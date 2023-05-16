@@ -12,7 +12,8 @@ project "Flare"
 
     includedirs
     {
-        "src"
+        "src",
+		INCLUDE_DIRS["GLAD"],
     }
 
 	targetdir("%{wks.location}/bin/" .. OUTPUT_DIRECTORY .. "/%{prj.name}")

@@ -20,3 +20,7 @@ OUTPUT_DIRECTORY = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
 include "Flare/premake5.lua"
 include "Sandbox/premake5.lua"
+
+group "Dependencies"
+    include "Flare/vendor/GLAD"
+group ""
