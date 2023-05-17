@@ -1,4 +1,4 @@
 INCLUDE_DIRS = {
-	"Flare/vendor/GLAD",
-	"Flare/vendor/GLFW"
+	"%{wks.location}/Flare/vendor/GLAD/include",
+	"%{wks.location}/Flare/vendor/GLFW/include"
 }

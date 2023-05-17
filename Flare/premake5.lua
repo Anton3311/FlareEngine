@@ -10,12 +10,15 @@ project "Flare"
         "src/**.cpp",
     }
 
-    includedirs
-    {
+	local flareIncludeDirs = {
         "src",
-		INCLUDE_DIRS["GLAD"],
-		INCLUDE_DIRS["GLFW"],
-    }
+	}
+
+	for i = 1, #INCLUDE_DIRS do
+		flareIncludeDirs[#flareIncludeDirs+1] = INCLUDE_DIRS[i]
+	end
+
+    includedirs(flareIncludeDirs)
 
 	links
 	{
