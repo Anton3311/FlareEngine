@@ -26,6 +26,11 @@ project "Flare"
 		"GLFW"
 	}
 
+	defines
+	{
+		"GLFW_INCLUDE_NONE"
+	}
+
 	targetdir("%{wks.location}/bin/" .. OUTPUT_DIRECTORY .. "/%{prj.name}")
 	objdir("%{wks.location}/bin-int/" .. OUTPUT_DIRECTORY .. "/%{prj.name}")
 
