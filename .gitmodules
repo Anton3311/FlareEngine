@@ -1,0 +1,3 @@
+[submodule ".\\Flare\\vendor\\GLFW"]
+	path = .\\Flare\\vendor\\GLFW
+	url = https://github.com/Anton3311/glfw.git

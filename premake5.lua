@@ -23,4 +23,5 @@ include "Sandbox/premake5.lua"
 
 group "Dependencies"
     include "Flare/vendor/GLAD"
+    include "Flare/vendor/GLFW"
 group ""

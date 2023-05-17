@@ -14,7 +14,14 @@ project "Flare"
     {
         "src",
 		INCLUDE_DIRS["GLAD"],
+		INCLUDE_DIRS["GLFW"],
     }
+
+	links
+	{
+		"GLAD",
+		"GLFW"
+	}
 
 	targetdir("%{wks.location}/bin/" .. OUTPUT_DIRECTORY .. "/%{prj.name}")
 	objdir("%{wks.location}/bin-int/" .. OUTPUT_DIRECTORY .. "/%{prj.name}")
