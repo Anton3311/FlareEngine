@@ -24,7 +24,9 @@ namespace Flare
 
 		m_Window = glfwCreateWindow(m_Data.Properties.Width, m_Data.Properties.Height, m_Data.Properties.Title.c_str(), nullptr, nullptr);
 
-		glfwMakeContextCurrent(m_Window);
+		m_GraphicsContext = GraphicsContext::Create((void*) m_Window);
+		m_GraphicsContext->Initialize();
+
 		glfwSetWindowUserPointer(m_Window, (void*) &m_Data);
 	}
 
@@ -42,7 +44,7 @@ namespace Flare
 	void WindowsWindow::OnUpdate()
 	{
 		glfwPollEvents();
-		glfwSwapBuffers(m_Window);
+		m_GraphicsContext->SwapBuffers();
 	}
 
 	void WindowsWindow::Release()

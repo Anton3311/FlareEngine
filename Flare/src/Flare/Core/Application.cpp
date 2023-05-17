@@ -1,5 +1,7 @@
 #include "Application.h"
 
+#include <Flare/Renderer/RenderCommand.h>
+
 namespace Flare
 {
 	Application::Application()
@@ -10,6 +12,8 @@ namespace Flare
 		properties.Height = 720;
 
 		m_Window = Window::Create(properties);
+
+		RenderCommand::Initialize();
 	}
 
 	void Application::Run()

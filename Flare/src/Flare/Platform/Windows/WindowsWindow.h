@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Flare/Core/Window.h>
+#include <Flare/Renderer/GraphicsContext.h>
 
 #include <GLFW/glfw3.h>
 
@@ -25,6 +26,7 @@ namespace Flare
 		};
 
 		GLFWwindow* m_Window;
+		Scope<GraphicsContext> m_GraphicsContext;
 		WindowData m_Data;
 	};
 }
