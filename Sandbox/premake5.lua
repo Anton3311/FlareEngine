@@ -13,7 +13,8 @@ project "Sandbox"
     includedirs
     {
         "src",
-		"%{wks.location}/Flare/src"
+		"%{wks.location}/Flare/src",
+		INCLUDE_DIRS.glm,
     }
 
 	links
