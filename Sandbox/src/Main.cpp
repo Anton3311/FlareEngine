@@ -1,5 +1,6 @@
 #include <Flare/Core/Application.h>
 #include <Flare/Renderer/RenderCommand.h>
+#include <Flare/Core/EntryPoint.h>
 
 using namespace Flare;
 
@@ -18,9 +19,7 @@ public:
 	}
 };
 
-int main()
+Scope<Application> Flare::CreateFlareApplication(Flare::CommandLineArguments arguments)
 {
-	SandboxApplication application;
-	application.Run();
-	return 0;
+	return CreateScope<SandboxApplication>();
 }
