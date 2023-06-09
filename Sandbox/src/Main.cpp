@@ -2,6 +2,8 @@
 #include <Flare/Renderer/RenderCommand.h>
 #include <Flare/Core/EntryPoint.h>
 
+#include <Flare/Renderer/Shader.h>
+
 #include <glm/glm.hpp>
 
 using namespace Flare;
@@ -11,6 +13,8 @@ class SandboxApplication : public Application
 public:
 	SandboxApplication()
 	{
+		m_Shader = Shader::Create("Shader.glsl");
+
 		glm::vec3 vertices[] =
 		{
 			{ -0.5f, -0.5f, 0.0f },
@@ -29,7 +33,8 @@ public:
 		m_Vertices = VertexBuffer::Create();
 		m_Indices = IndexBuffer::Create();
 		
-		BufferLayout layout = {
+		BufferLayout layout = 
+		{
 			BufferLayoutElement("Vertex", ShaderDataType::Float3),
 		};
 
@@ -43,17 +48,20 @@ public:
 
 		RenderCommand::SetClearColor(0.1f, 0.2f, 0.3f, 1);
 	}
-
 public:
 	virtual void OnUpdate() override
 	{
 		RenderCommand::Clear();
+
+		m_Shader->Bind();
 		RenderCommand::DrawIndex(m_Quad);
 	}
 private:
 	Ref<VertexArray> m_Quad;
 	Ref<VertexBuffer> m_Vertices;
 	Ref<IndexBuffer> m_Indices;
+
+	Ref<Shader> m_Shader;
 };
 
 Scope<Application> Flare::CreateFlareApplication(Flare::CommandLineArguments arguments)
