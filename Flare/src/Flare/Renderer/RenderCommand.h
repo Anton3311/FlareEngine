@@ -21,6 +21,11 @@ namespace Flare
 		{
 			s_API->SetClearColor(r, g, b, a);
 		}
+
+		static void DrawIndex(const Ref<VertexArray> mesh)
+		{
+			s_API->DrawIndexed(mesh);
+		}
 	private:
 		static Scope<RendererAPI> s_API;
 	};

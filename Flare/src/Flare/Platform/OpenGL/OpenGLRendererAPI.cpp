@@ -25,4 +25,10 @@ namespace Flare
 	{
 		glClear(GL_COLOR_BUFFER_BIT);
 	}
+
+	void OpenGLRendererAPI::DrawIndexed(const Ref<VertexArray>& vertexArray)
+	{
+		vertexArray->Bind();
+		glDrawElements(GL_TRIANGLES, vertexArray->GetIndexBuffer()->GetSize(), GL_UNSIGNED_INT, nullptr);
+	}
 }
