@@ -3,6 +3,7 @@
 #include <Flare/Core/EntryPoint.h>
 
 #include <Flare/Renderer/Shader.h>
+#include <Flare/Renderer2D/Renderer2D.h>
 
 #include <glm/glm.hpp>
 
@@ -13,49 +14,32 @@ class SandboxApplication : public Application
 public:
 	SandboxApplication()
 	{
-		m_Shader = Shader::Create("Shader.glsl");
-
-		glm::vec3 vertices[] =
-		{
-			{ -0.5f, -0.5f, 0.0f },
-			{ -0.5f,  0.5f, 0.0f },
-			{  0.5f,  0.5f, 0.0f },
-			{  0.5f, -0.5f, 0.0f },
-		};
-
-		uint32_t indices[] =
-		{
-			0, 1, 2,
-			0, 2, 3
-		};
-
-		m_Quad = VertexArray::Create();
-		m_Vertices = VertexBuffer::Create(sizeof(vertices), vertices);
-		m_Indices = IndexBuffer::Create(6, indices);
-
-		m_Vertices->SetLayout({
-			BufferLayoutElement("Vertex", ShaderDataType::Float3),
-		});
-
-		m_Quad->SetIndexBuffer(m_Indices);
-		m_Quad->AddVertexBuffer(m_Vertices);
+		Renderer2D::Initialize();
+		m_QuadShader = Shader::Create("QuadShader.glsl");
 
 		RenderCommand::SetClearColor(0.1f, 0.2f, 0.3f, 1);
+	}
+
+	~SandboxApplication()
+	{
+		Renderer2D::Shutdown();
 	}
 public:
 	virtual void OnUpdate() override
 	{
 		RenderCommand::Clear();
 
-		m_Shader->Bind();
-		RenderCommand::DrawIndex(m_Quad);
+		Renderer2D::Begin(m_QuadShader);
+		Renderer2D::Submit(glm::vec2(0.5f), glm::vec2(0.4f), glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
+		Renderer2D::Submit(glm::vec2(-0.8f), glm::vec2(0.1f), glm::vec4(0.2f, 0.8f, 0.4f, 1.0f));
+		Renderer2D::Submit(glm::vec2(-0.5f), glm::vec2(0.2f), glm::vec4(0.1f, 0.8f, 0.2f, 1.0f));
+		Renderer2D::Submit(glm::vec2(-0.5f, 0.2f), glm::vec2(0.08f), glm::vec4(0.1f, 0.8f, 0.2f, 1.0f));
+		Renderer2D::Submit(glm::vec2(-0.5f, -0.3f), glm::vec2(0.12f), glm::vec4(0.1f, 0.8f, 0.2f, 1.0f));
+		Renderer2D::Submit(glm::vec2(-0.2f, 0.7f), glm::vec2(0.4f, 0.2f), glm::vec4(0.8f, 0.2f, 0.1f, 1.0f));
+		Renderer2D::End();
 	}
 private:
-	Ref<VertexArray> m_Quad;
-	Ref<VertexBuffer> m_Vertices;
-	Ref<IndexBuffer> m_Indices;
-
-	Ref<Shader> m_Shader;
+	Ref<Shader> m_QuadShader;
 };
 
 Scope<Application> Flare::CreateFlareApplication(Flare::CommandLineArguments arguments)

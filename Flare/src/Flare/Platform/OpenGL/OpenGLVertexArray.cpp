@@ -22,6 +22,11 @@ namespace Flare
 	{
 		glBindVertexArray(m_Id);
 	}
+
+	void OpenGLVertexArray::Unbind()
+	{
+		glBindVertexArray(0);
+	}
 	
 	void OpenGLVertexArray::AddVertexBuffer(const Ref<VertexBuffer>& vertexBuffer)
 	{
@@ -34,6 +39,7 @@ namespace Flare
 
 		for (const auto& element : layout.GetElements())
 		{
+			glEnableVertexAttribArray(m_VertexBufferIndex);
 			switch (element.DataType)
 			{
 			case ShaderDataType::Int:
@@ -43,19 +49,8 @@ namespace Flare
 					element.IsNormalized, 
 					layout.GetStride(), 
 					(const void*)element.Offset);
-				
-				glEnableVertexAttribArray(m_VertexBufferIndex);
 				break;
 			case ShaderDataType::Float:
-				glVertexAttribPointer(m_VertexBufferIndex,
-					element.ComponentsCount,
-					GL_FLOAT,
-					element.IsNormalized,
-					layout.GetStride(),
-					(const void*)element.Offset);
-
-				glEnableVertexAttribArray(m_VertexBufferIndex);
-				break;
 			case ShaderDataType::Float2:
 			case ShaderDataType::Float3:
 			case ShaderDataType::Float4:
@@ -65,13 +60,11 @@ namespace Flare
 					element.IsNormalized,
 					layout.GetStride(),
 					(const void*)element.Offset);
-
-				glEnableVertexAttribArray(m_VertexBufferIndex);
 				break;
 			}
-		}
 
-		m_VertexBufferIndex++;
+			m_VertexBufferIndex++;
+		}
 	}
 
 	void OpenGLVertexArray::SetIndexBuffer(const Ref<IndexBuffer>& indexbuffer)

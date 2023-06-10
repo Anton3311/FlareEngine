@@ -17,6 +17,7 @@ namespace Flare
 		virtual const Ref<IndexBuffer> GetIndexBuffer() const = 0;
 
 		virtual void Bind() = 0;
+		virtual void Unbind() = 0;
 		virtual void AddVertexBuffer(const Ref<VertexBuffer>& vertexBuffer) = 0;
 	public:
 		static Ref<VertexArray> Create();

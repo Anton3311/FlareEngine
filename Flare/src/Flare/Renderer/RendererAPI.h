@@ -24,6 +24,7 @@ namespace Flare
 		virtual void Clear() = 0;
 
 		virtual void DrawIndexed(const Ref<VertexArray>& vertexArray) = 0;
+		virtual void DrawIndexed(const Ref<VertexArray>& vertexArray, size_t indicesCount) = 0;
 	public:
 		static Scope<RendererAPI> Create();
 		static API GetAPI() { return s_API; }

@@ -13,5 +13,6 @@ namespace Flare
 		virtual void Clear() override;
 
 		virtual void DrawIndexed(const Ref<VertexArray>& vertexArray) override;
+		virtual void DrawIndexed(const Ref<VertexArray>& vertexArray, size_t indicesCount) override;
 	};
 }

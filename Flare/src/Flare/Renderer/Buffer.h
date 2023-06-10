@@ -114,7 +114,7 @@ namespace Flare
 		virtual void Bind() = 0;
 		virtual void SetData(const void* indices, size_t count) = 0;
 		
-		size_t GetSize() const { return m_Count; }
+		size_t GetCount() const { return m_Count; }
 	protected:
 		size_t m_Count;
 	public:

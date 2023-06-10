@@ -13,9 +13,7 @@ namespace Flare
 	{
 		glCreateBuffers(1, &m_Id);
 		glBindBuffer(GL_ARRAY_BUFFER, m_Id);
-		glBufferData(GL_ARRAY_BUFFER, size, nullptr, GL_STATIC_DRAW);
-
-		SetData(data, size);
+		glBufferData(GL_ARRAY_BUFFER, size, data, GL_STATIC_DRAW);
 	}
 	
 	OpenGLVertexBuffer::~OpenGLVertexBuffer()
@@ -47,9 +45,8 @@ namespace Flare
 	{
 		glGenBuffers(1, &m_Id);
 		glBindBuffer(GL_ARRAY_BUFFER, m_Id);
-		glBufferData(GL_ARRAY_BUFFER, count * sizeof(uint32_t), nullptr, GL_STATIC_DRAW);
-
-		SetData(data, count);
+		glBufferData(GL_ARRAY_BUFFER, count * sizeof(uint32_t), data, GL_STATIC_DRAW);
+		m_Count = count;
 	}
 
 	OpenGLIndexBuffer::~OpenGLIndexBuffer()
