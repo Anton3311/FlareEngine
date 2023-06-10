@@ -6,6 +6,8 @@
 #include <fstream>
 
 #include <glad/glad.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 namespace Flare
 {
@@ -35,6 +37,12 @@ namespace Flare
     void Flare::OpenGLShader::Bind()
     {
         glUseProgram(m_Id);
+    }
+
+    void OpenGLShader::SetMatrix4(const std::string& name, const glm::mat4& matrix)
+    {
+        uint32_t location = glGetUniformLocation(m_Id, name.c_str());
+        glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
     }
 
     std::vector<OpenGLShader::ShaderProgram> OpenGLShader::PreProcess(std::string_view source)

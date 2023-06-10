@@ -28,6 +28,8 @@ namespace Flare
 		Ref<IndexBuffer> IndexBuffer;
 
 		Ref<Shader> CurrentShader;
+
+		glm::mat4 CameraProjectionMatrix;
 	};
 
 	class Renderer2D
@@ -36,7 +38,7 @@ namespace Flare
 		static void Initialize(size_t maxQuads = 10000);
 		static void Shutdown();
 
-		static void Begin(const Ref<Shader>& shader);
+		static void Begin(const Ref<Shader>& shader, const glm::mat4& projectionMatrix);
 		static void Flush();
 		static void Submit(glm::vec2 position, glm::vec2 size, glm::vec4 color);
 		static void End();

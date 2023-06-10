@@ -46,11 +46,12 @@ namespace Flare
 		delete s_Data;
 	}
 
-	void Renderer2D::Begin(const Ref<Shader>& shader)
+	void Renderer2D::Begin(const Ref<Shader>& shader, const glm::mat4& projectionMatrix)
 	{
 		if (s_Data->QuadIndex > 0 && s_Data->CurrentShader != nullptr)
 			Flush();
 
+		s_Data->CameraProjectionMatrix = projectionMatrix;
 		s_Data->CurrentShader = shader;
 	}
 	
@@ -59,6 +60,7 @@ namespace Flare
 		s_Data->VertexBuffer->SetData(s_Data->Vertices.data(), sizeof(QuadVertex) * s_Data->QuadIndex * 4);
 
 		s_Data->CurrentShader->Bind();
+		s_Data->CurrentShader->SetMatrix4("u_Projection", s_Data->CameraProjectionMatrix);
 		RenderCommand::DrawIndexed(s_Data->VertexArray, s_Data->QuadIndex * 6);
 
 		s_Data->QuadIndex = 0;
