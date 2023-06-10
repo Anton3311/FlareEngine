@@ -104,7 +104,7 @@ namespace Flare
 		virtual void Bind() = 0;
 		virtual void SetData(const void* data, size_t size) = 0;
 	public:
-		static Ref<VertexBuffer> Create();
+		static Ref<VertexBuffer> Create(size_t size);
 		static Ref<VertexBuffer> Create(size_t size, const void* data);
 	};
 
@@ -112,13 +112,13 @@ namespace Flare
 	{
 	public:
 		virtual void Bind() = 0;
-		virtual void SetData(const void* indices, size_t size) = 0;
+		virtual void SetData(const void* indices, size_t count) = 0;
 		
-		size_t GetSize() const { return m_Size; }
+		size_t GetSize() const { return m_Count; }
 	protected:
-		size_t m_Size;
+		size_t m_Count;
 	public:
-		static Ref<IndexBuffer> Create();
-		static Ref<IndexBuffer> Create(const void* data, size_t size);
+		static Ref<IndexBuffer> Create(size_t count);
+		static Ref<IndexBuffer> Create(size_t count, const void* data);
 	};
 }

@@ -2,6 +2,8 @@
 
 #include <Flare/Renderer/RenderCommand.h>
 
+#include <glad/glad.h>
+
 namespace Flare
 {
 	Application::Application()

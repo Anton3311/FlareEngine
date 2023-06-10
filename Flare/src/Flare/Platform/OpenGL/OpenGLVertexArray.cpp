@@ -8,6 +8,9 @@ namespace Flare
 		: m_VertexBufferIndex(0)
 	{
 		glGenVertexArrays(1, &m_Id);
+
+		GLenum error = glGetError();
+		glBindBuffer(GL_ARRAY_BUFFER, m_Id);
 	}
 	
 	OpenGLVertexArray::~OpenGLVertexArray()
@@ -23,6 +26,7 @@ namespace Flare
 	void OpenGLVertexArray::AddVertexBuffer(const Ref<VertexBuffer>& vertexBuffer)
 	{
 		glBindVertexArray(m_Id);
+		vertexBuffer->Bind();
 
 		const BufferLayout& layout = vertexBuffer->GetLayout();
 

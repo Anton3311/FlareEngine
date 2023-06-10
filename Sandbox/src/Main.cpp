@@ -30,18 +30,12 @@ public:
 		};
 
 		m_Quad = VertexArray::Create();
-		m_Vertices = VertexBuffer::Create();
-		m_Indices = IndexBuffer::Create();
-		
-		BufferLayout layout = 
-		{
+		m_Vertices = VertexBuffer::Create(sizeof(vertices), vertices);
+		m_Indices = IndexBuffer::Create(6, indices);
+
+		m_Vertices->SetLayout({
 			BufferLayoutElement("Vertex", ShaderDataType::Float3),
-		};
-
-		m_Vertices->SetLayout(layout);
-		m_Vertices->SetData(vertices, sizeof(vertices));
-
-		m_Indices->SetData(indices, 6);
+		});
 
 		m_Quad->SetIndexBuffer(m_Indices);
 		m_Quad->AddVertexBuffer(m_Vertices);
