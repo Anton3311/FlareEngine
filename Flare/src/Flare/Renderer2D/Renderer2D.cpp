@@ -33,6 +33,7 @@ namespace Flare
 		s_Data->VertexBuffer->SetLayout({
 			BufferLayoutElement("i_Position", ShaderDataType::Float3),
 			BufferLayoutElement("i_Color", ShaderDataType::Float4),
+			BufferLayoutElement("i_UV", ShaderDataType::Float2),
 		});
 
 		s_Data->VertexArray->SetIndexBuffer(s_Data->IndexBuffer);
@@ -44,6 +45,11 @@ namespace Flare
 		s_Data->QuadVertices[1] = glm::vec3(-0.5f, 0.5f, 0.0f);
 		s_Data->QuadVertices[2] = glm::vec3(0.5f, 0.5f, 0.0f);
 		s_Data->QuadVertices[3] = glm::vec3(0.5f, -0.5f, 0.0f);
+
+		s_Data->QuadUV[0] = glm::vec2(0.0f, 0.0f);
+		s_Data->QuadUV[1] = glm::vec2(0.0f, 1.0f);
+		s_Data->QuadUV[2] = glm::vec2(1.0f, 1.0f);
+		s_Data->QuadUV[3] = glm::vec2(1.0f, 0.0f);
 	}
 
 	void Renderer2D::Shutdown()
@@ -85,6 +91,7 @@ namespace Flare
 			QuadVertex& vertex = s_Data->Vertices[vertexIndex + i];
 			vertex.Position = s_Data->QuadVertices[i] * glm::vec3(size, 0.0f) + position;
 			vertex.Color = color;
+			vertex.UV = s_Data->QuadUV[i];
 		}
 
 		s_Data->QuadIndex++;

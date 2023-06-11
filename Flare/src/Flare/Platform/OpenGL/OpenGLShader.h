@@ -17,6 +17,7 @@ namespace Flare
 	public:
 		virtual void Bind() override;
 
+		virtual void SetInt(const std::string& name, int value) override;
 		virtual void SetMatrix4(const std::string& name, const glm::mat4& matrix) override;
 	private:
 		struct ShaderProgram

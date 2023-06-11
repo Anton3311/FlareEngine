@@ -14,6 +14,7 @@ namespace Flare
 	{
 		glm::vec3 Position;
 		glm::vec4 Color;
+		glm::vec2 UV;
 	};
 
 	struct Renderer2DData
@@ -30,6 +31,7 @@ namespace Flare
 		Ref<Shader> CurrentShader;
 
 		glm::vec3 QuadVertices[4];
+		glm::vec2 QuadUV[4];
 
 		glm::mat4 CameraProjectionMatrix;
 	};

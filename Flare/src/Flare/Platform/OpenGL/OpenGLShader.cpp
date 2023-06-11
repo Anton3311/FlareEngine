@@ -39,9 +39,15 @@ namespace Flare
         glUseProgram(m_Id);
     }
 
+    void OpenGLShader::SetInt(const std::string& name, int value)
+    {
+        int32_t location = glGetUniformLocation(m_Id, name.c_str());
+        glUniform1i(location, value);
+    }
+
     void OpenGLShader::SetMatrix4(const std::string& name, const glm::mat4& matrix)
     {
-        uint32_t location = glGetUniformLocation(m_Id, name.c_str());
+        int32_t location = glGetUniformLocation(m_Id, name.c_str());
         glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
     }
 
@@ -87,7 +93,8 @@ namespace Flare
         m_Id = glCreateProgram();
         auto programs = PreProcess(source);
 
-        std::vector<uint32_t> shaderIds(programs.size());
+        std::vector<uint32_t> shaderIds;
+        shaderIds.reserve(programs.size());
 
         for (auto& program : programs)
         {

@@ -4,6 +4,7 @@
 
 #include <Flare/Renderer/Shader.h>
 #include <Flare/Renderer2D/Renderer2D.h>
+#include <Flare/Renderer/Texture.h>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -16,6 +17,7 @@ public:
 	SandboxApplication()
 	{
 		Renderer2D::Initialize();
+		m_Texture = Texture::Create("Texture.png");
 		m_QuadShader = Shader::Create("QuadShader.glsl");
 
 		CalculateProjection(2.0f);
@@ -45,6 +47,9 @@ public:
 	{
 		RenderCommand::Clear();
 
+		m_Texture->Bind();
+		m_QuadShader->SetInt("u_Texture", 0);
+
 		Renderer2D::Begin(m_QuadShader, m_ProjectionMatrix);
 		Renderer2D::DrawQuad(glm::vec3(0.5f, 0.5f, 0.0f), glm::vec2(0.4f), glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
 		Renderer2D::DrawQuad(glm::vec3(-0.8f, -0.8f, 0.0f), glm::vec2(0.1f), glm::vec4(0.2f, 0.8f, 0.4f, 1.0f));
@@ -56,6 +61,7 @@ public:
 	}
 private:
 	Ref<Shader> m_QuadShader;
+	Ref<Texture> m_Texture;
 	glm::mat4 m_ProjectionMatrix;
 };
 

@@ -8,6 +8,9 @@ project "Flare"
     {
         "src/**.h",
         "src/**.cpp",
+
+		"vendor/sbt_image/**.h",
+		"vendor/sbt_image/**.cpp",
     }
 
     includedirs
@@ -16,6 +19,7 @@ project "Flare"
 		INCLUDE_DIRS.GLAD,
 		INCLUDE_DIRS.GLFW,
 		INCLUDE_DIRS.glm,
+		INCLUDE_DIRS.stb_image,
 	}
 
 	links
