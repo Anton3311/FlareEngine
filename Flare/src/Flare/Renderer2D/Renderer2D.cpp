@@ -31,7 +31,7 @@ namespace Flare
 		s_Data->IndexBuffer = IndexBuffer::Create(maxQuads * 6, indices.data());
 
 		s_Data->VertexBuffer->SetLayout({
-			BufferLayoutElement("i_Position", ShaderDataType::Float2),
+			BufferLayoutElement("i_Position", ShaderDataType::Float3),
 			BufferLayoutElement("i_Color", ShaderDataType::Float4),
 		});
 
@@ -39,6 +39,11 @@ namespace Flare
 		s_Data->VertexArray->AddVertexBuffer(s_Data->VertexBuffer);
 
 		s_Data->VertexArray->Unbind();
+
+		s_Data->QuadVertices[0] = glm::vec3(-0.5f, -0.5f, 0.0f);
+		s_Data->QuadVertices[1] = glm::vec3(-0.5f, 0.5f, 0.0f);
+		s_Data->QuadVertices[2] = glm::vec3(0.5f, 0.5f, 0.0f);
+		s_Data->QuadVertices[3] = glm::vec3(0.5f, -0.5f, 0.0f);
 	}
 
 	void Renderer2D::Shutdown()
@@ -66,7 +71,7 @@ namespace Flare
 		s_Data->QuadIndex = 0;
 	}
 	
-	void Renderer2D::Submit(glm::vec2 position, glm::vec2 size, glm::vec4 color)
+	void Renderer2D::DrawQuad(glm::vec3 position, glm::vec2 size, glm::vec4 color)
 	{
 		glm::vec2 halfSize = size / 2.0f;
 
@@ -75,28 +80,11 @@ namespace Flare
 
 		size_t vertexIndex = s_Data->QuadIndex * 4;
 
+		for (uint32_t i = 0; i < 4; i++)
 		{
-			QuadVertex& vertex = s_Data->Vertices[vertexIndex];
+			QuadVertex& vertex = s_Data->Vertices[vertexIndex + i];
+			vertex.Position = s_Data->QuadVertices[i] * glm::vec3(size, 0.0f) + position;
 			vertex.Color = color;
-			vertex.Position = position - halfSize;
-		}
-
-		{
-			QuadVertex& vertex = s_Data->Vertices[vertexIndex + 1];
-			vertex.Color = color;
-			vertex.Position = position + glm::vec2(-halfSize.x, halfSize.y);
-		}
-
-		{
-			QuadVertex& vertex = s_Data->Vertices[vertexIndex + 2];
-			vertex.Color = color;
-			vertex.Position = position + halfSize;
-		}
-
-		{
-			QuadVertex& vertex = s_Data->Vertices[vertexIndex + 3];
-			vertex.Color = color;
-			vertex.Position = position + glm::vec2(halfSize.x, -halfSize.y);
 		}
 
 		s_Data->QuadIndex++;

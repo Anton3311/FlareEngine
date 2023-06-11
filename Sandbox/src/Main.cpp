@@ -33,7 +33,7 @@ public:
 		float halfSize = size / 2;
 		float aspectRation = width / height;
 
-		m_ProjectionMatrix = glm::ortho(-halfSize * aspectRation, halfSize * aspectRation, -halfSize, halfSize, -0.1f, 1.0f);
+		m_ProjectionMatrix = glm::ortho(-halfSize * aspectRation, halfSize * aspectRation, -halfSize, halfSize, -0.1f, 10.0f);
 	}
 
 	~SandboxApplication()
@@ -46,12 +46,12 @@ public:
 		RenderCommand::Clear();
 
 		Renderer2D::Begin(m_QuadShader, m_ProjectionMatrix);
-		Renderer2D::Submit(glm::vec2(0.5f), glm::vec2(0.4f), glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
-		Renderer2D::Submit(glm::vec2(-0.8f), glm::vec2(0.1f), glm::vec4(0.2f, 0.8f, 0.4f, 1.0f));
-		Renderer2D::Submit(glm::vec2(-0.5f), glm::vec2(0.2f), glm::vec4(0.1f, 0.8f, 0.2f, 1.0f));
-		Renderer2D::Submit(glm::vec2(-0.5f, 0.2f), glm::vec2(0.08f), glm::vec4(0.1f, 0.8f, 0.2f, 1.0f));
-		Renderer2D::Submit(glm::vec2(-0.5f, -0.3f), glm::vec2(0.12f), glm::vec4(0.1f, 0.8f, 0.2f, 1.0f));
-		Renderer2D::Submit(glm::vec2(-0.2f, 0.7f), glm::vec2(0.4f, 0.2f), glm::vec4(0.8f, 0.2f, 0.1f, 1.0f));
+		Renderer2D::DrawQuad(glm::vec3(0.5f, 0.5f, 0.0f), glm::vec2(0.4f), glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
+		Renderer2D::DrawQuad(glm::vec3(-0.8f, -0.8f, 0.0f), glm::vec2(0.1f), glm::vec4(0.2f, 0.8f, 0.4f, 1.0f));
+		Renderer2D::DrawQuad(glm::vec3(-0.5f, -0.5f, 0.0f), glm::vec2(0.2f), glm::vec4(0.1f, 0.8f, 0.2f, 1.0f));
+		Renderer2D::DrawQuad(glm::vec3(-0.5f, 0.2f, 0.0f), glm::vec2(0.08f), glm::vec4(0.1f, 0.8f, 0.2f, 1.0f));
+		Renderer2D::DrawQuad(glm::vec3(-0.5f, -0.3f, 0.0f), glm::vec2(0.12f), glm::vec4(0.1f, 0.8f, 0.2f, 1.0f));
+		Renderer2D::DrawQuad(glm::vec3(-0.2f, 0.7f, 0.0f), glm::vec2(0.4f, 0.2f), glm::vec4(0.8f, 0.2f, 0.1f, 1.0f));
 		Renderer2D::End();
 	}
 private:

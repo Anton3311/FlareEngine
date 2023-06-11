@@ -12,7 +12,7 @@ namespace Flare
 {
 	struct QuadVertex
 	{
-		glm::vec2 Position;
+		glm::vec3 Position;
 		glm::vec4 Color;
 	};
 
@@ -29,6 +29,8 @@ namespace Flare
 
 		Ref<Shader> CurrentShader;
 
+		glm::vec3 QuadVertices[4];
+
 		glm::mat4 CameraProjectionMatrix;
 	};
 
@@ -40,7 +42,7 @@ namespace Flare
 
 		static void Begin(const Ref<Shader>& shader, const glm::mat4& projectionMatrix);
 		static void Flush();
-		static void Submit(glm::vec2 position, glm::vec2 size, glm::vec4 color);
+		static void DrawQuad(glm::vec3 position, glm::vec2 size, glm::vec4 color);
 		static void End();
 	private:
 		static Renderer2DData* s_Data;
