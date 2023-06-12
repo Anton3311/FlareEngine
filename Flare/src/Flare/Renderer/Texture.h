@@ -23,5 +23,6 @@ namespace Flare
 		uint32_t m_Height;
 	public:
 		static Ref<Texture> Create(const std::filesystem::path& path);
+		static Ref<Texture> Create(uint32_t width, uint32_t height, const void* data, TextureFormat format);
 	};
 }

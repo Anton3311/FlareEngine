@@ -34,6 +34,7 @@ namespace Flare
 			BufferLayoutElement("i_Position", ShaderDataType::Float3),
 			BufferLayoutElement("i_Color", ShaderDataType::Float4),
 			BufferLayoutElement("i_UV", ShaderDataType::Float2),
+			BufferLayoutElement("i_TextureIndex", ShaderDataType::Float),
 		});
 
 		s_Data->VertexArray->SetIndexBuffer(s_Data->IndexBuffer);
@@ -50,6 +51,14 @@ namespace Flare
 		s_Data->QuadUV[1] = glm::vec2(0.0f, 1.0f);
 		s_Data->QuadUV[2] = glm::vec2(1.0f, 1.0f);
 		s_Data->QuadUV[3] = glm::vec2(1.0f, 0.0f);
+
+		{
+			uint32_t whiteTextureData = 0xffffffff;
+			s_Data->WhiteTexture = Texture::Create(1, 1, &whiteTextureData, TextureFormat::RGBA8);
+		}
+
+		s_Data->Textures[0] = s_Data->WhiteTexture;
+		s_Data->TextureIndex = 1;
 	}
 
 	void Renderer2D::Shutdown()
@@ -70,11 +79,21 @@ namespace Flare
 	{
 		s_Data->VertexBuffer->SetData(s_Data->Vertices.data(), sizeof(QuadVertex) * s_Data->QuadIndex * 4);
 
+		int32_t slots[MaxTexturesCount];
+		for (size_t i = 0; i < MaxTexturesCount; i++)
+			slots[i] = i;
+
+		for (int32_t i = 0; i < s_Data->TextureIndex; i++)
+			s_Data->Textures[i]->Bind(i);
+
 		s_Data->CurrentShader->Bind();
 		s_Data->CurrentShader->SetMatrix4("u_Projection", s_Data->CameraProjectionMatrix);
+		s_Data->CurrentShader->SetIntArray("u_Textures", slots, MaxTexturesCount);
+		
 		RenderCommand::DrawIndexed(s_Data->VertexArray, s_Data->QuadIndex * 6);
 
 		s_Data->QuadIndex = 0;
+		s_Data->TextureIndex = 1;
 	}
 	
 	void Renderer2D::DrawQuad(glm::vec3 position, glm::vec2 size, glm::vec4 color)
@@ -85,13 +104,47 @@ namespace Flare
 			Flush();
 
 		size_t vertexIndex = s_Data->QuadIndex * 4;
-
 		for (uint32_t i = 0; i < 4; i++)
 		{
 			QuadVertex& vertex = s_Data->Vertices[vertexIndex + i];
 			vertex.Position = s_Data->QuadVertices[i] * glm::vec3(size, 0.0f) + position;
 			vertex.Color = color;
 			vertex.UV = s_Data->QuadUV[i];
+			vertex.TexuteIndex = 0; // White texture
+		}
+
+		s_Data->QuadIndex++;
+	}
+
+	void Renderer2D::DrawQuad(glm::vec3 position, glm::vec2 size, const Ref<Texture>& texture, glm::vec4 tint)
+	{
+
+		if (s_Data->QuadIndex >= s_Data->MaxQuadCount)
+			Flush();
+
+		if (s_Data->TextureIndex == MaxTexturesCount)
+			Flush();
+
+		int32_t textureIndex = 0;
+		size_t vertexIndex = s_Data->QuadIndex * 4;
+
+		for (textureIndex = 0; textureIndex < s_Data->TextureIndex; textureIndex++)
+		{
+			if (s_Data->Textures[textureIndex].get() == texture.get())
+				break;
+		}
+
+		if (textureIndex >= s_Data->TextureIndex)
+			s_Data->Textures[s_Data->TextureIndex++] = texture;
+
+		glm::vec2 halfSize = size / 2.0f;
+		for (uint32_t i = 0; i < 4; i++)
+		{
+			QuadVertex& vertex = s_Data->Vertices[vertexIndex + i];
+			vertex.Position = s_Data->QuadVertices[i] * glm::vec3(size, 0.0f) + position;
+			vertex.Color = tint;
+			vertex.UV = s_Data->QuadUV[i];
+			vertex.TexuteIndex = textureIndex;
 		}
 
 		s_Data->QuadIndex++;

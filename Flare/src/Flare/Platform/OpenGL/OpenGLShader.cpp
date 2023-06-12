@@ -45,6 +45,12 @@ namespace Flare
         glUniform1i(location, value);
     }
 
+    void OpenGLShader::SetIntArray(const std::string& name, const int* values, uint32_t count)
+    {
+        int32_t location = glGetUniformLocation(m_Id, name.c_str());
+        glUniform1iv(location, count, values);
+    }
+
     void OpenGLShader::SetMatrix4(const std::string& name, const glm::mat4& matrix)
     {
         int32_t location = glGetUniformLocation(m_Id, name.c_str());

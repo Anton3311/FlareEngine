@@ -3,6 +3,7 @@
 #include <Flare/Renderer/Buffer.h>
 #include <Flare/Renderer/VertexArray.h>
 #include <Flare/Renderer/Shader.h>
+#include <Flare/Renderer/Texture.h>
 
 #include <glm/glm.hpp>
 
@@ -15,7 +16,10 @@ namespace Flare
 		glm::vec3 Position;
 		glm::vec4 Color;
 		glm::vec2 UV;
+		float TexuteIndex;
 	};
+
+	constexpr size_t MaxTexturesCount = 32;
 
 	struct Renderer2DData
 	{
@@ -27,6 +31,10 @@ namespace Flare
 		Ref<VertexArray> VertexArray;
 		Ref<VertexBuffer> VertexBuffer;
 		Ref<IndexBuffer> IndexBuffer;
+
+		Ref<Texture> WhiteTexture;
+		Ref<Texture> Textures[MaxTexturesCount];
+		uint32_t TextureIndex;
 
 		Ref<Shader> CurrentShader;
 
@@ -45,6 +53,7 @@ namespace Flare
 		static void Begin(const Ref<Shader>& shader, const glm::mat4& projectionMatrix);
 		static void Flush();
 		static void DrawQuad(glm::vec3 position, glm::vec2 size, glm::vec4 color);
+		static void DrawQuad(glm::vec3 position, glm::vec2 size, const Ref<Texture>& texture, glm::vec4 tint);
 		static void End();
 	private:
 		static Renderer2DData* s_Data;

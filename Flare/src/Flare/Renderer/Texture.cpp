@@ -14,4 +14,13 @@ namespace Flare
 			return CreateRef<OpenGLTexture>(path);
 		}
 	}
+
+	Ref<Texture> Texture::Create(uint32_t width, uint32_t height, const void* data, TextureFormat format)
+	{
+		switch (RendererAPI::GetAPI())
+		{
+		case RendererAPI::API::OpenGL:
+			return CreateRef<OpenGLTexture>(width, height, data, format);
+		}
+	}
 }
