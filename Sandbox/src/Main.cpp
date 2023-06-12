@@ -56,7 +56,7 @@ public:
 		Renderer2D::DrawQuad(glm::vec3(-0.2f, 0.7f, 0.0f), glm::vec2(0.4f, 0.2f), glm::vec4(0.8f, 0.2f, 0.1f, 1.0f));
 
 		Renderer2D::DrawQuad(glm::vec3(0.0f), glm::vec2(0.2f), m_Texture, glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
-		Renderer2D::DrawQuad(glm::vec3(-0.1f), glm::vec2(0.2f), m_Texture, glm::vec4(1.0f));
+		Renderer2D::DrawQuad(glm::vec3(-0.1f), glm::vec2(1), m_Texture, glm::vec4(1.0f), glm::vec2(4));
 		Renderer2D::End();
 	}
 private:

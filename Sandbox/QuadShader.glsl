@@ -5,6 +5,7 @@ layout(location = 0) in vec3 i_Position;
 layout(location = 1) in vec4 i_Color;
 layout(location = 2) in vec2 i_UV;
 layout(location = 3) in float i_TextureIndex;
+layout(location = 4) in vec2 i_TextureTiling;
 
 uniform mat4 u_Projection;
 
@@ -15,7 +16,7 @@ flat out float TextureIndex;
 void main()
 {
     VertexColor = i_Color;
-    UV = i_UV;
+    UV = i_UV * i_TextureTiling;
     TextureIndex = i_TextureIndex;
     gl_Position = u_Projection * vec4(i_Position, 1.0);
 }
