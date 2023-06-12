@@ -15,6 +15,7 @@ project "Sandbox"
         "src",
 		"%{wks.location}/Flare/src",
 		INCLUDE_DIRS.glm,
+		INCLUDE_DIRS.spdlog,
     }
 
 	links

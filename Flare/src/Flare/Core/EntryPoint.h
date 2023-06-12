@@ -1,4 +1,5 @@
 #include <Flare/Core/Application.h>
+#include <Flare/Core/Log.h>
 
 #include <stdint.h>
 
@@ -23,6 +24,8 @@ int main(int argc, const char* argv[])
 	Flare::CommandLineArguments arguments;
 	arguments.ArgumentsCount = argc;
 	arguments.Arguments = argv;
+
+	Flare::Log::Initialize();
 
 	Flare::Scope<Flare::Application> application = CreateFlareApplication(arguments);
 	application->Run();
