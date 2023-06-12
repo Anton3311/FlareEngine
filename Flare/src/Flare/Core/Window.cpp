@@ -6,7 +6,7 @@ namespace Flare
 {
 	Scope<Window> Window::Create(WindowProperties& properties)
 	{
-#ifdef FL_PLATFORM_WINDOWS
+#ifdef FLARE_PLATFORM_WINDOWS
 		return CreateScope<WindowsWindow>(properties);
 #endif
 	}

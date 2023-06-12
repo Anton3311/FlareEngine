@@ -5,10 +5,17 @@
 #include <memory>
 
 #ifdef FLARE_DEBUG
-	#ifdef FL_PLATFORM_WINDOWS
-		#define FL_DEBUGBREAK __debugbreak()
+	#ifdef FLARE_PLATFORM_WINDOWS
+		#define FLARE_DEBUGBREAK __debugbreak()
+	#else
+		#define FLARE_DEBUGBREAK
 	#endif
+#else
+	#define FLARE_DEBUGBREAK
 #endif
+
+#define FLARE_EXPEND_MACRO(a) a
+#define FALRE_STRINGIFY_MACRO(a) #a
 
 namespace Flare
 {
