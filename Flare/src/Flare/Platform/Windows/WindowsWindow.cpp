@@ -82,6 +82,43 @@ namespace Flare
 			KeyTypedEvent event((KeyCode)keyCode);
 			data->Callback(event);
 		});
+
+		glfwSetMouseButtonCallback(m_Window, [](GLFWwindow* window, int button, int action, int mods)
+		{
+			WindowData* data = (WindowData*)glfwGetWindowUserPointer(window);
+
+			switch (action)
+			{
+				case GLFW_PRESS:
+				{
+					MouseButtonPressedEvent event((MouseCode)button);
+					data->Callback(event);
+					break;
+				}
+				case GLFW_RELEASE:
+				{
+					MouseButtonReleasedEvent event((MouseCode)button);
+					data->Callback(event);
+					break;
+				}
+			}
+		});
+
+		glfwSetScrollCallback(m_Window, [](GLFWwindow* window, double x, double y)
+		{
+			WindowData* data = (WindowData*)glfwGetWindowUserPointer(window);
+
+			MouseScrollEvent event(glm::vec2((float)x, (float)y));
+			data->Callback(event);
+		});
+
+		glfwSetCursorPosCallback(m_Window, [](GLFWwindow* window, double x, double y)
+		{
+			WindowData* data = (WindowData*)glfwGetWindowUserPointer(window);
+
+			MouseMoveEvent event(glm::vec2((float)x, (float)y));
+			data->Callback(event);
+		});
 	}
 
 	void WindowsWindow::OnUpdate()

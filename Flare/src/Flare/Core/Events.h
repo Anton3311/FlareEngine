@@ -3,6 +3,7 @@
 #include "Flare.h"
 #include "Flare/Core/Event.h"
 #include "Flare/Core/KeyCode.h"
+#include "Flare/Core/MouseCode.h"
 
 namespace Flare
 {
@@ -27,6 +28,58 @@ namespace Flare
 	private:
 		uint32_t m_Width;
 		uint32_t m_Height;
+	};
+
+	class MouseButtonPressedEvent : public Event
+	{
+	public:
+		MouseButtonPressedEvent(MouseCode mouseCode)
+			: m_MouseCode(mouseCode) {}
+		
+		inline MouseCode GetMouseCode() const { return m_MouseCode; }
+
+		EVENT_CLASS(MouseButtonPressed);
+	private:
+		MouseCode m_MouseCode;
+	};
+
+	class MouseButtonReleasedEvent : public Event
+	{
+	public:
+		MouseButtonReleasedEvent(MouseCode mouseCode)
+			: m_MouseCode(mouseCode) {}
+
+		inline MouseCode GetMouseCode() const { return m_MouseCode; }
+
+		EVENT_CLASS(MouseButtonReleased);
+	private:
+		MouseCode m_MouseCode;
+	};
+
+	class MouseScrollEvent : public Event
+	{
+	public:
+		MouseScrollEvent(glm::vec2 offset)
+			: m_Offset(offset) {}
+		
+		inline glm::vec2 GetOffset() const { return m_Offset; }
+
+		EVENT_CLASS(MouseScroll);
+	private:
+		glm::vec2 m_Offset;
+	};
+
+	class MouseMoveEvent : public Event
+	{
+	public:
+		MouseMoveEvent(glm::vec2 offset)
+			: m_Position(offset) {}
+
+		inline glm::vec2 GetPosition() const { return m_Position; }
+
+		EVENT_CLASS(MouseMove);
+	private:
+		glm::vec2 m_Position;
 	};
 
 	class KeyPressedEvent : public Event
