@@ -47,6 +47,41 @@ namespace Flare
 			WindowResizeEvent event(width, height);
 			data->Callback(event);
 		});
+
+		glfwSetKeyCallback(m_Window, [](GLFWwindow* window, int key, int scancode, int action, int mods)
+		{
+			WindowData* data = (WindowData*)glfwGetWindowUserPointer(window);
+
+			switch (action)
+			{
+				case GLFW_PRESS:
+				{
+					KeyPressedEvent event((KeyCode)key);
+					data->Callback(event);
+					break;
+				}
+				case GLFW_RELEASE:
+				{
+					KeyReleasedEvent event((KeyCode)key);
+					data->Callback(event);
+					break;
+				}
+				case GLFW_REPEAT:
+				{
+					KeyPressedEvent event((KeyCode)key, true);
+					data->Callback(event);
+					break;
+				}
+			}
+		});
+
+		glfwSetCharCallback(m_Window, [](GLFWwindow* window, unsigned int keyCode)
+		{
+			WindowData* data = (WindowData*)glfwGetWindowUserPointer(window);
+
+			KeyTypedEvent event((KeyCode)keyCode);
+			data->Callback(event);
+		});
 	}
 
 	void WindowsWindow::OnUpdate()
