@@ -14,7 +14,7 @@ public:
 		m_Texture = Texture::Create("Texture.png");
 		m_QuadShader = Shader::Create("QuadShader.glsl");
 
-		CalculateProjection(2.0f);
+		CalculateProjection(m_CameraSize);
 
 		RenderCommand::SetClearColor(0.1f, 0.2f, 0.3f, 1);
 	}
@@ -30,6 +30,16 @@ public:
 		float aspectRation = width / height;
 
 		m_ProjectionMatrix = glm::ortho(-halfSize * aspectRation, halfSize * aspectRation, -halfSize, halfSize, -0.1f, 10.0f);
+	}
+
+	virtual void OnEvent(Event& event) override
+	{
+		EventDispatcher dispatcher(event);
+		dispatcher.Dispatch<WindowResizeEvent>([this](WindowResizeEvent& event) -> bool
+		{
+			CalculateProjection(m_CameraSize);
+			return true;
+		});
 	}
 
 	~SandboxApplication()
@@ -57,6 +67,8 @@ private:
 	Ref<Shader> m_QuadShader;
 	Ref<Texture> m_Texture;
 	glm::mat4 m_ProjectionMatrix;
+
+	float m_CameraSize = 2.0f;
 };
 
 Scope<Application> Flare::CreateFlareApplication(Flare::CommandLineArguments arguments)
