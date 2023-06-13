@@ -1,8 +1,7 @@
 #include "VertexArray.h"
 
-#include <Flare/Renderer/RendererAPI.h>
-
-#include <Flare/Platform/OpenGL/OpenGLVertexArray.h>
+#include "Flare/Renderer/RendererAPI.h"
+#include "Flare/Platform/OpenGL/OpenGLVertexArray.h"
 
 namespace Flare
 {

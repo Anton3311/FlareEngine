@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Flare/Renderer/Shader.h>
+#include "Flare/Renderer/Shader.h"
 
 #include <glm/glm.hpp>
 

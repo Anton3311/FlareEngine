@@ -1,8 +1,7 @@
 #include "Buffer.h"
 
-#include <Flare/Renderer/RendererAPI.h>
-
-#include <Flare/Platform/OpenGL/OpenGLBuffer.h>
+#include "Flare/Renderer/RendererAPI.h"
+#include "Flare/Platform/OpenGL/OpenGLBuffer.h"
 
 namespace Flare
 {

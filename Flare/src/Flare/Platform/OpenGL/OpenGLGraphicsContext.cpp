@@ -1,6 +1,6 @@
 #include "OpenGLGraphicsContext.h"
 
-#include <iostream>
+#include "Flare.h"
 
 namespace Flare
 {
@@ -16,9 +16,7 @@ namespace Flare
 
 		int status = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
 		if (!status)
-		{
-			std::cout << "Failed to initialize glad\n";
-		}
+			FLARE_CORE_CRITICAL("Failed to initialize GLAD");
 	}
 
 	void OpenGLGraphicsContext::SwapBuffers()

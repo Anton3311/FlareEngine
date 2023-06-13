@@ -1,8 +1,7 @@
 #include "Texture.h"
 
-#include <Flare/Renderer/RendererAPI.h>
-
-#include <Flare/Platform/OpenGL/OpenGLTexture.h>
+#include "Flare/Renderer/RendererAPI.h"
+#include "Flare/Platform/OpenGL/OpenGLTexture.h"
 
 namespace Flare
 {

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Flare/Renderer/VertexArray.h>
+#include "Flare/Renderer/VertexArray.h"
 
 namespace Flare
 {
@@ -13,6 +13,7 @@ namespace Flare
 		virtual void Bind() override;
 		virtual void Unbind() override;
 		virtual void AddVertexBuffer(const Ref<VertexBuffer>& vertexBuffer) override;
+		virtual const VertexBuffers& GetVertexBuffers() const override { return m_VertexBuffers; }
 
 		virtual void SetIndexBuffer(const Ref<IndexBuffer>& indexbuffer) override;
 		virtual const Ref<IndexBuffer> GetIndexBuffer() const override;
@@ -20,5 +21,7 @@ namespace Flare
 		uint32_t m_Id;
 		uint32_t m_VertexBufferIndex;
 		Ref<IndexBuffer> m_IndexBuffer;
+
+		VertexBuffers m_VertexBuffers;
 	};
 }

@@ -1,6 +1,6 @@
 #include "WindowsWindow.h"
 
-#include <iostream>
+#include "Flare.h"
 
 namespace Flare
 {
@@ -17,7 +17,7 @@ namespace Flare
 			int result = glfwInit();
 			if (result == 0)
 			{
-				std::cout << "Failed to initialize glfw\n";
+				FLARE_CORE_CRITICAL("Failed to initialize GLFW");
 				return;
 			}
 		}

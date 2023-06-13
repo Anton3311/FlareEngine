@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Flare/Core/Core.h>
+#include "Flare/Core/Core.h"
 
 #include <stdint.h>
 #include <string>
@@ -114,9 +114,7 @@ namespace Flare
 		virtual void Bind() = 0;
 		virtual void SetData(const void* indices, size_t count) = 0;
 		
-		size_t GetCount() const { return m_Count; }
-	protected:
-		size_t m_Count;
+		virtual size_t GetCount() const = 0;
 	public:
 		static Ref<IndexBuffer> Create(size_t count);
 		static Ref<IndexBuffer> Create(size_t count, const void* data);

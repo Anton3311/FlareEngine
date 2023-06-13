@@ -1,13 +1,7 @@
-#include <Flare/Core/Application.h>
-#include <Flare/Renderer/RenderCommand.h>
-#include <Flare/Core/EntryPoint.h>
+#include "Flare.h"
 
-#include <Flare/Renderer/Shader.h>
-#include <Flare/Renderer2D/Renderer2D.h>
-#include <Flare/Renderer/Texture.h>
-
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
+#include "Flare/Core/EntryPoint.h"
+#include "Flare/Renderer2D/Renderer2D.h"
 
 using namespace Flare;
 

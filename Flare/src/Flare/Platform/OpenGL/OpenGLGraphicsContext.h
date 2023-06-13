@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Flare/Renderer/GraphicsContext.h>
+#include "Flare/Renderer/GraphicsContext.h"
 
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>

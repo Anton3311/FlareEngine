@@ -1,7 +1,7 @@
 #include "GraphicsContext.h"
 
-#include <Flare/Platform/OpenGL/OpenGLGraphicsContext.h>
-#include <Flare/Renderer/RendererAPI.h>
+#include "Flare/Platform/OpenGL/OpenGLGraphicsContext.h"
+#include "Flare/Renderer/RendererAPI.h"
 
 namespace Flare
 {

@@ -1,9 +1,9 @@
 #include "OpenGLTexture.h"
 
+#include "Flare.h"
+
 #include <glad/glad.h>
 #include <stb_image/stb_image.h>
-
-#include <iostream>
 
 namespace Flare
 {
@@ -43,6 +43,8 @@ namespace Flare
 			glTextureSubImage2D(m_Id, 0, 0, 0, m_Width, m_Height, m_TextureDataType, GL_UNSIGNED_BYTE, data);
 			stbi_image_free(data);
 		}
+		else
+			FLARE_CORE_ERROR("Could not load an image {0}", path.string());
 	}
 
 	OpenGLTexture::OpenGLTexture(uint32_t width, uint32_t height, const void* data, TextureFormat format)

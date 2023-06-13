@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Flare/Core/Core.h>
+#include "Flare/Core/Core.h"
 
 #include <spdlog/spdlog.h>
 

@@ -1,9 +1,9 @@
 #pragma once
 
-#include <filesystem>
+#include "Flare/Core/Log.h"
+#include "Flare/Core/Core.h"
 
-#include <Flare/Core/Log.h>
-#include <Flare/Core/Core.h>
+#include <filesystem>
 
 #ifdef FLARE_DEBUG
 	#define FLARE_ASSERT_IMPL(type, condition, msg, ...) { if (!(condition)) { FLARE##type##ERROR(msg, __VA_ARGS__); FLARE_DEBUGBREAK; } }

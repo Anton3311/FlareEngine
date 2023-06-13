@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Flare/Core/Platform.h>
+#include "Flare/Core/Platform.h"
 
 #include <memory>
 

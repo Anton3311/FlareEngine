@@ -1,8 +1,6 @@
 #include "Application.h"
 
-#include <Flare/Renderer/RenderCommand.h>
-
-#include <glad/glad.h>
+#include "Flare/Renderer/RenderCommand.h"
 
 namespace Flare
 {

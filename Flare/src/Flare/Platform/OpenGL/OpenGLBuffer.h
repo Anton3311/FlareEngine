@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Flare/Renderer/Buffer.h>
+#include "Flare/Renderer/Buffer.h"
 
 #include <glad/glad.h>
 
@@ -32,7 +32,10 @@ namespace Flare
 	public:
 		virtual void Bind() override;
 		virtual void SetData(const void* indices, size_t count) override;
+		virtual size_t GetCount() const override { return m_Count; }
 	private:
 		uint32_t m_Id;
+		size_t m_Count;
+
 	};
 }

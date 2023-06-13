@@ -1,7 +1,7 @@
 #include "Shader.h"
 
-#include <Flare/Platform/OpenGL/OpenGLShader.h>
-#include <Flare/Renderer/RendererAPI.h>
+#include "Flare/Platform/OpenGL/OpenGLShader.h"
+#include "Flare/Renderer/RendererAPI.h"
 
 namespace Flare
 {

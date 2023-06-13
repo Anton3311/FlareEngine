@@ -1,11 +1,6 @@
 #pragma once
 
-#include <Flare/Renderer/Buffer.h>
-#include <Flare/Renderer/VertexArray.h>
-#include <Flare/Renderer/Shader.h>
-#include <Flare/Renderer/Texture.h>
-
-#include <glm/glm.hpp>
+#include "Flare.h"
 
 #include <vector>
 

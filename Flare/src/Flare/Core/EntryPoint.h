@@ -1,5 +1,5 @@
-#include <Flare/Core/Application.h>
-#include <Flare/Core/Log.h>
+#include "Flare/Core/Application.h"
+#include "Flare/Core/Log.h"
 
 #include <stdint.h>
 

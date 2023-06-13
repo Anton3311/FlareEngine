@@ -1,6 +1,7 @@
 #include "OpenGLShader.h"
 
-#include <iostream>
+#include "Flare.h"
+
 #include <string>
 #include <string_view>
 #include <fstream>
@@ -26,7 +27,7 @@ namespace Flare
             Compile(source);
         }
         else
-            std::cout << "Failed to open shader file";
+            FLARE_CORE_ERROR("Could not read file {0}", path.string());
     }
     
     OpenGLShader::~OpenGLShader()
@@ -78,7 +79,7 @@ namespace Flare
             else if (type == "fragment")
                 shaderType = GL_FRAGMENT_SHADER;
             else
-                std::cout << "Invalid shader type\n";
+                FLARE_CORE_ERROR("Invalid shader type {0}", type);
 
             position = source.find(typeToken, nextLineStart);
 
@@ -121,7 +122,7 @@ namespace Flare
                 glGetShaderInfoLog(shader, maxLength, &maxLength, &infoLog[0]);
                 glDeleteShader(shader);
 
-                std::cout << infoLog.data() << '\n';
+                FLARE_CORE_ERROR("Failed to compile shader: {0}", infoLog.data());
                 break;
             }
 
@@ -142,7 +143,7 @@ namespace Flare
             glGetProgramInfoLog(m_Id, maxLength, &maxLength, &infoLog[0]);
             glDeleteProgram(m_Id);
 
-            std::cout << infoLog.data() << '\n';
+            FLARE_CORE_ERROR("Failed to link shader: {0}", infoLog.data());
 
             for (auto id : shaderIds)
                 glDeleteShader(id);

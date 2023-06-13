@@ -1,6 +1,6 @@
 #include "Renderer2D.h"
 
-#include <Flare/Renderer/RenderCommand.h>
+#include "Flare/Renderer/RenderCommand.h"
 
 namespace Flare
 {
@@ -65,11 +65,13 @@ namespace Flare
 	void Renderer2D::Shutdown()
 	{
 		delete s_Data;
+		s_Data = nullptr;
 	}
 
 	void Renderer2D::Begin(const Ref<Shader>& shader, const glm::mat4& projectionMatrix)
 	{
-		if (s_Data->QuadIndex > 0 && s_Data->CurrentShader != nullptr)
+		FLARE_CORE_ASSERT(shader);
+		if (s_Data->QuadIndex > 0)
 			Flush();
 
 		s_Data->CameraProjectionMatrix = projectionMatrix;
@@ -78,6 +80,7 @@ namespace Flare
 	
 	void Renderer2D::Flush()
 	{
+		FLARE_CORE_ASSERT(s_Data->CurrentShader, "Shader was not provided");
 		s_Data->VertexBuffer->SetData(s_Data->Vertices.data(), sizeof(QuadVertex) * s_Data->QuadIndex * 4);
 
 		int32_t slots[MaxTexturesCount];

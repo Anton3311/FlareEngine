@@ -1,6 +1,6 @@
 #include "RendererAPI.h"
 
-#include <Flare/Platform/OpenGL/OpenGLRendererAPI.h>
+#include "Flare/Platform/OpenGL/OpenGLRendererAPI.h"
 
 namespace Flare
 {
