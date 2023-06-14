@@ -16,7 +16,7 @@ public:
 
 		CalculateProjection(m_CameraSize);
 
-		RenderCommand::SetClearColor(0.1f, 0.2f, 0.3f, 1);
+		RenderCommand::SetClearColor(0.17f, 0.69f, 0.80f, 1);
 	}
 
 	void CalculateProjection(float size)
@@ -37,7 +37,9 @@ public:
 	{
 		glm::vec2 windowSize = glm::vec2(m_Window->GetProperties().Width, m_Window->GetProperties().Height);
 		glm::vec2 position = screenPosition / windowSize - glm::vec2(0.5f);
-		return m_CameraSize * (m_InverseProjection * glm::vec4(position.x, -position.y, 0.0, 0.0));
+
+		float ration = windowSize.x / windowSize.y;
+		return 2.0f * (m_InverseProjection * glm::vec4(position.x, -position.y, 0.0, 1.0));
 	}
 
 	virtual void OnEvent(Event& event) override
@@ -86,20 +88,29 @@ public:
 	virtual void OnUpdate() override
 	{
 		RenderCommand::Clear();
-
 		Renderer2D::Begin(m_QuadShader, m_ProjectionMatrix);
-		Renderer2D::DrawQuad(glm::vec3(0.5f, 0.5f, 0.0f), glm::vec2(0.4f), glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
-		Renderer2D::DrawQuad(glm::vec3(-0.8f, -0.8f, 0.0f), glm::vec2(0.1f), glm::vec4(0.2f, 0.8f, 0.4f, 1.0f));
-		Renderer2D::DrawQuad(glm::vec3(-0.5f, -0.5f, 0.0f), glm::vec2(0.2f), glm::vec4(0.1f, 0.8f, 0.2f, 1.0f));
-		Renderer2D::DrawQuad(glm::vec3(-0.5f, 0.2f, 0.0f), glm::vec2(0.08f), glm::vec4(0.1f, 0.8f, 0.2f, 1.0f));
-		Renderer2D::DrawQuad(glm::vec3(-0.5f, -0.3f, 0.0f), glm::vec2(0.12f), glm::vec4(0.1f, 0.8f, 0.2f, 1.0f));
-		Renderer2D::DrawQuad(glm::vec3(-0.2f, 0.7f, 0.0f), glm::vec2(0.4f, 0.2f), glm::vec4(0.8f, 0.2f, 0.1f, 1.0f));
 
-		Renderer2D::DrawQuad(glm::vec3(0.0f), glm::vec2(0.2f), m_Texture, glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
-		Renderer2D::DrawQuad(glm::vec3(-0.1f), glm::vec2(1), m_Texture, glm::vec4(1.0f), glm::vec2(4));
+		int width = 20;
+		int height = 20;
 
-		Renderer2D::DrawQuad(m_QuadPosition, glm::vec3(0.4f), m_Texture, m_Colors[m_ColorIndex]);
+		glm::vec4 cornerColors[4] =
+		{
+			glm::vec4(0.94f, 0.15f, 0.09f, 1.0f),
+			glm::vec4(0.13f, 0.98f, 0.14f, 1.0f),
+		};
 
+		for (int y = 0; y < height; y++)
+		{
+			for (int x = 0; x < width; x++)
+			{
+				glm::vec4 color0 = glm::lerp(cornerColors[0], cornerColors[1], (float)x / (float)width);
+				glm::vec4 color1 = glm::lerp(cornerColors[0], cornerColors[1], (float)y / (float)height);
+
+				Renderer2D::DrawQuad(glm::vec3(x - width / 2, y - height / 2, 0), glm::vec2(0.8f), (color0 + color1) / 2.0f);
+			}
+		}
+
+		Renderer2D::DrawQuad(m_QuadPosition, glm::vec3(1.0f), m_Texture, m_Colors[m_ColorIndex]);
 		Renderer2D::End();
 	}
 private:
@@ -119,7 +130,7 @@ private:
 	};
 
 	int32_t m_ColorIndex = 0;
-	float m_CameraSize = 2.0f;
+	float m_CameraSize = 14.0f;
 };
 
 Scope<Application> Flare::CreateFlareApplication(Flare::CommandLineArguments arguments)
