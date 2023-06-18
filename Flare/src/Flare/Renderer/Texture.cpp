@@ -5,21 +5,21 @@
 
 namespace Flare
 {
-	Ref<Texture> Texture::Create(const std::filesystem::path& path)
+	Ref<Texture> Texture::Create(const std::filesystem::path& path, TextureFiltering filtering)
 	{
 		switch (RendererAPI::GetAPI())
 		{
 		case RendererAPI::API::OpenGL:
-			return CreateRef<OpenGLTexture>(path);
+			return CreateRef<OpenGLTexture>(path, filtering);
 		}
 	}
 
-	Ref<Texture> Texture::Create(uint32_t width, uint32_t height, const void* data, TextureFormat format)
+	Ref<Texture> Texture::Create(uint32_t width, uint32_t height, const void* data, TextureFormat format, TextureFiltering filtering)
 	{
 		switch (RendererAPI::GetAPI())
 		{
 		case RendererAPI::API::OpenGL:
-			return CreateRef<OpenGLTexture>(width, height, data, format);
+			return CreateRef<OpenGLTexture>(width, height, data, format, filtering);
 		}
 	}
 }

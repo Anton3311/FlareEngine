@@ -48,15 +48,23 @@ namespace Flare
 
 		static void Begin(const Ref<Shader>& shader, const glm::mat4& projectionMatrix);
 		static void Flush();
-		static void DrawQuad(glm::vec3 position, glm::vec2 size, glm::vec4 color);
+		static void DrawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color);
 
-		static void DrawQuad(glm::vec3 position, 
-			glm::vec2 size, 
+		static void DrawQuad(const glm::vec3& position, const glm::vec2& size, 
 			const Ref<Texture>& texture, 
 			glm::vec4 tint = glm::vec4(1), 
 			glm::vec2 tilling = glm::vec2(1));
 
+		static void DrawSprite(const Sprite& sprite, const glm::vec3& position, const glm::vec2& size, const glm::vec4& color = glm::vec4(1.0f));
+
 		static void End();
+	private:
+		static void DrawQuad(const glm::vec3& position, 
+			const glm::vec2& size, 
+			const Ref<Texture>& texture, 
+			const glm::vec4& tint, 
+			const glm::vec2& tiling, 
+			const glm::vec2* uv);
 	private:
 		static Renderer2DData* s_Data;
 	};

@@ -14,6 +14,8 @@
 #include "Flare/Renderer/Texture.h"
 #include "Flare/Renderer/VertexArray.h"
 
+#include "Flare/Renderer/Sprite.h"
+
 #include <stdint.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
