@@ -51,12 +51,6 @@ public:
 			return true;
 		});
 
-		dispatcher.Dispatch<MouseMoveEvent>([this](MouseMoveEvent& event) -> bool
-		{
-			m_QuadPosition = ScreenPositionToWorldPosition(event.GetPosition());
-			return true;
-		});
-
 		dispatcher.Dispatch<MouseButtonPressedEvent>([this](MouseButtonPressedEvent& event) -> bool
 		{
 			if (event.GetMouseCode() == MouseCode::ButtonLeft)
@@ -85,7 +79,7 @@ public:
 		Renderer2D::Shutdown();
 	}
 public:
-	virtual void OnUpdate() override
+	virtual void OnUpdate(float deltaTime) override
 	{
 		RenderCommand::Clear();
 		Renderer2D::Begin(m_QuadShader, m_ProjectionMatrix);
@@ -110,16 +104,14 @@ public:
 			}
 		}
 
-		Renderer2D::DrawQuad(m_QuadPosition, glm::vec3(1.0f), m_Texture, m_Colors[m_ColorIndex]);
 		Renderer2D::End();
 	}
 private:
 	Ref<Shader> m_QuadShader;
 	Ref<Texture> m_Texture;
+
 	glm::mat4 m_ProjectionMatrix;
 	glm::mat4 m_InverseProjection;
-
-	glm::vec3 m_QuadPosition;
 
 	glm::vec4 m_Colors[4] =
 	{
@@ -130,7 +122,7 @@ private:
 	};
 
 	int32_t m_ColorIndex = 0;
-	float m_CameraSize = 14.0f;
+	float m_CameraSize = 24.0f;
 };
 
 Scope<Application> Flare::CreateFlareApplication(Flare::CommandLineArguments arguments)

@@ -14,6 +14,7 @@ namespace Flare
 		uint32_t Width;
 		uint32_t Height;
 		bool IsMinimized;
+		bool VSyncEnabled;
 	};
 
 	class Window
@@ -22,6 +23,7 @@ namespace Flare
 		virtual const WindowProperties& GetProperties() const = 0;
 
 		virtual void SetEventCallback(const EventCallback& callback) = 0;
+		virtual void SetVSync(bool vsync) = 0;
 
 		virtual void OnUpdate() = 0;
 	public:

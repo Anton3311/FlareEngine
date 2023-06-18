@@ -15,6 +15,7 @@ namespace Flare
 		virtual const WindowProperties& GetProperties() const override { return m_Data.Properties; }
 
 		virtual void SetEventCallback(const EventCallback& callback) override { m_Data.Callback = callback; }
+		virtual void SetVSync(bool vsync) override;
 
 		virtual void OnUpdate() override;
 	private:

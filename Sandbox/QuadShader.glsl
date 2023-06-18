@@ -35,5 +35,8 @@ out vec4 o_Color;
 void main()
 {
     o_Color = texture(u_Textures[int(TextureIndex)], UV);
+    if (o_Color.a == 0)
+        discard;
+
     o_Color *= VertexColor;
 }

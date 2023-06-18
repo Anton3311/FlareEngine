@@ -4,6 +4,11 @@
 
 namespace Flare
 {
+	float Time::GetTime()
+	{
+		return (float) glfwGetTime();
+	}
+
 	WindowsWindow::WindowsWindow(WindowProperties& properties)
 	{
 		m_Data.Properties = properties;
@@ -119,6 +124,8 @@ namespace Flare
 			MouseMoveEvent event(glm::vec2((float)x, (float)y));
 			data->Callback(event);
 		});
+
+		SetVSync(true);
 	}
 
 	void WindowsWindow::OnUpdate()
@@ -133,5 +140,15 @@ namespace Flare
 		glfwTerminate();
 
 		m_Window = nullptr;
+	}
+
+	void WindowsWindow::SetVSync(bool vsync)
+	{
+		m_Data.Properties.VSyncEnabled = vsync;
+
+		if (vsync)
+			glfwSwapInterval(1);
+		else
+			glfwSwapInterval(0);
 	}
 }
