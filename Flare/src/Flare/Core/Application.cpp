@@ -59,13 +59,15 @@ namespace Flare
 			float currentTime = Time::GetTime();
 			float deltaTime = currentTime - m_PreviousFrameTime;
 
-			m_ImGuiLayer->Begin();
 			for (const Ref<Layer>& layer : m_LayersStack.GetLayers())
 				layer->OnUpdate(deltaTime);
 
+			m_ImGuiLayer->Begin();
+			for (const Ref<Layer>& layer : m_LayersStack.GetLayers())
+				layer->OnImGUIRender();
 			m_ImGuiLayer->End();
-			m_Window->OnUpdate();
 
+			m_Window->OnUpdate();
 			m_PreviousFrameTime = currentTime;
 		}
 

@@ -4,6 +4,8 @@
 #include "Flare/Core/Application.h"
 #include "Flare/Renderer2D/Renderer2D.h"
 
+#include <imgui.h>
+
 namespace Flare
 {
 	SandboxLayer::SandboxLayer()
@@ -55,6 +57,15 @@ namespace Flare
 			CalculateProjection(m_CameraSize);
 			return false;
 		});
+	}
+
+	void SandboxLayer::OnImGUIRender()
+	{
+		ImGui::Begin("Test Window");
+
+		ImGui::Button("kjsdfj");
+
+		ImGui::End();
 	}
 
 	void SandboxLayer::CalculateProjection(float size)

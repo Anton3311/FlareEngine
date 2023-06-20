@@ -16,11 +16,13 @@ project "Sandbox"
 		"%{wks.location}/Flare/src",
 		INCLUDE_DIRS.glm,
 		INCLUDE_DIRS.spdlog,
+		INCLUDE_DIRS.imgui,
     }
 
 	links
 	{
-		"Flare"
+		"Flare",
+		"ImGUI"
 	}
 
 	targetdir("%{wks.location}/bin/" .. OUTPUT_DIRECTORY .. "/%{prj.name}")

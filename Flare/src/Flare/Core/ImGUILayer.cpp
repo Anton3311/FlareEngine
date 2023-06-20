@@ -31,6 +31,10 @@ namespace Flare
 		ImGuiIO& io = ImGui::GetIO();
 		io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
 		io.BackendFlags |= ImGuiBackendFlags_HasSetMousePos;
+		
+		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+		io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+		io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 
 		Application& application = Application::GetInstance();
 		Ref<Window> window = application.GetWindow();
@@ -43,16 +47,11 @@ namespace Flare
 
 	void ImGUILayer::OnDetach()
 	{
+		ImGui_ImplOpenGL3_Shutdown();
+		ImGui_ImplGlfw_Shutdown();
+		ImGui::DestroyContext();
 	}
 
-	void ImGUILayer::OnUpdate(float deltaTime)
-	{
-	}
-
-	void ImGUILayer::OnEvent(Event& event)
-	{
-	}
-	
 	void ImGUILayer::Begin()
 	{
 		ImGui_ImplOpenGL3_NewFrame();
@@ -74,5 +73,13 @@ namespace Flare
 
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+		{
+			GLFWwindow* currentContext = glfwGetCurrentContext();
+			ImGui::UpdatePlatformWindows();
+			ImGui::RenderPlatformWindowsDefault();
+			glfwMakeContextCurrent(currentContext);
+		}
 	}
 }

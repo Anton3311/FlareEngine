@@ -14,6 +14,7 @@ namespace Flare
 		virtual void OnUpdate(float deltaTime) override;
 
 		virtual void OnEvent(Event& event) override;
+		virtual void OnImGUIRender() override;
 	private:
 		void CalculateProjection(float size);
 	private:
