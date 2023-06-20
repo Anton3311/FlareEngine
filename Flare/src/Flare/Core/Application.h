@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Flare/Core/Window.h"
+#include "Flare/Core/LayerStack.h"
 
 namespace Flare
 {
@@ -11,15 +12,21 @@ namespace Flare
 
 		void Run();
 		void Close();
-	public:
-		virtual void OnUpdate(float deltaTime) = 0;
 
-		virtual void OnEvent(Event& event) {}
+		void PushLayer(const Ref<Layer>& layer);
+		void PushOverlay(const Ref<Layer>& layer);
+
+		Ref<Window> GetWindow() const { return m_Window; }
+
+		static Application& GetInstance();
 	protected:
 		Ref<Window> m_Window;
 	private:
-		bool m_Running;
+		LayerStack m_LayersStack;
 
+		bool m_Running;
 		float m_PreviousFrameTime;
+	private:
+		static Application* s_Instance;
 	};
 }
