@@ -41,6 +41,9 @@ namespace Flare
 			}
 		});
 
+		m_ImGuiLayer = CreateRef<ImGUILayer>();
+		PushOverlay(m_ImGuiLayer);
+
 		RenderCommand::Initialize();
 	}
 
@@ -56,9 +59,11 @@ namespace Flare
 			float currentTime = Time::GetTime();
 			float deltaTime = currentTime - m_PreviousFrameTime;
 
+			m_ImGuiLayer->Begin();
 			for (const Ref<Layer>& layer : m_LayersStack.GetLayers())
 				layer->OnUpdate(deltaTime);
 
+			m_ImGuiLayer->End();
 			m_Window->OnUpdate();
 
 			m_PreviousFrameTime = currentTime;

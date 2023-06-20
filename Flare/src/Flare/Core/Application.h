@@ -2,6 +2,7 @@
 
 #include "Flare/Core/Window.h"
 #include "Flare/Core/LayerStack.h"
+#include "Flare/Core/ImGUILayer.h"
 
 namespace Flare
 {
@@ -23,6 +24,7 @@ namespace Flare
 		Ref<Window> m_Window;
 	private:
 		LayerStack m_LayersStack;
+		Ref<ImGUILayer> m_ImGuiLayer;
 
 		bool m_Running;
 		float m_PreviousFrameTime;

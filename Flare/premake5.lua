@@ -21,12 +21,14 @@ project "Flare"
 		INCLUDE_DIRS.glm,
 		INCLUDE_DIRS.stb_image,
 		INCLUDE_DIRS.spdlog,
+		INCLUDE_DIRS.imgui,
 	}
 
 	links
 	{
 		"GLAD",
-		"GLFW"
+		"GLFW",
+		"ImGUI",
 	}
 
 	defines

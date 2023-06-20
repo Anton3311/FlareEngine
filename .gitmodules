@@ -7,3 +7,6 @@
 [submodule ".\\Flare\\vendor\\spdlog"]
 	path = .\\Flare\\vendor\\spdlog
 	url = https://github.com/gabime/spdlog
+[submodule ".\\Flare\\vendor\\ImGUI"]
+	path = .\\Flare\\vendor\\ImGUI
+	url = https://github.com/Anton3311/imgui.git

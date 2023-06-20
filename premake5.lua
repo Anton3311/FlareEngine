@@ -21,6 +21,7 @@ OUTPUT_DIRECTORY = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 group "Dependencies"
     include "Flare/vendor/GLFW"
     include "Flare/vendor/GLAD"
+    include "Flare/vendor/ImGUI"
 group ""
 
 group "Core"
