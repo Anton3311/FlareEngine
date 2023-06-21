@@ -61,9 +61,9 @@ namespace Flare
 
 	void SandboxLayer::OnImGUIRender()
 	{
-		ImGui::Begin("Test Window");
+		ImGui::Begin("Sandbox Layer Window");
 
-		ImGui::Button("kjsdfj");
+		ImGui::Button("Button");
 
 		ImGui::End();
 	}
