@@ -60,6 +60,9 @@ namespace Flare
 
 		s_Data->Textures[0] = s_Data->WhiteTexture;
 		s_Data->TextureIndex = 1;
+
+		s_Data->Stats.DrawCalls = 0;
+		s_Data->Stats.QuadsCount = 0;
 	}
 
 	void Renderer2D::Shutdown()
@@ -98,6 +101,8 @@ namespace Flare
 
 		s_Data->QuadIndex = 0;
 		s_Data->TextureIndex = 1;
+
+		s_Data->Stats.DrawCalls++;
 	}
 	
 	void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color)
@@ -118,6 +123,7 @@ namespace Flare
 		}
 
 		s_Data->QuadIndex++;
+		s_Data->Stats.QuadsCount++;
 	}
 
 	void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const Ref<Texture>& texture, glm::vec4 tint, glm::vec2 tiling)
@@ -143,6 +149,13 @@ namespace Flare
 		if (s_Data->QuadIndex > 0)
 			Flush();
 	}
+
+	void Renderer2D::ResetStats()
+	{
+		s_Data->Stats.DrawCalls = 0;
+		s_Data->Stats.QuadsCount = 0;
+	}
+
 	void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const Ref<Texture>& texture, const glm::vec4& tint, const glm::vec2& tiling, const glm::vec2* uv)
 	{
 		if (s_Data->QuadIndex >= s_Data->MaxQuadCount)
@@ -163,7 +176,6 @@ namespace Flare
 		if (textureIndex >= s_Data->TextureIndex)
 			s_Data->Textures[s_Data->TextureIndex++] = texture;
 
-		glm::vec2 halfSize = size / 2.0f;
 		for (uint32_t i = 0; i < 4; i++)
 		{
 			QuadVertex& vertex = s_Data->Vertices[vertexIndex + i];
@@ -175,5 +187,6 @@ namespace Flare
 		}
 
 		s_Data->QuadIndex++;
+		s_Data->Stats.QuadsCount++;
 	}
 }

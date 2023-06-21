@@ -24,6 +24,7 @@ namespace Flare
 
 	void SandboxLayer::OnUpdate(float deltaTime)
 	{
+		Renderer2D::ResetStats();
 		Renderer2D::Begin(m_QuadShader, m_ProjectionMatrix);
 
 		int width = 20;
@@ -61,9 +62,12 @@ namespace Flare
 
 	void SandboxLayer::OnImGUIRender()
 	{
-		ImGui::Begin("Sandbox Layer Window");
+		ImGui::Begin("Renderer 2D");
 
-		ImGui::Button("Button");
+		const auto& stats = Renderer2D::GetStats();
+		ImGui::Text("Quads: %d", stats.QuadsCount);
+		ImGui::Text("Draw Calls: %d", stats.DrawCalls);
+		ImGui::Text("Vertices: %d", stats.GetTotalVertexCount());
 
 		ImGui::End();
 	}

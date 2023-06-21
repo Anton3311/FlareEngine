@@ -6,6 +6,14 @@
 
 namespace Flare
 {
+	struct Renderer2DStats
+	{
+		uint32_t QuadsCount;
+		uint32_t DrawCalls;
+
+		uint32_t GetTotalVertexCount() const { return QuadsCount * 4; }
+	};
+
 	struct QuadVertex
 	{
 		glm::vec3 Position;
@@ -19,6 +27,8 @@ namespace Flare
 
 	struct Renderer2DData
 	{
+		Renderer2DStats Stats;
+
 		size_t QuadIndex;
 		size_t MaxQuadCount;
 
@@ -58,11 +68,14 @@ namespace Flare
 		static void DrawSprite(const Sprite& sprite, const glm::vec3& position, const glm::vec2& size, const glm::vec4& color = glm::vec4(1.0f));
 
 		static void End();
+
+		static void ResetStats();
+		static const Renderer2DStats& GetStats() { return s_Data->Stats; }
 	private:
 		static void DrawQuad(const glm::vec3& position, 
 			const glm::vec2& size, 
 			const Ref<Texture>& texture, 
-			const glm::vec4& tint, 
+			const glm::vec4& tint,
 			const glm::vec2& tiling, 
 			const glm::vec2* uv);
 	private:
