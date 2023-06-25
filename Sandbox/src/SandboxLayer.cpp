@@ -6,6 +6,8 @@
 
 #include <imgui.h>
 
+#include <chrono>
+
 namespace Flare
 {
 	SandboxLayer::SandboxLayer()
@@ -17,33 +19,32 @@ namespace Flare
 	{
 		m_QuadShader = Shader::Create("QuadShader.glsl");
 
-		RenderCommand::SetClearColor(0.2f, 0.3f, 0.6f, 1.0f);
+		RenderCommand::SetClearColor(0.04f, 0.07f, 0.1f, 1.0f);
 
 		CalculateProjection(m_CameraSize);
 	}
 
 	void SandboxLayer::OnUpdate(float deltaTime)
 	{
+		m_PreviousFrameTime = deltaTime;
+			
 		Renderer2D::ResetStats();
 		Renderer2D::Begin(m_QuadShader, m_ProjectionMatrix);
-
-		int width = 20;
-		int height = 20;
 
 		glm::vec4 cornerColors[4] =
 		{
 			glm::vec4(0.94f, 0.15f, 0.09f, 1.0f),
-			glm::vec4(0.13f, 0.98f, 0.14f, 1.0f),
+			glm::vec4(0.13f, 0.12f, 0.98f, 1.0f),
 		};
 
-		for (int y = 0; y < height; y++)
+		for (int32_t y = 0; y < m_Height; y++)
 		{
-			for (int x = 0; x < width; x++)
+			for (int32_t x = 0; x < m_Width; x++)
 			{
-				glm::vec4 color0 = glm::lerp(cornerColors[0], cornerColors[1], (float)x / (float)width);
-				glm::vec4 color1 = glm::lerp(cornerColors[0], cornerColors[1], (float)y / (float)height);
+				glm::vec4 color0 = glm::lerp(cornerColors[0], cornerColors[1], (float)x / (float)m_Width);
+				glm::vec4 color1 = glm::lerp(cornerColors[0], cornerColors[1], (float)y / (float)m_Height);
 
-				Renderer2D::DrawQuad(glm::vec3(x - width / 2, y - height / 2, 0), glm::vec2(0.8f), (color0 + color1) / 2.0f);
+				Renderer2D::DrawQuad(glm::vec3(x - m_Width / 2, y - m_Height / 2, 0), glm::vec2(0.8f), (color0 + color1) / 2.0f);
 			}
 		}
 
@@ -62,14 +63,44 @@ namespace Flare
 
 	void SandboxLayer::OnImGUIRender()
 	{
-		ImGui::Begin("Renderer 2D");
+		{
+			ImGui::Begin("Renderer 2D");
 
-		const auto& stats = Renderer2D::GetStats();
-		ImGui::Text("Quads: %d", stats.QuadsCount);
-		ImGui::Text("Draw Calls: %d", stats.DrawCalls);
-		ImGui::Text("Vertices: %d", stats.GetTotalVertexCount());
+			const auto& stats = Renderer2D::GetStats();
+			ImGui::Text("Quads %d", stats.QuadsCount);
+			ImGui::Text("Draw Calls %d", stats.DrawCalls);
+			ImGui::Text("Vertices %d", stats.GetTotalVertexCount());
 
-		ImGui::End();
+			ImGui::Text("Frame time %f", m_PreviousFrameTime);
+			ImGui::Text("FPS %f", 1.0f / m_PreviousFrameTime);
+
+			ImGui::End();
+		}
+
+		{
+			ImGui::Begin("Settings");
+
+			Ref<Window> window = Application::GetInstance().GetWindow();
+
+			bool vsync = window->GetProperties().VSyncEnabled;
+			if (ImGui::Checkbox("VSync", &vsync))
+			{
+				window->SetVSync(vsync);
+			}
+
+			ImGui::End();
+		}
+
+		{
+			ImGui::Begin("Sandbox Settings");
+			ImGui::InputInt("Width", &m_Width, 1, 100);
+			ImGui::InputInt("Height", &m_Height);
+
+			if (ImGui::SliderFloat("Camera Size", &m_CameraSize, 1.0f, 100.0f))
+				CalculateProjection(m_CameraSize);
+
+			ImGui::End();
+		}
 	}
 
 	void SandboxLayer::CalculateProjection(float size)

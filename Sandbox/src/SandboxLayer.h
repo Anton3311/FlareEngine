@@ -24,5 +24,9 @@ namespace Flare
 		glm::mat4 m_InverseProjection;
 
 		float m_CameraSize = 24.0f;
+		float m_PreviousFrameTime = 0.0f;
+
+		int32_t m_Width = 20;
+		int32_t m_Height = 20;
 	};
 }
