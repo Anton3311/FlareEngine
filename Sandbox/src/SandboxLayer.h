@@ -19,6 +19,7 @@ namespace Flare
 		void CalculateProjection(float size);
 	private:
 		Ref<Shader> m_QuadShader;
+		Ref<FrameBuffer> m_FrameBuffer;
 
 		glm::mat4 m_ProjectionMatrix;
 		glm::mat4 m_InverseProjection;

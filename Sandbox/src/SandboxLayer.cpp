@@ -19,6 +19,16 @@ namespace Flare
 	{
 		m_QuadShader = Shader::Create("QuadShader.glsl");
 
+		Ref<Window> window = Application::GetInstance().GetWindow();
+		uint32_t width = window->GetProperties().Width;
+		uint32_t height = window->GetProperties().Height;
+
+		FrameBufferSpecifications specifications(width, height, {
+			{FrameBufferTextureFormat::RGB8, TextureWrap::Clamp, TextureFiltering::NoFiltering }
+		});
+
+		m_FrameBuffer = FrameBuffer::Create(specifications);
+
 		RenderCommand::SetClearColor(0.04f, 0.07f, 0.1f, 1.0f);
 
 		CalculateProjection(m_CameraSize);
@@ -26,6 +36,9 @@ namespace Flare
 
 	void SandboxLayer::OnUpdate(float deltaTime)
 	{
+		m_FrameBuffer->Bind();
+		RenderCommand::Clear();
+
 		m_PreviousFrameTime = deltaTime;
 			
 		Renderer2D::ResetStats();
@@ -49,6 +62,7 @@ namespace Flare
 		}
 
 		Renderer2D::End();
+		m_FrameBuffer->Unbind();
 	}
 
 	void SandboxLayer::OnEvent(Event& event)
@@ -98,6 +112,10 @@ namespace Flare
 
 			if (ImGui::SliderFloat("Camera Size", &m_CameraSize, 1.0f, 100.0f))
 				CalculateProjection(m_CameraSize);
+
+			const FrameBufferSpecifications frameBufferSpecs = m_FrameBuffer->GetSpecifications();
+			ImVec2 imageSize = ImVec2(frameBufferSpecs.Width / 4, frameBufferSpecs.Height / 4);
+			ImGui::Image((ImTextureID)m_FrameBuffer->GetColorAttachmentRendererId(0), imageSize);
 
 			ImGui::End();
 		}

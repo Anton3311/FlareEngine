@@ -6,6 +6,12 @@
 
 namespace Flare
 {
+	enum class TextureWrap
+	{
+		Clamp,
+		Repeat,
+	};
+
 	enum class TextureFormat
 	{
 		RGB8,
