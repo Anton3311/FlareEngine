@@ -76,7 +76,7 @@ namespace Flare
 	}
 
 	void SandboxLayer::OnImGUIRender()
-	{
+	{		
 		{
 			ImGui::Begin("Renderer 2D");
 
