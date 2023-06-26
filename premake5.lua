@@ -2,7 +2,7 @@ include "dependencies.lua"
 
 workspace "Flare"
 	architecture "x86_64"
-	startproject "Sandbox"
+	startproject "FlareEditor"
 
 	configurations
 	{
@@ -26,6 +26,10 @@ group ""
 
 group "Core"
 	include "Flare"
+group ""
+
+group "Editor"
+	include "FlareEditor"
 group ""
 
 group "Sandbox"

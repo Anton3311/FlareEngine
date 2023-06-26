@@ -77,39 +77,10 @@ namespace Flare
 		ImGui_ImplGlfw_NewFrame();
 
 		ImGui::NewFrame();
-
-		static bool fullscreen = true;
-		static ImGuiDockNodeFlags dockspaceFlags = ImGuiDockNodeFlags_None;
-
-		ImGuiWindowFlags windowFlags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
-		if (fullscreen)
-		{
-			const ImGuiViewport* viewport = ImGui::GetMainViewport();
-			ImGui::SetNextWindowPos(viewport->WorkPos);
-			ImGui::SetNextWindowSize(viewport->WorkSize);
-			ImGui::SetNextWindowViewport(viewport->ID);
-			windowFlags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
-			windowFlags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
-		}
-		else
-		{
-			dockspaceFlags &= ~ImGuiDockNodeFlags_PassthruCentralNode;
-		}
-
-		if (dockspaceFlags & ImGuiDockNodeFlags_PassthruCentralNode)
-			windowFlags |= ImGuiWindowFlags_NoBackground;
-
-		static bool open = true;
-		ImGui::Begin("DockSpaceTest", &open, windowFlags);
-
-		ImGuiID dockspaceId = ImGui::GetID("DockSpace");
-		ImGui::DockSpace(dockspaceId, ImVec2(0.0f, 0.0f), dockspaceFlags);
 	}
 
 	void ImGUILayer::End()
 	{
-		ImGui::End();
-
 		ImGuiIO& io = ImGui::GetIO();
 		Application& application = Application::GetInstance();
 
