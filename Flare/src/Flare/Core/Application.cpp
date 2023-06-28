@@ -1,5 +1,6 @@
 #include "Application.h"
 
+#include "Flare/Renderer2D/Renderer2D.h"
 #include "Flare/Renderer/RenderCommand.h"
 
 namespace Flare
@@ -45,6 +46,12 @@ namespace Flare
 		PushOverlay(m_ImGuiLayer);
 
 		RenderCommand::Initialize();
+		Renderer2D::Initialize();
+	}
+
+	Application::~Application()
+	{
+		Renderer2D::Shutdown();
 	}
 
 	void Application::Run()

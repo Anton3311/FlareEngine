@@ -133,8 +133,6 @@ namespace Flare
 			ImGui::DragInt("Width", &m_Width, 1, 100);
 			ImGui::DragInt("Height", &m_Height);
 
-			ImGui::DragInt2("Viewport size", glm::value_ptr(m_ViewportSize));
-
 			if (ImGui::SliderFloat("Camera Size", &m_CameraSize, 1.0f, 100.0f))
 				CalculateProjection(m_CameraSize);
 

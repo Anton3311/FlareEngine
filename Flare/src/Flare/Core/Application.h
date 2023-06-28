@@ -10,6 +10,7 @@ namespace Flare
 	{
 	public:
 		Application();
+		virtual ~Application();
 
 		void Run();
 		void Close();
