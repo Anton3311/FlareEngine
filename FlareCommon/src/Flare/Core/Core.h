@@ -3,6 +3,7 @@
 #include "Flare/Core/Platform.h"
 
 #include <memory>
+#include <xhash>
 
 #ifdef FLARE_DEBUG
 	#ifdef FLARE_PLATFORM_WINDOWS
@@ -35,5 +36,12 @@ namespace Flare
 	constexpr Scope<T> CreateScope(Args&&... args)
 	{
 		return std::make_unique<T>(std::forward<Args>(args)...);
+	}
+
+	template<typename T>
+	void CombineHashes(size_t& seed, const T& value)
+	{
+		std::hash<T> hasher;
+		seed ^= hasher(value) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 	}
 }

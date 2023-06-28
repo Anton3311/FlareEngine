@@ -13,12 +13,14 @@ project "FlareECS"
     includedirs
 	{
 		"src/",
-		"%{wks.location}/FlareCommon/src/"
+		"%{wks.location}/FlareCommon/src/",
+		INCLUDE_DIRS.spdlog,
 	}
 
 	links
 	{
 		"FlareCommon",
+		"FlareECS",
 	}
 
 	targetdir("%{wks.location}/bin/" .. OUTPUT_DIRECTORY .. "/%{prj.name}")

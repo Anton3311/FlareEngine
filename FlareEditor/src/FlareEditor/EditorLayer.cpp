@@ -7,8 +7,19 @@
 
 #include <imgui.h>
 
+
 namespace Flare
 {
+	struct TestComponent
+	{
+		static ComponentId Id;
+
+		float FloatA;
+		glm::vec4 Vec;
+	};
+
+	size_t TestComponent::Id = 0;
+
 	EditorLayer::EditorLayer()
 		: Layer("EditorLayer")
 	{
@@ -31,6 +42,12 @@ namespace Flare
 		RenderCommand::SetClearColor(0.04f, 0.07f, 0.1f, 1.0f);
 
 		CalculateProjection(m_CameraSize);
+
+		TestComponent::Id = m_World.GetRegistry().RegisterComponent(typeid(TestComponent).name(), sizeof(TestComponent));
+
+		ComponentId components[] = { TestComponent::Id };
+		Entity e = m_World.GetRegistry().CreateEntity(ComponentSet(components, 1));
+		Entity e1 = m_World.GetRegistry().CreateEntity(ComponentSet(components, 1));
 	}
 
 	void EditorLayer::OnUpdate(float deltaTime)
