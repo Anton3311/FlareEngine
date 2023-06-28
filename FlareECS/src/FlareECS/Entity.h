@@ -8,6 +8,8 @@ namespace Flare
 	struct Entity
 	{
 	public:
+		Entity()
+			: m_Packed(SIZE_MAX) {}
 		Entity(uint32_t id)
 			: m_Packed(0), m_Id(id), m_Generation(0) {}
 		Entity(uint32_t id, uint16_t generation)

@@ -9,6 +9,7 @@
 
 #include <unordered_map>
 #include <vector>
+#include <optional>
 
 namespace Flare
 {
@@ -16,6 +17,8 @@ namespace Flare
 	{
 	public:
 		Entity CreateEntity(ComponentSet& components);
+
+		std::optional<void*> GetEntityComponent(Entity entity, ComponentId component);
 
 		ComponentId RegisterComponent(std::string_view name, size_t size);
 		inline const ComponentInfo& GetComponentInfo(size_t index) const;

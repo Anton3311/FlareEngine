@@ -48,6 +48,49 @@ namespace Flare
 		return entity;
 	}
 
+	std::optional<void*> Registry::GetEntityComponent(Entity entity, ComponentId component)
+	{
+		auto it = m_EntityToRecord.find(entity);
+		if (it == m_EntityToRecord.end())
+			return {};
+
+		EntityRecord& entityRecord = m_EntityRecords[it->second];
+		ArchetypeRecord& archetype = m_Archetypes[entityRecord.ArchetypeId];
+
+		const auto& components = archetype.Data.Components;
+
+		size_t componentIndex = SIZE_MAX;
+
+		{
+			size_t left = 0;
+			size_t right = components.size();
+
+			while (right - left > 1)
+			{
+				size_t mid = (right - left) / 2;
+				if (components[mid] == component)
+				{
+					componentIndex = mid;
+					break;
+				}
+
+				if (components[mid] > component)
+					right = mid;
+				else
+					left = mid;
+			}
+
+			if (components[left] == component)
+				componentIndex = left;
+		}
+
+		if (componentIndex == SIZE_MAX)
+			return {};
+
+		uint8_t* entityData = archetype.Storage.GetEntityData(entityRecord.BufferIndex);
+		return entityData + archetype.Data.ComponentOffsets[componentIndex];
+	}
+
 	ComponentId Registry::RegisterComponent(std::string_view name, size_t size)
 	{
 		size_t id = m_RegisteredComponents.size();

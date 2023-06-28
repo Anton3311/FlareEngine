@@ -54,7 +54,7 @@ namespace Flare
 			: m_EntitySize(0), m_EntitiesCount(0) {}
 
 		size_t AddEntity();
-		inline uint8_t* GetEntityData(size_t entityIndex);
+		uint8_t* GetEntityData(size_t entityIndex);
 		
 		inline size_t GetEntitiesCount() const { return m_EntitiesCount; }
 		inline size_t GetEntitySize() const { return m_EntitySize; }
