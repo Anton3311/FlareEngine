@@ -25,6 +25,7 @@ group "Dependencies"
 group ""
 
 group "Core"
+	include "FlareCommon"
 	include "Flare"
 group ""
 

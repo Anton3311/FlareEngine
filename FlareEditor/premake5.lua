@@ -14,6 +14,7 @@ project "FlareEditor"
     {
         "src",
 		"%{wks.location}/Flare/src",
+		"%{wks.location}/FlareCommon/src",
 		INCLUDE_DIRS.glm,
 		INCLUDE_DIRS.spdlog,
 		INCLUDE_DIRS.imgui,
@@ -22,7 +23,8 @@ project "FlareEditor"
 	links
 	{
 		"Flare",
-		"ImGUI"
+		"ImGUI",
+		"FlareCommon"
 	}
 
 	targetdir("%{wks.location}/bin/" .. OUTPUT_DIRECTORY .. "/%{prj.name}")
