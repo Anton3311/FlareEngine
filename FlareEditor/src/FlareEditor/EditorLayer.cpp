@@ -10,7 +10,7 @@
 namespace Flare
 {
 	EditorLayer::EditorLayer()
-		: Layer("EditorLayer"), m_ProjectionMatrix(glm::mat4(0.0f)), m_InverseProjection(glm::mat4(0.0f))
+		: Layer("EditorLayer")
 	{
 	}
 
@@ -24,7 +24,7 @@ namespace Flare
 
 		FrameBufferSpecifications specifications(width, height, {
 			{FrameBufferTextureFormat::RGB8, TextureWrap::Clamp, TextureFiltering::NoFiltering }
-			});
+		});
 
 		m_FrameBuffer = FrameBuffer::Create(specifications);
 
@@ -35,10 +35,18 @@ namespace Flare
 
 	void EditorLayer::OnUpdate(float deltaTime)
 	{
+		m_PreviousFrameTime = deltaTime;
+
+		const FrameBufferSpecifications& specs = m_FrameBuffer->GetSpecifications();
+		if (m_ViewportSize != glm::i32vec2(0.0f) && (specs.Width != (uint32_t)m_ViewportSize.x || specs.Height != (uint32_t)m_ViewportSize.y))
+		{
+			RenderCommand::SetViewport(0, 0, (uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+			m_FrameBuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+			CalculateProjection(m_CameraSize);
+		}
+
 		m_FrameBuffer->Bind();
 		RenderCommand::Clear();
-
-		m_PreviousFrameTime = deltaTime;
 
 		Renderer2D::ResetStats();
 		Renderer2D::Begin(m_QuadShader, m_ProjectionMatrix);
@@ -66,12 +74,6 @@ namespace Flare
 
 	void EditorLayer::OnEvent(Event& event)
 	{
-		EventDispatcher dispatcher(event);
-		dispatcher.Dispatch<WindowResizeEvent>([this](WindowResizeEvent& resizeEvent) -> bool
-		{
-			CalculateProjection(m_CameraSize);
-			return false;
-		});
 	}
 
 	void EditorLayer::OnImGUIRender()
@@ -131,14 +133,27 @@ namespace Flare
 			ImGui::DragInt("Width", &m_Width, 1, 100);
 			ImGui::DragInt("Height", &m_Height);
 
+			ImGui::DragInt2("Viewport size", glm::value_ptr(m_ViewportSize));
+
 			if (ImGui::SliderFloat("Camera Size", &m_CameraSize, 1.0f, 100.0f))
 				CalculateProjection(m_CameraSize);
 
+			ImGui::End();
+		}
+
+		{
+			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+			ImGui::Begin("Viewport");
+
+			ImVec2 windowSize = ImGui::GetContentRegionAvail();
+			m_ViewportSize = glm::i32vec2((uint32_t)windowSize.x, (uint32_t)windowSize.y);
+
 			const FrameBufferSpecifications frameBufferSpecs = m_FrameBuffer->GetSpecifications();
-			ImVec2 imageSize = ImVec2(frameBufferSpecs.Width / 4, frameBufferSpecs.Height / 4);
-			ImGui::Image((ImTextureID)m_FrameBuffer->GetColorAttachmentRendererId(0), imageSize);
+			ImVec2 imageSize = ImVec2(frameBufferSpecs.Width, frameBufferSpecs.Height);
+			ImGui::Image((ImTextureID)m_FrameBuffer->GetColorAttachmentRendererId(0), windowSize);
 
 			ImGui::End();
+			ImGui::PopStyleVar();
 		}
 
 		ImGui::End();
@@ -146,10 +161,8 @@ namespace Flare
 
 	void EditorLayer::CalculateProjection(float size)
 	{
-		const auto& windowProperties = Application::GetInstance().GetWindow()->GetProperties();
-
-		float width = windowProperties.Width;
-		float height = windowProperties.Height;
+		float width = m_ViewportSize.x;
+		float height = m_ViewportSize.y;
 
 		float halfSize = size / 2;
 		float aspectRation = width / height;

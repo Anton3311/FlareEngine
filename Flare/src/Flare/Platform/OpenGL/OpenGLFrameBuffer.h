@@ -18,6 +18,8 @@ namespace Flare
 
 		virtual const FrameBufferSpecifications& GetSpecifications() const override { return m_Specifications; }
 	private:
+		void Create();
+	private:
 		FrameBufferSpecifications m_Specifications;
 
 		uint32_t m_Id;
