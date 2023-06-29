@@ -37,6 +37,8 @@ namespace Flare
 
 	struct EntityRecord
 	{
+		Entity Id;
+
 		size_t RegistryIndex;
 		ArchetypeId Archetype;
 		size_t BufferIndex;

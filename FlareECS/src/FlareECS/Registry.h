@@ -14,6 +14,7 @@
 namespace Flare
 {
 	class EntityView;
+	class EntityRegistryIterator;
 
 	class Registry
 	{
@@ -22,14 +23,19 @@ namespace Flare
 		bool AddEntityComponent(Entity entity, ComponentId componentId, const void* componentData);
 
 		EntityView View(ComponentSet components);
+		const ComponentSet& GetEntityComponents(Entity entity);
+
 		std::optional<void*> GetEntityComponent(Entity entity, ComponentId component);
 
-		inline ArchetypeRecord& GetArchetypeRecord(size_t archetypeId) { return m_Archetypes[archetypeId]; }
-
 		ComponentId RegisterComponent(std::string_view name, size_t size);
+
+		inline ArchetypeRecord& GetArchetypeRecord(size_t archetypeId) { return m_Archetypes[archetypeId]; }
 		
 		inline const ComponentInfo& GetComponentInfo(size_t index) const;
 		inline const std::vector<ComponentInfo>& GetRegisteredComponents() const { return m_RegisteredComponents; }
+
+		EntityRegistryIterator begin();
+		EntityRegistryIterator end();
 	public:
 		inline EntityRecord& operator[](size_t index);
 		inline const EntityRecord& operator[](size_t index) const;
@@ -45,5 +51,7 @@ namespace Flare
 		std::unordered_map<ComponentSet, size_t> m_ComponentSetToArchetype;
 
 		std::vector<ComponentInfo> m_RegisteredComponents;
+
+		friend class EntityRegistryIterator;
 	};
 }

@@ -5,8 +5,10 @@
 
 #include "Flare/Renderer2D/Renderer2D.h"
 
+#include "FlareECS/Registry.h"
 #include "FlareECS/Query/EntityView.h"
 #include "FlareECS/Query/EntityViewIterator.h"
+#include "FlareECS/Query/EntityRegistryIterator.h"
 #include "FlareECS/Query/ComponentView.h"
 
 #include <imgui.h>
@@ -216,17 +218,21 @@ namespace Flare
 
 		{
 			ImGui::Begin("ECS");
-			if (ImGui::CollapsingHeader("Entities"))
+
+			if (ImGui::CollapsingHeader("Registry"))
 			{
-				ComponentId components[] = { TestComponent::Id, TransformComponent::Id };
-
-				EntityView view = m_World.GetRegistry().View(ComponentSet(components, 2));
-				ComponentView<TransformComponent> transforms = view.View<TransformComponent>();
-
-				for (EntityViewElement ent : view)
+				for (Entity entity : m_World.GetRegistry())
 				{
-					TransformComponent& t = transforms[ent];
-					ImGui::Text("Position: x=%f y=%f z=%f", t.Position.x, t.Position.y, t.Position.z);
+					ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_FramePadding;
+					bool opened = ImGui::TreeNodeEx((void*)std::hash<Entity>()(entity), flags, "Entity");
+
+					if (opened)
+					{
+						for (ComponentId component : m_World.GetRegistry().GetEntityComponents(entity))
+							ImGui::Text("%s", m_World.GetRegistry().GetComponentInfo(component).Name.c_str());
+						
+						ImGui::TreePop();
+					}
 				}
 			}
 

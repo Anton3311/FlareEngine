@@ -17,6 +17,36 @@ namespace Flare
 		size_t Size;
 	};
 
+	class ComponentSetIterator
+	{
+	public:
+		constexpr ComponentSetIterator(const ComponentId* element)
+			: m_Element(element) {}
+
+		constexpr ComponentId operator*() const
+		{
+			return *m_Element;
+		}
+
+		constexpr ComponentSetIterator operator++()
+		{
+			++m_Element;
+			return *this;
+		}
+
+		constexpr bool operator==(ComponentSetIterator other)
+		{
+			return m_Element == other.m_Element;
+		}
+
+		constexpr bool operator!=(ComponentSetIterator other)
+		{
+			return m_Element != other.m_Element;
+		}
+	private:
+		const ComponentId* m_Element;
+	};
+
 	class ComponentSet
 	{
 	public:
@@ -37,6 +67,16 @@ namespace Flare
 		{
 			FLARE_CORE_ASSERT(index < m_Count);
 			return m_Ids[index];
+		}
+
+		constexpr ComponentSetIterator begin() const
+		{
+			return ComponentSetIterator(m_Ids);
+		}
+
+		constexpr ComponentSetIterator end() const
+		{
+			return ComponentSetIterator(m_Ids + m_Count);
 		}
 	private:
 		ComponentId* m_Ids;

@@ -1,6 +1,7 @@
 #include "Registry.h"
 
 #include "FlareECS/Query/EntityView.h"
+#include "FlareECS/Query/EntityRegistryIterator.h"
 
 #include <algorithm>
 
@@ -16,6 +17,7 @@ namespace Flare
 		EntityRecord& record = m_EntityRecords.emplace_back();
 
 		record.RegistryIndex = registryIndex;
+		record.Id = Entity(record.RegistryIndex);
 
 		auto it = m_ComponentSetToArchetype.find(components);
 		if (it != m_ComponentSetToArchetype.end())
@@ -46,9 +48,8 @@ namespace Flare
 		ArchetypeRecord& archetypeRecord = m_Archetypes[record.Archetype];
 		record.BufferIndex = archetypeRecord.Storage.AddEntity(record.RegistryIndex);
 
-		Entity entity = Entity((uint32_t)registryIndex);
-		m_EntityToRecord.emplace(entity, record.RegistryIndex);
-		return entity;
+		m_EntityToRecord.emplace(record.Id, record.RegistryIndex);
+		return record.Id;
 	}
 
 	bool Registry::AddEntityComponent(Entity entity, ComponentId componentId, const void* componentData)
@@ -196,6 +197,16 @@ namespace Flare
 		return m_RegisteredComponents[index];
 	}
 
+	EntityRegistryIterator Registry::begin()
+	{
+		return EntityRegistryIterator(*this, 0);
+	}
+
+	EntityRegistryIterator Registry::end()
+	{
+		return EntityRegistryIterator(*this, m_EntityRecords.size());
+	}
+
 	EntityView Registry::View(ComponentSet components)
 	{
 		std::sort(components.GetIds(), components.GetIds() + components.GetCount());
@@ -205,6 +216,13 @@ namespace Flare
 
 		size_t archetypeId = it->second;
 		return EntityView(*this, archetypeId);
+	}
+
+	const ComponentSet& Registry::GetEntityComponents(Entity entity)
+	{
+		auto it = m_EntityToRecord.find(entity);
+		FLARE_CORE_ASSERT(it != m_EntityToRecord.end());
+		return ComponentSet(m_Archetypes[m_EntityRecords[it->second].Archetype].Data.Components);
 	}
 
 	inline EntityRecord& Registry::operator[](size_t index)
