@@ -14,6 +14,5 @@ namespace Flare
 		inline Registry& GetRegistry() { return m_Registry; }
 	private:
 		Registry m_Registry;
-		std::vector<ComponentInfo> m_RegisteredComponents;
 	};
 }

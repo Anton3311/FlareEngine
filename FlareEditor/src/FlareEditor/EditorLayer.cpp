@@ -28,8 +28,16 @@ namespace Flare
 		glm::vec3 Position;
 	};
 
+	struct TagComponent
+	{
+		static ComponentId Id;
+
+		const char* Name;
+	};
+
 	size_t TestComponent::Id = 0;
 	size_t TransformComponent::Id = 0;
+	size_t TagComponent::Id = 0;
 
 	EditorLayer::EditorLayer()
 		: Layer("EditorLayer")
@@ -56,25 +64,32 @@ namespace Flare
 
 
 
-		TestComponent::Id = m_World.GetRegistry().RegisterComponent(typeid(TestComponent).name(), sizeof(TestComponent));
-		TransformComponent::Id = m_World.GetRegistry().RegisterComponent(typeid(TransformComponent).name(), sizeof(TransformComponent));
-
-		ComponentId components[] = { TestComponent::Id, TransformComponent::Id };
-		Entity ents[2];
-		ents[0] = m_World.GetRegistry().CreateEntity(ComponentSet(components, 2));
-		ents[1] = m_World.GetRegistry().CreateEntity(ComponentSet(components, 2));
-
-		for (uint32_t i = 0; i < 2; i++)
 		{
-			std::optional<void*> result = m_World.GetRegistry().GetEntityComponent(ents[i], TestComponent::Id);
+			TestComponent::Id = m_World.GetRegistry().RegisterComponent(typeid(TestComponent).name(), sizeof(TestComponent));
+			TransformComponent::Id = m_World.GetRegistry().RegisterComponent(typeid(TransformComponent).name(), sizeof(TransformComponent));
+			TagComponent::Id = m_World.GetRegistry().RegisterComponent(typeid(TagComponent).name(), sizeof(TagComponent));
 
-			TestComponent& component = *(TestComponent*)result.value();
-			component.FloatA = 10.0f + (float) i;
-			component.Vec = glm::vec4(1.0f, 0.4f, 0.1f, 0.9f);
+			ComponentId components[] = { TestComponent::Id, TransformComponent::Id };
+			Entity ents[2];
+			ents[0] = m_World.GetRegistry().CreateEntity(ComponentSet(components, 2));
+			ents[1] = m_World.GetRegistry().CreateEntity(ComponentSet(components, 2));
 
-			std::optional<void*> transformResult = m_World.GetRegistry().GetEntityComponent(ents[i], TransformComponent::Id);
-			TransformComponent& transform = *(TransformComponent*)transformResult.value();
-			transform.Position = glm::vec3(0.0f, 1.0f, i);
+			for (uint32_t i = 0; i < 2; i++)
+			{
+				std::optional<void*> result = m_World.GetRegistry().GetEntityComponent(ents[i], TestComponent::Id);
+
+				TestComponent& component = *(TestComponent*)result.value();
+				component.FloatA = 10.0f + (float) i;
+				component.Vec = glm::vec4(1.0f, 0.4f, 0.1f, 0.9f);
+
+				std::optional<void*> transformResult = m_World.GetRegistry().GetEntityComponent(ents[i], TransformComponent::Id);
+				TransformComponent& transform = *(TransformComponent*)transformResult.value();
+				transform.Position = glm::vec3(0.0f, 1.0f, i);
+			}
+		}
+
+		{
+			m_TestEntity = m_World.GetRegistry().CreateEntity(ComponentSet(&TestComponent::Id, 1));
 		}
 	}
 
@@ -201,22 +216,44 @@ namespace Flare
 
 		{
 			ImGui::Begin("ECS");
-
-			ComponentId components[] = { TestComponent::Id, TransformComponent::Id };
-
-			EntityView view = m_World.GetRegistry().View(ComponentSet(components, 2));
-			ComponentView<TransformComponent> transforms = view.View<TransformComponent>();
-
-			for (EntityViewElement ent : view)
+			if (ImGui::CollapsingHeader("Entities"))
 			{
-				TransformComponent& t = transforms[ent];
+				ComponentId components[] = { TestComponent::Id, TransformComponent::Id };
 
-				if (ImGui::CollapsingHeader("Entity"))
+				EntityView view = m_World.GetRegistry().View(ComponentSet(components, 2));
+				ComponentView<TransformComponent> transforms = view.View<TransformComponent>();
+
+				for (EntityViewElement ent : view)
 				{
-					ImGui::DragFloat3("Position", glm::value_ptr(t.Position));
+					TransformComponent& t = transforms[ent];
+					ImGui::Text("Position: x=%f y=%f z=%f", t.Position.x, t.Position.y, t.Position.z);
 				}
 			}
-			
+
+			if (ImGui::CollapsingHeader("Components"))
+			{
+				const auto& components = m_World.GetRegistry().GetRegisteredComponents();
+				for (const auto& component : components)
+				{
+					ImGui::Separator();
+					ImGui::Text("Id: %d", component.Id);
+					ImGui::Text("Name: %s", component.Name.c_str());
+					ImGui::Text("Size: %d", component.Size);
+				}
+			}
+
+			if (ImGui::Button("Add transform component"))
+			{
+				TransformComponent transform = TransformComponent{ glm::vec3(1.0f, 0.0f, 234.0f) };
+				m_World.GetRegistry().AddEntityComponent(m_TestEntity, TransformComponent::Id, &transform);
+			}
+
+			if (ImGui::Button("Add tag component"))
+			{
+				TagComponent tag = TagComponent{ "Tag" };
+				m_World.GetRegistry().AddEntityComponent(m_TestEntity, TagComponent::Id, &tag);
+			}
+
 			ImGui::End();
 		}
 

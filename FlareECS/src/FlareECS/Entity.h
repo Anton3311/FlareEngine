@@ -1,5 +1,7 @@
 #pragma once
 
+#include "FlareECS/Archetype.h"
+
 #include <stdint.h>
 #include <xhash>
 
@@ -36,7 +38,7 @@ namespace Flare
 	struct EntityRecord
 	{
 		size_t RegistryIndex;
-		size_t ArchetypeId;
+		ArchetypeId Archetype;
 		size_t BufferIndex;
 	};
 }

@@ -35,5 +35,6 @@ namespace Flare
 		glm::i32vec2 m_ViewportSize = glm::i32vec2(0.0f);
 
 		World m_World;
+		Entity m_TestEntity;
 	};
 }

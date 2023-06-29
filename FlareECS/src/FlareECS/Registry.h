@@ -19,18 +19,24 @@ namespace Flare
 	{
 	public:
 		Entity CreateEntity(ComponentSet& components);
-
-		std::optional<void*> GetEntityComponent(Entity entity, ComponentId component);
-
-		ComponentId RegisterComponent(std::string_view name, size_t size);
-
-		inline const ComponentInfo& GetComponentInfo(size_t index) const;
-		inline ArchetypeRecord& GetArchetypeRecord(size_t archetypeId) { return m_Archetypes[archetypeId]; }
+		bool AddEntityComponent(Entity entity, ComponentId componentId, const void* componentData);
 
 		EntityView View(ComponentSet components);
+		std::optional<void*> GetEntityComponent(Entity entity, ComponentId component);
+
+		inline ArchetypeRecord& GetArchetypeRecord(size_t archetypeId) { return m_Archetypes[archetypeId]; }
+
+		ComponentId RegisterComponent(std::string_view name, size_t size);
+		
+		inline const ComponentInfo& GetComponentInfo(size_t index) const;
+		inline const std::vector<ComponentInfo>& GetRegisteredComponents() const { return m_RegisteredComponents; }
 	public:
 		inline EntityRecord& operator[](size_t index);
 		inline const EntityRecord& operator[](size_t index) const;
+	private:
+		ArchetypeId CreateArchetype();
+
+		void RemoveEntityData(ArchetypeId archetype, size_t entityBufferIndex);
 	private:
 		std::vector<EntityRecord> m_EntityRecords;
 		std::unordered_map<Entity, size_t> m_EntityToRecord;
