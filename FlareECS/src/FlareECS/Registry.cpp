@@ -225,6 +225,13 @@ namespace Flare
 		return ComponentSet(m_Archetypes[m_EntityRecords[it->second].Archetype].Data.Components);
 	}
 
+	bool Registry::HasComponent(Entity entity, ComponentId component)
+	{
+		auto it = m_EntityToRecord.find(entity);
+		FLARE_CORE_ASSERT(it != m_EntityToRecord.end());
+		return m_Archetypes[m_EntityRecords[it->second].Archetype].Data.FindComponent(component).has_value();
+	}
+
 	inline EntityRecord& Registry::operator[](size_t index)
 	{
 		FLARE_CORE_ASSERT(index < m_EntityRecords.size());

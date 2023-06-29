@@ -24,6 +24,7 @@ namespace Flare
 
 		EntityView View(ComponentSet components);
 		const ComponentSet& GetEntityComponents(Entity entity);
+		bool HasComponent(Entity entity, ComponentId component);
 
 		std::optional<void*> GetEntityComponent(Entity entity, ComponentId component);
 
