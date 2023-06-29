@@ -13,6 +13,8 @@
 
 namespace Flare
 {
+	class EntityView;
+
 	class Registry
 	{
 	public:
@@ -21,7 +23,11 @@ namespace Flare
 		std::optional<void*> GetEntityComponent(Entity entity, ComponentId component);
 
 		ComponentId RegisterComponent(std::string_view name, size_t size);
+
 		inline const ComponentInfo& GetComponentInfo(size_t index) const;
+		inline ArchetypeRecord& GetArchetypeRecord(size_t archetypeId) { return m_Archetypes[archetypeId]; }
+
+		EntityView View(ComponentSet components);
 	public:
 		inline EntityRecord& operator[](size_t index);
 		inline const EntityRecord& operator[](size_t index) const;

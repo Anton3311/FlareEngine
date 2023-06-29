@@ -5,8 +5,11 @@
 
 #include "Flare/Renderer2D/Renderer2D.h"
 
-#include <imgui.h>
+#include "FlareECS/Query/EntityView.h"
+#include "FlareECS/Query/EntityViewIterator.h"
+#include "FlareECS/Query/ComponentView.h"
 
+#include <imgui.h>
 
 namespace Flare
 {
@@ -51,6 +54,8 @@ namespace Flare
 
 		CalculateProjection(m_CameraSize);
 
+
+
 		TestComponent::Id = m_World.GetRegistry().RegisterComponent(typeid(TestComponent).name(), sizeof(TestComponent));
 		TransformComponent::Id = m_World.GetRegistry().RegisterComponent(typeid(TransformComponent).name(), sizeof(TransformComponent));
 
@@ -70,15 +75,6 @@ namespace Flare
 			std::optional<void*> transformResult = m_World.GetRegistry().GetEntityComponent(ents[i], TransformComponent::Id);
 			TransformComponent& transform = *(TransformComponent*)transformResult.value();
 			transform.Position = glm::vec3(0.0f, 1.0f, i);
-		}
-
-		for (uint32_t i = 0; i < 2; i++)
-		{
-			std::optional<void*> result = m_World.GetRegistry().GetEntityComponent(ents[i], TestComponent::Id);
-			TestComponent& component = *(TestComponent*)result.value();
-
-			std::optional<void*> transformResult = m_World.GetRegistry().GetEntityComponent(ents[i], TransformComponent::Id);
-			TransformComponent& transform = *(TransformComponent*)transformResult.value();
 		}
 	}
 
@@ -201,6 +197,27 @@ namespace Flare
 
 			ImGui::End();
 			ImGui::PopStyleVar();
+		}
+
+		{
+			ImGui::Begin("ECS");
+
+			ComponentId components[] = { TestComponent::Id, TransformComponent::Id };
+
+			EntityView view = m_World.GetRegistry().View(ComponentSet(components, 2));
+			ComponentView<TransformComponent> transforms = view.View<TransformComponent>();
+
+			for (EntityViewElement ent : view)
+			{
+				TransformComponent& t = transforms[ent];
+
+				if (ImGui::CollapsingHeader("Entity"))
+				{
+					ImGui::DragFloat3("Position", glm::value_ptr(t.Position));
+				}
+			}
+			
+			ImGui::End();
 		}
 
 		ImGui::End();

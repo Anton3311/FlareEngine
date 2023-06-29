@@ -4,6 +4,7 @@
 #include "FlareECS/EntityStorage.h"
 
 #include <vector>
+#include <optional>
 
 namespace Flare
 {
@@ -12,6 +13,8 @@ namespace Flare
 		size_t Id;
 		std::vector<ComponentId> Components; // Sorted
 		std::vector<size_t> ComponentOffsets;
+
+		std::optional<size_t> FindComponent(ComponentId component);
 	};
 	
 	struct ArchetypeRecord
