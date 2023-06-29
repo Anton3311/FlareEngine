@@ -9,7 +9,7 @@ namespace Flare
 
 		while (right - left > 1)
 		{
-			size_t mid = (right - left) / 2;
+			size_t mid = (right + left) / 2;
 			if (Components[mid] == component)
 			{
 				return { mid };

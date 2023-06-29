@@ -98,15 +98,12 @@ namespace Flare
 			newComponents[oldComponentCount] = componentId;
 
 			insertedComponentIndex = oldComponentCount;
-			for (; insertedComponentIndex > 0; insertedComponentIndex--)
+			for (size_t i = insertedComponentIndex; i > 0; i--)
 			{
-				if (newComponents[insertedComponentIndex - 1] > newComponents[insertedComponentIndex])
+				if (newComponents[i - 1] > newComponents[i])
 				{
-					std::swap(newComponents[insertedComponentIndex - 1], newComponents[insertedComponentIndex]);
-					insertedComponentIndex--;
-				}
-				else
-				{
+					std::swap(newComponents[i - 1], newComponents[i]);
+					insertedComponentIndex = i - 1;
 					break;
 				}
 			}
@@ -149,12 +146,111 @@ namespace Flare
 		const uint8_t* oldEntityData = oldArchetype.Storage.GetEntityData(entityRecord.BufferIndex);
 
 		size_t componentSize = m_RegisteredComponents[componentId].Size;
-		size_t sizeBefore = newArchetype.Data.ComponentOffsets[insertedComponentIndex];
-		size_t sizeAfter = newArchetype.Storage.GetEntitySize() - (sizeBefore + componentSize);
+		size_t sizeBefore = oldArchetype.Storage.GetEntitySize();
+		if (insertedComponentIndex < oldArchetype.Data.Components.size())
+			sizeBefore = oldArchetype.Data.ComponentOffsets[insertedComponentIndex];
+
+		size_t sizeAfter = oldArchetype.Storage.GetEntitySize() - sizeBefore;
 
 		std::memcpy(newEntityData, oldEntityData, sizeBefore);
 		std::memcpy(newEntityData + sizeBefore, componentData, componentSize);
 		std::memcpy(newEntityData + sizeBefore + componentSize, oldEntityData + sizeBefore, sizeAfter);
+
+		RemoveEntityData(entityRecord.Archetype, entityRecord.BufferIndex);
+
+		entityRecord.Archetype = newArchetypeId;
+		entityRecord.BufferIndex = newEntityIndex;
+	}
+
+	bool Registry::RemoveEntityComponent(Entity entity, ComponentId componentId)
+	{
+		if (componentId >= m_RegisteredComponents.size())
+		{
+			FLARE_CORE_WARN("Provided component was not registered");
+			return false;
+		}
+
+		auto it = m_EntityToRecord.find(entity);
+		if (it == m_EntityToRecord.end())
+			return {};
+
+		EntityRecord& entityRecord = m_EntityRecords[it->second];
+		ArchetypeRecord& archetype = m_Archetypes[entityRecord.Archetype];
+
+		size_t removedComponentIndex = SIZE_MAX;
+		ArchetypeId newArchetypeId = INVALID_ARCHETYPE_ID;
+		
+		{
+			auto result = archetype.Data.FindComponent(componentId);
+			if (!result.has_value())
+				return false;
+			else
+				removedComponentIndex = result.value();
+		}
+
+		auto edgeIterator = archetype.Data.Edges.find(componentId);
+		if (edgeIterator != archetype.Data.Edges.end())
+		{
+			newArchetypeId = edgeIterator->second.Add;
+		}
+		else
+		{
+			size_t oldComponentCount = archetype.Data.Components.size();
+			std::vector<ComponentId> newComponents(oldComponentCount - 1);
+
+			for (size_t insertIndex = 0, i = 0; i < oldComponentCount; i++)
+			{
+				if (archetype.Data.Components[i] == componentId)
+					continue;
+				else
+				{
+					newComponents[insertIndex] = archetype.Data.Components[i];
+					insertIndex++;
+				}
+			}
+
+			auto it = m_ComponentSetToArchetype.find(ComponentSet(newComponents));
+			if (it != m_ComponentSetToArchetype.end())
+			{
+				newArchetypeId = it->second;
+			}
+			else
+			{
+				newArchetypeId = CreateArchetype();
+
+				ArchetypeRecord& newArchetype = m_Archetypes[newArchetypeId];
+				newArchetype.Data.Components = std::move(newComponents);
+				newArchetype.Data.ComponentOffsets.resize(newArchetype.Data.Components.size());
+
+				size_t entitySize = 0;
+				for (size_t i = 0; i < newArchetype.Data.Components.size(); i++)
+				{
+					newArchetype.Data.ComponentOffsets[i] = entitySize;
+					entitySize += m_RegisteredComponents[newArchetype.Data.Components[i]].Size;
+				}
+
+				newArchetype.Storage.SetEntitySize(entitySize);
+				m_ComponentSetToArchetype.emplace(ComponentSet(newArchetype.Data.Components), newArchetypeId);
+			}
+
+			m_Archetypes[entityRecord.Archetype].Data.Edges.emplace(componentId, ArchetypeEdge{ INVALID_ARCHETYPE_ID, newArchetypeId});
+			m_Archetypes[newArchetypeId].Data.Edges.emplace(componentId, ArchetypeEdge{ entityRecord.Archetype, INVALID_ARCHETYPE_ID });
+		}
+
+		ArchetypeRecord& oldArchetype = m_Archetypes[entityRecord.Archetype];
+		ArchetypeRecord& newArchetype = m_Archetypes[newArchetypeId];
+
+		size_t sizeBefore = oldArchetype.Data.ComponentOffsets[removedComponentIndex];
+		size_t componentSize = m_RegisteredComponents[componentId].Size;
+		size_t sizeAfter = oldArchetype.Storage.GetEntitySize() - (sizeBefore + componentSize);
+
+		size_t newEntityIndex = newArchetype.Storage.AddEntity(entityRecord.RegistryIndex);
+
+		uint8_t* newEntityData = newArchetype.Storage.GetEntityData(newEntityIndex);
+		const uint8_t* oldEntityData = oldArchetype.Storage.GetEntityData(entityRecord.BufferIndex);
+
+		std::memcpy(newEntityData, oldEntityData, sizeBefore);
+		std::memcpy(newEntityData + sizeBefore, oldEntityData + sizeBefore + componentSize, sizeAfter);
 
 		RemoveEntityData(entityRecord.Archetype, entityRecord.BufferIndex);
 

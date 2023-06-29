@@ -228,9 +228,27 @@ namespace Flare
 
 					if (opened)
 					{
+						std::optional<ComponentId> removedComponent = {};
 						for (ComponentId component : m_World.GetRegistry().GetEntityComponents(entity))
+						{
+							if (!removedComponent.has_value() && ImGui::BeginPopupContextWindow())
+							{
+								if (ImGui::MenuItem("Remove component"))
+								{
+									removedComponent = component;
+								}
+
+								ImGui::EndMenu();
+							}
+
+							ImGui::Separator();
 							ImGui::Text("%s", m_World.GetRegistry().GetComponentInfo(component).Name.c_str());
-						
+							DrawComponent(entity, component);
+						}
+
+						if (removedComponent.has_value())
+							m_World.GetRegistry().RemoveEntityComponent(entity, removedComponent.value());
+
 						ImGui::TreePop();
 					}
 				}
@@ -276,5 +294,25 @@ namespace Flare
 
 		m_ProjectionMatrix = glm::ortho(-halfSize * aspectRation, halfSize * aspectRation, -halfSize, halfSize, -0.1f, 10.0f);
 		m_InverseProjection = glm::inverse(m_ProjectionMatrix);
+	}
+
+	void EditorLayer::DrawComponent(Entity entity, ComponentId componentId)
+	{
+		if (componentId == TestComponent::Id)
+		{
+			TestComponent& testComponent = *(TestComponent*)m_World.GetRegistry().GetEntityComponent(entity, componentId).value();
+			ImGui::DragFloat("Float A", &testComponent.FloatA);
+			ImGui::DragFloat4("Vec", glm::value_ptr(testComponent.Vec));
+		}
+		else if (componentId == TransformComponent::Id)
+		{
+			TransformComponent& transform = *(TransformComponent*)m_World.GetRegistry().GetEntityComponent(entity, componentId).value();
+			ImGui::DragFloat3("Position", glm::value_ptr(transform.Position));
+		}
+		else if (componentId == TagComponent::Id)
+		{
+			TagComponent& tag = *(TagComponent*)m_World.GetRegistry().GetEntityComponent(entity, componentId).value();
+			ImGui::Text("%s", tag.Name);
+		}
 	}
 }
