@@ -7,6 +7,8 @@
 #include "FlareECS/Component.h"
 #include "FlareECS/Archetype.h"
 
+#include "FlareECS/Query/QueryCache.h"
+
 #include <unordered_map>
 #include <vector>
 #include <optional>
@@ -14,16 +16,20 @@
 namespace Flare
 {
 	class EntityView;
+	class EntityArchetypesView;
 	class EntityRegistryIterator;
 
 	class Registry
 	{
 	public:
+		Registry()
+			: m_QueryCache(*this) {}
+
+	public:
 		Entity CreateEntity(ComponentSet& components);
 		bool AddEntityComponent(Entity entity, ComponentId componentId, const void* componentData);
 		bool RemoveEntityComponent(Entity entity, ComponentId componentId);
 
-		EntityView View(ComponentSet components);
 		const ComponentSet& GetEntityComponents(Entity entity);
 		bool HasComponent(Entity entity, ComponentId component);
 
@@ -40,6 +46,13 @@ namespace Flare
 
 		EntityRegistryIterator begin();
 		EntityRegistryIterator end();
+
+		// Querying
+
+		QueryId CreateQuery(const ComponentSet& components);
+
+		EntityView QueryArchetype(ComponentSet components);
+		EntityArchetypesView ExecuteQuery(QueryId query);
 	public:
 		inline EntityRecord& operator[](size_t index);
 		inline const EntityRecord& operator[](size_t index) const;
@@ -58,6 +71,9 @@ namespace Flare
 
 		std::vector<ComponentInfo> m_RegisteredComponents;
 
+		QueryCache m_QueryCache;
+
 		friend class EntityRegistryIterator;
+		friend class QueryCache;
 	};
 }

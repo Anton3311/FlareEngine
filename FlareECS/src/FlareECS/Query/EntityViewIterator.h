@@ -20,7 +20,7 @@ namespace Flare
 	public:
 		EntityViewIterator(EntityStorage& storage, size_t index)
 			: m_Storage(storage), m_EntityIndex(index) {}
-		
+
 		inline EntityViewIterator operator++()
 		{
 			m_EntityIndex++;

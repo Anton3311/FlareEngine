@@ -9,6 +9,7 @@
 #include "FlareECS/Query/EntityView.h"
 #include "FlareECS/Query/EntityViewIterator.h"
 #include "FlareECS/Query/EntityRegistryIterator.h"
+#include "FlareECS/Query/EntityArchetypesView.h"
 #include "FlareECS/Query/ComponentView.h"
 
 #include <imgui.h>
@@ -92,6 +93,10 @@ namespace Flare
 
 		{
 			m_TestEntity = m_World.GetRegistry().CreateEntity(ComponentSet(&TestComponent::Id, 1));
+		}
+
+		{
+			m_Query = m_World.GetRegistry().CreateQuery(ComponentSet(&TransformComponent::Id, 1));
 		}
 	}
 
@@ -219,6 +224,11 @@ namespace Flare
 		{
 			ImGui::Begin("ECS");
 
+			if (ImGui::Button("Create Entity"))
+			{
+				m_TestEntity = m_World.GetRegistry().CreateEntity(ComponentSet(&TestComponent::Id, 1));
+			}
+
 			if (ImGui::CollapsingHeader("Registry"))
 			{
 				for (Entity entity : m_World.GetRegistry())
@@ -279,6 +289,24 @@ namespace Flare
 			}
 
 			ImGui::End();
+
+			{
+				ImGui::Begin("ECS Query");
+
+				EntityArchetypesView view = m_World.GetRegistry().ExecuteQuery(m_Query);
+				for (EntityView entityView : view)
+				{
+					ComponentView<TransformComponent> transforms = entityView.View<TransformComponent>();
+
+					for (EntityViewElement entity : entityView)
+					{
+						ImGui::Separator();
+						ImGui::DragFloat3("Position", glm::value_ptr(transforms[entity].Position));
+					}
+				}
+
+				ImGui::End();
+			}
 		}
 
 		ImGui::End();

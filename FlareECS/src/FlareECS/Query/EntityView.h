@@ -8,13 +8,14 @@
 #include "FlareECS/Query/EntityViewIterator.h"
 
 #include <stdint.h>
+#include <unordered_set>
 
 namespace Flare
 {
 	class EntityView
 	{
 	public:
-		EntityView(Registry& registry, size_t archetype)
+		EntityView(Registry& registry, ArchetypeId archetype)
 			: m_Registry(registry), m_Archetype(archetype) {}
 	public:
 		EntityViewIterator begin();
@@ -24,7 +25,7 @@ namespace Flare
 		ComponentView<ComponentT> View()
 		{
 			ArchetypeRecord& archetypeRecord = m_Registry.GetArchetypeRecord(m_Archetype);
-			std::optional<size_t> index = archetypeRecord.Data.FindComponent(ComponentT::Id);
+			std::optional<size_t> index = m_Registry.GetArchetypeComponentIndex(m_Archetype, ComponentT::Id);
 
 			FLARE_CORE_ASSERT(index.has_value(), "Archetype doesn't have a component");
 
@@ -32,6 +33,6 @@ namespace Flare
 		}
 	private:
 		Registry& m_Registry;
-		size_t m_Archetype;
+		ArchetypeId m_Archetype;
 	};
 }

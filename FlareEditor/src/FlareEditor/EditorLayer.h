@@ -4,6 +4,7 @@
 #include "Flare/Core/Layer.h"
 
 #include "FlareECS/World.h"
+#include "FlareECS/Registry.h"
 
 namespace Flare
 {
@@ -37,6 +38,7 @@ namespace Flare
 		glm::i32vec2 m_ViewportSize = glm::i32vec2(0.0f);
 
 		World m_World;
+		QueryId m_Query;
 		Entity m_TestEntity;
 	};
 }
