@@ -43,6 +43,9 @@ namespace Flare
 			newArchetype.Storage.SetEntitySize(entitySize);
 
 			m_ComponentSetToArchetype.emplace(ComponentSet(newArchetype.Data.Components), newArchetype.Data.Id);
+
+			for (size_t i = 0; i < newArchetype.Data.Components.size(); i++)
+				m_ComponentToArchetype[newArchetype.Data.Components[i]].emplace(newArchetypeId, i);
 		}
 
 		ArchetypeRecord& archetypeRecord = m_Archetypes[record.Archetype];
@@ -68,7 +71,7 @@ namespace Flare
 		ArchetypeRecord& archetype = m_Archetypes[entityRecord.Archetype];
 
 		// Can only have one instance of a component
-		if (archetype.Data.FindComponent(componentId).has_value())
+		if (GetArchetypeComponentIndex(entityRecord.Archetype, componentId).has_value())
 			return false;
 
 		size_t oldComponentCount = archetype.Data.Components.size();
@@ -81,7 +84,7 @@ namespace Flare
 		{
 			newArchetypeId = edgeIterator->second.Add;
 			
-			std::optional<size_t> index = m_Archetypes[newArchetypeId].Data.FindComponent(componentId);
+			std::optional<size_t> index = GetArchetypeComponentIndex(newArchetypeId, componentId);
 			if (index.has_value())
 				insertedComponentIndex = index.value();
 			else
@@ -134,6 +137,10 @@ namespace Flare
 
 			m_Archetypes[entityRecord.Archetype].Data.Edges.emplace(componentId, ArchetypeEdge{newArchetypeId, INVALID_ARCHETYPE_ID});
 			m_Archetypes[newArchetypeId].Data.Edges.emplace(componentId, ArchetypeEdge{INVALID_ARCHETYPE_ID, entityRecord.Archetype});
+
+			ArchetypeRecord& newArchetype = m_Archetypes[newArchetypeId];
+			for (size_t i = 0; i < newArchetype.Data.Components.size(); i++)
+				m_ComponentToArchetype[newArchetype.Data.Components[i]].emplace(newArchetypeId, i);
 		}
 
 		FLARE_CORE_ASSERT(insertedComponentIndex != SIZE_MAX);
@@ -181,17 +188,17 @@ namespace Flare
 		ArchetypeId newArchetypeId = INVALID_ARCHETYPE_ID;
 		
 		{
-			auto result = archetype.Data.FindComponent(componentId);
-			if (!result.has_value())
-				return false;
+			std::optional<size_t> componentIndex = GetArchetypeComponentIndex(entityRecord.Archetype, componentId);
+			if (componentIndex.has_value())
+				removedComponentIndex = componentIndex.value();
 			else
-				removedComponentIndex = result.value();
+				return false;
 		}
 
 		auto edgeIterator = archetype.Data.Edges.find(componentId);
 		if (edgeIterator != archetype.Data.Edges.end())
 		{
-			newArchetypeId = edgeIterator->second.Add;
+			newArchetypeId = edgeIterator->second.Remove;
 		}
 		else
 		{
@@ -235,6 +242,10 @@ namespace Flare
 
 			m_Archetypes[entityRecord.Archetype].Data.Edges.emplace(componentId, ArchetypeEdge{ INVALID_ARCHETYPE_ID, newArchetypeId});
 			m_Archetypes[newArchetypeId].Data.Edges.emplace(componentId, ArchetypeEdge{ entityRecord.Archetype, INVALID_ARCHETYPE_ID });
+
+			ArchetypeRecord& newArchetype = m_Archetypes[newArchetypeId];
+			for (size_t i = 0; i < newArchetype.Data.Components.size(); i++)
+				m_ComponentToArchetype[newArchetype.Data.Components[i]].emplace(newArchetypeId, i);
 		}
 
 		ArchetypeRecord& oldArchetype = m_Archetypes[entityRecord.Archetype];
@@ -267,7 +278,7 @@ namespace Flare
 		EntityRecord& entityRecord = m_EntityRecords[it->second];
 		ArchetypeRecord& archetype = m_Archetypes[entityRecord.Archetype];
 
-		std::optional<size_t> componentIndex = archetype.Data.FindComponent(component);
+		std::optional<size_t> componentIndex = GetArchetypeComponentIndex(entityRecord.Archetype, component);
 		if (!componentIndex.has_value())
 			return {};
 
@@ -325,7 +336,7 @@ namespace Flare
 	{
 		auto it = m_EntityToRecord.find(entity);
 		FLARE_CORE_ASSERT(it != m_EntityToRecord.end());
-		return m_Archetypes[m_EntityRecords[it->second].Archetype].Data.FindComponent(component).has_value();
+		return GetArchetypeComponentIndex(m_EntityRecords[it->second].Archetype, component).has_value();
 	}
 
 	inline EntityRecord& Registry::operator[](size_t index)
@@ -347,6 +358,23 @@ namespace Flare
 		record.Data.Id = id;
 		
 		return id;
+	}
+
+	std::optional<size_t> Registry::GetArchetypeComponentIndex(ArchetypeId archetype, ComponentId component)
+	{
+		auto it = m_ComponentToArchetype.find(component);
+		if (it != m_ComponentToArchetype.end())
+		{
+			auto it2 = it->second.find(archetype);
+			if (it2 != it->second.end())
+			{
+				return { it2->second };
+			}
+			else
+				return {};
+		}
+		else
+			return {};
 	}
 
 	void Registry::RemoveEntityData(ArchetypeId archetype, size_t entityBufferIndex)

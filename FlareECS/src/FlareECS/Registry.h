@@ -36,6 +36,8 @@ namespace Flare
 		inline const ComponentInfo& GetComponentInfo(size_t index) const;
 		inline const std::vector<ComponentInfo>& GetRegisteredComponents() const { return m_RegisteredComponents; }
 
+		std::optional<size_t> GetArchetypeComponentIndex(ArchetypeId archetype, ComponentId component);
+
 		EntityRegistryIterator begin();
 		EntityRegistryIterator end();
 	public:
@@ -51,6 +53,8 @@ namespace Flare
 
 		std::vector<ArchetypeRecord> m_Archetypes;
 		std::unordered_map<ComponentSet, size_t> m_ComponentSetToArchetype;
+
+		std::unordered_map<ComponentId, std::unordered_map<ArchetypeId, size_t>> m_ComponentToArchetype;
 
 		std::vector<ComponentInfo> m_RegisteredComponents;
 
