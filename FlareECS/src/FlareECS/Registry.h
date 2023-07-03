@@ -26,23 +26,29 @@ namespace Flare
 			: m_QueryCache(*this) {}
 
 	public:
+		// Entity operations
+
 		Entity CreateEntity(ComponentSet& components);
 		bool AddEntityComponent(Entity entity, ComponentId componentId, const void* componentData);
 		bool RemoveEntityComponent(Entity entity, ComponentId componentId);
 
-		const ComponentSet& GetEntityComponents(Entity entity);
-		bool HasComponent(Entity entity, ComponentId component);
-
-		std::optional<void*> GetEntityComponent(Entity entity, ComponentId component);
+		// Component operations
 
 		ComponentId RegisterComponent(std::string_view name, size_t size);
 
-		inline ArchetypeRecord& GetArchetypeRecord(size_t archetypeId) { return m_Archetypes[archetypeId]; }
-		
+		std::optional<void*> GetEntityComponent(Entity entity, ComponentId component);
+		const ComponentSet& GetEntityComponents(Entity entity);
+		bool HasComponent(Entity entity, ComponentId component);
+
 		inline const ComponentInfo& GetComponentInfo(size_t index) const;
 		inline const std::vector<ComponentInfo>& GetRegisteredComponents() const { return m_RegisteredComponents; }
 
+		// Archetype operations
+
+		inline ArchetypeRecord& GetArchetypeRecord(size_t archetypeId) { return m_Archetypes[archetypeId]; }
 		std::optional<size_t> GetArchetypeComponentIndex(ArchetypeId archetype, ComponentId component);
+
+		// Iterator
 
 		EntityRegistryIterator begin();
 		EntityRegistryIterator end();

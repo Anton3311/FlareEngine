@@ -20,7 +20,6 @@ namespace Flare
 		virtual void OnImGUIRender() override;
 	private:
 		void CalculateProjection(float size);
-
 		void DrawComponent(Entity entity, ComponentId componentId);
 	private:
 		Ref<Shader> m_QuadShader;

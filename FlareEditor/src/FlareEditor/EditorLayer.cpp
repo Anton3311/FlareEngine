@@ -98,6 +98,18 @@ namespace Flare
 		{
 			m_Query = m_World.GetRegistry().CreateQuery(ComponentSet(&TransformComponent::Id, 1));
 		}
+
+		{
+			m_World.RegisterSystem(m_World.GetRegistry().CreateQuery(ComponentSet(&TransformComponent::Id, 1)), [](EntityView view) -> void
+			{
+				ComponentView<TransformComponent> transforms = view.View<TransformComponent>();
+				for (EntityViewElement entity : view)
+				{
+					TransformComponent& transform = transforms[entity];
+					Renderer2D::DrawQuad(transform.Position, glm::vec2(0.4f), glm::vec4(1.0f));
+				}
+			});
+		}
 	}
 
 	void EditorLayer::OnUpdate(float deltaTime)
@@ -134,6 +146,8 @@ namespace Flare
 				Renderer2D::DrawQuad(glm::vec3(x - m_Width / 2, y - m_Height / 2, 0), glm::vec2(0.8f), (color0 + color1) / 2.0f);
 			}
 		}
+
+		m_World.OnUpdate();
 
 		Renderer2D::End();
 		m_FrameBuffer->Unbind();
@@ -278,7 +292,7 @@ namespace Flare
 
 			if (ImGui::Button("Add transform component"))
 			{
-				TransformComponent transform = TransformComponent{ glm::vec3(1.0f, 0.0f, 234.0f) };
+				TransformComponent transform = TransformComponent{ glm::vec3(2.0f, 0.0f, 0.0f) };
 				m_World.GetRegistry().AddEntityComponent(m_TestEntity, TransformComponent::Id, &transform);
 			}
 
@@ -300,8 +314,10 @@ namespace Flare
 
 					for (EntityViewElement entity : entityView)
 					{
+						ImGui::PushID(entity.GetEntityData());
 						ImGui::Separator();
 						ImGui::DragFloat3("Position", glm::value_ptr(transforms[entity].Position));
+						ImGui::PopID();
 					}
 				}
 
