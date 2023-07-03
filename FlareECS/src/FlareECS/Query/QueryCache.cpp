@@ -31,7 +31,10 @@ namespace Flare
 
 		query.Components.resize(components.GetCount());
 		for (size_t i = 0; i < components.GetCount(); i++)
+		{
 			query.Components[i] = components[i];
+			m_CachedMatches[components[i]].push_back(id);
+		}
 
 		query.MatchedArchetypes.reserve(matched.size());
 		for (ArchetypeId archetype : matched)
@@ -47,7 +50,6 @@ namespace Flare
 		for (ComponentId component : archetypeRecord.Data.Components)
 		{
 			auto it = m_CachedMatches.find(component);
-
 			if (it == m_CachedMatches.end())
 				continue;
 
@@ -64,7 +66,7 @@ namespace Flare
 
 	bool QueryCache::CompareComponentSets(const ComponentSet& archetypeComponents, const ComponentSet& queryComponents)
 	{
-		// Query components must be contained to archetype components
+		// Query components must be contained by archetype components
 		if (queryComponents.GetCount() > archetypeComponents.GetCount())
 			return false;
 
@@ -73,6 +75,9 @@ namespace Flare
 		{
 			if (archetypeComponents[i] == queryComponents[queryComponentIndex])
 				queryComponentIndex++;
+
+			if (queryComponentIndex == queryComponents.GetCount())
+				break;
 		}
 
 		return queryComponentIndex == queryComponents.GetCount();
