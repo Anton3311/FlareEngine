@@ -275,7 +275,9 @@ namespace Flare
 		size_t newEntityIndex = newArchetype.Storage.AddEntity(entityRecord.RegistryIndex);
 
 		uint8_t* newEntityData = newArchetype.Storage.GetEntityData(newEntityIndex);
-		const uint8_t* oldEntityData = oldArchetype.Storage.GetEntityData(entityRecord.BufferIndex);
+		uint8_t* oldEntityData = oldArchetype.Storage.GetEntityData(entityRecord.BufferIndex);
+
+		m_RegisteredComponents[componentId].Deleter(oldEntityData + sizeBefore);
 
 		std::memcpy(newEntityData, oldEntityData, sizeBefore);
 		std::memcpy(newEntityData + sizeBefore, oldEntityData + sizeBefore + componentSize, sizeAfter);
@@ -303,7 +305,7 @@ namespace Flare
 		return entityData + archetype.Data.ComponentOffsets[componentIndex.value()];
 	}
 
-	ComponentId Registry::RegisterComponent(std::string_view name, size_t size)
+	ComponentId Registry::RegisterComponent(std::string_view name, size_t size, const std::function<void(void*)>& deleter)
 	{
 		size_t id = m_RegisteredComponents.size();
 		ComponentInfo& info = m_RegisteredComponents.emplace_back();
@@ -311,6 +313,7 @@ namespace Flare
 		info.Id = id;
 		info.Name = name;
 		info.Size = size;
+		info.Deleter = deleter;
 
 		return id;
 	}

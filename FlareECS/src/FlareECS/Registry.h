@@ -32,7 +32,7 @@ namespace Flare
 
 		// Component operations
 
-		ComponentId RegisterComponent(std::string_view name, size_t size);
+		ComponentId RegisterComponent(std::string_view name, size_t size, const std::function<void(void*)>& deleter);
 
 		std::optional<void*> GetEntityComponent(Entity entity, ComponentId component);
 		const ComponentSet& GetEntityComponents(Entity entity);

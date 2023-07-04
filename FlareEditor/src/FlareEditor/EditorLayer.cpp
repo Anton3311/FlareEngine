@@ -70,9 +70,9 @@ namespace Flare
 
 
 		{
-			TestComponent::Id = m_World.GetRegistry().RegisterComponent(typeid(TestComponent).name(), sizeof(TestComponent));
-			TransformComponent::Id = m_World.GetRegistry().RegisterComponent(typeid(TransformComponent).name(), sizeof(TransformComponent));
-			TagComponent::Id = m_World.GetRegistry().RegisterComponent(typeid(TagComponent).name(), sizeof(TagComponent));
+			m_World.RegisterComponent<TestComponent>();
+			m_World.RegisterComponent<TransformComponent>();
+			m_World.RegisterComponent<TagComponent>();
 
 			ComponentId components[] = { TestComponent::Id, TransformComponent::Id };
 			Entity ents[2];

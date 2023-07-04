@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include <xhash>
+#include <functional>
 
 namespace Flare
 {
@@ -15,6 +16,8 @@ namespace Flare
 		ComponentId Id;
 		std::string Name;
 		size_t Size;
+
+		std::function<void(void*)> Deleter;
 	};
 
 	class ComponentSetIterator
