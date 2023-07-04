@@ -13,7 +13,14 @@ namespace Flare
 		EntityStorageChunk()
 			: m_Buffer(nullptr) {}
 
-		EntityStorageChunk(EntityStorageChunk&) = delete;
+		EntityStorageChunk(EntityStorageChunk& other)
+		{
+			if (m_Buffer != nullptr)
+				delete[] m_Buffer;
+
+			m_Buffer = other.m_Buffer;
+			other.m_Buffer = nullptr;
+		}
 
 		EntityStorageChunk(EntityStorageChunk&& other)
 		{
@@ -51,7 +58,7 @@ namespace Flare
 	{
 	public:
 		EntityStorage()
-			: m_EntitySize(0), m_EntitiesCount(0) {}
+			: m_EntitySize(0), m_EntitiesCount(0), m_EntitiesPerChunk(0) {}
 
 		size_t AddEntity(size_t registryIndex);
 		uint8_t* GetEntityData(size_t entityIndex);
@@ -64,12 +71,14 @@ namespace Flare
 
 		inline const std::vector<size_t>& GetEntityIndices() const { return m_EntityIndices; }
 	public:
-		using StorageChunk = EntityStorageChunk<4096>;
+		static constexpr size_t DefaultStorageChunkSize = 4096;
+		using StorageChunk = EntityStorageChunk<DefaultStorageChunkSize>;
 	private:
-		StorageChunk m_Chunk;
+		std::vector<StorageChunk> m_Chunks;
 		std::vector<size_t> m_EntityIndices;
 
 		size_t m_EntitySize;
 		size_t m_EntitiesCount;
+		size_t m_EntitiesPerChunk;
 	};
 }

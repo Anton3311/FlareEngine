@@ -236,92 +236,94 @@ namespace Flare
 		}
 
 		{
-			ImGui::Begin("ECS");
-
-			if (ImGui::Button("Create Entity"))
+			if (m_ShowECSWindow)
 			{
-				m_TestEntity = m_World.GetRegistry().CreateEntity(ComponentSet(&TestComponent::Id, 1));
-			}
-
-			if (ImGui::CollapsingHeader("Registry"))
-			{
-				for (Entity entity : m_World.GetRegistry())
+				ImGui::Begin("ECS", &m_ShowECSWindow);
+				if (ImGui::Button("Create Entity"))
 				{
-					ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_FramePadding;
-					bool opened = ImGui::TreeNodeEx((void*)std::hash<Entity>()(entity), flags, "Entity");
+					m_TestEntity = m_World.GetRegistry().CreateEntity(ComponentSet(&TestComponent::Id, 1));
+				}
 
-					if (opened)
+				if (ImGui::CollapsingHeader("Registry"))
+				{
+					for (Entity entity : m_World.GetRegistry())
 					{
-						std::optional<ComponentId> removedComponent = {};
-						for (ComponentId component : m_World.GetRegistry().GetEntityComponents(entity))
+						ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_FramePadding;
+						bool opened = ImGui::TreeNodeEx((void*)std::hash<Entity>()(entity), flags, "Entity");
+
+						if (opened)
 						{
-							if (!removedComponent.has_value() && ImGui::BeginPopupContextWindow())
+							std::optional<ComponentId> removedComponent = {};
+							for (ComponentId component : m_World.GetRegistry().GetEntityComponents(entity))
 							{
-								if (ImGui::MenuItem("Remove component"))
+								if (!removedComponent.has_value() && ImGui::BeginPopupContextWindow())
 								{
-									removedComponent = component;
+									if (ImGui::MenuItem("Remove component"))
+									{
+										removedComponent = component;
+									}
+
+									ImGui::EndMenu();
 								}
 
-								ImGui::EndMenu();
+								ImGui::Separator();
+								ImGui::Text("%s", m_World.GetRegistry().GetComponentInfo(component).Name.c_str());
+								DrawComponent(entity, component);
 							}
 
-							ImGui::Separator();
-							ImGui::Text("%s", m_World.GetRegistry().GetComponentInfo(component).Name.c_str());
-							DrawComponent(entity, component);
+							if (removedComponent.has_value())
+								m_World.GetRegistry().RemoveEntityComponent(entity, removedComponent.value());
+
+							ImGui::TreePop();
 						}
-
-						if (removedComponent.has_value())
-							m_World.GetRegistry().RemoveEntityComponent(entity, removedComponent.value());
-
-						ImGui::TreePop();
 					}
 				}
-			}
 
-			if (ImGui::CollapsingHeader("Components"))
-			{
-				const auto& components = m_World.GetRegistry().GetRegisteredComponents();
-				for (const auto& component : components)
+				if (ImGui::CollapsingHeader("Components"))
 				{
-					ImGui::Separator();
-					ImGui::Text("Id: %d", component.Id);
-					ImGui::Text("Name: %s", component.Name.c_str());
-					ImGui::Text("Size: %d", component.Size);
-				}
-			}
-
-			if (ImGui::Button("Add transform component"))
-			{
-				TransformComponent transform = TransformComponent{ glm::vec3(2.0f, 0.0f, 0.0f) };
-				m_World.GetRegistry().AddEntityComponent(m_TestEntity, TransformComponent::Id, &transform);
-			}
-
-			if (ImGui::Button("Add tag component"))
-			{
-				TagComponent tag = TagComponent{ "Tag" };
-				m_World.GetRegistry().AddEntityComponent(m_TestEntity, TagComponent::Id, &tag);
-			}
-
-			ImGui::End();
-
-			{
-				ImGui::Begin("ECS Query");
-
-				EntityArchetypesView view = m_World.GetRegistry().ExecuteQuery(m_Query);
-				for (EntityView entityView : view)
-				{
-					ComponentView<TransformComponent> transforms = entityView.View<TransformComponent>();
-
-					for (EntityViewElement entity : entityView)
+					const auto& components = m_World.GetRegistry().GetRegisteredComponents();
+					for (const auto& component : components)
 					{
-						ImGui::PushID(entity.GetEntityData());
 						ImGui::Separator();
-						ImGui::DragFloat3("Position", glm::value_ptr(transforms[entity].Position));
-						ImGui::PopID();
+						ImGui::Text("Id: %d", component.Id);
+						ImGui::Text("Name: %s", component.Name.c_str());
+						ImGui::Text("Size: %d", component.Size);
 					}
 				}
 
+				if (ImGui::Button("Add transform component"))
+				{
+					TransformComponent transform = TransformComponent{ glm::vec3(2.0f, 0.0f, 0.0f) };
+					m_World.GetRegistry().AddEntityComponent(m_TestEntity, TransformComponent::Id, &transform);
+				}
+
+				if (ImGui::Button("Add tag component"))
+				{
+					TagComponent tag = TagComponent{ "Tag" };
+					m_World.GetRegistry().AddEntityComponent(m_TestEntity, TagComponent::Id, &tag);
+				}
 				ImGui::End();
+			}
+
+			{
+				if (m_ShowQueryWindow)
+				{
+					ImGui::Begin("ECS Query", &m_ShowQueryWindow);
+					EntityArchetypesView view = m_World.GetRegistry().ExecuteQuery(m_Query);
+					for (EntityView entityView : view)
+					{
+						ComponentView<TransformComponent> transforms = entityView.View<TransformComponent>();
+
+						for (EntityViewElement entity : entityView)
+						{
+							ImGui::PushID(entity.GetEntityData());
+							ImGui::Separator();
+							ImGui::DragFloat3("Position", glm::value_ptr(transforms[entity].Position));
+							ImGui::PopID();
+						}
+					}
+					ImGui::End();
+				}
 			}
 		}
 
