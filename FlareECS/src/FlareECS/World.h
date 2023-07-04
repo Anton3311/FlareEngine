@@ -1,7 +1,7 @@
 #pragma once
 
 #include "FlareECS/Registry.h"
-#include "FlareECS/Component.h"
+#include "FlareECS/Entity/Component.h"
 
 #include "FlareECS/System/System.h"
 

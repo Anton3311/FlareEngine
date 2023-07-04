@@ -348,18 +348,18 @@ namespace Flare
 	{
 		if (componentId == TestComponent::Id)
 		{
-			TestComponent& testComponent = *(TestComponent*)m_World.GetRegistry().GetEntityComponent(entity, componentId).value();
+			TestComponent& testComponent = *(TestComponent*)(m_World.GetRegistry().GetEntityComponent(entity, componentId).value());
 			ImGui::DragFloat("Float A", &testComponent.FloatA);
 			ImGui::DragFloat4("Vec", glm::value_ptr(testComponent.Vec));
 		}
 		else if (componentId == TransformComponent::Id)
 		{
-			TransformComponent& transform = *(TransformComponent*)m_World.GetRegistry().GetEntityComponent(entity, componentId).value();
+			TransformComponent& transform = *(TransformComponent*)(m_World.GetRegistry().GetEntityComponent(entity, componentId).value());
 			ImGui::DragFloat3("Position", glm::value_ptr(transform.Position));
 		}
 		else if (componentId == TagComponent::Id)
 		{
-			TagComponent& tag = *(TagComponent*)m_World.GetRegistry().GetEntityComponent(entity, componentId).value();
+			TagComponent& tag = *(TagComponent*)(m_World.GetRegistry().GetEntityComponent(entity, componentId).value());
 			ImGui::Text("%s", tag.Name);
 		}
 	}

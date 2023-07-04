@@ -1,6 +1,6 @@
 #pragma once
 
-#include "FlareECS/Component.h"
+#include "FlareECS/Entity/Component.h"
 
 #include <vector>
 #include <unordered_set>

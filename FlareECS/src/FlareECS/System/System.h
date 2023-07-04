@@ -1,6 +1,6 @@
 #pragma once
 
-#include "FlareECS/Archetype.h"
+#include "FlareECS/Entity/Archetype.h"
 
 #include "FlareECS/Query/EntityView.h"
 #include "FlareECS/Query/QueryCache.h"

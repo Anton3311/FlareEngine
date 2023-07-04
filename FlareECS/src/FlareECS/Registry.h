@@ -3,9 +3,9 @@
 #include "Flare/Core/Assert.h"
 #include "Flare/Core/Core.h"
 
-#include "FlareECS/Entity.h"
-#include "FlareECS/Component.h"
-#include "FlareECS/Archetype.h"
+#include "FlareECS/Entity/Entity.h"
+#include "FlareECS/Entity/Component.h"
+#include "FlareECS/Entity/Archetype.h"
 
 #include "FlareECS/Query/QueryCache.h"
 

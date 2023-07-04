@@ -1,6 +1,6 @@
 #pragma once
 
-#include "FlareECS/Archetype.h"
+#include "FlareECS/Entity/Archetype.h"
 
 #include <stdint.h>
 #include <xhash>
