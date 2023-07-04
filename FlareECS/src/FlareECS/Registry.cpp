@@ -4,10 +4,18 @@
 #include "FlareECS/Query/EntityRegistryIterator.h"
 #include "FlareECS/Query/EntityArchetypesView.h"
 
+#include "FlareECS/EntityStorage/EntityChunksPool.h"
+
 #include <algorithm>
 
 namespace Flare
 {
+	Registry::Registry()
+		: m_QueryCache(*this)
+	{
+		EntityChunksPool::Initialize(16);
+	}
+
 	Entity Registry::CreateEntity(ComponentSet& components)
 	{
 		FLARE_CORE_ASSERT(components.GetCount() > 0);

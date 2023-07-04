@@ -1,6 +1,6 @@
 #pragma once
 
-#include "FlareECS/EntityStorage.h"
+#include "FlareECS/EntityStorage/EntityStorage.h"
 
 namespace Flare
 {

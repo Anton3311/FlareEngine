@@ -12,6 +12,8 @@
 #include "FlareECS/Query/EntityArchetypesView.h"
 #include "FlareECS/Query/ComponentView.h"
 
+#include "FlareECS/EntityStorage/EntityChunksPool.h"
+
 #include <imgui.h>
 
 namespace Flare
