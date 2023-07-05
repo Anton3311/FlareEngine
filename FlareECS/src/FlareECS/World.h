@@ -8,6 +8,9 @@
 #include <vector>
 #include <string_view>
 
+#define FLARE_COMPONENT static Flare::ComponentId Id;
+#define FLARE_COMPONENT_IMPL(name) Flare::ComponentId name::Id = INVALID_COMPONENT_ID;
+
 namespace Flare
 {
 	class World
