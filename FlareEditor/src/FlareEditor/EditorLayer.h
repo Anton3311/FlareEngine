@@ -3,6 +3,9 @@
 #include "Flare.h"
 #include "Flare/Core/Layer.h"
 
+#include "FlareECS/World.h"
+#include "FlareECS/Registry.h"
+
 namespace Flare
 {
 	class EditorLayer : public Layer
@@ -17,6 +20,7 @@ namespace Flare
 		virtual void OnImGUIRender() override;
 	private:
 		void CalculateProjection(float size);
+		void DrawComponent(Entity entity, ComponentId componentId);
 	private:
 		Ref<Shader> m_QuadShader;
 		Ref<FrameBuffer> m_FrameBuffer;
@@ -31,5 +35,12 @@ namespace Flare
 		int32_t m_Height = 20;
 
 		glm::i32vec2 m_ViewportSize = glm::i32vec2(0.0f);
+
+		World m_World;
+		QueryId m_Query;
+		Entity m_TestEntity;
+
+		bool m_ShowECSWindow;
+		bool m_ShowQueryWindow;
 	};
 }

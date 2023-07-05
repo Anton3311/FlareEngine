@@ -1,5 +1,5 @@
-project "FlareEditor"
-    kind "ConsoleApp"
+project "FlareECS"
+    kind "StaticLib"
 	language "C++"
 	cppdialect "C++17"
 	staticruntime "off"
@@ -11,20 +11,14 @@ project "FlareEditor"
     }
 
     includedirs
-    {
-        "src",
-		"%{wks.location}/Flare/src",
-		"%{wks.location}/FlareCommon/src",
-		"%{wks.location}/FlareECS/src",
-		INCLUDE_DIRS.glm,
+	{
+		"src/",
+		"%{wks.location}/FlareCommon/src/",
 		INCLUDE_DIRS.spdlog,
-		INCLUDE_DIRS.imgui,
-    }
+	}
 
 	links
 	{
-		"Flare",
-		"ImGUI",
 		"FlareCommon",
 		"FlareECS",
 	}

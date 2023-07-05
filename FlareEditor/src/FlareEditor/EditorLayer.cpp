@@ -5,10 +5,44 @@
 
 #include "Flare/Renderer2D/Renderer2D.h"
 
+#include "FlareECS/Registry.h"
+#include "FlareECS/Query/EntityView.h"
+#include "FlareECS/Query/EntityViewIterator.h"
+#include "FlareECS/Query/EntityRegistryIterator.h"
+#include "FlareECS/Query/EntityArchetypesView.h"
+#include "FlareECS/Query/ComponentView.h"
+
+#include "FlareECS/EntityStorage/EntityChunksPool.h"
+
 #include <imgui.h>
 
 namespace Flare
 {
+	struct TestComponent
+	{
+		FLARE_COMPONENT;
+
+		float FloatA;
+		glm::vec4 Vec;
+	};
+	FLARE_COMPONENT_IMPL(TestComponent);
+
+	struct TransformComponent
+	{
+		FLARE_COMPONENT;
+
+		glm::vec3 Position;
+	};
+	FLARE_COMPONENT_IMPL(TransformComponent);
+
+	struct TagComponent
+	{
+		FLARE_COMPONENT;
+
+		const char* Name;
+	};
+	FLARE_COMPONENT_IMPL(TagComponent);
+
 	EditorLayer::EditorLayer()
 		: Layer("EditorLayer")
 	{
@@ -31,6 +65,40 @@ namespace Flare
 		RenderCommand::SetClearColor(0.04f, 0.07f, 0.1f, 1.0f);
 
 		CalculateProjection(m_CameraSize);
+
+
+
+		m_World.RegisterComponent<TestComponent>();
+		m_World.RegisterComponent<TransformComponent>();
+		m_World.RegisterComponent<TagComponent>();
+
+		Entity entities[2];
+			
+		entities[0] = m_World.CreateEntity<TestComponent, TransformComponent>();
+		entities[1] = m_World.CreateEntity<TestComponent, TransformComponent>();
+
+		m_TestEntity = entities[0];
+
+		for (uint32_t i = 0; i < 2; i++)
+		{
+			TestComponent& component = m_World.GetEntityComponent<TestComponent>(entities[i]);
+			component.FloatA = 10.0f + (float) i;
+			component.Vec = glm::vec4(1.0f, 0.4f, 0.1f, 0.9f);
+
+			TransformComponent& transform = m_World.GetEntityComponent<TransformComponent>(entities[i]);
+			transform.Position = glm::vec3(0.0f, 1.0f, i);
+		}
+
+		m_Query = m_World.CreateQuery<TransformComponent>();
+		m_World.RegisterSystem(m_Query, [](EntityView view) -> void
+		{
+			ComponentView<TransformComponent> transforms = view.View<TransformComponent>();
+			for (EntityViewElement entity : view)
+			{
+				TransformComponent& transform = transforms[entity];
+				Renderer2D::DrawQuad(transform.Position, glm::vec2(0.4f), glm::vec4(1.0f));
+			}
+		});
 	}
 
 	void EditorLayer::OnUpdate(float deltaTime)
@@ -67,6 +135,8 @@ namespace Flare
 				Renderer2D::DrawQuad(glm::vec3(x - m_Width / 2, y - m_Height / 2, 0), glm::vec2(0.8f), (color0 + color1) / 2.0f);
 			}
 		}
+
+		m_World.OnUpdate();
 
 		Renderer2D::End();
 		m_FrameBuffer->Unbind();
@@ -154,6 +224,84 @@ namespace Flare
 			ImGui::PopStyleVar();
 		}
 
+		{
+			if (m_ShowECSWindow)
+			{
+				ImGui::Begin("ECS", &m_ShowECSWindow);
+				if (ImGui::Button("Create Entity"))
+				{
+					m_TestEntity = m_World.GetRegistry().CreateEntity(ComponentSet(&TestComponent::Id, 1));
+				}
+
+				if (ImGui::CollapsingHeader("Registry"))
+				{
+					for (Entity entity : m_World.GetRegistry())
+					{
+						ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_FramePadding;
+						bool opened = ImGui::TreeNodeEx((void*)std::hash<Entity>()(entity), flags, "Entity");
+
+						if (opened)
+						{
+							for (ComponentId component : m_World.GetEntityComponents(entity))
+							{
+								ImGui::Separator();
+								ImGui::Text("%s", m_World.GetRegistry().GetComponentInfo(component).Name.c_str());
+								DrawComponent(entity, component);
+							}
+
+							ImGui::TreePop();
+						}
+					}
+				}
+
+				if (ImGui::CollapsingHeader("Components"))
+				{
+					const auto& components = m_World.GetRegistry().GetRegisteredComponents();
+					for (const auto& component : components)
+					{
+						ImGui::Separator();
+						ImGui::Text("Id: %d", component.Id);
+						ImGui::Text("Name: %s", component.Name.c_str());
+						ImGui::Text("Size: %d", component.Size);
+					}
+				}
+
+				if (ImGui::Button("Add transform component"))
+				{
+					TransformComponent transform = TransformComponent{ glm::vec3(2.0f, 0.0f, 0.0f) };
+					m_World.GetRegistry().AddEntityComponent(m_TestEntity, TransformComponent::Id, &transform);
+				}
+
+				if (ImGui::Button("Add tag component"))
+				{
+					TagComponent tag = TagComponent{ "Tag" };
+					m_World.GetRegistry().AddEntityComponent(m_TestEntity, TagComponent::Id, &tag);
+				}
+				ImGui::End();
+			}
+
+			{
+				if (m_ShowQueryWindow)
+				{
+					ImGui::Begin("ECS Query", &m_ShowQueryWindow);
+					EntityArchetypesView view = m_World.GetRegistry().ExecuteQuery(m_Query);
+					for (EntityView entityView : view)
+					{
+						ComponentView<TransformComponent> transforms = entityView.View<TransformComponent>();
+
+						for (EntityViewElement entity : entityView)
+						{
+							ImGui::PushID(entity.GetEntityData());
+							ImGui::Separator();
+							ImGui::DragFloat3("Position", glm::value_ptr(transforms[entity].Position));
+							ImGui::PopID();
+						}
+					}
+					ImGui::End();
+				}
+			}
+		}
+
 		ImGui::End();
 	}
 
@@ -167,5 +315,25 @@ namespace Flare
 
 		m_ProjectionMatrix = glm::ortho(-halfSize * aspectRation, halfSize * aspectRation, -halfSize, halfSize, -0.1f, 10.0f);
 		m_InverseProjection = glm::inverse(m_ProjectionMatrix);
+	}
+
+	void EditorLayer::DrawComponent(Entity entity, ComponentId componentId)
+	{
+		if (componentId == TestComponent::Id)
+		{
+			TestComponent& testComponent = *m_World.TryGetEntityComponent<TestComponent>(entity, componentId).value();
+			ImGui::DragFloat("Float A", &testComponent.FloatA);
+			ImGui::DragFloat4("Vec", glm::value_ptr(testComponent.Vec));
+		}
+		else if (componentId == TransformComponent::Id)
+		{
+			TransformComponent& transform = *m_World.TryGetEntityComponent<TransformComponent>(entity, componentId).value();
+			ImGui::DragFloat3("Position", glm::value_ptr(transform.Position));
+		}
+		else if (componentId == TagComponent::Id)
+		{
+			TagComponent& tag = *m_World.TryGetEntityComponent<TagComponent>(entity, componentId).value();
+			ImGui::Text("%s", tag.Name);
+		}
 	}
 }
