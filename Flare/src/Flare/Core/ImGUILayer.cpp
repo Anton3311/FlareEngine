@@ -110,16 +110,18 @@ namespace Flare
 		style.TabBorderSize = 0.0f;
 		style.WindowBorderSize = 1.0f;
 		style.ChildBorderSize = 1.0f;
-		style.FrameBorderSize = 0.0f;
+		style.FrameBorderSize = 1.5f;
 		style.PopupBorderSize = 1.0f;
 		style.TabBorderSize = 0.0f;
+
+		style.WindowMenuButtonPosition = ImGuiDir_None;
 
 		style.FramePadding = ImVec2(6.0f, 6.0f);
 
 		auto& colors = style.Colors;
 
 		ImVec4 windowBackgroundColor = ColorFromHex(0x2D3142ff);
-		ImVec4 frameBorder = ColorFromHex(0x8D99AEFF);
+		ImVec4 frameBorder = ColorFromHex(0x8D99AEFF) * 0.6f;
 		ImVec4 primaryColor = ColorFromHex(0xF45D01FF);
 		ImVec4 surfaceColor = ColorFromHex(0x434758FF);
 

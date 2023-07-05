@@ -1,6 +1,7 @@
 #include "PropertiesWindow.h"
 
 #include "FlareEditor/EditorContext.h"
+#include "FlareEditor/UI/EditorGUI.h"
 
 #include <imgui.h>
 
@@ -10,6 +11,9 @@ namespace Flare
 	{
 		World& world = EditorContext::Instance.ActiveScene->GetECSWorld();
 		Entity selectedEntity = EditorContext::Instance.SelectedEntity;
+
+		ImGuiIO& io = ImGui::GetIO();
+		ImGuiStyle& style = ImGui::GetStyle();
 
 		ImGui::Begin("Properties");
 
@@ -21,10 +25,17 @@ namespace Flare
 
 			for (ComponentId component : world.GetEntityComponents(selectedEntity))
 			{
-				if (ImGui::CollapsingHeader(world.GetRegistry().GetComponentInfo(component).Name.c_str()))
+				const ComponentInfo& componentInfo = world.GetRegistry().GetComponentInfo(component);
+
+				ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_FramePadding;
+				if (ImGui::TreeNodeEx((void*)component, flags, "%s", componentInfo.Name.c_str()))
 				{
 					if (component == CameraComponent::Id)
+					{
 						RenderCameraComponent(world.GetEntityComponent<CameraComponent>(selectedEntity));
+					}
+
+					ImGui::TreePop();
 				}
 			}
 		}
@@ -34,8 +45,12 @@ namespace Flare
 
 	void PropertiesWindow::RenderCameraComponent(CameraComponent& cameraComponent)
 	{
-		ImGui::DragFloat("Size", &cameraComponent.Size);
-		ImGui::DragFloat("Near", &cameraComponent.Near);
-		ImGui::DragFloat("Far", &cameraComponent.Far);
+		if (EditorGUI::BeginPropertyGrid())
+		{
+			EditorGUI::FloatPropertyField("Size", cameraComponent.Size);
+			EditorGUI::FloatPropertyField("Near", cameraComponent.Near);
+			EditorGUI::FloatPropertyField("Far", cameraComponent.Far);
+			EditorGUI::EndPropertyGrid();
+		}
 	}
 }
