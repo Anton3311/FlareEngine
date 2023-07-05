@@ -33,7 +33,7 @@ namespace Flare
 		return index;
 	}
 
-	uint8_t* EntityStorage::GetEntityData(size_t entityIndex)
+	uint8_t* EntityStorage::GetEntityData(size_t entityIndex) const
 	{
 		size_t bytesOffset = (entityIndex * m_EntitySize) % ENTITY_CHUNK_SIZE;
 		size_t chunkIndex = entityIndex / m_EntitiesPerChunk;

@@ -15,7 +15,7 @@ namespace Flare
 		EntityStorage(EntityStorage&& other) noexcept;
 
 		size_t AddEntity(size_t registryIndex);
-		uint8_t* GetEntityData(size_t entityIndex);
+		uint8_t* GetEntityData(size_t entityIndex) const;
 
 		void RemoveEntityData(size_t entityIndex);
 		

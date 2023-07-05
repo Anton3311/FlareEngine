@@ -16,6 +16,21 @@ namespace Flare
 		EntityChunksPool::Initialize(16);
 	}
 
+	Registry::~Registry()
+	{
+		for (const ArchetypeRecord& archetype : m_Archetypes)
+		{
+			for (size_t entityIndex = 0; entityIndex < archetype.Storage.GetEntitiesCount(); entityIndex++)
+			{
+				uint8_t* entityData = archetype.Storage.GetEntityData(entityIndex);
+				for (size_t i = 0; i < archetype.Data.Components.size(); i++)
+				{
+					m_RegisteredComponents[archetype.Data.Components[i]].Deleter((void*)archetype.Data.ComponentOffsets[i]);
+				}
+			}
+		}
+	}
+
 	Entity Registry::CreateEntity(ComponentSet& components)
 	{
 		FLARE_CORE_ASSERT(components.GetCount() > 0);
@@ -385,11 +400,11 @@ namespace Flare
 		return EntityArchetypesView(*this, data.MatchedArchetypes);
 	}
 
-	const ComponentSet& Registry::GetEntityComponents(Entity entity)
+	const std::vector<ComponentId>& Registry::GetEntityComponents(Entity entity)
 	{
 		auto it = m_EntityToRecord.find(entity);
 		FLARE_CORE_ASSERT(it != m_EntityToRecord.end());
-		return ComponentSet(m_Archetypes[m_EntityRecords[it->second].Archetype].Data.Components);
+		return m_Archetypes[m_EntityRecords[it->second].Archetype].Data.Components;
 	}
 
 	bool Registry::HasComponent(Entity entity, ComponentId component)

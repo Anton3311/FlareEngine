@@ -69,49 +69,37 @@ namespace Flare
 
 
 
+		m_World.RegisterComponent<TestComponent>();
+		m_World.RegisterComponent<TransformComponent>();
+		m_World.RegisterComponent<TagComponent>();
+
+		Entity entities[2];
+			
+		entities[0] = m_World.CreateEntity<TestComponent, TransformComponent>();
+		entities[1] = m_World.CreateEntity<TestComponent, TransformComponent>();
+
+		m_TestEntity = entities[0];
+
+		for (uint32_t i = 0; i < 2; i++)
 		{
-			m_World.RegisterComponent<TestComponent>();
-			m_World.RegisterComponent<TransformComponent>();
-			m_World.RegisterComponent<TagComponent>();
+			TestComponent& component = m_World.GetEntityComponent<TestComponent>(entities[i]);
+			component.FloatA = 10.0f + (float) i;
+			component.Vec = glm::vec4(1.0f, 0.4f, 0.1f, 0.9f);
 
-			ComponentId components[] = { TestComponent::Id, TransformComponent::Id };
-			Entity ents[2];
-			ents[0] = m_World.GetRegistry().CreateEntity(ComponentSet(components, 2));
-			ents[1] = m_World.GetRegistry().CreateEntity(ComponentSet(components, 2));
+			TransformComponent& transform = m_World.GetEntityComponent<TransformComponent>(entities[i]);
+			transform.Position = glm::vec3(0.0f, 1.0f, i);
+		}
 
-			for (uint32_t i = 0; i < 2; i++)
+		m_Query = m_World.CreateQuery<TransformComponent>();
+		m_World.RegisterSystem(m_Query, [](EntityView view) -> void
+		{
+			ComponentView<TransformComponent> transforms = view.View<TransformComponent>();
+			for (EntityViewElement entity : view)
 			{
-				std::optional<void*> result = m_World.GetRegistry().GetEntityComponent(ents[i], TestComponent::Id);
-
-				TestComponent& component = *(TestComponent*)result.value();
-				component.FloatA = 10.0f + (float) i;
-				component.Vec = glm::vec4(1.0f, 0.4f, 0.1f, 0.9f);
-
-				std::optional<void*> transformResult = m_World.GetRegistry().GetEntityComponent(ents[i], TransformComponent::Id);
-				TransformComponent& transform = *(TransformComponent*)transformResult.value();
-				transform.Position = glm::vec3(0.0f, 1.0f, i);
+				TransformComponent& transform = transforms[entity];
+				Renderer2D::DrawQuad(transform.Position, glm::vec2(0.4f), glm::vec4(1.0f));
 			}
-		}
-
-		{
-			m_TestEntity = m_World.GetRegistry().CreateEntity(ComponentSet(&TestComponent::Id, 1));
-		}
-
-		{
-			m_Query = m_World.GetRegistry().CreateQuery(ComponentSet(&TransformComponent::Id, 1));
-		}
-
-		{
-			m_World.RegisterSystem(m_World.GetRegistry().CreateQuery(ComponentSet(&TransformComponent::Id, 1)), [](EntityView view) -> void
-			{
-				ComponentView<TransformComponent> transforms = view.View<TransformComponent>();
-				for (EntityViewElement entity : view)
-				{
-					TransformComponent& transform = transforms[entity];
-					Renderer2D::DrawQuad(transform.Position, glm::vec2(0.4f), glm::vec4(1.0f));
-				}
-			});
-		}
+		});
 	}
 
 	void EditorLayer::OnUpdate(float deltaTime)
@@ -255,26 +243,12 @@ namespace Flare
 
 						if (opened)
 						{
-							std::optional<ComponentId> removedComponent = {};
-							for (ComponentId component : m_World.GetRegistry().GetEntityComponents(entity))
+							for (ComponentId component : m_World.GetEntityComponents(entity))
 							{
-								if (!removedComponent.has_value() && ImGui::BeginPopupContextWindow())
-								{
-									if (ImGui::MenuItem("Remove component"))
-									{
-										removedComponent = component;
-									}
-
-									ImGui::EndMenu();
-								}
-
 								ImGui::Separator();
 								ImGui::Text("%s", m_World.GetRegistry().GetComponentInfo(component).Name.c_str());
 								DrawComponent(entity, component);
 							}
-
-							if (removedComponent.has_value())
-								m_World.GetRegistry().RemoveEntityComponent(entity, removedComponent.value());
 
 							ImGui::TreePop();
 						}
@@ -348,18 +322,18 @@ namespace Flare
 	{
 		if (componentId == TestComponent::Id)
 		{
-			TestComponent& testComponent = *(TestComponent*)(m_World.GetRegistry().GetEntityComponent(entity, componentId).value());
+			TestComponent& testComponent = *m_World.TryGetEntityComponent<TestComponent>(entity, componentId).value();
 			ImGui::DragFloat("Float A", &testComponent.FloatA);
 			ImGui::DragFloat4("Vec", glm::value_ptr(testComponent.Vec));
 		}
 		else if (componentId == TransformComponent::Id)
 		{
-			TransformComponent& transform = *(TransformComponent*)(m_World.GetRegistry().GetEntityComponent(entity, componentId).value());
+			TransformComponent& transform = *m_World.TryGetEntityComponent<TransformComponent>(entity, componentId).value();
 			ImGui::DragFloat3("Position", glm::value_ptr(transform.Position));
 		}
 		else if (componentId == TagComponent::Id)
 		{
-			TagComponent& tag = *(TagComponent*)(m_World.GetRegistry().GetEntityComponent(entity, componentId).value());
+			TagComponent& tag = *m_World.TryGetEntityComponent<TagComponent>(entity, componentId).value();
 			ImGui::Text("%s", tag.Name);
 		}
 	}

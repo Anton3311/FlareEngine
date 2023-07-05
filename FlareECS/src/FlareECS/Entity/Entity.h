@@ -10,11 +10,11 @@ namespace Flare
 	struct Entity
 	{
 	public:
-		Entity()
+		constexpr Entity()
 			: m_Packed(SIZE_MAX) {}
-		Entity(uint32_t id)
+		constexpr Entity(uint32_t id)
 			: m_Packed(0), m_Id(id), m_Generation(0) {}
-		Entity(uint32_t id, uint16_t generation)
+		constexpr Entity(uint32_t id, uint16_t generation)
 			: m_Packed(0), m_Id(id), m_Generation(generation) {}
 
 		inline uint32_t GetIndex() const { return m_Id; }

@@ -24,6 +24,7 @@ namespace Flare
 	{
 	public:
 		Registry();
+		~Registry();
 	public:
 		// Entity operations
 
@@ -38,7 +39,7 @@ namespace Flare
 		ComponentId RegisterComponent(std::string_view name, size_t size, const std::function<void(void*)>& deleter);
 
 		std::optional<void*> GetEntityComponent(Entity entity, ComponentId component);
-		const ComponentSet& GetEntityComponents(Entity entity);
+		const std::vector<ComponentId>& GetEntityComponents(Entity entity);
 		bool HasComponent(Entity entity, ComponentId component);
 
 		inline const ComponentInfo& GetComponentInfo(size_t index) const;
