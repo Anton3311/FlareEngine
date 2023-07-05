@@ -26,7 +26,7 @@ namespace Flare
 		EntityRecord& record = m_EntityRecords.emplace_back();
 
 		record.RegistryIndex = registryIndex;
-		record.Id = Entity(record.RegistryIndex);
+		record.Id = m_EntityIndex.CreateId();
 
 		auto it = m_ComponentSetToArchetype.find(components);
 		if (it != m_ComponentSetToArchetype.end())
@@ -64,6 +64,30 @@ namespace Flare
 
 		m_EntityToRecord.emplace(record.Id, record.RegistryIndex);
 		return record.Id;
+	}
+
+	void Registry::DeleteEntity(Entity entity)
+	{
+		auto recordIterator = m_EntityToRecord.find(entity);
+		if (recordIterator == m_EntityToRecord.end())
+			return;
+
+		EntityRecord& record = m_EntityRecords[recordIterator->second];
+		EntityRecord& lastEntityRecord = m_EntityRecords.back();
+
+		m_EntityIndex.AddDeletedId(record.Id);
+
+		// Move last entity in the registry to the location of a deleted entity
+		m_Archetypes[lastEntityRecord.Archetype].Storage.UpdateEntityRegistryIndex(lastEntityRecord.BufferIndex, record.RegistryIndex);
+		RemoveEntityData(record.Archetype, record.BufferIndex);
+
+		record.Id = lastEntityRecord.Id;
+		record.Archetype = lastEntityRecord.Archetype;
+		record.BufferIndex = lastEntityRecord.BufferIndex;
+		m_EntityToRecord[lastEntityRecord.Id] = record.RegistryIndex;
+
+		m_EntityToRecord.erase(recordIterator);
+		m_EntityRecords.erase(m_EntityRecords.end() - 1);
 	}
 
 	bool Registry::AddEntityComponent(Entity entity, ComponentId componentId, const void* componentData)
@@ -286,6 +310,11 @@ namespace Flare
 
 		entityRecord.Archetype = newArchetypeId;
 		entityRecord.BufferIndex = newEntityIndex;
+	}
+
+	bool Registry::IsEntityAlive(Entity entity) const
+	{
+		return m_EntityToRecord.find(entity) != m_EntityToRecord.end();
 	}
 
 	std::optional<void*> Registry::GetEntityComponent(Entity entity, ComponentId component)

@@ -6,6 +6,7 @@
 #include "FlareECS/Entity/Entity.h"
 #include "FlareECS/Entity/Component.h"
 #include "FlareECS/Entity/Archetype.h"
+#include "FlareECS/Entity/EntityIndex.h"
 
 #include "FlareECS/Query/QueryCache.h"
 
@@ -27,8 +28,10 @@ namespace Flare
 		// Entity operations
 
 		Entity CreateEntity(ComponentSet& components);
+		void DeleteEntity(Entity entity);
 		bool AddEntityComponent(Entity entity, ComponentId componentId, const void* componentData);
 		bool RemoveEntityComponent(Entity entity, ComponentId componentId);
+		bool IsEntityAlive(Entity entity) const;
 
 		// Component operations
 
@@ -76,6 +79,7 @@ namespace Flare
 		std::vector<ComponentInfo> m_RegisteredComponents;
 
 		QueryCache m_QueryCache;
+		EntityIndex m_EntityIndex;
 
 		friend class EntityRegistryIterator;
 		friend class QueryCache;
