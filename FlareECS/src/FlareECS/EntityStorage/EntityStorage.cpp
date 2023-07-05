@@ -8,7 +8,7 @@ namespace Flare
 		: m_EntitySize(0), m_EntitiesCount(0), m_EntitiesPerChunk(0) {}
 	
 	EntityStorage::EntityStorage(EntityStorage&& other) noexcept
-		: m_Chunks(std::move(other.m_Chunks)), m_EntityIndices(std::move(other.m_EntitiesCount)),
+		: m_Chunks(std::move(other.m_Chunks)), m_EntityIndices(std::move(other.m_EntityIndices)),
 		m_EntitySize(other.m_EntitySize), m_EntitiesPerChunk(other.m_EntitiesPerChunk), m_EntitiesCount(other.m_EntitiesCount)
 	{
 		other.m_EntitiesCount = 0;
