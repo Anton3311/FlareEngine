@@ -17,6 +17,7 @@ project "Flare"
 	{
 		"src/",
 		"%{wks.location}/FlareCommon/src/",
+		"%{wks.location}/FlareECS/src/",
 		INCLUDE_DIRS.GLAD,
 		INCLUDE_DIRS.GLFW,
 		INCLUDE_DIRS.glm,
@@ -30,6 +31,7 @@ project "Flare"
 		"GLAD",
 		"GLFW",
 		"ImGUI",
+		"FlareECS",
 		"FlareCommon"
 	}
 
