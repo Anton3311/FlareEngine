@@ -23,4 +23,11 @@ namespace Flare
 		float Near;
 		float Far;
 	};
+
+	struct SpriteComponent
+	{
+		FLARE_COMPONENT;
+
+		glm::vec4 Color;
+	};
 }

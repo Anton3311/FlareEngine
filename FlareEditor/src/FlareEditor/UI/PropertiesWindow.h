@@ -13,5 +13,7 @@ namespace Flare
 		void OnImGuiRender();
 	private:
 		void RenderCameraComponent(CameraComponent& cameraComponent);
+		void RenderTransformComponent(TransformComponent& transform);
+		void RenderSpriteComponent(SpriteComponent& sprite);
 	};
 }
