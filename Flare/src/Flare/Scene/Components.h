@@ -1,8 +1,8 @@
 #pragma once
 
-#include "FlareECS/World.h"
+#include "Flare.h"
 
-#include <glm/glm.hpp>
+#include "FlareECS/World.h"
 
 namespace Flare
 {
@@ -13,6 +13,8 @@ namespace Flare
 		glm::vec3 Position;
 		glm::vec3 Rotation;
 		glm::vec3 Scale;
+
+		glm::mat4 GetTransformationMatrix() const;
 	};
 
 	struct CameraComponent

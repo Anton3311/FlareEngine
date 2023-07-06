@@ -126,6 +126,29 @@ namespace Flare
 		s_Data->Stats.QuadsCount++;
 	}
 
+	void Renderer2D::DrawQuad(const glm::mat4& transform, const glm::vec4& tint)
+	{
+		if (s_Data->QuadIndex >= s_Data->MaxQuadCount)
+			Flush();
+
+		if (s_Data->TextureIndex == MaxTexturesCount)
+			Flush();
+
+		size_t vertexIndex = s_Data->QuadIndex * 4;
+		for (uint32_t i = 0; i < 4; i++)
+		{
+			QuadVertex& vertex = s_Data->Vertices[vertexIndex + i];
+			vertex.Position = transform * glm::vec4(s_Data->QuadVertices[i], 1.0f);
+			vertex.Color = tint;
+			vertex.UV = s_Data->QuadUV[i];
+			vertex.TextureTiling = glm::vec2(1.0f);
+			vertex.TextuteIndex = 0; // White texture
+		}
+
+		s_Data->QuadIndex++;
+		s_Data->Stats.QuadsCount++;
+	}
+
 	void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const Ref<Texture>& texture, glm::vec4 tint, glm::vec2 tiling)
 	{
 		DrawQuad(position, size, texture, tint, tiling, s_Data->QuadUV);
