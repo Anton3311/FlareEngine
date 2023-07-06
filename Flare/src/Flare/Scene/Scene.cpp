@@ -17,7 +17,7 @@ namespace Flare
 		m_World.RegisterComponent<CameraComponent>();
 		m_World.RegisterComponent<SpriteComponent>();
 
-		m_CameraDataUpdateQuery = m_World.CreateQuery<CameraComponent>();
+		m_CameraDataUpdateQuery = m_World.CreateQuery<TransformComponent, CameraComponent>();
 
 		m_World.RegisterSystem(m_World.CreateQuery<TransformComponent, SpriteComponent>(), [this](EntityView view)
 		{
@@ -33,7 +33,7 @@ namespace Flare
 			}
 		});
 
-		Entity cameraEntity = m_World.CreateEntity<CameraComponent>();
+		Entity cameraEntity = m_World.CreateEntity<TransformComponent, CameraComponent>();
 		CameraComponent& camera = m_World.GetEntityComponent<CameraComponent>(cameraEntity);
 		camera.Size = 10.0f;
 		camera.Near = 0.1f;
@@ -57,14 +57,18 @@ namespace Flare
 			for (EntityView entityView : archetypesView)
 			{
 				ComponentView<CameraComponent> cameras = entityView.View<CameraComponent>();
+				ComponentView<TransformComponent> transforms = entityView.View<TransformComponent>();
+
 				for (EntityViewElement entity : entityView)
 				{
 					CameraComponent& camera = cameras[entity];
 
+					glm::mat4 inverseTransform = glm::inverse(transforms[entity].GetTransformationMatrix());
+
 					float halfSize = camera.Size / 2;
 					float aspectRation = (float)m_ViewportWidth / (float)m_ViewportHeight;
 
-					m_CameraData.Projection = glm::ortho(-halfSize * aspectRation, halfSize * aspectRation, -halfSize, halfSize, camera.Near, camera.Far);
+					m_CameraData.Projection = glm::ortho(-halfSize * aspectRation, halfSize * aspectRation, -halfSize, halfSize, camera.Near, camera.Far) * inverseTransform;
 				}
 			}
 		}
