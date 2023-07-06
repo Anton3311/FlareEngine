@@ -78,6 +78,10 @@ namespace Flare
 		record.BufferIndex = archetypeRecord.Storage.AddEntity(record.RegistryIndex);
 
 		m_EntityToRecord.emplace(record.Id, record.RegistryIndex);
+
+		uint8_t* entityData = archetypeRecord.Storage.GetEntityData(record.BufferIndex);
+		// Intialize entity data to 0
+		std::memset(entityData, 0, archetypeRecord.Storage.GetEntitySize());
 		return record.Id;
 	}
 
