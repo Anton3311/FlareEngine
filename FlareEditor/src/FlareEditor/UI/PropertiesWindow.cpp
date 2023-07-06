@@ -22,7 +22,10 @@ namespace Flare
 			ImGui::BeginDisabled();
 			ImGui::Text("Index %d Generation %d", selectedEntity.GetIndex(), selectedEntity.GetGeneration());
 			ImGui::EndDisabled();
+			
+			RenderAddComponentMenu(selectedEntity);
 
+			std::optional<ComponentId> removedComponent;
 			for (ComponentId component : world.GetEntityComponents(selectedEntity))
 			{
 				const ComponentInfo& componentInfo = world.GetRegistry().GetComponentInfo(component);
@@ -44,10 +47,38 @@ namespace Flare
 
 					ImGui::TreePop();
 				}
+
+				if (ImGui::BeginPopupContextItem())
+				{
+					if (ImGui::MenuItem("Remove"))
+						removedComponent = component;
+
+					ImGui::End();
+				}
 			}
+
+			if (removedComponent.has_value())
+				world.GetRegistry().RemoveEntityComponent(selectedEntity, removedComponent.value());
 		}
 
 		ImGui::End();
+	}
+
+	void PropertiesWindow::RenderAddComponentMenu(Entity entity)
+	{
+		if (ImGui::BeginMenu("Add component"))
+		{
+			World& world = EditorContext::Instance.ActiveScene->GetECSWorld();
+			const std::vector<ComponentInfo>& components = world.GetRegistry().GetRegisteredComponents();
+
+			for (const auto& info : components)
+			{
+				if (ImGui::MenuItem(info.Name.c_str()))
+					world.GetRegistry().AddEntityComponent(entity, info.Id, nullptr);
+			}
+
+			ImGui::End();
+		}
 	}
 
 	void PropertiesWindow::RenderCameraComponent(CameraComponent& cameraComponent)

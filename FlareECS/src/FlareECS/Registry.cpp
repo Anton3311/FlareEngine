@@ -220,8 +220,12 @@ namespace Flare
 		size_t sizeAfter = oldArchetype.Storage.GetEntitySize() - sizeBefore;
 
 		std::memcpy(newEntityData, oldEntityData, sizeBefore);
-		std::memcpy(newEntityData + sizeBefore, componentData, componentSize);
 		std::memcpy(newEntityData + sizeBefore + componentSize, oldEntityData + sizeBefore, sizeAfter);
+
+		if (componentData == nullptr)
+			std::memset(newEntityData + sizeBefore, 0, componentSize);
+		else
+			std::memcpy(newEntityData + sizeBefore, componentData, componentSize);
 
 		RemoveEntityData(entityRecord.Archetype, entityRecord.BufferIndex);
 

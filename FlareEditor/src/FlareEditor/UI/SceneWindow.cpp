@@ -1,5 +1,7 @@
 #include "SceneWindow.h"
 
+#include "Flare/Scene/Components.h"
+
 #include "FlareECS/World.h"
 #include "FlareECS/Query/EntityRegistryIterator.h"
 #include "FlareECS/Registry.h"
@@ -12,9 +14,19 @@ namespace Flare
 {
 	void SceneWindow::OnImGuiRender()
 	{
+		World& world = EditorContext::Instance.ActiveScene->GetECSWorld();
+
 		ImGui::Begin("Scene");
 
-		World& world = EditorContext::Instance.ActiveScene->GetECSWorld();
+		if (ImGui::BeginPopupContextWindow("Scene Context Menu"))
+		{
+			if (ImGui::MenuItem("Create Entity"))
+				world.CreateEntity<TransformComponent>();
+
+			ImGui::EndMenu();
+		}
+
+		std::optional<Entity> deletedEntity;
 		for (Entity entity : world.GetRegistry())
 		{
 			ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_FramePadding;
@@ -28,7 +40,18 @@ namespace Flare
 			{
 				ImGui::TreePop();
 			}
+
+			if (ImGui::BeginPopupContextItem())
+			{
+				if (ImGui::MenuItem("Delete entity"))
+					deletedEntity = entity;
+
+				ImGui::EndMenu();
+			}
 		}
+
+		if (deletedEntity.has_value())
+			world.DeleteEntity(deletedEntity.value());
 
 		ImGui::End();
 	}

@@ -103,20 +103,23 @@ namespace Flare
 	{
 		ImGuiStyle& style = ImGui::GetStyle();
 		style.WindowRounding = 0.0f;
-		style.FrameRounding = 4.0f;
-		style.GrabRounding = 4.0f;
-
-		style.TabRounding = 0.0f;
-		style.TabBorderSize = 0.0f;
 		style.WindowBorderSize = 1.0f;
-		style.ChildBorderSize = 1.0f;
-		style.FrameBorderSize = 1.5f;
-		style.PopupBorderSize = 1.0f;
-		style.TabBorderSize = 0.0f;
-
 		style.WindowMenuButtonPosition = ImGuiDir_None;
 
+		style.FrameRounding = 4.0f;
+		style.FrameBorderSize = 1.5f;
 		style.FramePadding = ImVec2(6.0f, 6.0f);
+
+		style.GrabRounding = 4.0f;
+
+		style.TabRounding = 4.0f;
+		style.TabBorderSize = 0.0f;
+		style.TabBorderSize = 0.0f;
+
+		style.PopupRounding = 4.0f;
+		style.PopupBorderSize = 1.0f;
+
+		style.ChildBorderSize = 1.0f;
 
 		auto& colors = style.Colors;
 
