@@ -382,8 +382,9 @@ namespace Flare
 		return EntityRegistryIterator(*this, m_EntityRecords.size());
 	}
 
-	QueryId Registry::CreateQuery(const ComponentSet& components)
+	QueryId Registry::CreateQuery(ComponentSet& components)
 	{
+		std::sort(components.GetIds(), components.GetIds() + components.GetCount());
 		return m_QueryCache.AddQuery(components);
 	}
 

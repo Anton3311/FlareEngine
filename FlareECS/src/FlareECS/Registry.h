@@ -57,7 +57,7 @@ namespace Flare
 
 		// Querying
 
-		QueryId CreateQuery(const ComponentSet& components);
+		QueryId CreateQuery(ComponentSet& components);
 
 		EntityView QueryArchetype(ComponentSet components);
 		EntityArchetypesView ExecuteQuery(QueryId query);
