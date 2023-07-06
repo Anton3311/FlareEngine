@@ -32,14 +32,6 @@ namespace Flare
 				Renderer2D::DrawQuad(transform.GetTransformationMatrix(), sprite.Color);
 			}
 		});
-
-		Entity cameraEntity = m_World.CreateEntity<TransformComponent, CameraComponent>();
-		CameraComponent& camera = m_World.GetEntityComponent<CameraComponent>(cameraEntity);
-		camera.Size = 10.0f;
-		camera.Near = 0.1f;
-		camera.Far = 10.0f;
-
-		m_World.CreateEntity<TransformComponent, SpriteComponent>();
 	}
 
 	Scene::~Scene()
@@ -77,9 +69,6 @@ namespace Flare
 
 		m_World.OnUpdate();
 
-		//Renderer2D::DrawQuad(glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(2.0f), glm::vec4(0.8f, 0.3f, 0.2f, 1.0f));
-		//Renderer2D::DrawQuad(glm::translate(glm::mat4(1.0f), glm::vec3(-0.2f, 0.5f, -1.0f)), nullptr, glm::vec4(0.2f, 0.9f, 0.2f, 1.0f));
-		//Renderer2D::DrawQuad(glm::identity<glm::mat4>(), nullptr, glm::vec4(0.2f, 0.9f, 0.2f, 1.0f));
 		Renderer2D::End();
 	}
 

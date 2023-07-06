@@ -1,0 +1,31 @@
+Entities:
+  - Components:
+      Transform:
+        Position: [0, 0, 0]
+        Rotation: [0, 0, 0]
+        Scale: [1, 1, 1]
+      Camera:
+        Size: 10
+        Near: 0.100000001
+        Far: 10
+  - Components:
+      Transform:
+        Position: [-2.20000005, 0, -1.10000002]
+        Rotation: [0, 0, 69.3000031]
+        Scale: [1, 1, 1]
+      Sprite:
+        Color: [0.762962937, 0.079122059, 0.079122059, 1]
+  - Components:
+      Transform:
+        Position: [0, 0, -0.800000012]
+        Rotation: [0, 0, 118.5]
+        Scale: [1, 1, 1]
+      Sprite:
+        Color: [0.0930589959, 0.785185218, 0.277625978, 1]
+  - Components:
+      Transform:
+        Position: [0, 1.60000002, -0.5]
+        Rotation: [0, 0, -37.4000015]
+        Scale: [1, 1, 1]
+      Sprite:
+        Color: [0.145678997, 0.236323699, 0.655555546, 1]

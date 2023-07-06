@@ -5,4 +5,5 @@ INCLUDE_DIRS = {
 	stb_image = "%{wks.location}/Flare/vendor/stb_image",
 	spdlog = "%{wks.location}/Flare/vendor/spdlog/include",
 	imgui = "%{wks.location}/Flare/vendor/ImGUI/",
+	yaml_cpp = "%{wks.location}/Flare/vendor/yaml-cpp/include/",
 }

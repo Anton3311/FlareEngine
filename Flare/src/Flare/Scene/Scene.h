@@ -9,6 +9,7 @@
 
 namespace Flare
 {
+	class SceneSerializer;
 	class Scene
 	{
 	public:
@@ -30,5 +31,7 @@ namespace Flare
 		CameraData m_CameraData;
 	private:
 		static Ref<Scene> m_Active;
+
+		friend SceneSerializer;
 	};
 }

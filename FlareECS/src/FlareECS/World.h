@@ -63,6 +63,12 @@ namespace Flare
 		}
 
 		template<typename T>
+		constexpr bool AddEntityComponent(Entity entity, const T& data)
+		{
+			return m_Registry.AddEntityComponent(entity, T::Id, &data);
+		}
+
+		template<typename T>
 		constexpr bool RemoveEntityComponent(Entity entity)
 		{
 			return m_Registry.RemoveEntityComponent(entity, T::Id);

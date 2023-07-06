@@ -2,8 +2,8 @@
 
 #include "Flare.h"
 #include "Flare/Core/Application.h"
-
 #include "Flare/Renderer2D/Renderer2D.h"
+#include "Flare/Scene/SceneSerializer.h"
 
 #include "FlareEditor/EditorContext.h"
 
@@ -88,6 +88,21 @@ namespace Flare
 
 		ImGuiID dockspaceId = ImGui::GetID("DockSpace");
 		ImGui::DockSpace(dockspaceId, ImVec2(0.0f, 0.0f), dockspaceFlags);
+
+		if (ImGui::BeginMenuBar())
+		{
+			if (ImGui::BeginMenu("Scene"))
+			{
+				if (ImGui::MenuItem("Open Scene"))
+					SceneSerializer::Deserialize(EditorContext::Instance.ActiveScene, "Scene.flare");
+				if (ImGui::MenuItem("Save Scene"))
+					SceneSerializer::Serialize(EditorContext::Instance.ActiveScene, "Scene.flare");
+				ImGui::EndMenu();
+			}
+
+			ImGui::EndMenuBar();
+		}
+
 
 		{
 			ImGui::Begin("Renderer 2D");

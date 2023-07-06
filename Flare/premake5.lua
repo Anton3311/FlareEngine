@@ -24,6 +24,7 @@ project "Flare"
 		INCLUDE_DIRS.stb_image,
 		INCLUDE_DIRS.spdlog,
 		INCLUDE_DIRS.imgui,
+		INCLUDE_DIRS.yaml_cpp,
 	}
 
 	links
@@ -32,12 +33,14 @@ project "Flare"
 		"GLFW",
 		"ImGUI",
 		"FlareECS",
-		"FlareCommon"
+		"FlareCommon",
+		"yaml-cpp"
 	}
 
 	defines
 	{
-		"GLFW_INCLUDE_NONE"
+		"GLFW_INCLUDE_NONE",
+		"YAML_CPP_STATIC_DEFINE",
 	}
 
 	targetdir("%{wks.location}/bin/" .. OUTPUT_DIRECTORY .. "/%{prj.name}")

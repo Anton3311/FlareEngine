@@ -10,3 +10,6 @@
 [submodule ".\\Flare\\vendor\\ImGUI"]
 	path = .\\Flare\\vendor\\ImGUI
 	url = https://github.com/Anton3311/imgui.git
+[submodule "Flare/vendor/yaml-cpp"]
+	path = Flare/vendor/yaml-cpp
+	url = git@github.com:Anton3311/yaml-cpp.git
