@@ -14,25 +14,19 @@ namespace Flare
 {
 	class Registry;
 
-	using QueryId = size_t;
-	constexpr QueryId INVALID_QUERY_ID = SIZE_MAX;
-
+	class Query;
 	class QueryCache
 	{
 	public:
 		QueryCache(Registry& registry)
 			: m_Registry(registry) {}
-	public:
-		QueryId AddQuery(const ComponentSet& components);
-		void OnArchetypeCreated(ArchetypeId archetype);
 
-		inline const QueryData& operator[](QueryId id) const
-		{
-			FLARE_CORE_ASSERT(id < m_Queries.size());
-			return m_Queries[id];
-		}
+		const QueryData& operator[](QueryId id) const;
+	public:
+		Query AddQuery(const ComponentSet& components);
+		void OnArchetypeCreated(ArchetypeId archetype);
 	private:
-		bool CompareComponentSets(const ComponentSet& archetypeComponents, const ComponentSet& queryComponents);
+		bool CompareComponentSets(const std::vector<ComponentId>& archetypeComponents, const std::vector<ComponentId>& queryComponents);
 	private:
 		Registry& m_Registry;
 

@@ -1,16 +1,10 @@
 #include "World.h"
 
-#include "FlareECS/Query/EntityArchetypesView.h"
-
 namespace Flare
 {
-	void World::RegisterSystem(QueryId query, const SystemFunction& system)
+	void World::RegisterSystem(const Query& query, const SystemFunction& system)
 	{
-		System& systemData = m_Systems.emplace_back();
-		systemData.Archetype = INVALID_ARCHETYPE_ID;
-		systemData.IsArchetypeQuery = false;
-		systemData.Function = system;
-		systemData.Query = query;
+		m_Systems.emplace_back(query, system);
 	}
 
 	void World::OnUpdate()
@@ -23,8 +17,7 @@ namespace Flare
 			}
 			else
 			{
-				EntityArchetypesView queryResult = m_Registry.ExecuteQuery(system.Query);
-				for (EntityView view : queryResult)
+				for (EntityView view : system.SystemQuery)
 					system.Function(view);
 			}
 		}

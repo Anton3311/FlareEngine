@@ -2,7 +2,8 @@
 
 #include "FlareECS/Query/EntityView.h"
 #include "FlareECS/Query/EntityRegistryIterator.h"
-#include "FlareECS/Query/EntityArchetypesView.h"
+
+#include "FlareECS/Query/Query.h"
 
 #include "FlareECS/EntityStorage/EntityChunksPool.h"
 
@@ -394,9 +395,8 @@ namespace Flare
 		return EntityRegistryIterator(*this, m_EntityRecords.size());
 	}
 
-	QueryId Registry::CreateQuery(ComponentSet& components)
+	Query Registry::CreateQuery(const ComponentSet& components)
 	{
-		std::sort(components.GetIds(), components.GetIds() + components.GetCount());
 		return m_QueryCache.AddQuery(components);
 	}
 
@@ -409,12 +409,6 @@ namespace Flare
 
 		size_t archetypeId = it->second;
 		return EntityView(*this, archetypeId);
-	}
-
-	EntityArchetypesView Registry::ExecuteQuery(QueryId query)
-	{
-		const QueryData& data = m_QueryCache[query];
-		return EntityArchetypesView(*this, data.MatchedArchetypes);
 	}
 
 	const std::vector<ComponentId>& Registry::GetEntityComponents(Entity entity)

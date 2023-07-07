@@ -16,8 +16,9 @@
 
 namespace Flare
 {
+	class Query;
+
 	class EntityView;
-	class EntityArchetypesView;
 	class EntityRegistryIterator;
 
 	class Registry
@@ -58,10 +59,9 @@ namespace Flare
 
 		// Querying
 
-		QueryId CreateQuery(ComponentSet& components);
+		Query CreateQuery(const ComponentSet& components);
 
 		EntityView QueryArchetype(ComponentSet components);
-		EntityArchetypesView ExecuteQuery(QueryId query);
 	public:
 		inline EntityRecord& operator[](size_t index);
 		inline const EntityRecord& operator[](size_t index) const;

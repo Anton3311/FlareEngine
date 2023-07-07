@@ -27,7 +27,7 @@ namespace Flare
 		World m_World;
 		Ref<Shader> m_QuadShader;
 
-		QueryId m_CameraDataUpdateQuery;
+		Query m_CameraDataUpdateQuery;
 		CameraData m_CameraData;
 	private:
 		static Ref<Scene> m_Active;

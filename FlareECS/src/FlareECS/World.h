@@ -3,6 +3,8 @@
 #include "FlareECS/Registry.h"
 #include "FlareECS/Entity/Component.h"
 
+#include "FlareECS/Query/Query.h"
+
 #include "FlareECS/System/System.h"
 
 #include <vector>
@@ -96,7 +98,7 @@ namespace Flare
 		}
 
 		template<typename... T>
-		constexpr QueryId CreateQuery()
+		constexpr Query CreateQuery()
 		{
 			ComponentId ids[sizeof...(T)];
 			size_t index = 0;
@@ -111,7 +113,7 @@ namespace Flare
 	public:
 		inline Registry& GetRegistry() { return m_Registry; }
 
-		void RegisterSystem(QueryId query, const SystemFunction& system);
+		void RegisterSystem(const Query& query, const SystemFunction& system);
 
 		void OnUpdate();
 	private:

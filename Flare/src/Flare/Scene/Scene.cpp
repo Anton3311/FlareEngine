@@ -4,8 +4,6 @@
 
 #include "Flare/Scene/Components.h"
 
-#include "FlareECS/Query/EntityArchetypesView.h"
-
 namespace Flare
 {
 	Scene::Scene()
@@ -45,8 +43,7 @@ namespace Flare
 
 		if (m_ViewportWidth != 0 && m_ViewportHeight != 0)
 		{
-			EntityArchetypesView archetypesView = m_World.GetRegistry().ExecuteQuery(m_CameraDataUpdateQuery);
-			for (EntityView entityView : archetypesView)
+			for (EntityView entityView : m_CameraDataUpdateQuery)
 			{
 				ComponentView<CameraComponent> cameras = entityView.View<CameraComponent>();
 				ComponentView<TransformComponent> transforms = entityView.View<TransformComponent>();
