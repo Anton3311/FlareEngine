@@ -27,6 +27,8 @@ namespace Flare
 			}
 		}
 
+		glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, true);
+
 		m_Window = glfwCreateWindow(m_Data.Properties.Width, m_Data.Properties.Height, m_Data.Properties.Title.c_str(), nullptr, nullptr);
 
 		m_GraphicsContext = GraphicsContext::Create((void*) m_Window);

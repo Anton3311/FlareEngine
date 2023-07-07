@@ -23,7 +23,7 @@ namespace Flare
 		uint32_t height = window->GetProperties().Height;
 
 		FrameBufferSpecifications specifications(width, height, {
-			{FrameBufferTextureFormat::RGB8, TextureWrap::Clamp, TextureFiltering::NoFiltering }
+			{ FrameBufferTextureFormat::RGB8, TextureWrap::Clamp, TextureFiltering::NoFiltering }
 		});
 
 		m_FrameBuffer = FrameBuffer::Create(specifications);
@@ -102,7 +102,6 @@ namespace Flare
 
 			ImGui::EndMenuBar();
 		}
-
 
 		{
 			ImGui::Begin("Renderer 2D");

@@ -1,13 +1,43 @@
 #include "OpenGLRendererAPI.h"
 
+#include "Flare/Core/Log.h"
+
 #include <glad/glad.h>
 
 namespace Flare
 {
+	static void OpenGLDebugMessageCallback(GLenum source,
+		GLenum type,
+		GLuint id,
+		GLenum severity,
+		GLsizei length,
+		const GLchar* message,
+		const void* userParam)
+	{
+		switch (severity)
+		{
+		case GL_DEBUG_SEVERITY_LOW:
+			FLARE_CORE_WARN(message);
+			return;
+		case GL_DEBUG_SEVERITY_MEDIUM:
+			FLARE_CORE_ERROR(message);
+			return;
+		case GL_DEBUG_SEVERITY_HIGH:
+			FLARE_CORE_CRITICAL(message);
+			return;
+		case GL_DEBUG_SEVERITY_NOTIFICATION:
+			FLARE_CORE_TRACE(message);
+			return;
+		}
+	}
+
 	void OpenGLRendererAPI::Initialize()
 	{
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+		glDebugMessageCallback(OpenGLDebugMessageCallback, nullptr);
+		glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_NOTIFICATION, 0, nullptr, GL_FALSE);
 		//glEnable(GL_DEPTH_TEST);
 	}
 
