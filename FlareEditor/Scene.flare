@@ -34,9 +34,9 @@ Entities:
         Texture: 0
   - Components:
       Transform:
-        Position: [0, -2.79999995, -0.100000001]
-        Rotation: [0, 0, 0]
+        Position: [-2.9000001, -2.79999995, -0.100000001]
+        Rotation: [0, 0, -28.8999996]
         Scale: [2, 2, 2]
       Sprite:
         Color: [1, 1, 1, 1]
-        Texture: 7247848625752884350
+        Texture: 10180646465309905513

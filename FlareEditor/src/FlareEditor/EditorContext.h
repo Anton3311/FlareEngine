@@ -16,7 +16,7 @@ namespace Flare
 		static void OpenScene(AssetHandle handle);
 
 		static const Ref<Scene>& GetActiveScene() { return Instance.m_ActiveScene; }
-		static AssetHandle GetActiveSceneHandle() { return Instance.m_ActiveSceneHandle; }
+		//static AssetHandle GetActiveSceneHandle() { return Instance.m_ActiveSceneHandle; }
 	public:
 
 		Entity SelectedEntity;

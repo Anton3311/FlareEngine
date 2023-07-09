@@ -98,7 +98,14 @@ namespace Flare
 		{
 			if (ImGui::BeginMenu("Scene"))
 			{
-				// TODO: add open/save scene
+				if (ImGui::MenuItem("Save"))
+				{
+					if (AssetManager::IsAssetHandleValid(EditorContext::GetActiveScene()->Handle))
+						SceneSerializer::Serialize(EditorContext::GetActiveScene());
+					// else
+					// TODO: Ask for save location
+				}
+
 				ImGui::EndMenu();
 			}
 

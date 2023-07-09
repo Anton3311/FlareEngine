@@ -37,5 +37,7 @@ namespace Flare
 		inline AssetType GetType() const { return m_Type; }
 	private:
 		AssetType m_Type;
+	public:
+		AssetHandle Handle = NULL_ASSET_HANDLE;
 	};
 }

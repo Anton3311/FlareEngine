@@ -9,7 +9,7 @@ namespace Flare
 	class SceneSerializer
 	{
 	public:
-		static void Serialize(const Ref<Scene>& scene, const std::filesystem::path& path);
+		static void Serialize(const Ref<Scene>& scene);
 		static void Deserialize(const Ref<Scene>& scene, const std::filesystem::path& path);
 	};
 }

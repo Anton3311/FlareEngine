@@ -20,7 +20,6 @@ namespace Flare
 			Ref<EditorAssetManager> editorAssetManager = As<EditorAssetManager>(AssetManager::GetInstance());
 			editorAssetManager->UnloadAsset(Instance.m_ActiveSceneHandle);
 			
-			Instance.m_ActiveSceneHandle = handle;
 			Instance.m_ActiveScene = AssetManager::GetAsset<Scene>(handle);
 		}
 	}
