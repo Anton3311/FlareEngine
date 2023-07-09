@@ -100,6 +100,7 @@ namespace Flare
 
 			emitter << YAML::Key << "Sprite" << YAML::BeginMap;
 			emitter << YAML::Key << "Color" << YAML::Value << sprite.Color;
+			emitter << YAML::Key << "Texture" << YAML::Value << sprite.Texture;
 			emitter << YAML::EndMap;
 		}
 		else if (component == CameraComponent::Id)
@@ -115,7 +116,7 @@ namespace Flare
 	}
 
 	template<typename T>
-	static void AddDesirializaedComponent(World& world, Entity& entity, const T& componentData)
+	static void AddDeserializedComponent(World& world, Entity& entity, const T& componentData)
 	{
 		if (world.IsEntityAlive(entity))
 			world.AddEntityComponent<T>(entity, componentData);
@@ -194,7 +195,7 @@ namespace Flare
 					transformComponent.Rotation = transformNode["Rotation"].as<glm::vec3>();
 					transformComponent.Scale = transformNode["Scale"].as<glm::vec3>();
 
-					AddDesirializaedComponent<TransformComponent>(scene->m_World, entity, transformComponent);
+					AddDeserializedComponent<TransformComponent>(scene->m_World, entity, transformComponent);
 				}
 				
 				if (componentsNode["Sprite"])
@@ -204,7 +205,10 @@ namespace Flare
 					SpriteComponent spriteComponent;
 					spriteComponent.Color = spriteNode["Color"].as<glm::vec4>();
 
-					AddDesirializaedComponent<SpriteComponent>(scene->m_World, entity, spriteComponent);
+					YAML::Node textureNode = spriteNode["Texture"];
+					spriteComponent.Texture = textureNode ? textureNode.as<uint64_t>() : NULL_ASSET_HANDLE;
+
+					AddDeserializedComponent<SpriteComponent>(scene->m_World, entity, spriteComponent);
 				}
 
 				if (componentsNode["Camera"])
@@ -216,7 +220,7 @@ namespace Flare
 					cameraComponent.Near = cameraNode["Near"].as<float>();
 					cameraComponent.Far = cameraNode["Far"].as<float>();
 
-					AddDesirializaedComponent<CameraComponent>(scene->m_World, entity, cameraComponent);
+					AddDeserializedComponent<CameraComponent>(scene->m_World, entity, cameraComponent);
 				}
 			}
 		}

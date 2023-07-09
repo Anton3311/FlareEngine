@@ -99,5 +99,6 @@ namespace Flare
 	void PropertiesWindow::RenderSpriteComponent(SpriteComponent& sprite)
 	{
 		EditorGUI::ColorPropertyField("Color", sprite.Color);
+		EditorGUI::AssetField("Texture", sprite.Texture);
 	}
 }

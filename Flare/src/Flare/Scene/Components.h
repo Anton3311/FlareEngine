@@ -4,6 +4,8 @@
 
 #include "FlareECS/World.h"
 
+#include "Flare/AssetManager/Asset.h"
+
 namespace Flare
 {
 	struct TransformComponent
@@ -31,5 +33,6 @@ namespace Flare
 		FLARE_COMPONENT;
 
 		glm::vec4 Color;
+		AssetHandle Texture;
 	};
 }

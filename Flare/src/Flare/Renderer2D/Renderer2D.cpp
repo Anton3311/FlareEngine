@@ -126,7 +126,7 @@ namespace Flare
 		s_Data->Stats.QuadsCount++;
 	}
 
-	void Renderer2D::DrawQuad(const glm::mat4& transform, const glm::vec4& tint)
+	void Renderer2D::DrawQuad(const glm::mat4& transform, const glm::vec4& tint, const Ref<Texture>& texture)
 	{
 		if (s_Data->QuadIndex >= s_Data->MaxQuadCount)
 			Flush();
@@ -134,7 +134,21 @@ namespace Flare
 		if (s_Data->TextureIndex == MaxTexturesCount)
 			Flush();
 
+		int32_t textureIndex = 0;
 		size_t vertexIndex = s_Data->QuadIndex * 4;
+
+		if (texture != nullptr)
+		{
+			for (textureIndex = 0; textureIndex < s_Data->TextureIndex; textureIndex++)
+			{
+				if (s_Data->Textures[textureIndex].get() == texture.get())
+					break;
+			}
+
+			if (textureIndex >= s_Data->TextureIndex)
+				s_Data->Textures[s_Data->TextureIndex++] = texture;
+		}
+
 		for (uint32_t i = 0; i < 4; i++)
 		{
 			QuadVertex& vertex = s_Data->Vertices[vertexIndex + i];
@@ -142,7 +156,7 @@ namespace Flare
 			vertex.Color = tint;
 			vertex.UV = s_Data->QuadUV[i];
 			vertex.TextureTiling = glm::vec2(1.0f);
-			vertex.TextuteIndex = 0; // White texture
+			vertex.TextuteIndex = textureIndex;
 		}
 
 		s_Data->QuadIndex++;

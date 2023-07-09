@@ -30,7 +30,23 @@ namespace Flare
 
     Ref<Asset> EditorAssetManager::GetAsset(AssetHandle handle)
     {
-        return Ref<Asset>();
+        auto assetIterator = m_LoadedAssets.find(handle);
+        if (assetIterator != m_LoadedAssets.end())
+            return assetIterator->second;
+
+        auto registryIterator = m_Registry.find(handle);
+        if (registryIterator == m_Registry.end())
+            return nullptr;
+
+        return LoadAsset(registryIterator->second).value_or(nullptr);
+    }
+
+    const AssetMetadata* EditorAssetManager::GetAssetMetadata(AssetHandle handle)
+    {
+        auto it = m_Registry.find(handle);
+        if (it == m_Registry.end())
+            return nullptr;
+        return &it->second;
     }
 
     bool EditorAssetManager::IsAssetHandleValid(AssetHandle handle)
@@ -59,26 +75,34 @@ namespace Flare
         if (extension == ".png")
             type = AssetType::Texture;
 
-        auto importerIterator = m_AssetImporters.find(type);
-        if (importerIterator == m_AssetImporters.end())
-        {
-            FLARE_CORE_WARN("Cannot import '{0}', because an imported for that asset type is not provided");
-            return false;
-        }
-
         AssetHandle handle;
         AssetMetadata metadata;
         metadata.Handle = handle;
         metadata.Path = path;
         metadata.Type = type;
 
-        Ref<Asset> asset = importerIterator->second(metadata);
+        if (!LoadAsset(metadata).has_value())
+            return false;
 
-        m_LoadedAssets.emplace(handle, asset);
         m_Registry.emplace(handle, metadata);
         m_FilepathToAssetHandle.emplace(path, handle);
 
         SerializeRegistry();
+    }
+
+    std::optional<Ref<Asset>> EditorAssetManager::LoadAsset(const AssetMetadata& metadata)
+    {
+        auto importerIterator = m_AssetImporters.find(metadata.Type);
+        if (importerIterator == m_AssetImporters.end())
+        {
+            FLARE_CORE_WARN("Cannot import '{0}', because an imported for that asset type is not provided");
+            return {};
+        }
+
+        Ref<Asset> asset = importerIterator->second(metadata);
+        m_LoadedAssets.emplace(metadata.Handle, asset);
+
+        return asset;
     }
 
     void EditorAssetManager::SerializeRegistry()

@@ -123,6 +123,12 @@ namespace Flare
 
 			ImGui::TreePop();
 		}
+
+		if (m_Mode == AssetTreeViewMode::Registry && ImGui::BeginDragDropSource())
+		{
+			ImGui::SetDragDropPayload("ASSET_HANDLE", &node.Handle, sizeof(AssetHandle));
+			ImGui::EndDragDropSource();
+		}
 	}
 
 	void AssetManagerWindow::BuildDirectory(uint32_t parentIndex, const std::filesystem::path& path)

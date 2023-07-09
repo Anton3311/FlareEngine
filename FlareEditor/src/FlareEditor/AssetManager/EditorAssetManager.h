@@ -16,6 +16,8 @@ namespace Flare
 		EditorAssetManager(const std::filesystem::path& root);
 	public:
 		virtual Ref<Asset> GetAsset(AssetHandle handle) override;
+		virtual const AssetMetadata* GetAssetMetadata(AssetHandle handle) override;
+
 		virtual bool IsAssetHandleValid(AssetHandle handle) override;
 		virtual bool IsAssetLoaded(AssetHandle handle) override;
 
@@ -24,6 +26,8 @@ namespace Flare
 
 		bool ImportAsset(const std::filesystem::path& path);
 	private:
+		std::optional<Ref<Asset>> LoadAsset(const AssetMetadata& metadata);
+
 		void SerializeRegistry();
 		void DeserializeRegistry();
 	private:

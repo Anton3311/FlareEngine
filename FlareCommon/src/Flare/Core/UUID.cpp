@@ -10,8 +10,4 @@ namespace Flare
 
 	UUID::UUID()
 		: m_Value(s_UniformDistricution(s_Engine)) {}
-	
-	UUID::UUID(uint64_t value)
-		: m_Value(value) {}
-
 }

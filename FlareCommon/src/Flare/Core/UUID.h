@@ -8,7 +8,8 @@ namespace Flare
 	{
 	public:
 		UUID();
-		UUID(uint64_t value);
+		constexpr UUID(uint64_t value)
+			: m_Value(value) {}
 
 		inline operator uint64_t() const { return m_Value; }
 	private:

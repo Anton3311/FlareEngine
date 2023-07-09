@@ -9,6 +9,7 @@
 namespace Flare
 {
 	using AssetHandle = UUID;
+	constexpr AssetHandle NULL_ASSET_HANDLE = 0;
 
 	enum class AssetType
 	{

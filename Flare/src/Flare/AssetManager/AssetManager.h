@@ -15,8 +15,12 @@ namespace Flare
 		template<typename T>
 		static Ref<T> GetAsset(AssetHandle handle)
 		{
-			static_assert(std::is_base_of<Asset, T>, "Provided type is not an asset type");
 			return As<T>(GetRawAsset(handle));
+		}
+
+		static const AssetMetadata* GetAssetMetadata(AssetHandle handle)
+		{
+			return s_Instance->GetAssetMetadata(handle);
 		}
 		
 		static Ref<Asset> GetRawAsset(AssetHandle handle)
