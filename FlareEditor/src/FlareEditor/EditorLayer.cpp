@@ -5,7 +5,10 @@
 #include "Flare/Renderer2D/Renderer2D.h"
 #include "Flare/Scene/SceneSerializer.h"
 
+#include "Flare/AssetManager/AssetManager.h"
+
 #include "FlareEditor/EditorContext.h"
+#include "FlareEditor/AssetManager/EditorAssetManager.h"
 
 #include <imgui.h>
 
@@ -18,6 +21,8 @@ namespace Flare
 
 	void EditorLayer::OnAttach()
 	{
+		AssetManager::Intialize(CreateRef<EditorAssetManager>(std::filesystem::current_path()));
+
 		Ref<Window> window = Application::GetInstance().GetWindow();
 		uint32_t width = window->GetProperties().Width;
 		uint32_t height = window->GetProperties().Height;
@@ -152,6 +157,7 @@ namespace Flare
 
 		m_SceneWindow.OnImGuiRender();
 		m_PropertiesWindow.OnImGuiRender();
+		m_AssetManagerWindow.OnImGuiRender();
 
 		ImGui::End();
 	}

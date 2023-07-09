@@ -5,6 +5,7 @@
 
 #include "FlareEditor/UI/SceneWindow.h"
 #include "FlareEditor/UI/PropertiesWindow.h"
+#include "FlareEditor/UI/AssetManagerWindow.h"
 
 namespace Flare
 {
@@ -27,5 +28,6 @@ namespace Flare
 
 		SceneWindow m_SceneWindow;
 		PropertiesWindow m_PropertiesWindow;
+		AssetManagerWindow m_AssetManagerWindow;
 	};
 }
