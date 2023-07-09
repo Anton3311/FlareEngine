@@ -4,13 +4,15 @@
 
 #include "FlareECS/World.h"
 
+#include "Flare/AssetManager/Asset.h"
+
 #include "Flare/Renderer/Shader.h"
 #include "Flare/Renderer/CameraData.h"
 
 namespace Flare
 {
 	class SceneSerializer;
-	class Scene
+	class Scene : public Asset
 	{
 	public:
 		Scene();

@@ -8,6 +8,7 @@
 namespace Flare
 {
 	Scene::Scene()
+		: Asset(AssetType::Scene)
 	{
 		m_CameraData.Projection = glm::mat4(1.0f);
 		m_QuadShader = Shader::Create("QuadShader.glsl");

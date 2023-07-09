@@ -2,6 +2,8 @@
 
 #include "Flare/Core/Assert.h"
 
+#include "FlareEditor/EditorContext.h"
+
 #include <imgui.h>
 
 namespace Flare
@@ -110,19 +112,22 @@ namespace Flare
 		ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_SpanFullWidth;
 		if (ImGui::TreeNodeEx(node.Name.c_str(), flags, "%s", node.Name.c_str()))
 		{
-			if (m_Mode == AssetTreeViewMode::All)
+			if (ImGui::BeginPopupContextItem(node.Name.c_str()))
 			{
-				if (ImGui::BeginPopupContextWindow(node.Name.c_str()))
-				{
-					if (ImGui::MenuItem("Import"))
-						node.IsImported = m_AssetManager->ImportAsset(node.Path);
+				if (m_Mode == AssetTreeViewMode::Registry && ImGui::MenuItem("Open"))
+					OnOpenFile(node);
 
-					ImGui::EndMenu();
-				}
+				if (m_Mode == AssetTreeViewMode::All && ImGui::MenuItem("Import"))
+					node.IsImported = m_AssetManager->ImportAsset(node.Path);
+
+				ImGui::EndMenu();
 			}
 
 			ImGui::TreePop();
 		}
+
+		if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+			OnOpenFile(node);
 
 		if (m_Mode == AssetTreeViewMode::Registry && ImGui::BeginDragDropSource())
 		{
@@ -153,6 +158,26 @@ namespace Flare
 
 			m_AssetTree[parentIndex].LastChildIndex = (uint32_t)(m_AssetTree.size() - 1);
 			m_AssetTree[parentIndex].ChildrenCount++;
+		}
+	}
+
+	void AssetManagerWindow::OnOpenFile(const AssetTreeNode& node)
+	{
+		FLARE_CORE_ASSERT(!node.IsDirectory);
+		FLARE_CORE_ASSERT(node.Handle.has_value());
+
+		if (AssetManager::IsAssetHandleValid(node.Handle.value()))
+		{
+			const AssetMetadata* metadata = AssetManager::GetAssetMetadata(node.Handle.value());
+			
+			switch (metadata->Type)
+			{
+			case AssetType::Scene:
+				EditorContext::OpenScene(node.Handle.value());
+				break;
+			default:
+				break;
+			}
 		}
 	}
 }

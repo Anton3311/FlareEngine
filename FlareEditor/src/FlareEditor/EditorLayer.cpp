@@ -35,7 +35,7 @@ namespace Flare
 
 		RenderCommand::SetClearColor(0.04f, 0.07f, 0.1f, 1.0f);
 
-		EditorContext::Instance.ActiveScene = CreateRef<Scene>();
+		EditorContext::Initialize();
 	}
 
 	void EditorLayer::OnUpdate(float deltaTime)
@@ -46,7 +46,7 @@ namespace Flare
 		if (m_ViewportSize != glm::i32vec2(0.0f) && (specs.Width != (uint32_t)m_ViewportSize.x || specs.Height != (uint32_t)m_ViewportSize.y))
 		{
 			RenderCommand::SetViewport(0, 0, (uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
-			EditorContext::Instance.ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+			EditorContext::GetActiveScene()->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
 
 			m_FrameBuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
 		}
@@ -56,7 +56,7 @@ namespace Flare
 
 		Renderer2D::ResetStats();
 
-		EditorContext::Instance.ActiveScene->OnUpdateRuntime();
+		EditorContext::GetActiveScene()->OnUpdateRuntime();
 
 		m_FrameBuffer->Unbind();
 	}
@@ -98,10 +98,7 @@ namespace Flare
 		{
 			if (ImGui::BeginMenu("Scene"))
 			{
-				if (ImGui::MenuItem("Open Scene"))
-					SceneSerializer::Deserialize(EditorContext::Instance.ActiveScene, "Scene.flare");
-				if (ImGui::MenuItem("Save Scene"))
-					SceneSerializer::Serialize(EditorContext::Instance.ActiveScene, "Scene.flare");
+				// TODO: add open/save scene
 				ImGui::EndMenu();
 			}
 
@@ -143,7 +140,7 @@ namespace Flare
 
 			if (newViewportSize != m_ViewportSize)
 			{
-				EditorContext::Instance.ActiveScene->OnViewportResize(newViewportSize.x, newViewportSize.y);
+				EditorContext::GetActiveScene()->OnViewportResize(newViewportSize.x, newViewportSize.y);
 				m_ViewportSize = newViewportSize;
 			}
 

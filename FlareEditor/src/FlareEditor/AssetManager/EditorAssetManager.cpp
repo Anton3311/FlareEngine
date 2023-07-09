@@ -4,6 +4,7 @@
 #include "Flare/Core/Log.h"
 
 #include "Flare/AssetManager/Importers/TextureImporter.h"
+#include "Flare/AssetManager/Importers/SceneImporter.h"
 
 #include <yaml-cpp/yaml.h>
 
@@ -25,6 +26,8 @@ namespace Flare
         : m_Root(root)
     {
         m_AssetImporters.emplace(AssetType::Texture, TextureImporter::ImportTexture);
+        m_AssetImporters.emplace(AssetType::Scene, SceneImporter::ImportScene);
+
         DeserializeRegistry();
     }
 
@@ -51,12 +54,12 @@ namespace Flare
 
     bool EditorAssetManager::IsAssetHandleValid(AssetHandle handle)
     {
-        return false;
+        return m_Registry.find(handle) != m_Registry.end();
     }
 
     bool EditorAssetManager::IsAssetLoaded(AssetHandle handle)
     {
-        return false;
+        return m_LoadedAssets.find(handle) != m_LoadedAssets.end();
     }
 
     std::optional<AssetHandle> EditorAssetManager::FindAssetByPath(const std::filesystem::path& path)
@@ -74,6 +77,8 @@ namespace Flare
 
         if (extension == ".png")
             type = AssetType::Texture;
+        else if (extension == ".flare")
+            type = AssetType::Scene;
 
         AssetHandle handle;
         AssetMetadata metadata;
@@ -88,6 +93,15 @@ namespace Flare
         m_FilepathToAssetHandle.emplace(path, handle);
 
         SerializeRegistry();
+    }
+
+    void EditorAssetManager::UnloadAsset(AssetHandle handle)
+    {
+        auto it = m_LoadedAssets.find(handle);
+        if (it == m_LoadedAssets.end())
+            return;
+
+        m_LoadedAssets.erase(it);
     }
 
     std::optional<Ref<Asset>> EditorAssetManager::LoadAsset(const AssetMetadata& metadata)
@@ -153,16 +167,10 @@ namespace Flare
             AssetHandle handle = assetNode["Handle"].as<uint64_t>();
             std::filesystem::path path = m_Root / std::filesystem::path(assetNode["Path"].as<std::string>());
 
-            AssetType type = AssetType::None;
-            if (assetNode["Type"].as<std::string>() == "Texture")
-                type = AssetType::Texture;
-
-            FLARE_CORE_ASSERT(type != AssetType::None);
-
             AssetMetadata metadata;
             metadata.Handle = handle;
             metadata.Path = path;
-            metadata.Type = type;
+            metadata.Type = AssetTypeFromString(assetNode["Type"].as<std::string>());
 
             m_Registry.emplace(handle, metadata);
             m_FilepathToAssetHandle.emplace(path, handle);

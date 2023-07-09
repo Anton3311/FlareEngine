@@ -17,4 +17,15 @@ namespace Flare
 		FLARE_CORE_ASSERT(false, "Unhandled asset type");
 		return "";
 	}
+
+	AssetType AssetTypeFromString(std::string_view string)
+	{
+		if (string == "Texture")
+			return AssetType::Texture;
+		else if (string == "Scene")
+			return AssetType::Scene;
+
+		FLARE_CORE_ASSERT(false, "Unknown asset type string");
+		return AssetType::None;
+	}
 }

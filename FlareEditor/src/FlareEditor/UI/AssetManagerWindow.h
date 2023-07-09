@@ -13,15 +13,6 @@ namespace Flare
 {
 	class AssetManagerWindow
 	{
-	public:
-		void OnImGuiRender();
-
-		void RebuildAssetTree();
-	private:
-		void RenderDirectory();
-		void RenderFile();
-
-		void BuildDirectory(uint32_t parentIndex, const std::filesystem::path& path);
 	private:
 		enum class AssetTreeViewMode
 		{
@@ -46,6 +37,17 @@ namespace Flare
 			AssetTreeNode(const std::string& name, const std::filesystem::path& path, AssetHandle handle)
 				: Name(name), Path(path), IsDirectory(false), IsImported(false), Handle(handle), ChildrenCount(0), LastChildIndex(UINT32_MAX) {}
 		};
+	public:
+		void OnImGuiRender();
+
+		void RebuildAssetTree();
+	private:
+		void RenderDirectory();
+		void RenderFile();
+
+		void BuildDirectory(uint32_t parentIndex, const std::filesystem::path& path);
+
+		void OnOpenFile(const AssetTreeNode& node);
 	private:
 		AssetTreeViewMode m_Mode = AssetTreeViewMode::Registry;
 		Ref<EditorAssetManager> m_AssetManager;

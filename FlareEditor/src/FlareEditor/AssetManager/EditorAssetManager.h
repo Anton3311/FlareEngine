@@ -4,6 +4,8 @@
 #include "Flare/AssetManager/AssetManagerBase.h"
 
 #include <filesystem>
+#include <map>
+#include <string_view>
 #include <unordered_map>
 #include <functional>
 #include <optional>
@@ -25,6 +27,7 @@ namespace Flare
 		std::optional<AssetHandle> FindAssetByPath(const std::filesystem::path& path);
 
 		bool ImportAsset(const std::filesystem::path& path);
+		void UnloadAsset(AssetHandle handle);
 	private:
 		std::optional<Ref<Asset>> LoadAsset(const AssetMetadata& metadata);
 
@@ -36,7 +39,7 @@ namespace Flare
 		std::filesystem::path m_Root;
 
 		std::unordered_map<AssetHandle, Ref<Asset>> m_LoadedAssets;
-		std::unordered_map<AssetHandle, AssetMetadata> m_Registry;
+		std::map<AssetHandle, AssetMetadata> m_Registry;
 
 		std::unordered_map<std::filesystem::path, AssetHandle> m_FilepathToAssetHandle;
 		std::unordered_map<AssetType, AssetImporter> m_AssetImporters;
