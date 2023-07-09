@@ -1,5 +1,7 @@
 #include "EditorGUI.h"
 
+#include "Flare/AssetManager/AssetManager.h"
+
 #include <imgui.h>
 
 namespace Flare
@@ -50,6 +52,45 @@ namespace Flare
 		ImGui::PushID(&color);
 		bool result = ImGui::ColorEdit4("", glm::value_ptr(color), ImGuiColorEditFlags_Float);
 		ImGui::PopID();
+		return result;
+	}
+
+	bool EditorGUI::AssetField(const char* name, AssetHandle& handle)
+	{
+		RenderPropertyName(name);
+
+		if (handle == NULL_ASSET_HANDLE)
+			ImGui::Button("None");
+		else
+		{
+			const AssetMetadata* metadata = AssetManager::GetAssetMetadata(handle);
+
+			if (metadata != nullptr)
+				ImGui::Button(metadata->Path.filename().string().c_str());
+			else
+				ImGui::Button("Invalid");
+		}
+
+		bool result = false;
+		if (ImGui::BeginDragDropTarget())
+		{
+			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ASSET_HANDLE"))
+			{
+				handle = *(AssetHandle*)payload->Data;
+				result = true;
+			}
+
+			ImGui::EndDragDropTarget();
+		}
+
+		ImGui::SameLine();
+
+		if (ImGui::Button("Reset"))
+		{
+			handle = NULL_ASSET_HANDLE;
+			return true;
+		}
+
 		return result;
 	}
 

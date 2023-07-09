@@ -15,6 +15,7 @@ Entities:
         Scale: [1, 1, 1]
       Sprite:
         Color: [0.762962937, 0.079122059, 0.079122059, 1]
+        Texture: 0
   - Components:
       Transform:
         Position: [0, 0, -0.800000012]
@@ -22,6 +23,7 @@ Entities:
         Scale: [1, 1, 1]
       Sprite:
         Color: [0.0930589959, 0.785185218, 0.277625978, 1]
+        Texture: 0
   - Components:
       Transform:
         Position: [0, 1.60000002, -0.5]
@@ -29,3 +31,12 @@ Entities:
         Scale: [1, 1, 1]
       Sprite:
         Color: [0.145678997, 0.236323699, 0.655555546, 1]
+        Texture: 0
+  - Components:
+      Transform:
+        Position: [-2.9000001, -2.79999995, -0.100000001]
+        Rotation: [0, 0, -28.8999996]
+        Scale: [2, 2, 2]
+      Sprite:
+        Color: [1, 1, 1, 1]
+        Texture: 10180646465309905513

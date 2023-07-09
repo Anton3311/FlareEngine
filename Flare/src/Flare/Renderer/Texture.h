@@ -2,6 +2,8 @@
 
 #include "Flare/Core/Core.h"
 
+#include "Flare/AssetManager/Asset.h"
+
 #include <filesystem>
 
 namespace Flare
@@ -32,9 +34,12 @@ namespace Flare
 		TextureFiltering Filtering;
 	};
 
-	class Texture
+	class Texture : public Asset
 	{
 	public:
+		Texture()
+			: Asset(AssetType::Texture) {}
+
 		virtual void Bind(uint32_t slot = 0) = 0;
 		virtual void SetData(const void* data, size_t size) = 0;
 

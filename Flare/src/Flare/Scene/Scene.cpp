@@ -1,12 +1,14 @@
 #include "Scene.h"
 
 #include "Flare/Renderer2D/Renderer2D.h"
+#include "Flare/AssetManager/AssetManager.h"
 
 #include "Flare/Scene/Components.h"
 
 namespace Flare
 {
 	Scene::Scene()
+		: Asset(AssetType::Scene)
 	{
 		m_CameraData.Projection = glm::mat4(1.0f);
 		m_QuadShader = Shader::Create("QuadShader.glsl");
@@ -27,7 +29,9 @@ namespace Flare
 				TransformComponent& transform = transforms[entity];
 				SpriteComponent& sprite = sprites[entity];
 
-				Renderer2D::DrawQuad(transform.GetTransformationMatrix(), sprite.Color);
+				Renderer2D::DrawQuad(transform.GetTransformationMatrix(), sprite.Color, sprite.Texture == NULL_ASSET_HANDLE 
+					? nullptr 
+					: AssetManager::GetAsset<Texture>(sprite.Texture));
 			}
 		});
 	}

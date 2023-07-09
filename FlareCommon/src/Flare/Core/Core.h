@@ -32,6 +32,12 @@ namespace Flare
 		return std::make_shared<T>(std::forward<Args>(args)...);
 	}
 
+	template<typename T, typename F>
+	constexpr Ref<T> As(const Ref<F>& ref)
+	{
+		return std::static_pointer_cast<T>(ref);
+	}
+
 	template<typename T, typename ...Args>
 	constexpr Scope<T> CreateScope(Args&&... args)
 	{

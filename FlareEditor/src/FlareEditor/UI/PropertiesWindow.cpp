@@ -9,7 +9,7 @@ namespace Flare
 {
 	void PropertiesWindow::OnImGuiRender()
 	{
-		World& world = EditorContext::Instance.ActiveScene->GetECSWorld();
+		World& world = EditorContext::GetActiveScene()->GetECSWorld();
 		Entity selectedEntity = EditorContext::Instance.SelectedEntity;
 
 		ImGuiIO& io = ImGui::GetIO();
@@ -69,7 +69,7 @@ namespace Flare
 	{
 		if (ImGui::BeginMenu("Add component"))
 		{
-			World& world = EditorContext::Instance.ActiveScene->GetECSWorld();
+			World& world = EditorContext::GetActiveScene()->GetECSWorld();
 			const std::vector<ComponentInfo>& components = world.GetRegistry().GetRegisteredComponents();
 
 			for (const auto& info : components)
@@ -99,5 +99,6 @@ namespace Flare
 	void PropertiesWindow::RenderSpriteComponent(SpriteComponent& sprite)
 	{
 		EditorGUI::ColorPropertyField("Color", sprite.Color);
+		EditorGUI::AssetField("Texture", sprite.Texture);
 	}
 }

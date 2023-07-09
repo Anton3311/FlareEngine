@@ -5,7 +5,10 @@
 #include "Flare/Renderer2D/Renderer2D.h"
 #include "Flare/Scene/SceneSerializer.h"
 
+#include "Flare/AssetManager/AssetManager.h"
+
 #include "FlareEditor/EditorContext.h"
+#include "FlareEditor/AssetManager/EditorAssetManager.h"
 
 #include <imgui.h>
 
@@ -18,6 +21,8 @@ namespace Flare
 
 	void EditorLayer::OnAttach()
 	{
+		AssetManager::Intialize(CreateRef<EditorAssetManager>(std::filesystem::current_path()));
+
 		Ref<Window> window = Application::GetInstance().GetWindow();
 		uint32_t width = window->GetProperties().Width;
 		uint32_t height = window->GetProperties().Height;
@@ -30,7 +35,7 @@ namespace Flare
 
 		RenderCommand::SetClearColor(0.04f, 0.07f, 0.1f, 1.0f);
 
-		EditorContext::Instance.ActiveScene = CreateRef<Scene>();
+		EditorContext::Initialize();
 	}
 
 	void EditorLayer::OnUpdate(float deltaTime)
@@ -41,7 +46,7 @@ namespace Flare
 		if (m_ViewportSize != glm::i32vec2(0.0f) && (specs.Width != (uint32_t)m_ViewportSize.x || specs.Height != (uint32_t)m_ViewportSize.y))
 		{
 			RenderCommand::SetViewport(0, 0, (uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
-			EditorContext::Instance.ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+			EditorContext::GetActiveScene()->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
 
 			m_FrameBuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
 		}
@@ -51,7 +56,7 @@ namespace Flare
 
 		Renderer2D::ResetStats();
 
-		EditorContext::Instance.ActiveScene->OnUpdateRuntime();
+		EditorContext::GetActiveScene()->OnUpdateRuntime();
 
 		m_FrameBuffer->Unbind();
 	}
@@ -93,10 +98,14 @@ namespace Flare
 		{
 			if (ImGui::BeginMenu("Scene"))
 			{
-				if (ImGui::MenuItem("Open Scene"))
-					SceneSerializer::Deserialize(EditorContext::Instance.ActiveScene, "Scene.flare");
-				if (ImGui::MenuItem("Save Scene"))
-					SceneSerializer::Serialize(EditorContext::Instance.ActiveScene, "Scene.flare");
+				if (ImGui::MenuItem("Save"))
+				{
+					if (AssetManager::IsAssetHandleValid(EditorContext::GetActiveScene()->Handle))
+						SceneSerializer::Serialize(EditorContext::GetActiveScene());
+					// else
+					// TODO: Ask for save location
+				}
+
 				ImGui::EndMenu();
 			}
 
@@ -138,7 +147,7 @@ namespace Flare
 
 			if (newViewportSize != m_ViewportSize)
 			{
-				EditorContext::Instance.ActiveScene->OnViewportResize(newViewportSize.x, newViewportSize.y);
+				EditorContext::GetActiveScene()->OnViewportResize(newViewportSize.x, newViewportSize.y);
 				m_ViewportSize = newViewportSize;
 			}
 
@@ -152,6 +161,7 @@ namespace Flare
 
 		m_SceneWindow.OnImGuiRender();
 		m_PropertiesWindow.OnImGuiRender();
+		m_AssetManagerWindow.OnImGuiRender();
 
 		ImGui::End();
 	}
