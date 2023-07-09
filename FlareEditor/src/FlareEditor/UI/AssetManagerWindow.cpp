@@ -136,7 +136,7 @@ namespace Flare
 			ImGui::TreePop();
 		}
 
-		if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+		if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
 			OnOpenFile(node);
 
 		if (m_Mode == AssetTreeViewMode::Registry && ImGui::BeginDragDropSource())
