@@ -117,8 +117,18 @@ namespace Flare
 				if (m_Mode == AssetTreeViewMode::Registry && ImGui::MenuItem("Open"))
 					OnOpenFile(node);
 
+				if (m_Mode == AssetTreeViewMode::Registry && ImGui::MenuItem("Remove"))
+				{
+					FLARE_CORE_ASSERT(node.Handle != NULL_ASSET_HANDLE);
+					m_AssetManager->RemoveFromRegistry(node.Handle);
+					node.IsImported = false;
+				}
+
 				if (m_Mode == AssetTreeViewMode::All && ImGui::MenuItem("Import"))
-					node.IsImported = m_AssetManager->ImportAsset(node.Path);
+				{
+					node.Handle = m_AssetManager->ImportAsset(node.Path);
+					node.IsImported = node.Handle != NULL_ASSET_HANDLE;
+				}
 
 				ImGui::EndMenu();
 			}
@@ -164,16 +174,16 @@ namespace Flare
 	void AssetManagerWindow::OnOpenFile(const AssetTreeNode& node)
 	{
 		FLARE_CORE_ASSERT(!node.IsDirectory);
-		FLARE_CORE_ASSERT(node.Handle.has_value());
+		FLARE_CORE_ASSERT(node.Handle != NULL_ASSET_HANDLE);
 
-		if (AssetManager::IsAssetHandleValid(node.Handle.value()))
+		if (AssetManager::IsAssetHandleValid(node.Handle))
 		{
-			const AssetMetadata* metadata = AssetManager::GetAssetMetadata(node.Handle.value());
+			const AssetMetadata* metadata = AssetManager::GetAssetMetadata(node.Handle);
 			
 			switch (metadata->Type)
 			{
 			case AssetType::Scene:
-				EditorContext::OpenScene(node.Handle.value());
+				EditorContext::OpenScene(node.Handle);
 				break;
 			default:
 				break;

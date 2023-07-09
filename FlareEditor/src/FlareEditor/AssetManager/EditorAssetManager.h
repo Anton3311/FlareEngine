@@ -26,8 +26,10 @@ namespace Flare
 		const std::filesystem::path& GetRoot() const { return m_Root; }
 		std::optional<AssetHandle> FindAssetByPath(const std::filesystem::path& path);
 
-		bool ImportAsset(const std::filesystem::path& path);
+		AssetHandle ImportAsset(const std::filesystem::path& path);
 		void UnloadAsset(AssetHandle handle);
+
+		void RemoveFromRegistry(AssetHandle handle);
 	private:
 		std::optional<Ref<Asset>> LoadAsset(const AssetMetadata& metadata);
 

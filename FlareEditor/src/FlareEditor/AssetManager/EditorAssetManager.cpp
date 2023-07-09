@@ -70,7 +70,7 @@ namespace Flare
         return it->second;
     }
 
-    bool EditorAssetManager::ImportAsset(const std::filesystem::path& path)
+    AssetHandle EditorAssetManager::ImportAsset(const std::filesystem::path& path)
     {
         AssetType type = AssetType::None;
         std::filesystem::path extension = path.extension();
@@ -87,12 +87,14 @@ namespace Flare
         metadata.Type = type;
 
         if (!LoadAsset(metadata).has_value())
-            return false;
+            return NULL_ASSET_HANDLE;
 
         m_Registry.emplace(handle, metadata);
         m_FilepathToAssetHandle.emplace(path, handle);
 
         SerializeRegistry();
+
+        return handle;
     }
 
     void EditorAssetManager::UnloadAsset(AssetHandle handle)
@@ -102,6 +104,17 @@ namespace Flare
             return;
 
         m_LoadedAssets.erase(it);
+    }
+
+    void EditorAssetManager::RemoveFromRegistry(AssetHandle handle)
+    {
+        auto it = m_Registry.find(handle);
+        if (it != m_Registry.end())
+        {
+            UnloadAsset(handle);
+            m_Registry.erase(handle);
+            SerializeRegistry();
+        }
     }
 
     std::optional<Ref<Asset>> EditorAssetManager::LoadAsset(const AssetMetadata& metadata)
