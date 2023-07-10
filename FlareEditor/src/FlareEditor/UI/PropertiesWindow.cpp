@@ -33,17 +33,12 @@ namespace Flare
 				ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_FramePadding;
 				if (ImGui::TreeNodeEx((void*)component, flags, "%s", componentInfo.Name.c_str()))
 				{
-					if (EditorGUI::BeginPropertyGrid())
-					{
-						if (component == CameraComponent::Id)
-							RenderCameraComponent(world.GetEntityComponent<CameraComponent>(selectedEntity));
-						else if (component == TransformComponent::Id)
-							RenderTransformComponent(world.GetEntityComponent<TransformComponent>(selectedEntity));
-						else if (component == SpriteComponent::Id)
-							RenderSpriteComponent(world.GetEntityComponent<SpriteComponent>(selectedEntity));
-
-						EditorGUI::EndPropertyGrid();
-					}
+					if (component == CameraComponent::Id)
+						RenderCameraComponent(world.GetEntityComponent<CameraComponent>(selectedEntity));
+					else if (component == TransformComponent::Id)
+						RenderTransformComponent(world.GetEntityComponent<TransformComponent>(selectedEntity));
+					else if (component == SpriteComponent::Id)
+						RenderSpriteComponent(world.GetEntityComponent<SpriteComponent>(selectedEntity));
 
 					ImGui::TreePop();
 				}
@@ -84,21 +79,48 @@ namespace Flare
 
 	void PropertiesWindow::RenderCameraComponent(CameraComponent& cameraComponent)
 	{
-		EditorGUI::FloatPropertyField("Size", cameraComponent.Size);
-		EditorGUI::FloatPropertyField("Near", cameraComponent.Near);
-		EditorGUI::FloatPropertyField("Far", cameraComponent.Far);
+		if (EditorGUI::BeginPropertyGrid())
+		{
+			EditorGUI::BeginToggleGroup("Projection");
+			if (EditorGUI::ToggleGroupItem("Orthographic", cameraComponent.Projection == CameraComponent::ProjectionType::Orthographic))
+				cameraComponent.Projection = CameraComponent::ProjectionType::Orthographic;
+			if (EditorGUI::ToggleGroupItem("Perspective", cameraComponent.Projection == CameraComponent::ProjectionType::Perspective))
+				cameraComponent.Projection = CameraComponent::ProjectionType::Perspective;
+
+			EditorGUI::EndToggleGroup();
+
+			if (cameraComponent.Projection == CameraComponent::ProjectionType::Orthographic)
+				EditorGUI::FloatPropertyField("Size", cameraComponent.Size);
+			else
+				EditorGUI::FloatPropertyField("FOV", cameraComponent.FOV);
+
+			EditorGUI::FloatPropertyField("Near", cameraComponent.Near);
+			EditorGUI::FloatPropertyField("Far", cameraComponent.Far);
+
+			EditorGUI::EndPropertyGrid();
+		}
 	}
 
 	void PropertiesWindow::RenderTransformComponent(TransformComponent& transform)
 	{
-		EditorGUI::Vector3PropertyField("Position", transform.Position);
-		EditorGUI::Vector3PropertyField("Rotation", transform.Rotation);
-		EditorGUI::Vector3PropertyField("Scale", transform.Scale);
+		if (EditorGUI::BeginPropertyGrid())
+		{
+			EditorGUI::Vector3PropertyField("Position", transform.Position);
+			EditorGUI::Vector3PropertyField("Rotation", transform.Rotation);
+			EditorGUI::Vector3PropertyField("Scale", transform.Scale);
+
+			EditorGUI::EndPropertyGrid();
+		}
 	}
 
 	void PropertiesWindow::RenderSpriteComponent(SpriteComponent& sprite)
 	{
-		EditorGUI::ColorPropertyField("Color", sprite.Color);
-		EditorGUI::AssetField("Texture", sprite.Texture);
+		if (EditorGUI::BeginPropertyGrid())
+		{
+			EditorGUI::ColorPropertyField("Color", sprite.Color);
+			EditorGUI::AssetField("Texture", sprite.Texture);
+
+			EditorGUI::EndPropertyGrid();
+		}
 	}
 }

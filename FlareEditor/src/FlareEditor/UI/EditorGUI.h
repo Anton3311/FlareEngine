@@ -15,6 +15,10 @@ namespace Flare
 		static bool ColorPropertyField(const char* name, glm::vec4& color);
 
 		static bool AssetField(const char* name, AssetHandle& handle);
+
+		static bool BeginToggleGroup(const char* name);
+		static bool ToggleGroupItem(const char* text, bool selected);
+		static void EndToggleGroup();
 	private:
 		static void RenderPropertyName(const char* name);
 	};

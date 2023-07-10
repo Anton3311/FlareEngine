@@ -44,6 +44,19 @@ namespace Flare
 			emitter << YAML::Key << "Size" << YAML::Value << camera.Size;
 			emitter << YAML::Key << "Near" << YAML::Value << camera.Near;
 			emitter << YAML::Key << "Far" << YAML::Value << camera.Far;
+
+			emitter << YAML::Key << "Projection";
+			switch (camera.Projection)
+			{
+			case CameraComponent::ProjectionType::Orthographic:
+				emitter << YAML::Value << "Orthographic";
+				break;
+			case CameraComponent::ProjectionType::Perspective:
+				emitter << YAML::Value << "Perspective";
+				break;
+			}
+
+			emitter << YAML::Key << "FOV" << YAML::Value << camera.FOV;
 			emitter << YAML::EndMap;
 		}
 	}
@@ -156,6 +169,18 @@ namespace Flare
 					cameraComponent.Size = cameraNode["Size"].as<float>();
 					cameraComponent.Near = cameraNode["Near"].as<float>();
 					cameraComponent.Far = cameraNode["Far"].as<float>();
+
+					if (YAML::Node fovNode = cameraNode["FOV"])
+						cameraComponent.FOV = fovNode.as<float>();
+
+					if (YAML::Node projectionType = cameraNode["Projection"])
+					{
+						std::string string = projectionType.as<std::string>();
+						if (string == "Orthographic")
+							cameraComponent.Projection = CameraComponent::ProjectionType::Orthographic;
+						else if (string == "Perspective")
+							cameraComponent.Projection = CameraComponent::ProjectionType::Perspective;
+					}
 
 					AddDeserializedComponent<CameraComponent>(scene->m_World, entity, cameraComponent);
 				}

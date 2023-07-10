@@ -9,7 +9,7 @@ namespace Flare
 	bool EditorGUI::BeginPropertyGrid()
 	{
 		ImVec2 windowSize = ImGui::GetContentRegionAvail();
-		if (ImGui::BeginTable("sdf", 2))
+		if (ImGui::BeginTable("Property Grid", 2))
 		{
 			ImGui::TableSetupColumn("Property", ImGuiTableColumnFlags_WidthFixed, windowSize.x * 0.25f);
 			ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthFixed, windowSize.x * 0.75f);
@@ -94,9 +94,40 @@ namespace Flare
 		return result;
 	}
 
+	bool EditorGUI::BeginToggleGroup(const char* name)
+	{
+		RenderPropertyName(name);
+
+		ImGui::NewLine();
+		return true;
+	}
+
+	bool EditorGUI::ToggleGroupItem(const char* text, bool selected)
+	{
+		ImGuiStyle& style = ImGui::GetStyle();
+
+		if (selected)
+			ImGui::PushStyleColor(ImGuiCol_Button, style.Colors[ImGuiCol_FrameBg]);
+		else
+			ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0.0f);
+
+		ImGui::SameLine();
+		bool result = ImGui::Button(text);
+
+		if (selected)
+			ImGui::PopStyleColor();
+		else
+			ImGui::PopStyleVar();
+
+		return result;
+	}
+
+	void EditorGUI::EndToggleGroup()
+	{
+	}
+
 	void EditorGUI::RenderPropertyName(const char* name)
 	{
-		ImVec2 windowSize = ImGui::GetContentRegionAvail();
 		ImGui::TableNextRow();
 		ImGui::TableSetColumnIndex(0);
 

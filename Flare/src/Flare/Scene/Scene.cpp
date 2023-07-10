@@ -61,7 +61,16 @@ namespace Flare
 					float halfSize = camera.Size / 2;
 					float aspectRation = (float)m_ViewportWidth / (float)m_ViewportHeight;
 
-					m_CameraData.Projection = glm::ortho(-halfSize * aspectRation, halfSize * aspectRation, -halfSize, halfSize, camera.Near, camera.Far) * inverseTransform;
+					if (camera.Projection == CameraComponent::ProjectionType::Orthographic)
+					{
+						m_CameraData.Projection = glm::ortho(-halfSize * aspectRation, halfSize * aspectRation, -halfSize, halfSize, camera.Near, camera.Far)
+							* inverseTransform;
+					}
+					else
+					{
+						m_CameraData.Projection = glm::perspective<float>(glm::radians(camera.FOV), aspectRation, camera.Near, camera.Far)
+							* inverseTransform;
+					}
 				}
 			}
 		}
