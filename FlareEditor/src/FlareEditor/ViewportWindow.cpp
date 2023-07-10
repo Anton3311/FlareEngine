@@ -26,6 +26,9 @@ namespace Flare
 			RenderCommand::SetViewport(0, 0, m_RenderData.ViewportSize.x, m_RenderData.ViewportSize.y);
 
 			m_FrameBuffer->Bind();
+
+			RenderCommand::Clear();
+
 			EditorContext::GetActiveScene()->OnBeforeRender(m_RenderData);
 			EditorContext::GetActiveScene()->OnRender(m_RenderData);
 			m_FrameBuffer->Unbind();
