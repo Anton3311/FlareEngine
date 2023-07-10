@@ -8,6 +8,29 @@
 namespace YAML
 {
 	template<>
+	struct convert<glm::vec2>
+	{
+		static Node encode(const glm::vec2& vector)
+		{
+			Node node;
+			node.push_back(vector.x);
+			node.push_back(vector.y);
+			node.SetStyle(EmitterStyle::Flow);
+			return node;
+		}
+
+		static bool decode(const Node& node, glm::vec2& out)
+		{
+			if (!node.IsSequence() || node.size() != 2)
+				return false;
+
+			out.x = node[0].as<float>();
+			out.y = node[1].as<float>();
+			return true;
+		}
+	};
+
+	template<>
 	struct convert<glm::vec3>
 	{
 		static Node encode(const glm::vec3& vector)
@@ -78,6 +101,7 @@ namespace YAML
 	};
 }
 
+YAML::Emitter& operator<<(YAML::Emitter& emitter, const glm::vec2& vector);
 YAML::Emitter& operator<<(YAML::Emitter& emitter, const glm::vec3& vector);
 YAML::Emitter& operator<<(YAML::Emitter& emitter, const glm::vec4& vector);
 YAML::Emitter& operator<<(YAML::Emitter& emitter, Flare::AssetHandle handle);

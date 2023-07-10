@@ -35,7 +35,6 @@ namespace Flare
 			BufferLayoutElement("i_Color", ShaderDataType::Float4),
 			BufferLayoutElement("i_UV", ShaderDataType::Float2),
 			BufferLayoutElement("i_TextureIndex", ShaderDataType::Float),
-			BufferLayoutElement("i_TextureTilling", ShaderDataType::Float2),
 		});
 
 		s_Data->VertexArray->SetIndexBuffer(s_Data->IndexBuffer);
@@ -126,7 +125,7 @@ namespace Flare
 		s_Data->Stats.QuadsCount++;
 	}
 
-	void Renderer2D::DrawQuad(const glm::mat4& transform, const glm::vec4& tint, const Ref<Texture>& texture)
+	void Renderer2D::DrawQuad(const glm::mat4& transform, const glm::vec4& tint, const Ref<Texture>& texture, glm::vec2 tiling)
 	{
 		if (s_Data->QuadIndex >= s_Data->MaxQuadCount)
 			Flush();
@@ -154,8 +153,7 @@ namespace Flare
 			QuadVertex& vertex = s_Data->Vertices[vertexIndex + i];
 			vertex.Position = transform * glm::vec4(s_Data->QuadVertices[i], 1.0f);
 			vertex.Color = tint;
-			vertex.UV = s_Data->QuadUV[i];
-			vertex.TextureTiling = glm::vec2(1.0f);
+			vertex.UV = s_Data->QuadUV[i] * tiling;
 			vertex.TextuteIndex = textureIndex;
 		}
 
@@ -218,8 +216,7 @@ namespace Flare
 			QuadVertex& vertex = s_Data->Vertices[vertexIndex + i];
 			vertex.Position = s_Data->QuadVertices[i] * glm::vec3(size, 0.0f) + position;
 			vertex.Color = tint;
-			vertex.UV = uv[i];
-			vertex.TextureTiling = tiling;
+			vertex.UV = uv[i] * tiling;
 			vertex.TextuteIndex = textureIndex;
 		}
 

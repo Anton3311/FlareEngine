@@ -67,9 +67,11 @@ namespace Flare
 				TransformComponent& transform = transforms[entity];
 				SpriteComponent& sprite = sprites[entity];
 
-				Renderer2D::DrawQuad(transform.GetTransformationMatrix(), sprite.Color, sprite.Texture == NULL_ASSET_HANDLE
-					? nullptr
-					: AssetManager::GetAsset<Texture>(sprite.Texture));
+				Renderer2D::DrawQuad(transform.GetTransformationMatrix(), sprite.Color,
+					sprite.Texture == NULL_ASSET_HANDLE
+						? nullptr
+						: AssetManager::GetAsset<Texture>(sprite.Texture),
+					sprite.TextureTiling);
 			}
 		}
 

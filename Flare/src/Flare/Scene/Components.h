@@ -42,6 +42,7 @@ namespace Flare
 		FLARE_COMPONENT;
 
 		glm::vec4 Color;
+		glm::vec2 TextureTiling;
 		AssetHandle Texture;
 	};
 }

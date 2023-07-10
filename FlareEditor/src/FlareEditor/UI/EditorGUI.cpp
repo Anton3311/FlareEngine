@@ -35,6 +35,16 @@ namespace Flare
 		return result;
 	}
 
+	bool EditorGUI::Vector2PropertyField(const char* name, glm::vec2& value)
+	{
+		RenderPropertyName(name);
+
+		ImGui::PushID(&value);
+		bool result = ImGui::DragFloat2("", glm::value_ptr(value), 0.1f);
+		ImGui::PopID();
+		return result;
+	}
+
 	bool EditorGUI::Vector3PropertyField(const char* name, glm::vec3& value)
 	{
 		RenderPropertyName(name);
@@ -44,7 +54,6 @@ namespace Flare
 		ImGui::PopID();
 		return result;
 	}
-
 	bool EditorGUI::ColorPropertyField(const char* name, glm::vec4& color)
 	{
 		RenderPropertyName(name);

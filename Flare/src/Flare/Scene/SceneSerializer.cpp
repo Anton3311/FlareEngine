@@ -34,6 +34,7 @@ namespace Flare
 			emitter << YAML::Key << "Sprite" << YAML::BeginMap;
 			emitter << YAML::Key << "Color" << YAML::Value << sprite.Color;
 			emitter << YAML::Key << "Texture" << YAML::Value << sprite.Texture;
+			emitter << YAML::Key << "TextureTiling" << YAML::Value << sprite.TextureTiling;
 			emitter << YAML::EndMap;
 		}
 		else if (component == CameraComponent::Id)
@@ -155,8 +156,13 @@ namespace Flare
 					SpriteComponent spriteComponent;
 					spriteComponent.Color = spriteNode["Color"].as<glm::vec4>();
 
-					YAML::Node textureNode = spriteNode["Texture"];
-					spriteComponent.Texture = textureNode ? textureNode.as<uint64_t>() : NULL_ASSET_HANDLE;
+					if (YAML::Node textureNode = spriteNode["Texture"])
+						spriteComponent.Texture = textureNode ? textureNode.as<uint64_t>() : NULL_ASSET_HANDLE;
+
+					if (YAML::Node tilingNode = spriteNode["TextureTiling"])
+						spriteComponent.TextureTiling = tilingNode.as<glm::vec2>();
+					else
+						spriteComponent.TextureTiling = glm::vec2(1.0f);
 
 					AddDeserializedComponent<SpriteComponent>(scene->m_World, entity, spriteComponent);
 				}

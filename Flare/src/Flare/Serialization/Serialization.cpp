@@ -1,5 +1,12 @@
 #include "Serialization.h"
 
+YAML::Emitter& operator<<(YAML::Emitter& emitter, const glm::vec2& vector)
+{
+	emitter << YAML::Flow;
+	emitter << YAML::BeginSeq << vector.x << vector.y << YAML::EndSeq;
+	return emitter;
+}
+
 YAML::Emitter& operator<<(YAML::Emitter& emitter, const glm::vec3& vector)
 {
 	emitter << YAML::Flow;

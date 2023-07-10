@@ -119,6 +119,7 @@ namespace Flare
 		{
 			EditorGUI::ColorPropertyField("Color", sprite.Color);
 			EditorGUI::AssetField("Texture", sprite.Texture);
+			EditorGUI::Vector2PropertyField("Tiling", sprite.TextureTiling);
 
 			EditorGUI::EndPropertyGrid();
 		}
