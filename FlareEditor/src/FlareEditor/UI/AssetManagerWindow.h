@@ -8,6 +8,8 @@
 #include <vector>
 #include <string>
 #include <filesystem>
+#include <unordered_map>
+#include <functional>
 
 namespace Flare
 {
@@ -41,6 +43,8 @@ namespace Flare
 		void OnImGuiRender();
 
 		void RebuildAssetTree();
+
+		void SetOpenAction(AssetType assetType, const std::function<void(AssetHandle)>& action);
 	private:
 		void RenderDirectory();
 		void RenderFile();
@@ -56,5 +60,7 @@ namespace Flare
 
 		// Files and subdirectories are stored after the parent direcetory in the array
 		std::vector<AssetTreeNode> m_AssetTree;
+
+		std::unordered_map<AssetType, std::function<void(AssetHandle)>> m_FileOpenActions;
 	};
 }

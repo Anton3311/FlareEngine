@@ -33,6 +33,12 @@ namespace Flare
 
 		m_FrameBuffer = FrameBuffer::Create(specifications);
 
+		m_AssetManagerWindow.SetOpenAction(AssetType::Scene, [this](AssetHandle handle)
+		{
+			EditorContext::OpenScene(handle);
+			EditorContext::GetActiveScene()->OnViewportResize(m_ViewportSize.x, m_ViewportSize.y);
+		});
+
 		RenderCommand::SetClearColor(0.04f, 0.07f, 0.1f, 1.0f);
 
 		EditorContext::Initialize();

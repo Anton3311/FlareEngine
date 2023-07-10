@@ -74,6 +74,11 @@ namespace Flare
 		BuildDirectory(rootIndex, m_AssetManager->GetRoot());
 	}
 
+	void AssetManagerWindow::SetOpenAction(AssetType assetType, const std::function<void(AssetHandle)>& action)
+	{
+		m_FileOpenActions[assetType] = action;
+	}
+
 	void AssetManagerWindow::RenderDirectory()
 	{
 		const AssetTreeNode& node = m_AssetTree[m_NodeRenderIndex];
@@ -179,14 +184,11 @@ namespace Flare
 		if (AssetManager::IsAssetHandleValid(node.Handle))
 		{
 			const AssetMetadata* metadata = AssetManager::GetAssetMetadata(node.Handle);
-			
-			switch (metadata->Type)
+			if (metadata)
 			{
-			case AssetType::Scene:
-				EditorContext::OpenScene(node.Handle);
-				break;
-			default:
-				break;
+				auto action = m_FileOpenActions.find(metadata->Type);
+				if (action != m_FileOpenActions.end())
+					action->second(metadata->Handle);
 			}
 		}
 	}
