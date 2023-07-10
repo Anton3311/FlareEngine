@@ -31,5 +31,6 @@ namespace Flare
 		AssetManagerWindow m_AssetManagerWindow;
 
 		std::vector<ViewportWindow> m_Viewports;
+		glm::vec4 m_ClearColor = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
 	};
 }

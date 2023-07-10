@@ -29,8 +29,6 @@ namespace Flare
 			EditorContext::OpenScene(handle);
 		});
 
-		RenderCommand::SetClearColor(0.04f, 0.07f, 0.1f, 1.0f);
-
 		EditorContext::Initialize();
 
 		m_Viewports.emplace_back("Scene Viewport");
@@ -100,15 +98,21 @@ namespace Flare
 		}
 
 		{
-			ImGui::Begin("Renderer 2D");
-
-			const auto& stats = Renderer2D::GetStats();
-			ImGui::Text("Quads %d", stats.QuadsCount);
-			ImGui::Text("Draw Calls %d", stats.DrawCalls);
-			ImGui::Text("Vertices %d", stats.GetTotalVertexCount());
+			ImGui::Begin("Renderer");
 
 			ImGui::Text("Frame time %f", m_PreviousFrameTime);
 			ImGui::Text("FPS %f", 1.0f / m_PreviousFrameTime);
+
+			if (ImGui::ColorEdit3("Clear Color", glm::value_ptr(m_ClearColor), ImGuiColorEditFlags_Float))
+				RenderCommand::SetClearColor(m_ClearColor.r, m_ClearColor.g, m_ClearColor.b, 1.0);
+
+			if (ImGui::CollapsingHeader("Renderer 2D"))
+			{
+				const auto& stats = Renderer2D::GetStats();
+				ImGui::Text("Quads %d", stats.QuadsCount);
+				ImGui::Text("Draw Calls %d", stats.DrawCalls);
+				ImGui::Text("Vertices %d", stats.GetTotalVertexCount());
+			}
 
 			ImGui::End();
 		}
