@@ -43,10 +43,9 @@ namespace Flare
 			switch (element.DataType)
 			{
 			case ShaderDataType::Int:
-				glVertexAttribPointer(m_VertexBufferIndex, 
+				glVertexAttribIPointer(m_VertexBufferIndex, 
 					element.ComponentsCount, 
-					GL_INT, 
-					element.IsNormalized, 
+					GL_INT,
 					layout.GetStride(), 
 					(const void*)element.Offset);
 				break;
