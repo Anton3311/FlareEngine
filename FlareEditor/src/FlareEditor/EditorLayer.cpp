@@ -22,6 +22,7 @@ namespace Flare
 	void EditorLayer::OnAttach()
 	{
 		AssetManager::Intialize(CreateRef<EditorAssetManager>(std::filesystem::current_path()));
+		m_AssetManagerWindow.RebuildAssetTree();
 
 		Ref<Window> window = Application::GetInstance().GetWindow();
 		uint32_t width = window->GetProperties().Width;
