@@ -24,48 +24,28 @@ namespace Flare
 		AssetManager::Intialize(CreateRef<EditorAssetManager>(std::filesystem::current_path()));
 		m_AssetManagerWindow.RebuildAssetTree();
 
-		Ref<Window> window = Application::GetInstance().GetWindow();
-		uint32_t width = window->GetProperties().Width;
-		uint32_t height = window->GetProperties().Height;
-
-		FrameBufferSpecifications specifications(width, height, {
-			{ FrameBufferTextureFormat::RGB8, TextureWrap::Clamp, TextureFiltering::NoFiltering }
-		});
-
-		m_FrameBuffer = FrameBuffer::Create(specifications);
-
 		m_AssetManagerWindow.SetOpenAction(AssetType::Scene, [this](AssetHandle handle)
 		{
 			EditorContext::OpenScene(handle);
-			EditorContext::GetActiveScene()->OnViewportResize(m_ViewportSize.x, m_ViewportSize.y);
 		});
 
 		RenderCommand::SetClearColor(0.04f, 0.07f, 0.1f, 1.0f);
 
 		EditorContext::Initialize();
+
+		m_Viewports.emplace_back("Scene Viewport");
 	}
 
 	void EditorLayer::OnUpdate(float deltaTime)
 	{
 		m_PreviousFrameTime = deltaTime;
 
-		const FrameBufferSpecifications& specs = m_FrameBuffer->GetSpecifications();
-		if (m_ViewportSize != glm::i32vec2(0.0f) && (specs.Width != (uint32_t)m_ViewportSize.x || specs.Height != (uint32_t)m_ViewportSize.y))
-		{
-			RenderCommand::SetViewport(0, 0, (uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
-			EditorContext::GetActiveScene()->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
-
-			m_FrameBuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
-		}
-
-		m_FrameBuffer->Bind();
-		RenderCommand::Clear();
-
 		Renderer2D::ResetStats();
 
 		EditorContext::GetActiveScene()->OnUpdateRuntime();
 
-		m_FrameBuffer->Unbind();
+		for (auto& viewport : m_Viewports)
+			viewport.OnRenderViewport();
 	}
 
 	void EditorLayer::OnEvent(Event& event)
@@ -145,26 +125,8 @@ namespace Flare
 			ImGui::End();
 		}
 
-		{
-			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-			ImGui::Begin("Viewport");
-
-			ImVec2 windowSize = ImGui::GetContentRegionAvail();
-			glm::i32vec2 newViewportSize = glm::i32vec2((uint32_t)windowSize.x, (uint32_t)windowSize.y);
-
-			if (newViewportSize != m_ViewportSize)
-			{
-				EditorContext::GetActiveScene()->OnViewportResize(newViewportSize.x, newViewportSize.y);
-				m_ViewportSize = newViewportSize;
-			}
-
-			const FrameBufferSpecifications frameBufferSpecs = m_FrameBuffer->GetSpecifications();
-			ImVec2 imageSize = ImVec2(frameBufferSpecs.Width, frameBufferSpecs.Height);
-			ImGui::Image((ImTextureID)m_FrameBuffer->GetColorAttachmentRendererId(0), windowSize);
-
-			ImGui::End();
-			ImGui::PopStyleVar();
-		}
+		for (auto& viewport : m_Viewports)
+			viewport.OnRenderImGui();
 
 		m_SceneWindow.OnImGuiRender();
 		m_PropertiesWindow.OnImGuiRender();

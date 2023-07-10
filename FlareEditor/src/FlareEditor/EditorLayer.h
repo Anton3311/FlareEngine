@@ -7,6 +7,10 @@
 #include "FlareEditor/UI/PropertiesWindow.h"
 #include "FlareEditor/UI/AssetManagerWindow.h"
 
+#include "FlareEditor/ViewportWindow.h"
+
+#include <vector>
+
 namespace Flare
 {
 	class EditorLayer : public Layer
@@ -20,14 +24,12 @@ namespace Flare
 		virtual void OnEvent(Event& event) override;
 		virtual void OnImGUIRender() override;
 	private:
-		Ref<FrameBuffer> m_FrameBuffer;
-
 		float m_PreviousFrameTime = 0.0f;
-
-		glm::i32vec2 m_ViewportSize = glm::i32vec2(0.0f);
 
 		SceneWindow m_SceneWindow;
 		PropertiesWindow m_PropertiesWindow;
 		AssetManagerWindow m_AssetManagerWindow;
+
+		std::vector<ViewportWindow> m_Viewports;
 	};
 }

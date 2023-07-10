@@ -10,42 +10,23 @@ namespace Flare
 	Scene::Scene()
 		: Asset(AssetType::Scene)
 	{
-		m_CameraData.Projection = glm::mat4(1.0f);
 		m_QuadShader = Shader::Create("QuadShader.glsl");
 
 		m_World.RegisterComponent<TransformComponent>();
 		m_World.RegisterComponent<CameraComponent>();
 		m_World.RegisterComponent<SpriteComponent>();
-
+		
 		m_CameraDataUpdateQuery = m_World.CreateQuery<TransformComponent, CameraComponent>();
-
-		m_World.RegisterSystem(m_World.CreateQuery<TransformComponent, SpriteComponent>(), [this](EntityView view)
-		{
-			ComponentView<TransformComponent> transforms = view.View<TransformComponent>();
-			ComponentView<SpriteComponent> sprites = view.View<SpriteComponent>();
-
-			for (EntityViewElement entity : view)
-			{
-				TransformComponent& transform = transforms[entity];
-				SpriteComponent& sprite = sprites[entity];
-
-				Renderer2D::DrawQuad(transform.GetTransformationMatrix(), sprite.Color, sprite.Texture == NULL_ASSET_HANDLE 
-					? nullptr 
-					: AssetManager::GetAsset<Texture>(sprite.Texture));
-			}
-		});
+		m_SpritesQuery = m_World.CreateQuery<TransformComponent, SpriteComponent>();
 	}
 
 	Scene::~Scene()
 	{
 	}
 
-	void Scene::OnUpdateRuntime()
+	void Scene::OnBeforeRender(RenderData& renderData)
 	{
-		// TODO: call between Renderer2D::Begin() and Renderer2D::End()
-		// TODO: maually execute system for updating camera data
-
-		if (m_ViewportWidth != 0 && m_ViewportHeight != 0)
+		if (!renderData.IsEditorCamera)
 		{
 			for (EntityView entityView : m_CameraDataUpdateQuery)
 			{
@@ -59,32 +40,48 @@ namespace Flare
 					glm::mat4 inverseTransform = glm::inverse(transforms[entity].GetTransformationMatrix());
 
 					float halfSize = camera.Size / 2;
-					float aspectRation = (float)m_ViewportWidth / (float)m_ViewportHeight;
+					float aspectRation = (float)renderData.ViewportSize.x / (float)renderData.ViewportSize.y;
 
 					if (camera.Projection == CameraComponent::ProjectionType::Orthographic)
-					{
-						m_CameraData.Projection = glm::ortho(-halfSize * aspectRation, halfSize * aspectRation, -halfSize, halfSize, camera.Near, camera.Far)
-							* inverseTransform;
-					}
+						renderData.Camera.Projection = glm::ortho(-halfSize * aspectRation, halfSize * aspectRation, -halfSize, halfSize, camera.Near, camera.Far);
 					else
-					{
-						m_CameraData.Projection = glm::perspective<float>(glm::radians(camera.FOV), aspectRation, camera.Near, camera.Far)
-							* inverseTransform;
-					}
+						renderData.Camera.Projection = glm::perspective<float>(glm::radians(camera.FOV), aspectRation, camera.Near, camera.Far);
+
+					renderData.Camera.Projection *= inverseTransform;
 				}
 			}
 		}
+	}
 
-		Renderer2D::Begin(m_QuadShader, m_CameraData.Projection);
+	void Scene::OnRender(const RenderData& renderData)
+	{
+		Renderer2D::Begin(m_QuadShader, renderData.Camera.Projection);
 
-		m_World.OnUpdate();
+		for (EntityView view : m_SpritesQuery)
+		{
+			ComponentView<TransformComponent> transforms = view.View<TransformComponent>();
+			ComponentView<SpriteComponent> sprites = view.View<SpriteComponent>();
+
+			for (EntityViewElement entity : view)
+			{
+				TransformComponent& transform = transforms[entity];
+				SpriteComponent& sprite = sprites[entity];
+
+				Renderer2D::DrawQuad(transform.GetTransformationMatrix(), sprite.Color, sprite.Texture == NULL_ASSET_HANDLE
+					? nullptr
+					: AssetManager::GetAsset<Texture>(sprite.Texture));
+			}
+		}
 
 		Renderer2D::End();
 	}
 
+	void Scene::OnUpdateRuntime()
+	{
+		m_World.OnUpdate();
+	}
+
 	void Scene::OnViewportResize(uint32_t width, uint32_t height)
 	{
-		m_ViewportWidth = width;
-		m_ViewportHeight = height;
 	}
 }
