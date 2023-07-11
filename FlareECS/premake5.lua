@@ -20,7 +20,6 @@ project "FlareECS"
 	links
 	{
 		"FlareCommon",
-		"FlareECS",
 	}
 
 	targetdir("%{wks.location}/bin/" .. OUTPUT_DIRECTORY .. "/%{prj.name}")
