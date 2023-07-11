@@ -27,6 +27,9 @@ namespace Flare
     EditorAssetManager::EditorAssetManager(const std::filesystem::path& root)
         : m_Root(root)
     {
+        if (!std::filesystem::exists(root))
+            std::filesystem::create_directories(root);
+
         m_AssetImporters.emplace(AssetType::Texture, TextureImporter::ImportTexture);
         m_AssetImporters.emplace(AssetType::Scene, SceneImporter::ImportScene);
 

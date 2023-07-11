@@ -7,6 +7,8 @@
 
 #include "Flare/AssetManager/AssetManager.h"
 
+#include "Flare/Project/Project.h"
+
 #include "FlareEditor/EditorContext.h"
 #include "FlareEditor/AssetManager/EditorAssetManager.h"
 
@@ -21,7 +23,9 @@ namespace Flare
 
 	void EditorLayer::OnAttach()
 	{
-		AssetManager::Intialize(CreateRef<EditorAssetManager>(std::filesystem::current_path()));
+		UpdateWindowTitle();
+
+		AssetManager::Intialize(CreateRef<EditorAssetManager>(Project::GetActive()->Location / "Assets"));
 		m_AssetManagerWindow.RebuildAssetTree();
 
 		m_AssetManagerWindow.SetOpenAction(AssetType::Scene, [this](AssetHandle handle)
@@ -81,6 +85,14 @@ namespace Flare
 
 		if (ImGui::BeginMenuBar())
 		{
+			if (ImGui::BeginMenu("Project"))
+			{
+				if (ImGui::MenuItem("Save"))
+				{
+					Project::Save();
+				}
+			}
+
 			if (ImGui::BeginMenu("Scene"))
 			{
 				if (ImGui::MenuItem("Save"))
@@ -137,5 +149,11 @@ namespace Flare
 		m_AssetManagerWindow.OnImGuiRender();
 
 		ImGui::End();
+	}
+
+	void EditorLayer::UpdateWindowTitle()
+	{
+		std::string name = fmt::format("Flare Editor - {0} - {1}", Project::GetActive()->Name, Project::GetActive()->Location.generic_string());
+		Application::GetInstance().GetWindow()->SetTitle(name);
 	}
 }

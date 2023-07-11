@@ -1,9 +1,15 @@
 #pragma once
 
-#include "Flare/Core/Platform.h"
-
 #include <memory>
 #include <xhash>
+
+#ifdef _WIN32
+	#ifdef _WIN64
+		#define FLARE_PLATFORM_WINDOWS
+	#else
+		#error "x86 platform is not supported"
+	#endif
+#endif
 
 #ifdef FLARE_DEBUG
 	#ifdef FLARE_PLATFORM_WINDOWS

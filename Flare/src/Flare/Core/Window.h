@@ -22,8 +22,12 @@ namespace Flare
 	public:
 		virtual const WindowProperties& GetProperties() const = 0;
 
+		virtual void SetTitle(const std::string& title) = 0;
+
 		virtual void SetEventCallback(const EventCallback& callback) = 0;
 		virtual void SetVSync(bool vsync) = 0;
+
+		virtual void* GetNativeWindow() = 0;
 
 		virtual void OnUpdate() = 0;
 	public:

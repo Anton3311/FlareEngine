@@ -2,7 +2,6 @@
 
 #include "Flare/Core/Application.h"
 #include "Flare/Core/Core.h"
-#include "Flare/Core/Platform.h"
 
 #ifdef FLARE_PLATFORM_WINDOWS
 	#include "Flare/Platform/Windows/WindowsWindow.h"

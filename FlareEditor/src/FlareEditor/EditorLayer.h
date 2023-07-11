@@ -24,6 +24,8 @@ namespace Flare
 		virtual void OnEvent(Event& event) override;
 		virtual void OnImGUIRender() override;
 	private:
+		void UpdateWindowTitle();
+	private:
 		float m_PreviousFrameTime = 0.0f;
 
 		SceneWindow m_SceneWindow;
