@@ -45,5 +45,7 @@ namespace Flare
 
 		std::unordered_map<std::filesystem::path, AssetHandle> m_FilepathToAssetHandle;
 		std::unordered_map<AssetType, AssetImporter> m_AssetImporters;
+
+		static std::filesystem::path s_RegistryFileName;
 	};
 }

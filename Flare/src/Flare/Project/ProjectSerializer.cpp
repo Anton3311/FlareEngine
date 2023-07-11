@@ -20,7 +20,7 @@ namespace Flare
 		std::ofstream output(path);
 		if (!output.is_open())
 		{
-			FLARE_CORE_ERROR("Failed to write project file {0}", project->Location.generic_string());
+			FLARE_CORE_ERROR("Failed to write project file {0}", path.generic_string());
 			return;
 		}
 
@@ -33,7 +33,7 @@ namespace Flare
 
 		if (!input.is_open())
 		{
-			FLARE_CORE_ERROR("Failed to read project file {0}", project->Location.generic_string());
+			FLARE_CORE_ERROR("Failed to read project file {0}", path.generic_string());
 			return;
 		}
 
@@ -48,7 +48,7 @@ namespace Flare
 		}
 		else
 		{
-			FLARE_CORE_ERROR("Failed to parse project file {0}", project->Location.generic_string());
+			FLARE_CORE_ERROR("Failed to parse project file {0}", path.generic_string());
 		}
 	}
 }

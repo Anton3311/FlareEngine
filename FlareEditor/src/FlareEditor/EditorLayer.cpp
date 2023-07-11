@@ -8,6 +8,7 @@
 #include "Flare/AssetManager/AssetManager.h"
 
 #include "Flare/Project/Project.h"
+#include "Flare/Platform/Platform.h"
 
 #include "FlareEditor/EditorContext.h"
 #include "FlareEditor/AssetManager/EditorAssetManager.h"
@@ -91,6 +92,16 @@ namespace Flare
 				{
 					Project::Save();
 				}
+
+				if (ImGui::MenuItem("Open"))
+				{
+					std::optional<std::filesystem::path> projectPath = Platform::ShowOpenFileDialog(L"Flare Project (*.flareproj)\0*.flareproj\0");
+
+					if (projectPath.has_value())
+						Project::OpenProject(projectPath.value());
+				}
+
+				ImGui::EndMenu();
 			}
 
 			if (ImGui::BeginMenu("Scene"))
@@ -153,7 +164,10 @@ namespace Flare
 
 	void EditorLayer::UpdateWindowTitle()
 	{
-		std::string name = fmt::format("Flare Editor - {0} - {1}", Project::GetActive()->Name, Project::GetActive()->Location.generic_string());
-		Application::GetInstance().GetWindow()->SetTitle(name);
+		if (Project::GetActive() != nullptr)
+		{
+			std::string name = fmt::format("Flare Editor - {0} - {1}", Project::GetActive()->Name, Project::GetActive()->Location.generic_string());
+			Application::GetInstance().GetWindow()->SetTitle(name);
+		}
 	}
 }

@@ -7,6 +7,7 @@
 #include "Flare/AssetManager/Importers/SceneImporter.h"
 
 #include "Flare/Serialization/Serialization.h"
+#include "Flare/Project/Project.h"
 
 #include <yaml-cpp/yaml.h>
 
@@ -24,6 +25,8 @@ namespace YAML
 
 namespace Flare
 {
+    std::filesystem::path EditorAssetManager::s_RegistryFileName = "AssetRegistry.yaml";
+
     EditorAssetManager::EditorAssetManager(const std::filesystem::path& root)
         : m_Root(root)
     {
@@ -136,7 +139,7 @@ namespace Flare
 
     void EditorAssetManager::SerializeRegistry()
     {
-        std::filesystem::path path = m_Root / std::filesystem::path("AssetRegistry.yaml");
+        std::filesystem::path path = Project::GetActive()->Location / s_RegistryFileName;
 
         YAML::Emitter emitter;
         emitter << YAML::BeginMap;
@@ -162,7 +165,7 @@ namespace Flare
 
     void EditorAssetManager::DeserializeRegistry()
     {
-        std::filesystem::path registryPath = m_Root / std::filesystem::path("AssetRegistry.yaml");
+        std::filesystem::path registryPath = Project::GetActive()->Location / s_RegistryFileName;
 
         std::ifstream inputFile(registryPath);
         if (!inputFile)

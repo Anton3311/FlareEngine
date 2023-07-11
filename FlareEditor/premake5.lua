@@ -36,6 +36,11 @@ project "FlareEditor"
 		"YAML_CPP_STATIC_DEFINE"
 	}
 
+	debugargs
+	{
+		"%{wks.location}/Sandbox/Sandbox.flareproj"
+	}
+
 	targetdir("%{wks.location}/bin/" .. OUTPUT_DIRECTORY .. "/%{prj.name}")
 	objdir("%{wks.location}/bin-int/" .. OUTPUT_DIRECTORY .. "/%{prj.name}")
 
