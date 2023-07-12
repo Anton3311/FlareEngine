@@ -107,12 +107,9 @@ namespace Flare
 			if (ImGui::BeginMenu("Scene"))
 			{
 				if (ImGui::MenuItem("Save"))
-				{
-					if (AssetManager::IsAssetHandleValid(EditorContext::GetActiveScene()->Handle))
-						SceneSerializer::Serialize(EditorContext::GetActiveScene());
-					// else
-					// TODO: Ask for save location
-				}
+					SaveActiveScene();
+				if (ImGui::MenuItem("Save As"))
+					SaveActiveSceneAs();
 
 				ImGui::EndMenu();
 			}
@@ -168,6 +165,29 @@ namespace Flare
 		{
 			std::string name = fmt::format("Flare Editor - {0} - {1}", Project::GetActive()->Name, Project::GetActive()->Location.generic_string());
 			Application::GetInstance().GetWindow()->SetTitle(name);
+		}
+	}
+
+	void EditorLayer::SaveActiveScene()
+	{
+		if (AssetManager::IsAssetHandleValid(EditorContext::GetActiveScene()->Handle))
+			SceneSerializer::Serialize(EditorContext::GetActiveScene());
+		else
+			SaveActiveSceneAs();
+	}
+
+	void EditorLayer::SaveActiveSceneAs()
+	{
+		std::optional<std::filesystem::path> scenePath = Platform::ShowSaveFileDialog(L"Flare Scene (*.flare)\0*.flare\0");
+		if (scenePath.has_value())
+		{
+			std::filesystem::path& path = scenePath.value();
+			if (!path.has_extension())
+				path.replace_extension(".flare");
+
+			SceneSerializer::Serialize(EditorContext::GetActiveScene(), path);
+			AssetHandle handle = As<EditorAssetManager>(AssetManager::GetInstance())->ImportAsset(path);
+			EditorContext::OpenScene(handle);
 		}
 	}
 }

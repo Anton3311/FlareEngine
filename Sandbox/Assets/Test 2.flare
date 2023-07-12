@@ -1,0 +1,21 @@
+Entities:
+  - Components:
+      Transform:
+        Position: [0, 0, 0]
+        Rotation: [0, 0, 0]
+        Scale: [1, 1, 1]
+      Camera:
+        Size: 10
+        Near: 0.100000001
+        Far: 100
+        Projection: Orthographic
+        FOV: 0
+  - Components:
+      Transform:
+        Position: [0, 0, -0.600000024]
+        Rotation: [0, 0, -60.5]
+        Scale: [1, 2, 1]
+      Sprite:
+        Color: [0, 0, 1, 1]
+        Texture: 5193090395626261884
+        TextureTiling: [1, 1]

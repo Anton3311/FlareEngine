@@ -1,0 +1,10 @@
+AssetRegistry:
+  - Handle: 5193090395626261884
+    Type: Texture
+    Path: Texture.png
+  - Handle: 16256238360584041012
+    Type: Scene
+    Path: Test 2.flare
+  - Handle: 16883279782608513727
+    Type: Scene
+    Path: Test.flare

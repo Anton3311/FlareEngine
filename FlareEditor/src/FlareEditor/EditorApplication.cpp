@@ -15,8 +15,6 @@ namespace Flare
 	{
 		Application::GetInstance().GetWindow()->SetTitle("Flare Editor");
 
-		FLARE_CORE_INFO("Working directory {0}", std::filesystem::current_path().generic_string());
-
 		if (arguments.ArgumentsCount >= 2)
 		{
 			std::filesystem::path projectPath = arguments[1];
