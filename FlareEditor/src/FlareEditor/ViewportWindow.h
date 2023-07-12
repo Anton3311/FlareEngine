@@ -3,6 +3,8 @@
 #include "Flare/Renderer/FrameBuffer.h"
 #include "Flare/Renderer/RenderData.h"
 
+#include <glm/glm.hpp>
+
 #include <string>
 #include <string_view>
 
@@ -13,9 +15,13 @@ namespace Flare
 	public:
 		ViewportWindow(std::string_view name, bool useEditorCamera = false);
 	public:
-		void OnRenderViewport();
 		void OnRenderImGui();
-	private:
+
+		virtual void OnRenderViewport();
+		void SetViewProjection(const glm::mat4& projection) { m_RenderData.Camera.Projection = projection; }
+	protected:
+		virtual void OnViewportResize() {}
+	protected:
 		std::string m_Name;
 		Ref<FrameBuffer> m_FrameBuffer;
 		RenderData m_RenderData;

@@ -13,6 +13,8 @@
 #include "FlareEditor/EditorContext.h"
 #include "FlareEditor/AssetManager/EditorAssetManager.h"
 
+#include "FlareEditor/UI/SceneViewportWindow.h"
+
 #include <imgui.h>
 
 namespace Flare
@@ -36,7 +38,14 @@ namespace Flare
 
 		EditorContext::Initialize();
 
-		m_Viewports.emplace_back("Scene Viewport");
+		m_Viewports.emplace_back(CreateRef<SceneViewportWindow>(m_Camera));
+
+		EditorCameraSettings& settings = m_Camera.GetSettings();
+		settings.FOV = 60.0f;
+		settings.Near = 0.1f;
+		settings.Far = 1000.0f;
+		settings.RotationSpeed = 1.0f;
+		settings.DragSpeed = 0.1f;
 	}
 
 	void EditorLayer::OnUpdate(float deltaTime)
@@ -48,11 +57,12 @@ namespace Flare
 		EditorContext::GetActiveScene()->OnUpdateRuntime();
 
 		for (auto& viewport : m_Viewports)
-			viewport.OnRenderViewport();
+			viewport->OnRenderViewport();
 	}
 
 	void EditorLayer::OnEvent(Event& event)
 	{
+		m_Camera.ProcessEvents(event);
 	}
 
 	void EditorLayer::OnImGUIRender()
@@ -150,7 +160,7 @@ namespace Flare
 		}
 
 		for (auto& viewport : m_Viewports)
-			viewport.OnRenderImGui();
+			viewport->OnRenderImGui();
 
 		m_SceneWindow.OnImGuiRender();
 		m_PropertiesWindow.OnImGuiRender();

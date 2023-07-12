@@ -12,9 +12,9 @@ Entities:
         FOV: 0
   - Components:
       Transform:
-        Position: [0, 0, -0.600000024]
-        Rotation: [0, 0, -60.5]
-        Scale: [1, 2, 1]
+        Position: [0, 0, 0]
+        Rotation: [0, 0, 0]
+        Scale: [1, 1, 1]
       Sprite:
         Color: [0, 0, 1, 1]
         Texture: 5193090395626261884
