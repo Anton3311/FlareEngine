@@ -34,7 +34,3 @@ group ""
 group "Editor"
 	include "FlareEditor"
 group ""
-
-group "Sandbox"
-	include "Sandbox"
-group ""
