@@ -37,17 +37,17 @@ namespace Flare
 				{
 					CameraComponent& camera = cameras[entity];
 
-					glm::mat4 inverseTransform = glm::inverse(transforms[entity].GetTransformationMatrix());
-
 					float halfSize = camera.Size / 2;
 					float aspectRation = (float)renderData.ViewportSize.x / (float)renderData.ViewportSize.y;
 
-					if (camera.Projection == CameraComponent::ProjectionType::Orthographic)
-						renderData.Camera.Projection = glm::ortho(-halfSize * aspectRation, halfSize * aspectRation, -halfSize, halfSize, camera.Near, camera.Far);
-					else
-						renderData.Camera.Projection = glm::perspective<float>(glm::radians(camera.FOV), aspectRation, camera.Near, camera.Far);
+					renderData.Camera.ViewMatrix = glm::inverse(transforms[entity].GetTransformationMatrix());
 
-					renderData.Camera.Projection *= inverseTransform;
+					if (camera.Projection == CameraComponent::ProjectionType::Orthographic)
+						renderData.Camera.ProjectionMatrix = glm::ortho(-halfSize * aspectRation, halfSize * aspectRation, -halfSize, halfSize, camera.Near, camera.Far);
+					else
+						renderData.Camera.ProjectionMatrix = glm::perspective<float>(glm::radians(camera.FOV), aspectRation, camera.Near, camera.Far);
+
+					renderData.Camera.CalculateViewProjection();
 				}
 			}
 		}
@@ -55,7 +55,7 @@ namespace Flare
 
 	void Scene::OnRender(const RenderData& renderData)
 	{
-		Renderer2D::Begin(m_QuadShader, renderData.Camera.Projection);
+		Renderer2D::Begin(m_QuadShader, renderData.Camera.ViewProjectionMatrix);
 
 		for (EntityView view : m_SpritesQuery)
 		{

@@ -7,7 +7,6 @@
 #include "Flare/AssetManager/Asset.h"
 
 #include "Flare/Renderer/Shader.h"
-#include "Flare/Renderer/CameraData.h"
 #include "Flare/Renderer/RenderData.h"
 
 namespace Flare

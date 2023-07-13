@@ -20,8 +20,14 @@ namespace Flare
 	class EditorCamera
 	{
 	public:
+		EditorCamera()
+		{
+			RecalculateViewMatrix();
+		}
+
 		EditorCameraSettings& GetSettings() { return m_Settings; }
-		const glm::mat4& GetViewProjection() const { return m_ViewProjection; }
+		const glm::mat4& GetProjectionMatrix() const { return m_ProjectionMatrix; }
+		const glm::mat4& GetViewMatrix() const { return m_ViewMatrix; }
 
 		void ProcessEvents(Event& event);
 		void RecalculateProjection(const glm::u32vec2& viewportSize);
@@ -30,7 +36,7 @@ namespace Flare
 		void Rotate(glm::vec2 mouseInput);
 		void Drag(glm::vec2 mouseInput);
 	private:
-		void RecalculateTransform();
+		void RecalculateViewMatrix();
 
 		glm::vec3 TransformDirection(const glm::vec3& direction);
 	private:
@@ -40,8 +46,8 @@ namespace Flare
 		bool m_IsMoved = false;
 		bool m_IsControlled = false;
 
-		glm::mat4 m_Projection = glm::mat4(1.0f);
-		glm::mat4 m_ViewProjection = glm::mat4(1.0f);
+		glm::mat4 m_ProjectionMatrix = glm::mat4(1.0f);
+		glm::mat4 m_ViewMatrix = glm::mat4(1.0f);
 
 		glm::vec3 m_Origin = glm::vec3(0.0f);
 		glm::vec3 m_Rotation = glm::vec3(0.0f);

@@ -61,15 +61,13 @@ namespace Flare
 	void EditorCamera::RecalculateProjection(const glm::u32vec2& viewportSize)
 	{
 		float aspectRatio = (float)viewportSize.x / (float)viewportSize.y;
-		m_Projection = glm::perspective<float>(glm::radians(m_Settings.FOV), aspectRatio, m_Settings.Near, m_Settings.Far);
-
-		RecalculateTransform();
+		m_ProjectionMatrix = glm::perspective<float>(glm::radians(m_Settings.FOV), aspectRatio, m_Settings.Near, m_Settings.Far);
 	}
 
 	void EditorCamera::Zoom(float amount)
 	{
 		m_DistanceToOrigin = glm::max(m_DistanceToOrigin + amount, 0.1f);
-		RecalculateTransform();
+		RecalculateViewMatrix();
 	}
 
 	void EditorCamera::Rotate(glm::vec2 mouseInput)
@@ -79,7 +77,7 @@ namespace Flare
 		m_Rotation.x -= mouseInput.y;
 		m_Rotation.y += mouseInput.x;
 
-		RecalculateTransform();
+		RecalculateViewMatrix();
 	}
 
 	void EditorCamera::Drag(glm::vec2 mouseInput)
@@ -92,15 +90,13 @@ namespace Flare
 		glm::vec3 movementDirection = -right * mouseInput.x + up * mouseInput.y;
 		m_Origin += movementDirection;
 
-		RecalculateTransform();
+		RecalculateViewMatrix();
 	}
 
-	void EditorCamera::RecalculateTransform()
+	void EditorCamera::RecalculateViewMatrix()
 	{
 		glm::vec3 position = m_Origin - TransformDirection(glm::vec3(0.0f, 0.0f, -1.0f)) * m_DistanceToOrigin;
-
-		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position) * glm::toMat4(glm::quat(glm::radians(-m_Rotation)));
-		m_ViewProjection = m_Projection * glm::inverse(transform);
+		m_ViewMatrix = glm::inverse(glm::translate(glm::mat4(1.0f), position) * glm::toMat4(glm::quat(glm::radians(-m_Rotation))));
 	}
 
 	glm::vec3 EditorCamera::TransformDirection(const glm::vec3& direction)

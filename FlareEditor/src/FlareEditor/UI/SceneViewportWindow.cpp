@@ -4,7 +4,13 @@ namespace Flare
 {
 	void SceneViewportWindow::OnRenderViewport()
 	{
-		m_RenderData.Camera.Projection = m_Camera.GetViewProjection();
+		if (m_RenderData.IsEditorCamera)
+		{
+			m_RenderData.Camera.ViewMatrix = m_Camera.GetViewMatrix();
+			m_RenderData.Camera.ProjectionMatrix = m_Camera.GetProjectionMatrix();
+			m_RenderData.Camera.CalculateViewProjection();
+		}
+
 		ViewportWindow::OnRenderViewport();
 	}
 
