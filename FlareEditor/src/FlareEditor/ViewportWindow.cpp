@@ -9,7 +9,7 @@
 namespace Flare
 {
 	ViewportWindow::ViewportWindow(std::string_view name, bool useEditorCamera)
-		: m_Name(name)
+		: m_Name(name), m_IsFocused(false), m_IsHovered(false), m_RelativeMousePosition(glm::ivec2(0))
 	{
 		m_RenderData.IsEditorCamera = useEditorCamera;
 	}
@@ -30,21 +30,33 @@ namespace Flare
 
 			m_FrameBuffer->Bind();
 
-			RenderCommand::Clear();
+			OnClear();
 
 			EditorContext::GetActiveScene()->OnBeforeRender(m_RenderData);
 			EditorContext::GetActiveScene()->OnRender(m_RenderData);
+
 			m_FrameBuffer->Unbind();
 		}
 	}
 
-	void ViewportWindow::OnRenderImGui()
+	void ViewportWindow::BeginImGui()
 	{
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 		ImGui::Begin(m_Name.c_str());
 
+		m_IsHovered = ImGui::IsWindowHovered();
+		m_IsFocused = ImGui::IsWindowFocused();
+
+		ImGuiIO& io = ImGui::GetIO();
+
+		ImVec2 cursorPosition = ImGui::GetCursorPos();
+		ImVec2 windowPosition = ImGui::GetWindowPos();
 		ImVec2 windowSize = ImGui::GetContentRegionAvail();
-		glm::u32vec2 newViewportSize = glm::u32vec2((uint32_t)windowSize.x, (uint32_t)windowSize.y);
+		glm::u32vec2 newViewportSize = glm::u32vec2((int32_t)windowSize.x, (int32_t)windowSize.y);
+
+		m_RelativeMousePosition = glm::uvec2(
+			(uint32_t)(io.MousePos.x - windowPosition.x - cursorPosition.x),
+			(uint32_t)(io.MousePos.y - windowPosition.y - cursorPosition.y));
 
 		if (m_FrameBuffer != nullptr)
 		{
@@ -56,19 +68,38 @@ namespace Flare
 		if (m_RenderData.ViewportSize == glm::u32vec2(0))
 		{
 			m_RenderData.ViewportSize = newViewportSize;
-			FrameBufferSpecifications specifications(m_RenderData.ViewportSize.x, m_RenderData.ViewportSize.y, {
-				{ FrameBufferTextureFormat::RGB8, TextureWrap::Clamp, TextureFiltering::NoFiltering }
-			});
-
-			m_FrameBuffer = FrameBuffer::Create(specifications);
+			CreateFrameBuffer();
 			OnViewportResize();
 		}
 		else if (newViewportSize != m_RenderData.ViewportSize)
 		{
 			m_RenderData.ViewportSize = newViewportSize;
 		}
+	}
 
+	void ViewportWindow::EndImGui()
+	{
 		ImGui::End();
 		ImGui::PopStyleVar();
+	}
+
+	void ViewportWindow::CreateFrameBuffer()
+	{
+		FrameBufferSpecifications specifications(m_RenderData.ViewportSize.x, m_RenderData.ViewportSize.y, {
+			{ FrameBufferTextureFormat::RGB8, TextureWrap::Clamp, TextureFiltering::NoFiltering },
+		});
+
+		m_FrameBuffer = FrameBuffer::Create(specifications);
+	}
+
+	void ViewportWindow::OnClear()
+	{
+		RenderCommand::Clear();
+	}
+
+	void ViewportWindow::OnRenderImGui()
+	{
+		BeginImGui();
+		EndImGui();
 	}
 }

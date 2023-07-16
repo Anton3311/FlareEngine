@@ -13,6 +13,10 @@ namespace Flare
 
 		virtual void OnRenderViewport() override;
 		virtual void OnViewportResize() override;
+		virtual void OnRenderImGui() override;
+	protected:
+		virtual void CreateFrameBuffer() override;
+		virtual void OnClear() override;
 	private:
 		EditorCamera& m_Camera;
 	};

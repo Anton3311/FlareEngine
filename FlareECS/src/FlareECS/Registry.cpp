@@ -349,6 +349,13 @@ namespace Flare
 		return it->first;
 	}
 
+	std::optional<Entity> Registry::FindEntityByRegistryIndex(size_t registryIndex)
+	{
+		if (registryIndex < m_EntityRecords.size())
+			return m_EntityRecords[registryIndex].Id;
+		return {};
+	}
+
 	std::optional<void*> Registry::GetEntityComponent(Entity entity, ComponentId component)
 	{
 		auto it = FindEntity(entity);

@@ -35,6 +35,7 @@ namespace Flare
 			BufferLayoutElement("i_Color", ShaderDataType::Float4),
 			BufferLayoutElement("i_UV", ShaderDataType::Float2),
 			BufferLayoutElement("i_TextureIndex", ShaderDataType::Float),
+			BufferLayoutElement("i_EntityIndex", ShaderDataType::Int),
 		});
 
 		s_Data->VertexArray->SetIndexBuffer(s_Data->IndexBuffer);
@@ -119,13 +120,14 @@ namespace Flare
 			vertex.Color = color;
 			vertex.UV = s_Data->QuadUV[i];
 			vertex.TextuteIndex = 0; // White texture
+			vertex.EntityIndex = INT32_MAX;
 		}
 
 		s_Data->QuadIndex++;
 		s_Data->Stats.QuadsCount++;
 	}
 
-	void Renderer2D::DrawQuad(const glm::mat4& transform, const glm::vec4& tint, const Ref<Texture>& texture, glm::vec2 tiling)
+	void Renderer2D::DrawQuad(const glm::mat4& transform, const glm::vec4& tint, const Ref<Texture>& texture, glm::vec2 tiling, int32_t entityIndex)
 	{
 		if (s_Data->QuadIndex >= s_Data->MaxQuadCount)
 			Flush();
@@ -155,6 +157,7 @@ namespace Flare
 			vertex.Color = tint;
 			vertex.UV = s_Data->QuadUV[i] * tiling;
 			vertex.TextuteIndex = textureIndex;
+			vertex.EntityIndex = entityIndex;
 		}
 
 		s_Data->QuadIndex++;
@@ -218,6 +221,7 @@ namespace Flare
 			vertex.Color = tint;
 			vertex.UV = uv[i] * tiling;
 			vertex.TextuteIndex = textureIndex;
+			vertex.EntityIndex = INT32_MAX;
 		}
 
 		s_Data->QuadIndex++;

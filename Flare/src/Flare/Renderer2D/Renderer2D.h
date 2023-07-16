@@ -20,6 +20,7 @@ namespace Flare
 		glm::vec4 Color;
 		glm::vec2 UV;
 		float TextuteIndex;
+		int32_t EntityIndex;
 	};
 
 	constexpr size_t MaxTexturesCount = 32;
@@ -59,7 +60,7 @@ namespace Flare
 		static void Flush();
 		static void DrawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color);
 
-		static void DrawQuad(const glm::mat4& transform, const glm::vec4& tint, const Ref<Texture>& texture, glm::vec2 tiling);
+		static void DrawQuad(const glm::mat4& transform, const glm::vec4& tint, const Ref<Texture>& texture, glm::vec2 tiling, int32_t entityIndex);
 
 		static void DrawQuad(const glm::vec3& position, const glm::vec2& size, 
 			const Ref<Texture>& texture, 

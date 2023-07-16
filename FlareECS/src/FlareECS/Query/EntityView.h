@@ -21,6 +21,8 @@ namespace Flare
 		EntityViewIterator begin();
 		EntityViewIterator end();
 
+		std::optional<Entity> GetEntity(size_t index);
+
 		template<typename ComponentT>
 		ComponentView<ComponentT> View()
 		{

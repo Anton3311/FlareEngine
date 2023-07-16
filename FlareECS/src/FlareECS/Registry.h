@@ -34,7 +34,9 @@ namespace Flare
 		bool AddEntityComponent(Entity entity, ComponentId componentId, const void* componentData);
 		bool RemoveEntityComponent(Entity entity, ComponentId componentId);
 		bool IsEntityAlive(Entity entity) const;
+
 		std::optional<Entity> FindEntityByIndex(uint32_t entityIndex);
+		std::optional<Entity> FindEntityByRegistryIndex(size_t registryIndex);
 
 		// Component operations
 

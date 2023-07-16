@@ -23,7 +23,7 @@ namespace Flare
         return 0;
     }
 
-    static GLenum FrameBufferTextureForamtToOpenGLFormat(FrameBufferTextureFormat format)
+    static GLenum FrameBufferTextureFormatToOpenGLFormat(FrameBufferTextureFormat format)
     {
         switch (format)
         {
@@ -82,7 +82,7 @@ namespace Flare
     void OpenGLFrameBuffer::ClearAttachment(uint32_t index, uint32_t value)
     {
         FLARE_CORE_ASSERT(index < m_ColorAttachments.size());
-        glClearTexImage(m_ColorAttachments[index], 0, FrameBufferTextureForamtToOpenGLFormat(m_Specifications.Attachments[index].Format), GL_INT, &value);
+        glClearTexImage(m_ColorAttachments[index], 0, FrameBufferTextureFormatToOpenGLFormat(m_Specifications.Attachments[index].Format), GL_INT, &value);
     }
 
     void OpenGLFrameBuffer::ReadPixel(uint32_t attachmentIndex, uint32_t x, uint32_t y, void* pixelOutput)
@@ -90,7 +90,7 @@ namespace Flare
         FLARE_CORE_ASSERT(attachmentIndex < m_ColorAttachments.size());
         glReadBuffer(GL_COLOR_ATTACHMENT0 + attachmentIndex);
 
-        glReadPixels(x, y, 1, 1, FrameBufferTextureForamtToOpenGLFormat(m_Specifications.Attachments[attachmentIndex].Format), GL_INT, pixelOutput);
+        glReadPixels(x, y, 1, 1, FrameBufferTextureFormatToOpenGLFormat(m_Specifications.Attachments[attachmentIndex].Format), GL_INT, pixelOutput);
     }
 
     void OpenGLFrameBuffer::Create()
@@ -105,7 +105,7 @@ namespace Flare
             glTexImage2D(GL_TEXTURE_2D, 0, 
                 FrameBufferTextureForamtToOpenGLInternalFormat(m_Specifications.Attachments[i].Format),
                 m_Specifications.Width, m_Specifications.Height, 0,
-                FrameBufferTextureForamtToOpenGLFormat(m_Specifications.Attachments[i].Format),
+                FrameBufferTextureFormatToOpenGLFormat(m_Specifications.Attachments[i].Format),
                 GL_UNSIGNED_BYTE, nullptr);
 
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
