@@ -1,13 +1,12 @@
 #pragma once
 
 #include "Flare/Core/Core.h"
-
-#include "FlareECS/World.h"
-
 #include "Flare/AssetManager/Asset.h"
 
 #include "Flare/Renderer/Shader.h"
 #include "Flare/Renderer/RenderData.h"
+
+#include "FlareECS.h"
 
 namespace Flare
 {
@@ -17,6 +16,8 @@ namespace Flare
 	public:
 		Scene();
 		~Scene();
+
+		void CopyFrom(const Ref<Scene>& scene);
 	public:
 		void OnBeforeRender(RenderData& renderData);
 		void OnRender(const RenderData& renderData);
@@ -32,8 +33,6 @@ namespace Flare
 		Query m_CameraDataUpdateQuery;
 		Query m_SpritesQuery;
 	private:
-		static Ref<Scene> m_Active;
-
 		friend SceneSerializer;
 	};
 }

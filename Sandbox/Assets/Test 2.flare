@@ -12,7 +12,7 @@ Entities:
         FOV: 0
   - Components:
       Transform:
-        Position: [0, 0, 0]
+        Position: [0, 0, -1.20000005]
         Rotation: [0, 0, 0]
         Scale: [1, 1, 1]
       Sprite:

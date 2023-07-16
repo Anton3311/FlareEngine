@@ -32,11 +32,18 @@ namespace Flare
 		}
 	}
 
-	Entity Registry::CreateEntity(ComponentSet& components)
+	Entity Registry::CreateEntity(const ComponentSet& componentSet)
 	{
-		FLARE_CORE_ASSERT(components.GetCount() > 0);
+		FLARE_CORE_ASSERT(componentSet.GetCount() > 0);
 
-		std::sort(components.GetIds(), components.GetIds() + components.GetCount());
+		if (m_TemporaryComponentSet.size() < componentSet.GetCount())
+			m_TemporaryComponentSet.resize(componentSet.GetCount());
+
+		std::memcpy(m_TemporaryComponentSet.data(), componentSet.GetIds(), sizeof(ComponentId) * componentSet.GetCount());
+
+		std::sort(m_TemporaryComponentSet.data(), m_TemporaryComponentSet.data() + componentSet.GetCount());
+
+		ComponentSet components = ComponentSet(m_TemporaryComponentSet.data(), componentSet.GetCount());
 
 		size_t registryIndex = m_EntityRecords.size();
 		EntityRecord& record = m_EntityRecords.emplace_back();
@@ -356,6 +363,36 @@ namespace Flare
 		return {};
 	}
 
+	std::optional<uint8_t*> Registry::GetEntityData(Entity entity)
+	{
+		auto it = FindEntity(entity);
+		if (it == m_EntityToRecord.end())
+			return {};
+
+		EntityRecord& record = m_EntityRecords[it->second];
+		return m_Archetypes[record.Archetype].Storage.GetEntityData(record.BufferIndex);
+	}
+
+	std::optional<const uint8_t*> Registry::GetEntityData(Entity entity) const
+	{
+		auto it = FindEntity(entity);
+		if (it == m_EntityToRecord.end())
+			return {};
+
+		const EntityRecord& record = m_EntityRecords[it->second];
+		return m_Archetypes[record.Archetype].Storage.GetEntityData(record.BufferIndex);
+	}
+
+	std::optional<size_t> Registry::GetEntityDataSize(Entity entity)
+	{
+		auto it = FindEntity(entity);
+		if (it == m_EntityToRecord.end())
+			return {};
+
+		EntityRecord& record = m_EntityRecords[it->second];
+		return m_Archetypes[record.Archetype].Storage.GetEntitySize();
+	}
+
 	std::optional<void*> Registry::GetEntityComponent(Entity entity, ComponentId component)
 	{
 		auto it = FindEntity(entity);
@@ -407,10 +444,17 @@ namespace Flare
 		return m_QueryCache.AddQuery(components);
 	}
 
-	EntityView Registry::QueryArchetype(ComponentSet components)
+	EntityView Registry::QueryArchetype(const ComponentSet& componentSet)
 	{
-		std::sort(components.GetIds(), components.GetIds() + components.GetCount());
-		auto it = m_ComponentSetToArchetype.find(components);
+		FLARE_CORE_ASSERT(componentSet.GetCount() > 0);
+
+		if (m_TemporaryComponentSet.size() < componentSet.GetCount())
+			m_TemporaryComponentSet.resize(componentSet.GetCount());
+
+		std::memcpy(m_TemporaryComponentSet.data(), componentSet.GetIds(), sizeof(ComponentId) * componentSet.GetCount());
+
+		std::sort(m_TemporaryComponentSet.data(), m_TemporaryComponentSet.data() + componentSet.GetCount());
+		auto it = m_ComponentSetToArchetype.find(ComponentSet(m_TemporaryComponentSet.data(), componentSet.GetCount()));
 
 		FLARE_CORE_ASSERT(it != m_ComponentSetToArchetype.end());
 

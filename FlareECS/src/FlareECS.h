@@ -6,4 +6,6 @@
 #include "FlareECS/Entity/Component.h"
 #include "FlareECS/Entity/Archetype.h"
 
+#include "FlareECS/Query/EntityRegistryIterator.h"
+
 #include "FlareECS/Query/Query.h"

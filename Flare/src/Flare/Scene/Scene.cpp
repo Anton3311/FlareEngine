@@ -24,6 +24,22 @@ namespace Flare
 	{
 	}
 
+	void Scene::CopyFrom(const Ref<Scene>& scene)
+	{
+		for (Entity entity : scene->m_World.GetRegistry())
+		{
+			Entity newEntity = m_World.GetRegistry().CreateEntity(ComponentSet(scene->m_World.GetEntityComponents(entity)));
+
+			std::optional<size_t> entitySize = scene->m_World.GetRegistry().GetEntityDataSize(entity);
+
+			std::optional<uint8_t*> newEntityData = m_World.GetRegistry().GetEntityData(newEntity);
+			std::optional<const uint8_t*> entityData = scene->m_World.GetRegistry().GetEntityData(entity);
+
+			if (entitySize.has_value() && newEntityData.has_value() && entityData.has_value())
+				std::memcpy(newEntityData.value(), entityData.value(), entitySize.value());
+		}
+	}
+
 	void Scene::OnBeforeRender(RenderData& renderData)
 	{
 		if (!renderData.IsEditorCamera)

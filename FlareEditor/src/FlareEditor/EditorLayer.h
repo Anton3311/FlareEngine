@@ -29,6 +29,9 @@ namespace Flare
 
 		void SaveActiveScene();
 		void SaveActiveSceneAs();
+
+		void EnterPlayMode();
+		void ExitPlayMode();
 	private:
 		float m_PreviousFrameTime = 0.0f;
 

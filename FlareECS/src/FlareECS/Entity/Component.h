@@ -55,7 +55,7 @@ namespace Flare
 	class ComponentSet
 	{
 	public:
-		ComponentSet(std::vector<ComponentId>& ids)
+		ComponentSet(const std::vector<ComponentId>& ids)
 			: m_Ids(ids.data()), m_Count(ids.size())
 		{
 			FLARE_CORE_ASSERT(m_Count, "Components count shouldn't been 0");
@@ -64,7 +64,7 @@ namespace Flare
 		constexpr ComponentSet(ComponentId* ids, size_t count)
 			: m_Ids(ids), m_Count(count) {}
 
-		constexpr ComponentId* GetIds() { return m_Ids; }
+		constexpr const ComponentId* GetIds() { return m_Ids; }
 		constexpr const ComponentId* GetIds() const { return m_Ids; }
 		constexpr size_t GetCount() const { return m_Count; }
 
@@ -84,7 +84,7 @@ namespace Flare
 			return ComponentSetIterator(m_Ids + m_Count);
 		}
 	private:
-		ComponentId* m_Ids;
+		const ComponentId* m_Ids;
 		size_t m_Count;
 	};
 

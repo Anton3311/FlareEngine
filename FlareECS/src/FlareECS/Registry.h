@@ -29,7 +29,7 @@ namespace Flare
 	public:
 		// Entity operations
 
-		Entity CreateEntity(ComponentSet& components);
+		Entity CreateEntity(const ComponentSet& componentSet);
 		void DeleteEntity(Entity entity);
 		bool AddEntityComponent(Entity entity, ComponentId componentId, const void* componentData);
 		bool RemoveEntityComponent(Entity entity, ComponentId componentId);
@@ -37,6 +37,10 @@ namespace Flare
 
 		std::optional<Entity> FindEntityByIndex(uint32_t entityIndex);
 		std::optional<Entity> FindEntityByRegistryIndex(size_t registryIndex);
+
+		std::optional<uint8_t*> GetEntityData(Entity entity);
+		std::optional<const uint8_t*> GetEntityData(Entity entity) const;
+		std::optional<size_t> GetEntityDataSize(Entity entity);
 
 		// Component operations
 
@@ -63,7 +67,7 @@ namespace Flare
 
 		Query CreateQuery(const ComponentSet& components);
 
-		EntityView QueryArchetype(ComponentSet components);
+		EntityView QueryArchetype(const ComponentSet& componentSet);
 	public:
 		inline EntityRecord& operator[](size_t index);
 		inline const EntityRecord& operator[](size_t index) const;
@@ -75,6 +79,8 @@ namespace Flare
 		std::unordered_map<Entity, size_t>::iterator FindEntity(Entity entity);
 		std::unordered_map<Entity, size_t>::const_iterator FindEntity(Entity entity) const;
 	private:
+		std::vector<ComponentId> m_TemporaryComponentSet;
+
 		std::vector<EntityRecord> m_EntityRecords;
 		std::unordered_map<Entity, size_t> m_EntityToRecord;
 

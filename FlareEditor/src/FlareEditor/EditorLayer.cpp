@@ -16,6 +16,7 @@
 #include "FlareEditor/UI/SceneViewportWindow.h"
 
 #include <imgui.h>
+#include <imgui_internal.h>
 
 namespace Flare
 {
@@ -39,6 +40,7 @@ namespace Flare
 		EditorContext::Initialize();
 
 		m_Viewports.emplace_back(CreateRef<SceneViewportWindow>(m_Camera));
+		m_Viewports.emplace_back(CreateRef<ViewportWindow>("Game"));
 
 		EditorCameraSettings& settings = m_Camera.GetSettings();
 		settings.FOV = 60.0f;
@@ -70,7 +72,7 @@ namespace Flare
 		static bool fullscreen = true;
 		static ImGuiDockNodeFlags dockspaceFlags = ImGuiDockNodeFlags_None;
 
-		ImGuiWindowFlags windowFlags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
+		ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoDocking;
 		if (fullscreen)
 		{
 			const ImGuiViewport* viewport = ImGui::GetMainViewport();
@@ -98,10 +100,9 @@ namespace Flare
 		{
 			if (ImGui::BeginMenu("Project"))
 			{
+				ImGui::BeginDisabled(EditorContext::Instance.Mode != EditorMode::Edit);
 				if (ImGui::MenuItem("Save"))
-				{
 					Project::Save();
-				}
 
 				if (ImGui::MenuItem("Open"))
 				{
@@ -110,21 +111,39 @@ namespace Flare
 					if (projectPath.has_value())
 						Project::OpenProject(projectPath.value());
 				}
+				ImGui::EndDisabled();
 
 				ImGui::EndMenu();
 			}
 
 			if (ImGui::BeginMenu("Scene"))
 			{
+				ImGui::BeginDisabled(EditorContext::Instance.Mode != EditorMode::Edit);
 				if (ImGui::MenuItem("Save"))
 					SaveActiveScene();
 				if (ImGui::MenuItem("Save As"))
 					SaveActiveSceneAs();
 
+				ImGui::EndDisabled();
 				ImGui::EndMenu();
 			}
 
-			ImGui::EndMenuBar();
+			ImGuiWindow* window = ImGui::GetCurrentWindow();
+			float buttonHeight = window->MenuBarHeight() - 4.0f;
+
+			ImVec2 buttonSize = ImVec2(60.0f, buttonHeight);
+			if (EditorContext::Instance.Mode == EditorMode::Edit)
+			{
+				if (ImGui::Button("Play", buttonSize))
+					EnterPlayMode();
+			}
+			else
+			{
+				if (ImGui::Button("Stop", buttonSize))
+					ExitPlayMode();
+			}
+
+			ImGui::EndMainMenuBar();
 		}
 
 		{
@@ -199,5 +218,24 @@ namespace Flare
 			AssetHandle handle = As<EditorAssetManager>(AssetManager::GetInstance())->ImportAsset(path);
 			EditorContext::OpenScene(handle);
 		}
+	}
+
+	void EditorLayer::EnterPlayMode()
+	{
+		FLARE_CORE_ASSERT(EditorContext::Instance.Mode == EditorMode::Edit);
+
+		Ref<Scene> playModeScene = CreateRef<Scene>();
+		playModeScene->CopyFrom(EditorContext::GetActiveScene());
+
+		EditorContext::SetActiveScene(playModeScene);
+		EditorContext::Instance.Mode = EditorMode::Play;
+	}
+
+	void EditorLayer::ExitPlayMode()
+	{
+		FLARE_CORE_ASSERT(EditorContext::Instance.Mode == EditorMode::Play);
+		EditorContext::SetActiveScene(EditorContext::GetEditedScene());
+
+		EditorContext::Instance.Mode = EditorMode::Edit;
 	}
 }
