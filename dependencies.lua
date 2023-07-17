@@ -3,7 +3,7 @@ INCLUDE_DIRS = {
 	GLFW = "%{wks.location}/Flare/vendor/GLFW/include",
 	glm = "%{wks.location}/Flare/vendor/glm/",
 	stb_image = "%{wks.location}/Flare/vendor/stb_image",
-	spdlog = "%{wks.location}/Flare/vendor/spdlog/include",
+	spdlog = "../Flare/vendor/spdlog/include",
 	imgui = "%{wks.location}/Flare/vendor/ImGUI/",
 	yaml_cpp = "%{wks.location}/Flare/vendor/yaml-cpp/include/",
 }

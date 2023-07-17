@@ -18,6 +18,9 @@ project "Flare"
 		"src/",
 		"%{wks.location}/FlareCommon/src/",
 		"%{wks.location}/FlareECS/src/",
+		"%{wks.location}/FlareScripting/src/",
+		"%{wks.location}/FlareScriptingCore/src/",
+
 		INCLUDE_DIRS.GLAD,
 		INCLUDE_DIRS.GLFW,
 		INCLUDE_DIRS.glm,
@@ -34,6 +37,8 @@ project "Flare"
 		"ImGUI",
 		"FlareECS",
 		"FlareCommon",
+		"FlareScripting",
+		"FlareScriptingCore",
 		"yaml-cpp"
 	}
 

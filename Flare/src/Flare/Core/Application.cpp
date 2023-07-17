@@ -3,6 +3,8 @@
 #include "Flare/Renderer2D/Renderer2D.h"
 #include "Flare/Renderer/RenderCommand.h"
 
+#include "FlareScripting/ScriptingEngine.h"
+
 namespace Flare
 {
 	Application* Application::s_Instance = nullptr;
@@ -47,10 +49,13 @@ namespace Flare
 
 		RenderCommand::Initialize();
 		Renderer2D::Initialize();
+
+		ScriptingEngine::Initialize();
 	}
 
 	Application::~Application()
 	{
+		ScriptingEngine::Shutdown();
 		Renderer2D::Shutdown();
 	}
 

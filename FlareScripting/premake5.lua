@@ -1,5 +1,5 @@
-project "FlareEditor"
-    kind "ConsoleApp"
+project "FlareScripting"
+    kind "StaticLib"
 	language "C++"
 	cppdialect "C++17"
 	staticruntime "off"
@@ -11,38 +11,18 @@ project "FlareEditor"
     }
 
     includedirs
-    {
-        "src",
-		"%{wks.location}/Flare/src",
-		"%{wks.location}/FlareCommon/src",
-		"%{wks.location}/FlareECS/src",
-		"%{wks.location}/FlareScripting",
-		"%{wks.location}/FlareScriptingCore",
-		INCLUDE_DIRS.glm,
+	{
+		"src/",
+		"%{wks.location}/FlareCommon/src/",
+		"%{wks.location}/FlareScriptingCore/src/",
+
 		INCLUDE_DIRS.spdlog,
-		INCLUDE_DIRS.imgui,
-		INCLUDE_DIRS.yaml_cpp,
-    }
+	}
 
 	links
 	{
-		"Flare",
-		"ImGUI",
 		"FlareCommon",
-		"FlareScripting",
 		"FlareScriptingCore",
-		"FlareECS",
-		"yaml-cpp",
-	}
-
-	defines
-	{
-		"YAML_CPP_STATIC_DEFINE"
-	}
-
-	debugargs
-	{
-		"%{wks.location}/Sandbox/Sandbox.flareproj"
 	}
 
 	targetdir("%{wks.location}/bin/" .. OUTPUT_DIRECTORY .. "/%{prj.name}")
