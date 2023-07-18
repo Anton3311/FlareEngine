@@ -1,5 +1,4 @@
-#include "FlareScriptingCore/ScriptingType.h"
-#include "FlareScriptingCore/SystemInfo.h"
+#include "FlareScriptingCore/Flare.h"
 
 #include "Flare/Core/Log.h"
 
@@ -8,6 +7,12 @@
 
 namespace Sandbox
 {
+	struct HealthComponent
+	{
+		FLARE_COMPONENT(HealthComponent);
+	};
+	FLARE_COMPONENT_IMPL(HealthComponent);
+
 	struct TestSystem : public Flare::SystemBase
 	{
 		FLARE_SYSTEM(TestSystem);
@@ -16,7 +21,7 @@ namespace Sandbox
 		{
 		}
 
-		virtual void Execute() override
+		virtual void Execute(Flare::EntityView& chunk) override
 		{
 		}
 	};

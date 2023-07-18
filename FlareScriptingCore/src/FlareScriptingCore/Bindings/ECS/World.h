@@ -1,55 +1,73 @@
 #pragma once
 
+#include "FlareScriptingCore/Bindings/ECS/ECS.h"
+#include "FlareScriptingCore/Bindings/ECS/Component.h"
+
+#include <array>
 #include <stdint.h>
 
-#include "FlareScriptingCore/Bindings/ECS/ECS.h"
-
-namespace Flare
+namespace Flare::Internal
 {
-	namespace Bindings
+	struct Entity
 	{
-		struct Entity
+	public:
+		constexpr Entity()
+			: m_Index(UINT32_MAX), m_Generation(UINT16_MAX), m_Dummy(UINT16_MAX) {}
+
+		constexpr uint32_t GetIndex() const { return m_Index; }
+		constexpr uint32_t GetGeneration() const { return m_Generation; }
+	private:
+		uint32_t m_Index;
+		uint16_t m_Generation;
+		uint16_t m_Dummy;
+	};
+
+	struct WorldBindings
+	{
+		using CreateEntityFunction = Entity(*)(Internal::ComponentId* components, size_t count);
+		CreateEntityFunction CreateEntity;
+
+		void* (*AddEntityComponent)(Entity entity, Internal::ComponentId component, const void* componentData, size_t componentDataSize);
+		void(*RemoveEntityComponent)(Entity entity, Internal::ComponentId component);
+
+		bool(*IsEntityAlive)(Entity entity);
+		void(*DeleteEntity)(Entity entity);
+
+		static WorldBindings Bindings;
+	};
+
+	template<typename... Components>
+	class ComponentGroup
+	{
+	public:
+		ComponentGroup()
 		{
-		public:
-			constexpr Entity()
-				: m_Index(UINT32_MAX), m_Generation(UINT16_MAX), m_Dummy(UINT16_MAX) {}
-		private:
-			uint32_t m_Index;
-			uint16_t m_Generation;
-			uint16_t m_Dummy;
-		};
-
-		struct WorldBindings
-		{
-			using CreateEntityFunction = Entity(*)(ComponentId* components, size_t count);
-			CreateEntityFunction CreateEntity;
-
-			void* (*AddEntityComponent)(Entity entity, ComponentId component, const void* componentData, size_t componentDataSize);
-			void(*RemoveEntityComponent)(Entity entity, ComponentId component);
-
-			bool(*IsEntityAlive)(Entity entity);
-			void(*DeleteEntity)(Entity entity);
-
-			static WorldBindings Bindings;
-		};
-
-		class World
-		{
-		public:
-			template<typename... Components>
-			constexpr Entity CreateEntity()
+			size_t index = 0;
+			([&]
 			{
-				ComponentId ids[sizeof...(Components)];
+				m_Ids[index] = Components::Info.Id;
+				index++;
+			} (), ...);
+		}
+	public:
+		constexpr const std::array<ComponentId, sizeof...(Components)>& GetIds() const { return m_Ids; }
+	private:
+		std::array<ComponentId, sizeof...(Components)> m_Ids;
+	};
 
-				size_t index = 0;
-				([&]
-				{
-					ids[index] = Components::Id;
-					index++;
-				} (), ...);
+	class World
+	{
+	public:
+		template<typename... Components>
+		static constexpr Entity CreateEntity()
+		{
+			ComponentGroup<Components...> group;
+			WorldBindings::Bindings.CreateEntity(group.GetIds().data(), group.GetIds().size());
+		}
 
-				WorldBindings::Bindings.CreateEntity(ids, sizeof...(Components));
-			}
-		};
-	}
+		static constexpr bool IsAlive(Entity entity)
+		{
+			return WorldBindings::Bindings.IsEntityAlive(entity);
+		}
+	};
 }

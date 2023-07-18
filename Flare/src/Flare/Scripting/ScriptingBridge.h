@@ -9,7 +9,9 @@ namespace Flare
 	class ScriptingBridge
 	{
 	public:
-		static void ConfigureModule(ModuleConfiguration& config);
+		static void ConfigureModule(Internal::ModuleConfiguration& config);
+
+		inline static World& GetCurrentWorld();
 
 		inline static void SetCurrentWorld(World& world)
 		{

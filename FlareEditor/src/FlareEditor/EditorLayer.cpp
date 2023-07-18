@@ -240,6 +240,7 @@ namespace Flare
 
 		ScriptingEngine::SetCurrentECSWorld(EditorContext::GetActiveScene()->GetECSWorld());
 		ScriptingEngine::LoadModule(modulePath);
+		ScriptingEngine::RegisterComponents();
 		ScriptingEngine::RegisterSystems();
 	}
 

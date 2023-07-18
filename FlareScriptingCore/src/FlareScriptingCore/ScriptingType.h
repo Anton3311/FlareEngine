@@ -8,7 +8,7 @@
 #include <typeinfo>
 #include <iostream>
 
-namespace Flare
+namespace Flare::Internal
 {
     class ScriptingType
     {

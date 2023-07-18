@@ -1,13 +1,14 @@
 #pragma once
 
 #include "FlareScriptingCore/ScriptingType.h"
-#include "FlareScriptingCore/SytemConfiguration.h"
+#include "FlareScriptingCore/SystemConfiguration.h"
+#include "FlareScriptingCore/Bindings/ECS/EntityView.h"
 
 #include <string>
 #include <string_view>
 #include <typeinfo>
 
-namespace Flare
+namespace Flare::Internal
 {
 	struct SystemInfo
 	{
@@ -26,7 +27,7 @@ namespace Flare
 	{
 	public:
 		virtual void Configure(SystemConfiguration& config) = 0;
-		virtual void Execute() = 0;
+		virtual void Execute(Internal::EntityView& chunk) = 0;
 	};
 
 #ifndef FLARE_SCRIPTING_CORE_NO_MACROS

@@ -1,6 +1,6 @@
 #include "ScriptingType.h"
 
-namespace Flare
+namespace Flare::Internal
 {
 	std::vector<const ScriptingType*>& ScriptingType::GetRegisteredTypes()
 	{

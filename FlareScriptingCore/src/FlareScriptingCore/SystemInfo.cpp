@@ -1,8 +1,8 @@
 #include "SystemInfo.h"
 
-namespace Flare
+namespace Flare::Internal
 {
-    std::vector<const SystemInfo*>& Flare::SystemInfo::GetRegisteredSystems()
+    std::vector<const SystemInfo*>& SystemInfo::GetRegisteredSystems()
     {
         static std::vector<const SystemInfo*> s_RegisteredSystems;
         return s_RegisteredSystems;

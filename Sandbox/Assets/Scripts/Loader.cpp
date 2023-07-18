@@ -3,17 +3,21 @@
 #include "FlareScriptingCore/ModuleConfiguration.h"
 #include "FlareScriptingCore/ScriptingType.h"
 #include "FlareScriptingCore/SystemInfo.h"
+#include "FlareScriptingCore/ComponentInfo.h"
+#include "FlareScriptingCore/Bindings/ECS/EntityView.h"
 
-FLARE_API void OnModuleLoaded(Flare::ModuleConfiguration& config)
+FLARE_API void OnModuleLoaded(Flare::Internal::ModuleConfiguration& config)
 {
 	Flare::Log::Initialize();
 
-	config.RegisteredTypes = &Flare::ScriptingType::GetRegisteredTypes();
-	config.RegisteredSystems = &Flare::SystemInfo::GetRegisteredSystems();
+	config.RegisteredTypes = &Flare::Internal::ScriptingType::GetRegisteredTypes();
+	config.RegisteredSystems = &Flare::Internal::SystemInfo::GetRegisteredSystems();
+	config.RegisteredComponents = &Flare::Internal::ComponentInfo::GetRegisteredComponents();
 
-	config.WorldBindings = &Flare::Bindings::WorldBindings::Bindings;
+	config.WorldBindings = &Flare::Internal::WorldBindings::Bindings;
+	config.EntityViewBindings = &Flare::Internal::EntityViewBindings::Bindings;
 }
 
-FLARE_API void OnModuleUnloaded(Flare::ModuleConfiguration& config)
+FLARE_API void OnModuleUnloaded(Flare::Internal::ModuleConfiguration& config)
 {
 }

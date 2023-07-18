@@ -1,6 +1,6 @@
 #include "World.h"
 
-namespace Flare::Bindings
+namespace Flare::Internal
 {
 	WorldBindings WorldBindings::Bindings;
 }

@@ -1,6 +1,6 @@
 #pragma once
 
-namespace Flare
+namespace Flare::Internal
 {
 	class SystemConfiguration
 	{
