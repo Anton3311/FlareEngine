@@ -2,14 +2,9 @@
 
 namespace Flare
 {
-	std::vector<ScriptingType>& ScriptingType::GetRegisteredTypes()
+	std::vector<const ScriptingType*>& ScriptingType::GetRegisteredTypes()
 	{
-		static std::vector<ScriptingType> s_RegisteredTypes;
+		static std::vector<const ScriptingType*> s_RegisteredTypes;
 		return s_RegisteredTypes;
-	}
-
-	FLARE_API const std::vector<ScriptingType>& GetRegisteredScriptingTypes()
-	{
-		return ScriptingType::GetRegisteredTypes();
 	}
 }

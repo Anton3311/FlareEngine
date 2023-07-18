@@ -1,15 +1,25 @@
 #include "FlareScriptingCore/ScriptingType.h"
+#include "FlareScriptingCore/SystemInfo.h"
+
+#include "Flare/Core/Log.h"
 
 #include <stdint.h>
+#include <iostream>
 
 namespace Sandbox
 {
-	struct HealthComponent
+	struct TestSystem : public Flare::SystemBase
 	{
-		FLARE_DEFINE_SCRIPTING_TYPE(HealthComponent);
+		FLARE_SYSTEM(TestSystem);
 
-		uint32_t Health;
-		uint32_t MaxHealth;
+		virtual void Configure(Flare::SystemConfiguration& config) override
+		{
+		}
+
+		virtual void Execute() override
+		{
+		}
 	};
-	FLARE_IMPL_SCRIPTING_TYPE(HealthComponent);
+
+	FLARE_SYSTEM_IMPL(TestSystem);
 }

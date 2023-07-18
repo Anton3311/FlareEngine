@@ -1,6 +1,6 @@
 #include "ScriptingModule.h"
 
-#include "FlareScripting/Platform/WindowsScriptingModule.h"
+#include "Flare/Platform/Windows/WindowsScriptingModule.h"
 
 namespace Flare
 {

@@ -16,8 +16,7 @@ project "FlareEditor"
 		"%{wks.location}/Flare/src",
 		"%{wks.location}/FlareCommon/src",
 		"%{wks.location}/FlareECS/src",
-		"%{wks.location}/FlareScripting",
-		"%{wks.location}/FlareScriptingCore",
+		"%{wks.location}/FlareScriptingCore/src/",
 		INCLUDE_DIRS.glm,
 		INCLUDE_DIRS.spdlog,
 		INCLUDE_DIRS.imgui,
@@ -29,7 +28,6 @@ project "FlareEditor"
 		"Flare",
 		"ImGUI",
 		"FlareCommon",
-		"FlareScripting",
 		"FlareScriptingCore",
 		"FlareECS",
 		"yaml-cpp",
@@ -37,7 +35,8 @@ project "FlareEditor"
 
 	defines
 	{
-		"YAML_CPP_STATIC_DEFINE"
+		"YAML_CPP_STATIC_DEFINE",
+		"FLARE_SCRIPTING_CORE_NO_MACROS",
 	}
 
 	debugargs

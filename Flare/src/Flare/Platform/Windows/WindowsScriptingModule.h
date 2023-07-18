@@ -4,7 +4,7 @@
 
 #ifdef FLARE_PLATFORM_WINDOWS
 
-#include "FlareScripting/ScriptingModule.h"
+#include "Flare/Scripting/ScriptingModule.h"
 
 #include <windows.h>
 

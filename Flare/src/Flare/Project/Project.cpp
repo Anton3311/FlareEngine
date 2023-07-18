@@ -1,10 +1,8 @@
 #include "Project.h"
 
 #include "Flare/Core/Assert.h"
-
 #include "Flare/Project/ProjectSerializer.h"
-
-#include "FlareScripting/ScriptingEngine.h"
+#include "Flare/Scripting/ScriptingEngine.h"
 
 namespace Flare
 {

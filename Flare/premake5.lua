@@ -37,7 +37,6 @@ project "Flare"
 		"ImGUI",
 		"FlareECS",
 		"FlareCommon",
-		"FlareScripting",
 		"FlareScriptingCore",
 		"yaml-cpp"
 	}
@@ -46,6 +45,7 @@ project "Flare"
 	{
 		"GLFW_INCLUDE_NONE",
 		"YAML_CPP_STATIC_DEFINE",
+		"FLARE_SCRIPTING_CORE_NO_MACROS",
 	}
 
 	targetdir("%{wks.location}/bin/" .. OUTPUT_DIRECTORY .. "/%{prj.name}")

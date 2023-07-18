@@ -3,7 +3,7 @@
 #include "Flare/Renderer2D/Renderer2D.h"
 #include "Flare/Renderer/RenderCommand.h"
 
-#include "FlareScripting/ScriptingEngine.h"
+#include "Flare/Scripting/ScriptingEngine.h"
 
 namespace Flare
 {
