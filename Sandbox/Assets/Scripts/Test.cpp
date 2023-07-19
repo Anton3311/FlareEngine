@@ -31,6 +31,8 @@ namespace Sandbox
 
 		virtual void Configure(Flare::SystemConfiguration& config) override
 		{
+			config.Query.Add<Transform>();
+			config.Query.Add<HealthComponent>();
 		}
 
 		virtual void Execute(Flare::EntityView& chunk) override

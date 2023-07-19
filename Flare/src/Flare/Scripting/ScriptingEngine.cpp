@@ -117,7 +117,8 @@ namespace Flare
 				}
 				else
 				{
-					component->Id = s_Data.CurrentWorld->GetRegistry().RegisterComponent(component->Name, type->Size, type->Destructor);
+					// TODO: pass components destructor
+					component->Id = s_Data.CurrentWorld->GetRegistry().RegisterComponent(component->Name, type->Size, [](void*) {});
 				}
 			}
 		}
@@ -137,26 +138,32 @@ namespace Flare
 
 				module.ScriptingInstances.push_back(ScriptingTypeInstance{ typeIndexIterator->second, systemInstance });
 
-				Internal::SystemConfiguration config;
+				Internal::SystemConfiguration config(&s_Data.TemporaryQueryComponents);
 				systemInstance->Configure(config);
 
-				s_Data.CurrentWorld->RegisterSystem(s_Data.CurrentWorld->CreateQuery<TransformComponent>(), [systemInstance](EntityView view)
-				{
-					FLARE_CORE_ASSERT(s_Data.CurrentWorld != nullptr);
-					ArchetypeRecord& record = s_Data.CurrentWorld->GetRegistry().GetArchetypeRecord(view.GetArchetype());
-
-					size_t chunksCount = record.Storage.GetChunksCount();
-					for (size_t i = 0; i < chunksCount; i++)
+				s_Data.CurrentWorld->RegisterSystem(
+					s_Data.CurrentWorld->GetRegistry().CreateQuery(ComponentSet(
+						s_Data.TemporaryQueryComponents.data(), 
+						s_Data.TemporaryQueryComponents.size())),
+					[systemInstance](EntityView view)
 					{
-						Internal::EntityView chunk(
-							view.GetArchetype(),
-							record.Storage.GetChunkBuffer(i),
-							record.Storage.GetEntitySize(),
-							record.Storage.GetEntitiesCountInChunk(i));
+						FLARE_CORE_ASSERT(s_Data.CurrentWorld != nullptr);
+						ArchetypeRecord& record = s_Data.CurrentWorld->GetRegistry().GetArchetypeRecord(view.GetArchetype());
 
-						systemInstance->Execute(chunk);
-					}
-				});
+						size_t chunksCount = record.Storage.GetChunksCount();
+						for (size_t i = 0; i < chunksCount; i++)
+						{
+							Internal::EntityView chunk(
+								view.GetArchetype(),
+								record.Storage.GetChunkBuffer(i),
+								record.Storage.GetEntitySize(),
+								record.Storage.GetEntitiesCountInChunk(i));
+
+							systemInstance->Execute(chunk);
+						}
+					});
+
+				s_Data.TemporaryQueryComponents.clear();
 			}
 		}
 	}

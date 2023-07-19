@@ -39,6 +39,7 @@ namespace Flare
 		{
 			World* CurrentWorld = nullptr;
 			std::vector<ScriptingModuleData> Modules;
+			std::vector<ComponentId> TemporaryQueryComponents;
 		};
 	public:
 		static void Initialize();
