@@ -34,7 +34,7 @@ namespace Flare::Internal
 
 		constexpr ComponentT& operator[](EntityElement element)
 		{
-			return *(ComponentT*)element.GetData();
+			return *(ComponentT*)(element.GetData() + m_ComponentOffset);
 		}
 	private:
 		size_t m_ComponentOffset;
