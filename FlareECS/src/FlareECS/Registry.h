@@ -45,6 +45,7 @@ namespace Flare
 		// Component operations
 
 		ComponentId RegisterComponent(std::string_view name, size_t size, const std::function<void(void*)>& deleter);
+		std::optional<ComponentId> FindComponnet(std::string_view name);
 
 		std::optional<void*> GetEntityComponent(Entity entity, ComponentId component);
 		const std::vector<ComponentId>& GetEntityComponents(Entity entity);
@@ -89,6 +90,7 @@ namespace Flare
 
 		std::unordered_map<ComponentId, std::unordered_map<ArchetypeId, size_t>> m_ComponentToArchetype;
 
+		std::unordered_map<std::string_view, ComponentId> m_ComponentNameToId;
 		std::vector<ComponentInfo> m_RegisteredComponents;
 
 		QueryCache m_QueryCache;

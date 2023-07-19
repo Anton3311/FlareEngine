@@ -30,6 +30,7 @@ namespace Flare
 	void ScriptingEngine::SetCurrentECSWorld(World& world)
 	{
 		s_Data.CurrentWorld = &world;
+		ScriptingBridge::SetCurrentWorld(world);
 	}
 
 	void ScriptingEngine::ReloadModules()
@@ -108,7 +109,16 @@ namespace Flare
 
 				const Internal::ScriptingType* type = (*module.Config.RegisteredTypes)[typeIndexIterator->second];
 
-				s_Data.CurrentWorld->GetRegistry().RegisterComponent(component->Name, type->Size, type->Destructor);
+				if (component->AliasedName.has_value())
+				{
+					std::optional<ComponentId> aliasedComponent = s_Data.CurrentWorld->GetRegistry().FindComponnet(component->AliasedName.value());
+					FLARE_CORE_ASSERT(aliasedComponent.has_value(), "Failed to find component");
+					component->Id = aliasedComponent.value();
+				}
+				else
+				{
+					component->Id = s_Data.CurrentWorld->GetRegistry().RegisterComponent(component->Name, type->Size, type->Destructor);
+				}
 			}
 		}
 	}

@@ -15,6 +15,7 @@ namespace Flare
 	using Internal::Entity;
 	using Internal::EntityView;
 	using Internal::EntityElement;
+	using Internal::ComponentView;
 
 	using Internal::ComponentInfo;
 	using Internal::ScriptingType;

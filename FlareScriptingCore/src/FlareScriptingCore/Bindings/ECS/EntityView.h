@@ -7,6 +7,9 @@ namespace Flare::Internal
 {
 	struct EntityViewBindings
 	{
+		using GetArchetypeComponentOffsetFunction = size_t(*)(ArchetypeId archetype, ComponentId component);
+		GetArchetypeComponentOffsetFunction GetArchetypeComponentOffset;
+
 		static EntityViewBindings Bindings;
 	};
 
@@ -20,6 +23,21 @@ namespace Flare::Internal
 		constexpr const uint8_t* GetData() const { return m_Data; }
 	private:
 		uint8_t* m_Data;
+	};
+
+	template<typename ComponentT>
+	class ComponentView
+	{
+	public:
+		constexpr ComponentView(size_t offset)
+			: m_ComponentOffset(offset) {}
+
+		constexpr ComponentT& operator[](EntityElement element)
+		{
+			return *(ComponentT*)element.GetData();
+		}
+	private:
+		size_t m_ComponentOffset;
 	};
 
 	class EntityViewIterator
@@ -61,6 +79,12 @@ namespace Flare::Internal
 
 		constexpr size_t GetEntitySize() const { return m_EntitySize; }
 		constexpr size_t GetEntitiesCount() const { return m_EntitiesCount; }
+
+		template<typename ComponentT>
+		constexpr ComponentView<ComponentT> View()
+		{
+			return ComponentView<ComponentT>(EntityViewBindings::Bindings.GetArchetypeComponentOffset(m_Archetype, ComponentT::Info.Id));
+		}
 
 		constexpr EntityViewIterator begin()
 		{

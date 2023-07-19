@@ -412,7 +412,7 @@ namespace Flare
 
 	ComponentId Registry::RegisterComponent(std::string_view name, size_t size, const std::function<void(void*)>& deleter)
 	{
-		size_t id = m_RegisteredComponents.size();
+		ComponentId id = m_RegisteredComponents.size();
 		ComponentInfo& info = m_RegisteredComponents.emplace_back();
 
 		info.Id = id;
@@ -420,7 +420,17 @@ namespace Flare
 		info.Size = size;
 		info.Deleter = deleter;
 
+		m_ComponentNameToId.emplace(info.Name, id);
+
 		return id;
+	}
+
+	std::optional<ComponentId> Registry::FindComponnet(std::string_view name)
+	{
+		auto it = m_ComponentNameToId.find(name);
+		if (it == m_ComponentNameToId.end())
+			return {};
+		return it->second;
 	}
 
 	inline const ComponentInfo& Registry::GetComponentInfo(size_t index) const

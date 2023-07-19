@@ -66,7 +66,9 @@ return {
 
 				dependecies_location .. "FlareScriptingCore/src/",
 				dependecies_location .. "FlareCommon/src/",
-				dependecies_location .. "Flare/vendor/spdlog/include/"
+				dependecies_location .. "Flare/vendor/spdlog/include/",
+
+                dependecies_location .. "Flare/vendor/glm/"
 			}
 
 			links
