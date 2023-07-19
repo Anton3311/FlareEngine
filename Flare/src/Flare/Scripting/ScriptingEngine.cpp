@@ -47,7 +47,7 @@ namespace Flare
 				{
 					FLARE_CORE_ASSERT(instance.TypeIndex < module.Config.RegisteredTypes->size(), "Instance has invalid type index");
 					const Internal::ScriptingType* type = (*module.Config.RegisteredTypes)[instance.TypeIndex];
-					type->Destructor(instance.Instance);
+					type->Deleter(instance.Instance);
 				}
 			}
 		}
@@ -117,8 +117,7 @@ namespace Flare
 				}
 				else
 				{
-					// TODO: pass components destructor
-					component->Id = s_Data.CurrentWorld->GetRegistry().RegisterComponent(component->Name, type->Size, [](void*) {});
+					component->Id = s_Data.CurrentWorld->GetRegistry().RegisterComponent(component->Name, type->Size, type->Destructor);
 				}
 			}
 		}
