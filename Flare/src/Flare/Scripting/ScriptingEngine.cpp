@@ -27,6 +27,14 @@ namespace Flare
 		UnloadAllModules();
 	}
 
+	void ScriptingEngine::OnFrameStart(float deltaTime)
+	{
+		for (ScriptingModuleData& module : s_Data.Modules)
+		{
+			module.Config.TimeData->DeltaTime = deltaTime;
+		}
+	}
+
 	void ScriptingEngine::SetCurrentECSWorld(World& world)
 	{
 		s_Data.CurrentWorld = &world;

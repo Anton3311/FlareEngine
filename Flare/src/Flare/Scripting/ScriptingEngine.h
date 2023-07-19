@@ -45,6 +45,8 @@ namespace Flare
 		static void Initialize();
 		static void Shutdown();
 
+		static void OnFrameStart(float deltaTime);
+
 		static void SetCurrentECSWorld(World& world);
 
 		static void ReloadModules();

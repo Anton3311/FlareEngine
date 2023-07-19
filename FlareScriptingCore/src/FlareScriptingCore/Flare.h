@@ -4,6 +4,8 @@
 #include "FlareScriptingCore/Bindings/ECS/World.h"
 #include "FlareScriptingCore/Bindings/ECS/EntityView.h"
 
+#include "FlareScriptingCore/Bindings/Time.h"
+
 #include "FlareScriptingCore/ComponentInfo.h"
 #include "FlareScriptingCore/SystemInfo.h"
 #include "FlareScriptingCore/ScriptingType.h"
@@ -22,4 +24,6 @@ namespace Flare
 	using Internal::SystemBase;
 	using Internal::SystemInfo;
 	using Internal::SystemConfiguration;
+
+	using Internal::Time;
 }

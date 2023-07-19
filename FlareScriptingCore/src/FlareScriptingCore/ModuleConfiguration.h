@@ -9,6 +9,8 @@
 #include "FlareScriptingCore/Bindings/ECS/EntityView.h"
 #include "FlareScriptingCore/Bindings/ECS/World.h"
 
+#include "FlareScriptingCore/Bindings/Time.h"
+
 #include <vector>
 
 namespace Flare::Internal
@@ -21,5 +23,6 @@ namespace Flare::Internal
 
 		Internal::WorldBindings* WorldBindings = nullptr;
 		Internal::EntityViewBindings* EntityViewBindings = nullptr;
+		Internal::TimeData* TimeData = nullptr;
 	};
 }

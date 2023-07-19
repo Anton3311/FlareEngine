@@ -42,7 +42,7 @@ namespace Sandbox
 			for (Flare::EntityElement entity : chunk)
 			{
 				Transform& transform = transforms[entity];
-				FLARE_INFO("Position: {0}, {1}, {2}", transform.Position.x, transform.Position.y, transform.Position.z);
+				transform.Position += glm::vec3(0.1f, 0.0f, 0.0f) * Flare::Time::GetDeltaTime();
 			}
 		}
 	};

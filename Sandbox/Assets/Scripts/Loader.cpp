@@ -16,6 +16,7 @@ FLARE_API void OnModuleLoaded(Flare::Internal::ModuleConfiguration& config)
 
 	config.WorldBindings = &Flare::Internal::WorldBindings::Bindings;
 	config.EntityViewBindings = &Flare::Internal::EntityViewBindings::Bindings;
+	config.TimeData = &Flare::Internal::TimeData::Data;
 }
 
 FLARE_API void OnModuleUnloaded(Flare::Internal::ModuleConfiguration& config)
