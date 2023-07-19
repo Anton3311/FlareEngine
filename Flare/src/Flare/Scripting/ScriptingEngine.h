@@ -22,14 +22,16 @@ namespace Flare
 
 	struct ScriptingModuleData
 	{
-		Internal::ModuleConfiguration Config;
 		Ref<ScriptingModule> Module;
+		Internal::ModuleConfiguration Config;
 
 		std::optional<ModuleEventFunction> OnLoad;
 		std::optional<ModuleEventFunction> OnUnload;
 
 		std::vector<ScriptingTypeInstance> ScriptingInstances;
 		std::unordered_map<std::string_view, size_t> TypeNameToIndex;
+
+		std::unordered_map<ComponentId, size_t> ComponentIdToTypeIndex;
 	};
 
 	class ScriptingEngine
@@ -57,6 +59,8 @@ namespace Flare
 
 		static void RegisterComponents();
 		static void RegisterSystems();
+
+		static std::optional<const Internal::ScriptingType*> FindComponentType(ComponentId id);
 
 		inline static Data& GetData() { return s_Data; }
 	private:

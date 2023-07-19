@@ -80,11 +80,18 @@ namespace Flare
 			{
 				moduleData.OnLoad.value()(moduleData.Config);
 
-				const std::vector<const Internal::ScriptingType*>& registeredTypes = *moduleData.Config.RegisteredTypes;
+				const std::vector<Internal::ScriptingType*>& registeredTypes = *moduleData.Config.RegisteredTypes;
 
 				size_t typeIndex = 0;
-				for (const Internal::ScriptingType* type : registeredTypes)
+				for (Internal::ScriptingType* type : registeredTypes)
+				{
 					moduleData.TypeNameToIndex.emplace(type->Name, typeIndex++);
+
+					if (type->ConfigureSerialization)
+					{
+						type->ConfigureSerialization(type->GetSerializationSettings());
+					}
+				}
 
 				ScriptingBridge::ConfigureModule(moduleData.Config);
 			}
@@ -126,6 +133,7 @@ namespace Flare
 				else
 				{
 					component->Id = s_Data.CurrentWorld->GetRegistry().RegisterComponent(component->Name, type->Size, type->Destructor);
+					module.ComponentIdToTypeIndex.emplace(component->Id, typeIndexIterator->second);
 				}
 			}
 		}
@@ -173,5 +181,19 @@ namespace Flare
 				s_Data.TemporaryQueryComponents.clear();
 			}
 		}
+	}
+
+	std::optional<const Internal::ScriptingType*> ScriptingEngine::FindComponentType(ComponentId id)
+	{
+		for (ScriptingModuleData& module : s_Data.Modules)
+		{
+			auto it = module.ComponentIdToTypeIndex.find(id);
+			if (it != module.ComponentIdToTypeIndex.end())
+			{
+				return (*module.Config.RegisteredTypes)[it->second];
+			}
+		}
+
+		return {};
 	}
 }

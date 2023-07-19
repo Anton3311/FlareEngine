@@ -22,8 +22,17 @@ namespace Sandbox
 	struct HealthComponent
 	{
 		FLARE_COMPONENT(HealthComponent);
+
+		glm::vec2 Vector2;
+		glm::vec3 Vector3;
+
+		static void ConfigureSerialization(Flare::TypeSerializationSettings& settings)
+		{
+			FLARE_SERIALIZE_FIELD(settings, HealthComponent, Vector2);
+			FLARE_SERIALIZE_FIELD(settings, HealthComponent, Vector3);
+		}
 	};
-	FLARE_COMPONENT_IMPL(HealthComponent);
+	FLARE_COMPONENT_IMPL(HealthComponent, HealthComponent::ConfigureSerialization);
 
 	struct TestSystem : public Flare::SystemBase
 	{

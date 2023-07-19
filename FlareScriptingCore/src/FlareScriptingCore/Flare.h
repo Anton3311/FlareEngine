@@ -11,6 +11,8 @@
 #include "FlareScriptingCore/ScriptingType.h"
 #include "FlareScriptingCore/SystemConfiguration.h"
 
+#include "FlareScriptingCore/TypeSerializationSettings.h"
+
 namespace Flare
 {
 	using Internal::World;
@@ -26,4 +28,6 @@ namespace Flare
 	using Internal::SystemConfiguration;
 
 	using Internal::Time;
+
+	using Internal::TypeSerializationSettings;
 }

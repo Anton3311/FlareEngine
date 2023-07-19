@@ -17,7 +17,7 @@ namespace Flare::Internal
 {
 	struct ModuleConfiguration
 	{
-		const std::vector<const ScriptingType*>* RegisteredTypes = nullptr;
+		const std::vector<ScriptingType*>* RegisteredTypes = nullptr;
 		const std::vector<const SystemInfo*>* RegisteredSystems = nullptr;
 		const std::vector<ComponentInfo*>* RegisteredComponents = nullptr;
 

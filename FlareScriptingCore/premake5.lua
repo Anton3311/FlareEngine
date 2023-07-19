@@ -15,6 +15,7 @@ project "FlareScriptingCore"
 		"src/",
 		"%{wks.location}/FlareCommon/src/",
 		INCLUDE_DIRS.spdlog,
+		INCLUDE_DIRS.glm,
 	}
 
 	links

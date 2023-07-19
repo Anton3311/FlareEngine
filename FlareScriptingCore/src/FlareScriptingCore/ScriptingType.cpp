@@ -2,9 +2,9 @@
 
 namespace Flare::Internal
 {
-	std::vector<const ScriptingType*>& ScriptingType::GetRegisteredTypes()
+	std::vector<ScriptingType*>& ScriptingType::GetRegisteredTypes()
 	{
-		static std::vector<const ScriptingType*> s_RegisteredTypes;
+		static std::vector<ScriptingType*> s_RegisteredTypes;
 		return s_RegisteredTypes;
 	}
 }

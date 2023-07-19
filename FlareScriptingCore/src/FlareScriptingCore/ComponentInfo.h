@@ -2,6 +2,8 @@
 
 #include "FlareScriptingCore/Bindings/ECS/Component.h"
 
+#include "FlareScriptingCore/ScriptingType.h"
+
 #include <string_view>
 #include <optional>
 #include <vector>
@@ -35,8 +37,8 @@ namespace Flare::Internal
 	#define FLARE_COMPONENT(component) \
 		FLARE_DEFINE_SCRIPTING_TYPE(component) \
 		static Flare::Internal::ComponentInfo Info;
-	#define FLARE_COMPONENT_IMPL(component) \
-		FLARE_IMPL_SCRIPTING_TYPE(component) \
+	#define FLARE_COMPONENT_IMPL(component, ...) \
+		FLARE_IMPL_SCRIPTING_TYPE(component, __VA_ARGS__) \
 		Flare::Internal::ComponentInfo component::Info = Flare::Internal::ComponentInfo(typeid(component).name());
 
 	#define FLARE_COMPONENT_ALIAS_IMPL(component, aliasedComponent) \
