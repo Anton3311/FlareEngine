@@ -41,6 +41,7 @@ namespace Flare
 		{
 			World* CurrentWorld = nullptr;
 			size_t RegisteredComponentCount = 0;
+			bool ShouldRegisterComponents = false;
 			std::vector<ScriptingModuleData> Modules;
 			std::vector<ComponentId> TemporaryQueryComponents;
 		};
@@ -55,7 +56,6 @@ namespace Flare
 		static void LoadModules();
 		static void ReleaseScriptingInstances();
 
-		static void LoadModule(const std::filesystem::path& modulePath);
 		static void UnloadAllModules();
 
 		static void RegisterComponents();
@@ -64,6 +64,8 @@ namespace Flare
 		static std::optional<const Internal::ScriptingType*> FindComponentType(ComponentId id);
 
 		inline static Data& GetData() { return s_Data; }
+	private:
+		static void LoadModule(const std::filesystem::path& modulePath);
 	private:
 		static Data s_Data;
 

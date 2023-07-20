@@ -48,6 +48,9 @@ namespace Flare
 
 	void Scene::Initialize()
 	{
+		ScriptingEngine::SetCurrentECSWorld(m_World);
+		ScriptingEngine::RegisterComponents();
+
 		m_CameraDataUpdateQuery = m_World.CreateQuery<TransformComponent, CameraComponent>();
 		m_SpritesQuery = m_World.CreateQuery<TransformComponent, SpriteComponent>();
 	}

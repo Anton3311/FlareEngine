@@ -47,6 +47,8 @@ namespace Flare
 		FLARE_CORE_ASSERT(Project::GetActive());
 		for (const std::filesystem::path& modulePath : Project::GetActive()->ScriptingModules)
 			ScriptingEngine::LoadModule(modulePath);
+
+		s_Data.ShouldRegisterComponents = true;
 	}
 
 	void ScriptingEngine::ReleaseScriptingInstances()
@@ -106,6 +108,7 @@ namespace Flare
 
 	void ScriptingEngine::UnloadAllModules()
 	{
+		s_Data.ShouldRegisterComponents = false;
 		ReleaseScriptingInstances();
 
 		for (auto& module : s_Data.Modules)
@@ -120,8 +123,12 @@ namespace Flare
 
 	void ScriptingEngine::RegisterComponents()
 	{
+		if (s_Data.Modules.size() == 0)
+			return;
+		if (!s_Data.ShouldRegisterComponents)
+			return;
+
 		FLARE_CORE_ASSERT(s_Data.CurrentWorld != nullptr);
-		FLARE_CORE_ASSERT(s_Data.RegisteredComponentCount == 0, "Scripting module components have already been registered");
 
 		for (ScriptingModuleData& module : s_Data.Modules)
 		{
@@ -146,6 +153,8 @@ namespace Flare
 				}
 			}
 		}
+
+		s_Data.ShouldRegisterComponents = false;
 	}
 
 	void ScriptingEngine::RegisterSystems()

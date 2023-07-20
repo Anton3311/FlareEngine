@@ -4,6 +4,8 @@
 #include "Flare/AssetManager/AssetManager.h"
 #include "Flare/Serialization/Serialization.h"
 
+#include "Flare/Scripting/ScriptingEngine.h"
+
 #include "FlareECS/Query/EntityRegistryIterator.h"
 
 #include <yaml-cpp/yaml.h>
@@ -19,7 +21,7 @@ namespace Flare
 		{
 			TransformComponent& transform = world.GetEntityComponent<TransformComponent>(entity);
 
-			emitter << YAML::Key << "Transform" << YAML::BeginMap;
+			emitter << YAML::BeginMap << YAML::Key << "Name" << YAML::Value << "Transform";
 
 			emitter << YAML::Key << "Position" << YAML::Value << transform.Position;
 			emitter << YAML::Key << "Rotation" << YAML::Value << transform.Rotation;
@@ -31,7 +33,7 @@ namespace Flare
 		{
 			SpriteComponent& sprite = world.GetEntityComponent<SpriteComponent>(entity);
 
-			emitter << YAML::Key << "Sprite" << YAML::BeginMap;
+			emitter << YAML::BeginMap << YAML::Key << "Name" << YAML::Value << "Sprite";
 			emitter << YAML::Key << "Color" << YAML::Value << sprite.Color;
 			emitter << YAML::Key << "Texture" << YAML::Value << sprite.Texture;
 			emitter << YAML::Key << "TextureTiling" << YAML::Value << sprite.TextureTiling;
@@ -41,7 +43,8 @@ namespace Flare
 		{
 			CameraComponent& camera = world.GetEntityComponent<CameraComponent>(entity);
 
-			emitter << YAML::Key << "Camera" << YAML::BeginMap;
+			emitter << YAML::BeginMap << YAML::Key << "Name" << YAML::Value << "Camera";
+
 			emitter << YAML::Key << "Size" << YAML::Value << camera.Size;
 			emitter << YAML::Key << "Near" << YAML::Value << camera.Near;
 			emitter << YAML::Key << "Far" << YAML::Value << camera.Far;
@@ -60,6 +63,40 @@ namespace Flare
 			emitter << YAML::Key << "FOV" << YAML::Value << camera.FOV;
 			emitter << YAML::EndMap;
 		}
+		else
+		{
+		 	std::optional<const Internal::ScriptingType*> componentType = ScriptingEngine::FindComponentType(component);
+			std::optional<void*> entityData = world.GetRegistry().GetEntityComponent(entity, component);
+
+			FLARE_CORE_ASSERT(entityData.has_value());
+
+			if (componentType.has_value())
+			{
+				emitter << YAML::BeginMap;
+				emitter << YAML::Key << "Name" << YAML::Value << std::string(componentType.value()->Name);
+
+				const Internal::TypeSerializationSettings& serializationSettings = componentType.value()->GetSerializationSettings();
+				for (const Internal::Field& field : serializationSettings.GetFields())
+				{
+					uint8_t* fieldData = (uint8_t*)entityData.value() + field.Offset;
+					switch (field.Type)
+					{
+					case Internal::FieldType::Float2:
+						emitter << YAML::Key << field.Name << YAML::Value << *(glm::vec2*)(fieldData);
+						break;
+					case Internal::FieldType::Float3:
+						emitter << YAML::Key << field.Name << YAML::Value << *(glm::vec3*)(fieldData);
+						break;
+					default:
+						FLARE_CORE_ASSERT(false, "Unhandled field type");
+					}
+				}
+
+				emitter << YAML::EndMap;
+			}
+			else
+				FLARE_CORE_ERROR("Componnet with id {0} cannot be serialized because it's type infomation cannot be found", component);
+		}
 	}
 
 	template<typename T>
@@ -72,6 +109,20 @@ namespace Flare
 			entity = world.CreateEntity<T>();
 			T& component = world.GetEntityComponent<T>(entity);
 			component = componentData;
+		}
+	}
+
+	static uint8_t* AddDeserializedComponent(World& world, Entity& entity, ComponentId id)
+	{
+		if (world.IsEntityAlive(entity))
+		{
+			world.GetRegistry().AddEntityComponent(entity, id, nullptr);
+			return (uint8_t*) world.GetRegistry().GetEntityComponent(entity, id).value();
+		}
+		else
+		{
+			entity = world.GetRegistry().CreateEntity(ComponentSet(&id, 1));
+			return (uint8_t*) world.GetRegistry().GetEntityComponent(entity, id).value();
 		}
 	}
 
@@ -92,12 +143,12 @@ namespace Flare
 		{
 			emitter << YAML::BeginMap;
 
-			emitter << YAML::Key << "Components" << YAML::BeginMap; // Components
+			emitter << YAML::Key << "Components" << YAML::BeginSeq; // Components
 
 			for (ComponentId component : scene->m_World.GetEntityComponents(entity))
 				SerializeComponent(emitter, scene->m_World, entity, component);
 
-			emitter << YAML::EndMap; // Components
+			emitter << YAML::EndSeq; // Components
 			emitter << YAML::EndMap;
 		}
 
@@ -136,53 +187,47 @@ namespace Flare
 			YAML::Node componentsNode = entity["Components"];
 
 			Entity entity;
-			if (componentsNode)
+			for (YAML::Node componentNode : componentsNode)
 			{
-				if (componentsNode["Transform"])
-				{
-					YAML::Node transformNode = componentsNode["Transform"];
+				std::string name = componentNode["Name"].as<std::string>();
 
-					YAML::Node positionNode = transformNode["Position"];
+				if (name == "Transform")
+				{
+					YAML::Node positionNode = componentNode["Position"];
 					
 					TransformComponent transformComponent;
 					transformComponent.Position = positionNode.as<glm::vec3>();
-					transformComponent.Rotation = transformNode["Rotation"].as<glm::vec3>();
-					transformComponent.Scale = transformNode["Scale"].as<glm::vec3>();
+					transformComponent.Rotation = componentNode["Rotation"].as<glm::vec3>();
+					transformComponent.Scale = componentNode["Scale"].as<glm::vec3>();
 
 					AddDeserializedComponent<TransformComponent>(scene->m_World, entity, transformComponent);
 				}
-				
-				if (componentsNode["Sprite"])
+				else if (name == "Sprite")
 				{
-					YAML::Node spriteNode = componentsNode["Sprite"];
-
 					SpriteComponent spriteComponent;
-					spriteComponent.Color = spriteNode["Color"].as<glm::vec4>();
+					spriteComponent.Color = componentNode["Color"].as<glm::vec4>();
 
-					if (YAML::Node textureNode = spriteNode["Texture"])
+					if (YAML::Node textureNode = componentNode["Texture"])
 						spriteComponent.Texture = textureNode ? textureNode.as<uint64_t>() : NULL_ASSET_HANDLE;
 
-					if (YAML::Node tilingNode = spriteNode["TextureTiling"])
+					if (YAML::Node tilingNode = componentNode["TextureTiling"])
 						spriteComponent.TextureTiling = tilingNode.as<glm::vec2>();
 					else
 						spriteComponent.TextureTiling = glm::vec2(1.0f);
 
 					AddDeserializedComponent<SpriteComponent>(scene->m_World, entity, spriteComponent);
 				}
-
-				if (componentsNode["Camera"])
+				else if (name == "Camera")
 				{
-					YAML::Node cameraNode = componentsNode["Camera"];
-
 					CameraComponent cameraComponent;
-					cameraComponent.Size = cameraNode["Size"].as<float>();
-					cameraComponent.Near = cameraNode["Near"].as<float>();
-					cameraComponent.Far = cameraNode["Far"].as<float>();
+					cameraComponent.Size = componentNode["Size"].as<float>();
+					cameraComponent.Near = componentNode["Near"].as<float>();
+					cameraComponent.Far = componentNode["Far"].as<float>();
 
-					if (YAML::Node fovNode = cameraNode["FOV"])
+					if (YAML::Node fovNode = componentNode["FOV"])
 						cameraComponent.FOV = fovNode.as<float>();
 
-					if (YAML::Node projectionType = cameraNode["Projection"])
+					if (YAML::Node projectionType = componentNode["Projection"])
 					{
 						std::string string = projectionType.as<std::string>();
 						if (string == "Orthographic")
@@ -192,6 +237,44 @@ namespace Flare
 					}
 
 					AddDeserializedComponent<CameraComponent>(scene->m_World, entity, cameraComponent);
+				}
+				else
+				{
+					std::optional<ComponentId> componentId = scene->GetECSWorld().GetRegistry().FindComponnet(name);
+					if (!componentId.has_value())
+					{
+						FLARE_CORE_ERROR("Component named {0} cannot not be deserialized", name);
+						continue;
+					}
+
+					std::optional<const Internal::ScriptingType*> type = ScriptingEngine::FindComponentType(componentId.value());
+					if (type.has_value())
+					{
+						uint8_t* componentData = AddDeserializedComponent(scene->GetECSWorld(), entity, componentId.value());
+						for (const Internal::Field& field : type.value()->GetSerializationSettings().GetFields())
+						{
+							if (YAML::Node fieldNode = componentNode[field.Name])
+							{
+								switch (field.Type)
+								{
+									case Internal::FieldType::Float2:
+									{
+										glm::vec2 vector = fieldNode.as<glm::vec2>();
+										std::memcpy(componentData + field.Offset, &vector, sizeof(vector));
+										break;
+									}
+									case Internal::FieldType::Float3:
+									{
+										glm::vec3 vector = fieldNode.as<glm::vec3>();
+										std::memcpy(componentData + field.Offset, &vector, sizeof(vector));
+										break;
+									}
+									default:
+										FLARE_CORE_ASSERT(false, "Unhandled field type");
+								}
+							}
+						}
+					}
 				}
 			}
 		}
