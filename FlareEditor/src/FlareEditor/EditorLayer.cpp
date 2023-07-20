@@ -228,29 +228,27 @@ namespace Flare
 	{
 		FLARE_CORE_ASSERT(EditorContext::Instance.Mode == EditorMode::Edit);
 
-		ScriptingEngine::UnloadAllModules();
+		SaveActiveScene();
 
-		Ref<Scene> playModeScene = CreateRef<Scene>();
+		Ref<Scene> playModeScene = CreateRef<Scene>(false);
+		ScriptingEngine::SetCurrentECSWorld(playModeScene->GetECSWorld());
+
 		playModeScene->CopyFrom(EditorContext::GetActiveScene());
+		playModeScene->Initialize();
+		playModeScene->InitializeRuntime();
 
 		EditorContext::SetActiveScene(playModeScene);
 		EditorContext::Instance.Mode = EditorMode::Play;
-
-		std::filesystem::path modulePath = Project::GetActive()->Location
-			/ "bin/Debug-windows-x86_64/" 
-			/ Project::GetActive()->Name / fmt::format("{0}.dll", Project::GetActive()->Name);
-
-		ScriptingEngine::SetCurrentECSWorld(EditorContext::GetActiveScene()->GetECSWorld());
-		ScriptingEngine::LoadModule(modulePath);
-		ScriptingEngine::RegisterComponents();
-		ScriptingEngine::RegisterSystems();
 	}
 
 	void EditorLayer::ExitPlayMode()
 	{
 		FLARE_CORE_ASSERT(EditorContext::Instance.Mode == EditorMode::Play);
+
 		EditorContext::SetActiveScene(EditorContext::GetEditedScene());
 
 		EditorContext::Instance.Mode = EditorMode::Edit;
+
+		ScriptingEngine::SetCurrentECSWorld(EditorContext::GetActiveScene()->GetECSWorld());
 	}
 }

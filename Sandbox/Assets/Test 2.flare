@@ -19,3 +19,12 @@ Entities:
         Color: [0, 0, 1, 1]
         Texture: 5193090395626261884
         TextureTiling: [1, 1]
+  - Components:
+      Transform:
+        Position: [-4.19999981, -1.20000005, 0]
+        Rotation: [0, 0, 0]
+        Scale: [1, 1, 1]
+      Sprite:
+        Color: [1, 1, 1, 1]
+        Texture: 0
+        TextureTiling: [1, 1]

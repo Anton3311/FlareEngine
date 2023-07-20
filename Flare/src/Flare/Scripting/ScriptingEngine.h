@@ -40,6 +40,7 @@ namespace Flare
 		struct Data
 		{
 			World* CurrentWorld = nullptr;
+			size_t RegisteredComponentCount = 0;
 			std::vector<ScriptingModuleData> Modules;
 			std::vector<ComponentId> TemporaryQueryComponents;
 		};
@@ -51,7 +52,7 @@ namespace Flare
 
 		static void SetCurrentECSWorld(World& world);
 
-		static void ReloadModules();
+		static void LoadModules();
 		static void ReleaseScriptingInstances();
 
 		static void LoadModule(const std::filesystem::path& modulePath);

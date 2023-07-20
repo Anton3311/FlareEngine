@@ -14,10 +14,13 @@ namespace Flare
 	class Scene : public Asset
 	{
 	public:
-		Scene();
+		Scene(bool reigsyerComponents = true);
 		~Scene();
 
 		void CopyFrom(const Ref<Scene>& scene);
+
+		void Initialize();
+		void InitializeRuntime();
 	public:
 		void OnBeforeRender(RenderData& renderData);
 		void OnRender(const RenderData& renderData);

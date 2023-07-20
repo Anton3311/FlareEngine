@@ -1,3 +1,4 @@
 Project:
   Name: Sandbox
   StartScene: 0
+  ScriptingModules: ["bin/Debug-windows-x86_64/Sandbox/Sandbox.dll"]

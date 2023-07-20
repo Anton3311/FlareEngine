@@ -35,7 +35,7 @@ namespace Flare
 
 		s_Active = project;
 
-		ScriptingEngine::LoadModule(path.parent_path() / "bin/Debug-windows-x86_64/" / s_Active->Name / fmt::format("{0}.dll", s_Active->Name));
+		ScriptingEngine::LoadModules();
 	}
 
 	void Project::Save()

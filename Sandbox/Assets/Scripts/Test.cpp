@@ -47,11 +47,12 @@ namespace Sandbox
 		virtual void Execute(Flare::EntityView& chunk) override
 		{
 			Flare::ComponentView<Transform> transforms = chunk.View<Transform>();
+			Flare::ComponentView<HealthComponent> healthComponents = chunk.View<HealthComponent>();
 
 			for (Flare::EntityElement entity : chunk)
 			{
 				Transform& transform = transforms[entity];
-				transform.Position += glm::vec3(0.1f, 0.0f, 0.0f) * Flare::Time::GetDeltaTime();
+				transform.Position += healthComponents[entity].Vector3 * Flare::Time::GetDeltaTime();
 			}
 		}
 	};

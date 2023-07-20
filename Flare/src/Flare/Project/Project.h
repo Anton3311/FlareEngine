@@ -4,6 +4,7 @@
 
 #include <filesystem>
 #include <string>
+#include <vector>
 #include <string_view>
 
 namespace Flare
@@ -27,6 +28,8 @@ namespace Flare
 		std::string Name;
 		const std::filesystem::path Location;
 		AssetHandle StartScene;
+
+		std::vector<std::filesystem::path> ScriptingModules;
 	public:
 		static Ref<Project> s_Active;
 		static std::filesystem::path s_ProjectFileExtension;

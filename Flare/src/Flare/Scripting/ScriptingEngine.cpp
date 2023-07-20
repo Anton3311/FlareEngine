@@ -5,6 +5,7 @@
 #include "Flare/Scripting/ScriptingModule.h"
 #include "Flare/Scripting/ScriptingBridge.h"
 #include "Flare/Scene/Components.h"
+#include "Flare/Project/Project.h"
 
 #include "FlareScriptingCore/SystemInfo.h"
 #include "FlareScriptingCore/ComponentInfo.h"
@@ -41,8 +42,11 @@ namespace Flare
 		ScriptingBridge::SetCurrentWorld(world);
 	}
 
-	void ScriptingEngine::ReloadModules()
+	void ScriptingEngine::LoadModules()
 	{
+		FLARE_CORE_ASSERT(Project::GetActive());
+		for (const std::filesystem::path& modulePath : Project::GetActive()->ScriptingModules)
+			ScriptingEngine::LoadModule(modulePath);
 	}
 
 	void ScriptingEngine::ReleaseScriptingInstances()
@@ -111,10 +115,14 @@ namespace Flare
 		}
 
 		s_Data.Modules.clear();
+		s_Data.RegisteredComponentCount = 0;
 	}
 
 	void ScriptingEngine::RegisterComponents()
 	{
+		FLARE_CORE_ASSERT(s_Data.CurrentWorld != nullptr);
+		FLARE_CORE_ASSERT(s_Data.RegisteredComponentCount == 0, "Scripting module components have already been registered");
+
 		for (ScriptingModuleData& module : s_Data.Modules)
 		{
 			for (Internal::ComponentInfo* component : *module.Config.RegisteredComponents)
@@ -134,6 +142,7 @@ namespace Flare
 				{
 					component->Id = s_Data.CurrentWorld->GetRegistry().RegisterComponent(component->Name, type->Size, type->Destructor);
 					module.ComponentIdToTypeIndex.emplace(component->Id, typeIndexIterator->second);
+					s_Data.RegisteredComponentCount++;
 				}
 			}
 		}
