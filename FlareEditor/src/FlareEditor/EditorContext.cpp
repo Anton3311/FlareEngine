@@ -17,6 +17,14 @@ namespace Flare
 		ScriptingEngine::RegisterComponents();
 	}
 
+	void EditorContext::Uninitialize()
+	{
+		Instance.m_ActiveScene = nullptr;
+		Instance.m_EditedScene = nullptr;
+
+		Instance.SelectedEntity = Entity();
+	}
+
 	void EditorContext::OpenScene(AssetHandle handle)
 	{
 		FLARE_CORE_ASSERT(Instance.Mode == EditorMode::Edit);

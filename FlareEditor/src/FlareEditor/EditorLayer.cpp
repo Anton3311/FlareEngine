@@ -52,6 +52,17 @@ namespace Flare
 		settings.DragSpeed = 0.1f;
 	}
 
+	void EditorLayer::OnDetach()
+	{
+		if (EditorContext::Instance.Mode == EditorMode::Play)
+			ExitPlayMode();
+
+		if (AssetManager::IsAssetHandleValid(EditorContext::GetEditedScene()->Handle))
+			As<EditorAssetManager>(AssetManager::GetInstance())->UnloadAsset(EditorContext::GetEditedScene()->Handle);
+
+		EditorContext::Uninitialize();
+	}
+
 	void EditorLayer::OnUpdate(float deltaTime)
 	{
 		m_PreviousFrameTime = deltaTime;

@@ -64,6 +64,8 @@ namespace Flare
 					type->Deleter(instance.Instance);
 				}
 			}
+
+			module.ScriptingInstances.clear();
 		}
 	}
 
@@ -94,9 +96,7 @@ namespace Flare
 					moduleData.TypeNameToIndex.emplace(type->Name, typeIndex++);
 
 					if (type->ConfigureSerialization)
-					{
 						type->ConfigureSerialization(type->GetSerializationSettings());
-					}
 				}
 
 				ScriptingBridge::ConfigureModule(moduleData.Config);
@@ -118,7 +118,6 @@ namespace Flare
 		}
 
 		s_Data.Modules.clear();
-		s_Data.RegisteredComponentCount = 0;
 	}
 
 	void ScriptingEngine::RegisterComponents()
@@ -130,6 +129,7 @@ namespace Flare
 
 		FLARE_CORE_ASSERT(s_Data.CurrentWorld != nullptr);
 
+		size_t moduleIndex = 0;
 		for (ScriptingModuleData& module : s_Data.Modules)
 		{
 			for (Internal::ComponentInfo* component : *module.Config.RegisteredComponents)
@@ -148,10 +148,11 @@ namespace Flare
 				else
 				{
 					component->Id = s_Data.CurrentWorld->GetRegistry().RegisterComponent(component->Name, type->Size, type->Destructor);
-					module.ComponentIdToTypeIndex.emplace(component->Id, typeIndexIterator->second);
-					s_Data.RegisteredComponentCount++;
+					s_Data.ComponentIdToTypeIndex.emplace(component->Id, ScriptingEngine::Data::TypeIndex{ moduleIndex, typeIndexIterator->second });
 				}
 			}
+
+			moduleIndex++;
 		}
 
 		s_Data.ShouldRegisterComponents = false;
@@ -203,15 +204,10 @@ namespace Flare
 
 	std::optional<const Internal::ScriptingType*> ScriptingEngine::FindComponentType(ComponentId id)
 	{
-		for (ScriptingModuleData& module : s_Data.Modules)
-		{
-			auto it = module.ComponentIdToTypeIndex.find(id);
-			if (it != module.ComponentIdToTypeIndex.end())
-			{
-				return (*module.Config.RegisteredTypes)[it->second];
-			}
-		}
-
+		auto it = s_Data.ComponentIdToTypeIndex.find(id);
+		if (it != s_Data.ComponentIdToTypeIndex.end())
+			return (*s_Data.Modules[it->second.ModuleIndex].Config.RegisteredTypes)[it->second.TypeIndex];
+		
 		return {};
 	}
 }
