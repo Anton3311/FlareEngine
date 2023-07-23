@@ -22,7 +22,7 @@ namespace Flare
 
 	struct ScriptingModuleData
 	{
-		Ref<ScriptingModule> Module;
+		ScriptingModule Module;
 		Internal::ModuleConfiguration Config;
 
 		std::optional<ModuleEventFunction> OnLoad;

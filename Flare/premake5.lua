@@ -18,7 +18,6 @@ project "Flare"
 		"src/",
 		"%{wks.location}/FlareCommon/src/",
 		"%{wks.location}/FlareECS/src/",
-		"%{wks.location}/FlareScripting/src/",
 		"%{wks.location}/FlareScriptingCore/src/",
 
 		INCLUDE_DIRS.GLAD,

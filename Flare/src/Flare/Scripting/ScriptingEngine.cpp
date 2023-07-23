@@ -71,20 +71,17 @@ namespace Flare
 
 	void ScriptingEngine::LoadModule(const std::filesystem::path& modulePath)
 	{
-		Ref<ScriptingModule> module = ScriptingModule::Create(modulePath);
-		if (module->IsLoaded())
-		{
-			std::optional<ScriptingModuleFunction> onLoad = module->LoadFunction(s_ModuleLoaderFunctionName);
-			std::optional<ScriptingModuleFunction> onUnload = module->LoadFunction(s_ModuleUnloaderFunctionName);
+		ScriptingModuleData moduleData;
+		moduleData.Module.Load(modulePath);
 
-			ScriptingModuleData moduleData;
+		if (moduleData.Module.IsLoaded())
+		{
 			moduleData.Config = Internal::ModuleConfiguration{};
 
-			moduleData.Module = module;
-			moduleData.OnLoad = onLoad.has_value() ? (ModuleEventFunction)onLoad.value() : std::optional<ModuleEventFunction>{};
-			moduleData.OnUnload = onLoad.has_value() ? (ModuleEventFunction)onUnload.value() : std::optional<ModuleEventFunction>{};
+			moduleData.OnLoad = moduleData.Module.LoadFunction<ModuleEventFunction>(s_ModuleLoaderFunctionName);
+			moduleData.OnUnload = moduleData.Module.LoadFunction<ModuleEventFunction>(s_ModuleUnloaderFunctionName);
 
-			if (onLoad.has_value())
+			if (moduleData.OnLoad.has_value())
 			{
 				moduleData.OnLoad.value()(moduleData.Config);
 
@@ -132,6 +129,9 @@ namespace Flare
 		size_t moduleIndex = 0;
 		for (ScriptingModuleData& module : s_Data.Modules)
 		{
+			FLARE_CORE_ASSERT(module.Module.IsLoaded());
+			FLARE_CORE_ASSERT(module.Config.RegisteredComponents != nullptr);
+			FLARE_CORE_ASSERT(module.Config.RegisteredTypes != nullptr);
 			for (Internal::ComponentInfo* component : *module.Config.RegisteredComponents)
 			{
 				auto typeIndexIterator = module.TypeNameToIndex.find(component->Name);

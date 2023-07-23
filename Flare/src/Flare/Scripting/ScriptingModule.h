@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Flare/Core/Core.h"
+#include "Flare/Platform/Platform.h"
 
 #include <filesystem>
 #include <optional>
@@ -12,12 +13,24 @@ namespace Flare
 	class ScriptingModule
 	{
 	public:
-		virtual ~ScriptingModule() {}
+		ScriptingModule();
+		ScriptingModule(const std::filesystem::path& path);
+		ScriptingModule(const ScriptingModule&) = delete;
+		ScriptingModule(ScriptingModule&& other);
+		~ScriptingModule();
 
-		virtual bool IsLoaded() = 0;
+		void Load(const std::filesystem::path& path);
+		bool IsLoaded() const { return m_Library != nullptr; }
 
-		virtual std::optional<ScriptingModuleFunction> LoadFunction(const std::string& name) = 0;
-	public:
-		static Ref<ScriptingModule> Create(const std::filesystem::path& path);
+		template<typename T>
+		std::optional<T> LoadFunction(const std::string& name) const
+		{
+			std::optional<void*> function = Platform::LoadFunction(m_Library, name);
+			if (function.has_value())
+				return (T)function.value();
+			return {};
+		}
+	private:
+		void* m_Library;
 	};
 }
