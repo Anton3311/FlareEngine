@@ -21,13 +21,12 @@ Entities:
         TextureTiling: [1, 1]
   - Components:
       - Name: Transform
-        Position: [-4.19999981, -1.20000005, 0]
-        Rotation: [0, 0, 0]
+        Position: [-4.19999981, -1.20000005, -0.5]
+        Rotation: [0, 0, 45]
         Scale: [1, 1, 1]
       - Name: Sprite
         Color: [1, 1, 1, 1]
         Texture: 0
         TextureTiling: [1, 1]
-      - Name: struct Sandbox::HealthComponent
-        Vector2: [2.9000001, 0]
-        Vector3: [0, -4.9000001, 0]
+      - Name: struct Sandbox::MovingQuadComponet
+        Velocity: [1.20000005, -0.200000003, 0]

@@ -4,6 +4,7 @@
 #include "FlareECS/Query/Query.h"
 
 #include <unordered_set>
+#include <algorithm>
 
 namespace Flare
 {
@@ -23,6 +24,7 @@ namespace Flare
 		query.Components.resize(components.GetCount());
 
 		std::memcpy(query.Components.data(), components.GetIds(), components.GetCount() * sizeof(ComponentId));
+		std::sort(query.Components.begin(), query.Components.end());
 
 		for (size_t i = 0; i < components.GetCount(); i++)
 		{

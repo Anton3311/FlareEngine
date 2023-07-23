@@ -16,7 +16,7 @@ namespace Flare
 		ScriptingModule();
 		ScriptingModule(const std::filesystem::path& path);
 		ScriptingModule(const ScriptingModule&) = delete;
-		ScriptingModule(ScriptingModule&& other);
+		ScriptingModule(ScriptingModule&& other) noexcept;
 		~ScriptingModule();
 
 		void Load(const std::filesystem::path& path);

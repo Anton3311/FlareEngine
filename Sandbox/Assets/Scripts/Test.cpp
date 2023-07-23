@@ -9,30 +9,18 @@
 
 namespace Sandbox
 {
-	struct Transform
+	struct MovingQuadComponet
 	{
-		FLARE_COMPONENT(Transform);
+		FLARE_COMPONENT(MovingQuadComponet);
 
-		glm::vec3 Position;
-		glm::vec3 Rotation;
-		glm::vec3 Scale;
-	};
-	FLARE_COMPONENT_ALIAS_IMPL(Transform, "struct Flare::TransformComponent");
-
-	struct HealthComponent
-	{
-		FLARE_COMPONENT(HealthComponent);
-
-		glm::vec2 Vector2;
-		glm::vec3 Vector3;
-
+		glm::vec3 Velocity;
+		
 		static void ConfigureSerialization(Flare::TypeSerializationSettings& settings)
 		{
-			FLARE_SERIALIZE_FIELD(settings, HealthComponent, Vector2);
-			FLARE_SERIALIZE_FIELD(settings, HealthComponent, Vector3);
+			FLARE_SERIALIZE_FIELD(settings, MovingQuadComponet, Velocity);
 		}
 	};
-	FLARE_COMPONENT_IMPL(HealthComponent, HealthComponent::ConfigureSerialization);
+	FLARE_COMPONENT_IMPL(MovingQuadComponet, MovingQuadComponet::ConfigureSerialization);
 
 	struct TestSystem : public Flare::SystemBase
 	{
@@ -40,19 +28,25 @@ namespace Sandbox
 
 		virtual void Configure(Flare::SystemConfiguration& config) override
 		{
-			config.Query.Add<Transform>();
-			config.Query.Add<HealthComponent>();
+			config.Query.Add<Flare::Transform>();
+			config.Query.Add<MovingQuadComponet>();
+			config.Query.Add<Flare::Sprite>();
 		}
 
 		virtual void Execute(Flare::EntityView& chunk) override
 		{
-			Flare::ComponentView<Transform> transforms = chunk.View<Transform>();
-			Flare::ComponentView<HealthComponent> healthComponents = chunk.View<HealthComponent>();
+			Flare::ComponentView<Flare::Transform> transforms = chunk.View<Flare::Transform>();
+			Flare::ComponentView<Flare::Sprite> sprites = chunk.View<Flare::Sprite>();
+			Flare::ComponentView<MovingQuadComponet> quadComponents = chunk.View<MovingQuadComponet>();
 
 			for (Flare::EntityElement entity : chunk)
 			{
-				Transform& transform = transforms[entity];
-				transform.Position += healthComponents[entity].Vector3 * Flare::Time::GetDeltaTime();
+				Flare::Transform& transform = transforms[entity];
+				Flare::Sprite& sprite = sprites[entity];
+
+				transform.Position += quadComponents[entity].Velocity * Flare::Time::GetDeltaTime();
+				sprite.Color.r = glm::sin(transform.Position.x * 10.0f);
+				sprite.Color.g = glm::cos(transform.Position.y * 10.0f);
 			}
 		}
 	};
