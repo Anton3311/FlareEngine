@@ -5,19 +5,22 @@
 
 #include "Flare/Scene/Components.h"
 
+#include "Flare/Scripting/ScriptingEngine.h"
+
 namespace Flare
 {
-	Scene::Scene()
+	Scene::Scene(bool registerComponents)
 		: Asset(AssetType::Scene)
 	{
 		m_QuadShader = Shader::Create("QuadShader.glsl");
+		if (registerComponents)
+		{
+			m_World.RegisterComponent<TransformComponent>();
+			m_World.RegisterComponent<CameraComponent>();
+			m_World.RegisterComponent<SpriteComponent>();
 
-		m_World.RegisterComponent<TransformComponent>();
-		m_World.RegisterComponent<CameraComponent>();
-		m_World.RegisterComponent<SpriteComponent>();
-		
-		m_CameraDataUpdateQuery = m_World.CreateQuery<TransformComponent, CameraComponent>();
-		m_SpritesQuery = m_World.CreateQuery<TransformComponent, SpriteComponent>();
+			Initialize();
+		}
 	}
 
 	Scene::~Scene()
@@ -26,6 +29,9 @@ namespace Flare
 
 	void Scene::CopyFrom(const Ref<Scene>& scene)
 	{
+		for (const ComponentInfo& component : scene->m_World.GetRegistry().GetRegisteredComponents())
+			m_World.GetRegistry().RegisterComponent(component.Name, component.Size, component.Deleter);
+
 		for (Entity entity : scene->m_World.GetRegistry())
 		{
 			Entity newEntity = m_World.GetRegistry().CreateEntity(ComponentSet(scene->m_World.GetEntityComponents(entity)));
@@ -38,6 +44,20 @@ namespace Flare
 			if (entitySize.has_value() && newEntityData.has_value() && entityData.has_value())
 				std::memcpy(newEntityData.value(), entityData.value(), entitySize.value());
 		}
+	}
+
+	void Scene::Initialize()
+	{
+		ScriptingEngine::SetCurrentECSWorld(m_World);
+		ScriptingEngine::RegisterComponents();
+
+		m_CameraDataUpdateQuery = m_World.CreateQuery<TransformComponent, CameraComponent>();
+		m_SpritesQuery = m_World.CreateQuery<TransformComponent, SpriteComponent>();
+	}
+
+	void Scene::InitializeRuntime()
+	{
+		ScriptingEngine::RegisterSystems();
 	}
 
 	void Scene::OnBeforeRender(RenderData& renderData)

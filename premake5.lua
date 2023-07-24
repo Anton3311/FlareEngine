@@ -29,6 +29,7 @@ group "Core"
 	include "FlareCommon"
 	include "Flare"
 	include "FlareECS"
+	include "FlareScriptingCore"
 group ""
 
 group "Editor"

@@ -18,6 +18,8 @@ project "Flare"
 		"src/",
 		"%{wks.location}/FlareCommon/src/",
 		"%{wks.location}/FlareECS/src/",
+		"%{wks.location}/FlareScriptingCore/src/",
+
 		INCLUDE_DIRS.GLAD,
 		INCLUDE_DIRS.GLFW,
 		INCLUDE_DIRS.glm,
@@ -34,6 +36,7 @@ project "Flare"
 		"ImGUI",
 		"FlareECS",
 		"FlareCommon",
+		"FlareScriptingCore",
 		"yaml-cpp"
 	}
 
@@ -41,6 +44,7 @@ project "Flare"
 	{
 		"GLFW_INCLUDE_NONE",
 		"YAML_CPP_STATIC_DEFINE",
+		"FLARE_SCRIPTING_CORE_NO_MACROS",
 	}
 
 	targetdir("%{wks.location}/bin/" .. OUTPUT_DIRECTORY .. "/%{prj.name}")

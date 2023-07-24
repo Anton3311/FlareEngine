@@ -2,6 +2,9 @@
 
 #include "Flare/Scene/Components.h"
 
+#include "FlareScriptingCore/ScriptingType.h"
+#include "FlareScriptingCore/TypeSerializationSettings.h"
+
 #include <unordered_map>
 #include <functional>
 
@@ -13,6 +16,8 @@ namespace Flare
 		void OnImGuiRender();
 	private:
 		void RenderAddComponentMenu(Entity entity);
+
+		void RenderScriptingComponentEditor(const Internal::ScriptingType& scriptingType, uint8_t* componentData);
 		
 		void RenderCameraComponent(CameraComponent& cameraComponent);
 		void RenderTransformComponent(TransformComponent& transform);

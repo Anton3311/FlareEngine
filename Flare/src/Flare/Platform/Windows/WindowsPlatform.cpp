@@ -18,6 +18,52 @@
 
 namespace Flare
 {
+	void* Platform::LoadSharedLibrary(const std::filesystem::path& path)
+	{
+		HMODULE library = LoadLibraryW(path.c_str());
+		DWORD errorCode = GetLastError();
+		if (errorCode != 0)
+		{
+			LPSTR messageBuffer = nullptr;
+
+			size_t size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+				NULL, errorCode, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 0, NULL);
+
+			std::string message(messageBuffer, size);
+			FLARE_CORE_ERROR("Failed to load scripting module: {0}\nError: {1}", path.generic_string(), message);
+
+			return nullptr;
+		}
+		return library;
+	}
+
+	void Platform::FreeSharedLibrary(void* library)
+	{
+		FLARE_CORE_ASSERT(library != nullptr);
+		FreeLibrary((HMODULE)library);
+	}
+
+	void* Platform::LoadFunction(void* library, const std::string& name)
+	{
+		FLARE_CORE_ASSERT(library != nullptr);
+		auto function = GetProcAddress((HMODULE)library, name.c_str());
+
+		DWORD errorCode = GetLastError();
+		if (errorCode != 0)
+		{
+			LPSTR messageBuffer = nullptr;
+
+			size_t size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+				NULL, errorCode, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 0, NULL);
+
+			std::string message(messageBuffer, size);
+			FLARE_CORE_ERROR("Failed to load function {0}\nError: {1}", name, message);
+			return nullptr;
+		}
+		else
+			return function;
+	}
+
 	std::optional<std::filesystem::path> Platform::ShowOpenFileDialog(const wchar_t* filter)
 	{
 		Ref<Window> window = Application::GetInstance().GetWindow();

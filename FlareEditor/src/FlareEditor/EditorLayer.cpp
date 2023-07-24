@@ -10,6 +10,8 @@
 #include "Flare/Project/Project.h"
 #include "Flare/Platform/Platform.h"
 
+#include "Flare/Scripting/ScriptingEngine.h"
+
 #include "FlareEditor/EditorContext.h"
 #include "FlareEditor/AssetManager/EditorAssetManager.h"
 
@@ -50,11 +52,24 @@ namespace Flare
 		settings.DragSpeed = 0.1f;
 	}
 
+	void EditorLayer::OnDetach()
+	{
+		if (EditorContext::Instance.Mode == EditorMode::Play)
+			ExitPlayMode();
+
+		if (AssetManager::IsAssetHandleValid(EditorContext::GetEditedScene()->Handle))
+			As<EditorAssetManager>(AssetManager::GetInstance())->UnloadAsset(EditorContext::GetEditedScene()->Handle);
+
+		EditorContext::Uninitialize();
+	}
+
 	void EditorLayer::OnUpdate(float deltaTime)
 	{
 		m_PreviousFrameTime = deltaTime;
 
 		Renderer2D::ResetStats();
+
+		ScriptingEngine::OnFrameStart(deltaTime);
 
 		EditorContext::GetActiveScene()->OnUpdateRuntime();
 
@@ -72,7 +87,7 @@ namespace Flare
 		static bool fullscreen = true;
 		static ImGuiDockNodeFlags dockspaceFlags = ImGuiDockNodeFlags_None;
 
-		ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoDocking;
+		ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_MenuBar;
 		if (fullscreen)
 		{
 			const ImGuiViewport* viewport = ImGui::GetMainViewport();
@@ -143,7 +158,7 @@ namespace Flare
 					ExitPlayMode();
 			}
 
-			ImGui::EndMainMenuBar();
+			ImGui::EndMenuBar();
 		}
 
 		{
@@ -224,8 +239,14 @@ namespace Flare
 	{
 		FLARE_CORE_ASSERT(EditorContext::Instance.Mode == EditorMode::Edit);
 
-		Ref<Scene> playModeScene = CreateRef<Scene>();
+		SaveActiveScene();
+
+		Ref<Scene> playModeScene = CreateRef<Scene>(false);
+		ScriptingEngine::SetCurrentECSWorld(playModeScene->GetECSWorld());
+
 		playModeScene->CopyFrom(EditorContext::GetActiveScene());
+		playModeScene->Initialize();
+		playModeScene->InitializeRuntime();
 
 		EditorContext::SetActiveScene(playModeScene);
 		EditorContext::Instance.Mode = EditorMode::Play;
@@ -234,8 +255,11 @@ namespace Flare
 	void EditorLayer::ExitPlayMode()
 	{
 		FLARE_CORE_ASSERT(EditorContext::Instance.Mode == EditorMode::Play);
+
 		EditorContext::SetActiveScene(EditorContext::GetEditedScene());
 
 		EditorContext::Instance.Mode = EditorMode::Edit;
+
+		ScriptingEngine::SetCurrentECSWorld(EditorContext::GetActiveScene()->GetECSWorld());
 	}
 }

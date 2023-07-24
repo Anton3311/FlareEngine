@@ -19,6 +19,8 @@ namespace Flare
 	{
 	public:
 		static void Initialize();
+		static void Uninitialize();
+
 		static void OpenScene(AssetHandle handle);
 
 		static const Ref<Scene>& GetActiveScene() { return Instance.m_ActiveScene; }

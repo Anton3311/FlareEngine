@@ -1,8 +1,8 @@
 #include "Project.h"
 
 #include "Flare/Core/Assert.h"
-
 #include "Flare/Project/ProjectSerializer.h"
+#include "Flare/Scripting/ScriptingEngine.h"
 
 namespace Flare
 {
@@ -28,10 +28,14 @@ namespace Flare
 		FLARE_CORE_ASSERT(!std::filesystem::is_directory(path));
 		FLARE_CORE_ASSERT(path.extension() == s_ProjectFileExtension);
 
+		ScriptingEngine::UnloadAllModules();
+
 		Ref<Project> project = CreateRef<Project>(path.parent_path());
 		ProjectSerializer::Deserialize(project, path);
 
 		s_Active = project;
+
+		ScriptingEngine::LoadModules();
 	}
 
 	void Project::Save()

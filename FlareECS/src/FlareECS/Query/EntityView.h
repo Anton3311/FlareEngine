@@ -23,6 +23,8 @@ namespace Flare
 
 		std::optional<Entity> GetEntity(size_t index);
 
+		constexpr ArchetypeId GetArchetype() const { return m_Archetype; }
+
 		template<typename ComponentT>
 		ComponentView<ComponentT> View()
 		{
