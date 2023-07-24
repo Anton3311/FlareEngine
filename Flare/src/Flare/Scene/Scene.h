@@ -14,7 +14,7 @@ namespace Flare
 	class Scene : public Asset
 	{
 	public:
-		Scene(bool reigsyerComponents = true);
+		Scene(bool registerComponents = true);
 		~Scene();
 
 		void CopyFrom(const Ref<Scene>& scene);

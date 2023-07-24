@@ -9,11 +9,11 @@
 
 namespace Flare
 {
-	Scene::Scene(bool reigsyerComponents)
+	Scene::Scene(bool registerComponents)
 		: Asset(AssetType::Scene)
 	{
 		m_QuadShader = Shader::Create("QuadShader.glsl");
-		if (reigsyerComponents)
+		if (registerComponents)
 		{
 			m_World.RegisterComponent<TransformComponent>();
 			m_World.RegisterComponent<CameraComponent>();
