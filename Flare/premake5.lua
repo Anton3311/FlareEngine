@@ -52,6 +52,8 @@ project "Flare"
 
 	filter "system:windows"
 		systemversion "latest"
+
+		links { "dwmapi.lib" }
 	
 	filter "configurations:Debug"
 		defines "FLARE_DEBUG"
