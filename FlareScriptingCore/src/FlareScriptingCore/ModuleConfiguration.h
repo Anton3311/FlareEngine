@@ -10,6 +10,7 @@
 #include "FlareScriptingCore/Bindings/ECS/World.h"
 
 #include "FlareScriptingCore/Bindings/Time.h"
+#include "FlareScriptingCore/Bindings/Input.h"
 
 #include <vector>
 
@@ -24,5 +25,6 @@ namespace Flare::Internal
 		Internal::WorldBindings* WorldBindings = nullptr;
 		Internal::EntityViewBindings* EntityViewBindings = nullptr;
 		Internal::TimeData* TimeData = nullptr;
+		Internal::InputBindings* InputBindings = nullptr;
 	};
 }

@@ -102,6 +102,9 @@ namespace Flare
 			
 				switch (field.Type)
 				{
+				case Internal::FieldType::Float:
+					EditorGUI::FloatPropertyField(field.Name.c_str(), *(float*)fieldData);
+					break;
 				case Internal::FieldType::Float2:
 					EditorGUI::Vector2PropertyField(field.Name.c_str(), *(glm::vec2*)fieldData);
 					break;

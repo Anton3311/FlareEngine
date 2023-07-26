@@ -69,6 +69,20 @@ namespace Flare
 			EditorGUI::EndMenu();
 		}
 
+		float buttonHeight = window->MenuBarHeight();
+
+		ImVec2 buttonSize = ImVec2(60.0f, buttonHeight);
+		if (EditorContext::Instance.Mode == EditorMode::Edit)
+		{
+			if (ImGui::Button("Play", buttonSize))
+				EditorLayer::GetInstance().EnterPlayMode();
+		}
+		else
+		{
+			if (ImGui::Button("Stop", buttonSize))
+				EditorLayer::GetInstance().ExitPlayMode();
+		}
+
 		window->DC.LayoutType = prevLayout;
 	}
 }

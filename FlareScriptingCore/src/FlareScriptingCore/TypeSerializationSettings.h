@@ -17,6 +17,7 @@ namespace Flare::Internal
 		Int32,
 		UInt32,
 
+		Float,
 		Float2,
 		Float3,
 		Float4,
@@ -36,6 +37,7 @@ namespace Flare::Internal
 
 	DATA_TYPE_TO_FIELD_TYPE_CONVERTER(int32_t);
 	DATA_TYPE_TO_FIELD_TYPE_CONVERTER(uint32_t);
+	DATA_TYPE_TO_FIELD_TYPE_CONVERTER(float);
 	DATA_TYPE_TO_FIELD_TYPE_CONVERTER(glm::vec2);
 	DATA_TYPE_TO_FIELD_TYPE_CONVERTER(glm::vec3);
 	DATA_TYPE_TO_FIELD_TYPE_CONVERTER(glm::vec4);

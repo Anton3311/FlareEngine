@@ -29,4 +29,4 @@ Entities:
         Texture: 0
         TextureTiling: [1, 1]
       - Name: struct Sandbox::MovingQuadComponet
-        Velocity: [1.20000005, -0.200000003, 0]
+        Speed: 4

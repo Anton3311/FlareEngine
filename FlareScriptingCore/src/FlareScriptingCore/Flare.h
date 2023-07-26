@@ -7,6 +7,7 @@
 #include "FlareScriptingCore/Bindings/ECS/EntityView.h"
 
 #include "FlareScriptingCore/Bindings/Time.h"
+#include "FlareScriptingCore/Bindings/Input.h"
 
 #include "FlareScriptingCore/ComponentInfo.h"
 #include "FlareScriptingCore/SystemInfo.h"
@@ -30,6 +31,7 @@ namespace Flare
 	using Internal::SystemConfiguration;
 
 	using Internal::Time;
+	using Internal::Input;
 
 	using Internal::TypeSerializationSettings;
 

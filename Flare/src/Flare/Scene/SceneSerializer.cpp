@@ -87,6 +87,9 @@ namespace Flare
 					case Internal::FieldType::Float3:
 						emitter << YAML::Key << field.Name << YAML::Value << *(glm::vec3*)(fieldData);
 						break;
+					case Internal::FieldType::Float:
+						emitter << YAML::Key << field.Name << YAML::Value << *(float*)(fieldData);
+						break;
 					default:
 						FLARE_CORE_ASSERT(false, "Unhandled field type");
 					}
@@ -257,6 +260,12 @@ namespace Flare
 							{
 								switch (field.Type)
 								{
+									case Internal::FieldType::Float:
+									{
+										float value = fieldNode.as<float>();
+										std::memcpy(componentData + field.Offset, &value, sizeof(value));
+										break;
+									}
 									case Internal::FieldType::Float2:
 									{
 										glm::vec2 vector = fieldNode.as<glm::vec2>();

@@ -13,11 +13,11 @@ namespace Sandbox
 	{
 		FLARE_COMPONENT(MovingQuadComponet);
 
-		glm::vec3 Velocity;
+		float Speed;
 		
 		static void ConfigureSerialization(Flare::TypeSerializationSettings& settings)
 		{
-			FLARE_SERIALIZE_FIELD(settings, MovingQuadComponet, Velocity);
+			FLARE_SERIALIZE_FIELD(settings, MovingQuadComponet, Speed);
 		}
 	};
 	FLARE_COMPONENT_IMPL(MovingQuadComponet, MovingQuadComponet::ConfigureSerialization);
@@ -30,11 +30,21 @@ namespace Sandbox
 		{
 			config.Query.Add<Flare::Transform>();
 			config.Query.Add<MovingQuadComponet>();
-			config.Query.Add<Flare::Sprite>();
 		}
 
 		virtual void Execute(Flare::EntityView& chunk) override
 		{
+			glm::vec3 direction = glm::vec3(0.0f);
+
+			if (Flare::Input::IsKeyPressed(Flare::KeyCode::W))
+				direction.y += 1;
+			if (Flare::Input::IsKeyPressed(Flare::KeyCode::S))
+				direction.y -= 1;
+			if (Flare::Input::IsKeyPressed(Flare::KeyCode::A))
+				direction.x -= 1;
+			if (Flare::Input::IsKeyPressed(Flare::KeyCode::D))
+				direction.x += 1;
+
 			Flare::ComponentView<Flare::Transform> transforms = chunk.View<Flare::Transform>();
 			Flare::ComponentView<Flare::Sprite> sprites = chunk.View<Flare::Sprite>();
 			Flare::ComponentView<MovingQuadComponet> quadComponents = chunk.View<MovingQuadComponet>();
@@ -44,9 +54,7 @@ namespace Sandbox
 				Flare::Transform& transform = transforms[entity];
 				Flare::Sprite& sprite = sprites[entity];
 
-				transform.Position += quadComponents[entity].Velocity * Flare::Time::GetDeltaTime();
-				sprite.Color.r = glm::sin(transform.Position.x * 10.0f);
-				sprite.Color.g = glm::cos(transform.Position.y * 10.0f);
+				transform.Position += direction * quadComponents[entity].Speed * Flare::Time::GetDeltaTime();
 			}
 		}
 	};

@@ -11,6 +11,7 @@
 #include "Flare/Platform/Platform.h"
 
 #include "Flare/Scripting/ScriptingEngine.h"
+#include "Flare/Input/InputManager.h"
 
 #include "FlareEditor/EditorContext.h"
 #include "FlareEditor/AssetManager/EditorAssetManager.h"
@@ -89,6 +90,7 @@ namespace Flare
 	void EditorLayer::OnEvent(Event& event)
 	{
 		m_Camera.ProcessEvents(event);
+		InputManager::ProcessEvent(event);
 	}
 
 	void EditorLayer::OnImGUIRender()
@@ -122,26 +124,6 @@ namespace Flare
 
 		EditorTitleBar titleBar;
 		titleBar.OnRenderImGui();
-
-		if (ImGui::BeginMenuBar())
-		{
-			ImGuiWindow* window = ImGui::GetCurrentWindow();
-			float buttonHeight = window->MenuBarHeight() - 4.0f;
-
-			ImVec2 buttonSize = ImVec2(60.0f, buttonHeight);
-			if (EditorContext::Instance.Mode == EditorMode::Edit)
-			{
-				if (ImGui::Button("Play", buttonSize))
-					EnterPlayMode();
-			}
-			else
-			{
-				if (ImGui::Button("Stop", buttonSize))
-					ExitPlayMode();
-			}
-
-			ImGui::EndMenuBar();
-		}
 
 		{
 			ImGui::Begin("Renderer");
