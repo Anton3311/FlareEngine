@@ -39,10 +39,10 @@ namespace Flare
 			return m_Chunks[index].GetBuffer();
 		}
 
-		inline const std::vector<size_t>& GetEntityIndices() const { return m_EntityIndices; }
+		inline const std::vector<uint32_t>& GetEntityIndices() const { return m_EntityIndices; }
 	private:
 		std::vector<EntityStorageChunk> m_Chunks;
-		std::vector<size_t> m_EntityIndices;
+		std::vector<uint32_t> m_EntityIndices;
 
 		size_t m_EntitySize;
 		size_t m_EntitiesCount;

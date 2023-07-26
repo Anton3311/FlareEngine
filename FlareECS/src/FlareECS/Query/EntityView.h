@@ -21,7 +21,7 @@ namespace Flare
 		EntityViewIterator begin();
 		EntityViewIterator end();
 
-		std::optional<Entity> GetEntity(size_t index);
+		std::optional<Entity> GetEntity(uint32_t index);
 
 		constexpr ArchetypeId GetArchetype() const { return m_Archetype; }
 

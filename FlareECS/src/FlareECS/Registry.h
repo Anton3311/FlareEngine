@@ -36,7 +36,7 @@ namespace Flare
 		bool IsEntityAlive(Entity entity) const;
 
 		std::optional<Entity> FindEntityByIndex(uint32_t entityIndex);
-		std::optional<Entity> FindEntityByRegistryIndex(size_t registryIndex);
+		std::optional<Entity> FindEntityByRegistryIndex(uint32_t registryIndex);
 
 		std::optional<uint8_t*> GetEntityData(Entity entity);
 		std::optional<const uint8_t*> GetEntityData(Entity entity) const;
@@ -51,7 +51,7 @@ namespace Flare
 		const std::vector<ComponentId>& GetEntityComponents(Entity entity);
 		bool HasComponent(Entity entity, ComponentId component) const;
 
-		inline const ComponentInfo& GetComponentInfo(size_t index) const;
+		inline const ComponentInfo& GetComponentInfo(ComponentId id) const;
 		inline const std::vector<ComponentInfo>& GetRegisteredComponents() const { return m_RegisteredComponents; }
 
 		// Archetype operations

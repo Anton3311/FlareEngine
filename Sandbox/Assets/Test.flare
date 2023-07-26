@@ -1,21 +1,30 @@
 Entities:
   - Components:
-      Transform:
+      - Name: Transform
         Position: [0, 0, 0]
+        Rotation: [0, 0, -43.7999992]
+        Scale: [1, 1, 1]
+      - Name: Sprite
+        Color: [1, 1, 0, 1]
+        Texture: 0
+        TextureTiling: [0, 0]
+  - Components:
+      - Name: Transform
+        Position: [0, 0, 1.29999995]
         Rotation: [0, 0, 0]
         Scale: [1, 1, 1]
-      Camera:
+      - Name: Camera
         Size: 10
         Near: 0.100000001
-        Far: 100
+        Far: 10
         Projection: Orthographic
         FOV: 0
   - Components:
-      Transform:
-        Position: [-2, 0, -2.20000005]
-        Rotation: [0, 0, -28.7000008]
+      - Name: Transform
+        Position: [-3.4000001, 0, 0]
+        Rotation: [0, 0, 0]
         Scale: [1, 1, 1]
-      Sprite:
-        Color: [0, 1, 0, 1]
-        Texture: 5193090395626261884
-        TextureTiling: [1, 1]
+      - Name: Sprite
+        Color: [1, 0, 0, 1]
+        Texture: 0
+        TextureTiling: [0, 0]

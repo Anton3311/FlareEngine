@@ -48,7 +48,7 @@ namespace Flare
 		size_t registryIndex = m_EntityRecords.size();
 		EntityRecord& record = m_EntityRecords.emplace_back();
 
-		record.RegistryIndex = registryIndex;
+		record.RegistryIndex = (uint32_t)registryIndex;
 		record.Id = m_EntityIndex.CreateId();
 
 		auto it = m_ComponentSetToArchetype.find(components);
@@ -356,7 +356,7 @@ namespace Flare
 		return it->first;
 	}
 
-	std::optional<Entity> Registry::FindEntityByRegistryIndex(size_t registryIndex)
+	std::optional<Entity> Registry::FindEntityByRegistryIndex(uint32_t registryIndex)
 	{
 		if (registryIndex < m_EntityRecords.size())
 			return m_EntityRecords[registryIndex].Id;
@@ -433,10 +433,10 @@ namespace Flare
 		return it->second;
 	}
 
-	inline const ComponentInfo& Registry::GetComponentInfo(size_t index) const
+	inline const ComponentInfo& Registry::GetComponentInfo(ComponentId id) const
 	{
-		FLARE_CORE_ASSERT(index < m_RegisteredComponents.size());
-		return m_RegisteredComponents[index];
+		FLARE_CORE_ASSERT(id < m_RegisteredComponents.size());
+		return m_RegisteredComponents[id];
 	}
 
 	EntityRegistryIterator Registry::begin()
