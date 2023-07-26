@@ -18,6 +18,7 @@ namespace Flare
 	{
 	public:
 		EditorLayer();
+		~EditorLayer();
 	public:
 		virtual void OnAttach() override;
 		virtual void OnDetach() override;
@@ -25,14 +26,16 @@ namespace Flare
 
 		virtual void OnEvent(Event& event) override;
 		virtual void OnImGUIRender() override;
-	private:
-		void UpdateWindowTitle();
 
 		void SaveActiveScene();
 		void SaveActiveSceneAs();
 
 		void EnterPlayMode();
 		void ExitPlayMode();
+
+		static EditorLayer& GetInstance();
+	private:
+		void UpdateWindowTitle();
 	private:
 		float m_PreviousFrameTime = 0.0f;
 
@@ -44,5 +47,7 @@ namespace Flare
 		glm::vec4 m_ClearColor = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
 
 		EditorCamera m_Camera;
+
+		static EditorLayer* s_Instance;
 	};
 }

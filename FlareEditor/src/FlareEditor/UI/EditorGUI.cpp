@@ -23,6 +23,31 @@ namespace Flare
 		ImGui::EndTable();
 	}
 
+	bool EditorGUI::BeginMenu(const char* name)
+	{
+		ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0.0f);
+		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0.0f);
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
+
+		if (ImGui::Button(name))
+		{
+			ImVec2 buttonMin = ImGui::GetItemRectMin();
+			ImVec2 buttonMax = ImGui::GetItemRectMax();
+			ImGui::SetNextWindowPos(ImVec2(buttonMin.x, buttonMax.y));
+			ImGui::OpenPopup(name);
+		}
+
+		ImGui::PopStyleVar(2);
+		ImGui::PopStyleColor(1);
+		
+		return ImGui::BeginPopup(name);
+	}
+
+	void EditorGUI::EndMenu()
+	{
+		ImGui::EndMenu();
+	}
+
 	bool EditorGUI::FloatPropertyField(const char* name, float& value)
 	{
 		RenderPropertyName(name);

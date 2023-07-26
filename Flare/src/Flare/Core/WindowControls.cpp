@@ -7,7 +7,7 @@
 
 namespace Flare
 {
-	void WindowControls::BeginTitleBar()
+	bool WindowControls::BeginTitleBar()
 	{
 		ImGuiViewport* viewport = ImGui::GetMainViewport();
 
@@ -16,12 +16,14 @@ namespace Flare
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 		bool showTitleBar = ImGui::BeginViewportSideBar("TitleBar", viewport, ImGuiDir_Up, m_TitleBarHeight, flags);
+		ImGui::PopStyleVar();
+
+		return showTitleBar;
 	}
 
 	void WindowControls::EndTitleBar()
 	{
 		ImGui::End();
-		ImGui::PopStyleVar(1);
 	}
 
 	void WindowControls::RenderControls()

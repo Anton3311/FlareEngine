@@ -5,6 +5,7 @@
 
 namespace Flare
 {
+	class EditorLayer;
 	class EditorTitleBar
 	{
 	public:

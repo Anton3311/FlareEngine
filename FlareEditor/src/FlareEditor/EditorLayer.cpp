@@ -23,9 +23,17 @@
 
 namespace Flare
 {
+	EditorLayer* EditorLayer::s_Instance = nullptr;
+
 	EditorLayer::EditorLayer()
 		: Layer("EditorLayer")
 	{
+		s_Instance = this;
+	}
+
+	EditorLayer::~EditorLayer()
+	{
+		s_Instance = nullptr;
 	}
 
 	void EditorLayer::OnAttach()
@@ -117,36 +125,6 @@ namespace Flare
 
 		if (ImGui::BeginMenuBar())
 		{
-			if (ImGui::BeginMenu("Project"))
-			{
-				ImGui::BeginDisabled(EditorContext::Instance.Mode != EditorMode::Edit);
-				if (ImGui::MenuItem("Save"))
-					Project::Save();
-
-				if (ImGui::MenuItem("Open"))
-				{
-					std::optional<std::filesystem::path> projectPath = Platform::ShowOpenFileDialog(L"Flare Project (*.flareproj)\0*.flareproj\0");
-
-					if (projectPath.has_value())
-						Project::OpenProject(projectPath.value());
-				}
-				ImGui::EndDisabled();
-
-				ImGui::EndMenu();
-			}
-
-			if (ImGui::BeginMenu("Scene"))
-			{
-				ImGui::BeginDisabled(EditorContext::Instance.Mode != EditorMode::Edit);
-				if (ImGui::MenuItem("Save"))
-					SaveActiveScene();
-				if (ImGui::MenuItem("Save As"))
-					SaveActiveSceneAs();
-
-				ImGui::EndDisabled();
-				ImGui::EndMenu();
-			}
-
 			ImGuiWindow* window = ImGui::GetCurrentWindow();
 			float buttonHeight = window->MenuBarHeight() - 4.0f;
 
@@ -265,5 +243,11 @@ namespace Flare
 		EditorContext::Instance.Mode = EditorMode::Edit;
 
 		ScriptingEngine::SetCurrentECSWorld(EditorContext::GetActiveScene()->GetECSWorld());
+	}
+
+	EditorLayer& EditorLayer::GetInstance()
+	{
+		FLARE_CORE_ASSERT(s_Instance != nullptr, "Invalid EditorLayer instance");
+		return *s_Instance;
 	}
 }

@@ -8,7 +8,7 @@ namespace Flare
 	class WindowControls
 	{
 	public:
-		void BeginTitleBar();
+		bool BeginTitleBar();
 		void EndTitleBar();
 
 		void RenderControls();
