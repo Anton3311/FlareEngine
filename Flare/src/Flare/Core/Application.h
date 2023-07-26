@@ -2,7 +2,7 @@
 
 #include "Flare/Core/Window.h"
 #include "Flare/Core/LayerStack.h"
-#include "Flare/Core/ImGUILayer.h"
+#include "Flare/ImGui/ImGUILayer.h"
 
 namespace Flare
 {
