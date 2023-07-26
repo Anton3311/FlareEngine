@@ -1,6 +1,7 @@
 #include "WindowsWindow.h"
 
 #include "Flare.h"
+#include "Flare/Core/Assert.h"
 
 #include <windows.h>
 #include <WinUser.h>
@@ -11,19 +12,21 @@
 
 namespace Flare
 {
-	WNDPROC originalProc;
+	const wchar_t* WindowsWindow::s_WindowPropertyName = L"FlareWin";
 
-	LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+	LRESULT CALLBACK WindowsWindow::CustomWindowDecorationProc(HWND windowHandle, UINT message, WPARAM wParam, LPARAM lParam)
 	{
-		switch (uMsg)
+		WindowsWindow* window = (WindowsWindow*)GetPropW(windowHandle, WindowsWindow::s_WindowPropertyName);
+
+		switch (message)
 		{
 		case WM_CREATE:
 		{
 			RECT size_rect;
-			GetWindowRect(hWnd, &size_rect);
+			GetWindowRect(windowHandle, &size_rect);
 
 			SetWindowPos(
-				hWnd, NULL,
+				windowHandle, NULL,
 				size_rect.left, size_rect.top,
 				size_rect.right - size_rect.left, size_rect.bottom - size_rect.top,
 				SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE
@@ -32,18 +35,18 @@ namespace Flare
 		}
 		case WM_ACTIVATE:
 		{
-			LONG_PTR lStyle = GetWindowLongPtr(hWnd, GWL_STYLE);
+			LONG_PTR lStyle = GetWindowLongPtr(windowHandle, GWL_STYLE);
 			lStyle |= WS_THICKFRAME;
 			lStyle &= ~WS_CAPTION;
-			SetWindowLongPtr(hWnd, GWL_STYLE, lStyle);
+			SetWindowLongPtr(windowHandle, GWL_STYLE, lStyle);
 
 			RECT windowRect;
-			GetWindowRect(hWnd, &windowRect);
+			GetWindowRect(windowHandle, &windowRect);
 			int width = windowRect.right - windowRect.left;
 			int height = windowRect.bottom - windowRect.top;
-			SetWindowPos(hWnd, NULL, 0, 0, width, height, SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE | SWP_NOREDRAW | SWP_NOCOPYBITS);
+			SetWindowPos(windowHandle, NULL, 0, 0, width, height, SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE | SWP_NOREDRAW | SWP_NOCOPYBITS);
 			RECT title_bar_rect = { 0 };
-			InvalidateRect(hWnd, &title_bar_rect, FALSE);
+			InvalidateRect(windowHandle, &title_bar_rect, FALSE);
 
 			return 0;
 		}
@@ -64,7 +67,7 @@ namespace Flare
 			if (/*_glfwIsWindows10Version1607OrGreaterWin32()*/ true)
 			{
 				AdjustWindowRectExForDpi(&frame, style, FALSE, exStyle,
-					GetDpiForWindow(hWnd));
+					GetDpiForWindow(windowHandle));
 			}
 			else
 				AdjustWindowRectEx(&frame, style, FALSE, exStyle);
@@ -87,7 +90,7 @@ namespace Flare
 
 			{
 				MONITORINFO mi;
-				const HMONITOR mh = MonitorFromWindow(hWnd, MONITOR_DEFAULTTONEAREST);
+				const HMONITOR mh = MonitorFromWindow(windowHandle, MONITOR_DEFAULTTONEAREST);
 
 				ZeroMemory(&mi, sizeof(mi));
 				mi.cbSize = sizeof(mi);
@@ -104,7 +107,7 @@ namespace Flare
 		case WM_NCCALCSIZE:
 		{
 			WINDOWPLACEMENT placement;
-			GetWindowPlacement(hWnd, &placement);
+			GetWindowPlacement(windowHandle, &placement);
 
 			if (placement.showCmd == SW_MAXIMIZE)
 				return WVR_ALIGNTOP | WVR_ALIGNLEFT;
@@ -128,51 +131,64 @@ namespace Flare
 		}
 		case WM_NCHITTEST:
 		{
+
 			int32_t captionHeight = GetSystemMetrics(SM_CYCAPTION);
 			int32_t borderWidth = GetSystemMetrics(SM_CXFRAME);
 
 			POINTS mousePos = MAKEPOINTS(lParam);
 			POINT clientMousePos = { mousePos.x, mousePos.y };
-			ScreenToClient(hWnd, &clientMousePos);
+			ScreenToClient(windowHandle, &clientMousePos);
 
 			RECT windowRect;
-			GetClientRect(hWnd, &windowRect);
+			GetClientRect(windowHandle, &windowRect);
 
+			enum HitResult
+			{
+				HitNone = 0,
+				HitLeft = 1,
+				HitRight = 2,
+				HitTop = 4,
+				HitBottom = 8,
+			};
+
+			int32_t result = HitNone;
+			if (clientMousePos.x <= borderWidth)
+				result |= HitLeft;
+			if (clientMousePos.y <= borderWidth)
+				result |= HitTop;
+			if (clientMousePos.x >= windowRect.right - borderWidth)
+				result |= HitRight;
 			if (clientMousePos.y >= windowRect.bottom - borderWidth)
-			{
-				if (clientMousePos.x <= borderWidth)
-					return HTBOTTOMLEFT;
-				else if (clientMousePos.x >= windowRect.right - borderWidth)
-					return HTBOTTOMRIGHT;
-				else
-					return HTBOTTOM;
-			}
-			else if (clientMousePos.y <= borderWidth)
-			{
-				if (clientMousePos.x <= borderWidth)
-					return HTTOPLEFT;
-				else if (clientMousePos.x >= windowRect.right - borderWidth)
-					return HTTOPRIGHT;
-				else
-					return HTTOP;
-			}
-			else if (clientMousePos.x <= borderWidth)
-			{
-				return HTLEFT;
-			}
-			else if (clientMousePos.x >= windowRect.right - borderWidth)
-			{
-				return HTRIGHT;
-			}
+				result |= HitBottom;
 
-			if (clientMousePos.y >= 0 && clientMousePos.y <= captionHeight)
+			if (result == HitNone && window->m_Data.Controls.IsTitleBatHovered())
 				return HTCAPTION;
+
+			switch (result)
+			{
+			case HitLeft | HitTop:
+				return HTTOPLEFT;
+			case HitLeft | HitBottom:
+				return HTBOTTOMLEFT;
+			case HitRight | HitTop:
+				return HTTOPRIGHT;
+			case HitRight | HitBottom:
+				return HTBOTTOMRIGHT;
+			case HitLeft:
+				return HTLEFT;
+			case HitRight:
+				return HTRIGHT;
+			case HitTop:
+				return HTTOP;
+			case HitBottom:
+				return HTBOTTOM;
+			}
 
 			break;
 		}
 		}
 
-		return CallWindowProc(originalProc, hWnd, uMsg, wParam, lParam);
+		return CallWindowProc(window->m_OriginalProc, windowHandle, message, wParam, lParam);
 	}
 
 	float Time::GetTime()
@@ -185,6 +201,26 @@ namespace Flare
 		m_Data.Properties = properties;
 
 		Initialize();
+	}
+
+	// From https://github.com/bitsdojo/bitsdojo_window
+	//
+	// see: https://github.com/bitsdojo/bitsdojo_window/blob/816d217e770303035494653bd80f67484ca159e7/bitsdojo_window_windows/lib/src/window.dart#L122
+	glm::uvec2 WindowsWindow::GetControlsButtonSize()
+	{
+		uint32_t dpi = GetDpiForWindow(glfwGetWin32Window(m_Window));
+		float scaleFactor = dpi / 96.0f;
+
+		float titleBarHeight = GetSystemMetricsForDpi(SM_CYCAPTION, dpi) / scaleFactor;
+		float sizeFrame = GetSystemMetricsForDpi(SM_CYSIZEFRAME, dpi) / scaleFactor;
+		float paddedBorder = GetSystemMetricsForDpi(SM_CXPADDEDBORDER, dpi) / scaleFactor;
+
+		float height = titleBarHeight + sizeFrame + paddedBorder;
+
+		float caption = GetSystemMetricsForDpi(SM_CYCAPTION, dpi) / scaleFactor;
+		float width = caption * 2;
+
+		return glm::uvec2(width, height);
 	}
 
 	void WindowsWindow::Initialize()
@@ -215,6 +251,12 @@ namespace Flare
 			data->Callback(event);
 		});
 
+		glfwSetWindowMaximizeCallback(m_Window, [](GLFWwindow* window, int maximized)
+		{
+			WindowData* data = (WindowData*)glfwGetWindowUserPointer(window);
+			data->Properties.IsMaximized = maximized;
+		});
+
 		glfwSetWindowSizeCallback(m_Window, [](GLFWwindow* window, int width, int height)
 		{
 			WindowData* data = (WindowData*)glfwGetWindowUserPointer(window);
@@ -228,7 +270,7 @@ namespace Flare
 				data->Callback(event);
 			}
 		});
-
+		
 		glfwSetKeyCallback(m_Window, [](GLFWwindow* window, int key, int scancode, int action, int mods)
 		{
 			WindowData* data = (WindowData*)glfwGetWindowUserPointer(window);
@@ -303,28 +345,29 @@ namespace Flare
 
 		SetVSync(true);
 
-		bool custom = true;
-		if (custom)
+		if (m_Data.Properties.CustomTitleBar)
 		{
-			HWND hWnd = glfwGetWin32Window(m_Window);
+			HWND windowHandle = glfwGetWin32Window(m_Window);
 
-			LONG_PTR lStyle = GetWindowLongPtr(hWnd, GWL_STYLE);
-			lStyle |= WS_THICKFRAME;
-			lStyle &= ~WS_CAPTION;
-			SetWindowLongPtr(hWnd, GWL_STYLE, lStyle);
+			LONG_PTR style = GetWindowLongPtr(windowHandle, GWL_STYLE);
+			style |= WS_THICKFRAME;
+			style &= ~WS_CAPTION;
+			SetWindowLongPtr(windowHandle, GWL_STYLE, style);
 
 			RECT windowRect;
-			GetWindowRect(hWnd, &windowRect);
+			GetWindowRect(windowHandle, &windowRect);
 			int width = windowRect.right - windowRect.left;
 			int height = windowRect.bottom - windowRect.top;
 
 			MARGINS margins0 = { 0 };
+			DwmExtendFrameIntoClientArea(windowHandle, &margins0);
 
-			DwmExtendFrameIntoClientArea(hWnd, &margins0);
+			bool result = SetPropW(windowHandle, s_WindowPropertyName, this);
+			FLARE_CORE_ASSERT(result, "Failed to set window property");
 
-			originalProc = (WNDPROC)GetWindowLongPtr(hWnd, GWLP_WNDPROC);
-			SetWindowLongPtr(hWnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(WindowProc));
-			SetWindowPos(hWnd, NULL, 0, 0, width, height, SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE | SWP_NOREDRAW | SWP_NOCOPYBITS);
+			m_OriginalProc = (WNDPROC)GetWindowLongPtr(windowHandle, GWLP_WNDPROC);
+			SetWindowLongPtr(windowHandle, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(CustomWindowDecorationProc));
+			SetWindowPos(windowHandle, NULL, 0, 0, width, height, SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE | SWP_NOREDRAW | SWP_NOCOPYBITS);
 		}
 	}
 
@@ -346,6 +389,19 @@ namespace Flare
 	{
 		glfwSetWindowTitle(m_Window, title.c_str());
 		m_Data.Properties.Title = title;
+	}
+
+	void WindowsWindow::Hide()
+	{
+		glfwIconifyWindow(m_Window);
+	}
+
+	void WindowsWindow::SetMaximized(bool value)
+	{
+		if (value)
+			glfwMaximizeWindow(m_Window);
+		else
+			glfwRestoreWindow(m_Window);
 	}
 
 	void WindowsWindow::SetVSync(bool vsync)
