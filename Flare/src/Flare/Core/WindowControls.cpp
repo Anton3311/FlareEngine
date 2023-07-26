@@ -59,16 +59,37 @@ namespace Flare
 			ImRect rect = ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax());
 			ImVec2 itemSize = ImGui::GetItemRectSize();
 
-			float quadHalfSize = rect.GetHeight() * 0.3f / 2.0f;
+			float quadHalfSize = rect.GetHeight() * 0.28f / 2.0f;
 			ImVec2 rectCenter = (rect.Min + rect.Max) / 2.0f;
 
 			ImVec2 quadMin = rectCenter - ImVec2(quadHalfSize, quadHalfSize);
 			ImVec2 quadMax = rectCenter + ImVec2(quadHalfSize, quadHalfSize);
 
-			drawList->AddLine(quadMin, ImVec2(quadMin.x, quadMax.y), iconColor);
-			drawList->AddLine(ImVec2(quadMin.x, quadMax.y), quadMax, iconColor);
-			drawList->AddLine(quadMin, ImVec2(quadMax.x, quadMin.y), iconColor);
-			drawList->AddLine(ImVec2(quadMax.x, quadMin.y), quadMax, iconColor);
+			ImVec2 points[4] =
+			{
+				quadMin, 
+				ImVec2(quadMin.x, quadMax.y),
+				quadMax,
+				ImVec2(quadMax.x, quadMin.y),
+			};
+
+			if (window->GetProperties().IsMaximized)
+			{
+				const float offsetPercent = 0.08f;
+				ImVec2 offset = ImVec2(-glm::ceil(buttonSize.y * offsetPercent), glm::ceil(buttonSize.y * offsetPercent));
+				for (uint32_t i = 0; i < 4; i++)
+					points[i] += offset;
+
+				drawList->AddLine(points[0] - offset, points[3] - offset, iconColor);
+				drawList->AddLine(points[2] - offset, points[3] - offset, iconColor);
+				drawList->AddLine(points[0] - offset, points[0] + ImVec2(-offset.x, 0), iconColor);
+				drawList->AddLine(points[2] - offset, points[2] + ImVec2(0, -offset.y), iconColor);
+			}
+
+			drawList->AddLine(points[0], points[1], iconColor);
+			drawList->AddLine(points[1], points[2], iconColor);
+			drawList->AddLine(points[2], points[3], iconColor);
+			drawList->AddLine(points[3], points[0], iconColor);
 		}
 
 		{

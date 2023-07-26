@@ -131,7 +131,6 @@ namespace Flare
 		}
 		case WM_NCHITTEST:
 		{
-
 			int32_t captionHeight = GetSystemMetrics(SM_CYCAPTION);
 			int32_t borderWidth = GetSystemMetrics(SM_CXFRAME);
 
