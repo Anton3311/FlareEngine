@@ -44,6 +44,9 @@ namespace Flare
 		ImGui_ImplOpenGL3_Init("#version 410");
 #endif
 
+		ImFont* roboto = io.Fonts->AddFontFromFileTTF("assets/Fonts/Roboto/Roboto-Regular.ttf", 14.0f);
+		io.FontDefault = roboto;
+
 		SetThemeColors();
 	}
 
