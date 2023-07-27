@@ -1,6 +1,7 @@
 #pragma once
 
 #include "FlareECS/ComponentId.h"
+#include "FlareECS/QueryFilters.h"
 
 #include <vector>
 
@@ -16,9 +17,17 @@ namespace Flare::Internal
 		SystemQuery& operator=(const SystemQuery&) = delete;
 	public:
 		template<typename ComponentT>
-		void Add()
+		void With()
 		{
 			m_Buffer->push_back(ComponentT::Info.Id);
+		}
+
+		template<typename ComponentT>
+		void Without()
+		{
+			m_Buffer->push_back(ComponentId(
+				ComponentT::Info.Id.GetIndex() | (uint32_t)QueryFilterType::Without,
+				ComponentT::Info.Id.GetGeneration()));
 		}
 	private:
 		std::vector<ComponentId>* m_Buffer;

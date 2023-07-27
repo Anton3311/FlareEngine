@@ -37,7 +37,7 @@ namespace Flare
 	{
 	public:
 		constexpr Without()
-			: QueryFilter(ComponentId(T::Id.GetIndex() | (uint32_t)ComponentsFiler::Without, T::Id.GetGeneration())) {}
+			: QueryFilter(ComponentId(T::Id.GetIndex() | (uint32_t)QueryFilterType::Without, T::Id.GetGeneration())) {}
 	};
 
 	template<template<typename ...> class, template<typename...> class>

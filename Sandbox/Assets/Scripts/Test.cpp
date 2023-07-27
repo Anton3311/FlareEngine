@@ -22,14 +22,25 @@ namespace Sandbox
 	};
 	FLARE_COMPONENT_IMPL(MovingQuadComponet, MovingQuadComponet::ConfigureSerialization);
 
+	struct TestComponent
+	{
+		FLARE_COMPONENT(TestComponent);
+
+		static void ConfigureSerialization(Flare::TypeSerializationSettings& settings)
+		{
+		}
+	};
+	FLARE_COMPONENT_IMPL(TestComponent, TestComponent::ConfigureSerialization);
+
 	struct TestSystem : public Flare::SystemBase
 	{
 		FLARE_SYSTEM(TestSystem);
 
 		virtual void Configure(Flare::SystemConfiguration& config) override
 		{
-			config.Query.Add<Flare::Transform>();
-			config.Query.Add<MovingQuadComponet>();
+			config.Query.With<Flare::Transform>();
+			config.Query.With<MovingQuadComponet>();
+			config.Query.Without<TestComponent>();
 		}
 
 		virtual void Execute(Flare::EntityView& chunk) override

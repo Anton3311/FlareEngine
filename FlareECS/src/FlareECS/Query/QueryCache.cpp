@@ -30,7 +30,7 @@ namespace Flare
 
 		for (size_t i = 0; i < components.GetCount(); i++)
 		{
-			auto it = m_Registry.m_ComponentToArchetype.find(components[i]);
+			auto it = m_Registry.m_ComponentToArchetype.find(components[i].Masked());
 			if (it != m_Registry.m_ComponentToArchetype.end())
 			{
 				for (std::pair<ArchetypeId, size_t> archetype : it->second)
@@ -47,7 +47,7 @@ namespace Flare
 		query.MatchedArchetypes = std::move(matched);
 
 		for (size_t i = 0; i < components.GetCount(); i++)
-			m_CachedMatches[components[i]].push_back(id);
+			m_CachedMatches[components[i].Masked()].push_back(id);
 
 		return Query(id, m_Registry, *this);
 	}
@@ -84,7 +84,7 @@ namespace Flare
 		{
 			bool match = archetypeComponents[i].ComapreMasked(queryComponents[queryComponentIndex]);
 
-			bool without = HAS_BIT(queryComponents[queryComponentIndex].GetIndex(), (uint32_t)ComponentsFiler::Without);
+			bool without = HAS_BIT(queryComponents[queryComponentIndex].GetIndex(), (uint32_t)QueryFilterType::Without);
 			if (without)
 			{
 				if (archetypeComponents[i].GetIndex() > (queryComponents[queryComponentIndex].GetIndex() & ComponentId::INDEX_MASK))
@@ -103,6 +103,9 @@ namespace Flare
 			if (queryComponentIndex == queryComponents.size())
 				break;
 		}
+
+		while (queryComponentIndex < queryComponents.size() && HAS_BIT(queryComponents[queryComponentIndex].GetIndex(), (uint32_t)QueryFilterType::Without))
+			++queryComponentIndex;
 
 		return queryComponentIndex == queryComponents.size();
 	}

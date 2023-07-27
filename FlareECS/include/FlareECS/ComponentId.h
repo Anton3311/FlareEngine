@@ -13,6 +13,11 @@ namespace Flare
 		constexpr ComponentId(uint32_t index, uint16_t generation)
 			: m_Index(index), m_Generation(generation) {}
 
+		constexpr ComponentId Masked() const
+		{
+			return ComponentId(m_Index & INDEX_MASK, m_Generation);
+		}
+
 		constexpr uint32_t GetIndex() const { return m_Index; }
 		constexpr uint16_t GetGeneration() const { return m_Generation; }
 
@@ -23,12 +28,12 @@ namespace Flare
 
 		constexpr bool operator<(ComponentId other) const
 		{
-			return m_Index < other.m_Index;
+			return (m_Index & INDEX_MASK) < (other.m_Index& INDEX_MASK);
 		}
 
 		constexpr bool operator>(ComponentId other) const
 		{
-			return m_Index > other.m_Index;
+			return (m_Index & INDEX_MASK) > (other.m_Index & INDEX_MASK);
 		}
 
 		constexpr bool operator==(ComponentId other) const
@@ -57,6 +62,6 @@ struct std::hash<Flare::ComponentId>
 {
 	size_t operator()(Flare::ComponentId id) const
 	{
-		return std::hash<uint32_t>()(id.m_Index);
+		return std::hash<uint32_t>()(id.m_Index & Flare::ComponentId::INDEX_MASK);
 	}
 };
