@@ -12,7 +12,7 @@ namespace Flare
 	Scene::Scene(bool registerComponents)
 		: Asset(AssetType::Scene)
 	{
-		m_QuadShader = Shader::Create("QuadShader.glsl");
+		m_QuadShader = Shader::Create("assets/Shaders/QuadShader.glsl");
 		if (registerComponents)
 		{
 			m_World.RegisterComponent<TransformComponent>();
