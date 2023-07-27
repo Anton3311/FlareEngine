@@ -1,6 +1,6 @@
 #pragma once
 
-#include "FlareScriptingCore/Bindings/ECS/Component.h"
+#include "FlareECS/ComponentId.h"
 
 #include "FlareScriptingCore/ScriptingType.h"
 

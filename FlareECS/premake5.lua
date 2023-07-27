@@ -8,11 +8,14 @@ project "FlareECS"
     {
         "src/**.h",
         "src/**.cpp",
+
+		"include/**.h",
     }
 
     includedirs
 	{
 		"src/",
+		"include/",
 		"%{wks.location}/FlareCommon/src/",
 		INCLUDE_DIRS.spdlog,
 	}

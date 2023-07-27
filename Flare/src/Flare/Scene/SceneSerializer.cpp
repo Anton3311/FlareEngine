@@ -98,7 +98,8 @@ namespace Flare
 				emitter << YAML::EndMap;
 			}
 			else
-				FLARE_CORE_ERROR("Componnet with id {0} cannot be serialized because it's type infomation cannot be found", component);
+				FLARE_CORE_ERROR("Componnet with id={{0};{1}} cannot be serialized because it's type infomation cannot be found",
+					component.GetIndex(), component.GetGeneration());
 		}
 	}
 

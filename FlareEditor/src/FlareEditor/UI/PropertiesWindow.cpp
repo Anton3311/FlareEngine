@@ -33,7 +33,7 @@ namespace Flare
 				const ComponentInfo& componentInfo = world.GetRegistry().GetComponentInfo(component);
 
 				ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_FramePadding;
-				if (ImGui::TreeNodeEx((void*)component, flags, "%s", componentInfo.Name.c_str()))
+				if (ImGui::TreeNodeEx((void*)std::hash<ComponentId>()(component), flags, "%s", componentInfo.Name.c_str()))
 				{
 					if (component == CameraComponent::Id)
 						RenderCameraComponent(world.GetEntityComponent<CameraComponent>(selectedEntity));

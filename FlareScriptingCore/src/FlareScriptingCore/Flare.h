@@ -2,7 +2,8 @@
 
 #include "Flare/Core/UUID.h"
 
-#include "FlareScriptingCore/Bindings/ECS/Component.h"
+#include "FlareECS/ComponentId.h"
+
 #include "FlareScriptingCore/Bindings/ECS/World.h"
 #include "FlareScriptingCore/Bindings/ECS/EntityView.h"
 

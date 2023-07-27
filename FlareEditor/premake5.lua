@@ -16,6 +16,7 @@ project "FlareEditor"
 		"%{wks.location}/Flare/src",
 		"%{wks.location}/FlareCommon/src",
 		"%{wks.location}/FlareECS/src",
+		"%{wks.location}/FlareECS/include",
 		"%{wks.location}/FlareScriptingCore/src/",
 		INCLUDE_DIRS.glm,
 		INCLUDE_DIRS.spdlog,

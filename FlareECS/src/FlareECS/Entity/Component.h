@@ -3,6 +3,8 @@
 #include "Flare/Core/Assert.h"
 #include "Flare/Core/Core.h"
 
+#include "FlareECS/ComponentId.h"
+
 #include <string>
 #include <vector>
 #include <xhash>
@@ -10,12 +12,10 @@
 
 namespace Flare
 {
-	using ComponentId = uint32_t;
-	constexpr ComponentId INVALID_COMPONENT_ID = UINT32_MAX;
-
 	struct ComponentInfo
 	{
 		ComponentId Id;
+		uint32_t RegistryIndex;
 		std::string Name;
 		size_t Size;
 

@@ -1,7 +1,8 @@
 #pragma once
 
+#include "FlareECS/ComponentId.h"
+
 #include "FlareScriptingCore/Bindings/ECS/ECS.h"
-#include "FlareScriptingCore/Bindings/ECS/Component.h"
 
 namespace Flare::Internal
 {

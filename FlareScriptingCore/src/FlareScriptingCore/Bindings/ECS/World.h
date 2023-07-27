@@ -1,7 +1,8 @@
 #pragma once
 
+#include "FlareECS/ComponentId.h"
+
 #include "FlareScriptingCore/Bindings/ECS/ECS.h"
-#include "FlareScriptingCore/Bindings/ECS/Component.h"
 
 #include <array>
 #include <stdint.h>
@@ -24,11 +25,11 @@ namespace Flare::Internal
 
 	struct WorldBindings
 	{
-		using CreateEntityFunction = Entity(*)(Internal::ComponentId* components, size_t count);
+		using CreateEntityFunction = Entity(*)(ComponentId* components, size_t count);
 		CreateEntityFunction CreateEntity;
 
-		void* (*AddEntityComponent)(Entity entity, Internal::ComponentId component, const void* componentData, size_t componentDataSize);
-		void(*RemoveEntityComponent)(Entity entity, Internal::ComponentId component);
+		void* (*AddEntityComponent)(Entity entity, ComponentId component, const void* componentData, size_t componentDataSize);
+		void(*RemoveEntityComponent)(Entity entity, ComponentId component);
 
 		bool(*IsEntityAlive)(Entity entity);
 		void(*DeleteEntity)(Entity entity);

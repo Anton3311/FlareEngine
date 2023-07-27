@@ -26,7 +26,7 @@ namespace Flare
 				uint8_t* entityData = archetype.Storage.GetEntityData(entityIndex);
 				for (size_t i = 0; i < archetype.Data.Components.size(); i++)
 				{
-					m_RegisteredComponents[archetype.Data.Components[i]].Deleter((void*)archetype.Data.ComponentOffsets[i]);
+					GetComponentInfo(archetype.Data.Components[i]).Deleter((void*)archetype.Data.ComponentOffsets[i]);
 				}
 			}
 		}
@@ -119,11 +119,9 @@ namespace Flare
 
 	bool Registry::AddEntityComponent(Entity entity, ComponentId componentId, const void* componentData)
 	{
-		if (componentId >= m_RegisteredComponents.size())
-		{
-			FLARE_CORE_WARN("Provided component was not registered");
-			return false;
-		}
+		FLARE_CORE_ASSERT(IsComponentIdValid(componentId), "Invalid component id");
+
+		const ComponentInfo& componentInfo = GetComponentInfo(componentId);
 
 		auto recordIterator = FindEntity(entity);
 		if (recordIterator == m_EntityToRecord.end())
@@ -191,7 +189,7 @@ namespace Flare
 				for (size_t i = 0; i < newArchetype.Data.Components.size(); i++)
 				{
 					newArchetype.Data.ComponentOffsets[i] = entitySize;
-					entitySize += m_RegisteredComponents[newArchetype.Data.Components[i]].Size;
+					entitySize += GetComponentInfo(newArchetype.Data.Components[i]).Size;
 				}
 
 				newArchetype.Storage.SetEntitySize(entitySize);
@@ -220,7 +218,6 @@ namespace Flare
 		uint8_t* newEntityData = newArchetype.Storage.GetEntityData(newEntityIndex);
 		const uint8_t* oldEntityData = oldArchetype.Storage.GetEntityData(entityRecord.BufferIndex);
 
-		size_t componentSize = m_RegisteredComponents[componentId].Size;
 		size_t sizeBefore = oldArchetype.Storage.GetEntitySize();
 		if (insertedComponentIndex < oldArchetype.Data.Components.size())
 			sizeBefore = oldArchetype.Data.ComponentOffsets[insertedComponentIndex];
@@ -228,12 +225,12 @@ namespace Flare
 		size_t sizeAfter = oldArchetype.Storage.GetEntitySize() - sizeBefore;
 
 		std::memcpy(newEntityData, oldEntityData, sizeBefore);
-		std::memcpy(newEntityData + sizeBefore + componentSize, oldEntityData + sizeBefore, sizeAfter);
+		std::memcpy(newEntityData + sizeBefore + componentInfo.Size, oldEntityData + sizeBefore, sizeAfter);
 
 		if (componentData == nullptr)
-			std::memset(newEntityData + sizeBefore, 0, componentSize);
+			std::memset(newEntityData + sizeBefore, 0, componentInfo.Size);
 		else
-			std::memcpy(newEntityData + sizeBefore, componentData, componentSize);
+			std::memcpy(newEntityData + sizeBefore, componentData, componentInfo.Size);
 
 		RemoveEntityData(entityRecord.Archetype, entityRecord.BufferIndex);
 
@@ -243,11 +240,9 @@ namespace Flare
 
 	bool Registry::RemoveEntityComponent(Entity entity, ComponentId componentId)
 	{
-		if (componentId >= m_RegisteredComponents.size())
-		{
-			FLARE_CORE_WARN("Provided component was not registered");
-			return false;
-		}
+		FLARE_CORE_ASSERT(IsComponentIdValid(componentId), "Invalid component id");
+
+		const ComponentInfo& componentInfo = GetComponentInfo(componentId);
 
 		auto recordIterator = FindEntity(entity);
 		if (recordIterator == m_EntityToRecord.end())
@@ -305,7 +300,7 @@ namespace Flare
 				for (size_t i = 0; i < newArchetype.Data.Components.size(); i++)
 				{
 					newArchetype.Data.ComponentOffsets[i] = entitySize;
-					entitySize += m_RegisteredComponents[newArchetype.Data.Components[i]].Size;
+					entitySize += GetComponentInfo(newArchetype.Data.Components[i]).Size;
 				}
 
 				newArchetype.Storage.SetEntitySize(entitySize);
@@ -324,18 +319,17 @@ namespace Flare
 		ArchetypeRecord& newArchetype = m_Archetypes[newArchetypeId];
 
 		size_t sizeBefore = oldArchetype.Data.ComponentOffsets[removedComponentIndex];
-		size_t componentSize = m_RegisteredComponents[componentId].Size;
-		size_t sizeAfter = oldArchetype.Storage.GetEntitySize() - (sizeBefore + componentSize);
+		size_t sizeAfter = oldArchetype.Storage.GetEntitySize() - (sizeBefore + componentInfo.Size);
 
 		size_t newEntityIndex = newArchetype.Storage.AddEntity(entityRecord.RegistryIndex);
 
 		uint8_t* newEntityData = newArchetype.Storage.GetEntityData(newEntityIndex);
 		uint8_t* oldEntityData = oldArchetype.Storage.GetEntityData(entityRecord.BufferIndex);
 
-		m_RegisteredComponents[componentId].Deleter(oldEntityData + sizeBefore);
+		componentInfo.Deleter(oldEntityData + sizeBefore);
 
 		std::memcpy(newEntityData, oldEntityData, sizeBefore);
-		std::memcpy(newEntityData + sizeBefore, oldEntityData + sizeBefore + componentSize, sizeAfter);
+		std::memcpy(newEntityData + sizeBefore, oldEntityData + sizeBefore + componentInfo.Size, sizeAfter);
 
 		RemoveEntityData(entityRecord.Archetype, entityRecord.BufferIndex);
 
@@ -412,31 +406,43 @@ namespace Flare
 
 	ComponentId Registry::RegisterComponent(std::string_view name, size_t size, const std::function<void(void*)>& deleter)
 	{
-		ComponentId id = m_RegisteredComponents.size();
+		Entity entityId = m_EntityIndex.CreateId();
+
+		uint32_t registryIndex = (uint32_t)m_RegisteredComponents.size();
 		ComponentInfo& info = m_RegisteredComponents.emplace_back();
 
-		info.Id = id;
+		info.Id = ComponentId(entityId.GetIndex(), entityId.GetGeneration());
+		info.RegistryIndex = registryIndex;
 		info.Name = name;
 		info.Size = size;
 		info.Deleter = deleter;
 
-		m_ComponentNameToId.emplace(info.Name, id);
-
-		return id;
+		m_ComponentNameToIndex.emplace(info.Name, registryIndex);
+		m_ComponentIdToIndex.emplace(info.Id, registryIndex);
+		return info.Id;
 	}
 
 	std::optional<ComponentId> Registry::FindComponnet(std::string_view name)
 	{
-		auto it = m_ComponentNameToId.find(name);
-		if (it == m_ComponentNameToId.end())
+		auto it = m_ComponentNameToIndex.find(name);
+		if (it == m_ComponentNameToIndex.end())
 			return {};
-		return it->second;
+		FLARE_CORE_ASSERT(it->second < m_RegisteredComponents.size());
+		return m_RegisteredComponents[it->second].Id;
+	}
+
+	bool Registry::IsComponentIdValid(ComponentId id) const
+	{
+		auto it = m_ComponentIdToIndex.find(id);
+		if (it == m_ComponentIdToIndex.end())
+			return false;
+		return it->second < m_RegisteredComponents.size();
 	}
 
 	inline const ComponentInfo& Registry::GetComponentInfo(ComponentId id) const
 	{
-		FLARE_CORE_ASSERT(id < m_RegisteredComponents.size());
-		return m_RegisteredComponents[id];
+		FLARE_CORE_ASSERT(IsComponentIdValid(id));
+		return m_RegisteredComponents[m_ComponentIdToIndex.at(id)];
 	}
 
 	EntityRegistryIterator Registry::begin()
