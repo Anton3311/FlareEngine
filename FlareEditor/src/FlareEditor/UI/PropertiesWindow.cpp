@@ -55,14 +55,13 @@ namespace Flare
 					ImGui::TreePop();
 				}
 
-				// TODO: fix
-				/*if (ImGui::BeginPopupContextItem())
+				if (ImGui::BeginPopupContextItem(componentInfo.Name.c_str()))
 				{
 					if (ImGui::MenuItem("Remove"))
 						removedComponent = component;
 
 					ImGui::End();
-				}*/
+				}
 			}
 
 			if (removedComponent.has_value())
