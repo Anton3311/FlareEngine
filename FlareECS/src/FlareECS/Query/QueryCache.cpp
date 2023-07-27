@@ -1,5 +1,7 @@
 #include "QueryCache.h"
 
+#include "Flare/Core/Core.h"
+
 #include "FlareECS/Registry.h"
 #include "FlareECS/Query/Query.h"
 
@@ -80,7 +82,22 @@ namespace Flare
 		size_t queryComponentIndex = 0;
 		for (size_t i = 0; i < archetypeComponents.size(); i++)
 		{
-			if (archetypeComponents[i] == queryComponents[queryComponentIndex])
+			bool match = archetypeComponents[i].ComapreMasked(queryComponents[queryComponentIndex]);
+
+			bool without = HAS_BIT(queryComponents[queryComponentIndex].GetIndex(), (uint32_t)ComponentsFiler::Without);
+			if (without)
+			{
+				if (archetypeComponents[i].GetIndex() > (queryComponents[queryComponentIndex].GetIndex() & ComponentId::INDEX_MASK))
+					queryComponentIndex++;
+				else if (match)
+					return false;
+				else if (i == archetypeComponents.size() - 1)
+					queryComponentIndex++;
+				else
+					continue;
+			}
+
+			if (match)
 				queryComponentIndex++;
 
 			if (queryComponentIndex == queryComponents.size())

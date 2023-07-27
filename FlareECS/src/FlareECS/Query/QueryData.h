@@ -18,4 +18,10 @@ namespace Flare
 		std::vector<ComponentId> Components;
 		std::unordered_set<ArchetypeId> MatchedArchetypes;
 	};
+
+	enum class ComponentsFiler : uint32_t
+	{
+		With = 0,
+		Without = 1ui32 << 31ui32,
+	};
 }

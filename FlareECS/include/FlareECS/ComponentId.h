@@ -16,6 +16,11 @@ namespace Flare
 		constexpr uint32_t GetIndex() const { return m_Index; }
 		constexpr uint16_t GetGeneration() const { return m_Generation; }
 
+		constexpr bool ComapreMasked(ComponentId other) const
+		{
+			return (m_Index & INDEX_MASK) == (other.m_Index & INDEX_MASK) && m_Generation == other.m_Generation;
+		}
+
 		constexpr bool operator<(ComponentId other) const
 		{
 			return m_Index < other.m_Index;
@@ -35,6 +40,8 @@ namespace Flare
 		{
 			return m_Index != other.m_Index || m_Generation != other.m_Generation;
 		}
+
+		static constexpr uint32_t INDEX_MASK = 0xffffffff >> 4;
 	private:
 		uint32_t m_Index;
 		uint16_t m_Generation;

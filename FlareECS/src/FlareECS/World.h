@@ -15,6 +15,37 @@
 
 namespace Flare
 {
+	class QueryFilter
+	{
+	public:
+		constexpr QueryFilter(ComponentId component)
+			: Component(component) {}
+
+		const ComponentId Component;
+	};
+
+	template<typename T>
+	class With : public QueryFilter
+	{
+	public:
+		constexpr With()
+			: QueryFilter(T::Id) {}
+	};
+
+	template<typename T>
+	class Without : public QueryFilter
+	{
+	public:
+		constexpr Without()
+			: QueryFilter(ComponentId(T::Id.GetIndex() | (uint32_t)ComponentsFiler::Without, T::Id.GetGeneration())) {}
+	};
+
+	template<template<typename ...> class, template<typename...> class>
+	struct IsSameTemplate : std::false_type {};
+
+	template<template<typename ...> class T>
+	struct IsSameTemplate<T, T> : std::true_type {};
+
 	class World
 	{
 	public:
@@ -108,7 +139,8 @@ namespace Flare
 
 			([&]
 			{
-				ids[index++] = T::Id;
+				T filter;
+				ids[index++] = filter.Component;
 			} (), ...);
 
 			return m_Registry.CreateQuery(ComponentSet(ids, sizeof...(T)));
