@@ -53,6 +53,7 @@ namespace Flare
 
 		SystemsManager& systemsManager = m_World.GetSystemsManager();
 		m_2DRenderingGroup = systemsManager.CreateGroup("2D Rendering");
+		m_ScriptingUpdateGroup = systemsManager.CreateGroup("Scripting Update");
 
 		m_CameraDataUpdateQuery = m_World.CreateQuery<With<TransformComponent>, With<CameraComponent>>();
 
@@ -105,7 +106,7 @@ namespace Flare
 
 	void Scene::OnUpdateRuntime()
 	{
-		m_World.OnUpdate();
+		m_World.GetSystemsManager().ExecuteGroup(m_ScriptingUpdateGroup);
 	}
 
 	void Scene::OnViewportResize(uint32_t width, uint32_t height)

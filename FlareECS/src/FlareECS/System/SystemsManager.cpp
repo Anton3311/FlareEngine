@@ -46,10 +46,10 @@ namespace Flare
 	{
 		FLARE_CORE_ASSERT(id < (SystemGroupId)m_Groups.size());
 
-		SystemGroup group = m_Groups[id];
+		SystemGroup& group = m_Groups[id];
 		for (size_t i = 0; i < group.SystemIndices.size(); i++)
 		{
-			SystemData& data = m_Systems[i];
+			SystemData& data = m_Systems[group.SystemIndices[i]];
 			if (data.OnBeforeUpdate)
 				data.OnBeforeUpdate(data.ExecutionContext);
 

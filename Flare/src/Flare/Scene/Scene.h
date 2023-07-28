@@ -36,6 +36,7 @@ namespace Flare
 		Ref<Shader> m_QuadShader;
 
 		SystemGroupId m_2DRenderingGroup;
+		SystemGroupId m_ScriptingUpdateGroup;
 
 		Query m_CameraDataUpdateQuery;
 	private:

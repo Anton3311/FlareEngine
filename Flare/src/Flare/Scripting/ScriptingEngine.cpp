@@ -160,6 +160,10 @@ namespace Flare
 
 	void ScriptingEngine::RegisterSystems()
 	{
+		std::string_view defaultGroupName = "Scripting Update";
+		std::optional<SystemGroupId> defaultGroup = s_Data.CurrentWorld->GetSystemsManager().FindGroup(defaultGroupName);
+		FLARE_CORE_ASSERT(defaultGroup.has_value());
+
 		for (ScriptingModuleData& module : s_Data.Modules)
 		{
 			for (const Internal::SystemInfo* systemInfo : *module.Config.RegisteredSystems)
@@ -175,27 +179,36 @@ namespace Flare
 				Internal::SystemConfiguration config(&s_Data.TemporaryQueryComponents);
 				systemInstance->Configure(config);
 
-				s_Data.CurrentWorld->RegisterSystem(
-					s_Data.CurrentWorld->GetRegistry().CreateQuery(ComponentSet(
-						s_Data.TemporaryQueryComponents.data(), 
-						s_Data.TemporaryQueryComponents.size())),
-					[systemInstance](EntityView view)
+				Query query = s_Data.CurrentWorld->GetRegistry().CreateQuery(ComponentSet(
+					s_Data.TemporaryQueryComponents.data(),
+					s_Data.TemporaryQueryComponents.size()));
+
+				SystemsManager& systems = s_Data.CurrentWorld->GetSystemsManager();
+				systems.RegisterSystem((*module.Config.RegisteredTypes)[typeIndexIterator->second]->Name,
+					defaultGroup.value(),
+					query,
+					nullptr,
+					[systemInstance](SystemExecutionContext& context)
 					{
-						FLARE_CORE_ASSERT(s_Data.CurrentWorld != nullptr);
-						ArchetypeRecord& record = s_Data.CurrentWorld->GetRegistry().GetArchetypeRecord(view.GetArchetype());
-
-						size_t chunksCount = record.Storage.GetChunksCount();
-						for (size_t i = 0; i < chunksCount; i++)
+						for (EntityView view : context.GetQuery())
 						{
-							Internal::EntityView chunk(
-								view.GetArchetype(),
-								record.Storage.GetChunkBuffer(i),
-								record.Storage.GetEntitySize(),
-								record.Storage.GetEntitiesCountInChunk(i));
+							FLARE_CORE_ASSERT(s_Data.CurrentWorld != nullptr);
+							ArchetypeRecord& record = s_Data.CurrentWorld->GetRegistry().GetArchetypeRecord(view.GetArchetype());
 
-							systemInstance->Execute(chunk);
+							size_t chunksCount = record.Storage.GetChunksCount();
+							for (size_t i = 0; i < chunksCount; i++)
+							{
+								Internal::EntityView chunk(
+									view.GetArchetype(),
+									record.Storage.GetChunkBuffer(i),
+									record.Storage.GetEntitySize(),
+									record.Storage.GetEntitiesCountInChunk(i));
+
+								systemInstance->Execute(chunk);
+							}
 						}
-					});
+					},
+					nullptr);
 
 				s_Data.TemporaryQueryComponents.clear();
 			}
