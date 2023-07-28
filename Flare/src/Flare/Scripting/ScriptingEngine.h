@@ -6,7 +6,7 @@
 #include "FlareECS/World.h"
 
 #include "FlareScriptingCore/ModuleConfiguration.h"
-#include "FlareScriptingCore/SystemInfo.h"
+#include "FlareScriptingCore/Bindings/ECS/SystemInfo.h"
 
 #include <filesystem>
 

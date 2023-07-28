@@ -2,12 +2,12 @@
 
 #include "FlareScriptingCore/Defines.h"
 #include "FlareScriptingCore/ScriptingType.h"
-#include "FlareScriptingCore/SystemInfo.h"
-#include "FlareScriptingCore/ComponentInfo.h"
 
 #include "FlareScriptingCore/Bindings/ECS/ECS.h"
 #include "FlareScriptingCore/Bindings/ECS/EntityView.h"
 #include "FlareScriptingCore/Bindings/ECS/World.h"
+#include "FlareScriptingCore/Bindings/ECS/ComponentInfo.h"
+#include "FlareScriptingCore/Bindings/ECS/SystemInfo.h"
 
 #include "FlareScriptingCore/Bindings/Time.h"
 #include "FlareScriptingCore/Bindings/Input.h"

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "FlareScriptingCore/ScriptingType.h"
-#include "FlareScriptingCore/SystemConfiguration.h"
+#include "FlareScriptingCore/Bindings/ECS/SystemConfiguration.h"
 #include "FlareScriptingCore/Bindings/ECS/EntityView.h"
 
 #include <string>

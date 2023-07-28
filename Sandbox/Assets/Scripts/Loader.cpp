@@ -2,8 +2,9 @@
 
 #include "FlareScriptingCore/ModuleConfiguration.h"
 #include "FlareScriptingCore/ScriptingType.h"
-#include "FlareScriptingCore/SystemInfo.h"
-#include "FlareScriptingCore/ComponentInfo.h"
+
+#include "FlareScriptingCore/Bindings/ECS/ComponentInfo.h"
+#include "FlareScriptingCore/Bindings/ECS/SystemInfo.h"
 #include "FlareScriptingCore/Bindings/ECS/EntityView.h"
 
 FLARE_API void OnModuleLoaded(Flare::Internal::ModuleConfiguration& config)
