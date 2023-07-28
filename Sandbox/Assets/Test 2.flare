@@ -5,7 +5,7 @@ Entities:
         Rotation: [0, 0, 0]
         Scale: [1, 1, 1]
       - Name: Camera
-        Size: 10
+        Size: 20.1000004
         Near: 0.100000001
         Far: 100
         Projection: Orthographic
@@ -32,7 +32,7 @@ Entities:
         Speed: 4
   - Components:
       - Name: Transform
-        Position: [0, -3.20000005, 0]
+        Position: [0, -3.20000005, -0.300000012]
         Rotation: [0, 0, -32.7000008]
         Scale: [1.39999998, 0.600000024, 1]
       - Name: Sprite

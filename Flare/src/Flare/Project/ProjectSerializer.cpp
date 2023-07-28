@@ -16,8 +16,10 @@ namespace Flare
 		emitter << YAML::Key << "StartScene" << project->StartScene << YAML::Value;
 
 		emitter << YAML::Key << "ScriptingModules" << YAML::BeginSeq;
-		for (const std::filesystem::path& modulePath : project->ScriptingModules)
-			emitter << YAML::Value << std::filesystem::relative(modulePath, project->Location).generic_string();
+
+		for (const std::string& modulePath : project->ScriptingModules)
+			emitter << YAML::Value << modulePath;
+
 		emitter << YAML::EndSeq;
 
 		emitter << YAML::EndMap;
@@ -54,7 +56,7 @@ namespace Flare
 			if (YAML::Node scriptingModules = projectNode["ScriptingModules"])
 			{
 				for (YAML::Node modulePath : scriptingModules)
-					project->ScriptingModules.push_back(project->Location / modulePath.as<std::string>());
+					project->ScriptingModules.push_back(modulePath.as<std::string>());
 			}
 		}
 		else

@@ -45,8 +45,26 @@ namespace Flare
 	void ScriptingEngine::LoadModules()
 	{
 		FLARE_CORE_ASSERT(Project::GetActive());
-		for (const std::filesystem::path& modulePath : Project::GetActive()->ScriptingModules)
-			ScriptingEngine::LoadModule(modulePath);
+
+		std::string_view configurationName = "";
+		std::string_view platformName = "";
+#ifdef FLARE_DEBUG
+		configurationName = "Debug";
+#elif defined(FLARE_RELEASE)
+		configurationName = "Release";
+#elif defined(FLARE_DIST)
+		configurationName = "Dist";
+#endif
+
+#ifdef FLARE_PLATFORM_WINDOWS
+		platformName = "windows";
+#endif
+
+		for (const std::string& moduleName : Project::GetActive()->ScriptingModules)
+		{
+			ScriptingEngine::LoadModule(Project::GetActive()->Location
+				/ fmt::format("bin/{0}-{1}-x86_64/{2}/{2}.dll", configurationName, platformName, moduleName));
+		}
 
 		s_Data.ShouldRegisterComponents = true;
 	}
@@ -73,6 +91,9 @@ namespace Flare
 	{
 		ScriptingModuleData moduleData;
 		moduleData.Module.Load(modulePath);
+
+		if (!moduleData.Module.IsLoaded())
+			return;
 
 		if (moduleData.Module.IsLoaded())
 		{

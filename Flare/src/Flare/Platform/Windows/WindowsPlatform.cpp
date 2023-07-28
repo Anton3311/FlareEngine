@@ -30,7 +30,7 @@ namespace Flare
 				NULL, errorCode, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 0, NULL);
 
 			std::string message(messageBuffer, size);
-			FLARE_CORE_ERROR("Failed to load scripting module: {0}\nError: {1}", path.generic_string(), message);
+			FLARE_CORE_ERROR("Failed to load scripting module: {0}\nError {1}: {2}", path.generic_string(), errorCode, message);
 
 			return nullptr;
 		}
@@ -57,7 +57,7 @@ namespace Flare
 				NULL, errorCode, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 0, NULL);
 
 			std::string message(messageBuffer, size);
-			FLARE_CORE_ERROR("Failed to load function {0}\nError: {1}", name, message);
+			FLARE_CORE_ERROR("Failed to load function {0}\nError {1}: {2}", name, errorCode, message);
 			return nullptr;
 		}
 		else

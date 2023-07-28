@@ -29,7 +29,7 @@ namespace Flare
 		const std::filesystem::path Location;
 		AssetHandle StartScene;
 
-		std::vector<std::filesystem::path> ScriptingModules;
+		std::vector<std::string> ScriptingModules;
 	public:
 		static Ref<Project> s_Active;
 		static std::filesystem::path s_ProjectFileExtension;
