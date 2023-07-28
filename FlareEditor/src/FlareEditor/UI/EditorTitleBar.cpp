@@ -7,7 +7,9 @@
 
 #include "FlareEditor/EditorContext.h"
 #include "FlareEditor/EditorLayer.h"
+
 #include "FlareEditor/UI/EditorGUI.h"
+#include "FlareEditor/UI/SystemsInspectorWindow.h"
 
 #include <imgui_internal.h>
 
@@ -66,6 +68,14 @@ namespace Flare
 				EditorLayer::GetInstance().SaveActiveSceneAs();
 
 			ImGui::EndDisabled();
+			EditorGUI::EndMenu();
+		}
+
+		if (EditorGUI::BeginMenu("Window"))
+		{
+			if (ImGui::MenuItem("Systems Inspector"))
+				SystemsInspectorWindow::Show();
+
 			EditorGUI::EndMenu();
 		}
 

@@ -18,6 +18,7 @@
 
 #include "FlareEditor/UI/SceneViewportWindow.h"
 #include "FlareEditor/UI/EditorTitleBar.h"
+#include "FlareEditor/UI/SystemsInspectorWindow.h"
 
 #include <imgui.h>
 #include <imgui_internal.h>
@@ -159,6 +160,8 @@ namespace Flare
 
 		for (auto& viewport : m_Viewports)
 			viewport->OnRenderImGui();
+
+		SystemsInspectorWindow::OnImGuiRender();
 
 		m_SceneWindow.OnImGuiRender();
 		m_PropertiesWindow.OnImGuiRender();
