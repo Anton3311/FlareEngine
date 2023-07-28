@@ -2,6 +2,7 @@
 
 #include "FlareECS/ComponentId.h"
 #include "FlareECS/QueryFilters.h"
+#include "FlareECS/System.h"
 
 #include <vector>
 
@@ -36,12 +37,13 @@ namespace Flare::Internal
 	class SystemConfiguration
 	{
 	public:
-		SystemConfiguration(std::vector<ComponentId>* queryOutputBuffer)
-			: Query(queryOutputBuffer) {}
+		SystemConfiguration(std::vector<ComponentId>* queryOutputBuffer, SystemGroupId defaultGroup)
+			: Query(queryOutputBuffer), Group(defaultGroup) {}
 
 		SystemConfiguration(SystemConfiguration&) = delete;
 		SystemConfiguration& operator=(const SystemConfiguration&) = delete;
 	public:
 		SystemQuery Query;
+		SystemGroupId Group;
 	};
 }

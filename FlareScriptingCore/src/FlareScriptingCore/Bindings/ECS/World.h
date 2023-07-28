@@ -1,10 +1,13 @@
 #pragma once
 
 #include "FlareECS/ComponentId.h"
+#include "FlareECS/System.h"
 
 #include "FlareScriptingCore/Bindings/ECS/ECS.h"
 
 #include <array>
+#include <optional>
+#include <string_view>
 #include <stdint.h>
 
 namespace Flare::Internal
@@ -34,6 +37,9 @@ namespace Flare::Internal
 		bool(*IsEntityAlive)(Entity entity);
 		void(*DeleteEntity)(Entity entity);
 
+		using FindSystemGroupFunction = std::optional<SystemGroupId>(*)(std::string_view name);
+		FindSystemGroupFunction FindSystemGroup;
+
 		static WorldBindings Bindings;
 	};
 
@@ -59,6 +65,11 @@ namespace Flare::Internal
 	class World
 	{
 	public:
+		static constexpr std::optional<SystemGroupId> FindSystemGroup(std::string_view name)
+		{
+			return WorldBindings::Bindings.FindSystemGroup(name);
+		}
+
 		template<typename... Components>
 		static constexpr Entity CreateEntity()
 		{

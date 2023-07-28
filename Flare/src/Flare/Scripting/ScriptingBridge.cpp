@@ -12,6 +12,11 @@ namespace Flare
         return Entity();
     }
 
+    static std::optional<SystemGroupId> World_FindSystemGroup(std::string_view name)
+    {
+        return ScriptingBridge::GetCurrentWorld().GetSystemsManager().FindGroup(name);
+    }
+
     static bool Input_IsKeyPressed(KeyCode key)
     {
         return InputManager::IsKeyPressed(key);
@@ -42,7 +47,10 @@ namespace Flare
         InputBindings& inputBindings = *config.InputBindings;
 
         worldBinding.CreateEntity = (WorldBindings::CreateEntityFunction)CreateEntity_Wrapper;
+        worldBinding.FindSystemGroup = (WorldBindings::FindSystemGroupFunction)World_FindSystemGroup;
+
         entityViewBindings.GetArchetypeComponentOffset = (EntityViewBindings::GetArchetypeComponentOffsetFunction)GetArchetypeComponentOffset_Wrapper;
+
         inputBindings.IsKeyPressed = Input_IsKeyPressed;
         inputBindings.IsMouseButtonPressed = Input_IsMouseButtonPreseed;
     }

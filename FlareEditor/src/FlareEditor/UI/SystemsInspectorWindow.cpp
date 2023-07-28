@@ -30,7 +30,7 @@ namespace Flare
 						const SystemData& systemData = systems.GetSystems()[systemIndex];
 
 						ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_Bullet;
-						bool opened = ImGui::TreeNodeEx((void*)systemData.Name.c_str(), flags, "System '%s'", group.Name.c_str());
+						bool opened = ImGui::TreeNodeEx((void*)systemData.Name.c_str(), flags, "System '%s'", systemData.Name.c_str());
 						if (opened)
 							ImGui::TreePop();
 					}
