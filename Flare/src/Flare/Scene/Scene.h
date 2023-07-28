@@ -6,6 +6,8 @@
 #include "Flare/Renderer/Shader.h"
 #include "Flare/Renderer/RenderData.h"
 
+#include "Flare/Scene/SceneRenderer.h"
+
 #include "FlareECS.h"
 
 namespace Flare
@@ -33,8 +35,9 @@ namespace Flare
 		World m_World;
 		Ref<Shader> m_QuadShader;
 
+		SystemGroupId m_2DRenderingGroup;
+
 		Query m_CameraDataUpdateQuery;
-		Query m_SpritesQuery;
 	private:
 		friend SceneSerializer;
 	};

@@ -51,8 +51,13 @@ namespace Flare
 		ScriptingEngine::SetCurrentECSWorld(m_World);
 		ScriptingEngine::RegisterComponents();
 
+		SystemsManager& systemsManager = m_World.GetSystemsManager();
+		m_2DRenderingGroup = systemsManager.CreateGroup("2D Rendering");
+
 		m_CameraDataUpdateQuery = m_World.CreateQuery<With<TransformComponent>, With<CameraComponent>>();
-		m_SpritesQuery = m_World.CreateQuery<With<TransformComponent>, With<SpriteComponent>>();
+
+		systemsManager.RegisterSystem("Sprites Renderer", m_2DRenderingGroup, SpritesRendererSystem::Setup(m_World), 
+			nullptr, SpritesRendererSystem::OnUpdate, nullptr);
 	}
 
 	void Scene::InitializeRuntime()
@@ -93,26 +98,7 @@ namespace Flare
 	{
 		Renderer2D::Begin(m_QuadShader, renderData.Camera.ViewProjectionMatrix);
 
-		for (EntityView view : m_SpritesQuery)
-		{
-			ComponentView<TransformComponent> transforms = view.View<TransformComponent>();
-			ComponentView<SpriteComponent> sprites = view.View<SpriteComponent>();
-
-			size_t index = 0;
-			for (EntityViewElement entity : view)
-			{
-				TransformComponent& transform = transforms[entity];
-				SpriteComponent& sprite = sprites[entity];
-
-				Renderer2D::DrawQuad(transform.GetTransformationMatrix(), sprite.Color,
-					sprite.Texture == NULL_ASSET_HANDLE
-						? nullptr
-						: AssetManager::GetAsset<Texture>(sprite.Texture),
-					sprite.TextureTiling, (int32_t) view.GetEntity(index).value_or(Entity()).GetIndex());
-
-				index++;
-			}
-		}
+		m_World.GetSystemsManager().ExecuteGroup(m_2DRenderingGroup);
 
 		Renderer2D::End();
 	}
