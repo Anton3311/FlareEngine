@@ -26,7 +26,7 @@ namespace Flare
 				uint8_t* entityData = archetype.Storage.GetEntityData(entityIndex);
 				for (size_t i = 0; i < archetype.Data.Components.size(); i++)
 				{
-					GetComponentInfo(archetype.Data.Components[i]).Deleter((void*)archetype.Data.ComponentOffsets[i]);
+					GetComponentInfo(archetype.Data.Components[i]).Deleter((void*)(entityData + archetype.Data.ComponentOffsets[i]));
 				}
 			}
 		}
