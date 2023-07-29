@@ -6,10 +6,14 @@ namespace Flare
 {
     World* ScriptingBridge::s_World = nullptr;
 
-    static Entity CreateEntity_Wrapper()
+    static Entity World_CreateEntity(const ComponentId* components, uint32_t count)
     {
-        FLARE_CORE_INFO("Creating a new entity from a scripting module :)");
-        return Entity();
+        return ScriptingBridge::GetCurrentWorld().GetRegistry().CreateEntity(ComponentSet(components, (size_t)count));
+    }
+
+    static void* World_GetEntityComponent(Entity entity, ComponentId component)
+    {
+        return ScriptingBridge::GetCurrentWorld().GetRegistry().GetEntityComponent(entity, component).value_or(nullptr);
     }
 
     static std::optional<SystemGroupId> World_FindSystemGroup(std::string_view name)
@@ -46,8 +50,9 @@ namespace Flare
         EntityViewBindings& entityViewBindings = *config.EntityViewBindings;
         InputBindings& inputBindings = *config.InputBindings;
 
-        worldBinding.CreateEntity = (WorldBindings::CreateEntityFunction)CreateEntity_Wrapper;
+        worldBinding.CreateEntity = (WorldBindings::CreateEntityFunction)World_CreateEntity;
         worldBinding.FindSystemGroup = (WorldBindings::FindSystemGroupFunction)World_FindSystemGroup;
+        worldBinding.GetEntityComponent = (WorldBindings::GetEntityComponentFunction)World_GetEntityComponent;
 
         entityViewBindings.GetArchetypeComponentOffset = (EntityViewBindings::GetArchetypeComponentOffsetFunction)GetArchetypeComponentOffset_Wrapper;
 

@@ -70,4 +70,61 @@ namespace Sandbox
 		}
 	};
 	FLARE_SYSTEM_IMPL(TestSystem);
+
+	struct Spawner
+	{
+		FLARE_COMPONENT(Spawner);
+		float Interval;
+		float TimeLeft;
+
+		static void ConfigureSerialization(Flare::TypeSerializationSettings& settings)
+		{
+			FLARE_SERIALIZE_FIELD(settings, Spawner, Interval);
+			FLARE_SERIALIZE_FIELD(settings, Spawner, TimeLeft);
+		}
+	};
+	FLARE_COMPONENT_IMPL(Spawner, Spawner::ConfigureSerialization);
+
+	struct SpawnSystem : public Flare::SystemBase
+	{
+		FLARE_SYSTEM(SpawnSystem);
+
+		virtual void Configure(Flare::SystemConfiguration& config) override
+		{
+			config.Query.With<Spawner>();
+		}
+
+		virtual void Execute(Flare::EntityView& chunk) override
+		{
+			Flare::ComponentView<Spawner> spawners = chunk.View<Spawner>();
+
+			bool spawn = false;
+			for (Flare::EntityElement entity : chunk)
+			{
+				Spawner& spawner = spawners[entity];
+
+				if (spawner.TimeLeft >= 0)
+					spawner.TimeLeft -= Flare::Time::GetDeltaTime();
+				else
+				{
+					spawn = true;
+					spawner.TimeLeft += spawner.Interval;
+				}
+			}
+
+			if (spawn)
+			{
+				Flare::Entity entity = Flare::World::CreateEntity<Flare::Transform, Flare::Sprite, MovingQuadComponet>();
+				Flare::Transform& transform = Flare::World::GetEntityComponent<Flare::Transform>(entity);
+				transform.Scale = glm::vec3(1.0f);
+
+				Flare::Sprite& sprite = Flare::World::GetEntityComponent<Flare::Sprite>(entity);
+				sprite.Color = glm::vec4(1.0f);
+
+				MovingQuadComponet& movingQuad = Flare::World::GetEntityComponent<MovingQuadComponet>(entity);
+				movingQuad.Speed = 10.0f;
+			}
+		}
+	};
+	FLARE_SYSTEM_IMPL(SpawnSystem);
 }
