@@ -44,7 +44,6 @@ namespace Flare
 		glm::vec3 Rotation;
 		glm::vec3 Scale;
 	};
-	FLARE_COMPONENT_ALIAS_IMPL(Transform, "struct Flare::TransformComponent");
 
 	struct Sprite
 	{
@@ -55,5 +54,4 @@ namespace Flare
 
 		UUID Texture;
 	};
-	FLARE_COMPONENT_ALIAS_IMPL(Sprite, "struct Flare::SpriteComponent");
 }

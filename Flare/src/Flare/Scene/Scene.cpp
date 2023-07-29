@@ -54,6 +54,8 @@ namespace Flare
 		SystemsManager& systemsManager = m_World.GetSystemsManager();
 		m_2DRenderingGroup = systemsManager.CreateGroup("2D Rendering");
 		m_ScriptingUpdateGroup = systemsManager.CreateGroup("Scripting Update");
+		m_OnRuntimeStartGroup = systemsManager.CreateGroup("On Runtime Start");
+		m_OnRuntimeEndGroup = systemsManager.CreateGroup("On Runtime End");
 
 		m_CameraDataUpdateQuery = m_World.CreateQuery<With<TransformComponent>, With<CameraComponent>>();
 
@@ -64,6 +66,16 @@ namespace Flare
 	void Scene::InitializeRuntime()
 	{
 		ScriptingEngine::RegisterSystems();
+	}
+
+	void Scene::OnRuntimeStart()
+	{
+		m_World.GetSystemsManager().ExecuteGroup(m_OnRuntimeStartGroup);
+	}
+
+	void Scene::OnRuntimeEnd()
+	{
+		m_World.GetSystemsManager().ExecuteGroup(m_OnRuntimeEndGroup);
 	}
 
 	void Scene::OnBeforeRender(RenderData& renderData)

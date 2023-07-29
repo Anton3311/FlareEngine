@@ -24,6 +24,9 @@ namespace Flare
 		void Initialize();
 		void InitializeRuntime();
 	public:
+		void OnRuntimeStart();
+		void OnRuntimeEnd();
+
 		void OnBeforeRender(RenderData& renderData);
 		void OnRender(const RenderData& renderData);
 
@@ -37,6 +40,8 @@ namespace Flare
 
 		SystemGroupId m_2DRenderingGroup;
 		SystemGroupId m_ScriptingUpdateGroup;
+		SystemGroupId m_OnRuntimeStartGroup;
+		SystemGroupId m_OnRuntimeEndGroup;
 
 		Query m_CameraDataUpdateQuery;
 	private:

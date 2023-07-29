@@ -217,10 +217,14 @@ namespace Flare
 
 		EditorContext::SetActiveScene(playModeScene);
 		EditorContext::Instance.Mode = EditorMode::Play;
+
+		EditorContext::GetActiveScene()->OnRuntimeStart();
 	}
 
 	void EditorLayer::ExitPlayMode()
 	{
+		EditorContext::GetActiveScene()->OnRuntimeEnd();
+
 		FLARE_CORE_ASSERT(EditorContext::Instance.Mode == EditorMode::Play);
 
 		EditorContext::SetActiveScene(EditorContext::GetEditedScene());
