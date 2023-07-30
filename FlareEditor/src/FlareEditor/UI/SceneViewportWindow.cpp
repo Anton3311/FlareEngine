@@ -4,6 +4,8 @@
 #include "Flare/Scene/Components.h"
 #include "Flare/Math/Math.h"
 
+#include "Flare/Input/InputManager.h"
+
 #include "FlareEditor/EditorContext.h"
 #include "FlareEditor/AssetManager/EditorAssetManager.h"
 #include "FlareEditor/EditorLayer.h"
@@ -89,6 +91,9 @@ namespace Flare
 			{
 				glm::mat4 transformationMatrix = transform.value()->GetTransformationMatrix();
 
+				// TODO: move snap values to editor settings
+				float snapValue = 0.5f;
+
 				ImGuizmo::OPERATION operation = (ImGuizmo::OPERATION)-1;
 				switch (EditorContext::Instance.Gizmo)
 				{
@@ -96,6 +101,7 @@ namespace Flare
 					operation = ImGuizmo::TRANSLATE;
 					break;
 				case GizmoMode::Rotate:
+					snapValue = 5.0f;
 					operation = ImGuizmo::ROTATE;
 					break;
 				case GizmoMode::Scale:
@@ -107,11 +113,14 @@ namespace Flare
 
 				ImGuizmo::MODE mode = ImGuizmo::WORLD;
 
+				bool snappingEnabled = InputManager::IsKeyPressed(KeyCode::LeftControl) || InputManager::IsKeyPressed(KeyCode::RightControl);
+
 				if (ImGuizmo::Manipulate(
 					glm::value_ptr(m_Camera.GetViewMatrix()),
 					glm::value_ptr(m_Camera.GetProjectionMatrix()),
 					operation, mode,
-					glm::value_ptr(transformationMatrix)))
+					glm::value_ptr(transformationMatrix),
+					nullptr, snappingEnabled ? &snapValue : nullptr))
 				{
 					Math::DecomposeTransform(transformationMatrix,
 						transform.value()->Position,
