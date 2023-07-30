@@ -2,6 +2,8 @@
 
 #include "FlareECS/EntityStorage/EntityChunksPool.h"
 
+#include <cmath>
+
 namespace Flare
 {
 	EntityStorage::EntityStorage()
@@ -35,10 +37,12 @@ namespace Flare
 
 	uint8_t* EntityStorage::GetEntityData(size_t entityIndex) const
 	{
-		size_t bytesOffset = (entityIndex * m_EntitySize) % ENTITY_CHUNK_SIZE;
+		size_t bytesOffset = (entityIndex % m_EntitiesPerChunk * m_EntitySize);
 		size_t chunkIndex = entityIndex / m_EntitiesPerChunk;
 
+		FLARE_CORE_ASSERT(bytesOffset < ENTITY_CHUNK_SIZE - m_EntitySize);
 		FLARE_CORE_ASSERT(chunkIndex < m_Chunks.size());
+
 		return m_Chunks[chunkIndex].GetBuffer() + bytesOffset;
 	}
 
@@ -66,7 +70,7 @@ namespace Flare
 	{
 		FLARE_CORE_ASSERT(m_EntitiesCount == 0, "Entity size can only be set if the storage is empty");
 		m_EntitySize = entitySize;
-		m_EntitiesPerChunk = ENTITY_CHUNK_SIZE / entitySize;
+		m_EntitiesPerChunk = floor((float) ENTITY_CHUNK_SIZE / (float) entitySize);
 	}
 
 	void EntityStorage::UpdateEntityRegistryIndex(size_t entityIndex, size_t newRegistryIndex)
