@@ -21,6 +21,7 @@ project "FlareEditor"
 		INCLUDE_DIRS.glm,
 		INCLUDE_DIRS.spdlog,
 		INCLUDE_DIRS.imgui,
+		INCLUDE_DIRS.imguizmo,
 		INCLUDE_DIRS.yaml_cpp,
     }
 

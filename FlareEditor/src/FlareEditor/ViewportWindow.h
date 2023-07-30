@@ -33,5 +33,6 @@ namespace Flare
 		bool m_IsFocused;
 		bool m_IsHovered;
 		glm::ivec2 m_RelativeMousePosition;
+		glm::uvec2 m_ViewportOffset;
 	};
 }

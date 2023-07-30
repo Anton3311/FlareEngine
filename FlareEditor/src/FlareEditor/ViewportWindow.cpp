@@ -53,16 +53,19 @@ namespace Flare
 		ImVec2 windowPosition = ImGui::GetWindowPos();
 		ImVec2 windowSize = ImGui::GetContentRegionAvail();
 		glm::u32vec2 newViewportSize = glm::u32vec2((int32_t)windowSize.x, (int32_t)windowSize.y);
+		m_ViewportOffset = glm::uvec2(cursorPosition.x, cursorPosition.y);
 
 		m_RelativeMousePosition = glm::uvec2(
-			(uint32_t)(io.MousePos.x - windowPosition.x - cursorPosition.x),
-			(uint32_t)(io.MousePos.y - windowPosition.y - cursorPosition.y));
+			(uint32_t)(io.MousePos.x - windowPosition.x),
+			(uint32_t)(io.MousePos.y - windowPosition.y)) - m_ViewportOffset;
+
+		m_RelativeMousePosition.y = m_RenderData.ViewportSize.y - m_RelativeMousePosition.y;
 
 		if (m_FrameBuffer != nullptr)
 		{
 			const FrameBufferSpecifications frameBufferSpecs = m_FrameBuffer->GetSpecifications();
 			ImVec2 imageSize = ImVec2(frameBufferSpecs.Width, frameBufferSpecs.Height);
-			ImGui::Image((ImTextureID)m_FrameBuffer->GetColorAttachmentRendererId(0), windowSize);
+			ImGui::Image((ImTextureID)m_FrameBuffer->GetColorAttachmentRendererId(0), windowSize, ImVec2(0, 1), ImVec2(1, 0));
 		}
 
 		if (m_RenderData.ViewportSize == glm::u32vec2(0))

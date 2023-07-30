@@ -11,6 +11,9 @@ project "Flare"
 
 		"vendor/stb_image/stb_image/**.h",
 		"vendor/stb_image/stb_image/**.cpp",
+
+		"vendor/ImGuizmo/ImGuizmo.h",
+		"vendor/ImGuizmo/ImGuizmo.cpp",
     }
 
     includedirs
@@ -27,6 +30,7 @@ project "Flare"
 		INCLUDE_DIRS.stb_image,
 		INCLUDE_DIRS.spdlog,
 		INCLUDE_DIRS.imgui,
+		INCLUDE_DIRS.imguizmo,
 		INCLUDE_DIRS.yaml_cpp,
 	}
 

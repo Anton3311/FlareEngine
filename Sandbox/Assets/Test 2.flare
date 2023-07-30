@@ -5,7 +5,7 @@ Entities:
         Rotation: [0, 0, 0]
         Scale: [1, 1, 1]
       - Name: Camera
-        Size: 20.1000004
+        Size: 11.3000002
         Near: 0.100000001
         Far: 100
         Projection: Orthographic
@@ -13,8 +13,8 @@ Entities:
   - Components:
       - Name: Transform
         Position: [0, 0, -1.20000005]
-        Rotation: [0, 0, 0]
-        Scale: [1, 1, 1]
+        Rotation: [168.311813, -9.40043068, -68.1223984]
+        Scale: [5.63262272, 8.70941257, 5.79757786]
       - Name: Sprite
         Color: [0, 0, 1, 1]
         Texture: 5193090395626261884
@@ -30,17 +30,6 @@ Entities:
         TextureTiling: [1, 1]
       - Name: struct Sandbox::MovingQuadComponet
         Speed: 4
-  - Components:
-      - Name: Transform
-        Position: [0, -3.20000005, -0.300000012]
-        Rotation: [0, 0, -32.7000008]
-        Scale: [1.39999998, 0.600000024, 1]
-      - Name: Sprite
-        Color: [0, 0.470999986, 0, 1]
-        Texture: 0
-        TextureTiling: [0, 0]
-      - Name: struct Sandbox::MovingQuadComponet
-        Speed: 5.19999981
   - Components:
       - Name: Transform
         Position: [0, 0, 0]

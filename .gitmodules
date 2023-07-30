@@ -13,3 +13,6 @@
 [submodule "Flare/vendor/yaml-cpp"]
 	path = Flare/vendor/yaml-cpp
 	url = git@github.com:Anton3311/yaml-cpp.git
+[submodule "Flare/vendor/ImGuizmo"]
+	path = Flare/vendor/ImGuizmo
+	url = git@github.com:CedricGuillemet/ImGuizmo.git

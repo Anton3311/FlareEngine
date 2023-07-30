@@ -10,6 +10,7 @@
 #include <stdint.h>
 
 #include <imgui_internal.h>
+#include <ImGuizmo.h>
 
 #include <backends/imgui_impl_opengl3.h>
 #include <backends/imgui_impl_glfw.h>
@@ -63,6 +64,7 @@ namespace Flare
 		ImGui_ImplGlfw_NewFrame();
 
 		ImGui::NewFrame();
+		ImGuizmo::BeginFrame();
 	}
 
 	void ImGUILayer::End()
@@ -151,5 +153,9 @@ namespace Flare
 		colors[ImGuiCol_HeaderActive] = ImGuiTheme::FrameActiveBackground;
 
 		colors[ImGuiCol_CheckMark] = ImGuiTheme::Primary;
+
+		ImGuizmo::Style& guizmoStyle = ImGuizmo::GetStyle();
+		guizmoStyle.RotationLineThickness = 4.0f;
+		guizmoStyle.TranslationLineThickness = 4.0f;
 	}
 }

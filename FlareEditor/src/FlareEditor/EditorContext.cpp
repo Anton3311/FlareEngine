@@ -10,6 +10,8 @@ namespace Flare
 
 	void EditorContext::Initialize()
 	{
+		Instance.Gizmo = GizmoMode::Translate;
+
 		Instance.m_ActiveScene = CreateRef<Scene>();
 		Instance.m_EditedScene = Instance.m_ActiveScene;
 

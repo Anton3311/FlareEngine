@@ -15,6 +15,14 @@ namespace Flare
 		Play,
 	};
 
+	enum class GizmoMode
+	{
+		None,
+		Translate,
+		Rotate,
+		Scale,
+	};
+
 	struct EditorContext
 	{
 	public:
@@ -30,6 +38,7 @@ namespace Flare
 	public:
 		Entity SelectedEntity;
 		EditorMode Mode;
+		GizmoMode Gizmo;
 	private:
 		Ref<Scene> m_ActiveScene;
 		Ref<Scene> m_EditedScene;

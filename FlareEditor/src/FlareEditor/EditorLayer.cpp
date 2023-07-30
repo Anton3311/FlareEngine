@@ -92,6 +92,25 @@ namespace Flare
 	{
 		m_Camera.ProcessEvents(event);
 		InputManager::ProcessEvent(event);
+
+		EventDispatcher dispatcher(event);
+		dispatcher.Dispatch<KeyReleasedEvent>([](KeyReleasedEvent& e) -> bool
+		{
+			switch (e.GetKeyCode())
+			{
+			case KeyCode::G:
+				EditorContext::Instance.Gizmo = GizmoMode::Translate;
+				break;
+			case KeyCode::R:
+				EditorContext::Instance.Gizmo = GizmoMode::Rotate;
+				break;
+			case KeyCode::S:
+				EditorContext::Instance.Gizmo = GizmoMode::Scale;
+				break;
+			}
+
+			return false;
+		});
 	}
 
 	void EditorLayer::OnImGUIRender()
