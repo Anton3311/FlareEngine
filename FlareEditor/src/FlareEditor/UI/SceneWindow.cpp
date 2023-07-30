@@ -9,6 +9,7 @@
 #include "FlareEditor/EditorContext.h"
 
 #include <imgui.h>
+#include <imgui_internal.h>
 
 namespace Flare
 {
@@ -16,6 +17,7 @@ namespace Flare
 	{
 		World& world = EditorContext::GetActiveScene()->GetECSWorld();
 
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 		ImGui::Begin("Scene");
 
 		if (ImGui::BeginPopupContextWindow("Scene Context Menu"))
@@ -26,33 +28,50 @@ namespace Flare
 			ImGui::EndMenu();
 		}
 
+		const auto& records = world.GetRegistry().GetEntityRecords();
+
+		ImGui::BeginChild("Scene Entities");
+		ImGuiListClipper clipper;
+		clipper.Begin(records.size());
+
 		std::optional<Entity> deletedEntity;
-		for (Entity entity : world.GetRegistry())
+		while (clipper.Step())
 		{
-			ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_FramePadding;
-
-			bool opened = ImGui::TreeNodeEx((void*)std::hash<Entity>()(entity), flags, "Entity %d", entity.GetIndex());
-
-			if (ImGui::IsItemClicked())
-				EditorContext::Instance.SelectedEntity = entity;
-
-			if (opened)
+			for (int32_t i = clipper.DisplayStart; i < clipper.DisplayEnd; i++)
 			{
-				ImGui::TreePop();
-			}
+				if (i < 0 || i >= (int32_t)records.size())
+					continue;
 
-			if (ImGui::BeginPopupContextItem())
-			{
-				if (ImGui::MenuItem("Delete entity"))
-					deletedEntity = entity;
+				Entity entity = records[i].Id;
+				ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_FramePadding;
 
-				ImGui::EndMenu();
+				bool opened = ImGui::TreeNodeEx((void*)std::hash<Entity>()(entity), flags, "Entity %d", entity.GetIndex());
+
+				if (ImGui::IsItemClicked())
+					EditorContext::Instance.SelectedEntity = entity;
+
+				if (opened)
+				{
+					ImGui::TreePop();
+				}
+
+				if (ImGui::BeginPopupContextItem())
+				{
+					if (ImGui::MenuItem("Delete entity"))
+						deletedEntity = entity;
+
+					ImGui::EndMenu();
+				}
 			}
 		}
+
+		clipper.End();
+		ImGui::EndChild();
 
 		if (deletedEntity.has_value())
 			world.DeleteEntity(deletedEntity.value());
 
 		ImGui::End();
+		ImGui::PopStyleVar();
 	}
 }
