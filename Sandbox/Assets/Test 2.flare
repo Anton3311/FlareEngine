@@ -26,7 +26,7 @@ Entities:
         Scale: [1, 1, 1]
       - Name: Sprite
         Color: [1, 1, 1, 1]
-        Texture: 0
+        Texture: 5193090395626261884
         TextureTiling: [1, 1]
       - Name: struct Sandbox::MovingQuadComponet
         Speed: 4

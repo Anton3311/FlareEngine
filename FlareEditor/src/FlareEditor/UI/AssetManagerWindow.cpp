@@ -146,7 +146,7 @@ namespace Flare
 
 		if (m_Mode == AssetTreeViewMode::Registry && ImGui::BeginDragDropSource())
 		{
-			ImGui::SetDragDropPayload("ASSET_HANDLE", &node.Handle, sizeof(AssetHandle));
+			ImGui::SetDragDropPayload(ASSET_PAYLOAD_NAME, &node.Handle, sizeof(AssetHandle));
 			ImGui::EndDragDropSource();
 		}
 	}

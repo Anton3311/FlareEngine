@@ -1,6 +1,7 @@
 #include "EditorGUI.h"
 
 #include "Flare/AssetManager/AssetManager.h"
+#include "FlareEditor/AssetManager/EditorAssetManager.h"
 
 #include <imgui.h>
 
@@ -108,7 +109,7 @@ namespace Flare
 		bool result = false;
 		if (ImGui::BeginDragDropTarget())
 		{
-			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ASSET_HANDLE"))
+			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(ASSET_PAYLOAD_NAME))
 			{
 				handle = *(AssetHandle*)payload->Data;
 				result = true;

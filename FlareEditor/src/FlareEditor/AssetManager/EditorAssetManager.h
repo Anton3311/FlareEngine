@@ -12,6 +12,8 @@
 
 namespace Flare
 {
+	constexpr char* ASSET_PAYLOAD_NAME = "ASSET_PAYLOAD";
+	
 	class EditorAssetManager : public AssetManagerBase
 	{
 	public:

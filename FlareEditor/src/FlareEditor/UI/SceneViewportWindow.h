@@ -1,5 +1,7 @@
 #pragma once
 
+#include "FlareECS/EntityId.h"
+
 #include "FlareEditor/ViewportWindow.h"
 #include "FlareEditor/EditorCamera.h"
 
@@ -17,6 +19,8 @@ namespace Flare
 	protected:
 		virtual void CreateFrameBuffer() override;
 		virtual void OnClear() override;
+	private:
+		Entity GetEntityUnderCursor() const;
 	private:
 		EditorCamera& m_Camera;
 	};
