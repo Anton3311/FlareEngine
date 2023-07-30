@@ -81,7 +81,7 @@ namespace Flare
 		openFile.nMaxFileTitle = 0;
 		openFile.lpstrFileTitle = nullptr;
 		openFile.lpstrInitialDir = nullptr;
-		openFile.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+		openFile.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR;
 		openFile.hwndOwner = glfwGetWin32Window((GLFWwindow*)window->GetNativeWindow());
 
 		if (GetOpenFileNameW(&openFile) == TRUE)
@@ -106,7 +106,7 @@ namespace Flare
 		openFile.nMaxFileTitle = 0;
 		openFile.lpstrFileTitle = nullptr;
 		openFile.lpstrInitialDir = nullptr;
-		openFile.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+		openFile.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR;
 		openFile.hwndOwner = glfwGetWin32Window((GLFWwindow*)window->GetNativeWindow());
 
 		if (GetSaveFileNameW(&openFile) == TRUE)
