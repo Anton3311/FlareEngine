@@ -9,8 +9,8 @@ namespace Flare
 {
 	Application* Application::s_Instance = nullptr;
 
-	Application::Application()
-		: m_Running(true)
+	Application::Application(CommandLineArguments arguments)
+		: m_Running(true), m_CommandLineArguments(arguments)
 	{
 		s_Instance = this;
 

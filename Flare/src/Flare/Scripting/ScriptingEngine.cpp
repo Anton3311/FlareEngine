@@ -135,7 +135,10 @@ namespace Flare
 				module.OnUnload.value()(module.Config);
 		}
 
+		s_Data.ComponentIdToTypeIndex.clear();
+		s_Data.TemporaryQueryComponents.clear();
 		s_Data.Modules.clear();
+		s_Data.CurrentWorld = nullptr;
 	}
 
 	void ScriptingEngine::RegisterComponents()

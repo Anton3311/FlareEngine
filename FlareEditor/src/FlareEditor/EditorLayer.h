@@ -2,6 +2,7 @@
 
 #include "Flare.h"
 #include "Flare/Core/Layer.h"
+#include "Flare/Core/CommandLineArguments.h"
 
 #include "FlareEditor/UI/SceneWindow.h"
 #include "FlareEditor/UI/PropertiesWindow.h"
@@ -27,6 +28,7 @@ namespace Flare
 		virtual void OnEvent(Event& event) override;
 		virtual void OnImGUIRender() override;
 
+		void OpenProject(const std::filesystem::path& path);
 		void SaveActiveScene();
 		void SaveActiveSceneAs();
 
@@ -36,6 +38,7 @@ namespace Flare
 		static EditorLayer& GetInstance();
 	private:
 		void UpdateWindowTitle();
+		void OnOpenProject();
 	private:
 		float m_PreviousFrameTime = 0.0f;
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Flare/AssetManager/Asset.h"
+#include "Flare/Core/Signal.h"
 
 #include <filesystem>
 #include <string>
@@ -32,6 +33,8 @@ namespace Flare
 		std::vector<std::string> ScriptingModules;
 	public:
 		static Ref<Project> s_Active;
+		static Signal<> OnProjectOpen;
+		static Signal<> OnUnloadActiveProject;
 		static std::filesystem::path s_ProjectFileExtension;
 	};
 }

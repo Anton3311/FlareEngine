@@ -1,6 +1,9 @@
 #include "AssetManagerWindow.h"
 
 #include "Flare/Core/Assert.h"
+#include "Flare/Core/Event.h"
+
+#include "Flare/Project/Project.h"
 
 #include "FlareEditor/EditorContext.h"
 

@@ -7,6 +7,9 @@
 namespace Flare
 {
 	Ref<Project> Project::s_Active;
+	Signal<> Project::OnProjectOpen;
+	Signal<> Project::OnUnloadActiveProject;
+
 	std::filesystem::path Project::s_ProjectFileExtension = ".flareproj";
 
 	void Project::New(std::string_view name, const std::filesystem::path& path)
@@ -28,6 +31,8 @@ namespace Flare
 		FLARE_CORE_ASSERT(!std::filesystem::is_directory(path));
 		FLARE_CORE_ASSERT(path.extension() == s_ProjectFileExtension);
 
+		Project::OnUnloadActiveProject.Invoke();
+
 		ScriptingEngine::UnloadAllModules();
 
 		Ref<Project> project = CreateRef<Project>(path.parent_path());
@@ -36,6 +41,8 @@ namespace Flare
 		s_Active = project;
 
 		ScriptingEngine::LoadModules();
+
+		Project::OnProjectOpen.Invoke();
 	}
 
 	void Project::Save()

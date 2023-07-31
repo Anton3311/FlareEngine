@@ -17,7 +17,9 @@ namespace Flare
 	class EditorAssetManager : public AssetManagerBase
 	{
 	public:
-		EditorAssetManager(const std::filesystem::path& root);
+		EditorAssetManager();
+
+		void Reinitialize();
 	public:
 		virtual Ref<Asset> GetAsset(AssetHandle handle) override;
 		virtual const AssetMetadata* GetAssetMetadata(AssetHandle handle) override;
@@ -49,5 +51,6 @@ namespace Flare
 		std::unordered_map<AssetType, AssetImporter> m_AssetImporters;
 
 		static std::filesystem::path s_RegistryFileName;
+		static std::filesystem::path s_AssetsDirectoryName;
 	};
 }
