@@ -91,6 +91,18 @@ namespace Flare
 		{
 			if (ImGui::Button("Stop", buttonSize))
 				EditorLayer::GetInstance().ExitPlayMode();
+
+			// TODO: replace with icons
+			if (!EditorLayer::GetInstance().IsPlaymodePaused())
+			{
+				if (ImGui::Button("Pause"))
+					EditorLayer::GetInstance().SetPlaymodePaused(true);
+			}
+			else
+			{
+				if (ImGui::Button("Continue"))
+					EditorLayer::GetInstance().SetPlaymodePaused(false);
+			}
 		}
 
 		window->DC.LayoutType = prevLayout;

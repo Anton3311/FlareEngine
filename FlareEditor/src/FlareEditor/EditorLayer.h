@@ -28,12 +28,14 @@ namespace Flare
 		virtual void OnEvent(Event& event) override;
 		virtual void OnImGUIRender() override;
 
-		void OpenProject(const std::filesystem::path& path);
 		void SaveActiveScene();
 		void SaveActiveSceneAs();
 
 		void EnterPlayMode();
 		void ExitPlayMode();
+
+		inline bool IsPlaymodePaused() const { return m_PlaymodePaused; }
+		inline void SetPlaymodePaused(bool value) { m_PlaymodePaused = value; }
 
 		static EditorLayer& GetInstance();
 	private:
@@ -50,6 +52,7 @@ namespace Flare
 		glm::vec4 m_ClearColor = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
 
 		EditorCamera m_Camera;
+		bool m_PlaymodePaused;
 
 		static EditorLayer* s_Instance;
 	};

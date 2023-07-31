@@ -101,7 +101,8 @@ namespace Flare
 
 		ScriptingEngine::OnFrameStart(deltaTime);
 
-		EditorContext::GetActiveScene()->OnUpdateRuntime();
+		if (!m_PlaymodePaused)
+			EditorContext::GetActiveScene()->OnUpdateRuntime();
 
 		for (auto& viewport : m_Viewports)
 			viewport->OnRenderViewport();
@@ -256,6 +257,8 @@ namespace Flare
 		FLARE_CORE_ASSERT(EditorContext::Instance.Mode == EditorMode::Edit);
 
 		SaveActiveScene();
+
+		m_PlaymodePaused = false;
 
 		Ref<Scene> playModeScene = CreateRef<Scene>(false);
 		ScriptingEngine::SetCurrentECSWorld(playModeScene->GetECSWorld());
