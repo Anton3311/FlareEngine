@@ -22,7 +22,7 @@ namespace Flare
 	{
 		HMODULE library = LoadLibraryW(path.c_str());
 		DWORD errorCode = GetLastError();
-		if (errorCode != 0)
+		if (library == NULL)
 		{
 			LPSTR messageBuffer = nullptr;
 
@@ -49,7 +49,7 @@ namespace Flare
 		auto function = GetProcAddress((HMODULE)library, name.c_str());
 
 		DWORD errorCode = GetLastError();
-		if (errorCode != 0)
+		if (function == NULL)
 		{
 			LPSTR messageBuffer = nullptr;
 
