@@ -19,6 +19,7 @@
 #include "FlareEditor/UI/SceneViewportWindow.h"
 #include "FlareEditor/UI/EditorTitleBar.h"
 #include "FlareEditor/UI/SystemsInspectorWindow.h"
+#include "FlareEditor/UI/ProjectSettingsWindow.h"
 
 #include <imgui.h>
 #include <imgui_internal.h>
@@ -201,6 +202,7 @@ namespace Flare
 			viewport->OnRenderImGui();
 
 		SystemsInspectorWindow::OnImGuiRender();
+		ProjectSettingsWindow::OnRenderImGui();
 
 		m_SceneWindow.OnImGuiRender();
 		m_PropertiesWindow.OnImGuiRender();
@@ -227,6 +229,9 @@ namespace Flare
 
 		UpdateWindowTitle();
 		m_AssetManagerWindow.RebuildAssetTree();
+
+		AssetHandle startScene = Project::GetActive()->StartScene;
+		EditorContext::OpenScene(startScene);
 	}
 
 	void EditorLayer::SaveActiveScene()

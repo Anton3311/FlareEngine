@@ -10,6 +10,7 @@
 
 #include "FlareEditor/UI/EditorGUI.h"
 #include "FlareEditor/UI/SystemsInspectorWindow.h"
+#include "FlareEditor/UI/ProjectSettingsWindow.h"
 
 #include <imgui_internal.h>
 
@@ -54,6 +55,10 @@ namespace Flare
 				if (projectPath.has_value())
 					Project::OpenProject(projectPath.value());
 			}
+
+			if (ImGui::MenuItem("Settings"))
+				ProjectSettingsWindow::Show();
+			
 			ImGui::EndDisabled();
 
 			EditorGUI::EndMenu();

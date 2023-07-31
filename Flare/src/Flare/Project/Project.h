@@ -24,7 +24,7 @@ namespace Flare
 
 		static void Save();
 
-		inline std::filesystem::path GetProjectFilePath() { return Location / Name / s_ProjectFileExtension; }
+		inline std::filesystem::path GetProjectFilePath() { return (Location / Name).replace_extension(s_ProjectFileExtension); }
 	public:
 		std::string Name;
 		const std::filesystem::path Location;
