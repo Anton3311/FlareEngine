@@ -25,9 +25,9 @@ namespace Flare
 		template<typename T>
 		std::optional<T> LoadFunction(const std::string& name) const
 		{
-			std::optional<void*> function = Platform::LoadFunction(m_Library, name);
-			if (function.has_value())
-				return (T)function.value();
+			void* function = Platform::LoadFunction(m_Library, name);
+			if (function != nullptr)
+				return (T)function;
 			return {};
 		}
 	private:
