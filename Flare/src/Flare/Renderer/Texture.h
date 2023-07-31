@@ -22,7 +22,7 @@ namespace Flare
 
 	enum class TextureFiltering
 	{
-		NoFiltering,
+		Closest,
 		Linear,
 	};
 

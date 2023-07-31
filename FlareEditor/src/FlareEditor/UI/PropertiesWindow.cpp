@@ -110,6 +110,11 @@ namespace Flare
 				case Internal::FieldType::Float3:
 					EditorGUI::Vector3PropertyField(field.Name.c_str(), *(glm::vec3*)fieldData);
 					break;
+				case Internal::FieldType::Asset:
+				case Internal::FieldType::Texture:
+					EditorGUI::AssetField(field.Name.c_str(), *(AssetHandle*)fieldData);
+					break;
+
 				}
 			}
 			EditorGUI::EndPropertyGrid();

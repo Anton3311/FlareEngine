@@ -138,8 +138,8 @@ namespace Flare
 	void SceneViewportWindow::CreateFrameBuffer()
 	{
 		FrameBufferSpecifications specifications(m_RenderData.ViewportSize.x, m_RenderData.ViewportSize.y, {
-			{ FrameBufferTextureFormat::RGB8, TextureWrap::Clamp, TextureFiltering::NoFiltering },
-			{ FrameBufferTextureFormat::RedInteger, TextureWrap::Clamp, TextureFiltering::NoFiltering },
+			{ FrameBufferTextureFormat::RGB8, TextureWrap::Clamp, TextureFiltering::Closest },
+			{ FrameBufferTextureFormat::RedInteger, TextureWrap::Clamp, TextureFiltering::Closest },
 		});
 
 		m_FrameBuffer = FrameBuffer::Create(specifications);

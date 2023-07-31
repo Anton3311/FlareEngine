@@ -90,6 +90,10 @@ namespace Flare
 					case Internal::FieldType::Float:
 						emitter << YAML::Key << field.Name << YAML::Value << *(float*)(fieldData);
 						break;
+					case Internal::FieldType::Asset:
+					case Internal::FieldType::Texture:
+						emitter << YAML::Key << field.Name << YAML::Value << *(AssetHandle*)(fieldData);
+						break;
 					default:
 						FLARE_CORE_ASSERT(false, "Unhandled field type");
 					}
@@ -277,6 +281,13 @@ namespace Flare
 									{
 										glm::vec3 vector = fieldNode.as<glm::vec3>();
 										std::memcpy(componentData + field.Offset, &vector, sizeof(vector));
+										break;
+									}
+									case Internal::FieldType::Asset:
+									case Internal::FieldType::Texture:
+									{
+										AssetHandle handle = fieldNode.as<AssetHandle>();
+										std::memcpy(componentData + field.Offset, &handle, sizeof(handle));
 										break;
 									}
 									default:

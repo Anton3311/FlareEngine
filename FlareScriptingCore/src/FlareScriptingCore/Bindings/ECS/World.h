@@ -20,6 +20,11 @@ namespace Flare::Internal
 
 		constexpr uint32_t GetIndex() const { return m_Index; }
 		constexpr uint32_t GetGeneration() const { return m_Generation; }
+
+		constexpr bool operator==(Entity other) const
+		{
+			return m_Index == other.m_Index && m_Generation == other.m_Generation;
+		}
 	private:
 		uint32_t m_Index;
 		uint16_t m_Generation;

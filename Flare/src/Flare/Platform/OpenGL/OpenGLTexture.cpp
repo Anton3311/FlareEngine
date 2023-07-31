@@ -92,7 +92,7 @@ namespace Flare
 	{
 		switch (m_Specifications.Filtering)
 		{
-		case TextureFiltering::NoFiltering:
+		case TextureFiltering::Closest:
 			glTextureParameteri(m_Id, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 			glTextureParameteri(m_Id, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 			break;

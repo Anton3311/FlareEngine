@@ -13,6 +13,8 @@
 #include "FlareScriptingCore/Bindings/Time.h"
 #include "FlareScriptingCore/Bindings/Input.h"
 
+#include "FlareScriptingCore/Bindings/Texture.h"
+
 #include "FlareScriptingCore/ScriptingType.h"
 
 #include "FlareScriptingCore/TypeSerializationSettings.h"
@@ -34,6 +36,8 @@ namespace Flare
 	using Internal::Time;
 	using Internal::Input;
 
+	using Internal::TextureAsset;
+
 	using Internal::TypeSerializationSettings;
 
 	struct Transform
@@ -52,6 +56,6 @@ namespace Flare
 		glm::vec4 Color;
 		glm::vec2 TextureTiling;
 
-		UUID Texture;
+		TextureAsset Texture;
 	};
 }
