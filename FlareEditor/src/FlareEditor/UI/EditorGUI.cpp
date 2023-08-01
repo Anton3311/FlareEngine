@@ -1,9 +1,9 @@
 #include "EditorGUI.h"
 
 #include "Flare/AssetManager/AssetManager.h"
+#include "Flare/Scene/Scene.h"
 
 #include "FlareEditor/AssetManager/EditorAssetManager.h"
-#include "FlareEditor/EditorContext.h"
 
 #include <spdlog/spdlog.h>
 

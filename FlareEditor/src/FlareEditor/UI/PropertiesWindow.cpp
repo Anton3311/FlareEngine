@@ -1,9 +1,10 @@
 #include "PropertiesWindow.h"
 
-#include "FlareEditor/EditorContext.h"
-#include "FlareEditor/UI/EditorGUI.h"
-
+#include "Flare/Scene/Scene.h"
 #include "Flare/Scripting/ScriptingEngine.h"
+
+#include "FlareEditor/UI/EditorGUI.h"
+#include "FlareEditor/EditorLayer.h"
 
 #include <imgui.h>
 
@@ -12,7 +13,7 @@ namespace Flare
 	void PropertiesWindow::OnImGuiRender()
 	{
 		World& world = Scene::GetActive()->GetECSWorld();
-		Entity selectedEntity = EditorContext::Instance.SelectedEntity;
+		Entity selectedEntity = EditorLayer::GetInstance().GetSelectedEntity();
 
 		ImGuiIO& io = ImGui::GetIO();
 		ImGuiStyle& style = ImGui::GetStyle();

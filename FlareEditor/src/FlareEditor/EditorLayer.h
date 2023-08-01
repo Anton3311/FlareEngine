@@ -15,6 +15,20 @@
 
 namespace Flare
 {
+	enum class EditorMode
+	{
+		Edit,
+		Play,
+	};
+
+	enum class GuizmoMode
+	{
+		None,
+		Translate,
+		Rotate,
+		Scale,
+	};
+
 	class EditorLayer : public Layer
 	{
 	public:
@@ -39,6 +53,12 @@ namespace Flare
 		inline bool IsPlaymodePaused() const { return m_PlaymodePaused; }
 		inline void SetPlaymodePaused(bool value) { m_PlaymodePaused = value; }
 
+		inline Entity GetSelectedEntity() const { return m_SelectedEntity; }
+		inline void SetSelectedEntity(Entity entity) { m_SelectedEntity = entity; }
+
+		inline GuizmoMode GetGuizmoMode() const { return m_Guizmo; }
+		inline EditorMode GetMode() const { return m_Mode; }
+
 		static EditorLayer& GetInstance();
 	private:
 		void UpdateWindowTitle();
@@ -56,6 +76,9 @@ namespace Flare
 		EditorCamera m_Camera;
 		AssetHandle m_EditedSceneHandle;
 		bool m_PlaymodePaused;
+		Entity m_SelectedEntity;
+		EditorMode m_Mode;
+		GuizmoMode m_Guizmo;
 
 		static EditorLayer* s_Instance;
 	};

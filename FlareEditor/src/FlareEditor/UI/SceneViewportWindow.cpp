@@ -2,11 +2,11 @@
 
 #include "Flare/Renderer/RenderCommand.h"
 #include "Flare/Scene/Components.h"
+#include "Flare/Scene/Scene.h"
 #include "Flare/Math/Math.h"
 
 #include "Flare/Input/InputManager.h"
 
-#include "FlareEditor/EditorContext.h"
 #include "FlareEditor/AssetManager/EditorAssetManager.h"
 #include "FlareEditor/EditorLayer.h"
 
@@ -73,9 +73,10 @@ namespace Flare
 
 		ImGuiIO& io = ImGui::GetIO();
 		if (io.MouseClicked[ImGuiMouseButton_Left] && m_FrameBuffer != nullptr && m_IsHovered && m_RelativeMousePosition.x >= 0 && m_RelativeMousePosition.y >= 0)
-			EditorContext::Instance.SelectedEntity = GetEntityUnderCursor();
+			EditorLayer::GetInstance().SetSelectedEntity(GetEntityUnderCursor());
 
-		if (world.IsEntityAlive(EditorContext::Instance.SelectedEntity) && EditorContext::Instance.Gizmo != GizmoMode::None)
+		Entity selectedEntity = EditorLayer::GetInstance().GetSelectedEntity();
+		if (world.IsEntityAlive(selectedEntity) && EditorLayer::GetInstance().GetGuizmoMode() != GuizmoMode::None)
 		{
 			ImGuizmo::SetOrthographic(false);
 			ImGuizmo::SetDrawlist();
@@ -86,7 +87,7 @@ namespace Flare
 				(float)m_RenderData.ViewportSize.x, 
 				(float) m_RenderData.ViewportSize.y);
 
-			std::optional<TransformComponent*> transform = world.TryGetEntityComponent<TransformComponent>(EditorContext::Instance.SelectedEntity);
+			std::optional<TransformComponent*> transform = world.TryGetEntityComponent<TransformComponent>(selectedEntity);
 			if (transform.has_value())
 			{
 				glm::mat4 transformationMatrix = transform.value()->GetTransformationMatrix();
@@ -95,16 +96,16 @@ namespace Flare
 				float snapValue = 0.5f;
 
 				ImGuizmo::OPERATION operation = (ImGuizmo::OPERATION)-1;
-				switch (EditorContext::Instance.Gizmo)
+				switch (EditorLayer::GetInstance().GetGuizmoMode())
 				{
-				case GizmoMode::Translate:
+				case GuizmoMode::Translate:
 					operation = ImGuizmo::TRANSLATE;
 					break;
-				case GizmoMode::Rotate:
+				case GuizmoMode::Rotate:
 					snapValue = 5.0f;
 					operation = ImGuizmo::ROTATE;
 					break;
-				case GizmoMode::Scale:
+				case GuizmoMode::Scale:
 					operation = ImGuizmo::SCALE;
 					break;
 				default:

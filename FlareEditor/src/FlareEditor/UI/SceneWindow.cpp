@@ -1,13 +1,14 @@
 #include "SceneWindow.h"
 
 #include "Flare/Scene/Components.h"
+#include "Flare/Scene/Scene.h"
 #include "Flare/ImGui/ImGuiTheme.h"
 
 #include "FlareECS/World.h"
 #include "FlareECS/Query/EntityRegistryIterator.h"
 #include "FlareECS/Registry.h"
 
-#include "FlareEditor/EditorContext.h"
+#include "FlareEditor/EditorLayer.h"
 #include "FlareEditor/UI/EditorGUI.h"
 
 #include <imgui.h>
@@ -51,7 +52,7 @@ namespace Flare
 
 				ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImGui::GetStyle().FramePadding / 2);
 
-				bool selected = entity == EditorContext::Instance.SelectedEntity;
+				bool selected = entity == EditorLayer::GetInstance().GetSelectedEntity();
 				if (selected)
 				{
 					flags |= ImGuiTreeNodeFlags_Framed;
@@ -78,7 +79,7 @@ namespace Flare
 				}
 
 				if (ImGui::IsItemHovered() && ImGui::IsMouseReleased(ImGuiMouseButton_Left))
-					EditorContext::Instance.SelectedEntity = entity;
+					EditorLayer::GetInstance().SetSelectedEntity(entity);
 
 				if (opened)
 					ImGui::TreePop();

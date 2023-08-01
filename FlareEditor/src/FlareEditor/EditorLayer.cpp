@@ -13,7 +13,6 @@
 #include "Flare/Scripting/ScriptingEngine.h"
 #include "Flare/Input/InputManager.h"
 
-#include "FlareEditor/EditorContext.h"
 #include "FlareEditor/AssetManager/EditorAssetManager.h"
 
 #include "FlareEditor/UI/SceneViewportWindow.h"
@@ -29,7 +28,11 @@ namespace Flare
 	EditorLayer* EditorLayer::s_Instance = nullptr;
 
 	EditorLayer::EditorLayer()
-		: Layer("EditorLayer"), m_EditedSceneHandle(NULL_ASSET_HANDLE), m_PlaymodePaused(false)
+		: Layer("EditorLayer"), 
+		m_EditedSceneHandle(NULL_ASSET_HANDLE), 
+		m_PlaymodePaused(false),
+		m_Mode(EditorMode::Edit),
+		m_Guizmo(GuizmoMode::None)
 	{
 		s_Instance = this;
 	}
@@ -57,8 +60,6 @@ namespace Flare
 			OpenScene(handle);
 		});
 
-		EditorContext::Initialize();
-
 		m_Viewports.emplace_back(CreateRef<SceneViewportWindow>(m_Camera));
 		m_Viewports.emplace_back(CreateRef<ViewportWindow>("Game"));
 
@@ -85,14 +86,13 @@ namespace Flare
 
 	void EditorLayer::OnDetach()
 	{
-		if (EditorContext::Instance.Mode == EditorMode::Play)
+		if (m_Mode == EditorMode::Play)
 			ExitPlayMode();
 
 		if (AssetManager::IsAssetHandleValid(Scene::GetActive()->Handle))
 			As<EditorAssetManager>(AssetManager::GetInstance())->UnloadAsset(Scene::GetActive()->Handle);
 
 		Scene::SetActive(nullptr);
-		EditorContext::Uninitialize();
 	}
 
 	void EditorLayer::OnUpdate(float deltaTime)
@@ -103,7 +103,7 @@ namespace Flare
 
 		ScriptingEngine::OnFrameStart(deltaTime);
 
-		if (EditorContext::Instance.Mode == EditorMode::Play && !m_PlaymodePaused)
+		if (m_Mode == EditorMode::Play && !m_PlaymodePaused)
 			Scene::GetActive()->OnUpdateRuntime();
 
 		for (auto& viewport : m_Viewports)
@@ -116,18 +116,18 @@ namespace Flare
 		InputManager::ProcessEvent(event);
 
 		EventDispatcher dispatcher(event);
-		dispatcher.Dispatch<KeyReleasedEvent>([](KeyReleasedEvent& e) -> bool
+		dispatcher.Dispatch<KeyReleasedEvent>([this](KeyReleasedEvent& e) -> bool
 		{
 			switch (e.GetKeyCode())
 			{
 			case KeyCode::G:
-				EditorContext::Instance.Gizmo = GizmoMode::Translate;
+				m_Guizmo = GuizmoMode::Translate;
 				break;
 			case KeyCode::R:
-				EditorContext::Instance.Gizmo = GizmoMode::Rotate;
+				m_Guizmo = GuizmoMode::Rotate;
 				break;
 			case KeyCode::S:
-				EditorContext::Instance.Gizmo = GizmoMode::Scale;
+				m_Guizmo = GuizmoMode::Scale;
 				break;
 			}
 
@@ -226,7 +226,6 @@ namespace Flare
 		Ref<EditorAssetManager> assetManager = As<EditorAssetManager>(AssetManager::GetInstance());
 
 		assetManager->Reinitialize();
-		EditorContext::Initialize();
 
 		UpdateWindowTitle();
 		m_AssetManagerWindow.RebuildAssetTree();
@@ -287,7 +286,7 @@ namespace Flare
 
 	void EditorLayer::EnterPlayMode()
 	{
-		FLARE_CORE_ASSERT(EditorContext::Instance.Mode == EditorMode::Edit);
+		FLARE_CORE_ASSERT(m_Mode == EditorMode::Edit);
 
 		Ref<Scene> active = Scene::GetActive();
 
@@ -308,7 +307,7 @@ namespace Flare
 		SceneSerializer::Deserialize(playModeScene, activeScenePath);
 
 		Scene::SetActive(playModeScene);
-		EditorContext::Instance.Mode = EditorMode::Play;
+		m_Mode = EditorMode::Play;
 
 		playModeScene->InitializeRuntime();
 		Scene::GetActive()->OnRuntimeStart();
@@ -316,7 +315,7 @@ namespace Flare
 
 	void EditorLayer::ExitPlayMode()
 	{
-		FLARE_CORE_ASSERT(EditorContext::Instance.Mode == EditorMode::Play);
+		FLARE_CORE_ASSERT(m_Mode == EditorMode::Play);
 
 		Scene::GetActive()->OnRuntimeEnd();
 
@@ -328,7 +327,7 @@ namespace Flare
 		editorScene->InitializeRuntime();
 
 		Scene::SetActive(editorScene);
-		EditorContext::Instance.Mode = EditorMode::Edit;
+		m_Mode = EditorMode::Edit;
 	}
 
 	EditorLayer& EditorLayer::GetInstance()

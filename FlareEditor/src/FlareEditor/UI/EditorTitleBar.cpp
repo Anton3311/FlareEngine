@@ -5,7 +5,6 @@
 #include "Flare/Platform/Platform.h"
 #include "Flare/Project/Project.h"
 
-#include "FlareEditor/EditorContext.h"
 #include "FlareEditor/EditorLayer.h"
 
 #include "FlareEditor/UI/EditorGUI.h"
@@ -44,7 +43,7 @@ namespace Flare
 
 		if (EditorGUI::BeginMenu("Project"))
 		{
-			ImGui::BeginDisabled(EditorContext::Instance.Mode != EditorMode::Edit);
+			ImGui::BeginDisabled(EditorLayer::GetInstance().GetMode() != EditorMode::Edit);
 			if (ImGui::MenuItem("Save"))
 				Project::Save();
 
@@ -66,7 +65,7 @@ namespace Flare
 
 		if (EditorGUI::BeginMenu("Scene"))
 		{
-			ImGui::BeginDisabled(EditorContext::Instance.Mode != EditorMode::Edit);
+			ImGui::BeginDisabled(EditorLayer::GetInstance().GetMode() != EditorMode::Edit);
 			if (ImGui::MenuItem("Save"))
 				EditorLayer::GetInstance().SaveActiveScene();
 			if (ImGui::MenuItem("Save As"))
@@ -87,7 +86,7 @@ namespace Flare
 		float buttonHeight = window->MenuBarHeight();
 
 		ImVec2 buttonSize = ImVec2(60.0f, buttonHeight);
-		if (EditorContext::Instance.Mode == EditorMode::Edit)
+		if (EditorLayer::GetInstance().GetMode() == EditorMode::Edit)
 		{
 			if (ImGui::Button("Play", buttonSize))
 				EditorLayer::GetInstance().EnterPlayMode();

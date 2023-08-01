@@ -3,7 +3,6 @@
 #include "Flare/Scene/Scene.h"
 #include "Flare/ImGui/ImGUILayer.h"
 
-#include "FlareEditor/EditorContext.h"
 #include "FlareEditor/UI/EditorGUI.h"
 
 #include <glm/glm.hpp>

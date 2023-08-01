@@ -1,8 +1,7 @@
 #include "ViewportWindow.h"
 
 #include "Flare/Renderer/RenderCommand.h"
-
-#include "FlareEditor/EditorContext.h"
+#include "Flare/Scene/Scene.h"
 
 #include <imgui.h>
 

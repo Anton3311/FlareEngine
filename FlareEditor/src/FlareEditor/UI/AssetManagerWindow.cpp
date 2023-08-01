@@ -5,7 +5,6 @@
 
 #include "Flare/Project/Project.h"
 
-#include "FlareEditor/EditorContext.h"
 #include "FlareEditor/UI/EditorGUI.h"
 
 #include <imgui.h>
