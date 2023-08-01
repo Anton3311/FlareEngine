@@ -100,6 +100,9 @@ namespace Sandbox
 
 		static void ConfigureSerialization(Flare::TypeSerializationSettings& settings)
 		{
+			FLARE_SERIALIZE_FIELD(settings, SpawnSystem, TestValue);
+			FLARE_SERIALIZE_FIELD(settings, SpawnSystem, Tex);
+			FLARE_SERIALIZE_FIELD(settings, SpawnSystem, Vector);
 		}
 
 		virtual void Execute(Flare::EntityView& chunk) override
@@ -133,6 +136,10 @@ namespace Sandbox
 				movingQuad.Speed = 10.0f;
 			}
 		}
+	private:
+		float TestValue;
+		Flare::TextureAsset Tex;
+		glm::vec3 Vector;
 	};
 	FLARE_SYSTEM_IMPL(SpawnSystem);
 }

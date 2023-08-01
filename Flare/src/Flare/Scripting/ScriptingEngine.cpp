@@ -148,6 +148,7 @@ namespace Flare
 		s_Data.Modules.clear();
 		s_Data.TypeNameToIndex.clear();
 		s_Data.SystemIndexToInstance.clear();
+		s_Data.SystemNameToInstance.clear();
 		s_Data.CurrentWorld = nullptr;
 	}
 
@@ -193,6 +194,28 @@ namespace Flare
 		s_Data.ShouldRegisterComponents = false;
 	}
 
+	void ScriptingEngine::CreateSystems()
+	{
+		size_t moduleIndex = 0;
+		for (ScriptingModuleData& module : s_Data.Modules)
+		{
+			module.FirstSystemInstance = module.ScriptingInstances.size();
+			for (const Internal::SystemInfo* systemInfo : *module.Config.RegisteredSystems)
+			{
+				auto typeIndexIterator = s_Data.TypeNameToIndex.find(std::string(systemInfo->Name));
+				FLARE_CORE_ASSERT(typeIndexIterator != s_Data.TypeNameToIndex.end());
+
+				const Internal::ScriptingType* type = (*module.Config.RegisteredTypes)[typeIndexIterator->second.IndexInModule];
+				Internal::SystemBase* systemInstance = (Internal::SystemBase*)type->Constructor();
+
+				s_Data.SystemNameToInstance.emplace(systemInfo->Name, ScriptingItemIndex(moduleIndex, module.ScriptingInstances.size()));
+				module.ScriptingInstances.push_back(ScriptingTypeInstance{ typeIndexIterator->second, systemInstance });
+			}
+
+			moduleIndex++;
+		}
+	}
+
 	void ScriptingEngine::RegisterSystems()
 	{
 		std::string_view defaultGroupName = "Scripting Update";
@@ -201,21 +224,18 @@ namespace Flare
 
 		for (ScriptingModuleData& module : s_Data.Modules)
 		{
+			size_t instanceIndex = module.FirstSystemInstance;
 			for (const Internal::SystemInfo* systemInfo : *module.Config.RegisteredSystems)
 			{
 				SystemsManager& systems = s_Data.CurrentWorld->GetSystemsManager();
-				size_t instanceIndex = module.ScriptingInstances.size();
 
-				auto typeIndexIterator = s_Data.TypeNameToIndex.find(std::string(systemInfo->Name));
-				FLARE_CORE_ASSERT(typeIndexIterator != s_Data.TypeNameToIndex.end());
-
-				const Internal::ScriptingType* type = (*module.Config.RegisteredTypes)[typeIndexIterator->second.IndexInModule];
-				Internal::SystemBase* systemInstance = (Internal::SystemBase*)type->Constructor();
-
-				module.ScriptingInstances.push_back(ScriptingTypeInstance{ typeIndexIterator->second, systemInstance });
+				ScriptingTypeInstance& instance = module.ScriptingInstances[instanceIndex];
+				Internal::SystemBase* systemInstance = (Internal::SystemBase*)instance.Instance;
 
 				Internal::SystemConfiguration config(&s_Data.TemporaryQueryComponents, defaultGroup.value());
 				systemInstance->Configure(config);
+
+				const Internal::ScriptingType* type = GetScriptingType(instance.Type);
 
 				if (!systems.IsGroupIdValid(config.Group))
 				{
@@ -255,10 +275,11 @@ namespace Flare
 					nullptr);
 
 				s_Data.SystemIndexToInstance.emplace(systemIndex, ScriptingItemIndex(
-					typeIndexIterator->second.ModuleIndex, 
+					instance.Type.ModuleIndex,
 					instanceIndex));
 
 				s_Data.TemporaryQueryComponents.clear();
+				instanceIndex++;
 			}
 		}
 	}
@@ -273,9 +294,6 @@ namespace Flare
 
 	std::optional<const Internal::ScriptingType*> ScriptingEngine::FindSystemType(uint32_t systemIndex)
 	{
-		if (systemIndex >= (uint32_t)s_Data.SystemIndexToInstance.size())
-			return {};
-
 		auto it = s_Data.SystemIndexToInstance.find(systemIndex);
 		if (it == s_Data.SystemIndexToInstance.end())
 			return {};
@@ -286,11 +304,19 @@ namespace Flare
 			.ScriptingInstances[instanceIndex.IndexInModule].Type);
 	}
 
-	std::optional<uint8_t*> ScriptingEngine::FindSystemInstance(uint32_t systemIndex)
+	std::optional<Internal::SystemBase*> ScriptingEngine::FindSystemByName(std::string_view name)
 	{
-		if (systemIndex >= (uint32_t)s_Data.SystemIndexToInstance.size())
+		auto it = s_Data.SystemNameToInstance.find(name);
+		if (it == s_Data.SystemNameToInstance.end())
 			return {};
 
+		ScriptingItemIndex index = it->second;
+		void* instance = s_Data.Modules[index.ModuleIndex].ScriptingInstances[index.IndexInModule].Instance;
+		return (Internal::SystemBase*)instance;
+	}
+
+	std::optional<uint8_t*> ScriptingEngine::FindSystemInstance(uint32_t systemIndex)
+	{
 		auto it = s_Data.SystemIndexToInstance.find(systemIndex);
 		if (it == s_Data.SystemIndexToInstance.end())
 			return {};

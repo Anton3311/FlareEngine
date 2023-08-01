@@ -38,3 +38,9 @@ Entities:
       - Name: struct Sandbox::Spawner
         Interval: 0.200000003
         TimeLeft: 1
+Systems:
+  - Name: struct Sandbox::TestSystem
+  - Name: struct Sandbox::SpawnSystem
+    TestValue: -10
+    Tex: 5193090395626261884
+    Vector: [-6.80000019, -9.80000019, 5.69999981]

@@ -40,6 +40,7 @@ namespace Flare
 		std::optional<ModuleEventFunction> OnUnload;
 
 		std::vector<ScriptingTypeInstance> ScriptingInstances;
+		size_t FirstSystemInstance;
 	};
 
 	class ScriptingEngine
@@ -54,8 +55,10 @@ namespace Flare
 			std::vector<ComponentId> TemporaryQueryComponents;
 
 			std::unordered_map<ComponentId, ScriptingItemIndex> ComponentIdToTypeIndex;
-			std::unordered_map<uint32_t, ScriptingItemIndex> SystemIndexToInstance;
 			std::unordered_map<std::string, ScriptingItemIndex> TypeNameToIndex;
+
+			std::unordered_map<uint32_t, ScriptingItemIndex> SystemIndexToInstance;
+			std::unordered_map<std::string_view, ScriptingItemIndex> SystemNameToInstance;
 		};
 	public:
 		static void Initialize();
@@ -71,18 +74,22 @@ namespace Flare
 		static void UnloadAllModules();
 
 		static void RegisterComponents();
+		static void CreateSystems();
 		static void RegisterSystems();
 		
 		static std::optional<const Internal::ScriptingType*> FindType(std::string_view name);
 		static std::optional<const Internal::ScriptingType*> FindSystemType(uint32_t systemIndex);
+
+		static std::optional<Internal::SystemBase*> FindSystemByName(std::string_view name);
+
 		static std::optional<uint8_t*> FindSystemInstance(uint32_t systemIndex);
 
 		static std::optional<const Internal::ScriptingType*> FindComponentType(ComponentId id);
+		static const Internal::ScriptingType* GetScriptingType(ScriptingItemIndex index);
 
 		inline static Data& GetData() { return s_Data; }
 	private:
 		static void LoadModule(const std::filesystem::path& modulePath);
-		static const Internal::ScriptingType* GetScriptingType(ScriptingItemIndex index);
 	private:
 		static Data s_Data;
 

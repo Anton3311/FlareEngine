@@ -15,6 +15,88 @@
 
 namespace Flare
 {
+	static void SerializeType(YAML::Emitter& emitter, const Internal::ScriptingType& type, const uint8_t* data)
+	{
+		emitter << YAML::BeginMap;
+		emitter << YAML::Key << "Name" << YAML::Value << std::string(type.Name);
+
+		const Internal::TypeSerializationSettings& serializationSettings = type.GetSerializationSettings();
+		for (const Internal::Field& field : serializationSettings.GetFields())
+		{
+			const uint8_t* fieldData = (const uint8_t*)data + field.Offset;
+			switch (field.Type)
+			{
+			case Internal::FieldType::Float2:
+				emitter << YAML::Key << field.Name << YAML::Value << *(glm::vec2*)(fieldData);
+				break;
+			case Internal::FieldType::Float3:
+				emitter << YAML::Key << field.Name << YAML::Value << *(glm::vec3*)(fieldData);
+				break;
+			case Internal::FieldType::Float:
+				emitter << YAML::Key << field.Name << YAML::Value << *(float*)(fieldData);
+				break;
+			case Internal::FieldType::Asset:
+			case Internal::FieldType::Texture:
+				emitter << YAML::Key << field.Name << YAML::Value << *(AssetHandle*)(fieldData);
+				break;
+			case Internal::FieldType::Entity:
+			{
+				FLARE_CORE_WARN("Entity serialization is not implemented");
+				break;
+			}
+			default:
+				FLARE_CORE_ASSERT(false, "Unhandled field type");
+			}
+		}
+
+		emitter << YAML::EndMap;
+	}
+
+	static void DeserializeType(YAML::Node& node, const Internal::ScriptingType& type, uint8_t* data)
+	{
+		for (const Internal::Field& field : type.GetSerializationSettings().GetFields())
+		{
+			if (YAML::Node fieldNode = node[field.Name])
+			{
+				switch (field.Type)
+				{
+				case Internal::FieldType::Float:
+				{
+					float value = fieldNode.as<float>();
+					std::memcpy(data + field.Offset, &value, sizeof(value));
+					break;
+				}
+				case Internal::FieldType::Float2:
+				{
+					glm::vec2 vector = fieldNode.as<glm::vec2>();
+					std::memcpy(data + field.Offset, &vector, sizeof(vector));
+					break;
+				}
+				case Internal::FieldType::Float3:
+				{
+					glm::vec3 vector = fieldNode.as<glm::vec3>();
+					std::memcpy(data + field.Offset, &vector, sizeof(vector));
+					break;
+				}
+				case Internal::FieldType::Asset:
+				case Internal::FieldType::Texture:
+				{
+					AssetHandle handle = fieldNode.as<AssetHandle>();
+					std::memcpy(data + field.Offset, &handle, sizeof(handle));
+					break;
+				}
+				case Internal::FieldType::Entity:
+				{
+					FLARE_CORE_WARN("Entity serialization is not implemented");
+					break;
+				}
+				default:
+					FLARE_CORE_ASSERT(false, "Unhandled field type");
+				}
+			}
+		}
+	}
+
 	static void SerializeComponent(YAML::Emitter& emitter, World& world, Entity entity, ComponentId component)
 	{
 		if (component == TransformComponent::Id)
@@ -71,41 +153,7 @@ namespace Flare
 			FLARE_CORE_ASSERT(entityData.has_value());
 
 			if (componentType.has_value())
-			{
-				emitter << YAML::BeginMap;
-				emitter << YAML::Key << "Name" << YAML::Value << std::string(componentType.value()->Name);
-
-				const Internal::TypeSerializationSettings& serializationSettings = componentType.value()->GetSerializationSettings();
-				for (const Internal::Field& field : serializationSettings.GetFields())
-				{
-					uint8_t* fieldData = (uint8_t*)entityData.value() + field.Offset;
-					switch (field.Type)
-					{
-					case Internal::FieldType::Float2:
-						emitter << YAML::Key << field.Name << YAML::Value << *(glm::vec2*)(fieldData);
-						break;
-					case Internal::FieldType::Float3:
-						emitter << YAML::Key << field.Name << YAML::Value << *(glm::vec3*)(fieldData);
-						break;
-					case Internal::FieldType::Float:
-						emitter << YAML::Key << field.Name << YAML::Value << *(float*)(fieldData);
-						break;
-					case Internal::FieldType::Asset:
-					case Internal::FieldType::Texture:
-						emitter << YAML::Key << field.Name << YAML::Value << *(AssetHandle*)(fieldData);
-						break;
-					case Internal::FieldType::Entity:
-					{
-						FLARE_CORE_WARN("Entity serialization is not implemented");
-						break;
-					}
-					default:
-						FLARE_CORE_ASSERT(false, "Unhandled field type");
-					}
-				}
-
-				emitter << YAML::EndMap;
-			}
+				SerializeType(emitter, *componentType.value(), (const uint8_t*)entityData.value());
 			else
 				FLARE_CORE_ERROR("Componnet with id={{0};{1}} cannot be serialized because it's type infomation cannot be found",
 					component.GetIndex(), component.GetGeneration());
@@ -166,6 +214,24 @@ namespace Flare
 		}
 
 		emitter << YAML::EndSeq;
+
+		emitter << YAML::Key << "Systems";
+		emitter << YAML::BeginSeq;
+
+		const auto& modules = ScriptingEngine::GetData().Modules;
+		for (const ScriptingModuleData& module : modules)
+		{
+			for (size_t systemIndex = module.FirstSystemInstance; systemIndex < module.Config.RegisteredSystems->size(); systemIndex++)
+			{
+				const ScriptingTypeInstance& instance = module.ScriptingInstances[systemIndex];
+				std::optional<const Internal::ScriptingType*> type = ScriptingEngine::GetScriptingType(instance.Type);
+
+				if (type.has_value())
+					SerializeType(emitter, *type.value(), (const uint8_t*)instance.Instance);
+			}
+		}
+		emitter << YAML::EndSeq;
+
 		emitter << YAML::EndMap;
 
 		std::ofstream output(path);
@@ -256,7 +322,7 @@ namespace Flare
 					std::optional<ComponentId> componentId = scene->GetECSWorld().GetRegistry().FindComponnet(name);
 					if (!componentId.has_value())
 					{
-						FLARE_CORE_ERROR("Component named {0} cannot not be deserialized", name);
+						FLARE_CORE_ERROR("Component named '{0}' cannot not be deserialized", name);
 						continue;
 					}
 
@@ -264,49 +330,36 @@ namespace Flare
 					if (type.has_value())
 					{
 						uint8_t* componentData = AddDeserializedComponent(scene->GetECSWorld(), entity, componentId.value());
-						for (const Internal::Field& field : type.value()->GetSerializationSettings().GetFields())
-						{
-							if (YAML::Node fieldNode = componentNode[field.Name])
-							{
-								switch (field.Type)
-								{
-									case Internal::FieldType::Float:
-									{
-										float value = fieldNode.as<float>();
-										std::memcpy(componentData + field.Offset, &value, sizeof(value));
-										break;
-									}
-									case Internal::FieldType::Float2:
-									{
-										glm::vec2 vector = fieldNode.as<glm::vec2>();
-										std::memcpy(componentData + field.Offset, &vector, sizeof(vector));
-										break;
-									}
-									case Internal::FieldType::Float3:
-									{
-										glm::vec3 vector = fieldNode.as<glm::vec3>();
-										std::memcpy(componentData + field.Offset, &vector, sizeof(vector));
-										break;
-									}
-									case Internal::FieldType::Asset:
-									case Internal::FieldType::Texture:
-									{
-										AssetHandle handle = fieldNode.as<AssetHandle>();
-										std::memcpy(componentData + field.Offset, &handle, sizeof(handle));
-										break;
-									}
-									case Internal::FieldType::Entity:
-									{
-										FLARE_CORE_WARN("Entity serialization is not implemented");
-										break;
-									}
-									default:
-										FLARE_CORE_ASSERT(false, "Unhandled field type");
-								}
-							}
-						}
+						DeserializeType(componentNode, *type.value(), componentData);
 					}
 				}
+			}
+		}
+
+		YAML::Node systems = node["Systems"];
+		if (!systems)
+			return;
+
+		for (auto system : systems)
+		{
+			if (YAML::Node nameNode = system["Name"])
+			{
+				std::string name = nameNode.as<std::string>();
+				std::optional<const Internal::ScriptingType*> type = ScriptingEngine::FindType(name);
+				if (!type.has_value())
+				{
+					FLARE_CORE_ERROR("System named '{0}' cannot be deserialized", name);
+					continue;
+				}
+
+				std::optional<Internal::SystemBase*> systemData = ScriptingEngine::FindSystemByName(name);
+				if (!systemData.has_value())
+				{
+					FLARE_CORE_ERROR("System '{0}' cannot be found", name);
+					continue;
+				}
+
+				DeserializeType(system, *type.value(), (uint8_t*) systemData.value());
 			}
 		}
 	}
