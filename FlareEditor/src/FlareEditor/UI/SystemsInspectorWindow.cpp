@@ -20,7 +20,7 @@ namespace Flare
 			ImVec2 size = ImGui::GetContentRegionAvail();
 			ImVec2 systemsSectionSize = ImVec2(glm::max(300.0f, size.x * 0.3f), size.y);
 
-			Ref<Scene> scene = EditorContext::GetActiveScene();
+			Ref<Scene> scene = Scene::GetActive();
 			const World& world = scene->GetECSWorld();
 			const SystemsManager& systems = world.GetSystemsManager();
 
@@ -75,7 +75,7 @@ namespace Flare
 
 	void SystemsInspectorWindow::RenderSystemItem(uint32_t systemIndex)
 	{
-		Ref<Scene> scene = EditorContext::GetActiveScene();
+		Ref<Scene> scene = Scene::GetActive();
 		const World& world = scene->GetECSWorld();
 		const SystemsManager& systems = world.GetSystemsManager();
 

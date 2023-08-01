@@ -29,7 +29,7 @@ namespace Flare
 	EditorLayer* EditorLayer::s_Instance = nullptr;
 
 	EditorLayer::EditorLayer()
-		: Layer("EditorLayer")
+		: Layer("EditorLayer"), m_EditedSceneHandle(NULL_ASSET_HANDLE), m_PlaymodePaused(false)
 	{
 		s_Instance = this;
 	}
@@ -46,15 +46,15 @@ namespace Flare
 		{
 			Ref<EditorAssetManager> assetManager = As<EditorAssetManager>(AssetManager::GetInstance());
 
-			assetManager->UnloadAsset(EditorContext::GetActiveScene()->Handle);
-			EditorContext::Uninitialize();
+			assetManager->UnloadAsset(Scene::GetActive()->Handle);
+			Scene::SetActive(nullptr);
 		});
 
 		AssetManager::Intialize(CreateRef<EditorAssetManager>());
 
 		m_AssetManagerWindow.SetOpenAction(AssetType::Scene, [this](AssetHandle handle)
 		{
-			EditorContext::OpenScene(handle);
+			OpenScene(handle);
 		});
 
 		EditorContext::Initialize();
@@ -88,9 +88,10 @@ namespace Flare
 		if (EditorContext::Instance.Mode == EditorMode::Play)
 			ExitPlayMode();
 
-		if (AssetManager::IsAssetHandleValid(EditorContext::GetEditedScene()->Handle))
-			As<EditorAssetManager>(AssetManager::GetInstance())->UnloadAsset(EditorContext::GetEditedScene()->Handle);
+		if (AssetManager::IsAssetHandleValid(Scene::GetActive()->Handle))
+			As<EditorAssetManager>(AssetManager::GetInstance())->UnloadAsset(Scene::GetActive()->Handle);
 
+		Scene::SetActive(nullptr);
 		EditorContext::Uninitialize();
 	}
 
@@ -102,8 +103,8 @@ namespace Flare
 
 		ScriptingEngine::OnFrameStart(deltaTime);
 
-		if (!m_PlaymodePaused)
-			EditorContext::GetActiveScene()->OnUpdateRuntime();
+		if (EditorContext::Instance.Mode == EditorMode::Play && !m_PlaymodePaused)
+			Scene::GetActive()->OnUpdateRuntime();
 
 		for (auto& viewport : m_Viewports)
 			viewport->OnRenderViewport();
@@ -231,13 +232,14 @@ namespace Flare
 		m_AssetManagerWindow.RebuildAssetTree();
 
 		AssetHandle startScene = Project::GetActive()->StartScene;
-		EditorContext::OpenScene(startScene);
+		OpenScene(startScene);
 	}
 
 	void EditorLayer::SaveActiveScene()
 	{
-		if (AssetManager::IsAssetHandleValid(EditorContext::GetActiveScene()->Handle))
-			SceneSerializer::Serialize(EditorContext::GetActiveScene());
+		FLARE_CORE_ASSERT(Scene::GetActive());
+		if (AssetManager::IsAssetHandleValid(Scene::GetActive()->Handle))
+			SceneSerializer::Serialize(Scene::GetActive());
 		else
 			SaveActiveSceneAs();
 	}
@@ -251,9 +253,35 @@ namespace Flare
 			if (!path.has_extension())
 				path.replace_extension(".flare");
 
-			SceneSerializer::Serialize(EditorContext::GetActiveScene(), path);
+			SceneSerializer::Serialize(Scene::GetActive(), path);
 			AssetHandle handle = As<EditorAssetManager>(AssetManager::GetInstance())->ImportAsset(path);
-			EditorContext::OpenScene(handle);
+			OpenScene(handle);
+		}
+	}
+
+	void EditorLayer::OpenScene(AssetHandle handle)
+	{
+		if (AssetManager::IsAssetHandleValid(handle))
+		{
+			Ref<Scene> active = Scene::GetActive();
+
+			Ref<EditorAssetManager> editorAssetManager = As<EditorAssetManager>(AssetManager::GetInstance());
+
+			if (active != nullptr && AssetManager::IsAssetHandleValid(active->Handle))
+				editorAssetManager->UnloadAsset(active->Handle);
+
+			active = nullptr;
+			Scene::SetActive(nullptr);
+			ScriptingEngine::UnloadAllModules();
+
+			ScriptingEngine::LoadModules();
+
+			active = AssetManager::GetAsset<Scene>(handle);
+			Scene::SetActive(active);
+
+			active->InitializeRuntime();
+
+			m_EditedSceneHandle = handle;
 		}
 	}
 
@@ -261,34 +289,46 @@ namespace Flare
 	{
 		FLARE_CORE_ASSERT(EditorContext::Instance.Mode == EditorMode::Edit);
 
+		Ref<Scene> active = Scene::GetActive();
+
+		Ref<EditorAssetManager> assetManager = As<EditorAssetManager>(AssetManager::GetInstance());
+		std::filesystem::path activeScenePath = assetManager->GetAssetMetadata(active->Handle)->Path;
 		SaveActiveScene();
 
 		m_PlaymodePaused = false;
 
-		Ref<Scene> playModeScene = CreateRef<Scene>(false);
-		ScriptingEngine::SetCurrentECSWorld(playModeScene->GetECSWorld());
+		Scene::SetActive(nullptr);
+		assetManager->UnloadAsset(active->Handle);
+		active = nullptr;
 
-		playModeScene->CopyFrom(EditorContext::GetActiveScene());
-		playModeScene->Initialize();
-		playModeScene->InitializeRuntime();
+		ScriptingEngine::UnloadAllModules();
 
-		EditorContext::SetActiveScene(playModeScene);
+		ScriptingEngine::LoadModules();
+		Ref<Scene> playModeScene = CreateRef<Scene>();
+		SceneSerializer::Deserialize(playModeScene, activeScenePath);
+
+		Scene::SetActive(playModeScene);
 		EditorContext::Instance.Mode = EditorMode::Play;
 
-		EditorContext::GetActiveScene()->OnRuntimeStart();
+		playModeScene->InitializeRuntime();
+		Scene::GetActive()->OnRuntimeStart();
 	}
 
 	void EditorLayer::ExitPlayMode()
 	{
-		EditorContext::GetActiveScene()->OnRuntimeEnd();
-
 		FLARE_CORE_ASSERT(EditorContext::Instance.Mode == EditorMode::Play);
 
-		EditorContext::SetActiveScene(EditorContext::GetEditedScene());
+		Scene::GetActive()->OnRuntimeEnd();
 
+		Scene::SetActive(nullptr);
+		ScriptingEngine::UnloadAllModules();
+
+		ScriptingEngine::LoadModules();
+	 	Ref<Scene> editorScene = AssetManager::GetAsset<Scene>(m_EditedSceneHandle);
+		editorScene->InitializeRuntime();
+
+		Scene::SetActive(editorScene);
 		EditorContext::Instance.Mode = EditorMode::Edit;
-
-		ScriptingEngine::SetCurrentECSWorld(EditorContext::GetActiveScene()->GetECSWorld());
 	}
 
 	EditorLayer& EditorLayer::GetInstance()

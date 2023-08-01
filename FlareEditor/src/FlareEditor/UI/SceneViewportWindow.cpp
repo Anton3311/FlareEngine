@@ -38,7 +38,7 @@ namespace Flare
 	{
 		BeginImGui();
 
-		World& world = EditorContext::GetActiveScene()->GetECSWorld();
+		World& world = Scene::GetActive()->GetECSWorld();
 		if (ImGui::BeginDragDropTarget())
 		{
 			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(ASSET_PAYLOAD_NAME))
@@ -50,7 +50,7 @@ namespace Flare
 					switch (metadata->Type)
 					{
 					case AssetType::Scene:
-						EditorContext::OpenScene(handle);
+						EditorLayer::GetInstance().OpenScene(handle);
 						break;
 					case AssetType::Texture:
 					{
@@ -158,7 +158,7 @@ namespace Flare
 		int32_t entityIndex;
 		m_FrameBuffer->ReadPixel(1, m_RelativeMousePosition.x, m_RelativeMousePosition.y, &entityIndex);
 
-		std::optional<Entity> entity = EditorContext::GetActiveScene()->GetECSWorld().GetRegistry().FindEntityByIndex(entityIndex);
+		std::optional<Entity> entity = Scene::GetActive()->GetECSWorld().GetRegistry().FindEntityByIndex(entityIndex);
 
 		m_FrameBuffer->Unbind();
 

@@ -87,4 +87,7 @@ namespace Flare::Internal
 	#define FLARE_GET_FIELD_TYPE(typeName, fieldName) decltype(((typeName*) nullptr)->fieldName)
 	#define FLARE_SERIALIZE_FIELD(settings, typeName, fieldName) settings.AddField<FLARE_GET_FIELD_TYPE(typeName, fieldName)> \
 		(#fieldName, offsetof(typeName, fieldName));
+
+#define FLARE_DEFAULT_SERIALIZER \
+	static void ConfigureSerialization(Flare::Internal::TypeSerializationSettings& settings) {}
 #endif

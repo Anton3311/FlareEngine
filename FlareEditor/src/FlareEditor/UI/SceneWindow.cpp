@@ -17,7 +17,7 @@ namespace Flare
 {
 	void SceneWindow::OnImGuiRender()
 	{
-		World& world = EditorContext::GetActiveScene()->GetECSWorld();
+		World& world = Scene::GetActive()->GetECSWorld();
 
 		ImGui::Begin("Scene");
 

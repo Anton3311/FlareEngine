@@ -241,7 +241,7 @@ namespace Flare
 					result |= EditorGUI::AssetField(field.Name.c_str(), *(AssetHandle*)fieldData);
 					break;
 				case Internal::FieldType::Entity:
-					result |= EditorGUI::EntityField(field.Name.c_str(), EditorContext::GetActiveScene()->GetECSWorld(), *(Entity*)fieldData);
+					result |= EditorGUI::EntityField(field.Name.c_str(), Scene::GetActive()->GetECSWorld(), *(Entity*)fieldData);
 					break;
 				}
 			}

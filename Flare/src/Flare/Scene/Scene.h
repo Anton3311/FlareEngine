@@ -34,6 +34,9 @@ namespace Flare
 		void OnViewportResize(uint32_t width, uint32_t height);
 
 		inline World& GetECSWorld() { return m_World; }
+
+		inline static Ref<Scene> GetActive() { return s_Active; }
+		inline static void SetActive(const Ref<Scene>& scene) { s_Active = scene; }
 	private:
 		World m_World;
 		Ref<Shader> m_QuadShader;
@@ -45,6 +48,7 @@ namespace Flare
 
 		Query m_CameraDataUpdateQuery;
 	private:
+		static Ref<Scene> s_Active;
 		friend SceneSerializer;
 	};
 }
