@@ -1,6 +1,7 @@
 #include "SceneWindow.h"
 
 #include "Flare/Scene/Components.h"
+#include "Flare/ImGui/ImGuiTheme.h"
 
 #include "FlareECS/World.h"
 #include "FlareECS/Query/EntityRegistryIterator.h"
@@ -43,9 +44,32 @@ namespace Flare
 					continue;
 
 				Entity entity = records[i].Id;
-				ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_FramePadding;
+				ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow
+					| ImGuiTreeNodeFlags_FramePadding
+					| ImGuiTreeNodeFlags_Bullet
+					| ImGuiTreeNodeFlags_SpanFullWidth;
+
+				ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImGui::GetStyle().FramePadding / 2);
+
+				bool selected = entity == EditorContext::Instance.SelectedEntity;
+				if (selected)
+				{
+					flags |= ImGuiTreeNodeFlags_Framed;
+					ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0.0f);
+					ImGui::PushStyleColor(ImGuiCol_Header, ImGuiTheme::Primary);
+					ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImGuiTheme::Primary);
+					ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImGuiTheme::PrimaryVariant);
+				}
 
 				bool opened = ImGui::TreeNodeEx((void*)std::hash<Entity>()(entity), flags, "Entity %d", entity.GetIndex());
+
+				if (selected)
+				{
+					ImGui::PopStyleVar(1);
+					ImGui::PopStyleColor(3);
+				}
+
+				ImGui::PopStyleVar(1);
 
 				if (ImGui::BeginDragDropSource())
 				{
