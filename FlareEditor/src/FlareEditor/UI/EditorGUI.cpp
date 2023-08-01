@@ -44,7 +44,7 @@ namespace Flare
 		ImGui::PopStyleVar(2);
 		ImGui::PopStyleColor(1);
 		
-		return ImGui::BeginPopup(name);
+		return ImGui::BeginPopup(name, ImGuiWindowFlags_NoMove);
 	}
 
 	void EditorGUI::EndMenu()
