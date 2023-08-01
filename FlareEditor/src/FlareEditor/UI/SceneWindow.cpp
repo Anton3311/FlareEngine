@@ -7,6 +7,7 @@
 #include "FlareECS/Registry.h"
 
 #include "FlareEditor/EditorContext.h"
+#include "FlareEditor/UI/EditorGUI.h"
 
 #include <imgui.h>
 #include <imgui_internal.h>
@@ -46,13 +47,17 @@ namespace Flare
 
 				bool opened = ImGui::TreeNodeEx((void*)std::hash<Entity>()(entity), flags, "Entity %d", entity.GetIndex());
 
-				if (ImGui::IsItemClicked())
+				if (ImGui::BeginDragDropSource())
+				{
+					ImGui::SetDragDropPayload(ENTITY_PAYLOAD_NAME, &entity, sizeof(Entity));
+					ImGui::EndDragDropSource();
+				}
+
+				if (ImGui::IsItemHovered() && ImGui::IsMouseReleased(ImGuiMouseButton_Left))
 					EditorContext::Instance.SelectedEntity = entity;
 
 				if (opened)
-				{
 					ImGui::TreePop();
-				}
 
 				if (ImGui::BeginPopupContextItem())
 				{

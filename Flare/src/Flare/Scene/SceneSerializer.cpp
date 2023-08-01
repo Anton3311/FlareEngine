@@ -94,6 +94,11 @@ namespace Flare
 					case Internal::FieldType::Texture:
 						emitter << YAML::Key << field.Name << YAML::Value << *(AssetHandle*)(fieldData);
 						break;
+					case Internal::FieldType::Entity:
+					{
+						FLARE_CORE_WARN("Entity serialization is not implemented");
+						break;
+					}
 					default:
 						FLARE_CORE_ASSERT(false, "Unhandled field type");
 					}
@@ -288,6 +293,11 @@ namespace Flare
 									{
 										AssetHandle handle = fieldNode.as<AssetHandle>();
 										std::memcpy(componentData + field.Offset, &handle, sizeof(handle));
+										break;
+									}
+									case Internal::FieldType::Entity:
+									{
+										FLARE_CORE_WARN("Entity serialization is not implemented");
 										break;
 									}
 									default:

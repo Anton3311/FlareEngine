@@ -114,7 +114,9 @@ namespace Flare
 				case Internal::FieldType::Texture:
 					EditorGUI::AssetField(field.Name.c_str(), *(AssetHandle*)fieldData);
 					break;
-
+				case Internal::FieldType::Entity:
+					EditorGUI::EntityField(field.Name.c_str(), EditorContext::GetActiveScene()->GetECSWorld(), *(Entity*)fieldData);
+					break;
 				}
 			}
 			EditorGUI::EndPropertyGrid();

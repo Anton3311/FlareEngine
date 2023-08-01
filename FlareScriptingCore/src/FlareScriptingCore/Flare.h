@@ -3,6 +3,7 @@
 #include "Flare/Core/UUID.h"
 
 #include "FlareECS/ComponentId.h"
+#include "FlareECS/EntityId.h"
 
 #include "FlareScriptingCore/Bindings/ECS/World.h"
 #include "FlareScriptingCore/Bindings/ECS/EntityView.h"
@@ -22,7 +23,6 @@
 namespace Flare
 {
 	using Internal::World;
-	using Internal::Entity;
 	using Internal::EntityView;
 	using Internal::EntityElement;
 	using Internal::ComponentView;

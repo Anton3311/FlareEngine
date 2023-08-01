@@ -21,8 +21,8 @@ Entities:
         TextureTiling: [1, 1]
   - Components:
       - Name: Transform
-        Position: [-4.19999981, -1.20000005, -0.5]
-        Rotation: [0, 0, 45]
+        Position: [-4.0128355, 0.29252696, -0.5]
+        Rotation: [0, -0, 45.0000038]
         Scale: [1, 1, 1]
       - Name: Sprite
         Color: [1, 1, 1, 1]

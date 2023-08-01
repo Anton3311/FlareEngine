@@ -3,6 +3,8 @@
 #include "Flare/AssetManager/AssetManager.h"
 #include "FlareEditor/AssetManager/EditorAssetManager.h"
 
+#include <spdlog/spdlog.h>
+
 #include <imgui.h>
 
 namespace Flare
@@ -94,16 +96,18 @@ namespace Flare
 	{
 		RenderPropertyName(name);
 
+		ImVec2 buttonSize = ImVec2(ImGui::GetContentRegionAvail().x - 60.0f, 0);
+
 		if (handle == NULL_ASSET_HANDLE)
-			ImGui::Button("None");
+			ImGui::Button("None", buttonSize);
 		else
 		{
 			const AssetMetadata* metadata = AssetManager::GetAssetMetadata(handle);
 
 			if (metadata != nullptr)
-				ImGui::Button(metadata->Path.filename().string().c_str());
+				ImGui::Button(metadata->Path.filename().string().c_str(), buttonSize);
 			else
-				ImGui::Button("Invalid");
+				ImGui::Button("Invalid", buttonSize);
 		}
 
 		bool result = false;
@@ -120,9 +124,45 @@ namespace Flare
 
 		ImGui::SameLine();
 
-		if (ImGui::Button("Reset"))
+		if (ImGui::Button("Reset", ImVec2(ImGui::GetContentRegionAvail().x, 0.0f)))
 		{
 			handle = NULL_ASSET_HANDLE;
+			return true;
+		}
+
+		return result;
+	}
+
+	bool EditorGUI::EntityField(const char* name, const World& world, Entity& entity)
+	{
+		bool alive = world.IsEntityAlive(entity);
+
+		RenderPropertyName(name);
+
+		float buttonWidth = ImGui::GetContentRegionAvail().x - 60.0f;
+
+		if (alive)
+			ImGui::Button(fmt::format("Enitty {0} {1}", entity.GetIndex(), entity.GetGeneration()).c_str(), ImVec2(buttonWidth, 0));
+		else
+			ImGui::Button("None", ImVec2(buttonWidth, 0));
+
+		bool result = false;
+		if (ImGui::BeginDragDropTarget())
+		{
+			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(ENTITY_PAYLOAD_NAME))
+			{
+				entity = *(Entity*)payload->Data;
+				result = true;
+			}
+
+			ImGui::EndDragDropTarget();
+		}
+
+		ImGui::SameLine();
+
+		if (ImGui::Button("Reset", ImVec2(ImGui::GetContentRegionAvail().x, 0.0f)))
+		{
+			entity = Entity();
 			return true;
 		}
 

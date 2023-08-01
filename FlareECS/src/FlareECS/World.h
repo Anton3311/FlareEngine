@@ -121,7 +121,7 @@ namespace Flare
 			m_Registry.DeleteEntity(entity);
 		}
 
-		inline bool IsEntityAlive(Entity entity)
+		inline bool IsEntityAlive(Entity entity) const
 		{
 			return m_Registry.IsEntityAlive(entity);
 		}
