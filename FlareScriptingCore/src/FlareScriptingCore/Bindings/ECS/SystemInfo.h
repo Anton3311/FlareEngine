@@ -36,7 +36,7 @@ namespace Flare::Internal
 			static Flare::SystemInfo System;
 
 	#define FLARE_SYSTEM_IMPL(systemName) \
-		FLARE_IMPL_SCRIPTING_TYPE(systemName) \
+		FLARE_IMPL_SCRIPTING_TYPE(systemName, systemName::ConfigureSerialization) \
 		Flare::SystemInfo systemName::System = Flare::SystemInfo(typeid(systemName).name());
 #endif
 }

@@ -43,6 +43,10 @@ namespace Sandbox
 			config.Query.Without<TestComponent>();
 		}
 
+		static void ConfigureSerialization(Flare::TypeSerializationSettings& settings)
+		{
+		}
+
 		virtual void Execute(Flare::EntityView& chunk) override
 		{
 			glm::vec3 direction = glm::vec3(0.0f);
@@ -92,6 +96,10 @@ namespace Sandbox
 		virtual void Configure(Flare::SystemConfiguration& config) override
 		{
 			config.Query.With<Spawner>();
+		}
+
+		static void ConfigureSerialization(Flare::TypeSerializationSettings& settings)
+		{
 		}
 
 		virtual void Execute(Flare::EntityView& chunk) override

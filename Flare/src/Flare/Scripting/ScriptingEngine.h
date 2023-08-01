@@ -14,9 +14,20 @@ namespace Flare
 {
 	using ModuleEventFunction = void(*)(Internal::ModuleConfiguration&);
 
+	struct ScriptingItemIndex
+	{
+		size_t ModuleIndex;
+		size_t IndexInModule;
+
+		constexpr ScriptingItemIndex()
+			: ModuleIndex(SIZE_MAX), IndexInModule(SIZE_MAX) {}
+		constexpr ScriptingItemIndex(size_t moduleIndex, size_t index)
+			: ModuleIndex(moduleIndex), IndexInModule(index) {}
+	};
+
 	struct ScriptingTypeInstance
 	{
-		size_t TypeIndex = SIZE_MAX;
+		ScriptingItemIndex Type = ScriptingItemIndex();
 		void* Instance = nullptr;
 	};
 
@@ -29,12 +40,12 @@ namespace Flare
 		std::optional<ModuleEventFunction> OnUnload;
 
 		std::vector<ScriptingTypeInstance> ScriptingInstances;
-		std::unordered_map<std::string_view, size_t> TypeNameToIndex;
 	};
 
 	class ScriptingEngine
 	{
 	public:
+
 		struct Data
 		{
 			World* CurrentWorld = nullptr;
@@ -42,13 +53,9 @@ namespace Flare
 			std::vector<ScriptingModuleData> Modules;
 			std::vector<ComponentId> TemporaryQueryComponents;
 
-			struct TypeIndex
-			{
-				size_t ModuleIndex;
-				size_t TypeIndex;
-			};
-
-			std::unordered_map<ComponentId, TypeIndex> ComponentIdToTypeIndex;
+			std::unordered_map<ComponentId, ScriptingItemIndex> ComponentIdToTypeIndex;
+			std::unordered_map<uint32_t, ScriptingItemIndex> SystemIndexToInstance;
+			std::unordered_map<std::string, ScriptingItemIndex> TypeNameToIndex;
 		};
 	public:
 		static void Initialize();
@@ -65,12 +72,17 @@ namespace Flare
 
 		static void RegisterComponents();
 		static void RegisterSystems();
+		
+		static std::optional<const Internal::ScriptingType*> FindType(std::string_view name);
+		static std::optional<const Internal::ScriptingType*> FindSystemType(uint32_t systemIndex);
+		static std::optional<uint8_t*> FindSystemInstance(uint32_t systemIndex);
 
 		static std::optional<const Internal::ScriptingType*> FindComponentType(ComponentId id);
 
 		inline static Data& GetData() { return s_Data; }
 	private:
 		static void LoadModule(const std::filesystem::path& modulePath);
+		static const Internal::ScriptingType* GetScriptingType(ScriptingItemIndex index);
 	private:
 		static Data s_Data;
 

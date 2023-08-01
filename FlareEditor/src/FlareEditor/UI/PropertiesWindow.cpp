@@ -48,7 +48,7 @@ namespace Flare
 						{
 							std::optional<const Internal::ScriptingType*> type = ScriptingEngine::FindComponentType(component);
 							if (type.has_value())
-								RenderScriptingComponentEditor(*type.value(), (uint8_t*) componentData.value());
+								EditorGUI::TypeEditor(*(type.value()), (uint8_t*) componentData.value());
 						}
 					}
 
@@ -85,41 +85,6 @@ namespace Flare
 			}
 
 			ImGui::End();
-		}
-	}
-
-	void PropertiesWindow::RenderScriptingComponentEditor(const Internal::ScriptingType& scriptingType, uint8_t* componentData)
-	{
-		const auto& fields = scriptingType.GetSerializationSettings().GetFields();
-
-		if (EditorGUI::BeginPropertyGrid())
-		{
-			for (size_t i = 0; i < fields.size(); i++)
-			{
-				const Internal::Field& field = fields[i];
-				uint8_t* fieldData = componentData + field.Offset;
-			
-				switch (field.Type)
-				{
-				case Internal::FieldType::Float:
-					EditorGUI::FloatPropertyField(field.Name.c_str(), *(float*)fieldData);
-					break;
-				case Internal::FieldType::Float2:
-					EditorGUI::Vector2PropertyField(field.Name.c_str(), *(glm::vec2*)fieldData);
-					break;
-				case Internal::FieldType::Float3:
-					EditorGUI::Vector3PropertyField(field.Name.c_str(), *(glm::vec3*)fieldData);
-					break;
-				case Internal::FieldType::Asset:
-				case Internal::FieldType::Texture:
-					EditorGUI::AssetField(field.Name.c_str(), *(AssetHandle*)fieldData);
-					break;
-				case Internal::FieldType::Entity:
-					EditorGUI::EntityField(field.Name.c_str(), EditorContext::GetActiveScene()->GetECSWorld(), *(Entity*)fieldData);
-					break;
-				}
-			}
-			EditorGUI::EndPropertyGrid();
 		}
 	}
 

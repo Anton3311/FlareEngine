@@ -54,7 +54,7 @@ namespace Flare
 		SystemGroupId CreateGroup(std::string_view name);
 		std::optional<SystemGroupId> FindGroup(std::string_view name) const;
 
-		void RegisterSystem(std::string_view name, 
+		uint32_t RegisterSystem(std::string_view name, 
 			SystemGroupId group,
 			const Query& query,
 			const SystemEventFunction& onBeforeUpdate = nullptr,

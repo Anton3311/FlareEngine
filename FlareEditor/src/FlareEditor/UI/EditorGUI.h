@@ -2,6 +2,8 @@
 
 #include "Flare.h"
 
+#include "Flare/Scripting/ScriptingEngine.h"
+
 #include "FlareECS/EntityId.h"
 #include "FlareECS/World.h"
 
@@ -30,6 +32,8 @@ namespace Flare
 		static bool BeginToggleGroupProperty(const char* name, uint32_t itemsCount);
 		static bool ToggleGroupItem(const char* text, bool selected);
 		static void EndToggleGroup();
+
+		static bool TypeEditor(const Internal::ScriptingType& type, uint8_t* data);
 	private:
 		static void RenderPropertyName(const char* name);
 	};

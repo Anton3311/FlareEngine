@@ -1,7 +1,9 @@
 #include "EditorGUI.h"
 
 #include "Flare/AssetManager/AssetManager.h"
+
 #include "FlareEditor/AssetManager/EditorAssetManager.h"
+#include "FlareEditor/EditorContext.h"
 
 #include <spdlog/spdlog.h>
 
@@ -211,11 +213,50 @@ namespace Flare
 		ImGui::PopItemWidth();
 	}
 
+	bool EditorGUI::TypeEditor(const Internal::ScriptingType& type, uint8_t* data)
+	{
+		const auto& fields = type.GetSerializationSettings().GetFields();
+		bool result = false;
+
+		if (EditorGUI::BeginPropertyGrid())
+		{
+			for (size_t i = 0; i < fields.size(); i++)
+			{
+				const Internal::Field& field = fields[i];
+				uint8_t* fieldData = data + field.Offset;
+
+				switch (field.Type)
+				{
+				case Internal::FieldType::Float:
+					result |= EditorGUI::FloatPropertyField(field.Name.c_str(), *(float*)fieldData);
+					break;
+				case Internal::FieldType::Float2:
+					result |= EditorGUI::Vector2PropertyField(field.Name.c_str(), *(glm::vec2*)fieldData);
+					break;
+				case Internal::FieldType::Float3:
+					result |= EditorGUI::Vector3PropertyField(field.Name.c_str(), *(glm::vec3*)fieldData);
+					break;
+				case Internal::FieldType::Asset:
+				case Internal::FieldType::Texture:
+					result |= EditorGUI::AssetField(field.Name.c_str(), *(AssetHandle*)fieldData);
+					break;
+				case Internal::FieldType::Entity:
+					result |= EditorGUI::EntityField(field.Name.c_str(), EditorContext::GetActiveScene()->GetECSWorld(), *(Entity*)fieldData);
+					break;
+				}
+			}
+			EditorGUI::EndPropertyGrid();
+		}
+
+		return result;
+	}
+
 	void EditorGUI::RenderPropertyName(const char* name)
 	{
 		ImGui::TableNextRow();
 		ImGui::TableSetColumnIndex(0);
 
+		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetStyle().FramePadding.y);
 		ImGui::Text(name);
 
 		ImGui::TableSetColumnIndex(1);

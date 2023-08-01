@@ -21,7 +21,7 @@ namespace Flare
 		return it->second;
 	}
 
-	void SystemsManager::RegisterSystem(std::string_view name, 
+	uint32_t SystemsManager::RegisterSystem(std::string_view name, 
 		SystemGroupId group,
 		const Query& query,
 		const SystemEventFunction& onBeforeUpdate,
@@ -40,6 +40,8 @@ namespace Flare
 		FLARE_CORE_ASSERT(group < (SystemGroupId)m_Groups.size());
 		m_Groups[group].SystemIndices.push_back(index);
 		data.IndexInGroup = (uint32_t) m_Groups[group].SystemIndices.size() - 1;
+
+		return index;
 	}
 
 	void SystemsManager::ExecuteGroup(SystemGroupId id)
