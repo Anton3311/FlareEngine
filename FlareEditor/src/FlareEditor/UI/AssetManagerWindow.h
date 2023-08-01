@@ -53,7 +53,7 @@ namespace Flare
 
 		void OnOpenFile(const AssetTreeNode& node);
 	private:
-		AssetTreeViewMode m_Mode = AssetTreeViewMode::Registry;
+		AssetTreeViewMode m_Mode = AssetTreeViewMode::All;
 		Ref<EditorAssetManager> m_AssetManager;
 
 		uint32_t m_NodeRenderIndex;

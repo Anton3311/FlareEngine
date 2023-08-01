@@ -6,6 +6,7 @@
 #include "Flare/Project/Project.h"
 
 #include "FlareEditor/EditorContext.h"
+#include "FlareEditor/UI/EditorGUI.h"
 
 #include <imgui.h>
 
@@ -22,29 +23,16 @@ namespace Flare
 
 		ImGuiStyle& style = ImGui::GetStyle();
 		
-		if (ImGui::BeginCombo("Mode", m_Mode == AssetTreeViewMode::All ? "All" : "Registry"))
+		if (EditorGUI::BeginToggleGroup("Mode", 2))
 		{
-			{
-				bool selected = m_Mode == AssetTreeViewMode::All;
-				if (ImGui::Selectable("All", selected))
-					m_Mode = AssetTreeViewMode::All;
+			if (EditorGUI::ToggleGroupItem("All", m_Mode == AssetTreeViewMode::All))
+				m_Mode = AssetTreeViewMode::All;
+			if (EditorGUI::ToggleGroupItem("Registry", m_Mode == AssetTreeViewMode::Registry))
+				m_Mode = AssetTreeViewMode::Registry;
 
-				if (selected)
-					ImGui::SetItemDefaultFocus();
-			}
-
-			{
-				bool selected = m_Mode == AssetTreeViewMode::Registry;
-				if (ImGui::Selectable("Registry", selected))
-					m_Mode = AssetTreeViewMode::Registry;
-
-				if (selected)
-					ImGui::SetItemDefaultFocus();
-			}
-
-			ImGui::EndCombo();
+			EditorGUI::EndToggleGroup();
 		}
-
+		
 		ImGui::Separator();
 
 		ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, 14.0f);
@@ -118,21 +106,30 @@ namespace Flare
 			return;
 
 		ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_SpanFullWidth;
-		if (ImGui::TreeNodeEx(node.Name.c_str(), flags, "%s", node.Name.c_str()))
+
+		if (!node.IsImported)
+			ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled));
+
+		bool opened = ImGui::TreeNodeEx(node.Name.c_str(), flags, "%s", node.Name.c_str());
+
+		if (!node.IsImported)
+			ImGui::PopStyleColor();
+
+		if (opened)
 		{
 			if (ImGui::BeginPopupContextItem(node.Name.c_str()))
 			{
-				if (m_Mode == AssetTreeViewMode::Registry && ImGui::MenuItem("Open"))
+				if (node.IsImported && ImGui::MenuItem("Open"))
 					OnOpenFile(node);
 
-				if (m_Mode == AssetTreeViewMode::Registry && ImGui::MenuItem("Remove"))
+				if (node.IsImported && ImGui::MenuItem("Remove"))
 				{
 					FLARE_CORE_ASSERT(node.Handle != NULL_ASSET_HANDLE);
 					m_AssetManager->RemoveFromRegistry(node.Handle);
 					node.IsImported = false;
 				}
 
-				if (m_Mode == AssetTreeViewMode::All && ImGui::MenuItem("Import"))
+				if (!node.IsImported && ImGui::MenuItem("Import"))
 				{
 					node.Handle = m_AssetManager->ImportAsset(node.Path);
 					node.IsImported = node.Handle != NULL_ASSET_HANDLE;
@@ -147,7 +144,7 @@ namespace Flare
 		if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
 			OnOpenFile(node);
 
-		if (m_Mode == AssetTreeViewMode::Registry && ImGui::BeginDragDropSource())
+		if (node.IsImported && ImGui::BeginDragDropSource())
 		{
 			ImGui::SetDragDropPayload(ASSET_PAYLOAD_NAME, &node.Handle, sizeof(AssetHandle));
 			ImGui::EndDragDropSource();

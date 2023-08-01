@@ -26,7 +26,8 @@ namespace Flare
 		static bool AssetField(const char* name, AssetHandle& handle);
 		static bool EntityField(const char* name, const World& world, Entity& entity);
 
-		static bool BeginToggleGroup(const char* name);
+		static bool BeginToggleGroup(const char* name, uint32_t itemsCount);
+		static bool BeginToggleGroupProperty(const char* name, uint32_t itemsCount);
 		static bool ToggleGroupItem(const char* text, bool selected);
 		static void EndToggleGroup();
 	private:

@@ -127,7 +127,7 @@ namespace Flare
 	{
 		if (EditorGUI::BeginPropertyGrid())
 		{
-			EditorGUI::BeginToggleGroup("Projection");
+			EditorGUI::BeginToggleGroupProperty("Projection", 2);
 			if (EditorGUI::ToggleGroupItem("Orthographic", cameraComponent.Projection == CameraComponent::ProjectionType::Orthographic))
 				cameraComponent.Projection = CameraComponent::ProjectionType::Orthographic;
 			if (EditorGUI::ToggleGroupItem("Perspective", cameraComponent.Projection == CameraComponent::ProjectionType::Perspective))

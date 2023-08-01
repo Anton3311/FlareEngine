@@ -6,6 +6,7 @@
 #include <spdlog/spdlog.h>
 
 #include <imgui.h>
+#include <imgui_internal.h>
 
 namespace Flare
 {
@@ -169,12 +170,20 @@ namespace Flare
 		return result;
 	}
 
-	bool EditorGUI::BeginToggleGroup(const char* name)
+	bool EditorGUI::BeginToggleGroup(const char* name, uint32_t itemsCount)
+	{
+		float itemWidth = ImGui::GetContentRegionAvail().x - (itemsCount) * ImGui::GetStyle().ItemInnerSpacing.x;
+		itemWidth /= itemsCount;
+
+		ImGui::PushItemWidth(itemWidth);
+		ImGui::GetCurrentWindow()->DC.LayoutType = ImGuiLayoutType_Horizontal;
+		return true;
+	}
+
+	bool EditorGUI::BeginToggleGroupProperty(const char* name, uint32_t itemsCount)
 	{
 		RenderPropertyName(name);
-
-		ImGui::NewLine();
-		return true;
+		return BeginToggleGroup(name, itemsCount);
 	}
 
 	bool EditorGUI::ToggleGroupItem(const char* text, bool selected)
@@ -182,23 +191,24 @@ namespace Flare
 		ImGuiStyle& style = ImGui::GetStyle();
 
 		if (selected)
-			ImGui::PushStyleColor(ImGuiCol_Button, style.Colors[ImGuiCol_FrameBg]);
-		else
-			ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0.0f);
+		{
+			ImGui::PushStyleColor(ImGuiCol_Button, style.Colors[ImGuiCol_TabActive]);
+			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, style.Colors[ImGuiCol_TabHovered]);
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive, style.Colors[ImGuiCol_TabActive]);
+		}
 
-		ImGui::SameLine();
-		bool result = ImGui::Button(text);
+		bool result = ImGui::Button(text, ImVec2(ImGui::CalcItemWidth(), 0));
 
 		if (selected)
-			ImGui::PopStyleColor();
-		else
-			ImGui::PopStyleVar();
+			ImGui::PopStyleColor(3);
 
 		return result;
 	}
 
 	void EditorGUI::EndToggleGroup()
 	{
+		ImGui::GetCurrentWindow()->DC.LayoutType = ImGuiLayoutType_Vertical;
+		ImGui::PopItemWidth();
 	}
 
 	void EditorGUI::RenderPropertyName(const char* name)
