@@ -222,37 +222,20 @@ namespace Flare
 		std::optional<SystemGroupId> defaultGroup = s_Data.CurrentWorld->GetSystemsManager().FindGroup(defaultGroupName);
 		FLARE_CORE_ASSERT(defaultGroup.has_value());
 
+		SystemsManager& systems = s_Data.CurrentWorld->GetSystemsManager();
 		for (ScriptingModuleData& module : s_Data.Modules)
 		{
 			size_t instanceIndex = module.FirstSystemInstance;
-			for (const Internal::SystemInfo* systemInfo : *module.Config.RegisteredSystems)
+			for (Internal::SystemInfo* systemInfo : *module.Config.RegisteredSystems)
 			{
-				SystemsManager& systems = s_Data.CurrentWorld->GetSystemsManager();
-
 				ScriptingTypeInstance& instance = module.ScriptingInstances[instanceIndex];
-				Internal::SystemBase* systemInstance = (Internal::SystemBase*)instance.Instance;
-
-				Internal::SystemConfiguration config(&s_Data.TemporaryQueryComponents, defaultGroup.value());
-				systemInstance->Configure(config);
+				Internal::SystemBase& systemInstance = instance.As<Internal::SystemBase>();
 
 				const Internal::ScriptingType* type = GetScriptingType(instance.Type);
 
-				if (!systems.IsGroupIdValid(config.Group))
-				{
-					FLARE_CORE_ERROR("System '{0}' cannot be registered because the specified system group id '{1}' is not valid", 
-						systemInfo->Name, config.Group);
-					continue;
-				}
-
-				Query query = s_Data.CurrentWorld->GetRegistry().CreateQuery(ComponentSet(
-					s_Data.TemporaryQueryComponents.data(),
-					s_Data.TemporaryQueryComponents.size()));
-
-				uint32_t systemIndex = systems.RegisterSystem(type->Name,
-					config.Group,
-					query,
+				SystemId id = systems.RegisterSystem(type->Name,
 					nullptr,
-					[systemInstance](SystemExecutionContext& context)
+					[system = &systemInstance](SystemExecutionContext& context)
 					{
 						for (EntityView view : context.GetQuery())
 						{
@@ -268,18 +251,62 @@ namespace Flare
 									record.Storage.GetEntitySize(),
 									record.Storage.GetEntitiesCountInChunk(i));
 
-								systemInstance->Execute(chunk);
+								system->Execute(chunk);
 							}
 						}
 					},
 					nullptr);
 
-				s_Data.SystemIndexToInstance.emplace(systemIndex, ScriptingItemIndex(
+				systemInfo->Id = id;
+
+				s_Data.SystemIndexToInstance.emplace(id, ScriptingItemIndex(
 					instance.Type.ModuleIndex,
 					instanceIndex));
 
 				s_Data.TemporaryQueryComponents.clear();
 				instanceIndex++;
+			}
+		}
+
+		std::vector<Internal::SystemConfiguration> configs;
+		for (ScriptingModuleData& module : s_Data.Modules)
+		{
+			const auto& registeredSystems = *module.Config.RegisteredSystems;
+			for (size_t systemIndex = 0; systemIndex < registeredSystems.size(); systemIndex++)
+			{
+				const Internal::SystemInfo* systemInfo = registeredSystems[systemIndex];
+
+				Internal::SystemBase& systemInstance = module.GetSystemInstance(systemIndex).As<Internal::SystemBase>();
+				Internal::SystemConfiguration& config = configs.emplace_back(&s_Data.TemporaryQueryComponents, defaultGroup.value());
+
+				systemInstance.Configure(config);
+
+				if (!systems.IsGroupIdValid(config.Group))
+				{
+					FLARE_CORE_ERROR("System '{0}' cannot be registered because the specified system group id '{1}' is not valid",
+						systemInfo->Name, config.Group);
+					continue;
+				}
+
+				systems.AddSystemToGroup(systemInfo->Id, config.Group, &config.GetExecutionOrder());
+
+				Query query = s_Data.CurrentWorld->GetRegistry().CreateQuery(ComponentSet(
+					s_Data.TemporaryQueryComponents.data(),
+					s_Data.TemporaryQueryComponents.size()));
+
+				systems.SetSystemQuery(systemInfo->Id, query);
+			}
+		}
+
+		size_t configIndex = 0;
+		for (ScriptingModuleData& module : s_Data.Modules)
+		{
+			const auto& registeredSystems = *module.Config.RegisteredSystems;
+			for (size_t systemIndex = 0; systemIndex < registeredSystems.size(); systemIndex++)
+			{
+				const Internal::SystemInfo* systemInfo = registeredSystems[systemIndex];
+				const Internal::SystemConfiguration& config = configs[configIndex++];
+				systems.AddSystemExecutionSettings(systemInfo->Id, &config.GetExecutionOrder());
 			}
 		}
 	}

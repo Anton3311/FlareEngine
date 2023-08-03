@@ -1,5 +1,7 @@
 #pragma once
 
+#include "FlareECS/System.h"
+
 #include "FlareScriptingCore/ScriptingType.h"
 #include "FlareScriptingCore/Bindings/ECS/SystemConfiguration.h"
 #include "FlareScriptingCore/Bindings/ECS/EntityView.h"
@@ -13,14 +15,15 @@ namespace Flare::Internal
 	struct SystemInfo
 	{
 		SystemInfo(const std::string_view& name)
-			: Name(name)
+			: Name(name), Id(UINT32_MAX)
 		{
 			GetRegisteredSystems().push_back(this);
 		}
 
+		SystemId Id;
 		const std::string_view Name;
 	public:
-		static std::vector<const SystemInfo*>& GetRegisteredSystems();
+		static std::vector<SystemInfo*>& GetRegisteredSystems();
 	};
 
 	class SystemBase
