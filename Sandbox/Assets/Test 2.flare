@@ -43,13 +43,7 @@ Entities:
         Position: [0, 0, 0]
         Rotation: [0, 0, 0]
         Scale: [0, 0, 0]
-      - Name: struct Sandbox::ExecutionOrder_TestComponent
-      - Name: struct Sandbox::ExecutionOrder_TestComponent1
-      - Name: struct Sandbox::ExecutionOrder_TestComponent2
 Systems:
-  - Name: struct Sandbox::FirstSystem
-  - Name: struct Sandbox::SecondSystem
-  - Name: struct Sandbox::ThirdSystem
   - Name: struct Sandbox::TestSystem
   - Name: struct Sandbox::SpawnSystem
     TestValue: -10
