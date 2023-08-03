@@ -62,13 +62,15 @@ namespace Flare
 
 		m_CameraDataUpdateQuery = m_World.CreateQuery<With<TransformComponent>, With<CameraComponent>>();
 
-		systemsManager.RegisterSystem("Sprites Renderer", m_2DRenderingGroup, SpritesRendererSystem::Setup(m_World), 
-			nullptr, SpritesRendererSystem::OnUpdate, nullptr);
+		SystemId id = systemsManager.RegisterSystem("Sprites Renderer", m_2DRenderingGroup, 
+			SpritesRendererSystem::Setup(m_World), nullptr,
+			SpritesRendererSystem::OnUpdate, nullptr);
 	}
 
 	void Scene::InitializeRuntime()
 	{
 		ScriptingEngine::RegisterSystems();
+		m_World.GetSystemsManager().RebuildExecutionGraphs();
 	}
 
 	void Scene::OnRuntimeStart()

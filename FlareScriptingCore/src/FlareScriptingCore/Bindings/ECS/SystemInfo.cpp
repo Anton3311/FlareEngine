@@ -2,9 +2,9 @@
 
 namespace Flare::Internal
 {
-    std::vector<const SystemInfo*>& SystemInfo::GetRegisteredSystems()
+    std::vector<SystemInfo*>& SystemInfo::GetRegisteredSystems()
     {
-        static std::vector<const SystemInfo*> s_RegisteredSystems;
+        static std::vector<SystemInfo*> s_RegisteredSystems;
         return s_RegisteredSystems;
     }
 }
