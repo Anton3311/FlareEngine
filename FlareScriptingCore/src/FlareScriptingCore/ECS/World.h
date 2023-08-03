@@ -16,7 +16,7 @@
 
 #include <stdint.h>
 
-namespace Flare::Internal
+namespace Flare::Scripting
 {
 	class World
 	{

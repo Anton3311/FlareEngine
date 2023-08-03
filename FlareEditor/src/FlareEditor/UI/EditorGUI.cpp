@@ -213,7 +213,7 @@ namespace Flare
 		ImGui::PopItemWidth();
 	}
 
-	bool EditorGUI::TypeEditor(const Internal::ScriptingType& type, uint8_t* data)
+	bool EditorGUI::TypeEditor(const Scripting::ScriptingType& type, uint8_t* data)
 	{
 		const auto& fields = type.GetSerializationSettings().GetFields();
 		bool result = false;
@@ -222,25 +222,25 @@ namespace Flare
 		{
 			for (size_t i = 0; i < fields.size(); i++)
 			{
-				const Internal::Field& field = fields[i];
+				const Scripting::Field& field = fields[i];
 				uint8_t* fieldData = data + field.Offset;
 
 				switch (field.Type)
 				{
-				case Internal::FieldType::Float:
+				case Scripting::FieldType::Float:
 					result |= EditorGUI::FloatPropertyField(field.Name.c_str(), *(float*)fieldData);
 					break;
-				case Internal::FieldType::Float2:
+				case Scripting::FieldType::Float2:
 					result |= EditorGUI::Vector2PropertyField(field.Name.c_str(), *(glm::vec2*)fieldData);
 					break;
-				case Internal::FieldType::Float3:
+				case Scripting::FieldType::Float3:
 					result |= EditorGUI::Vector3PropertyField(field.Name.c_str(), *(glm::vec3*)fieldData);
 					break;
-				case Internal::FieldType::Asset:
-				case Internal::FieldType::Texture:
+				case Scripting::FieldType::Asset:
+				case Scripting::FieldType::Texture:
 					result |= EditorGUI::AssetField(field.Name.c_str(), *(AssetHandle*)fieldData);
 					break;
-				case Internal::FieldType::Entity:
+				case Scripting::FieldType::Entity:
 					result |= EditorGUI::EntityField(field.Name.c_str(), Scene::GetActive()->GetECSWorld(), *(Entity*)fieldData);
 					break;
 				}

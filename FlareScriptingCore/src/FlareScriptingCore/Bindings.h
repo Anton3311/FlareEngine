@@ -12,7 +12,7 @@
 #include <functional>
 #include <string_view>
 
-namespace Flare::Internal
+namespace Flare::Scripting
 {
 	class EntityView;
 	struct Bindings

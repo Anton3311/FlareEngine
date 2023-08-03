@@ -6,7 +6,7 @@
 
 #include <vector>
 
-namespace Flare::Internal
+namespace Flare::Scripting
 {
 	class SystemQuery
 	{

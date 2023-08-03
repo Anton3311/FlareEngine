@@ -47,7 +47,7 @@ namespace Flare
 						std::optional<void*> componentData = world.GetRegistry().GetEntityComponent(selectedEntity, component);
 						if (componentData.has_value())
 						{
-							std::optional<const Internal::ScriptingType*> type = ScriptingEngine::FindComponentType(component);
+							std::optional<const Scripting::ScriptingType*> type = ScriptingEngine::FindComponentType(component);
 							if (type.has_value())
 								EditorGUI::TypeEditor(*(type.value()), (uint8_t*) componentData.value());
 						}

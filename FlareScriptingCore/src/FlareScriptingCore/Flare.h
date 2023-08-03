@@ -22,23 +22,23 @@
 
 namespace Flare
 {
-	using Internal::World;
-	using Internal::EntityView;
-	using Internal::EntityElement;
-	using Internal::ComponentView;
+	using Scripting::World;
+	using Scripting::EntityView;
+	using Scripting::EntityElement;
+	using Scripting::ComponentView;
 
-	using Internal::ComponentInfo;
-	using Internal::ScriptingType;
-	using Internal::SystemBase;
-	using Internal::SystemInfo;
-	using Internal::SystemConfiguration;
+	using Scripting::ComponentInfo;
+	using Scripting::ScriptingType;
+	using Scripting::SystemBase;
+	using Scripting::SystemInfo;
+	using Scripting::SystemConfiguration;
 
-	using Internal::Time;
-	using Internal::Input;
+	using Scripting::Time;
+	using Scripting::Input;
 
-	using Internal::TextureAsset;
+	using Scripting::TextureAsset;
 
-	using Internal::TypeSerializationSettings;
+	using Scripting::TypeSerializationSettings;
 
 	struct Transform
 	{

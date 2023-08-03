@@ -13,7 +13,7 @@
 
 #include <vector>
 
-namespace Flare::Internal
+namespace Flare::Scripting
 {
 	struct ModuleConfiguration
 	{
@@ -21,6 +21,6 @@ namespace Flare::Internal
 		const std::vector<SystemInfo*>* RegisteredSystems = nullptr;
 		const std::vector<ComponentInfo*>* RegisteredComponents = nullptr;
 
-		Internal::TimeData* TimeData = nullptr;
+		Scripting::TimeData* TimeData = nullptr;
 	};
 }

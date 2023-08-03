@@ -1,6 +1,6 @@
 #include "ComponentInfo.h"
 
-namespace Flare::Internal
+namespace Flare::Scripting
 {
     std::vector<ComponentInfo*>& ComponentInfo::GetRegisteredComponents()
     {

@@ -10,7 +10,7 @@
 #include <typeinfo>
 #include <iostream>
 
-namespace Flare::Internal
+namespace Flare::Scripting
 {
     class ScriptingType
     {

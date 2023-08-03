@@ -10,7 +10,7 @@
 #include <string_view>
 #include <typeinfo>
 
-namespace Flare::Internal
+namespace Flare::Scripting
 {
 	struct SystemInfo
 	{
@@ -30,7 +30,7 @@ namespace Flare::Internal
 	{
 	public:
 		virtual void Configure(SystemConfiguration& config) = 0;
-		virtual void Execute(Internal::EntityView& chunk) = 0;
+		virtual void Execute(Scripting::EntityView& chunk) = 0;
 	};
 
 #ifndef FLARE_SCRIPTING_CORE_NO_MACROS

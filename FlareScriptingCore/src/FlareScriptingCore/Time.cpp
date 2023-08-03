@@ -1,6 +1,6 @@
 #include "Time.h"
 
-namespace Flare::Internal
+namespace Flare::Scripting
 {
 	TimeData TimeData::Data;
 }

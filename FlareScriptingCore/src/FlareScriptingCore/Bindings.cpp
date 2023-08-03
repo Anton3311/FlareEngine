@@ -1,6 +1,6 @@
 #include "Bindings.h"
 
-namespace Flare::Internal
+namespace Flare::Scripting
 {
 	Bindings* Bindings::Instance = nullptr;
 }

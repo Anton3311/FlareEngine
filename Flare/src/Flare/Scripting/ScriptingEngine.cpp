@@ -78,7 +78,7 @@ namespace Flare
 			{
 				if (instance.Instance != nullptr)
 				{
-					const Internal::ScriptingType* type = GetScriptingType(instance.Type);
+					const Scripting::ScriptingType* type = GetScriptingType(instance.Type);
 					type->Deleter(instance.Instance);
 				}
 			}
@@ -99,7 +99,7 @@ namespace Flare
 		{
 			size_t moduleIndex = s_Data.Modules.size();
 
-			moduleData.Config = Internal::ModuleConfiguration{};
+			moduleData.Config = Scripting::ModuleConfiguration{};
 
 			moduleData.OnLoad = moduleData.Module.LoadFunction<OnModuleLoadFunction>(s_ModuleLoaderFunctionName);
 			moduleData.OnUnload = moduleData.Module.LoadFunction<OnModuleUnloadFunction>(s_ModuleUnloaderFunctionName);
@@ -108,10 +108,10 @@ namespace Flare
 			{
 				moduleData.OnLoad.value()(moduleData.Config, ScriptingBridge::GetBindings());
 
-				const std::vector<Internal::ScriptingType*>& registeredTypes = *moduleData.Config.RegisteredTypes;
+				const std::vector<Scripting::ScriptingType*>& registeredTypes = *moduleData.Config.RegisteredTypes;
 
 				size_t typeIndex = 0;
-				for (Internal::ScriptingType* type : registeredTypes)
+				for (Scripting::ScriptingType* type : registeredTypes)
 				{
 					s_Data.TypeNameToIndex.emplace(type->Name, ScriptingItemIndex(moduleIndex, typeIndex));
 
@@ -126,7 +126,7 @@ namespace Flare
 		}
 	}
 
-	const Internal::ScriptingType* ScriptingEngine::GetScriptingType(ScriptingItemIndex index)
+	const Scripting::ScriptingType* ScriptingEngine::GetScriptingType(ScriptingItemIndex index)
 	{
 		return (*s_Data.Modules[index.ModuleIndex].Config.RegisteredTypes)[index.IndexInModule];
 	}
@@ -166,13 +166,13 @@ namespace Flare
 			FLARE_CORE_ASSERT(module.Module.IsLoaded());
 			FLARE_CORE_ASSERT(module.Config.RegisteredComponents != nullptr);
 			FLARE_CORE_ASSERT(module.Config.RegisteredTypes != nullptr);
-			for (Internal::ComponentInfo* component : *module.Config.RegisteredComponents)
+			for (Scripting::ComponentInfo* component : *module.Config.RegisteredComponents)
 			{
 				auto typeIndexIterator = s_Data.TypeNameToIndex.find(std::string(component->Name));
 				FLARE_CORE_ASSERT(typeIndexIterator != s_Data.TypeNameToIndex.end());
 				FLARE_CORE_ASSERT(typeIndexIterator->second.ModuleIndex == moduleIndex);
 
-				const Internal::ScriptingType* type = (*module.Config.RegisteredTypes)[typeIndexIterator->second.IndexInModule];
+				const Scripting::ScriptingType* type = (*module.Config.RegisteredTypes)[typeIndexIterator->second.IndexInModule];
 
 				if (component->AliasedName.has_value())
 				{
@@ -199,13 +199,13 @@ namespace Flare
 		for (ScriptingModuleData& module : s_Data.Modules)
 		{
 			module.FirstSystemInstance = module.ScriptingInstances.size();
-			for (const Internal::SystemInfo* systemInfo : *module.Config.RegisteredSystems)
+			for (const Scripting::SystemInfo* systemInfo : *module.Config.RegisteredSystems)
 			{
 				auto typeIndexIterator = s_Data.TypeNameToIndex.find(std::string(systemInfo->Name));
 				FLARE_CORE_ASSERT(typeIndexIterator != s_Data.TypeNameToIndex.end());
 
-				const Internal::ScriptingType* type = (*module.Config.RegisteredTypes)[typeIndexIterator->second.IndexInModule];
-				Internal::SystemBase* systemInstance = (Internal::SystemBase*)type->Constructor();
+				const Scripting::ScriptingType* type = (*module.Config.RegisteredTypes)[typeIndexIterator->second.IndexInModule];
+				Scripting::SystemBase* systemInstance = (Scripting::SystemBase*)type->Constructor();
 
 				s_Data.SystemNameToInstance.emplace(systemInfo->Name, ScriptingItemIndex(moduleIndex, module.ScriptingInstances.size()));
 				module.ScriptingInstances.push_back(ScriptingTypeInstance{ typeIndexIterator->second, systemInstance });
@@ -227,11 +227,11 @@ namespace Flare
 			const auto& registeredSystems = *module.Config.RegisteredSystems;
 			for (size_t systemIndex = 0; systemIndex < registeredSystems.size(); systemIndex++)
 			{
-				Internal::SystemInfo* systemInfo = registeredSystems[systemIndex];
+				Scripting::SystemInfo* systemInfo = registeredSystems[systemIndex];
 				ScriptingTypeInstance& instance = module.GetSystemInstance(systemIndex);
-				Internal::SystemBase& systemInstance = instance.As<Internal::SystemBase>();
+				Scripting::SystemBase& systemInstance = instance.As<Scripting::SystemBase>();
 
-				const Internal::ScriptingType* type = GetScriptingType(instance.Type);
+				const Scripting::ScriptingType* type = GetScriptingType(instance.Type);
 
 				SystemId id = systems.RegisterSystem(type->Name,
 					nullptr,
@@ -245,7 +245,7 @@ namespace Flare
 							size_t chunksCount = record.Storage.GetChunksCount();
 							for (size_t i = 0; i < chunksCount; i++)
 							{
-								Internal::EntityView chunk(
+								Scripting::EntityView chunk(
 									view.GetArchetype(),
 									record.Storage.GetChunkBuffer(i),
 									record.Storage.GetEntitySize(),
@@ -265,16 +265,16 @@ namespace Flare
 			}
 		}
 
-		std::vector<Internal::SystemConfiguration> configs;
+		std::vector<Scripting::SystemConfiguration> configs;
 		for (ScriptingModuleData& module : s_Data.Modules)
 		{
 			const auto& registeredSystems = *module.Config.RegisteredSystems;
 			for (size_t systemIndex = 0; systemIndex < registeredSystems.size(); systemIndex++)
 			{
-				const Internal::SystemInfo* systemInfo = registeredSystems[systemIndex];
+				const Scripting::SystemInfo* systemInfo = registeredSystems[systemIndex];
 
-				Internal::SystemBase& systemInstance = module.GetSystemInstance(systemIndex).As<Internal::SystemBase>();
-				Internal::SystemConfiguration& config = configs.emplace_back(&s_Data.TemporaryQueryComponents, defaultGroup.value());
+				Scripting::SystemBase& systemInstance = module.GetSystemInstance(systemIndex).As<Scripting::SystemBase>();
+				Scripting::SystemConfiguration& config = configs.emplace_back(&s_Data.TemporaryQueryComponents, defaultGroup.value());
 
 				systemInstance.Configure(config);
 
@@ -302,14 +302,14 @@ namespace Flare
 			const auto& registeredSystems = *module.Config.RegisteredSystems;
 			for (size_t systemIndex = 0; systemIndex < registeredSystems.size(); systemIndex++)
 			{
-				const Internal::SystemInfo* systemInfo = registeredSystems[systemIndex];
-				const Internal::SystemConfiguration& config = configs[configIndex++];
+				const Scripting::SystemInfo* systemInfo = registeredSystems[systemIndex];
+				const Scripting::SystemConfiguration& config = configs[configIndex++];
 				systems.AddSystemExecutionSettings(systemInfo->Id, &config.GetExecutionOrder());
 			}
 		}
 	}
 
-	std::optional<const Internal::ScriptingType*> ScriptingEngine::FindType(std::string_view name)
+	std::optional<const Scripting::ScriptingType*> ScriptingEngine::FindType(std::string_view name)
 	{
 		auto it = s_Data.TypeNameToIndex.find(std::string(name));
 		if (it == s_Data.TypeNameToIndex.end())
@@ -317,7 +317,7 @@ namespace Flare
 		return GetScriptingType(it->second);
 	}
 
-	std::optional<const Internal::ScriptingType*> ScriptingEngine::FindSystemType(uint32_t systemIndex)
+	std::optional<const Scripting::ScriptingType*> ScriptingEngine::FindSystemType(uint32_t systemIndex)
 	{
 		auto it = s_Data.SystemIndexToInstance.find(systemIndex);
 		if (it == s_Data.SystemIndexToInstance.end())
@@ -329,7 +329,7 @@ namespace Flare
 			.ScriptingInstances[instanceIndex.IndexInModule].Type);
 	}
 
-	std::optional<Internal::SystemBase*> ScriptingEngine::FindSystemByName(std::string_view name)
+	std::optional<Scripting::SystemBase*> ScriptingEngine::FindSystemByName(std::string_view name)
 	{
 		auto it = s_Data.SystemNameToInstance.find(name);
 		if (it == s_Data.SystemNameToInstance.end())
@@ -337,7 +337,7 @@ namespace Flare
 
 		ScriptingItemIndex index = it->second;
 		void* instance = s_Data.Modules[index.ModuleIndex].ScriptingInstances[index.IndexInModule].Instance;
-		return (Internal::SystemBase*)instance;
+		return (Scripting::SystemBase*)instance;
 	}
 
 	std::optional<uint8_t*> ScriptingEngine::FindSystemInstance(uint32_t systemIndex)
@@ -350,7 +350,7 @@ namespace Flare
 		return (uint8_t*) s_Data.Modules[instanceIndex.ModuleIndex].ScriptingInstances[instanceIndex.IndexInModule].Instance;
 	}
 
-	std::optional<const Internal::ScriptingType*> ScriptingEngine::FindComponentType(ComponentId id)
+	std::optional<const Scripting::ScriptingType*> ScriptingEngine::FindComponentType(ComponentId id)
 	{
 		auto it = s_Data.ComponentIdToTypeIndex.find(id);
 		if (it != s_Data.ComponentIdToTypeIndex.end())

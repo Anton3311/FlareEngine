@@ -1,6 +1,6 @@
 #pragma once
 
-namespace Flare::Internal
+namespace Flare::Scripting
 {
 	struct TimeData
 	{

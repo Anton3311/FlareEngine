@@ -5,7 +5,7 @@
 namespace Flare
 {
     World* ScriptingBridge::s_World = nullptr;
-    Internal::Bindings ScriptingBridge::s_Bindings;
+    Scripting::Bindings ScriptingBridge::s_Bindings;
 
     static Entity World_CreateEntity(const ComponentId* components, size_t count)
     {
@@ -47,7 +47,7 @@ namespace Flare
 
     void ScriptingBridge::Initialize()
     {
-        using namespace Internal;
+        using namespace Scripting;
         s_Bindings.CreateEntity = World_CreateEntity;
         s_Bindings.FindSystemGroup = World_FindSystemGroup;
         s_Bindings.GetEntityComponent = World_GetEntityComponent;

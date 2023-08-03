@@ -1,6 +1,6 @@
 #include "SystemInfo.h"
 
-namespace Flare::Internal
+namespace Flare::Scripting
 {
     std::vector<SystemInfo*>& SystemInfo::GetRegisteredSystems()
     {

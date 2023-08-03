@@ -2,7 +2,7 @@
 
 #include "Flare/Core/UUID.h"
 
-namespace Flare::Internal
+namespace Flare::Scripting
 {
 	using AssetHandle = UUID;
 }

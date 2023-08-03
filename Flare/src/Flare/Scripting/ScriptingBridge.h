@@ -12,7 +12,7 @@ namespace Flare
 		static void Initialize();
 
 		inline static World& GetCurrentWorld();
-		inline static Internal::Bindings& GetBindings() { return s_Bindings; }
+		inline static Scripting::Bindings& GetBindings() { return s_Bindings; }
 
 		inline static void SetCurrentWorld(World& world)
 		{
@@ -20,6 +20,6 @@ namespace Flare
 		}
 	private:
 		static World* s_World;
-		static Internal::Bindings s_Bindings;
+		static Scripting::Bindings s_Bindings;
 	};
 }

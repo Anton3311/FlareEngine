@@ -33,7 +33,7 @@ namespace Flare
 		static bool ToggleGroupItem(const char* text, bool selected);
 		static void EndToggleGroup();
 
-		static bool TypeEditor(const Internal::ScriptingType& type, uint8_t* data);
+		static bool TypeEditor(const Scripting::ScriptingType& type, uint8_t* data);
 	private:
 		static void RenderPropertyName(const char* name);
 	};

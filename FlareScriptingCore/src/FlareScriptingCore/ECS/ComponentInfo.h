@@ -8,7 +8,7 @@
 #include <optional>
 #include <vector>
 
-namespace Flare::Internal
+namespace Flare::Scripting
 {
 	struct ComponentInfo
 	{
@@ -36,12 +36,12 @@ namespace Flare::Internal
 #ifndef FLARE_SCRIPTING_CORE_NO_MACROS
 	#define FLARE_COMPONENT(component) \
 		FLARE_DEFINE_SCRIPTING_TYPE(component) \
-		static Flare::Internal::ComponentInfo Info;
+		static Flare::Scripting::ComponentInfo Info;
 	#define FLARE_COMPONENT_IMPL(component, ...) \
 		FLARE_IMPL_SCRIPTING_TYPE(component, __VA_ARGS__) \
-		Flare::Internal::ComponentInfo component::Info = Flare::Internal::ComponentInfo(typeid(component).name());
+		Flare::Scripting::ComponentInfo component::Info = Flare::Scripting::ComponentInfo(typeid(component).name());
 
 	#define FLARE_COMPONENT_ALIAS_IMPL(component, aliasedComponent) \
 		FLARE_IMPL_SCRIPTING_TYPE(component) \
-		Flare::Internal::ComponentInfo component::Info = Flare::Internal::ComponentInfo(typeid(component).name(), aliasedComponent);
+		Flare::Scripting::ComponentInfo component::Info = Flare::Scripting::ComponentInfo(typeid(component).name(), aliasedComponent);
 #endif

@@ -13,7 +13,7 @@
 #include <string_view>
 #include <cstddef>
 
-namespace Flare::Internal
+namespace Flare::Scripting
 {
 	enum class FieldType
 	{

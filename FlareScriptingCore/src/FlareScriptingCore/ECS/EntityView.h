@@ -5,7 +5,7 @@
 
 #include "FlareScriptingCore/Bindings.h"
 
-namespace Flare::Internal
+namespace Flare::Scripting
 {
 	class EntityElement
 	{

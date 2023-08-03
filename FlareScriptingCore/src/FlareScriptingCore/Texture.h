@@ -2,7 +2,7 @@
 
 #include "FlareScriptingCore/Asset.h"
 
-namespace Flare::Internal
+namespace Flare::Scripting
 {
 	class TextureAsset
 	{
