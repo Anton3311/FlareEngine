@@ -7,8 +7,8 @@
 #include "Flare/Scene/Components.h"
 #include "Flare/Project/Project.h"
 
-#include "FlareScriptingCore/Bindings/ECS/SystemInfo.h"
-#include "FlareScriptingCore/Bindings/ECS/ComponentInfo.h"
+#include "FlareScriptingCore/ECS/SystemInfo.h"
+#include "FlareScriptingCore/ECS/ComponentInfo.h"
 
 #include "FlareECS.h"
 

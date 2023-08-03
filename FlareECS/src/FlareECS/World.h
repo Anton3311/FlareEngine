@@ -3,6 +3,9 @@
 #include "FlareECS/Registry.h"
 #include "FlareECS/Entity/Component.h"
 
+#include "FlareECS/ComponentGroup.h"
+
+#include "FlareECS/QueryFilters.h"
 #include "FlareECS/Query/Query.h"
 
 #include "FlareECS/System/SystemsManager.h"
@@ -15,31 +18,6 @@
 
 namespace Flare
 {
-	class QueryFilter
-	{
-	public:
-		constexpr QueryFilter(ComponentId component)
-			: Component(component) {}
-
-		const ComponentId Component;
-	};
-
-	template<typename T>
-	class With : public QueryFilter
-	{
-	public:
-		constexpr With()
-			: QueryFilter(T::Id) {}
-	};
-
-	template<typename T>
-	class Without : public QueryFilter
-	{
-	public:
-		constexpr Without()
-			: QueryFilter(ComponentId(T::Id.GetIndex() | (uint32_t)QueryFilterType::Without, T::Id.GetGeneration())) {}
-	};
-
 	class World
 	{
 	public:
@@ -49,7 +27,8 @@ namespace Flare
 		template<typename ComponentT>
 		constexpr void RegisterComponent()
 		{
-			ComponentT::Id = m_Registry.RegisterComponent(typeid(ComponentT).name(), sizeof(ComponentT), [](void* component) { ((ComponentT*)component)->~ComponentT(); });
+			ComponentT::Id = m_Registry.RegisterComponent(typeid(ComponentT).name(), 
+				sizeof(ComponentT), [](void* component) { ((ComponentT*)component)->~ComponentT(); });
 		}
 
 		template<typename... T>
@@ -128,16 +107,8 @@ namespace Flare
 		template<typename... T>
 		constexpr Query CreateQuery()
 		{
-			ComponentId ids[sizeof...(T)];
-			size_t index = 0;
-
-			([&]
-			{
-				T filter;
-				ids[index++] = filter.Component;
-			} (), ...);
-
-			return m_Registry.CreateQuery(ComponentSet(ids, sizeof...(T)));
+			FilteredComponentsGroup<T...> components;
+			return m_Registry.CreateQuery(ComponentSet(components.GetComponents().data(), components.GetComponents().size()));
 		}
 	public:
 		inline Registry& GetRegistry() { return m_Registry; }

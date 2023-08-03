@@ -5,16 +5,16 @@
 #include "FlareECS/ComponentId.h"
 #include "FlareECS/EntityId.h"
 
-#include "FlareScriptingCore/Bindings/ECS/World.h"
-#include "FlareScriptingCore/Bindings/ECS/EntityView.h"
-#include "FlareScriptingCore/Bindings/ECS/SystemInfo.h"
-#include "FlareScriptingCore/Bindings/ECS/SystemConfiguration.h"
-#include "FlareScriptingCore/Bindings/ECS/ComponentInfo.h"
+#include "FlareScriptingCore/ECS/World.h"
+#include "FlareScriptingCore/ECS/EntityView.h"
+#include "FlareScriptingCore/ECS/SystemInfo.h"
+#include "FlareScriptingCore/ECS/SystemConfiguration.h"
+#include "FlareScriptingCore/ECS/ComponentInfo.h"
 
-#include "FlareScriptingCore/Bindings/Time.h"
-#include "FlareScriptingCore/Bindings/Input.h"
+#include "FlareScriptingCore/Time.h"
+#include "FlareScriptingCore/Input.h"
 
-#include "FlareScriptingCore/Bindings/Texture.h"
+#include "FlareScriptingCore/Texture.h"
 
 #include "FlareScriptingCore/ScriptingType.h"
 

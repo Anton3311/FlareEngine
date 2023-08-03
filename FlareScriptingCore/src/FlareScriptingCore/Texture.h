@@ -1,6 +1,6 @@
 #pragma once
 
-#include "FlareScriptingCore/Bindings/Asset.h"
+#include "FlareScriptingCore/Asset.h"
 
 namespace Flare::Internal
 {

@@ -2,8 +2,8 @@
 
 #include "FlareECS/EntityId.h"
 
-#include "FlareScriptingCore/Bindings/Asset.h"
-#include "FlareScriptingCore/Bindings/Texture.h"
+#include "FlareScriptingCore/Asset.h"
+#include "FlareScriptingCore/Texture.h"
 
 #include <glm/glm.hpp>
 

@@ -4,7 +4,9 @@
 #include "FlareECS/System.h"
 #include "FlareECS/EntityId.h"
 
-#include "FlareScriptingCore/Bindings/ECS/EntityView.h"
+#include "FlareECS/ComponentGroup.h"
+
+#include "FlareScriptingCore/ECS/EntityView.h"
 #include "FlareScriptingCore/Bindings.h"
 
 #include <array>
@@ -16,25 +18,6 @@
 
 namespace Flare::Internal
 {
-	template<typename... Components>
-	class ComponentGroup
-	{
-	public:
-		ComponentGroup()
-		{
-			size_t index = 0;
-			([&]
-			{
-				m_Ids[index] = Components::Info.Id;
-				index++;
-			} (), ...);
-		}
-	public:
-		constexpr const std::array<ComponentId, sizeof...(Components)>& GetIds() const { return m_Ids; }
-	private:
-		std::array<ComponentId, sizeof...(Components)> m_Ids;
-	};
-
 	class World
 	{
 	public:

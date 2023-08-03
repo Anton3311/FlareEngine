@@ -3,8 +3,8 @@
 #include "FlareECS/System.h"
 
 #include "FlareScriptingCore/ScriptingType.h"
-#include "FlareScriptingCore/Bindings/ECS/SystemConfiguration.h"
-#include "FlareScriptingCore/Bindings/ECS/EntityView.h"
+#include "FlareScriptingCore/ECS/SystemConfiguration.h"
+#include "FlareScriptingCore/ECS/EntityView.h"
 
 #include <string>
 #include <string_view>

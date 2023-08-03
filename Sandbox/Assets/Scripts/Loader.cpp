@@ -3,9 +3,9 @@
 #include "FlareScriptingCore/ModuleConfiguration.h"
 #include "FlareScriptingCore/ScriptingType.h"
 
-#include "FlareScriptingCore/Bindings/ECS/ComponentInfo.h"
-#include "FlareScriptingCore/Bindings/ECS/SystemInfo.h"
-#include "FlareScriptingCore/Bindings/ECS/EntityView.h"
+#include "FlareScriptingCore/ECS/ComponentInfo.h"
+#include "FlareScriptingCore/ECS/SystemInfo.h"
+#include "FlareScriptingCore/ECS/EntityView.h"
 
 FLARE_API void OnModuleLoaded(Flare::Internal::ModuleConfiguration& config, Flare::Internal::Bindings& bindings)
 {
