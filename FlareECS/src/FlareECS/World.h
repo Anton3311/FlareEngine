@@ -40,12 +40,6 @@ namespace Flare
 			: QueryFilter(ComponentId(T::Id.GetIndex() | (uint32_t)QueryFilterType::Without, T::Id.GetGeneration())) {}
 	};
 
-	template<template<typename ...> class, template<typename...> class>
-	struct IsSameTemplate : std::false_type {};
-
-	template<template<typename ...> class T>
-	struct IsSameTemplate<T, T> : std::true_type {};
-
 	class World
 	{
 	public:

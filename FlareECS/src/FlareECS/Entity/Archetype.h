@@ -1,5 +1,7 @@
 #pragma once
 
+#include "FlareECS/ArchetypeId.h"
+
 #include "FlareECS/Entity/Component.h"
 #include "FlareECS/EntityStorage/EntityStorage.h"
 
@@ -9,9 +11,6 @@
 
 namespace Flare
 {
-	using ArchetypeId = size_t;
-	constexpr ArchetypeId INVALID_ARCHETYPE_ID = SIZE_MAX;
-
 	struct ArchetypeEdge
 	{
 		ArchetypeId Add;

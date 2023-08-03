@@ -5,8 +5,9 @@
 namespace Flare
 {
     World* ScriptingBridge::s_World = nullptr;
+    Internal::Bindings ScriptingBridge::s_Bindings;
 
-    static Entity World_CreateEntity(const ComponentId* components, uint32_t count)
+    static Entity World_CreateEntity(const ComponentId* components, size_t count)
     {
         return ScriptingBridge::GetCurrentWorld().GetRegistry().CreateEntity(ComponentSet(components, (size_t)count));
     }
@@ -26,12 +27,12 @@ namespace Flare
         return InputManager::IsKeyPressed(key);
     }
 
-    static bool Input_IsMouseButtonPreseed(MouseCode button)
+    static bool Input_IsMouseButtonPressed(MouseCode button)
     {
         return InputManager::IsMouseButtonPreseed(button);
     }
 
-    static size_t GetArchetypeComponentOffset_Wrapper(ArchetypeId archetype, ComponentId component)
+    static size_t World_GetArchetypeComponentOffset(ArchetypeId archetype, ComponentId component)
     {
         Registry& registry = ScriptingBridge::GetCurrentWorld().GetRegistry();
         ArchetypeRecord& record = registry.GetArchetypeRecord(archetype);
@@ -42,22 +43,19 @@ namespace Flare
         return record.Data.ComponentOffsets[index.value()];
     }
 
-    void ScriptingBridge::ConfigureModule(Internal::ModuleConfiguration& config)
+
+
+    void ScriptingBridge::Initialize()
     {
         using namespace Internal;
+        s_Bindings.CreateEntity = World_CreateEntity;
+        s_Bindings.FindSystemGroup = World_FindSystemGroup;
+        s_Bindings.GetEntityComponent = World_GetEntityComponent;
 
-        WorldBindings& worldBinding = *config.WorldBindings;
-        EntityViewBindings& entityViewBindings = *config.EntityViewBindings;
-        InputBindings& inputBindings = *config.InputBindings;
+        s_Bindings.GetArchetypeComponentOffset = World_GetArchetypeComponentOffset;
 
-        worldBinding.CreateEntity = (WorldBindings::CreateEntityFunction)World_CreateEntity;
-        worldBinding.FindSystemGroup = (WorldBindings::FindSystemGroupFunction)World_FindSystemGroup;
-        worldBinding.GetEntityComponent = (WorldBindings::GetEntityComponentFunction)World_GetEntityComponent;
-
-        entityViewBindings.GetArchetypeComponentOffset = (EntityViewBindings::GetArchetypeComponentOffsetFunction)GetArchetypeComponentOffset_Wrapper;
-
-        inputBindings.IsKeyPressed = Input_IsKeyPressed;
-        inputBindings.IsMouseButtonPressed = Input_IsMouseButtonPreseed;
+        s_Bindings.IsKeyPressed = Input_IsKeyPressed;
+        s_Bindings.IsMouseButtonPressed = Input_IsMouseButtonPressed;
     }
 
     inline World& ScriptingBridge::GetCurrentWorld()

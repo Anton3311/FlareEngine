@@ -21,6 +21,7 @@ namespace Flare
 
 	void ScriptingEngine::Initialize()
 	{
+		ScriptingBridge::Initialize();
 	}
 
 	void ScriptingEngine::Shutdown()
@@ -100,12 +101,12 @@ namespace Flare
 
 			moduleData.Config = Internal::ModuleConfiguration{};
 
-			moduleData.OnLoad = moduleData.Module.LoadFunction<ModuleEventFunction>(s_ModuleLoaderFunctionName);
-			moduleData.OnUnload = moduleData.Module.LoadFunction<ModuleEventFunction>(s_ModuleUnloaderFunctionName);
+			moduleData.OnLoad = moduleData.Module.LoadFunction<OnModuleLoadFunction>(s_ModuleLoaderFunctionName);
+			moduleData.OnUnload = moduleData.Module.LoadFunction<OnModuleUnloadFunction>(s_ModuleUnloaderFunctionName);
 
 			if (moduleData.OnLoad.has_value())
 			{
-				moduleData.OnLoad.value()(moduleData.Config);
+				moduleData.OnLoad.value()(moduleData.Config, ScriptingBridge::GetBindings());
 
 				const std::vector<Internal::ScriptingType*>& registeredTypes = *moduleData.Config.RegisteredTypes;
 
@@ -119,8 +120,6 @@ namespace Flare
 
 					typeIndex++;
 				}
-
-				ScriptingBridge::ConfigureModule(moduleData.Config);
 			}
 
 			s_Data.Modules.push_back(std::move(moduleData));

@@ -7,7 +7,7 @@
 #include "FlareScriptingCore/Bindings/ECS/SystemInfo.h"
 #include "FlareScriptingCore/Bindings/ECS/EntityView.h"
 
-FLARE_API void OnModuleLoaded(Flare::Internal::ModuleConfiguration& config)
+FLARE_API void OnModuleLoaded(Flare::Internal::ModuleConfiguration& config, Flare::Internal::Bindings& bindings)
 {
 	Flare::Log::Initialize();
 
@@ -15,13 +15,12 @@ FLARE_API void OnModuleLoaded(Flare::Internal::ModuleConfiguration& config)
 	config.RegisteredSystems = &Flare::Internal::SystemInfo::GetRegisteredSystems();
 	config.RegisteredComponents = &Flare::Internal::ComponentInfo::GetRegisteredComponents();
 
-	config.WorldBindings = &Flare::Internal::WorldBindings::Bindings;
-	config.EntityViewBindings = &Flare::Internal::EntityViewBindings::Bindings;
 	config.TimeData = &Flare::Internal::TimeData::Data;
 
-	config.InputBindings = &Flare::Internal::InputBindings::Bindings;
+	Flare::Internal::Bindings::Instance = &bindings;
 }
 
 FLARE_API void OnModuleUnloaded(Flare::Internal::ModuleConfiguration& config)
 {
+	Flare::Internal::Bindings::Instance = nullptr;
 }

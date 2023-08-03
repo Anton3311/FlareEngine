@@ -1,7 +1,7 @@
 Entities:
   - Components:
       - Name: Transform
-        Position: [0, 0, 0]
+        Position: [0, 0, 4.19999981]
         Rotation: [0, 0, 0]
         Scale: [1, 1, 1]
       - Name: Camera

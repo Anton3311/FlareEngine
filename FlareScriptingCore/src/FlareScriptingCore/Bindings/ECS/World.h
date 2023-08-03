@@ -4,33 +4,18 @@
 #include "FlareECS/System.h"
 #include "FlareECS/EntityId.h"
 
+#include "FlareScriptingCore/Bindings/ECS/EntityView.h"
+#include "FlareScriptingCore/Bindings.h"
+
 #include <array>
 #include <optional>
 #include <string_view>
+#include <functional>
+
 #include <stdint.h>
 
 namespace Flare::Internal
 {
-	struct WorldBindings
-	{
-		using CreateEntityFunction = Entity(*)(const ComponentId* components, size_t count);
-		CreateEntityFunction CreateEntity;
-
-		using GetEntityComponentFunction = void*(*)(Entity entity, ComponentId id);
-		GetEntityComponentFunction GetEntityComponent;
-
-		void* (*AddEntityComponent)(Entity entity, ComponentId component, const void* componentData, size_t componentDataSize);
-		void(*RemoveEntityComponent)(Entity entity, ComponentId component);
-
-		bool(*IsEntityAlive)(Entity entity);
-		void(*DeleteEntity)(Entity entity);
-
-		using FindSystemGroupFunction = std::optional<SystemGroupId>(*)(std::string_view name);
-		FindSystemGroupFunction FindSystemGroup;
-
-		static WorldBindings Bindings;
-	};
-
 	template<typename... Components>
 	class ComponentGroup
 	{
@@ -55,25 +40,25 @@ namespace Flare::Internal
 	public:
 		static constexpr std::optional<SystemGroupId> FindSystemGroup(std::string_view name)
 		{
-			return WorldBindings::Bindings.FindSystemGroup(name);
+			return Bindings::Instance->FindSystemGroup(name);
 		}
 
 		template<typename... Components>
 		static constexpr Entity CreateEntity()
 		{
 			ComponentGroup<Components...> group;
-			return WorldBindings::Bindings.CreateEntity(group.GetIds().data(), group.GetIds().size());
+			return Bindings::Instance->CreateEntity(group.GetIds().data(), group.GetIds().size());
 		}
 
 		template<typename ComponentT>
 		inline static ComponentT& GetEntityComponent(Entity entity)
 		{
-			return *(ComponentT*)WorldBindings::Bindings.GetEntityComponent(entity, ComponentT::Info.Id);
+			return *(ComponentT*)Bindings::Instance->GetEntityComponent(entity, ComponentT::Info.Id);
 		}
 
 		static constexpr bool IsAlive(Entity entity)
 		{
-			return WorldBindings::Bindings.IsEntityAlive(entity);
+			return Bindings::Instance->IsEntityAlive(entity);
 		}
 	};
 }

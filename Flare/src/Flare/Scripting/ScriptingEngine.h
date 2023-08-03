@@ -12,7 +12,8 @@
 
 namespace Flare
 {
-	using ModuleEventFunction = void(*)(Internal::ModuleConfiguration&);
+	using OnModuleLoadFunction = void(*)(Internal::ModuleConfiguration&, Internal::Bindings&);
+	using OnModuleUnloadFunction = void(*)(Internal::ModuleConfiguration&);
 
 	struct ScriptingItemIndex
 	{
@@ -48,8 +49,8 @@ namespace Flare
 		ScriptingModule Module;
 		Internal::ModuleConfiguration Config;
 
-		std::optional<ModuleEventFunction> OnLoad;
-		std::optional<ModuleEventFunction> OnUnload;
+		std::optional<OnModuleLoadFunction> OnLoad;
+		std::optional<OnModuleUnloadFunction> OnUnload;
 
 		std::vector<ScriptingTypeInstance> ScriptingInstances;
 		size_t FirstSystemInstance;
