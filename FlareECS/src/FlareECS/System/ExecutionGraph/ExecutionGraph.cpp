@@ -33,9 +33,9 @@ namespace Flare
 		m_ExecutionSettings.emplace_back();
 	}
 
-	void ExecutionGraph::AddExecutionSettings(const std::vector<ExecutionOrder>& settings)
+	void ExecutionGraph::AddExecutionSettings(const std::vector<ExecutionOrder> settings)
 	{
-		m_ExecutionSettings.push_back(settings);
+		m_ExecutionSettings.push_back(std::move(settings));
 	}
 
 	ExecutionGraph::BuildResult ExecutionGraph::RebuildGraph()

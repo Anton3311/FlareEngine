@@ -40,7 +40,6 @@ namespace Sandbox
 	};
 	FLARE_SYSTEM_IMPL(FirstSystem);
 
-	struct ThirdSystem;
 	struct SecondSystem : public Flare::SystemBase
 	{
 		FLARE_SYSTEM(SecondSystem);
@@ -50,7 +49,6 @@ namespace Sandbox
 		{
 			config.Query.With<ExecutionOrder_TestComponent1>();
 
-			config.ExecuteAfter<ThirdSystem>();
 		}
 
 		virtual void Execute(Flare::EntityView& chunk) override
@@ -70,6 +68,7 @@ namespace Sandbox
 			config.Query.With<ExecutionOrder_TestComponent2>();
 
 			config.ExecuteBefore<FirstSystem>();
+			config.ExecuteAfter<SecondSystem>();
 		}
 
 		virtual void Execute(Flare::EntityView& chunk) override

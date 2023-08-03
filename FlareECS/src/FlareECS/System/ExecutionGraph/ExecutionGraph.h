@@ -31,7 +31,7 @@ namespace Flare
 		};
 	public:
 		void AddExecutionSettings();
-		void AddExecutionSettings(const std::vector<ExecutionOrder>& settings);
+		void AddExecutionSettings(const std::vector<ExecutionOrder> settings);
 
 		inline const std::vector<uint32_t>& GetExecutionOrder() const { return m_ExecutionOrder; }
 	

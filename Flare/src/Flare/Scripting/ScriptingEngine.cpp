@@ -225,10 +225,11 @@ namespace Flare
 		SystemsManager& systems = s_Data.CurrentWorld->GetSystemsManager();
 		for (ScriptingModuleData& module : s_Data.Modules)
 		{
-			size_t instanceIndex = module.FirstSystemInstance;
-			for (Internal::SystemInfo* systemInfo : *module.Config.RegisteredSystems)
+			const auto& registeredSystems = *module.Config.RegisteredSystems;
+			for (size_t systemIndex = 0; systemIndex < registeredSystems.size(); systemIndex++)
 			{
-				ScriptingTypeInstance& instance = module.ScriptingInstances[instanceIndex];
+				Internal::SystemInfo* systemInfo = registeredSystems[systemIndex];
+				ScriptingTypeInstance& instance = module.GetSystemInstance(systemIndex);
 				Internal::SystemBase& systemInstance = instance.As<Internal::SystemBase>();
 
 				const Internal::ScriptingType* type = GetScriptingType(instance.Type);
@@ -261,10 +262,7 @@ namespace Flare
 
 				s_Data.SystemIndexToInstance.emplace(id, ScriptingItemIndex(
 					instance.Type.ModuleIndex,
-					instanceIndex));
-
-				s_Data.TemporaryQueryComponents.clear();
-				instanceIndex++;
+					module.FirstSystemInstance + systemIndex));
 			}
 		}
 
@@ -288,13 +286,14 @@ namespace Flare
 					continue;
 				}
 
-				systems.AddSystemToGroup(systemInfo->Id, config.Group, &config.GetExecutionOrder());
+				systems.AddSystemToGroup(systemInfo->Id, config.Group);
 
 				Query query = s_Data.CurrentWorld->GetRegistry().CreateQuery(ComponentSet(
 					s_Data.TemporaryQueryComponents.data(),
 					s_Data.TemporaryQueryComponents.size()));
 
 				systems.SetSystemQuery(systemInfo->Id, query);
+				s_Data.TemporaryQueryComponents.clear();
 			}
 		}
 

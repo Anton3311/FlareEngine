@@ -21,27 +21,41 @@ namespace Flare
 		return it->second;
 	}
 
-	uint32_t SystemsManager::RegisterSystem(std::string_view name, 
+	SystemId SystemsManager::RegisterSystem(std::string_view name,
+		SystemGroupId group, const Query& query,
+		const SystemEventFunction& onBeforeUpdate, 
+		const SystemEventFunction& onUpdate, 
+		const SystemEventFunction& onAfterUpdate)
+	{
+		SystemId id = RegisterSystem(name, onBeforeUpdate, onUpdate, onAfterUpdate);
+		AddSystemToGroup(id, group);
+		SetSystemQuery(id, query);
+		AddSystemExecutionSettings(id, nullptr);
+
+		return id;
+	}
+
+	SystemId SystemsManager::RegisterSystem(std::string_view name, 
 		const SystemEventFunction& onBeforeUpdate,
 		const SystemEventFunction& onUpdate,
 		const SystemEventFunction& onAfterUpdate)
 	{
-		uint32_t index = (uint32_t) m_Systems.size();
+		SystemId id = (SystemId) m_Systems.size();
 
 		SystemData& data = m_Systems.emplace_back();
 		data.Name = name;
-		data.Id = index;
+		data.Id = id;
 		data.GroupId = UINT32_MAX;
 		data.OnUpdate = onUpdate;
 		data.OnBeforeUpdate = onBeforeUpdate;
 		data.OnAfterUpdate = onAfterUpdate;
 		
-		return index;
+		return id;
 	}
 
 	void SystemsManager::AddSystemToGroup(SystemId system, SystemGroupId group)
 	{
-		FLARE_CORE_ASSERT(m_Systems[system].GroupId == UINT32_MAX, "System is already assign to a group");
+		FLARE_CORE_ASSERT(m_Systems[system].GroupId == UINT32_MAX, "System is already assigned to a group");
 
 		SystemData& data = m_Systems[system];
 
@@ -59,11 +73,11 @@ namespace Flare
 			m_Groups[data.GroupId].Graph.AddExecutionSettings();
 		else
 		{
-			auto a = *executionOrder;
-			for (auto& order : a)
-				order.ItemIndex = m_Systems[order.ItemIndex].IndexInGroup;
+			std::vector<ExecutionOrder> order = *executionOrder;
+			for (auto& i : order)
+				i.ItemIndex = m_Systems[i.ItemIndex].IndexInGroup;
 
-			m_Groups[data.GroupId].Graph.AddExecutionSettings(a);
+			m_Groups[data.GroupId].Graph.AddExecutionSettings(std::move(order));
 		}
 	}
 
