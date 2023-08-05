@@ -36,11 +36,11 @@ namespace Flare
 				ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_FramePadding;
 				if (ImGui::TreeNodeEx((void*)std::hash<ComponentId>()(component), flags, "%s", componentInfo.Name.c_str()))
 				{
-					if (component == CameraComponent::Id)
+					if (component == CameraComponent::Info.Id)
 						RenderCameraComponent(world.GetEntityComponent<CameraComponent>(selectedEntity));
-					else if (component == TransformComponent::Id)
+					else if (component == TransformComponent::Info.Id)
 						RenderTransformComponent(world.GetEntityComponent<TransformComponent>(selectedEntity));
-					else if (component == SpriteComponent::Id)
+					else if (component == SpriteComponent::Info.Id)
 						RenderSpriteComponent(world.GetEntityComponent<SpriteComponent>(selectedEntity));
 					else
 					{

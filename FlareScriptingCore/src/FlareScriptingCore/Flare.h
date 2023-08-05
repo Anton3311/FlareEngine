@@ -10,6 +10,7 @@
 #include "FlareScriptingCore/ECS/SystemInfo.h"
 #include "FlareScriptingCore/ECS/SystemConfiguration.h"
 #include "FlareScriptingCore/ECS/ComponentInfo.h"
+#include "FlareScriptingCore/ECS/Query.h"
 
 #include "FlareScriptingCore/Time.h"
 #include "FlareScriptingCore/Input.h"
@@ -26,6 +27,7 @@ namespace Flare
 	using Scripting::EntityView;
 	using Scripting::EntityElement;
 	using Scripting::ComponentView;
+	using Scripting::Query;
 
 	using Scripting::ComponentInfo;
 	using Scripting::ScriptingType;

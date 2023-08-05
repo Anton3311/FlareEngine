@@ -99,7 +99,7 @@ namespace Flare
 
 	static void SerializeComponent(YAML::Emitter& emitter, World& world, Entity entity, ComponentId component)
 	{
-		if (component == TransformComponent::Id)
+		if (component == TransformComponent::Info.Id)
 		{
 			TransformComponent& transform = world.GetEntityComponent<TransformComponent>(entity);
 
@@ -111,7 +111,7 @@ namespace Flare
 
 			emitter << YAML::EndMap;
 		}
-		else if (component == SpriteComponent::Id)
+		else if (component == SpriteComponent::Info.Id)
 		{
 			SpriteComponent& sprite = world.GetEntityComponent<SpriteComponent>(entity);
 
@@ -121,7 +121,7 @@ namespace Flare
 			emitter << YAML::Key << "TextureTiling" << YAML::Value << sprite.TextureTiling;
 			emitter << YAML::EndMap;
 		}
-		else if (component == CameraComponent::Id)
+		else if (component == CameraComponent::Info.Id)
 		{
 			CameraComponent& camera = world.GetEntityComponent<CameraComponent>(entity);
 

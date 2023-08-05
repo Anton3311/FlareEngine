@@ -2,10 +2,16 @@
 
 #include "Flare/Input/InputManager.h"
 
+#include "FlareScriptingCore/ECS/EntityView.h"
+
+#include <functional>
+
 namespace Flare
 {
     World* ScriptingBridge::s_World = nullptr;
     Scripting::Bindings ScriptingBridge::s_Bindings;
+
+    // ECS
 
     static Entity World_CreateEntity(const ComponentId* components, size_t count)
     {
@@ -22,16 +28,6 @@ namespace Flare
         return ScriptingBridge::GetCurrentWorld().GetSystemsManager().FindGroup(name);
     }
 
-    static bool Input_IsKeyPressed(KeyCode key)
-    {
-        return InputManager::IsKeyPressed(key);
-    }
-
-    static bool Input_IsMouseButtonPressed(MouseCode button)
-    {
-        return InputManager::IsMouseButtonPreseed(button);
-    }
-
     static size_t World_GetArchetypeComponentOffset(ArchetypeId archetype, ComponentId component)
     {
         Registry& registry = ScriptingBridge::GetCurrentWorld().GetRegistry();
@@ -43,7 +39,46 @@ namespace Flare
         return record.Data.ComponentOffsets[index.value()];
     }
 
+    static QueryId World_CreateQuery(const ComponentId* components, size_t count)
+    {
+        World& world = ScriptingBridge::GetCurrentWorld();
+        return world.GetRegistry().CreateQuery(ComponentSet(components, count)).GetId();
+    }
 
+    static void World_ForEachChunkInQuery(QueryId queryId, const std::function<void(Scripting::EntityView& view)>& perChunk)
+    {
+        World& world = ScriptingBridge::GetCurrentWorld();
+        Query query = Query(queryId, world.GetRegistry());
+
+        for (EntityView view : query)
+        {
+            ArchetypeRecord& record = world.GetRegistry().GetArchetypeRecord(view.GetArchetype());
+
+            size_t chunksCount = record.Storage.GetChunksCount();
+            for (size_t i = 0; i < chunksCount; i++)
+            {
+                Scripting::EntityView chunk(
+                    view.GetArchetype(),
+                    record.Storage.GetChunkBuffer(i),
+                    record.Storage.GetEntitySize(),
+                    record.Storage.GetEntitiesCountInChunk(i));
+
+                perChunk(chunk);
+            }
+        }
+    }
+
+    // Input
+
+    static bool Input_IsKeyPressed(KeyCode key)
+    {
+        return InputManager::IsKeyPressed(key);
+    }
+
+    static bool Input_IsMouseButtonPressed(MouseCode button)
+    {
+        return InputManager::IsMouseButtonPreseed(button);
+    }
 
     void ScriptingBridge::Initialize()
     {
@@ -51,6 +86,9 @@ namespace Flare
         s_Bindings.CreateEntity = World_CreateEntity;
         s_Bindings.FindSystemGroup = World_FindSystemGroup;
         s_Bindings.GetEntityComponent = World_GetEntityComponent;
+
+        s_Bindings.CreateQuery = World_CreateQuery;
+        s_Bindings.ForEachChunkInQuery = World_ForEachChunkInQuery;
 
         s_Bindings.GetArchetypeComponentOffset = World_GetArchetypeComponentOffset;
 

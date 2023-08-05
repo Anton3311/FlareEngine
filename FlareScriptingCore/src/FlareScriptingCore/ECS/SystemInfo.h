@@ -30,7 +30,7 @@ namespace Flare::Scripting
 	{
 	public:
 		virtual void Configure(SystemConfiguration& config) = 0;
-		virtual void Execute(Scripting::EntityView& chunk) = 0;
+		virtual void OnUpdate() = 0;
 	};
 
 #ifndef FLARE_SCRIPTING_CORE_NO_MACROS

@@ -49,6 +49,10 @@ namespace Flare
 	public:
 		constexpr Query()
 			: m_Id(INVALID_QUERY_ID), m_Registry(nullptr), m_QueryCache(nullptr) {}
+
+		Query(QueryId id, Registry& registry)
+			: m_Id(id), m_Registry(&registry), m_QueryCache(&registry.GetQueryCache()) {}
+
 		constexpr Query(QueryId id, Registry& registry, const QueryCache& queryCache)
 			: m_Id(id), m_Registry(&registry), m_QueryCache(&queryCache) {}
 	public:

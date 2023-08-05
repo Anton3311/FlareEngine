@@ -72,7 +72,6 @@ namespace Flare
 			World* CurrentWorld = nullptr;
 			bool ShouldRegisterComponents = false;
 			std::vector<ScriptingModuleData> Modules;
-			std::vector<ComponentId> TemporaryQueryComponents;
 
 			std::unordered_map<ComponentId, ScriptingItemIndex> ComponentIdToTypeIndex;
 			std::unordered_map<std::string, ScriptingItemIndex> TypeNameToIndex;

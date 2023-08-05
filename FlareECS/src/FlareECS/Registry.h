@@ -70,6 +70,7 @@ namespace Flare
 		// Querying
 
 		Query CreateQuery(const ComponentSet& components);
+		inline const QueryCache& GetQueryCache() const { return m_QueryCache; }
 
 		EntityView QueryArchetype(const ComponentSet& componentSet);
 	public:

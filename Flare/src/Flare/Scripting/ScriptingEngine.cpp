@@ -143,7 +143,6 @@ namespace Flare
 		}
 
 		s_Data.ComponentIdToTypeIndex.clear();
-		s_Data.TemporaryQueryComponents.clear();
 		s_Data.Modules.clear();
 		s_Data.TypeNameToIndex.clear();
 		s_Data.SystemIndexToInstance.clear();
@@ -237,23 +236,7 @@ namespace Flare
 					nullptr,
 					[system = &systemInstance](SystemExecutionContext& context)
 					{
-						for (EntityView view : context.GetQuery())
-						{
-							FLARE_CORE_ASSERT(s_Data.CurrentWorld != nullptr);
-							ArchetypeRecord& record = s_Data.CurrentWorld->GetRegistry().GetArchetypeRecord(view.GetArchetype());
-
-							size_t chunksCount = record.Storage.GetChunksCount();
-							for (size_t i = 0; i < chunksCount; i++)
-							{
-								Scripting::EntityView chunk(
-									view.GetArchetype(),
-									record.Storage.GetChunkBuffer(i),
-									record.Storage.GetEntitySize(),
-									record.Storage.GetEntitiesCountInChunk(i));
-
-								system->Execute(chunk);
-							}
-						}
+						system->OnUpdate();
 					},
 					nullptr);
 
@@ -274,7 +257,7 @@ namespace Flare
 				const Scripting::SystemInfo* systemInfo = registeredSystems[systemIndex];
 
 				Scripting::SystemBase& systemInstance = module.GetSystemInstance(systemIndex).As<Scripting::SystemBase>();
-				Scripting::SystemConfiguration& config = configs.emplace_back(&s_Data.TemporaryQueryComponents, defaultGroup.value());
+				Scripting::SystemConfiguration& config = configs.emplace_back(defaultGroup.value());
 
 				systemInstance.Configure(config);
 
@@ -286,13 +269,6 @@ namespace Flare
 				}
 
 				systems.AddSystemToGroup(systemInfo->Id, config.Group);
-
-				Query query = s_Data.CurrentWorld->GetRegistry().CreateQuery(ComponentSet(
-					s_Data.TemporaryQueryComponents.data(),
-					s_Data.TemporaryQueryComponents.size()));
-
-				systems.SetSystemQuery(systemInfo->Id, query);
-				s_Data.TemporaryQueryComponents.clear();
 			}
 		}
 

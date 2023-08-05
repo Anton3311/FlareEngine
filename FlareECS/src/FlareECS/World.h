@@ -13,8 +13,8 @@
 #include <vector>
 #include <string_view>
 
-#define FLARE_COMPONENT static Flare::ComponentId Id;
-#define FLARE_COMPONENT_IMPL(name) Flare::ComponentId name::Id = INVALID_COMPONENT_ID;
+#define FLARE_COMPONENT static Flare::RegisteredComponentInfo Info;
+#define FLARE_COMPONENT_IMPL(name) Flare::RegisteredComponentInfo name::Info;
 
 namespace Flare
 {
@@ -27,7 +27,7 @@ namespace Flare
 		template<typename ComponentT>
 		constexpr void RegisterComponent()
 		{
-			ComponentT::Id = m_Registry.RegisterComponent(typeid(ComponentT).name(), 
+			ComponentT::Info.Id = m_Registry.RegisterComponent(typeid(ComponentT).name(), 
 				sizeof(ComponentT), [](void* component) { ((ComponentT*)component)->~ComponentT(); });
 		}
 
@@ -39,7 +39,7 @@ namespace Flare
 			size_t index = 0;
 			([&]
 			{
-				ids[index++] = T::Id;
+				ids[index++] = T::Info.Id;
 			} (), ...);
 
 			return m_Registry.CreateEntity(ComponentSet(ids, sizeof...(T)));
@@ -48,7 +48,7 @@ namespace Flare
 		template<typename T>
 		constexpr T& GetEntityComponent(Entity entity)
 		{
-			std::optional<void*> componentData = m_Registry.GetEntityComponent(entity, T::Id);
+			std::optional<void*> componentData = m_Registry.GetEntityComponent(entity, T::Info.Id);
 			FLARE_CORE_ASSERT(componentData.has_value(), "Failed to get entity component");
 			return *(T*)componentData.value();
 		}
@@ -56,7 +56,7 @@ namespace Flare
 		template<typename T>
 		constexpr std::optional<T*> TryGetEntityComponent(Entity entity)
 		{
-			std::optional<void*> componentData = m_Registry.GetEntityComponent(entity, T::Id);
+			std::optional<void*> componentData = m_Registry.GetEntityComponent(entity, T::Info.Id);
 			if (componentData.has_value())
 				return (T*)componentData.value();
 			return {};
@@ -74,19 +74,19 @@ namespace Flare
 		template<typename T>
 		constexpr bool AddEntityComponent(Entity entity, const T& data)
 		{
-			return m_Registry.AddEntityComponent(entity, T::Id, &data);
+			return m_Registry.AddEntityComponent(entity, T::Info.Id, &data);
 		}
 
 		template<typename T>
 		constexpr bool RemoveEntityComponent(Entity entity)
 		{
-			return m_Registry.RemoveEntityComponent(entity, T::Id);
+			return m_Registry.RemoveEntityComponent(entity, T::Info.Id);
 		}
 		
 		template<typename T>
 		constexpr bool HasComponent(Entity entity)
 		{
-			return m_Registry.HasComponent(entity, T::Id);
+			return m_Registry.HasComponent(entity, T::Info.Id);
 		}
 
 		inline void DeleteEntity(Entity entity)

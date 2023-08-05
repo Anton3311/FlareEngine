@@ -29,7 +29,7 @@ namespace Flare
 		ComponentView<ComponentT> View()
 		{
 			ArchetypeRecord& archetypeRecord = m_Registry.GetArchetypeRecord(m_Archetype);
-			std::optional<size_t> index = m_Registry.GetArchetypeComponentIndex(m_Archetype, ComponentT::Id);
+			std::optional<size_t> index = m_Registry.GetArchetypeComponentIndex(m_Archetype, ComponentT::Info.Id);
 
 			FLARE_CORE_ASSERT(index.has_value(), "Archetype doesn't have a component");
 

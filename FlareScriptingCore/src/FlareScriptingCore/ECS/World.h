@@ -6,6 +6,7 @@
 
 #include "FlareECS/ComponentGroup.h"
 
+#include "FlareScriptingCore/ECS/Query.h"
 #include "FlareScriptingCore/ECS/EntityView.h"
 #include "FlareScriptingCore/Bindings.h"
 
@@ -42,6 +43,11 @@ namespace Flare::Scripting
 		static constexpr bool IsAlive(Entity entity)
 		{
 			return Bindings::Instance->IsEntityAlive(entity);
+		}
+
+		static constexpr void ForEachChunk(Query query, const std::function<void(EntityView&)>& perChunk)
+		{
+			Bindings::Instance->ForEachChunkInQuery(query.GetId(), perChunk);
 		}
 	};
 }
