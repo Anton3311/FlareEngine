@@ -21,7 +21,17 @@ namespace Flare
 	class World
 	{
 	public:
-		World() = default;
+		World()
+		{
+			FLARE_CORE_ASSERT(s_CurrentWorld == nullptr, "Multiple ECS Worlds");
+			s_CurrentWorld = this;
+		}
+
+		~World()
+		{
+			s_CurrentWorld = nullptr;
+		}
+
 		World(const World&) = delete;
 
 		template<typename ComponentT>
@@ -110,6 +120,12 @@ namespace Flare
 			FilteredComponentsGroup<T...> components;
 			return m_Registry.CreateQuery(ComponentSet(components.GetComponents().data(), components.GetComponents().size()));
 		}
+
+		inline static World& GetCurrent()
+		{
+			FLARE_CORE_ASSERT(s_CurrentWorld != nullptr);
+			return *s_CurrentWorld;
+		}
 	public:
 		inline Registry& GetRegistry() { return m_Registry; }
 
@@ -119,5 +135,7 @@ namespace Flare
 		Registry m_Registry;
 
 		SystemsManager m_SystemsManager;
+	private:
+		static World* s_CurrentWorld;
 	};
 }

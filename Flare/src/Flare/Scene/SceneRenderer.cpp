@@ -2,14 +2,14 @@
 
 namespace Flare
 {
-	Query SpritesRendererSystem::Setup(World& world)
+	SpritesRendererSystem::SpritesRendererSystem()
 	{
-		return world.CreateQuery<With<TransformComponent>, With<SpriteComponent>>();
+		m_SpritesQuery = World::GetCurrent().CreateQuery<With<TransformComponent>, With<SpriteComponent>>();
 	}
 
 	void SpritesRendererSystem::OnUpdate(SystemExecutionContext& context)
 	{
-		for (EntityView view : context.GetQuery())
+		for (EntityView view : m_SpritesQuery)
 		{
 			ComponentView<TransformComponent> transforms = view.View<TransformComponent>();
 			ComponentView<SpriteComponent> sprites = view.View<SpriteComponent>();

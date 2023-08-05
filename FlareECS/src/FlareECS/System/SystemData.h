@@ -11,15 +11,6 @@ namespace Flare
 {
 	class SystemExecutionContext
 	{
-	public:
-		SystemExecutionContext() = default;
-		SystemExecutionContext(const Query& query)
-			: m_Query(query) {}
-	public:
-		constexpr Query GetQuery() const { return m_Query; }
-		constexpr void SetQuery(const Query& query) { m_Query = query; }
-	private:
-		Query m_Query;
 	};
 
 	using SystemEventFunction = std::function<void(SystemExecutionContext& context)>;
@@ -35,9 +26,6 @@ namespace Flare
 		std::string Name;
 
 		SystemExecutionContext ExecutionContext;
-
-		SystemEventFunction OnBeforeUpdate;
-		SystemEventFunction OnAfterUpdate;
 		SystemEventFunction OnUpdate;
 
 		SystemId Id;

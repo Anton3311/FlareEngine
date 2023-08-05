@@ -8,9 +8,13 @@
 
 namespace Flare
 {
-	struct SpritesRendererSystem
+	struct SpritesRendererSystem : public System
 	{
-		static Query Setup(World& world);
-		static void OnUpdate(SystemExecutionContext& context);
+	public:
+		SpritesRendererSystem();
+
+		virtual void OnUpdate(SystemExecutionContext& context) override;
+	private:
+		Query m_SpritesQuery;
 	};
 }

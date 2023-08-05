@@ -233,12 +233,10 @@ namespace Flare
 				const Scripting::ScriptingType* type = GetScriptingType(instance.Type);
 
 				SystemId id = systems.RegisterSystem(type->Name,
-					nullptr,
 					[system = &systemInstance](SystemExecutionContext& context)
 					{
 						system->OnUpdate();
-					},
-					nullptr);
+					});
 
 				systemInfo->Id = id;
 

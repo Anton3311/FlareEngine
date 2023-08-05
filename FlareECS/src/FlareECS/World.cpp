@@ -2,4 +2,5 @@
 
 namespace Flare
 {
+	World* World::s_CurrentWorld = nullptr;
 }

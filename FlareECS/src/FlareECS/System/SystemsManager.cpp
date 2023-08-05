@@ -21,24 +21,18 @@ namespace Flare
 		return it->second;
 	}
 
-	SystemId SystemsManager::RegisterSystem(std::string_view name,
-		SystemGroupId group, const Query& query,
-		const SystemEventFunction& onBeforeUpdate, 
-		const SystemEventFunction& onUpdate, 
-		const SystemEventFunction& onAfterUpdate)
+	SystemId SystemsManager::RegisterSystem(std::string_view name, SystemGroupId group,
+		const SystemEventFunction& onUpdate)
 	{
-		SystemId id = RegisterSystem(name, onBeforeUpdate, onUpdate, onAfterUpdate);
+		SystemId id = RegisterSystem(name, onUpdate);
 		AddSystemToGroup(id, group);
-		SetSystemQuery(id, query);
 		AddSystemExecutionSettings(id, nullptr);
 
 		return id;
 	}
 
 	SystemId SystemsManager::RegisterSystem(std::string_view name, 
-		const SystemEventFunction& onBeforeUpdate,
-		const SystemEventFunction& onUpdate,
-		const SystemEventFunction& onAfterUpdate)
+		const SystemEventFunction& onUpdate)
 	{
 		SystemId id = (SystemId) m_Systems.size();
 
@@ -47,8 +41,6 @@ namespace Flare
 		data.Id = id;
 		data.GroupId = UINT32_MAX;
 		data.OnUpdate = onUpdate;
-		data.OnBeforeUpdate = onBeforeUpdate;
-		data.OnAfterUpdate = onAfterUpdate;
 		
 		return id;
 	}
@@ -81,12 +73,6 @@ namespace Flare
 		}
 	}
 
-	void SystemsManager::SetSystemQuery(SystemId system, const Query& query)
-	{
-		FLARE_CORE_ASSERT(system < (SystemId)m_Systems.size());
-		m_Systems[system].ExecutionContext.SetQuery(query);
-	}
-
 	void SystemsManager::ExecuteGroup(SystemGroupId id)
 	{
 		FLARE_CORE_ASSERT(id < (SystemGroupId)m_Groups.size());
@@ -95,14 +81,9 @@ namespace Flare
 		for (size_t i : group.Graph.GetExecutionOrder())
 		{
 			SystemData& data = m_Systems[group.SystemIndices[i]];
-			if (data.OnBeforeUpdate)
-				data.OnBeforeUpdate(data.ExecutionContext);
-
+			
 			if (data.OnUpdate)
 				data.OnUpdate(data.ExecutionContext);
-
-			if (data.OnAfterUpdate)
-				data.OnAfterUpdate(data.ExecutionContext);
 		}
 	}
 
