@@ -496,7 +496,10 @@ namespace Flare
 		const ArchetypeRecord& record = GetArchetypeRecord(archetype);
 
 		if (record.Storage.GetEntitiesCount() != 1)
+		{
+			FLARE_CORE_ERROR("Failed to get singleton entity: Multiple entities matched the query");
 			return Entity();
+		}
 
 		return m_EntityRecords[record.Storage.GetEntityIndices()[0]].Id;
 	}
