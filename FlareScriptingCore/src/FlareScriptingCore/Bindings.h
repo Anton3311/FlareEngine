@@ -31,6 +31,12 @@ namespace Flare::Scripting
 		using IsEntityAliveFunction = bool(*)(Entity entity);
 		IsEntityAliveFunction IsEntityAlive;
 
+		// ECS/Singleton
+		using GetSingletonEntityFunction = Entity(*)(QueryId query);
+		GetSingletonEntityFunction GetSingletonEntity;
+		using GetSingletonComponentFunction = void*(*)(ComponentId id);
+		GetSingletonComponentFunction GetSingletonComponent;
+
 		using GetArchetypeComponentOffsetFunction = size_t(*)(ArchetypeId archetype, ComponentId component);
 		GetArchetypeComponentOffsetFunction GetArchetypeComponentOffset;
 

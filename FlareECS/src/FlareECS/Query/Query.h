@@ -71,6 +71,11 @@ namespace Flare
 			FLARE_CORE_ASSERT(m_QueryCache);
 			return QueryIterator(*m_Registry, (*m_QueryCache)[m_Id].MatchedArchetypes.end());
 		}
+
+		inline const std::unordered_set<ArchetypeId>& GetMatchedArchetypes() const
+		{
+			return (*m_QueryCache)[m_Id].MatchedArchetypes;
+		}
 	private:
 		QueryId m_Id;
 		Registry* m_Registry;

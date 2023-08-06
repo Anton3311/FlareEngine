@@ -57,9 +57,13 @@ namespace Flare
 		inline const ComponentInfo& GetComponentInfo(ComponentId id) const;
 		inline const std::vector<ComponentInfo>& GetRegisteredComponents() const { return m_RegisteredComponents; }
 
+		std::optional<void*> GetSingleComponent(ComponentId id) const;
+		std::optional<Entity> GetSingletonEntity(const Query& query) const;
+		
 		// Archetype operations
 
 		inline ArchetypeRecord& GetArchetypeRecord(size_t archetypeId) { return m_Archetypes[archetypeId]; }
+		inline const ArchetypeRecord& GetArchetypeRecord(size_t archetypeId) const { return m_Archetypes[archetypeId]; }
 		std::optional<size_t> GetArchetypeComponentIndex(ArchetypeId archetype, ComponentId component) const;
 
 		// Iterator

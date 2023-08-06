@@ -89,5 +89,5 @@ namespace Flare::Scripting
 		(#fieldName, offsetof(typeName, fieldName));
 
 #define FLARE_DEFAULT_SERIALIZER \
-	static void ConfigureSerialization(Flare::Internal::TypeSerializationSettings& settings) {}
+	static void ConfigureSerialization(Flare::Scripting::TypeSerializationSettings& settings) {}
 #endif

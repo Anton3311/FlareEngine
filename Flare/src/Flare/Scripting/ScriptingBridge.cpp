@@ -18,9 +18,28 @@ namespace Flare
         return ScriptingBridge::GetCurrentWorld().GetRegistry().CreateEntity(ComponentSet(components, (size_t)count));
     }
 
+    static bool World_IsEntityAlive(Entity entity)
+    {
+        return ScriptingBridge::GetCurrentWorld().IsEntityAlive(entity);
+    }
+
     static void* World_GetEntityComponent(Entity entity, ComponentId component)
     {
         return ScriptingBridge::GetCurrentWorld().GetRegistry().GetEntityComponent(entity, component).value_or(nullptr);
+    }
+
+    static Entity World_GetSingletonEntity(QueryId queryId)
+    {
+        World& world = ScriptingBridge::GetCurrentWorld();
+        Query query = Query(queryId, world.GetRegistry());
+
+        return world.GetRegistry().GetSingletonEntity(query).value_or(Entity());
+    }
+
+    static void* World_GetSingletonComponent(ComponentId id)
+    {
+        World& world = ScriptingBridge::GetCurrentWorld();
+        return world.GetRegistry().GetSingleComponent(id).value_or(nullptr);
     }
 
     static std::optional<SystemGroupId> World_FindSystemGroup(std::string_view name)
@@ -84,11 +103,15 @@ namespace Flare
     {
         using namespace Scripting;
         s_Bindings.CreateEntity = World_CreateEntity;
+        s_Bindings.IsEntityAlive = World_IsEntityAlive;
         s_Bindings.FindSystemGroup = World_FindSystemGroup;
         s_Bindings.GetEntityComponent = World_GetEntityComponent;
 
         s_Bindings.CreateQuery = World_CreateQuery;
         s_Bindings.ForEachChunkInQuery = World_ForEachChunkInQuery;
+
+        s_Bindings.GetSingletonEntity = World_GetSingletonEntity;
+        s_Bindings.GetSingletonComponent = World_GetSingletonComponent;
 
         s_Bindings.GetArchetypeComponentOffset = World_GetArchetypeComponentOffset;
 

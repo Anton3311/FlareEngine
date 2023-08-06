@@ -40,6 +40,17 @@ namespace Flare::Scripting
 			return *(ComponentT*)Bindings::Instance->GetEntityComponent(entity, ComponentT::Info.Id);
 		}
 
+		constexpr static Entity GetSingletonEntity(Query query)
+		{
+			return Bindings::Instance->GetSingletonEntity(query.GetId());
+		}
+
+		template<typename T>
+		constexpr static T* GetSingletonComponent()
+		{
+			return (T*)Bindings::Instance->GetSingletonComponent(T::Info.Id);
+		}
+
 		static constexpr bool IsAlive(Entity entity)
 		{
 			return Bindings::Instance->IsEntityAlive(entity);

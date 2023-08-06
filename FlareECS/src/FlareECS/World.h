@@ -114,6 +114,28 @@ namespace Flare
 			return m_Registry.GetEntityComponents(entity);
 		}
 
+		constexpr Entity GetSingletonEntity(const Query& query)
+		{
+			return m_Registry.GetSingletonEntity(query).value_or(Entity());
+		}
+
+		template<typename T>
+		constexpr T& GetSingletonComponent()
+		{
+			auto result = m_Registry.GetSingleComponent(T::Info.Id);
+			FLARE_CORE_ASSERT(result.has_value(), "Failed to get singleton component");
+			return *(T*)result.value();
+		}
+
+		template<typename T>
+		constexpr std::optional<T*> TryGetSingletonComponent()
+		{
+			auto result = m_Registry.GetSingleComponent(T::Info.Id);
+			if (result.has_value())
+				return *(T*)result.value();
+			return {};
+		}
+
 		template<typename... T>
 		constexpr Query CreateQuery()
 		{

@@ -446,6 +446,61 @@ namespace Flare
 		return m_RegisteredComponents[m_ComponentIdToIndex.at(id)];
 	}
 
+	std::optional<void*> Registry::GetSingleComponent(ComponentId id) const
+	{
+		FLARE_CORE_ASSERT(IsComponentIdValid(id));
+
+		auto it = m_ComponentToArchetype.find(id);
+		const auto& archetypes = it->second;
+		
+		if (archetypes.size() == 0)
+		{
+			FLARE_CORE_ERROR("Failed to get singleton component: World doesn't contain any entities with component '{0}'", GetComponentInfo(id).Name);
+			return {};
+		}
+		else if (archetypes.size() != 1)
+		{
+			FLARE_CORE_ERROR("Failed to get singleton component: World contains multiple entities with component '{0}'", GetComponentInfo(id).Name);
+			return {};
+		}
+
+		auto archetype = *archetypes.begin();
+		const ArchetypeRecord& record = GetArchetypeRecord(archetype.first);
+
+		if (record.Storage.GetEntitiesCount() != 1)
+		{
+			FLARE_CORE_ERROR("Failed to get singleton component: World contains multiple entities with component '{0}'", GetComponentInfo(id).Name);
+			return {};
+		}
+
+		uint8_t* entityData = record.Storage.GetEntityData(0);
+
+		return entityData + record.Data.ComponentOffsets[archetype.second];
+	}
+
+	std::optional<Entity> Registry::GetSingletonEntity(const Query& query) const
+	{
+		const auto& matchedArchetypes = query.GetMatchedArchetypes();
+		if (matchedArchetypes.size() == 0)
+		{
+			FLARE_CORE_ERROR("Failed to get singleton entity: Zero entities matched the query");
+			return Entity();
+		}
+		else if (matchedArchetypes.size() != 1)
+		{
+			FLARE_CORE_ERROR("Failed to get singleton entity: Multiple entities matched the query");
+			return Entity();
+		}
+
+		ArchetypeId archetype = *matchedArchetypes.begin();
+		const ArchetypeRecord& record = GetArchetypeRecord(archetype);
+
+		if (record.Storage.GetEntitiesCount() != 1)
+			return Entity();
+
+		return m_EntityRecords[record.Storage.GetEntityIndices()[0]].Id;
+	}
+
 	EntityRegistryIterator Registry::begin()
 	{
 		return EntityRegistryIterator(*this, 0);

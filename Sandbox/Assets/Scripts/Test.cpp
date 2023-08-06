@@ -22,15 +22,18 @@ namespace Sandbox
 	};
 	FLARE_COMPONENT_IMPL(MovingQuadComponet, MovingQuadComponet::ConfigureSerialization);
 
-	struct TestComponent
+	struct TestSingleton
 	{
-		FLARE_COMPONENT(TestComponent);
+		FLARE_COMPONENT(TestSingleton);
+
+		float Num;
 
 		static void ConfigureSerialization(Flare::TypeSerializationSettings& settings)
 		{
+			FLARE_SERIALIZE_FIELD(settings, TestSingleton, Num);
 		}
 	};
-	FLARE_COMPONENT_IMPL(TestComponent, TestComponent::ConfigureSerialization);
+	FLARE_COMPONENT_IMPL(TestSingleton, TestSingleton::ConfigureSerialization);
 
 	struct TestSystem : public Flare::SystemBase
 	{
@@ -39,6 +42,7 @@ namespace Sandbox
 		virtual void Configure(Flare::SystemConfiguration& config) override
 		{
 			m_TestQuery = Flare::Query::New<Flare::With<Flare::Transform>, Flare::With<MovingQuadComponet>>();
+			m_SingletonQuery = Flare::Query::New<Flare::With<TestSingleton>>();
 		}
 
 		static void ConfigureSerialization(Flare::TypeSerializationSettings& settings)
@@ -47,6 +51,10 @@ namespace Sandbox
 
 		virtual void OnUpdate() override
 		{
+			TestSingleton* singleton = Flare::World::GetSingletonComponent<TestSingleton>();
+			if (singleton != nullptr)
+				FLARE_INFO(singleton->Num);
+
 			Flare::World::ForEachChunk(m_TestQuery, [](Flare::EntityView& view)
 			{
 				glm::vec3 direction = glm::vec3(0.0f);
@@ -75,6 +83,7 @@ namespace Sandbox
 		}
 	private:
 		Flare::Query m_TestQuery;
+		Flare::Query m_SingletonQuery;
 	};
 	FLARE_SYSTEM_IMPL(TestSystem);
 }

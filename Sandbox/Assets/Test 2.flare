@@ -40,5 +40,17 @@ Entities:
         Position: [0, 0, 0]
         Rotation: [0, 0, 0]
         Scale: [0, 0, 0]
+  - Components:
+      - Name: Transform
+        Position: [0, 0, 0]
+        Rotation: [0, 0, 0]
+        Scale: [0, 0, 0]
+      - Name: struct Sandbox::TestSingleton
+        Num: 8.69999981
+  - Components:
+      - Name: Transform
+        Position: [0, 0, 0]
+        Rotation: [0, 0, 0]
+        Scale: [0, 0, 0]
 Systems:
   - Name: struct Sandbox::TestSystem
