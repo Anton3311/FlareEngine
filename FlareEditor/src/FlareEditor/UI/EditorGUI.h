@@ -20,6 +20,7 @@ namespace Flare
 		static bool BeginMenu(const char* name);
 		static void EndMenu();
 
+		static bool BoolPropertyField(const char* name, bool& value);
 		static bool FloatPropertyField(const char* name, float& value);
 		static bool Vector2PropertyField(const char* name, glm::vec2& value);
 		static bool Vector3PropertyField(const char* name, glm::vec3& value);

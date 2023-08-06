@@ -26,14 +26,17 @@ namespace Flare
 			const uint8_t* fieldData = (const uint8_t*)data + field.Offset;
 			switch (field.Type)
 			{
+			case Scripting::FieldType::Bool:
+				emitter << YAML::Key << field.Name << YAML::Value << *(bool*)(fieldData);
+				break;
+			case Scripting::FieldType::Float:
+				emitter << YAML::Key << field.Name << YAML::Value << *(float*)(fieldData);
+				break;
 			case Scripting::FieldType::Float2:
 				emitter << YAML::Key << field.Name << YAML::Value << *(glm::vec2*)(fieldData);
 				break;
 			case Scripting::FieldType::Float3:
 				emitter << YAML::Key << field.Name << YAML::Value << *(glm::vec3*)(fieldData);
-				break;
-			case Scripting::FieldType::Float:
-				emitter << YAML::Key << field.Name << YAML::Value << *(float*)(fieldData);
 				break;
 			case Scripting::FieldType::Asset:
 			case Scripting::FieldType::Texture:
@@ -60,6 +63,12 @@ namespace Flare
 			{
 				switch (field.Type)
 				{
+				case Scripting::FieldType::Bool:
+				{
+					float value = fieldNode.as<bool>();
+					std::memcpy(data + field.Offset, &value, sizeof(value));
+					break;
+				}
 				case Scripting::FieldType::Float:
 				{
 					float value = fieldNode.as<float>();

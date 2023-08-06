@@ -19,6 +19,8 @@ namespace Flare::Scripting
 	{
 		None,
 
+		Bool,
+
 		Int32,
 		UInt32,
 
@@ -44,6 +46,7 @@ namespace Flare::Scripting
 	template<>                                       \
 	FieldType DataTypeToFiedType::Get<dataType>();
 
+	DATA_TYPE_TO_FIELD_TYPE_CONVERTER(bool);
 	DATA_TYPE_TO_FIELD_TYPE_CONVERTER(int32_t);
 	DATA_TYPE_TO_FIELD_TYPE_CONVERTER(uint32_t);
 	DATA_TYPE_TO_FIELD_TYPE_CONVERTER(float);

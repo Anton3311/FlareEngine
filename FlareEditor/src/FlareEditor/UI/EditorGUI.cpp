@@ -54,6 +54,18 @@ namespace Flare
 		ImGui::EndMenu();
 	}
 
+	bool EditorGUI::BoolPropertyField(const char* name, bool& value)
+	{
+		RenderPropertyName(name);
+
+		ImGui::PushID(&value);
+		bool result = ImGui::Checkbox("", &value);
+		ImGui::PopID();
+
+		ImGui::PopItemWidth();
+		return result;
+	}
+
 	bool EditorGUI::FloatPropertyField(const char* name, float& value)
 	{
 		RenderPropertyName(name);
@@ -227,6 +239,9 @@ namespace Flare
 
 				switch (field.Type)
 				{
+				case Scripting::FieldType::Bool:
+					result |= EditorGUI::BoolPropertyField(field.Name.c_str(), *(bool*)fieldData);
+					break;
 				case Scripting::FieldType::Float:
 					result |= EditorGUI::FloatPropertyField(field.Name.c_str(), *(float*)fieldData);
 					break;
