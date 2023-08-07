@@ -1,4 +1,4 @@
-include "dependencies.lua"
+include "Dependencies.lua"
 
 workspace "Flare"
 	architecture "x86_64"
@@ -26,12 +26,12 @@ group "Dependencies"
 group ""
 
 group "Core"
-	include "FlareCommon"
-	include "Flare"
-	include "FlareECS"
-	include "FlareScriptingCore"
+	include "FlareCommon/FlareCommon.Build.lua"
+	include "Flare/Flare.Build.lua"
+	include "FlareECS/FlareECS.Build.lua"
+	include "FlareScriptingCore/FlareScriptingCore.Build.lua"
 group ""
 
 group "Editor"
-	include "FlareEditor"
+	include "FlareEditor/FlareEditor.Build.lua"
 group ""
