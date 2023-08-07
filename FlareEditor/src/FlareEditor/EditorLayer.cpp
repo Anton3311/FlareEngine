@@ -15,6 +15,7 @@
 
 #include "FlareEditor/AssetManager/EditorAssetManager.h"
 
+#include "FlareEditor/ImGui/ImGuiLayer.h"
 #include "FlareEditor/UI/SceneViewportWindow.h"
 #include "FlareEditor/UI/EditorTitleBar.h"
 #include "FlareEditor/UI/SystemsInspectorWindow.h"
@@ -44,6 +45,8 @@ namespace Flare
 
 	void EditorLayer::OnAttach()
 	{
+		ImGuiLayer::OnAttach();
+
 		Project::OnProjectOpen.Bind(FLARE_BIND_EVENT_CALLBACK(OnOpenProject));
 		Project::OnUnloadActiveProject.Bind([this]()
 		{
@@ -86,6 +89,8 @@ namespace Flare
 
 	void EditorLayer::OnDetach()
 	{
+		ImGuiLayer::OnDetach();
+
 		if (m_Mode == EditorMode::Play)
 			ExitPlayMode();
 
@@ -137,6 +142,8 @@ namespace Flare
 
 	void EditorLayer::OnImGUIRender()
 	{
+		ImGuiLayer::Begin();
+
 		static bool fullscreen = true;
 		static ImGuiDockNodeFlags dockspaceFlags = ImGuiDockNodeFlags_None;
 
@@ -210,6 +217,7 @@ namespace Flare
 		m_AssetManagerWindow.OnImGuiRender();
 
 		ImGui::End();
+		ImGuiLayer::End();
 	}
 
 	void EditorLayer::UpdateWindowTitle()

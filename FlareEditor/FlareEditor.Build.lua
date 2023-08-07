@@ -8,6 +8,9 @@ project "FlareEditor"
     {
         "src/**.h",
         "src/**.cpp",
+		
+		"%{wks.location}/Flare/vendor/ImGuizmo/ImGuizmo.h",
+		"%{wks.location}/Flare/vendor/ImGuizmo/ImGuizmo.cpp",
     }
 
     includedirs
@@ -18,7 +21,9 @@ project "FlareEditor"
 		"%{wks.location}/FlareECS/src",
 		"%{wks.location}/FlareECS/include",
 		"%{wks.location}/FlareScriptingCore/src/",
+
 		INCLUDE_DIRS.glm,
+		INCLUDE_DIRS.GLFW,
 		INCLUDE_DIRS.spdlog,
 		INCLUDE_DIRS.imgui,
 		INCLUDE_DIRS.imguizmo,

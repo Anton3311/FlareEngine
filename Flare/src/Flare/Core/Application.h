@@ -3,7 +3,6 @@
 #include "Flare/Core/Window.h"
 #include "Flare/Core/LayerStack.h"
 #include "Flare/Core/CommandLineArguments.h"
-#include "Flare/ImGui/ImGUILayer.h"
 
 namespace Flare
 {
@@ -28,7 +27,6 @@ namespace Flare
 		CommandLineArguments m_CommandLineArguments;
 	private:
 		LayerStack m_LayersStack;
-		Ref<ImGUILayer> m_ImGuiLayer;
 
 		bool m_Running;
 		float m_PreviousFrameTime;

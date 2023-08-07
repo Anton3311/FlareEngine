@@ -2,12 +2,12 @@
 
 #include "Flare/Scene/Components.h"
 #include "Flare/Scene/Scene.h"
-#include "Flare/ImGui/ImGuiTheme.h"
 
 #include "FlareECS/World.h"
 #include "FlareECS/Query/EntityRegistryIterator.h"
 #include "FlareECS/Registry.h"
 
+#include "FlareEditor/ImGui/ImGuiLayer.h"
 #include "FlareEditor/EditorLayer.h"
 #include "FlareEditor/UI/EditorGUI.h"
 

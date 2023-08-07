@@ -1,8 +1,8 @@
 #include "SystemsInspectorWindow.h"
 
 #include "Flare/Scene/Scene.h"
-#include "Flare/ImGui/ImGUILayer.h"
 
+#include "FlareEditor/ImGui/ImGuiLayer.h"
 #include "FlareEditor/UI/EditorGUI.h"
 
 #include <glm/glm.hpp>

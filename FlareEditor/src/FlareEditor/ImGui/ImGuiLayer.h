@@ -9,7 +9,7 @@
 namespace Flare
 {
 	ImVec4 ColorFromHex(uint32_t hex);
-	
+
 	struct ImGuiTheme
 	{
 		static ImVec4 Text;
@@ -28,5 +28,17 @@ namespace Flare
 		static ImVec4 PrimaryVariant;
 
 		static ImVec4 Surface;
+	};
+
+	class ImGuiLayer
+	{
+	public:
+		static void OnAttach();
+		static void OnDetach();
+
+		static void Begin();
+		static void End();
+
+		static void SetThemeColors();
 	};
 }
