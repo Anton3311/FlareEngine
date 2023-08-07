@@ -317,7 +317,7 @@ namespace Flare
 		}
 		}
 
-		return CallWindowProc(window->m_OriginalProc, windowHandle, message, wParam, lParam);
+		return CallWindowProc((WNDPROC)window->m_OriginalProc, windowHandle, message, wParam, lParam);
 	}
 
 	float Time::GetTime()
@@ -495,7 +495,7 @@ namespace Flare
 			bool result = SetPropW(windowHandle, s_WindowPropertyName, this);
 			FLARE_CORE_ASSERT(result, "Failed to set window property");
 
-			m_OriginalProc = (WNDPROC)GetWindowLongPtr(windowHandle, GWLP_WNDPROC);
+			m_OriginalProc = (void*)(WNDPROC)GetWindowLongPtr(windowHandle, GWLP_WNDPROC);
 			SetWindowLongPtr(windowHandle, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(CustomWindowDecorationProc));
 			SetWindowPos(windowHandle, NULL, 0, 0, width, height, SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE | SWP_NOREDRAW | SWP_NOCOPYBITS);
 		}

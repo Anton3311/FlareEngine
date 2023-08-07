@@ -64,10 +64,8 @@ namespace Flare
 			return function;
 	}
 
-	std::optional<std::filesystem::path> Platform::ShowOpenFileDialog(const wchar_t* filter)
+	std::optional<std::filesystem::path> Platform::ShowOpenFileDialog(const wchar_t* filter, const Ref<Window>& window)
 	{
-		Ref<Window> window = Application::GetInstance().GetWindow();
-
 		wchar_t buffer[256] = { 0 };
 
 		OPENFILENAMEW openFile{};
@@ -89,10 +87,8 @@ namespace Flare
 		return {};
 	}
 
-	std::optional<std::filesystem::path> Platform::ShowSaveFileDialog(const wchar_t* filter)
+	std::optional<std::filesystem::path> Platform::ShowSaveFileDialog(const wchar_t* filter, const Ref<Window>& window)
 	{
-		Ref<Window> window = Application::GetInstance().GetWindow();
-
 		wchar_t buffer[256] = { 0 };
 
 		OPENFILENAMEW openFile{};

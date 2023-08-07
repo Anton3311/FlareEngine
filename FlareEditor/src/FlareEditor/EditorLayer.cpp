@@ -80,7 +80,9 @@ namespace Flare
 		}
 		else
 		{
-			std::optional<std::filesystem::path> projectPath = Platform::ShowOpenFileDialog(L"Flare Project (*.flareproj)\0*.flareproj\0");
+			std::optional<std::filesystem::path> projectPath = Platform::ShowOpenFileDialog(
+				L"Flare Project (*.flareproj)\0*.flareproj\0",
+				Application::GetInstance().GetWindow());
 
 			if (projectPath.has_value())
 				Project::OpenProject(projectPath.value());
@@ -253,7 +255,10 @@ namespace Flare
 
 	void EditorLayer::SaveActiveSceneAs()
 	{
-		std::optional<std::filesystem::path> scenePath = Platform::ShowSaveFileDialog(L"Flare Scene (*.flare)\0*.flare\0");
+		std::optional<std::filesystem::path> scenePath = Platform::ShowSaveFileDialog(
+			L"Flare Scene (*.flare)\0*.flare\0",
+			Application::GetInstance().GetWindow());
+
 		if (scenePath.has_value())
 		{
 			std::filesystem::path& path = scenePath.value();
