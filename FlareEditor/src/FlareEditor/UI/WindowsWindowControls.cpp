@@ -1,13 +1,13 @@
-#include "WindowControls.h"
+#include "WindowsWindowControls.h"
 
 #include "Flare/Core/Application.h"
-#include "Flare/Core/Window.h"
+#include "FlarePlatform/Window.h"
 
 #include <imgui_internal.h>
 
 namespace Flare
 {
-	bool WindowControls::BeginTitleBar()
+	bool WindowsWindowControls::BeginTitleBar()
 	{
 		ImGuiViewport* viewport = ImGui::GetMainViewport();
 
@@ -21,12 +21,12 @@ namespace Flare
 		return showTitleBar;
 	}
 
-	void WindowControls::EndTitleBar()
+	void WindowsWindowControls::EndTitleBar()
 	{
 		ImGui::End();
 	}
 
-	void WindowControls::RenderControls()
+	void WindowsWindowControls::RenderControls()
 	{
 		Ref<Window> window = Application::GetInstance().GetWindow();
 		glm::uvec2 buttonSize = window->GetControlsButtonSize();
@@ -35,7 +35,7 @@ namespace Flare
 		const float iconSize = 0.35f;
 		ImU32 iconColor;
 
-		ImVec2 windowSize = ImVec2(window->GetProperties().Width, m_TitleBarHeight);
+		ImVec2 windowSize = ImVec2(window->GetProperties().Size.x, m_TitleBarHeight);
 
 		ImGui::InvisibleButton("##TitleBarDragArea", ImVec2(windowSize.x - buttonSize.x * 3 - ImGui::GetCursorPosX(), m_TitleBarHeight));
 		m_TitleBarHovered = ImGui::IsItemHovered();
@@ -114,7 +114,7 @@ namespace Flare
 		}
 	}
 
-	bool WindowControls::RenderControlsButton(const char* name, ImU32& iconColor)
+	bool WindowsWindowControls::RenderControlsButton(const char* name, ImU32& iconColor)
 	{
 		bool result = false;
 

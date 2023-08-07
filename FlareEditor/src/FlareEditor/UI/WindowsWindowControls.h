@@ -1,11 +1,13 @@
 #pragma once
 
+#include "FlarePlatform/WindowControls.h"
+
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include <imgui.h>
 
 namespace Flare
 {
-	class WindowControls
+	class WindowsWindowControls : public WindowControls
 	{
 	public:
 		bool BeginTitleBar();
@@ -13,7 +15,7 @@ namespace Flare
 
 		void RenderControls();
 
-		bool IsTitleBatHovered() const { return m_TitleBarHovered; }
+		virtual bool IsTitleBarHovered() const override { return m_TitleBarHovered; }
 	private:
 		bool RenderControlsButton(const char* name, ImU32& iconColor);
 	private:

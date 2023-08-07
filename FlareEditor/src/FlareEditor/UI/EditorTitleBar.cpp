@@ -1,9 +1,10 @@
 #include "EditorTitleBar.h"
 
 #include "Flare/Core/Application.h"
-#include "Flare/Core/Window.h"
-#include "Flare/Platform/Platform.h"
 #include "Flare/Project/Project.h"
+
+#include "FlarePlatform/Platform.h"
+#include "FlarePlatform/Window.h"
 
 #include "FlareEditor/EditorLayer.h"
 
@@ -15,20 +16,25 @@
 
 namespace Flare
 {
+	EditorTitleBar::EditorTitleBar()
+	{
+		m_WindowControls = CreateRef<WindowsWindowControls>();
+
+		Application::GetInstance().GetWindow()->SetWindowControls(m_WindowControls);
+	}
+
 	void EditorTitleBar::OnRenderImGui()
 	{
 		Ref<Window> window = Application::GetInstance().GetWindow();
 
 		if (window->GetProperties().CustomTitleBar)
 		{
-			WindowControls& controls = window->GetWindowControls();
-
-			if (controls.BeginTitleBar())
+			if (m_WindowControls->BeginTitleBar())
 			{
 				RenderTitleBar();
 
-				controls.RenderControls();
-				controls.EndTitleBar();
+				m_WindowControls->RenderControls();
+				m_WindowControls->EndTitleBar();
 			}
 		}
 	}

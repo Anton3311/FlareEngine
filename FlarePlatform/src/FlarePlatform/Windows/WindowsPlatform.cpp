@@ -1,8 +1,9 @@
-#include "Flare/Platform/Platform.h"
+#include "FlarePlatform/Platform.h"
 
-#include "Flare/Core/Core.h"
-#include "Flare/Core/Window.h"
-#include "Flare/Core/Application.h"
+#include "Flare/Core/Assert.h"
+#include "Flare/Core/Assert.h"
+
+#include "FlarePlatform/Window.h"
 
 #include <optional>
 #include <filesystem>
@@ -18,6 +19,11 @@
 
 namespace Flare
 {
+	float Platform::GetTime()
+	{
+		return glfwGetTime();
+	}
+
 	void* Platform::LoadSharedLibrary(const std::filesystem::path& path)
 	{
 		HMODULE library = LoadLibraryW(path.c_str());
@@ -70,6 +76,8 @@ namespace Flare
 
 		OPENFILENAMEW openFile{};
 		ZeroMemory(&openFile, sizeof(OPENFILENAMEW));
+
+		GLFWwindow* nativeWindow = (GLFWwindow*)window->GetNativeWindow();
 
 		openFile.lStructSize = sizeof(OPENFILENAMEW);
 		openFile.lpstrFile = buffer;

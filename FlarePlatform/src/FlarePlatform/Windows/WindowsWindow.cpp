@@ -1,7 +1,8 @@
 #include "WindowsWindow.h"
 
-#include "Flare.h"
 #include "Flare/Core/Assert.h"
+#include "Flare/Core/KeyCode.h"
+#include "Flare/Core/MouseCode.h"
 
 #include <windows.h>
 #include <WinUser.h>
@@ -290,7 +291,7 @@ namespace Flare
 			if (clientMousePos.y >= windowRect.bottom - borderWidth)
 				result |= HitBottom;
 
-			if (result == HitNone && window->m_Data.Controls.IsTitleBatHovered())
+			if (window->m_Data.Controls != nullptr && result == HitNone && window->m_Data.Controls->IsTitleBarHovered())
 				return HTCAPTION;
 
 			switch (result)
@@ -320,11 +321,6 @@ namespace Flare
 		return CallWindowProc((WNDPROC)window->m_OriginalProc, windowHandle, message, wParam, lParam);
 	}
 
-	float Time::GetTime()
-	{
-		return (float) glfwGetTime();
-	}
-
 	WindowsWindow::WindowsWindow(WindowProperties& properties)
 	{
 		m_Data.Properties = properties;
@@ -335,7 +331,7 @@ namespace Flare
 	// From https://github.com/bitsdojo/bitsdojo_window
 	//
 	// see: https://github.com/bitsdojo/bitsdojo_window/blob/816d217e770303035494653bd80f67484ca159e7/bitsdojo_window_windows/lib/src/window.dart#L122
-	glm::uvec2 WindowsWindow::GetControlsButtonSize()
+	glm::uvec2 WindowsWindow::GetControlsButtonSize() const
 	{
 		uint32_t dpi = GetDpiForWindow(glfwGetWin32Window(m_Window));
 		float scaleFactor = dpi / 96.0f;
@@ -365,10 +361,7 @@ namespace Flare
 
 		glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
 
-		m_Window = glfwCreateWindow(m_Data.Properties.Width, m_Data.Properties.Height, m_Data.Properties.Title.c_str(), nullptr, nullptr);
-
-		m_GraphicsContext = GraphicsContext::Create((void*) m_Window);
-		m_GraphicsContext->Initialize();
+		m_Window = glfwCreateWindow(m_Data.Properties.Size.x, m_Data.Properties.Size.y, m_Data.Properties.Title.c_str(), nullptr, nullptr);
 
 		glfwSetWindowUserPointer(m_Window, (void*) &m_Data);
 
@@ -389,8 +382,7 @@ namespace Flare
 		glfwSetWindowSizeCallback(m_Window, [](GLFWwindow* window, int width, int height)
 		{
 			WindowData* data = (WindowData*)glfwGetWindowUserPointer(window);
-			data->Properties.Width = width;
-			data->Properties.Height = height;
+			data->Properties.Size = glm::uvec2(width, height);
 			data->Properties.IsMinimized = width == 0 && height == 0;
 
 			if (data->Callback)
@@ -504,7 +496,6 @@ namespace Flare
 	void WindowsWindow::OnUpdate()
 	{
 		glfwPollEvents();
-		m_GraphicsContext->SwapBuffers();
 	}
 
 	void WindowsWindow::Release()

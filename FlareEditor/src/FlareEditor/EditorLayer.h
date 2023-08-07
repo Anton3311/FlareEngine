@@ -8,6 +8,8 @@
 #include "FlareEditor/UI/PropertiesWindow.h"
 #include "FlareEditor/UI/AssetManagerWindow.h"
 
+#include "FlareEditor/UI//EditorTitleBar.h"
+
 #include "FlareEditor/ViewportWindow.h"
 #include "FlareEditor/EditorCamera.h"
 
@@ -65,6 +67,8 @@ namespace Flare
 		void OnOpenProject();
 	private:
 		float m_PreviousFrameTime = 0.0f;
+
+		EditorTitleBar m_TitleBar;
 
 		SceneWindow m_SceneWindow;
 		PropertiesWindow m_PropertiesWindow;

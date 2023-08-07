@@ -1,6 +1,6 @@
 #include "InputManager.h"
 
-#include "Flare/Core/Events.h"
+#include "FlarePlatform/Events.h"
 
 namespace Flare
 {

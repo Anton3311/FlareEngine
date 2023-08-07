@@ -1,7 +1,7 @@
 #include "EditorCamera.h"
 
 #include "Flare/Core/Log.h"
-#include "Flare/Core/Events.h"
+#include "FlarePlatform/Events.h"
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>

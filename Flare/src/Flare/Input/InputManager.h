@@ -2,7 +2,8 @@
 
 #include "Flare/Core/KeyCode.h"
 #include "Flare/Core/MouseCode.h"
-#include "Flare/Core/Event.h"
+
+#include "FlarePlatform/Event.h"
 
 #include <glm/glm.hpp>
 

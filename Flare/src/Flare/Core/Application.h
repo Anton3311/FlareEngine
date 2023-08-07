@@ -1,8 +1,11 @@
 #pragma once
 
-#include "Flare/Core/Window.h"
 #include "Flare/Core/LayerStack.h"
 #include "Flare/Core/CommandLineArguments.h"
+
+#include "Flare/Renderer/GraphicsContext.h"
+
+#include "FlarePlatform/Window.h"
 
 namespace Flare
 {
@@ -26,6 +29,7 @@ namespace Flare
 		Ref<Window> m_Window;
 		CommandLineArguments m_CommandLineArguments;
 	private:
+		Scope<GraphicsContext> m_GraphicsContext;
 		LayerStack m_LayersStack;
 
 		bool m_Running;

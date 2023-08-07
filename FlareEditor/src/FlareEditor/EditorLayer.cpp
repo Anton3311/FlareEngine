@@ -8,10 +8,12 @@
 #include "Flare/AssetManager/AssetManager.h"
 
 #include "Flare/Project/Project.h"
-#include "Flare/Platform/Platform.h"
 
 #include "Flare/Scripting/ScriptingEngine.h"
 #include "Flare/Input/InputManager.h"
+
+#include "FlarePlatform/Platform.h"
+#include "FlarePlatform/Events.h"
 
 #include "FlareEditor/AssetManager/EditorAssetManager.h"
 
@@ -173,8 +175,7 @@ namespace Flare
 		ImGuiID dockspaceId = ImGui::GetID("DockSpace");
 		ImGui::DockSpace(dockspaceId, ImVec2(0.0f, 0.0f), dockspaceFlags);
 
-		EditorTitleBar titleBar;
-		titleBar.OnRenderImGui();
+		m_TitleBar.OnRenderImGui();
 
 		{
 			ImGui::Begin("Renderer");

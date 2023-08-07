@@ -1,7 +1,7 @@
 #include "ScriptingModule.h"
 
 #include "Flare/Core/Assert.h"
-#include "Flare/Platform/Platform.h"
+#include "FlarePlatform/Platform.h"
 
 namespace Flare
 {

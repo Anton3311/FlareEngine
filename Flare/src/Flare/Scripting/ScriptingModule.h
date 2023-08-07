@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Flare/Core/Core.h"
-#include "Flare/Platform/Platform.h"
+#include "FlarePlatform/Platform.h"
 
 #include <filesystem>
 #include <optional>

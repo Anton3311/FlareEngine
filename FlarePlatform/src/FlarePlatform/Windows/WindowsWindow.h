@@ -1,9 +1,10 @@
 #pragma once
 
-#include <Flare/Core/Window.h>
-#include <Flare/Renderer/GraphicsContext.h>
+#include "FlarePlatform/Window.h"
 
 #include <GLFW/glfw3.h>
+
+#include <Windows.h>
 
 namespace Flare
 {
@@ -27,12 +28,13 @@ namespace Flare
 
 		GLFWwindow* GetGLFWWindow() const { return m_Window; }
 
-		virtual WindowControls& GetWindowControls() override { return m_Data.Controls; }
-		virtual glm::uvec2 GetControlsButtonSize() override;
+		virtual void SetWindowControls(const Ref<WindowControls>& controls) { m_Data.Controls = controls; }
+		virtual Ref<WindowControls> GetWindowControls() const override { return m_Data.Controls; }
+		virtual glm::uvec2 GetControlsButtonSize() const override;
 	private:
 		void Initialize();
 		void Release();
-
+		
 		static LRESULT CALLBACK CustomWindowDecorationProc(HWND windowHandle, UINT message, WPARAM wParam, LPARAM lParam);
 		static const wchar_t* s_WindowPropertyName;
 	private:
@@ -40,11 +42,10 @@ namespace Flare
 		{
 			WindowProperties Properties;
 			EventCallback Callback;
-			WindowControls Controls;
+			Ref<WindowControls> Controls;
 		};
 
 		GLFWwindow* m_Window;
-		Scope<GraphicsContext> m_GraphicsContext;
 		WindowData m_Data;
 
 		void* m_OriginalProc;

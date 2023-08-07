@@ -1,6 +1,7 @@
 #include "Window.h"
 
-#include "Flare/Platform/Windows/WindowsWindow.h"
+#include "FlarePlatform/Window.h"
+#include "FlarePlatform/Windows/WindowsWindow.h"
 
 namespace Flare
 {

@@ -1,9 +1,11 @@
 #pragma once
 
-#include "Flare.h"
-#include "Flare/Core/Event.h"
 #include "Flare/Core/KeyCode.h"
 #include "Flare/Core/MouseCode.h"
+
+#include "FlarePlatform/Event.h"
+
+#include <glm/glm.hpp>
 
 namespace Flare
 {

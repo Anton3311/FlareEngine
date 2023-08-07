@@ -5,6 +5,11 @@
 
 #include "Flare/Scripting/ScriptingEngine.h"
 
+#include "FlarePlatform/Event.h"
+#include "FlarePlatform/Events.h"
+
+#include "FlarePlatform/Platform.h"
+
 namespace Flare
 {
 	Application* Application::s_Instance = nullptr;
@@ -16,11 +21,13 @@ namespace Flare
 
 		WindowProperties properties;
 		properties.Title = "Flare Engine";
-		properties.Width = 1280;
-		properties.Height = 720;
+		properties.Size = glm::uvec2(1280, 720);
 		properties.CustomTitleBar = true;
 
 		m_Window = Window::Create(properties);
+		m_GraphicsContext = GraphicsContext::Create(m_Window->GetNativeWindow());
+		m_GraphicsContext->Initialize();
+		
 		m_Window->SetEventCallback([this](Event& event)
 		{
 			EventDispatcher dispatcher(event);
@@ -64,7 +71,7 @@ namespace Flare
 
 		while (m_Running)
 		{
-			float currentTime = Time::GetTime();
+			float currentTime = Platform::GetTime();
 			float deltaTime = currentTime - m_PreviousFrameTime;
 
 			for (const Ref<Layer>& layer : m_LayersStack.GetLayers())
@@ -74,6 +81,8 @@ namespace Flare
 				layer->OnImGUIRender();
 
 			m_Window->OnUpdate();
+			m_GraphicsContext->SwapBuffers();
+
 			m_PreviousFrameTime = currentTime;
 		}
 

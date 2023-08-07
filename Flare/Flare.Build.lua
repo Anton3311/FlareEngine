@@ -17,6 +17,7 @@ project "Flare"
 	{
 		"src/",
 		"%{wks.location}/FlareCommon/src/",
+		"%{wks.location}/FlarePlatform/src/",
 		"%{wks.location}/FlareECS/src/",
 		"%{wks.location}/FlareECS/include/",
 		"%{wks.location}/FlareScriptingCore/src/",
@@ -38,6 +39,7 @@ project "Flare"
 		"ImGUI",
 		"FlareECS",
 		"FlareCommon",
+		"FlarePlatform",
 		"FlareScriptingCore",
 		"yaml-cpp"
 	}

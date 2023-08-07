@@ -1,21 +1,23 @@
 #pragma once
 
-#include "Flare.h"
-#include "Flare/Core/Events.h"
-#include "Flare/Core/WindowControls.h"
+#include "Flare/Core/Core.h"
+
+#include "FlarePlatform/Event.h"
+#include "FlarePlatform/Events.h"
+#include "FlarePlatform/WindowControls.h"
+
+#include <glm/glm.hpp>
 
 #include <string>
 #include <stdint.h>
-
-#include <glm/glm.hpp>
 
 namespace Flare
 {
 	struct WindowProperties
 	{
 		std::string Title;
-		uint32_t Width = 0;
-		uint32_t Height = 0;
+		glm::uvec2 Size;
+		glm::uvec2 Position;
 		bool IsMinimized = false;
 		bool IsMaximized = false;
 		bool CustomTitleBar = false;
@@ -38,8 +40,9 @@ namespace Flare
 
 		virtual void OnUpdate() = 0;
 
-		virtual WindowControls& GetWindowControls() = 0;
-		virtual glm::uvec2 GetControlsButtonSize() = 0;
+		virtual void SetWindowControls(const Ref<WindowControls>& controls) = 0;
+		virtual Ref<WindowControls> GetWindowControls() const = 0;
+		virtual glm::uvec2 GetControlsButtonSize() const = 0;
 	public:
 		static Scope<Window> Create(WindowProperties& properties);
 	};

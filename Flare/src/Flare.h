@@ -4,8 +4,6 @@
 #include "Flare/Core/Log.h"
 #include "Flare/Core/Assert.h"
 
-#include "Flare/Core/Time.h"
-
 // Rendering
 
 #include "Flare/Renderer/Buffer.h"

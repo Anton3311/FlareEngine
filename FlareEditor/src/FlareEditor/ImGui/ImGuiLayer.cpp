@@ -1,13 +1,12 @@
 #include "ImGuiLayer.h"
 
 #include "Flare/Core/Application.h"
-
-#ifdef FLARE_PLATFORM_WINDOWS
-	#include "Flare/Platform/Windows/WindowsWindow.h"
-#endif
+#include "FlarePlatform/Window.h"
 
 #include <imgui_internal.h>
 #include <ImGuizmo.h>
+
+#include <GLFW/glfw3.h>
 
 #include <backends/imgui_impl_opengl3.h>
 #include <backends/imgui_impl_glfw.h>
@@ -59,7 +58,7 @@ namespace Flare
 		Ref<Window> window = application.GetWindow();
 
 #ifdef FLARE_PLATFORM_WINDOWS
-		ImGui_ImplGlfw_InitForOpenGL(((WindowsWindow*)window.get())->GetGLFWWindow(), true);
+		ImGui_ImplGlfw_InitForOpenGL((GLFWwindow*)window->GetNativeWindow(), true);
 		ImGui_ImplOpenGL3_Init("#version 410");
 #endif
 
@@ -91,7 +90,7 @@ namespace Flare
 		Application& application = Application::GetInstance();
 
 		const WindowProperties& windowProps = application.GetWindow()->GetProperties();
-		io.DisplaySize = ImVec2(windowProps.Width, windowProps.Height);
+		io.DisplaySize = ImVec2(windowProps.Size.x, windowProps.Size.y);
 
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

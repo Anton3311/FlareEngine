@@ -1,6 +1,5 @@
 #include "EditorAssetManager.h"
 
-#include "Flare/Core/Event.h"
 #include "Flare/Core/Assert.h"
 #include "Flare/Core/Log.h"
 

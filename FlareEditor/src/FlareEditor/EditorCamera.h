@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Flare/Core/Event.h"
+#include "FlarePlatform/Event.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>

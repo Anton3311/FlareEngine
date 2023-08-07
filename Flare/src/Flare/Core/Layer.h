@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Flare/Core/Event.h"
+#include "FlarePlatform/Event.h"
 
 #include <string>
 
