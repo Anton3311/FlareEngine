@@ -18,6 +18,9 @@ local function set_module_defines(module_name, export)
 		defines { dist_api }
 
 	filter {}
+
+	targetdir("%{wks.location}/bin/" .. OUTPUT_DIRECTORY)
+	objdir("%{wks.location}/bin-int/" .. OUTPUT_DIRECTORY .. "/%{prj.name}")
 end
 
 M.define_module = function(name)

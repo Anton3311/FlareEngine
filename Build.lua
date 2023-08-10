@@ -11,6 +11,12 @@ workspace "Flare"
 		"Dist",
 	}
 
+	filter "configurations:not Dist"
+		disablewarnings
+		{
+			"4251"
+		}
+
 	flags
 	{
 		"MultiProcessorCompile"

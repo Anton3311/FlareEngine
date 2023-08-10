@@ -37,9 +37,6 @@ project "FlarePlatform"
 		"_GLFW_BUILD_DLL",
 	}
 
-	targetdir("%{wks.location}/bin/" .. OUTPUT_DIRECTORY)
-	objdir("%{wks.location}/bin-int/" .. OUTPUT_DIRECTORY .. "/%{prj.name}")
-
 	filter "system:windows"
 		systemversion "latest"
 
