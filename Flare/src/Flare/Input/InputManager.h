@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Flare/Core/Core.h"
 #include "Flare/Core/KeyCode.h"
 #include "Flare/Core/MouseCode.h"
 
@@ -9,9 +10,9 @@
 
 namespace Flare
 {
-	class InputManager
+	class FLARE_API InputManager
 	{
-	private:
+	public:
 		struct Data
 		{
 			glm::ivec2 PreviousMousePosition;
@@ -26,17 +27,15 @@ namespace Flare
 		static void Initialize();
 		static void ProcessEvent(Event& event);
 
-		static bool IsKeyPressed(KeyCode key) { return s_Data.KeyState[(size_t)key]; }
-		static bool IsMouseButtonPreseed(MouseCode button) { return s_Data.MouseButtonsState[(size_t)button]; }
+		static bool IsKeyPressed(KeyCode key);
+		static bool IsMouseButtonPreseed(MouseCode button);
 
-		static void SetMousePositionOffset(const glm::ivec2& offset) { s_Data.MousePositionOffset = offset; }
-		static glm::ivec2 GetMousePositionOffset() { return s_Data.MousePositionOffset; }
+		static void SetMousePositionOffset(const glm::ivec2& offset);
+		static glm::ivec2 GetMousePositionOffset();
 
-		static glm::ivec2 GetMousePosition() { return s_Data.MousePosition + s_Data.MousePositionOffset; }
-		static glm::ivec2 GetRawMousePosition() { return s_Data.MousePosition; }
+		static glm::ivec2 GetMousePosition();
+		static glm::ivec2 GetRawMousePosition();
 
-		static glm::ivec2 GetMouseDelta() { return s_Data.MousePosition - s_Data.PreviousMousePosition; }
-	private:
-		static Data s_Data;
+		static glm::ivec2 GetMouseDelta();
 	};
 }

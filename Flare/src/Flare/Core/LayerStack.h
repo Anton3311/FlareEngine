@@ -7,7 +7,7 @@
 
 namespace Flare
 {
-	class LayerStack
+	class FLARE_API LayerStack
 	{
 	public:
 		LayerStack();

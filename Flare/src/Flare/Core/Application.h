@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Flare/Core/Core.h"
 #include "Flare/Core/LayerStack.h"
 #include "Flare/Core/CommandLineArguments.h"
 
@@ -9,7 +10,7 @@
 
 namespace Flare
 {
-	class Application
+	class FLARE_API Application
 	{
 	public:
 		Application(CommandLineArguments arguments);
@@ -34,7 +35,5 @@ namespace Flare
 
 		bool m_Running;
 		float m_PreviousFrameTime;
-	private:
-		static Application* s_Instance;
 	};
 }

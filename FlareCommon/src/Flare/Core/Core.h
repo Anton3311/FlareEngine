@@ -21,6 +21,14 @@
 	#define FLARE_DEBUGBREAK
 #endif
 
+#define FLARE_NONE
+
+#define FLARE_API_EXPORT __declspec(dllexport)
+#define FLARE_API_IMPORT __declspec(dllimport)
+
+#define FLARE_EXPORT extern "C" __declspec(dllexport)
+#define FLARE_IMPORT extern "C" __declspec(dllimport)
+
 #define FLARE_EXPEND_MACRO(a) a
 #define FALRE_STRINGIFY_MACRO(a) #a
 

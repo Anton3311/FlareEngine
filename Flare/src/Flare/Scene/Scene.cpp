@@ -9,7 +9,7 @@
 
 namespace Flare
 {
-	Ref<Scene> Scene::s_Active = nullptr;
+	Ref<Scene> s_Active = nullptr;
 
 	Scene::Scene(bool registerComponents)
 		: Asset(AssetType::Scene)
@@ -126,5 +126,20 @@ namespace Flare
 
 	void Scene::OnViewportResize(uint32_t width, uint32_t height)
 	{
+	}
+
+	World& Scene::GetECSWorld()
+	{
+		return m_World;
+	}
+
+	Ref<Scene> Scene::GetActive()
+	{
+		return s_Active;
+	}
+
+	void Scene::SetActive(const Ref<Scene>& scene)
+	{
+		s_Active = scene;
 	}
 }

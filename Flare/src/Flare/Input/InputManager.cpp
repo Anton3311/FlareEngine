@@ -4,7 +4,7 @@
 
 namespace Flare
 {
-	InputManager::Data InputManager::s_Data;
+	InputManager::Data s_Data;
 
 	void InputManager::Initialize()
 	{
@@ -51,5 +51,40 @@ namespace Flare
 			data.MouseButtonsState[(size_t)e.GetMouseCode()] = false;
 			return false;
 		});
+	}
+
+	bool InputManager::IsKeyPressed(KeyCode key)
+	{
+		return s_Data.KeyState[(size_t)key];
+	}
+	
+	bool InputManager::IsMouseButtonPreseed(MouseCode button)
+	{
+		return s_Data.MouseButtonsState[(size_t)button];
+	}
+
+	void InputManager::SetMousePositionOffset(const glm::ivec2& offset)
+	{
+		s_Data.MousePositionOffset = offset;
+	}
+
+	glm::ivec2 InputManager::GetMousePositionOffset()
+	{
+		return s_Data.MousePositionOffset;
+	}
+
+	glm::ivec2 InputManager::GetMousePosition()
+	{
+		return s_Data.MousePosition + s_Data.MousePositionOffset;
+	}
+
+	glm::ivec2 InputManager::GetRawMousePosition()
+	{
+		return s_Data.MousePosition;
+	}
+
+	glm::ivec2 InputManager::GetMouseDelta()
+	{
+		return s_Data.MousePosition - s_Data.PreviousMousePosition;
 	}
 }

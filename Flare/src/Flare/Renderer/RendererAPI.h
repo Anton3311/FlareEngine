@@ -7,7 +7,7 @@
 
 namespace Flare
 {
-	class RendererAPI
+	class FLARE_API RendererAPI
 	{
 	public:
 		enum class API
@@ -26,8 +26,6 @@ namespace Flare
 		virtual void DrawIndexed(const Ref<VertexArray>& vertexArray, size_t indicesCount) = 0;
 	public:
 		static Scope<RendererAPI> Create();
-		static API GetAPI() { return s_API; }
-	private:
-		static API s_API;
+		static API GetAPI();
 	};
 }

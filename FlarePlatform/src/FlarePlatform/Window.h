@@ -24,7 +24,7 @@ namespace Flare
 		bool VSyncEnabled = true;
 	};
 
-	class Window
+	class FLAREPLATFORM_API Window
 	{
 	public:
 		virtual const WindowProperties& GetProperties() const = 0;

@@ -1,8 +1,12 @@
+local build_tool = require("BuildTool")
+
 project "Flare"
-    kind "StaticLib"
 	language "C++"
 	cppdialect "C++17"
 	staticruntime "off"
+
+	build_tool.define_module("Flare")
+	build_tool.add_module_ref("FlarePlatform")
 
     files
     {
@@ -49,9 +53,10 @@ project "Flare"
 		"GLFW_INCLUDE_NONE",
 		"YAML_CPP_STATIC_DEFINE",
 		"FLARE_SCRIPTING_CORE_NO_MACROS",
+		"_GLFW_BUILD_DLL",
 	}
 
-	targetdir("%{wks.location}/bin/" .. OUTPUT_DIRECTORY .. "/%{prj.name}")
+	targetdir("%{wks.location}/bin/" .. OUTPUT_DIRECTORY)
 	objdir("%{wks.location}/bin-int/" .. OUTPUT_DIRECTORY .. "/%{prj.name}")
 
 	filter "system:windows"

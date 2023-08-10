@@ -4,7 +4,7 @@
 
 namespace Flare
 {
-	Renderer2DData* Renderer2D::s_Data = nullptr;
+	Renderer2DData* s_Data = nullptr;
 
 	void Renderer2D::Initialize(size_t maxQuads)
 	{
@@ -192,6 +192,11 @@ namespace Flare
 	{
 		s_Data->Stats.DrawCalls = 0;
 		s_Data->Stats.QuadsCount = 0;
+	}
+
+	const Renderer2DStats& Renderer2D::GetStats()
+	{
+		return s_Data->Stats;
 	}
 
 	void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const Ref<Texture>& texture, const glm::vec4& tint, const glm::vec2& tiling, const glm::vec2* uv)

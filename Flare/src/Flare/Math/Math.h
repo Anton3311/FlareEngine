@@ -1,8 +1,10 @@
 #pragma once
 
+#include "Flare/Core/Core.h"
+
 #include <glm/glm.hpp>
 
 namespace Flare::Math
 {
-	bool DecomposeTransform(const glm::mat4& transform, glm::vec3& outTranslation, glm::vec3& outRotation, glm::vec3& outScale);
+	FLARE_API bool DecomposeTransform(const glm::mat4& transform, glm::vec3& outTranslation, glm::vec3& outRotation, glm::vec3& outScale);
 }

@@ -4,7 +4,7 @@
 
 namespace Flare
 {
-	RendererAPI::API RendererAPI::s_API = RendererAPI::API::OpenGL;
+	RendererAPI::API s_API = RendererAPI::API::OpenGL;
 
 	Scope<RendererAPI> RendererAPI::Create()
 	{
@@ -13,5 +13,10 @@ namespace Flare
 		case API::OpenGL:
 			return CreateScope<OpenGLRendererAPI>();
 		}
+	}
+
+	RendererAPI::API RendererAPI::GetAPI()
+	{
+		return s_API;
 	}
 }

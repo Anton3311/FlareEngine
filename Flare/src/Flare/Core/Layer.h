@@ -6,7 +6,7 @@
 
 namespace Flare
 {
-	class Layer
+	class FLARE_API Layer
 	{
 	public:
 		Layer(std::string_view debugName)

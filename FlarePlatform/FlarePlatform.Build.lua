@@ -1,8 +1,11 @@
+local build_tool = require("BuildTool")
+
 project "FlarePlatform"
-    kind "StaticLib"
 	language "C++"
 	cppdialect "C++17"
 	staticruntime "off"
+
+	build_tool.define_module("FlarePlatform")
 
     files
     {
@@ -30,9 +33,10 @@ project "FlarePlatform"
 	defines
 	{
 		"GLFW_INCLUDE_NONE",
+		"_GLFW_BUILD_DLL",
 	}
 
-	targetdir("%{wks.location}/bin/" .. OUTPUT_DIRECTORY .. "/%{prj.name}")
+	targetdir("%{wks.location}/bin/" .. OUTPUT_DIRECTORY)
 	objdir("%{wks.location}/bin-int/" .. OUTPUT_DIRECTORY .. "/%{prj.name}")
 
 	filter "system:windows"

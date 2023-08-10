@@ -14,10 +14,10 @@
 
 namespace Flare
 {
-	const std::string ScriptingEngine::s_ModuleLoaderFunctionName = "OnModuleLoaded";
-	const std::string ScriptingEngine::s_ModuleUnloaderFunctionName = "OnModuleUnloaded";
+	const std::string s_ModuleLoaderFunctionName = "OnModuleLoaded";
+	const std::string s_ModuleUnloaderFunctionName = "OnModuleUnloaded";
 
-	ScriptingEngine::Data ScriptingEngine::s_Data;
+	ScriptingEngine::Data s_Data;
 
 	void ScriptingEngine::Initialize()
 	{
@@ -331,5 +331,10 @@ namespace Flare
 			return (*s_Data.Modules[it->second.ModuleIndex].Config.RegisteredTypes)[it->second.IndexInModule];
 		
 		return {};
+	}
+
+	ScriptingEngine::Data& ScriptingEngine::GetData()
+	{
+		return s_Data;
 	}
 }

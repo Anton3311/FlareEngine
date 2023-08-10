@@ -4,7 +4,7 @@
 
 namespace Flare
 {
-	class GraphicsContext
+	class FLARE_API GraphicsContext
 	{
 	public:
 		virtual ~GraphicsContext() = default;

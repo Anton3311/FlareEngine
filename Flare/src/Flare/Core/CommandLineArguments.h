@@ -4,7 +4,7 @@
 
 namespace Flare
 {
-	struct CommandLineArguments
+	struct FLARE_API CommandLineArguments
 	{
 		const char** Arguments = nullptr;
 		uint32_t ArgumentsCount = 0;

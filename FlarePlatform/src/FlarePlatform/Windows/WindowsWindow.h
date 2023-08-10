@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Flare/Core/Core.h"
 #include "FlarePlatform/Window.h"
 
 #include <GLFW/glfw3.h>
@@ -8,7 +9,7 @@
 
 namespace Flare
 {
-	class WindowsWindow : public Window
+	class FLAREPLATFORM_API WindowsWindow : public Window
 	{
 	public:
 		WindowsWindow(WindowProperties& properties);

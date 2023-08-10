@@ -10,21 +10,21 @@
 
 namespace Flare
 {
-	class Project
+	class FLARE_API Project
 	{
 	public:
 		Project(const std::filesystem::path& location)
 			: Location(location) {}
 	public:
-		static Ref<Project> GetActive() { return s_Active; }
+		static Ref<Project> GetActive();
 
 		static void New(std::string_view name, const std::filesystem::path& path);
 		static void OpenProject(const std::filesystem::path& path);
-		static const std::filesystem::path& GetProjectFileExtension() { return s_ProjectFileExtension; }
+		static const std::filesystem::path& GetProjectFileExtension();
 
 		static void Save();
 
-		inline std::filesystem::path GetProjectFilePath() { return (Location / Name).replace_extension(s_ProjectFileExtension); }
+		std::filesystem::path GetProjectFilePath();
 	public:
 		std::string Name;
 		const std::filesystem::path Location;
@@ -32,7 +32,6 @@ namespace Flare
 
 		std::vector<std::string> ScriptingModules;
 	public:
-		static Ref<Project> s_Active;
 		static Signal<> OnProjectOpen;
 		static Signal<> OnUnloadActiveProject;
 		static std::filesystem::path s_ProjectFileExtension;

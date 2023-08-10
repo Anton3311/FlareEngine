@@ -50,7 +50,7 @@ namespace Flare
 		glm::mat4 CameraProjectionMatrix;
 	};
 
-	class Renderer2D
+	class FLARE_API Renderer2D
 	{
 	public:
 		static void Initialize(size_t maxQuads = 10000);
@@ -72,7 +72,7 @@ namespace Flare
 		static void End();
 
 		static void ResetStats();
-		static const Renderer2DStats& GetStats() { return s_Data->Stats; }
+		static const Renderer2DStats& GetStats();
 	private:
 		static void DrawQuad(const glm::vec3& position, 
 			const glm::vec2& size, 
@@ -80,7 +80,5 @@ namespace Flare
 			const glm::vec4& tint,
 			const glm::vec2& tiling, 
 			const glm::vec2* uv);
-	private:
-		static Renderer2DData* s_Data;
 	};
 }

@@ -14,6 +14,13 @@ namespace Flare
 		const GLchar* message,
 		const void* userParam)
 	{
+		static bool i = false;
+		if (!i)
+		{
+			Log::Initialize();
+			i = true;
+		}
+
 		switch (severity)
 		{
 		case GL_DEBUG_SEVERITY_LOW:

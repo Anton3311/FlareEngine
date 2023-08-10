@@ -8,7 +8,7 @@
 
 namespace Flare
 {
-	struct TransformComponent
+	struct FLARE_API TransformComponent
 	{
 		FLARE_COMPONENT;
 
@@ -19,7 +19,7 @@ namespace Flare
 		glm::mat4 GetTransformationMatrix() const;
 	};
 
-	struct CameraComponent
+	struct FLARE_API CameraComponent
 	{
 		FLARE_COMPONENT;
 
@@ -37,7 +37,7 @@ namespace Flare
 		float Far;
 	};
 
-	struct SpriteComponent
+	struct FLARE_API SpriteComponent
 	{
 		FLARE_COMPONENT;
 

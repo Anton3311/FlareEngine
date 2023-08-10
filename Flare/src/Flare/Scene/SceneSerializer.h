@@ -6,7 +6,7 @@
 
 namespace Flare
 {
-	class SceneSerializer
+	class FLARE_API SceneSerializer
 	{
 	public:
 		static void Serialize(const Ref<Scene>& scene);

@@ -9,7 +9,7 @@
 
 namespace Flare
 {
-	class Platform
+	class FLAREPLATFORM_API Platform
 	{
 	public:
 		static float GetTime();

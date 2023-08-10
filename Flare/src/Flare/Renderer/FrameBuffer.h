@@ -34,7 +34,7 @@ namespace Flare
 		std::vector<FrameBufferAttachmentSpecifications> Attachments;
 	};
 
-	class FrameBuffer
+	class FLARE_API FrameBuffer
 	{
 	public:
 		virtual ~FrameBuffer() = default;

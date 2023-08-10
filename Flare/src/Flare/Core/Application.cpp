@@ -12,7 +12,7 @@
 
 namespace Flare
 {
-	Application* Application::s_Instance = nullptr;
+	Application* s_Instance = nullptr;
 
 	Application::Application(CommandLineArguments arguments)
 		: m_Running(true), m_CommandLineArguments(arguments)

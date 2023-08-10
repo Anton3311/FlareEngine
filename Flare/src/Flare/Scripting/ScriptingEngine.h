@@ -63,10 +63,9 @@ namespace Flare
 		}
 	};
 
-	class ScriptingEngine
+	class FLARE_API ScriptingEngine
 	{
 	public:
-
 		struct Data
 		{
 			World* CurrentWorld = nullptr;
@@ -106,13 +105,8 @@ namespace Flare
 		static std::optional<const Scripting::ScriptingType*> FindComponentType(ComponentId id);
 		static const Scripting::ScriptingType* GetScriptingType(ScriptingItemIndex index);
 
-		inline static Data& GetData() { return s_Data; }
+		static Data& GetData();
 	private:
 		static void LoadModule(const std::filesystem::path& modulePath);
-	private:
-		static Data s_Data;
-
-		static const std::string s_ModuleLoaderFunctionName;
-		static const std::string s_ModuleUnloaderFunctionName;
 	};
 }

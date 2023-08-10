@@ -13,7 +13,7 @@
 namespace Flare
 {
 	class SceneSerializer;
-	class Scene : public Asset
+	class FLARE_API Scene : public Asset
 	{
 	public:
 		Scene(bool registerComponents = true);
@@ -33,10 +33,10 @@ namespace Flare
 		void OnUpdateRuntime();
 		void OnViewportResize(uint32_t width, uint32_t height);
 
-		inline World& GetECSWorld() { return m_World; }
+		World& GetECSWorld();
 
-		inline static Ref<Scene> GetActive() { return s_Active; }
-		inline static void SetActive(const Ref<Scene>& scene) { s_Active = scene; }
+		static Ref<Scene> GetActive();
+		static void SetActive(const Ref<Scene>& scene);
 	private:
 		World m_World;
 		Ref<Shader> m_QuadShader;
@@ -48,7 +48,6 @@ namespace Flare
 
 		Query m_CameraDataUpdateQuery;
 	private:
-		static Ref<Scene> s_Active;
 		friend SceneSerializer;
 	};
 }

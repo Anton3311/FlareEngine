@@ -1,14 +1,19 @@
+local build_tool = require("BuildTool")
+
 project "FlareEditor"
     kind "ConsoleApp"
 	language "C++"
 	cppdialect "C++17"
 	staticruntime "off"
 
+	build_tool.add_module_ref("Flare")
+	build_tool.add_module_ref("FlarePlatform")
+
     files
     {
         "src/**.h",
         "src/**.cpp",
-		
+
 		"%{wks.location}/Flare/vendor/ImGuizmo/ImGuizmo.h",
 		"%{wks.location}/Flare/vendor/ImGuizmo/ImGuizmo.cpp",
     }
@@ -34,6 +39,7 @@ project "FlareEditor"
 	links
 	{
 		"Flare",
+		"GLFW",
 		"ImGUI",
 		"FlareCommon",
 		"FlarePlatform",
@@ -53,12 +59,12 @@ project "FlareEditor"
 		"%{wks.location}/Sandbox/Sandbox.flareproj"
 	}
 
-	targetdir("%{wks.location}/bin/" .. OUTPUT_DIRECTORY .. "/%{prj.name}")
+	targetdir("%{wks.location}/bin/" .. OUTPUT_DIRECTORY)
 	objdir("%{wks.location}/bin-int/" .. OUTPUT_DIRECTORY .. "/%{prj.name}")
 
 	filter "system:windows"
 		systemversion "latest"
-	
+
 	filter "configurations:Debug"
 		defines "FLARE_DEBUG"
 		runtime "Debug"

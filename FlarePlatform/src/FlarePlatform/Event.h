@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Flare/Core/Core.h"
+
 #include <string_view>
 #include <functional>
 
@@ -22,7 +24,7 @@ namespace Flare
 		KeyTyped,
 	};
 
-	class Event
+	class FLAREPLATFORM_API Event
 	{
 	public:
 		virtual EventType GetType() const = 0;

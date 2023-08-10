@@ -18,8 +18,8 @@ namespace Flare
 		Texture,
 	};
 
-	std::string_view AssetTypeToString(AssetType type);
-	AssetType AssetTypeFromString(std::string_view string);
+	FLARE_API std::string_view AssetTypeToString(AssetType type);
+	FLARE_API AssetType AssetTypeFromString(std::string_view string);
 
 	struct AssetMetadata
 	{
@@ -28,7 +28,7 @@ namespace Flare
 		std::filesystem::path Path;
 	};
 
-	class Asset
+	class FLARE_API Asset
 	{
 	public:
 		Asset(AssetType type)

@@ -8,7 +8,7 @@ workspace "Flare"
 	{
 		"Debug",
 		"Release",
-		"Dist"
+		"Dist",
 	}
 
 	flags
