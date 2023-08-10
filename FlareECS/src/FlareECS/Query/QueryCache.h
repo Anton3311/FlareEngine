@@ -12,10 +12,10 @@
 
 namespace Flare
 {
-	class Registry;
+	class FLAREECS_API Registry;
 
 	class Query;
-	class QueryCache
+	class FLAREECS_API QueryCache
 	{
 	public:
 		QueryCache(Registry& registry)

@@ -66,6 +66,16 @@ namespace Flare
 		}
 	}
 
+	size_t EntityStorage::GetEntitiesCount() const
+	{
+		return m_EntitiesCount;
+	}
+
+	size_t EntityStorage::GetEntitySize() const
+	{
+		return m_EntitySize;
+	}
+
 	void EntityStorage::SetEntitySize(size_t entitySize)
 	{
 		FLARE_CORE_ASSERT(m_EntitiesCount == 0, "Entity size can only be set if the storage is empty");
@@ -78,4 +88,35 @@ namespace Flare
 		FLARE_CORE_ASSERT(entityIndex < m_EntityIndices.size());
 		m_EntityIndices[entityIndex] = newRegistryIndex;
 	}
+
+	size_t EntityStorage::GetChunksCount() const
+	{
+		return m_Chunks.size();
+	}
+
+	size_t EntityStorage::GetEntitiesCountInChunk(size_t index) const
+	{
+		FLARE_CORE_ASSERT(index < m_Chunks.size());
+		if (index == m_Chunks.size() - 1)
+			return m_EntitiesCount % m_EntitiesPerChunk;
+		return m_EntitiesPerChunk;
+	}
+
+	uint8_t* EntityStorage::GetChunkBuffer(size_t index)
+	{
+		FLARE_CORE_ASSERT(index < m_Chunks.size());
+		return m_Chunks[index].GetBuffer();
+	}
+
+	const uint8_t* EntityStorage::GetChunkBuffer(size_t index) const
+	{
+		FLARE_CORE_ASSERT(index < m_Chunks.size());
+		return m_Chunks[index].GetBuffer();
+	}
+
+	const std::vector<uint32_t>& EntityStorage::GetEntityIndices() const
+	{
+		return m_EntityIndices;
+	}
+
 }

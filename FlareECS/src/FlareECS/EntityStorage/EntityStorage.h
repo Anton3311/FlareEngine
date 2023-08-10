@@ -8,7 +8,7 @@
 
 namespace Flare
 {
-	class EntityStorage
+	class FLAREECS_API EntityStorage
 	{
 	public:
 		EntityStorage();
@@ -19,33 +19,17 @@ namespace Flare
 
 		void RemoveEntityData(size_t entityIndex);
 		
-		inline size_t GetEntitiesCount() const { return m_EntitiesCount; }
-		inline size_t GetEntitySize() const { return m_EntitySize; }
+		size_t GetEntitiesCount() const;
+		size_t GetEntitySize() const;
 		void SetEntitySize(size_t entitySize);
 		void UpdateEntityRegistryIndex(size_t entityIndex, size_t newRegistryIndex);
 
-		inline size_t GetChunksCount() const { return m_Chunks.size(); }
-		inline size_t GetEntitiesCountInChunk(size_t index) const
-		{
-			FLARE_CORE_ASSERT(index < m_Chunks.size());
-			if (index == m_Chunks.size() - 1)
-				return m_EntitiesCount % m_EntitiesPerChunk;
-			return m_EntitiesPerChunk;
-		}
+		size_t GetChunksCount() const;
+		size_t GetEntitiesCountInChunk(size_t index) const;
 
-		inline uint8_t* GetChunkBuffer(size_t index)
-		{
-			FLARE_CORE_ASSERT(index < m_Chunks.size());
-			return m_Chunks[index].GetBuffer();
-		}
-
-		inline const uint8_t* GetChunkBuffer(size_t index) const
-		{
-			FLARE_CORE_ASSERT(index < m_Chunks.size());
-			return m_Chunks[index].GetBuffer();
-		}
-
-		inline const std::vector<uint32_t>& GetEntityIndices() const { return m_EntityIndices; }
+		uint8_t* GetChunkBuffer(size_t index);
+		const uint8_t* GetChunkBuffer(size_t index) const;
+		const std::vector<uint32_t>& GetEntityIndices() const;
 	private:
 		std::vector<EntityStorageChunk> m_Chunks;
 		std::vector<uint32_t> m_EntityIndices;

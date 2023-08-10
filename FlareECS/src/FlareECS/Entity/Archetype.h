@@ -17,7 +17,7 @@ namespace Flare
 		ArchetypeId Remove;
 	};
 
-	struct Archetype
+	struct FLAREECS_API Archetype
 	{
 		size_t Id;
 
@@ -36,12 +36,17 @@ namespace Flare
 		}
 	};
 	
-	struct ArchetypeRecord
+	struct FLAREECS_API ArchetypeRecord
 	{
 		Archetype Data;
 		EntityStorage Storage;
 
 		ArchetypeRecord() {}
+
+		ArchetypeRecord(const ArchetypeRecord& other)
+		{
+			FLARE_CORE_INFO("ArchetypeRecord::Copy");
+		}
 
 		ArchetypeRecord(ArchetypeRecord&& other) noexcept
 			: Data(std::move(other.Data)), Storage(std::move(other.Storage)) {}

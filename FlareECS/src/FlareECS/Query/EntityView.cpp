@@ -2,6 +2,9 @@
 
 namespace Flare
 {
+	EntityView::EntityView(Registry& registry, ArchetypeId archetype)
+		: m_Registry(registry), m_Archetype(archetype) {}
+
 	EntityViewIterator EntityView::begin()
 	{
 		return EntityViewIterator(m_Registry.GetArchetypeRecord(m_Archetype).Storage, 0);
@@ -19,5 +22,10 @@ namespace Flare
 		FLARE_CORE_ASSERT(index < indices.size());
 
 		return m_Registry.FindEntityByRegistryIndex(indices[index]);
+	}
+
+	ArchetypeId EntityView::GetArchetype() const
+	{
+		return m_Archetype;
 	}
 }

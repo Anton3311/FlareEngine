@@ -21,7 +21,7 @@ namespace Flare
 	class EntityView;
 	class EntityRegistryIterator;
 
-	class Registry
+	class FLAREECS_API Registry
 	{
 	public:
 		Registry();

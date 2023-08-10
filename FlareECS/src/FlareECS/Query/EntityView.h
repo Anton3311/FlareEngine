@@ -12,18 +12,17 @@
 
 namespace Flare
 {
-	class EntityView
+	class FLAREECS_API EntityView
 	{
 	public:
-		EntityView(Registry& registry, ArchetypeId archetype)
-			: m_Registry(registry), m_Archetype(archetype) {}
+		EntityView(Registry& registry, ArchetypeId archetype);
 	public:
 		EntityViewIterator begin();
 		EntityViewIterator end();
 
 		std::optional<Entity> GetEntity(uint32_t index);
 
-		constexpr ArchetypeId GetArchetype() const { return m_Archetype; }
+		ArchetypeId GetArchetype() const;
 
 		template<typename ComponentT>
 		ComponentView<ComponentT> View()

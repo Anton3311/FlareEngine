@@ -2,6 +2,12 @@
 
 namespace Flare
 {
+	SystemsManager::~SystemsManager()
+	{
+		for (System* system : m_ManagedSystems)
+			delete system;
+	}
+
 	SystemGroupId SystemsManager::CreateGroup(std::string_view name)
 	{
 		SystemGroupId id = (SystemGroupId)m_Groups.size();
@@ -19,6 +25,17 @@ namespace Flare
 		if (it == m_GroupNameToId.end())
 			return {};
 		return it->second;
+	}
+
+	SystemId SystemsManager::RegisterSystem(std::string_view name, SystemGroupId group, System* system)
+	{
+		SystemId id = RegisterSystem(name, group, [system](SystemExecutionContext& context)
+		{
+			system->OnUpdate(context);
+		});
+
+		m_ManagedSystems.push_back(system);
+		return id;
 	}
 
 	SystemId SystemsManager::RegisterSystem(std::string_view name, SystemGroupId group,
@@ -87,6 +104,11 @@ namespace Flare
 		}
 	}
 
+	bool SystemsManager::IsGroupIdValid(SystemGroupId id)
+	{
+		return id < (SystemGroupId)m_Groups.size();
+	}
+
 	void SystemsManager::RebuildExecutionGraphs()
 	{
 		for (SystemGroup& group : m_Groups)
@@ -97,5 +119,20 @@ namespace Flare
 				continue;
 			}
 		}
+	}
+
+	const std::vector<SystemGroup>& SystemsManager::GetGroups() const
+	{
+		return m_Groups;
+	}
+
+	std::vector<SystemGroup>& SystemsManager::GetGroups()
+	{
+		return m_Groups;
+	}
+
+	const std::vector<SystemData>& SystemsManager::GetSystems() const
+	{
+		return m_Systems;
 	}
 }

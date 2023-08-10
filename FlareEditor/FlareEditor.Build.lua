@@ -9,6 +9,7 @@ project "FlareEditor"
 	build_tool.add_module_ref("Flare")
 	build_tool.add_module_ref("FlarePlatform")
 	build_tool.add_module_ref("FlareCommon")
+	build_tool.add_module_ref("FlareECS")
 
     files
     {

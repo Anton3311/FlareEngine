@@ -8,6 +8,7 @@ project "Flare"
 	build_tool.define_module("Flare")
 	build_tool.add_module_ref("FlarePlatform")
 	build_tool.add_module_ref("FlareCommon")
+	build_tool.add_module_ref("FlareECS")
 
     files
     {

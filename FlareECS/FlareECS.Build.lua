@@ -1,11 +1,11 @@
 local build_tool = require("BuildTool")
 
 project "FlareECS"
-    kind "StaticLib"
 	language "C++"
 	cppdialect "C++17"
 	staticruntime "off"
 
+	build_tool.define_module("FlareECS")
 	build_tool.add_module_ref("FlareCommon")
 
     files
@@ -29,12 +29,9 @@ project "FlareECS"
 		"FlareCommon",
 	}
 
-	targetdir("%{wks.location}/bin/" .. OUTPUT_DIRECTORY .. "/%{prj.name}")
-	objdir("%{wks.location}/bin-int/" .. OUTPUT_DIRECTORY .. "/%{prj.name}")
-
 	filter "system:windows"
 		systemversion "latest"
-	
+
 	filter "configurations:Debug"
 		defines "FLARE_DEBUG"
 		runtime "Debug"
