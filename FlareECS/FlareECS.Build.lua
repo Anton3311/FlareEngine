@@ -1,8 +1,12 @@
+local build_tool = require("BuildTool")
+
 project "FlareECS"
     kind "StaticLib"
 	language "C++"
 	cppdialect "C++17"
 	staticruntime "off"
+
+	build_tool.add_module_ref("FlareCommon")
 
     files
     {

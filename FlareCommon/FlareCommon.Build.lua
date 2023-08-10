@@ -1,8 +1,11 @@
+local build_tool = require("BuildTool")
+
 project "FlareCommon"
-    kind "StaticLib"
 	language "C++"
 	cppdialect "C++17"
 	staticruntime "off"
+
+	build_tool.define_module("FlareCommon")
 
     files
     {
@@ -16,7 +19,7 @@ project "FlareCommon"
 		INCLUDE_DIRS.spdlog,
 	}
 
-	targetdir("%{wks.location}/bin/" .. OUTPUT_DIRECTORY .. "/%{prj.name}")
+	targetdir("%{wks.location}/bin/" .. OUTPUT_DIRECTORY)
 	objdir("%{wks.location}/bin-int/" .. OUTPUT_DIRECTORY .. "/%{prj.name}")
 
 	filter "system:windows"

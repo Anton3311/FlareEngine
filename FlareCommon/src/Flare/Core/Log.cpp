@@ -4,8 +4,8 @@
 
 namespace Flare
 {
-	Ref<spdlog::logger> Log::s_CoreLogger;
-	Ref<spdlog::logger> Log::s_ClientLogger;
+	Ref<spdlog::logger> s_CoreLogger;
+	Ref<spdlog::logger> s_ClientLogger;
 
 	void Log::Initialize()
 	{
@@ -16,5 +16,15 @@ namespace Flare
 
 		s_CoreLogger->set_level(spdlog::level::level_enum::trace);
 		s_ClientLogger->set_level(spdlog::level::level_enum::trace);
+	}
+
+	Ref<spdlog::logger> Log::GetCoreLogger()
+	{
+		return s_CoreLogger;
+	}
+
+	Ref<spdlog::logger> Log::GetClientLogger()
+	{
+		return s_ClientLogger;
 	}
 }

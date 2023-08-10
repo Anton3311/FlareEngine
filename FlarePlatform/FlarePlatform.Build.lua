@@ -6,6 +6,7 @@ project "FlarePlatform"
 	staticruntime "off"
 
 	build_tool.define_module("FlarePlatform")
+	build_tool.add_module_ref("FlareCommon")
 
     files
     {
