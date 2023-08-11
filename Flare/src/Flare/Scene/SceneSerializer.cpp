@@ -65,7 +65,7 @@ namespace Flare
 				{
 				case Scripting::FieldType::Bool:
 				{
-					float value = fieldNode.as<bool>();
+					bool value = fieldNode.as<bool>();
 					std::memcpy(data + field.Offset, &value, sizeof(value));
 					break;
 				}
