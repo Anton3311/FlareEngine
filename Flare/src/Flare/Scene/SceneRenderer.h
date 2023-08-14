@@ -5,6 +5,7 @@
 #include "Flare/Scene/Components.h"
 
 #include "FlareECS/World.h"
+#include "FlareECS/System/SystemInitializer.h"
 
 namespace Flare
 {
@@ -13,6 +14,7 @@ namespace Flare
 	public:
 		SpritesRendererSystem();
 
+		virtual void OnConfig(SystemConfig& config) override {}
 		virtual void OnUpdate(SystemExecutionContext& context) override;
 	private:
 		Query m_SpritesQuery;

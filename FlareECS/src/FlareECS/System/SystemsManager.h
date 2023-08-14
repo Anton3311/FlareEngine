@@ -26,7 +26,9 @@ namespace Flare
 
 		SystemId RegisterSystem(std::string_view name, SystemGroupId group, System* system);
 		SystemId RegisterSystem(std::string_view name, SystemGroupId group, const SystemEventFunction& onUpdate = nullptr);
-		SystemId RegisterSystem(std::string_view name,  const SystemEventFunction& onUpdate = nullptr);
+		SystemId RegisterSystem(std::string_view name, const SystemEventFunction& onUpdate = nullptr);
+
+		void RegisterSystems(SystemGroupId defaultGroup);
 
 		void AddSystemToGroup(SystemId system, SystemGroupId group);
 		void AddSystemExecutionSettings(SystemId system, const std::vector<ExecutionOrder>* executionOrder);

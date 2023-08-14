@@ -2,4 +2,5 @@ Project:
   Name: Sandbox
   StartScene: 16256238360584041012
   ScriptingModules:
-    - Sandbox
+  Modules:
+    - "Sandbox"

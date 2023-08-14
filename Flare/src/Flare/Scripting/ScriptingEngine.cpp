@@ -10,6 +10,8 @@
 #include "FlareScriptingCore/ECS/SystemInfo.h"
 #include "FlareScriptingCore/ECS/ComponentInfo.h"
 
+#include "FlareECS/System/SystemInitializer.h"
+
 #include "FlareECS.h"
 
 namespace Flare
@@ -65,6 +67,18 @@ namespace Flare
 		{
 			ScriptingEngine::LoadModule(Project::GetActive()->Location
 				/ fmt::format("bin/{0}-{1}-x86_64/{2}/{2}.dll", configurationName, platformName, moduleName));
+		}
+
+		//SystemInitializer init("sdfsf", 0);
+		auto& arr = SystemInitializer::GetInitializers();
+		//arr.reserve(16);
+		for (const std::filesystem::path& modulePath : Project::GetActive()->Modules)
+		{
+			std::filesystem::path libraryPath = Project::GetActive()->Location / modulePath / "bin/Debug-windows-x86_64" / fmt::format("{0}.dll", modulePath.filename().generic_string());
+			void* library = Platform::LoadSharedLibrary(libraryPath);
+			FLARE_CORE_ASSERT(library);
+
+			s_Data.LoadedSharedLibraries.push_back(library);
 		}
 
 		s_Data.ShouldRegisterComponents = true;
@@ -135,6 +149,10 @@ namespace Flare
 	{
 		s_Data.ShouldRegisterComponents = false;
 		ReleaseScriptingInstances();
+
+		for (void* lib : s_Data.LoadedSharedLibraries)
+			Platform::FreeSharedLibrary(lib);
+		s_Data.LoadedSharedLibraries.clear();
 
 		for (auto& module : s_Data.Modules)
 		{
@@ -219,6 +237,8 @@ namespace Flare
 		std::string_view defaultGroupName = "Scripting Update";
 		std::optional<SystemGroupId> defaultGroup = s_Data.CurrentWorld->GetSystemsManager().FindGroup(defaultGroupName);
 		FLARE_CORE_ASSERT(defaultGroup.has_value());
+
+		s_Data.CurrentWorld->GetSystemsManager().RegisterSystems(defaultGroup.value());
 
 		SystemsManager& systems = s_Data.CurrentWorld->GetSystemsManager();
 		for (ScriptingModuleData& module : s_Data.Modules)

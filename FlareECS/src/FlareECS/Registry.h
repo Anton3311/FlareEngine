@@ -16,7 +16,7 @@
 
 namespace Flare
 {
-	class Query;
+	class FLAREECS_API Query;
 
 	class EntityView;
 	class EntityRegistryIterator;
@@ -35,7 +35,7 @@ namespace Flare
 		bool RemoveEntityComponent(Entity entity, ComponentId componentId);
 		bool IsEntityAlive(Entity entity) const;
 
-		inline const std::vector<EntityRecord>& GetEntityRecords() const { return m_EntityRecords; }
+		const std::vector<EntityRecord>& GetEntityRecords() const;
 
 		std::optional<Entity> FindEntityByIndex(uint32_t entityIndex);
 		std::optional<Entity> FindEntityByRegistryIndex(uint32_t registryIndex);
@@ -54,16 +54,16 @@ namespace Flare
 		const std::vector<ComponentId>& GetEntityComponents(Entity entity);
 		bool HasComponent(Entity entity, ComponentId component) const;
 
-		inline const ComponentInfo& GetComponentInfo(ComponentId id) const;
-		inline const std::vector<ComponentInfo>& GetRegisteredComponents() const { return m_RegisteredComponents; }
+		const ComponentInfo& GetComponentInfo(ComponentId id) const;
+		const std::vector<ComponentInfo>& GetRegisteredComponents() const;
 
 		std::optional<void*> GetSingleComponent(ComponentId id) const;
 		std::optional<Entity> GetSingletonEntity(const Query& query) const;
 		
 		// Archetype operations
 
-		inline ArchetypeRecord& GetArchetypeRecord(size_t archetypeId) { return m_Archetypes[archetypeId]; }
-		inline const ArchetypeRecord& GetArchetypeRecord(size_t archetypeId) const { return m_Archetypes[archetypeId]; }
+		ArchetypeRecord& GetArchetypeRecord(size_t archetypeId);
+		const ArchetypeRecord& GetArchetypeRecord(size_t archetypeId) const;
 		std::optional<size_t> GetArchetypeComponentIndex(ArchetypeId archetype, ComponentId component) const;
 
 		// Iterator
@@ -74,12 +74,12 @@ namespace Flare
 		// Querying
 
 		Query CreateQuery(const ComponentSet& components);
-		inline const QueryCache& GetQueryCache() const { return m_QueryCache; }
+		const QueryCache& GetQueryCache() const;
 
 		EntityView QueryArchetype(const ComponentSet& componentSet);
 	public:
-		inline EntityRecord& operator[](size_t index);
-		inline const EntityRecord& operator[](size_t index) const;
+		EntityRecord& operator[](size_t index);
+		const EntityRecord& operator[](size_t index) const;
 	private:
 		ArchetypeId CreateArchetype();
 

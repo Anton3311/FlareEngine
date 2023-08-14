@@ -90,25 +90,10 @@ namespace Flare
 			return m_Registry.HasComponent(entity, T::Info.Id);
 		}
 
-		inline void DeleteEntity(Entity entity)
-		{
-			m_Registry.DeleteEntity(entity);
-		}
-
-		inline bool IsEntityAlive(Entity entity) const
-		{
-			return m_Registry.IsEntityAlive(entity);
-		}
-
-		inline const std::vector<ComponentId>& GetEntityComponents(Entity entity)
-		{
-			return m_Registry.GetEntityComponents(entity);
-		}
-
-		constexpr Entity GetSingletonEntity(const Query& query)
-		{
-			return m_Registry.GetSingletonEntity(query).value_or(Entity());
-		}
+		void DeleteEntity(Entity entity);
+		bool IsEntityAlive(Entity entity) const;
+		const std::vector<ComponentId>& GetEntityComponents(Entity entity);
+		Entity GetSingletonEntity(const Query& query);
 
 		template<typename T>
 		constexpr T& GetSingletonComponent()

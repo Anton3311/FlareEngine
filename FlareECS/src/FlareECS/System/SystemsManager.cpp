@@ -1,5 +1,8 @@
 #include "SystemsManager.h"
 
+#include "FlareECS/World.h"
+#include "FlareECS/System/SystemInitializer.h"
+
 namespace Flare
 {
 	SystemsManager::~SystemsManager()
@@ -60,6 +63,24 @@ namespace Flare
 		data.OnUpdate = onUpdate;
 		
 		return id;
+	}
+
+	void SystemsManager::RegisterSystems(SystemGroupId defaultGroup)
+	{
+		const auto& initializers = SystemInitializer::GetInitializers();
+		for (const SystemInitializer* initializer : initializers)
+		{
+			System* instance = initializer->CreateSystem();
+			int a = 100;
+			SystemConfig config;
+			config.Group = {};
+			config.world = &World::GetCurrent();
+			config.a = &a;
+
+			instance->OnConfig(config);
+		
+			RegisterSystem(initializer->TypeName, config.Group.value_or(defaultGroup), instance);
+		}
 	}
 
 	void SystemsManager::AddSystemToGroup(SystemId system, SystemGroupId group)

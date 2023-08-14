@@ -1,5 +1,11 @@
 local M = {}
 
+newoption
+{
+    trigger = "flare_root",
+    description = "Flare root directory"
+}
+
 local function set_module_defines(module_name, export)
 	local module_api_define = string.format("%s_API", string.upper(module_name))
 
@@ -40,6 +46,26 @@ M.set_module_kind = function()
 		kind "StaticLib"
 
 	filter {}
+end
+
+M.add_internal_module_ref = function(name)
+    set_module_defines(name);
+
+    local root = _OPTIONS["flare_root"]
+
+    includedirs
+    {
+        string.format("%s/%s/src/", root, name),
+        string.format("%s/%s/include/", root, name),
+    }
+
+    filter "configurations:not Dist"
+        links
+        {
+            string.format("%s/bin/%s/%s.lib", root, OUTPUT_DIRECTORY, name),
+        }
+
+    filter {}
 end
 
 return M

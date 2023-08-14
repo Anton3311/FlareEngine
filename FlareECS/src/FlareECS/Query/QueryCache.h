@@ -13,8 +13,8 @@
 namespace Flare
 {
 	class FLAREECS_API Registry;
+	class FLAREECS_API Query;
 
-	class Query;
 	class FLAREECS_API QueryCache
 	{
 	public:

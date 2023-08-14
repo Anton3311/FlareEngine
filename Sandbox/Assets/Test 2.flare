@@ -28,8 +28,6 @@ Entities:
         Color: [1, 1, 1, 1]
         Texture: 5193090395626261884
         TextureTiling: [1, 1]
-      - Name: struct Sandbox::MovingQuadComponet
-        Speed: 4
   - Components:
       - Name: Transform
         Position: [0, 0, 0]
@@ -45,12 +43,10 @@ Entities:
         Position: [0, 0, 0]
         Rotation: [0, 0, 0]
         Scale: [0, 0, 0]
-      - Name: struct Sandbox::TestSingleton
-        Num: 8.69999981
   - Components:
       - Name: Transform
         Position: [0, 0, 0]
         Rotation: [0, 0, 0]
         Scale: [0, 0, 0]
 Systems:
-  - Name: struct Sandbox::TestSystem
+  []

@@ -15,6 +15,26 @@ namespace Flare
 		s_CurrentWorld = nullptr;
 	}
 
+	void World::DeleteEntity(Entity entity)
+	{
+		m_Registry.DeleteEntity(entity);
+	}
+
+	bool World::IsEntityAlive(Entity entity) const
+	{
+		return m_Registry.IsEntityAlive(entity);
+	}
+
+	const std::vector<ComponentId>& World::GetEntityComponents(Entity entity)
+	{
+		return m_Registry.GetEntityComponents(entity);
+	}
+
+	Entity World::GetSingletonEntity(const Query& query)
+	{
+		return m_Registry.GetSingletonEntity(query).value_or(Entity());
+	}
+
 	World& World::GetCurrent()
 	{
 		FLARE_CORE_ASSERT(s_CurrentWorld != nullptr);

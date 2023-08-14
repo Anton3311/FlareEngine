@@ -44,7 +44,7 @@ namespace Flare
 		std::unordered_set<ArchetypeId>::const_iterator m_Archetype;
 	};
 
-	class Query
+	class FLAREECS_API Query
 	{
 	public:
 		constexpr Query()
@@ -56,26 +56,11 @@ namespace Flare
 		constexpr Query(QueryId id, Registry& registry, const QueryCache& queryCache)
 			: m_Id(id), m_Registry(&registry), m_QueryCache(&queryCache) {}
 	public:
-		inline QueryId GetId() const { return m_Id; }
+		QueryId GetId() const;
 
-		inline QueryIterator begin() const
-		{
-			FLARE_CORE_ASSERT(m_Registry);
-			FLARE_CORE_ASSERT(m_QueryCache);
-			return QueryIterator(*m_Registry, (*m_QueryCache)[m_Id].MatchedArchetypes.begin());
-		}
-
-		inline QueryIterator end() const
-		{
-			FLARE_CORE_ASSERT(m_Registry);
-			FLARE_CORE_ASSERT(m_QueryCache);
-			return QueryIterator(*m_Registry, (*m_QueryCache)[m_Id].MatchedArchetypes.end());
-		}
-
-		inline const std::unordered_set<ArchetypeId>& GetMatchedArchetypes() const
-		{
-			return (*m_QueryCache)[m_Id].MatchedArchetypes;
-		}
+		QueryIterator begin() const;
+		QueryIterator end() const;
+		const std::unordered_set<ArchetypeId>& GetMatchedArchetypes() const;
 	private:
 		QueryId m_Id;
 		Registry* m_Registry;
