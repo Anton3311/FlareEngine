@@ -29,6 +29,51 @@ local function set_module_defines(module_name, export)
 	objdir("%{wks.location}/bin-int/" .. OUTPUT_DIRECTORY .. "/%{prj.name}")
 end
 
+M.setup_workspace = function(name)
+	workspace(name)
+	configurations({"Debug", "Release", "Dist"})
+	architecture("x86_64")
+end
+
+M.setup_project = function(name)
+	local root = _OPTIONS["flare_root"]
+
+	project(name)
+	language("C++")
+	cppdialect("C++17")
+	staticruntime("off")
+	files({"Source/**.h", "Source/*.hpp", "Source/*.cpp"})
+
+	M.set_module_kind()
+
+	includedirs({
+		root .. "Flare/vendor/spdlog/include",
+		root .. "Flare/vendor/glm",
+	})
+
+	filter "system:windows"
+		systemversion "latest"
+
+	filter "configurations:Debug"
+		defines "FLARE_DEBUG"
+		runtime "Debug"
+		symbols "on"
+
+	filter "configurations:Release"
+		defines "FLARE_RELEASE"
+		runtime "Release"
+		optimize "on"
+		
+	filter "configurations:Dist"
+		defines "FLARE_DIST"
+		runtime "Release"
+		optimize "on"
+
+	filter {}
+
+	M.define_module(name)
+end
+
 M.define_module = function(name)
 	set_module_defines(name, true)
 	M.set_module_kind()

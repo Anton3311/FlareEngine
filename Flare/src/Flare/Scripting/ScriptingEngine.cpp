@@ -69,9 +69,6 @@ namespace Flare
 				/ fmt::format("bin/{0}-{1}-x86_64/{2}/{2}.dll", configurationName, platformName, moduleName));
 		}
 
-		//SystemInitializer init("sdfsf", 0);
-		auto& arr = SystemInitializer::GetInitializers();
-		//arr.reserve(16);
 		for (const std::filesystem::path& modulePath : Project::GetActive()->Modules)
 		{
 			std::filesystem::path libraryPath = Project::GetActive()->Location / modulePath / "bin/Debug-windows-x86_64" / fmt::format("{0}.dll", modulePath.filename().generic_string());
