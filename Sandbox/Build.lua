@@ -1,7 +1,4 @@
-local workspace_name = "Sandbox"
+local build_tool = include(_OPTIONS["flare_root"] .. "BuildTool.lua")
 
-local project_base = include(_OPTIONS["flare_root"] .. "scripting_project_base.lua")
-project_base.setup()
-
-project_base.create_workspace(workspace_name)
-project_base.create_project("Sandbox")
+build_tool.setup_workspace("Sandbox")
+include("Sandbox/Sandbox.Build.lua")

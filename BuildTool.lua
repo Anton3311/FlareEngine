@@ -1,5 +1,7 @@
 local M = {}
 
+OUTPUT_DIRECTORY = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}/"
+
 newoption
 {
     trigger = "flare_root",
@@ -36,7 +38,7 @@ M.setup_workspace = function(name)
 end
 
 M.setup_project = function(name)
-	local root = _OPTIONS["flare_root"]
+	local root = "%{wks.location}/" .. _OPTIONS["flare_root"]
 
 	project(name)
 	language("C++")
@@ -96,7 +98,7 @@ end
 M.add_internal_module_ref = function(name)
     set_module_defines(name);
 
-    local root = _OPTIONS["flare_root"]
+    local root = "%{wks.location}/" .. _OPTIONS["flare_root"]
 
     includedirs
     {

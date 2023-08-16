@@ -1,4 +1,5 @@
 include "Dependencies.lua"
+include "BuildTool.lua"
 
 workspace "Flare"
 	architecture "x86_64"
@@ -21,8 +22,6 @@ workspace "Flare"
 	{
 		"MultiProcessorCompile"
 	}
-
-OUTPUT_DIRECTORY = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
 group "Dependencies"
     include "Flare/vendor/GLFW"
