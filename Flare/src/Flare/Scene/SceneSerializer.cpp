@@ -6,6 +6,8 @@
 
 #include "Flare/Scripting/ScriptingEngine.h"
 
+#include "Flare/Serialization/TypeInitializer.h"
+
 #include "FlareECS/Query/EntityRegistryIterator.h"
 
 #include <yaml-cpp/yaml.h>
@@ -47,6 +49,39 @@ namespace Flare
 				FLARE_CORE_WARN("Entity serialization is not implemented");
 				break;
 			}
+			default:
+				FLARE_CORE_ASSERT(false, "Unhandled field type");
+			}
+		}
+
+		emitter << YAML::EndMap;
+	}
+
+	static void SerializeType(YAML::Emitter& emitter, const TypeInitializer& type, const uint8_t* data)
+	{
+		emitter << YAML::BeginMap;
+		emitter << YAML::Key << "Name" << YAML::Value << std::string(type.TypeName);
+
+		for (const FieldData& field : type.SerializedFields)
+		{
+			const uint8_t* fieldData = (const uint8_t*)data + field.Offset;
+			switch (field.Type)
+			{
+			case SerializableFieldType::Bool:
+				emitter << YAML::Key << field.Name << YAML::Value << *(bool*)(fieldData);
+				break;
+			case SerializableFieldType::Int32:
+				emitter << YAML::Key << field.Name << YAML::Value << *(int32_t*)(fieldData);
+				break;
+			case SerializableFieldType::Float32:
+				emitter << YAML::Key << field.Name << YAML::Value << *(float*)(fieldData);
+				break;
+			case SerializableFieldType::Float2:
+				emitter << YAML::Key << field.Name << YAML::Value << *(glm::vec2*)(fieldData);
+				break;
+			case SerializableFieldType::Float3:
+				emitter << YAML::Key << field.Name << YAML::Value << *(glm::vec3*)(fieldData);
+				break;
 			default:
 				FLARE_CORE_ASSERT(false, "Unhandled field type");
 			}
@@ -106,6 +141,52 @@ namespace Flare
 		}
 	}
 
+
+	static void DeserializeType(YAML::Node& node, const TypeInitializer& type, uint8_t* data)
+	{
+		for (const FieldData& field : type.SerializedFields)
+		{
+			if (YAML::Node fieldNode = node[field.Name])
+			{
+				switch (field.Type)
+				{
+				case SerializableFieldType::Bool:
+				{
+					bool value = fieldNode.as<bool>();
+					std::memcpy(data + field.Offset, &value, sizeof(value));
+					break;
+				}
+				case SerializableFieldType::Int32:
+				{
+					int32_t value = fieldNode.as<int32_t>();
+					std::memcpy(data + field.Offset, &value, sizeof(value));
+					break;
+				}
+				case SerializableFieldType::Float32:
+				{
+					float value = fieldNode.as<float>();
+					std::memcpy(data + field.Offset, &value, sizeof(value));
+					break;
+				}
+				case SerializableFieldType::Float2:
+				{
+					glm::vec2 vector = fieldNode.as<glm::vec2>();
+					std::memcpy(data + field.Offset, &vector, sizeof(vector));
+					break;
+				}
+				case SerializableFieldType::Float3:
+				{
+					glm::vec3 vector = fieldNode.as<glm::vec3>();
+					std::memcpy(data + field.Offset, &vector, sizeof(vector));
+					break;
+				}
+				default:
+					FLARE_CORE_ASSERT(false, "Unhandled field type");
+				}
+			}
+		}
+	}
+
 	static void SerializeComponent(YAML::Emitter& emitter, World& world, Entity entity, ComponentId component)
 	{
 		if (component == TransformComponent::Info.Id)
@@ -156,16 +237,11 @@ namespace Flare
 		}
 		else
 		{
-		 	std::optional<const Scripting::ScriptingType*> componentType = ScriptingEngine::FindComponentType(component);
 			std::optional<void*> entityData = world.GetRegistry().GetEntityComponent(entity, component);
+			const ComponentInfo& info = world.GetRegistry().GetComponentInfo(component);
 
-			FLARE_CORE_ASSERT(entityData.has_value());
-
-			if (componentType.has_value())
-				SerializeType(emitter, *componentType.value(), (const uint8_t*)entityData.value());
-			else
-				FLARE_CORE_ERROR("Componnet with id={{0};{1}} cannot be serialized because it's type infomation cannot be found",
-					component.GetIndex(), component.GetGeneration());
+			if (entityData.has_value() && info.Initializer)
+				SerializeType(emitter, info.Initializer->Type, (const uint8_t*) entityData.value());
 		}
 	}
 
@@ -335,11 +411,11 @@ namespace Flare
 						continue;
 					}
 
-					std::optional<const Scripting::ScriptingType*> type = ScriptingEngine::FindComponentType(componentId.value());
-					if (type.has_value())
+					const ComponentInfo& info = scene->GetECSWorld().GetRegistry().GetComponentInfo(componentId.value());
+					if (info.Initializer)
 					{
 						uint8_t* componentData = AddDeserializedComponent(scene->GetECSWorld(), entity, componentId.value());
-						DeserializeType(componentNode, *type.value(), componentData);
+						DeserializeType(componentNode, info.Initializer->Type, componentData);
 					}
 				}
 			}
