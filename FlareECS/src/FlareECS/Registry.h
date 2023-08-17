@@ -5,6 +5,7 @@
 
 #include "FlareECS/Entity/Entity.h"
 #include "FlareECS/Entity/Component.h"
+#include "FlareECS/Entity/ComponentInitializer.h"
 #include "FlareECS/Entity/Archetype.h"
 #include "FlareECS/Entity/EntityIndex.h"
 
@@ -46,6 +47,8 @@ namespace Flare
 
 		// Component operations
 
+		void RegisterComponents();
+
 		ComponentId RegisterComponent(std::string_view name, size_t size, const std::function<void(void*)>& deleter);
 		std::optional<ComponentId> FindComponnet(std::string_view name);
 		bool IsComponentIdValid(ComponentId id) const;
@@ -81,6 +84,7 @@ namespace Flare
 		EntityRecord& operator[](size_t index);
 		const EntityRecord& operator[](size_t index) const;
 	private:
+		ComponentId RegisterComponent(ComponentInitializer& initializer);
 		ArchetypeId CreateArchetype();
 
 		void RemoveEntityData(ArchetypeId archetype, size_t entityBufferIndex);

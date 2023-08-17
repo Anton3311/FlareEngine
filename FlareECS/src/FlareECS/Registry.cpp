@@ -5,6 +5,8 @@
 
 #include "FlareECS/Query/Query.h"
 
+#include "FlareECS/Entity/ComponentInitializer.h"
+
 #include "FlareECS/EntityStorage/EntityChunksPool.h"
 
 #include <algorithm>
@@ -410,6 +412,13 @@ namespace Flare
 		return entityData + archetype.Data.ComponentOffsets[componentIndex.value()];
 	}
 
+	void Registry::RegisterComponents()
+	{
+		auto& initializers = ComponentInitializer::GetInitializers();
+		for (ComponentInitializer* initializer : initializers)
+			initializer->m_Id = RegisterComponent(*initializer);
+	}
+
 	ComponentId Registry::RegisterComponent(std::string_view name, size_t size, const std::function<void(void*)>& deleter)
 	{
 		Entity entityId = m_EntityIndex.CreateId();
@@ -576,6 +585,25 @@ namespace Flare
 	{
 		FLARE_CORE_ASSERT(index < m_EntityRecords.size());
 		return m_EntityRecords[index];
+	}
+
+	ComponentId Registry::RegisterComponent(ComponentInitializer& initializer)
+	{
+		Entity entityId = m_EntityIndex.CreateId();
+
+		uint32_t registryIndex = (uint32_t)m_RegisteredComponents.size();
+		ComponentInfo& info = m_RegisteredComponents.emplace_back();
+
+		info.Id = ComponentId(entityId.GetIndex(), entityId.GetGeneration());
+		info.RegistryIndex = registryIndex;
+		info.Name = initializer.Type.TypeName;
+		info.Size = initializer.Type.Size;
+		info.Deleter = initializer.Type.Destructor;
+		info.Initializer = &initializer;
+
+		m_ComponentNameToIndex.emplace(info.Name, registryIndex);
+		m_ComponentIdToIndex.emplace(info.Id, registryIndex);
+		return info.Id;
 	}
 
 	ArchetypeId Registry::CreateArchetype()

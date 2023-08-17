@@ -3,6 +3,7 @@
 #include "Flare.h"
 
 #include "Flare/Scripting/ScriptingEngine.h"
+#include "Flare/Serialization/TypeInitializer.h"
 
 #include "FlareECS/EntityId.h"
 #include "FlareECS/World.h"
@@ -21,6 +22,7 @@ namespace Flare
 		static void EndMenu();
 
 		static bool BoolPropertyField(const char* name, bool& value);
+		static bool IntPropertyField(const char* name, int32_t& value);
 		static bool FloatPropertyField(const char* name, float& value);
 		static bool Vector2PropertyField(const char* name, glm::vec2& value);
 		static bool Vector3PropertyField(const char* name, glm::vec3& value);
@@ -35,6 +37,7 @@ namespace Flare
 		static void EndToggleGroup();
 
 		static bool TypeEditor(const Scripting::ScriptingType& type, uint8_t* data);
+		static bool TypeEditor(const TypeInitializer& type, uint8_t* data);
 	private:
 		static void RenderPropertyName(const char* name);
 	};

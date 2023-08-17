@@ -163,6 +163,8 @@ namespace Flare
 
 	void ScriptingEngine::RegisterComponents()
 	{
+		s_Data.CurrentWorld->GetRegistry().RegisterComponents();
+
 		if (s_Data.Modules.size() == 0)
 			return;
 		if (!s_Data.ShouldRegisterComponents)

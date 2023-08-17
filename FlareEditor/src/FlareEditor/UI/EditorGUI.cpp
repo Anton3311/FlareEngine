@@ -66,6 +66,18 @@ namespace Flare
 		return result;
 	}
 
+	bool EditorGUI::IntPropertyField(const char* name, int32_t& value)
+	{
+		RenderPropertyName(name);
+
+		ImGui::PushID(&value);
+		bool result = ImGui::DragInt("", &value, 0.1f);
+		ImGui::PopID();
+
+		ImGui::PopItemWidth();
+		return result;
+	}
+
 	bool EditorGUI::FloatPropertyField(const char* name, float& value)
 	{
 		RenderPropertyName(name);
@@ -257,6 +269,43 @@ namespace Flare
 					break;
 				case Scripting::FieldType::Entity:
 					result |= EditorGUI::EntityField(field.Name.c_str(), Scene::GetActive()->GetECSWorld(), *(Entity*)fieldData);
+					break;
+				}
+			}
+			EditorGUI::EndPropertyGrid();
+		}
+
+		return result;
+	}
+
+	bool EditorGUI::TypeEditor(const TypeInitializer& type, uint8_t* data)
+	{
+		const auto& fields = type.SerializedFields;
+		bool result = false;
+
+		if (EditorGUI::BeginPropertyGrid())
+		{
+			for (size_t i = 0; i < fields.size(); i++)
+			{
+				const FieldData& field = fields[i];
+				uint8_t* fieldData = data + field.Offset;
+
+				switch (field.Type)
+				{
+				case SerializableFieldType::Bool:
+					result |= EditorGUI::BoolPropertyField(field.Name, *(bool*)fieldData);
+					break;
+				case SerializableFieldType::Int32:
+					result |= EditorGUI::IntPropertyField(field.Name, *(int32_t*)fieldData);
+					break;
+				case SerializableFieldType::Float32:
+					result |= EditorGUI::FloatPropertyField(field.Name, *(float*)fieldData);
+					break;
+				case SerializableFieldType::Float2:
+					result |= EditorGUI::Vector2PropertyField(field.Name, *(glm::vec2*)fieldData);
+					break;
+				case SerializableFieldType::Float3:
+					result |= EditorGUI::Vector3PropertyField(field.Name, *(glm::vec3*)fieldData);
 					break;
 				}
 			}

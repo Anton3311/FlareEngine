@@ -17,6 +17,7 @@ project "FlareCommon"
 	{
 		"src/",
 		INCLUDE_DIRS.spdlog,
+		INCLUDE_DIRS.glm,
 	}
 
 	filter "system:windows"

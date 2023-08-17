@@ -4,6 +4,7 @@
 #include "Flare/Core/Core.h"
 
 #include "FlareECS/ComponentId.h"
+#include "FlareECS/Entity/ComponentInitializer.h"
 
 #include <string>
 #include <vector>
@@ -23,6 +24,8 @@ namespace Flare
 		uint32_t RegistryIndex;
 		std::string Name;
 		size_t Size;
+
+		ComponentInitializer* Initializer;
 
 		std::function<void(void*)> Deleter;
 	};
