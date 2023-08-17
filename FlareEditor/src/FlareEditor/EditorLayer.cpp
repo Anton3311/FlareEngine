@@ -110,8 +110,6 @@ namespace Flare
 
 		Renderer2D::ResetStats();
 
-		ScriptingEngine::OnFrameStart(deltaTime);
-
 		if (m_Mode == EditorMode::Play && !m_PlaymodePaused)
 			Scene::GetActive()->OnUpdateRuntime();
 

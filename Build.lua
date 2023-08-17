@@ -35,7 +35,6 @@ group "Core"
 	include "FlareCommon/FlareCommon.Build.lua"
 	include "Flare/Flare.Build.lua"
 	include "FlareECS/FlareECS.Build.lua"
-	include "FlareScriptingCore/FlareScriptingCore.Build.lua"
 group ""
 
 group "Editor"

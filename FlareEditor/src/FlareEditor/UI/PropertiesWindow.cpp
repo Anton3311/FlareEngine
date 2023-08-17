@@ -45,17 +45,8 @@ namespace Flare
 					else
 					{
 						std::optional<void*> componentData = world.GetRegistry().GetEntityComponent(selectedEntity, component);
-						if (componentData.has_value())
-						{
-							if (componentInfo.Initializer)
-							{
-								EditorGUI::TypeEditor(componentInfo.Initializer->Type, (uint8_t*) componentData.value());
-							}
-
-							std::optional<const Scripting::ScriptingType*> type = ScriptingEngine::FindComponentType(component);
-							if (type.has_value())
-								EditorGUI::TypeEditor(*(type.value()), (uint8_t*) componentData.value());
-						}
+						if (componentData.has_value() && componentInfo.Initializer)
+							EditorGUI::TypeEditor(componentInfo.Initializer->Type, (uint8_t*) componentData.value());
 					}
 
 					ImGui::TreePop();

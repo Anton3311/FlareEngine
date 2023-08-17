@@ -55,11 +55,8 @@ namespace Flare
 		Ref<Scene> scene = Scene::GetActive();
 		const World& world = scene->GetECSWorld();
 		const SystemsManager& systems = world.GetSystemsManager();
-
 		const SystemData& systemData = systems.GetSystems()[systemIndex];
-		auto type = ScriptingEngine::FindSystemType(systemIndex);
-		auto instance = ScriptingEngine::FindSystemInstance(systemIndex);
-
+		
 		ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_Leaf;
 		bool opened = ImGui::TreeNodeEx((void*)systemData.Name.c_str(), flags, "System '%s'", systemData.Name.c_str());
 		if (opened)

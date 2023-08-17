@@ -26,7 +26,6 @@ project "Flare"
 		"%{wks.location}/FlarePlatform/src/",
 		"%{wks.location}/FlareECS/src/",
 		"%{wks.location}/FlareECS/include/",
-		"%{wks.location}/FlareScriptingCore/src/",
 
 		INCLUDE_DIRS.GLAD,
 		INCLUDE_DIRS.GLFW,
@@ -46,7 +45,6 @@ project "Flare"
 		"FlareECS",
 		"FlareCommon",
 		"FlarePlatform",
-		"FlareScriptingCore",
 		"yaml-cpp"
 	}
 
@@ -54,7 +52,6 @@ project "Flare"
 	{
 		"GLFW_INCLUDE_NONE",
 		"YAML_CPP_STATIC_DEFINE",
-		"FLARE_SCRIPTING_CORE_NO_MACROS",
 		"_GLFW_BUILD_DLL",
 	}
 

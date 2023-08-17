@@ -237,47 +237,6 @@ namespace Flare
 		ImGui::PopItemWidth();
 	}
 
-	bool EditorGUI::TypeEditor(const Scripting::ScriptingType& type, uint8_t* data)
-	{
-		const auto& fields = type.GetSerializationSettings().GetFields();
-		bool result = false;
-
-		if (EditorGUI::BeginPropertyGrid())
-		{
-			for (size_t i = 0; i < fields.size(); i++)
-			{
-				const Scripting::Field& field = fields[i];
-				uint8_t* fieldData = data + field.Offset;
-
-				switch (field.Type)
-				{
-				case Scripting::FieldType::Bool:
-					result |= EditorGUI::BoolPropertyField(field.Name.c_str(), *(bool*)fieldData);
-					break;
-				case Scripting::FieldType::Float:
-					result |= EditorGUI::FloatPropertyField(field.Name.c_str(), *(float*)fieldData);
-					break;
-				case Scripting::FieldType::Float2:
-					result |= EditorGUI::Vector2PropertyField(field.Name.c_str(), *(glm::vec2*)fieldData);
-					break;
-				case Scripting::FieldType::Float3:
-					result |= EditorGUI::Vector3PropertyField(field.Name.c_str(), *(glm::vec3*)fieldData);
-					break;
-				case Scripting::FieldType::Asset:
-				case Scripting::FieldType::Texture:
-					result |= EditorGUI::AssetField(field.Name.c_str(), *(AssetHandle*)fieldData);
-					break;
-				case Scripting::FieldType::Entity:
-					result |= EditorGUI::EntityField(field.Name.c_str(), Scene::GetActive()->GetECSWorld(), *(Entity*)fieldData);
-					break;
-				}
-			}
-			EditorGUI::EndPropertyGrid();
-		}
-
-		return result;
-	}
-
 	bool EditorGUI::TypeEditor(const TypeInitializer& type, uint8_t* data)
 	{
 		const auto& fields = type.SerializedFields;

@@ -51,8 +51,7 @@ namespace Flare
 	void Scene::Initialize()
 	{
 		ScriptingEngine::SetCurrentECSWorld(m_World);
-		ScriptingEngine::RegisterComponents();
-		ScriptingEngine::CreateSystems();
+		m_World.GetRegistry().RegisterComponents();
 
 		SystemsManager& systemsManager = m_World.GetSystemsManager();
 		m_2DRenderingGroup = systemsManager.CreateGroup("2D Rendering");
