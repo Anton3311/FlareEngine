@@ -26,7 +26,7 @@ namespace Flare
 	{
 	public:
 		constexpr With()
-			: QueryFilter(T::Info.Id) {}
+			: QueryFilter(COMPONENT_ID(T)) {}
 	};
 
 	template<typename T>
@@ -34,6 +34,8 @@ namespace Flare
 	{
 	public:
 		constexpr Without()
-			: QueryFilter(ComponentId(T::Info.Id.GetIndex() | (uint32_t)QueryFilterType::Without, T::Info.Id.GetGeneration())) {}
+			: QueryFilter(ComponentId(
+				COMPONENT_ID(T).GetIndex() | (uint32_t)QueryFilterType::Without, 
+				COMPONENT_ID(T).GetGeneration())) {}
 	};
 }

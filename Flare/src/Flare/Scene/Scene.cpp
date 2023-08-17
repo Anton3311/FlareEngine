@@ -17,10 +17,6 @@ namespace Flare
 		m_QuadShader = Shader::Create("assets/Shaders/QuadShader.glsl");
 		if (registerComponents)
 		{
-			m_World.RegisterComponent<TransformComponent>();
-			m_World.RegisterComponent<CameraComponent>();
-			m_World.RegisterComponent<SpriteComponent>();
-
 			Initialize();
 		}
 	}

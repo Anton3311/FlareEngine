@@ -2,9 +2,9 @@
 
 namespace Flare
 {
-	FLARE_COMPONENT_IMPL(TransformComponent);
-	FLARE_COMPONENT_IMPL(CameraComponent);
-	FLARE_COMPONENT_IMPL(SpriteComponent);
+	FLARE_IMPL_COMPONENT(TransformComponent);
+	FLARE_IMPL_COMPONENT(CameraComponent);
+	FLARE_IMPL_COMPONENT(SpriteComponent);
 
 	glm::mat4 TransformComponent::GetTransformationMatrix() const
 	{

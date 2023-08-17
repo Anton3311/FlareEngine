@@ -2,9 +2,6 @@
 
 #include "Flare/Scene/Components.h"
 
-#include "FlareScriptingCore/ScriptingType.h"
-#include "FlareScriptingCore/TypeSerializationSettings.h"
-
 #include <unordered_map>
 #include <functional>
 

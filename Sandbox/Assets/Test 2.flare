@@ -48,6 +48,8 @@ Entities:
         Position: [0, 0, 0]
         Rotation: [0, 0, 0]
         Scale: [0, 0, 0]
+      - Name: struct Sandbox::RotatingQuadData
+        RotationSpeed: 2
       - Name: struct Sandbox::SomeComponent
         a: 34
         b: -59

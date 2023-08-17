@@ -13,9 +13,6 @@
 #include <vector>
 #include <string_view>
 
-#define FLARE_COMPONENT static Flare::RegisteredComponentInfo Info;
-#define FLARE_COMPONENT_IMPL(name) Flare::RegisteredComponentInfo name::Info;
-
 namespace Flare
 {
 	class FLAREECS_API World
@@ -25,13 +22,6 @@ namespace Flare
 		~World();
 		World(const World&) = delete;
 
-		template<typename ComponentT>
-		constexpr void RegisterComponent()
-		{
-			ComponentT::Info.Id = m_Registry.RegisterComponent(typeid(ComponentT).name(), 
-				sizeof(ComponentT), [](void* component) { ((ComponentT*)component)->~ComponentT(); });
-		}
-
 		template<typename... T>
 		constexpr Entity CreateEntity()
 		{
@@ -40,7 +30,7 @@ namespace Flare
 			size_t index = 0;
 			([&]
 			{
-				ids[index++] = T::Info.Id;
+				ids[index++] = COMPONENT_ID(T);
 			} (), ...);
 
 			return m_Registry.CreateEntity(ComponentSet(ids, sizeof...(T)));
@@ -49,7 +39,7 @@ namespace Flare
 		template<typename T>
 		constexpr T& GetEntityComponent(Entity entity)
 		{
-			std::optional<void*> componentData = m_Registry.GetEntityComponent(entity, T::Info.Id);
+			std::optional<void*> componentData = m_Registry.GetEntityComponent(entity, COMPONENT_ID(T));
 			FLARE_CORE_ASSERT(componentData.has_value(), "Failed to get entity component");
 			return *(T*)componentData.value();
 		}
@@ -57,7 +47,7 @@ namespace Flare
 		template<typename T>
 		constexpr std::optional<T*> TryGetEntityComponent(Entity entity)
 		{
-			std::optional<void*> componentData = m_Registry.GetEntityComponent(entity, T::Info.Id);
+			std::optional<void*> componentData = m_Registry.GetEntityComponent(entity, COMPONENT_ID(T));
 			if (componentData.has_value())
 				return (T*)componentData.value();
 			return {};
@@ -75,19 +65,19 @@ namespace Flare
 		template<typename T>
 		constexpr bool AddEntityComponent(Entity entity, const T& data)
 		{
-			return m_Registry.AddEntityComponent(entity, T::Info.Id, &data);
+			return m_Registry.AddEntityComponent(entity, COMPONENT_ID(T), &data);
 		}
 
 		template<typename T>
 		constexpr bool RemoveEntityComponent(Entity entity)
 		{
-			return m_Registry.RemoveEntityComponent(entity, T::Info.Id);
+			return m_Registry.RemoveEntityComponent(entity, COMPONENT_ID(T));
 		}
 		
 		template<typename T>
 		constexpr bool HasComponent(Entity entity)
 		{
-			return m_Registry.HasComponent(entity, T::Info.Id);
+			return m_Registry.HasComponent(entity, COMPONENT_ID(T));
 		}
 
 		void DeleteEntity(Entity entity);
@@ -98,7 +88,7 @@ namespace Flare
 		template<typename T>
 		constexpr T& GetSingletonComponent()
 		{
-			auto result = m_Registry.GetSingleComponent(T::Info.Id);
+			auto result = m_Registry.GetSingleComponent(COMPONENT_ID(T));
 			FLARE_CORE_ASSERT(result.has_value(), "Failed to get singleton component");
 			return *(T*)result.value();
 		}
@@ -106,7 +96,7 @@ namespace Flare
 		template<typename T>
 		constexpr std::optional<T*> TryGetSingletonComponent()
 		{
-			auto result = m_Registry.GetSingleComponent(T::Info.Id);
+			auto result = m_Registry.GetSingleComponent(COMPONENT_ID(T));
 			if (result.has_value())
 				return *(T*)result.value();
 			return {};

@@ -13,11 +13,6 @@
 
 namespace Flare
 {
-	struct RegisteredComponentInfo
-	{
-		ComponentId Id;
-	};
-
 	struct ComponentInfo
 	{
 		ComponentId Id;

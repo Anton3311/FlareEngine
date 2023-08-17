@@ -1,5 +1,7 @@
 #include "Application.h"
 
+#include "Flare/Core/Time.h"
+
 #include "Flare/Renderer2D/Renderer2D.h"
 #include "Flare/Renderer/RenderCommand.h"
 
@@ -73,6 +75,8 @@ namespace Flare
 		{
 			float currentTime = Platform::GetTime();
 			float deltaTime = currentTime - m_PreviousFrameTime;
+
+			Time::UpdateDeltaTime();
 
 			for (const Ref<Layer>& layer : m_LayersStack.GetLayers())
 				layer->OnUpdate(deltaTime);

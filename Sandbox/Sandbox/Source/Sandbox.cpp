@@ -4,56 +4,62 @@
 #include <FlareECS/System/SystemInitializer.h>
 #include <FlareECS/Entity/ComponentInitializer.h>
 
+#include <Flare/Core/Time.h>
 #include <Flare/Serialization/TypeInitializer.h>
 #include <Flare/Scene/Components.h>
 
 #include <iostream>
 
-
 namespace Sandbox
 {
 	using namespace Flare;
-	class SandboxTestSystem : public Flare::System
+	struct RotatingQuadData
+	{
+		FLARE_COMPONENT;
+		float RotationSpeed;
+	};
+	FLARE_IMPL_COMPONENT(RotatingQuadData,
+		FLARE_FIELD(RotatingQuadData, RotationSpeed)
+	);
+
+	class RotatingQuadSystem : public Flare::System
 	{
 	public:
 		FLARE_SYSTEM;
-		FLARE_TYPE;
 
 		virtual void OnConfig(SystemConfig& config) override
 		{
-			m_TestQuery = World::GetCurrent().CreateQuery<With<TransformComponent>, Without<CameraComponent>>();
+			m_Query = World::GetCurrent().CreateQuery<With<TransformComponent>, Without<CameraComponent>>();
+			m_SingletonQuery = World::GetCurrent().CreateQuery<With<RotatingQuadData>>();
 		}
 
 		virtual void OnUpdate(SystemExecutionContext& context) override
 		{
-			for (EntityView chunk : m_TestQuery)
+			const RotatingQuadData& data = World::GetCurrent().GetSingletonComponent<RotatingQuadData>();
+			Entity e = World::GetCurrent().GetSingletonEntity(m_SingletonQuery);
+
+			for (EntityView chunk : m_Query)
 			{
 				auto transforms = chunk.View<TransformComponent>();
 				for (EntityViewElement entity : chunk)
 				{
-					transforms[entity].Rotation.z += 2.0f;
+					transforms[entity].Rotation.z += data.RotationSpeed * Time::GetDeltaTime();
 				}
 			}
 		}
-
-		int a;
-		float b;
 	private:
-		Query m_TestQuery;
+		Query m_Query;
+		Query m_SingletonQuery;
 	};
-	FLARE_IMPL_SYSTEM(SandboxTestSystem);
-	FLARE_IMPL_TYPE(SandboxTestSystem,
-		FLARE_FIELD(SandboxTestSystem, a),
-		FLARE_FIELD(SandboxTestSystem, b)
-	);
-
+	FLARE_IMPL_SYSTEM(RotatingQuadSystem);
+		
 	struct SomeComponent
 	{
-		FLARE_COMPONENT2;
+		FLARE_COMPONENT;
 
 		int a, b;
 	};
-	FLARE_IMPL_COMPONENT2(SomeComponent,
+	FLARE_IMPL_COMPONENT(SomeComponent,
 		FLARE_FIELD(SomeComponent, a),
 		FLARE_FIELD(SomeComponent, b),
 	);

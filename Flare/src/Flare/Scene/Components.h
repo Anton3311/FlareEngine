@@ -3,6 +3,7 @@
 #include "Flare.h"
 
 #include "FlareECS/World.h"
+#include "FlareECS/Entity/ComponentInitializer.h"
 
 #include "Flare/AssetManager/Asset.h"
 

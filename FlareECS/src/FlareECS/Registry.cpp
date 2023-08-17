@@ -472,19 +472,32 @@ namespace Flare
 		auto it = m_ComponentToArchetype.find(id);
 		const auto& archetypes = it->second;
 		
-		if (archetypes.size() == 0)
+		ArchetypeId archetype = INVALID_ARCHETYPE_ID;
+		size_t componentIndex = SIZE_MAX;
+		for (const auto& pair : archetypes)
+		{
+			if (m_Archetypes[pair.first].Storage.GetEntitiesCount() != 0)
+			{
+				if (archetype == INVALID_ARCHETYPE_ID)
+				{
+					archetype = pair.first;
+					componentIndex = pair.second;
+				}
+				else
+				{
+					FLARE_CORE_ERROR("Failed to get singleton component: World contains multiple entities with component '{0}'", GetComponentInfo(id).Name);
+					return {};
+				}
+			}
+		}
+
+		if (archetype == INVALID_ARCHETYPE_ID)
 		{
 			FLARE_CORE_ERROR("Failed to get singleton component: World doesn't contain any entities with component '{0}'", GetComponentInfo(id).Name);
 			return {};
 		}
-		else if (archetypes.size() != 1)
-		{
-			FLARE_CORE_ERROR("Failed to get singleton component: World contains multiple entities with component '{0}'", GetComponentInfo(id).Name);
-			return {};
-		}
 
-		auto archetype = *archetypes.begin();
-		const ArchetypeRecord& record = GetArchetypeRecord(archetype.first);
+		const ArchetypeRecord& record = GetArchetypeRecord(archetype);
 
 		if (record.Storage.GetEntitiesCount() != 1)
 		{
@@ -493,27 +506,36 @@ namespace Flare
 		}
 
 		uint8_t* entityData = record.Storage.GetEntityData(0);
-
-		return entityData + record.Data.ComponentOffsets[archetype.second];
+		return entityData + record.Data.ComponentOffsets[componentIndex];
 	}
 
 	std::optional<Entity> Registry::GetSingletonEntity(const Query& query) const
 	{
-		const auto& matchedArchetypes = query.GetMatchedArchetypes();
-		if (matchedArchetypes.size() == 0)
+		const auto& archetypes = query.GetMatchedArchetypes();
+
+		ArchetypeId archetype = INVALID_ARCHETYPE_ID;
+		size_t componentIndex = SIZE_MAX;
+		for (const auto& pair : archetypes)
+		{
+			if (m_Archetypes[pair].Storage.GetEntitiesCount() != 0)
+			{
+				if (archetype == INVALID_ARCHETYPE_ID)
+					archetype = pair;
+				else
+				{
+					FLARE_CORE_ERROR("Failed to get singleton entity: Multiple entities matched the query");
+					return Entity();
+				}
+			}
+		}
+
+		if (archetype == INVALID_ARCHETYPE_ID)
 		{
 			FLARE_CORE_ERROR("Failed to get singleton entity: Zero entities matched the query");
 			return Entity();
 		}
-		else if (matchedArchetypes.size() != 1)
-		{
-			FLARE_CORE_ERROR("Failed to get singleton entity: Multiple entities matched the query");
-			return Entity();
-		}
 
-		ArchetypeId archetype = *matchedArchetypes.begin();
 		const ArchetypeRecord& record = GetArchetypeRecord(archetype);
-
 		if (record.Storage.GetEntitiesCount() != 1)
 		{
 			FLARE_CORE_ERROR("Failed to get singleton entity: Multiple entities matched the query");

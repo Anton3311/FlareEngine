@@ -16,7 +16,7 @@ namespace Flare
 			size_t index = 0;
 			([&]
 				{
-					m_Ids[index] = Components::Info.Id;
+					m_Ids[index] = COMPONENT_ID(Components);
 					index++;
 				} (), ...);
 		}
