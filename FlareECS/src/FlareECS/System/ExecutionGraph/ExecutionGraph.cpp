@@ -33,7 +33,7 @@ namespace Flare
 		m_ExecutionSettings.emplace_back();
 	}
 
-	void ExecutionGraph::AddExecutionSettings(const std::vector<ExecutionOrder> settings)
+	void ExecutionGraph::AddExecutionSettings(std::vector<ExecutionOrder> settings)
 	{
 		m_ExecutionSettings.push_back(std::move(settings));
 	}
@@ -78,6 +78,8 @@ namespace Flare
 			if (m_Graph[i].Dependecies.size() == 0)
 				GenerateExecutionOrderList((uint32_t)i, unresolvedNodes);
 		}
+
+		return BuildResult::Success;
 	}
 
 	void ExecutionGraph::GenerateExecutionOrderList(uint32_t initialNode, std::unordered_set<uint32_t>& unresolvedNodes)

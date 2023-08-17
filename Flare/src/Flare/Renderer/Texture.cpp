@@ -12,6 +12,8 @@ namespace Flare
 		case RendererAPI::API::OpenGL:
 			return CreateRef<OpenGLTexture>(path, filtering);
 		}
+
+		return nullptr;
 	}
 
 	Ref<Texture> Texture::Create(uint32_t width, uint32_t height, const void* data, TextureFormat format, TextureFiltering filtering)
@@ -21,5 +23,7 @@ namespace Flare
 		case RendererAPI::API::OpenGL:
 			return CreateRef<OpenGLTexture>(width, height, data, format, filtering);
 		}
+
+		return nullptr;
 	}
 }

@@ -18,12 +18,12 @@ namespace Flare
 
 		for (size_t quadIndex = 0; quadIndex < maxQuads; quadIndex++)
 		{
-			indices[quadIndex * 6 + 0] = quadIndex * 4 + 0;
-			indices[quadIndex * 6 + 1] = quadIndex * 4 + 1;
-			indices[quadIndex * 6 + 2] = quadIndex * 4 + 2;
-			indices[quadIndex * 6 + 3] = quadIndex * 4 + 0;
-			indices[quadIndex * 6 + 4] = quadIndex * 4 + 2;
-			indices[quadIndex * 6 + 5] = quadIndex * 4 + 3;
+			indices[quadIndex * 6 + 0] = (uint32_t)(quadIndex * 4 + 0);
+			indices[quadIndex * 6 + 1] = (uint32_t)(quadIndex * 4 + 1);
+			indices[quadIndex * 6 + 2] = (uint32_t)(quadIndex * 4 + 2);
+			indices[quadIndex * 6 + 3] = (uint32_t)(quadIndex * 4 + 0);
+			indices[quadIndex * 6 + 4] = (uint32_t)(quadIndex * 4 + 2);
+			indices[quadIndex * 6 + 5] = (uint32_t)(quadIndex * 4 + 3);
 		}
 
 		s_Data->VertexArray = VertexArray::Create();
@@ -87,10 +87,10 @@ namespace Flare
 		s_Data->VertexBuffer->SetData(s_Data->Vertices.data(), sizeof(QuadVertex) * s_Data->QuadIndex * 4);
 
 		int32_t slots[MaxTexturesCount];
-		for (size_t i = 0; i < MaxTexturesCount; i++)
-			slots[i] = i;
+		for (uint32_t i = 0; i < MaxTexturesCount; i++)
+			slots[i] = (int32_t)i;
 
-		for (int32_t i = 0; i < s_Data->TextureIndex; i++)
+		for (uint32_t i = 0; i < s_Data->TextureIndex; i++)
 			s_Data->Textures[i]->Bind(i);
 
 		s_Data->CurrentShader->Bind();
@@ -135,7 +135,7 @@ namespace Flare
 		if (s_Data->TextureIndex == MaxTexturesCount)
 			Flush();
 
-		int32_t textureIndex = 0;
+		uint32_t textureIndex = 0;
 		size_t vertexIndex = s_Data->QuadIndex * 4;
 
 		if (texture != nullptr)
@@ -156,7 +156,7 @@ namespace Flare
 			vertex.Position = transform * glm::vec4(s_Data->QuadVertices[i], 1.0f);
 			vertex.Color = tint;
 			vertex.UV = s_Data->QuadUV[i] * tiling;
-			vertex.TextuteIndex = textureIndex;
+			vertex.TextuteIndex = (float)textureIndex;
 			vertex.EntityIndex = entityIndex;
 		}
 
@@ -207,7 +207,7 @@ namespace Flare
 		if (s_Data->TextureIndex == MaxTexturesCount)
 			Flush();
 
-		int32_t textureIndex = 0;
+		uint32_t textureIndex = 0;
 		size_t vertexIndex = s_Data->QuadIndex * 4;
 
 		for (textureIndex = 0; textureIndex < s_Data->TextureIndex; textureIndex++)
@@ -225,7 +225,7 @@ namespace Flare
 			vertex.Position = s_Data->QuadVertices[i] * glm::vec3(size, 0.0f) + position;
 			vertex.Color = tint;
 			vertex.UV = uv[i] * tiling;
-			vertex.TextuteIndex = textureIndex;
+			vertex.TextuteIndex = (float)textureIndex;
 			vertex.EntityIndex = INT32_MAX;
 		}
 

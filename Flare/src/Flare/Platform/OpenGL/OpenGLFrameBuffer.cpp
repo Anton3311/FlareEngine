@@ -49,7 +49,7 @@ namespace Flare
     OpenGLFrameBuffer::~OpenGLFrameBuffer()
     {
         glDeleteFramebuffers(1, &m_Id);
-        glDeleteTextures(m_ColorAttachments.size(), m_ColorAttachments.data());
+        glDeleteTextures((int32_t)m_ColorAttachments.size(), m_ColorAttachments.data());
     }
 
     void OpenGLFrameBuffer::Bind()
@@ -65,7 +65,7 @@ namespace Flare
     void OpenGLFrameBuffer::Resize(uint32_t width, uint32_t height)
     {
         glDeleteFramebuffers(1, &m_Id);
-        glDeleteTextures(m_ColorAttachments.size(), m_ColorAttachments.data());
+        glDeleteTextures((int32_t)m_ColorAttachments.size(), m_ColorAttachments.data());
 
         m_Specifications.Width = width;
         m_Specifications.Height = height;
@@ -76,7 +76,7 @@ namespace Flare
     void* OpenGLFrameBuffer::GetColorAttachmentRendererId(uint32_t attachmentIndex)
     {
         FLARE_CORE_ASSERT((size_t)attachmentIndex < m_ColorAttachments.size());
-        return reinterpret_cast<void*>(m_ColorAttachments[attachmentIndex]);
+        return (void*)(size_t)(m_ColorAttachments[attachmentIndex]);
     }
 
     void OpenGLFrameBuffer::ClearAttachment(uint32_t index, uint32_t value)
@@ -97,7 +97,7 @@ namespace Flare
     {
         glCreateFramebuffers(1, &m_Id);
         glBindFramebuffer(GL_FRAMEBUFFER, m_Id);
-        glCreateTextures(GL_TEXTURE_2D, m_ColorAttachments.size(), m_ColorAttachments.data());
+        glCreateTextures(GL_TEXTURE_2D, (int32_t)m_ColorAttachments.size(), m_ColorAttachments.data());
 
         for (size_t i = 0; i < m_ColorAttachments.size(); i++)
         {
@@ -114,12 +114,12 @@ namespace Flare
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, GL_TEXTURE_2D, m_ColorAttachments[i], 0);
+            glFramebufferTexture2D(GL_FRAMEBUFFER, (GLenum)(GL_COLOR_ATTACHMENT0 + i), GL_TEXTURE_2D, m_ColorAttachments[i], 0);
         }
 
         FLARE_CORE_ASSERT(m_ColorAttachments.size() <= 3);
         GLenum drawBuffers[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };
-        glDrawBuffers(m_ColorAttachments.size(), drawBuffers);
+        glDrawBuffers((int32_t)m_ColorAttachments.size(), drawBuffers);
 
         FLARE_CORE_ASSERT(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE, "Frame buffer is incomplete");
 

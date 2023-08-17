@@ -12,5 +12,7 @@ namespace Flare
 		case RendererAPI::API::OpenGL:
 			return CreateRef<OpenGLShader>(path);
 		}
+
+		return false;
 	}
 }

@@ -239,6 +239,8 @@ namespace Flare
 
 		entityRecord.Archetype = newArchetypeId;
 		entityRecord.BufferIndex = newEntityIndex;
+
+		return true;
 	}
 
 	bool Registry::RemoveEntityComponent(Entity entity, ComponentId componentId)
@@ -249,7 +251,7 @@ namespace Flare
 
 		auto recordIterator = FindEntity(entity);
 		if (recordIterator == m_EntityToRecord.end())
-			return {};
+			return false;
 
 		EntityRecord& entityRecord = m_EntityRecords[recordIterator->second];
 		ArchetypeRecord& archetype = m_Archetypes[entityRecord.Archetype];
@@ -338,6 +340,8 @@ namespace Flare
 
 		entityRecord.Archetype = newArchetypeId;
 		entityRecord.BufferIndex = newEntityIndex;
+
+		return true;
 	}
 
 	bool Registry::IsEntityAlive(Entity entity) const

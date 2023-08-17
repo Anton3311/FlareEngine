@@ -8,7 +8,10 @@
 namespace Flare
 {
 	ViewportWindow::ViewportWindow(std::string_view name, bool useEditorCamera)
-		: m_Name(name), m_IsFocused(false), m_IsHovered(false), m_RelativeMousePosition(glm::ivec2(0))
+		: m_Name(name), m_IsFocused(false),
+		m_IsHovered(false), 
+		m_RelativeMousePosition(glm::ivec2(0)),
+		m_ViewportOffset(glm::uvec2(0))
 	{
 		m_RenderData.IsEditorCamera = useEditorCamera;
 	}
@@ -63,7 +66,7 @@ namespace Flare
 		if (m_FrameBuffer != nullptr)
 		{
 			const FrameBufferSpecifications frameBufferSpecs = m_FrameBuffer->GetSpecifications();
-			ImVec2 imageSize = ImVec2(frameBufferSpecs.Width, frameBufferSpecs.Height);
+			ImVec2 imageSize = ImVec2((float) frameBufferSpecs.Width, (float) frameBufferSpecs.Height);
 			ImGui::Image((ImTextureID)m_FrameBuffer->GetColorAttachmentRendererId(0), windowSize, ImVec2(0, 1), ImVec2(1, 0));
 		}
 

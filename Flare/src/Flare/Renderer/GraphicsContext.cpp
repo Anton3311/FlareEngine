@@ -12,5 +12,6 @@ namespace Flare
 		case RendererAPI::API::OpenGL:
 			return CreateScope<OpenGLGraphicsContext>((GLFWwindow*) windowHandle);
 		}
+		return nullptr;
 	}
 }

@@ -18,7 +18,7 @@ namespace Flare
 		Float4,
 	};
 
-	constexpr size_t ShaderDataTypeSize(ShaderDataType dataType)
+	constexpr uint32_t ShaderDataTypeSize(ShaderDataType dataType)
 	{
 		switch (dataType)
 		{

@@ -18,7 +18,7 @@ namespace Flare
 		other.m_EntitiesPerChunk = 0;
 	}
 
-	size_t EntityStorage::AddEntity(size_t registryIndex)
+	size_t EntityStorage::AddEntity(uint32_t registryIndex)
 	{
 		FLARE_CORE_ASSERT(m_EntitySize > 0, "Entity has no size");
 
@@ -50,7 +50,7 @@ namespace Flare
 	{
 		FLARE_CORE_ASSERT(entityIndex < m_EntitiesCount);
 
-		size_t lastEntityIndex = m_EntityIndices.back();
+		uint32_t lastEntityIndex = m_EntityIndices.back();
 
 		m_EntityIndices[entityIndex] = lastEntityIndex;
 		m_EntityIndices.erase(m_EntityIndices.end() - 1);
@@ -80,10 +80,10 @@ namespace Flare
 	{
 		FLARE_CORE_ASSERT(m_EntitiesCount == 0, "Entity size can only be set if the storage is empty");
 		m_EntitySize = entitySize;
-		m_EntitiesPerChunk = floor((float) ENTITY_CHUNK_SIZE / (float) entitySize);
+		m_EntitiesPerChunk = (size_t)floor((float) ENTITY_CHUNK_SIZE / (float) entitySize);
 	}
 
-	void EntityStorage::UpdateEntityRegistryIndex(size_t entityIndex, size_t newRegistryIndex)
+	void EntityStorage::UpdateEntityRegistryIndex(size_t entityIndex, uint32_t newRegistryIndex)
 	{
 		FLARE_CORE_ASSERT(entityIndex < m_EntityIndices.size());
 		m_EntityIndices[entityIndex] = newRegistryIndex;

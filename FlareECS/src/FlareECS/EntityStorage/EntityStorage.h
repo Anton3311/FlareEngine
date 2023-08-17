@@ -14,7 +14,7 @@ namespace Flare
 		EntityStorage();
 		EntityStorage(EntityStorage&& other) noexcept;
 
-		size_t AddEntity(size_t registryIndex);
+		size_t AddEntity(uint32_t registryIndex);
 		uint8_t* GetEntityData(size_t entityIndex) const;
 
 		void RemoveEntityData(size_t entityIndex);
@@ -22,7 +22,7 @@ namespace Flare
 		size_t GetEntitiesCount() const;
 		size_t GetEntitySize() const;
 		void SetEntitySize(size_t entitySize);
-		void UpdateEntityRegistryIndex(size_t entityIndex, size_t newRegistryIndex);
+		void UpdateEntityRegistryIndex(size_t entityIndex, uint32_t newRegistryIndex);
 
 		size_t GetChunksCount() const;
 		size_t GetEntitiesCountInChunk(size_t index) const;

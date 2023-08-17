@@ -12,6 +12,8 @@ namespace Flare
 		case RendererAPI::API::OpenGL:
 			return CreateRef<OpenGLVertexBuffer>(size);
 		}
+
+		return nullptr;
 	}
 
 	Ref<VertexBuffer> VertexBuffer::Create(size_t size, const void* data)
@@ -23,6 +25,8 @@ namespace Flare
 		case RendererAPI::API::OpenGL:
 			vertexBuffer = CreateRef<OpenGLVertexBuffer>(size, data);
 			break;
+		default:
+			return nullptr;
 		}
 
 		vertexBuffer->SetData(data, size);
@@ -36,18 +40,18 @@ namespace Flare
 		case RendererAPI::API::OpenGL:
 			return CreateRef<OpenGLIndexBuffer>(count);
 		}
+
+		return nullptr;
 	}
 	
 	Ref<IndexBuffer> IndexBuffer::Create(size_t count, const void* data)
 	{
-		Ref<IndexBuffer> indexBuffer = nullptr;
-
 		switch (RendererAPI::GetAPI())
 		{
 		case RendererAPI::API::OpenGL:
-			indexBuffer = CreateRef<OpenGLIndexBuffer>(count, data);
-			break;
+			return CreateRef<OpenGLIndexBuffer>(count, data);
 		}
-		return indexBuffer;
+
+		return nullptr;
 	}
 }

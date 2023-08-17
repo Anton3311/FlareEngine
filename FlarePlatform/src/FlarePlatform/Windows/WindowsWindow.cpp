@@ -4,6 +4,8 @@
 #include "Flare/Core/KeyCode.h"
 #include "Flare/Core/MouseCode.h"
 
+#include <optional>
+
 #include <windows.h>
 #include <WinUser.h>
 #include <dwmapi.h>
@@ -15,7 +17,7 @@ namespace Flare
 {
 	const wchar_t* WindowsWindow::s_WindowPropertyName = L"FlareWin";
 
-	static KeyCode TranslateGLFWKey(int key)
+	static std::optional<KeyCode> TranslateGLFWKey(int key)
 	{
 		switch (key)
 		{
@@ -143,6 +145,8 @@ namespace Flare
 			default:
 				FLARE_CORE_ASSERT("Unhandled key translation");
 		}
+
+		return {};
 	}
 
 	LRESULT CALLBACK WindowsWindow::CustomWindowDecorationProc(HWND windowHandle, UINT message, WPARAM wParam, LPARAM lParam)
@@ -395,25 +399,28 @@ namespace Flare
 		glfwSetKeyCallback(m_Window, [](GLFWwindow* window, int key, int scancode, int action, int mods)
 		{
 			WindowData* data = (WindowData*)glfwGetWindowUserPointer(window);
-			KeyCode translatedKey = TranslateGLFWKey(key);
+			std::optional<KeyCode> translatedKey = TranslateGLFWKey(key);
+
+			if (!translatedKey.has_value())
+				return;
 
 			switch (action)
 			{
 				case GLFW_PRESS:
 				{
-					KeyPressedEvent event(translatedKey);
+					KeyPressedEvent event(translatedKey.value());
 					data->Callback(event);
 					break;
 				}
 				case GLFW_RELEASE:
 				{
-					KeyReleasedEvent event(translatedKey);
+					KeyReleasedEvent event(translatedKey.value());
 					data->Callback(event);
 					break;
 				}
 				case GLFW_REPEAT:
 				{
-					KeyPressedEvent event(translatedKey, true);
+					KeyPressedEvent event(translatedKey.value(), true);
 					data->Callback(event);
 					break;
 				}

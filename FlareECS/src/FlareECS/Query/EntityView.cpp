@@ -16,7 +16,7 @@ namespace Flare
 		return EntityViewIterator(storage, storage.GetEntitiesCount());
 	}
 
-	std::optional<Entity> EntityView::GetEntity(uint32_t index)
+	std::optional<Entity> EntityView::GetEntity(size_t index)
 	{
 		const auto& indices = m_Registry.GetArchetypeRecord(m_Archetype).Storage.GetEntityIndices();
 		FLARE_CORE_ASSERT(index < indices.size());

@@ -59,12 +59,12 @@ namespace Flare
 	void OpenGLRendererAPI::DrawIndexed(const Ref<VertexArray>& vertexArray)
 	{
 		vertexArray->Bind();
-		glDrawElements(GL_TRIANGLES, vertexArray->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, (const void*)0);
+		glDrawElements(GL_TRIANGLES, (int32_t)vertexArray->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, (const void*)0);
 	}
 
 	void OpenGLRendererAPI::DrawIndexed(const Ref<VertexArray>& vertexArray, size_t indicesCount)
 	{
 		vertexArray->Bind();
-		glDrawElements(GL_TRIANGLES, indicesCount, GL_UNSIGNED_INT, (const void*)0);
+		glDrawElements(GL_TRIANGLES, (int32_t)indicesCount, GL_UNSIGNED_INT, (const void*)0);
 	}
 }

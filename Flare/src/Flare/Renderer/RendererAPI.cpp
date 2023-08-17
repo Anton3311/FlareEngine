@@ -1,5 +1,6 @@
 #include "RendererAPI.h"
 
+#include "Flare/Core/Assert.h"
 #include "Flare/Platform/OpenGL/OpenGLRendererAPI.h"
 
 namespace Flare
@@ -12,7 +13,11 @@ namespace Flare
 		{
 		case API::OpenGL:
 			return CreateScope<OpenGLRendererAPI>();
+		default:
+			FLARE_CORE_ASSERT(false, "Unsupported rendering API");
 		}
+
+		return nullptr;
 	}
 
 	RendererAPI::API RendererAPI::GetAPI()
