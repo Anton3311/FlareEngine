@@ -13,6 +13,8 @@ namespace Flare
 	{
 		FLARE_COMPONENT;
 
+		TransformComponent();
+
 		glm::vec3 Position;
 		glm::vec3 Rotation;
 		glm::vec3 Scale;
@@ -30,6 +32,8 @@ namespace Flare
 			Perspective,
 		};
 
+		CameraComponent();
+
 		ProjectionType Projection;
 
 		float Size;
@@ -41,6 +45,8 @@ namespace Flare
 	struct FLARE_API SpriteComponent
 	{
 		FLARE_COMPONENT;
+
+		SpriteComponent();
 
 		glm::vec4 Color;
 		glm::vec2 TextureTiling;
