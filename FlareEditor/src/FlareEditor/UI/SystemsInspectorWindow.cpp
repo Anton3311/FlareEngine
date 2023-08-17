@@ -17,14 +17,13 @@ namespace Flare
 		if (s_Opened && ImGui::Begin("Systems Inspector", &s_Opened))
 		{
 			ImVec2 size = ImGui::GetContentRegionAvail();
-			ImVec2 systemsSectionSize = ImVec2(glm::max(300.0f, size.x * 0.3f), size.y);
 
 			Ref<Scene> scene = Scene::GetActive();
 			const World& world = scene->GetECSWorld();
 			const SystemsManager& systems = world.GetSystemsManager();
 
 			{
-				ImGui::BeginChild("Systems", systemsSectionSize);
+				ImGui::BeginChild("Systems");
 				for (const SystemGroup& group : systems.GetGroups())
 				{
 					ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_SpanFullWidth;
@@ -37,27 +36,6 @@ namespace Flare
 
 						ImGui::TreePop();
 					}
-				}
-
-				ImGui::EndChild();
-			}
-
-			ImGui::SameLine();
-			ImGui::GetCurrentWindow()->DC.LayoutType = ImGuiLayoutType_Horizontal;
-			ImGui::Separator();
-			ImGui::GetCurrentWindow()->DC.LayoutType = ImGuiLayoutType_Vertical;
-			ImGui::SameLine();
-
-			{
-				ImGui::BeginChild("System Editor", ImGui::GetContentRegionAvail());
-				const auto& allSystems = systems.GetSystems();
-				if (s_CurrentSystem < allSystems.size())
-				{
-					auto type = ScriptingEngine::FindSystemType(s_CurrentSystem);
-					auto inst = ScriptingEngine::FindSystemInstance(s_CurrentSystem);
-
-					if (type.has_value() && inst.has_value())
-						EditorGUI::TypeEditor(*(type.value()), (uint8_t*)inst.value());
 				}
 
 				ImGui::EndChild();

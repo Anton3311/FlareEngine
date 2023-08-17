@@ -51,5 +51,3 @@ Entities:
       - Name: struct Sandbox::SomeComponent
         a: 34
         b: -59
-Systems:
-  []
