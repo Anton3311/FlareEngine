@@ -34,7 +34,7 @@ namespace Flare
 		}
 	}
 
-	Entity Registry::CreateEntity(const ComponentSet& componentSet)
+	Entity Registry::CreateEntity(const ComponentSet& componentSet, ComponentInitializationStrategy initStrategy)
 	{
 		FLARE_CORE_ASSERT(componentSet.GetCount() > 0);
 
@@ -90,8 +90,32 @@ namespace Flare
 		m_EntityToRecord.emplace(record.Id, record.RegistryIndex);
 
 		uint8_t* entityData = archetypeRecord.Storage.GetEntityData(record.BufferIndex);
-		// Intialize entity data to 0
-		std::memset(entityData, 0, archetypeRecord.Storage.GetEntitySize());
+
+		switch (initStrategy)
+		{
+			case ComponentInitializationStrategy::Zero:
+			{
+				// Intialize entity data to 0
+				std::memset(entityData, 0, archetypeRecord.Storage.GetEntitySize());
+				break;
+			}
+			case ComponentInitializationStrategy::DefaultConstructor:
+			{
+				for (size_t i = 0; i < archetypeRecord.Data.Components.size(); i++)
+				{
+					const ComponentInfo& info = GetComponentInfo(archetypeRecord.Data.Components[i]);
+					uint8_t* componentData = entityData + archetypeRecord.Data.ComponentOffsets[i];
+
+					if (info.Initializer)
+						info.Initializer->Type.DefaultConstructor(componentData);
+					else
+						std::memset(componentData, 0, info.Size);
+				}
+
+				break;
+			}
+		}
+
 		return record.Id;
 	}
 
@@ -119,7 +143,7 @@ namespace Flare
 		m_EntityRecords.erase(m_EntityRecords.end() - 1);
 	}
 
-	bool Registry::AddEntityComponent(Entity entity, ComponentId componentId, const void* componentData)
+	bool Registry::AddEntityComponent(Entity entity, ComponentId componentId, const void* componentData, ComponentInitializationStrategy initStrategy)
 	{
 		FLARE_CORE_ASSERT(IsComponentIdValid(componentId), "Invalid component id");
 
@@ -231,7 +255,13 @@ namespace Flare
 		std::memcpy(newEntityData + sizeBefore + componentInfo.Size, oldEntityData + sizeBefore, sizeAfter);
 
 		if (componentData == nullptr)
-			std::memset(newEntityData + sizeBefore, 0, componentInfo.Size);
+		{
+			uint8_t* componentData = newEntityData + sizeBefore;
+			if (initStrategy == ComponentInitializationStrategy::Zero || !componentInfo.Initializer)
+				std::memcpy(componentData, 0, componentInfo.Size);
+			else
+				componentInfo.Initializer->Type.DefaultConstructor(componentData);
+		}
 		else
 			std::memcpy(newEntityData + sizeBefore, componentData, componentInfo.Size);
 

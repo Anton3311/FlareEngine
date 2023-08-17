@@ -23,7 +23,7 @@ namespace Flare
 		World(const World&) = delete;
 
 		template<typename... T>
-		constexpr Entity CreateEntity()
+		constexpr Entity CreateEntity(ComponentInitializationStrategy initStrategy = ComponentInitializationStrategy::DefaultConstructor)
 		{
 			ComponentId ids[sizeof...(T)];
 
@@ -33,7 +33,7 @@ namespace Flare
 				ids[index++] = COMPONENT_ID(T);
 			} (), ...);
 
-			return m_Registry.CreateEntity(ComponentSet(ids, sizeof...(T)));
+			return m_Registry.CreateEntity(ComponentSet(ids, sizeof...(T)), initStrategy);
 		}
 
 		template<typename T>

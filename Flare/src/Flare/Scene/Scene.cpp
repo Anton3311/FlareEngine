@@ -32,7 +32,9 @@ namespace Flare
 
 		for (Entity entity : scene->m_World.GetRegistry())
 		{
-			Entity newEntity = m_World.GetRegistry().CreateEntity(ComponentSet(scene->m_World.GetEntityComponents(entity)));
+			Entity newEntity = m_World.GetRegistry().CreateEntity(
+				ComponentSet(scene->m_World.GetEntityComponents(entity)),
+				ComponentInitializationStrategy::Zero);
 
 			std::optional<size_t> entitySize = scene->m_World.GetRegistry().GetEntityDataSize(entity);
 

@@ -58,6 +58,9 @@ namespace Sandbox
 		FLARE_COMPONENT;
 
 		int a, b;
+
+		SomeComponent()
+			: a(100), b(-234) {}
 	};
 	FLARE_IMPL_COMPONENT(SomeComponent,
 		FLARE_FIELD(SomeComponent, a),

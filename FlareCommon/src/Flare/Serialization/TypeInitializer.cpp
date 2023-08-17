@@ -2,8 +2,14 @@
 
 namespace Flare
 {
-    TypeInitializer::TypeInitializer(std::string_view typeName, size_t size, DestructorFunction destructor, const std::initializer_list<FieldData>& fields)
-        : TypeName(typeName), Size(size), Destructor(destructor), SerializedFields(fields)
+    TypeInitializer::TypeInitializer(std::string_view typeName, size_t size, 
+        DestructorFunction destructor,
+        DefaultConstructorFunction constructor,
+        const std::initializer_list<FieldData>& fields)
+        : TypeName(typeName), Size(size), 
+          Destructor(destructor),
+          DefaultConstructor(constructor),
+          SerializedFields(fields)
     {
         GetInitializers().push_back(this);
     }
