@@ -3,9 +3,9 @@
 #include "FlareECS/Registry.h"
 #include "FlareECS/Entity/Component.h"
 
-#include "FlareECS/ComponentGroup.h"
+#include "FlareECS/Entity/ComponentGroup.h"
 
-#include "FlareECS/QueryFilters.h"
+#include "FlareECS/Query/QueryFilters.h"
 #include "FlareECS/Query/Query.h"
 
 #include "FlareECS/System/SystemsManager.h"

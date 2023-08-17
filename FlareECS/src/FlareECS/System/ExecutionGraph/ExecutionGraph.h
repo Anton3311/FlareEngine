@@ -1,13 +1,33 @@
 #pragma once
 
-#include "FlareECS/System.h"
-
 #include <vector>
 #include <unordered_set>
 #include <stdint.h>
 
 namespace Flare
-{	
+{
+	struct ExecutionOrder
+	{
+		enum class Order : uint8_t
+		{
+			Before,
+			After,
+		};
+
+		inline static ExecutionOrder After(uint32_t index)
+		{
+			return { Order::After, index };
+		}
+
+		inline static ExecutionOrder Before(uint32_t index)
+		{
+			return { Order::Before, index };
+		}
+
+		Order ExecutionOrder;
+		uint32_t ItemIndex;
+	};
+
 	class ExecutionGraph
 	{
 	public:

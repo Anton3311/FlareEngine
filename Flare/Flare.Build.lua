@@ -25,7 +25,6 @@ project "Flare"
 		"%{wks.location}/FlareCommon/src/",
 		"%{wks.location}/FlarePlatform/src/",
 		"%{wks.location}/FlareECS/src/",
-		"%{wks.location}/FlareECS/include/",
 
 		INCLUDE_DIRS.GLAD,
 		INCLUDE_DIRS.GLFW,

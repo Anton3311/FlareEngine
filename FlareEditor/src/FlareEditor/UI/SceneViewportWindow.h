@@ -1,6 +1,6 @@
 #pragma once
 
-#include "FlareECS/EntityId.h"
+#include "FlareECS/Entity/Entity.h"
 
 #include "FlareEditor/ViewportWindow.h"
 #include "FlareEditor/EditorCamera.h"

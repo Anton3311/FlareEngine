@@ -4,6 +4,7 @@
 #include "FlareECS/Entity/Archetype.h"
 
 #include "FlareECS/Query/QueryCache.h"
+#include "FlareECS/Query/QueryData.h"
 #include "FlareECS/Query/EntityView.h"
 
 #include "FlareECS/Registry.h"

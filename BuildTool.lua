@@ -103,7 +103,6 @@ M.add_internal_module_ref = function(name)
     includedirs
     {
         string.format("%s/%s/src/", root, name),
-        string.format("%s/%s/include/", root, name),
     }
 
     filter "configurations:not Dist"

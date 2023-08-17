@@ -3,7 +3,7 @@
 #include "Flare/Core/Core.h"
 #include "Flare/Serialization/TypeInitializer.h"
 
-#include "FlareECS/ComponentId.h"
+#include "FlareECS/Entity/Component.h"
 
 #include <vector>
 

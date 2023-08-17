@@ -12,8 +12,6 @@ project "FlareECS"
     {
         "src/**.h",
         "src/**.cpp",
-
-		"include/**.h",
     }
 
     includedirs

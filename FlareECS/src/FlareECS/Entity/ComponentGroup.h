@@ -1,7 +1,7 @@
 #pragma once
 
-#include "FlareECS/ComponentId.h"
-#include "FlareECS/QueryFilters.h"
+#include "FlareECS/Entity/Component.h"
+#include "FlareECS/Query/QueryFilters.h"
 
 #include <array>
 

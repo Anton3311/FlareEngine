@@ -1,14 +1,15 @@
 #pragma once
 
 #include "FlareECS/Query/Query.h"
-#include "FlareECS/System.h"
-
 #include "FlareECS/System/ExecutionGraph/ExecutionGraph.h"
 
 #include <functional>
 
 namespace Flare
 {
+	using SystemGroupId = uint32_t;
+	using SystemId = uint32_t;
+
 	class SystemExecutionContext
 	{
 	};
