@@ -75,22 +75,23 @@ namespace Flare
 
 	bool QueryCache::CompareComponentSets(const std::vector<ComponentId>& archetypeComponents, const std::vector<ComponentId>& queryComponents)
 	{
-		// Query components must be contained by archetype components
-		if (queryComponents.size() > archetypeComponents.size())
-			return false;
-
 		size_t queryComponentIndex = 0;
-		for (size_t i = 0; i < archetypeComponents.size(); i++)
+		size_t i = 0;
+		while (i < archetypeComponents.size())
 		{
-			bool match = archetypeComponents[i].ComapreMasked(queryComponents[queryComponentIndex]);
-
+			bool match = archetypeComponents[i].CompareMasked(queryComponents[queryComponentIndex]);
 			bool without = HAS_BIT(queryComponents[queryComponentIndex].GetIndex(), (uint32_t)QueryFilterType::Without);
+
+			if (match && without)
+				return false;
+
 			if (without)
 			{
 				if (archetypeComponents[i].GetIndex() > (queryComponents[queryComponentIndex].GetIndex() & ComponentId::INDEX_MASK))
+				{
 					queryComponentIndex++;
-				else if (match)
-					return false;
+					continue;
+				}
 				else if (i == archetypeComponents.size() - 1)
 					queryComponentIndex++;
 				else
@@ -102,6 +103,8 @@ namespace Flare
 
 			if (queryComponentIndex == queryComponents.size())
 				break;
+
+			++i;
 		}
 
 		while (queryComponentIndex < queryComponents.size() && HAS_BIT(queryComponents[queryComponentIndex].GetIndex(), (uint32_t)QueryFilterType::Without))
