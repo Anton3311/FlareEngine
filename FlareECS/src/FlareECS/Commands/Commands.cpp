@@ -17,4 +17,9 @@ namespace Flare
 	{
 		world.GetRegistry().RemoveEntityComponent(m_Entity, m_Component);
 	}
+
+	void DeleteEntityCommand::Apply(World& world)
+	{
+		world.DeleteEntity(m_Entity);
+	}
 }

@@ -29,4 +29,30 @@ namespace Flare
 		Entity m_Entity;
 		ComponentId m_Component;
 	};
+
+	template<typename... T>
+	class CreateEntityCommand : public Command
+	{
+	public:
+		CreateEntityCommand(ComponentInitializationStrategy initStrategy = ComponentInitializationStrategy::DefaultConstructor)
+			: m_InitStrategy(initStrategy) {}
+
+		virtual void Apply(World& world) override
+		{
+			world.CreateEntity<T...>(m_InitStrategy);
+		}
+	private:
+		ComponentInitializationStrategy m_InitStrategy;
+	};
+
+	class FLAREECS_API DeleteEntityCommand : public Command
+	{
+	public:
+		DeleteEntityCommand(Entity entity)
+			: m_Entity(entity) {}
+
+		virtual void Apply(World& world) override;
+	private:
+		Entity m_Entity;
+	};
 }

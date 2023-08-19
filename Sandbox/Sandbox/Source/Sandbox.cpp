@@ -49,14 +49,13 @@ namespace Sandbox
 
 		virtual void OnConfig(SystemConfig& config) override
 		{
-			m_Query = World::GetCurrent().CreateQuery<With<TransformComponent>, Without<CameraComponent>>();
+			m_Query = World::GetCurrent().CreateQuery<With<TransformComponent>, With<SpriteComponent>>();
 			m_SingletonQuery = World::GetCurrent().CreateQuery<With<RotatingQuadData>>();
 		}
 
 		virtual void OnUpdate(SystemExecutionContext& context) override
 		{
 			const RotatingQuadData& data = World::GetCurrent().GetSingletonComponent<RotatingQuadData>();
-			Entity e = World::GetCurrent().GetSingletonEntity(m_SingletonQuery);
 
 			uint32_t op = 0;
 			if (InputManager::IsKeyPressed(KeyCode::D1))
@@ -88,6 +87,12 @@ namespace Sandbox
 						break;
 					case 2:
 						m_CommandBuffer.RemoveComponent<SomeComponent>(e);
+						break;
+					case 3:
+						m_CommandBuffer.CreateEntity<TransformComponent, SpriteComponent, SomeComponent>();
+						break;
+					case 4:
+						m_CommandBuffer.DeleteEntity(e);
 						break;
 					}
 

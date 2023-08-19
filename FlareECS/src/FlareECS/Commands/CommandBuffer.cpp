@@ -8,6 +8,11 @@ namespace Flare
 
 	}
 
+	void CommandBuffer::DeleteEntity(Entity entity)
+	{
+		AddCommand<DeleteEntityCommand>(DeleteEntityCommand(entity));
+	}
+
 	void CommandBuffer::Execute(World& world)
 	{
 		while (m_Storage.CanRead())

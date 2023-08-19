@@ -40,6 +40,14 @@ namespace Flare
 			AddCommand<RemoveComponentCommand>(RemoveComponentCommand(entity, COMPONENT_ID(T)));
 		}
 
+		template<typename... T>
+		void CreateEntity(ComponentInitializationStrategy initStrategy = ComponentInitializationStrategy::DefaultConstructor)
+		{
+			AddCommand<CreateEntityCommand<T...>>(CreateEntityCommand<T...>(initStrategy));
+		}
+
+		void DeleteEntity(Entity entity);
+
 		void Execute(World& world);
 	private:
 		CommandsStorage m_Storage;
