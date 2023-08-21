@@ -5,6 +5,7 @@ namespace Flare
 	World* s_CurrentWorld = nullptr;
 
 	World::World()
+		: m_SystemsManager(*this)
 	{
 		FLARE_CORE_ASSERT(s_CurrentWorld == nullptr, "Multiple ECS Worlds");
 		s_CurrentWorld = this;

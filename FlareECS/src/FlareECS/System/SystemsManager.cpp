@@ -5,6 +5,9 @@
 
 namespace Flare
 {
+	SystemsManager::SystemsManager(World& world)
+		: m_CommandBuffer(world) {}
+
 	SystemsManager::~SystemsManager()
 	{
 		for (System* system : m_ManagedSystems)
@@ -119,9 +122,13 @@ namespace Flare
 		for (size_t i : group.Graph.GetExecutionOrder())
 		{
 			SystemData& data = m_Systems[group.SystemIndices[i]];
+			data.ExecutionContext.Commands = &m_CommandBuffer;
 			
 			if (data.OnUpdate)
+			{
 				data.OnUpdate(data.ExecutionContext);
+				m_CommandBuffer.Execute();
+			}
 		}
 	}
 

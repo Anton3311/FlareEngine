@@ -3,6 +3,8 @@
 #include "FlareECS/Query/Query.h"
 #include "FlareECS/System/ExecutionGraph/ExecutionGraph.h"
 
+#include "FlareECS/Commands/CommandBuffer.h"
+
 #include <functional>
 
 namespace Flare
@@ -10,8 +12,9 @@ namespace Flare
 	using SystemGroupId = uint32_t;
 	using SystemId = uint32_t;
 
-	class SystemExecutionContext
+	struct SystemExecutionContext
 	{
+		CommandBuffer* Commands = nullptr;
 	};
 
 	using SystemEventFunction = std::function<void(SystemExecutionContext& context)>;
