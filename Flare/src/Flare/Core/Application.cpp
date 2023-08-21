@@ -6,6 +6,7 @@
 #include "Flare/Renderer/RenderCommand.h"
 
 #include "Flare/Scripting/ScriptingEngine.h"
+#include "Flare/Input/InputManager.h"
 
 #include "FlarePlatform/Event.h"
 #include "FlarePlatform/Events.h"
@@ -54,6 +55,8 @@ namespace Flare
 			}
 		});
 
+		InputManager::Initialize();
+
 		RenderCommand::Initialize();
 		Renderer2D::Initialize();
 
@@ -78,15 +81,16 @@ namespace Flare
 
 			Time::UpdateDeltaTime();
 
+			InputManager::Update();
+			m_Window->OnUpdate();
+
 			for (const Ref<Layer>& layer : m_LayersStack.GetLayers())
 				layer->OnUpdate(deltaTime);
 
 			for (const Ref<Layer>& layer : m_LayersStack.GetLayers())
 				layer->OnImGUIRender();
 
-			m_Window->OnUpdate();
 			m_GraphicsContext->SwapBuffers();
-
 			m_PreviousFrameTime = currentTime;
 		}
 

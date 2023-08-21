@@ -1,90 +1,155 @@
 #include "InputManager.h"
 
+#include <stdint.h>
+
 #include "FlarePlatform/Events.h"
 
 namespace Flare
 {
-	InputManager::Data s_Data;
+	enum class InputState : uint8_t
+	{
+		None,
+		Pressed,
+		Released,
+	};
+
+	struct InputManagerData
+	{
+		glm::ivec2 PreviousMousePosition;
+		glm::ivec2 MousePosition;
+
+		glm::ivec2 MousePositionOffset;
+
+		InputState MouseButtonState[(size_t)MouseCode::ButtonLast + 1];
+		InputState KeyState[(size_t)KeyCode::Menu + 1];
+
+		bool KeyHeld[(size_t)KeyCode::Menu + 1];
+		bool MouseButtonHeld[(size_t)MouseCode::ButtonLast + 1];
+	};
+
+	InputManagerData* s_InputData;
 
 	void InputManager::Initialize()
 	{
-		s_Data.MousePosition = glm::ivec2(0);
-		s_Data.PreviousMousePosition = glm::ivec2(0);
-		s_Data.MousePositionOffset = glm::ivec2(0);
+		s_InputData = new InputManagerData();
 
-		std::memset(s_Data.MouseButtonsState, 0, sizeof(s_Data.MouseButtonsState));
-		std::memset(s_Data.KeyState, 0, sizeof(s_Data.KeyState));
+		s_InputData->MousePosition = glm::ivec2(0);
+		s_InputData->PreviousMousePosition = glm::ivec2(0);
+		s_InputData->MousePositionOffset = glm::ivec2(0);
+
+		std::memset(s_InputData->MouseButtonState, (int32_t)InputState::None, sizeof(s_InputData->MouseButtonState));
+		std::memset(s_InputData->KeyState, (int32_t)InputState::None, sizeof(s_InputData->KeyState));
+
+		std::memset(s_InputData->KeyHeld, false, sizeof(s_InputData->KeyHeld));
+		std::memset(s_InputData->MouseButtonHeld, false, sizeof(s_InputData->MouseButtonHeld));
+	}
+
+	void InputManager::Update()
+	{
+		std::memset(s_InputData->MouseButtonState, (int32_t)InputState::None, sizeof(s_InputData->MouseButtonState));
+		std::memset(s_InputData->KeyState, (int32_t)InputState::None, sizeof(s_InputData->KeyState));
 	}
 
 	void InputManager::ProcessEvent(Event& event)
 	{
 		EventDispatcher dispatcher(event);
 
-		Data& data = s_Data;
-		dispatcher.Dispatch<KeyPressedEvent>([&data](KeyPressedEvent& e) -> bool
+		dispatcher.Dispatch<KeyPressedEvent>([](KeyPressedEvent& e) -> bool
 		{
-			data.KeyState[(size_t)e.GetKeyCode()] = true;
+			if (!s_InputData->KeyHeld[(size_t)e.GetKeyCode()])
+			{
+				s_InputData->KeyState[(size_t)e.GetKeyCode()] = InputState::Pressed;
+				s_InputData->KeyHeld[(size_t)e.GetKeyCode()] = true;
+			}
+
 			return false;
 		});
 
-		dispatcher.Dispatch<KeyReleasedEvent>([&data](KeyReleasedEvent& e) -> bool
+		dispatcher.Dispatch<KeyReleasedEvent>([](KeyReleasedEvent& e) -> bool
 		{
-			data.KeyState[(size_t)e.GetKeyCode()] = false;
+			if (s_InputData->KeyHeld[(size_t)e.GetKeyCode()])
+			{
+				s_InputData->KeyState[(size_t)e.GetKeyCode()] = InputState::Released;
+				s_InputData->KeyHeld[(size_t)e.GetKeyCode()] = false;
+			}
+
 			return false;
 		});
 
-		dispatcher.Dispatch<MouseMoveEvent>([&data](MouseMoveEvent& e) -> bool
+		dispatcher.Dispatch<MouseMoveEvent>([](MouseMoveEvent& e) -> bool
 		{
-			data.PreviousMousePosition = data.MousePosition;
-			data.MousePosition = e.GetPosition();
+			s_InputData->PreviousMousePosition = s_InputData->MousePosition;
+			s_InputData->MousePosition = e.GetPosition();
 			return false;
 		});
 
-		dispatcher.Dispatch<MouseButtonPressedEvent>([&data](MouseButtonPressedEvent& e) -> bool
+		dispatcher.Dispatch<MouseButtonPressedEvent>([](MouseButtonPressedEvent& e) -> bool
 		{
-			data.MouseButtonsState[(size_t)e.GetMouseCode()] = true;
+			s_InputData->MouseButtonState[(size_t)e.GetMouseCode()] = InputState::Pressed;
+			s_InputData->MouseButtonHeld[(size_t)e.GetMouseCode()] = true;
 			return false;
 		});
 
-		dispatcher.Dispatch<MouseButtonReleasedEvent>([&data](MouseButtonReleasedEvent& e) -> bool
+		dispatcher.Dispatch<MouseButtonReleasedEvent>([](MouseButtonReleasedEvent& e) -> bool
 		{
-			data.MouseButtonsState[(size_t)e.GetMouseCode()] = false;
+			s_InputData->MouseButtonState[(size_t)e.GetMouseCode()] = InputState::Released;
+			s_InputData->MouseButtonHeld[(size_t)e.GetMouseCode()] = false;
 			return false;
 		});
+	}
+
+	bool InputManager::IsKeyHeld(KeyCode key)
+	{
+		return s_InputData->KeyHeld[(size_t)key];
 	}
 
 	bool InputManager::IsKeyPressed(KeyCode key)
 	{
-		return s_Data.KeyState[(size_t)key];
+		return s_InputData->KeyState[(size_t)key] == InputState::Pressed;
 	}
-	
-	bool InputManager::IsMouseButtonPreseed(MouseCode button)
+
+	bool InputManager::IsKeyReleased(KeyCode key)
 	{
-		return s_Data.MouseButtonsState[(size_t)button];
+		return s_InputData->KeyState[(size_t)key] == InputState::Released;
+	}
+
+	bool InputManager::IsMouseButtonHeld(MouseCode button)
+	{
+		return s_InputData->MouseButtonHeld[(size_t)button];
+	}
+
+	bool InputManager::IsMouseButtonPressed(MouseCode button)
+	{
+		return s_InputData->MouseButtonState[(size_t)button] == InputState::Pressed;
+	}
+
+	bool InputManager::IsMouseButtonReleased(MouseCode button)
+	{
+		return s_InputData->MouseButtonState[(size_t)button] == InputState::Released;
 	}
 
 	void InputManager::SetMousePositionOffset(const glm::ivec2& offset)
 	{
-		s_Data.MousePositionOffset = offset;
+		s_InputData->MousePositionOffset = offset;
 	}
 
 	glm::ivec2 InputManager::GetMousePositionOffset()
 	{
-		return s_Data.MousePositionOffset;
+		return s_InputData->MousePositionOffset;
 	}
 
 	glm::ivec2 InputManager::GetMousePosition()
 	{
-		return s_Data.MousePosition + s_Data.MousePositionOffset;
+		return s_InputData->MousePosition + s_InputData->MousePositionOffset;
 	}
 
 	glm::ivec2 InputManager::GetRawMousePosition()
 	{
-		return s_Data.MousePosition;
+		return s_InputData->MousePosition;
 	}
 
 	glm::ivec2 InputManager::GetMouseDelta()
 	{
-		return s_Data.MousePosition - s_Data.PreviousMousePosition;
+		return s_InputData->MousePosition - s_InputData->PreviousMousePosition;
 	}
 }
