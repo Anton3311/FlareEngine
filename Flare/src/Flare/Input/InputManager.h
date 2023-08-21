@@ -26,6 +26,8 @@ namespace Flare
 		static bool IsMouseButtonPressed(MouseCode button);
 		static bool IsMouseButtonReleased(MouseCode button);
 
+		static glm::vec2 GetMouseScroll();
+
 		static void SetMousePositionOffset(const glm::ivec2& offset);
 		static glm::ivec2 GetMousePositionOffset();
 

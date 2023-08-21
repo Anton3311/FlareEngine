@@ -19,6 +19,7 @@ namespace Flare
 		glm::ivec2 MousePosition;
 
 		glm::ivec2 MousePositionOffset;
+		glm::vec2 MouseScroll;
 
 		InputState MouseButtonState[(size_t)MouseCode::ButtonLast + 1];
 		InputState KeyState[(size_t)KeyCode::Menu + 1];
@@ -82,6 +83,12 @@ namespace Flare
 			s_InputData->MousePosition = e.GetPosition();
 			return false;
 		});
+		
+		dispatcher.Dispatch<MouseScrollEvent>([](MouseScrollEvent& e) -> bool
+		{
+			s_InputData->MouseScroll = e.GetOffset();
+			return false;
+		});
 
 		dispatcher.Dispatch<MouseButtonPressedEvent>([](MouseButtonPressedEvent& e) -> bool
 		{
@@ -126,6 +133,11 @@ namespace Flare
 	bool InputManager::IsMouseButtonReleased(MouseCode button)
 	{
 		return s_InputData->MouseButtonState[(size_t)button] == InputState::Released;
+	}
+
+	glm::vec2 InputManager::GetMouseScroll()
+	{
+		return s_InputData->MouseScroll;
 	}
 
 	void InputManager::SetMousePositionOffset(const glm::ivec2& offset)
