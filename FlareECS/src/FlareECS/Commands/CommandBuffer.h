@@ -5,16 +5,16 @@
 #include "FlareECS/Commands/CommandsStorage.h"
 #include "FlareECS/Commands/Command.h"
 #include "FlareECS/Commands/Commands.h"
-#include "FlareECS/World.h"
 
 #include <type_traits>
 
 namespace Flare
 {
+	class FLAREECS_API World;
 	class FLAREECS_API CommandBuffer
 	{
 	public:
-		CommandBuffer();
+		CommandBuffer(World& world);
 
 		template<typename T>
 		void AddCommand(const T& command)
@@ -48,8 +48,9 @@ namespace Flare
 
 		void DeleteEntity(Entity entity);
 
-		void Execute(World& world);
+		void Execute();
 	private:
+		World& m_World;
 		CommandsStorage m_Storage;
 	};
 }

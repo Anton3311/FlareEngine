@@ -1,5 +1,6 @@
 #pragma once
 
+#include "FlareECS/Registry.h"
 #include "FlareECS/Entity/ComponentGroup.h"
 #include "FlareECS/Commands/Command.h"
 

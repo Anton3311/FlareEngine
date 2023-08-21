@@ -1,11 +1,10 @@
 #pragma once
 
-#include "FlareECS/World.h"
-
 #include <stdint.h>
 
 namespace Flare
 {
+	class FLAREECS_API World;
 	class Command
 	{
 	public:

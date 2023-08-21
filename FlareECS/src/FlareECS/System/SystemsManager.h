@@ -5,6 +5,8 @@
 #include "FlareECS/System/System.h"
 #include "FlareECS/System/SystemData.h"
 
+#include "FlareECS/Commands/CommandBuffer.h"
+
 #include <functional>
 #include <vector>
 #include <string>
@@ -14,10 +16,11 @@
 namespace Flare
 {
 	class System;
+	class FLAREECS_API World;
 	class FLAREECS_API SystemsManager
 	{
 	public:
-		SystemsManager() = default;
+		SystemsManager(World& world);
 		~SystemsManager();
 
 		SystemGroupId CreateGroup(std::string_view name);
@@ -41,6 +44,8 @@ namespace Flare
 
 		const std::vector<SystemData>& GetSystems() const;
 	private:
+		CommandBuffer m_CommandBuffer;
+
 		std::vector<SystemData> m_Systems;
 		std::unordered_map<std::string, SystemGroupId> m_GroupNameToId;
 		std::vector<SystemGroup> m_Groups;

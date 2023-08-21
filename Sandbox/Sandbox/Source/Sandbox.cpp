@@ -83,16 +83,16 @@ namespace Sandbox
 					switch (op)
 					{
 					case 1:
-						m_CommandBuffer.AddComponent<SomeComponent>(e);
+						context.Commands->AddComponent<SomeComponent>(e);
 						break;
 					case 2:
-						m_CommandBuffer.RemoveComponent<SomeComponent>(e);
+						context.Commands->RemoveComponent<SomeComponent>(e);
 						break;
 					case 3:
-						m_CommandBuffer.CreateEntity<TransformComponent, SpriteComponent, SomeComponent>();
+						context.Commands->CreateEntity<TransformComponent, SpriteComponent, SomeComponent>();
 						break;
 					case 4:
-						m_CommandBuffer.DeleteEntity(e);
+						context.Commands->DeleteEntity(e);
 						break;
 					}
 
@@ -101,11 +101,8 @@ namespace Sandbox
 					entityIndex++;
 				}
 			}
-
-			m_CommandBuffer.Execute(World::GetCurrent());
 		}
 	private:
-		CommandBuffer m_CommandBuffer;
 		Query m_Query;
 		Query m_SingletonQuery;
 	};

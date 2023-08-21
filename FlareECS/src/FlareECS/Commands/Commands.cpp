@@ -1,5 +1,7 @@
 #include "Commands.h"
 
+#include "FlareECS/World.h"
+
 namespace Flare
 {
 	AddComponentCommand::AddComponentCommand(Entity entity, ComponentId component, ComponentInitializationStrategy initStrategy)
