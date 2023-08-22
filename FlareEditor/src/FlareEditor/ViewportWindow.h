@@ -25,7 +25,7 @@ namespace Flare
 
 		virtual void CreateFrameBuffer();
 		virtual void OnClear();
-		virtual void OnViewportResize() {}
+		virtual void OnViewportChanged() {}
 	protected:
 		std::string m_Name;
 		Ref<FrameBuffer> m_FrameBuffer;
@@ -33,6 +33,6 @@ namespace Flare
 		bool m_IsFocused;
 		bool m_IsHovered;
 		glm::ivec2 m_RelativeMousePosition;
-		glm::uvec2 m_ViewportOffset;
+		glm::ivec2 m_ViewportOffset;
 	};
 }

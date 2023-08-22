@@ -369,6 +369,15 @@ namespace Flare
 
 		glfwSetWindowUserPointer(m_Window, (void*) &m_Data);
 
+		glfwSetWindowPosCallback(m_Window, [](GLFWwindow* window, int x, int y)
+		{
+			WindowData* data = (WindowData*)glfwGetWindowUserPointer(window);
+			if (data)
+			{
+				data->Properties.Position = glm::ivec2(x, y);
+			}
+		});
+
 		glfwSetWindowCloseCallback(m_Window, [](GLFWwindow* window)
 		{
 			WindowData* data = (WindowData*)glfwGetWindowUserPointer(window);

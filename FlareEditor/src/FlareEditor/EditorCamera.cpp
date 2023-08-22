@@ -3,11 +3,18 @@
 #include "Flare/Core/Log.h"
 #include "FlarePlatform/Events.h"
 
+#include "Flare/Renderer2D/Renderer2D.h"
+
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
 
 namespace Flare
 {
+	EditorCamera::EditorCamera()
+	{
+		RecalculateViewMatrix();
+	}
+
 	void EditorCamera::ProcessEvents(Event& event)
 	{
 		EventDispatcher dispatcher(event);
@@ -58,9 +65,11 @@ namespace Flare
 		});
 	}
 
-	void EditorCamera::RecalculateProjection(const glm::u32vec2& viewportSize)
+	void EditorCamera::OnViewportChanged(const ViewportRect& viewport)
 	{
-		float aspectRatio = (float)viewportSize.x / (float)viewportSize.y;
+		m_Viewport = viewport;
+
+		float aspectRatio = (float)viewport.Size.x / (float)viewport.Size.y;
 		m_ProjectionMatrix = glm::perspective<float>(glm::radians(m_Settings.FOV), aspectRatio, m_Settings.Near, m_Settings.Far);
 	}
 

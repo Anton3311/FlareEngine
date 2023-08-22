@@ -3,6 +3,8 @@
 #include "Flare/Renderer/RenderCommand.h"
 #include "Flare/Scene/Scene.h"
 
+#include "Flare/Core/Application.h"
+
 #include <imgui.h>
 
 namespace Flare
@@ -18,17 +20,17 @@ namespace Flare
 
 	void ViewportWindow::OnRenderViewport()
 	{
-		if (m_RenderData.ViewportSize != glm::u32vec2(0))
+		if (m_RenderData.Viewport.Size != glm::ivec2(0))
 		{
 			const FrameBufferSpecifications frameBufferSpecs = m_FrameBuffer->GetSpecifications();
 
-			if (frameBufferSpecs.Width != m_RenderData.ViewportSize.x || frameBufferSpecs.Height != m_RenderData.ViewportSize.y)
+			if (frameBufferSpecs.Width != m_RenderData.Viewport.Size.x || frameBufferSpecs.Height != m_RenderData.Viewport.Size.y)
 			{
-				m_FrameBuffer->Resize(m_RenderData.ViewportSize.x, m_RenderData.ViewportSize.y);
-				OnViewportResize();
+				m_FrameBuffer->Resize(m_RenderData.Viewport.Size.x, m_RenderData.Viewport.Size.y);
+				OnViewportChanged();
 			}
 
-			RenderCommand::SetViewport(0, 0, m_RenderData.ViewportSize.x, m_RenderData.ViewportSize.y);
+			RenderCommand::SetViewport(0, 0, m_RenderData.Viewport.Size.x, m_RenderData.Viewport.Size.y);
 
 			m_FrameBuffer->Bind();
 
@@ -51,17 +53,17 @@ namespace Flare
 
 		ImGuiIO& io = ImGui::GetIO();
 
+		Ref<Window> window = Application::GetInstance().GetWindow();
+
 		ImVec2 cursorPosition = ImGui::GetCursorPos();
 		ImVec2 windowPosition = ImGui::GetWindowPos();
 		ImVec2 windowSize = ImGui::GetContentRegionAvail();
-		glm::u32vec2 newViewportSize = glm::u32vec2((int32_t)windowSize.x, (int32_t)windowSize.y);
-		m_ViewportOffset = glm::uvec2(cursorPosition.x, cursorPosition.y);
+		glm::ivec2 newViewportSize = glm::u32vec2((int32_t)windowSize.x, (int32_t)windowSize.y);
+		m_ViewportOffset = glm::ivec2(cursorPosition.x, cursorPosition.y);
 
-		m_RelativeMousePosition = glm::uvec2(
-			(uint32_t)(io.MousePos.x - windowPosition.x),
-			(uint32_t)(io.MousePos.y - windowPosition.y)) - m_ViewportOffset;
-
-		m_RelativeMousePosition.y = m_RenderData.ViewportSize.y - m_RelativeMousePosition.y;
+		m_RelativeMousePosition = glm::ivec2(
+			(int32_t)(io.MousePos.x - windowPosition.x),
+			(int32_t)(io.MousePos.y - windowPosition.y)) - m_ViewportOffset;
 
 		if (m_FrameBuffer != nullptr)
 		{
@@ -70,16 +72,18 @@ namespace Flare
 			ImGui::Image((ImTextureID)m_FrameBuffer->GetColorAttachmentRendererId(0), windowSize, ImVec2(0, 1), ImVec2(1, 0));
 		}
 
-		if (m_RenderData.ViewportSize == glm::u32vec2(0))
+		if (m_RenderData.Viewport.Size == glm::ivec2(0))
 		{
-			m_RenderData.ViewportSize = newViewportSize;
+			m_RenderData.Viewport.Size = newViewportSize;
 			CreateFrameBuffer();
-			OnViewportResize();
+			OnViewportChanged();
 		}
-		else if (newViewportSize != m_RenderData.ViewportSize)
+		else if (newViewportSize != m_RenderData.Viewport.Size)
 		{
-			m_RenderData.ViewportSize = newViewportSize;
+			m_RenderData.Viewport.Size = newViewportSize;
 		}
+
+		m_RenderData.Viewport.Position = glm::ivec2(windowPosition.x, windowPosition.y) + m_ViewportOffset - (glm::ivec2)window->GetProperties().Position;
 	}
 
 	void ViewportWindow::EndImGui()
@@ -90,7 +94,7 @@ namespace Flare
 
 	void ViewportWindow::CreateFrameBuffer()
 	{
-		FrameBufferSpecifications specifications(m_RenderData.ViewportSize.x, m_RenderData.ViewportSize.y, {
+		FrameBufferSpecifications specifications(m_RenderData.Viewport.Size.x, m_RenderData.Viewport.Size.y, {
 			{ FrameBufferTextureFormat::RGB8, TextureWrap::Clamp, TextureFiltering::Closest },
 		});
 

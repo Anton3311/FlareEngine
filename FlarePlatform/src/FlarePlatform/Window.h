@@ -17,7 +17,7 @@ namespace Flare
 	{
 		std::string Title;
 		glm::uvec2 Size;
-		glm::uvec2 Position;
+		glm::ivec2 Position;
 		bool IsMinimized = false;
 		bool IsMaximized = false;
 		bool CustomTitleBar = false;

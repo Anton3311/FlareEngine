@@ -26,12 +26,11 @@ namespace Flare
 		}
 
 		ViewportWindow::OnRenderViewport();
-		
 	}
 
-	void SceneViewportWindow::OnViewportResize()
+	void SceneViewportWindow::OnViewportChanged()
 	{
-		m_Camera.RecalculateProjection(m_RenderData.ViewportSize);
+		m_Camera.OnViewportChanged(m_RenderData.Viewport);
 	}
 
 	void SceneViewportWindow::OnRenderImGui()
@@ -84,8 +83,8 @@ namespace Flare
 			ImVec2 windowPosition = ImGui::GetWindowPos();
 			ImGuizmo::SetRect(windowPosition.x + m_ViewportOffset.x, 
 				windowPosition.y + m_ViewportOffset.y, 
-				(float)m_RenderData.ViewportSize.x, 
-				(float) m_RenderData.ViewportSize.y);
+				(float)m_RenderData.Viewport.Size.x, 
+				(float) m_RenderData.Viewport.Size.y);
 
 			std::optional<TransformComponent*> transform = world.TryGetEntityComponent<TransformComponent>(selectedEntity);
 			if (transform.has_value())
@@ -138,7 +137,7 @@ namespace Flare
 
 	void SceneViewportWindow::CreateFrameBuffer()
 	{
-		FrameBufferSpecifications specifications(m_RenderData.ViewportSize.x, m_RenderData.ViewportSize.y, {
+		FrameBufferSpecifications specifications(m_RenderData.Viewport.Size.x, m_RenderData.Viewport.Size.y, {
 			{ FrameBufferTextureFormat::RGB8, TextureWrap::Clamp, TextureFiltering::Closest },
 			{ FrameBufferTextureFormat::RedInteger, TextureWrap::Clamp, TextureFiltering::Closest },
 		});

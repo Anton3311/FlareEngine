@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Flare/Renderer/RenderData.h"
+
 #include "FlarePlatform/Event.h"
 
 #include <glm/glm.hpp>
@@ -20,17 +22,14 @@ namespace Flare
 	class EditorCamera
 	{
 	public:
-		EditorCamera()
-		{
-			RecalculateViewMatrix();
-		}
+		EditorCamera();
 
 		EditorCameraSettings& GetSettings() { return m_Settings; }
 		const glm::mat4& GetProjectionMatrix() const { return m_ProjectionMatrix; }
 		const glm::mat4& GetViewMatrix() const { return m_ViewMatrix; }
 
 		void ProcessEvents(Event& event);
-		void RecalculateProjection(const glm::u32vec2& viewportSize);
+		void OnViewportChanged(const ViewportRect& viewport);
 
 		void Zoom(float amount);
 		void Rotate(glm::vec2 mouseInput);
@@ -41,6 +40,7 @@ namespace Flare
 		glm::vec3 TransformDirection(const glm::vec3& direction);
 	private:
 		EditorCameraSettings m_Settings;
+		ViewportRect m_Viewport;
 		glm::vec2 m_PreviousMousePosition = glm::vec2(0.0f);
 
 		bool m_IsMoved = false;

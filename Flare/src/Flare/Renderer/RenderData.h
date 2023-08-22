@@ -1,7 +1,15 @@
 #pragma once
 
+#include <glm/glm.hpp>
+
 namespace Flare
 {
+	struct ViewportRect
+	{
+		glm::ivec2 Position = glm::ivec2(0);
+		glm::ivec2 Size = glm::ivec2(0);
+	};
+
 	struct CameraData
 	{
 		glm::mat4 ProjectionMatrix = glm::mat4(1.0f);
@@ -18,7 +26,7 @@ namespace Flare
 	struct RenderData
 	{
 		CameraData Camera;
-		glm::u32vec2 ViewportSize = glm::uvec2(0);
+		ViewportRect Viewport;
 		bool IsEditorCamera = false;
 	};
 }
