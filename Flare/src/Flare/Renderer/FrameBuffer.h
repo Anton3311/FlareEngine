@@ -13,7 +13,26 @@ namespace Flare
 		RGBA8,
 
 		RedInteger,
+
+		Depth24Stencil8,
+
+		Depth = Depth24Stencil8
 	};
+
+	constexpr bool IsDepthFormat(FrameBufferTextureFormat format)
+	{
+		switch (format)
+		{
+		case FrameBufferTextureFormat::RGB8:
+		case FrameBufferTextureFormat::RGBA8:
+		case FrameBufferTextureFormat::RedInteger:
+			return false;
+		case FrameBufferTextureFormat::Depth24Stencil8:
+			return true;
+		}
+
+		return false;
+	}
 
 	struct FrameBufferAttachmentSpecifications
 	{

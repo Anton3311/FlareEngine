@@ -206,6 +206,7 @@ namespace Flare
 		FrameBufferSpecifications screenBufferSpecs(m_RenderData.Viewport.Size.x, m_RenderData.Viewport.Size.y, {
 			{ FrameBufferTextureFormat::RGB8, TextureWrap::Clamp, TextureFiltering::Closest },
 			{ FrameBufferTextureFormat::RedInteger, TextureWrap::Clamp, TextureFiltering::Closest },
+			{ FrameBufferTextureFormat::Depth, TextureWrap::Clamp, TextureFiltering::Closest },
 		});
 
 		m_FrameBuffer = FrameBuffer::Create(specifications);

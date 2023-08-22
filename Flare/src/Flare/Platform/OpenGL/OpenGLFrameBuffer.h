@@ -25,10 +25,13 @@ namespace Flare
 		virtual const FrameBufferSpecifications& GetSpecifications() const override { return m_Specifications; }
 	private:
 		void Create();
+		void AttachColorTexture(uint32_t index);
+		void AttachDethTexture(uint32_t index);
 	private:
 		FrameBufferSpecifications m_Specifications;
 
 		uint32_t m_Id;
 		std::vector<uint32_t> m_ColorAttachments;
+		uint32_t m_DepthAttachment;
 	};
 }

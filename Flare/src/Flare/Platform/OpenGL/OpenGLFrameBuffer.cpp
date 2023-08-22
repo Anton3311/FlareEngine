@@ -143,20 +143,10 @@ namespace Flare
 
         for (size_t i = 0; i < m_ColorAttachments.size(); i++)
         {
-            glBindTexture(GL_TEXTURE_2D, m_ColorAttachments[i]);
-            glTexImage2D(GL_TEXTURE_2D, 0, 
-                FrameBufferTextureForamtToOpenGLInternalFormat(m_Specifications.Attachments[i].Format),
-                m_Specifications.Width, m_Specifications.Height, 0,
-                FrameBufferTextureFormatToOpenGLFormat(m_Specifications.Attachments[i].Format),
-                GL_UNSIGNED_BYTE, nullptr);
-
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-            glFramebufferTexture2D(GL_FRAMEBUFFER, (GLenum)(GL_COLOR_ATTACHMENT0 + i), GL_TEXTURE_2D, m_ColorAttachments[i], 0);
+            if (IsDepthFormat(m_Specifications.Attachments[i].Format))
+                AttachDethTexture(i);
+            else
+                AttachColorTexture(i);
         }
 
         FLARE_CORE_ASSERT(m_ColorAttachments.size() <= 3);
@@ -167,5 +157,47 @@ namespace Flare
 
         glBindTexture(GL_TEXTURE_2D, 0);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    }
+
+    void OpenGLFrameBuffer::AttachColorTexture(uint32_t index)
+    {
+        glBindTexture(GL_TEXTURE_2D, m_ColorAttachments[index]);
+        glTexImage2D(GL_TEXTURE_2D, 0,
+            FrameBufferTextureForamtToOpenGLInternalFormat(m_Specifications.Attachments[index].Format),
+            m_Specifications.Width, m_Specifications.Height, 0,
+            FrameBufferTextureFormatToOpenGLFormat(m_Specifications.Attachments[index].Format),
+            GL_UNSIGNED_BYTE, nullptr);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+        glFramebufferTexture2D(GL_FRAMEBUFFER, (GLenum)(GL_COLOR_ATTACHMENT0 + index), GL_TEXTURE_2D, m_ColorAttachments[index], 0);
+    }
+
+    void OpenGLFrameBuffer::AttachDethTexture(uint32_t index)
+    {
+        glBindTexture(GL_TEXTURE_2D, m_ColorAttachments[index]);
+
+        uint32_t format = 0;
+        switch (m_Specifications.Attachments[index].Format)
+        {
+        case FrameBufferTextureFormat::Depth24Stencil8:
+            format = GL_DEPTH24_STENCIL8;
+            break;
+        default:
+            FLARE_CORE_ASSERT(false, "Attachment format is not depth format");
+        }
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+        glTexStorage2D(GL_TEXTURE_2D, 1, format, m_Specifications.Width, m_Specifications.Height);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, m_ColorAttachments[index], 0);
     }
 }
