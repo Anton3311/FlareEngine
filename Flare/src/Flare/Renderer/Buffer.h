@@ -95,7 +95,7 @@ namespace Flare
 		std::vector<BufferLayoutElement> m_Elements;
 	};
 
-	class VertexBuffer
+	class FLARE_API VertexBuffer
 	{
 	public:
 		virtual const BufferLayout& GetLayout() const = 0;
@@ -108,7 +108,7 @@ namespace Flare
 		static Ref<VertexBuffer> Create(size_t size, const void* data);
 	};
 
-	class IndexBuffer
+	class FLARE_API IndexBuffer
 	{
 	public:
 		virtual void Bind() = 0;

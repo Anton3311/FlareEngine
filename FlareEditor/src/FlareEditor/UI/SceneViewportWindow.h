@@ -1,5 +1,8 @@
 #pragma once
 
+#include "Flare/Renderer/Shader.h"
+#include "Flare/Renderer/VertexArray.h"
+
 #include "FlareECS/Entity/Entity.h"
 
 #include "FlareEditor/ViewportWindow.h"
@@ -10,8 +13,7 @@ namespace Flare
 	class SceneViewportWindow : public ViewportWindow
 	{
 	public:
-		SceneViewportWindow(EditorCamera& camera)
-			: ViewportWindow("Scene Viewport", true), m_Camera(camera) {}
+		SceneViewportWindow(EditorCamera& camera);
 
 		virtual void OnRenderViewport() override;
 		virtual void OnViewportChanged() override;
@@ -23,5 +25,8 @@ namespace Flare
 		Entity GetEntityUnderCursor() const;
 	private:
 		EditorCamera& m_Camera;
+		Ref<Shader> m_SelectionOutlineShader;
+		Ref<VertexArray> m_FullscreenQuad;
+		Ref<FrameBuffer> m_ScreenBuffer;
 	};
 }

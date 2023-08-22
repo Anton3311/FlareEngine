@@ -8,6 +8,7 @@
 #include "Flare/Input/InputManager.h"
 
 #include "FlareEditor/AssetManager/EditorAssetManager.h"
+#include "FlareEditor/ImGui/ImGuiLayer.h"
 #include "FlareEditor/EditorLayer.h"
 
 #include <imgui.h>
@@ -16,6 +17,34 @@
 
 namespace Flare
 {
+	SceneViewportWindow::SceneViewportWindow(EditorCamera& camera)
+		: ViewportWindow("Scene Viewport", true), m_Camera(camera)
+	{
+		m_SelectionOutlineShader = Shader::Create("assets/Shaders/SelectionOutline.glsl");
+		
+		float vertices[] = {
+			-1, -1,
+			-1,  1,
+			 1,  1,
+			 1, -1,
+		};
+
+		uint32_t indices[] = {
+			0, 1, 2,
+			2, 0, 3,
+		};
+
+		Ref<VertexBuffer> vertexBuffer = VertexBuffer::Create(sizeof(vertices), (const void*)vertices);
+		vertexBuffer->SetLayout({
+			BufferLayoutElement("i_Position", ShaderDataType::Float2),
+		});
+
+		m_FullscreenQuad = VertexArray::Create();
+		m_FullscreenQuad->SetIndexBuffer(IndexBuffer::Create(6, (const void*)indices));
+		m_FullscreenQuad->AddVertexBuffer(vertexBuffer);
+		m_FullscreenQuad->Unbind();
+	}
+
 	void SceneViewportWindow::OnRenderViewport()
 	{
 		if (m_RenderData.IsEditorCamera)
@@ -25,11 +54,44 @@ namespace Flare
 			m_RenderData.Camera.CalculateViewProjection();
 		}
 
-		ViewportWindow::OnRenderViewport();
+		PrepareViewport();
+
+		if (m_RenderData.Viewport.Size != glm::ivec2(0))
+		{
+			m_ScreenBuffer->Bind();
+			OnClear();
+
+			Scene::GetActive()->OnBeforeRender(m_RenderData);
+			Scene::GetActive()->OnRender(m_RenderData);
+
+			m_ScreenBuffer->Unbind();
+
+			m_FrameBuffer->Blit(m_ScreenBuffer, 0, 0);
+
+			Entity selectedEntity = EditorLayer::GetInstance().GetSelectedEntity();
+			if (selectedEntity != Entity())
+			{
+				m_FrameBuffer->Bind();
+				m_ScreenBuffer->BindAttachmentTexture(1);
+
+				ImVec4 primaryColor = ImGuiTheme::Primary;
+				glm::vec4 selectionColor = glm::vec4(primaryColor.x, primaryColor.y, primaryColor.z, 1.0f);
+
+				m_SelectionOutlineShader->Bind();
+				m_SelectionOutlineShader->SetInt("u_SelectedId", (int32_t)selectedEntity.GetIndex());
+				m_SelectionOutlineShader->SetInt("u_IdsTexture", 0);
+				m_SelectionOutlineShader->SetFloat4("u_OutlineColor", selectionColor);
+				m_SelectionOutlineShader->SetFloat2("u_OutlineThickness", glm::vec2(4.0f) / (glm::vec2)m_RenderData.Viewport.Size / 2.0f);
+
+				RenderCommand::DrawIndexed(m_FullscreenQuad);
+				m_FrameBuffer->Unbind();
+			}
+		}
 	}
 
 	void SceneViewportWindow::OnViewportChanged()
 	{
+		m_ScreenBuffer->Resize(m_RenderData.Viewport.Size.x, m_RenderData.Viewport.Size.y);
 		m_Camera.OnViewportChanged(m_RenderData.Viewport);
 	}
 
@@ -139,28 +201,33 @@ namespace Flare
 	{
 		FrameBufferSpecifications specifications(m_RenderData.Viewport.Size.x, m_RenderData.Viewport.Size.y, {
 			{ FrameBufferTextureFormat::RGB8, TextureWrap::Clamp, TextureFiltering::Closest },
+		});
+
+		FrameBufferSpecifications screenBufferSpecs(m_RenderData.Viewport.Size.x, m_RenderData.Viewport.Size.y, {
+			{ FrameBufferTextureFormat::RGB8, TextureWrap::Clamp, TextureFiltering::Closest },
 			{ FrameBufferTextureFormat::RedInteger, TextureWrap::Clamp, TextureFiltering::Closest },
 		});
 
 		m_FrameBuffer = FrameBuffer::Create(specifications);
+		m_ScreenBuffer = FrameBuffer::Create(screenBufferSpecs);
 	}
 
 	void SceneViewportWindow::OnClear()
 	{
 		RenderCommand::Clear();
-		m_FrameBuffer->ClearAttachment(1, INT32_MAX);
+		m_ScreenBuffer->ClearAttachment(1, INT32_MAX);
 	}
 
 	Entity SceneViewportWindow::GetEntityUnderCursor() const
 	{
-		m_FrameBuffer->Bind();
+		m_ScreenBuffer->Bind();
 
 		int32_t entityIndex;
-		m_FrameBuffer->ReadPixel(1, m_RelativeMousePosition.x, m_RelativeMousePosition.y, &entityIndex);
+		m_ScreenBuffer->ReadPixel(1, m_RelativeMousePosition.x, m_RelativeMousePosition.y, &entityIndex);
 
 		std::optional<Entity> entity = Scene::GetActive()->GetECSWorld().GetRegistry().FindEntityByIndex(entityIndex);
 
-		m_FrameBuffer->Unbind();
+		m_ScreenBuffer->Unbind();
 
 		return entity.value_or(Entity());
 	}

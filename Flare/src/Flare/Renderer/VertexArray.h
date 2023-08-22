@@ -6,7 +6,7 @@
 
 namespace Flare
 {
-	class VertexArray
+	class FLARE_API VertexArray
 	{
 	public:
 		using VertexBuffers = std::vector<Ref<VertexBuffer>>;

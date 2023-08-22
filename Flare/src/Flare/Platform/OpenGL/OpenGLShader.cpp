@@ -46,6 +46,30 @@ namespace Flare
         glUniform1i(location, value);
     }
 
+    void OpenGLShader::SetFloat(const std::string& name, float value)
+    {
+        int32_t location = glGetUniformLocation(m_Id, name.c_str());
+        glUniform1f(location, value);
+    }
+
+    void OpenGLShader::SetFloat2(const std::string& name, glm::vec2 value)
+    {
+        int32_t location = glGetUniformLocation(m_Id, name.c_str());
+        glUniform2f(location, value.x, value.y);
+    }
+
+    void OpenGLShader::SetFloat3(const std::string& name, const glm::vec3& value)
+    {
+        int32_t location = glGetUniformLocation(m_Id, name.c_str());
+        glUniform3f(location, value.x, value.y, value.z);
+    }
+
+    void OpenGLShader::SetFloat4(const std::string& name, const glm::vec4& value)
+    {
+        int32_t location = glGetUniformLocation(m_Id, name.c_str());
+        glUniform4f(location, value.x, value.y, value.z, value.w);
+    }
+
     void OpenGLShader::SetIntArray(const std::string& name, const int* values, uint32_t count)
     {
         int32_t location = glGetUniformLocation(m_Id, name.c_str());

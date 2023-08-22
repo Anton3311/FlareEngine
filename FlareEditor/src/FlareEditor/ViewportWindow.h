@@ -18,6 +18,8 @@ namespace Flare
 		virtual void OnRenderImGui();
 		virtual void OnRenderViewport();
 
+		void PrepareViewport();
+
 		void SetViewProjection(const glm::mat4& projection) { m_RenderData.Camera.ProjectionMatrix = projection; }
 	protected:
 		void BeginImGui();

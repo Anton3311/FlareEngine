@@ -20,6 +20,23 @@ namespace Flare
 
 	void ViewportWindow::OnRenderViewport()
 	{
+		PrepareViewport();
+
+		if (m_RenderData.Viewport.Size != glm::ivec2(0))
+		{
+			m_FrameBuffer->Bind();
+
+			OnClear();
+
+			Scene::GetActive()->OnBeforeRender(m_RenderData);
+			Scene::GetActive()->OnRender(m_RenderData);
+
+			m_FrameBuffer->Unbind();
+		}
+	}
+
+	void ViewportWindow::PrepareViewport()
+	{
 		if (m_RenderData.Viewport.Size != glm::ivec2(0))
 		{
 			const FrameBufferSpecifications frameBufferSpecs = m_FrameBuffer->GetSpecifications();
@@ -31,15 +48,6 @@ namespace Flare
 			}
 
 			RenderCommand::SetViewport(0, 0, m_RenderData.Viewport.Size.x, m_RenderData.Viewport.Size.y);
-
-			m_FrameBuffer->Bind();
-
-			OnClear();
-
-			Scene::GetActive()->OnBeforeRender(m_RenderData);
-			Scene::GetActive()->OnRender(m_RenderData);
-
-			m_FrameBuffer->Unbind();
 		}
 	}
 

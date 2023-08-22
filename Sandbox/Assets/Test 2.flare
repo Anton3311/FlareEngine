@@ -23,11 +23,11 @@ Entities:
       - Name: Transform
         Position: [-4.0128355, 0.29252696, -0.5]
         Rotation: [0, -0, 45.0000038]
-        Scale: [1, 1, 1]
+        Scale: [4, 1, 1]
       - Name: Sprite
         Color: [1, 1, 1, 1]
         Texture: 5193090395626261884
-        TextureTiling: [1, 1]
+        TextureTiling: [4, 1]
   - Components:
       - Name: Transform
         Position: [0, 0, 0]
@@ -53,3 +53,12 @@ Entities:
       - Name: struct Sandbox::SomeComponent
         a: 34
         b: -59
+  - Components:
+      - Name: Transform
+        Position: [0, 0, 0]
+        Rotation: [0, 0, 0]
+        Scale: [1.70000005, 1.70000005, 1]
+      - Name: Sprite
+        Color: [0.142348766, 0.142348766, 0.142348766, 1]
+        Texture: 0
+        TextureTiling: [1, 1]

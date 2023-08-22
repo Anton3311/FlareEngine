@@ -79,6 +79,11 @@ namespace Flare
         return (void*)(size_t)(m_ColorAttachments[attachmentIndex]);
     }
 
+    uint32_t OpenGLFrameBuffer::GetAttachmentsCount()
+    {
+        return (uint32_t)m_ColorAttachments.size();
+    }
+
     void OpenGLFrameBuffer::ClearAttachment(uint32_t index, uint32_t value)
     {
         FLARE_CORE_ASSERT(index < m_ColorAttachments.size());
@@ -91,6 +96,43 @@ namespace Flare
         glReadBuffer(GL_COLOR_ATTACHMENT0 + attachmentIndex);
 
         glReadPixels(x, y, 1, 1, FrameBufferTextureFormatToOpenGLFormat(m_Specifications.Attachments[attachmentIndex].Format), GL_INT, pixelOutput);
+    }
+
+    void OpenGLFrameBuffer::Blit(const Ref<FrameBuffer>& source, uint32_t destinationAttachment, uint32_t sourceAttachment)
+    {
+        Ref<OpenGLFrameBuffer> sourceFrameBuffer = As<OpenGLFrameBuffer>(source);
+        FLARE_CORE_ASSERT(destinationAttachment < (uint32_t)m_ColorAttachments.size());
+        FLARE_CORE_ASSERT(sourceAttachment < (uint32_t)sourceFrameBuffer->m_ColorAttachments.size());
+        
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, sourceFrameBuffer->m_Id);
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_Id);
+
+        glDrawBuffer(GL_COLOR_ATTACHMENT0 + destinationAttachment);
+        glReadBuffer(GL_COLOR_ATTACHMENT0 + sourceAttachment);
+
+        glBlitFramebuffer(0, 0, 
+            m_Specifications.Width, 
+            m_Specifications.Height, 
+            0, 0, 
+            sourceFrameBuffer->m_Specifications.Width,
+            sourceFrameBuffer->m_Specifications.Height,
+            GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
+        GLenum drawBuffers[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };
+        glDrawBuffers((int32_t)m_ColorAttachments.size(), drawBuffers);
+
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+
+        auto t = glGetError();
+        if (t != GL_NO_ERROR)
+            FLARE_CORE_INFO("{0}", t);
+    }
+
+    void OpenGLFrameBuffer::BindAttachmentTexture(uint32_t attachment, uint32_t slot)
+    {
+        FLARE_CORE_ASSERT(attachment < (uint32_t)m_ColorAttachments.size());
+        glBindTextureUnit(slot, m_ColorAttachments[attachment]);
     }
 
     void OpenGLFrameBuffer::Create()
