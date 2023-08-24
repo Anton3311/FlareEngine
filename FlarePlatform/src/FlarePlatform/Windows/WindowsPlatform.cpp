@@ -19,6 +19,18 @@
 
 namespace Flare
 {
+	static void LogError()
+	{
+		DWORD errorCode = GetLastError();
+		LPSTR messageBuffer = nullptr;
+
+		size_t size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+			NULL, errorCode, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 0, NULL);
+
+		std::string message(messageBuffer, size);
+		FLARE_CORE_ERROR("Error {0}: {1}", errorCode, message);
+	}
+
 	float Platform::GetTime()
 	{
 		return (float)glfwGetTime();
@@ -30,14 +42,8 @@ namespace Flare
 		DWORD errorCode = GetLastError();
 		if (library == NULL)
 		{
-			LPSTR messageBuffer = nullptr;
-
-			size_t size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-				NULL, errorCode, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 0, NULL);
-
-			std::string message(messageBuffer, size);
-			FLARE_CORE_ERROR("Failed to load scripting module: {0}\nError {1}: {2}", path.generic_string(), errorCode, message);
-
+			FLARE_CORE_ERROR("Failed to load scripting module: {0}", path.generic_string());
+			LogError();
 			return nullptr;
 		}
 		return library;
@@ -57,17 +63,48 @@ namespace Flare
 		DWORD errorCode = GetLastError();
 		if (function == NULL)
 		{
-			LPSTR messageBuffer = nullptr;
-
-			size_t size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-				NULL, errorCode, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 0, NULL);
-
-			std::string message(messageBuffer, size);
-			FLARE_CORE_ERROR("Failed to load function {0}\nError {1}: {2}", name, errorCode, message);
+			FLARE_CORE_ERROR("Failed to load function {0}", name);
+			LogError();
 			return nullptr;
 		}
 		else
 			return function;
+	}
+
+#undef CreateProcess;
+
+	int32_t Platform::CreateProcess(std::filesystem::path& path, const ProcessCreationSettings& settings)
+	{
+		STARTUPINFO startUpInfo;
+		PROCESS_INFORMATION processInfo;
+		ZeroMemory(&startUpInfo, sizeof(startUpInfo));
+		ZeroMemory(&processInfo, sizeof(processInfo));
+
+		startUpInfo.cb = sizeof(startUpInfo);
+
+		std::wstring arguments = path.wstring() + L" " + settings.Arguments;
+		bool result = CreateProcessW(path.c_str(), (LPWSTR)arguments.c_str(), nullptr, nullptr, false, 0, nullptr, nullptr, &startUpInfo, &processInfo);
+		if (!result)
+		{
+			FLARE_CORE_ERROR("Failed to create process: {0}", path.generic_string());
+			LogError();
+			return -1;
+		}
+		
+		if (WaitForSingleObject(processInfo.hProcess, settings.MillisecondsTimeout) == WAIT_FAILED)
+		{
+			FLARE_CORE_ERROR("Failed to wait for child process: {0}", path.generic_string());
+			LogError();
+			return -1;
+		}
+
+		DWORD exitCode;
+		GetExitCodeProcess(processInfo.hProcess, &exitCode);
+
+		CloseHandle(processInfo.hProcess);
+		CloseHandle(processInfo.hThread);
+
+		return (int32_t)exitCode;
 	}
 
 	std::optional<std::filesystem::path> Platform::ShowOpenFileDialog(const wchar_t* filter, const Ref<Window>& window)
