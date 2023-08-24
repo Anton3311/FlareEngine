@@ -175,7 +175,7 @@ namespace Flare
 
 				ImGuizmo::MODE mode = ImGuizmo::WORLD;
 
-				bool snappingEnabled = InputManager::IsKeyPressed(KeyCode::LeftControl) || InputManager::IsKeyPressed(KeyCode::RightControl);
+				bool snappingEnabled = InputManager::IsKeyHeld(KeyCode::LeftControl) || InputManager::IsKeyHeld(KeyCode::RightControl);
 
 				if (ImGuizmo::Manipulate(
 					glm::value_ptr(m_Camera.GetViewMatrix()),
