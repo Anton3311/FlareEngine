@@ -23,6 +23,8 @@
 #include "FlareEditor/UI/SystemsInspectorWindow.h"
 #include "FlareEditor/UI/ProjectSettingsWindow.h"
 
+#include "FlareEditor/Scripting/BuildSystem/BuildSystem.h"
+
 #include <imgui.h>
 #include <imgui_internal.h>
 
@@ -340,6 +342,32 @@ namespace Flare
 
 		Scene::SetActive(editorScene);
 		m_Mode = EditorMode::Edit;
+	}
+
+	void EditorLayer::ReloadScriptingModules()
+	{
+		FLARE_CORE_ASSERT(m_Mode == EditorMode::Edit);
+
+		Ref<Scene> active = Scene::GetActive();
+
+		Ref<EditorAssetManager> assetManager = As<EditorAssetManager>(AssetManager::GetInstance());
+		std::filesystem::path activeScenePath = assetManager->GetAssetMetadata(active->Handle)->Path;
+		SaveActiveScene();
+
+		Scene::SetActive(nullptr);
+		assetManager->UnloadAsset(active->Handle);
+		active = nullptr;
+
+		ScriptingEngine::UnloadAllModules();
+
+		BuildSystem::BuildModules();
+
+		ScriptingEngine::LoadModules();
+		active = CreateRef<Scene>();
+		SceneSerializer::Deserialize(active, activeScenePath);
+
+		active->InitializeRuntime();
+		Scene::SetActive(active);
 	}
 
 	EditorLayer& EditorLayer::GetInstance()

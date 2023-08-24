@@ -49,7 +49,7 @@ namespace Flare
 #ifdef FLARE_PLATFORM_WINDOWS
 		platformName = "windows";
 #endif
-		
+
 		for (const std::string& moduleName : Project::GetActive()->ScriptingModules)
 		{
 			std::filesystem::path libraryPath = Project::GetActive()->Location
@@ -59,7 +59,11 @@ namespace Flare
 					moduleName);
 
 			void* library = Platform::LoadSharedLibrary(libraryPath);
-			FLARE_CORE_ASSERT(library);
+			if (!library)
+			{
+				FLARE_CORE_ERROR("Failed to load module '{0}'", moduleName);
+				continue;
+			}
 
 			s_Data.LoadedSharedLibraries.push_back(library);
 		}

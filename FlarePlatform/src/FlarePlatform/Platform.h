@@ -15,6 +15,7 @@ namespace Flare
 	{
 		uint32_t MillisecondsTimeout = 0xffffffff;
 		std::wstring Arguments;
+		std::filesystem::path WorkingDirectory = std::filesystem::current_path();
 	};
 
 	class FLAREPLATFORM_API Platform

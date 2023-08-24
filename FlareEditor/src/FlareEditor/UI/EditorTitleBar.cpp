@@ -83,6 +83,16 @@ namespace Flare
 			EditorGUI::EndMenu();
 		}
 
+		if (EditorGUI::BeginMenu("Scripting"))
+		{
+			if (ImGui::MenuItem("Reload"))
+			{
+				EditorLayer::GetInstance().ReloadScriptingModules();
+			}
+
+			EditorGUI::EndMenu();
+		}
+
 		if (EditorGUI::BeginMenu("Window"))
 		{
 			if (ImGui::MenuItem("Systems Inspector"))

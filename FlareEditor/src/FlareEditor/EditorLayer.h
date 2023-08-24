@@ -52,6 +52,8 @@ namespace Flare
 		void EnterPlayMode();
 		void ExitPlayMode();
 
+		void ReloadScriptingModules();
+
 		inline bool IsPlaymodePaused() const { return m_PlaymodePaused; }
 		inline void SetPlaymodePaused(bool value) { m_PlaymodePaused = value; }
 
