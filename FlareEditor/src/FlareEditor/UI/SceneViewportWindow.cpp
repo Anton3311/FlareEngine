@@ -133,9 +133,6 @@ namespace Flare
 		}
 
 		ImGuiIO& io = ImGui::GetIO();
-		if (io.MouseClicked[ImGuiMouseButton_Left] && m_FrameBuffer != nullptr && m_IsHovered && m_RelativeMousePosition.x >= 0 && m_RelativeMousePosition.y >= 0)
-			EditorLayer::GetInstance().SetSelectedEntity(GetEntityUnderCursor());
-
 		Entity selectedEntity = EditorLayer::GetInstance().GetSelectedEntity();
 		if (world.IsEntityAlive(selectedEntity) && EditorLayer::GetInstance().GetGuizmoMode() != GuizmoMode::None)
 		{
@@ -191,7 +188,15 @@ namespace Flare
 
 					transform.value()->Rotation = glm::degrees(transform.value()->Rotation);
 				}
+
 			}
+
+		}
+
+		if (!ImGuizmo::IsUsingAny())
+		{
+			if (io.MouseClicked[ImGuiMouseButton_Left] && m_FrameBuffer != nullptr && m_IsHovered && m_RelativeMousePosition.x >= 0 && m_RelativeMousePosition.y >= 0)
+				EditorLayer::GetInstance().SetSelectedEntity(GetEntityUnderCursor());
 		}
 
 		EndImGui();
