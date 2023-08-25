@@ -89,7 +89,7 @@ namespace Flare
 #undef GET_FIELD_TYPE
 
 #define FLARE_GET_FIELD_TYPE(typeName, fieldName) decltype(((typeName*)nullptr)->fieldName)
-#define FLARE_FIELD(typeName, fieldName) FieldData{#fieldName, GetFieldType<FLARE_GET_FIELD_TYPE(typeName, fieldName)>(), offsetof(typeName, fieldName)}
+#define FLARE_FIELD(typeName, fieldName) Flare::FieldData{#fieldName, Flare::GetFieldType<FLARE_GET_FIELD_TYPE(typeName, fieldName)>(), offsetof(typeName, fieldName)}
 
     class FLARECOMMON_API TypeInitializer
     {

@@ -54,6 +54,9 @@ namespace Flare
 		Project::OnProjectOpen.Bind(FLARE_BIND_EVENT_CALLBACK(OnOpenProject));
 		Project::OnUnloadActiveProject.Bind([this]()
 		{
+			if (Scene::GetActive() == nullptr)
+				return;
+
 			Ref<EditorAssetManager> assetManager = As<EditorAssetManager>(AssetManager::GetInstance());
 
 			assetManager->UnloadAsset(Scene::GetActive()->Handle);

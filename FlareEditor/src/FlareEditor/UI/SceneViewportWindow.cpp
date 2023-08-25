@@ -47,6 +47,9 @@ namespace Flare
 
 	void SceneViewportWindow::OnRenderViewport()
 	{
+		if (Scene::GetActive() == nullptr)
+			return;
+
 		if (m_RenderData.IsEditorCamera)
 		{
 			m_RenderData.Camera.ViewMatrix = m_Camera.GetViewMatrix();
@@ -98,6 +101,12 @@ namespace Flare
 	void SceneViewportWindow::OnRenderImGui()
 	{
 		BeginImGui();
+
+		if (Scene::GetActive() == nullptr)
+		{
+			EndImGui();
+			return;
+		}
 
 		World& world = Scene::GetActive()->GetECSWorld();
 		if (ImGui::BeginDragDropTarget())

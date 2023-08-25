@@ -20,6 +20,9 @@ namespace Flare
 
 	void ViewportWindow::OnRenderViewport()
 	{
+		if (Scene::GetActive() == nullptr)
+			return;
+
 		PrepareViewport();
 
 		if (m_RenderData.Viewport.Size != glm::ivec2(0))

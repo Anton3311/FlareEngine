@@ -12,13 +12,19 @@ namespace Flare
 {
 	void PropertiesWindow::OnImGuiRender()
 	{
+		ImGui::Begin("Properties");
+
+		if (Scene::GetActive() == nullptr)
+		{
+			ImGui::End();
+			return;
+		}
+
 		World& world = Scene::GetActive()->GetECSWorld();
 		Entity selectedEntity = EditorLayer::GetInstance().GetSelectedEntity();
 
 		ImGuiIO& io = ImGui::GetIO();
 		ImGuiStyle& style = ImGui::GetStyle();
-
-		ImGui::Begin("Properties");
 
 		if (world.IsEntityAlive(selectedEntity))
 		{
