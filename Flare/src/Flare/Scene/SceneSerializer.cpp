@@ -31,6 +31,9 @@ namespace Flare
 			case SerializableFieldType::Int32:
 				emitter << YAML::Key << field.Name << YAML::Value << *(int32_t*)(fieldData);
 				break;
+			case SerializableFieldType::UInt32:
+				emitter << YAML::Key << field.Name << YAML::Value << *(uint32_t*)(fieldData);
+				break;
 			case SerializableFieldType::Float32:
 				emitter << YAML::Key << field.Name << YAML::Value << *(float*)(fieldData);
 				break;
@@ -65,6 +68,12 @@ namespace Flare
 				case SerializableFieldType::Int32:
 				{
 					int32_t value = fieldNode.as<int32_t>();
+					std::memcpy(data + field.Offset, &value, sizeof(value));
+					break;
+				}
+				case SerializableFieldType::UInt32:
+				{
+					int32_t value = fieldNode.as<uint32_t>();
 					std::memcpy(data + field.Offset, &value, sizeof(value));
 					break;
 				}

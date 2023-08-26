@@ -70,19 +70,32 @@ namespace Flare
 
 	void SystemsManager::RegisterSystems(SystemGroupId defaultGroup)
 	{
-		const auto& initializers = SystemInitializer::GetInitializers();
-		for (const SystemInitializer* initializer : initializers)
+		auto& initializers = SystemInitializer::GetInitializers();
+
+		std::vector<std::pair<SystemId, System*>> instances(initializers.size());
+
+		size_t instanceIndex = 0;
+		for (SystemInitializer* initializer : initializers)
 		{
 			System* instance = initializer->CreateSystem();
-			int a = 100;
+
+			SystemId id = RegisterSystem(initializer->TypeName, [instance](SystemExecutionContext& context)
+			{
+				instance->OnUpdate(context);
+			});
+
+			instances[instanceIndex++] = { id, instance };
+			initializer->m_Id = id;
+		}
+		
+		for (auto [id, system] : instances)
+		{
 			SystemConfig config;
 			config.Group = {};
-			config.world = &World::GetCurrent();
-			config.a = &a;
+			system->OnConfig(config);
 
-			instance->OnConfig(config);
-		
-			RegisterSystem(initializer->TypeName, config.Group.value_or(defaultGroup), instance);
+			AddSystemToGroup(id, config.Group.value_or(defaultGroup));
+			AddSystemExecutionSettings(id, &config.GetExecutionOrder());
 		}
 	}
 
@@ -102,7 +115,7 @@ namespace Flare
 	{
 		SystemData& data = m_Systems[system];
 
-		if (executionOrder == nullptr)
+		if (executionOrder == nullptr || executionOrder != nullptr && executionOrder->size() == 0)
 			m_Groups[data.GroupId].Graph.AddExecutionSettings();
 		else
 		{

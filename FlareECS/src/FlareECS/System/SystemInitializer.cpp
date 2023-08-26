@@ -5,7 +5,7 @@
 namespace Flare
 {
 	SystemInitializer::SystemInitializer(const char* name, CreateSystemFunction createSystem)
-		: TypeName(name), CreateSystem(createSystem)
+		: TypeName(name), CreateSystem(createSystem), m_Id(UINT32_MAX)
 	{
 		std::vector<SystemInitializer*>& initializers = GetInitializers();
 		initializers.push_back(this);

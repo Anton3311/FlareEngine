@@ -4,6 +4,7 @@
 
 namespace Flare
 {
+	class FLAREECS_API SystemsManager;
 	struct FLAREECS_API SystemInitializer
 	{
 		using CreateSystemFunction = System*(*)();
@@ -11,10 +12,15 @@ namespace Flare
 		SystemInitializer(const char* name, CreateSystemFunction createSystem);
 		~SystemInitializer();
 
+		constexpr SystemId GetId() const { return m_Id; }
+
 		static std::vector<SystemInitializer*>& GetInitializers();
 
 		const char* TypeName;
 		CreateSystemFunction CreateSystem;
+	private:
+		SystemId m_Id;
+		friend class SystemsManager;
 	};
 
 #define FLARE_SYSTEM static Flare::SystemInitializer _SystemInitializer;
