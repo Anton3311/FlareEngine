@@ -48,6 +48,7 @@ namespace Flare
 		void SaveActiveSceneAs();
 
 		void OpenScene(AssetHandle handle);
+		void CreateNewScene();
 
 		void EnterPlayMode();
 		void ExitPlayMode();

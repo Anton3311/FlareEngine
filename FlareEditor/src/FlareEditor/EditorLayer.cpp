@@ -301,6 +301,32 @@ namespace Flare
 		}
 	}
 
+	void EditorLayer::CreateNewScene()
+	{
+		Ref<Scene> active = Scene::GetActive();
+
+		if (active != nullptr)
+		{
+			Ref<EditorAssetManager> editorAssetManager = As<EditorAssetManager>(AssetManager::GetInstance());
+
+			if (active != nullptr && AssetManager::IsAssetHandleValid(active->Handle))
+				editorAssetManager->UnloadAsset(active->Handle);
+		}
+
+		active = nullptr;
+		Scene::SetActive(nullptr);
+		ScriptingEngine::UnloadAllModules();
+
+		ScriptingEngine::LoadModules();
+
+		active = CreateRef<Scene>();
+		active->Initialize();
+		active->InitializeRuntime();
+		Scene::SetActive(active);
+
+		m_EditedSceneHandle = 0;
+	}
+
 	void EditorLayer::EnterPlayMode()
 	{
 		FLARE_CORE_ASSERT(m_Mode == EditorMode::Edit);

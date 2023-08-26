@@ -74,6 +74,8 @@ namespace Flare
 		if (EditorGUI::BeginMenu("Scene"))
 		{
 			ImGui::BeginDisabled(EditorLayer::GetInstance().GetMode() != EditorMode::Edit);
+			if (ImGui::MenuItem("New"))
+				EditorLayer::GetInstance().CreateNewScene();
 			if (ImGui::MenuItem("Save"))
 				EditorLayer::GetInstance().SaveActiveScene();
 			if (ImGui::MenuItem("Save As"))
