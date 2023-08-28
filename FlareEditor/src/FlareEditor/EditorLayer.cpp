@@ -3,6 +3,7 @@
 #include "Flare.h"
 #include "Flare/Core/Application.h"
 #include "Flare/Renderer2D/Renderer2D.h"
+#include "Flare/Renderer/Renderer.h"
 #include "Flare/Scene/SceneSerializer.h"
 
 #include "Flare/AssetManager/AssetManager.h"
@@ -70,8 +71,9 @@ namespace Flare
 			OpenScene(handle);
 		});
 
+		m_GameWindow = CreateRef<ViewportWindow>("Game");
 		m_Viewports.emplace_back(CreateRef<SceneViewportWindow>(m_Camera));
-		m_Viewports.emplace_back(CreateRef<ViewportWindow>("Game"));
+		m_Viewports.emplace_back(m_GameWindow);
 
 		EditorCameraSettings& settings = m_Camera.GetSettings();
 		settings.FOV = 60.0f;
@@ -114,6 +116,9 @@ namespace Flare
 		m_PreviousFrameTime = deltaTime;
 
 		Renderer2D::ResetStats();
+
+		Renderer::SetMainViewportSize(m_GameWindow->GetRenderData().Viewport.Size);
+		InputManager::SetMousePositionOffset(-m_GameWindow->GetRenderData().Viewport.Position);
 
 		if (m_Mode == EditorMode::Play && !m_PlaymodePaused)
 			Scene::GetActive()->OnUpdateRuntime();

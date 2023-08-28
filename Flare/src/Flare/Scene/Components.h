@@ -34,6 +34,10 @@ namespace Flare
 
 		CameraComponent();
 
+		glm::mat4 GetProjection() const;
+		glm::vec3 ScreenToWorld(glm::vec2 point) const;
+		glm::vec3 ViewportToWorld(glm::vec2 point) const;
+
 		ProjectionType Projection;
 
 		float Size;

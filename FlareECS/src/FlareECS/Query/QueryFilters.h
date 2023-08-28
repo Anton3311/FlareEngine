@@ -1,6 +1,7 @@
 #pragma once
 
 #include "FlareECS/Entity/Component.h"
+#include "FlareECS/Entity/ComponentInitializer.h"
 
 #include <stdint.h>
 

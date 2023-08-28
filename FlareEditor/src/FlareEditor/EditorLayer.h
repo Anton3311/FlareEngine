@@ -72,6 +72,7 @@ namespace Flare
 		float m_PreviousFrameTime = 0.0f;
 
 		EditorTitleBar m_TitleBar;
+		Ref<ViewportWindow> m_GameWindow;
 
 		SceneWindow m_SceneWindow;
 		PropertiesWindow m_PropertiesWindow;
