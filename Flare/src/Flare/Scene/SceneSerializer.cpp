@@ -23,7 +23,7 @@ namespace Flare
 		for (const FieldData& field : type.SerializedFields)
 		{
 			const uint8_t* fieldData = (const uint8_t*)data + field.Offset;
-			switch (field.Type)
+			switch (field.FieldType)
 			{
 			case SerializableFieldType::Bool:
 				emitter << YAML::Key << field.Name << YAML::Value << *(bool*)(fieldData);
@@ -57,7 +57,7 @@ namespace Flare
 		{
 			if (YAML::Node fieldNode = node[field.Name])
 			{
-				switch (field.Type)
+				switch (field.FieldType)
 				{
 				case SerializableFieldType::Bool:
 				{

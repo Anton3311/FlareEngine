@@ -41,55 +41,64 @@ namespace Flare
         UInt2,
         UInt3,
         UInt4,
+
+        Custom,
     };
 
+    class FLARECOMMON_API TypeInitializer;
     struct FieldData
     {
+        constexpr FieldData(const char* name, SerializableFieldType fieldType, size_t offset, TypeInitializer* type)
+            : Name(name), FieldType(fieldType), Offset(offset), Type(type) {}
+
         const char* Name;
-        SerializableFieldType Type;
+        SerializableFieldType FieldType;
         size_t Offset;
+        TypeInitializer* Type;
     };
 
     template<typename T>
-    constexpr SerializableFieldType GetFieldType()
+    constexpr FieldData GetFieldData(const char* fieldName, size_t offset)
     {
         if constexpr (std::is_same<T, float>().value)
-            return SerializableFieldType::Float32;
+            return FieldData{ fieldName, SerializableFieldType::Float32, offset, nullptr };
         if constexpr (std::is_same<T, double>().value)
-            return SerializableFieldType::Float64;
-
-        return SerializableFieldType::None;
+            return FieldData{ fieldName, SerializableFieldType::Float64, offset, nullptr };
+        return FieldData{ fieldName, SerializableFieldType::Custom, offset, &T::_Type };
     }
 
-#define GET_FIELD_TYPE(typeName, fieldType) template<> constexpr SerializableFieldType GetFieldType<typeName>() { return fieldType; }
+#define GET_FIELD_DATA(typeName, fieldType) template<> constexpr Flare::FieldData GetFieldData<typeName>(const char* name, size_t offset) \
+    { \
+        return FieldData{name, fieldType, offset, nullptr}; \
+    }
 
-    GET_FIELD_TYPE(bool, SerializableFieldType::Bool);
+    GET_FIELD_DATA(bool, SerializableFieldType::Bool);
 
-    GET_FIELD_TYPE(int8_t,   SerializableFieldType::Int8);
-    GET_FIELD_TYPE(uint8_t,  SerializableFieldType::UInt8);
-    GET_FIELD_TYPE(int16_t,  SerializableFieldType::Int16);
-    GET_FIELD_TYPE(uint16_t, SerializableFieldType::UInt16);
-    GET_FIELD_TYPE(int32_t,  SerializableFieldType::Int32);
-    GET_FIELD_TYPE(uint32_t, SerializableFieldType::UInt32);
-    GET_FIELD_TYPE(int64_t,  SerializableFieldType::Int64);
-    GET_FIELD_TYPE(uint64_t, SerializableFieldType::UInt64);
+    GET_FIELD_DATA(int8_t,   SerializableFieldType::Int8);
+    GET_FIELD_DATA(uint8_t,  SerializableFieldType::UInt8);
+    GET_FIELD_DATA(int16_t,  SerializableFieldType::Int16);
+    GET_FIELD_DATA(uint16_t, SerializableFieldType::UInt16);
+    GET_FIELD_DATA(int32_t,  SerializableFieldType::Int32);
+    GET_FIELD_DATA(uint32_t, SerializableFieldType::UInt32);
+    GET_FIELD_DATA(int64_t,  SerializableFieldType::Int64);
+    GET_FIELD_DATA(uint64_t, SerializableFieldType::UInt64);
 
-    GET_FIELD_TYPE(glm::vec2, SerializableFieldType::Float2);
-    GET_FIELD_TYPE(glm::vec3, SerializableFieldType::Float3);
-    GET_FIELD_TYPE(glm::vec4, SerializableFieldType::Float4);
+    GET_FIELD_DATA(glm::vec2, SerializableFieldType::Float2);
+    GET_FIELD_DATA(glm::vec3, SerializableFieldType::Float3);
+    GET_FIELD_DATA(glm::vec4, SerializableFieldType::Float4);
 
-    GET_FIELD_TYPE(glm::ivec2, SerializableFieldType::Int2);
-    GET_FIELD_TYPE(glm::ivec3, SerializableFieldType::Int3);
-    GET_FIELD_TYPE(glm::ivec4, SerializableFieldType::Int4);
+    GET_FIELD_DATA(glm::ivec2, SerializableFieldType::Int2);
+    GET_FIELD_DATA(glm::ivec3, SerializableFieldType::Int3);
+    GET_FIELD_DATA(glm::ivec4, SerializableFieldType::Int4);
 
-    GET_FIELD_TYPE(glm::uvec2, SerializableFieldType::UInt2);
-    GET_FIELD_TYPE(glm::uvec3, SerializableFieldType::UInt3);
-    GET_FIELD_TYPE(glm::uvec4, SerializableFieldType::UInt4);
+    GET_FIELD_DATA(glm::uvec2, SerializableFieldType::UInt2);
+    GET_FIELD_DATA(glm::uvec3, SerializableFieldType::UInt3);
+    GET_FIELD_DATA(glm::uvec4, SerializableFieldType::UInt4);
 
-#undef GET_FIELD_TYPE
+#undef GET_FIELD_DATA
 
 #define FLARE_GET_FIELD_TYPE(typeName, fieldName) decltype(((typeName*)nullptr)->fieldName)
-#define FLARE_FIELD(typeName, fieldName) Flare::FieldData{#fieldName, Flare::GetFieldType<FLARE_GET_FIELD_TYPE(typeName, fieldName)>(), offsetof(typeName, fieldName)}
+#define FLARE_FIELD(typeName, fieldName) Flare::GetFieldData<FLARE_GET_FIELD_TYPE(typeName, fieldName)>(#fieldName, offsetof(typeName, fieldName))
 
     class FLARECOMMON_API TypeInitializer
     {
