@@ -14,6 +14,8 @@
 #include <unordered_map>
 #include <vector>
 #include <optional>
+#include <Flare/Core/KeyCode.h>
+#include <Flare/Core/KeyCode.h>
 
 namespace Flare
 {
@@ -39,6 +41,9 @@ namespace Flare
 		Entity CreateEntity(const ComponentSet& componentSet, 
 			ComponentInitializationStrategy initStrategy = ComponentInitializationStrategy::DefaultConstructor);
 
+		Entity CreateEntityFromArchetype(ArchetypeId archetype,
+			ComponentInitializationStrategy initStrategy = ComponentInitializationStrategy::DefaultConstructor);
+
 		void DeleteEntity(Entity entity);
 
 		bool AddEntityComponent(Entity entity, 
@@ -48,6 +53,8 @@ namespace Flare
 
 		bool RemoveEntityComponent(Entity entity, ComponentId componentId);
 		bool IsEntityAlive(Entity entity) const;
+
+		ArchetypeId GetEntityArchetype(Entity entity);
 
 		const std::vector<EntityRecord>& GetEntityRecords() const;
 

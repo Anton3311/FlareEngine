@@ -91,8 +91,18 @@ namespace Flare
 
 				if (ImGui::BeginPopupContextItem())
 				{
-					if (ImGui::MenuItem("Delete entity"))
-						deletedEntity = entity;
+					if (ImGui::MenuItem("Delete"))
+						world.DeleteEntity(entity);
+
+					if (ImGui::MenuItem("Duplicate"))
+					{
+						Registry& registry = world.GetRegistry();
+						ArchetypeId archetype = registry.GetEntityArchetype(entity);
+						Entity duplicated = registry.CreateEntityFromArchetype(archetype, ComponentInitializationStrategy::Zero);
+						
+						const ArchetypeRecord& record = registry.GetArchetypeRecord(archetype);
+						std::memcpy(registry.GetEntityData(duplicated).value(), registry.GetEntityData(entity).value(), record.Storage.GetEntitySize());
+					}
 
 					ImGui::EndMenu();
 				}
@@ -101,9 +111,6 @@ namespace Flare
 
 		clipper.End();
 		ImGui::EndChild();
-
-		if (deletedEntity.has_value())
-			world.DeleteEntity(deletedEntity.value());
 
 		ImGui::End();
 	}
