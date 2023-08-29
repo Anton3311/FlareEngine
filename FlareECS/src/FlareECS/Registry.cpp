@@ -172,18 +172,24 @@ namespace Flare
 		EntityRecord& record = m_EntityRecords[recordIterator->second];
 		EntityRecord& lastEntityRecord = m_EntityRecords.back();
 
+		uint32_t lastEntityInBuffer = m_Archetypes[record.Archetype].Storage.GetEntityIndices().back();
+		if (lastEntityInBuffer != record.RegistryIndex)
+			m_EntityRecords[lastEntityInBuffer].BufferIndex = record.BufferIndex;
+
+		m_Archetypes[record.Archetype].Storage.RemoveEntityData(record.BufferIndex);
+
 		m_EntityIndex.AddDeletedId(record.Id);
+		m_EntityToRecord.erase(record.Id);
 
-		// Move last entity in the registry to the location of a deleted entity
-		m_Archetypes[lastEntityRecord.Archetype].Storage.UpdateEntityRegistryIndex(lastEntityRecord.BufferIndex, record.RegistryIndex);
-		RemoveEntityData(record.Archetype, record.BufferIndex);
+		lastEntityRecord.RegistryIndex = record.RegistryIndex;
+		record = lastEntityRecord;
 
-		record.Id = lastEntityRecord.Id;
-		record.Archetype = lastEntityRecord.Archetype;
-		record.BufferIndex = lastEntityRecord.BufferIndex;
-		m_EntityToRecord[lastEntityRecord.Id] = record.RegistryIndex;
+		if (lastEntityRecord.Id != entity)
+		{
+			m_Archetypes[record.Archetype].Storage.UpdateEntityRegistryIndex(record.BufferIndex, record.RegistryIndex);
+			m_EntityToRecord[record.Id] = record.RegistryIndex;
+		}
 
-		m_EntityToRecord.erase(recordIterator);
 		m_EntityRecords.erase(m_EntityRecords.end() - 1);
 	}
 
