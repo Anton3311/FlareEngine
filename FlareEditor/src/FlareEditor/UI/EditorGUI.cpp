@@ -268,9 +268,15 @@ namespace Flare
 					break;
 				case SerializableFieldType::Custom:
 				{
+					if (field.Type == &Entity::_Type)
+					{
+						EntityField(field.Name, World::GetCurrent(), *(Entity*)fieldData);
+						break;
+					}
+
 					EndPropertyGrid();
 
-					bool opened = ImGui::TreeNodeEx(type.TypeName.data(), ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_SpanAvailWidth);
+					bool opened = ImGui::TreeNodeEx(field.Type->TypeName.data(), ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_SpanAvailWidth);
 					if (opened)
 					{
 						result |= EditorGUI::TypeEditor(*field.Type, fieldData);

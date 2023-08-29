@@ -2,14 +2,18 @@
 
 #include "FlareECS/Entity/Archetype.h"
 
+#include "Flare/Serialization/TypeInitializer.h"
+
 #include <stdint.h>
 #include <xhash>
 
 namespace Flare
 {
-	struct Entity
+	struct FLAREECS_API Entity
 	{
 	public:
+		FLARE_TYPE;
+
 		constexpr Entity()
 			: m_Packed(SIZE_MAX) {}
 		constexpr Entity(uint32_t id)
