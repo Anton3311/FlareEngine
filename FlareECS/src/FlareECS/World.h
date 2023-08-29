@@ -88,7 +88,7 @@ namespace Flare
 		template<typename T>
 		constexpr T& GetSingletonComponent()
 		{
-			auto result = m_Registry.GetSingleComponent(COMPONENT_ID(T));
+			auto result = m_Registry.GetSingletonComponent(COMPONENT_ID(T));
 			FLARE_CORE_ASSERT(result.has_value(), "Failed to get singleton component");
 			return *(T*)result.value();
 		}
@@ -96,7 +96,7 @@ namespace Flare
 		template<typename T>
 		constexpr std::optional<T*> TryGetSingletonComponent()
 		{
-			auto result = m_Registry.GetSingleComponent(COMPONENT_ID(T));
+			auto result = m_Registry.GetSingletonComponent(COMPONENT_ID(T));
 			if (result.has_value())
 				return *(T*)result.value();
 			return {};

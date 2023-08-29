@@ -557,11 +557,17 @@ namespace Flare
 		return m_RegisteredComponents;
 	}
 
-	std::optional<void*> Registry::GetSingleComponent(ComponentId id) const
+	std::optional<void*> Registry::GetSingletonComponent(ComponentId id) const
 	{
 		FLARE_CORE_ASSERT(IsComponentIdValid(id));
 
 		auto it = m_ComponentToArchetype.find(id);
+		if (it == m_ComponentToArchetype.end())
+		{
+			FLARE_CORE_ERROR("Failed to get singleton component: World doesn't contain any entities with component '{0}'", GetComponentInfo(id).Name);
+			return nullptr;
+		}
+
 		const auto& archetypes = it->second;
 		
 		ArchetypeId archetype = INVALID_ARCHETYPE_ID;

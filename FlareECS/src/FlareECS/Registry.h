@@ -80,7 +80,7 @@ namespace Flare
 		const ComponentInfo& GetComponentInfo(ComponentId id) const;
 		const std::vector<ComponentInfo>& GetRegisteredComponents() const;
 
-		std::optional<void*> GetSingleComponent(ComponentId id) const;
+		std::optional<void*> GetSingletonComponent(ComponentId id) const;
 		std::optional<Entity> GetSingletonEntity(const Query& query) const;
 		
 		// Archetype operations
