@@ -73,6 +73,7 @@ namespace Flare
 		auto& initializers = SystemInitializer::GetInitializers();
 
 		std::vector<std::pair<SystemId, System*>> instances(initializers.size());
+		std::vector<SystemConfig> configs(initializers.size());
 
 		size_t instanceIndex = 0;
 		for (SystemInitializer* initializer : initializers)
@@ -88,15 +89,19 @@ namespace Flare
 			initializer->m_Id = id;
 		}
 		
-		for (auto [id, system] : instances)
+		instanceIndex = 0;
+		for (auto& [id, system] : instances)
 		{
-			SystemConfig config;
+			SystemConfig& config = configs[instanceIndex];
 			config.Group = {};
 			system->OnConfig(config);
 
 			AddSystemToGroup(id, config.Group.value_or(defaultGroup));
-			AddSystemExecutionSettings(id, &config.GetExecutionOrder());
+			instanceIndex++;
 		}
+
+		for (size_t i = 0; i < configs.size(); i++)
+			AddSystemExecutionSettings(instances[i].first, &configs[i].GetExecutionOrder());
 	}
 
 	void SystemsManager::AddSystemToGroup(SystemId system, SystemGroupId group)
@@ -156,7 +161,7 @@ namespace Flare
 		{
 			if (group.Graph.RebuildGraph() == ExecutionGraph::BuildResult::CircularDependecy)
 			{
-				FLARE_CORE_ERROR("Faield to build an execution graph for '{0}' because of circular dependecy", group.Name);
+				FLARE_CORE_ERROR("Failed to build an execution graph for '{0}' because of circular dependecy", group.Name);
 				continue;
 			}
 		}
