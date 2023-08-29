@@ -60,10 +60,6 @@ namespace Flare
     template<typename T>
     constexpr FieldData GetFieldData(const char* fieldName, size_t offset)
     {
-        if constexpr (std::is_same<T, float>().value)
-            return FieldData{ fieldName, SerializableFieldType::Float32, offset, nullptr };
-        if constexpr (std::is_same<T, double>().value)
-            return FieldData{ fieldName, SerializableFieldType::Float64, offset, nullptr };
         return FieldData{ fieldName, SerializableFieldType::Custom, offset, &T::_Type };
     }
 
@@ -73,6 +69,8 @@ namespace Flare
     }
 
     GET_FIELD_DATA(bool, SerializableFieldType::Bool);
+    GET_FIELD_DATA(float, SerializableFieldType::Float32);
+    GET_FIELD_DATA(double, SerializableFieldType::Float64);
 
     GET_FIELD_DATA(int8_t,   SerializableFieldType::Int8);
     GET_FIELD_DATA(uint8_t,  SerializableFieldType::UInt8);

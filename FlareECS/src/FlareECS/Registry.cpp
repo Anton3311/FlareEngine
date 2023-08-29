@@ -473,7 +473,7 @@ namespace Flare
 
 	std::optional<ComponentId> Registry::FindComponnet(std::string_view name)
 	{
-		auto it = m_ComponentNameToIndex.find(name);
+		auto it = m_ComponentNameToIndex.find(std::string(name));
 		if (it == m_ComponentNameToIndex.end())
 			return {};
 		FLARE_CORE_ASSERT(it->second < m_RegisteredComponents.size());

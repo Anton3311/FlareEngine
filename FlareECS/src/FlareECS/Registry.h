@@ -115,7 +115,7 @@ namespace Flare
 
 		std::unordered_map<ComponentId, std::unordered_map<ArchetypeId, size_t>> m_ComponentToArchetype;
 
-		std::unordered_map<std::string_view, uint32_t> m_ComponentNameToIndex;
+		std::unordered_map<std::string, uint32_t> m_ComponentNameToIndex;
 		std::unordered_map<ComponentId, uint32_t> m_ComponentIdToIndex;
 		std::vector<ComponentInfo> m_RegisteredComponents;
 
