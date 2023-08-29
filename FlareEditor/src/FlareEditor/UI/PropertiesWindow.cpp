@@ -34,41 +34,46 @@ namespace Flare
 			
 			RenderAddComponentMenu(selectedEntity);
 
-			std::optional<ComponentId> removedComponent;
-			for (ComponentId component : world.GetEntityComponents(selectedEntity))
+			if (ImGui::BeginChild("Components"))
 			{
-				const ComponentInfo& componentInfo = world.GetRegistry().GetComponentInfo(component);
-
-				ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_FramePadding;
-				if (ImGui::TreeNodeEx((void*)std::hash<ComponentId>()(component), flags, "%s", componentInfo.Name.c_str()))
+				std::optional<ComponentId> removedComponent;
+				for (ComponentId component : world.GetEntityComponents(selectedEntity))
 				{
-					if (component == COMPONENT_ID(CameraComponent))
-						RenderCameraComponent(world.GetEntityComponent<CameraComponent>(selectedEntity));
-					else if (component == COMPONENT_ID(TransformComponent))
-						RenderTransformComponent(world.GetEntityComponent<TransformComponent>(selectedEntity));
-					else if (component == COMPONENT_ID(SpriteComponent))
-						RenderSpriteComponent(world.GetEntityComponent<SpriteComponent>(selectedEntity));
-					else
+					const ComponentInfo& componentInfo = world.GetRegistry().GetComponentInfo(component);
+
+					ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_FramePadding;
+					if (ImGui::TreeNodeEx((void*)std::hash<ComponentId>()(component), flags, "%s", componentInfo.Name.c_str()))
 					{
-						std::optional<void*> componentData = world.GetRegistry().GetEntityComponent(selectedEntity, component);
-						if (componentData.has_value() && componentInfo.Initializer)
-							EditorGUI::TypeEditor(componentInfo.Initializer->Type, (uint8_t*) componentData.value());
+						if (component == COMPONENT_ID(CameraComponent))
+							RenderCameraComponent(world.GetEntityComponent<CameraComponent>(selectedEntity));
+						else if (component == COMPONENT_ID(TransformComponent))
+							RenderTransformComponent(world.GetEntityComponent<TransformComponent>(selectedEntity));
+						else if (component == COMPONENT_ID(SpriteComponent))
+							RenderSpriteComponent(world.GetEntityComponent<SpriteComponent>(selectedEntity));
+						else
+						{
+							std::optional<void*> componentData = world.GetRegistry().GetEntityComponent(selectedEntity, component);
+							if (componentData.has_value() && componentInfo.Initializer)
+								EditorGUI::TypeEditor(componentInfo.Initializer->Type, (uint8_t*) componentData.value());
+						}
+
+						ImGui::TreePop();
 					}
 
-					ImGui::TreePop();
+					if (ImGui::BeginPopupContextItem(componentInfo.Name.c_str()))
+					{
+						if (ImGui::MenuItem("Remove"))
+							removedComponent = component;
+
+						ImGui::End();
+					}
 				}
 
-				if (ImGui::BeginPopupContextItem(componentInfo.Name.c_str()))
-				{
-					if (ImGui::MenuItem("Remove"))
-						removedComponent = component;
+				if (removedComponent.has_value())
+					world.GetRegistry().RemoveEntityComponent(selectedEntity, removedComponent.value());
 
-					ImGui::End();
-				}
+				ImGui::EndChild();
 			}
-
-			if (removedComponent.has_value())
-				world.GetRegistry().RemoveEntityComponent(selectedEntity, removedComponent.value());
 		}
 
 		ImGui::End();
