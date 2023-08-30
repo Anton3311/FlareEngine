@@ -81,6 +81,8 @@ namespace Flare
 			(int32_t)(io.MousePos.x - windowPosition.x),
 			(int32_t)(io.MousePos.y - windowPosition.y)) - m_ViewportOffset;
 
+		m_RelativeMousePosition.y = newViewportSize.y - m_RelativeMousePosition.y;
+
 		if (m_FrameBuffer != nullptr)
 		{
 			const FrameBufferSpecifications frameBufferSpecs = m_FrameBuffer->GetSpecifications();
