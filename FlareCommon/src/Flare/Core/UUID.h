@@ -12,8 +12,12 @@ namespace Flare
 		UUID();
 		constexpr UUID(uint64_t value)
 			: m_Value(value) {}
-
-		inline operator uint64_t() const { return m_Value; }
+		
+		constexpr operator uint64_t() const { return m_Value; }
+		constexpr bool operator==(UUID other) const { return m_Value == other.m_Value; }
+		constexpr bool operator!=(UUID other) const { return m_Value != other.m_Value; }
+		constexpr UUID& operator=(UUID other) { m_Value = other.m_Value; return *this; }
+		constexpr UUID& operator=(uint64_t value) { m_Value = value; return *this; }
 	private:
 		uint64_t m_Value;
 		

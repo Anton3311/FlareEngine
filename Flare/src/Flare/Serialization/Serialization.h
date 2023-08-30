@@ -87,7 +87,7 @@ namespace YAML
 	{
 		static Node encode(const Flare::AssetHandle& handle)
 		{
-			return Node((uint64_t)handle);
+			return Node((uint64_t)(Flare::UUID)handle);
 		}
 
 		static bool decode(const Node& node, Flare::AssetHandle& out)
@@ -95,7 +95,7 @@ namespace YAML
 			if (!node.IsScalar())
 				return false;
 
-			out = node.as<uint64_t>();
+			out = (Flare::UUID)node.as<uint64_t>();
 			return true;
 		}
 	};

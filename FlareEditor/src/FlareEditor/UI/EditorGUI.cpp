@@ -270,7 +270,12 @@ namespace Flare
 				{
 					if (field.Type == &Entity::_Type)
 					{
-						EntityField(field.Name, World::GetCurrent(), *(Entity*)fieldData);
+						result |= EntityField(field.Name, World::GetCurrent(), *(Entity*)fieldData);
+						break;
+					}
+					else if (field.Type == &AssetHandle::_Type)
+					{
+						result |= AssetField(field.Name, *(AssetHandle*)fieldData);
 						break;
 					}
 

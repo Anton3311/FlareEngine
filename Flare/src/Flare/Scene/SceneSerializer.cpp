@@ -51,6 +51,11 @@ namespace Flare
 					FLARE_CORE_WARN("Entity serialization is not supported yet");
 					break;
 				}
+				else if (field.Type == &AssetHandle::_Type)
+				{
+					emitter << YAML::Key << field.Name << YAML::Value << *(AssetHandle*)fieldData;
+					break;
+				}
 
 				emitter << YAML::Key << field.Name << YAML::Value;
 				SerializeType(emitter, *field.Type, data + field.Offset);
@@ -114,6 +119,12 @@ namespace Flare
 					if (field.Type == &Entity::_Type)
 					{
 						FLARE_CORE_WARN("Entity deserialization is not supported yet");
+						break;
+					}
+					else if (field.Type == &AssetHandle::_Type)
+					{
+						AssetHandle handle = fieldNode.as<AssetHandle>();
+						std::memcpy(data + field.Offset, &handle, sizeof(handle));
 						break;
 					}
 
@@ -295,7 +306,7 @@ namespace Flare
 					spriteComponent.Color = componentNode["Color"].as<glm::vec4>();
 
 					if (YAML::Node textureNode = componentNode["Texture"])
-						spriteComponent.Texture = textureNode ? textureNode.as<uint64_t>() : NULL_ASSET_HANDLE;
+						spriteComponent.Texture = textureNode ? textureNode.as<AssetHandle>() : NULL_ASSET_HANDLE;
 
 					if (YAML::Node tilingNode = componentNode["TextureTiling"])
 						spriteComponent.TextureTiling = tilingNode.as<glm::vec2>();

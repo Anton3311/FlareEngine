@@ -2,6 +2,8 @@
 
 namespace Flare
 {
+	FLARE_IMPL_TYPE(AssetHandle);
+
 	std::string_view AssetTypeToString(AssetType type)
 	{
 		switch (type)
