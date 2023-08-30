@@ -20,6 +20,22 @@ namespace Flare
 		ComponentInitializationStrategy m_InitStrategy;
 	};
 
+	template<typename T>
+	class AddComponentWithDataCommand : public Command
+	{
+	public:
+		AddComponentWithDataCommand(Entity entity, const T& data)
+			: m_Entity(entity), m_Data(data) {}
+	public:
+		virtual void Apply(World& world) override
+		{
+			world.AddEntityComponent<T>(m_Entity, m_Data);
+		}
+	private:
+		Entity m_Entity;
+		T m_Data;
+	};
+
 	class FLAREECS_API RemoveComponentCommand : public Command
 	{
 	public:

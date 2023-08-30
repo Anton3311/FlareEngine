@@ -35,6 +35,12 @@ namespace Flare
 		}
 
 		template<typename T>
+		void AddComponentWithData(Entity entity, const T& component)
+		{
+			AddCommand<AddComponentWithDataCommand<T>>(AddComponentWithDataCommand<T>(entity, component));
+		}
+
+		template<typename T>
 		void RemoveComponent(Entity entity)
 		{
 			AddCommand<RemoveComponentCommand>(RemoveComponentCommand(entity, COMPONENT_ID(T)));

@@ -19,7 +19,8 @@ namespace Flare
 	std::optional<Entity> EntityView::GetEntity(size_t index)
 	{
 		const auto& indices = m_Registry.GetArchetypeRecord(m_Archetype).Storage.GetEntityIndices();
-		FLARE_CORE_ASSERT(index < indices.size());
+		if (index >= indices.size())
+			return {};
 
 		return m_Registry.FindEntityByRegistryIndex(indices[index]);
 	}
