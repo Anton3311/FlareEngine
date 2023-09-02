@@ -122,7 +122,17 @@ namespace Flare
 	bool EditorGUI::AssetField(const char* name, AssetHandle& handle)
 	{
 		PropertyName(name);
+		return AssetField(handle);
+	}
 
+	bool EditorGUI::EntityField(const char* name, const World& world, Entity& entity)
+	{
+		PropertyName(name);
+		return EntityField(world, entity);
+	}
+
+	bool EditorGUI::AssetField(AssetHandle& handle)
+	{
 		ImVec2 buttonSize = ImVec2(ImGui::GetContentRegionAvail().x - 60.0f, 0);
 
 		if (handle == NULL_ASSET_HANDLE)
@@ -160,12 +170,9 @@ namespace Flare
 		return result;
 	}
 
-	bool EditorGUI::EntityField(const char* name, const World& world, Entity& entity)
+	bool EditorGUI::EntityField(const World& world, Entity& entity)
 	{
 		bool alive = world.IsEntityAlive(entity);
-
-		PropertyName(name);
-
 		float buttonWidth = ImGui::GetContentRegionAvail().x - 60.0f;
 
 		if (alive)
@@ -237,6 +244,79 @@ namespace Flare
 		ImGui::PopItemWidth();
 	}
 
+	static bool RenderFieldEditor(const FieldTypeInfo& field, uint8_t* fieldData)
+	{
+		bool result = false;
+		ImGui::PushID(fieldData);
+		if (field.FieldType == SerializableFieldType::Custom)
+		{
+			if (field.CustomType == &Entity::_Type)
+				result = EditorGUI::EntityField(World::GetCurrent(), *(Entity*)fieldData);
+			else if (field.CustomType == &AssetHandle::_Type)
+				result = EditorGUI::AssetField(*(AssetHandle*)fieldData);
+
+			ImGui::PopID();
+			return result;
+		}
+
+		switch (field.FieldType)
+		{
+		case SerializableFieldType::Bool:
+			result |= ImGui::Checkbox("", (bool*)fieldData);
+			break;
+		case SerializableFieldType::Int32:
+			result |= ImGui::DragInt("", (int32_t*)fieldData);
+			break;
+		case SerializableFieldType::Float32:
+			result |= ImGui::DragFloat("", (float*)fieldData);
+			break;
+		case SerializableFieldType::Float2:
+			result |= ImGui::DragFloat2("", (float*)fieldData);
+			break;
+		case SerializableFieldType::Float3:
+			result |= ImGui::DragFloat3("", (float*)fieldData);
+			break;
+		}
+
+		ImGui::PopID();
+		return result;
+	}
+
+	static bool RenderArrayEditor(const FieldData& field, uint8_t* data)
+	{
+		bool result = false;
+		EditorGUI::EndPropertyGrid();
+
+		bool opened = ImGui::TreeNodeEx(field.Name, ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_SpanAvailWidth);
+		if (opened)
+		{
+			EditorGUI::BeginPropertyGrid();
+			float framePadding = ImGui::GetStyle().FramePadding.y;
+			size_t elementSize = field.ArrayElementType.GetSize();
+
+			{
+				// Array Size
+				EditorGUI::PropertyName("Size");
+
+				ImGui::SetCursorPosY(ImGui::GetCursorPosY() + framePadding);
+				ImGui::Text("%d", field.ElementsCount);
+				ImGui::SetCursorPosY(ImGui::GetCursorPosY() + framePadding);
+			}
+
+			for (size_t i = 0; i < field.ElementsCount; i++)
+			{
+				EditorGUI::PropertyIndex(i);
+				result |= RenderFieldEditor(field.ArrayElementType, data + i * elementSize);
+			}
+
+			EditorGUI::EndPropertyGrid();
+			ImGui::TreePop();
+		}
+
+		EditorGUI::BeginPropertyGrid();
+		return result;
+	}
+
 	bool EditorGUI::TypeEditor(const TypeInitializer& type, uint8_t* data)
 	{
 		const auto& fields = type.SerializedFields;
@@ -249,47 +329,23 @@ namespace Flare
 				const FieldData& field = fields[i];
 				uint8_t* fieldData = data + field.Offset;
 
-				switch (field.FieldType)
+				if (field.TypeInfo.FieldType == SerializableFieldType::Array)
+					result |= RenderArrayEditor(field, fieldData);
+				else if (field.TypeInfo.FieldType == SerializableFieldType::Custom && field.TypeInfo.CustomType != &Entity::_Type && field.TypeInfo.CustomType != &AssetHandle::_Type)
 				{
-				case SerializableFieldType::Bool:
-					result |= EditorGUI::BoolPropertyField(field.Name, *(bool*)fieldData);
-					break;
-				case SerializableFieldType::Int32:
-					result |= EditorGUI::IntPropertyField(field.Name, *(int32_t*)fieldData);
-					break;
-				case SerializableFieldType::Float32:
-					result |= EditorGUI::FloatPropertyField(field.Name, *(float*)fieldData);
-					break;
-				case SerializableFieldType::Float2:
-					result |= EditorGUI::Vector2PropertyField(field.Name, *(glm::vec2*)fieldData);
-					break;
-				case SerializableFieldType::Float3:
-					result |= EditorGUI::Vector3PropertyField(field.Name, *(glm::vec3*)fieldData);
-					break;
-				case SerializableFieldType::Custom:
-				{
-					if (field.Type == &Entity::_Type)
-					{
-						result |= EntityField(field.Name, World::GetCurrent(), *(Entity*)fieldData);
-						break;
-					}
-					else if (field.Type == &AssetHandle::_Type)
-					{
-						result |= AssetField(field.Name, *(AssetHandle*)fieldData);
-						break;
-					}
-
-					EndPropertyGrid();
-
-					bool opened = ImGui::TreeNodeEx(field.Type->TypeName.data(), ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_SpanAvailWidth);
+					EditorGUI::EndPropertyGrid();
+					bool opened = ImGui::TreeNodeEx(field.Name, ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_SpanAvailWidth);
 					if (opened)
 					{
-						result |= EditorGUI::TypeEditor(*field.Type, fieldData);
+						result |= EditorGUI::TypeEditor(*field.TypeInfo.CustomType, fieldData);
 						ImGui::TreePop();
 					}
-					BeginPropertyGrid();
-					break;
+					EditorGUI::BeginPropertyGrid();
 				}
+				else
+				{
+					PropertyName(field.Name);
+					result |= RenderFieldEditor(field.TypeInfo, data + field.Offset);
 				}
 			}
 			EditorGUI::EndPropertyGrid();
@@ -305,6 +361,18 @@ namespace Flare
 
 		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetStyle().FramePadding.y);
 		ImGui::Text(name);
+
+		ImGui::TableSetColumnIndex(1);
+		ImGui::PushItemWidth(-1);
+	}
+
+	void EditorGUI::PropertyIndex(size_t index)
+	{
+		ImGui::TableNextRow();
+		ImGui::TableSetColumnIndex(0);
+
+		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetStyle().FramePadding.y);
+		ImGui::Text("%d", index);
 
 		ImGui::TableSetColumnIndex(1);
 		ImGui::PushItemWidth(-1);
