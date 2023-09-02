@@ -56,7 +56,7 @@ namespace Flare
 
 	bool EditorGUI::BoolPropertyField(const char* name, bool& value)
 	{
-		RenderPropertyName(name);
+		PropertyName(name);
 
 		ImGui::PushID(&value);
 		bool result = ImGui::Checkbox("", &value);
@@ -68,7 +68,7 @@ namespace Flare
 
 	bool EditorGUI::IntPropertyField(const char* name, int32_t& value)
 	{
-		RenderPropertyName(name);
+		PropertyName(name);
 
 		ImGui::PushID(&value);
 		bool result = ImGui::DragInt("", &value, 0.1f);
@@ -80,7 +80,7 @@ namespace Flare
 
 	bool EditorGUI::FloatPropertyField(const char* name, float& value)
 	{
-		RenderPropertyName(name);
+		PropertyName(name);
 
 		ImGui::PushID(&value);
 		bool result = ImGui::DragFloat("", &value, 0.1f);
@@ -92,7 +92,7 @@ namespace Flare
 
 	bool EditorGUI::Vector2PropertyField(const char* name, glm::vec2& value)
 	{
-		RenderPropertyName(name);
+		PropertyName(name);
 
 		ImGui::PushID(&value);
 		bool result = ImGui::DragFloat2("", glm::value_ptr(value), 0.1f);
@@ -102,7 +102,7 @@ namespace Flare
 
 	bool EditorGUI::Vector3PropertyField(const char* name, glm::vec3& value)
 	{
-		RenderPropertyName(name);
+		PropertyName(name);
 
 		ImGui::PushID(&value);
 		bool result = ImGui::DragFloat3("", glm::value_ptr(value), 0.1f);
@@ -111,7 +111,7 @@ namespace Flare
 	}
 	bool EditorGUI::ColorPropertyField(const char* name, glm::vec4& color)
 	{
-		RenderPropertyName(name);
+		PropertyName(name);
 
 		ImGui::PushID(&color);
 		bool result = ImGui::ColorEdit4("", glm::value_ptr(color), ImGuiColorEditFlags_Float);
@@ -121,7 +121,7 @@ namespace Flare
 
 	bool EditorGUI::AssetField(const char* name, AssetHandle& handle)
 	{
-		RenderPropertyName(name);
+		PropertyName(name);
 
 		ImVec2 buttonSize = ImVec2(ImGui::GetContentRegionAvail().x - 60.0f, 0);
 
@@ -164,7 +164,7 @@ namespace Flare
 	{
 		bool alive = world.IsEntityAlive(entity);
 
-		RenderPropertyName(name);
+		PropertyName(name);
 
 		float buttonWidth = ImGui::GetContentRegionAvail().x - 60.0f;
 
@@ -208,7 +208,7 @@ namespace Flare
 
 	bool EditorGUI::BeginToggleGroupProperty(const char* name, uint32_t itemsCount)
 	{
-		RenderPropertyName(name);
+		PropertyName(name);
 		return BeginToggleGroup(name, itemsCount);
 	}
 
@@ -298,7 +298,7 @@ namespace Flare
 		return result;
 	}
 
-	void EditorGUI::RenderPropertyName(const char* name)
+	void EditorGUI::PropertyName(const char* name)
 	{
 		ImGui::TableNextRow();
 		ImGui::TableSetColumnIndex(0);

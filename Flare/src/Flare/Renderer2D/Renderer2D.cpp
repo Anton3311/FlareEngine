@@ -1,5 +1,7 @@
 #include "Renderer2D.h"
 
+#include "Flare/Core/Core.h"
+
 #include "Flare/Renderer/RenderCommand.h"
 
 namespace Flare
@@ -127,7 +129,7 @@ namespace Flare
 		s_Data->Stats.QuadsCount++;
 	}
 
-	void Renderer2D::DrawQuad(const glm::mat4& transform, const glm::vec4& tint, const Ref<Texture>& texture, glm::vec2 tiling, int32_t entityIndex)
+	void Renderer2D::DrawQuad(const glm::mat4& transform, const glm::vec4& tint, const Ref<Texture>& texture, glm::vec2 tiling, int32_t entityIndex, SpriteRenderFlags flags)
 	{
 		if (s_Data->QuadIndex >= s_Data->MaxQuadCount)
 			Flush();
@@ -158,6 +160,18 @@ namespace Flare
 			vertex.UV = s_Data->QuadUV[i] * tiling;
 			vertex.TextuteIndex = (float)textureIndex;
 			vertex.EntityIndex = entityIndex;
+		}
+
+		if (HAS_BIT(flags, SpriteRenderFlags::FlipX))
+		{
+			for (uint32_t i = 0; i < 4; i++)
+				s_Data->Vertices[vertexIndex + i].UV.x = 1.0f - s_Data->Vertices[vertexIndex + i].UV.x;
+		}
+
+		if (HAS_BIT(flags, SpriteRenderFlags::FlipY))
+		{
+			for (uint32_t i = 0; i < 4; i++)
+				s_Data->Vertices[vertexIndex + i].UV.y = 1.0f - s_Data->Vertices[vertexIndex + i].UV.y;
 		}
 
 		s_Data->QuadIndex++;

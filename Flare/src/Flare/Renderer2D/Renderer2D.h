@@ -50,6 +50,38 @@ namespace Flare
 		glm::mat4 CameraProjectionMatrix;
 	};
 
+	enum class SpriteRenderFlags : uint8_t
+	{
+		None = 0,
+		FlipX = 1,
+		FlipY = 2,
+	};
+
+	constexpr SpriteRenderFlags operator|(SpriteRenderFlags a, SpriteRenderFlags b)
+	{
+		return (SpriteRenderFlags)((uint8_t)a | (uint8_t)b);
+	}
+
+	constexpr SpriteRenderFlags operator~(SpriteRenderFlags a)
+	{
+		return (SpriteRenderFlags)(~(uint8_t)a);
+	}
+
+	constexpr void operator|=(SpriteRenderFlags& a, SpriteRenderFlags b)
+	{
+		a = (SpriteRenderFlags)((uint8_t)a | (uint8_t)b);
+	}
+
+	constexpr SpriteRenderFlags operator&(SpriteRenderFlags a, SpriteRenderFlags b)
+	{
+		return (SpriteRenderFlags)((uint8_t)a & (uint8_t)b);
+	}
+
+	constexpr bool operator!=(SpriteRenderFlags a, int b)
+	{
+		return (int)a != b;
+	}
+
 	class FLARE_API Renderer2D
 	{
 	public:
@@ -60,7 +92,12 @@ namespace Flare
 		static void Flush();
 		static void DrawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color);
 
-		static void DrawQuad(const glm::mat4& transform, const glm::vec4& tint, const Ref<Texture>& texture, glm::vec2 tiling, int32_t entityIndex);
+		static void DrawQuad(const glm::mat4& transform,
+			const glm::vec4& tint,
+			const Ref<Texture>& texture,
+			glm::vec2 tiling,
+			int32_t entityIndex,
+			SpriteRenderFlags flags = SpriteRenderFlags::None);
 
 		static void DrawQuad(const glm::vec3& position, const glm::vec2& size, 
 			const Ref<Texture>& texture, 

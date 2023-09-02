@@ -140,6 +140,23 @@ namespace Flare
 			EditorGUI::AssetField("Texture", sprite.Texture);
 			EditorGUI::Vector2PropertyField("Tiling", sprite.TextureTiling);
 
+			EditorGUI::PropertyName("Flip");
+			{
+				bool flipX = HAS_BIT(sprite.Flags, SpriteRenderFlags::FlipX);
+				bool flipY = HAS_BIT(sprite.Flags, SpriteRenderFlags::FlipY);
+
+				ImGui::Checkbox("X", &flipX);
+				ImGui::SameLine();
+				ImGui::Checkbox("Y", &flipY);
+
+				sprite.Flags = sprite.Flags & ~(SpriteRenderFlags::FlipX | SpriteRenderFlags::FlipY);
+
+				if (flipX)
+					sprite.Flags |= SpriteRenderFlags::FlipX;
+				if (flipY)
+					sprite.Flags |= SpriteRenderFlags::FlipY;
+			}
+
 			EditorGUI::EndPropertyGrid();
 		}
 	}

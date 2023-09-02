@@ -37,7 +37,7 @@ namespace Flare
 		static void EndToggleGroup();
 
 		static bool TypeEditor(const TypeInitializer& type, uint8_t* data);
-	private:
-		static void RenderPropertyName(const char* name);
+
+		static void PropertyName(const char* name);
 	};
 }

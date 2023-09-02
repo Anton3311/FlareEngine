@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Flare.h"
+#include "Flare/Renderer2D/Renderer2D.h"
 
 #include "FlareECS/World.h"
 #include "FlareECS/Entity/ComponentInitializer.h"
@@ -55,5 +56,6 @@ namespace Flare
 		glm::vec4 Color;
 		glm::vec2 TextureTiling;
 		AssetHandle Texture;
+		SpriteRenderFlags Flags;
 	};
 }

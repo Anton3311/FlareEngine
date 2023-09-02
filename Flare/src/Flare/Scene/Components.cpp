@@ -58,5 +58,6 @@ namespace Flare
 	SpriteComponent::SpriteComponent()
 		: Color(glm::vec4(1.0f)),
 		  TextureTiling(glm::vec2(1.0f)),
-		  Texture(0) {}
+		  Texture(0),
+		  Flags(SpriteRenderFlags::None) {}
 }

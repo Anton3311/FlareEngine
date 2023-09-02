@@ -24,7 +24,8 @@ namespace Flare
 					sprite.Texture == NULL_ASSET_HANDLE
 					? nullptr
 					: AssetManager::GetAsset<Texture>(sprite.Texture),
-					sprite.TextureTiling, (int32_t)view.GetEntity(index).value_or(Entity()).GetIndex());
+					sprite.TextureTiling, (int32_t)view.GetEntity(index).value_or(Entity()).GetIndex(),
+					sprite.Flags);
 
 				index++;
 			}
