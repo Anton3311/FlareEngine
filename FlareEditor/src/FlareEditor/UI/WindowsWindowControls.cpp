@@ -128,7 +128,7 @@ namespace Flare
 		ImU32 buttonColor = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_WindowBg]);
 		iconColor = 0xffffffff;
 
-		ImGui::InvisibleButton(name, ImVec2(buttonSize.x, buttonSize.y));
+		ImGui::InvisibleButton(name, ImVec2((float)buttonSize.x, (float)buttonSize.y));
 		if (ImGui::IsItemClicked())
 		{
 			buttonColor = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_ButtonActive]);

@@ -1,12 +1,12 @@
 #pragma once
 
-#include "Flare/Core/Core.h"
+#include "FlareCore/Core.h"
 
 #include <xhash>
 
 namespace Flare
 {
-	class FLARECOMMON_API UUID
+	class FLARECORE_API UUID
 	{
 	public:
 		UUID();

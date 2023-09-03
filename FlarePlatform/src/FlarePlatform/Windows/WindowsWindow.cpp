@@ -1,8 +1,8 @@
 #include "WindowsWindow.h"
 
-#include "Flare/Core/Assert.h"
-#include "Flare/Core/KeyCode.h"
-#include "Flare/Core/MouseCode.h"
+#include "FlareCore/Assert.h"
+#include "FlareCore/KeyCode.h"
+#include "FlareCore/MouseCode.h"
 
 #include <optional>
 

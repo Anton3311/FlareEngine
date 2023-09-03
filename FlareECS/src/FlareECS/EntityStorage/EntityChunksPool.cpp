@@ -1,6 +1,6 @@
 #include "EntityChunksPool.h"
 
-#include "Flare/Core/Assert.h"
+#include "FlareCore/Assert.h"
 
 namespace Flare
 {

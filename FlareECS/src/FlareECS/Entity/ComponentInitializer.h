@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Flare/Core/Core.h"
-#include "Flare/Serialization/TypeInitializer.h"
+#include "FlareCore/Core.h"
+#include "FlareCore/Serialization/TypeInitializer.h"
 
 #include "FlareECS/Entity/Component.h"
 

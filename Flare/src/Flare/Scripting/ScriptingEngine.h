@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Flare/Core/UUID.h"
+#include "FlareCore/UUID.h"
 #include "FlareECS/World.h"
 
 #include <filesystem>

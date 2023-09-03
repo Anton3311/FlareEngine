@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Flare/Core/Core.h"
-#include "Flare/Core/Log.h"
-#include "Flare/Core/Assert.h"
+#include "FlareCore/Core.h"
+#include "FlareCore/Log.h"
+#include "FlareCore/Assert.h"
 
 // Rendering
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Flare/Core/Assert.h"
+#include "FlareCore/Assert.h"
 
 #include "FlareECS/Entity/Component.h"
 #include "FlareECS/Entity/Archetype.h"

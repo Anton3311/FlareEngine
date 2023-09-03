@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Flare/Core/Core.h"
+#include "FlareCore/Core.h"
 #include "Flare/Renderer/VertexArray.h"
 
 #include <stdint.h>

@@ -1,6 +1,6 @@
 #include "EditorCamera.h"
 
-#include "Flare/Core/Log.h"
+#include "FlareCore/Log.h"
 #include "FlarePlatform/Events.h"
 
 #include "Flare/Renderer2D/Renderer2D.h"

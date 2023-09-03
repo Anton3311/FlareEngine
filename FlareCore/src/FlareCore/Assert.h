@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Flare/Core/Log.h"
-#include "Flare/Core/Core.h"
+#include "FlareCore/Log.h"
+#include "FlareCore/Core.h"
 
 #include <filesystem>
 

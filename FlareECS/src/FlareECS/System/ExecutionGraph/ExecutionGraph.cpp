@@ -1,6 +1,6 @@
 #include "ExecutionGraph.h"
 
-#include "Flare/Core/Assert.h"
+#include "FlareCore/Assert.h"
 
 #include <unordered_set>
 #include <queue>

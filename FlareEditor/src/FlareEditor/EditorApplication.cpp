@@ -1,6 +1,6 @@
 #include "EditorApplication.h"
 
-#include "Flare/Core/Log.h"
+#include "FlareCore/Log.h"
 #include "Flare/Project/Project.h"
 
 #include "FlarePlatform/Platform.h"

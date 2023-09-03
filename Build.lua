@@ -32,7 +32,7 @@ group ""
 
 group "Core"
 	include "FlarePlatform/FlarePlatform.Build.lua"
-	include "FlareCommon/FlareCommon.Build.lua"
+	include "FlareCore/FlareCore.Build.lua"
 	include "Flare/Flare.Build.lua"
 	include "FlareECS/FlareECS.Build.lua"
 group ""

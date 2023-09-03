@@ -7,7 +7,7 @@ project "Flare"
 
 	build_tool.define_module("Flare")
 	build_tool.add_module_ref("FlarePlatform")
-	build_tool.add_module_ref("FlareCommon")
+	build_tool.add_module_ref("FlareCore")
 	build_tool.add_module_ref("FlareECS")
 
     files
@@ -22,7 +22,7 @@ project "Flare"
     includedirs
 	{
 		"src/",
-		"%{wks.location}/FlareCommon/src/",
+		"%{wks.location}/FlareCore/src/",
 		"%{wks.location}/FlarePlatform/src/",
 		"%{wks.location}/FlareECS/src/",
 
@@ -42,7 +42,7 @@ project "Flare"
 		"GLFW",
 		"ImGUI",
 		"FlareECS",
-		"FlareCommon",
+		"FlareCore",
 		"FlarePlatform",
 		"yaml-cpp"
 	}
@@ -58,7 +58,7 @@ project "Flare"
 		systemversion "latest"
 
 		links { "dwmapi.lib" }
-	
+
 	filter "configurations:Debug"
 		defines "FLARE_DEBUG"
 		runtime "Debug"

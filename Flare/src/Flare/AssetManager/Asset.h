@@ -1,9 +1,9 @@
 #pragma once
 
-#include "Flare/Core/UUID.h"
-#include "Flare/Core/Assert.h"
+#include "FlareCore/UUID.h"
+#include "FlareCore/Assert.h"
 
-#include "Flare/Serialization/TypeInitializer.h"
+#include "FlareCore/Serialization/TypeInitializer.h"
 
 #include <filesystem>
 #include <string_view>

@@ -1,6 +1,6 @@
 #include "ScriptingEngine.h"
 
-#include "Flare/Core/Log.h"
+#include "FlareCore/Log.h"
 
 #include "Flare/Scene/Components.h"
 #include "Flare/Project/Project.h"

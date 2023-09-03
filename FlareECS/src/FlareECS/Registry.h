@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Flare/Core/Assert.h"
-#include "Flare/Core/Core.h"
+#include "FlareCore/Assert.h"
+#include "FlareCore/Core.h"
 
 #include "FlareECS/Entity/Entity.h"
 #include "FlareECS/Entity/Component.h"
@@ -14,8 +14,6 @@
 #include <unordered_map>
 #include <vector>
 #include <optional>
-#include <Flare/Core/KeyCode.h>
-#include <Flare/Core/KeyCode.h>
 
 namespace Flare
 {

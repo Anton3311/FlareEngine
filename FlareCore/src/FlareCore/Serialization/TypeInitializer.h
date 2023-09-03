@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Flare/Core/Core.h"
-#include "Flare/Core/Assert.h"
+#include "FlareCore/Core.h"
+#include "FlareCore/Assert.h"
 
 #include <glm/glm.hpp>
 
@@ -48,10 +48,10 @@ namespace Flare
         Custom,
     };
 
-    FLARECOMMON_API size_t GetFieldTypeSize(SerializableFieldType fieldType);
+    FLARECORE_API size_t GetFieldTypeSize(SerializableFieldType fieldType);
 
-    class FLARECOMMON_API TypeInitializer;
-    struct FLARECOMMON_API FieldTypeInfo
+    class FLARECORE_API TypeInitializer;
+    struct FLARECORE_API FieldTypeInfo
     {
         constexpr FieldTypeInfo()
             : FieldType(SerializableFieldType::None), CustomType(nullptr) {}
@@ -153,7 +153,7 @@ namespace Flare
 #define FLARE_GET_FIELD_TYPE(typeName, fieldName) decltype(((typeName*)nullptr)->fieldName)
 #define FLARE_FIELD(typeName, fieldName) Flare::FieldDataFromType<FLARE_GET_FIELD_TYPE(typeName, fieldName)>().Get(#fieldName, offsetof(typeName, fieldName))
 
-    class FLARECOMMON_API TypeInitializer
+    class FLARECORE_API TypeInitializer
     {
     public:
         using DefaultConstructorFunction = void(*)(void*);

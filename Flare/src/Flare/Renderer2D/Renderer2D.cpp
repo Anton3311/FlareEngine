@@ -1,6 +1,6 @@
 #include "Renderer2D.h"
 
-#include "Flare/Core/Core.h"
+#include "FlareCore/Core.h"
 
 #include "Flare/Renderer/RenderCommand.h"
 

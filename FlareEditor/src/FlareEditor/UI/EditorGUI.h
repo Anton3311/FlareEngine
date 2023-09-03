@@ -3,7 +3,7 @@
 #include "Flare.h"
 
 #include "Flare/Scripting/ScriptingEngine.h"
-#include "Flare/Serialization/TypeInitializer.h"
+#include "FlareCore/Serialization/TypeInitializer.h"
 
 #include "FlareECS/Entity/Entity.h"
 #include "FlareECS/World.h"

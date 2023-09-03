@@ -1,6 +1,6 @@
 #include "RendererAPI.h"
 
-#include "Flare/Core/Assert.h"
+#include "FlareCore/Assert.h"
 #include "Flare/Platform/OpenGL/OpenGLRendererAPI.h"
 
 namespace Flare

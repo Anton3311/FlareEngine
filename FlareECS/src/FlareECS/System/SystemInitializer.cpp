@@ -1,6 +1,6 @@
 #include "SystemInitializer.h"
 
-#include "Flare/Core/Log.h"
+#include "FlareCore/Log.h"
 
 namespace Flare
 {

@@ -1,6 +1,6 @@
 #include "TypeInitializer.h"
 
-#include "Flare/Core/Assert.h"
+#include "FlareCore/Assert.h"
 
 namespace Flare
 {

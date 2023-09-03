@@ -1,6 +1,6 @@
 #include "OpenGLFrameBuffer.h"
 
-#include "Flare/Core/Assert.h"
+#include "FlareCore/Assert.h"
 
 #include <glad/glad.h>
 #include <glm/gtc/type_ptr.hpp>
@@ -144,9 +144,9 @@ namespace Flare
         for (size_t i = 0; i < m_ColorAttachments.size(); i++)
         {
             if (IsDepthFormat(m_Specifications.Attachments[i].Format))
-                AttachDethTexture(i);
+                AttachDethTexture((uint32_t)i);
             else
-                AttachColorTexture(i);
+                AttachColorTexture((uint32_t)i);
         }
 
         FLARE_CORE_ASSERT(m_ColorAttachments.size() <= 3);

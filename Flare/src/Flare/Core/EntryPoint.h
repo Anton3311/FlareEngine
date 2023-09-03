@@ -1,6 +1,6 @@
 #include "Flare/Core/Application.h"
 #include "Flare/Core/CommandLineArguments.h"
-#include "Flare/Core/Log.h"
+#include "FlareCore/Log.h"
 
 #include <stdint.h>
 

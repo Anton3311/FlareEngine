@@ -1,7 +1,7 @@
 #include "FlarePlatform/Platform.h"
 
-#include "Flare/Core/Assert.h"
-#include "Flare/Core/Assert.h"
+#include "FlareCore/Assert.h"
+#include "FlareCore/Assert.h"
 
 #include "FlarePlatform/Window.h"
 

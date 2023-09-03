@@ -4,7 +4,7 @@
 #include "Flare/AssetManager/AssetManager.h"
 
 #include "Flare/Serialization/Serialization.h"
-#include "Flare/Serialization/TypeInitializer.h"
+#include "FlareCore/Serialization/TypeInitializer.h"
 
 #include "FlareECS/Query/EntityRegistryIterator.h"
 

@@ -1,6 +1,6 @@
 #include "QueryCache.h"
 
-#include "Flare/Core/Core.h"
+#include "FlareCore/Core.h"
 
 #include "FlareECS/Registry.h"
 #include "FlareECS/Query/Query.h"

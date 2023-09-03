@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Flare/Core/Core.h"
-#include "Flare/Core/KeyCode.h"
-#include "Flare/Core/MouseCode.h"
+#include "FlareCore/Core.h"
+#include "FlareCore/KeyCode.h"
+#include "FlareCore/MouseCode.h"
 
 #include "FlarePlatform/Event.h"
 

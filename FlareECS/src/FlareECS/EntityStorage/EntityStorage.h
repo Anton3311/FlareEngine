@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Flare/Core/Assert.h"
+#include "FlareCore/Assert.h"
 
 #include "FlareECS/EntityStorage/EntityStorageChunk.h"
 

@@ -6,7 +6,7 @@ project "FlareECS"
 	staticruntime "off"
 
 	build_tool.define_module("FlareECS")
-	build_tool.add_module_ref("FlareCommon")
+	build_tool.add_module_ref("FlareCore")
 
     files
     {
@@ -18,14 +18,14 @@ project "FlareECS"
 	{
 		"src/",
 		"include/",
-		"%{wks.location}/FlareCommon/src/",
+		"%{wks.location}/FlareCore/src/",
 		INCLUDE_DIRS.spdlog,
 		INCLUDE_DIRS.glm,
 	}
 
 	links
 	{
-		"FlareCommon",
+		"FlareCore",
 	}
 
 	filter "system:windows"

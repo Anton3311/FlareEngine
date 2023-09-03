@@ -8,7 +8,7 @@ project "FlareEditor"
 
 	build_tool.add_module_ref("Flare")
 	build_tool.add_module_ref("FlarePlatform")
-	build_tool.add_module_ref("FlareCommon")
+	build_tool.add_module_ref("FlareCore")
 	build_tool.add_module_ref("FlareECS")
 
     files
@@ -24,7 +24,7 @@ project "FlareEditor"
     {
         "src",
 		"%{wks.location}/Flare/src",
-		"%{wks.location}/FlareCommon/src",
+		"%{wks.location}/FlareCore/src",
 		"%{wks.location}/FlarePlatform/src",
 		"%{wks.location}/FlareECS/src",
 
@@ -41,7 +41,7 @@ project "FlareEditor"
 		"Flare",
 		"GLFW",
 		"ImGUI",
-		"FlareCommon",
+		"FlareCore",
 		"FlarePlatform",
 		"FlareECS",
 		"yaml-cpp",

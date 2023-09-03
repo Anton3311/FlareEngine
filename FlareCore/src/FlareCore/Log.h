@@ -1,12 +1,12 @@
 #pragma once
 
-#include "Flare/Core/Core.h"
+#include "FlareCore/Core.h"
 
 #include <spdlog/spdlog.h>
 
 namespace Flare
 {
-	class FLARECOMMON_API Log
+	class FLARECORE_API Log
 	{
 	public:
 		static void Initialize();

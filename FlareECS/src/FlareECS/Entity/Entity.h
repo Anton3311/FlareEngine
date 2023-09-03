@@ -2,7 +2,7 @@
 
 #include "FlareECS/Entity/Archetype.h"
 
-#include "Flare/Serialization/TypeInitializer.h"
+#include "FlareCore/Serialization/TypeInitializer.h"
 
 #include <stdint.h>
 #include <xhash>

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Flare/Core/Core.h"
+#include "FlareCore/Core.h"
 #include "FlarePlatform/Window.h"
 
 #include <GLFW/glfw3.h>

@@ -90,7 +90,7 @@ namespace Flare
 		Application& application = Application::GetInstance();
 
 		const WindowProperties& windowProps = application.GetWindow()->GetProperties();
-		io.DisplaySize = ImVec2(windowProps.Size.x, windowProps.Size.y);
+		io.DisplaySize = ImVec2((float)windowProps.Size.x, (float)windowProps.Size.y);
 
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

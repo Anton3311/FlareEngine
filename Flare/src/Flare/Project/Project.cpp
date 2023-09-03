@@ -1,6 +1,6 @@
 #include "Project.h"
 
-#include "Flare/Core/Assert.h"
+#include "FlareCore/Assert.h"
 #include "Flare/Project/ProjectSerializer.h"
 #include "Flare/Scripting/ScriptingEngine.h"
 

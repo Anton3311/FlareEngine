@@ -1,7 +1,7 @@
 #include "EditorAssetManager.h"
 
-#include "Flare/Core/Assert.h"
-#include "Flare/Core/Log.h"
+#include "FlareCore/Assert.h"
+#include "FlareCore/Log.h"
 
 #include "Flare/AssetManager/Importers/TextureImporter.h"
 #include "Flare/AssetManager/Importers/SceneImporter.h"

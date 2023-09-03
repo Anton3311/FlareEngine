@@ -1,6 +1,6 @@
 #include "OpenGLRendererAPI.h"
 
-#include "Flare/Core/Log.h"
+#include "FlareCore/Log.h"
 
 #include <glad/glad.h>
 

@@ -6,7 +6,7 @@ project "FlarePlatform"
 	staticruntime "off"
 
 	build_tool.define_module("FlarePlatform")
-	build_tool.add_module_ref("FlareCommon")
+	build_tool.add_module_ref("FlareCore")
 
     files
     {
@@ -17,7 +17,7 @@ project "FlarePlatform"
     includedirs
 	{
 		"src/",
-		"%{wks.location}/FlareCommon/src/",
+		"%{wks.location}/FlareCore/src/",
 
 		INCLUDE_DIRS.GLFW,
 		INCLUDE_DIRS.glm,
@@ -28,7 +28,7 @@ project "FlarePlatform"
 	{
 		"GLFW",
 		"ImGUI",
-		"FlareCommon",
+		"FlareCore",
 	}
 
 	defines
