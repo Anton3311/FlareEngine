@@ -77,7 +77,7 @@ namespace Flare
 	{
 		size_t queryComponentIndex = 0;
 		size_t i = 0;
-		while (i < archetypeComponents.size())
+		while (i < archetypeComponents.size() && queryComponentIndex < queryComponents.size())
 		{
 			bool match = archetypeComponents[i].CompareMasked(queryComponents[queryComponentIndex]);
 			bool without = HAS_BIT(queryComponents[queryComponentIndex].GetIndex(), (uint32_t)QueryFilterType::Without);

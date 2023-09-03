@@ -59,6 +59,12 @@ M.setup_project = function(name)
 		root .. "Flare/vendor/glm",
 	})
 
+	filter "configurations:not Dist"
+		disablewarnings
+		{
+			"4251"
+		}
+
 	filter "system:windows"
 		systemversion "latest"
 

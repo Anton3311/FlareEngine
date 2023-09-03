@@ -40,7 +40,7 @@ namespace Flare
 		size_t bytesOffset = (entityIndex % m_EntitiesPerChunk * m_EntitySize);
 		size_t chunkIndex = entityIndex / m_EntitiesPerChunk;
 
-		FLARE_CORE_ASSERT(bytesOffset < ENTITY_CHUNK_SIZE - m_EntitySize);
+		FLARE_CORE_ASSERT(bytesOffset <= ENTITY_CHUNK_SIZE - m_EntitySize);
 		FLARE_CORE_ASSERT(chunkIndex < m_Chunks.size());
 
 		return m_Chunks[chunkIndex].GetBuffer() + bytesOffset;
