@@ -7,7 +7,7 @@
 #include <FlareECS/Commands/CommandBuffer.h>
 
 #include <Flare/Core/Time.h>
-#include <Flare/Serialization/TypeInitializer.h>
+#include <FlareCore/Serialization/TypeInitializer.h>
 #include <Flare/Scene/Components.h>
 
 #include <Flare/Input/InputManager.h>
