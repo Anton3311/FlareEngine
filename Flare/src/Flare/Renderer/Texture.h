@@ -34,7 +34,7 @@ namespace Flare
 		TextureFiltering Filtering;
 	};
 
-	class Texture : public Asset
+	class FLARE_API Texture : public Asset
 	{
 	public:
 		Texture()

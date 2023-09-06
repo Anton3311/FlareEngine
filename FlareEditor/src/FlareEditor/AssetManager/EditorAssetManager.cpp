@@ -3,11 +3,12 @@
 #include "FlareCore/Assert.h"
 #include "FlareCore/Log.h"
 
-#include "Flare/AssetManager/Importers/TextureImporter.h"
-#include "Flare/AssetManager/Importers/SceneImporter.h"
-
 #include "Flare/Serialization/Serialization.h"
 #include "Flare/Project/Project.h"
+
+#include "Flare/Renderer/Texture.h"
+
+#include "FlareEditor/Serialization/SceneSerializer.h"
 
 #include <yaml-cpp/yaml.h>
 
@@ -30,8 +31,17 @@ namespace Flare
 
     EditorAssetManager::EditorAssetManager()
     {
-        m_AssetImporters.emplace(AssetType::Texture, TextureImporter::ImportTexture);
-        m_AssetImporters.emplace(AssetType::Scene, SceneImporter::ImportScene);
+        m_AssetImporters.emplace(AssetType::Texture, [](const AssetMetadata& metadata) -> Ref<Asset>
+        {
+            return Texture::Create(metadata.Path, TextureFiltering::Closest);
+        });
+
+        m_AssetImporters.emplace(AssetType::Scene, [](const AssetMetadata& metadata) -> Ref<Asset>
+        {
+            Ref<Scene> scene = CreateRef<Scene>();
+            SceneSerializer::Deserialize(scene, metadata.Path);
+            return scene;
+        });
     }
 
     void EditorAssetManager::Reinitialize()

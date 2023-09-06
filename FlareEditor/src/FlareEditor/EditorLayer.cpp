@@ -4,7 +4,6 @@
 #include "Flare/Core/Application.h"
 #include "Flare/Renderer2D/Renderer2D.h"
 #include "Flare/Renderer/Renderer.h"
-#include "Flare/Scene/SceneSerializer.h"
 
 #include "Flare/AssetManager/AssetManager.h"
 
@@ -16,6 +15,7 @@
 #include "FlarePlatform/Platform.h"
 #include "FlarePlatform/Events.h"
 
+#include "FlareEditor/Serialization/SceneSerializer.h"
 #include "FlareEditor/AssetManager/EditorAssetManager.h"
 
 #include "FlareEditor/ImGui/ImGuiLayer.h"
