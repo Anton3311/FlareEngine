@@ -4,6 +4,7 @@
 
 #include "Flare/Project/Project.h"
 
+#include "FlareEditor/EditorLayer.h"
 #include "FlareEditor/UI/EditorGUI.h"
 
 #include <imgui.h>
@@ -141,6 +142,12 @@ namespace Flare
 
 		if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
 			OnOpenFile(node);
+
+		if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Left))
+		{
+			EditorLayer::GetInstance().Selection.SetAsset(node.Handle);
+			OnAssetSelectionChanged.Invoke(node.Handle);
+		}
 
 		if (node.IsImported && ImGui::BeginDragDropSource())
 		{

@@ -36,6 +36,7 @@ namespace Flare
 	EditorLayer::EditorLayer()
 		: Layer("EditorLayer"), 
 		m_EditedSceneHandle(NULL_ASSET_HANDLE), 
+		m_PropertiesWindow(m_AssetManagerWindow),
 		m_PlaymodePaused(false),
 		m_Mode(EditorMode::Edit),
 		m_Guizmo(GuizmoMode::None)
@@ -50,6 +51,7 @@ namespace Flare
 
 	void EditorLayer::OnAttach()
 	{
+		m_PropertiesWindow.OnAttach();
 		ImGuiLayer::OnAttach();
 
 		Project::OnProjectOpen.Bind(FLARE_BIND_EVENT_CALLBACK(OnOpenProject));

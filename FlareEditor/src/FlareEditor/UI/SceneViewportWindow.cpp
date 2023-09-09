@@ -71,7 +71,7 @@ namespace Flare
 
 			m_FrameBuffer->Blit(m_ScreenBuffer, 0, 0);
 
-			Entity selectedEntity = EditorLayer::GetInstance().GetSelectedEntity();
+			Entity selectedEntity = EditorLayer::GetInstance().Selection.TryGetEntity().value_or(Entity());
 			if (selectedEntity != Entity())
 			{
 				m_FrameBuffer->Bind();
@@ -142,9 +142,12 @@ namespace Flare
 		}
 
 		ImGuiIO& io = ImGui::GetIO();
-		Entity selectedEntity = EditorLayer::GetInstance().GetSelectedEntity();
-		if (world.IsEntityAlive(selectedEntity) && EditorLayer::GetInstance().GetGuizmoMode() != GuizmoMode::None)
+
+		const EditorSelection& selection = EditorLayer::GetInstance().Selection;
+
+		if (selection.GetType() == EditorSelectionType::Entity && world.IsEntityAlive(selection.GetEntity()) && EditorLayer::GetInstance().GetGuizmoMode() != GuizmoMode::None)
 		{
+			Entity selectedEntity = selection.GetEntity();
 			ImGuizmo::SetOrthographic(false);
 			ImGuizmo::SetDrawlist();
 
@@ -205,7 +208,7 @@ namespace Flare
 		if (!ImGuizmo::IsUsingAny())
 		{
 			if (io.MouseClicked[ImGuiMouseButton_Left] && m_FrameBuffer != nullptr && m_IsHovered && m_RelativeMousePosition.x >= 0 && m_RelativeMousePosition.y >= 0)
-				EditorLayer::GetInstance().SetSelectedEntity(GetEntityUnderCursor());
+				EditorLayer::GetInstance().Selection.SetEntity(GetEntityUnderCursor());
 		}
 
 		EndImGui();

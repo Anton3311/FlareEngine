@@ -31,6 +31,7 @@ namespace Flare
 		std::optional<AssetHandle> FindAssetByPath(const std::filesystem::path& path);
 
 		AssetHandle ImportAsset(const std::filesystem::path& path);
+		void ReloadAsset(AssetHandle handle);
 		void UnloadAsset(AssetHandle handle);
 
 		void RemoveFromRegistry(AssetHandle handle);

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Flare/AssetManager/AssetManager.h"
+#include "Flare/Core/Signal.h"
 
 #include "FlareEditor/AssetManager/EditorAssetManager.h"
 
@@ -52,6 +53,8 @@ namespace Flare
 		void BuildDirectory(uint32_t parentIndex, const std::filesystem::path& path);
 
 		void OnOpenFile(const AssetTreeNode& node);
+	public:
+		Signal<AssetHandle> OnAssetSelectionChanged;
 	private:
 		AssetTreeViewMode m_Mode = AssetTreeViewMode::All;
 		Ref<EditorAssetManager> m_AssetManager;

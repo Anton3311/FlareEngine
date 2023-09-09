@@ -29,7 +29,7 @@ namespace Flare
 	private:
 		UUID m_UUID;
 	};
-	
+
 	constexpr AssetHandle NULL_ASSET_HANDLE = 0;
 
 	enum class AssetType

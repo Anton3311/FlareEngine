@@ -57,7 +57,7 @@ namespace Flare
 
 				ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImGui::GetStyle().FramePadding / 2);
 
-				bool selected = entity == EditorLayer::GetInstance().GetSelectedEntity();
+				bool selected = entity == EditorLayer::GetInstance().Selection.TryGetEntity().value_or(Entity());
 				if (selected)
 				{
 					flags |= ImGuiTreeNodeFlags_Framed;
@@ -84,7 +84,7 @@ namespace Flare
 				}
 
 				if (ImGui::IsItemHovered() && ImGui::IsMouseReleased(ImGuiMouseButton_Left))
-					EditorLayer::GetInstance().SetSelectedEntity(entity);
+					EditorLayer::GetInstance().Selection.SetEntity(entity);
 
 				if (opened)
 					ImGui::TreePop();

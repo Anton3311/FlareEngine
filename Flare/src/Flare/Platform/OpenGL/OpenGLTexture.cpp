@@ -7,7 +7,7 @@
 
 namespace Flare
 {
-	OpenGLTexture::OpenGLTexture(const std::filesystem::path& path, TextureFiltering filtering)
+	OpenGLTexture::OpenGLTexture(const std::filesystem::path& path, const TextureSpecifications& specifications)
 	{
 		int width, height, channels;
 		stbi_set_flip_vertically_on_load(true);
@@ -17,7 +17,8 @@ namespace Flare
 		{
 			m_Specifications.Width = width;
 			m_Specifications.Height = height;
-			m_Specifications.Filtering = filtering;
+			m_Specifications.Filtering = specifications.Filtering;
+			m_Specifications.Wrap = specifications.Wrap;
 
 			m_InternalTextureFormat = 0;
 			m_TextureDataType = 0;
@@ -38,7 +39,31 @@ namespace Flare
 			glCreateTextures(GL_TEXTURE_2D, 1, &m_Id);
 			glTextureStorage2D(m_Id, 1, m_InternalTextureFormat, m_Specifications.Width, m_Specifications.Height);
 
-			SetFiltering(m_Specifications.Filtering);
+			switch (m_Specifications.Filtering)
+			{
+			case TextureFiltering::Closest:
+				glTextureParameteri(m_Id, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+				glTextureParameteri(m_Id, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+				break;
+			case TextureFiltering::Linear:
+				glTextureParameteri(m_Id, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+				glTextureParameteri(m_Id, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+				break;
+			}
+
+			switch (m_Specifications.Wrap)
+			{
+			case TextureWrap::Clamp:
+				glTextureParameteri(m_Id, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+				glTextureParameteri(m_Id, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+				glTextureParameteri(m_Id, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+				break;
+			case TextureWrap::Repeat:
+				glTextureParameteri(m_Id, GL_TEXTURE_WRAP_R, GL_REPEAT);
+				glTextureParameteri(m_Id, GL_TEXTURE_WRAP_S, GL_REPEAT);
+				glTextureParameteri(m_Id, GL_TEXTURE_WRAP_T, GL_REPEAT);
+				break;
+			}
 
 			glTextureSubImage2D(m_Id, 0, 0, 0, m_Specifications.Width, m_Specifications.Height, m_TextureDataType, GL_UNSIGNED_BYTE, data);
 			stbi_image_free(data);

@@ -11,10 +11,11 @@ namespace Flare
 	public:
 		using ListenerFunction = std::function<void(T...)>;
 
-		void Invoke(const T&& ...args)
+		template<typename... ArgT>
+		void Invoke(ArgT&&... args)
 		{
 			for (auto& listener : m_Listeners)
-				listener(std::forward<T>(args)...);
+				listener(std::forward<ArgT>(args)...);
 		}
 
 		void Bind(const ListenerFunction& listener)

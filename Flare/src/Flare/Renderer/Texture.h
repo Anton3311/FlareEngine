@@ -5,6 +5,7 @@
 #include "Flare/AssetManager/Asset.h"
 
 #include <filesystem>
+#include <optional>
 
 namespace Flare
 {
@@ -32,7 +33,14 @@ namespace Flare
 		uint32_t Height;
 		TextureFormat Format;
 		TextureFiltering Filtering;
+		TextureWrap Wrap;
 	};
+
+	FLARE_API const char* TextureWrapToString(TextureWrap wrap);
+	FLARE_API const char* TextureFilteringToString(TextureFiltering filtering);
+
+	FLARE_API std::optional<TextureWrap> TextureWrapFromString(std::string_view string);
+	FLARE_API std::optional<TextureFiltering> TextureFilteringFromString(std::string_view string);
 
 	class FLARE_API Texture : public Asset
 	{
@@ -50,7 +58,7 @@ namespace Flare
 		virtual TextureFormat GetFormat() const = 0;
 		virtual TextureFiltering GetFiltering() const = 0;
 	public:
-		static Ref<Texture> Create(const std::filesystem::path& path, TextureFiltering filtering = TextureFiltering::Linear);
+		static Ref<Texture> Create(const std::filesystem::path& path, const TextureSpecifications& specifications);
 		static Ref<Texture> Create(uint32_t width, uint32_t height, const void* data, TextureFormat format, TextureFiltering filtering = TextureFiltering::Linear);
 	};
 }
