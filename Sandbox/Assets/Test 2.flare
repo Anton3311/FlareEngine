@@ -1,15 +1,15 @@
 Entities:
   - Components:
       - Name: Transform
-        Position: [0, 0, 4.19999981]
+        Position: [0, 0, 8.89999962]
         Rotation: [0, 0, 0]
         Scale: [1, 1, 1]
       - Name: Camera
-        Size: 11.3000002
+        Size: 10
         Near: 0.100000001
         Far: 100
-        Projection: Orthographic
-        FOV: 0
+        Projection: Perspective
+        FOV: 90
   - Components:
       - Name: Transform
         Position: [0, 0, -1.20000005]

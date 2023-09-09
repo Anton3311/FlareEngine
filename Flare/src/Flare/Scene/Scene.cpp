@@ -53,6 +53,8 @@ namespace Flare
 		m_World.GetRegistry().RegisterComponents();
 
 		SystemsManager& systemsManager = m_World.GetSystemsManager();
+		systemsManager.CreateGroup("Debug Rendering");
+
 		m_2DRenderingGroup = systemsManager.CreateGroup("2D Rendering");
 		m_ScriptingUpdateGroup = systemsManager.CreateGroup("Scripting Update");
 		m_OnRuntimeStartGroup = systemsManager.CreateGroup("On Runtime Start");

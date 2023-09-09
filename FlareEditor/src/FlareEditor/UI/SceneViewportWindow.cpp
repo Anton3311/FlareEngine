@@ -60,17 +60,23 @@ namespace Flare
 
 		PrepareViewport();
 
+		Ref<Scene> scene = Scene::GetActive();
 		if (m_RenderData.Viewport.Size != glm::ivec2(0))
 		{
+			std::optional<SystemGroupId> debugRenderingGroup = scene->GetECSWorld().GetSystemsManager().FindGroup("Debug Rendering");
+
 			m_ScreenBuffer->Bind();
 			OnClear();
 
-			Scene::GetActive()->OnBeforeRender(m_RenderData);
-			Scene::GetActive()->OnRender(m_RenderData);
+			scene->OnBeforeRender(m_RenderData);
+			scene->OnRender(m_RenderData);
 
-			DebugRenderer::Begin(m_RenderData);
-			DebugRenderer::DrawLine(glm::vec3(-1.0f, 0.0f, 2.0f), glm::vec3(3.0f, 0.0f, 2.0f));
-			DebugRenderer::End();
+			if (debugRenderingGroup.has_value())
+			{
+				DebugRenderer::Begin(m_RenderData);
+				scene->GetECSWorld().GetSystemsManager().ExecuteGroup(debugRenderingGroup.value());
+				DebugRenderer::End();
+			}
 
 			m_ScreenBuffer->Unbind();
 
