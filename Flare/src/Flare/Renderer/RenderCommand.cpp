@@ -14,6 +14,11 @@ namespace Flare
 		s_API->Clear();
 	}
 
+	void RenderCommand::SetLineWidth(float width)
+	{
+		s_API->SetLineWidth(width);
+	}
+
 	void RenderCommand::SetClearColor(float r, float g, float b, float a)
 	{
 		s_API->SetClearColor(r, g, b, a);
@@ -32,5 +37,10 @@ namespace Flare
 	void RenderCommand::DrawIndexed(const Ref<VertexArray>& mesh, size_t indicesCount)
 	{
 		s_API->DrawIndexed(mesh, indicesCount);
+	}
+
+	void RenderCommand::DrawLines(const Ref<VertexArray>& lines, size_t verticesCount)
+	{
+		s_API->DrawLines(lines, verticesCount);
 	}
 }

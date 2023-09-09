@@ -3,6 +3,7 @@
 #include "Flare/Core/Time.h"
 
 #include "Flare/Renderer2D/Renderer2D.h"
+#include "Flare/Renderer/DebugRenderer.h"
 #include "Flare/Renderer/RenderCommand.h"
 
 #include "Flare/Scripting/ScriptingEngine.h"
@@ -59,14 +60,18 @@ namespace Flare
 
 		RenderCommand::Initialize();
 		Renderer2D::Initialize();
+		DebugRenderer::Initialize();
 
 		ScriptingEngine::Initialize();
+
+		RenderCommand::SetLineWidth(1.2f);
 	}
 
 	Application::~Application()
 	{
 		ScriptingEngine::Shutdown();
 		Renderer2D::Shutdown();
+		DebugRenderer::Shutdown();
 	}
 
 	void Application::Run()

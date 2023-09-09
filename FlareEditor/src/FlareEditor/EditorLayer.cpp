@@ -39,7 +39,7 @@ namespace Flare
 		m_PropertiesWindow(m_AssetManagerWindow),
 		m_PlaymodePaused(false),
 		m_Mode(EditorMode::Edit),
-		m_Guizmo(GuizmoMode::None)
+		m_Guizmo(GuizmoMode::Translate)
 	{
 		s_Instance = this;
 	}

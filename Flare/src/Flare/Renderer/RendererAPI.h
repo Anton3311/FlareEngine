@@ -22,8 +22,11 @@ namespace Flare
 		virtual void SetClearColor(float r, float g, float b, float a) = 0;
 		virtual void Clear() = 0;
 
+		virtual void SetLineWidth(float width) = 0;
+
 		virtual void DrawIndexed(const Ref<VertexArray>& vertexArray) = 0;
 		virtual void DrawIndexed(const Ref<VertexArray>& vertexArray, size_t indicesCount) = 0;
+		virtual void DrawLines(const Ref<VertexArray>& vertexArray, size_t cverticesCountount) = 0;
 	public:
 		static Scope<RendererAPI> Create();
 		static API GetAPI();

@@ -1,6 +1,7 @@
 #include "SceneViewportWindow.h"
 
 #include "Flare/Renderer/RenderCommand.h"
+#include "Flare/Renderer/DebugRenderer.h"
 #include "Flare/Scene/Components.h"
 #include "Flare/Scene/Scene.h"
 #include "Flare/Math/Math.h"
@@ -66,6 +67,10 @@ namespace Flare
 
 			Scene::GetActive()->OnBeforeRender(m_RenderData);
 			Scene::GetActive()->OnRender(m_RenderData);
+
+			DebugRenderer::Begin(m_RenderData);
+			DebugRenderer::DrawLine(glm::vec3(-1.0f, 0.0f, 2.0f), glm::vec3(3.0f, 0.0f, 2.0f));
+			DebugRenderer::End();
 
 			m_ScreenBuffer->Unbind();
 
