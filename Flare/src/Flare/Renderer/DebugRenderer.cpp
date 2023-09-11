@@ -200,6 +200,15 @@ namespace Flare
 			FlushRays();
 	}
 
+	void DebugRenderer::DrawWireQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color)
+	{
+		glm::vec3 halfSize = glm::vec3(size / 2.0f, 0.0f);
+		DrawLine(position + glm::vec3(-halfSize.x, halfSize.y, 0.0f), position + halfSize, color);
+		DrawLine(position + glm::vec3(-halfSize.x, -halfSize.y, 0.0f), position + glm::vec3(halfSize.x, -halfSize.y, 0.0f), color);
+		DrawLine(position + glm::vec3(-halfSize.x, halfSize.y, 0.0f), position + glm::vec3(-halfSize.x, -halfSize.y, 0.0f), color);
+		DrawLine(position + halfSize, position + glm::vec3(halfSize.x, -halfSize.y, 0.0f), color);
+	}
+
 	void DebugRenderer::FlushLines()
 	{
 		FLARE_CORE_ASSERT(s_DebugRendererData.FrameData);

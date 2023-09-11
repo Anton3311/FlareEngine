@@ -77,10 +77,7 @@ namespace Flare
 			{
 				DebugRenderer::Begin(m_RenderData);
 				scene->GetECSWorld().GetSystemsManager().ExecuteGroup(debugRenderingGroup.value());
-				DebugRenderer::End();
 
-				DebugRenderer::Begin(m_RenderData);
-				
 				for (uint32_t i = 0; i < 3; i++)
 				{
 					glm::vec3 direction = glm::vec3(0.0f);
