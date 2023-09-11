@@ -28,6 +28,8 @@ namespace Flare
 		const glm::mat4& GetProjectionMatrix() const { return m_ProjectionMatrix; }
 		const glm::mat4& GetViewMatrix() const { return m_ViewMatrix; }
 
+		glm::vec3 GetPosition() const;
+
 		void ProcessEvents(Event& event);
 		void OnViewportChanged(const ViewportRect& viewport);
 
@@ -37,7 +39,7 @@ namespace Flare
 	private:
 		void RecalculateViewMatrix();
 
-		glm::vec3 TransformDirection(const glm::vec3& direction);
+		glm::vec3 TransformDirection(const glm::vec3& direction) const;
 	private:
 		EditorCameraSettings m_Settings;
 		ViewportRect m_Viewport;

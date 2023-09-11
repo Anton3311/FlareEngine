@@ -97,13 +97,14 @@ namespace Flare
 					float halfSize = camera.Size / 2;
 					float aspectRation = (float)renderData.Viewport.Size.x / (float)renderData.Viewport.Size.y;
 
-					renderData.Camera.ViewMatrix = glm::inverse(transforms[entity].GetTransformationMatrix());
+					renderData.Camera.View = glm::inverse(transforms[entity].GetTransformationMatrix());
 
 					if (camera.Projection == CameraComponent::ProjectionType::Orthographic)
-						renderData.Camera.ProjectionMatrix = glm::ortho(-halfSize * aspectRation, halfSize * aspectRation, -halfSize, halfSize, camera.Near, camera.Far);
+						renderData.Camera.Projection = glm::ortho(-halfSize * aspectRation, halfSize * aspectRation, -halfSize, halfSize, camera.Near, camera.Far);
 					else
-						renderData.Camera.ProjectionMatrix = glm::perspective<float>(glm::radians(camera.FOV), aspectRation, camera.Near, camera.Far);
+						renderData.Camera.Projection = glm::perspective<float>(glm::radians(camera.FOV), aspectRation, camera.Near, camera.Far);
 
+					renderData.Camera.Position = transforms[entity].Position;
 					renderData.Camera.CalculateViewProjection();
 				}
 			}
@@ -112,7 +113,7 @@ namespace Flare
 
 	void Scene::OnRender(const RenderData& renderData)
 	{
-		Renderer2D::Begin(m_QuadShader, renderData.Camera.ViewProjectionMatrix);
+		Renderer2D::Begin(m_QuadShader, renderData.Camera.ViewProjection);
 
 		m_World.GetSystemsManager().ExecuteGroup(m_2DRenderingGroup);
 

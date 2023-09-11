@@ -53,9 +53,11 @@ namespace Flare
 
 		if (m_RenderData.IsEditorCamera)
 		{
-			m_RenderData.Camera.ViewMatrix = m_Camera.GetViewMatrix();
-			m_RenderData.Camera.ProjectionMatrix = m_Camera.GetProjectionMatrix();
+			m_RenderData.Camera.View = m_Camera.GetViewMatrix();
+			m_RenderData.Camera.Projection = m_Camera.GetProjectionMatrix();
+			m_RenderData.Camera.InverseProjection = glm::inverse(m_RenderData.Camera.Projection);
 			m_RenderData.Camera.CalculateViewProjection();
+			m_RenderData.Camera.Position = m_Camera.GetPosition();
 		}
 
 		PrepareViewport();
@@ -75,6 +77,17 @@ namespace Flare
 			{
 				DebugRenderer::Begin(m_RenderData);
 				scene->GetECSWorld().GetSystemsManager().ExecuteGroup(debugRenderingGroup.value());
+				DebugRenderer::End();
+
+				DebugRenderer::Begin(m_RenderData);
+				
+				for (uint32_t i = 0; i < 3; i++)
+				{
+					glm::vec3 direction = glm::vec3(0.0f);
+					direction[i] = 1.0f;
+					DebugRenderer::DrawRay(glm::vec3(0.0f), direction * 0.5f, glm::vec4(direction * 0.66f, 1.0f));
+				}
+
 				DebugRenderer::End();
 			}
 

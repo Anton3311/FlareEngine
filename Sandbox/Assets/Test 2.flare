@@ -1,8 +1,8 @@
 Entities:
   - Components:
       - Name: Transform
-        Position: [0, 0, 8.89999962]
-        Rotation: [0, 0, 0]
+        Position: [0, 0, 4]
+        Rotation: [0, -0, 0]
         Scale: [1, 1, 1]
       - Name: Camera
         Size: 10
@@ -57,8 +57,8 @@ Entities:
         b: -59
   - Components:
       - Name: Transform
-        Position: [0, 0, 0]
-        Rotation: [0, 0, 0]
+        Position: [-1.46646929, 0, 0]
+        Rotation: [0, -0, 0]
         Scale: [1.70000005, 1.70000005, 1]
       - Name: Sprite
         Color: [0.142348766, 0.142348766, 0.142348766, 1]

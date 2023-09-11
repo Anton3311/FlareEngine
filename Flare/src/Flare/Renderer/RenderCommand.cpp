@@ -43,4 +43,9 @@ namespace Flare
 	{
 		s_API->DrawLines(lines, verticesCount);
 	}
+
+	void RenderCommand::SetDepthTestEnabled(bool enabled)
+	{
+		s_API->SetDepthTestEnabled(enabled);
+	}
 }
