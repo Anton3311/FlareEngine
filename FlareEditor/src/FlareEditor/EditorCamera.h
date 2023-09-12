@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Flare/Renderer/RenderData.h"
+#include "Flare/Renderer/Viewport.h"
 
 #include "FlarePlatform/Event.h"
 

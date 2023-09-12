@@ -4,12 +4,6 @@
 
 namespace Flare
 {
-	struct ViewportRect
-	{
-		glm::ivec2 Position = glm::ivec2(0);
-		glm::ivec2 Size = glm::ivec2(0);
-	};
-
 	struct CameraData
 	{
 		glm::vec3 Position;
@@ -33,7 +27,6 @@ namespace Flare
 	struct RenderData
 	{
 		CameraData Camera;
-		ViewportRect Viewport;
 		bool IsEditorCamera = false;
 	};
 }

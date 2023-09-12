@@ -119,8 +119,8 @@ namespace Flare
 
 		Renderer2D::ResetStats();
 
-		Renderer::SetMainViewportSize(m_GameWindow->GetRenderData().Viewport.Size);
-		InputManager::SetMousePositionOffset(-m_GameWindow->GetRenderData().Viewport.Position);
+		Renderer::SetMainViewport(m_GameWindow->GetViewport());
+		InputManager::SetMousePositionOffset(-m_GameWindow->GetViewport().GetRect().Position);
 
 		if (m_Mode == EditorMode::Play && !m_PlaymodePaused)
 			Scene::GetActive()->OnUpdateRuntime();

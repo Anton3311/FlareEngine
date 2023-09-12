@@ -51,31 +51,31 @@ namespace Flare
 		if (Scene::GetActive() == nullptr)
 			return;
 
-		if (m_RenderData.IsEditorCamera)
+		if (m_Viewport.FrameData.IsEditorCamera)
 		{
-			m_RenderData.Camera.View = m_Camera.GetViewMatrix();
-			m_RenderData.Camera.Projection = m_Camera.GetProjectionMatrix();
-			m_RenderData.Camera.InverseProjection = glm::inverse(m_RenderData.Camera.Projection);
-			m_RenderData.Camera.CalculateViewProjection();
-			m_RenderData.Camera.Position = m_Camera.GetPosition();
+			m_Viewport.FrameData.Camera.View = m_Camera.GetViewMatrix();
+			m_Viewport.FrameData.Camera.Projection = m_Camera.GetProjectionMatrix();
+			m_Viewport.FrameData.Camera.InverseProjection = glm::inverse(m_Viewport.FrameData.Camera.Projection);
+			m_Viewport.FrameData.Camera.CalculateViewProjection();
+			m_Viewport.FrameData.Camera.Position = m_Camera.GetPosition();
 		}
 
 		PrepareViewport();
 
 		Ref<Scene> scene = Scene::GetActive();
-		if (m_RenderData.Viewport.Size != glm::ivec2(0))
+		if (m_Viewport.GetSize() != glm::ivec2(0))
 		{
 			std::optional<SystemGroupId> debugRenderingGroup = scene->GetECSWorld().GetSystemsManager().FindGroup("Debug Rendering");
 
 			m_ScreenBuffer->Bind();
 			OnClear();
 
-			scene->OnBeforeRender(m_RenderData);
-			scene->OnRender(m_RenderData);
+			scene->OnBeforeRender(m_Viewport.FrameData);
+			scene->OnRender(m_Viewport.FrameData);
 
 			if (debugRenderingGroup.has_value())
 			{
-				DebugRenderer::Begin(m_RenderData);
+				DebugRenderer::Begin();
 				scene->GetECSWorld().GetSystemsManager().ExecuteGroup(debugRenderingGroup.value());
 
 				for (uint32_t i = 0; i < 3; i++)
@@ -105,7 +105,7 @@ namespace Flare
 				m_SelectionOutlineShader->SetInt("u_SelectedId", (int32_t)selectedEntity.GetIndex());
 				m_SelectionOutlineShader->SetInt("u_IdsTexture", 0);
 				m_SelectionOutlineShader->SetFloat4("u_OutlineColor", selectionColor);
-				m_SelectionOutlineShader->SetFloat2("u_OutlineThickness", glm::vec2(4.0f) / (glm::vec2)m_RenderData.Viewport.Size / 2.0f);
+				m_SelectionOutlineShader->SetFloat2("u_OutlineThickness", glm::vec2(4.0f) / (glm::vec2)m_Viewport.GetSize() / 2.0f);
 
 				RenderCommand::DrawIndexed(m_FullscreenQuad);
 				m_FrameBuffer->Unbind();
@@ -115,8 +115,8 @@ namespace Flare
 
 	void SceneViewportWindow::OnViewportChanged()
 	{
-		m_ScreenBuffer->Resize(m_RenderData.Viewport.Size.x, m_RenderData.Viewport.Size.y);
-		m_Camera.OnViewportChanged(m_RenderData.Viewport);
+		m_ScreenBuffer->Resize(m_Viewport.GetSize().x, m_Viewport.GetSize().y);
+		m_Camera.OnViewportChanged(m_Viewport.GetRect());
 	}
 
 	void SceneViewportWindow::OnRenderImGui()
@@ -175,8 +175,8 @@ namespace Flare
 			ImVec2 windowPosition = ImGui::GetWindowPos();
 			ImGuizmo::SetRect(windowPosition.x + m_ViewportOffset.x, 
 				windowPosition.y + m_ViewportOffset.y, 
-				(float)m_RenderData.Viewport.Size.x, 
-				(float) m_RenderData.Viewport.Size.y);
+				(float)m_Viewport.GetSize().x, 
+				(float) m_Viewport.GetSize().y);
 
 			std::optional<TransformComponent*> transform = world.TryGetEntityComponent<TransformComponent>(selectedEntity);
 			if (transform.has_value())
@@ -237,11 +237,11 @@ namespace Flare
 
 	void SceneViewportWindow::CreateFrameBuffer()
 	{
-		FrameBufferSpecifications specifications(m_RenderData.Viewport.Size.x, m_RenderData.Viewport.Size.y, {
+		FrameBufferSpecifications specifications(m_Viewport.GetSize().x, m_Viewport.GetSize().y, {
 			{ FrameBufferTextureFormat::RGB8, TextureWrap::Clamp, TextureFiltering::Closest },
 		});
 
-		FrameBufferSpecifications screenBufferSpecs(m_RenderData.Viewport.Size.x, m_RenderData.Viewport.Size.y, {
+		FrameBufferSpecifications screenBufferSpecs(m_Viewport.GetSize().x, m_Viewport.GetSize().y, {
 			{ FrameBufferTextureFormat::RGB8, TextureWrap::Clamp, TextureFiltering::Closest },
 			{ FrameBufferTextureFormat::RedInteger, TextureWrap::Clamp, TextureFiltering::Closest },
 			{ FrameBufferTextureFormat::Depth, TextureWrap::Clamp, TextureFiltering::Closest },

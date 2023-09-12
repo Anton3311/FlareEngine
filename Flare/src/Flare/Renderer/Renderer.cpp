@@ -4,18 +4,41 @@ namespace Flare
 {
 	struct RendererData
 	{
-		glm::uvec2 ViewportSize;
+		Viewport* MainViewport;
+		Viewport* CurrentViewport;
 	};
 
 	RendererData s_RendererData;
 
-	void Renderer::SetMainViewportSize(glm::uvec2 size)
+	void Renderer::Initialize()
 	{
-		s_RendererData.ViewportSize = size;
+		s_RendererData.MainViewport = nullptr;
+		s_RendererData.CurrentViewport = nullptr;
 	}
 
-	glm::uvec2 Renderer::GetMainViewportSize()
+	void Renderer::Shutdown()
 	{
-		return s_RendererData.ViewportSize;
+	}
+
+	void Renderer::SetMainViewport(Viewport& viewport)
+	{
+		s_RendererData.MainViewport = &viewport;
+	}
+
+	void Renderer::SetCurrentViewport(Viewport& viewport)
+	{
+		s_RendererData.CurrentViewport = &viewport;
+	}
+
+	Viewport& Renderer::GetMainViewport()
+	{
+		FLARE_CORE_ASSERT(s_RendererData.MainViewport);
+		return *s_RendererData.MainViewport;
+	}
+
+	Viewport& Renderer::GetCurrentViewport()
+	{
+		FLARE_CORE_ASSERT(s_RendererData.CurrentViewport);
+		return *s_RendererData.CurrentViewport;
 	}
 }

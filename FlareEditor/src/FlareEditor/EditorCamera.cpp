@@ -3,8 +3,6 @@
 #include "FlareCore/Log.h"
 #include "FlarePlatform/Events.h"
 
-#include "Flare/Renderer2D/Renderer2D.h"
-
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
 

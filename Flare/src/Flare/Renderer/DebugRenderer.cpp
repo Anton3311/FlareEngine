@@ -2,6 +2,7 @@
 
 #include "FlareCore/Assert.h"
 
+#include "Flare/Renderer/Renderer.h"
 #include "Flare/Renderer/VertexArray.h"
 #include "Flare/Renderer/Buffer.h"
 #include "Flare/Renderer/RenderCommand.h"
@@ -126,10 +127,10 @@ namespace Flare
 		s_DebugRendererData.LinesBuffer = nullptr;
 	}
 
-	void DebugRenderer::Begin(const RenderData& renderData)
+	void DebugRenderer::Begin()
 	{
 		FLARE_CORE_ASSERT(!s_DebugRendererData.FrameData);
-		s_DebugRendererData.FrameData = &renderData;
+		s_DebugRendererData.FrameData = &Renderer::GetCurrentViewport().FrameData;
 	}
 
 	void DebugRenderer::End()
