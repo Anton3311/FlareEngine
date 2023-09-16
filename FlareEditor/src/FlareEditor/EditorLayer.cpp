@@ -385,6 +385,7 @@ namespace Flare
 		FLARE_CORE_ASSERT(m_Mode == EditorMode::Edit);
 
 		Ref<Scene> active = Scene::GetActive();
+		AssetHandle activeSceneHandle = active->Handle;
 
 		Ref<EditorAssetManager> assetManager = As<EditorAssetManager>(AssetManager::GetInstance());
 		std::filesystem::path activeScenePath = assetManager->GetAssetMetadata(active->Handle)->Path;
@@ -400,6 +401,7 @@ namespace Flare
 
 		ScriptingEngine::LoadModules();
 		active = CreateRef<Scene>();
+		active->Handle = activeSceneHandle;
 		SceneSerializer::Deserialize(active, activeScenePath);
 
 		active->InitializeRuntime();
