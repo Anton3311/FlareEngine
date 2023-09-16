@@ -4,8 +4,6 @@
 
 namespace Flare
 {
-	FLARE_IMPL_COMPONENT(TransformComponent);
-	FLARE_IMPL_COMPONENT(CameraComponent);
 	FLARE_IMPL_COMPONENT(SpriteComponent);
 
 	TransformComponent::TransformComponent()
@@ -19,6 +17,7 @@ namespace Flare
 			glm::scale(glm::mat4(1.0f), Scale);
 	}
 
+	FLARE_IMPL_COMPONENT(CameraComponent);
 	CameraComponent::CameraComponent()
 		: Projection(ProjectionType::Perspective),
 		  Size(10.0f),
@@ -55,6 +54,7 @@ namespace Flare
 		return inverseProjection * glm::vec4(point, 0.0f, 1.0f);
 	}
 
+	FLARE_IMPL_COMPONENT(TransformComponent);
 	SpriteComponent::SpriteComponent()
 		: Color(glm::vec4(1.0f)),
 		  TextureTiling(glm::vec2(1.0f)),

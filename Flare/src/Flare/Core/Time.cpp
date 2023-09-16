@@ -10,17 +10,17 @@ namespace Flare
 		float PreviousFrameTime;
 	};
 
-	TimeData s_Data;
+	TimeData s_TimeData;
 
 	float Time::GetDeltaTime()
 	{
-		return s_Data.DeltaTime;
+		return s_TimeData.DeltaTime;
 	}
 
 	void Time::UpdateDeltaTime()
 	{
 		float currentTime = Platform::GetTime();
-		s_Data.DeltaTime = currentTime - s_Data.PreviousFrameTime;
-		s_Data.PreviousFrameTime = currentTime;
+		s_TimeData.DeltaTime = currentTime - s_TimeData.PreviousFrameTime;
+		s_TimeData.PreviousFrameTime = currentTime;
 	}
 }

@@ -16,7 +16,7 @@ namespace Flare
 	const std::string s_ModuleLoaderFunctionName = "OnModuleLoaded";
 	const std::string s_ModuleUnloaderFunctionName = "OnModuleUnloaded";
 
-	ScriptingEngine::Data s_Data;
+	ScriptingEngine::Data s_ScriptingData;
 
 	void ScriptingEngine::Initialize()
 	{
@@ -29,7 +29,7 @@ namespace Flare
 
 	void ScriptingEngine::SetCurrentECSWorld(World& world)
 	{
-		s_Data.CurrentWorld = &world;
+		s_ScriptingData.CurrentWorld = &world;
 	}
 
 	void ScriptingEngine::LoadModules()
@@ -65,28 +65,28 @@ namespace Flare
 				continue;
 			}
 
-			s_Data.LoadedSharedLibraries.push_back(library);
+			s_ScriptingData.LoadedSharedLibraries.push_back(library);
 		}
 	}
 
 	void ScriptingEngine::UnloadAllModules()
 	{
-		for (void* lib : s_Data.LoadedSharedLibraries)
+		for (void* lib : s_ScriptingData.LoadedSharedLibraries)
 			Platform::FreeSharedLibrary(lib);
-		s_Data.LoadedSharedLibraries.clear();
+		s_ScriptingData.LoadedSharedLibraries.clear();
 	}
 
 	void ScriptingEngine::RegisterSystems()
 	{
 		std::string_view defaultGroupName = "Scripting Update";
-		std::optional<SystemGroupId> defaultGroup = s_Data.CurrentWorld->GetSystemsManager().FindGroup(defaultGroupName);
+		std::optional<SystemGroupId> defaultGroup = s_ScriptingData.CurrentWorld->GetSystemsManager().FindGroup(defaultGroupName);
 		FLARE_CORE_ASSERT(defaultGroup.has_value());
 
-		s_Data.CurrentWorld->GetSystemsManager().RegisterSystems(defaultGroup.value());
+		s_ScriptingData.CurrentWorld->GetSystemsManager().RegisterSystems(defaultGroup.value());
 	}
 
 	ScriptingEngine::Data& ScriptingEngine::GetData()
 	{
-		return s_Data;
+		return s_ScriptingData;
 	}
 }

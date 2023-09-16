@@ -117,7 +117,7 @@ namespace Flare
 
 	void Scene::OnRender(const RenderData& renderData)
 	{
-		Renderer2D::Begin(m_QuadShader, renderData.Camera.ViewProjection);
+		Renderer2D::Begin(m_QuadShader);
 
 		m_World.GetSystemsManager().ExecuteGroup(m_2DRenderingGroup);
 

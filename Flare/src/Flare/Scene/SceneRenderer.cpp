@@ -14,20 +14,21 @@ namespace Flare
 			ComponentView<TransformComponent> transforms = view.View<TransformComponent>();
 			ComponentView<SpriteComponent> sprites = view.View<SpriteComponent>();
 
-			size_t index = 0;
-			for (EntityViewElement entity : view)
+			for (EntityViewIterator entityIterator = view.begin(); entityIterator != view.end(); ++entityIterator)
 			{
-				TransformComponent& transform = transforms[entity];
-				SpriteComponent& sprite = sprites[entity];
+				TransformComponent& transform = transforms[*entityIterator];
+				SpriteComponent& sprite = sprites[*entityIterator];
+
+				auto entity = view.GetEntity(entityIterator.GetEntityIndex());
+				if (!entity)
+					continue;
 
 				Renderer2D::DrawQuad(transform.GetTransformationMatrix(), sprite.Color,
 					sprite.Texture == NULL_ASSET_HANDLE
 					? nullptr
 					: AssetManager::GetAsset<Texture>(sprite.Texture),
-					sprite.TextureTiling, (int32_t)view.GetEntity(index).value_or(Entity()).GetIndex(),
+					sprite.TextureTiling, (int32_t)entity.value().GetIndex(),
 					sprite.Flags);
-
-				index++;
 			}
 		}
 	}
