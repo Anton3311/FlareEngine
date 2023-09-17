@@ -7,18 +7,18 @@ namespace Flare
 
 	EntityViewIterator EntityView::begin()
 	{
-		return EntityViewIterator(m_Registry.GetArchetypeRecord(m_Archetype).Storage, 0);
+		return EntityViewIterator(m_Registry.GetEntityStorage(m_Archetype), 0);
 	}
 
 	EntityViewIterator EntityView::end()
 	{
-		EntityStorage& storage = m_Registry.GetArchetypeRecord(m_Archetype).Storage;
+		EntityStorage& storage = m_Registry.GetEntityStorage(m_Archetype);
 		return EntityViewIterator(storage, storage.GetEntitiesCount());
 	}
 
 	std::optional<Entity> EntityView::GetEntity(size_t index)
 	{
-		const auto& indices = m_Registry.GetArchetypeRecord(m_Archetype).Storage.GetEntityIndices();
+		const auto& indices = m_Registry.GetEntityStorage(m_Archetype).GetEntityIndices();
 		if (index >= indices.size())
 			return {};
 

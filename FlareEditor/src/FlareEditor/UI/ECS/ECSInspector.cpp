@@ -57,7 +57,7 @@ namespace Flare
 						ImGui::SetCursorPosX(ImGui::GetCursorPosX() + windowSize.x / 2.0f - size.x / 2.0f);
 						ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetStyle().FramePadding.y);
 
-						ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.95f, 0.23f, 0.11, 1.0f));
+						ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.95f, 0.23f, 0.11f, 1.0f));
 						ImGui::Text(errorText);
 						ImGui::PopStyleColor();
 					}
@@ -109,14 +109,14 @@ namespace Flare
 				{
 					if (ImGui::BeginChild("Archetypes List"))
 					{
-						for (const auto& archetype : world.GetRegistry().GetArchetypes())
+						for (const auto& archetype : world.GetArchetypes().Records)
 						{
 							ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_SpanFullWidth;
-							bool opened = ImGui::TreeNodeEx((void*)&archetype, flags, "Archetype %d", archetype.Data.Id);
+							bool opened = ImGui::TreeNodeEx((void*)&archetype, flags, "Archetype %d", archetype.Id);
 
 							if (opened)
 							{
-								RenderArchetypeInfo(archetype.Data.Id);
+								RenderArchetypeInfo(archetype.Id);
 								ImGui::TreePop();
 							}
 						}
@@ -180,16 +180,17 @@ namespace Flare
 		World& world = World::GetCurrent();
 		if (EditorGUI::BeginPropertyGrid())
 		{
-			const ArchetypeRecord& record = world.GetRegistry().GetArchetypeRecord(archetype);
+			const ArchetypeRecord& record = world.GetArchetypes()[archetype];
+			const EntityStorage& storage = world.GetRegistry().GetEntityStorage(archetype);
 
 			ImGui::BeginDisabled(true);
-			uint32_t entitiesCount = (uint32_t)record.Storage.GetEntitiesCount();
+			uint32_t entitiesCount = (uint32_t)storage.GetEntitiesCount();
 			EditorGUI::UIntPropertyField("Entities count", entitiesCount);
-			uint32_t chunksCount = (uint32_t)record.Storage.GetChunksCount();
+			uint32_t chunksCount = (uint32_t)storage.GetChunksCount();
 			EditorGUI::UIntPropertyField("Chunks count", chunksCount);
-			uint32_t entitiesPerChunk = (uint32_t)record.Storage.GetEntitiesPerChunkCount();
+			uint32_t entitiesPerChunk = (uint32_t)storage.GetEntitiesPerChunkCount();
 			EditorGUI::UIntPropertyField("Entities per chunk", entitiesPerChunk);
-			uint32_t entitySize = (uint32_t)record.Storage.GetEntitySize();
+			uint32_t entitySize = (uint32_t)storage.GetEntitySize();
 			EditorGUI::UIntPropertyField("Entity Size", entitySize);
 			ImGui::EndDisabled();
 

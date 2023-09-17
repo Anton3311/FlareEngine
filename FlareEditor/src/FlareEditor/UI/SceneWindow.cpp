@@ -100,8 +100,10 @@ namespace Flare
 						ArchetypeId archetype = registry.GetEntityArchetype(entity);
 						Entity duplicated = registry.CreateEntityFromArchetype(archetype, ComponentInitializationStrategy::Zero);
 						
-						const ArchetypeRecord& record = registry.GetArchetypeRecord(archetype);
-						std::memcpy(registry.GetEntityData(duplicated).value(), registry.GetEntityData(entity).value(), record.Storage.GetEntitySize());
+						const ArchetypeRecord& record = world.GetArchetypes()[archetype];
+						std::memcpy(registry.GetEntityData(duplicated).value(),
+							registry.GetEntityData(entity).value(),
+							registry.GetEntityStorage(archetype).GetEntitySize());
 					}
 
 					ImGui::EndMenu();

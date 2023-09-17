@@ -4,6 +4,7 @@
 
 #include "FlareECS/Entity/Component.h"
 #include "FlareECS/Entity/Archetype.h"
+#include "FlareECS/Entity/Archetypes.h"
 
 #include "FlareECS/Query/QueryData.h"
 
@@ -18,8 +19,8 @@ namespace Flare
 	class FLAREECS_API QueryCache
 	{
 	public:
-		QueryCache(Registry& registry)
-			: m_Registry(registry) {}
+		QueryCache(Registry& registry, const Archetypes& archetypes)
+			: m_Registry(registry), m_Archetypes(archetypes) {}
 
 		const QueryData& operator[](QueryId id) const;
 	public:
@@ -29,6 +30,7 @@ namespace Flare
 		bool CompareComponentSets(const std::vector<ComponentId>& archetypeComponents, const std::vector<ComponentId>& queryComponents);
 	private:
 		Registry& m_Registry;
+		const Archetypes& m_Archetypes;
 
 		std::vector<QueryData> m_Queries;
 		std::unordered_map<ComponentId, std::vector<QueryId>> m_CachedMatches;

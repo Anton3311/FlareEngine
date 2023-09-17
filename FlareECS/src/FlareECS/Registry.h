@@ -7,6 +7,7 @@
 #include "FlareECS/Entity/Component.h"
 #include "FlareECS/Entity/ComponentInitializer.h"
 #include "FlareECS/Entity/Archetype.h"
+#include "FlareECS/Entity/Archetypes.h"
 #include "FlareECS/Entity/EntityIndex.h"
 
 #include "FlareECS/Query/QueryCache.h"
@@ -31,7 +32,8 @@ namespace Flare
 	class FLAREECS_API Registry
 	{
 	public:
-		Registry();
+		Registry(QueryCache& queries, Archetypes& archetypes);
+		Registry(const Registry&) = delete;
 		~Registry();
 	public:
 		// Entity operations
@@ -61,7 +63,10 @@ namespace Flare
 
 		std::optional<uint8_t*> GetEntityData(Entity entity);
 		std::optional<const uint8_t*> GetEntityData(Entity entity) const;
-		std::optional<size_t> GetEntityDataSize(Entity entity);
+		std::optional<size_t> GetEntityDataSize(Entity entity) const;
+
+		EntityStorage& GetEntityStorage(ArchetypeId archetype);
+		const EntityStorage& GetEntityStorage(ArchetypeId archetype) const;
 
 		// Component operations
 
@@ -80,25 +85,15 @@ namespace Flare
 
 		std::optional<void*> GetSingletonComponent(ComponentId id) const;
 		std::optional<Entity> GetSingletonEntity(const Query& query) const;
-		
-		// Archetype operations
-		
-		const std::vector<ArchetypeRecord>& GetArchetypes() const;
-		ArchetypeRecord& GetArchetypeRecord(ArchetypeId archetypeId);
-		const ArchetypeRecord& GetArchetypeRecord(ArchetypeId archetypeId) const;
-		std::optional<size_t> GetArchetypeComponentIndex(ArchetypeId archetype, ComponentId component) const;
 
+		// Archetypes
+
+		inline const Archetypes& GetArchetypes() const { return m_Archetypes; }
+		
 		// Iterator
 
 		EntityRegistryIterator begin();
 		EntityRegistryIterator end();
-
-		// Querying
-
-		Query CreateQuery(const ComponentSet& components);
-		const QueryCache& GetQueryCache() const;
-
-		EntityView QueryArchetype(const ComponentSet& componentSet);
 	public:
 		EntityRecord& operator[](size_t index);
 		const EntityRecord& operator[](size_t index) const;
@@ -113,19 +108,18 @@ namespace Flare
 	private:
 		std::vector<ComponentId> m_TemporaryComponentSet;
 
+		Archetypes& m_Archetypes;
+		QueryCache& m_Queries;
+
+		std::vector<EntityStorage> m_EntityStorages;
+
 		std::vector<EntityRecord> m_EntityRecords;
 		std::unordered_map<Entity, size_t> m_EntityToRecord;
-
-		std::vector<ArchetypeRecord> m_Archetypes;
-		std::unordered_map<ComponentSet, size_t> m_ComponentSetToArchetype;
-
-		std::unordered_map<ComponentId, std::unordered_map<ArchetypeId, size_t>> m_ComponentToArchetype;
 
 		std::unordered_map<std::string, uint32_t> m_ComponentNameToIndex;
 		std::unordered_map<ComponentId, uint32_t> m_ComponentIdToIndex;
 		std::vector<ComponentInfo> m_RegisteredComponents;
 
-		QueryCache m_QueryCache;
 		EntityIndex m_EntityIndex;
 
 		friend class EntityRegistryIterator;

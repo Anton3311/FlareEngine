@@ -12,8 +12,12 @@ namespace Flare
 	{
 	public:
 		EntityStorage();
+		EntityStorage(const EntityStorage&) = delete;
 		EntityStorage(EntityStorage&& other) noexcept;
 
+		EntityStorage& operator=(const EntityStorage&) = delete;
+		EntityStorage& operator=(EntityStorage&& other) noexcept;
+		
 		size_t AddEntity(uint32_t registryIndex);
 		uint8_t* GetEntityData(size_t entityIndex) const;
 

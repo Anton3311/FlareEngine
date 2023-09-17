@@ -30,15 +30,15 @@ namespace Flare
 
 		for (size_t i = 0; i < components.GetCount(); i++)
 		{
-			auto it = m_Registry.m_ComponentToArchetype.find(components[i].Masked());
-			if (it != m_Registry.m_ComponentToArchetype.end())
+			auto it = m_Archetypes.ComponentToArchetype.find(components[i].Masked());
+			if (it != m_Archetypes.ComponentToArchetype.end())
 			{
 				for (std::pair<ArchetypeId, size_t> archetype : it->second)
 				{
 					if (matched.find(archetype.first) != matched.end())
 						continue;
 
-					if (CompareComponentSets(m_Registry.GetArchetypeRecord(archetype.first).Data.Components, query.Components))
+					if (CompareComponentSets(m_Archetypes[archetype.first].Components, query.Components))
 						matched.insert(archetype.first);
 				}
 			}
@@ -54,9 +54,9 @@ namespace Flare
 
 	void QueryCache::OnArchetypeCreated(ArchetypeId archetype)
 	{
-		ArchetypeRecord& archetypeRecord = m_Registry.GetArchetypeRecord(archetype);
+		const ArchetypeRecord& archetypeRecord = m_Archetypes[archetype];
 
-		for (ComponentId component : archetypeRecord.Data.Components)
+		for (ComponentId component : archetypeRecord.Components)
 		{
 			auto it = m_CachedMatches.find(component);
 			if (it == m_CachedMatches.end())
@@ -67,7 +67,7 @@ namespace Flare
 			{
 				QueryData& query = m_Queries[queryId];
 
-				if (CompareComponentSets(archetypeRecord.Data.Components, query.Components))
+				if (CompareComponentSets(archetypeRecord.Components, query.Components))
 					query.MatchedArchetypes.insert(archetype);
 			}
 		}

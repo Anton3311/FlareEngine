@@ -15,10 +15,10 @@ namespace Flare
 		{
 			size_t index = 0;
 			([&]
-				{
-					m_Ids[index] = COMPONENT_ID(Components);
-					index++;
-				} (), ...);
+			{
+				m_Ids[index] = COMPONENT_ID(Components);
+				index++;
+			} (), ...);
 		}
 	public:
 		constexpr const std::array<ComponentId, sizeof...(Components)>& GetIds() const { return m_Ids; }
