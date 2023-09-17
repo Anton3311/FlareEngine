@@ -6,7 +6,7 @@
 #include "Flare/Serialization/Serialization.h"
 #include "FlareCore/Serialization/TypeInitializer.h"
 
-#include "FlareECS/Query/EntityRegistryIterator.h"
+#include "FlareECS/Query/EntitiesIterator.h"
 
 #include "FlareEditor/Serialization/Serialization.h"
 
@@ -68,8 +68,8 @@ namespace Flare
 		}
 		else
 		{
-			std::optional<void*> entityData = world.GetRegistry().GetEntityComponent(entity, component);
-			const ComponentInfo& info = world.GetRegistry().GetComponentInfo(component);
+			std::optional<void*> entityData = world.GetEntities().GetEntityComponent(entity, component);
+			const ComponentInfo& info = world.GetEntities().GetComponentInfo(component);
 
 			if (entityData.has_value() && info.Initializer)
 				SerializeType(emitter, info.Initializer->Type, (const uint8_t*) entityData.value());
@@ -93,13 +93,13 @@ namespace Flare
 	{
 		if (world.IsEntityAlive(entity))
 		{
-			world.GetRegistry().AddEntityComponent(entity, id, nullptr);
-			return (uint8_t*) world.GetRegistry().GetEntityComponent(entity, id).value();
+			world.GetEntities().AddEntityComponent(entity, id, nullptr);
+			return (uint8_t*) world.GetEntities().GetEntityComponent(entity, id).value();
 		}
 		else
 		{
-			entity = world.GetRegistry().CreateEntity(ComponentSet(&id, 1));
-			return (uint8_t*) world.GetRegistry().GetEntityComponent(entity, id).value();
+			entity = world.GetEntities().CreateEntity(ComponentSet(&id, 1));
+			return (uint8_t*) world.GetEntities().GetEntityComponent(entity, id).value();
 		}
 	}
 
@@ -116,7 +116,7 @@ namespace Flare
 		emitter << YAML::Key << "Entities";
 		emitter << YAML::BeginSeq;
 
-		for (Entity entity : scene->m_World.GetRegistry())
+		for (Entity entity : scene->m_World.GetEntities())
 		{
 			emitter << YAML::BeginMap;
 
@@ -232,14 +232,14 @@ namespace Flare
 				}
 				else
 				{
-					std::optional<ComponentId> componentId = scene->GetECSWorld().GetRegistry().FindComponnet(name);
+					std::optional<ComponentId> componentId = scene->GetECSWorld().GetEntities().FindComponnet(name);
 					if (!componentId.has_value())
 					{
 						FLARE_CORE_ERROR("Component named '{0}' cannot be deserialized", name);
 						continue;
 					}
 
-					const ComponentInfo& info = scene->GetECSWorld().GetRegistry().GetComponentInfo(componentId.value());
+					const ComponentInfo& info = scene->GetECSWorld().GetEntities().GetComponentInfo(componentId.value());
 					if (info.Initializer)
 					{
 						uint8_t* componentData = AddDeserializedComponent(scene->GetECSWorld(), entity, componentId.value());

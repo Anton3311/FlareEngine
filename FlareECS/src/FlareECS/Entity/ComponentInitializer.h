@@ -9,7 +9,7 @@
 
 namespace Flare
 {
-	class FLAREECS_API Registry;
+	class FLAREECS_API Entities;
 	class FLAREECS_API ComponentInitializer
 	{
 	public:
@@ -24,7 +24,7 @@ namespace Flare
 	private:
 		ComponentId m_Id;
 
-		friend class Registry;
+		friend class Entities;
 	};
 }
 

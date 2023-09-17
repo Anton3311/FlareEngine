@@ -13,14 +13,14 @@
 
 namespace Flare
 {
-	class FLAREECS_API Registry;
+	class FLAREECS_API Entities;
 	class FLAREECS_API Query;
 
 	class FLAREECS_API QueryCache
 	{
 	public:
-		QueryCache(Registry& registry, const Archetypes& archetypes)
-			: m_Registry(registry), m_Archetypes(archetypes) {}
+		QueryCache(Entities& entities, const Archetypes& archetypes)
+			: m_Entities(entities), m_Archetypes(archetypes) {}
 
 		const QueryData& operator[](QueryId id) const;
 	public:
@@ -29,7 +29,7 @@ namespace Flare
 	private:
 		bool CompareComponentSets(const std::vector<ComponentId>& archetypeComponents, const std::vector<ComponentId>& queryComponents);
 	private:
-		Registry& m_Registry;
+		Entities& m_Entities;
 		const Archetypes& m_Archetypes;
 
 		std::vector<QueryData> m_Queries;

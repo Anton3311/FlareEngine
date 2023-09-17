@@ -21,7 +21,7 @@ namespace Flare
 	class FLAREECS_API Query;
 
 	class EntityView;
-	class EntityRegistryIterator;
+	class EntitiesIterator;
 
 	enum class ComponentInitializationStrategy : uint8_t
 	{
@@ -29,12 +29,12 @@ namespace Flare
 		DefaultConstructor,
 	};
 
-	class FLAREECS_API Registry
+	class FLAREECS_API Entities
 	{
 	public:
-		Registry(QueryCache& queries, Archetypes& archetypes);
-		Registry(const Registry&) = delete;
-		~Registry();
+		Entities(QueryCache& queries, Archetypes& archetypes);
+		Entities(const Entities&) = delete;
+		~Entities();
 	public:
 		// Entity operations
 
@@ -92,8 +92,8 @@ namespace Flare
 		
 		// Iterator
 
-		EntityRegistryIterator begin();
-		EntityRegistryIterator end();
+		EntitiesIterator begin();
+		EntitiesIterator end();
 	public:
 		EntityRecord& operator[](size_t index);
 		const EntityRecord& operator[](size_t index) const;
@@ -122,7 +122,7 @@ namespace Flare
 
 		EntityIndex m_EntityIndex;
 
-		friend class EntityRegistryIterator;
+		friend class EntitiesIterator;
 		friend class QueryCache;
 	};
 }

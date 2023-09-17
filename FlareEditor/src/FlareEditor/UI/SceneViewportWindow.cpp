@@ -264,7 +264,7 @@ namespace Flare
 		int32_t entityIndex;
 		m_ScreenBuffer->ReadPixel(1, m_RelativeMousePosition.x, m_RelativeMousePosition.y, &entityIndex);
 
-		std::optional<Entity> entity = Scene::GetActive()->GetECSWorld().GetRegistry().FindEntityByIndex(entityIndex);
+		std::optional<Entity> entity = Scene::GetActive()->GetECSWorld().GetEntities().FindEntityByIndex(entityIndex);
 
 		m_ScreenBuffer->Unbind();
 

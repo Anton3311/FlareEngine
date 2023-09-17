@@ -1,7 +1,7 @@
-#include "Registry.h"
+#include "Entities.h"
 
 #include "FlareECS/Query/EntityView.h"
-#include "FlareECS/Query/EntityRegistryIterator.h"
+#include "FlareECS/Query/EntitiesIterator.h"
 
 #include "FlareECS/Query/Query.h"
 
@@ -13,13 +13,13 @@
 
 namespace Flare
 {
-	Registry::Registry(QueryCache& queries, Archetypes& archetypes)
+	Entities::Entities(QueryCache& queries, Archetypes& archetypes)
 		: m_Queries(queries), m_Archetypes(archetypes)
 	{
 		EntityChunksPool::Initialize(16);
 	}
 
-	Registry::~Registry()
+	Entities::~Entities()
 	{
 		for (const ArchetypeRecord& archetype : m_Archetypes.Records)
 		{
@@ -35,7 +35,7 @@ namespace Flare
 		}
 	}
 
-	Entity Registry::CreateEntity(const ComponentSet& componentSet, ComponentInitializationStrategy initStrategy)
+	Entity Entities::CreateEntity(const ComponentSet& componentSet, ComponentInitializationStrategy initStrategy)
 	{
 		FLARE_CORE_ASSERT(componentSet.GetCount() > 0);
 
@@ -121,7 +121,7 @@ namespace Flare
 		return record.Id;
 	}
 
-	Entity Registry::CreateEntityFromArchetype(ArchetypeId archetype, ComponentInitializationStrategy initStrategy)
+	Entity Entities::CreateEntityFromArchetype(ArchetypeId archetype, ComponentInitializationStrategy initStrategy)
 	{
 		FLARE_CORE_ASSERT((size_t)archetype < m_Archetypes.Records.size());
 
@@ -167,7 +167,7 @@ namespace Flare
 		return record.Id;
 	}
 
-	void Registry::DeleteEntity(Entity entity)
+	void Entities::DeleteEntity(Entity entity)
 	{
 		auto recordIterator = FindEntity(entity);
 		if (recordIterator == m_EntityToRecord.end())
@@ -199,7 +199,7 @@ namespace Flare
 		m_EntityRecords.erase(m_EntityRecords.end() - 1);
 	}
 
-	bool Registry::AddEntityComponent(Entity entity, ComponentId componentId, const void* componentData, ComponentInitializationStrategy initStrategy)
+	bool Entities::AddEntityComponent(Entity entity, ComponentId componentId, const void* componentData, ComponentInitializationStrategy initStrategy)
 	{
 		FLARE_CORE_ASSERT(IsComponentIdValid(componentId), "Invalid component id");
 
@@ -333,7 +333,7 @@ namespace Flare
 		return true;
 	}
 
-	bool Registry::RemoveEntityComponent(Entity entity, ComponentId componentId)
+	bool Entities::RemoveEntityComponent(Entity entity, ComponentId componentId)
 	{
 		FLARE_CORE_ASSERT(IsComponentIdValid(componentId), "Invalid component id");
 
@@ -438,12 +438,12 @@ namespace Flare
 		return true;
 	}
 
-	bool Registry::IsEntityAlive(Entity entity) const
+	bool Entities::IsEntityAlive(Entity entity) const
 	{
 		return FindEntity(entity) != m_EntityToRecord.end();
 	}
 
-	ArchetypeId Registry::GetEntityArchetype(Entity entity)
+	ArchetypeId Entities::GetEntityArchetype(Entity entity)
 	{
 		auto it = m_EntityToRecord.find(entity);
 		FLARE_CORE_ASSERT(it != m_EntityToRecord.end());
@@ -451,12 +451,12 @@ namespace Flare
 		return m_EntityRecords[it->second].Archetype;
 	}
 
-	const std::vector<EntityRecord>& Registry::GetEntityRecords() const
+	const std::vector<EntityRecord>& Entities::GetEntityRecords() const
 	{
 		return m_EntityRecords;
 	}
 
-	std::optional<Entity> Registry::FindEntityByIndex(uint32_t entityIndex)
+	std::optional<Entity> Entities::FindEntityByIndex(uint32_t entityIndex)
 	{
 		auto it = m_EntityToRecord.find(Entity(entityIndex, 0));
 		if (it == m_EntityToRecord.end())
@@ -464,14 +464,14 @@ namespace Flare
 		return it->first;
 	}
 
-	std::optional<Entity> Registry::FindEntityByRegistryIndex(uint32_t registryIndex)
+	std::optional<Entity> Entities::FindEntityByRegistryIndex(uint32_t registryIndex)
 	{
 		if (registryIndex < m_EntityRecords.size())
 			return m_EntityRecords[registryIndex].Id;
 		return {};
 	}
 
-	std::optional<uint8_t*> Registry::GetEntityData(Entity entity)
+	std::optional<uint8_t*> Entities::GetEntityData(Entity entity)
 	{
 		auto it = FindEntity(entity);
 		if (it == m_EntityToRecord.end())
@@ -481,7 +481,7 @@ namespace Flare
 		return GetEntityStorage(record.Archetype).GetEntityData(record.BufferIndex);
 	}
 
-	std::optional<const uint8_t*> Registry::GetEntityData(Entity entity) const
+	std::optional<const uint8_t*> Entities::GetEntityData(Entity entity) const
 	{
 		auto it = FindEntity(entity);
 		if (it == m_EntityToRecord.end())
@@ -492,7 +492,7 @@ namespace Flare
 		return storage.GetEntityData(record.BufferIndex);
 	}
 
-	std::optional<size_t> Registry::GetEntityDataSize(Entity entity) const
+	std::optional<size_t> Entities::GetEntityDataSize(Entity entity) const
 	{
 		auto it = FindEntity(entity);
 		if (it == m_EntityToRecord.end())
@@ -502,7 +502,7 @@ namespace Flare
 		return GetEntityStorage(record.Archetype).GetEntitySize();
 	}
 
-	std::optional<void*> Registry::GetEntityComponent(Entity entity, ComponentId component)
+	std::optional<void*> Entities::GetEntityComponent(Entity entity, ComponentId component)
 	{
 		auto it = FindEntity(entity);
 		if (it == m_EntityToRecord.end())
@@ -520,14 +520,14 @@ namespace Flare
 		return entityData + archetype.ComponentOffsets[componentIndex.value()];
 	}
 
-	void Registry::RegisterComponents()
+	void Entities::RegisterComponents()
 	{
 		auto& initializers = ComponentInitializer::GetInitializers();
 		for (ComponentInitializer* initializer : initializers)
 			initializer->m_Id = RegisterComponent(*initializer);
 	}
 
-	ComponentId Registry::RegisterComponent(std::string_view name, size_t size, const std::function<void(void*)>& deleter)
+	ComponentId Entities::RegisterComponent(std::string_view name, size_t size, const std::function<void(void*)>& deleter)
 	{
 		Entity entityId = m_EntityIndex.CreateId();
 
@@ -545,7 +545,7 @@ namespace Flare
 		return info.Id;
 	}
 
-	std::optional<ComponentId> Registry::FindComponnet(std::string_view name)
+	std::optional<ComponentId> Entities::FindComponnet(std::string_view name)
 	{
 		auto it = m_ComponentNameToIndex.find(std::string(name));
 		if (it == m_ComponentNameToIndex.end())
@@ -554,7 +554,7 @@ namespace Flare
 		return m_RegisteredComponents[it->second].Id;
 	}
 
-	bool Registry::IsComponentIdValid(ComponentId id) const
+	bool Entities::IsComponentIdValid(ComponentId id) const
 	{
 		auto it = m_ComponentIdToIndex.find(id);
 		if (it == m_ComponentIdToIndex.end())
@@ -562,18 +562,18 @@ namespace Flare
 		return it->second < m_RegisteredComponents.size();
 	}
 
-	const ComponentInfo& Registry::GetComponentInfo(ComponentId id) const
+	const ComponentInfo& Entities::GetComponentInfo(ComponentId id) const
 	{
 		FLARE_CORE_ASSERT(IsComponentIdValid(id));
 		return m_RegisteredComponents[m_ComponentIdToIndex.at(id)];
 	}
 
-	const std::vector<ComponentInfo>& Registry::GetRegisteredComponents() const
+	const std::vector<ComponentInfo>& Entities::GetRegisteredComponents() const
 	{
 		return m_RegisteredComponents;
 	}
 
-	std::optional<void*> Registry::GetSingletonComponent(ComponentId id) const
+	std::optional<void*> Entities::GetSingletonComponent(ComponentId id) const
 	{
 		FLARE_CORE_ASSERT(IsComponentIdValid(id));
 
@@ -625,7 +625,7 @@ namespace Flare
 		return entityData + record.ComponentOffsets[componentIndex];
 	}
 
-	std::optional<Entity> Registry::GetSingletonEntity(const Query& query) const
+	std::optional<Entity> Entities::GetSingletonEntity(const Query& query) const
 	{
 		const auto& archetypes = query.GetMatchedArchetypes();
 
@@ -663,43 +663,43 @@ namespace Flare
 		return m_EntityRecords[storage.GetEntityIndices()[0]].Id;
 	}
 
-	EntityRegistryIterator Registry::begin()
+	EntitiesIterator Entities::begin()
 	{
-		return EntityRegistryIterator(*this, 0);
+		return EntitiesIterator(*this, 0);
 	}
 
-	EntityRegistryIterator Registry::end()
+	EntitiesIterator Entities::end()
 	{
-		return EntityRegistryIterator(*this, m_EntityRecords.size());
+		return EntitiesIterator(*this, m_EntityRecords.size());
 	}
 
-	const std::vector<ComponentId>& Registry::GetEntityComponents(Entity entity)
+	const std::vector<ComponentId>& Entities::GetEntityComponents(Entity entity)
 	{
 		auto it = FindEntity(entity);
 		FLARE_CORE_ASSERT(it != m_EntityToRecord.end());
 		return m_Archetypes.Records[m_EntityRecords[it->second].Archetype].Components;
 	}
 
-	bool Registry::HasComponent(Entity entity, ComponentId component) const
+	bool Entities::HasComponent(Entity entity, ComponentId component) const
 	{
 		auto it = FindEntity(entity);
 		FLARE_CORE_ASSERT(it != m_EntityToRecord.end());
 		return m_Archetypes.GetArchetypeComponentIndex(m_EntityRecords[it->second].Archetype, component).has_value();
 	}
 
-	EntityRecord& Registry::operator[](size_t index)
+	EntityRecord& Entities::operator[](size_t index)
 	{
 		FLARE_CORE_ASSERT(index < m_EntityRecords.size());
 		return m_EntityRecords[index];
 	}
 
-	const EntityRecord& Registry::operator[](size_t index) const
+	const EntityRecord& Entities::operator[](size_t index) const
 	{
 		FLARE_CORE_ASSERT(index < m_EntityRecords.size());
 		return m_EntityRecords[index];
 	}
 
-	ComponentId Registry::RegisterComponent(ComponentInitializer& initializer)
+	ComponentId Entities::RegisterComponent(ComponentInitializer& initializer)
 	{
 		Entity entityId = m_EntityIndex.CreateId();
 
@@ -718,7 +718,7 @@ namespace Flare
 		return info.Id;
 	}
 
-	ArchetypeId Registry::CreateArchetype()
+	ArchetypeId Entities::CreateArchetype()
 	{
 		ArchetypeId id = m_Archetypes.Records.size();
 		ArchetypeRecord& record = m_Archetypes.Records.emplace_back();
@@ -728,19 +728,19 @@ namespace Flare
 		return id;
 	}
 
-	EntityStorage& Registry::GetEntityStorage(ArchetypeId archetype)
+	EntityStorage& Entities::GetEntityStorage(ArchetypeId archetype)
 	{
 		FLARE_CORE_ASSERT(m_Archetypes.IsIdValid(archetype));
 		return m_EntityStorages[archetype];
 	}
 
-	const EntityStorage& Registry::GetEntityStorage(ArchetypeId archetype) const
+	const EntityStorage& Entities::GetEntityStorage(ArchetypeId archetype) const
 	{
 		FLARE_CORE_ASSERT(m_Archetypes.IsIdValid(archetype));
 		return m_EntityStorages[archetype];
 	}
 
-	void Registry::RemoveEntityData(ArchetypeId archetype, size_t entityBufferIndex)
+	void Entities::RemoveEntityData(ArchetypeId archetype, size_t entityBufferIndex)
 	{
 		ArchetypeRecord& archetypeRecord = m_Archetypes.Records[archetype];
 
@@ -751,7 +751,7 @@ namespace Flare
 		lastEntityRecord.BufferIndex = entityBufferIndex;
 	}
 
-	std::unordered_map<Entity, size_t>::iterator Registry::FindEntity(Entity entity)
+	std::unordered_map<Entity, size_t>::iterator Entities::FindEntity(Entity entity)
 	{
 		auto it = m_EntityToRecord.find(entity);
 
@@ -764,7 +764,7 @@ namespace Flare
 		return it;
 	}
 
-	std::unordered_map<Entity, size_t>::const_iterator Registry::FindEntity(Entity entity) const
+	std::unordered_map<Entity, size_t>::const_iterator Entities::FindEntity(Entity entity) const
 	{
 		auto it = m_EntityToRecord.find(entity);
 

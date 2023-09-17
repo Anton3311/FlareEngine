@@ -1,6 +1,6 @@
 #pragma once
 
-#include "FlareECS/Registry.h"
+#include "FlareECS/Entities.h"
 #include "FlareECS/Query/EntityViewIterator.h"
 
 namespace Flare

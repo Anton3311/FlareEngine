@@ -4,8 +4,8 @@
 #include "Flare/Scene/Scene.h"
 
 #include "FlareECS/World.h"
-#include "FlareECS/Query/EntityRegistryIterator.h"
-#include "FlareECS/Registry.h"
+#include "FlareECS/Query/EntitiesIterator.h"
+#include "FlareECS/Entities.h"
 
 #include "FlareEditor/ImGui/ImGuiLayer.h"
 #include "FlareEditor/EditorLayer.h"
@@ -27,7 +27,7 @@ namespace Flare
 		}
 
 		World& world = Scene::GetActive()->GetECSWorld();
-		const auto& records = world.GetRegistry().GetEntityRecords();
+		const auto& records = world.GetEntities().GetEntityRecords();
 
 		ImGui::BeginChild("Scene Entities");
 		ImGuiListClipper clipper;
@@ -96,14 +96,14 @@ namespace Flare
 
 					if (ImGui::MenuItem("Duplicate"))
 					{
-						Registry& registry = world.GetRegistry();
-						ArchetypeId archetype = registry.GetEntityArchetype(entity);
-						Entity duplicated = registry.CreateEntityFromArchetype(archetype, ComponentInitializationStrategy::Zero);
+						Entities& entities = world.GetEntities();
+						ArchetypeId archetype = entities.GetEntityArchetype(entity);
+						Entity duplicated = entities.CreateEntityFromArchetype(archetype, ComponentInitializationStrategy::Zero);
 						
 						const ArchetypeRecord& record = world.GetArchetypes()[archetype];
-						std::memcpy(registry.GetEntityData(duplicated).value(),
-							registry.GetEntityData(entity).value(),
-							registry.GetEntityStorage(archetype).GetEntitySize());
+						std::memcpy(entities.GetEntityData(duplicated).value(),
+							entities.GetEntityData(entity).value(),
+							entities.GetEntityStorage(archetype).GetEntitySize());
 					}
 
 					ImGui::EndMenu();
