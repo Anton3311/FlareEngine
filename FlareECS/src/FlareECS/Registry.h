@@ -82,9 +82,10 @@ namespace Flare
 		std::optional<Entity> GetSingletonEntity(const Query& query) const;
 		
 		// Archetype operations
-
-		ArchetypeRecord& GetArchetypeRecord(size_t archetypeId);
-		const ArchetypeRecord& GetArchetypeRecord(size_t archetypeId) const;
+		
+		const std::vector<ArchetypeRecord>& GetArchetypes() const;
+		ArchetypeRecord& GetArchetypeRecord(ArchetypeId archetypeId);
+		const ArchetypeRecord& GetArchetypeRecord(ArchetypeId archetypeId) const;
 		std::optional<size_t> GetArchetypeComponentIndex(ArchetypeId archetype, ComponentId component) const;
 
 		// Iterator

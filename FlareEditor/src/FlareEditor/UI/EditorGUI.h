@@ -23,6 +23,7 @@ namespace Flare
 
 		static bool BoolPropertyField(const char* name, bool& value);
 		static bool IntPropertyField(const char* name, int32_t& value);
+		static bool UIntPropertyField(const char* name, uint32_t& value);
 		static bool FloatPropertyField(const char* name, float& value);
 		static bool Vector2PropertyField(const char* name, glm::vec2& value);
 		static bool Vector3PropertyField(const char* name, glm::vec3& value);

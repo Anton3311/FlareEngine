@@ -21,8 +21,8 @@
 #include "FlareEditor/ImGui/ImGuiLayer.h"
 #include "FlareEditor/UI/SceneViewportWindow.h"
 #include "FlareEditor/UI/EditorTitleBar.h"
-#include "FlareEditor/UI/SystemsInspectorWindow.h"
 #include "FlareEditor/UI/ProjectSettingsWindow.h"
+#include "FlareEditor/UI/ECS/ECSInspector.h"
 
 #include "FlareEditor/Scripting/BuildSystem/BuildSystem.h"
 
@@ -222,12 +222,13 @@ namespace Flare
 		for (auto& viewport : m_Viewports)
 			viewport->OnRenderImGui();
 
-		SystemsInspectorWindow::OnImGuiRender();
 		ProjectSettingsWindow::OnRenderImGui();
 
 		m_SceneWindow.OnImGuiRender();
 		m_PropertiesWindow.OnImGuiRender();
 		m_AssetManagerWindow.OnImGuiRender();
+
+		ECSInspector::GetInstance().OnImGuiRender();
 
 		ImGui::End();
 		ImGuiLayer::End();

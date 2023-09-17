@@ -78,6 +78,18 @@ namespace Flare
 		return result;
 	}
 
+	bool EditorGUI::UIntPropertyField(const char* name, uint32_t& value)
+	{
+		PropertyName(name);
+
+		ImGui::PushID(&value);
+		bool result = ImGui::DragScalar("", ImGuiDataType_U32, &value);
+		ImGui::PopID();
+
+		ImGui::PopItemWidth();
+		return result;
+	}
+
 	bool EditorGUI::FloatPropertyField(const char* name, float& value)
 	{
 		PropertyName(name);

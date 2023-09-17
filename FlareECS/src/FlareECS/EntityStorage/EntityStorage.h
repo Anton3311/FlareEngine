@@ -24,7 +24,8 @@ namespace Flare
 		void SetEntitySize(size_t entitySize);
 		void UpdateEntityRegistryIndex(size_t entityIndex, uint32_t newRegistryIndex);
 
-		size_t GetChunksCount() const;
+		size_t GetChunksCount() const { return m_Chunks.size(); }
+		size_t GetEntitiesPerChunkCount() const { return m_EntitiesPerChunk; }
 		size_t GetEntitiesCountInChunk(size_t index) const;
 
 		uint8_t* GetChunkBuffer(size_t index);

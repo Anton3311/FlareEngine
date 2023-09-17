@@ -735,12 +735,17 @@ namespace Flare
 		return id;
 	}
 
-	ArchetypeRecord& Registry::GetArchetypeRecord(size_t archetypeId)
+	const std::vector<ArchetypeRecord>& Registry::GetArchetypes() const
+	{
+		return m_Archetypes;
+	}
+
+	ArchetypeRecord& Registry::GetArchetypeRecord(ArchetypeId archetypeId)
 	{
 		return m_Archetypes[archetypeId];
 	}
 
-	const ArchetypeRecord& Registry::GetArchetypeRecord(size_t archetypeId) const
+	const ArchetypeRecord& Registry::GetArchetypeRecord(ArchetypeId archetypeId) const
 	{
 		return m_Archetypes[archetypeId];
 	}

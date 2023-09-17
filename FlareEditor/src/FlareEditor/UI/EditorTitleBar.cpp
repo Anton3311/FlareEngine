@@ -9,8 +9,8 @@
 #include "FlareEditor/EditorLayer.h"
 
 #include "FlareEditor/UI/EditorGUI.h"
-#include "FlareEditor/UI/SystemsInspectorWindow.h"
 #include "FlareEditor/UI/ProjectSettingsWindow.h"
+#include "FlareEditor/UI/ECS/ECSInspector.h"
 
 #include <imgui_internal.h>
 
@@ -97,8 +97,8 @@ namespace Flare
 
 		if (EditorGUI::BeginMenu("Window"))
 		{
-			if (ImGui::MenuItem("Systems Inspector"))
-				SystemsInspectorWindow::Show();
+			if (ImGui::MenuItem("ECS Inspector"))
+				ECSInspector::Show();
 
 			EditorGUI::EndMenu();
 		}
