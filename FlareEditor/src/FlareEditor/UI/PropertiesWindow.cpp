@@ -79,7 +79,7 @@ namespace Flare
 			std::optional<ComponentId> removedComponent;
 			for (ComponentId component : world.GetEntityComponents(entity))
 			{
-				const ComponentInfo& componentInfo = world.GetEntities().GetComponentInfo(component);
+				const ComponentInfo& componentInfo = world.Entities.GetComponentInfo(component);
 
 				ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_FramePadding;
 				if (ImGui::TreeNodeEx((void*)std::hash<ComponentId>()(component), flags, "%s", componentInfo.Name.c_str()))
@@ -92,7 +92,7 @@ namespace Flare
 						RenderSpriteComponent(world.GetEntityComponent<SpriteComponent>(entity));
 					else
 					{
-						std::optional<void*> componentData = world.GetEntities().GetEntityComponent(entity, component);
+						std::optional<void*> componentData = world.Entities.GetEntityComponent(entity, component);
 						if (componentData.has_value() && componentInfo.Initializer)
 							EditorGUI::TypeEditor(componentInfo.Initializer->Type, (uint8_t*)componentData.value());
 					}
@@ -110,7 +110,7 @@ namespace Flare
 			}
 
 			if (removedComponent.has_value())
-				world.GetEntities().RemoveEntityComponent(entity, removedComponent.value());
+				world.Entities.RemoveEntityComponent(entity, removedComponent.value());
 
 			ImGui::EndChild();
 		}
@@ -139,12 +139,12 @@ namespace Flare
 		if (ImGui::BeginMenu("Add component"))
 		{
 			World& world = Scene::GetActive()->GetECSWorld();
-			const std::vector<ComponentInfo>& components = world.GetEntities().GetRegisteredComponents();
+			const std::vector<ComponentInfo>& components = world.Entities.GetRegisteredComponents();
 
 			for (const auto& info : components)
 			{
 				if (ImGui::MenuItem(info.Name.c_str()))
-					world.GetEntities().AddEntityComponent(entity, info.Id, nullptr);
+					world.Entities.AddEntityComponent(entity, info.Id, nullptr);
 			}
 
 			ImGui::End();

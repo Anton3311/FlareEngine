@@ -26,21 +26,14 @@ namespace Flare
 		template<typename... T>
 		constexpr Entity CreateEntity(ComponentInitializationStrategy initStrategy = ComponentInitializationStrategy::DefaultConstructor)
 		{
-			ComponentId ids[sizeof...(T)];
-
-			size_t index = 0;
-			([&]
-			{
-				ids[index++] = COMPONENT_ID(T);
-			} (), ...);
-
-			return m_Entities.CreateEntity(ComponentSet(ids, sizeof...(T)), initStrategy);
+			ComponentGroup<T...> group;
+			return Entities.CreateEntity(ComponentSet(group.GetIds().data(), group.GetIds().size()), initStrategy);
 		}
 
 		template<typename T>
 		constexpr T& GetEntityComponent(Entity entity)
 		{
-			std::optional<void*> componentData = m_Entities.GetEntityComponent(entity, COMPONENT_ID(T));
+			std::optional<void*> componentData = Entities.GetEntityComponent(entity, COMPONENT_ID(T));
 			FLARE_CORE_ASSERT(componentData.has_value(), "Failed to get entity component");
 			return *(T*)componentData.value();
 		}
@@ -48,37 +41,28 @@ namespace Flare
 		template<typename T>
 		constexpr std::optional<T*> TryGetEntityComponent(Entity entity)
 		{
-			std::optional<void*> componentData = m_Entities.GetEntityComponent(entity, COMPONENT_ID(T));
+			std::optional<void*> componentData = Entities.GetEntityComponent(entity, COMPONENT_ID(T));
 			if (componentData.has_value())
 				return (T*)componentData.value();
 			return {};
 		}
 
 		template<typename T>
-		constexpr std::optional<T*> TryGetEntityComponent(Entity entity, ComponentId component)
-		{
-			if (T::Id != component)
-				return {};
-
-			return TryGetEntityComponent<T>(entity);
-		}
-
-		template<typename T>
 		constexpr bool AddEntityComponent(Entity entity, const T& data)
 		{
-			return m_Entities.AddEntityComponent(entity, COMPONENT_ID(T), &data);
+			return Entities.AddEntityComponent(entity, COMPONENT_ID(T), &data);
 		}
 
 		template<typename T>
 		constexpr bool RemoveEntityComponent(Entity entity)
 		{
-			return m_Entities.RemoveEntityComponent(entity, COMPONENT_ID(T));
+			return Entities.RemoveEntityComponent(entity, COMPONENT_ID(T));
 		}
-		
+
 		template<typename T>
 		constexpr bool HasComponent(Entity entity)
 		{
-			return m_Entities.HasComponent(entity, COMPONENT_ID(T));
+			return Entities.HasComponent(entity, COMPONENT_ID(T));
 		}
 
 		void DeleteEntity(Entity entity);
@@ -89,7 +73,7 @@ namespace Flare
 		template<typename T>
 		constexpr T& GetSingletonComponent()
 		{
-			auto result = m_Entities.GetSingletonComponent(COMPONENT_ID(T));
+			auto result = Entities.GetSingletonComponent(COMPONENT_ID(T));
 			FLARE_CORE_ASSERT(result.has_value(), "Failed to get singleton component");
 			return *(T*)result.value();
 		}
@@ -97,7 +81,7 @@ namespace Flare
 		template<typename T>
 		constexpr std::optional<T*> TryGetSingletonComponent()
 		{
-			auto result = m_Entities.GetSingletonComponent(COMPONENT_ID(T));
+			auto result = Entities.GetSingletonComponent(COMPONENT_ID(T));
 			if (result.has_value())
 				return *(T*)result.value();
 			return {};
@@ -112,20 +96,15 @@ namespace Flare
 
 		static World& GetCurrent();
 	public:
-		inline Archetypes& GetArchetypes() { return m_Archetypes; }
 		inline const Archetypes& GetArchetypes() const { return m_Archetypes; }
-
-		inline Entities& GetEntities() { return m_Entities; }
-		inline const Entities& GetEntities() const { return m_Entities; }
-
-		inline QueryCache& GetQueries() { return m_Queries; }
 		inline const QueryCache& GetQueries() const { return m_Queries; }
 
 		inline SystemsManager& GetSystemsManager() { return m_SystemsManager; }
 		inline const SystemsManager& GetSystemsManager() const { return m_SystemsManager; }
+
+		Flare::Entities Entities;
 	private:
 		Archetypes m_Archetypes;
-		Entities m_Entities;
 		QueryCache m_Queries;
 		SystemsManager m_SystemsManager;
 	};

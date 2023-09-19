@@ -27,7 +27,7 @@ namespace Flare
 		}
 
 		World& world = Scene::GetActive()->GetECSWorld();
-		const auto& records = world.GetEntities().GetEntityRecords();
+		const auto& records = world.Entities.GetEntityRecords();
 
 		ImGui::BeginChild("Scene Entities");
 		ImGuiListClipper clipper;
@@ -96,7 +96,7 @@ namespace Flare
 
 					if (ImGui::MenuItem("Duplicate"))
 					{
-						Entities& entities = world.GetEntities();
+						Entities& entities = world.Entities;
 						ArchetypeId archetype = entities.GetEntityArchetype(entity);
 						Entity duplicated = entities.CreateEntityFromArchetype(archetype, ComponentInitializationStrategy::Zero);
 						

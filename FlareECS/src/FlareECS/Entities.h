@@ -34,6 +34,9 @@ namespace Flare
 	public:
 		Entities(QueryCache& queries, Archetypes& archetypes);
 		Entities(const Entities&) = delete;
+
+		Entities& operator=(const Entities&) = delete;
+
 		~Entities();
 	public:
 		// Entity operations

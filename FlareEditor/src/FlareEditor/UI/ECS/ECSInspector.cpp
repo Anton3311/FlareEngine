@@ -42,7 +42,7 @@ namespace Flare
 						ImGui::SeparatorText("Entity");
 						RenderEntityInfo(selected);
 
-						ArchetypeId archetype = world.GetEntities().GetEntityArchetype(selected);
+						ArchetypeId archetype = world.Entities.GetEntityArchetype(selected);
 
 						ImGui::SeparatorText("Archetype");
 						RenderArchetypeInfo(archetype);
@@ -69,7 +69,7 @@ namespace Flare
 				{
 					if (ImGui::BeginChild("Components List"))
 					{
-						const auto& components = world.GetEntities().GetRegisteredComponents();
+						const auto& components = world.Entities.GetRegisteredComponents();
 
 						for (const ComponentInfo& component : components)
 						{
@@ -101,7 +101,7 @@ namespace Flare
 
 						ImGui::EndChild();
 					}
-					
+
 					ImGui::EndTabItem();
 				}
 
@@ -181,7 +181,7 @@ namespace Flare
 		if (EditorGUI::BeginPropertyGrid())
 		{
 			const ArchetypeRecord& record = world.GetArchetypes()[archetype];
-			const EntityStorage& storage = world.GetEntities().GetEntityStorage(archetype);
+			const EntityStorage& storage = world.Entities.GetEntityStorage(archetype);
 
 			ImGui::BeginDisabled(true);
 			uint32_t entitiesCount = (uint32_t)storage.GetEntitiesCount();

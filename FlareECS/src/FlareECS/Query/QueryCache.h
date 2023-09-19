@@ -22,6 +22,9 @@ namespace Flare
 		QueryCache(Entities& entities, const Archetypes& archetypes)
 			: m_Entities(entities), m_Archetypes(archetypes) {}
 
+		QueryCache(const QueryCache&) = delete;
+		QueryCache& operator=(const QueryCache&) = delete;
+
 		const QueryData& operator[](QueryId id) const;
 	public:
 		Query AddQuery(const ComponentSet& components);

@@ -11,6 +11,11 @@ namespace Flare
 {
 	struct Archetypes
 	{
+		Archetypes() = default;
+
+		Archetypes(const Archetypes&) = delete;
+		Archetypes& operator=(const Archetypes&) = delete;
+
 		inline bool IsIdValid(ArchetypeId id) const
 		{
 			return (size_t)id < Records.size();
