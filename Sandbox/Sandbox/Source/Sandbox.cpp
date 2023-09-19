@@ -40,6 +40,16 @@ namespace Sandbox
 		FLARE_FIELD(SomeComponent, b),
 	);
 
+	struct TestComponent
+	{
+		FLARE_COMPONENT;
+		int a;
+
+		TestComponent()
+			: a(1000) {}
+	};
+	FLARE_IMPL_COMPONENT(TestComponent, FLARE_FIELD(TestComponent, a));
+
 	class RotatingQuadSystem : public Flare::System
 	{
 	public:
@@ -93,6 +103,9 @@ namespace Sandbox
 						break;
 					case 4:
 						context.Commands->DeleteEntity(e);
+						break;
+					case 5:
+						World::GetCurrent().CreateEntity<TransformComponent, TestComponent>(TransformComponent(), TestComponent());
 						break;
 					}
 

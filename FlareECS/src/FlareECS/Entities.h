@@ -44,6 +44,9 @@ namespace Flare
 		Entity CreateEntity(const ComponentSet& componentSet, 
 			ComponentInitializationStrategy initStrategy = ComponentInitializationStrategy::DefaultConstructor);
 
+		// Components must be sorted by [ComponentId]
+		Entity CreateEntity(const std::pair<ComponentId, const void*>* components, size_t count);
+
 		Entity CreateEntityFromArchetype(ArchetypeId archetype,
 			ComponentInitializationStrategy initStrategy = ComponentInitializationStrategy::DefaultConstructor);
 
@@ -101,6 +104,16 @@ namespace Flare
 		EntityRecord& operator[](size_t index);
 		const EntityRecord& operator[](size_t index) const;
 	private:
+		struct EntityCreationResult
+		{
+			Entity Id;
+			ArchetypeId Archetype;
+			uint8_t* Data;
+		};
+
+		void CreateEntity(const ComponentSet& components, EntityCreationResult& result);
+		void InitializeEntity(const EntityCreationResult& entityResult, ComponentInitializationStrategy initStrategy);
+
 		ComponentId RegisterComponent(ComponentInitializer& initializer);
 		ArchetypeId CreateArchetype();
 

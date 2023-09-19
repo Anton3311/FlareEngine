@@ -4,12 +4,15 @@
 
 namespace Flare
 {
-	FLARE_IMPL_COMPONENT(SpriteComponent);
+	FLARE_IMPL_COMPONENT(TransformComponent);
 
 	TransformComponent::TransformComponent()
 		: Position(glm::vec3(0.0f)),
 		  Rotation(glm::vec3(0.0f)),
 		  Scale(glm::vec3(1.0f)) {}
+
+	TransformComponent::TransformComponent(const glm::vec3& position)
+		: Position(position), Rotation(glm::vec3(0.0f)), Scale(glm::vec3(1.0f)) {}
 
 	glm::mat4 TransformComponent::GetTransformationMatrix() const
 	{
@@ -54,10 +57,16 @@ namespace Flare
 		return inverseProjection * glm::vec4(point, 0.0f, 1.0f);
 	}
 
-	FLARE_IMPL_COMPONENT(TransformComponent);
+	FLARE_IMPL_COMPONENT(SpriteComponent);
 	SpriteComponent::SpriteComponent()
 		: Color(glm::vec4(1.0f)),
 		  TextureTiling(glm::vec2(1.0f)),
 		  Texture(0),
 		  Flags(SpriteRenderFlags::None) {}
+
+	SpriteComponent::SpriteComponent(AssetHandle texture)
+		: Color(glm::vec4(1.0f)),
+		TextureTiling(glm::vec2(1.0f)),
+		Texture(texture),
+		Flags(SpriteRenderFlags::None) {}
 }

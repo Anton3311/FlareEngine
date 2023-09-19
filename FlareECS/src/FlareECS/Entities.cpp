@@ -48,77 +48,40 @@ namespace Flare
 
 		ComponentSet components = ComponentSet(m_TemporaryComponentSet.data(), componentSet.GetCount());
 
-		size_t registryIndex = m_EntityRecords.size();
-		EntityRecord& record = m_EntityRecords.emplace_back();
+		EntityCreationResult result;
+		CreateEntity(components, result);
+		InitializeEntity(result, initStrategy);
 
-		record.RegistryIndex = (uint32_t)registryIndex;
-		record.Id = m_EntityIndex.CreateId();
+		return result.Id;
+	}
 
-		auto it = m_Archetypes.ComponentSetToArchetype.find(components);
-		if (it != m_Archetypes.ComponentSetToArchetype.end())
-			record.Archetype = it->second;
-		else
+	Entity Entities::CreateEntity(const std::pair<ComponentId, const void*>* components, size_t count)
+	{
+		if (m_TemporaryComponentSet.size() < count)
+			m_TemporaryComponentSet.resize(count);
+
+		for (size_t i = 0; i < count; i++)
+			m_TemporaryComponentSet[i] = components[i].first;
+
+		EntityCreationResult result;
+		CreateEntity(ComponentSet(m_TemporaryComponentSet.data(), count), result);
+
+		const ArchetypeRecord& archetypeRecord = m_Archetypes[result.Archetype];
+		for (size_t i = 0; i < count; i++)
 		{
-			ArchetypeId newArchetypeId = CreateArchetype();
-			ArchetypeRecord& newArchetype = m_Archetypes.Records[newArchetypeId];
-			record.Archetype = newArchetype.Id;
+			if (components[i].second == nullptr)
+				continue;
 
-			newArchetype.ComponentOffsets.resize(components.GetCount());
-			newArchetype.Components.resize(components.GetCount());
+			size_t componentSize = 0;
+			if (i == count - 1)
+				componentSize = GetEntityStorage(result.Archetype).GetEntitySize() - archetypeRecord.ComponentOffsets[count - 1];
+			else
+				componentSize = archetypeRecord.ComponentOffsets[i + 1] - archetypeRecord.ComponentOffsets[i];
 
-			std::memcpy(newArchetype.Components.data(), components.GetIds(), components.GetCount() * sizeof(size_t));
-
-			size_t entitySize = 0;
-			for (size_t i = 0; i < components.GetCount(); i++)
-			{
-				newArchetype.ComponentOffsets[i] = entitySize;
-				entitySize += GetComponentInfo(components[i]).Size;
-			}
-
-			GetEntityStorage(newArchetypeId).SetEntitySize(entitySize);
-
-			m_Archetypes.ComponentSetToArchetype.emplace(ComponentSet(newArchetype.Components), newArchetype.Id);
-
-			for (size_t i = 0; i < newArchetype.Components.size(); i++)
-				m_Archetypes.ComponentToArchetype[newArchetype.Components[i]].emplace(newArchetypeId, i);
-
-			m_Queries.OnArchetypeCreated(newArchetypeId);
+			std::memcpy(result.Data + archetypeRecord.ComponentOffsets[i], components[i].second, componentSize);
 		}
 
-		ArchetypeRecord& archetypeRecord = m_Archetypes.Records[record.Archetype];
-		EntityStorage& storage = GetEntityStorage(record.Archetype);
-		record.BufferIndex = storage.AddEntity(record.RegistryIndex);
-
-		m_EntityToRecord.emplace(record.Id, record.RegistryIndex);
-		
-		uint8_t* entityData = storage.GetEntityData(record.BufferIndex);
-
-		switch (initStrategy)
-		{
-			case ComponentInitializationStrategy::Zero:
-			{
-				// Intialize entity data to 0
-				std::memset(entityData, 0, storage.GetEntitySize());
-				break;
-			}
-			case ComponentInitializationStrategy::DefaultConstructor:
-			{
-				for (size_t i = 0; i < archetypeRecord.Components.size(); i++)
-				{
-					const ComponentInfo& info = GetComponentInfo(archetypeRecord.Components[i]);
-					uint8_t* componentData = entityData + archetypeRecord.ComponentOffsets[i];
-
-					if (info.Initializer)
-						info.Initializer->Type.DefaultConstructor(componentData);
-					else
-						std::memset(componentData, 0, info.Size);
-				}
-
-				break;
-			}
-		}
-
-		return record.Id;
+		return result.Id;
 	}
 
 	Entity Entities::CreateEntityFromArchetype(ArchetypeId archetype, ComponentInitializationStrategy initStrategy)
@@ -318,7 +281,7 @@ namespace Flare
 		{
 			uint8_t* componentData = newEntityData + sizeBefore;
 			if (initStrategy == ComponentInitializationStrategy::Zero || !componentInfo.Initializer)
-				std::memcpy(componentData, 0, componentInfo.Size);
+				std::memset(componentData, 0, componentInfo.Size);
 			else
 				componentInfo.Initializer->Type.DefaultConstructor(componentData);
 		}
@@ -697,6 +660,85 @@ namespace Flare
 	{
 		FLARE_CORE_ASSERT(index < m_EntityRecords.size());
 		return m_EntityRecords[index];
+	}
+
+	void Entities::CreateEntity(const ComponentSet& components, EntityCreationResult& result)
+	{
+		size_t registryIndex = m_EntityRecords.size();
+		EntityRecord& record = m_EntityRecords.emplace_back();
+
+		record.RegistryIndex = (uint32_t)registryIndex;
+		record.Id = m_EntityIndex.CreateId();
+
+		auto it = m_Archetypes.ComponentSetToArchetype.find(components);
+		if (it != m_Archetypes.ComponentSetToArchetype.end())
+			record.Archetype = it->second;
+		else
+		{
+			ArchetypeId newArchetypeId = CreateArchetype();
+			ArchetypeRecord& newArchetype = m_Archetypes.Records[newArchetypeId];
+			record.Archetype = newArchetype.Id;
+
+			newArchetype.ComponentOffsets.resize(components.GetCount());
+			newArchetype.Components.resize(components.GetCount());
+
+			std::memcpy(newArchetype.Components.data(), components.GetIds(), components.GetCount() * sizeof(size_t));
+
+			size_t entitySize = 0;
+			for (size_t i = 0; i < components.GetCount(); i++)
+			{
+				newArchetype.ComponentOffsets[i] = entitySize;
+				entitySize += GetComponentInfo(components[i]).Size;
+			}
+
+			GetEntityStorage(newArchetypeId).SetEntitySize(entitySize);
+
+			m_Archetypes.ComponentSetToArchetype.emplace(ComponentSet(newArchetype.Components), newArchetype.Id);
+
+			for (size_t i = 0; i < newArchetype.Components.size(); i++)
+				m_Archetypes.ComponentToArchetype[newArchetype.Components[i]].emplace(newArchetypeId, i);
+
+			m_Queries.OnArchetypeCreated(newArchetypeId);
+		}
+
+		ArchetypeRecord& archetypeRecord = m_Archetypes.Records[record.Archetype];
+		EntityStorage& storage = GetEntityStorage(record.Archetype);
+		record.BufferIndex = storage.AddEntity(record.RegistryIndex);
+
+		m_EntityToRecord.emplace(record.Id, record.RegistryIndex);
+
+		result.Id = record.Id;
+		result.Archetype = record.Archetype;
+		result.Data = storage.GetEntityData(record.BufferIndex);
+	}
+
+	void Entities::InitializeEntity(const EntityCreationResult& entityResult, ComponentInitializationStrategy initStrategy)
+	{
+		switch (initStrategy)
+		{
+		case ComponentInitializationStrategy::Zero:
+		{
+			// Intialize entity data to 0
+			std::memset(entityResult.Data, 0, GetEntityStorage(entityResult.Archetype).GetEntitySize());
+			break;
+		}
+		case ComponentInitializationStrategy::DefaultConstructor:
+		{
+			const ArchetypeRecord& archetypeRecord = m_Archetypes[entityResult.Archetype];
+			for (size_t i = 0; i < archetypeRecord.Components.size(); i++)
+			{
+				const ComponentInfo& info = GetComponentInfo(archetypeRecord.Components[i]);
+				uint8_t* componentData = entityResult.Data + archetypeRecord.ComponentOffsets[i];
+
+				if (info.Initializer)
+					info.Initializer->Type.DefaultConstructor(componentData);
+				else
+					std::memset(componentData, 0, info.Size);
+			}
+
+			break;
+		}
+		}
 	}
 
 	ComponentId Entities::RegisterComponent(ComponentInitializer& initializer)

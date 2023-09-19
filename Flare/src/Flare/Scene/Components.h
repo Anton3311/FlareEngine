@@ -15,7 +15,8 @@ namespace Flare
 		FLARE_COMPONENT;
 
 		TransformComponent();
-
+		TransformComponent(const glm::vec3& position);
+		
 		glm::vec3 Position;
 		glm::vec3 Rotation;
 		glm::vec3 Scale;
@@ -52,6 +53,7 @@ namespace Flare
 		FLARE_COMPONENT;
 
 		SpriteComponent();
+		SpriteComponent(AssetHandle texture);
 
 		glm::vec4 Color;
 		glm::vec2 TextureTiling;

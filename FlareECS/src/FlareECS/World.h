@@ -30,6 +30,26 @@ namespace Flare
 			return Entities.CreateEntity(ComponentSet(group.GetIds().data(), group.GetIds().size()), initStrategy);
 		}
 
+		template<typename... T>
+		constexpr Entity CreateEntity(const T& ...components)
+		{
+			std::array<std::pair<ComponentId, const void*>, sizeof...(T)> componentPairs;
+
+			size_t index = 0;
+			([&]
+			{
+				componentPairs[index] = { COMPONENT_ID(T), &components };
+				index++;
+			} (), ...);
+
+			std::sort(componentPairs.begin(), componentPairs.end(), [](const std::pair<ComponentId, const void*>& a, std::pair<ComponentId, const void*>& b) -> bool
+			{
+				return a.first < b.first;
+			});
+
+			return Entities.CreateEntity(componentPairs.data(), sizeof...(T));
+		}
+
 		template<typename T>
 		constexpr T& GetEntityComponent(Entity entity)
 		{
