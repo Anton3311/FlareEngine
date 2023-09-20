@@ -52,6 +52,12 @@ namespace Flare
 			AddCommand<CreateEntityCommand<T...>>(CreateEntityCommand<T...>(initStrategy));
 		}
 
+		template<typename... T>
+		void CreateEntity(const T& ...components)
+		{
+			AddCommand<CreateEntityWithDataCommand<T...>>(CreateEntityWithDataCommand<T...>(components...));
+		}
+
 		void DeleteEntity(Entity entity);
 
 		void Execute();

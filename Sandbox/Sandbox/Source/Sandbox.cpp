@@ -105,7 +105,7 @@ namespace Sandbox
 						context.Commands->DeleteEntity(e);
 						break;
 					case 5:
-						World::GetCurrent().CreateEntity<TransformComponent, TestComponent>(TransformComponent(), TestComponent());
+						context.Commands->CreateEntity(TransformComponent{ glm::vec3(1.0f, 0.0f, 0.0f) }, SomeComponent{});
 						break;
 					}
 

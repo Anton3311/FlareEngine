@@ -62,6 +62,21 @@ namespace Flare
 		ComponentInitializationStrategy m_InitStrategy;
 	};
 
+	template<typename... T>
+	class CreateEntityWithDataCommand : public Command
+	{
+	public:
+		CreateEntityWithDataCommand(const T& ...components)
+			: m_Components(components...) {}
+
+		virtual void Apply(World& world) override
+		{
+			std::apply([&world](const T& ...components) { world.CreateEntity<T...>(components...); }, m_Components);
+		}
+	private:
+		std::tuple<T...> m_Components;
+	};
+
 	class FLAREECS_API DeleteEntityCommand : public Command
 	{
 	public:
