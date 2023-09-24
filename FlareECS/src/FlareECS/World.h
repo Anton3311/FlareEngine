@@ -2,6 +2,7 @@
 
 #include "FlareECS/Entities.h"
 #include "FlareECS/Entity/Component.h"
+#include "FlareECS/Entity/Components.h"
 #include "FlareECS/Entity/ComponentGroup.h"
 
 #include "FlareECS/Entity/Archetypes.h"
@@ -131,6 +132,7 @@ namespace Flare
 		inline const SystemsManager& GetSystemsManager() const { return m_SystemsManager; }
 
 		Flare::Entities Entities;
+		Flare::Components Components;
 	private:
 		Archetypes m_Archetypes;
 		QueryCache m_Queries;

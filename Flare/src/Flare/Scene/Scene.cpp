@@ -28,31 +28,10 @@ namespace Flare
 	{
 	}
 
-	void Scene::CopyFrom(const Ref<Scene>& scene)
-	{
-		for (const ComponentInfo& component : scene->m_World.Entities.GetRegisteredComponents())
-			m_World.Entities.RegisterComponent(component.Name, component.Size, component.Deleter);
-
-		for (Entity entity : scene->m_World.Entities)
-		{
-			Entity newEntity = m_World.Entities.CreateEntity(
-				ComponentSet(scene->m_World.GetEntityComponents(entity)),
-				ComponentInitializationStrategy::Zero);
-
-			std::optional<size_t> entitySize = scene->m_World.Entities.GetEntityDataSize(entity);
-
-			std::optional<uint8_t*> newEntityData = m_World.Entities.GetEntityData(newEntity);
-			std::optional<const uint8_t*> entityData = scene->m_World.Entities.GetEntityData(entity);
-
-			if (entitySize.has_value() && newEntityData.has_value() && entityData.has_value())
-				std::memcpy(newEntityData.value(), entityData.value(), entitySize.value());
-		}
-	}
-
 	void Scene::Initialize()
 	{
 		ScriptingEngine::SetCurrentECSWorld(m_World);
-		m_World.Entities.RegisterComponents();
+		m_World.Components.RegisterComponents();
 
 		SystemsManager& systemsManager = m_World.GetSystemsManager();
 		systemsManager.CreateGroup("Debug Rendering");

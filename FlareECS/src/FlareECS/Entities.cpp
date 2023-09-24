@@ -13,8 +13,8 @@
 
 namespace Flare
 {
-	Entities::Entities(QueryCache& queries, Archetypes& archetypes)
-		: m_Queries(queries), m_Archetypes(archetypes)
+	Entities::Entities(Components& components, QueryCache& queries, Archetypes& archetypes)
+		: m_Components(components), m_Queries(queries), m_Archetypes(archetypes)
 	{
 		EntityChunksPool::Initialize(16);
 	}
@@ -29,7 +29,7 @@ namespace Flare
 				uint8_t* entityData = storage.GetEntityData(entityIndex);
 				for (size_t i = 0; i < archetype.Components.size(); i++)
 				{
-					GetComponentInfo(archetype.Components[i]).Deleter((void*)(entityData + archetype.ComponentOffsets[i]));
+					m_Components.GetComponentInfo(archetype.Components[i]).Deleter((void*)(entityData + archetype.ComponentOffsets[i]));
 				}
 			}
 		}
@@ -113,7 +113,7 @@ namespace Flare
 		{
 			for (size_t i = 0; i < archetypeRecord.Components.size(); i++)
 			{
-				const ComponentInfo& info = GetComponentInfo(archetypeRecord.Components[i]);
+				const ComponentInfo& info = m_Components.GetComponentInfo(archetypeRecord.Components[i]);
 				uint8_t* componentData = entityData + archetypeRecord.ComponentOffsets[i];
 
 				if (info.Initializer)
@@ -164,9 +164,9 @@ namespace Flare
 
 	bool Entities::AddEntityComponent(Entity entity, ComponentId componentId, const void* componentData, ComponentInitializationStrategy initStrategy)
 	{
-		FLARE_CORE_ASSERT(IsComponentIdValid(componentId), "Invalid component id");
+		FLARE_CORE_ASSERT(m_Components.IsComponentIdValid(componentId), "Invalid component id");
 
-		const ComponentInfo& componentInfo = GetComponentInfo(componentId);
+		const ComponentInfo& componentInfo = m_Components.GetComponentInfo(componentId);
 
 		auto recordIterator = FindEntity(entity);
 		if (recordIterator == m_EntityToRecord.end())
@@ -236,7 +236,7 @@ namespace Flare
 				for (size_t i = 0; i < newArchetype.Components.size(); i++)
 				{
 					newArchetype.ComponentOffsets[i] = entitySize;
-					entitySize += GetComponentInfo(newArchetype.Components[i]).Size;
+					entitySize += m_Components.GetComponentInfo(newArchetype.Components[i]).Size;
 				}
 
 				storage.SetEntitySize(entitySize);
@@ -298,9 +298,9 @@ namespace Flare
 
 	bool Entities::RemoveEntityComponent(Entity entity, ComponentId componentId)
 	{
-		FLARE_CORE_ASSERT(IsComponentIdValid(componentId), "Invalid component id");
+		FLARE_CORE_ASSERT(m_Components.IsComponentIdValid(componentId), "Invalid component id");
 
-		const ComponentInfo& componentInfo = GetComponentInfo(componentId);
+		const ComponentInfo& componentInfo = m_Components.GetComponentInfo(componentId);
 
 		auto recordIterator = FindEntity(entity);
 		if (recordIterator == m_EntityToRecord.end())
@@ -359,7 +359,7 @@ namespace Flare
 				for (size_t i = 0; i < newArchetype.Components.size(); i++)
 				{
 					newArchetype.ComponentOffsets[i] = entitySize;
-					entitySize += GetComponentInfo(newArchetype.Components[i]).Size;
+					entitySize += m_Components.GetComponentInfo(newArchetype.Components[i]).Size;
 				}
 
 				storage.SetEntitySize(entitySize);
@@ -501,67 +501,14 @@ namespace Flare
 		return entityData + archetype.ComponentOffsets[componentIndex.value()];
 	}
 
-	void Entities::RegisterComponents()
-	{
-		auto& initializers = ComponentInitializer::GetInitializers();
-		for (ComponentInitializer* initializer : initializers)
-			initializer->m_Id = RegisterComponent(*initializer);
-	}
-
-	ComponentId Entities::RegisterComponent(std::string_view name, size_t size, const std::function<void(void*)>& deleter)
-	{
-		Entity entityId = m_EntityIndex.CreateId();
-
-		uint32_t registryIndex = (uint32_t)m_RegisteredComponents.size();
-		ComponentInfo& info = m_RegisteredComponents.emplace_back();
-
-		info.Id = ComponentId(entityId.GetIndex(), entityId.GetGeneration());
-		info.RegistryIndex = registryIndex;
-		info.Name = name;
-		info.Size = size;
-		info.Deleter = deleter;
-
-		m_ComponentNameToIndex.emplace(info.Name, registryIndex);
-		m_ComponentIdToIndex.emplace(info.Id, registryIndex);
-		return info.Id;
-	}
-
-	std::optional<ComponentId> Entities::FindComponnet(std::string_view name)
-	{
-		auto it = m_ComponentNameToIndex.find(std::string(name));
-		if (it == m_ComponentNameToIndex.end())
-			return {};
-		FLARE_CORE_ASSERT(it->second < m_RegisteredComponents.size());
-		return m_RegisteredComponents[it->second].Id;
-	}
-
-	bool Entities::IsComponentIdValid(ComponentId id) const
-	{
-		auto it = m_ComponentIdToIndex.find(id);
-		if (it == m_ComponentIdToIndex.end())
-			return false;
-		return it->second < m_RegisteredComponents.size();
-	}
-
-	const ComponentInfo& Entities::GetComponentInfo(ComponentId id) const
-	{
-		FLARE_CORE_ASSERT(IsComponentIdValid(id));
-		return m_RegisteredComponents[m_ComponentIdToIndex.at(id)];
-	}
-
-	const std::vector<ComponentInfo>& Entities::GetRegisteredComponents() const
-	{
-		return m_RegisteredComponents;
-	}
-
 	std::optional<void*> Entities::GetSingletonComponent(ComponentId id) const
 	{
-		FLARE_CORE_ASSERT(IsComponentIdValid(id));
+		FLARE_CORE_ASSERT(m_Components.IsComponentIdValid(id));
 
 		auto it = m_Archetypes.ComponentToArchetype.find(id);
 		if (it == m_Archetypes.ComponentToArchetype.end())
 		{
-			FLARE_CORE_ERROR("Failed to get singleton component: World doesn't contain any entities with component '{0}'", GetComponentInfo(id).Name);
+			FLARE_CORE_ERROR("Failed to get singleton component: World doesn't contain any entities with component '{0}'", m_Components.GetComponentInfo(id).Name);
 			return nullptr;
 		}
 
@@ -581,7 +528,7 @@ namespace Flare
 				}
 				else
 				{
-					FLARE_CORE_ERROR("Failed to get singleton component: World contains multiple entities with component '{0}'", GetComponentInfo(id).Name);
+					FLARE_CORE_ERROR("Failed to get singleton component: World contains multiple entities with component '{0}'", m_Components.GetComponentInfo(id).Name);
 					return {};
 				}
 			}
@@ -589,7 +536,7 @@ namespace Flare
 
 		if (archetype == INVALID_ARCHETYPE_ID)
 		{
-			FLARE_CORE_ERROR("Failed to get singleton component: World doesn't contain any entities with component '{0}'", GetComponentInfo(id).Name);
+			FLARE_CORE_ERROR("Failed to get singleton component: World doesn't contain any entities with component '{0}'", m_Components.GetComponentInfo(id).Name);
 			return {};
 		}
 
@@ -598,7 +545,7 @@ namespace Flare
 
 		if (storage.GetEntitiesCount() != 1)
 		{
-			FLARE_CORE_ERROR("Failed to get singleton component: World contains multiple entities with component '{0}'", GetComponentInfo(id).Name);
+			FLARE_CORE_ERROR("Failed to get singleton component: World contains multiple entities with component '{0}'", m_Components.GetComponentInfo(id).Name);
 			return {};
 		}
 
@@ -706,7 +653,7 @@ namespace Flare
 			for (size_t i = 0; i < components.GetCount(); i++)
 			{
 				newArchetype.ComponentOffsets[i] = entitySize;
-				entitySize += GetComponentInfo(components[i]).Size;
+				entitySize += m_Components.GetComponentInfo(components[i]).Size;
 			}
 
 			GetEntityStorage(newArchetypeId).SetEntitySize(entitySize);
@@ -745,7 +692,7 @@ namespace Flare
 			const ArchetypeRecord& archetypeRecord = m_Archetypes[entityResult.Archetype];
 			for (size_t i = 0; i < archetypeRecord.Components.size(); i++)
 			{
-				const ComponentInfo& info = GetComponentInfo(archetypeRecord.Components[i]);
+				const ComponentInfo& info = m_Components.GetComponentInfo(archetypeRecord.Components[i]);
 				uint8_t* componentData = entityResult.Data + archetypeRecord.ComponentOffsets[i];
 
 				if (info.Initializer)
@@ -757,25 +704,6 @@ namespace Flare
 			break;
 		}
 		}
-	}
-
-	ComponentId Entities::RegisterComponent(ComponentInitializer& initializer)
-	{
-		Entity entityId = m_EntityIndex.CreateId();
-
-		uint32_t registryIndex = (uint32_t)m_RegisteredComponents.size();
-		ComponentInfo& info = m_RegisteredComponents.emplace_back();
-
-		info.Id = ComponentId(entityId.GetIndex(), entityId.GetGeneration());
-		info.RegistryIndex = registryIndex;
-		info.Name = initializer.Type.TypeName;
-		info.Size = initializer.Type.Size;
-		info.Deleter = initializer.Type.Destructor;
-		info.Initializer = &initializer;
-
-		m_ComponentNameToIndex.emplace(info.Name, registryIndex);
-		m_ComponentIdToIndex.emplace(info.Id, registryIndex);
-		return info.Id;
 	}
 
 	ArchetypeId Entities::CreateArchetype()

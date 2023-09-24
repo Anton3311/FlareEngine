@@ -69,8 +69,7 @@ namespace Flare
 				{
 					if (ImGui::BeginChild("Components List"))
 					{
-						const auto& components = world.Entities.GetRegisteredComponents();
-
+						const auto& components = world.Components.GetRegisteredComponents();
 						for (const ComponentInfo& component : components)
 						{
 							ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_SpanFullWidth;

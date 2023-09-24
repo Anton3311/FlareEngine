@@ -79,7 +79,7 @@ namespace Flare
 			std::optional<ComponentId> removedComponent;
 			for (ComponentId component : world.GetEntityComponents(entity))
 			{
-				const ComponentInfo& componentInfo = world.Entities.GetComponentInfo(component);
+				const ComponentInfo& componentInfo = world.Components.GetComponentInfo(component);
 
 				ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_FramePadding;
 				if (ImGui::TreeNodeEx((void*)std::hash<ComponentId>()(component), flags, "%s", componentInfo.Name.c_str()))
@@ -139,7 +139,7 @@ namespace Flare
 		if (ImGui::BeginMenu("Add component"))
 		{
 			World& world = Scene::GetActive()->GetECSWorld();
-			const std::vector<ComponentInfo>& components = world.Entities.GetRegisteredComponents();
+			const std::vector<ComponentInfo>& components = world.Components.GetRegisteredComponents();
 
 			for (const auto& info : components)
 			{

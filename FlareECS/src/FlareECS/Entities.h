@@ -5,6 +5,7 @@
 
 #include "FlareECS/Entity/Entity.h"
 #include "FlareECS/Entity/Component.h"
+#include "FlareECS/Entity/Components.h"
 #include "FlareECS/Entity/ComponentInitializer.h"
 #include "FlareECS/Entity/Archetype.h"
 #include "FlareECS/Entity/Archetypes.h"
@@ -32,7 +33,7 @@ namespace Flare
 	class FLAREECS_API Entities
 	{
 	public:
-		Entities(QueryCache& queries, Archetypes& archetypes);
+		Entities(Components& components, QueryCache& queries, Archetypes& archetypes);
 		Entities(const Entities&) = delete;
 
 		Entities& operator=(const Entities&) = delete;
@@ -76,20 +77,11 @@ namespace Flare
 
 		// Component operations
 
-		void RegisterComponents();
-
-		ComponentId RegisterComponent(std::string_view name, size_t size, const std::function<void(void*)>& deleter);
-		std::optional<ComponentId> FindComponnet(std::string_view name);
-		bool IsComponentIdValid(ComponentId id) const;
-
 		std::optional<void*> GetEntityComponent(Entity entity, ComponentId component);
 		std::optional<const void*> GetEntityComponent(Entity entity, ComponentId component) const;
 
 		const std::vector<ComponentId>& GetEntityComponents(Entity entity);
 		bool HasComponent(Entity entity, ComponentId component) const;
-
-		const ComponentInfo& GetComponentInfo(ComponentId id) const;
-		const std::vector<ComponentInfo>& GetRegisteredComponents() const;
 
 		std::optional<void*> GetSingletonComponent(ComponentId id) const;
 		std::optional<Entity> GetSingletonEntity(const Query& query) const;
@@ -97,6 +89,7 @@ namespace Flare
 		// Archetypes
 
 		inline const Archetypes& GetArchetypes() const { return m_Archetypes; }
+		inline const Components& GetComponents() const { return m_Components; }
 		
 		// Iterator
 
@@ -128,15 +121,12 @@ namespace Flare
 
 		Archetypes& m_Archetypes;
 		QueryCache& m_Queries;
+		Components& m_Components;
 
 		std::vector<EntityStorage> m_EntityStorages;
 
 		std::vector<EntityRecord> m_EntityRecords;
 		std::unordered_map<Entity, size_t> m_EntityToRecord;
-
-		std::unordered_map<std::string, uint32_t> m_ComponentNameToIndex;
-		std::unordered_map<ComponentId, uint32_t> m_ComponentIdToIndex;
-		std::vector<ComponentInfo> m_RegisteredComponents;
 
 		EntityIndex m_EntityIndex;
 

@@ -69,7 +69,7 @@ namespace Flare
 		else
 		{
 			std::optional<void*> entityData = world.Entities.GetEntityComponent(entity, component);
-			const ComponentInfo& info = world.Entities.GetComponentInfo(component);
+			const ComponentInfo& info = world.Components.GetComponentInfo(component);
 
 			if (entityData.has_value() && info.Initializer)
 				SerializeType(emitter, info.Initializer->Type, (const uint8_t*)entityData.value());
@@ -232,14 +232,14 @@ namespace Flare
 				}
 				else
 				{
-					std::optional<ComponentId> componentId = scene->GetECSWorld().Entities.FindComponnet(name);
+					std::optional<ComponentId> componentId = scene->GetECSWorld().Components.FindComponnet(name);
 					if (!componentId.has_value())
 					{
 						FLARE_CORE_ERROR("Component named '{0}' cannot be deserialized", name);
 						continue;
 					}
 
-					const ComponentInfo& info = scene->GetECSWorld().Entities.GetComponentInfo(componentId.value());
+					const ComponentInfo& info = scene->GetECSWorld().Components.GetComponentInfo(componentId.value());
 					if (info.Initializer)
 					{
 						uint8_t* componentData = AddDeserializedComponent(scene->GetECSWorld(), entity, componentId.value());
