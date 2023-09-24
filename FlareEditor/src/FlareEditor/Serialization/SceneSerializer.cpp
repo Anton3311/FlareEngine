@@ -17,11 +17,11 @@
 
 namespace Flare
 {
-	static void SerializeComponent(YAML::Emitter& emitter, World& world, Entity entity, ComponentId component)
+	void SceneSerializer::SerializeComponent(YAML::Emitter& emitter, const World& world, Entity entity, ComponentId component)
 	{
 		if (component == COMPONENT_ID(TransformComponent))
 		{
-			TransformComponent& transform = world.GetEntityComponent<TransformComponent>(entity);
+			const TransformComponent& transform = world.GetEntityComponent<TransformComponent>(entity);
 
 			emitter << YAML::BeginMap << YAML::Key << "Name" << YAML::Value << "Transform";
 
@@ -33,7 +33,7 @@ namespace Flare
 		}
 		else if (component == COMPONENT_ID(SpriteComponent))
 		{
-			SpriteComponent& sprite = world.GetEntityComponent<SpriteComponent>(entity);
+			const SpriteComponent& sprite = world.GetEntityComponent<SpriteComponent>(entity);
 
 			emitter << YAML::BeginMap << YAML::Key << "Name" << YAML::Value << "Sprite";
 			emitter << YAML::Key << "Color" << YAML::Value << sprite.Color;
@@ -44,7 +44,7 @@ namespace Flare
 		}
 		else if (component == COMPONENT_ID(CameraComponent))
 		{
-			CameraComponent& camera = world.GetEntityComponent<CameraComponent>(entity);
+			const CameraComponent& camera = world.GetEntityComponent<CameraComponent>(entity);
 
 			emitter << YAML::BeginMap << YAML::Key << "Name" << YAML::Value << "Camera";
 
@@ -68,7 +68,7 @@ namespace Flare
 		}
 		else
 		{
-			std::optional<void*> entityData = world.Entities.GetEntityComponent(entity, component);
+			std::optional<const void*> entityData = world.Entities.GetEntityComponent(entity, component);
 			const ComponentInfo& info = world.Components.GetComponentInfo(component);
 
 			if (entityData.has_value() && info.Initializer)
@@ -103,6 +103,99 @@ namespace Flare
 		}
 	}
 
+	void SceneSerializer::SerializeEntity(YAML::Emitter& emitter, World& world, Entity entity)
+	{
+		emitter << YAML::BeginMap;
+
+		emitter << YAML::Key << "Components" << YAML::BeginSeq; // Components
+
+		for (ComponentId component : world.GetEntityComponents(entity))
+			SerializeComponent(emitter, world, entity, component);
+
+		emitter << YAML::EndSeq; // Components
+		emitter << YAML::EndMap;
+	}
+
+	Entity SceneSerializer::DeserializeEntity(YAML::Node node, World& world)
+	{
+		Entity entity;
+		for (YAML::Node componentNode : node)
+		{
+			std::string name = componentNode["Name"].as<std::string>();
+
+			if (name == "Transform")
+			{
+				YAML::Node positionNode = componentNode["Position"];
+
+				TransformComponent transformComponent;
+				transformComponent.Position = positionNode.as<glm::vec3>();
+				transformComponent.Rotation = componentNode["Rotation"].as<glm::vec3>();
+				transformComponent.Scale = componentNode["Scale"].as<glm::vec3>();
+
+				AddDeserializedComponent<TransformComponent>(world, entity, transformComponent);
+			}
+			else if (name == "Sprite")
+			{
+				SpriteComponent spriteComponent;
+				spriteComponent.Color = componentNode["Color"].as<glm::vec4>();
+
+				if (YAML::Node textureNode = componentNode["Texture"])
+					spriteComponent.Texture = textureNode ? textureNode.as<AssetHandle>() : NULL_ASSET_HANDLE;
+
+				if (YAML::Node tilingNode = componentNode["TextureTiling"])
+					spriteComponent.TextureTiling = tilingNode.as<glm::vec2>();
+				else
+					spriteComponent.TextureTiling = glm::vec2(1.0f);
+
+				if (YAML::Node flags = componentNode["Flags"])
+					spriteComponent.Flags = (SpriteRenderFlags)flags.as<uint64_t>();
+				else
+					spriteComponent.Flags = SpriteRenderFlags::None;
+
+				AddDeserializedComponent<SpriteComponent>(world, entity, spriteComponent);
+			}
+			else if (name == "Camera")
+			{
+				CameraComponent cameraComponent;
+				cameraComponent.Size = componentNode["Size"].as<float>();
+				cameraComponent.Near = componentNode["Near"].as<float>();
+				cameraComponent.Far = componentNode["Far"].as<float>();
+
+				if (YAML::Node fovNode = componentNode["FOV"])
+					cameraComponent.FOV = fovNode.as<float>();
+
+				if (YAML::Node projectionType = componentNode["Projection"])
+				{
+					std::string string = projectionType.as<std::string>();
+					if (string == "Orthographic")
+						cameraComponent.Projection = CameraComponent::ProjectionType::Orthographic;
+					else if (string == "Perspective")
+						cameraComponent.Projection = CameraComponent::ProjectionType::Perspective;
+				}
+
+				AddDeserializedComponent<CameraComponent>(world, entity, cameraComponent);
+			}
+			else
+			{
+				std::optional<ComponentId> componentId = world.Components.FindComponnet(name);
+				if (!componentId.has_value())
+				{
+					FLARE_CORE_ERROR("Component named '{0}' cannot be deserialized", name);
+					continue;
+				}
+
+				const ComponentInfo& info = world.Components.GetComponentInfo(componentId.value());
+				if (info.Initializer)
+				{
+					uint8_t* componentData = AddDeserializedComponent(world, entity, componentId.value());
+					DeserializeType(componentNode, info.Initializer->Type, componentData);
+				}
+			}
+		}
+
+		return entity;
+	}
+
 	void SceneSerializer::Serialize(const Ref<Scene>& scene)
 	{
 		FLARE_CORE_ASSERT(AssetManager::IsAssetHandleValid(scene->Handle));
@@ -117,17 +210,7 @@ namespace Flare
 		emitter << YAML::BeginSeq;
 
 		for (Entity entity : scene->m_World.Entities)
-		{
-			emitter << YAML::BeginMap;
-
-			emitter << YAML::Key << "Components" << YAML::BeginSeq; // Components
-
-			for (ComponentId component : scene->m_World.GetEntityComponents(entity))
-				SerializeComponent(emitter, scene->m_World, entity, component);
-
-			emitter << YAML::EndSeq; // Components
-			emitter << YAML::EndMap;
-		}
+			SerializeEntity(emitter, scene->m_World, entity);
 
 		emitter << YAML::EndSeq;
 
@@ -173,80 +256,7 @@ namespace Flare
 		{
 			YAML::Node componentsNode = entity["Components"];
 
-			Entity entity;
-			for (YAML::Node componentNode : componentsNode)
-			{
-				std::string name = componentNode["Name"].as<std::string>();
-
-				if (name == "Transform")
-				{
-					YAML::Node positionNode = componentNode["Position"];
-
-					TransformComponent transformComponent;
-					transformComponent.Position = positionNode.as<glm::vec3>();
-					transformComponent.Rotation = componentNode["Rotation"].as<glm::vec3>();
-					transformComponent.Scale = componentNode["Scale"].as<glm::vec3>();
-
-					AddDeserializedComponent<TransformComponent>(scene->m_World, entity, transformComponent);
-				}
-				else if (name == "Sprite")
-				{
-					SpriteComponent spriteComponent;
-					spriteComponent.Color = componentNode["Color"].as<glm::vec4>();
-
-					if (YAML::Node textureNode = componentNode["Texture"])
-						spriteComponent.Texture = textureNode ? textureNode.as<AssetHandle>() : NULL_ASSET_HANDLE;
-
-					if (YAML::Node tilingNode = componentNode["TextureTiling"])
-						spriteComponent.TextureTiling = tilingNode.as<glm::vec2>();
-					else
-						spriteComponent.TextureTiling = glm::vec2(1.0f);
-
-					if (YAML::Node flags = componentNode["Flags"])
-						spriteComponent.Flags = (SpriteRenderFlags)flags.as<uint64_t>();
-					else
-						spriteComponent.Flags = SpriteRenderFlags::None;
-
-					AddDeserializedComponent<SpriteComponent>(scene->m_World, entity, spriteComponent);
-				}
-				else if (name == "Camera")
-				{
-					CameraComponent cameraComponent;
-					cameraComponent.Size = componentNode["Size"].as<float>();
-					cameraComponent.Near = componentNode["Near"].as<float>();
-					cameraComponent.Far = componentNode["Far"].as<float>();
-
-					if (YAML::Node fovNode = componentNode["FOV"])
-						cameraComponent.FOV = fovNode.as<float>();
-
-					if (YAML::Node projectionType = componentNode["Projection"])
-					{
-						std::string string = projectionType.as<std::string>();
-						if (string == "Orthographic")
-							cameraComponent.Projection = CameraComponent::ProjectionType::Orthographic;
-						else if (string == "Perspective")
-							cameraComponent.Projection = CameraComponent::ProjectionType::Perspective;
-					}
-
-					AddDeserializedComponent<CameraComponent>(scene->m_World, entity, cameraComponent);
-				}
-				else
-				{
-					std::optional<ComponentId> componentId = scene->GetECSWorld().Components.FindComponnet(name);
-					if (!componentId.has_value())
-					{
-						FLARE_CORE_ERROR("Component named '{0}' cannot be deserialized", name);
-						continue;
-					}
-
-					const ComponentInfo& info = scene->GetECSWorld().Components.GetComponentInfo(componentId.value());
-					if (info.Initializer)
-					{
-						uint8_t* componentData = AddDeserializedComponent(scene->GetECSWorld(), entity, componentId.value());
-						DeserializeType(componentNode, info.Initializer->Type, componentData);
-					}
-				}
-			}
+			DeserializeEntity(componentsNode, scene->m_World);
 		}
 	}
 }

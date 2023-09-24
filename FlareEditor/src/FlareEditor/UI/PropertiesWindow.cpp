@@ -129,8 +129,6 @@ namespace Flare
 			RenderTextureImportSettingsEditor(handle, s_SelectedTextureImportSettings);
 			break;
 		}
-		default:
-			FLARE_CORE_ASSERT(false, "Unhandled asset type");
 		}
 	}
 

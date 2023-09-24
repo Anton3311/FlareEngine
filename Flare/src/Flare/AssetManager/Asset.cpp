@@ -14,6 +14,8 @@ namespace Flare
 			return "Scene";
 		case AssetType::Texture:
 			return "Texture";
+		case AssetType::Prefab:
+			return "Prefab";
 		}
 
 		FLARE_CORE_ASSERT(false, "Unhandled asset type");
@@ -26,6 +28,8 @@ namespace Flare
 			return AssetType::Texture;
 		else if (string == "Scene")
 			return AssetType::Scene;
+		else if (string == "Prefab")
+			return AssetType::Prefab;
 
 		FLARE_CORE_ASSERT(false, "Unknown asset type string");
 		return AssetType::None;

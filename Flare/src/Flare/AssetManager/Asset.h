@@ -37,6 +37,7 @@ namespace Flare
 		None,
 		Scene,
 		Texture,
+		Prefab,
 	};
 
 	FLARE_API std::string_view AssetTypeToString(AssetType type);

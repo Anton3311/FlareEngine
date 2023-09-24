@@ -137,8 +137,8 @@ namespace Flare
 		size_t m_Count;
 	};
 
-	bool operator==(const ComponentSet& setA, const ComponentSet& setB);
-	bool operator!=(const ComponentSet& setA, const ComponentSet& setB);
+	FLAREECS_API bool operator==(const ComponentSet& setA, const ComponentSet& setB);
+	FLAREECS_API bool operator!=(const ComponentSet& setA, const ComponentSet& setB);
 }
 
 template<>

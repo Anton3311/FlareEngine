@@ -9,6 +9,7 @@
 #include "Flare/Renderer/Texture.h"
 
 #include "FlareEditor/AssetManager/TextureImporter.h"
+#include "FlareEditor/AssetManager/PrefabImporter.h"
 #include "FlareEditor/Serialization/SceneSerializer.h"
 
 #include <yaml-cpp/yaml.h>
@@ -33,6 +34,7 @@ namespace Flare
     EditorAssetManager::EditorAssetManager()
     {
         m_AssetImporters.emplace(AssetType::Texture, TextureImporter::ImportTexture);
+        m_AssetImporters.emplace(AssetType::Prefab, PrefabImporter::ImportPrefab);
         m_AssetImporters.emplace(AssetType::Scene, [](const AssetMetadata& metadata) -> Ref<Asset>
         {
             Ref<Scene> scene = CreateRef<Scene>();
@@ -105,6 +107,8 @@ namespace Flare
             type = AssetType::Texture;
         else if (extension == ".flare")
             type = AssetType::Scene;
+        else if (extension == ".flrprefab")
+            type = AssetType::Prefab;
 
         AssetHandle handle;
         AssetMetadata metadata;

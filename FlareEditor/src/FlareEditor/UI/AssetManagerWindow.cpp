@@ -7,6 +7,7 @@
 #include "FlareEditor/EditorLayer.h"
 #include "FlareEditor/UI/EditorGUI.h"
 
+#include <fstream>
 #include <imgui.h>
 
 namespace Flare
@@ -45,6 +46,8 @@ namespace Flare
 			ImGui::EndChild();
 		}
 
+		RenderCreateNewFilePopup();
+
 		ImGui::PopStyleVar();
 		ImGui::PopStyleVar();
 
@@ -72,9 +75,39 @@ namespace Flare
 	void AssetManagerWindow::RenderDirectory()
 	{
 		const AssetTreeNode& node = m_AssetTree[m_NodeRenderIndex];
-
 		ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_SpanFullWidth;
+
 		bool opened = ImGui::TreeNodeEx(node.Name.c_str(), flags, "%s", node.Name.c_str());
+		if (ImGui::BeginPopupContextItem(node.Name.c_str()))
+		{
+			if (ImGui::BeginMenu("New"))
+			{
+				if (ImGui::MenuItem("Prefab"))
+				{
+					m_ShowNewFileNamePopup = true;
+					m_OnNewFileNameEntered = [this, nodeIndex = m_NodeRenderIndex](std::string_view name)
+					{
+						FLARE_CORE_ASSERT(m_AssetTree[nodeIndex].IsDirectory);
+						std::filesystem::path path = m_AssetTree[nodeIndex].Path / name;
+						path.replace_extension(".flrprefab");
+
+						if (!std::filesystem::exists(path))
+						{
+							std::ofstream output(path);
+							output << R"(Components:
+  - Name: struct Flare::TransformComponent
+    Position: [0, 0, 0]
+    Rotation: [0, 0, 0]
+    Scale: [1, 1, 1])";
+						}
+					};
+				}
+
+				ImGui::EndMenu();
+			}
+
+			ImGui::EndMenu();
+		}
 
 		if (opened)
 		{
@@ -94,7 +127,8 @@ namespace Flare
 			ImGui::TreePop();
 		}
 
-		m_NodeRenderIndex = node.LastChildIndex;
+		if (node.ChildrenCount != 0)
+			m_NodeRenderIndex = node.LastChildIndex;
 	}
 
 	void AssetManagerWindow::RenderFile()
@@ -194,6 +228,61 @@ namespace Flare
 				auto action = m_FileOpenActions.find(metadata->Type);
 				if (action != m_FileOpenActions.end())
 					action->second(metadata->Handle);
+			}
+		}
+	}
+
+	void AssetManagerWindow::RenderCreateNewFilePopup()
+	{
+		bool createNewFile = false;
+
+		ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+		ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+
+		if (m_ShowNewFileNamePopup)
+		{
+			m_ShowNewFileNamePopup = false;
+			std::memset(m_TextInputBuffer, 0, sizeof(m_TextInputBuffer));
+			ImGui::OpenPopup("EnterNewFileName");
+		}
+
+		if (ImGui::BeginPopupModal("EnterNewFileName", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+		{
+			ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetStyle().FramePadding.y);
+			ImGui::Text("Name");
+			ImGui::SameLine();
+
+			ImGui::PushID("FileNameField");
+			ImGui::InputText("", m_TextInputBuffer, 512);
+			ImGui::PopID();
+
+			if (ImGui::Button("Create"))
+				createNewFile = true;
+
+			if (ImGui::IsKeyPressed(ImGuiKey_Enter))
+				createNewFile = true;
+			if (ImGui::IsKeyPressed(ImGuiKey_Escape))
+				ImGui::CloseCurrentPopup();
+
+			ImGui::SameLine();
+
+			if (ImGui::Button("Cancel"))
+				ImGui::CloseCurrentPopup();
+
+			if (createNewFile)
+				ImGui::CloseCurrentPopup();
+
+			ImGui::EndPopup();
+		}
+
+		if (createNewFile)
+		{
+			std::string_view fileName = m_TextInputBuffer;
+
+			if (m_OnNewFileNameEntered)
+			{
+				m_OnNewFileNameEntered(fileName);
+				m_OnNewFileNameEntered = nullptr;
 			}
 		}
 	}

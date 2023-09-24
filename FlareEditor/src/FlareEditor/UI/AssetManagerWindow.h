@@ -53,6 +53,8 @@ namespace Flare
 		void BuildDirectory(uint32_t parentIndex, const std::filesystem::path& path);
 
 		void OnOpenFile(const AssetTreeNode& node);
+
+		void RenderCreateNewFilePopup();
 	public:
 		Signal<AssetHandle> OnAssetSelectionChanged;
 	private:
@@ -65,5 +67,9 @@ namespace Flare
 		std::vector<AssetTreeNode> m_AssetTree;
 
 		std::unordered_map<AssetType, std::function<void(AssetHandle)>> m_FileOpenActions;
+
+		char m_TextInputBuffer[512];
+		bool m_ShowNewFileNamePopup = false;
+		std::function<void(std::string_view fileName)> m_OnNewFileNameEntered;
 	};
 }

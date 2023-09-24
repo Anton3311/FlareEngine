@@ -4,6 +4,8 @@
 #include "Flare/Renderer/DebugRenderer.h"
 #include "Flare/Scene/Components.h"
 #include "Flare/Scene/Scene.h"
+#include "Flare/Scene/Prefab.h"
+
 #include "Flare/Math/Math.h"
 
 #include "Flare/Input/InputManager.h"
@@ -153,6 +155,12 @@ namespace Flare
 						if (sprite.has_value())
 							sprite.value()->Texture = handle;
 
+						break;
+					}
+					case AssetType::Prefab:
+					{
+						Ref<Prefab> prefab = AssetManager::GetAsset<Prefab>(handle);
+						prefab->CreateInstance(Scene::GetActive()->GetECSWorld());
 						break;
 					}
 					}

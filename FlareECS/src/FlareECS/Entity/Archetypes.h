@@ -47,7 +47,7 @@ namespace Flare
 		}
 
 		std::vector<ArchetypeRecord> Records;
-		std::unordered_map<ComponentSet, size_t> ComponentSetToArchetype;
+		std::unordered_map<ComponentSet, ArchetypeId> ComponentSetToArchetype;
 		std::unordered_map<ComponentId, std::unordered_map<ArchetypeId, size_t>> ComponentToArchetype;
 	};
 }

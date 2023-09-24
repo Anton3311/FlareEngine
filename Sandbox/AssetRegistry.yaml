@@ -8,9 +8,15 @@ AssetRegistry:
   - Handle: 11273132474447840936
     Type: Scene
     Path: Test.flare
-  - Handle: 16256238360584041012
+  - Handle: 11883254765048218712
+    Type: Prefab
+    Path: test dir/test prefab.flrprefab
+  - Handle: 12443752963323924563
     Type: Scene
     Path: Test 2.flare
   - Handle: 16883279782608513727
     Type: Scene
     Path: Test.flare
+  - Handle: 18007753805608336408
+    Type: Prefab
+    Path: test dir/prefab 0.flrprefab
