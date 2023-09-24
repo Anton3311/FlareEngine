@@ -83,6 +83,8 @@ namespace Flare
 		bool IsComponentIdValid(ComponentId id) const;
 
 		std::optional<void*> GetEntityComponent(Entity entity, ComponentId component);
+		std::optional<const void*> GetEntityComponent(Entity entity, ComponentId component) const;
+
 		const std::vector<ComponentId>& GetEntityComponents(Entity entity);
 		bool HasComponent(Entity entity, ComponentId component) const;
 

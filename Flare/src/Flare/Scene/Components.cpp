@@ -69,4 +69,11 @@ namespace Flare
 		TextureTiling(glm::vec2(1.0f)),
 		Texture(texture),
 		Flags(SpriteRenderFlags::None) {}
+
+	FLARE_IMPL_COMPONENT(SpriteLayer, FLARE_FIELD(SpriteLayer, Layer));
+	SpriteLayer::SpriteLayer()
+		: Layer(0) {}
+
+	SpriteLayer::SpriteLayer(int32_t layer)
+		: Layer(layer) {}
 }

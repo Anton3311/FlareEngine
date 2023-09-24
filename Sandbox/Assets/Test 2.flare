@@ -65,3 +65,17 @@ Entities:
         Texture: 0
         TextureTiling: [1, 1]
         Flags: 0
+      - Name: struct Flare::SpriteLayer
+        Layer: 37
+  - Components:
+      - Name: Transform
+        Position: [-3.79999995, 0, 0]
+        Rotation: [0, 0, 0]
+        Scale: [1, 1, 1]
+      - Name: Sprite
+        Color: [1, 1, 1, 1]
+        Texture: 0
+        TextureTiling: [1, 1]
+        Flags: 0
+      - Name: struct Flare::SpriteLayer
+        Layer: 16

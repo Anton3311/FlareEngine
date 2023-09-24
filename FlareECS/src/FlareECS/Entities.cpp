@@ -471,8 +471,8 @@ namespace Flare
 		if (it == m_EntityToRecord.end())
 			return {};
 
-		EntityRecord& entityRecord = m_EntityRecords[it->second];
-		ArchetypeRecord& archetype = m_Archetypes.Records[entityRecord.Archetype];
+		const EntityRecord& entityRecord = m_EntityRecords[it->second];
+		const ArchetypeRecord& archetype = m_Archetypes.Records[entityRecord.Archetype];
 		const EntityStorage& storage = GetEntityStorage(entityRecord.Archetype);
 
 		std::optional<size_t> componentIndex = m_Archetypes.GetArchetypeComponentIndex(entityRecord.Archetype, component);
@@ -480,6 +480,24 @@ namespace Flare
 			return {};
 
 		uint8_t* entityData = storage.GetEntityData(entityRecord.BufferIndex);
+		return entityData + archetype.ComponentOffsets[componentIndex.value()];
+	}
+
+	std::optional<const void*> Entities::GetEntityComponent(Entity entity, ComponentId component) const
+	{
+		auto it = FindEntity(entity);
+		if (it == m_EntityToRecord.end())
+			return {};
+
+		const EntityRecord& entityRecord = m_EntityRecords[it->second];
+		const ArchetypeRecord& archetype = m_Archetypes.Records[entityRecord.Archetype];
+		const EntityStorage& storage = GetEntityStorage(entityRecord.Archetype);
+
+		std::optional<size_t> componentIndex = m_Archetypes.GetArchetypeComponentIndex(entityRecord.Archetype, component);
+		if (!componentIndex.has_value())
+			return {};
+
+		const uint8_t* entityData = storage.GetEntityData(entityRecord.BufferIndex);
 		return entityData + archetype.ComponentOffsets[componentIndex.value()];
 	}
 

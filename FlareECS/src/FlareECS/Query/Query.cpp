@@ -25,4 +25,13 @@ namespace Flare
 	{
 		return (*m_QueryCache)[m_Id].MatchedArchetypes;
 	}
+
+	size_t Query::GetEntitiesCount() const
+	{
+		size_t count = 0;
+		for (ArchetypeId archetype : (*m_QueryCache)[m_Id].MatchedArchetypes)
+			count += m_Entities->GetEntityStorage(archetype).GetEntitiesCount();
+
+		return count;
+	}
 }

@@ -117,11 +117,13 @@ namespace Flare
 
 	void Scene::OnRender(const RenderData& renderData)
 	{
+		RenderCommand::SetDepthTestEnabled(false);
 		Renderer2D::Begin(m_QuadShader);
 
 		m_World.GetSystemsManager().ExecuteGroup(m_2DRenderingGroup);
 
 		Renderer2D::End();
+		RenderCommand::SetDepthTestEnabled(true);
 	}
 
 	void Scene::OnUpdateRuntime()

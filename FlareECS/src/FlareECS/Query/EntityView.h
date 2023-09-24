@@ -34,6 +34,17 @@ namespace Flare
 
 			return ComponentView<ComponentT>(archetypeRecord.ComponentOffsets[index.value()]);
 		}
+
+		template<typename T>
+		OptionalComponentView<T> ViewOptional()
+		{
+			const ArchetypeRecord& archetypeRecord = m_Entities.GetArchetypes()[m_Archetype];
+			std::optional<size_t> index = m_Entities.GetArchetypes().GetArchetypeComponentIndex(m_Archetype, COMPONENT_ID(T));
+
+			if (index.has_value())
+				return OptionalComponentView<T>(archetypeRecord.ComponentOffsets[index.value()]);
+			return OptionalComponentView<T>();
+		}
 	private:
 		Entities& m_Entities;
 		ArchetypeId m_Archetype;

@@ -18,5 +18,6 @@ namespace Flare
 		virtual void OnUpdate(SystemExecutionContext& context) override;
 	private:
 		Query m_SpritesQuery;
+		std::vector<std::pair<Entity, int32_t>> m_SortedEntities;
 	};
 }

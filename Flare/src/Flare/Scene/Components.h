@@ -60,4 +60,14 @@ namespace Flare
 		AssetHandle Texture;
 		SpriteRenderFlags Flags;
 	};
+
+	struct SpriteLayer
+	{
+		FLARE_COMPONENT;
+
+		SpriteLayer();
+		SpriteLayer(int32_t layer);
+
+		int32_t Layer;
+	};
 }

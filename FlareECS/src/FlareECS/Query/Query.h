@@ -58,6 +58,8 @@ namespace Flare
 		QueryIterator begin() const;
 		QueryIterator end() const;
 		const std::unordered_set<ArchetypeId>& GetMatchedArchetypes() const;
+
+		size_t GetEntitiesCount() const;
 	private:
 		QueryId m_Id;
 		Entities* m_Entities;
