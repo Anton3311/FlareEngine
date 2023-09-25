@@ -1,52 +1,52 @@
 Entities:
   - Components:
-      - Name: Transform
+      - Name: struct Flare::TransformComponent
         Position: [0, 0, 4]
         Rotation: [0, -0, 0]
         Scale: [1, 1, 1]
-      - Name: Camera
+      - Name: struct Flare::CameraComponent
+        Projection: 1
         Size: 10
+        FOV: 90
         Near: 0.100000001
         Far: 100
-        Projection: Perspective
-        FOV: 90
   - Components:
-      - Name: Transform
+      - Name: struct Flare::TransformComponent
         Position: [0, 0, -1.20000005]
         Rotation: [168.311813, -9.40043068, -68.1223984]
         Scale: [5.63262272, 8.70941257, 5.79757786]
-      - Name: Sprite
-        Color: [0, 0, 1, 1]
-        Texture: 5193090395626261884
+      - Name: struct Flare::SpriteComponent
+        Color: [0, 0, 1, 2]
         TextureTiling: [1, 1]
+        Texture: 5193090395626261884
         Flags: 0
   - Components:
-      - Name: Transform
+      - Name: struct Flare::TransformComponent
         Position: [-4.0128355, 0.29252696, 0]
         Rotation: [0, -0, 45.0000038]
         Scale: [4, 1, 1]
-      - Name: Sprite
+      - Name: struct Flare::SpriteComponent
         Color: [1, 1, 1, 1]
-        Texture: 5193090395626261884
         TextureTiling: [4, 1]
+        Texture: 5193090395626261884
         Flags: 0
   - Components:
-      - Name: Transform
+      - Name: struct Flare::TransformComponent
         Position: [0, 0, 0]
         Rotation: [0, 0, 0]
         Scale: [0, 0, 0]
   - Components:
-      - Name: Transform
+      - Name: struct Flare::TransformComponent
         Position: [0, 0, 0]
         Rotation: [0, 0, 0]
         Scale: [0, 0, 0]
   - Components:
-      - Name: Transform
+      - Name: struct Flare::TransformComponent
         Position: [0, 0, 0]
         Rotation: [0, 0, 0]
         Scale: [0, 0, 0]
   - Components:
-      - Name: Transform
+      - Name: struct Flare::TransformComponent
         Position: [0, 0, 0]
         Rotation: [0, 0, 0]
         Scale: [0, 0, 0]
@@ -56,26 +56,26 @@ Entities:
         a: 34
         b: -59
   - Components:
-      - Name: Transform
+      - Name: struct Flare::TransformComponent
         Position: [-3.46407223, 0.69900316, 0]
         Rotation: [0, -0, 0]
         Scale: [1.70000005, 1.70000005, 1]
-      - Name: Sprite
+      - Name: struct Flare::SpriteComponent
         Color: [0.142348766, 0.142348766, 0.142348766, 1]
-        Texture: 0
         TextureTiling: [1, 1]
+        Texture: 0
         Flags: 0
       - Name: struct Flare::SpriteLayer
         Layer: 37
   - Components:
-      - Name: Transform
+      - Name: struct Flare::TransformComponent
         Position: [-3.79999995, 0, 0]
         Rotation: [0, 0, 0]
         Scale: [1, 1, 1]
-      - Name: Sprite
+      - Name: struct Flare::SpriteComponent
         Color: [1, 1, 1, 1]
-        Texture: 0
         TextureTiling: [1, 1]
+        Texture: 0
         Flags: 0
       - Name: struct Flare::SpriteLayer
         Layer: 16

@@ -14,12 +14,28 @@ namespace Flare
 		case SerializableFieldType::Bool:
 			emitter << YAML::Value << *(bool*)(data);
 			break;
+
+		case SerializableFieldType::Int8:
+			emitter << YAML::Value << (int16_t) *(int8_t*)(data);
+			break;
+		case SerializableFieldType::UInt8:
+			emitter << YAML::Value << (uint16_t) *(uint8_t*)(data);
+			break;
+
+		case SerializableFieldType::Int16:
+			emitter << YAML::Value << *(int16_t*)(data);
+			break;
+		case SerializableFieldType::UInt16:
+			emitter << YAML::Value << *(uint16_t*)(data);
+			break;
+
 		case SerializableFieldType::Int32:
 			emitter << YAML::Value << *(int32_t*)(data);
 			break;
 		case SerializableFieldType::UInt32:
 			emitter << YAML::Value << *(uint32_t*)(data);
 			break;
+
 		case SerializableFieldType::Float32:
 			emitter << YAML::Value << *(float*)(data);
 			break;
@@ -28,6 +44,9 @@ namespace Flare
 			break;
 		case SerializableFieldType::Float3:
 			emitter << YAML::Value << *(glm::vec3*)(data);
+			break;
+		case SerializableFieldType::Float4:
+			emitter << YAML::Value << *(glm::vec4*)(data);
 			break;
 		case SerializableFieldType::Custom:
 		{
@@ -95,6 +114,32 @@ namespace Flare
 			std::memcpy(data, &value, sizeof(value));
 			break;
 		}
+		case SerializableFieldType::Int8:
+		{
+			int8_t value = fieldNode.as<int16_t>();
+			std::memcpy(data, &value, sizeof(value));
+			break;
+		}
+		case SerializableFieldType::UInt8:
+		{
+			int8_t value = fieldNode.as<uint16_t>();
+			std::memcpy(data, &value, sizeof(value));
+			break;
+		}
+
+		case SerializableFieldType::Int16:
+		{
+			int16_t value = fieldNode.as<int16_t>();
+			std::memcpy(data, &value, sizeof(value));
+			break;
+		}
+		case SerializableFieldType::UInt16:
+		{
+			int16_t value = fieldNode.as<uint16_t>();
+			std::memcpy(data, &value, sizeof(value));
+			break;
+		}
+
 		case SerializableFieldType::Int32:
 		{
 			int32_t value = fieldNode.as<int32_t>();
@@ -107,6 +152,7 @@ namespace Flare
 			std::memcpy(data, &value, sizeof(value));
 			break;
 		}
+
 		case SerializableFieldType::Float32:
 		{
 			float value = fieldNode.as<float>();
@@ -122,6 +168,12 @@ namespace Flare
 		case SerializableFieldType::Float3:
 		{
 			glm::vec3 vector = fieldNode.as<glm::vec3>();
+			std::memcpy(data, &vector, sizeof(vector));
+			break;
+		}
+		case SerializableFieldType::Float4:
+		{
+			glm::vec4 vector = fieldNode.as<glm::vec4>();
 			std::memcpy(data, &vector, sizeof(vector));
 			break;
 		}

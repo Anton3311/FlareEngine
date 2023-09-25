@@ -4,7 +4,11 @@
 
 namespace Flare
 {
-	FLARE_IMPL_COMPONENT(TransformComponent);
+	FLARE_IMPL_COMPONENT(TransformComponent,
+		FLARE_FIELD(TransformComponent, Position),
+		FLARE_FIELD(TransformComponent, Rotation),
+		FLARE_FIELD(TransformComponent, Scale),
+	);
 
 	TransformComponent::TransformComponent()
 		: Position(glm::vec3(0.0f)),
@@ -20,7 +24,14 @@ namespace Flare
 			glm::scale(glm::mat4(1.0f), Scale);
 	}
 
-	FLARE_IMPL_COMPONENT(CameraComponent);
+	FLARE_IMPL_COMPONENT(CameraComponent,
+		FLARE_ENUM_FIELD(CameraComponent, Projection),
+		FLARE_FIELD(CameraComponent, Size),
+		FLARE_FIELD(CameraComponent, FOV),
+		FLARE_FIELD(CameraComponent, Near),
+		FLARE_FIELD(CameraComponent, Far),
+	);
+
 	CameraComponent::CameraComponent()
 		: Projection(ProjectionType::Perspective),
 		  Size(10.0f),
@@ -57,7 +68,13 @@ namespace Flare
 		return inverseProjection * glm::vec4(point, 0.0f, 1.0f);
 	}
 
-	FLARE_IMPL_COMPONENT(SpriteComponent);
+	FLARE_IMPL_COMPONENT(SpriteComponent,
+		FLARE_FIELD(SpriteComponent, Color),
+		FLARE_FIELD(SpriteComponent, TextureTiling),
+		FLARE_FIELD(SpriteComponent, Texture),
+		FLARE_ENUM_FIELD(SpriteComponent, Flags),
+	);
+
 	SpriteComponent::SpriteComponent()
 		: Color(glm::vec4(1.0f)),
 		  TextureTiling(glm::vec2(1.0f)),

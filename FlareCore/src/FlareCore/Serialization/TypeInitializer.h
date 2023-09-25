@@ -151,7 +151,9 @@ namespace Flare
     };
 
 #define FLARE_GET_FIELD_TYPE(typeName, fieldName) decltype(((typeName*)nullptr)->fieldName)
+#define FLARE_GET_ENUM_FIELD_TYPE(typeName, fieldName) std::underlying_type_t<FLARE_GET_FIELD_TYPE(typeName, fieldName)>
 #define FLARE_FIELD(typeName, fieldName) Flare::FieldDataFromType<FLARE_GET_FIELD_TYPE(typeName, fieldName)>().Get(#fieldName, offsetof(typeName, fieldName))
+#define FLARE_ENUM_FIELD(typeName, fieldName) Flare::FieldDataFromType<FLARE_GET_ENUM_FIELD_TYPE(typeName, fieldName)>().Get(#fieldName, offsetof(typeName, fieldName))
 
     class FLARECORE_API TypeInitializer
     {
