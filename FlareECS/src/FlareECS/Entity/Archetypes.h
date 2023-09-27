@@ -16,6 +16,14 @@ namespace Flare
 		Archetypes(const Archetypes&) = delete;
 		Archetypes& operator=(const Archetypes&) = delete;
 
+		inline void Clear()
+		{
+			ComponentSetToArchetype.clear();
+			ComponentToArchetype.clear();
+
+			Records.clear();
+		}
+
 		inline bool IsIdValid(ArchetypeId id) const
 		{
 			return (size_t)id < Records.size();

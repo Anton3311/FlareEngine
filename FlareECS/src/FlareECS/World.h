@@ -1,6 +1,8 @@
 #pragma once
 
+#include "FlareECS/ECSContext.h"
 #include "FlareECS/Entities.h"
+
 #include "FlareECS/Entity/Component.h"
 #include "FlareECS/Entity/Components.h"
 #include "FlareECS/Entity/ComponentGroup.h"
@@ -20,7 +22,7 @@ namespace Flare
 	class FLAREECS_API World
 	{
 	public:
-		World();
+		World(ECSContext& context);
 		~World();
 		World(const World&) = delete;
 
@@ -132,9 +134,9 @@ namespace Flare
 		inline const SystemsManager& GetSystemsManager() const { return m_SystemsManager; }
 
 		Flare::Entities Entities;
-		Flare::Components Components;
+		Flare::Components& Components;
 	private:
-		Archetypes m_Archetypes;
+		Archetypes& m_Archetypes;
 		QueryCache m_Queries;
 		SystemsManager m_SystemsManager;
 	};

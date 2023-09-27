@@ -297,6 +297,7 @@ namespace Flare
 			active = nullptr;
 			Scene::SetActive(nullptr);
 			ScriptingEngine::UnloadAllModules();
+			m_ECSContext.Clear();
 
 			ScriptingEngine::LoadModules();
 
@@ -324,10 +325,11 @@ namespace Flare
 		active = nullptr;
 		Scene::SetActive(nullptr);
 		ScriptingEngine::UnloadAllModules();
+		m_ECSContext.Clear();
 
 		ScriptingEngine::LoadModules();
 
-		active = CreateRef<Scene>();
+		active = CreateRef<Scene>(m_ECSContext);
 		active->Initialize();
 		active->InitializeRuntime();
 		Scene::SetActive(active);
@@ -352,9 +354,10 @@ namespace Flare
 		active = nullptr;
 
 		ScriptingEngine::UnloadAllModules();
+		m_ECSContext.Clear();
 
 		ScriptingEngine::LoadModules();
-		Ref<Scene> playModeScene = CreateRef<Scene>();
+		Ref<Scene> playModeScene = CreateRef<Scene>(m_ECSContext);
 		SceneSerializer::Deserialize(playModeScene, activeScenePath);
 
 		Scene::SetActive(playModeScene);
@@ -372,6 +375,7 @@ namespace Flare
 
 		Scene::SetActive(nullptr);
 		ScriptingEngine::UnloadAllModules();
+		m_ECSContext.Clear();
 
 		ScriptingEngine::LoadModules();
 	 	Ref<Scene> editorScene = AssetManager::GetAsset<Scene>(m_EditedSceneHandle);
@@ -397,11 +401,12 @@ namespace Flare
 		active = nullptr;
 
 		ScriptingEngine::UnloadAllModules();
+		m_ECSContext.Clear();
 
 		BuildSystem::BuildModules();
 
 		ScriptingEngine::LoadModules();
-		active = CreateRef<Scene>();
+		active = CreateRef<Scene>(m_ECSContext);
 		active->Handle = activeSceneHandle;
 		SceneSerializer::Deserialize(active, activeScenePath);
 

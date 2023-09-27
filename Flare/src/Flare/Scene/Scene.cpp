@@ -14,14 +14,11 @@ namespace Flare
 {
 	Ref<Scene> s_Active = nullptr;
 
-	Scene::Scene(bool registerComponents)
-		: Asset(AssetType::Scene)
+	Scene::Scene(ECSContext& context)
+		: Asset(AssetType::Scene), m_World(context)
 	{
 		m_QuadShader = Shader::Create("assets/Shaders/QuadShader.glsl");
-		if (registerComponents)
-		{
-			Initialize();
-		}
+		Initialize();
 	}
 
 	Scene::~Scene()

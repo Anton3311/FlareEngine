@@ -4,6 +4,8 @@
 #include "Flare/Core/Layer.h"
 #include "Flare/Core/CommandLineArguments.h"
 
+#include "FlareECS/ECSContext.h"
+
 #include "FlareEditor/UI/SceneWindow.h"
 #include "FlareEditor/UI/PropertiesWindow.h"
 #include "FlareEditor/UI/AssetManagerWindow.h"
@@ -63,6 +65,9 @@ namespace Flare
 		inline GuizmoMode GetGuizmoMode() const { return m_Guizmo; }
 		inline EditorMode GetMode() const { return m_Mode; }
 
+		inline ECSContext& GetECSContext() { return m_ECSContext; }
+		inline const ECSContext& GetECSContext() const { return m_ECSContext; }
+
 		static EditorLayer& GetInstance();
 	private:
 		void UpdateWindowTitle();
@@ -85,6 +90,8 @@ namespace Flare
 		bool m_PlaymodePaused;
 		EditorMode m_Mode;
 		GuizmoMode m_Guizmo;
+
+		ECSContext m_ECSContext;
 	public:
 		EditorSelection Selection;
 	private:

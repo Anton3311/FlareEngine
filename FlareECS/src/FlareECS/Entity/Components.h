@@ -31,6 +31,17 @@ namespace Flare
 
 		void RegisterComponents();
 
+		inline void Clear()
+		{
+			ComponentNameToIndex.clear();
+			ComponentIdToIndex.clear();
+
+			for (const ComponentInfo& component : RegisteredComponents)
+				m_IdGenerator.AddDeletedId(Entity(component.Id.GetIndex(), component.Id.GetGeneration()));
+
+			RegisteredComponents.clear();
+		}
+
 		std::optional<ComponentId> FindComponnet(std::string_view name) const;
 		bool IsComponentIdValid(ComponentId id) const;
 

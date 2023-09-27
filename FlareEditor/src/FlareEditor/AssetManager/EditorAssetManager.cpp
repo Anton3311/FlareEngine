@@ -8,6 +8,8 @@
 
 #include "Flare/Renderer/Texture.h"
 
+#include "FlareEditor/EditorLayer.h"
+
 #include "FlareEditor/AssetManager/TextureImporter.h"
 #include "FlareEditor/AssetManager/PrefabImporter.h"
 #include "FlareEditor/Serialization/SceneSerializer.h"
@@ -37,7 +39,7 @@ namespace Flare
         m_AssetImporters.emplace(AssetType::Prefab, PrefabImporter::ImportPrefab);
         m_AssetImporters.emplace(AssetType::Scene, [](const AssetMetadata& metadata) -> Ref<Asset>
         {
-            Ref<Scene> scene = CreateRef<Scene>();
+            Ref<Scene> scene = CreateRef<Scene>(EditorLayer::GetInstance().GetECSContext());
             SceneSerializer::Deserialize(scene, metadata.Path);
             return scene;
         });

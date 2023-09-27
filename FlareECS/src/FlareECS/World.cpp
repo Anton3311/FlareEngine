@@ -4,10 +4,12 @@ namespace Flare
 {
 	World* s_CurrentWorld = nullptr;
 
-	World::World()
+	World::World(ECSContext& context)
 		: m_SystemsManager(*this),
-		Entities(Components, m_Queries, m_Archetypes),
-		m_Queries(Entities, m_Archetypes)
+		Components(context.Components),
+		m_Archetypes(context.Archetypes),
+		Entities(context.Components, m_Queries, context.Archetypes),
+		m_Queries(Entities, context.Archetypes)
 	{
 		FLARE_CORE_ASSERT(s_CurrentWorld == nullptr, "Multiple ECS Worlds");
 		s_CurrentWorld = this;

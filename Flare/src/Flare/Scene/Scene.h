@@ -16,7 +16,7 @@ namespace Flare
 	class FLARE_API Scene : public Asset
 	{
 	public:
-		Scene(bool registerComponents = true);
+		Scene(ECSContext& context);
 		~Scene();
 
 		void Initialize();
