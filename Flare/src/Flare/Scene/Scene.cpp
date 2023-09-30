@@ -17,6 +17,8 @@ namespace Flare
 	Scene::Scene(ECSContext& context)
 		: Asset(AssetType::Scene), m_World(context)
 	{
+		m_World.MakeCurrent();
+
 		m_QuadShader = Shader::Create("assets/Shaders/QuadShader.glsl");
 		Initialize();
 	}

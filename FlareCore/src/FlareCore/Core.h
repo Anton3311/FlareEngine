@@ -32,6 +32,13 @@
 #define FLARE_EXPEND_MACRO(a) a
 #define FALRE_STRINGIFY_MACRO(a) #a
 
+#define FLARE_IMPL_ENUM_BITFIELD(enumName) \
+	constexpr enumName operator&(enumName a, enumName b) { return (enumName) ((uint64_t)a & (uint64_t)b); } \
+	constexpr enumName operator|(enumName a, enumName b) { return (enumName) ((uint64_t)a | (uint64_t)b); } \
+	constexpr enumName operator~(enumName a) { return (enumName) (~(uint64_t)a); } \
+	constexpr bool operator==(enumName a, int32_t b) { return (int32_t)a == b; } \
+	constexpr bool operator!=(enumName a, int32_t b) { return (int32_t)a != b; }
+
 #define HAS_BIT(value, bit) ((value & bit) != 0)
 
 namespace Flare

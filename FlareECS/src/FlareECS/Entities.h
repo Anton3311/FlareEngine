@@ -39,6 +39,8 @@ namespace Flare
 		Entities& operator=(const Entities&) = delete;
 
 		~Entities();
+
+		void Clear();
 	public:
 		// Entity operations
 
@@ -102,17 +104,17 @@ namespace Flare
 		struct EntityCreationResult
 		{
 			Entity Id;
-			ArchetypeId Archetype;
-			uint8_t* Data;
+			ArchetypeId Archetype = INVALID_ARCHETYPE_ID;
+			uint8_t* Data = nullptr;
 		};
 
 		void CreateEntity(const ComponentSet& components, EntityCreationResult& result);
 		void InitializeEntity(const EntityCreationResult& entityResult, ComponentInitializationStrategy initStrategy);
 
-		ComponentId RegisterComponent(ComponentInitializer& initializer);
 		ArchetypeId CreateArchetype();
 
 		void RemoveEntityData(ArchetypeId archetype, size_t entityBufferIndex);
+		void ValidateEntityStorages();
 
 		std::unordered_map<Entity, size_t>::iterator FindEntity(Entity entity);
 		std::unordered_map<Entity, size_t>::const_iterator FindEntity(Entity entity) const;

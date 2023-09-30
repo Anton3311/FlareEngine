@@ -24,6 +24,8 @@
 #include "FlareEditor/UI/ProjectSettingsWindow.h"
 #include "FlareEditor/UI/ECS/ECSInspector.h"
 
+#include "FlareEditor/UI/PrefabEditor.h"
+
 #include "FlareEditor/Scripting/BuildSystem/BuildSystem.h"
 
 #include <imgui.h>
@@ -98,6 +100,14 @@ namespace Flare
 			if (projectPath.has_value())
 				Project::OpenProject(projectPath.value());
 		}
+
+		m_PrefabEditor = CreateRef<PrefabEditor>(m_ECSContext);
+		m_AssetEditorWindows.push_back(m_PrefabEditor);
+
+		m_AssetManagerWindow.SetOpenAction(AssetType::Prefab, [this](AssetHandle handle)
+		{
+			m_PrefabEditor->Open(handle);
+		});
 	}
 
 	void EditorLayer::OnDetach()
@@ -229,6 +239,9 @@ namespace Flare
 		m_AssetManagerWindow.OnImGuiRender();
 
 		ECSInspector::GetInstance().OnImGuiRender();
+
+		for (auto& window : m_AssetEditorWindows)
+			window->OnUpdate();
 
 		ImGui::End();
 		ImGuiLayer::End();

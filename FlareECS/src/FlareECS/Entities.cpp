@@ -17,6 +17,7 @@ namespace Flare
 		: m_Components(components), m_Queries(queries), m_Archetypes(archetypes)
 	{
 		EntityChunksPool::Initialize(16);
+		ValidateEntityStorages();
 	}
 
 	Entities::~Entities()
@@ -33,6 +34,33 @@ namespace Flare
 				}
 			}
 		}
+	}
+
+	void Entities::Clear()
+	{
+		for (const ArchetypeRecord& archetype : m_Archetypes.Records)
+		{
+			if (archetype.Id >= m_EntityStorages.size())
+				break;
+
+			EntityStorage& storage = m_EntityStorages[archetype.Id];
+			for (size_t entityIndex = 0; entityIndex < storage.GetEntitiesCount(); entityIndex++)
+			{
+				uint8_t* entityData = storage.GetEntityData(entityIndex);
+				for (size_t i = 0; i < archetype.Components.size(); i++)
+				{
+					m_Components.GetComponentInfo(archetype.Components[i]).Deleter((void*)(entityData + archetype.ComponentOffsets[i]));
+				}
+			}
+		}
+
+		for (const EntityRecord& record : m_EntityRecords)
+			m_EntityIndex.AddDeletedId(record.Id);
+
+		m_EntityStorages.clear();
+		m_EntityRecords.clear();
+		m_EntityToRecord.clear();
+		m_TemporaryComponentSet.clear();
 	}
 
 	Entity Entities::CreateEntity(const ComponentSet& componentSet, ComponentInitializationStrategy initStrategy)
@@ -719,6 +747,7 @@ namespace Flare
 	EntityStorage& Entities::GetEntityStorage(ArchetypeId archetype)
 	{
 		FLARE_CORE_ASSERT(m_Archetypes.IsIdValid(archetype));
+		ValidateEntityStorages();
 		return m_EntityStorages[archetype];
 	}
 
@@ -737,6 +766,23 @@ namespace Flare
 
 		storage.RemoveEntityData(entityBufferIndex);
 		lastEntityRecord.BufferIndex = entityBufferIndex;
+	}
+
+	void Entities::ValidateEntityStorages()
+	{
+		size_t oldSize = m_EntityStorages.size();
+		if (m_EntityStorages.size() < m_Archetypes.Records.size())
+		{
+			m_EntityStorages.resize(m_Archetypes.Records.size());
+
+			for (size_t i = oldSize; i < m_EntityStorages.size(); i++)
+			{
+				const ArchetypeRecord& record = m_Archetypes.Records[i];
+
+				size_t entitySize = record.ComponentOffsets.back() + m_Components.GetComponentInfo(record.Components.back()).Size;
+				m_EntityStorages[i].SetEntitySize(entitySize);
+			}
+		}
 	}
 
 	std::unordered_map<Entity, size_t>::iterator Entities::FindEntity(Entity entity)

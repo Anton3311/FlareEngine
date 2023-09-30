@@ -6,11 +6,14 @@
 
 #include "FlareECS/ECSContext.h"
 
+#include "FlareEditor/UI/AssetEditor.h"
+
 #include "FlareEditor/UI/SceneWindow.h"
 #include "FlareEditor/UI/PropertiesWindow.h"
 #include "FlareEditor/UI/AssetManagerWindow.h"
 
 #include "FlareEditor/UI//EditorTitleBar.h"
+#include "FlareEditor/UI/PrefabEditor.h"
 
 #include "FlareEditor/ViewportWindow.h"
 #include "FlareEditor/EditorCamera.h"
@@ -77,6 +80,9 @@ namespace Flare
 
 		EditorTitleBar m_TitleBar;
 		Ref<ViewportWindow> m_GameWindow;
+
+		std::vector<Ref<AssetEditor>> m_AssetEditorWindows;
+		Ref<PrefabEditor> m_PrefabEditor;
 
 		SceneWindow m_SceneWindow;
 		PropertiesWindow m_PropertiesWindow;

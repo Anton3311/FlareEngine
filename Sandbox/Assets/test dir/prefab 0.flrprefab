@@ -1,5 +1,10 @@
 Components:
   - Name: struct Flare::TransformComponent
-    Position: [0, 0, 0]
+    Position: [0, 5.5, 0]
     Rotation: [0, 0, 0]
     Scale: [1, 1, 1]
+  - Name: struct Flare::SpriteComponent
+    Color: [1, 1, 1, 1]
+    TextureTiling: [1, 1]
+    Texture: 0
+    Flags: 0
