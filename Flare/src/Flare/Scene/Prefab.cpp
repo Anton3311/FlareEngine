@@ -25,4 +25,12 @@ namespace Flare
 
         return entity;
     }
+
+    InstantiatePrefab::InstantiatePrefab(const Ref<Prefab>& prefab)
+        : m_Prefab(prefab) {}
+
+    void InstantiatePrefab::Apply(World& world)
+    {
+        m_Prefab->CreateInstance(world);
+    }
 }

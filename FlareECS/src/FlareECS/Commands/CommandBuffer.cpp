@@ -20,7 +20,8 @@ namespace Flare
 		while (m_Storage.CanRead())
 		{
 			auto [meta, command] = m_Storage.Pop();
-			meta.Apply((Command*)command, m_World);
+			command->Apply(m_World);
+			command->~Command();
 		}
 
 		m_Storage.Clear();

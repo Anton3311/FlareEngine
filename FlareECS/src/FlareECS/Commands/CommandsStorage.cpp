@@ -15,26 +15,27 @@ namespace Flare
 			delete[] m_Buffer;
 	}
 
-	void CommandsStorage::Push(const CommandMetadata& meta, const void* commandData)
+	void* CommandsStorage::Allocate(const CommandMetadata& meta)
 	{
-		FLARE_CORE_ASSERT(commandData);
-
 		size_t itemSize = sizeof(meta) + meta.CommandSize;
 		size_t newSize = m_Size + itemSize;
 
 		if (m_Buffer == nullptr || newSize > m_Capacity)
 			Reallocate();
 
+		void* commandData = nullptr;
+
 		if (m_Buffer != nullptr)
 		{
 			std::memcpy(m_Buffer + m_Size, &meta, sizeof(meta));
-			std::memcpy(m_Buffer + m_Size + sizeof(meta), commandData, meta.CommandSize);
-
+			commandData = m_Buffer + m_Size + sizeof(meta);
 			m_Size = newSize;
 		}
+
+		return commandData;
 	}
 
-	std::pair<const CommandMetadata&, void*> CommandsStorage::Pop()
+	std::pair<const CommandMetadata&, Command*> CommandsStorage::Pop()
 	{
 		FLARE_CORE_ASSERT(m_ReadPosition + sizeof(CommandMetadata) <= m_Size);
 		const CommandMetadata& metadata = *(CommandMetadata*)(m_Buffer + m_ReadPosition);
@@ -43,7 +44,7 @@ namespace Flare
 		void* command = m_Buffer + m_ReadPosition + sizeof(CommandMetadata);
 
 		m_ReadPosition += sizeof(CommandMetadata) + metadata.CommandSize;
-		return { metadata, command };
+		return { metadata, (Command*) command };
 	}
 
 	bool CommandsStorage::CanRead()

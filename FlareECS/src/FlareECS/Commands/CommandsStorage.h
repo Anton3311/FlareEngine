@@ -13,8 +13,8 @@ namespace Flare
 		CommandsStorage(size_t capacity);
 		~CommandsStorage();
 
-		void Push(const CommandMetadata& meta, const void* commandData);
-		std::pair<const CommandMetadata&, void*> Pop();
+		void* Allocate(const CommandMetadata& meta);
+		std::pair<const CommandMetadata&, Command*> Pop();
 		bool CanRead();
 		void Clear();
 	private:

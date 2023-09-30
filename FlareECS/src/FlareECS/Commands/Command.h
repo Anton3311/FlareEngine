@@ -5,9 +5,10 @@
 namespace Flare
 {
 	class FLAREECS_API World;
-	class Command
+	class FLAREECS_API Command
 	{
 	public:
+		virtual ~Command() = default;
 		virtual void Apply(World& world) = 0;
 	};
 
@@ -15,7 +16,6 @@ namespace Flare
 
 	struct CommandMetadata
 	{
-		ApplyCommandFunction Apply;
 		size_t CommandSize;
 	};
 }

@@ -9,6 +9,7 @@ namespace Flare
 	class FLAREECS_API AddComponentCommand : public Command
 	{
 	public:
+		AddComponentCommand() = default;
 		AddComponentCommand(Entity entity,
 			ComponentId component,
 			ComponentInitializationStrategy initStrategy = ComponentInitializationStrategy::DefaultConstructor);
@@ -24,6 +25,7 @@ namespace Flare
 	class AddComponentWithDataCommand : public Command
 	{
 	public:
+		AddComponentWithDataCommand() = default;
 		AddComponentWithDataCommand(Entity entity, const T& data)
 			: m_Entity(entity), m_Data(data) {}
 	public:
@@ -39,6 +41,7 @@ namespace Flare
 	class FLAREECS_API RemoveComponentCommand : public Command
 	{
 	public:
+		RemoveComponentCommand() = default;
 		RemoveComponentCommand(Entity entity, ComponentId component);
 
 		virtual void Apply(World& world) override;
@@ -66,6 +69,7 @@ namespace Flare
 	class CreateEntityWithDataCommand : public Command
 	{
 	public:
+		CreateEntityWithDataCommand() = default;
 		CreateEntityWithDataCommand(const T& ...components)
 			: m_Components(components...) {}
 
@@ -80,6 +84,7 @@ namespace Flare
 	class FLAREECS_API DeleteEntityCommand : public Command
 	{
 	public:
+		DeleteEntityCommand() = default;
 		DeleteEntityCommand(Entity entity)
 			: m_Entity(entity) {}
 

@@ -4,6 +4,7 @@
 
 #include "FlareECS/World.h"
 #include "FlareECS/Entity/Entity.h"
+#include "FlareECS/Commands/Command.h"
 
 namespace Flare
 {
@@ -29,5 +30,16 @@ namespace Flare
 		ArchetypeId m_Archetype;
 		std::vector<ComponentId> m_Components;
 		const uint8_t* m_Data;
+	};
+	
+	class FLARE_API InstantiatePrefab : public Command
+	{
+	public:
+		InstantiatePrefab() = default;
+		InstantiatePrefab(const Ref<Prefab>& prefab);
+
+		void Apply(World& world) override;
+	private:
+		Ref<Prefab> m_Prefab;
 	};
 }

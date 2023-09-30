@@ -20,12 +20,17 @@ namespace Flare
 		void AddCommand(const T& command)
 		{
 			static_assert(std::is_base_of_v<Command, T> == true, "T is not a Command");
+			static_assert(std::is_default_constructible_v<T> == true, "T must be have a default constructor");
 
 			CommandMetadata metadata;
-			metadata.Apply = [](Command* c, World& world) { ((T*)c)->Apply(world); };
 			metadata.CommandSize = sizeof(T);
 
-			m_Storage.Push(metadata, (const void*) &command);
+			T* commandData = (T*)m_Storage.Allocate(metadata);
+			FLARE_CORE_ASSERT(commandData);
+
+			new(commandData) T;
+
+			*commandData = command;
 		}
 
 		template<typename T>

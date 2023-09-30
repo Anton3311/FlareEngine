@@ -11,6 +11,9 @@ AssetRegistry:
   - Handle: 11883254765048218712
     Type: Prefab
     Path: test dir/test prefab.flrprefab
+  - Handle: 12144771466075799185
+    Type: Prefab
+    Path: test dir/WhiteQuad.flrprefab
   - Handle: 12443752963323924563
     Type: Scene
     Path: Test 2.flare
