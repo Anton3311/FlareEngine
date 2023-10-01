@@ -116,13 +116,13 @@ namespace Flare
 		}
 		case SerializableFieldType::Int8:
 		{
-			int8_t value = fieldNode.as<int16_t>();
+			int8_t value = (int8_t)fieldNode.as<int16_t>();
 			std::memcpy(data, &value, sizeof(value));
 			break;
 		}
 		case SerializableFieldType::UInt8:
 		{
-			int8_t value = fieldNode.as<uint16_t>();
+			int8_t value = (uint8_t)fieldNode.as<uint16_t>();
 			std::memcpy(data, &value, sizeof(value));
 			break;
 		}

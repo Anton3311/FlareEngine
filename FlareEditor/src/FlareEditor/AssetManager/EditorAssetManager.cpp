@@ -43,6 +43,11 @@ namespace Flare
             SceneSerializer::Deserialize(scene, metadata.Path);
             return scene;
         });
+
+        m_AssetImporters.emplace(AssetType::Shader, [](const AssetMetadata& metadata) -> Ref<Asset>
+        {
+            return Shader::Create(metadata.Path);
+        });
     }
 
     void EditorAssetManager::Reinitialize()
@@ -111,6 +116,8 @@ namespace Flare
             type = AssetType::Scene;
         else if (extension == ".flrprefab")
             type = AssetType::Prefab;
+        else if (extension == ".glsl")
+            type = AssetType::Shader;
 
         AssetHandle handle;
         AssetMetadata metadata;
