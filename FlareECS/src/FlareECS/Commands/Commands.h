@@ -108,4 +108,17 @@ namespace Flare
 	private:
 		Entity m_Entity;
 	};
+
+	class FLAREECS_API GetEntityCommand : public EntityCommand
+	{
+	public:
+		GetEntityCommand() = default;
+		GetEntityCommand(Entity entity);
+
+		void Apply(CommandContext& context, World& world) override;
+		void Initialize(FutureEntity entity) override;
+	private:
+		FutureEntity m_OutputEntity;
+		Entity m_Entity;
+	};
 }

@@ -10,6 +10,11 @@ namespace Flare
 
 	}
 
+	FutureEntityCommands CommandBuffer::GetEntity(Entity entity)
+	{
+		return AddEntityCommand<GetEntityCommand>(GetEntityCommand(entity));
+	}
+
 	void CommandBuffer::DeleteEntity(Entity entity)
 	{
 		AddCommand<DeleteEntityCommand>(DeleteEntityCommand(entity));

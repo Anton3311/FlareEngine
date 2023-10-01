@@ -26,4 +26,18 @@ namespace Flare
 	{
 		world.DeleteEntity(m_Entity);
 	}
+
+	GetEntityCommand::GetEntityCommand(Entity entity)
+		: m_Entity(entity) {}
+
+	void GetEntityCommand::Apply(CommandContext& context, World& world)
+	{
+		FLARE_CORE_ASSERT(world.IsEntityAlive(m_Entity));
+		context.SetEntity(m_OutputEntity, m_Entity);
+	}
+
+	void GetEntityCommand::Initialize(FutureEntity entity)
+	{
+		m_OutputEntity = entity;
+	}
 }

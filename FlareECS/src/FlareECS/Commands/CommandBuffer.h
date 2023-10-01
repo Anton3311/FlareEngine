@@ -32,7 +32,7 @@ namespace Flare
 		}
 
 		template<typename T>
-		FutureEntityCommands& RemoveComponent(Entity entity)
+		FutureEntityCommands& RemoveComponent()
 		{
 			m_CommandBuffer.AddCommand<RemoveComponentCommand>(RemoveComponentCommand(m_FutureEntity, COMPONENT_ID(T)));
 			return *this;
@@ -66,7 +66,7 @@ namespace Flare
 		template<typename T>
 		FutureEntityCommands AddEntityCommand(const T& command)
 		{
-			static_assert(std::is_base_of_v<EntityCommand, T> == true, "T is not an EntityCreationCommand");
+			static_assert(std::is_base_of_v<EntityCommand, T> == true, "T is not an EntityCommand");
 
 			auto [commandData, meta] = CreateCommand<T>();
 			FutureEntity entity = AllocateFutureEntity(*meta);
@@ -89,6 +89,8 @@ namespace Flare
 		{
 			return AddEntityCommand(CreateEntityWithDataCommand<T...>(components...));
 		}
+
+		FutureEntityCommands GetEntity(Entity entity);
 
 		void DeleteEntity(Entity entity);
 		void Execute();

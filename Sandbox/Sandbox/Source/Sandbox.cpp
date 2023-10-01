@@ -103,10 +103,10 @@ namespace Sandbox
 					case 1:
 						context.Commands->AddEntityCommand(InstantiatePrefab(prefab))
 							.AddComponent<SomeComponent>();
-						//context.Commands->AddComponent<SomeComponent>(e);
 						break;
 					case 2:
-						//context.Commands->RemoveComponent<SomeComponent>(e);
+						context.Commands->GetEntity(e)
+							.AddComponent<SomeComponent>();
 						break;
 					case 3:
 						context.Commands->CreateEntity<TransformComponent, SpriteComponent, SomeComponent>();
@@ -116,6 +116,10 @@ namespace Sandbox
 						break;
 					case 5:
 						context.Commands->CreateEntity(TransformComponent{ glm::vec3(1.0f, 0.0f, 0.0f) }, SomeComponent{});
+						break;
+					case 6:
+						context.Commands->GetEntity(e)
+							.RemoveComponent<SomeComponent>();
 						break;
 					}
 

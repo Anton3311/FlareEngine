@@ -45,7 +45,7 @@ namespace Flare
 		virtual void Apply(CommandContext& context, World& world) = 0;
 	};
 
-	class FLAREECS_API EntityCreationCommand : public Command
+	class FLAREECS_API EntityCommand : public Command
 	{
 	public:
 		virtual void Initialize(FutureEntity entity) = 0;
