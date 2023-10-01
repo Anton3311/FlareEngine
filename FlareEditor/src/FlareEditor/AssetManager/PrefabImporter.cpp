@@ -44,7 +44,7 @@ namespace Flare
             World& world = World::GetCurrent();
 
             size_t prefabDataSize = 0;
-            std::vector<ComponentId> ids;
+            std::vector<std::pair<ComponentId, const void*>> components;
 
             if (YAML::Node componentsNode = node["Components"])
             {
@@ -57,13 +57,11 @@ namespace Flare
                         if (componentId.has_value())
                         {
                             prefabDataSize += world.Components.GetComponentInfo(componentId.value()).Size;
-                            ids.push_back(componentId.value());
+                            components.push_back({ componentId.value(), nullptr });
                         }
                     }
                 }
             }
-
-            std::sort(ids.begin(), ids.end());
 
             uint8_t* prefabData = nullptr;
             if (prefabDataSize != 0)
@@ -72,6 +70,7 @@ namespace Flare
                 std::memset(prefabData, 0, prefabDataSize);
 
                 size_t writeOffset = 0;
+                size_t index = 0;
 
                 if (YAML::Node componentsNode = node["Components"])
                 {
@@ -89,19 +88,20 @@ namespace Flare
                                 if (info.Initializer)
                                     DeserializeType(componentNode, info.Initializer->Type, prefabData + writeOffset);
 
+                                components[index].second = (const void*)(prefabData + writeOffset);
+
                                 writeOffset += info.Size;
+                                index++;
                             }
                         }
                     }
                 }
             }
 
-            const Archetypes& archetypes = world.GetArchetypes();
-            auto it = archetypes.ComponentSetToArchetype.find(ComponentSet(ids.data(), ids.size()));
-            if (it != archetypes.ComponentSetToArchetype.end())
-                return CreateRef<Prefab>(it->second, prefabData);
+            using Pair = std::pair<ComponentId, const void*>;
+            std::sort(components.begin(), components.end(), [](const Pair& a, const Pair& b) -> bool { return a.first < b.first; });
 
-            return CreateRef<Prefab>(std::move(ids), prefabData);
+            return CreateRef<Prefab>(prefabData, std::move(components));
         }
         catch (std::exception& e)
         {

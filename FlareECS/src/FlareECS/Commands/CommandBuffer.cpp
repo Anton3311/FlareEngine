@@ -20,7 +20,10 @@ namespace Flare
 		while (m_Storage.CanRead())
 		{
 			auto [meta, command] = m_Storage.Pop();
-			command->Apply(m_World);
+
+			CommandContext context(meta, m_Storage);
+
+			command->Apply(context, m_World);
 			command->~Command();
 		}
 

@@ -10,6 +10,38 @@
 
 namespace Flare
 {
+	class FLAREECS_API CommandBuffer;
+	class FutureEntityCommands
+	{
+	public:
+		constexpr FutureEntityCommands(FutureEntity entity, CommandBuffer& commandBuffer)
+			: m_FutureEntity(entity), m_CommandBuffer(commandBuffer) {}
+	public:
+		template<typename T>
+		FutureEntityCommands& AddComponent(ComponentInitializationStrategy initStrategy = ComponentInitializationStrategy::DefaultConstructor)
+		{
+			m_CommandBuffer.AddCommand<AddComponentCommand>(AddComponentCommand(m_FutureEntity, COMPONENT_ID(T), initStrategy));
+			return *this;
+		}
+
+		template<typename T>
+		FutureEntityCommands& AddComponentWithData(const T& component)
+		{
+			m_CommandBuffer.AddCommand<AddComponentWithDataCommand<T>>(AddComponentWithDataCommand<T>(m_FutureEntity, component));
+			return *this;
+		}
+
+		template<typename T>
+		FutureEntityCommands& RemoveComponent(Entity entity)
+		{
+			m_CommandBuffer.AddCommand<RemoveComponentCommand>(RemoveComponentCommand(m_FutureEntity, COMPONENT_ID(T)));
+			return *this;
+		}
+	private:
+		FutureEntity m_FutureEntity;
+		CommandBuffer& m_CommandBuffer;
+	};
+
 	class FLAREECS_API World;
 	class FLAREECS_API CommandBuffer
 	{
@@ -20,52 +52,69 @@ namespace Flare
 		void AddCommand(const T& command)
 		{
 			static_assert(std::is_base_of_v<Command, T> == true, "T is not a Command");
-			static_assert(std::is_default_constructible_v<T> == true, "T must be have a default constructor");
+			static_assert(std::is_default_constructible_v<T> == true, "T must have a default constructor");
 
-			CommandMetadata metadata;
-			metadata.CommandSize = sizeof(T);
-
-			T* commandData = (T*)m_Storage.Allocate(metadata);
+			auto [meta, commandData] = m_Storage.AllocateCommand(sizeof(T));
 			FLARE_CORE_ASSERT(commandData);
 
+			meta->CommandSize = sizeof(T);
+
 			new(commandData) T;
+			*(T*)commandData = command;
+		}
 
+		template<typename T>
+		FutureEntityCommands AddEntityCommand(const T& command)
+		{
+			static_assert(std::is_base_of_v<EntityCommand, T> == true, "T is not an EntityCreationCommand");
+
+			auto [commandData, meta] = CreateCommand<T>();
+			FutureEntity entity = AllocateFutureEntity(*meta);
+
+			new(commandData) T;
 			*commandData = command;
-		}
 
-		template<typename T>
-		void AddComponent(Entity entity, ComponentInitializationStrategy initStrategy = ComponentInitializationStrategy::DefaultConstructor)
-		{
-			AddCommand<AddComponentCommand>(AddComponentCommand(entity, COMPONENT_ID(T), initStrategy));
-		}
-
-		template<typename T>
-		void AddComponentWithData(Entity entity, const T& component)
-		{
-			AddCommand<AddComponentWithDataCommand<T>>(AddComponentWithDataCommand<T>(entity, component));
-		}
-
-		template<typename T>
-		void RemoveComponent(Entity entity)
-		{
-			AddCommand<RemoveComponentCommand>(RemoveComponentCommand(entity, COMPONENT_ID(T)));
+			((EntityCommand*)commandData)->Initialize(entity);
+			return FutureEntityCommands(entity, *this);
 		}
 
 		template<typename... T>
-		void CreateEntity(ComponentInitializationStrategy initStrategy = ComponentInitializationStrategy::DefaultConstructor)
+		FutureEntityCommands CreateEntity(ComponentInitializationStrategy initStrategy = ComponentInitializationStrategy::DefaultConstructor)
 		{
-			AddCommand<CreateEntityCommand<T...>>(CreateEntityCommand<T...>(initStrategy));
+			return AddEntityCommand(CreateEntityCommand<T...>(initStrategy));
 		}
 
 		template<typename... T>
-		void CreateEntity(const T& ...components)
+		FutureEntityCommands CreateEntity(const T& ...components)
 		{
-			AddCommand<CreateEntityWithDataCommand<T...>>(CreateEntityWithDataCommand<T...>(components...));
+			return AddEntityCommand(CreateEntityWithDataCommand<T...>(components...));
 		}
 
 		void DeleteEntity(Entity entity);
-
 		void Execute();
+	private:
+		template<typename T>
+		std::pair<T*, CommandMetadata*> CreateCommand()
+		{
+			static_assert(std::is_base_of_v<Command, T> == true, "T is not a Command");
+			static_assert(std::is_default_constructible_v<T> == true, "T must have a default constructor");
+
+			auto [meta, commandData] = m_Storage.AllocateCommand(sizeof(T));
+			FLARE_CORE_ASSERT(commandData);
+
+			meta->CommandSize = sizeof(T);
+
+			return { (T*)commandData, meta };
+		}
+
+		FutureEntity AllocateFutureEntity(CommandMetadata& meta)
+		{
+			std::optional<size_t> futureEntityLocation = m_Storage.Allocate(sizeof(Entity));
+			FLARE_CORE_ASSERT(futureEntityLocation.has_value());
+
+			meta.CommandSize += sizeof(Entity);
+			return FutureEntity(futureEntityLocation.value());
+		}
 	private:
 		World& m_World;
 		CommandsStorage m_Storage;

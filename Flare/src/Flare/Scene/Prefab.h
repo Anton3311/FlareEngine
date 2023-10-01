@@ -11,11 +11,9 @@ namespace Flare
 	class FLARE_API Prefab : public Asset
 	{
 	public:
-		Prefab(std::vector<ComponentId>&& components, const uint8_t* prefabData)
-			: Asset(AssetType::Prefab), m_Data(prefabData), m_Archetype(INVALID_ARCHETYPE_ID), m_Components(std::move(components)) {}
-		Prefab(ArchetypeId archetype, const uint8_t* prefabData)
-			: Asset(AssetType::Prefab), m_Data(prefabData), m_Archetype(archetype) {}
-
+		Prefab(const uint8_t* prefabData, std::vector<std::pair<ComponentId, const void*>>&& components)
+			: Asset(AssetType::Prefab), m_Data(prefabData), m_Components(std::move(components)) {}
+		
 		~Prefab()
 		{
 			if (m_Data != nullptr)
@@ -27,19 +25,20 @@ namespace Flare
 	
 		Entity CreateInstance(World& world);
 	private:
-		ArchetypeId m_Archetype;
-		std::vector<ComponentId> m_Components;
+		std::vector<std::pair<ComponentId, const void*>> m_Components;
 		const uint8_t* m_Data;
 	};
 	
-	class FLARE_API InstantiatePrefab : public Command
+	class FLARE_API InstantiatePrefab : public EntityCommand
 	{
 	public:
 		InstantiatePrefab() = default;
 		InstantiatePrefab(const Ref<Prefab>& prefab);
 
-		void Apply(World& world) override;
+		virtual void Apply(CommandContext& context, World& world) override;
+		virtual void Initialize(FutureEntity entity);
 	private:
+		FutureEntity m_OutputEntity;
 		Ref<Prefab> m_Prefab;
 	};
 }

@@ -376,6 +376,8 @@ namespace Flare
 		Scene::SetActive(playModeScene);
 		m_Mode = EditorMode::Play;
 
+		assetManager->ReloadPrefabs();
+
 		playModeScene->InitializeRuntime();
 		Scene::GetActive()->OnRuntimeStart();
 	}
@@ -383,6 +385,7 @@ namespace Flare
 	void EditorLayer::ExitPlayMode()
 	{
 		FLARE_CORE_ASSERT(m_Mode == EditorMode::Play);
+		Ref<EditorAssetManager> assetManager = As<EditorAssetManager>(AssetManager::GetInstance());
 
 		Scene::GetActive()->OnRuntimeEnd();
 
@@ -390,12 +393,15 @@ namespace Flare
 		ScriptingEngine::UnloadAllModules();
 		m_ECSContext.Clear();
 
+
 		ScriptingEngine::LoadModules();
 	 	Ref<Scene> editorScene = AssetManager::GetAsset<Scene>(m_EditedSceneHandle);
 		editorScene->InitializeRuntime();
 
 		Scene::SetActive(editorScene);
 		m_Mode = EditorMode::Edit;
+
+		assetManager->ReloadPrefabs();
 	}
 
 	void EditorLayer::ReloadScriptingModules()

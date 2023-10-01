@@ -174,19 +174,20 @@ namespace Flare
 			ImGui::TreePop();
 		}
 
+		if (node.IsImported && ImGui::BeginDragDropSource())
+		{
+			FLARE_CORE_INFO("ljsdlf");
+			ImGui::SetDragDropPayload(ASSET_PAYLOAD_NAME, &node.Handle, sizeof(AssetHandle));
+			ImGui::EndDragDropSource();
+		}
+
 		if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
 			OnOpenFile(node);
 
-		if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Left))
+		if (ImGui::IsItemHovered() && ImGui::IsMouseReleased(ImGuiMouseButton_Left))
 		{
 			EditorLayer::GetInstance().Selection.SetAsset(node.Handle);
 			OnAssetSelectionChanged.Invoke(node.Handle);
-		}
-
-		if (node.IsImported && ImGui::BeginDragDropSource())
-		{
-			ImGui::SetDragDropPayload(ASSET_PAYLOAD_NAME, &node.Handle, sizeof(AssetHandle));
-			ImGui::EndDragDropSource();
 		}
 	}
 

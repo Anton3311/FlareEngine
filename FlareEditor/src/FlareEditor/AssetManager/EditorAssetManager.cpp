@@ -146,6 +146,15 @@ namespace Flare
         m_LoadedAssets.erase(it);
     }
 
+    void EditorAssetManager::ReloadPrefabs()
+    {
+        for (const auto& [handle, asset] : m_Registry)
+        {
+            if (asset.Type == AssetType::Prefab && IsAssetLoaded(handle))
+                ReloadAsset(handle);
+        }
+    }
+
     void EditorAssetManager::RemoveFromRegistry(AssetHandle handle)
     {
         auto it = m_Registry.find(handle);

@@ -8,7 +8,11 @@
 
 #include <Flare/Core/Time.h>
 #include <FlareCore/Serialization/TypeInitializer.h>
+
+#include <Flare/AssetManager/AssetManager.h>
+
 #include <Flare/Scene/Components.h>
+#include <Flare/Scene/Prefab.h>
 
 #include <Flare/Input/InputManager.h>
 
@@ -21,9 +25,11 @@ namespace Sandbox
 	{
 		FLARE_COMPONENT;
 		float RotationSpeed;
+		AssetHandle PrefabHandle;
 	};
 	FLARE_IMPL_COMPONENT(RotatingQuadData,
-		FLARE_FIELD(RotatingQuadData, RotationSpeed)
+		FLARE_FIELD(RotatingQuadData, RotationSpeed),
+		FLARE_FIELD(RotatingQuadData, PrefabHandle)
 	);
 
 	struct SomeComponent
@@ -67,6 +73,8 @@ namespace Sandbox
 		{
 			const RotatingQuadData& data = World::GetCurrent().GetSingletonComponent<RotatingQuadData>();
 
+			Ref<Prefab> prefab = AssetManager::GetAsset<Prefab>(data.PrefabHandle);
+
 			uint32_t op = 0;
 			if (InputManager::IsKeyPressed(KeyCode::D1))
 				op = 1;
@@ -93,10 +101,12 @@ namespace Sandbox
 					switch (op)
 					{
 					case 1:
-						context.Commands->AddComponent<SomeComponent>(e);
+						context.Commands->AddEntityCommand(InstantiatePrefab(prefab))
+							.AddComponent<SomeComponent>();
+						//context.Commands->AddComponent<SomeComponent>(e);
 						break;
 					case 2:
-						context.Commands->RemoveComponent<SomeComponent>(e);
+						//context.Commands->RemoveComponent<SomeComponent>(e);
 						break;
 					case 3:
 						context.Commands->CreateEntity<TransformComponent, SpriteComponent, SomeComponent>();

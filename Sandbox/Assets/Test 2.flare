@@ -52,6 +52,7 @@ Entities:
         Scale: [0, 0, 0]
       - Name: struct Sandbox::RotatingQuadData
         RotationSpeed: 45
+        PrefabHandle: 12144771466075799185
       - Name: struct Sandbox::SomeComponent
         a: 34
         b: -59

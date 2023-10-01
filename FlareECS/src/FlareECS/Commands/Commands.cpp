@@ -4,23 +4,25 @@
 
 namespace Flare
 {
-	AddComponentCommand::AddComponentCommand(Entity entity, ComponentId component, ComponentInitializationStrategy initStrategy)
+	AddComponentCommand::AddComponentCommand(FutureEntity entity, ComponentId component, ComponentInitializationStrategy initStrategy)
 		: m_Entity(entity), m_Component(component), m_InitStrategy(initStrategy) {}
 	
-	void AddComponentCommand::Apply(World& world)
+	void AddComponentCommand::Apply(CommandContext& context, World& world)
 	{
-		world.Entities.AddEntityComponent(m_Entity, m_Component, nullptr, m_InitStrategy);
+		FLARE_CORE_ASSERT(world.IsEntityAlive(context.GetEntity(m_Entity)));
+		world.Entities.AddEntityComponent(context.GetEntity(m_Entity), m_Component, nullptr, m_InitStrategy);
 	}
 
-	RemoveComponentCommand::RemoveComponentCommand(Entity entity, ComponentId component)
+	RemoveComponentCommand::RemoveComponentCommand(FutureEntity entity, ComponentId component)
 		: m_Entity(entity), m_Component(component) {}
 
-	void RemoveComponentCommand::Apply(World& world)
+	void RemoveComponentCommand::Apply(CommandContext& context, World& world)
 	{
-		world.Entities.RemoveEntityComponent(m_Entity, m_Component);
+		FLARE_CORE_ASSERT(world.IsEntityAlive(context.GetEntity(m_Entity)));
+		world.Entities.RemoveEntityComponent(context.GetEntity(m_Entity), m_Component);
 	}
 
-	void DeleteEntityCommand::Apply(World& world)
+	void DeleteEntityCommand::Apply(CommandContext& context, World& world)
 	{
 		world.DeleteEntity(m_Entity);
 	}

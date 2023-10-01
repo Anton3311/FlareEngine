@@ -5,6 +5,6 @@ Components:
     Scale: [1, 1, 1]
   - Name: struct Flare::SpriteComponent
     Color: [1, 1, 1, 1]
-    TextureTiling: [1, 1]
-    Texture: 0
+    TextureTiling: [2, 2]
+    Texture: 5193090395626261884
     Flags: 0

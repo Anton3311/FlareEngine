@@ -15,30 +15,44 @@ namespace Flare
 			delete[] m_Buffer;
 	}
 
-	void* CommandsStorage::Allocate(const CommandMetadata& meta)
+	std::optional<size_t> CommandsStorage::Allocate(size_t size)
 	{
-		size_t itemSize = sizeof(meta) + meta.CommandSize;
+		if (m_Size + size > m_Capacity)
+			Reallocate();
+
+		if (m_Buffer != nullptr)
+		{
+			size_t offset = m_Size;
+			m_Size += size;
+			return offset;
+		}
+
+		return {};
+	}
+
+	std::pair<CommandMetadata*, void*> CommandsStorage::AllocateCommand(size_t commandSize)
+	{
+		size_t itemSize = sizeof(CommandMetadata) + commandSize;
 		size_t newSize = m_Size + itemSize;
 
 		if (m_Buffer == nullptr || newSize > m_Capacity)
 			Reallocate();
 
-		void* commandData = nullptr;
-
 		if (m_Buffer != nullptr)
 		{
-			std::memcpy(m_Buffer + m_Size, &meta, sizeof(meta));
-			commandData = m_Buffer + m_Size + sizeof(meta);
+			size_t oldSize = m_Size;
 			m_Size = newSize;
+
+			return { (CommandMetadata*)(m_Buffer + oldSize), m_Buffer + oldSize + sizeof(CommandMetadata) };
 		}
 
-		return commandData;
+		return { nullptr, nullptr };
 	}
 
-	std::pair<const CommandMetadata&, Command*> CommandsStorage::Pop()
+	std::pair<CommandMetadata&, Command*> CommandsStorage::Pop()
 	{
 		FLARE_CORE_ASSERT(m_ReadPosition + sizeof(CommandMetadata) <= m_Size);
-		const CommandMetadata& metadata = *(CommandMetadata*)(m_Buffer + m_ReadPosition);
+		CommandMetadata& metadata = *(CommandMetadata*)(m_Buffer + m_ReadPosition);
 
 		FLARE_CORE_ASSERT(m_ReadPosition + sizeof(CommandMetadata) + metadata.CommandSize <= m_Size);
 		void* command = m_Buffer + m_ReadPosition + sizeof(CommandMetadata);

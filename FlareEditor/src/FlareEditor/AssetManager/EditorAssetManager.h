@@ -34,6 +34,8 @@ namespace Flare
 		void ReloadAsset(AssetHandle handle);
 		void UnloadAsset(AssetHandle handle);
 
+		void ReloadPrefabs();
+
 		void RemoveFromRegistry(AssetHandle handle);
 	private:
 		Ref<Asset> LoadAsset(const AssetMetadata& metadata);
