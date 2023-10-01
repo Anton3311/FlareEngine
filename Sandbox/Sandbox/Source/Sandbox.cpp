@@ -17,6 +17,7 @@
 #include <Flare/Input/InputManager.h>
 
 #include <iostream>
+#include <random>
 
 namespace Sandbox
 {
@@ -75,6 +76,10 @@ namespace Sandbox
 
 			Ref<Prefab> prefab = AssetManager::GetAsset<Prefab>(data.PrefabHandle);
 
+			static std::random_device s_Device;
+			static std::mt19937_64 s_Engine(s_Device());
+			static std::uniform_real_distribution<float> s_UniformDistricution;
+
 			uint32_t op = 0;
 			if (InputManager::IsKeyPressed(KeyCode::D1))
 				op = 1;
@@ -101,9 +106,13 @@ namespace Sandbox
 					switch (op)
 					{
 					case 1:
+					{
+						glm::vec3 position = glm::vec3(s_UniformDistricution(s_Engine), s_UniformDistricution(s_Engine), 0.0f);
 						context.Commands->AddEntityCommand(InstantiatePrefab(prefab))
-							.AddComponent<SomeComponent>();
+							.AddComponent<SomeComponent>()
+							.SetComponent<TransformComponent>(TransformComponent { position });
 						break;
+					}
 					case 2:
 						context.Commands->GetEntity(e)
 							.AddComponent<SomeComponent>();

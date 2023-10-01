@@ -41,6 +41,25 @@ namespace Flare
 		T m_Data;
 	};
 
+	template<typename T>
+	class SetComponentCommand : public Command
+	{
+	public:
+		SetComponentCommand() = default;
+		SetComponentCommand(FutureEntity entity, const T& data)
+			: m_Entity(entity), m_Data(data) {}
+	public:
+		virtual void Apply(CommandContext& context, World& world) override
+		{
+			FLARE_CORE_ASSERT(world.IsEntityAlive(context.GetEntity(m_Entity)));
+			world.GetEntityComponent<T>(context.GetEntity(m_Entity)) = m_Data;
+		}
+	private:
+		FutureEntity m_Entity;
+		T m_Data;
+	};
+
+
 	class FLAREECS_API RemoveComponentCommand : public Command
 	{
 	public:

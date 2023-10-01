@@ -32,6 +32,13 @@ namespace Flare
 		}
 
 		template<typename T>
+		FutureEntityCommands& SetComponent(const T& component)
+		{
+			m_CommandBuffer.AddCommand<SetComponentCommand<T>>(SetComponentCommand<T>(m_FutureEntity, component));
+			return *this;
+		}
+
+		template<typename T>
 		FutureEntityCommands& RemoveComponent()
 		{
 			m_CommandBuffer.AddCommand<RemoveComponentCommand>(RemoveComponentCommand(m_FutureEntity, COMPONENT_ID(T)));
