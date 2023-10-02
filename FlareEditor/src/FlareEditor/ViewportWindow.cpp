@@ -29,13 +29,14 @@ namespace Flare
 
 		if (m_Viewport.GetSize() != glm::ivec2(0))
 		{
-			m_FrameBuffer->Bind();
+			Scene::GetActive()->OnBeforeRender(m_Viewport);
 
+			m_FrameBuffer->Bind();
 			OnClear();
 
-			Scene::GetActive()->OnBeforeRender(m_Viewport.FrameData);
-			m_Viewport.FrameData.UploadCameraData();
-			Scene::GetActive()->OnRender(m_Viewport.FrameData);
+			Renderer::BeginScene(m_Viewport);
+			Scene::GetActive()->OnRender(m_Viewport);
+			Renderer::EndScene();
 
 			m_FrameBuffer->Unbind();
 		}
@@ -43,7 +44,6 @@ namespace Flare
 
 	void ViewportWindow::PrepareViewport()
 	{
-		Renderer::SetCurrentViewport(m_Viewport);
 		if (m_Viewport.GetSize() != glm::ivec2(0))
 		{
 			const FrameBufferSpecifications frameBufferSpecs = m_FrameBuffer->GetSpecifications();

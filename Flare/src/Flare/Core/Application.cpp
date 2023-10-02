@@ -2,6 +2,7 @@
 
 #include "Flare/Core/Time.h"
 
+#include "Flare/Renderer/Renderer.h"
 #include "Flare/Renderer2D/Renderer2D.h"
 #include "Flare/Renderer/DebugRenderer.h"
 #include "Flare/Renderer/RenderCommand.h"
@@ -59,6 +60,7 @@ namespace Flare
 		InputManager::Initialize();
 
 		RenderCommand::Initialize();
+		Renderer::Initialize();
 		Renderer2D::Initialize();
 		DebugRenderer::Initialize();
 
@@ -70,6 +72,7 @@ namespace Flare
 	Application::~Application()
 	{
 		ScriptingEngine::Shutdown();
+		Renderer::Shutdown();
 		Renderer2D::Shutdown();
 		DebugRenderer::Shutdown();
 	}

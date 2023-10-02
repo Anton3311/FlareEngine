@@ -1,5 +1,6 @@
 #include "SceneViewportWindow.h"
 
+#include "Flare/Renderer/Renderer.h"
 #include "Flare/Renderer/RenderCommand.h"
 #include "Flare/Renderer/DebugRenderer.h"
 #include "Flare/Scene/Components.h"
@@ -60,8 +61,6 @@ namespace Flare
 			m_Viewport.FrameData.Camera.InverseProjection = glm::inverse(m_Viewport.FrameData.Camera.Projection);
 			m_Viewport.FrameData.Camera.CalculateViewProjection();
 			m_Viewport.FrameData.Camera.Position = m_Camera.GetPosition();
-
-			m_Viewport.FrameData.UploadCameraData();
 		}
 
 		PrepareViewport();
@@ -71,11 +70,13 @@ namespace Flare
 		{
 			std::optional<SystemGroupId> debugRenderingGroup = scene->GetECSWorld().GetSystemsManager().FindGroup("Debug Rendering");
 
+			scene->OnBeforeRender(m_Viewport);
+
+			Renderer::BeginScene(m_Viewport);
 			m_ScreenBuffer->Bind();
 			OnClear();
 
-			scene->OnBeforeRender(m_Viewport.FrameData);
-			scene->OnRender(m_Viewport.FrameData);
+			scene->OnRender(m_Viewport);
 
 			if (debugRenderingGroup.has_value())
 			{
@@ -93,6 +94,7 @@ namespace Flare
 			}
 
 			m_ScreenBuffer->Unbind();
+			Renderer::EndScene();
 
 			m_FrameBuffer->Blit(m_ScreenBuffer, 0, 0);
 

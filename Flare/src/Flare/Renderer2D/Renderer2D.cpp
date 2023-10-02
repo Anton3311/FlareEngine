@@ -133,7 +133,6 @@ namespace Flare
 			s_Renderer2DData.Textures[i]->Bind(i);
 
 		s_Renderer2DData.CurrentShader->Bind();
-		s_Renderer2DData.CurrentShader->SetMatrix4("u_Projection", s_Renderer2DData.FrameData->Camera.ViewProjection);
 		s_Renderer2DData.CurrentShader->SetIntArray("u_Textures", slots, MaxTexturesCount);
 		
 		RenderCommand::DrawIndexed(s_Renderer2DData.VertexArray, s_Renderer2DData.QuadIndex * 6);

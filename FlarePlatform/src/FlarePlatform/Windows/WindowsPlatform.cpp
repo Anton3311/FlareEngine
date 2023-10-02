@@ -71,7 +71,7 @@ namespace Flare
 			return function;
 	}
 
-#undef CreateProcess;
+#undef CreateProcess
 
 	int32_t Platform::CreateProcess(std::filesystem::path& path, const ProcessCreationSettings& settings)
 	{

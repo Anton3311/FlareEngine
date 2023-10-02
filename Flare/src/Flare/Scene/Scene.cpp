@@ -61,12 +61,11 @@ namespace Flare
 		m_World.GetSystemsManager().ExecuteGroup(m_OnRuntimeEndGroup);
 	}
 
-	void Scene::OnBeforeRender(RenderData& renderData)
+	void Scene::OnBeforeRender(Viewport& viewport)
 	{
-		if (!renderData.IsEditorCamera)
+		if (!viewport.FrameData.IsEditorCamera)
 		{
-			Viewport& currentViewport = Renderer::GetCurrentViewport();
-			float aspectRation = currentViewport.GetAspectRatio();
+			float aspectRation = viewport.GetAspectRatio();
 
 			for (EntityView entityView : m_CameraDataUpdateQuery)
 			{
@@ -79,21 +78,21 @@ namespace Flare
 
 					float halfSize = camera.Size / 2;
 
-					renderData.Camera.View = glm::inverse(transforms[entity].GetTransformationMatrix());
+					viewport.FrameData.Camera.View = glm::inverse(transforms[entity].GetTransformationMatrix());
 
 					if (camera.Projection == CameraComponent::ProjectionType::Orthographic)
-						renderData.Camera.Projection = glm::ortho(-halfSize * aspectRation, halfSize * aspectRation, -halfSize, halfSize, camera.Near, camera.Far);
+						viewport.FrameData.Camera.Projection = glm::ortho(-halfSize * aspectRation, halfSize * aspectRation, -halfSize, halfSize, camera.Near, camera.Far);
 					else
-						renderData.Camera.Projection = glm::perspective<float>(glm::radians(camera.FOV), aspectRation, camera.Near, camera.Far);
+						viewport.FrameData.Camera.Projection = glm::perspective<float>(glm::radians(camera.FOV), aspectRation, camera.Near, camera.Far);
 
-					renderData.Camera.Position = transforms[entity].Position;
-					renderData.Camera.CalculateViewProjection();
+					viewport.FrameData.Camera.Position = transforms[entity].Position;
+					viewport.FrameData.Camera.CalculateViewProjection();
 				}
 			}
 		}
 	}
 
-	void Scene::OnRender(const RenderData& renderData)
+	void Scene::OnRender(const Viewport& viewport)
 	{
 		RenderCommand::SetDepthTestEnabled(false);
 		Renderer2D::Begin(m_QuadShader);

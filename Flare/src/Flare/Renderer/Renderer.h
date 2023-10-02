@@ -15,7 +15,9 @@ namespace Flare
 		static void Shutdown();
 
 		static void SetMainViewport(Viewport& viewport);
-		static void SetCurrentViewport(Viewport& viewport);
+
+		static void BeginScene(Viewport& viewport);
+		static void EndScene();
 
 		static Viewport& GetMainViewport();
 		static Viewport& GetCurrentViewport();

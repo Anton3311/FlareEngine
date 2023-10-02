@@ -5,6 +5,7 @@
 
 #include "Flare/Renderer/Shader.h"
 #include "Flare/Renderer/RenderData.h"
+#include "Flare/Renderer/Viewport.h"
 
 #include "Flare/Scene/SceneRenderer.h"
 
@@ -25,8 +26,8 @@ namespace Flare
 		void OnRuntimeStart();
 		void OnRuntimeEnd();
 
-		void OnBeforeRender(RenderData& renderData);
-		void OnRender(const RenderData& renderData);
+		void OnBeforeRender(Viewport& viewport);
+		void OnRender(const Viewport& viewport);
 
 		void OnUpdateRuntime();
 		void OnViewportResize(uint32_t width, uint32_t height);

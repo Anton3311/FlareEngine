@@ -13,6 +13,7 @@ namespace Flare
 	{
 		CameraData()
 			: Position(0.0f),
+			Unused(0.0f),
 			Projection(0.0f),
 			View(0.0f),
 			ViewProjection(0.0f),
@@ -42,18 +43,6 @@ namespace Flare
 
 	struct RenderData
 	{
-		RenderData()
-		{
-			CameraBuffer = UniformBuffer::Create(sizeof(CameraData), 0);
-		}
-
-		inline void UploadCameraData()
-		{
-			CameraBuffer->SetData(&Camera, sizeof(CameraData), 0);
-		}
-
-		Ref<UniformBuffer> CameraBuffer;
-
 		CameraData Camera;
 		bool IsEditorCamera = false;
 	};
