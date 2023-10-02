@@ -30,8 +30,6 @@ namespace Flare
 			glm::vec3( 1.0f, -1.0f,  1.0f),
 		};
 
-		constexpr float maxFar = 10.0f;
-
 		glm::vec3 farPoints[4];
 		glm::vec3 nearPoints[4];
 		for (EntityView chunk : m_Query)
@@ -55,7 +53,7 @@ namespace Flare
 					for (uint32_t i = 0; i < 4; i++)
 					{
 						nearPoints[i] = transform.Position + glm::rotate(rotation, localTopRight * camera.Near * offsetSigns[i]);
-						farPoints[i] = transform.Position + glm::rotate(rotation, localTopRight * maxFar * offsetSigns[i]);
+						farPoints[i] = transform.Position + glm::rotate(rotation, localTopRight * camera.Far * offsetSigns[i]);
 					}
 				}
 				else

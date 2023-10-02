@@ -216,7 +216,7 @@ namespace Flare
 		s_DebugRendererData.LinesVertexBuffer->SetData(s_DebugRendererData.LinesBufferBase, sizeof(Vertex) * VerticesPerLine * s_DebugRendererData.LinesCount);
 
 		s_DebugRendererData.DebugShader->Bind();
-		s_DebugRendererData.DebugShader->SetMatrix4("u_ViewProjection", s_DebugRendererData.FrameData->Camera.ViewProjection);
+		//s_DebugRendererData.DebugShader->SetMatrix4("u_ViewProjection", s_DebugRendererData.FrameData->Camera.ViewProjection);
 
 		RenderCommand::DrawLines(s_DebugRendererData.LinesMesh, s_DebugRendererData.LinesCount * VerticesPerLine);
 
@@ -230,7 +230,7 @@ namespace Flare
 		s_DebugRendererData.RayVertexBuffer->SetData(s_DebugRendererData.RaysBufferBase, sizeof(Vertex) * VerticesPerRay * s_DebugRendererData.RaysCount);
 
 		s_DebugRendererData.DebugShader->Bind();
-		s_DebugRendererData.DebugShader->SetMatrix4("u_ViewProjection", s_DebugRendererData.FrameData->Camera.ViewProjection);
+		//s_DebugRendererData.DebugShader->SetMatrix4("u_ViewProjection", s_DebugRendererData.FrameData->Camera.ViewProjection);
 
 		RenderCommand::DrawIndexed(s_DebugRendererData.RaysMesh, s_DebugRendererData.RaysCount * IndicesPerRay);
 
