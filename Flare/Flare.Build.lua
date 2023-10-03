@@ -34,6 +34,8 @@ project "Flare"
 		INCLUDE_DIRS.imguizmo,
 		INCLUDE_DIRS.yaml_cpp,
 		INCLUDE_DIRS.imgui,
+
+		INCLUDE_DIRS.vulkan_sdk,
 	}
 
 	links
@@ -44,8 +46,9 @@ project "Flare"
 		"FlareECS",
 		"FlareCore",
 		"FlarePlatform",
-		"yaml-cpp"
+		"yaml-cpp",
 	}
+
 
 	defines
 	{
@@ -73,3 +76,20 @@ project "Flare"
 		defines "FLARE_DIST"
 		runtime "Release"
 		optimize "on"
+
+	filter "configurations:Debug"
+		links
+		{
+			LIBRARIES.shaderc_debug,
+			LIBRARIES.spriv_cross_glsl_debug,
+			LIBRARIES.spriv_cross_debug,
+			LIBRARIES.spriv_tools_debug,
+		}
+
+	filter "configurations:Release or Dist"
+		links
+		{
+			LIBRARIES.shaderc_release,
+			LIBRARIES.spriv_cross_glsl_release,
+			LIBRARIES.spriv_cross_release,
+		}

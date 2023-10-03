@@ -22,7 +22,7 @@ layout(std140, binding = 0) uniform Camera
 	CameraData u_Camera;
 };
 
-out vec4 VertexColor;
+layout(location = 0) out vec4 VertexColor;
 
 void main()
 {
@@ -33,9 +33,9 @@ void main()
 #type fragment
 #version 450
 
-in vec4 VertexColor;
+layout(location = 0) in vec4 VertexColor;
 
-out vec4 o_Color;
+layout(location = 0) out vec4 o_Color;
 
 void main()
 {

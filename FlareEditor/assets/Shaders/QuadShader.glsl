@@ -25,10 +25,10 @@ layout(std140, binding = 0) uniform Camera
 	CameraData u_Camera;
 };
 
-out vec4 VertexColor;
-out vec2 UV;
-flat out float TextureIndex;
-flat out int EntityIndex;
+layout(location = 0) out vec4 VertexColor;
+layout(location = 1) out vec2 UV;
+layout(location = 2) flat out float TextureIndex;
+layout(location = 3) flat out int EntityIndex;
 
 void main()
 {
@@ -44,13 +44,13 @@ void main()
 
 layout(binding = 0) uniform sampler2D u_Textures[32];
 
-in vec2 UV;
-in vec4 VertexColor;
-flat in float TextureIndex;
-flat in int EntityIndex;
+layout(location = 0) in vec4 VertexColor;
+layout(location = 1) in vec2 UV;
+layout(location = 2) flat in float TextureIndex;
+layout(location = 3) flat in int EntityIndex;
 
-out vec4 o_Color;
-out int o_EntityIndex;
+layout(location = 0) out vec4 o_Color;
+layout(location = 1) out int o_EntityIndex;
 
 void main()
 {

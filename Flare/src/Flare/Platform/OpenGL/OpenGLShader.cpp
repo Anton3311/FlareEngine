@@ -4,27 +4,41 @@
 
 #include <string>
 #include <string_view>
+#include <sstream>
 #include <fstream>
 
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include <shaderc/shaderc.hpp>
+#include <spirv_cross/spirv_cross.hpp>
+#include <spirv_cross/spirv_glsl.hpp>
+
 namespace Flare
 {
+    static shaderc_shader_kind GLShaderTypeToShaderC(uint32_t type)
+    {
+        switch (type)
+        {
+        case GL_VERTEX_SHADER:
+            return shaderc_vertex_shader;
+        case GL_FRAGMENT_SHADER:
+            return shaderc_fragment_shader;
+        }
+
+        return (shaderc_shader_kind)0;
+    }
+
     OpenGLShader::OpenGLShader(const std::filesystem::path& path)
     {
-        std::string source;
         std::ifstream file(path);
         if (file.is_open())
         {
-            file.seekg(0, std::ios::end);
-            source.resize(file.tellg());
-            file.seekg(0, std::ios::beg);
-            file.read(&source[0], source.size());
-            file.close();
+            std::stringstream buffer;
+            buffer << file.rdbuf();
 
-            Compile(source);
+            Compile(path, buffer.str());
         }
         else
             FLARE_CORE_ERROR("Could not read file {0}", path.string());
@@ -91,9 +105,9 @@ namespace Flare
         size_t position = source.find_first_of(typeToken);
         while (position != std::string_view::npos)
         {
-            size_t endOfLine = source.find_first_of("\n", position);
+            size_t endOfLine = source.find_first_of("\r\n", position);
             size_t typeStart = position + typeToken.size() + 1;
-            size_t nextLineStart = source.find_first_of("\n", endOfLine);
+            size_t nextLineStart = source.find_first_of("\r\n", endOfLine);
 
             std::string_view type = source.substr(typeStart, endOfLine - typeStart);
 
@@ -109,17 +123,59 @@ namespace Flare
 
             std::string_view programSource;
             if (position == std::string_view::npos)
-                programSource = source.substr(nextLineStart);
+                programSource = source.substr(nextLineStart, source.size() - nextLineStart);
             else
                 programSource = source.substr(nextLineStart, position - nextLineStart);
 
-            programs.emplace_back(programSource, shaderType);
+            programs.emplace_back(std::string(programSource.data(), programSource.size()), shaderType);
         }
 
         return programs;
     }
 
-    void OpenGLShader::Compile(std::string_view source)
+    using SpirvData = std::vector<uint32_t>;
+
+    static std::optional<SpirvData> CompileVulkanGlslToSpirv(const std::string& path, const std::string& source, shaderc_shader_kind programKind)
+    {
+        shaderc::Compiler compiler;
+        shaderc::CompileOptions options;
+        options.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_2);
+        options.SetOptimizationLevel(shaderc_optimization_level_performance);
+
+        shaderc::SpvCompilationResult shaderModule = compiler.CompileGlslToSpv(source, programKind, path.c_str(), options);
+        if (shaderModule.GetCompilationStatus() != shaderc_compilation_status_success)
+        {
+            FLARE_CORE_ERROR("Shader Error: {0}", shaderModule.GetErrorMessage());
+            FLARE_CORE_ERROR("Failed to compile shader '{0}'", path);
+            return {};
+        }
+
+        return std::vector<uint32_t>(shaderModule.cbegin(), shaderModule.cend());
+    }
+
+    static std::optional<SpirvData> CompileSpirvToGlsl(const std::string& path, const SpirvData& spirvData, shaderc_shader_kind programKind)
+    {
+        spirv_cross::CompilerGLSL glslCompiler(spirvData);
+        std::string glsl = glslCompiler.compile();
+
+        shaderc::Compiler compiler;
+        shaderc::CompileOptions options;
+        options.SetTargetEnvironment(shaderc_target_env_opengl, shaderc_env_version_opengl_4_5);
+        options.SetAutoMapLocations(true);
+        options.SetOptimizationLevel(shaderc_optimization_level_performance);
+
+        shaderc::SpvCompilationResult shaderModule = compiler.CompileGlslToSpv(glsl, programKind, path.c_str(), options);
+        if (shaderModule.GetCompilationStatus() != shaderc_compilation_status_success)
+        {
+            FLARE_CORE_ERROR("Shader Error: {0}", shaderModule.GetErrorMessage());
+            FLARE_CORE_ERROR("Failed to compile shader '{0}'", path);
+            return {};
+        }
+
+        return std::vector<uint32_t>(shaderModule.cbegin(), shaderModule.cend());
+    }
+
+    void OpenGLShader::Compile(const std::filesystem::path& path, std::string_view source)
     {
         m_Id = glCreateProgram();
         auto programs = PreProcess(source);
@@ -127,30 +183,33 @@ namespace Flare
         std::vector<uint32_t> shaderIds;
         shaderIds.reserve(programs.size());
 
+        std::string filePath = path.generic_string();
         for (auto& program : programs)
         {
-            const char* source = program.Source.c_str();
-
-            GLuint shader = glCreateShader(program.Type);
-            glShaderSource(shader, 1, &source, 0);
-            glCompileShader(shader);
-
-            GLint isCompiled = 0;
-            glGetShaderiv(shader, GL_COMPILE_STATUS, &isCompiled);
-            if (isCompiled == GL_FALSE)
+            std::string_view stageName = "";
+            switch (program.Type)
             {
-                GLint maxLength = 0;
-                glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &maxLength);
-
-                std::vector<GLchar> infoLog(maxLength);
-                glGetShaderInfoLog(shader, maxLength, &maxLength, &infoLog[0]);
-                glDeleteShader(shader);
-
-                FLARE_CORE_ERROR("Failed to compile shader: {0}", infoLog.data());
+            case GL_VERTEX_SHADER:
+                stageName = "Vertex";
+                break;
+            case GL_FRAGMENT_SHADER:
+                stageName = "Pixel";
                 break;
             }
 
+            std::optional<SpirvData> spirvData = CompileVulkanGlslToSpirv(filePath, program.Source, GLShaderTypeToShaderC(program.Type));
+            if (!spirvData.has_value())
+                continue;
+
+            std::optional<SpirvData> compiledShader = CompileSpirvToGlsl(filePath, spirvData.value(), GLShaderTypeToShaderC(program.Type));
+            if (!compiledShader.has_value())
+                continue;
+
+            GLuint shader = glCreateShader(program.Type);
+            glShaderBinary(1, &shader, GL_SHADER_BINARY_FORMAT_SPIR_V, compiledShader.value().data(), compiledShader.value().size() * sizeof(uint32_t));
+            glSpecializeShader(shader, "main", 0, nullptr, nullptr);
             glAttachShader(m_Id, shader);
+
             shaderIds.push_back(shader);
         }
 

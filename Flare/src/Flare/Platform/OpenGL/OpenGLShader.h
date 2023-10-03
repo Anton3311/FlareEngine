@@ -35,7 +35,7 @@ namespace Flare
 		};
 
 		std::vector<ShaderProgram> PreProcess(std::string_view source);
-		void Compile(std::string_view source);
+		void Compile(const std::filesystem::path& path, std::string_view source);
 	private:
 		uint32_t m_Id;
 	};

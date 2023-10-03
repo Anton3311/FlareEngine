@@ -8,7 +8,7 @@ struct Vertex
 	vec2 UV;
 };
 
-out Vertex VertexData;
+layout(location = 0) out Vertex VertexData;
 
 void main()
 {
@@ -24,14 +24,17 @@ struct Vertex
 	vec2 UV;
 };
 
-in Vertex VertexData;
+layout(location = 0) in Vertex VertexData;
+layout(location = 0) out vec4 o_Color;
 
-out vec4 o_Color;
+layout(std140, push_constant) uniform OutlineData
+{
+	vec4 u_OutlineColor;
+	int u_SelectedId;
+	vec2 u_OutlineThickness;
+};
 
-uniform vec4 u_OutlineColor;
-uniform int u_SelectedId;
-uniform vec2 u_OutlineThickness;
-uniform isampler2D u_IdsTexture;
+layout(binding = 0) uniform isampler2D u_IdsTexture;
 
 void main()
 {
