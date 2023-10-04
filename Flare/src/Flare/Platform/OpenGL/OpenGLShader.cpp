@@ -139,14 +139,16 @@ namespace Flare
     {
         shaderc::Compiler compiler;
         shaderc::CompileOptions options;
+        options.SetSourceLanguage(shaderc_source_language_glsl);
+        options.SetGenerateDebugInfo();
         options.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_2);
         options.SetOptimizationLevel(shaderc_optimization_level_performance);
 
-        shaderc::SpvCompilationResult shaderModule = compiler.CompileGlslToSpv(source, programKind, path.c_str(), options);
+        shaderc::SpvCompilationResult shaderModule = compiler.CompileGlslToSpv(source.c_str(), source.size(), programKind, path.c_str(), "main", options);
         if (shaderModule.GetCompilationStatus() != shaderc_compilation_status_success)
         {
+            FLARE_CORE_ERROR("Failed to Vulkan GLSL '{0}'", path);
             FLARE_CORE_ERROR("Shader Error: {0}", shaderModule.GetErrorMessage());
-            FLARE_CORE_ERROR("Failed to compile shader '{0}'", path);
             return {};
         }
 
@@ -167,12 +169,47 @@ namespace Flare
         shaderc::SpvCompilationResult shaderModule = compiler.CompileGlslToSpv(glsl, programKind, path.c_str(), options);
         if (shaderModule.GetCompilationStatus() != shaderc_compilation_status_success)
         {
-            FLARE_CORE_ERROR("Shader Error: {0}", shaderModule.GetErrorMessage());
             FLARE_CORE_ERROR("Failed to compile shader '{0}'", path);
+            FLARE_CORE_ERROR("Shader Error: {0}", shaderModule.GetErrorMessage());
             return {};
         }
 
         return std::vector<uint32_t>(shaderModule.cbegin(), shaderModule.cend());
+    }
+
+    static void PrintResourceInfo(spirv_cross::Compiler& compiler, const spirv_cross::Resource& resource)
+    {
+        const auto& bufferType = compiler.get_type(resource.base_type_id);
+        uint32_t bufferSize = compiler.get_declared_struct_size(bufferType);
+        uint32_t binding = compiler.get_decoration(resource.id, spv::DecorationBinding);
+
+        size_t membersCount = bufferType.member_types.size();
+
+        FLARE_CORE_INFO("   Name = {0} Size = {1} Binding = {2} MembersCount = {3}", resource.name, bufferSize, binding, membersCount);
+    }
+
+    static void Reflect(const std::string& shaderPath, const SpirvData& shader)
+    {
+        try
+        {
+            spirv_cross::Compiler compiler(shader);
+            spirv_cross::ShaderResources resources = compiler.get_shader_resources();
+
+
+            FLARE_CORE_INFO("Shader reflection '{0}'", shaderPath);
+            FLARE_CORE_INFO("Uniform buffers:");
+
+            for (const auto& resource : resources.uniform_buffers)
+                PrintResourceInfo(compiler, resource);
+
+            FLARE_CORE_INFO("Push constant buffers:");
+            for (const auto& resource : resources.push_constant_buffers)
+                PrintResourceInfo(compiler, resource);
+        }
+        catch (spirv_cross::CompilerError& e)
+        {
+            FLARE_CORE_ERROR("Shader '{0}' reflection failed: {1}", shaderPath, e.what());
+        }
     }
 
     void OpenGLShader::Compile(const std::filesystem::path& path, std::string_view source)
@@ -200,6 +237,8 @@ namespace Flare
             std::optional<SpirvData> spirvData = CompileVulkanGlslToSpirv(filePath, program.Source, GLShaderTypeToShaderC(program.Type));
             if (!spirvData.has_value())
                 continue;
+
+            Reflect(filePath, spirvData.value());
 
             std::optional<SpirvData> compiledShader = CompileSpirvToGlsl(filePath, spirvData.value(), GLShaderTypeToShaderC(program.Type));
             if (!compiledShader.has_value())

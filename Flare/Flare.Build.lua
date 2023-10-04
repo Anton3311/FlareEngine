@@ -49,7 +49,6 @@ project "Flare"
 		"yaml-cpp",
 	}
 
-
 	defines
 	{
 		"GLFW_INCLUDE_NONE",
