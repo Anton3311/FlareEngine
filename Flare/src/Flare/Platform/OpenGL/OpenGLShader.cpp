@@ -135,6 +135,40 @@ namespace Flare
 
     using SpirvData = std::vector<uint32_t>;
 
+    static std::filesystem::path SHADER_CACHE_LOCATION = "Cache/Shaders/";
+
+    static std::filesystem::path GetCachePath(const std::filesystem::path& initialPath, std::string_view apiName, std::string_view stageName)
+    {
+        std::filesystem::path parent = std::filesystem::relative(initialPath.parent_path(), std::filesystem::current_path());
+        std::filesystem::path cachePath = SHADER_CACHE_LOCATION / parent / fmt::format("{0}.{1}.chache.{2}", initialPath.filename().string(), apiName, stageName);
+
+        return cachePath;
+    }
+
+    static void WriteSpirvData(const std::filesystem::path& path, const SpirvData& data)
+    {
+        std::ofstream output(path, std::ios::out | std::ios::binary);
+        output.write((const char*)data.data(), data.size() * sizeof(uint32_t));
+        output.close();
+    }
+
+    static bool ReadSpirvData(const std::filesystem::path& path, SpirvData& output)
+    {
+        std::ifstream inputStream(path, std::ios::in | std::ios::binary);
+
+        if (!inputStream.is_open())
+            return false;
+
+        inputStream.seekg(0, std::ios::end);
+        size_t size = inputStream.tellg();
+        inputStream.seekg(0, std::ios::beg);
+
+        output.resize(size / sizeof(uint32_t));
+        inputStream.read((char*)output.data(), size);
+
+        return true;
+    }
+
     static std::optional<SpirvData> CompileVulkanGlslToSpirv(const std::string& path, const std::string& source, shaderc_shader_kind programKind)
     {
         shaderc::Compiler compiler;
@@ -227,25 +261,52 @@ namespace Flare
             switch (program.Type)
             {
             case GL_VERTEX_SHADER:
-                stageName = "Vertex";
+                stageName = "vertex";
                 break;
             case GL_FRAGMENT_SHADER:
-                stageName = "Pixel";
+                stageName = "pixel";
                 break;
             }
 
-            std::optional<SpirvData> spirvData = CompileVulkanGlslToSpirv(filePath, program.Source, GLShaderTypeToShaderC(program.Type));
-            if (!spirvData.has_value())
-                continue;
+            SpirvData compiledShaderData;
+            std::filesystem::path cachePath = GetCachePath(path, "vulkan", stageName);
+            if (std::filesystem::exists(cachePath))
+            {
+                FLARE_CORE_ASSERT(ReadSpirvData(cachePath, compiledShaderData));
+            }
+            else
+            {
+                std::filesystem::create_directories(cachePath.parent_path());
 
-            Reflect(filePath, spirvData.value());
+                std::optional<SpirvData> spirvData = CompileVulkanGlslToSpirv(filePath, program.Source, GLShaderTypeToShaderC(program.Type));
+                if (!spirvData.has_value())
+                    continue;
 
-            std::optional<SpirvData> compiledShader = CompileSpirvToGlsl(filePath, spirvData.value(), GLShaderTypeToShaderC(program.Type));
-            if (!compiledShader.has_value())
-                continue;
+                compiledShaderData = std::move(spirvData.value());
+                WriteSpirvData(cachePath, compiledShaderData);
+            }
+
+            Reflect(filePath, compiledShaderData);
+
+            cachePath = GetCachePath(path, "opengl", stageName);
+            if (std::filesystem::exists(cachePath))
+            {
+                FLARE_CORE_ASSERT(ReadSpirvData(cachePath, compiledShaderData));
+            }
+            else
+            {
+                std::filesystem::create_directories(cachePath.parent_path());
+
+                std::optional<SpirvData> compiledShader = CompileSpirvToGlsl(filePath, compiledShaderData, GLShaderTypeToShaderC(program.Type));
+                if (!compiledShader.has_value())
+                    continue;
+
+                compiledShaderData = std::move(compiledShader.value());
+                WriteSpirvData(cachePath, compiledShaderData);
+            }
 
             GLuint shader = glCreateShader(program.Type);
-            glShaderBinary(1, &shader, GL_SHADER_BINARY_FORMAT_SPIR_V, compiledShader.value().data(), compiledShader.value().size() * sizeof(uint32_t));
+            glShaderBinary(1, &shader, GL_SHADER_BINARY_FORMAT_SPIR_V, compiledShaderData.data(), compiledShaderData.size() * sizeof(uint32_t));
             glSpecializeShader(shader, "main", 0, nullptr, nullptr);
             glAttachShader(m_Id, shader);
 
