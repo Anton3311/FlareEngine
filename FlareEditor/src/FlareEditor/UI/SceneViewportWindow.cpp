@@ -108,10 +108,10 @@ namespace Flare
 				glm::vec4 selectionColor = glm::vec4(primaryColor.x, primaryColor.y, primaryColor.z, 1.0f);
 
 				m_SelectionOutlineShader->Bind();
-				m_SelectionOutlineShader->SetInt("u_SelectedId", (int32_t)selectedEntity.GetIndex());
+				m_SelectionOutlineShader->SetInt("u_Outline.SelectedId", (int32_t)selectedEntity.GetIndex());
 				m_SelectionOutlineShader->SetInt("u_IdsTexture", 0);
-				m_SelectionOutlineShader->SetFloat4("u_OutlineColor", selectionColor);
-				m_SelectionOutlineShader->SetFloat2("u_OutlineThickness", glm::vec2(4.0f) / (glm::vec2)m_Viewport.GetSize() / 2.0f);
+				m_SelectionOutlineShader->SetFloat4("u_Outline.Color", selectionColor);
+				m_SelectionOutlineShader->SetFloat2("u_Outline.Thickness", glm::vec2(4.0f) / (glm::vec2)m_Viewport.GetSize() / 2.0f);
 
 				RenderCommand::DrawIndexed(m_FullscreenQuad);
 				m_FrameBuffer->Unbind();

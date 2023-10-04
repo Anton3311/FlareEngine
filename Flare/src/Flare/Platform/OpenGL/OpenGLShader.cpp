@@ -181,7 +181,7 @@ namespace Flare
         shaderc::SpvCompilationResult shaderModule = compiler.CompileGlslToSpv(source.c_str(), source.size(), programKind, path.c_str(), "main", options);
         if (shaderModule.GetCompilationStatus() != shaderc_compilation_status_success)
         {
-            FLARE_CORE_ERROR("Failed to Vulkan GLSL '{0}'", path);
+            FLARE_CORE_ERROR("Failed to compile Vulkan GLSL '{0}'", path);
             FLARE_CORE_ERROR("Shader Error: {0}", shaderModule.GetErrorMessage());
             return {};
         }
@@ -197,7 +197,9 @@ namespace Flare
         shaderc::Compiler compiler;
         shaderc::CompileOptions options;
         options.SetTargetEnvironment(shaderc_target_env_opengl, shaderc_env_version_opengl_4_5);
+        options.SetSourceLanguage(shaderc_source_language_glsl);
         options.SetAutoMapLocations(true);
+        options.SetGenerateDebugInfo();
         options.SetOptimizationLevel(shaderc_optimization_level_performance);
 
         shaderc::SpvCompilationResult shaderModule = compiler.CompileGlslToSpv(glsl, programKind, path.c_str(), options);
@@ -219,7 +221,10 @@ namespace Flare
 
         size_t membersCount = bufferType.member_types.size();
 
-        FLARE_CORE_INFO("   Name = {0} Size = {1} Binding = {2} MembersCount = {3}", resource.name, bufferSize, binding, membersCount);
+        FLARE_CORE_INFO("\tName = {0} Size = {1} Binding = {2} MembersCount = {3}", resource.name, bufferSize, binding, membersCount);
+
+        for (size_t i = 0; i < membersCount; i++)
+            FLARE_CORE_INFO("\t\t{0}: {1} {2}", i, compiler.get_name(bufferType.member_types[i]), compiler.get_member_name(resource.base_type_id, i));
     }
 
     static void Reflect(const std::string& shaderPath, const SpirvData& shader)
@@ -228,7 +233,6 @@ namespace Flare
         {
             spirv_cross::Compiler compiler(shader);
             spirv_cross::ShaderResources resources = compiler.get_shader_resources();
-
 
             FLARE_CORE_INFO("Shader reflection '{0}'", shaderPath);
             FLARE_CORE_INFO("Uniform buffers:");
