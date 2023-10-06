@@ -61,8 +61,11 @@ namespace Flare
 			static_assert(std::is_base_of_v<Command, T> == true, "T is not a Command");
 			static_assert(std::is_default_constructible_v<T> == true, "T must have a default constructor");
 
-			auto [meta, commandData] = m_Storage.AllocateCommand(sizeof(T));
-			FLARE_CORE_ASSERT(commandData);
+			std::optional<CommandAllocation> commandAllocation = m_Storage.AllocateCommand(sizeof(T));
+			FLARE_CORE_ASSERT(commandAllocation.has_value());
+
+			T* commandData = m_Storage.Read<T>(commandAllocation.value().CommandLocation).value_or(nullptr);
+			CommandMetadata* meta = m_Storage.Read<CommandMetadata>(commandAllocation.value().MetaLocation).value_or(nullptr);
 
 			meta->CommandSize = sizeof(T);
 
@@ -73,10 +76,24 @@ namespace Flare
 		template<typename T>
 		FutureEntityCommands AddEntityCommand(const T& command)
 		{
+			static_assert(std::is_base_of_v<Command, T> == true, "T is not a Command");
+			static_assert(std::is_default_constructible_v<T> == true, "T must have a default constructor");
 			static_assert(std::is_base_of_v<EntityCommand, T> == true, "T is not an EntityCommand");
 
-			auto [commandData, meta] = CreateCommand<T>();
-			FutureEntity entity = AllocateFutureEntity(*meta);
+			std::optional<CommandAllocation> commandAllocation = m_Storage.AllocateCommand(sizeof(T));
+			std::optional<size_t> entityLocation = m_Storage.Allocate(sizeof(Entity));
+
+			FLARE_CORE_ASSERT(commandAllocation.has_value());
+			FLARE_CORE_ASSERT(entityLocation.has_value());
+
+			FutureEntity entity = entityLocation.value();
+
+			m_Storage.Write<Entity>(entityLocation.value(), Entity());
+
+			T* commandData = m_Storage.Read<T>(commandAllocation.value().CommandLocation).value_or(nullptr);
+			CommandMetadata* meta = m_Storage.Read<CommandMetadata>(commandAllocation.value().MetaLocation).value_or(nullptr);
+
+			meta->CommandSize = sizeof(T) + sizeof(Entity);
 
 			new(commandData) T;
 			*commandData = command;
@@ -101,29 +118,6 @@ namespace Flare
 
 		void DeleteEntity(Entity entity);
 		void Execute();
-	private:
-		template<typename T>
-		std::pair<T*, CommandMetadata*> CreateCommand()
-		{
-			static_assert(std::is_base_of_v<Command, T> == true, "T is not a Command");
-			static_assert(std::is_default_constructible_v<T> == true, "T must have a default constructor");
-
-			auto [meta, commandData] = m_Storage.AllocateCommand(sizeof(T));
-			FLARE_CORE_ASSERT(commandData);
-
-			meta->CommandSize = sizeof(T);
-
-			return { (T*)commandData, meta };
-		}
-
-		FutureEntity AllocateFutureEntity(CommandMetadata& meta)
-		{
-			std::optional<size_t> futureEntityLocation = m_Storage.Allocate(sizeof(Entity));
-			FLARE_CORE_ASSERT(futureEntityLocation.has_value());
-
-			meta.CommandSize += sizeof(Entity);
-			return FutureEntity(futureEntityLocation.value());
-		}
 	private:
 		World& m_World;
 		CommandsStorage m_Storage;

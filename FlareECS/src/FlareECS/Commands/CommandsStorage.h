@@ -8,6 +8,12 @@
 
 namespace Flare
 {
+	struct CommandAllocation
+	{
+		size_t MetaLocation;
+		size_t CommandLocation;
+	};
+
 	class FLAREECS_API CommandsStorage
 	{
 	public:
@@ -19,6 +25,14 @@ namespace Flare
 		{
 			if (location + sizeof(T) <= m_Capacity)
 				return (const T*)(m_Buffer + location);
+			return {};
+		}
+
+		template<typename T>
+		std::optional<T*> Read(size_t location)
+		{
+			if (location + sizeof(T) <= m_Capacity)
+				return (T*)(m_Buffer + location);
 			return {};
 		}
 
@@ -36,8 +50,12 @@ namespace Flare
 
 		std::optional<size_t> Allocate(size_t size);
 
-		std::pair<CommandMetadata*, void*> AllocateCommand(size_t commandSize);
+		std::optional<CommandAllocation> AllocateCommand(size_t commandSize);
 		std::pair<CommandMetadata&, Command*> Pop();
+
+		inline size_t GetReadPosition() const { return m_ReadPosition; }
+		inline size_t GetSize() const { return m_Size; }
+
 		bool CanRead();
 		void Clear();
 	private:

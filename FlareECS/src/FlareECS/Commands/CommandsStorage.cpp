@@ -17,7 +17,7 @@ namespace Flare
 
 	std::optional<size_t> CommandsStorage::Allocate(size_t size)
 	{
-		if (m_Size + size > m_Capacity)
+		if (m_Buffer == nullptr || m_Size + size > m_Capacity)
 			Reallocate();
 
 		if (m_Buffer != nullptr)
@@ -30,7 +30,7 @@ namespace Flare
 		return {};
 	}
 
-	std::pair<CommandMetadata*, void*> CommandsStorage::AllocateCommand(size_t commandSize)
+	std::optional<CommandAllocation> CommandsStorage::AllocateCommand(size_t commandSize)
 	{
 		size_t itemSize = sizeof(CommandMetadata) + commandSize;
 		size_t newSize = m_Size + itemSize;
@@ -43,10 +43,10 @@ namespace Flare
 			size_t oldSize = m_Size;
 			m_Size = newSize;
 
-			return { (CommandMetadata*)(m_Buffer + oldSize), m_Buffer + oldSize + sizeof(CommandMetadata) };
+			return { { oldSize, oldSize + sizeof(CommandMetadata) } };
 		}
 
-		return { nullptr, nullptr };
+		return {};
 	}
 
 	std::pair<CommandMetadata&, Command*> CommandsStorage::Pop()
@@ -70,6 +70,9 @@ namespace Flare
 	{
 		m_ReadPosition = 0;
 		m_Size = 0;
+
+		if (m_Buffer)
+			std::memset(m_Buffer, 0, m_Capacity);
 	}
 
 	void CommandsStorage::Reallocate()
@@ -79,7 +82,9 @@ namespace Flare
 
 		if (m_Buffer != nullptr)
 		{
-			std::memcpy(newBuffer, m_Buffer, m_Size);
+			errno_t error = memcpy_s(newBuffer, m_Capacity, m_Buffer, m_Size);
+			FLARE_CORE_ASSERT(error == 0);
+			
 			delete[] m_Buffer;
 		}
 
