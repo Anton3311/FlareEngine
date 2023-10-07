@@ -2,6 +2,8 @@
 
 #include "FlareCore/Core.h"
 
+#include "Flare/AssetManager/AssetManager.h"
+
 #include "Flare/Renderer/RenderCommand.h"
 #include "Flare/Renderer/Viewport.h"
 #include "Flare/Renderer/Renderer.h"
@@ -38,7 +40,8 @@ namespace Flare
 		Ref<Texture> Textures[MaxTexturesCount];
 		uint32_t TextureIndex = 0;
 
-		Ref<Shader> CurrentShader = nullptr;
+		Ref<Shader> DefaultShader = nullptr;
+		Ref<Material> CurrentMaterial = nullptr;
 
 		glm::vec3 QuadVertices[4];
 		glm::vec2 QuadUV[4];
@@ -53,7 +56,9 @@ namespace Flare
 		s_Renderer2DData.QuadIndex = 0;
 		s_Renderer2DData.MaxQuadCount = maxQuads;
 		s_Renderer2DData.Vertices.resize(maxQuads * 4);
-		s_Renderer2DData.CurrentShader = nullptr;
+		s_Renderer2DData.CurrentMaterial = nullptr;
+
+		s_Renderer2DData.DefaultShader = Shader::Create("Assets/Shaders/QuadShader.glsl");
 
 		std::vector<uint32_t> indices(maxQuads * 6);
 
@@ -110,19 +115,17 @@ namespace Flare
 	{
 	}
 
-	void Renderer2D::Begin(const Ref<Shader>& shader)
+	void Renderer2D::Begin(const Ref<Material>& material)
 	{
-		FLARE_CORE_ASSERT(shader);
 		if (s_Renderer2DData.QuadIndex > 0)
 			Flush();
 
 		s_Renderer2DData.FrameData = &Renderer::GetCurrentViewport().FrameData;
-		s_Renderer2DData.CurrentShader = shader;
+		s_Renderer2DData.CurrentMaterial = material;
 	}
 
 	void Renderer2D::Flush()
 	{
-		FLARE_CORE_ASSERT(s_Renderer2DData.CurrentShader, "Shader was not provided");
 		s_Renderer2DData.VertexBuffer->SetData(s_Renderer2DData.Vertices.data(), sizeof(QuadVertex) * s_Renderer2DData.QuadIndex * 4);
 
 		int32_t slots[MaxTexturesCount];
@@ -132,15 +135,41 @@ namespace Flare
 		for (uint32_t i = 0; i < s_Renderer2DData.TextureIndex; i++)
 			s_Renderer2DData.Textures[i]->Bind(i);
 
-		s_Renderer2DData.CurrentShader->Bind();
-		s_Renderer2DData.CurrentShader->SetIntArray("u_Textures", slots, MaxTexturesCount);
-		
-		RenderCommand::DrawIndexed(s_Renderer2DData.VertexArray, s_Renderer2DData.QuadIndex * 6);
+		if (s_Renderer2DData.CurrentMaterial)
+		{
+			Ref<Shader> shader = AssetManager::GetAsset<Shader>(s_Renderer2DData.CurrentMaterial->GetShaderHandle());
+			FLARE_CORE_ASSERT(shader);
+
+			std::optional<uint32_t> texturesParameterIndex = shader->GetParameterIndex("u_Textures");
+
+			if (texturesParameterIndex.has_value())
+				s_Renderer2DData.CurrentMaterial->SetIntArray(texturesParameterIndex.value(), slots, s_Renderer2DData.TextureIndex);
+
+			Renderer::DrawMesh(s_Renderer2DData.VertexArray, s_Renderer2DData.CurrentMaterial, s_Renderer2DData.QuadIndex * 6);
+		}
+		else
+		{
+			s_Renderer2DData.DefaultShader->Bind();
+			s_Renderer2DData.DefaultShader->SetIntArray("u_Textures", slots, s_Renderer2DData.TextureIndex);
+
+			RenderCommand::DrawIndexed(s_Renderer2DData.VertexArray, s_Renderer2DData.QuadIndex * 6);
+		}
 
 		s_Renderer2DData.QuadIndex = 0;
 		s_Renderer2DData.TextureIndex = 1;
 
 		s_Renderer2DData.Stats.DrawCalls++;
+	}
+
+	void Renderer2D::SetMaterial(const Ref<Material>& material)
+	{
+		Flush();
+		s_Renderer2DData.CurrentMaterial = material;
+	}
+
+	Ref<Material> Renderer2D::GetMaterial()
+	{
+		return s_Renderer2DData.CurrentMaterial;
 	}
 	
 	void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color)
@@ -237,6 +266,8 @@ namespace Flare
 	{
 		if (s_Renderer2DData.QuadIndex > 0)
 			Flush();
+
+		s_Renderer2DData.CurrentMaterial = nullptr;
 	}
 
 	void Renderer2D::ResetStats()

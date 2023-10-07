@@ -18,8 +18,6 @@ namespace Flare
 		: Asset(AssetType::Scene), m_World(context)
 	{
 		m_World.MakeCurrent();
-
-		m_QuadShader = Shader::Create("assets/Shaders/QuadShader.glsl");
 		Initialize();
 	}
 
@@ -95,7 +93,7 @@ namespace Flare
 	void Scene::OnRender(const Viewport& viewport)
 	{
 		RenderCommand::SetDepthTestEnabled(false);
-		Renderer2D::Begin(m_QuadShader);
+		Renderer2D::Begin();
 
 		m_World.GetSystemsManager().ExecuteGroup(m_2DRenderingGroup);
 

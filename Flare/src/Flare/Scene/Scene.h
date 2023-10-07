@@ -3,7 +3,6 @@
 #include "FlareCore/Core.h"
 #include "Flare/AssetManager/Asset.h"
 
-#include "Flare/Renderer/Shader.h"
 #include "Flare/Renderer/RenderData.h"
 #include "Flare/Renderer/Viewport.h"
 
@@ -38,7 +37,6 @@ namespace Flare
 		static void SetActive(const Ref<Scene>& scene);
 	private:
 		World m_World;
-		Ref<Shader> m_QuadShader;
 
 		SystemGroupId m_2DRenderingGroup;
 		SystemGroupId m_ScriptingUpdateGroup;

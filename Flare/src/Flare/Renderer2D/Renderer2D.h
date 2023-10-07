@@ -2,6 +2,8 @@
 
 #include "Flare.h"
 
+#include "Flare/Renderer/Material.h"
+
 #include <vector>
 
 namespace Flare
@@ -52,8 +54,12 @@ namespace Flare
 		static void Initialize(size_t maxQuads = 10000);
 		static void Shutdown();
 
-		static void Begin(const Ref<Shader>& shader);
+		static void Begin(const Ref<Material>& material = nullptr);
 		static void Flush();
+
+		static void SetMaterial(const Ref<Material>& material);
+		static Ref<Material> GetMaterial();
+
 		static void DrawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color);
 
 		static void DrawQuad(const glm::mat4& transform,

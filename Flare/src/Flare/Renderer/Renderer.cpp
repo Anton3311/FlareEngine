@@ -44,10 +44,10 @@ namespace Flare
 	{
 	}
 
-	void Renderer::DrawMesh(const Ref<VertexArray>& mesh, const Ref<Material>& material)
+	void Renderer::DrawMesh(const Ref<VertexArray>& mesh, const Ref<Material>& material, size_t indicesCount)
 	{
 		material->SetShaderParameters();
-		RenderCommand::DrawIndexed(mesh);
+		RenderCommand::DrawIndexed(mesh, indicesCount == SIZE_MAX ? mesh->GetIndexBuffer()->GetCount() : indicesCount);
 	}
 
 	Viewport& Renderer::GetMainViewport()

@@ -17,7 +17,14 @@ namespace Flare
 		virtual void OnConfig(SystemConfig& config) override {}
 		virtual void OnUpdate(SystemExecutionContext& context) override;
 	private:
+		struct EntityQueueElement
+		{
+			Entity Id;
+			int32_t SortingLayer;
+			AssetHandle Material;
+		};
+
 		Query m_SpritesQuery;
-		std::vector<std::pair<Entity, int32_t>> m_SortedEntities;
+		std::vector<EntityQueueElement> m_SortedEntities;
 	};
 }

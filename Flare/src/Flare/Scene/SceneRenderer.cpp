@@ -15,12 +15,14 @@ namespace Flare
 		m_SortedEntities.reserve(m_SpritesQuery.GetEntitiesCount());
 
 		const SpriteLayer defaultSpriteLayer = 0;
+		const MaterialComponent defaultMaterial = NULL_ASSET_HANDLE;
 		
 		for (EntityView view : m_SpritesQuery)
 		{
 			ComponentView<TransformComponent> transforms = view.View<TransformComponent>();
 			ComponentView<SpriteComponent> sprites = view.View<SpriteComponent>();
 			auto layers = view.ViewOptional<const SpriteLayer>();
+			auto materials = view.ViewOptional<const MaterialComponent>();
 
 			for (EntityViewIterator entityIterator = view.begin(); entityIterator != view.end(); ++entityIterator)
 			{
@@ -32,21 +34,39 @@ namespace Flare
 					continue;
 
 				const SpriteLayer& layer = layers.GetOrDefault(*entityIterator, defaultSpriteLayer);
+				const MaterialComponent& material = materials.GetOrDefault(*entityIterator, defaultMaterial);
 
-				m_SortedEntities.push_back({ entity.value(), layer.Layer });
+				m_SortedEntities.push_back({ entity.value(), layer.Layer, material.Material });
 			}
 		}
 
-		std::sort(m_SortedEntities.begin(), m_SortedEntities.end(), [](const std::pair<Entity, int32_t>& a, const std::pair<Entity, int32_t>& b) -> bool
+		std::sort(m_SortedEntities.begin(), m_SortedEntities.end(), [](const EntityQueueElement& a, const EntityQueueElement& b) -> bool
 		{
-			return a.second < b.second;
+			if (a.SortingLayer == b.SortingLayer)
+				return (size_t)a.Material < (size_t)b.Material;
+			return a.SortingLayer < b.SortingLayer;
 		});
 
 		const World& world = World::GetCurrent();
-		for (const auto& [entity, layer] : m_SortedEntities)
+		AssetHandle currentMaterial = NULL_ASSET_HANDLE;
+
+		for (const auto& [entity, layer, material] : m_SortedEntities)
 		{
 			const TransformComponent& transform = world.GetEntityComponent<TransformComponent>(entity);
 			const SpriteComponent& sprite = world.GetEntityComponent<SpriteComponent>(entity);
+
+			if (material != currentMaterial)
+			{
+				Ref<Material> materialInstance = AssetManager::GetAsset<Material>(material);
+				currentMaterial = material;
+
+				if (materialInstance)
+				{
+					Renderer2D::SetMaterial(materialInstance);
+				}
+				else
+					Renderer2D::SetMaterial(nullptr);
+			}
 
 			Renderer2D::DrawQuad(transform.GetTransformationMatrix(), sprite.Color,
 				sprite.Texture == NULL_ASSET_HANDLE
