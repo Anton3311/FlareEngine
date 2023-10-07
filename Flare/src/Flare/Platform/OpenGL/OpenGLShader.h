@@ -6,6 +6,8 @@
 
 #include <string>
 #include <string_view>
+#include <unordered_map>
+#include <optional>
 
 namespace Flare
 {
@@ -17,6 +19,8 @@ namespace Flare
 	public:
 		virtual void Bind() override;
 
+		virtual const ShaderParameters& GetParameters() const override;
+		
 		virtual void SetInt(const std::string& name, int value) override;
 		virtual void SetFloat(const std::string& name, float value) override;
 		virtual void SetFloat2(const std::string& name, glm::vec2 value) override;
@@ -38,5 +42,7 @@ namespace Flare
 		void Compile(const std::filesystem::path& path, std::string_view source);
 	private:
 		uint32_t m_Id;
+		ShaderParameters m_Parameters;
+		std::vector<int32_t> m_UniformLocations;
 	};
 }

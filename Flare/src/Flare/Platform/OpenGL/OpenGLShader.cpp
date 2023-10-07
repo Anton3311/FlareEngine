@@ -54,6 +54,11 @@ namespace Flare
         glUseProgram(m_Id);
     }
 
+    const ShaderParameters& OpenGLShader::GetParameters() const
+    {
+        return m_Parameters;
+    }
+
     void OpenGLShader::SetInt(const std::string& name, int value)
     {
         int32_t location = glGetUniformLocation(m_Id, name.c_str());
@@ -216,18 +221,18 @@ namespace Flare
     static void PrintResourceInfo(spirv_cross::Compiler& compiler, const spirv_cross::Resource& resource)
     {
         const auto& bufferType = compiler.get_type(resource.base_type_id);
-        uint32_t bufferSize = compiler.get_declared_struct_size(bufferType);
+        size_t bufferSize = compiler.get_declared_struct_size(bufferType);
         uint32_t binding = compiler.get_decoration(resource.id, spv::DecorationBinding);
 
-        size_t membersCount = bufferType.member_types.size();
+        uint32_t membersCount = (uint32_t)bufferType.member_types.size();
 
         FLARE_CORE_INFO("\tName = {0} Size = {1} Binding = {2} MembersCount = {3}", resource.name, bufferSize, binding, membersCount);
 
-        for (size_t i = 0; i < membersCount; i++)
+        for (uint32_t i = 0; i < membersCount; i++)
             FLARE_CORE_INFO("\t\t{0}: {1} {2}", i, compiler.get_name(bufferType.member_types[i]), compiler.get_member_name(resource.base_type_id, i));
     }
 
-    static void Reflect(const std::string& shaderPath, const SpirvData& shader)
+    static void Reflect(const std::string& shaderPath, const SpirvData& shader, ShaderParameters& parameters)
     {
         try
         {
@@ -242,7 +247,89 @@ namespace Flare
 
             FLARE_CORE_INFO("Push constant buffers:");
             for (const auto& resource : resources.push_constant_buffers)
-                PrintResourceInfo(compiler, resource);
+            {
+                const auto& bufferType = compiler.get_type(resource.base_type_id);
+                size_t bufferSize = compiler.get_declared_struct_size(bufferType);
+                uint32_t binding = compiler.get_decoration(resource.id, spv::DecorationBinding);
+
+                uint32_t membersCount = (uint32_t)bufferType.member_types.size();
+
+                FLARE_CORE_INFO("\tName = {0} Size = {1} Binding = {2} MembersCount = {3}", resource.name, bufferSize, binding, membersCount);
+
+                for (uint32_t i = 0; i < membersCount; i++)
+                {
+                    const std::string& memberName = compiler.get_member_name(resource.base_type_id, i);
+                    spirv_cross::TypeID memberTypeId = bufferType.member_types[i];
+                    size_t offset = compiler.type_struct_member_offset(bufferType, i);
+
+                    const auto& memberType = compiler.get_type(memberTypeId);
+
+                    ShaderDataType dataType = ShaderDataType::Int;
+                    uint32_t componentsCount = memberType.vecsize;
+
+                    bool error = false;
+                    
+                    switch (memberType.basetype)
+                    {
+                    case spirv_cross::SPIRType::BaseType::Int:
+                        switch (componentsCount)
+                        {
+                        case 1:
+                            dataType = ShaderDataType::Int;
+                            break;
+                        case 2:
+                            dataType = ShaderDataType::Int2;
+                            break;
+                        case 3:
+                            dataType = ShaderDataType::Int3;
+                            break;
+                        case 4:
+                            dataType = ShaderDataType::Int4;
+                            break;
+                        default:
+                            error = true;
+                            FLARE_CORE_ERROR("Unsupported components count");
+                        }
+
+                        break;
+                    case spirv_cross::SPIRType::BaseType::Float:
+                        switch (componentsCount)
+                        {
+                        case 1:
+                            dataType = ShaderDataType::Float;
+                            break;
+                        case 2:
+                            dataType = ShaderDataType::Float2;
+                            break;
+                        case 3:
+                            dataType = ShaderDataType::Float3;
+                            break;
+                        case 4:
+                            if (memberType.columns == 4)
+                                dataType = ShaderDataType::Matrix4x4;
+                            else
+                                dataType = ShaderDataType::Float4;
+                            break;
+                        default:
+                            error = true;
+                            FLARE_CORE_ERROR("Unsupported components count");
+                        }
+
+                        break;
+                    default:
+                        error = true;
+                        FLARE_CORE_ERROR("Unsupported shader data type");
+                    }
+
+                    if (error)
+                        continue;
+
+                    if (resource.name.empty())
+                        parameters.emplace_back(memberName, dataType, offset);
+                    else
+                        parameters.emplace_back(fmt::format("{0}.{1}", resource.name, memberName), dataType, offset);
+                }
+            }
         }
         catch (spirv_cross::CompilerError& e)
         {
@@ -290,7 +377,7 @@ namespace Flare
                 WriteSpirvData(cachePath, compiledShaderData);
             }
 
-            Reflect(filePath, compiledShaderData);
+            Reflect(filePath, compiledShaderData, m_Parameters);
 
             cachePath = GetCachePath(path, "opengl", stageName);
             if (std::filesystem::exists(cachePath))
@@ -310,7 +397,7 @@ namespace Flare
             }
 
             GLuint shader = glCreateShader(program.Type);
-            glShaderBinary(1, &shader, GL_SHADER_BINARY_FORMAT_SPIR_V, compiledShaderData.data(), compiledShaderData.size() * sizeof(uint32_t));
+            glShaderBinary(1, &shader, GL_SHADER_BINARY_FORMAT_SPIR_V, compiledShaderData.data(), (int32_t)(compiledShaderData.size() * sizeof(uint32_t)));
             glSpecializeShader(shader, "main", 0, nullptr, nullptr);
             glAttachShader(m_Id, shader);
 
@@ -339,5 +426,14 @@ namespace Flare
 
         for (auto id : shaderIds)
             glDetachShader(m_Id, id);
+
+        m_UniformLocations.reserve(m_Parameters.size());
+        for (const auto& param : m_Parameters)
+        {
+            int32_t location = glGetUniformLocation(m_Id, param.Name.c_str());
+            FLARE_CORE_ASSERT(location != -1);
+
+            m_UniformLocations.push_back(location);
+        }
     }
 }

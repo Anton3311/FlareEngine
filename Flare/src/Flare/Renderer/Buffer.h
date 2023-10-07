@@ -2,6 +2,8 @@
 
 #include "FlareCore/Core.h"
 
+#include "Flare/Renderer/Shader.h"
+
 #include <stdint.h>
 #include <string>
 #include <string_view>
@@ -9,51 +11,6 @@
 
 namespace Flare
 {
-	enum class ShaderDataType
-	{
-		Int,
-		Float,
-		Float2,
-		Float3,
-		Float4,
-	};
-
-	constexpr uint32_t ShaderDataTypeSize(ShaderDataType dataType)
-	{
-		switch (dataType)
-		{
-		case ShaderDataType::Int:
-		case ShaderDataType::Float:
-			return 4;
-		case ShaderDataType::Float2:
-			return 4 * 2;
-		case ShaderDataType::Float3:
-			return 4 * 3;
-		case ShaderDataType::Float4:
-			return 4 * 4;
-		}
-
-		return 0;
-	}
-
-	constexpr uint32_t ShaderDataTypeComponentCount(ShaderDataType dataType)
-	{
-		switch (dataType)
-		{
-		case ShaderDataType::Int:
-		case ShaderDataType::Float:
-			return 1;
-		case ShaderDataType::Float2:
-			return 2;
-		case ShaderDataType::Float3:
-			return 3;
-		case ShaderDataType::Float4:
-			return 4;
-		}
-
-		return 0;
-	}
-
 	struct BufferLayoutElement
 	{
 		BufferLayoutElement() = default;
