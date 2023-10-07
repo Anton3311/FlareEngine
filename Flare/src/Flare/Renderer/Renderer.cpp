@@ -1,5 +1,7 @@
 #include "Renderer.h"
 
+#include "Flare/AssetManager/AssetManager.h"
+
 #include "Flare/Renderer/UniformBuffer.h"
 #include "Flare/Renderer2D/Renderer2D.h"
 
@@ -40,6 +42,12 @@ namespace Flare
 
 	void Renderer::EndScene()
 	{
+	}
+
+	void Renderer::DrawMesh(const Ref<VertexArray>& mesh, const Ref<Material>& material)
+	{
+		material->SetShaderParameters();
+		RenderCommand::DrawIndexed(mesh);
 	}
 
 	Viewport& Renderer::GetMainViewport()

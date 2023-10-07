@@ -121,6 +121,17 @@ namespace Flare
 		ImGui::PopID();
 		return result;
 	}
+
+	bool EditorGUI::Vector4PropertyField(const char* name, glm::vec4& value)
+	{
+		PropertyName(name);
+
+		ImGui::PushID(&value);
+		bool result = ImGui::DragFloat4("", glm::value_ptr(value), 0.1f);
+		ImGui::PopID();
+		return result;
+	}
+
 	bool EditorGUI::ColorPropertyField(const char* name, glm::vec4& color)
 	{
 		PropertyName(name);

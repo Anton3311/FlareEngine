@@ -70,4 +70,14 @@ namespace Flare
 
 		int32_t Layer;
 	};
+
+	struct MaterialComponent
+	{
+		FLARE_COMPONENT;
+
+		MaterialComponent();
+		MaterialComponent(AssetHandle handle);
+
+		AssetHandle Material;
+	};
 }

@@ -4,8 +4,12 @@
 
 #include "Flare/Project/Project.h"
 
+#include "Flare/Renderer/Material.h"
+
 #include "FlareEditor/EditorLayer.h"
 #include "FlareEditor/UI/EditorGUI.h"
+
+#include "FlareEditor/AssetManager/MaterialImporter.h"
 
 #include <fstream>
 #include <imgui.h>
@@ -169,6 +173,30 @@ namespace Flare
 						if (AssetManager::IsAssetLoaded(node.Handle))
 							m_AssetManager->ReloadAsset(node.Handle);
 					}
+				}
+
+				if (ImGui::BeginMenu("New"))
+				{
+					FLARE_CORE_ASSERT(AssetManager::IsAssetHandleValid(node.Handle));
+					const AssetMetadata* metadata = AssetManager::GetAssetMetadata(node.Handle);
+
+					if (metadata->Type == AssetType::Shader && ImGui::MenuItem("Material"))
+					{
+						m_ShowNewFileNamePopup = true;
+						m_OnNewFileNameEntered = [this, nodeIndex = m_NodeRenderIndex](std::string_view name)
+						{
+							FLARE_CORE_ASSERT(!m_AssetTree[nodeIndex].IsDirectory);
+							std::filesystem::path path = m_AssetTree[nodeIndex].Path.parent_path() / name;
+							path.replace_extension(".flrmat");
+
+							Ref<Material> material = CreateRef<Material>(m_AssetTree[nodeIndex].Handle);
+							MaterialImporter::SerializeMaterial(material, path);
+
+							m_AssetManager->ImportAsset(path, material);
+						};
+					}
+
+					ImGui::EndMenu();
 				}
 
 				if (!node.IsImported && ImGui::MenuItem("Import"))

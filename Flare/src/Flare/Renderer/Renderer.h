@@ -4,6 +4,9 @@
 #include "Flare/Renderer/RenderData.h"
 #include "Flare/Renderer/Viewport.h"
 
+#include "Flare/Renderer/VertexArray.h"
+#include "Flare/Renderer/Material.h"
+
 #include <glm/glm.hpp>
 
 namespace Flare
@@ -18,6 +21,8 @@ namespace Flare
 
 		static void BeginScene(Viewport& viewport);
 		static void EndScene();
+
+		static void DrawMesh(const Ref<VertexArray>& mesh, const Ref<Material>& material);
 
 		static Viewport& GetMainViewport();
 		static Viewport& GetCurrentViewport();

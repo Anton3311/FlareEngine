@@ -93,4 +93,12 @@ namespace Flare
 
 	SpriteLayer::SpriteLayer(int32_t layer)
 		: Layer(layer) {}
+
+	FLARE_IMPL_COMPONENT(MaterialComponent, FLARE_FIELD(MaterialComponent, Material));
+
+	MaterialComponent::MaterialComponent()
+		: Material(NULL_ASSET_HANDLE) {}
+
+	MaterialComponent::MaterialComponent(AssetHandle handle)
+		: Material(handle) {}
 }

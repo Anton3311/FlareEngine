@@ -27,6 +27,8 @@ namespace Flare
 		static bool FloatPropertyField(const char* name, float& value);
 		static bool Vector2PropertyField(const char* name, glm::vec2& value);
 		static bool Vector3PropertyField(const char* name, glm::vec3& value);
+		static bool Vector4PropertyField(const char* name, glm::vec4& value);
+
 		static bool ColorPropertyField(const char* name, glm::vec4& color);
 
 		static bool AssetField(const char* name, AssetHandle& handle);

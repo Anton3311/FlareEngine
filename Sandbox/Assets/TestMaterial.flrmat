@@ -1,0 +1,5 @@
+Shader: 8952698402060583352
+Parameters:
+  - Name: Consts.Color
+    Type: 7
+    Value: [1.20000005, 0, -0.300000012, 0]

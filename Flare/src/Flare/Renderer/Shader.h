@@ -22,6 +22,9 @@ namespace Flare
 		Float3,
 		Float4,
 
+		Sampler,
+		SamplerArray,
+
 		Matrix4x4,
 	};
 
@@ -40,6 +43,8 @@ namespace Flare
 			return 4 * 4;
 		case ShaderDataType::Matrix4x4:
 			return 4 * 4 * 4;
+		case ShaderDataType::Sampler:
+			return 4;
 		}
 
 		return 0;
@@ -73,6 +78,12 @@ namespace Flare
 			Offset(offset),
 			Size(ShaderDataTypeSize(type)) {}
 
+		ShaderParameter(std::string_view name, ShaderDataType type, size_t size, size_t offset)
+			: Name(name),
+			Type(type),
+			Size(size),
+			Offset(offset) {}
+
 		std::string Name;
 		ShaderDataType Type;
 		size_t Offset;
@@ -92,6 +103,7 @@ namespace Flare
 		virtual void Bind() = 0;
 
 		virtual const ShaderParameters& GetParameters() const = 0;
+		virtual std::optional<uint32_t> GetParameterIndex(std::string_view name) const = 0;
 
 		virtual void SetInt(const std::string& name, int value) = 0;
 		virtual void SetFloat(const std::string& name, float value) = 0;

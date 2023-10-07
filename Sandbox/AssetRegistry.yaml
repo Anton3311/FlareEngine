@@ -5,6 +5,9 @@ AssetRegistry:
   - Handle: 5193090395626261884
     Type: Texture
     Path: Texture.png
+  - Handle: 8220382724088785445
+    Type: Material
+    Path: TestMaterial.flrmat
   - Handle: 8952698402060583352
     Type: Shader
     Path: TestShader.glsl

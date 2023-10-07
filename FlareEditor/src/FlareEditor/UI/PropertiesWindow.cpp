@@ -3,10 +3,13 @@
 #include "Flare/Scene/Scene.h"
 #include "Flare/Scripting/ScriptingEngine.h"
 
+#include "Flare/Renderer/Material.h"
+
 #include "FlareEditor/UI/EditorGUI.h"
 #include "FlareEditor/UI/ECS/EntityProperties.h"
 
 #include "FlareEditor/EditorLayer.h"
+#include "FlareEditor/AssetManager/MaterialImporter.h"
 
 #include <imgui.h>
 
@@ -78,10 +81,11 @@ namespace Flare
 		case AssetType::Scene:
 			break;
 		case AssetType::Texture:
-		{
 			RenderTextureImportSettingsEditor(handle, s_SelectedTextureImportSettings);
 			break;
-		}
+		case AssetType::Material:
+			RenderMaterialEditor(handle);
+			break;
 		}
 	}
 
@@ -157,6 +161,77 @@ namespace Flare
 			}
 
 			ImGui::EndChild();
+		}
+
+		return false;
+	}
+
+	bool PropertiesWindow::RenderMaterialEditor(AssetHandle handle)
+	{
+		FLARE_CORE_ASSERT(AssetManager::IsAssetHandleValid(handle));
+		Ref<Material> material = AssetManager::GetAsset<Material>(handle);
+
+		const AssetMetadata* metadata = AssetManager::GetAssetMetadata(handle);
+
+		if (ImGui::Button("Save"))
+			MaterialImporter::SerializeMaterial(material, metadata->Path);
+
+		if (EditorGUI::BeginPropertyGrid())
+		{
+			Ref<Shader> shader = AssetManager::GetAsset<Shader>(material->GetShaderHandle());
+
+			const ShaderParameters& shaderParameters = shader->GetParameters();
+
+			for (uint32_t i = 0; i < (uint32_t)shaderParameters.size(); i++)
+			{
+				switch (shaderParameters[i].Type)
+				{
+				case ShaderDataType::Int:
+				{
+					int32_t value = material->ReadParameterValue<int32_t>(i);
+					if (EditorGUI::IntPropertyField(shaderParameters[i].Name.c_str(), value))
+						material->SetInt(i, value);
+
+					break;
+				}
+				case ShaderDataType::Float:
+				{
+					float value = material->ReadParameterValue<float>(i);
+					if (EditorGUI::FloatPropertyField(shaderParameters[i].Name.c_str(), value))
+						material->SetFloat(i, value);
+
+					break;
+				}
+				case ShaderDataType::Float2:
+				{
+					glm::vec2 value = material->ReadParameterValue<glm::vec2>(i);
+					if (EditorGUI::Vector2PropertyField(shaderParameters[i].Name.c_str(), value))
+						material->SetFloat2(i, value);
+
+					break;
+				}
+				case ShaderDataType::Float3:
+				{
+					glm::vec3 value = material->ReadParameterValue<glm::vec3>(i);
+					if (EditorGUI::Vector3PropertyField(shaderParameters[i].Name.c_str(), value))
+						material->SetFloat3(i, value);
+
+					break;
+				}
+				case ShaderDataType::Float4:
+				{
+					glm::vec4 value = material->ReadParameterValue<glm::vec4>(i);
+					if (EditorGUI::Vector4PropertyField(shaderParameters[i].Name.c_str(), value))
+						material->SetFloat4(i, value);
+
+					break;
+				}
+				default:
+					FLARE_CORE_ASSERT("Unhandled shader data type");
+				}
+			}
+
+			EditorGUI::EndPropertyGrid();
 		}
 
 		return false;

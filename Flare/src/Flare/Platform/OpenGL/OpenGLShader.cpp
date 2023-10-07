@@ -59,6 +59,14 @@ namespace Flare
         return m_Parameters;
     }
 
+    std::optional<uint32_t> OpenGLShader::GetParameterIndex(std::string_view name) const
+    {
+        auto it = m_NameToIndex.find(name);
+        if (it == m_NameToIndex.end())
+            return {};
+        return it->second;
+    }
+
     void OpenGLShader::SetInt(const std::string& name, int value)
     {
         int32_t location = glGetUniformLocation(m_Id, name.c_str());
@@ -99,6 +107,66 @@ namespace Flare
     {
         int32_t location = glGetUniformLocation(m_Id, name.c_str());
         glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
+    }
+
+    void OpenGLShader::SetInt(uint32_t index, int32_t value)
+    {
+        FLARE_CORE_ASSERT((size_t)index < m_Parameters.size());
+        glUniform1i(m_UniformLocations[index], value);
+    }
+
+    void OpenGLShader::SetInt2(uint32_t index, glm::ivec2 value)
+    {
+        FLARE_CORE_ASSERT((size_t)index < m_Parameters.size());
+        glUniform2i(m_UniformLocations[index], value.x, value.y);
+    }
+
+    void OpenGLShader::SetInt3(uint32_t index, const glm::ivec3& value)
+    {
+        FLARE_CORE_ASSERT((size_t)index < m_Parameters.size());
+        glUniform3i(m_UniformLocations[index], value.x, value.y, value.z);
+    }
+
+    void OpenGLShader::SetInt4(uint32_t index, const glm::ivec4& value)
+    {
+        FLARE_CORE_ASSERT((size_t)index < m_Parameters.size());
+        glUniform4i(m_UniformLocations[index], value.x, value.y, value.z, value.w);
+    }
+
+    void OpenGLShader::SetFloat(uint32_t index, float value)
+    {
+        FLARE_CORE_ASSERT((size_t)index < m_Parameters.size());
+        glUniform1f(m_UniformLocations[index], value);
+    }
+
+    void OpenGLShader::SetFloat2(uint32_t index, glm::vec2 value)
+    {
+        FLARE_CORE_ASSERT((size_t)index < m_Parameters.size());
+        glUniform2f(m_UniformLocations[index], value.x, value.y);
+    }
+
+    void OpenGLShader::SetFloat3(uint32_t index, const glm::vec3& value)
+    {
+        FLARE_CORE_ASSERT((size_t)index < m_Parameters.size());
+        glUniform3f(m_UniformLocations[index], value.x, value.y, value.z);
+    }
+
+    void OpenGLShader::SetFloat4(uint32_t index, const glm::vec4& value)
+    {
+        FLARE_CORE_ASSERT((size_t)index < m_Parameters.size());
+        glUniform4f(m_UniformLocations[index], value.x, value.y, value.z, value.w);
+    }
+
+    void OpenGLShader::SetIntArray(uint32_t index, const int* values, uint32_t count)
+    {
+        FLARE_CORE_ASSERT((size_t)index < m_Parameters.size());
+        glUniform1iv(m_UniformLocations[index], count, values);
+    }
+
+    void OpenGLShader::SetMatrix4(uint32_t index, const glm::mat4& matrix)
+    {
+        FLARE_CORE_ASSERT((size_t)index < m_Parameters.size());
+        glUniformMatrix4fv(m_UniformLocations[index], 1, GL_FALSE, glm::value_ptr(matrix));
     }
 
     std::vector<OpenGLShader::ShaderProgram> OpenGLShader::PreProcess(std::string_view source)
@@ -245,6 +313,31 @@ namespace Flare
             for (const auto& resource : resources.uniform_buffers)
                 PrintResourceInfo(compiler, resource);
 
+            FLARE_CORE_INFO("Samplers:");
+            for (const auto& resource : resources.sampled_images)
+            {
+                const auto& samplerType = compiler.get_type(resource.type_id);
+                uint32_t membersCount = (uint32_t)samplerType.member_types.size();
+
+                ShaderDataType type = ShaderDataType::Sampler;
+                size_t size = ShaderDataTypeSize(type);
+                if (samplerType.array.size() > 0)
+                {
+                    if (samplerType.array.size() == 1)
+                    {
+                        type = ShaderDataType::SamplerArray;
+                        size *= samplerType.array[0];
+                    }
+                    else
+                    {
+                        FLARE_CORE_ERROR("Unsupported sampler array dimensions: {0}", samplerType.array.size());
+                        continue;
+                    }
+                }
+                
+                parameters.emplace_back(resource.name, type, size, 0);
+            }
+
             FLARE_CORE_INFO("Push constant buffers:");
             for (const auto& resource : resources.push_constant_buffers)
             {
@@ -379,6 +472,9 @@ namespace Flare
 
             Reflect(filePath, compiledShaderData, m_Parameters);
 
+            for (const auto& p : m_Parameters)
+                FLARE_CORE_INFO("\t\tName = {0} Size = {1} Offset = {2}", p.Name, p.Size, p.Offset);
+
             cachePath = GetCachePath(path, "opengl", stageName);
             if (std::filesystem::exists(cachePath))
             {
@@ -426,6 +522,9 @@ namespace Flare
 
         for (auto id : shaderIds)
             glDetachShader(m_Id, id);
+
+        for (size_t i = 0; i < m_Parameters.size(); i++)
+            m_NameToIndex.emplace(m_Parameters[i].Name, (uint32_t)i);
 
         m_UniformLocations.reserve(m_Parameters.size());
         for (const auto& param : m_Parameters)

@@ -18,6 +18,8 @@ namespace Flare
 			return "Prefab";
 		case AssetType::Shader:
 			return "Shader";
+		case AssetType::Material:
+			return "Material";
 		}
 
 		FLARE_CORE_ASSERT(false, "Unhandled asset type");
@@ -34,6 +36,8 @@ namespace Flare
 			return AssetType::Prefab;
 		else if (string == "Shader")
 			return AssetType::Shader;
+		else if (string == "Material")
+			return AssetType::Material;
 
 		FLARE_CORE_ASSERT(false, "Unknown asset type string");
 		return AssetType::None;
