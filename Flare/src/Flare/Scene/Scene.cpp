@@ -12,6 +12,8 @@
 
 namespace Flare
 {
+	static Ref<Font> s_Font;
+
 	Ref<Scene> s_Active = nullptr;
 
 	Scene::Scene(ECSContext& context)
@@ -19,6 +21,8 @@ namespace Flare
 	{
 		m_World.MakeCurrent();
 		Initialize();
+
+		s_Font = CreateRef<Font>("assets/Fonts/Roboto/Roboto-Regular.ttf");
 	}
 
 	Scene::~Scene()
@@ -94,6 +98,8 @@ namespace Flare
 	{
 		RenderCommand::SetDepthTestEnabled(false);
 		Renderer2D::Begin();
+
+		Renderer2D::DrawString("Hello world", glm::mat4(1.0f), s_Font);
 
 		m_World.GetSystemsManager().ExecuteGroup(m_2DRenderingGroup);
 

@@ -4,7 +4,6 @@
 #include "Flare/Core/Application.h"
 #include "Flare/Renderer2D/Renderer2D.h"
 #include "Flare/Renderer/Renderer.h"
-#include "Flare/Renderer/Font.h"
 
 #include "Flare/AssetManager/AssetManager.h"
 
@@ -36,8 +35,6 @@ namespace Flare
 {
 	EditorLayer* EditorLayer::s_Instance = nullptr;
 
-	static Font* font;
-
 	EditorLayer::EditorLayer()
 		: Layer("EditorLayer"), 
 		m_EditedSceneHandle(NULL_ASSET_HANDLE), 
@@ -47,8 +44,6 @@ namespace Flare
 		m_Guizmo(GuizmoMode::Translate)
 	{
 		s_Instance = this;
-
-		font = new Font("assets/Fonts/Roboto/Roboto-Regular.ttf");
 	}
 
 	EditorLayer::~EditorLayer()
@@ -230,15 +225,6 @@ namespace Flare
 			bool vsync = window->GetProperties().VSyncEnabled;
 			if (ImGui::Checkbox("VSync", &vsync))
 				window->SetVSync(vsync);
-
-			ImGui::End();
-		}
-
-		{
-			ImGui::Begin("Font Atlas");
-
-			Ref<Texture> fontAtlas = font->GetAtlas();
-			ImGui::Image((ImTextureID)fontAtlas->GetRendererId(), ImVec2(fontAtlas->GetWidth(), fontAtlas->GetHeight()), ImVec2(0, 1), ImVec2(1, 0));
 
 			ImGui::End();
 		}

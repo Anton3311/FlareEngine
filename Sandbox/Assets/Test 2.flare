@@ -96,8 +96,8 @@ Entities:
         Material: 8220382724088785445
   - Components:
       - Name: struct Flare::TransformComponent
-        Position: [0, 0, 0]
-        Rotation: [0, 0, 0]
+        Position: [-1.53645539, 0, 0]
+        Rotation: [0, -0, 0]
         Scale: [1, 1, 1]
       - Name: struct Flare::SpriteComponent
         Color: [1, 1, 1, 1]

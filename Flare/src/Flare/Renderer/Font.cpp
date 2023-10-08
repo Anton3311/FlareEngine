@@ -1,23 +1,13 @@
 #include "Font.h"
 
-#define MSDF_ATLAS_PUBLIC
-
 #include "FlareCore/Assert.h"
 
 #include <msdfgen.h>
-#include <msdf-atlas-gen.h>
 #include <msdfgen-ext.h>
 
 namespace Flare
 {
-    struct MSDFData
-    {
-        std::vector<msdf_atlas::GlyphGeometry> Glyphs;
-        msdf_atlas::FontGeometry Geometry;
-    };
-
 	Font::Font(const std::filesystem::path& path)
-        : m_Data(new MSDFData())
 	{
         msdfgen::FreetypeHandle* freetype = msdfgen::initializeFreetype();
         
@@ -49,8 +39,8 @@ namespace Flare
 
             double fontScale = 1.0f;
 
-            m_Data->Geometry = msdf_atlas::FontGeometry(&m_Data->Glyphs);
-            m_Data->Geometry.loadCharset(fontHandle, fontScale, charset);
+            m_Data.Geometry = msdf_atlas::FontGeometry(&m_Data.Glyphs);
+            m_Data.Geometry.loadCharset(fontHandle, fontScale, charset);
 
             double emSize = 40.0;
 
@@ -64,13 +54,13 @@ namespace Flare
             constexpr double DEFAULT_ANGLE_THRESHOLD = 3.0;
 
             uint64_t glyphSeed = 0;
-            for (msdf_atlas::GlyphGeometry& glyph : m_Data->Glyphs)
+            for (msdf_atlas::GlyphGeometry& glyph : m_Data.Glyphs)
             {
                 glyphSeed *= LCG_MULTIPLIER;
                 glyph.edgeColoring(msdfgen::edgeColoringInkTrap, DEFAULT_ANGLE_THRESHOLD, glyphSeed);
             }
 
-            int32_t remaining = atlasPacker.pack(m_Data->Glyphs.data(), (int32_t)m_Data->Glyphs.size());
+            int32_t remaining = atlasPacker.pack(m_Data.Glyphs.data(), (int32_t)m_Data.Glyphs.size());
             FLARE_CORE_ASSERT(remaining == 0);
 
             int32_t width;
@@ -85,7 +75,7 @@ namespace Flare
             msdf_atlas::ImmediateAtlasGenerator<float, 3, msdf_atlas::msdfGenerator, msdf_atlas::BitmapAtlasStorage<uint8_t, 3>> generator(width, height);
             generator.setAttributes(attributes);
             generator.setThreadCount(8);
-            generator.generate(m_Data->Glyphs.data(), (int)m_Data->Glyphs.size());
+            generator.generate(m_Data.Glyphs.data(), (int)m_Data.Glyphs.size());
 
             msdfgen::BitmapConstRef<uint8_t, 3> bitmap = (msdfgen::BitmapConstRef<uint8_t, 3>)generator.atlasStorage();
 
@@ -94,9 +84,4 @@ namespace Flare
 
         msdfgen::deinitializeFreetype(freetype);
 	}
-
-    Font::~Font()
-    {
-        delete m_Data;
-    }
 }

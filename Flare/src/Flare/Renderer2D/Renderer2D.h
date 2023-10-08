@@ -3,6 +3,7 @@
 #include "Flare.h"
 
 #include "Flare/Renderer/Material.h"
+#include "Flare/Renderer/Font.h"
 
 #include <vector>
 
@@ -55,6 +56,7 @@ namespace Flare
 		static void Shutdown();
 
 		static void Begin(const Ref<Material>& material = nullptr);
+		static void End();
 		static void Flush();
 
 		static void SetMaterial(const Ref<Material>& material);
@@ -76,7 +78,9 @@ namespace Flare
 
 		static void DrawSprite(const Sprite& sprite, const glm::vec3& position, const glm::vec2& size, const glm::vec4& color = glm::vec4(1.0f));
 
-		static void End();
+		// Text
+
+		static void DrawString(std::string_view text, const glm::mat4& transform, const Ref<Font>& font, const glm::vec4& color = glm::vec4(1.0f));
 
 		static void ResetStats();
 		static const Renderer2DStats& GetStats();
