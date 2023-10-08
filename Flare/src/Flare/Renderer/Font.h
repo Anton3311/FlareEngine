@@ -24,8 +24,10 @@ namespace Flare
 		Font(const std::filesystem::path& path);
 
 		Ref<Texture> GetAtlas() const { return m_FontAtlas; }
-
 		inline const MSDFData& GetData() const { return m_Data; }
+
+		static Ref<Font> GetDefault();
+		static void SetDefault(const Ref<Font>& font);
 	private:
 		MSDFData m_Data;
 		Ref<Texture> m_FontAtlas;

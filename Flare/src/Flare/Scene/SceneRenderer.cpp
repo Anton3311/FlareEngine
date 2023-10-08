@@ -7,16 +7,23 @@ namespace Flare
 	SpritesRendererSystem::SpritesRendererSystem()
 	{
 		m_SpritesQuery = World::GetCurrent().CreateQuery<With<TransformComponent>, With<SpriteComponent>>();
+		m_TextQuery = World::GetCurrent().CreateQuery<With<TransformComponent>, With<TextComponent>>();
 	}
 
 	void SpritesRendererSystem::OnUpdate(SystemExecutionContext& context)
+	{
+		RenderQuads(context);
+		RenderText(context);
+	}
+
+	void SpritesRendererSystem::RenderQuads(SystemExecutionContext& context)
 	{
 		m_SortedEntities.clear();
 		m_SortedEntities.reserve(m_SpritesQuery.GetEntitiesCount());
 
 		const SpriteLayer defaultSpriteLayer = 0;
 		const MaterialComponent defaultMaterial = NULL_ASSET_HANDLE;
-		
+
 		for (EntityView view : m_SpritesQuery)
 		{
 			ComponentView<TransformComponent> transforms = view.View<TransformComponent>();
@@ -41,11 +48,11 @@ namespace Flare
 		}
 
 		std::sort(m_SortedEntities.begin(), m_SortedEntities.end(), [](const EntityQueueElement& a, const EntityQueueElement& b) -> bool
-		{
-			if (a.SortingLayer == b.SortingLayer)
-				return (size_t)a.Material < (size_t)b.Material;
-			return a.SortingLayer < b.SortingLayer;
-		});
+			{
+				if (a.SortingLayer == b.SortingLayer)
+					return (size_t)a.Material < (size_t)b.Material;
+				return a.SortingLayer < b.SortingLayer;
+			});
 
 		const World& world = World::GetCurrent();
 		AssetHandle currentMaterial = NULL_ASSET_HANDLE;
@@ -74,6 +81,23 @@ namespace Flare
 				: AssetManager::GetAsset<Texture>(sprite.Texture),
 				sprite.TextureTiling, entity.GetIndex(),
 				sprite.Flags);
+		}
+	}
+
+	void SpritesRendererSystem::RenderText(SystemExecutionContext& context)
+	{
+		for (EntityView view : m_TextQuery)
+		{
+			auto transforms = view.View<TransformComponent>();
+			auto texts = view.View<TextComponent>();
+
+			for (EntityViewIterator entity = view.begin(); entity != view.end(); ++entity)
+			{
+				glm::mat4 transform = transforms[*entity].GetTransformationMatrix();
+
+				Entity entityId = view.GetEntity(entity.GetEntityIndex()).value_or(Entity());
+				Renderer2D::DrawString(texts[*entity].Text, transform, Font::GetDefault(), texts[*entity].Color, entityId.GetIndex());
+			}
 		}
 	}
 }

@@ -31,6 +31,8 @@ namespace Flare
 
 		static bool ColorPropertyField(const char* name, glm::vec4& color);
 
+		static bool TextInputField(const char* name, std::string& text);
+
 		static bool AssetField(const char* name, AssetHandle& handle);
 		static bool EntityField(const char* name, const World& world, Entity& entity);
 		static bool AssetField(AssetHandle& handle);

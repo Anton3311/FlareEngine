@@ -4,9 +4,11 @@
 layout(location = 0) in vec3 i_Position;
 layout(location = 1) in vec4 i_Color;
 layout(location = 2) in vec2 i_UV;
+layout(location = 3) in int i_EntityIndex;
 
 layout(location = 0) out vec2 UV;
 layout(location = 1) out vec4 Color;
+layout(location = 2) out flat int EntityIndex;
 
 struct CameraData
 {
@@ -31,6 +33,7 @@ void main()
 	gl_Position = u_Camera.ViewProjection * vec4(i_Position, 1.0);
 	UV = i_UV;
 	Color = i_Color;
+	EntityIndex = i_EntityIndex;
 }
 
 #type fragment
@@ -38,10 +41,12 @@ void main()
 
 layout(location = 0) in vec2 UV;
 layout(location = 1) in vec4 Color;
+layout(location = 2) in flat int EntityIndex;
 
 layout(binding = 0) uniform sampler2D msdf;
 
 layout(location = 0) out vec4 o_Color;
+layout(location = 1) out int o_EntityIndex;
 
 const float pxRange = 2.0;
 
@@ -65,4 +70,5 @@ void main() {
 		discard;
 
     o_Color = mix(vec4(0.0), Color, opacity);
+	o_EntityIndex = EntityIndex;
 }

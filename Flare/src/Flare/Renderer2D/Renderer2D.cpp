@@ -362,7 +362,7 @@ namespace Flare
 		s_Renderer2DData.Stats.QuadsCount++;
 	}
 
-	void Renderer2D::DrawString(std::string_view text, const glm::mat4& transform, const Ref<Font>& font, const glm::vec4& color)
+	void Renderer2D::DrawString(std::string_view text, const glm::mat4& transform, const Ref<Font>& font, const glm::vec4& color, int32_t entityIndex)
 	{
 		s_Renderer2DData.CurrentFont = font;
 
@@ -374,11 +374,14 @@ namespace Flare
 
 		glm::vec2 position = glm::vec2(0.0f);
 
-		float fontScale = 1.0 / (float)(metrics.ascenderY - metrics.descenderY);
+		float fontScale = 1.0f / (float)(metrics.ascenderY - metrics.descenderY);
 		position.y = -fontScale * (float)metrics.ascenderY;
 
 		for (size_t charIndex = 0; charIndex < text.size(); charIndex++)
 		{
+			if (text[charIndex] == 0)
+				break;
+
 			auto glyph = geometry.getGlyph(text[charIndex]);
 
 			if (!glyph)
@@ -416,38 +419,38 @@ namespace Flare
 			atlasBounds.Bottom *= texelSize.y;
 
 			{
-				TextVertex& vertex = s_Renderer2DData.TextVertices[s_Renderer2DData.TextVertexIndex + 0];
+				TextVertex& vertex = s_Renderer2DData.TextVertices[s_Renderer2DData.TextVertexIndex * 4 + 0];
 				vertex.Position = transform * glm::vec4(min, 0.0f, 1.0f);
 				vertex.Color = color;
 				vertex.UV = glm::vec2((float)atlasBounds.Left, (float)atlasBounds.Bottom);
-				vertex.EntityIndex = INT32_MAX;
+				vertex.EntityIndex = entityIndex;
 			}
 
 			{
-				TextVertex& vertex = s_Renderer2DData.TextVertices[s_Renderer2DData.TextVertexIndex + 1];
+				TextVertex& vertex = s_Renderer2DData.TextVertices[s_Renderer2DData.TextVertexIndex * 4 + 1];
 				vertex.Position = transform * glm::vec4(min.x, max.y, 0.0f, 1.0f);
 				vertex.Color = color;
 				vertex.UV = glm::vec2((float)atlasBounds.Left, (float)atlasBounds.Top);
-				vertex.EntityIndex = INT32_MAX;
+				vertex.EntityIndex = entityIndex;
 			}
 
 			{
-				TextVertex& vertex = s_Renderer2DData.TextVertices[s_Renderer2DData.TextVertexIndex + 2];
+				TextVertex& vertex = s_Renderer2DData.TextVertices[s_Renderer2DData.TextVertexIndex * 4 + 2];
 				vertex.Position = transform * glm::vec4(max, 0.0f, 1.0f);
 				vertex.Color = color;
 				vertex.UV = glm::vec2((float)atlasBounds.Right, (float)atlasBounds.Top);
-				vertex.EntityIndex = INT32_MAX;
+				vertex.EntityIndex = entityIndex;
 			}
 
 			{
-				TextVertex& vertex = s_Renderer2DData.TextVertices[s_Renderer2DData.TextVertexIndex + 3];
+				TextVertex& vertex = s_Renderer2DData.TextVertices[s_Renderer2DData.TextVertexIndex * 4 + 3];
 				vertex.Position = transform * glm::vec4(max.x, min.y, 0.0f, 1.0f);
 				vertex.Color = color;
 				vertex.UV = glm::vec2((float)atlasBounds.Right, (float)atlasBounds.Bottom);
-				vertex.EntityIndex = INT32_MAX;
+				vertex.EntityIndex = entityIndex;
 			}
 
-			s_Renderer2DData.TextVertexIndex += 4;
+			s_Renderer2DData.TextVertexIndex++;
 			s_Renderer2DData.Stats.QuadsCount++;
 
 			double advance = 0.0;
@@ -457,7 +460,7 @@ namespace Flare
 				geometry.getAdvance(advance, text[charIndex], text[charIndex + 1]);
 
 			float kerningOffset = 0.0f;
-			position.x += fontScale * advance + kerningOffset;
+			position.x += fontScale * (float)advance + kerningOffset;
 		}
 	}
 }

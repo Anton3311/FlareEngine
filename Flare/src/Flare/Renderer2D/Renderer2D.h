@@ -80,7 +80,12 @@ namespace Flare
 
 		// Text
 
-		static void DrawString(std::string_view text, const glm::mat4& transform, const Ref<Font>& font, const glm::vec4& color = glm::vec4(1.0f));
+		static void DrawString(
+			std::string_view text,
+			const glm::mat4& transform,
+			const Ref<Font>& font,
+			const glm::vec4& color = glm::vec4(1.0f),
+			int32_t entityIndex = INT32_MAX);
 
 		static void ResetStats();
 		static const Renderer2DStats& GetStats();
