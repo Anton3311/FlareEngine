@@ -16,8 +16,8 @@ namespace Flare
 
 		virtual void SetLineWidth(float width) override;
 
-		virtual void DrawIndexed(const Ref<VertexArray>& vertexArray) override;
-		virtual void DrawIndexed(const Ref<VertexArray>& vertexArray, size_t indicesCount) override;
-		virtual void DrawLines(const Ref<VertexArray>& vertexArray, size_t verticesCount) override;
+		virtual void DrawIndexed(const Ref<const VertexArray>& vertexArray) override;
+		virtual void DrawIndexed(const Ref<const VertexArray>& vertexArray, size_t indicesCount) override;
+		virtual void DrawLines(const Ref<const VertexArray>& vertexArray, size_t verticesCount) override;
 	};
 }

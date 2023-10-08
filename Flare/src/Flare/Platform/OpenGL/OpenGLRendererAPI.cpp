@@ -71,19 +71,19 @@ namespace Flare
 		glLineWidth(width);
 	}
 
-	void OpenGLRendererAPI::DrawIndexed(const Ref<VertexArray>& vertexArray)
+	void OpenGLRendererAPI::DrawIndexed(const Ref<const VertexArray>& vertexArray)
 	{
 		vertexArray->Bind();
 		glDrawElements(GL_TRIANGLES, (int32_t)vertexArray->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, (const void*)0);
 	}
 
-	void OpenGLRendererAPI::DrawIndexed(const Ref<VertexArray>& vertexArray, size_t indicesCount)
+	void OpenGLRendererAPI::DrawIndexed(const Ref<const VertexArray>& vertexArray, size_t indicesCount)
 	{
 		vertexArray->Bind();
 		glDrawElements(GL_TRIANGLES, (int32_t)indicesCount, GL_UNSIGNED_INT, (const void*)0);
 	}
 
-	void OpenGLRendererAPI::DrawLines(const Ref<VertexArray>& vertexArray, size_t verticesCount)
+	void OpenGLRendererAPI::DrawLines(const Ref<const VertexArray>& vertexArray, size_t verticesCount)
 	{
 		vertexArray->Bind();
 		glDrawArrays(GL_LINES, 0, (int32_t)verticesCount);

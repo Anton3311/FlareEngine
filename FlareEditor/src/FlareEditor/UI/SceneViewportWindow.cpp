@@ -25,28 +25,6 @@ namespace Flare
 		: ViewportWindow("Scene Viewport", true), m_Camera(camera)
 	{
 		m_SelectionOutlineShader = Shader::Create("assets/Shaders/SelectionOutline.glsl");
-		
-		float vertices[] = {
-			-1, -1,
-			-1,  1,
-			 1,  1,
-			 1, -1,
-		};
-
-		uint32_t indices[] = {
-			0, 1, 2,
-			2, 0, 3,
-		};
-
-		Ref<VertexBuffer> vertexBuffer = VertexBuffer::Create(sizeof(vertices), (const void*)vertices);
-		vertexBuffer->SetLayout({
-			BufferLayoutElement("i_Position", ShaderDataType::Float2),
-		});
-
-		m_FullscreenQuad = VertexArray::Create();
-		m_FullscreenQuad->SetIndexBuffer(IndexBuffer::Create(6, (const void*)indices));
-		m_FullscreenQuad->AddVertexBuffer(vertexBuffer);
-		m_FullscreenQuad->Unbind();
 	}
 
 	void SceneViewportWindow::OnRenderViewport()
@@ -78,6 +56,11 @@ namespace Flare
 
 			scene->OnRender(m_Viewport);
 
+
+			m_ScreenBuffer->Unbind();
+			m_FrameBuffer->Blit(m_ScreenBuffer, 0, 0);
+			m_FrameBuffer->Bind();
+
 			if (debugRenderingGroup.has_value())
 			{
 				DebugRenderer::Begin();
@@ -93,15 +76,9 @@ namespace Flare
 				DebugRenderer::End();
 			}
 
-			m_ScreenBuffer->Unbind();
-			Renderer::EndScene();
-
-			m_FrameBuffer->Blit(m_ScreenBuffer, 0, 0);
-
 			Entity selectedEntity = EditorLayer::GetInstance().Selection.TryGetEntity().value_or(Entity());
 			if (selectedEntity != Entity())
 			{
-				m_FrameBuffer->Bind();
 				m_ScreenBuffer->BindAttachmentTexture(1);
 
 				ImVec4 primaryColor = ImGuiTheme::Primary;
@@ -113,9 +90,12 @@ namespace Flare
 				m_SelectionOutlineShader->SetFloat4("u_Outline.Color", selectionColor);
 				m_SelectionOutlineShader->SetFloat2("u_Outline.Thickness", glm::vec2(4.0f) / (glm::vec2)m_Viewport.GetSize() / 2.0f);
 
-				RenderCommand::DrawIndexed(m_FullscreenQuad);
-				m_FrameBuffer->Unbind();
+				RenderCommand::DrawIndexed(Renderer::GetFullscreenQuad());
 			}
+
+			m_FrameBuffer->Unbind();
+
+			Renderer::EndScene();
 		}
 	}
 

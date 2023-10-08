@@ -10,8 +10,8 @@ namespace Flare
 		OpenGLVertexArray();
 		~OpenGLVertexArray();
 	public:
-		virtual void Bind() override;
-		virtual void Unbind() override;
+		virtual void Bind() const override;
+		virtual void Unbind() const override;
 		virtual void AddVertexBuffer(const Ref<VertexBuffer>& vertexBuffer) override;
 		virtual const VertexBuffers& GetVertexBuffers() const override { return m_VertexBuffers; }
 

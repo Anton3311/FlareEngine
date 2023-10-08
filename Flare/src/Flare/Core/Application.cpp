@@ -72,9 +72,9 @@ namespace Flare
 	Application::~Application()
 	{
 		ScriptingEngine::Shutdown();
-		Renderer::Shutdown();
 		Renderer2D::Shutdown();
 		DebugRenderer::Shutdown();
+		Renderer::Shutdown();
 	}
 
 	void Application::Run()

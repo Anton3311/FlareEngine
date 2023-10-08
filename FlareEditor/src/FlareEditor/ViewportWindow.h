@@ -15,6 +15,7 @@ namespace Flare
 	{
 	public:
 		ViewportWindow(std::string_view name, bool useEditorCamera = false);
+		virtual ~ViewportWindow() = default;
 	public:
 		virtual void OnRenderImGui();
 		virtual void OnRenderViewport();

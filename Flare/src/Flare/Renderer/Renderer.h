@@ -22,6 +22,8 @@ namespace Flare
 		static void BeginScene(Viewport& viewport);
 		static void EndScene();
 
+		static Ref<const VertexArray> GetFullscreenQuad();
+
 		static void DrawMesh(const Ref<VertexArray>& mesh, const Ref<Material>& material, size_t indicesCount = SIZE_MAX);
 
 		static Viewport& GetMainViewport();

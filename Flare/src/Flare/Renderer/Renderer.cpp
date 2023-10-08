@@ -13,6 +13,7 @@ namespace Flare
 		Viewport* CurrentViewport;
 
 		Ref<UniformBuffer> CameraBuffer;
+		Ref<VertexArray> FullscreenQuad;
 	};
 
 	RendererData s_RendererData;
@@ -23,10 +24,33 @@ namespace Flare
 		s_RendererData.CurrentViewport = nullptr;
 
 		s_RendererData.CameraBuffer = UniformBuffer::Create(sizeof(CameraData), 0);
+
+		float vertices[] = {
+			-1, -1,
+			-1,  1,
+			 1,  1,
+			 1, -1,
+		};
+
+		uint32_t indices[] = {
+			0, 1, 2,
+			2, 0, 3,
+		};
+
+		Ref<VertexBuffer> vertexBuffer = VertexBuffer::Create(sizeof(vertices), (const void*)vertices);
+		vertexBuffer->SetLayout({
+			BufferLayoutElement("i_Position", ShaderDataType::Float2),
+		});
+
+		s_RendererData.FullscreenQuad = VertexArray::Create();
+		s_RendererData.FullscreenQuad->SetIndexBuffer(IndexBuffer::Create(6, (const void*)indices));
+		s_RendererData.FullscreenQuad->AddVertexBuffer(vertexBuffer);
+		s_RendererData.FullscreenQuad->Unbind();
 	}
 
 	void Renderer::Shutdown()
 	{
+		s_RendererData.FullscreenQuad = nullptr;
 	}
 
 	void Renderer::SetMainViewport(Viewport& viewport)
@@ -42,6 +66,11 @@ namespace Flare
 
 	void Renderer::EndScene()
 	{
+	}
+
+	Ref<const VertexArray> Renderer::GetFullscreenQuad()
+	{
+		return s_RendererData.FullscreenQuad;
 	}
 
 	void Renderer::DrawMesh(const Ref<VertexArray>& mesh, const Ref<Material>& material, size_t indicesCount)

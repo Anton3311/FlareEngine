@@ -29,17 +29,17 @@ namespace Flare
 		s_API->SetViewport(x, y, width, height);
 	}
 
-	void RenderCommand::DrawIndexed(const Ref<VertexArray>& mesh)
+	void RenderCommand::DrawIndexed(const Ref<const VertexArray>& mesh)
 	{
 		s_API->DrawIndexed(mesh);
 	}
 
-	void RenderCommand::DrawIndexed(const Ref<VertexArray>& mesh, size_t indicesCount)
+	void RenderCommand::DrawIndexed(const Ref<const VertexArray>& mesh, size_t indicesCount)
 	{
 		s_API->DrawIndexed(mesh, indicesCount);
 	}
 
-	void RenderCommand::DrawLines(const Ref<VertexArray>& lines, size_t verticesCount)
+	void RenderCommand::DrawLines(const Ref<const VertexArray>& lines, size_t verticesCount)
 	{
 		s_API->DrawLines(lines, verticesCount);
 	}

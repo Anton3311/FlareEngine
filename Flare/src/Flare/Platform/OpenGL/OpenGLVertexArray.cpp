@@ -18,12 +18,12 @@ namespace Flare
 		glDeleteVertexArrays(1, &m_Id);
 	}
 
-	void OpenGLVertexArray::Bind()
+	void OpenGLVertexArray::Bind() const
 	{
 		glBindVertexArray(m_Id);
 	}
 
-	void OpenGLVertexArray::Unbind()
+	void OpenGLVertexArray::Unbind() const
 	{
 		glBindVertexArray(0);
 	}
