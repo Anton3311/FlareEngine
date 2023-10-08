@@ -9,6 +9,7 @@
 #include "Flare/Renderer/Renderer.h"
 
 #include <algorithm>
+#include <cctype>
 
 namespace Flare
 {
@@ -48,7 +49,7 @@ namespace Flare
 		Ref<VertexArray> TextMesh = nullptr;
 		Ref<VertexBuffer> TextVertexBuffer = nullptr;
 
-		size_t TextVertexIndex = 0;
+		size_t TextQuadIndex = 0;
 
 		Ref<Texture> WhiteTexture = nullptr;
 		Ref<Texture> Textures[MaxTexturesCount];
@@ -189,20 +190,23 @@ namespace Flare
 			RenderCommand::DrawIndexed(s_Renderer2DData.QuadsMesh, s_Renderer2DData.QuadIndex * 6);
 		}
 
-		if (s_Renderer2DData.TextVertexIndex != 0)
+		if (!s_Renderer2DData.CurrentFont)
+			s_Renderer2DData.CurrentFont = Font::GetDefault();
+
+		if (s_Renderer2DData.TextQuadIndex != 0 && s_Renderer2DData.CurrentFont)
 		{
-			s_Renderer2DData.TextVertexBuffer->SetData(s_Renderer2DData.TextVertices.data(), s_Renderer2DData.TextVertexIndex * sizeof(TextVertex) * 4);
+			s_Renderer2DData.TextVertexBuffer->SetData(s_Renderer2DData.TextVertices.data(), s_Renderer2DData.TextQuadIndex * sizeof(TextVertex) * 4);
 
 			s_Renderer2DData.CurrentFont->GetAtlas()->Bind();
 			s_Renderer2DData.TextShader->Bind();
 			
-			RenderCommand::DrawIndexed(s_Renderer2DData.TextMesh, s_Renderer2DData.TextVertexIndex * 6);
+			RenderCommand::DrawIndexed(s_Renderer2DData.TextMesh, s_Renderer2DData.TextQuadIndex * 6);
 		}
 
 		s_Renderer2DData.QuadIndex = 0;
 		s_Renderer2DData.TextureIndex = 1;
 
-		s_Renderer2DData.TextVertexIndex = 0;
+		s_Renderer2DData.TextQuadIndex = 0;
 
 		s_Renderer2DData.Stats.DrawCalls++;
 	}
@@ -364,103 +368,132 @@ namespace Flare
 
 	void Renderer2D::DrawString(std::string_view text, const glm::mat4& transform, const Ref<Font>& font, const glm::vec4& color, int32_t entityIndex)
 	{
-		s_Renderer2DData.CurrentFont = font;
+		if (s_Renderer2DData.CurrentFont.get() != font.get())
+		{
+			Flush();
+			s_Renderer2DData.CurrentFont = font;
+		}
 
 		const auto& msdfData = font->GetData();
 		const auto& geometry = msdfData.Geometry;
 		const auto& metrics = msdfData.Geometry.getMetrics();
 
-		const Ref<Texture>& fontAtlas = font->GetAtlas();
+		float kerningOffset = 0.0f;
+		float lineHeightOffset = 0.0f;
 
+		const Ref<Texture>& fontAtlas = font->GetAtlas();
+		glm::vec2 texelSize = glm::vec2(1.0f / fontAtlas->GetWidth(), 1.0f / fontAtlas->GetHeight());
 		glm::vec2 position = glm::vec2(0.0f);
 
 		float fontScale = 1.0f / (float)(metrics.ascenderY - metrics.descenderY);
 		position.y = -fontScale * (float)metrics.ascenderY;
+
+		const msdf_atlas::GlyphGeometry* errorGlyph = geometry.getGlyph('?');
+		const msdf_atlas::GlyphGeometry* spaceGlyph = geometry.getGlyph(' ');
+		
+		struct Rect
+		{
+			double Top;
+			double Right;
+			double Bottom;
+			double Left;
+		};
 
 		for (size_t charIndex = 0; charIndex < text.size(); charIndex++)
 		{
 			if (text[charIndex] == 0)
 				break;
 
-			auto glyph = geometry.getGlyph(text[charIndex]);
+			const msdf_atlas::GlyphGeometry* glyph = geometry.getGlyph(text[charIndex]);
 
 			if (!glyph)
-				glyph = geometry.getGlyph('?');
+				glyph = errorGlyph;
 			if (!glyph)
 				return;
-			
-			struct Rect
+
+			if (text[charIndex] == '\r')
+				continue;
+			else if (text[charIndex] == '\t')
+				glyph = spaceGlyph;
+			else if (text[charIndex] == '\n')
 			{
-				double Top;
-				double Right;
-				double Bottom;
-				double Left;
-			};
-
-			Rect atlasBounds;
-			Rect planeBounds;
-			glyph->getQuadAtlasBounds(atlasBounds.Left, atlasBounds.Bottom, atlasBounds.Right, atlasBounds.Top);
-			glyph->getQuadPlaneBounds(planeBounds.Left, planeBounds.Bottom, planeBounds.Right, planeBounds.Top);
-
-			glm::vec2 min = glm::vec2(planeBounds.Left, planeBounds.Bottom);
-			glm::vec2 max = glm::vec2(planeBounds.Right, planeBounds.Top);
-
-			min *= fontScale;
-			max *= fontScale;
-
-			min += position;
-			max += position;
-
-			glm::vec2 texelSize = glm::vec2(1.0f / fontAtlas->GetWidth(), 1.0f / fontAtlas->GetHeight());
-
-			atlasBounds.Left *= texelSize.x;
-			atlasBounds.Right *= texelSize.x;
-			atlasBounds.Top *= texelSize.y;
-			atlasBounds.Bottom *= texelSize.y;
-
+				position.x = 0;
+				position.y -= fontScale * metrics.lineHeight + lineHeightOffset;
+				continue;
+			}
+			else if (!std::isspace(text[charIndex]))
 			{
-				TextVertex& vertex = s_Renderer2DData.TextVertices[s_Renderer2DData.TextVertexIndex * 4 + 0];
-				vertex.Position = transform * glm::vec4(min, 0.0f, 1.0f);
-				vertex.Color = color;
-				vertex.UV = glm::vec2((float)atlasBounds.Left, (float)atlasBounds.Bottom);
-				vertex.EntityIndex = entityIndex;
+				Rect atlasBounds;
+				Rect planeBounds;
+				glyph->getQuadAtlasBounds(atlasBounds.Left, atlasBounds.Bottom, atlasBounds.Right, atlasBounds.Top);
+				glyph->getQuadPlaneBounds(planeBounds.Left, planeBounds.Bottom, planeBounds.Right, planeBounds.Top);
+
+				glm::vec2 min = glm::vec2(planeBounds.Left, planeBounds.Bottom);
+				glm::vec2 max = glm::vec2(planeBounds.Right, planeBounds.Top);
+
+				min = min * fontScale + position;
+				max = max * fontScale + position;
+
+				atlasBounds.Left *= texelSize.x;
+				atlasBounds.Right *= texelSize.x;
+				atlasBounds.Top *= texelSize.y;
+				atlasBounds.Bottom *= texelSize.y;
+
+				{
+					TextVertex& vertex = s_Renderer2DData.TextVertices[s_Renderer2DData.TextQuadIndex * 4 + 0];
+					vertex.Position = transform * glm::vec4(min, 0.0f, 1.0f);
+					vertex.Color = color;
+					vertex.UV = glm::vec2((float)atlasBounds.Left, (float)atlasBounds.Bottom);
+					vertex.EntityIndex = entityIndex;
+				}
+
+				{
+					TextVertex& vertex = s_Renderer2DData.TextVertices[s_Renderer2DData.TextQuadIndex * 4 + 1];
+					vertex.Position = transform * glm::vec4(min.x, max.y, 0.0f, 1.0f);
+					vertex.Color = color;
+					vertex.UV = glm::vec2((float)atlasBounds.Left, (float)atlasBounds.Top);
+					vertex.EntityIndex = entityIndex;
+				}
+
+				{
+					TextVertex& vertex = s_Renderer2DData.TextVertices[s_Renderer2DData.TextQuadIndex * 4 + 2];
+					vertex.Position = transform * glm::vec4(max, 0.0f, 1.0f);
+					vertex.Color = color;
+					vertex.UV = glm::vec2((float)atlasBounds.Right, (float)atlasBounds.Top);
+					vertex.EntityIndex = entityIndex;
+				}
+
+				{
+					TextVertex& vertex = s_Renderer2DData.TextVertices[s_Renderer2DData.TextQuadIndex * 4 + 3];
+					vertex.Position = transform * glm::vec4(max.x, min.y, 0.0f, 1.0f);
+					vertex.Color = color;
+					vertex.UV = glm::vec2((float)atlasBounds.Right, (float)atlasBounds.Bottom);
+					vertex.EntityIndex = entityIndex;
+				}
+
+				s_Renderer2DData.TextQuadIndex++;
+				s_Renderer2DData.Stats.QuadsCount++;
+
+				if (s_Renderer2DData.TextQuadIndex >= s_Renderer2DData.MaxQuadCount)
+					Flush();
 			}
 
+			if (charIndex + 1 < text.size())
 			{
-				TextVertex& vertex = s_Renderer2DData.TextVertices[s_Renderer2DData.TextVertexIndex * 4 + 1];
-				vertex.Position = transform * glm::vec4(min.x, max.y, 0.0f, 1.0f);
-				vertex.Color = color;
-				vertex.UV = glm::vec2((float)atlasBounds.Left, (float)atlasBounds.Top);
-				vertex.EntityIndex = entityIndex;
+				double advance = 0.0;
+
+				// TODO: properly handle tabs
+				char currentChar = text[charIndex];
+				if (currentChar == '\t')
+					currentChar = ' ';
+
+				geometry.getAdvance(advance, currentChar, text[charIndex + 1]);
+
+				if (text[charIndex] == '\t')
+					advance *= 4.0;
+
+				position.x += fontScale * (float)advance + kerningOffset;
 			}
-
-			{
-				TextVertex& vertex = s_Renderer2DData.TextVertices[s_Renderer2DData.TextVertexIndex * 4 + 2];
-				vertex.Position = transform * glm::vec4(max, 0.0f, 1.0f);
-				vertex.Color = color;
-				vertex.UV = glm::vec2((float)atlasBounds.Right, (float)atlasBounds.Top);
-				vertex.EntityIndex = entityIndex;
-			}
-
-			{
-				TextVertex& vertex = s_Renderer2DData.TextVertices[s_Renderer2DData.TextVertexIndex * 4 + 3];
-				vertex.Position = transform * glm::vec4(max.x, min.y, 0.0f, 1.0f);
-				vertex.Color = color;
-				vertex.UV = glm::vec2((float)atlasBounds.Right, (float)atlasBounds.Bottom);
-				vertex.EntityIndex = entityIndex;
-			}
-
-			s_Renderer2DData.TextVertexIndex++;
-			s_Renderer2DData.Stats.QuadsCount++;
-
-			double advance = 0.0;
-			if (charIndex + 1 == text.size())
-				geometry.getAdvance(advance, text[charIndex], 0);
-			else
-				geometry.getAdvance(advance, text[charIndex], text[charIndex + 1]);
-
-			float kerningOffset = 0.0f;
-			position.x += fontScale * (float)advance + kerningOffset;
 		}
 	}
 }
