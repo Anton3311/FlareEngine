@@ -4,6 +4,7 @@
 #include "Flare/Core/Application.h"
 #include "Flare/Renderer2D/Renderer2D.h"
 #include "Flare/Renderer/Renderer.h"
+#include "Flare/Renderer/Font.h"
 
 #include "Flare/AssetManager/AssetManager.h"
 
@@ -44,6 +45,8 @@ namespace Flare
 		m_Guizmo(GuizmoMode::Translate)
 	{
 		s_Instance = this;
+
+		Font fnt = "assets/Fonts/Roboto/Roboto-Regular.ttf";
 	}
 
 	EditorLayer::~EditorLayer()

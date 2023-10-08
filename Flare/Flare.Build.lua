@@ -26,6 +26,9 @@ project "Flare"
 		"%{wks.location}/FlarePlatform/src/",
 		"%{wks.location}/FlareECS/src/",
 
+		INCLUDE_DIRS.msdf_gen,
+		INCLUDE_DIRS.msdf_atlas_gen,
+
 		INCLUDE_DIRS.GLAD,
 		INCLUDE_DIRS.GLFW,
 		INCLUDE_DIRS.glm,
@@ -47,6 +50,9 @@ project "Flare"
 		"FlareCore",
 		"FlarePlatform",
 		"yaml-cpp",
+
+		"msdfgen",
+		"msdf-atlas-gen",
 	}
 
 	defines
