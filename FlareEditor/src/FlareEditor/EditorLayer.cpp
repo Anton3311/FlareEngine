@@ -36,6 +36,8 @@ namespace Flare
 {
 	EditorLayer* EditorLayer::s_Instance = nullptr;
 
+	static Font* font;
+
 	EditorLayer::EditorLayer()
 		: Layer("EditorLayer"), 
 		m_EditedSceneHandle(NULL_ASSET_HANDLE), 
@@ -46,7 +48,7 @@ namespace Flare
 	{
 		s_Instance = this;
 
-		Font fnt = "assets/Fonts/Roboto/Roboto-Regular.ttf";
+		font = new Font("assets/Fonts/Roboto/Roboto-Regular.ttf");
 	}
 
 	EditorLayer::~EditorLayer()
@@ -228,6 +230,15 @@ namespace Flare
 			bool vsync = window->GetProperties().VSyncEnabled;
 			if (ImGui::Checkbox("VSync", &vsync))
 				window->SetVSync(vsync);
+
+			ImGui::End();
+		}
+
+		{
+			ImGui::Begin("Font Atlas");
+
+			Ref<Texture> fontAtlas = font->GetAtlas();
+			ImGui::Image((ImTextureID)fontAtlas->GetRendererId(), ImVec2(fontAtlas->GetWidth(), fontAtlas->GetHeight()), ImVec2(0, 1), ImVec2(1, 0));
 
 			ImGui::End();
 		}
