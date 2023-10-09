@@ -2,6 +2,8 @@
 
 #include "FlareCore/Core.h"
 
+#include "Flare/AssetManager/Asset.h"
+
 #include "Flare/Renderer/Texture.h"
 
 #define MSDF_ATLAS_PUBLIC
@@ -18,7 +20,7 @@ namespace Flare
 		msdf_atlas::FontGeometry Geometry;
 	};
 
-	class FLARE_API Font
+	class FLARE_API Font : public Asset
 	{
 	public:
 		Font(const std::filesystem::path& path);

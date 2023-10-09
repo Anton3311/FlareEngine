@@ -40,6 +40,7 @@ namespace Flare
 		Prefab,
 		Shader,
 		Material,
+		Font,
 	};
 
 	FLARE_API std::string_view AssetTypeToString(AssetType type);

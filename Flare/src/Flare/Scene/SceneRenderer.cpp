@@ -96,7 +96,12 @@ namespace Flare
 				glm::mat4 transform = transforms[*entity].GetTransformationMatrix();
 
 				Entity entityId = view.GetEntity(entity.GetEntityIndex()).value_or(Entity());
-				Renderer2D::DrawString(texts[*entity].Text, transform, Font::GetDefault(), texts[*entity].Color, entityId.GetIndex());
+
+				Ref<Font> font = AssetManager::GetAsset<Font>(texts[*entity].Font);
+				if (font == nullptr)
+					font = Font::GetDefault();
+
+				Renderer2D::DrawString(texts[*entity].Text, transform, font, texts[*entity].Color, entityId.GetIndex());
 			}
 		}
 	}

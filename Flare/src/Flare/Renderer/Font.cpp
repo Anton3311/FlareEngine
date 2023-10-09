@@ -10,6 +10,7 @@ namespace Flare
     static Ref<Font> s_DefualtFont = nullptr;
 
 	Font::Font(const std::filesystem::path& path)
+        : Asset(AssetType::Font)
 	{
         msdfgen::FreetypeHandle* freetype = msdfgen::initializeFreetype();
         

@@ -103,11 +103,13 @@ namespace Flare
 		: Material(handle) {}
 
 
-	FLARE_IMPL_COMPONENT(TextComponent, FLARE_FIELD(TextComponent, Text));
+	FLARE_IMPL_COMPONENT(TextComponent,
+		FLARE_FIELD(TextComponent, Text),
+		FLARE_FIELD(TextComponent, Font),
+	);
 	TextComponent::TextComponent()
-		: Color(1.0f) {}
+		: Color(1.0f), Font(NULL_ASSET_HANDLE) {}
 
-	TextComponent::TextComponent(std::string_view text, const glm::vec4& color)
-		: Text(text), Color(color) {}
-
+	TextComponent::TextComponent(std::string_view text, const glm::vec4& color, AssetHandle font)
+		: Text(text), Color(color), Font(font) {}
 }

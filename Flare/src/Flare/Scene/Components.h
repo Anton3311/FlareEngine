@@ -86,9 +86,10 @@ namespace Flare
 		FLARE_COMPONENT;
 
 		TextComponent();
-		TextComponent(std::string_view text, const glm::vec4& color = glm::vec4(1.0f));
+		TextComponent(std::string_view text, const glm::vec4& color = glm::vec4(1.0f), AssetHandle font = NULL_ASSET_HANDLE);
 
 		std::string Text;
 		glm::vec4 Color;
+		AssetHandle Font;
 	};
 }
