@@ -61,7 +61,7 @@ namespace Flare
 		SpriteRenderFlags Flags;
 	};
 
-	struct SpriteLayer
+	struct FLARE_API SpriteLayer
 	{
 		FLARE_COMPONENT;
 
@@ -71,7 +71,7 @@ namespace Flare
 		int32_t Layer;
 	};
 
-	struct MaterialComponent
+	struct FLARE_API MaterialComponent
 	{
 		FLARE_COMPONENT;
 
@@ -79,5 +79,17 @@ namespace Flare
 		MaterialComponent(AssetHandle handle);
 
 		AssetHandle Material;
+	};
+
+	struct FLARE_API TextComponent
+	{
+		FLARE_COMPONENT;
+
+		TextComponent();
+		TextComponent(std::string_view text, const glm::vec4& color = glm::vec4(1.0f), AssetHandle font = NULL_ASSET_HANDLE);
+
+		std::string Text;
+		glm::vec4 Color;
+		AssetHandle Font;
 	};
 }

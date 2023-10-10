@@ -18,6 +18,7 @@ namespace Flare
 		virtual void SetData(const void* data, size_t size) override;
 
 		virtual const TextureSpecifications& GetSpecifications() const override { return m_Specifications; }
+		virtual void* GetRendererId() const override;
 
 		virtual uint32_t GetWidth() const override { return m_Specifications.Width; }
 		virtual uint32_t GetHeight() const override { return m_Specifications.Height; }

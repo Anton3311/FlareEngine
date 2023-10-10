@@ -5,6 +5,7 @@
 
 #include "Flare/Renderer/RenderData.h"
 #include "Flare/Renderer/Viewport.h"
+#include "Flare/Renderer/Font.h"
 
 #include "Flare/Scene/SceneRenderer.h"
 

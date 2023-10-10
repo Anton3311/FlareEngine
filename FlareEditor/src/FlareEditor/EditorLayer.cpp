@@ -4,6 +4,7 @@
 #include "Flare/Core/Application.h"
 #include "Flare/Renderer2D/Renderer2D.h"
 #include "Flare/Renderer/Renderer.h"
+#include "Flare/Renderer/Font.h"
 
 #include "Flare/AssetManager/AssetManager.h"
 
@@ -55,6 +56,9 @@ namespace Flare
 	{
 		m_PropertiesWindow.OnAttach();
 		ImGuiLayer::OnAttach();
+
+		Ref<Font> defaultFont = CreateRef<Font>("assets/Fonts/Roboto/Roboto-Regular.ttf");
+		Font::SetDefault(defaultFont);
 
 		Project::OnProjectOpen.Bind(FLARE_BIND_EVENT_CALLBACK(OnOpenProject));
 		Project::OnUnloadActiveProject.Bind([this]()

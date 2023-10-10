@@ -16,3 +16,9 @@
 [submodule "Flare/vendor/ImGuizmo"]
 	path = Flare/vendor/ImGuizmo
 	url = git@github.com:CedricGuillemet/ImGuizmo.git
+[submodule ".\\Flare\\vendor\\msdf/msdf-atlas-gen"]
+	path = .\\Flare\\vendor\\msdf/msdf-atlas-gen
+	url = git@github.com:Chlumsky/msdf-atlas-gen.git
+[submodule ".\\Flare\\vendor\\msdf\\freetype\\"]
+	path = .\\Flare\\vendor\\msdf\\freetype\\
+	url = git@github.com:freetype/freetype.git

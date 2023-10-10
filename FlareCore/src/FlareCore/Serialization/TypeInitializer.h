@@ -44,6 +44,7 @@ namespace Flare
         UInt4,
 
         Array,
+        String,
 
         Custom,
     };
@@ -129,6 +130,8 @@ namespace Flare
     GET_FIELD_DATA(glm::uvec2, Flare::SerializableFieldType::UInt2);
     GET_FIELD_DATA(glm::uvec3, Flare::SerializableFieldType::UInt3);
     GET_FIELD_DATA(glm::uvec4, Flare::SerializableFieldType::UInt4);
+
+    GET_FIELD_DATA(std::string, Flare::SerializableFieldType::String);
 
 #undef GET_FIELD_DATA
 

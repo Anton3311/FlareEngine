@@ -57,6 +57,8 @@ M.setup_project = function(name)
 	includedirs({
 		root .. "Flare/vendor/spdlog/include",
 		root .. "Flare/vendor/glm",
+		root .. "Flare/vendor/msdf/msdf-atlas-gen/msdf-atlas-gen",
+		root .. "Flare/vendor/msdf/msdf-atlas-gen/msdfgen",
 	})
 
 	filter "configurations:not Dist"

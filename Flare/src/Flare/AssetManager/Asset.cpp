@@ -20,6 +20,8 @@ namespace Flare
 			return "Shader";
 		case AssetType::Material:
 			return "Material";
+		case AssetType::Font:
+			return "Font";
 		}
 
 		FLARE_CORE_ASSERT(false, "Unhandled asset type");
@@ -38,6 +40,8 @@ namespace Flare
 			return AssetType::Shader;
 		else if (string == "Material")
 			return AssetType::Material;
+		else if (string == "Font")
+			return AssetType::Font;
 
 		FLARE_CORE_ASSERT(false, "Unknown asset type string");
 		return AssetType::None;

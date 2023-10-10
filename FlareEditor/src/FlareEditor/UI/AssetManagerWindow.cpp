@@ -177,23 +177,26 @@ namespace Flare
 
 				if (ImGui::BeginMenu("New"))
 				{
-					FLARE_CORE_ASSERT(AssetManager::IsAssetHandleValid(node.Handle));
-					const AssetMetadata* metadata = AssetManager::GetAssetMetadata(node.Handle);
-
-					if (metadata->Type == AssetType::Shader && ImGui::MenuItem("Material"))
+					if (node.IsImported)
 					{
-						m_ShowNewFileNamePopup = true;
-						m_OnNewFileNameEntered = [this, nodeIndex = m_NodeRenderIndex](std::string_view name)
+						FLARE_CORE_ASSERT(AssetManager::IsAssetHandleValid(node.Handle));
+						const AssetMetadata* metadata = AssetManager::GetAssetMetadata(node.Handle);
+
+						if (metadata->Type == AssetType::Shader && ImGui::MenuItem("Material"))
 						{
-							FLARE_CORE_ASSERT(!m_AssetTree[nodeIndex].IsDirectory);
-							std::filesystem::path path = m_AssetTree[nodeIndex].Path.parent_path() / name;
-							path.replace_extension(".flrmat");
+							m_ShowNewFileNamePopup = true;
+							m_OnNewFileNameEntered = [this, nodeIndex = m_NodeRenderIndex](std::string_view name)
+							{
+								FLARE_CORE_ASSERT(!m_AssetTree[nodeIndex].IsDirectory);
+								std::filesystem::path path = m_AssetTree[nodeIndex].Path.parent_path() / name;
+								path.replace_extension(".flrmat");
 
-							Ref<Material> material = CreateRef<Material>(m_AssetTree[nodeIndex].Handle);
-							MaterialImporter::SerializeMaterial(material, path);
+								Ref<Material> material = CreateRef<Material>(m_AssetTree[nodeIndex].Handle);
+								MaterialImporter::SerializeMaterial(material, path);
 
-							m_AssetManager->ImportAsset(path, material);
-						};
+								m_AssetManager->ImportAsset(path, material);
+							};
+						}
 					}
 
 					ImGui::EndMenu();

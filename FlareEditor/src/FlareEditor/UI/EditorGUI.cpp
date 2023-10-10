@@ -148,6 +148,32 @@ namespace Flare
 		return AssetField(handle);
 	}
 
+	static int32_t InputTextCallback(ImGuiInputTextCallbackData* data)
+	{
+		if (data->EventFlag == ImGuiInputTextFlags_CallbackResize)
+		{
+			std::string* str = (std::string*)data->UserData;
+			FLARE_CORE_ASSERT(data->Buf == str->c_str());
+
+			str->resize(data->BufTextLen);
+			data->Buf = (char*)str->c_str();
+
+			return 1;
+		}
+
+		return 0;
+	}
+
+	bool EditorGUI::TextInputField(const char* name, std::string& text)
+	{
+		PropertyName(name);
+
+		ImGui::PushID(&text);
+ 		bool result = ImGui::InputTextMultiline("", text.data(), text.size(), ImVec2(0.0f, 0.0f), ImGuiInputTextFlags_CallbackResize, InputTextCallback, (void*)&text);
+		ImGui::PopID();
+		return result;
+	}
+
 	bool EditorGUI::EntityField(const char* name, const World& world, Entity& entity)
 	{
 		PropertyName(name);
@@ -299,6 +325,12 @@ namespace Flare
 		case SerializableFieldType::Float3:
 			result |= ImGui::DragFloat3("", (float*)fieldData);
 			break;
+		case SerializableFieldType::String:
+		{
+			std::string* string = (std::string*)fieldData;
+			result |= ImGui::InputTextMultiline("", string->data(), string->size() + 1, ImVec2(0.0f, 0.0f), ImGuiInputTextFlags_CallbackResize, InputTextCallback, (void*)string);
+			break;
+		}
 		}
 
 		ImGui::PopID();

@@ -48,6 +48,9 @@ namespace Flare
 		case SerializableFieldType::Float4:
 			emitter << YAML::Value << *(glm::vec4*)(data);
 			break;
+		case SerializableFieldType::String:
+			emitter << YAML::Value << *(std::string*)data;
+			break;
 		case SerializableFieldType::Custom:
 		{
 			FLARE_CORE_ASSERT(typeInfo.CustomType);
@@ -175,6 +178,16 @@ namespace Flare
 		{
 			glm::vec4 vector = fieldNode.as<glm::vec4>();
 			std::memcpy(data, &vector, sizeof(vector));
+			break;
+		}
+		case SerializableFieldType::String:
+		{
+			std::string string = fieldNode.as<std::string>();
+
+			std::string* destString = (std::string*)data;
+			new (destString) std::string();
+
+			*destString = std::move(string);
 			break;
 		}
 		case SerializableFieldType::Custom:

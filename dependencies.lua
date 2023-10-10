@@ -19,6 +19,9 @@ INCLUDE_DIRS = {
 	imguizmo = "%{wks.location}/Flare/vendor/ImGuizmo/",
 	yaml_cpp = "%{wks.location}/Flare/vendor/yaml-cpp/include/",
 	vulkan_sdk = vulkan_include,
+
+	msdf_gen = "%{wks.location}/Flare/vendor/msdf/msdf-atlas-gen/msdfgen",
+	msdf_atlas_gen = "%{wks.location}/Flare/vendor/msdf/msdf-atlas-gen/msdf-atlas-gen",
 }
 
 LIBRARIES = {

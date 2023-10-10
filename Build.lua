@@ -28,6 +28,7 @@ group "Dependencies"
     include "Flare/vendor/GLAD"
     include "Flare/vendor/ImGUI"
     include "Flare/vendor/yaml-cpp"
+	include "Flare/vendor/msdf/MSDF.Build.lua"
 group ""
 
 group "Core"

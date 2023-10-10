@@ -28,6 +28,9 @@ project "FlareEditor"
 		"%{wks.location}/FlarePlatform/src",
 		"%{wks.location}/FlareECS/src",
 
+		INCLUDE_DIRS.msdf_gen,
+		INCLUDE_DIRS.msdf_atlas_gen,
+
 		INCLUDE_DIRS.glm,
 		INCLUDE_DIRS.GLFW,
 		INCLUDE_DIRS.spdlog,
