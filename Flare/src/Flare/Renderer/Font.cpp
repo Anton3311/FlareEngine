@@ -50,7 +50,7 @@ namespace Flare
             msdf_atlas::TightAtlasPacker atlasPacker;
             atlasPacker.setPixelRange(2.0);
             atlasPacker.setMiterLimit(1.0);
-            atlasPacker.setPadding(0.0);
+            atlasPacker.setPadding(0);
             atlasPacker.setScale(emSize);
 
             constexpr uint64_t LCG_MULTIPLIER = 6364136223846793005ull;
