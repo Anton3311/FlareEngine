@@ -213,7 +213,7 @@ namespace Flare
     static std::filesystem::path GetCachePath(const std::filesystem::path& initialPath, std::string_view apiName, std::string_view stageName)
     {
         std::filesystem::path parent = std::filesystem::relative(initialPath.parent_path(), std::filesystem::current_path());
-        std::filesystem::path cachePath = SHADER_CACHE_LOCATION / parent / fmt::format("{0}.{1}.chache.{2}", initialPath.filename().string(), apiName, stageName);
+        std::filesystem::path cachePath = SHADER_CACHE_LOCATION / parent / fmt::format("{0}.{1}.cache.{2}", initialPath.filename().string(), apiName, stageName);
 
         return cachePath;
     }
