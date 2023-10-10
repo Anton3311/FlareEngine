@@ -1,5 +1,4 @@
 project "freetype"
-	location "freetype"
 	kind "StaticLib"
 	language "C"
     staticruntime "off"
@@ -7,8 +6,7 @@ project "freetype"
 	targetdir ("bin/" .. OUTPUT_DIRECTORY .. "/%{prj.name}")
 	objdir ("bin-int/" .. OUTPUT_DIRECTORY .. "/%{prj.name}")
 
-	files
-	{
+	local source_files = {
 		"freetype/include/ft2build.h",
 		"freetype/include/freetype/*.h",
 		"freetype/include/freetype/config/*.h",
@@ -59,6 +57,12 @@ project "freetype"
 		"freetype/src/svg/**.h",
 		"freetype/src/svg/**.c",
 	}
+
+	for i = 1, 3 do
+		source_files[i] = "freetype/" .. source_files[i]
+	end
+
+	files(source_files)
 
 	includedirs
 	{
