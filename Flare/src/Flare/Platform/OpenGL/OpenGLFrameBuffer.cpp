@@ -137,6 +137,8 @@ namespace Flare
 
     void OpenGLFrameBuffer::Create()
     {
+        FLARE_CORE_ASSERT(m_Specifications.Width != 0 && m_Specifications.Height != 0);
+
         glCreateFramebuffers(1, &m_Id);
         glBindFramebuffer(GL_FRAMEBUFFER, m_Id);
         glCreateTextures(GL_TEXTURE_2D, (int32_t)m_ColorAttachments.size(), m_ColorAttachments.data());

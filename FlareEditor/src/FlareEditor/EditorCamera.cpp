@@ -68,11 +68,9 @@ namespace Flare
 		});
 	}
 
-	void EditorCamera::OnViewportChanged(const ViewportRect& viewport)
+	void EditorCamera::OnViewportChanged(glm::ivec2 viewportSize)
 	{
-		m_Viewport = viewport;
-
-		float aspectRatio = (float)viewport.Size.x / (float)viewport.Size.y;
+		float aspectRatio = (float)viewportSize.x / (float)viewportSize.y;
 		m_ProjectionMatrix = glm::perspective<float>(glm::radians(m_Settings.FOV), aspectRatio, m_Settings.Near, m_Settings.Far);
 	}
 

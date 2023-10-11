@@ -22,23 +22,25 @@ namespace Flare
 
 	void ViewportWindow::OnRenderViewport()
 	{
-		if (Scene::GetActive() == nullptr)
+		Ref<Scene> scene = Scene::GetActive();
+		if (scene == nullptr)
 			return;
 
 		PrepareViewport();
 
 		if (m_Viewport.GetSize() != glm::ivec2(0))
 		{
-			Scene::GetActive()->OnBeforeRender(m_Viewport);
+			scene->OnBeforeRender(m_Viewport);
 
-			m_FrameBuffer->Bind();
+			m_Viewport.RenderTarget->Bind();
+
 			OnClear();
 
 			Renderer::BeginScene(m_Viewport);
-			Scene::GetActive()->OnRender(m_Viewport);
+			scene->OnRender(m_Viewport);
 			Renderer::EndScene();
 
-			m_FrameBuffer->Unbind();
+			m_Viewport.RenderTarget->Unbind();
 		}
 	}
 
@@ -46,14 +48,15 @@ namespace Flare
 	{
 		if (m_Viewport.GetSize() != glm::ivec2(0))
 		{
-			const FrameBufferSpecifications frameBufferSpecs = m_FrameBuffer->GetSpecifications();
+			const FrameBufferSpecifications frameBufferSpecs = m_Viewport.RenderTarget->GetSpecifications();
 
 			if (frameBufferSpecs.Width != m_Viewport.GetSize().x || frameBufferSpecs.Height != m_Viewport.GetSize().y)
 			{
-				m_FrameBuffer->Resize(m_Viewport.GetSize().x, m_Viewport.GetSize().y);
+				m_Viewport.RenderTarget->Resize(m_Viewport.GetSize().x, m_Viewport.GetSize().y);
 				OnViewportChanged();
 			}
 
+			m_Viewport.RTPool.SetRenderTargetsSize(m_Viewport.GetSize());
 			RenderCommand::SetViewport(0, 0, m_Viewport.GetSize().x, m_Viewport.GetSize().y);
 		}
 	}
@@ -82,38 +85,39 @@ namespace Flare
 
 		m_RelativeMousePosition.y = newViewportSize.y - m_RelativeMousePosition.y;
 
-		if (m_FrameBuffer != nullptr)
+		if (m_Viewport.RenderTarget != nullptr)
 		{
-			const FrameBufferSpecifications frameBufferSpecs = m_FrameBuffer->GetSpecifications();
+			const FrameBufferSpecifications frameBufferSpecs = m_Viewport.RenderTarget->GetSpecifications();
 			ImVec2 imageSize = ImVec2((float) frameBufferSpecs.Width, (float) frameBufferSpecs.Height);
-			ImGui::Image((ImTextureID)m_FrameBuffer->GetColorAttachmentRendererId(0), windowSize, ImVec2(0, 1), ImVec2(1, 0));
+			ImGui::Image((ImTextureID)m_Viewport.RenderTarget->GetColorAttachmentRendererId(0), windowSize, ImVec2(0, 1), ImVec2(1, 0));
 		}
 
 		bool changed = false;
-		ViewportRect viewportRect = m_Viewport.GetRect();
+		glm::ivec2 viewportSize = m_Viewport.GetSize();
+		glm::ivec2 viewportPosition = m_Viewport.GetPosition();
 
 		if (m_Viewport.GetSize() == glm::ivec2(0))
 		{
-			viewportRect.Size = newViewportSize;
+			viewportSize = newViewportSize;
 			changed = true;
 		}
 		else if (newViewportSize != m_Viewport.GetSize())
 		{
-			viewportRect.Size = newViewportSize;
+			viewportSize = newViewportSize;
 			changed = true;
 		}
 
 		glm::ivec2 position = glm::ivec2(windowPosition.x, windowPosition.y) + m_ViewportOffset - (glm::ivec2)window->GetProperties().Position;
-		if (position != viewportRect.Position)
+		if (position != viewportPosition)
 		{
-			viewportRect.Position = position;
+			viewportPosition = position;
 			changed = true;
 		}
 
 		if (changed)
 		{
 			bool shouldCreateFrameBuffers = m_Viewport.GetSize() == glm::ivec2(0);
-			m_Viewport.Resize(viewportRect);
+			m_Viewport.Resize(viewportPosition, viewportSize);
 
 			if (shouldCreateFrameBuffers)
 				CreateFrameBuffer();
@@ -135,7 +139,7 @@ namespace Flare
 			{ FrameBufferTextureFormat::Depth, TextureWrap::Clamp, TextureFiltering::Closest },
 		});
 
-		m_FrameBuffer = FrameBuffer::Create(specifications);
+		m_Viewport.RenderTarget = FrameBuffer::Create(specifications);
 	}
 
 	void ViewportWindow::OnClear()

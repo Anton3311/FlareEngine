@@ -56,10 +56,9 @@ namespace Flare
 
 			scene->OnRender(m_Viewport);
 
-
 			m_ScreenBuffer->Unbind();
-			m_FrameBuffer->Blit(m_ScreenBuffer, 0, 0);
-			m_FrameBuffer->Bind();
+			m_Viewport.RenderTarget->Blit(m_ScreenBuffer, 0, 0);
+			m_Viewport.RenderTarget->Bind();
 
 			if (debugRenderingGroup.has_value())
 			{
@@ -93,7 +92,7 @@ namespace Flare
 				RenderCommand::DrawIndexed(Renderer::GetFullscreenQuad());
 			}
 
-			m_FrameBuffer->Unbind();
+			m_Viewport.RenderTarget->Unbind();
 
 			Renderer::EndScene();
 		}
@@ -102,7 +101,7 @@ namespace Flare
 	void SceneViewportWindow::OnViewportChanged()
 	{
 		m_ScreenBuffer->Resize(m_Viewport.GetSize().x, m_Viewport.GetSize().y);
-		m_Camera.OnViewportChanged(m_Viewport.GetRect());
+		m_Camera.OnViewportChanged(m_Viewport.GetSize());
 	}
 
 	void SceneViewportWindow::OnRenderImGui()
@@ -165,10 +164,10 @@ namespace Flare
 			ImGuizmo::SetDrawlist();
 
 			ImVec2 windowPosition = ImGui::GetWindowPos();
-			ImGuizmo::SetRect(windowPosition.x + m_ViewportOffset.x, 
-				windowPosition.y + m_ViewportOffset.y, 
-				(float)m_Viewport.GetSize().x, 
-				(float) m_Viewport.GetSize().y);
+			ImGuizmo::SetRect(windowPosition.x + m_ViewportOffset.x,
+				windowPosition.y + m_ViewportOffset.y,
+				(float)m_Viewport.GetSize().x,
+				(float)m_Viewport.GetSize().y);
 
 			std::optional<TransformComponent*> transform = world.TryGetEntityComponent<TransformComponent>(selectedEntity);
 			if (transform.has_value())
@@ -220,7 +219,7 @@ namespace Flare
 
 		if (!ImGuizmo::IsUsingAny())
 		{
-			if (io.MouseClicked[ImGuiMouseButton_Left] && m_FrameBuffer != nullptr && m_IsHovered && m_RelativeMousePosition.x >= 0 && m_RelativeMousePosition.y >= 0)
+			if (io.MouseClicked[ImGuiMouseButton_Left] && m_Viewport.RenderTarget != nullptr && m_IsHovered && m_RelativeMousePosition.x >= 0 && m_RelativeMousePosition.y >= 0)
 				EditorLayer::GetInstance().Selection.SetEntity(GetEntityUnderCursor());
 		}
 
@@ -231,15 +230,15 @@ namespace Flare
 	{
 		FrameBufferSpecifications specifications(m_Viewport.GetSize().x, m_Viewport.GetSize().y, {
 			{ FrameBufferTextureFormat::RGB8, TextureWrap::Clamp, TextureFiltering::Closest },
-		});
+			});
 
 		FrameBufferSpecifications screenBufferSpecs(m_Viewport.GetSize().x, m_Viewport.GetSize().y, {
 			{ FrameBufferTextureFormat::RGB8, TextureWrap::Clamp, TextureFiltering::Closest },
 			{ FrameBufferTextureFormat::RedInteger, TextureWrap::Clamp, TextureFiltering::Closest },
 			{ FrameBufferTextureFormat::Depth, TextureWrap::Clamp, TextureFiltering::Closest },
-		});
+			});
 
-		m_FrameBuffer = FrameBuffer::Create(specifications);
+		m_Viewport.RenderTarget = FrameBuffer::Create(specifications);
 		m_ScreenBuffer = FrameBuffer::Create(screenBufferSpecs);
 	}
 

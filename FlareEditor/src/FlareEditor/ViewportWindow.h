@@ -37,7 +37,6 @@ namespace Flare
 		virtual void OnViewportChanged() {}
 	protected:
 		std::string m_Name;
-		Ref<FrameBuffer> m_FrameBuffer;
 		Viewport m_Viewport;
 		bool m_IsFocused;
 		bool m_IsHovered;

@@ -3,6 +3,7 @@
 #include "FlareCore/Core.h"
 #include "Flare/Renderer/RenderData.h"
 #include "Flare/Renderer/Viewport.h"
+#include "Flare/Renderer/RenderPass.h"
 
 #include "Flare/Renderer/VertexArray.h"
 #include "Flare/Renderer/Material.h"
@@ -25,6 +26,9 @@ namespace Flare
 		static Ref<const VertexArray> GetFullscreenQuad();
 
 		static void DrawMesh(const Ref<VertexArray>& mesh, const Ref<Material>& material, size_t indicesCount = SIZE_MAX);
+
+		static void AddRenderPass(Scope<RenderPass> pass);
+		static void ExecuteRenderPasses();
 
 		static Viewport& GetMainViewport();
 		static Viewport& GetCurrentViewport();

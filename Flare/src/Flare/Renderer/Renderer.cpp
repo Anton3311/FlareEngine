@@ -14,6 +14,8 @@ namespace Flare
 
 		Ref<UniformBuffer> CameraBuffer;
 		Ref<VertexArray> FullscreenQuad;
+
+		std::vector<Scope<RenderPass>> RenderPasses;
 	};
 
 	RendererData s_RendererData;
@@ -77,6 +79,20 @@ namespace Flare
 	{
 		material->SetShaderParameters();
 		RenderCommand::DrawIndexed(mesh, indicesCount == SIZE_MAX ? mesh->GetIndexBuffer()->GetCount() : indicesCount);
+	}
+
+	void Renderer::AddRenderPass(Scope<RenderPass> pass)
+	{
+		s_RendererData.RenderPasses.push_back(std::move(pass));
+	}
+
+	void Renderer::ExecuteRenderPasses()
+	{
+		FLARE_CORE_ASSERT(s_RendererData.CurrentViewport);
+		RenderingContext context(s_RendererData.CurrentViewport->RenderTarget, s_RendererData.CurrentViewport->RTPool);
+
+		for (Scope<RenderPass>& pass : s_RendererData.RenderPasses)
+			pass->OnRender(context);
 	}
 
 	Viewport& Renderer::GetMainViewport()

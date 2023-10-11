@@ -32,7 +32,7 @@ namespace Flare
 		glm::vec3 GetPosition() const;
 
 		void ProcessEvents(Event& event);
-		void OnViewportChanged(const ViewportRect& viewport);
+		void OnViewportChanged(glm::ivec2 viewportSize);
 
 		void Zoom(float amount);
 		void Rotate(glm::vec2 mouseInput);
@@ -43,7 +43,6 @@ namespace Flare
 		glm::vec3 TransformDirection(const glm::vec3& direction) const;
 	private:
 		EditorCameraSettings m_Settings;
-		ViewportRect m_Viewport;
 		glm::vec2 m_PreviousMousePosition = glm::vec2(0.0f);
 
 		bool m_IsMoved = false;

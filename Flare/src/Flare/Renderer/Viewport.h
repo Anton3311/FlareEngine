@@ -3,33 +3,32 @@
 #include "FlareCore/Core.h"
 #include "Flare/Renderer/FrameBuffer.h"
 #include "Flare/Renderer/RenderData.h"
+#include "Flare/Renderer/RenderTargetsPool.h"
 
 #include <vector>
 #include <glm/glm.hpp>
 
 namespace Flare
 {
-	struct ViewportRect
-	{
-		glm::ivec2 Position = glm::ivec2(0);
-		glm::ivec2 Size = glm::ivec2(0);
-	};
-
 	class FLARE_API Viewport
 	{
 	public:
 		Viewport();
 
-		const ViewportRect& GetRect() const { return m_Rect; }
-		glm::ivec2 GetSize() const { return m_Rect.Size; }
+		inline glm::ivec2 GetPosition() const { return m_Position; }
+		inline glm::ivec2 GetSize() const { return m_Size; }
 
-		float GetAspectRatio() const { return (float)m_Rect.Size.x / (float)m_Rect.Size.y; }
+		inline float GetAspectRatio() const { return (float)m_Size.x / (float)m_Size.y; }
 
-		void Resize(const ViewportRect& newRect);
+		void Resize(glm::ivec2 position, glm::ivec2 size);
 	public:
 		RenderData FrameData;
+		Ref<FrameBuffer> RenderTarget;
+		RenderTargetsPool RTPool;
 	private:
 		bool m_IsDirty;
-		ViewportRect m_Rect;
+
+		glm::ivec2 m_Position;
+		glm::ivec2 m_Size;
 	};
 }
