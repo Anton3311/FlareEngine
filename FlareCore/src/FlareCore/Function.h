@@ -1,5 +1,7 @@
 #pragma once
 
+#include <utility>
+
 namespace Flare
 {
 	template<typename RetT, typename... ArgsT>
@@ -23,10 +25,26 @@ namespace Flare
 		FuncT m_Functor;
 	};
 
-	template<typename RetT, typename... ArgsT>
+	struct DefaultFunctionAllocator
+	{
+		template<typename T, typename... ArgsT>
+		static T* Allocate(ArgsT&& ...args)
+		{
+			return new T(std::forward<ArgsT>(args)...);
+		}
+
+		template<typename T>
+		static void Release(T* callable)
+		{
+			delete callable;
+		}
+	};
+
+	template<typename AllocatorT, typename RetT, typename... ArgsT>
 	struct FunctionImplementation
 	{
 		using ReturnType = RetT;
+		using CallableType = CallableBase<RetT, ArgsT...>;
 
 		FunctionImplementation()
 			: m_Callable(nullptr) {}
@@ -40,16 +58,19 @@ namespace Flare
 		~FunctionImplementation()
 		{
 			if (m_Callable != nullptr)
-				delete m_Callable;
+			{
+				AllocatorT::Release<CallableType>(m_Callable);
+				m_Callable = nullptr;
+			}
 		}
 
 		template<typename FuncT>
 		void SetCallable(FuncT&& function)
 		{
 			if (m_Callable != nullptr)
-				delete m_Callable;
+				AllocatorT::Release<CallableType>(m_Callable);
 
-			m_Callable = new Callable<FuncT, RetT, ArgsT...>(std::forward<FuncT>(function));
+			m_Callable = AllocatorT::Allocate<Callable<FuncT, RetT, ArgsT...>>(std::forward<FuncT>(function));
 		}
 
 		inline CallableBase<RetT, ArgsT...>& GetCallable()
@@ -57,13 +78,13 @@ namespace Flare
 			return *m_Callable;
 		}
 	private:
-		CallableBase<RetT, ArgsT...>* m_Callable;
+		CallableType* m_Callable;
 	};
 
 	template<typename T>
 	constexpr bool AlwaysFalse = false;
 
-	template<typename T>
+	template<typename AllocatorT, typename T>
 	struct GetFunctionImplementation
 	{
 		using Type = void;
@@ -71,17 +92,17 @@ namespace Flare
 		static_assert(AlwaysFalse<T>);
 	};
 
-	template<typename RetT, typename... ArgsT>
-	struct GetFunctionImplementation<RetT(ArgsT...)>
+	template<typename AllocatorT, typename RetT, typename... ArgsT>
+	struct GetFunctionImplementation<AllocatorT, RetT(ArgsT...)>
 	{
-		using Type = FunctionImplementation<RetT, ArgsT...>;
+		using Type = FunctionImplementation<AllocatorT, RetT, ArgsT...>;
 	};
 
-	template<typename FunctionT>
+	template<typename FunctionT, typename AllocatorT = DefaultFunctionAllocator>
 	class Function
 	{
 	public:
-		using Implementation = typename GetFunctionImplementation<FunctionT>::Type;
+		using Implementation = typename GetFunctionImplementation<AllocatorT, FunctionT>::Type;
 		using ReturnType = typename Implementation::ReturnType;
 
 		Function() {}
