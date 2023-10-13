@@ -15,6 +15,7 @@
 #include "FlareEditor/AssetManager/PrefabImporter.h"
 #include "FlareEditor/Serialization/SceneSerializer.h"
 #include "FlareEditor/AssetManager/MaterialImporter.h"
+#include "FlareEditor/AssetManager/MeshImporter.h"
 
 #include <yaml-cpp/yaml.h>
 
@@ -40,6 +41,7 @@ namespace Flare
         m_AssetImporters.emplace(AssetType::Texture, TextureImporter::ImportTexture);
         m_AssetImporters.emplace(AssetType::Prefab, PrefabImporter::ImportPrefab);
         m_AssetImporters.emplace(AssetType::Material, MaterialImporter::ImportMaterial);
+        m_AssetImporters.emplace(AssetType::Mesh, MeshImporter::ImportMesh);
         m_AssetImporters.emplace(AssetType::Scene, [](const AssetMetadata& metadata) -> Ref<Asset>
         {
             Ref<Scene> scene = CreateRef<Scene>(EditorLayer::GetInstance().GetECSContext());
@@ -130,6 +132,8 @@ namespace Flare
             type = AssetType::Shader;
         else if (extension == ".ttf")
             type = AssetType::Font;
+        else if (extension == ".fbx" || extension == ".gltf")
+            type = AssetType::Mesh;
 
         AssetHandle handle;
         AssetMetadata metadata;

@@ -31,6 +31,8 @@ project "FlareEditor"
 		INCLUDE_DIRS.msdf_gen,
 		INCLUDE_DIRS.msdf_atlas_gen,
 
+		INCLUDE_DIRS.assimp,
+
 		INCLUDE_DIRS.glm,
 		INCLUDE_DIRS.GLFW,
 		INCLUDE_DIRS.spdlog,
@@ -71,12 +73,30 @@ project "FlareEditor"
 		runtime "Debug"
 		symbols "on"
 
+		links
+		{
+			LIBRARIES.assimp_debug,
+			LIBRARIES.assimp_zlib_debug,
+		}
+
 	filter "configurations:Release"
 		defines "FLARE_RELEASE"
 		runtime "Release"
 		optimize "on"
 
+		links
+		{
+			LIBRARIES.assimp_release,
+			LIBRARIES.assimp_zlib_release,
+		}
+
 	filter "configurations:Dist"
 		defines "FLARE_DIST"
 		runtime "Release"
 		optimize "on"
+
+		links
+		{
+			LIBRARIES.assimp_release,
+			LIBRARIES.assimp_zlib_release,
+		}

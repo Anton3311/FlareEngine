@@ -11,6 +11,9 @@ AssetRegistry:
   - Handle: 8952698402060583352
     Type: Shader
     Path: TestShader.glsl
+  - Handle: 10342322337781790464
+    Type: Mesh
+    Path: Cube.fbx
   - Handle: 11273132474447840936
     Type: Scene
     Path: Test.flare

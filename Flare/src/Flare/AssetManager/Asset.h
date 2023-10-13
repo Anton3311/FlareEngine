@@ -41,6 +41,7 @@ namespace Flare
 		Shader,
 		Material,
 		Font,
+		Mesh,
 	};
 
 	FLARE_API std::string_view AssetTypeToString(AssetType type);
