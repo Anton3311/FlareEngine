@@ -80,4 +80,3 @@ project "FlareEditor"
 		defines "FLARE_DIST"
 		runtime "Release"
 		optimize "on"
-

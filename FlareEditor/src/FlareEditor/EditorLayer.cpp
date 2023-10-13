@@ -112,6 +112,7 @@ namespace Flare
 		{
 			m_PrefabEditor->Open(handle);
 		});
+
 	}
 
 	void EditorLayer::OnDetach()

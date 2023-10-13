@@ -39,6 +39,7 @@ project "Flare"
 		INCLUDE_DIRS.imgui,
 
 		INCLUDE_DIRS.vulkan_sdk,
+		INCLUDE_DIRS.assimp,
 	}
 
 	links
@@ -89,6 +90,9 @@ project "Flare"
 			LIBRARIES.spriv_cross_glsl_debug,
 			LIBRARIES.spriv_cross_debug,
 			LIBRARIES.spriv_tools_debug,
+
+			LIBRARIES.assimp_debug,
+			LIBRARIES.assimp_zlib_debug,
 		}
 
 	filter "configurations:Release or Dist"
@@ -97,4 +101,7 @@ project "Flare"
 			LIBRARIES.shaderc_release,
 			LIBRARIES.spriv_cross_glsl_release,
 			LIBRARIES.spriv_cross_release,
+
+			LIBRARIES.assimp_release,
+			LIBRARIES.assimp_zlib_release,
 		}

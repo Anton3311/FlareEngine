@@ -10,8 +10,55 @@
 
 #include "Flare/Scripting/ScriptingEngine.h"
 
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
+
 namespace Flare
 {
+
+	static Ref<VertexArray> m_TestMesh;
+	static Ref<Shader> m_MeshShader;
+
+	static void ProcessMeshNode(aiNode* node, const aiScene* scene)
+	{
+		for (uint32_t i = 0; i < node->mNumMeshes; i++)
+		{
+			aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
+
+			std::vector<glm::vec3> vertices;
+			std::vector<uint32_t> indices;
+
+			vertices.resize(mesh->mNumVertices);
+
+			for (size_t i = 0; i < vertices.size(); i++)
+			{
+				vertices[i].x = mesh->mVertices[i].x;
+				vertices[i].y = mesh->mVertices[i].y;
+				vertices[i].z = mesh->mVertices[i].z;
+			}
+
+			for (int32_t face = 0; face < mesh->mNumFaces; face++)
+			{
+				aiFace& f = mesh->mFaces[face];
+				for (int32_t i = 0; i < f.mNumIndices; i++)
+					indices.push_back(f.mIndices[i]);
+			}
+
+			Ref<VertexBuffer> buffer = VertexBuffer::Create(sizeof(glm::vec3) * vertices.size(), vertices.data());
+			buffer->SetLayout({
+				{ "i_Position", ShaderDataType::Float3 }
+				});
+
+			m_TestMesh->AddVertexBuffer(buffer);
+			m_TestMesh->SetIndexBuffer(IndexBuffer::Create(indices.size(), indices.data()));
+			return;
+		}
+
+		for (int i = 0; i < node->mNumChildren; i++)
+			ProcessMeshNode(node->mChildren[i], scene);
+	}
+
 	Ref<Scene> s_Active = nullptr;
 
 	Scene::Scene(ECSContext& context)
@@ -19,6 +66,23 @@ namespace Flare
 	{
 		m_World.MakeCurrent();
 		Initialize();
+
+
+		std::filesystem::path modelPath = "assets/Cube.fbx";
+
+		m_MeshShader = Shader::Create("assets/Shaders/Mesh.glsl");
+
+		Assimp::Importer importer;
+		const aiScene* scene = importer.ReadFile(modelPath.string(), aiProcess_Triangulate | aiProcess_FlipUVs);
+
+		if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
+			FLARE_CORE_ERROR("Failed to load model");
+		else
+		{
+			m_TestMesh = VertexArray::Create();
+			ProcessMeshNode(scene->mRootNode, scene);
+			m_TestMesh->Unbind();
+		}
 	}
 
 	Scene::~Scene()
@@ -101,6 +165,10 @@ namespace Flare
 
 		Renderer2D::End();
 		RenderCommand::SetDepthTestEnabled(true);
+
+		m_MeshShader->Bind();
+		RenderCommand::DrawIndexed(m_TestMesh);
+
 	}
 
 	void Scene::OnUpdateRuntime()

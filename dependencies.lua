@@ -9,6 +9,8 @@ print(vulkan_sdk)
 local vulkan_include = vulkan_sdk .. "/include/"
 local vulkan_lib = vulkan_sdk .. "/lib/"
 
+local assimp_path = "%{wks.location}/Flare/vendor/assimp/assimp/"
+
 INCLUDE_DIRS = {
 	GLAD = "%{wks.location}/Flare/vendor/GLAD/include",
 	GLFW = "%{wks.location}/Flare/vendor/GLFW/include",
@@ -22,6 +24,8 @@ INCLUDE_DIRS = {
 
 	msdf_gen = "%{wks.location}/Flare/vendor/msdf/msdf-atlas-gen/msdfgen",
 	msdf_atlas_gen = "%{wks.location}/Flare/vendor/msdf/msdf-atlas-gen/msdf-atlas-gen",
+
+	assimp = assimp_path .. "/include/",
 }
 
 LIBRARIES = {
@@ -34,4 +38,10 @@ LIBRARIES = {
 	shaderc_release = vulkan_lib .. "shaderc_shared.lib",
 	spriv_cross_release = vulkan_lib .. "spirv-cross-core.lib",
 	spriv_cross_glsl_release = vulkan_lib .. "spirv-cross-glsl.lib",
+
+	assimp_debug = assimp_path .. "/lib/Debug/assimp-vc143-mtd.lib",
+	assimp_release = assimp_path .. "/lib/Release/assimp-vc143-mtd.lib",
+
+	assimp_zlib_debug = assimp_path .. "contrib/zlib/Debug/zlibstaticd.lib",
+	assimp_zlib_release = assimp_path .. "contrib/zlib/Release/zlibstatic.lib",
 }
