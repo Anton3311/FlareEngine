@@ -31,7 +31,12 @@ void main()
 
 layout(location = 0) out vec4 o_Color;
 
+layout(std140, push_constant) uniform Input
+{
+	vec4 Color;
+} u_Input;
+
 void main()
 {
-	o_Color = vec4(1.0, 1.0, 1.0, 1.0);
+	o_Color = u_Input.Color;
 }

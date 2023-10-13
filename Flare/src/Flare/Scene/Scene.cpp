@@ -42,6 +42,7 @@ namespace Flare
 		m_CameraDataUpdateQuery = m_World.CreateQuery<With<TransformComponent>, With<CameraComponent>>();
 
 		systemsManager.RegisterSystem("Sprites Renderer", m_2DRenderingGroup, new SpritesRendererSystem());
+		systemsManager.RegisterSystem("Meshes Renderer", m_2DRenderingGroup, new MeshesRendererSystem());
 	}
 
 	void Scene::InitializeRuntime()
@@ -93,7 +94,6 @@ namespace Flare
 
 	void Scene::OnRender(const Viewport& viewport)
 	{
-		RenderCommand::SetDepthTestEnabled(false);
 		Renderer2D::Begin();
 
 		m_World.GetSystemsManager().ExecuteGroup(m_2DRenderingGroup);
@@ -101,7 +101,6 @@ namespace Flare
 		Renderer::ExecuteRenderPasses();
 
 		Renderer2D::End();
-		RenderCommand::SetDepthTestEnabled(true);
 	}
 
 	void Scene::OnUpdateRuntime()

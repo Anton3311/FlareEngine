@@ -120,6 +120,9 @@ namespace Flare
 		{
 			Ref<OpenGLShader> glShader = As<OpenGLShader>(shader);
 			glShader->Bind();
+
+			if (m_ShaderParametersCount == 0)
+				return;
 			
 			FLARE_CORE_ASSERT(m_Buffer);
 			for (uint32_t i = 0; i < (uint32_t)parameters.size(); i++)

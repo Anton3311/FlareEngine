@@ -3,6 +3,9 @@
 #include "Flare.h"
 #include "Flare/Renderer2D/Renderer2D.h"
 
+#include "Flare/Renderer/Mesh.h"
+#include "Flare/Renderer/Material.h"
+
 #include "FlareECS/World.h"
 #include "FlareECS/Entity/ComponentInitializer.h"
 
@@ -91,5 +94,16 @@ namespace Flare
 		std::string Text;
 		glm::vec4 Color;
 		AssetHandle Font;
+	};
+
+	struct FLARE_API MeshComponent
+	{
+		FLARE_COMPONENT;
+
+		MeshComponent();
+		MeshComponent(AssetHandle mesh, AssetHandle material);
+
+		AssetHandle Mesh;
+		AssetHandle Material;
 	};
 }

@@ -1,4 +1,7 @@
 AssetRegistry:
+  - Handle: 586196719532265385
+    Type: Shader
+    Path: Mesh.glsl
   - Handle: 1220645617260660817
     Type: Scene
     Path: Test.flare
@@ -26,6 +29,9 @@ AssetRegistry:
   - Handle: 12443752963323924563
     Type: Scene
     Path: Test 2.flare
+  - Handle: 13576769737354600278
+    Type: Material
+    Path: Cube Material.flrmat
   - Handle: 16883279782608513727
     Type: Scene
     Path: Test.flare

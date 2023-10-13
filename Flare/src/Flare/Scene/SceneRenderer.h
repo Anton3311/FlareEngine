@@ -31,4 +31,15 @@ namespace Flare
 		Query m_TextQuery;
 		std::vector<EntityQueueElement> m_SortedEntities;
 	};
+
+	struct MeshesRendererSystem : public System
+	{
+	public:
+		MeshesRendererSystem();
+
+		void OnConfig(SystemConfig& config) override;
+		void OnUpdate(SystemExecutionContext& context) override;
+	private:
+		Query m_Query;
+	};
 }

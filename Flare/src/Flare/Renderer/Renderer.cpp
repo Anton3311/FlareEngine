@@ -81,6 +81,11 @@ namespace Flare
 		RenderCommand::DrawIndexed(mesh, indicesCount == SIZE_MAX ? mesh->GetIndexBuffer()->GetCount() : indicesCount);
 	}
 
+	void Renderer::DrawMesh(const Ref<Mesh>& mesh, const Ref<Material>& material, const glm::mat4& transform)
+	{
+		DrawMesh(mesh->GetSubMesh().MeshVertexArray, material);
+	}
+
 	void Renderer::AddRenderPass(Scope<RenderPass> pass)
 	{
 		s_RendererData.RenderPasses.push_back(std::move(pass));

@@ -1,5 +1,7 @@
 #include "SceneRenderer.h"
 
+#include "Flare/Renderer/Renderer.h"
+
 #include <algorithm>
 
 namespace Flare
@@ -102,6 +104,35 @@ namespace Flare
 					font = Font::GetDefault();
 
 				Renderer2D::DrawString(texts[*entity].Text, transform, font, texts[*entity].Color, entityId.GetIndex());
+			}
+		}
+	}
+
+	// Meshes Renderer
+
+	MeshesRendererSystem::MeshesRendererSystem()
+	{
+		m_Query = World::GetCurrent().CreateQuery<With<TransformComponent>, With<MeshComponent>>();
+	}
+
+	void MeshesRendererSystem::OnConfig(SystemConfig& config) {}
+
+	void MeshesRendererSystem::OnUpdate(SystemExecutionContext& context)
+	{
+		for (EntityView view : m_Query)
+		{
+			auto transforms = view.View<TransformComponent>();
+			auto meshes = view.View<MeshComponent>();
+
+			for (EntityViewElement entity : view)
+			{
+				Ref<Mesh> mesh = AssetManager::GetAsset<Mesh>(meshes[entity].Mesh);
+				Ref<Material> material = AssetManager::GetAsset<Material>(meshes[entity].Material);
+
+				if (mesh == nullptr || material == nullptr)
+					continue;
+
+				Renderer::DrawMesh(mesh, material, transforms[entity].GetTransformationMatrix());
 			}
 		}
 	}
