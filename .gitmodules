@@ -22,3 +22,6 @@
 [submodule ".\\Flare\\vendor\\msdf\\freetype\\"]
 	path = .\\Flare\\vendor\\msdf\\freetype\\
 	url = git@github.com:freetype/freetype.git
+[submodule "Flare/vendor/assimp/assimp"]
+	path = Flare/vendor/assimp/assimp
+	url = git@github.com:assimp/assimp.git
