@@ -13,6 +13,7 @@ namespace Flare
 		Viewport* CurrentViewport;
 
 		Ref<UniformBuffer> CameraBuffer;
+		Ref<UniformBuffer> LightBuffer;
 		Ref<VertexArray> FullscreenQuad;
 
 		std::vector<Scope<RenderPass>> RenderPasses;
@@ -26,6 +27,7 @@ namespace Flare
 		s_RendererData.CurrentViewport = nullptr;
 
 		s_RendererData.CameraBuffer = UniformBuffer::Create(sizeof(CameraData), 0);
+		s_RendererData.LightBuffer = UniformBuffer::Create(sizeof(LightData), 1);
 
 		float vertices[] = {
 			-1, -1,
@@ -64,6 +66,7 @@ namespace Flare
 	{
 		s_RendererData.CurrentViewport = &viewport;
 		s_RendererData.CameraBuffer->SetData(&viewport.FrameData.Camera, sizeof(CameraData), 0);
+		s_RendererData.LightBuffer->SetData(&viewport.FrameData.Light, sizeof(LightData), 0);
 	}
 
 	void Renderer::EndScene()

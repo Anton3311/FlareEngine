@@ -40,6 +40,7 @@ namespace Flare
 		m_OnRuntimeEndGroup = systemsManager.CreateGroup("On Runtime End");
 
 		m_CameraDataUpdateQuery = m_World.CreateQuery<With<TransformComponent>, With<CameraComponent>>();
+		m_DirectionalLightQuery = m_World.CreateQuery<With<TransformComponent>, With<DirectionalLight>>();
 
 		systemsManager.RegisterSystem("Sprites Renderer", m_2DRenderingGroup, new SpritesRendererSystem());
 		systemsManager.RegisterSystem("Meshes Renderer", m_2DRenderingGroup, new MeshesRendererSystem());
@@ -63,6 +64,29 @@ namespace Flare
 
 	void Scene::OnBeforeRender(Viewport& viewport)
 	{
+		bool hasLight = false;
+		for (EntityView entityView : m_DirectionalLightQuery)
+		{
+			auto transforms = entityView.View<TransformComponent>();
+			auto lights = entityView.View<DirectionalLight>();
+
+			for (EntityViewElement entity : entityView)
+			{
+				glm::vec3 direction = transforms[entity].TransformDirection(glm::vec3(0.0f, 0.0f, -1.0f));
+
+				LightData& light = viewport.FrameData.Light;
+				light.Color = lights[entity].Color;
+				light.Intensity = lights[entity].Intensity;
+				light.Direction = -direction;
+
+				hasLight = true;
+				break;
+			}
+
+			if (hasLight)
+				break;
+		}
+
 		if (!viewport.FrameData.IsEditorCamera)
 		{
 			float aspectRation = viewport.GetAspectRatio();

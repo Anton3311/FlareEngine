@@ -1,3 +1,5 @@
 Shader: 586196719532265385
 Parameters:
-  []
+  - Name: u_Input.Color
+    Type: 7
+    Value: [0, 0.400000006, 1, 1]

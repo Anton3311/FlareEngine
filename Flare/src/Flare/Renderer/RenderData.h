@@ -41,9 +41,18 @@ namespace Flare
 		glm::mat4 InverseViewProjection;
 	};
 
+	struct LightData
+	{
+		glm::vec3 Color;
+		float Intensity;
+
+		glm::vec3 Direction;
+	};
+
 	struct RenderData
 	{
 		CameraData Camera;
+		LightData Light;
 		bool IsEditorCamera = false;
 	};
 }

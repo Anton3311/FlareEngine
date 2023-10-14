@@ -24,6 +24,11 @@ namespace Flare
 			glm::scale(glm::mat4(1.0f), Scale);
 	}
 
+	glm::vec3 TransformComponent::TransformDirection(const glm::vec3& direction) const
+	{
+		return glm::rotate(glm::quat(glm::radians(Rotation)), direction);
+	}
+
 	FLARE_IMPL_COMPONENT(CameraComponent,
 		FLARE_ENUM_FIELD(CameraComponent, Projection),
 		FLARE_FIELD(CameraComponent, Size),
@@ -122,4 +127,14 @@ namespace Flare
 
 	MeshComponent::MeshComponent(AssetHandle mesh, AssetHandle material)
 		: Mesh(mesh), Material(material) {}
+
+	FLARE_IMPL_COMPONENT(DirectionalLight,
+		FLARE_FIELD(DirectionalLight, Color),
+		FLARE_FIELD(DirectionalLight, Intensity)
+	);
+	DirectionalLight::DirectionalLight()
+		: Color(1.0f), Intensity(1.0f) {}
+
+	DirectionalLight::DirectionalLight(const glm::vec3& color, float intensity)
+		: Color(color), Intensity(intensity) {}
 }

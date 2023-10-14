@@ -20,11 +20,12 @@ namespace Flare
 		TransformComponent();
 		TransformComponent(const glm::vec3& position);
 		
+		glm::mat4 GetTransformationMatrix() const;
+		glm::vec3 TransformDirection(const glm::vec3& direction) const;
+
 		glm::vec3 Position;
 		glm::vec3 Rotation;
 		glm::vec3 Scale;
-
-		glm::mat4 GetTransformationMatrix() const;
 	};
 
 	struct FLARE_API CameraComponent
@@ -105,5 +106,16 @@ namespace Flare
 
 		AssetHandle Mesh;
 		AssetHandle Material;
+	};
+
+	struct FLARE_API DirectionalLight
+	{
+		FLARE_COMPONENT;
+
+		DirectionalLight();
+		DirectionalLight(const glm::vec3& color, float intensity);
+
+		glm::vec3 Color;
+		float Intensity;
 	};
 }

@@ -17,6 +17,9 @@ AssetRegistry:
   - Handle: 10342322337781790464
     Type: Mesh
     Path: Cube.fbx
+  - Handle: 10490832977963679498
+    Type: Mesh
+    Path: Sphere.fbx
   - Handle: 11273132474447840936
     Type: Scene
     Path: Test.flare
