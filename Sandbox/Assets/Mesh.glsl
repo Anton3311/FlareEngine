@@ -22,17 +22,26 @@ layout(std140, binding = 0) uniform Camera
 	CameraData u_Camera;
 };
 
+layout(std140, push_constant) uniform InstanceData
+{
+	mat4 Transform;
+	vec4 Color;
+} u_InstanceData;
+
 struct VertexData
 {
 	vec3 Normal;
+	vec4 Color;
 };
 
 layout(location = 0) out VertexData o_Vertex;
 
 void main()
 {
-	o_Vertex.Normal = i_Normal;
-    gl_Position = u_Camera.ViewProjection * vec4(i_Position, 1.0);
+	mat4 normalTransform = transpose(inverse(u_InstanceData.Transform));
+	o_Vertex.Normal = (normalTransform * vec4(i_Normal, 1.0)).xyz;
+	o_Vertex.Color = u_InstanceData.Color;
+    gl_Position = u_Camera.ViewProjection * u_InstanceData.Transform * vec4(i_Position, 1.0);
 }
 
 #type fragment
@@ -47,19 +56,15 @@ layout(std140, binding = 1) uniform DirLight
 struct VertexData
 {
 	vec3 Normal;
+	vec4 Color;
 };
 
 layout(location = 0) in VertexData i_Vertex;
 layout(location = 0) out vec4 o_Color;
 
-layout(std140, push_constant) uniform Input
-{
-	vec4 Color;
-} u_Input;
-
 void main()
 {
 	vec3 normal = normalize(i_Vertex.Normal);
-	vec3 diffuseColor = u_Input.Color.rgb * u_LightColor.rgb * u_LightColor.w;
-	o_Color = vec4(diffuseColor * max(0.0, dot(u_LightDirection, normal)), u_Input.Color.a);
+	vec3 diffuseColor = i_Vertex.Color.rgb * u_LightColor.rgb * u_LightColor.w;
+	o_Color = vec4(diffuseColor * max(0.0, dot(u_LightDirection, normal)), i_Vertex.Color.a);
 }

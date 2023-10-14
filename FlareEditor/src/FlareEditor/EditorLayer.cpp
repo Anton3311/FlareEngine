@@ -219,6 +219,12 @@ namespace Flare
 				ImGui::Text("Vertices %d", stats.GetTotalVertexCount());
 			}
 
+			if (ImGui::CollapsingHeader("Renderer"))
+			{
+				const auto& stats = Renderer::GetStatistics();
+				ImGui::Text("Draw calls %d", stats.DrawCallsCount);
+			}
+
 			ImGui::End();
 		}
 

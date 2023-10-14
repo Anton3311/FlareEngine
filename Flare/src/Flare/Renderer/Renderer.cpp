@@ -17,6 +17,7 @@ namespace Flare
 		Ref<VertexArray> FullscreenQuad;
 
 		std::vector<Scope<RenderPass>> RenderPasses;
+		RendererStatistics Statistics;
 	};
 
 	RendererData s_RendererData;
@@ -57,6 +58,11 @@ namespace Flare
 		s_RendererData.FullscreenQuad = nullptr;
 	}
 
+	const RendererStatistics& Renderer::GetStatistics()
+	{
+		return s_RendererData.Statistics;
+	}
+
 	void Renderer::SetMainViewport(Viewport& viewport)
 	{
 		s_RendererData.MainViewport = &viewport;
@@ -64,6 +70,8 @@ namespace Flare
 
 	void Renderer::BeginScene(Viewport& viewport)
 	{
+		s_RendererData.Statistics.DrawCallsCount = 0;
+
 		s_RendererData.CurrentViewport = &viewport;
 		s_RendererData.CameraBuffer->SetData(&viewport.FrameData.Camera, sizeof(CameraData), 0);
 		s_RendererData.LightBuffer->SetData(&viewport.FrameData.Light, sizeof(LightData), 0);
@@ -82,10 +90,20 @@ namespace Flare
 	{
 		material->SetShaderParameters();
 		RenderCommand::DrawIndexed(mesh, indicesCount == SIZE_MAX ? mesh->GetIndexBuffer()->GetCount() : indicesCount);
+		s_RendererData.Statistics.DrawCallsCount++;
 	}
 
 	void Renderer::DrawMesh(const Ref<Mesh>& mesh, const Ref<Material>& material, const glm::mat4& transform)
 	{
+		Ref<Shader> shader = AssetManager::GetAsset<Shader>(material->GetShaderHandle());
+		if (shader == nullptr)
+			return;
+
+		auto transformIndex = shader->GetParameterIndex("u_InstanceData.Transform");
+		if (!transformIndex.has_value())
+			return;
+
+		material->SetMatrix4(transformIndex.value(), transform);
 		DrawMesh(mesh->GetSubMesh().MeshVertexArray, material);
 	}
 

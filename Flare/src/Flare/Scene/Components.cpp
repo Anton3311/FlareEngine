@@ -20,8 +20,8 @@ namespace Flare
 
 	glm::mat4 TransformComponent::GetTransformationMatrix() const
 	{
-		return glm::translate(glm::mat4(1.0f), Position) * glm::toMat4(glm::quat(glm::radians(Rotation))) *
-			glm::scale(glm::mat4(1.0f), Scale);
+		return glm::translate(glm::identity<glm::mat4>(), Position) * glm::toMat4(glm::quat(glm::radians(Rotation))) *
+			glm::scale(glm::identity<glm::mat4>(), Scale);
 	}
 
 	glm::vec3 TransformComponent::TransformDirection(const glm::vec3& direction) const

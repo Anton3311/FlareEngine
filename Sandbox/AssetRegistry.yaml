@@ -32,6 +32,9 @@ AssetRegistry:
   - Handle: 12443752963323924563
     Type: Scene
     Path: Test 2.flare
+  - Handle: 12561055223819313244
+    Type: Prefab
+    Path: Sphere Prefab.flrprefab
   - Handle: 13576769737354600278
     Type: Material
     Path: Cube Material.flrmat

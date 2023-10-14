@@ -7,6 +7,9 @@
 
 #include "Flare/Platform/OpenGL/OpenGLShader.h"
 
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 namespace Flare
 {
 	Material::Material(AssetHandle shaderHandle)
@@ -107,6 +110,10 @@ namespace Flare
 	void Material::SetMatrix4(uint32_t index, const glm::mat4& matrix)
 	{
 		FLARE_CORE_ASSERT((size_t)index < m_ShaderParametersCount);
+		const ShaderParameters& parameters = AssetManager::GetAsset<Shader>(m_ShaderHandle)->GetParameters();
+
+		const float* values = glm::value_ptr(matrix);
+		memcpy_s(m_Buffer + parameters[index].Offset, parameters[index].Size, values, sizeof(*values) * 16);
 	}
 
 	void Material::SetShaderParameters()

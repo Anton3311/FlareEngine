@@ -132,7 +132,8 @@ namespace Flare
 				if (mesh == nullptr || material == nullptr)
 					continue;
 
-				Renderer::DrawMesh(mesh, material, transforms[entity].GetTransformationMatrix());
+				const TransformComponent& transform = transforms[entity];
+			 	Renderer::DrawMesh(mesh, material, transform.GetTransformationMatrix());
 			}
 		}
 	}
