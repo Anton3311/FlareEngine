@@ -17,7 +17,6 @@ namespace Flare
 		float Far = 60.0f;
 
 		float RotationSpeed = 1.0f;
-		float DragSpeed = 0.1f;
 	};
 
 	class EditorCamera
@@ -32,13 +31,14 @@ namespace Flare
 		glm::vec3 GetPosition() const;
 
 		void ProcessEvents(Event& event);
-		void OnViewportChanged(glm::ivec2 viewportSize);
+		void OnViewportChanged(glm::ivec2 viewportSize, glm::ivec2 viewportPosition);
 
 		void Zoom(float amount);
 		void Rotate(glm::vec2 mouseInput);
 		void Drag(glm::vec2 mouseInput);
 	private:
 		void RecalculateViewMatrix();
+		glm::vec3 CalculateTranslationPoint(glm::vec2 mousePosition, const glm::mat4& inverseProjection, const glm::mat4& inverseView);
 
 		glm::vec3 TransformDirection(const glm::vec3& direction) const;
 	private:
@@ -53,6 +53,10 @@ namespace Flare
 
 		glm::vec3 m_Origin = glm::vec3(0.0f);
 		glm::vec3 m_Rotation = glm::vec3(0.0f);
+
+		glm::vec2 m_ViewportPosition;
+		glm::vec2 m_ViewportSize;
+
 		float m_DistanceToOrigin = 10.0f;
 	};
 }

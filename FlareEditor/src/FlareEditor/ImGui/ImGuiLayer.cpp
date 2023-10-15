@@ -174,5 +174,6 @@ namespace Flare
 		ImGuizmo::Style& guizmoStyle = ImGuizmo::GetStyle();
 		guizmoStyle.RotationLineThickness = 4.0f;
 		guizmoStyle.TranslationLineThickness = 4.0f;
+		ImGuizmo::SetGizmoSizeClipSpace(0.12f);
 	}
 }

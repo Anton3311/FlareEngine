@@ -88,7 +88,6 @@ namespace Flare
 		settings.Near = 0.1f;
 		settings.Far = 1000.0f;
 		settings.RotationSpeed = 1.0f;
-		settings.DragSpeed = 0.1f;
 
 		if (Application::GetInstance().GetCommandLineArguments().ArgumentsCount >= 2)
 		{
@@ -112,7 +111,6 @@ namespace Flare
 		{
 			m_PrefabEditor->Open(handle);
 		});
-
 	}
 
 	void EditorLayer::OnDetach()

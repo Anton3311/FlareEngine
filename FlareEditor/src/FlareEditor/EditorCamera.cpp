@@ -49,13 +49,14 @@ namespace Flare
 
 		dispatcher.Dispatch<MouseMoveEvent>([this](MouseMoveEvent& event) -> bool
 		{
-			glm::vec2 delta = event.GetPosition() - m_PreviousMousePosition;
-			m_PreviousMousePosition = event.GetPosition();
+			glm::vec2 delta = event.GetPosition() - m_ViewportPosition - m_PreviousMousePosition;
 
 			if (m_IsControlled && !m_IsMoved)
 				Rotate(delta);
 			else if (m_IsControlled && m_IsMoved)
-				Drag(delta);
+				Drag(event.GetPosition() - m_ViewportPosition);
+
+			m_PreviousMousePosition = event.GetPosition() - m_ViewportPosition;
 
 			return false;
 		});
@@ -68,9 +69,12 @@ namespace Flare
 		});
 	}
 
-	void EditorCamera::OnViewportChanged(glm::ivec2 viewportSize)
+	void EditorCamera::OnViewportChanged(glm::ivec2 viewportSize, glm::ivec2 viewportPosition)
 	{
 		float aspectRatio = (float)viewportSize.x / (float)viewportSize.y;
+
+		m_ViewportPosition = viewportPosition;
+		m_ViewportSize = (glm::vec2)viewportSize;
 		m_ProjectionMatrix = glm::perspective<float>(glm::radians(m_Settings.FOV), aspectRatio, m_Settings.Near, m_Settings.Far);
 	}
 
@@ -90,14 +94,35 @@ namespace Flare
 		RecalculateViewMatrix();
 	}
 
+	static float IntersectPlane(glm::vec3 planeNormal, glm::vec3 rayDirection, glm::vec3 rayOrigin)
+	{
+		return -glm::dot(planeNormal, rayOrigin) / glm::dot(rayDirection, planeNormal);
+	}
+
+	glm::vec3 EditorCamera::CalculateTranslationPoint(glm::vec2 mousePosition, const glm::mat4& inverseProjection, const glm::mat4& inverseView)
+	{
+		mousePosition = mousePosition / m_ViewportSize;
+		glm::vec2 clipSpaceMousePosition = glm::vec2(mousePosition.x, 1.0f - mousePosition.y) * 2.0f - glm::vec2(1.0f);
+
+		glm::vec3 direction = inverseProjection * glm::vec4(clipSpaceMousePosition, -1.0f, 1.0f);
+		direction = inverseView * glm::vec4(direction, 0.0f);
+
+		glm::vec3 cameraPosition = GetPosition();
+		glm::vec3 translationPlaneNormal = TransformDirection(glm::vec3(0.0f, 0.0f, -1.0f));
+
+		float t = IntersectPlane(translationPlaneNormal, direction, cameraPosition);
+		return cameraPosition + direction * t;
+	}
+
 	void EditorCamera::Drag(glm::vec2 mouseInput)
 	{
-		mouseInput *= m_Settings.DragSpeed;
+		glm::mat4 inverseProjection = glm::inverse(m_ProjectionMatrix);
+		glm::mat4 inverseView = glm::inverse(m_ViewMatrix);
 
-		glm::vec3 right = TransformDirection(glm::vec3(1.0f, 0.0f, 0.0f));
-		glm::vec3 up = TransformDirection(glm::vec3(0.0f, 1.0f, 0.0f));
+		glm::vec3 previousPosition = CalculateTranslationPoint(mouseInput, inverseProjection, inverseView);
+		glm::vec3 currentPosition = CalculateTranslationPoint(m_PreviousMousePosition, inverseProjection, inverseView);
 
-		glm::vec3 movementDirection = -right * mouseInput.x + up * mouseInput.y;
+		glm::vec3 movementDirection = (currentPosition - previousPosition);
 		m_Origin += movementDirection;
 
 		RecalculateViewMatrix();
