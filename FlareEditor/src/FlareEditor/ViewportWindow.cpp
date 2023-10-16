@@ -8,6 +8,7 @@
 #include "Flare/Core/Application.h"
 
 #include <imgui.h>
+#include <imgui_internal.h>
 
 namespace Flare
 {

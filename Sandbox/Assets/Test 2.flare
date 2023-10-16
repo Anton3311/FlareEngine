@@ -58,7 +58,7 @@ Entities:
         b: -59
   - Components:
       - Name: struct Flare::TransformComponent
-        Position: [-3.46407223, 0.69900316, 0]
+        Position: [-3.46407223, 0.69900316, 0.238736749]
         Rotation: [0, -0, 0]
         Scale: [1.70000005, 1.70000005, 1]
       - Name: struct Flare::SpriteComponent
@@ -70,8 +70,8 @@ Entities:
         Layer: 37
   - Components:
       - Name: struct Flare::TransformComponent
-        Position: [-3.79999995, 0, 0]
-        Rotation: [0, 0, 0]
+        Position: [-4.22397041, 0, 0.144194305]
+        Rotation: [0, -0, 0]
         Scale: [1, 1, 1]
       - Name: struct Flare::SpriteComponent
         Color: [1, 1, 1, 1]
@@ -82,7 +82,7 @@ Entities:
         Layer: 16
   - Components:
       - Name: struct Flare::TransformComponent
-        Position: [-2.66137695, 0, 0]
+        Position: [-2.66137695, 0, -0.421218872]
         Rotation: [0, -0, 0]
         Scale: [1, 1, 1]
       - Name: struct Flare::SpriteComponent
@@ -116,9 +116,9 @@ Entities:
         Font: 0
   - Components:
       - Name: struct Flare::TransformComponent
-        Position: [-0.460810214, 0.936772943, 0]
+        Position: [-0.460810214, 4.18309498, 0]
         Rotation: [0, -0, 109.663719]
-        Scale: [1, 0.999999464, 1]
+        Scale: [1, 0.999999523, 1]
       - Name: struct Flare::MeshComponent
         Mesh: 10490832977963679498
         Material: 13576769737354600278
@@ -132,8 +132,8 @@ Entities:
         Intensity: 2
   - Components:
       - Name: struct Flare::TransformComponent
-        Position: [1.9477756, 0.936772943, 0]
-        Rotation: [0, 0, 0]
+        Position: [1, 0, 0]
+        Rotation: [0, -0, 0]
         Scale: [1, 0.999999523, 1]
       - Name: struct Flare::MeshComponent
         Mesh: 10342322337781790464

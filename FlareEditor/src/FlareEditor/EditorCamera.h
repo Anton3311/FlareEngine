@@ -29,6 +29,8 @@ namespace Flare
 		const glm::mat4& GetViewMatrix() const { return m_ViewMatrix; }
 
 		glm::vec3 GetPosition() const;
+		inline glm::vec3 GetRotationOrigin() const { return m_Origin; }
+		inline float GetZoom() const { return m_DistanceToOrigin; }
 
 		void ProcessEvents(Event& event);
 		void OnViewportChanged(glm::ivec2 viewportSize, glm::ivec2 viewportPosition);

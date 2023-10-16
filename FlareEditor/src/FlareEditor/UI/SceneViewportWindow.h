@@ -26,6 +26,7 @@ namespace Flare
 	private:
 		EditorCamera& m_Camera;
 		Ref<Shader> m_SelectionOutlineShader;
+		Ref<Shader> m_GridShader;
 		Ref<FrameBuffer> m_ScreenBuffer;
 	};
 }

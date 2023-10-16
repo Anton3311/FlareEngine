@@ -25,6 +25,7 @@ namespace Flare
 		: ViewportWindow("Scene Viewport", true), m_Camera(camera)
 	{
 		m_SelectionOutlineShader = Shader::Create("assets/Shaders/SelectionOutline.glsl");
+		m_GridShader = Shader::Create("assets/Shaders/Grid.glsl");
 	}
 
 	void SceneViewportWindow::OnRenderViewport()
@@ -56,6 +57,21 @@ namespace Flare
 
 			scene->OnRender(m_Viewport);
 
+			float scale = m_Camera.GetZoom() * 3.0f;
+			float cellScale = 5.0f + glm::floor(m_Camera.GetZoom() / 20.0f) * 5.0f;
+			glm::vec3 gridColor = glm::vec3(0.5f);
+
+			glm::vec3 cameraPosition = m_Camera.GetRotationOrigin();
+
+			m_GridShader->Bind();
+			m_GridShader->SetFloat3("u_Data.Offset", glm::vec3(cameraPosition.x, 0.0f, cameraPosition.z));
+			m_GridShader->SetFloat("u_Data.GridScale", scale);
+			m_GridShader->SetFloat("u_Data.Thickness", 0.01f);
+			m_GridShader->SetFloat("u_Data.CellScale", 1.0f / cellScale);
+			m_GridShader->SetFloat3("u_Data.Color", gridColor);
+			m_GridShader->SetFloat("u_Data.FallOffThreshold", 0.8f);
+			RenderCommand::DrawIndexed(Renderer::GetFullscreenQuad());
+			
 			m_ScreenBuffer->Unbind();
 			m_Viewport.RenderTarget->Blit(m_ScreenBuffer, 0, 0);
 			m_Viewport.RenderTarget->Bind();
