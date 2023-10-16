@@ -1,6 +1,8 @@
 #type vertex
 #version 450
 
+#include "Camera.glsl"
+
 layout(location = 0) in vec3 i_Position;
 layout(location = 1) in vec4 i_Color;
 layout(location = 2) in vec2 i_UV;
@@ -9,24 +11,6 @@ layout(location = 3) in int i_EntityIndex;
 layout(location = 0) out vec2 UV;
 layout(location = 1) out vec4 Color;
 layout(location = 2) out flat int EntityIndex;
-
-struct CameraData
-{
-	vec3 Position;
-
-	mat4 Projection;
-	mat4 View;
-	mat4 ViewProjection;
-
-	mat4 InverseProjection;
-	mat4 InverseView;
-	mat4 InverseViewProjection;
-};
-
-layout(std140, binding = 0) uniform Camera
-{
-	CameraData u_Camera;
-};
 
 void main()
 {

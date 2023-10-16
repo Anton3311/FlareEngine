@@ -108,8 +108,8 @@ Entities:
         Material: 8220382724088785445
   - Components:
       - Name: struct Flare::TransformComponent
-        Position: [0, 0, 0]
-        Rotation: [0, 0, 0]
+        Position: [0.808461308, 0, -0.00459730625]
+        Rotation: [0, -0, 0]
         Scale: [1, 1, 1]
       - Name: struct Flare::TextComponent
         Text: Hello world
@@ -132,7 +132,7 @@ Entities:
         Intensity: 2
   - Components:
       - Name: struct Flare::TransformComponent
-        Position: [1, 0, 0]
+        Position: [1, 2.53233695, 0]
         Rotation: [0, -0, 0]
         Scale: [1, 0.999999523, 1]
       - Name: struct Flare::MeshComponent

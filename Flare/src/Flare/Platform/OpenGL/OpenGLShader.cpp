@@ -242,12 +242,88 @@ namespace Flare
         return true;
     }
 
+    class ShaderIncluder : public shaderc::CompileOptions::IncluderInterface
+    {
+    public:
+        virtual shaderc_include_result* GetInclude(const char* requested_source,
+            shaderc_include_type type,
+            const char* requesting_source,
+            size_t include_depth)
+        {
+            std::filesystem::path requestingPath = requesting_source;
+            std::filesystem::path parent = requestingPath.parent_path();
+            std::filesystem::path includedFilePath = parent / requested_source;
+
+            if (!std::filesystem::exists(includedFilePath))
+                includedFilePath = std::filesystem::path("assets/Shaders/") / requested_source;
+            
+            shaderc_include_result* includeData = new shaderc_include_result();
+            includeData->content = nullptr;
+            includeData->content_length = 0;
+            includeData->source_name = nullptr;
+            includeData->source_name_length = 0;
+            includeData->user_data = nullptr;
+
+            std::ifstream inputStream(includedFilePath);
+
+            std::string_view path;
+            if (inputStream.is_open())
+            {
+                std::string pathString = includedFilePath.string();
+                path = pathString;
+
+                char* sourceName = new char[path.size() + 1];
+                sourceName[path.size()] = 0;
+
+                memcpy_s(sourceName, path.size() + 1, pathString.c_str(), pathString.size());
+
+                includeData->source_name = sourceName;
+                includeData->source_name_length = pathString.size();
+            }
+
+            if (inputStream.is_open())
+            {
+                inputStream.seekg(0, std::ios::end);
+                size_t size = inputStream.tellg();
+                char* source = new char[size + 1];
+                std::memset(source, 0, size + 1);
+
+                inputStream.seekg(0, std::ios::beg);
+                inputStream.read(source, size);
+
+                includeData->content = source;
+                includeData->content_length = strlen(source);
+            }
+            else
+            {
+                std::string_view message = "File not found.";
+
+                includeData->content = message.data();
+                includeData->content_length = message.size();
+            }
+
+            return includeData;
+        }
+
+        virtual void ReleaseInclude(shaderc_include_result* data)
+        {
+            if (data->source_name)
+            {
+                delete data->source_name;
+                delete data->content;
+            }
+
+            delete data;
+        }
+    };
+
     static std::optional<SpirvData> CompileVulkanGlslToSpirv(const std::string& path, const std::string& source, shaderc_shader_kind programKind)
     {
         shaderc::Compiler compiler;
         shaderc::CompileOptions options;
         options.SetSourceLanguage(shaderc_source_language_glsl);
         options.SetGenerateDebugInfo();
+        options.SetIncluder(CreateScope<ShaderIncluder>());
         options.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_2);
         options.SetOptimizationLevel(shaderc_optimization_level_performance);
 
