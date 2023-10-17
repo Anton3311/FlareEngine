@@ -57,8 +57,7 @@ namespace Flare
 
 		static void Begin(const Ref<Material>& material = nullptr);
 		static void End();
-		static void Flush();
-
+		
 		static void SetMaterial(const Ref<Material>& material);
 		static Ref<Material> GetMaterial();
 
@@ -89,6 +88,10 @@ namespace Flare
 
 		static void ResetStats();
 		static const Renderer2DStats& GetStats();
+	private:
+		static void FlushQuads();
+		static void FlushText();
+		static void FlushAll();
 	private:
 		static void DrawQuad(const glm::vec3& position, 
 			const glm::vec2& size, 
