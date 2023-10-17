@@ -51,7 +51,7 @@ namespace Flare
 				break;
 
 			case ShaderDataType::Float:
-				emitter << material->ReadParameterValue<int32_t>(index);
+				emitter << material->ReadParameterValue<float>(index);
 				break;
 			case ShaderDataType::Float2:
 				emitter << material->ReadParameterValue<glm::vec2>(index);

@@ -8,6 +8,9 @@ AssetRegistry:
   - Handle: 5193090395626261884
     Type: Texture
     Path: Texture.png
+  - Handle: 7732178757911584553
+    Type: Material
+    Path: Platform Material.flrmat
   - Handle: 8220382724088785445
     Type: Material
     Path: TestMaterial.flrmat

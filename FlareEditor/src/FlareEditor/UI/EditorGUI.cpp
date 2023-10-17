@@ -94,7 +94,7 @@ namespace Flare
 	{
 		PropertyName(name);
 
-		ImGui::PushID(&value);
+		ImGui::PushID(name);
 		bool result = ImGui::DragFloat("", &value, 0.1f);
 		ImGui::PopID();
 
@@ -106,7 +106,7 @@ namespace Flare
 	{
 		PropertyName(name);
 
-		ImGui::PushID(&value);
+		ImGui::PushID(name);
 		bool result = ImGui::DragFloat2("", glm::value_ptr(value), 0.1f);
 		ImGui::PopID();
 		return result;
@@ -116,7 +116,7 @@ namespace Flare
 	{
 		PropertyName(name);
 
-		ImGui::PushID(&value);
+		ImGui::PushID(name);
 		bool result = ImGui::DragFloat3("", glm::value_ptr(value), 0.1f);
 		ImGui::PopID();
 		return result;
@@ -126,7 +126,7 @@ namespace Flare
 	{
 		PropertyName(name);
 
-		ImGui::PushID(&value);
+		ImGui::PushID(name);
 		bool result = ImGui::DragFloat4("", glm::value_ptr(value), 0.1f);
 		ImGui::PopID();
 		return result;
