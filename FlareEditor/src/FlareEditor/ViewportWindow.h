@@ -4,6 +4,8 @@
 #include "Flare/Renderer/RenderData.h"
 #include "Flare/Renderer/Viewport.h"
 
+#include "FlarePlatform/Event.h"
+
 #include <glm/glm.hpp>
 
 #include <string>
@@ -19,6 +21,7 @@ namespace Flare
 	public:
 		virtual void OnRenderImGui();
 		virtual void OnRenderViewport();
+		virtual void OnEvent(Event& event) {}
 
 		const RenderData& GetRenderData() const { return m_Viewport.FrameData; }
 

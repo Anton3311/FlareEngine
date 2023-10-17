@@ -18,6 +18,7 @@ namespace Flare
 		virtual void OnRenderViewport() override;
 		virtual void OnViewportChanged() override;
 		virtual void OnRenderImGui() override;
+		virtual void OnEvent(Event& event) override;
 	protected:
 		virtual void CreateFrameBuffer() override;
 		virtual void OnClear() override;

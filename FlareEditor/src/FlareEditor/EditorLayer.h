@@ -65,7 +65,6 @@ namespace Flare
 		inline bool IsPlaymodePaused() const { return m_PlaymodePaused; }
 		inline void SetPlaymodePaused(bool value) { m_PlaymodePaused = value; }
 
-		inline GuizmoMode GetGuizmoMode() const { return m_Guizmo; }
 		inline EditorMode GetMode() const { return m_Mode; }
 
 		inline ECSContext& GetECSContext() { return m_ECSContext; }
@@ -88,17 +87,17 @@ namespace Flare
 		PropertiesWindow m_PropertiesWindow;
 		AssetManagerWindow m_AssetManagerWindow;
 
-		std::vector<Ref<ViewportWindow>> m_Viewports;
+		std::vector<Ref<ViewportWindow>> m_ViewportWindows;
 		glm::vec4 m_ClearColor = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
 
 		EditorCamera m_Camera;
 		AssetHandle m_EditedSceneHandle;
 		bool m_PlaymodePaused;
 		EditorMode m_Mode;
-		GuizmoMode m_Guizmo;
 
 		ECSContext m_ECSContext;
 	public:
+		GuizmoMode Guizmo;
 		EditorSelection Selection;
 	private:
 		static EditorLayer* s_Instance;

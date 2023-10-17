@@ -42,7 +42,7 @@ namespace Flare
 		m_PropertiesWindow(m_AssetManagerWindow),
 		m_PlaymodePaused(false),
 		m_Mode(EditorMode::Edit),
-		m_Guizmo(GuizmoMode::Translate)
+		Guizmo(GuizmoMode::None)
 	{
 		s_Instance = this;
 	}
@@ -80,8 +80,8 @@ namespace Flare
 		});
 
 		m_GameWindow = CreateRef<ViewportWindow>("Game");
-		m_Viewports.emplace_back(CreateRef<SceneViewportWindow>(m_Camera));
-		m_Viewports.emplace_back(m_GameWindow);
+		m_ViewportWindows.emplace_back(CreateRef<SceneViewportWindow>(m_Camera));
+		m_ViewportWindows.emplace_back(m_GameWindow);
 
 		EditorCameraSettings& settings = m_Camera.GetSettings();
 		settings.FOV = 60.0f;
@@ -138,33 +138,16 @@ namespace Flare
 		if (m_Mode == EditorMode::Play && !m_PlaymodePaused)
 			Scene::GetActive()->OnUpdateRuntime();
 
-		for (auto& viewport : m_Viewports)
+		for (auto& viewport : m_ViewportWindows)
 			viewport->OnRenderViewport();
 	}
 
 	void EditorLayer::OnEvent(Event& event)
 	{
-		m_Camera.ProcessEvents(event);
+		for (Ref<ViewportWindow>& window : m_ViewportWindows)
+			window->OnEvent(event);
+		
 		InputManager::ProcessEvent(event);
-
-		EventDispatcher dispatcher(event);
-		dispatcher.Dispatch<KeyReleasedEvent>([this](KeyReleasedEvent& e) -> bool
-		{
-			switch (e.GetKeyCode())
-			{
-			case KeyCode::G:
-				m_Guizmo = GuizmoMode::Translate;
-				break;
-			case KeyCode::R:
-				m_Guizmo = GuizmoMode::Rotate;
-				break;
-			case KeyCode::S:
-				m_Guizmo = GuizmoMode::Scale;
-				break;
-			}
-
-			return false;
-		});
 	}
 
 	void EditorLayer::OnImGUIRender()
@@ -238,7 +221,7 @@ namespace Flare
 			ImGui::End();
 		}
 
-		for (auto& viewport : m_Viewports)
+		for (auto& viewport : m_ViewportWindows)
 			viewport->OnRenderImGui();
 
 		ProjectSettingsWindow::OnRenderImGui();

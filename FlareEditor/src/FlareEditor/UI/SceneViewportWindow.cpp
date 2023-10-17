@@ -15,6 +15,8 @@
 #include "FlareEditor/ImGui/ImGuiLayer.h"
 #include "FlareEditor/EditorLayer.h"
 
+#include "FlarePlatform//Events.h"
+
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <ImGuizmo.h>
@@ -173,7 +175,9 @@ namespace Flare
 
 		const EditorSelection& selection = EditorLayer::GetInstance().Selection;
 
-		if (selection.GetType() == EditorSelectionType::Entity && world.IsEntityAlive(selection.GetEntity()) && EditorLayer::GetInstance().GetGuizmoMode() != GuizmoMode::None)
+		bool showGuizmo = EditorLayer::GetInstance().Guizmo != GuizmoMode::None;
+		bool hasSelection = selection.GetType() == EditorSelectionType::Entity && world.IsEntityAlive(selection.GetEntity());
+		if (showGuizmo && hasSelection)
 		{
 			Entity selectedEntity = selection.GetEntity();
 			ImGuizmo::SetOrthographic(false);
@@ -194,7 +198,7 @@ namespace Flare
 				float snapValue = 0.5f;
 
 				ImGuizmo::OPERATION operation = (ImGuizmo::OPERATION)-1;
-				switch (EditorLayer::GetInstance().GetGuizmoMode())
+				switch (EditorLayer::GetInstance().Guizmo)
 				{
 				case GuizmoMode::Translate:
 					operation = ImGuizmo::TRANSLATE;
@@ -238,6 +242,38 @@ namespace Flare
 		}
 
 		EndImGui();
+	}
+
+	void SceneViewportWindow::OnEvent(Event& event)
+	{
+		if (!m_IsFocused)
+			return;
+
+		if (m_IsHovered)
+			m_Camera.ProcessEvents(event);
+
+		EventDispatcher dispatcher(event);
+		dispatcher.Dispatch<KeyReleasedEvent>([this](KeyReleasedEvent& e) -> bool
+		{
+			GuizmoMode guizmoMode = GuizmoMode::None;
+			switch (e.GetKeyCode())
+			{
+			case KeyCode::G:
+				guizmoMode = GuizmoMode::Translate;
+				break;
+			case KeyCode::R:
+				guizmoMode = GuizmoMode::Rotate;
+				break;
+			case KeyCode::S:
+				guizmoMode = GuizmoMode::Scale;
+				break;
+			default:
+				return false;
+			}
+
+			EditorLayer::GetInstance().Guizmo = guizmoMode;
+			return false;
+		});
 	}
 
 	void SceneViewportWindow::CreateFrameBuffer()
