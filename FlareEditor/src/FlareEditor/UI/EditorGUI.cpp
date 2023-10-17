@@ -164,12 +164,34 @@ namespace Flare
 		return 0;
 	}
 
-	bool EditorGUI::TextInputField(const char* name, std::string& text)
+	bool EditorGUI::TextProperty(const char* name, std::string& text)
 	{
 		PropertyName(name);
 
 		ImGui::PushID(&text);
  		bool result = ImGui::InputTextMultiline("", text.data(), text.size(), ImVec2(0.0f, 0.0f), ImGuiInputTextFlags_CallbackResize, InputTextCallback, (void*)&text);
+		ImGui::PopID();
+		return result;
+	}
+
+	bool EditorGUI::TextField(const char* name, std::string& text)
+	{
+		float y = ImGui::GetCursorPosY();
+		ImGui::SetCursorPosY(y + ImGui::GetStyle().FramePadding.y);
+
+		ImGui::Text(name);
+		ImGui::SameLine();
+
+		ImGui::SetCursorPosY(y);
+
+		ImGui::PushID(name);
+		bool result = ImGui::InputText("",
+			text.data(),
+			text.size(),
+			ImGuiInputTextFlags_CallbackResize,
+			InputTextCallback,
+			(void*)&text);
+
 		ImGui::PopID();
 		return result;
 	}

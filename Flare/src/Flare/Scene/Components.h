@@ -13,6 +13,17 @@
 
 namespace Flare
 {
+	struct FLARE_API NameComponent
+	{
+		FLARE_COMPONENT;
+
+		NameComponent();
+		NameComponent(std::string_view name);
+		~NameComponent();
+
+		std::string Value;
+	};
+
 	struct FLARE_API TransformComponent
 	{
 		FLARE_COMPONENT;

@@ -18,6 +18,24 @@ namespace Flare
 		ImGui::Text("Index %d Generation %d", entity.GetIndex(), entity.GetGeneration());
 		ImGui::EndDisabled();
 
+		std::string newNameString = "";
+		std::string* nameString = &newNameString;
+
+		std::optional<NameComponent*> name = m_World.TryGetEntityComponent<NameComponent>(entity);
+		if (name.has_value())
+			nameString = &name.value()->Value;
+
+		if (EditorGUI::TextField("Name", *nameString))
+		{
+			if (!nameString->empty() && !name.has_value())
+			{
+				m_World.AddEntityComponent<NameComponent>(entity, NameComponent());
+				m_World.GetEntityComponent<NameComponent>(entity).Value = *nameString;
+			}
+			if (nameString->empty() && name.has_value())
+				m_World.RemoveEntityComponent<NameComponent>(entity);
+		}
+
 		RenderAddComponentMenu(entity);
 
 		if (ImGui::BeginChild("Components"))

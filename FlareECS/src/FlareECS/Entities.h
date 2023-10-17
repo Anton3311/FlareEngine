@@ -48,8 +48,8 @@ namespace Flare
 			ComponentInitializationStrategy initStrategy = ComponentInitializationStrategy::DefaultConstructor);
 
 		// Components must be sorted by [ComponentId]
-		Entity CreateEntity(const std::pair<ComponentId, const void*>* components, size_t count);
-
+		Entity CreateEntity(const std::pair<ComponentId, void*>* components, size_t count, bool copyComponents = false);
+		
 		Entity CreateEntityFromArchetype(ArchetypeId archetype,
 			ComponentInitializationStrategy initStrategy = ComponentInitializationStrategy::DefaultConstructor);
 
@@ -57,7 +57,7 @@ namespace Flare
 
 		bool AddEntityComponent(Entity entity, 
 			ComponentId componentId, 
-			const void* componentData, 
+			void* componentData, 
 			ComponentInitializationStrategy initStrategy = ComponentInitializationStrategy::DefaultConstructor);
 
 		bool RemoveEntityComponent(Entity entity, ComponentId componentId);

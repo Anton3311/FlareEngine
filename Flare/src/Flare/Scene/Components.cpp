@@ -4,12 +4,21 @@
 
 namespace Flare
 {
+	FLARE_IMPL_COMPONENT(NameComponent, FLARE_FIELD(NameComponent, Value));
+	NameComponent::NameComponent() {}
+
+	NameComponent::NameComponent(std::string_view name)
+		: Value(name) {}
+
+	NameComponent::~NameComponent()
+	{
+	}
+
 	FLARE_IMPL_COMPONENT(TransformComponent,
 		FLARE_FIELD(TransformComponent, Position),
 		FLARE_FIELD(TransformComponent, Rotation),
 		FLARE_FIELD(TransformComponent, Scale),
 	);
-
 	TransformComponent::TransformComponent()
 		: Position(glm::vec3(0.0f)),
 		  Rotation(glm::vec3(0.0f)),

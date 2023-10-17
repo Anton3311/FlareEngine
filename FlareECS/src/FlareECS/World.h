@@ -36,9 +36,10 @@ namespace Flare
 		}
 
 		template<typename... T>
-		constexpr Entity CreateEntity(const T& ...components)
+		constexpr Entity CreateEntity(T ...components)
 		{
-			std::array<std::pair<ComponentId, const void*>, sizeof...(T)> componentPairs;
+			using ComponentPair = std::pair<ComponentId, void*>;
+			std::array<ComponentPair, sizeof...(T)> componentPairs;
 
 			size_t index = 0;
 			([&]
@@ -47,7 +48,7 @@ namespace Flare
 				index++;
 			} (), ...);
 
-			std::sort(componentPairs.begin(), componentPairs.end(), [](const std::pair<ComponentId, const void*>& a, std::pair<ComponentId, const void*>& b) -> bool
+			std::sort(componentPairs.begin(), componentPairs.end(), [](const ComponentPair& a, const ComponentPair& b) -> bool
 			{
 				return a.first < b.first;
 			});
@@ -81,7 +82,7 @@ namespace Flare
 		}
 
 		template<typename T>
-		constexpr bool AddEntityComponent(Entity entity, const T& data)
+		constexpr bool AddEntityComponent(Entity entity, T data)
 		{
 			return Entities.AddEntityComponent(entity, COMPONENT_ID(T), &data);
 		}

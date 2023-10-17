@@ -11,7 +11,7 @@ namespace Flare
 	class FLARE_API Prefab : public Asset
 	{
 	public:
-		Prefab(const uint8_t* prefabData, std::vector<std::pair<ComponentId, const void*>>&& components)
+		Prefab(const uint8_t* prefabData, std::vector<std::pair<ComponentId, void*>>&& components)
 			: Asset(AssetType::Prefab), m_Data(prefabData), m_Components(std::move(components)) {}
 		
 		~Prefab()
@@ -25,7 +25,7 @@ namespace Flare
 	
 		Entity CreateInstance(World& world);
 	private:
-		std::vector<std::pair<ComponentId, const void*>> m_Components;
+		std::vector<std::pair<ComponentId, void*>> m_Components;
 		const uint8_t* m_Data;
 	};
 	

@@ -8,7 +8,7 @@ namespace Flare
 {
     Entity Prefab::CreateInstance(World& world)
     {
-        return world.Entities.CreateEntity(m_Components.data(), m_Components.size());
+        return world.Entities.CreateEntity(m_Components.data(), m_Components.size(), true);
     }
 
     InstantiatePrefab::InstantiatePrefab(const Ref<Prefab>& prefab)

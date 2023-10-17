@@ -61,7 +61,13 @@ namespace Flare
 					ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImGuiTheme::PrimaryVariant);
 				}
 
-				bool opened = ImGui::TreeNodeEx((void*)std::hash<Entity>()(entity), flags, "Entity %d", entity.GetIndex());
+				std::optional<NameComponent*> entityName = m_World->TryGetEntityComponent<NameComponent>(entity);
+
+				bool opened = false;
+				if (entityName.has_value())
+					opened = ImGui::TreeNodeEx((void*)std::hash<Entity>()(entity), flags, entityName.value()->Value.c_str());
+				else
+					opened = ImGui::TreeNodeEx((void*)std::hash<Entity>()(entity), flags, "Entity %d", entity.GetIndex());
 
 				if (selected)
 				{

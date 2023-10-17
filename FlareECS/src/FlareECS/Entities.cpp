@@ -83,7 +83,7 @@ namespace Flare
 		return result.Id;
 	}
 
-	Entity Entities::CreateEntity(const std::pair<ComponentId, const void*>* components, size_t count)
+	Entity Entities::CreateEntity(const std::pair<ComponentId, void*>* components, size_t count, bool copyComponents)
 	{
 		if (m_TemporaryComponentSet.size() < count)
 			m_TemporaryComponentSet.resize(count);
@@ -106,7 +106,15 @@ namespace Flare
 			else
 				componentSize = archetypeRecord.ComponentOffsets[i + 1] - archetypeRecord.ComponentOffsets[i];
 
-			std::memcpy(result.Data + archetypeRecord.ComponentOffsets[i], components[i].second, componentSize);
+			uint8_t* componentLocation = result.Data + archetypeRecord.ComponentOffsets[i];
+
+			const ComponentInfo& info = m_Components.GetComponentInfo(components[i].first);
+			info.Initializer->Type.DefaultConstructor((void*)componentLocation);
+
+			if (copyComponents)
+				info.Initializer->Type.CopyConstructor(componentLocation, components[i].second);
+			else
+				info.Initializer->Type.MoveConstructor(componentLocation, components[i].second);
 		}
 
 		return result.Id;
@@ -190,7 +198,7 @@ namespace Flare
 		m_EntityRecords.erase(m_EntityRecords.end() - 1);
 	}
 
-	bool Entities::AddEntityComponent(Entity entity, ComponentId componentId, const void* componentData, ComponentInitializationStrategy initStrategy)
+	bool Entities::AddEntityComponent(Entity entity, ComponentId componentId, void* componentData, ComponentInitializationStrategy initStrategy)
 	{
 		FLARE_CORE_ASSERT(m_Components.IsComponentIdValid(componentId), "Invalid component id");
 
@@ -314,7 +322,11 @@ namespace Flare
 				componentInfo.Initializer->Type.DefaultConstructor(componentData);
 		}
 		else
-			std::memcpy(newEntityData + sizeBefore, componentData, componentInfo.Size);
+		{
+			uint8_t* componentLocation = newEntityData + sizeBefore;
+			componentInfo.Initializer->Type.DefaultConstructor(componentLocation);
+			componentInfo.Initializer->Type.MoveConstructor(componentLocation, componentData);
+		}
 
 		RemoveEntityData(entityRecord.Archetype, entityRecord.BufferIndex);
 

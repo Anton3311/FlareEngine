@@ -49,8 +49,11 @@ namespace Flare
 			emitter << YAML::Value << *(glm::vec4*)(data);
 			break;
 		case SerializableFieldType::String:
-			emitter << YAML::Value << *(std::string*)data;
+		{
+			std::string copy = *(std::string*)data;
+			emitter << YAML::Value << copy;
 			break;
+		}
 		case SerializableFieldType::Custom:
 		{
 			FLARE_CORE_ASSERT(typeInfo.CustomType);

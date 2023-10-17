@@ -1,5 +1,7 @@
 Entities:
   - Components:
+      - Name: struct Flare::NameComponent
+        Value: Camera
       - Name: struct Flare::TransformComponent
         Position: [-7.77728987, 8.51464748, -5.95473766]
         Rotation: [145.291992, -57.4001122, 180]
@@ -127,6 +129,8 @@ Entities:
         Position: [-0.993040681, 0, 1.44894576]
         Rotation: [58.8102531, 28.7912788, 123.11628]
         Scale: [0.999985158, 0.999985516, 0.999984324]
+      - Name: struct Flare::NameComponent
+        Value: Light
       - Name: struct Flare::DirectionalLight
         Color: [1, 1, 1]
         Intensity: 3
@@ -162,3 +166,8 @@ Entities:
       - Name: struct Flare::MeshComponent
         Mesh: 10342322337781790464
         Material: 13576769737354600278
+  - Components:
+      - Name: struct Flare::TransformComponent
+        Position: [0, 0, 0]
+        Rotation: [0, 0, 0]
+        Scale: [1, 1, 1]

@@ -44,7 +44,7 @@ namespace Flare
             World& world = World::GetCurrent();
 
             size_t prefabDataSize = 0;
-            std::vector<std::pair<ComponentId, const void*>> components;
+            std::vector<std::pair<ComponentId, void*>> components;
 
             if (YAML::Node componentsNode = node["Components"])
             {
@@ -88,7 +88,7 @@ namespace Flare
                                 if (info.Initializer)
                                     DeserializeType(componentNode, info.Initializer->Type, prefabData + writeOffset);
 
-                                components[index].second = (const void*)(prefabData + writeOffset);
+                                components[index].second = (void*)(prefabData + writeOffset);
 
                                 writeOffset += info.Size;
                                 index++;
@@ -98,7 +98,7 @@ namespace Flare
                 }
             }
 
-            using Pair = std::pair<ComponentId, const void*>;
+            using Pair = std::pair<ComponentId, void*>;
             std::sort(components.begin(), components.end(), [](const Pair& a, const Pair& b) -> bool { return a.first < b.first; });
 
             return CreateRef<Prefab>(prefabData, std::move(components));
