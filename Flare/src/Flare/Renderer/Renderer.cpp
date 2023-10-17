@@ -16,6 +16,8 @@ namespace Flare
 		Ref<UniformBuffer> LightBuffer;
 		Ref<VertexArray> FullscreenQuad;
 
+		Ref<Texture> WhiteTexture;
+		
 		std::vector<Scope<RenderPass>> RenderPasses;
 		RendererStatistics Statistics;
 	};
@@ -51,6 +53,11 @@ namespace Flare
 		s_RendererData.FullscreenQuad->SetIndexBuffer(IndexBuffer::Create(6, (const void*)indices));
 		s_RendererData.FullscreenQuad->AddVertexBuffer(vertexBuffer);
 		s_RendererData.FullscreenQuad->Unbind();
+
+		{
+			uint32_t whiteTextureData = 0xffffffff;
+			s_RendererData.WhiteTexture = Texture::Create(1, 1, &whiteTextureData, TextureFormat::RGBA8);
+		}
 	}
 
 	void Renderer::Shutdown()
@@ -131,5 +138,10 @@ namespace Flare
 	{
 		FLARE_CORE_ASSERT(s_RendererData.CurrentViewport);
 		return *s_RendererData.CurrentViewport;
+	}
+
+	Ref<Texture> Renderer::GetWhiteTexture()
+	{
+		return s_RendererData.WhiteTexture;
 	}
 }

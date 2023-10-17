@@ -51,7 +51,6 @@ namespace Flare
 
 		size_t TextQuadIndex = 0;
 
-		Ref<Texture> WhiteTexture = nullptr;
 		Ref<Texture> Textures[MaxTexturesCount];
 		uint32_t TextureIndex = 0;
 
@@ -133,12 +132,7 @@ namespace Flare
 		s_Renderer2DData.QuadUV[2] = glm::vec2(1.0f, 1.0f);
 		s_Renderer2DData.QuadUV[3] = glm::vec2(1.0f, 0.0f);
 
-		{
-			uint32_t whiteTextureData = 0xffffffff;
-			s_Renderer2DData.WhiteTexture = Texture::Create(1, 1, &whiteTextureData, TextureFormat::RGBA8);
-		}
-
-		s_Renderer2DData.Textures[0] = s_Renderer2DData.WhiteTexture;
+		s_Renderer2DData.Textures[0] = Renderer::GetWhiteTexture();
 		s_Renderer2DData.TextureIndex = 1;
 
 		s_Renderer2DData.Stats.DrawCalls = 0;
