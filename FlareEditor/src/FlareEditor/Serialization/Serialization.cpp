@@ -36,6 +36,16 @@ namespace Flare
 			emitter << YAML::Value << *(uint32_t*)(data);
 			break;
 
+		case SerializableFieldType::Int2:
+			emitter << YAML::Value << *(glm::ivec2*)(data);
+			break;
+		case SerializableFieldType::Int3:
+			emitter << YAML::Value << *(glm::ivec3*)(data);
+			break;
+		case SerializableFieldType::Int4:
+			emitter << YAML::Value << *(glm::ivec4*)(data);
+			break;
+
 		case SerializableFieldType::Float32:
 			emitter << YAML::Value << *(float*)(data);
 			break;
@@ -155,6 +165,25 @@ namespace Flare
 		case SerializableFieldType::UInt32:
 		{
 			int32_t value = fieldNode.as<uint32_t>();
+			std::memcpy(data, &value, sizeof(value));
+			break;
+		}
+
+		case SerializableFieldType::Int2:
+		{
+			glm::ivec2 value = fieldNode.as<glm::ivec2>();
+			std::memcpy(data, &value, sizeof(value));
+			break;
+		}
+		case SerializableFieldType::Int3:
+		{
+			glm::ivec3 value = fieldNode.as<glm::ivec3>();
+			std::memcpy(data, &value, sizeof(value));
+			break;
+		}
+		case SerializableFieldType::Int4:
+		{
+			glm::ivec4 value = fieldNode.as<glm::ivec4>();
 			std::memcpy(data, &value, sizeof(value));
 			break;
 		}

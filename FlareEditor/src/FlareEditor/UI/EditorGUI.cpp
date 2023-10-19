@@ -341,11 +341,25 @@ namespace Flare
 		case SerializableFieldType::Float32:
 			result |= ImGui::DragFloat("", (float*)fieldData);
 			break;
+
+		case SerializableFieldType::Int2:
+			result |= ImGui::DragInt2("", (int32_t*)fieldData);
+			break;
+		case SerializableFieldType::Int3:
+			result |= ImGui::DragInt3("", (int32_t*)fieldData);
+			break;
+		case SerializableFieldType::Int4:
+			result |= ImGui::DragInt4("", (int32_t*)fieldData);
+			break;
+
 		case SerializableFieldType::Float2:
 			result |= ImGui::DragFloat2("", (float*)fieldData);
 			break;
 		case SerializableFieldType::Float3:
 			result |= ImGui::DragFloat3("", (float*)fieldData);
+			break;
+		case SerializableFieldType::Float4:
+			result |= ImGui::DragFloat4("", (float*)fieldData);
 			break;
 		case SerializableFieldType::String:
 		{

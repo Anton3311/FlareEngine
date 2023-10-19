@@ -70,7 +70,9 @@ namespace Flare
 	{
 		glm::mat4 projection = GetProjection();
 		glm::mat4 inverseProjection = glm::inverse(projection);
-		
+
+		point.y = Renderer::GetMainViewport().GetSize().y - point.y;
+
 		point = (point / (glm::vec2)Renderer::GetMainViewport().GetSize()) * 2.0f - glm::vec2(1.0f);
 		return inverseProjection * glm::vec4(point, 0.0f, 1.0f);
 	}
