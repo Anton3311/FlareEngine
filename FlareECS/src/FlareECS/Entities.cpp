@@ -248,7 +248,6 @@ namespace Flare
 				{
 					std::swap(newComponents[i - 1], newComponents[i]);
 					insertedComponentIndex = i - 1;
-					break;
 				}
 			}
 
@@ -313,17 +312,16 @@ namespace Flare
 		std::memcpy(newEntityData, oldEntityData, sizeBefore);
 		std::memcpy(newEntityData + sizeBefore + componentInfo.Size, oldEntityData + sizeBefore, sizeAfter);
 
+		uint8_t* componentLocation = newEntityData + sizeBefore;
 		if (componentData == nullptr)
 		{
-			uint8_t* componentData = newEntityData + sizeBefore;
 			if (initStrategy == ComponentInitializationStrategy::Zero || !componentInfo.Initializer)
-				std::memset(componentData, 0, componentInfo.Size);
+				std::memset(componentLocation, 0, componentInfo.Size);
 			else
-				componentInfo.Initializer->Type.DefaultConstructor(componentData);
+				componentInfo.Initializer->Type.DefaultConstructor(componentLocation);
 		}
 		else
 		{
-			uint8_t* componentLocation = newEntityData + sizeBefore;
 			componentInfo.Initializer->Type.DefaultConstructor(componentLocation);
 			componentInfo.Initializer->Type.MoveConstructor(componentLocation, componentData);
 		}
