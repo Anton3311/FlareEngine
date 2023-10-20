@@ -120,7 +120,7 @@ namespace Flare
 		if (m_Mode == EditorMode::Play)
 			ExitPlayMode();
 
-		if (AssetManager::IsAssetHandleValid(Scene::GetActive()->Handle))
+		if (Scene::GetActive() != nullptr && AssetManager::IsAssetHandleValid(Scene::GetActive()->Handle))
 			As<EditorAssetManager>(AssetManager::GetInstance())->UnloadAsset(Scene::GetActive()->Handle);
 
 		Scene::SetActive(nullptr);
