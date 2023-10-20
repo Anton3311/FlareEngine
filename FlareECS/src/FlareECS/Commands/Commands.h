@@ -34,7 +34,7 @@ namespace Flare
 		virtual void Apply(CommandContext& context, World& world) override
 		{
 			FLARE_CORE_ASSERT(world.IsEntityAlive(context.GetEntity(m_Entity)));
-			world.AddEntityComponent<T>(context.GetEntity(m_Entity), m_Data);
+			world.AddEntityComponent<T>(context.GetEntity(m_Entity), std::move(m_Data));
 		}
 	private:
 		FutureEntity m_Entity;
