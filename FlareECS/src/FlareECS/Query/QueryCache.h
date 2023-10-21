@@ -27,7 +27,8 @@ namespace Flare
 
 		const QueryData& operator[](QueryId id) const;
 	public:
-		Query AddQuery(const ComponentSet& components);
+		Query CreateQuery(QueryCreationData& creationData);
+
 		void OnArchetypeCreated(ArchetypeId archetype);
 	private:
 		bool CompareComponentSets(const std::vector<ComponentId>& archetypeComponents, const std::vector<ComponentId>& queryComponents);

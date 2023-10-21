@@ -7,6 +7,6 @@ namespace Flare
 
 	Query QueryBuilder::Create()
 	{
-		return m_Queries.AddQuery(ComponentSet(m_Ids));
+		return m_Queries.CreateQuery(m_Data);
 	}
 }

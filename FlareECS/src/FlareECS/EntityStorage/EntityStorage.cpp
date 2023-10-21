@@ -6,96 +6,126 @@
 
 namespace Flare
 {
-	EntityStorage::EntityStorage()
-		: m_EntitySize(0), m_EntitiesCount(0), m_EntitiesPerChunk(0) {}
+	EntityDataStorage::EntityDataStorage()
+		: EntitySize(0), EntitiesCount(0), EntitiesPerChunk(0) {}
+	
+	EntityDataStorage::EntityDataStorage(EntityDataStorage&& other) noexcept
+		: Chunks(std::move(other.Chunks)),
+		EntitySize(other.EntitySize), EntitiesPerChunk(other.EntitiesPerChunk), EntitiesCount(other.EntitiesCount)
+	{
+		other.EntitiesCount = 0;
+		other.EntitySize = 0;
+		other.EntitiesPerChunk = 0;
+	}
+
+	EntityDataStorage& EntityDataStorage::operator=(EntityDataStorage&& other) noexcept
+	{
+		Chunks = std::move(other.Chunks);
+		EntitySize = other.EntitySize;
+		EntitiesPerChunk = other.EntitiesPerChunk;
+		EntitiesCount = other.EntitiesCount;
+
+		other.EntitySize = 0;
+		other.EntitiesPerChunk = 0;
+		other.EntitiesCount = 0;
+
+		return *this;
+	}
+
+	size_t EntityDataStorage::AddEntity()
+	{
+		FLARE_CORE_ASSERT(EntitySize > 0, "Entity has no size");
+
+		if (EntitiesCount % EntitiesPerChunk == 0)
+			Chunks.push_back(EntityChunksPool::GetInstance()->GetOrCreate());
+
+		EntitiesCount++;
+		return EntitiesCount - 1;
+	}
+
+	uint8_t* EntityDataStorage::GetEntityData(size_t index) const
+	{
+		size_t bytesOffset = (index % EntitiesPerChunk * EntitySize);
+		size_t chunkIndex = index / EntitiesPerChunk;
+
+		FLARE_CORE_ASSERT(bytesOffset <= ENTITY_CHUNK_SIZE - EntitySize);
+		FLARE_CORE_ASSERT(chunkIndex < Chunks.size());
+
+		return Chunks[chunkIndex].GetBuffer() + bytesOffset;
+	}
+
+	void EntityDataStorage::RemoveEntityData(size_t index)
+	{
+		FLARE_CORE_ASSERT(index < EntitiesCount);
+
+		if (index != EntitiesCount - 1)
+			std::memcpy(GetEntityData(index), GetEntityData(EntitiesCount - 1), EntitySize);
+		EntitiesCount--;
+
+		if (EntitiesCount % EntitiesPerChunk == 0)
+		{
+			EntityChunksPool::GetInstance()->Add(Chunks.back());
+			Chunks.erase(Chunks.end() - 1);
+		}
+	}
+
+	void EntityDataStorage::SetEntitySize(size_t entitySize)
+	{
+		FLARE_CORE_ASSERT(EntitiesCount == 0, "Entity size can only be set if the storage is empty");
+		EntitySize = entitySize;
+		EntitiesPerChunk = (size_t)floor((float)ENTITY_CHUNK_SIZE / (float)entitySize);
+	}
+
+	size_t EntityDataStorage::GetEntitiesCountInChunk(size_t index) const
+	{
+		FLARE_CORE_ASSERT(index < Chunks.size());
+		if (index == Chunks.size() - 1)
+			return EntitiesCount % EntitiesPerChunk;
+		return EntitiesPerChunk;
+	}
+
+
+
+	EntityStorage::EntityStorage() {}
 
 	EntityStorage::EntityStorage(EntityStorage&& other) noexcept
-		: m_Chunks(std::move(other.m_Chunks)), m_EntityIndices(std::move(other.m_EntityIndices)),
-		m_EntitySize(other.m_EntitySize), m_EntitiesPerChunk(other.m_EntitiesPerChunk), m_EntitiesCount(other.m_EntitiesCount)
-	{
-		other.m_EntitiesCount = 0;
-		other.m_EntitySize = 0;
-		other.m_EntitiesPerChunk = 0;
-	}
+		: m_EntityIndices(std::move(other.m_EntityIndices)), m_DataStorage(std::move(other.m_DataStorage)) {}
 
 	EntityStorage& EntityStorage::operator=(EntityStorage&& other) noexcept
 	{
-		m_Chunks = std::move(other.m_Chunks);
 		m_EntityIndices = std::move(other.m_EntityIndices);
-		m_EntitySize = other.m_EntitySize;
-		m_EntitiesPerChunk = other.m_EntitiesPerChunk;
-		m_EntitiesCount = other.m_EntitiesCount;
-
-		other.m_EntitySize = 0;
-		other.m_EntitiesPerChunk = 0;
-		other.m_EntitiesCount = 0;
-
+		m_DataStorage = std::move(other.m_DataStorage);
+		
 		return *this;
 	}
 
 	size_t EntityStorage::AddEntity(uint32_t registryIndex)
 	{
-		FLARE_CORE_ASSERT(m_EntitySize > 0, "Entity has no size");
-
-		if (m_EntitiesCount % m_EntitiesPerChunk == 0)
-			m_Chunks.push_back(EntityChunksPool::GetInstance()->GetOrCreate());
-
-		size_t index = m_EntitiesCount;
-		size_t offset = (m_EntitySize * m_EntitiesCount) % ENTITY_CHUNK_SIZE;
-		size_t chunkIndex = m_EntitiesCount / m_EntitiesPerChunk;
-
+		size_t index = m_DataStorage.AddEntity();
 		m_EntityIndices.push_back(registryIndex);
-
-		m_EntitiesCount++;
 		return index;
 	}
 
 	uint8_t* EntityStorage::GetEntityData(size_t entityIndex) const
 	{
-		size_t bytesOffset = (entityIndex % m_EntitiesPerChunk * m_EntitySize);
-		size_t chunkIndex = entityIndex / m_EntitiesPerChunk;
-
-		FLARE_CORE_ASSERT(bytesOffset <= ENTITY_CHUNK_SIZE - m_EntitySize);
-		FLARE_CORE_ASSERT(chunkIndex < m_Chunks.size());
-
-		return m_Chunks[chunkIndex].GetBuffer() + bytesOffset;
+		return m_DataStorage.GetEntityData(entityIndex);
 	}
 
 	void EntityStorage::RemoveEntityData(size_t entityIndex)
 	{
-		FLARE_CORE_ASSERT(entityIndex < m_EntitiesCount);
+		FLARE_CORE_ASSERT(entityIndex < m_DataStorage.EntitiesCount);
 
 		uint32_t lastEntityIndex = m_EntityIndices.back();
 
 		m_EntityIndices[entityIndex] = lastEntityIndex;
 		m_EntityIndices.erase(m_EntityIndices.end() - 1);
 
-		if (entityIndex != m_EntitiesCount - 1)
-			std::memcpy(GetEntityData(entityIndex), GetEntityData(m_EntitiesCount - 1), m_EntitySize);
-		m_EntitiesCount--;
-
-		if (m_EntitiesCount % m_EntitiesPerChunk == 0)
-		{
-			EntityChunksPool::GetInstance()->Add(m_Chunks.back());
-			m_Chunks.erase(m_Chunks.end() - 1);
-		}
-	}
-
-	size_t EntityStorage::GetEntitiesCount() const
-	{
-		return m_EntitiesCount;
-	}
-
-	size_t EntityStorage::GetEntitySize() const
-	{
-		return m_EntitySize;
+		m_DataStorage.RemoveEntityData(entityIndex);
 	}
 
 	void EntityStorage::SetEntitySize(size_t entitySize)
 	{
-		FLARE_CORE_ASSERT(m_EntitiesCount == 0, "Entity size can only be set if the storage is empty");
-		m_EntitySize = entitySize;
-		m_EntitiesPerChunk = (size_t)floor((float) ENTITY_CHUNK_SIZE / (float) entitySize);
+		m_DataStorage.SetEntitySize(entitySize);
 	}
 
 	void EntityStorage::UpdateEntityRegistryIndex(size_t entityIndex, uint32_t newRegistryIndex)
@@ -104,29 +134,15 @@ namespace Flare
 		m_EntityIndices[entityIndex] = newRegistryIndex;
 	}
 
-	size_t EntityStorage::GetEntitiesCountInChunk(size_t index) const
-	{
-		FLARE_CORE_ASSERT(index < m_Chunks.size());
-		if (index == m_Chunks.size() - 1)
-			return m_EntitiesCount % m_EntitiesPerChunk;
-		return m_EntitiesPerChunk;
-	}
-
 	uint8_t* EntityStorage::GetChunkBuffer(size_t index)
 	{
-		FLARE_CORE_ASSERT(index < m_Chunks.size());
-		return m_Chunks[index].GetBuffer();
+		FLARE_CORE_ASSERT(index < m_DataStorage.Chunks.size());
+		return m_DataStorage.Chunks[index].GetBuffer();
 	}
 
 	const uint8_t* EntityStorage::GetChunkBuffer(size_t index) const
 	{
-		FLARE_CORE_ASSERT(index < m_Chunks.size());
-		return m_Chunks[index].GetBuffer();
+		FLARE_CORE_ASSERT(index < m_DataStorage.Chunks.size());
+		return m_DataStorage.Chunks[index].GetBuffer();
 	}
-
-	const std::vector<uint32_t>& EntityStorage::GetEntityIndices() const
-	{
-		return m_EntityIndices;
-	}
-
 }

@@ -17,13 +17,13 @@ namespace Flare
 		QueryBuilder& With()
 		{
 			size_t count = sizeof...(T);
-			m_Ids.reserve(m_Ids.size() + count);
+			m_Data.Components.reserve(m_Data.Components.size() + count);
 
 			size_t index = 0;
 
 			([&]
 			{
-				m_Ids.push_back(COMPONENT_ID(T));
+				m_Data.Components.push_back(COMPONENT_ID(T));
 			} (), ...);
 
 			return *this;
@@ -33,14 +33,14 @@ namespace Flare
 		QueryBuilder& Without()
 		{
 			size_t count = sizeof...(T);
-			m_Ids.reserve(m_Ids.size() + count);
+			m_Data.Components.reserve(m_Data.Components.size() + count);
 
 			size_t index = 0;
 
 			([&]
 			{
 				ComponentId id = COMPONENT_ID(T);
-				m_Ids.push_back(ComponentId(
+				m_Data.Components.push_back(ComponentId(
 					id.GetIndex() | (uint32_t)QueryFilterType::Without, 
 					id.GetGeneration()));
 			} (), ...);
@@ -51,6 +51,6 @@ namespace Flare
 		Query Create();
 	private:
 		QueryCache& m_Queries;
-		std::vector<ComponentId> m_Ids;
+		QueryCreationData m_Data;
 	};
 }

@@ -16,38 +16,34 @@ namespace Flare
 		return m_Queries[id];
 	}
 
-	Query QueryCache::AddQuery(const ComponentSet& components)
+	Query QueryCache::CreateQuery(QueryCreationData& creationData)
 	{
-		std::unordered_set<ArchetypeId> matched;
-
 		QueryId id = m_Queries.size();
 		QueryData& query = m_Queries.emplace_back();
 		query.Id = id;
-		query.Components.resize(components.GetCount());
+		query.Components = std::move(creationData.Components);
+		query.MatchedArchetypes;
 
-		std::memcpy(query.Components.data(), components.GetIds(), components.GetCount() * sizeof(ComponentId));
 		std::sort(query.Components.begin(), query.Components.end());
 
-		for (size_t i = 0; i < components.GetCount(); i++)
+		for (size_t i = 0; i < query.Components.size(); i++)
 		{
-			auto it = m_Archetypes.ComponentToArchetype.find(components[i].Masked());
+			auto it = m_Archetypes.ComponentToArchetype.find(query.Components[i].Masked());
 			if (it != m_Archetypes.ComponentToArchetype.end())
 			{
 				for (std::pair<ArchetypeId, size_t> archetype : it->second)
 				{
-					if (matched.find(archetype.first) != matched.end())
+					if (query.MatchedArchetypes.find(archetype.first) != query.MatchedArchetypes.end())
 						continue;
 
 					if (CompareComponentSets(m_Archetypes[archetype.first].Components, query.Components))
-						matched.insert(archetype.first);
+						query.MatchedArchetypes.insert(archetype.first);
 				}
 			}
 		}
 
-		query.MatchedArchetypes = std::move(matched);
-
-		for (size_t i = 0; i < components.GetCount(); i++)
-			m_CachedMatches[components[i].Masked()].push_back(id);
+		for (size_t i = 0; i < query.Components.size(); i++)
+			m_CachedMatches[query.Components[i].Masked()].push_back(id);
 
 		return Query(id, m_Entities, *this);
 	}

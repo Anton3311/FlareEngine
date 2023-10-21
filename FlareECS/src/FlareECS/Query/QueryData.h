@@ -12,6 +12,11 @@ namespace Flare
 	using QueryId = size_t;
 	constexpr QueryId INVALID_QUERY_ID = SIZE_MAX;
 
+	struct QueryCreationData
+	{
+		std::vector<ComponentId> Components;
+	};
+
 	struct QueryData
 	{
 		QueryId Id;

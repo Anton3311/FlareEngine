@@ -8,6 +8,30 @@
 
 namespace Flare
 {
+	struct EntityDataStorage
+	{
+	public:
+		EntityDataStorage();
+		EntityDataStorage(const EntityDataStorage&) = delete;
+		EntityDataStorage(EntityDataStorage&& other) noexcept;
+
+		EntityDataStorage& operator=(const EntityDataStorage&) = delete;
+		EntityDataStorage& operator=(EntityDataStorage&& other) noexcept;
+
+		size_t AddEntity();
+		uint8_t* GetEntityData(size_t index) const;
+		void RemoveEntityData(size_t index);
+
+		void SetEntitySize(size_t entitySize);
+		size_t GetEntitiesCountInChunk(size_t index) const;
+
+		std::vector<EntityStorageChunk> Chunks;
+
+		size_t EntitySize;
+		size_t EntitiesCount;
+		size_t EntitiesPerChunk;
+	};
+
 	class FLAREECS_API EntityStorage
 	{
 	public:
@@ -23,24 +47,23 @@ namespace Flare
 
 		void RemoveEntityData(size_t entityIndex);
 		
-		size_t GetEntitiesCount() const;
-		size_t GetEntitySize() const;
+		inline size_t GetEntitiesCount() const { return m_DataStorage.EntitiesCount; }
+		inline size_t GetEntitySize() const { return m_DataStorage.EntitySize; }
+
 		void SetEntitySize(size_t entitySize);
 		void UpdateEntityRegistryIndex(size_t entityIndex, uint32_t newRegistryIndex);
 
-		size_t GetChunksCount() const { return m_Chunks.size(); }
-		size_t GetEntitiesPerChunkCount() const { return m_EntitiesPerChunk; }
-		size_t GetEntitiesCountInChunk(size_t index) const;
+		inline size_t GetChunksCount() const { return m_DataStorage.Chunks.size(); }
+		inline size_t GetEntitiesPerChunkCount() const { return m_DataStorage.EntitiesPerChunk; }
+
+		size_t GetEntitiesCountInChunk(size_t index) const { return m_DataStorage.GetEntitiesCountInChunk(index); }
 
 		uint8_t* GetChunkBuffer(size_t index);
 		const uint8_t* GetChunkBuffer(size_t index) const;
-		const std::vector<uint32_t>& GetEntityIndices() const;
-	private:
-		std::vector<EntityStorageChunk> m_Chunks;
-		std::vector<uint32_t> m_EntityIndices;
 
-		size_t m_EntitySize;
-		size_t m_EntitiesCount;
-		size_t m_EntitiesPerChunk;
+		inline const std::vector<uint32_t>& GetEntityIndices() const { return m_EntityIndices; }
+	private:
+		EntityDataStorage m_DataStorage;
+		std::vector<uint32_t> m_EntityIndices;
 	};
 }

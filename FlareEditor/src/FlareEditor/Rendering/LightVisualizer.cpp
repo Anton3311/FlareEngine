@@ -12,8 +12,7 @@ namespace Flare
 	void LightVisualizer::OnConfig(SystemConfig& config)
 	{
 		config.Group = World::GetCurrent().GetSystemsManager().FindGroup("Debug Rendering");
-
-		m_Query = World::GetCurrent().CreateQuery<With<TransformComponent>, With<DirectionalLight>>();
+		m_Query = World::GetCurrent().NewQuery().With<TransformComponent, DirectionalLight>().Create();
 	}
 
 	void LightVisualizer::OnUpdate(SystemExecutionContext& context)

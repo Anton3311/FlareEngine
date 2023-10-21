@@ -21,7 +21,7 @@ namespace Flare
 	struct FLAREECS_API ArchetypeRecord
 	{
 		size_t Id;
-
+		
 		std::vector<ComponentId> Components; // Sorted
 		std::vector<size_t> ComponentOffsets;
 
