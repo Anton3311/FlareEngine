@@ -66,8 +66,8 @@ namespace Sandbox
 
 		virtual void OnConfig(SystemConfig& config) override
 		{
-			m_Query = World::GetCurrent().CreateQuery<With<TransformComponent>, With<SpriteComponent>>();
-			m_SingletonQuery = World::GetCurrent().CreateQuery<With<RotatingQuadData>>();
+			m_Query = World::GetCurrent().NewQuery().With<TransformComponent, SpriteComponent>().Create();
+			m_SingletonQuery = World::GetCurrent().NewQuery().With<RotatingQuadData>().Create();
 		}
 
 		virtual void OnUpdate(SystemExecutionContext& context) override

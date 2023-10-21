@@ -39,8 +39,8 @@ namespace Flare
 		m_OnRuntimeStartGroup = systemsManager.CreateGroup("On Runtime Start");
 		m_OnRuntimeEndGroup = systemsManager.CreateGroup("On Runtime End");
 
-		m_CameraDataUpdateQuery = m_World.CreateQuery<With<TransformComponent>, With<CameraComponent>>();
-		m_DirectionalLightQuery = m_World.CreateQuery<With<TransformComponent>, With<DirectionalLight>>();
+		m_CameraDataUpdateQuery = m_World.NewQuery().With<TransformComponent, CameraComponent>().Create();
+		m_DirectionalLightQuery = m_World.NewQuery().With<TransformComponent, DirectionalLight>().Create();
 
 		systemsManager.RegisterSystem("Sprites Renderer", m_2DRenderingGroup, new SpritesRendererSystem());
 		systemsManager.RegisterSystem("Meshes Renderer", m_2DRenderingGroup, new MeshesRendererSystem());

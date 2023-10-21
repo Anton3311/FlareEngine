@@ -10,6 +10,7 @@
 #include "FlareECS/Entity/Archetypes.h"
 
 #include "FlareECS/Query/QueryFilters.h"
+#include "FlareECS/Query/QueyrBuilder.h"
 #include "FlareECS/Query/Query.h"
 
 #include "FlareECS/System/SystemsManager.h"
@@ -121,11 +122,9 @@ namespace Flare
 			return {};
 		}
 
-		template<typename... T>
-		constexpr Query CreateQuery()
+		inline QueryBuilder NewQuery()
 		{
-			FilteredComponentsGroup<T...> components;
-			return m_Queries.AddQuery(ComponentSet(components.GetComponents().data(), components.GetComponents().size()));
+			return QueryBuilder(m_Queries);
 		}
 
 		static World& GetCurrent();
