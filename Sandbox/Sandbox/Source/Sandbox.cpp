@@ -68,6 +68,11 @@ namespace Sandbox
 		{
 			m_Query = World::GetCurrent().NewQuery().With<TransformComponent, SpriteComponent>().Create();
 			m_SingletonQuery = World::GetCurrent().NewQuery().With<RotatingQuadData>().Create();
+
+			m_DeletionQuery = World::GetCurrent().NewQuery()
+				.Deleted()
+				.With<SomeComponent>()
+				.Create();
 		}
 
 		virtual void OnUpdate(SystemExecutionContext& context) override
@@ -141,6 +146,7 @@ namespace Sandbox
 	private:
 		Query m_Query;
 		Query m_SingletonQuery;
+		Query m_DeletionQuery;
 	};
 	FLARE_IMPL_SYSTEM(RotatingQuadSystem);
 }

@@ -10,6 +10,21 @@
 
 namespace Flare
 {
+	QueryCache::~QueryCache()
+	{
+		for (const QueryData& query : m_Queries)
+		{
+			if (query.Target != QueryTarget::DeletedEntities)
+				continue;
+
+			for (ArchetypeId archetype : query.MatchedArchetypes)
+				m_Archetypes.Records[archetype].DeletionQueryReferences--;
+		}
+
+		for (const auto& archetype : m_Archetypes.Records)
+			FLARE_CORE_ASSERT(archetype.DeletionQueryReferences == 0);
+	}
+
 	const QueryData& QueryCache::operator[](QueryId id) const
 	{
 		FLARE_CORE_ASSERT(id < m_Queries.size());
@@ -21,6 +36,7 @@ namespace Flare
 		QueryId id = m_Queries.size();
 		QueryData& query = m_Queries.emplace_back();
 		query.Id = id;
+		query.Target = creationData.Target;
 		query.Components = std::move(creationData.Components);
 		query.MatchedArchetypes;
 
@@ -37,7 +53,12 @@ namespace Flare
 						continue;
 
 					if (CompareComponentSets(m_Archetypes[archetype.first].Components, query.Components))
+					{
 						query.MatchedArchetypes.insert(archetype.first);
+
+						if (query.Target == QueryTarget::DeletedEntities)
+							m_Archetypes.Records[archetype.first].DeletionQueryReferences++;
+					}
 				}
 			}
 		}
@@ -64,7 +85,14 @@ namespace Flare
 				QueryData& query = m_Queries[queryId];
 
 				if (CompareComponentSets(archetypeRecord.Components, query.Components))
+				{
+					// TODO: check if the archetype was already inserted (if this ever happens), 
+					// in oreder not to chage ref count and keep it correct
 					query.MatchedArchetypes.insert(archetype);
+
+					if (query.Target == QueryTarget::DeletedEntities)
+						m_Archetypes.Records[archetype].DeletionQueryReferences++;
+				}
 			}
 		}
 	}

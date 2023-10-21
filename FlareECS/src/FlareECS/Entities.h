@@ -76,6 +76,7 @@ namespace Flare
 
 		EntityStorage& GetEntityStorage(ArchetypeId archetype);
 		const EntityStorage& GetEntityStorage(ArchetypeId archetype) const;
+		const EntityDataStorage& GetDeletedEntityStorage(ArchetypeId archetype) const;
 
 		// Component operations
 
@@ -126,6 +127,7 @@ namespace Flare
 		Components& m_Components;
 
 		std::vector<EntityStorage> m_EntityStorages;
+		std::vector<EntityDataStorage> m_DeletedEntitiesStorages;
 
 		std::vector<EntityRecord> m_EntityRecords;
 		std::unordered_map<Entity, size_t> m_EntityToRecord;

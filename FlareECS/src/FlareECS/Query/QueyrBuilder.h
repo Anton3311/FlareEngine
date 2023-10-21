@@ -13,6 +13,18 @@ namespace Flare
 	public:
 		QueryBuilder(QueryCache& queries);
 
+		constexpr QueryBuilder& All()
+		{
+			m_Data.Target = QueryTarget::AllEntities;
+			return *this;
+		}
+
+		constexpr QueryBuilder& Deleted()
+		{
+			m_Data.Target = QueryTarget::DeletedEntities;
+			return *this;
+		}
+
 		template<typename... T>
 		QueryBuilder& With()
 		{

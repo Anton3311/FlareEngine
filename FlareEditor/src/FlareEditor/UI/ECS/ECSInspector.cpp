@@ -191,6 +191,8 @@ namespace Flare
 			EditorGUI::UIntPropertyField("Entities per chunk", entitiesPerChunk);
 			uint32_t entitySize = (uint32_t)storage.GetEntitySize();
 			EditorGUI::UIntPropertyField("Entity Size", entitySize);
+			int32_t references = record.DeletionQueryReferences;
+			EditorGUI::IntPropertyField("References in deletion queries", references);
 			ImGui::EndDisabled();
 
 			EditorGUI::EndPropertyGrid();
