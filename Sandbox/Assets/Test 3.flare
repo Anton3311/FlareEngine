@@ -1,0 +1,46 @@
+Entities:
+  - Components:
+      - Name: struct Flare::CameraComponent
+        Projection: 1
+        Size: 10
+        FOV: 60
+        Near: 0.100000001
+        Far: 1000
+      - Name: struct Flare::TransformComponent
+        Position: [0, 0, 0]
+        Rotation: [0, 0, 0]
+        Scale: [1, 1, 1]
+  - Components:
+      - Name: struct Flare::SpriteComponent
+        Color: [1, 1, 1, 1]
+        TextureTiling: [1, 1]
+        Texture: 0
+        Flags: 0
+      - Name: struct Flare::TransformComponent
+        Position: [0, 0, -1.59063542]
+        Rotation: [0, -0, 0]
+        Scale: [1, 1, 1]
+  - Components:
+      - Name: struct Sandbox::SomeComponent
+        a: 100
+        b: -234
+      - Name: struct Flare::TransformComponent
+        Position: [0, 0, 0]
+        Rotation: [0, 0, 0]
+        Scale: [1, 1, 1]
+  - Components:
+      - Name: struct Sandbox::SomeComponent
+        a: 100
+        b: -234
+      - Name: struct Flare::TransformComponent
+        Position: [0, 0, 0]
+        Rotation: [0, 0, 0]
+        Scale: [1, 1, 1]
+  - Components:
+      - Name: struct Sandbox::SomeComponent
+        a: 100
+        b: -234
+      - Name: struct Flare::TransformComponent
+        Position: [0, 0, 0]
+        Rotation: [0, 0, 0]
+        Scale: [1, 1, 1]

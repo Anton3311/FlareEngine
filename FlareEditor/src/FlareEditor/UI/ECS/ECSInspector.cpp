@@ -193,6 +193,8 @@ namespace Flare
 			EditorGUI::UIntPropertyField("Entity Size", entitySize);
 			int32_t references = record.DeletionQueryReferences;
 			EditorGUI::IntPropertyField("References in deletion queries", references);
+			uint32_t queuedForDeletion = (uint32_t)world.Entities.GetDeletedEntityStorage(archetype).DataStorage.EntitiesCount;
+			EditorGUI::UIntPropertyField("Queued for deletion", queuedForDeletion);
 			ImGui::EndDisabled();
 
 			EditorGUI::EndPropertyGrid();

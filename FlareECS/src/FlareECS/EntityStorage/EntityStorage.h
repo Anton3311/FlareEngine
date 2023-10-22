@@ -25,6 +25,8 @@ namespace Flare
 		void SetEntitySize(size_t entitySize);
 		size_t GetEntitiesCountInChunk(size_t index) const;
 
+		void Clear();
+
 		std::vector<EntityStorageChunk> Chunks;
 
 		size_t EntitySize;
@@ -46,6 +48,8 @@ namespace Flare
 		uint8_t* GetEntityData(size_t entityIndex) const;
 
 		void RemoveEntityData(size_t entityIndex);
+
+		EntityDataStorage& GetDataStorage() { return m_DataStorage; }
 		
 		inline size_t GetEntitiesCount() const { return m_DataStorage.EntitiesCount; }
 		inline size_t GetEntitySize() const { return m_DataStorage.EntitySize; }

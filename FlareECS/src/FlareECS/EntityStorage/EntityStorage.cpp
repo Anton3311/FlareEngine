@@ -84,6 +84,15 @@ namespace Flare
 		return EntitiesPerChunk;
 	}
 
+	void EntityDataStorage::Clear()
+	{
+		EntitiesCount = 0;
+		for (EntityStorageChunk& chunk : Chunks)
+			EntityChunksPool::GetInstance()->Add(chunk);
+
+		Chunks.clear();
+	}
+
 
 
 	EntityStorage::EntityStorage() {}

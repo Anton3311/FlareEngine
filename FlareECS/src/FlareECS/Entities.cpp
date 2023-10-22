@@ -181,6 +181,25 @@ namespace Flare
 		if (lastEntityInBuffer != record.RegistryIndex)
 			m_EntityRecords[lastEntityInBuffer].BufferIndex = record.BufferIndex;
 
+		const ArchetypeRecord& archetype = m_Archetypes.Records[record.Archetype];
+		if (archetype.IsUsedInDeletionQuery())
+		{
+			auto& deletedEntities = GetDeletedEntityStorage(archetype.Id);
+			deletedEntities.Ids.push_back(record.Id);
+
+			size_t index = deletedEntities.DataStorage.AddEntity();
+			const uint8_t* oldEntityData = storage.GetEntityData(record.BufferIndex);
+			uint8_t* newEntityData = deletedEntities.DataStorage.GetEntityData(index);
+
+			std::memcpy(newEntityData, oldEntityData, storage.GetEntitySize());
+		}
+		else
+		{
+			uint8_t* entityData = storage.GetEntityData(record.BufferIndex);
+			for (size_t i = 0; i < archetype.Components.size(); i++)
+				m_Components.GetComponentInfo(archetype.Components[i]).Deleter((void*)(entityData + archetype.ComponentOffsets[i]));
+		}
+
 		storage.RemoveEntityData(record.BufferIndex);
 
 		m_EntityIndex.AddDeletedId(record.Id);
@@ -261,11 +280,12 @@ namespace Flare
 			else
 			{
 				newArchetypeId = CreateArchetype();
-				EntityStorage& storage = GetEntityStorage(newArchetypeId);
 
 				ArchetypeRecord& newArchetype = m_Archetypes.Records[newArchetypeId];
 				newArchetype.Components = std::move(newComponents);
 				newArchetype.ComponentOffsets.resize(newArchetype.Components.size());
+
+				EntityStorage& storage = GetEntityStorage(newArchetypeId);
 
 				size_t entitySize = 0;
 				for (size_t i = 0; i < newArchetype.Components.size(); i++)
@@ -767,10 +787,35 @@ namespace Flare
 		return m_EntityStorages[archetype];
 	}
 
-	const EntityDataStorage& Entities::GetDeletedEntityStorage(ArchetypeId archetype) const
+	DeletedEntitiesStorage& Entities::GetDeletedEntityStorage(ArchetypeId archetype)
+	{
+		FLARE_CORE_ASSERT(m_Archetypes.IsIdValid(archetype));
+		ValidateEntityStorages();
+		return m_DeletedEntitiesStorages[archetype];
+	}
+
+	const DeletedEntitiesStorage& Entities::GetDeletedEntityStorage(ArchetypeId archetype) const
 	{
 		FLARE_CORE_ASSERT(m_Archetypes.IsIdValid(archetype));
 		return m_DeletedEntitiesStorages[archetype];
+	}
+
+	void Entities::ClearQueuedForDeletion()
+	{
+		for (const ArchetypeRecord& archetype : m_Archetypes.Records)
+		{
+			DeletedEntitiesStorage& storage = m_DeletedEntitiesStorages[archetype.Id];
+			for (size_t entityIndex = 0; entityIndex < storage.DataStorage.EntitiesCount; entityIndex++)
+			{
+				uint8_t* entityData = storage.DataStorage.GetEntityData(entityIndex);
+				for (size_t i = 0; i < archetype.Components.size(); i++)
+				{
+					m_Components.GetComponentInfo(archetype.Components[i]).Deleter((void*)(entityData + archetype.ComponentOffsets[i]));
+				}
+			}
+
+			storage.Clear();
+		}
 	}
 
 	void Entities::RemoveEntityData(ArchetypeId archetype, size_t entityBufferIndex)
@@ -786,9 +831,9 @@ namespace Flare
 
 	void Entities::ValidateEntityStorages()
 	{
-		size_t oldSize = m_EntityStorages.size();
 		if (m_EntityStorages.size() < m_Archetypes.Records.size())
 		{
+			size_t oldSize = m_EntityStorages.size();
 			m_EntityStorages.resize(m_Archetypes.Records.size());
 			m_DeletedEntitiesStorages.resize(m_Archetypes.Records.size());
 
@@ -798,7 +843,21 @@ namespace Flare
 
 				size_t entitySize = record.ComponentOffsets.back() + m_Components.GetComponentInfo(record.Components.back()).Size;
 				m_EntityStorages[i].SetEntitySize(entitySize);
-				m_DeletedEntitiesStorages[i].SetEntitySize(entitySize);
+				m_DeletedEntitiesStorages[i].DataStorage.SetEntitySize(entitySize);
+			}
+		}
+
+		if (m_DeletedEntitiesStorages.size() < m_Archetypes.Records.size())
+		{
+			size_t oldSize = m_DeletedEntitiesStorages.size();
+			m_DeletedEntitiesStorages.resize(m_Archetypes.Records.size());
+
+			for (size_t i = oldSize; i < m_DeletedEntitiesStorages.size(); i++)
+			{
+				const ArchetypeRecord& record = m_Archetypes.Records[i];
+
+				size_t entitySize = record.ComponentOffsets.back() + m_Components.GetComponentInfo(record.Components.back()).Size;
+				m_DeletedEntitiesStorages[i].DataStorage.SetEntitySize(entitySize);
 			}
 		}
 	}

@@ -41,6 +41,9 @@ AssetRegistry:
   - Handle: 13576769737354600278
     Type: Material
     Path: Cube Material.flrmat
+  - Handle: 14915581624512801748
+    Type: Scene
+    Path: Test 3.flare
   - Handle: 16883279782608513727
     Type: Scene
     Path: Test.flare
