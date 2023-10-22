@@ -104,9 +104,14 @@ namespace Flare
 						Entity duplicated = entities.CreateEntityFromArchetype(archetype, ComponentInitializationStrategy::Zero);
 
 						const ArchetypeRecord& record = m_World->GetArchetypes()[archetype];
+
+						// TODO: use a copy constructor instead
 						std::memcpy(entities.GetEntityData(duplicated).value(),
 							entities.GetEntityData(entity).value(),
 							entities.GetEntityStorage(archetype).GetEntitySize());
+
+						selectedEntity = duplicated;
+						result = true;
 					}
 
 					ImGui::EndMenu();
