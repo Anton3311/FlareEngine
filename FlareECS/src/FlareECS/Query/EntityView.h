@@ -15,7 +15,7 @@ namespace Flare
 	class FLAREECS_API EntityView
 	{
 	public:
-		EntityView(Entities& entities, ArchetypeId archetype);
+		EntityView(Entities& entities, QueryTarget target, ArchetypeId archetype);
 	public:
 		EntityViewIterator begin();
 		EntityViewIterator end();
@@ -46,6 +46,7 @@ namespace Flare
 			return OptionalComponentView<T>();
 		}
 	private:
+		QueryTarget m_QueryTarget;
 		Entities& m_Entities;
 		ArchetypeId m_Archetype;
 	};

@@ -17,12 +17,12 @@ namespace Flare
 	class QueryIterator
 	{
 	public:
-		QueryIterator(Entities& entities, const std::unordered_set<ArchetypeId>::const_iterator& archetype)
-			: m_Entities(entities), m_Archetype(archetype) {}
+		QueryIterator(Entities& entities, QueryTarget target, const std::unordered_set<ArchetypeId>::const_iterator& archetype)
+			: m_Entities(entities), m_Target(target), m_Archetype(archetype) {}
 
 		inline EntityView operator*()
 		{
-			return EntityView(m_Entities, *m_Archetype);
+			return EntityView(m_Entities, m_Target, *m_Archetype);
 		}
 
 		inline QueryIterator operator++()
@@ -42,6 +42,7 @@ namespace Flare
 		}
 	private:
 		Entities& m_Entities;
+		QueryTarget m_Target;
 		std::unordered_set<ArchetypeId>::const_iterator m_Archetype;
 	};
 

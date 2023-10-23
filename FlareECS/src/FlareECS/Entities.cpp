@@ -567,7 +567,7 @@ namespace Flare
 		if (it == m_Archetypes.ComponentToArchetype.end())
 		{
 			FLARE_CORE_ERROR("Failed to get singleton component: World doesn't contain any entities with component '{0}'", m_Components.GetComponentInfo(id).Name);
-			return nullptr;
+			return {};
 		}
 
 		const auto& archetypes = it->second;

@@ -6,9 +6,9 @@
 
 #include <stdint.h>
 
-namespace Flare
+namespace Flare	
 {
-	struct EntityDataStorage
+	struct FLAREECS_API EntityDataStorage
 	{
 	public:
 		EntityDataStorage();

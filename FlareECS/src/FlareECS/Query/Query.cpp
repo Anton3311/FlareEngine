@@ -11,14 +11,17 @@ namespace Flare
 	{
 		FLARE_CORE_ASSERT(m_Entities);
 		FLARE_CORE_ASSERT(m_QueryCache);
-		return QueryIterator(*m_Entities, (*m_QueryCache)[m_Id].MatchedArchetypes.begin());
+
+		const auto& data = (*m_QueryCache)[m_Id];
+		return QueryIterator(*m_Entities, data.Target, data.MatchedArchetypes.begin());
 	}
 
 	QueryIterator Query::end() const
 	{
 		FLARE_CORE_ASSERT(m_Entities);
 		FLARE_CORE_ASSERT(m_QueryCache);
-		return QueryIterator(*m_Entities, (*m_QueryCache)[m_Id].MatchedArchetypes.end());
+		const auto& data = (*m_QueryCache)[m_Id];
+		return QueryIterator(*m_Entities, data.Target, data.MatchedArchetypes.end());
 	}
 
 	const std::unordered_set<ArchetypeId>& Query::GetMatchedArchetypes() const

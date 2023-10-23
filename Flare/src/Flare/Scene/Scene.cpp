@@ -130,6 +130,7 @@ namespace Flare
 	void Scene::OnUpdateRuntime()
 	{
 		m_World.GetSystemsManager().ExecuteGroup(m_ScriptingUpdateGroup);
+		m_World.Entities.ClearQueuedForDeletion();
 	}
 
 	void Scene::OnViewportResize(uint32_t width, uint32_t height)

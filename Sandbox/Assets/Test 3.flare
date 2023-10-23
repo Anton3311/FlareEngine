@@ -44,3 +44,13 @@ Entities:
         Position: [0, 0, 0]
         Rotation: [0, 0, 0]
         Scale: [1, 1, 1]
+  - Components:
+      - Name: struct Flare::SpriteComponent
+        Color: [1, 1, 1, 1]
+        TextureTiling: [1, 1]
+        Texture: 0
+        Flags: 0
+      - Name: struct Flare::TransformComponent
+        Position: [-1.28212106, 0, -1.59063542]
+        Rotation: [0, -0, 0]
+        Scale: [1, 1, 1]
