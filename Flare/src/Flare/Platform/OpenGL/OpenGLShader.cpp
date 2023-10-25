@@ -30,7 +30,7 @@ namespace Flare
         return (shaderc_shader_kind)0;
     }
 
-    OpenGLShader::OpenGLShader(const std::filesystem::path& path)
+    OpenGLShader::OpenGLShader(const std::filesystem::path& path, const std::filesystem::path& cacheDirectory)
     {
         std::ifstream file(path);
         if (file.is_open())
@@ -38,7 +38,7 @@ namespace Flare
             std::stringstream buffer;
             buffer << file.rdbuf();
 
-            Compile(path, buffer.str());
+            Compile(path, cacheDirectory, buffer.str());
         }
         else
             FLARE_CORE_ERROR("Could not read file {0}", path.string());
@@ -207,16 +207,6 @@ namespace Flare
     }
 
     using SpirvData = std::vector<uint32_t>;
-
-    static std::filesystem::path SHADER_CACHE_LOCATION = "Cache/Shaders/";
-
-    static std::filesystem::path GetCachePath(const std::filesystem::path& initialPath, std::string_view apiName, std::string_view stageName)
-    {
-        std::filesystem::path parent = std::filesystem::relative(initialPath.parent_path(), std::filesystem::current_path());
-        std::filesystem::path cachePath = SHADER_CACHE_LOCATION / parent / fmt::format("{0}.{1}.cache.{2}", initialPath.filename().string(), apiName, stageName);
-
-        return cachePath;
-    }
 
     static void WriteSpirvData(const std::filesystem::path& path, const SpirvData& data)
     {
@@ -506,13 +496,16 @@ namespace Flare
         }
     }
 
-    void OpenGLShader::Compile(const std::filesystem::path& path, std::string_view source)
+    void OpenGLShader::Compile(const std::filesystem::path& path, const std::filesystem::path& cacheDirectory, std::string_view source)
     {
         m_Id = glCreateProgram();
         auto programs = PreProcess(source);
 
         std::vector<uint32_t> shaderIds;
         shaderIds.reserve(programs.size());
+
+        if (!std::filesystem::exists(cacheDirectory))
+            std::filesystem::create_directories(cacheDirectory);
 
         std::string filePath = path.generic_string();
         for (auto& program : programs)
@@ -529,7 +522,7 @@ namespace Flare
             }
 
             SpirvData compiledShaderData;
-            std::filesystem::path cachePath = GetCachePath(path, "vulkan", stageName);
+            std::filesystem::path cachePath = cacheDirectory / Shader::GetCacheFileName(path.filename().string(), "vulkan", stageName);
             if (std::filesystem::exists(cachePath))
             {
                 FLARE_CORE_ASSERT(ReadSpirvData(cachePath, compiledShaderData));
@@ -551,7 +544,7 @@ namespace Flare
             for (const auto& p : m_Parameters)
                 FLARE_CORE_INFO("\t\tName = {0} Size = {1} Offset = {2}", p.Name, p.Size, p.Offset);
 
-            cachePath = GetCachePath(path, "opengl", stageName);
+            cachePath = cacheDirectory / Shader::GetCacheFileName(path.filename().string(), "opengl", stageName);
             if (std::filesystem::exists(cachePath))
             {
                 FLARE_CORE_ASSERT(ReadSpirvData(cachePath, compiledShaderData));

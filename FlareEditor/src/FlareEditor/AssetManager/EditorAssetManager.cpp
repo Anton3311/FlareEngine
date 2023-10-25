@@ -51,7 +51,11 @@ namespace Flare
 
         m_AssetImporters.emplace(AssetType::Shader, [](const AssetMetadata& metadata) -> Ref<Asset>
         {
-            return Shader::Create(metadata.Path);
+            std::filesystem::path assetsPath = Project::GetActive()->Location / "Assets";
+            std::filesystem::path cacheDirectory = Project::GetActive()->Location
+                / "Cache/Shaders/"
+                / std::filesystem::relative(metadata.Path.parent_path(), assetsPath);
+            return Shader::Create(metadata.Path, cacheDirectory);
         });
 
         m_AssetImporters.emplace(AssetType::Font, [](const AssetMetadata& metadata) -> Ref<Asset>

@@ -14,7 +14,7 @@ namespace Flare
 	class OpenGLShader : public Shader
 	{
 	public:
-		OpenGLShader(const std::filesystem::path& path);
+		OpenGLShader(const std::filesystem::path& path, const std::filesystem::path& cacheDirectory);
 		~OpenGLShader();
 	public:
 		virtual void Bind() override;
@@ -52,7 +52,7 @@ namespace Flare
 		};
 
 		std::vector<ShaderProgram> PreProcess(std::string_view source);
-		void Compile(const std::filesystem::path& path, std::string_view source);
+		void Compile(const std::filesystem::path& path, const std::filesystem::path& cacheDirectory, std::string_view source);
 	private:
 		uint32_t m_Id;
 		ShaderParameters m_Parameters;
