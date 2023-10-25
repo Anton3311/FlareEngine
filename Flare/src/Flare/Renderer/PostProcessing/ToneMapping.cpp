@@ -24,8 +24,8 @@ namespace Flare
 		m_Shader->Bind();
 		RenderCommand::DrawIndexed(Renderer::GetFullscreenQuad());
 
-		context.RenderTarget->Bind();
 		context.RenderTarget->Blit(output, 0, 0);
 		context.RTPool.Release(output);
+		context.RenderTarget->Bind();
 	}
 }

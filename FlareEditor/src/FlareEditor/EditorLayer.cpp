@@ -209,19 +209,38 @@ namespace Flare
 				ImGui::Text("Draw calls %d", stats.DrawCallsCount);
 			}
 
-			if (ImGui::CollapsingHeader("Post Processing"))
+			if (ImGui::TreeNodeEx("Post Processing", ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_SpanAvailWidth))
 			{
 				auto postProcessing = Scene::GetActive()->GetPostProcessingManager();
-				Ref<ToneMapping> toneMapping = postProcessing.ToneMappingPass;
 
-				if (ImGui::CollapsingHeader("Tone Mapping"))
+				if (ImGui::TreeNodeEx("Tone Mapping", ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_SpanAvailWidth))
 				{
+					Ref<ToneMapping> toneMapping = postProcessing.ToneMappingPass;
 					if (EditorGUI::BeginPropertyGrid())
 					{
 						EditorGUI::BoolPropertyField("Enabled", toneMapping->Enabled);
 						EditorGUI::EndPropertyGrid();
 					}
+
+					ImGui::TreePop();
 				}
+
+				if (ImGui::TreeNodeEx("Vignette", ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_SpanAvailWidth))
+				{
+					Ref<Vignette> vignette = postProcessing.VignettePass;
+					if (EditorGUI::BeginPropertyGrid())
+					{
+						EditorGUI::BoolPropertyField("Enabled", vignette->Enabled);
+						EditorGUI::ColorPropertyField("Color", vignette->Color);
+						EditorGUI::FloatPropertyField("Radius", vignette->Radius);
+						EditorGUI::FloatPropertyField("Smoothness", vignette->Smoothness);
+						EditorGUI::EndPropertyGrid();
+					}
+
+					ImGui::TreePop();
+				}
+
+				ImGui::TreePop();
 			}
 
 			ImGui::End();

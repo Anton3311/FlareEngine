@@ -19,6 +19,7 @@ namespace Flare
 		: Asset(AssetType::Scene), m_World(context)
 	{
 		m_PostProcessingManager.ToneMappingPass = CreateRef<ToneMapping>();
+		m_PostProcessingManager.VignettePass = CreateRef<Vignette>();
 
 		m_World.MakeCurrent();
 		Initialize();
@@ -48,6 +49,7 @@ namespace Flare
 		systemsManager.RegisterSystem("Meshes Renderer", m_2DRenderingGroup, new MeshesRendererSystem());
 
 		Renderer::AddRenderPass(m_PostProcessingManager.ToneMappingPass);
+		Renderer::AddRenderPass(m_PostProcessingManager.VignettePass);
 	}
 
 	void Scene::InitializeRuntime()
