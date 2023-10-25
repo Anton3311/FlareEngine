@@ -6,6 +6,8 @@
 #include "Flare/Renderer/Renderer.h"
 #include "Flare/Renderer/Font.h"
 
+#include "Flare/Renderer/PostProcessing/ToneMapping.h"
+
 #include "Flare/AssetManager/AssetManager.h"
 
 #include "Flare/Project/Project.h"
@@ -20,6 +22,7 @@
 #include "FlareEditor/AssetManager/EditorAssetManager.h"
 
 #include "FlareEditor/ImGui/ImGuiLayer.h"
+#include "FlareEditor/UI/EditorGUI.h"
 #include "FlareEditor/UI/SceneViewportWindow.h"
 #include "FlareEditor/UI/EditorTitleBar.h"
 #include "FlareEditor/UI/ProjectSettingsWindow.h"
@@ -204,6 +207,21 @@ namespace Flare
 			{
 				const auto& stats = Renderer::GetStatistics();
 				ImGui::Text("Draw calls %d", stats.DrawCallsCount);
+			}
+
+			if (ImGui::CollapsingHeader("Post Processing"))
+			{
+				auto postProcessing = Scene::GetActive()->GetPostProcessingManager();
+				Ref<ToneMapping> toneMapping = postProcessing.ToneMappingPass;
+
+				if (ImGui::CollapsingHeader("Tone Mapping"))
+				{
+					if (EditorGUI::BeginPropertyGrid())
+					{
+						EditorGUI::BoolPropertyField("Enabled", toneMapping->Enabled);
+						EditorGUI::EndPropertyGrid();
+					}
+				}
 			}
 
 			ImGui::End();

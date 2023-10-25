@@ -6,6 +6,7 @@
 #include "Flare/Renderer/RenderData.h"
 #include "Flare/Renderer/Viewport.h"
 #include "Flare/Renderer/Font.h"
+#include "Flare/Renderer/PostProcessing/PostProcessingManager.h"
 
 #include "Flare/Scene/SceneRenderer.h"
 
@@ -33,6 +34,8 @@ namespace Flare
 		void OnViewportResize(uint32_t width, uint32_t height);
 
 		World& GetECSWorld();
+		inline PostProcessingManager& GetPostProcessingManager() { return m_PostProcessingManager; }
+		inline const PostProcessingManager& GetPostProcessingManager() const { return m_PostProcessingManager; }
 
 		static Ref<Scene> GetActive();
 		static void SetActive(const Ref<Scene>& scene);
@@ -46,6 +49,8 @@ namespace Flare
 
 		Query m_CameraDataUpdateQuery;
 		Query m_DirectionalLightQuery;
+
+		PostProcessingManager m_PostProcessingManager;
 	private:
 		friend SceneSerializer;
 	};

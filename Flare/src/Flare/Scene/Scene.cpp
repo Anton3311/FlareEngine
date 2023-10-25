@@ -18,6 +18,8 @@ namespace Flare
 	Scene::Scene(ECSContext& context)
 		: Asset(AssetType::Scene), m_World(context)
 	{
+		m_PostProcessingManager.ToneMappingPass = CreateRef<ToneMapping>();
+
 		m_World.MakeCurrent();
 		Initialize();
 	}
@@ -44,6 +46,8 @@ namespace Flare
 
 		systemsManager.RegisterSystem("Sprites Renderer", m_2DRenderingGroup, new SpritesRendererSystem());
 		systemsManager.RegisterSystem("Meshes Renderer", m_2DRenderingGroup, new MeshesRendererSystem());
+
+		Renderer::AddRenderPass(m_PostProcessingManager.ToneMappingPass);
 	}
 
 	void Scene::InitializeRuntime()
@@ -122,9 +126,9 @@ namespace Flare
 
 		m_World.GetSystemsManager().ExecuteGroup(m_2DRenderingGroup);
 
-		Renderer::ExecuteRenderPasses();
-
 		Renderer2D::End();
+
+		Renderer::ExecuteRenderPasses();
 	}
 
 	void Scene::OnUpdateRuntime()

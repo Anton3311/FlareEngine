@@ -51,6 +51,7 @@ namespace Flare
 		{
 			std::optional<SystemGroupId> debugRenderingGroup = scene->GetECSWorld().GetSystemsManager().FindGroup("Debug Rendering");
 
+			m_Viewport.RenderTarget = m_ScreenBuffer;
 			scene->OnBeforeRender(m_Viewport);
 
 			Renderer::BeginScene(m_Viewport);
@@ -75,6 +76,7 @@ namespace Flare
 			RenderCommand::DrawIndexed(Renderer::GetFullscreenQuad());
 			
 			m_ScreenBuffer->Unbind();
+			m_Viewport.RenderTarget = m_FinalImageBuffer;
 			m_Viewport.RenderTarget->Blit(m_ScreenBuffer, 0, 0);
 			m_Viewport.RenderTarget->Bind();
 
@@ -288,7 +290,8 @@ namespace Flare
 			{ FrameBufferTextureFormat::Depth, TextureWrap::Clamp, TextureFiltering::Closest },
 			});
 
-		m_Viewport.RenderTarget = FrameBuffer::Create(specifications);
+		m_FinalImageBuffer = FrameBuffer::Create(specifications);
+		m_Viewport.RenderTarget = m_FinalImageBuffer;
 		m_ScreenBuffer = FrameBuffer::Create(screenBufferSpecs);
 	}
 

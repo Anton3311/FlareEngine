@@ -18,7 +18,7 @@ namespace Flare
 
 		Ref<Texture> WhiteTexture;
 		
-		std::vector<Scope<RenderPass>> RenderPasses;
+		std::vector<Ref<RenderPass>> RenderPasses;
 		RendererStatistics Statistics;
 	};
 
@@ -114,9 +114,9 @@ namespace Flare
 		DrawMesh(mesh->GetSubMesh().MeshVertexArray, material);
 	}
 
-	void Renderer::AddRenderPass(Scope<RenderPass> pass)
+	void Renderer::AddRenderPass(Ref<RenderPass> pass)
 	{
-		s_RendererData.RenderPasses.push_back(std::move(pass));
+		s_RendererData.RenderPasses.push_back(pass);
 	}
 
 	void Renderer::ExecuteRenderPasses()
@@ -124,7 +124,7 @@ namespace Flare
 		FLARE_CORE_ASSERT(s_RendererData.CurrentViewport);
 		RenderingContext context(s_RendererData.CurrentViewport->RenderTarget, s_RendererData.CurrentViewport->RTPool);
 
-		for (Scope<RenderPass>& pass : s_RendererData.RenderPasses)
+		for (Ref<RenderPass>& pass : s_RendererData.RenderPasses)
 			pass->OnRender(context);
 	}
 
