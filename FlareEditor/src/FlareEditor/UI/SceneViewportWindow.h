@@ -23,6 +23,8 @@ namespace Flare
 		virtual void CreateFrameBuffer() override;
 		virtual void OnClear() override;
 	private:
+		void RenderGrid();
+
 		Entity GetEntityUnderCursor() const;
 	private:
 		EditorCamera& m_Camera;
