@@ -190,7 +190,7 @@ namespace Flare
 				{
 					int32_t value = material->ReadParameterValue<int32_t>(i);
 					if (EditorGUI::IntPropertyField(shaderParameters[i].Name.c_str(), value))
-						material->SetInt(i, value);
+						material->WriteParameterValue(i, value);
 
 					break;
 				}
@@ -198,7 +198,7 @@ namespace Flare
 				{
 					float value = material->ReadParameterValue<float>(i);
 					if (EditorGUI::FloatPropertyField(shaderParameters[i].Name.c_str(), value))
-						material->SetFloat(i, value);
+						material->WriteParameterValue(i, value);
 
 					break;
 				}
@@ -206,7 +206,7 @@ namespace Flare
 				{
 					glm::vec2 value = material->ReadParameterValue<glm::vec2>(i);
 					if (EditorGUI::Vector2PropertyField(shaderParameters[i].Name.c_str(), value))
-						material->SetFloat2(i, value);
+						material->WriteParameterValue(i, value);
 
 					break;
 				}
@@ -214,7 +214,7 @@ namespace Flare
 				{
 					glm::vec3 value = material->ReadParameterValue<glm::vec3>(i);
 					if (EditorGUI::Vector3PropertyField(shaderParameters[i].Name.c_str(), value))
-						material->SetFloat3(i, value);
+						material->WriteParameterValue(i, value);
 
 					break;
 				}
@@ -222,7 +222,7 @@ namespace Flare
 				{
 					glm::vec4 value = material->ReadParameterValue<glm::vec4>(i);
 					if (EditorGUI::Vector4PropertyField(shaderParameters[i].Name.c_str(), value))
-						material->SetFloat4(i, value);
+						material->WriteParameterValue(i, value);
 
 					break;
 				}

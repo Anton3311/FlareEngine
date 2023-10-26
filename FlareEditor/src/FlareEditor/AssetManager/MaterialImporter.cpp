@@ -128,30 +128,30 @@ namespace Flare
 							switch (type.value())
 							{
 							case ShaderDataType::Int:
-								material->SetInt(index.value(), valueNode.as<int32_t>());
+								material->WriteParameterValue(index.value(), valueNode.as<int32_t>());
 								break;
 							case ShaderDataType::Int2:
-								material->SetInt2(index.value(), valueNode.as<glm::ivec2>());
+								material->WriteParameterValue(index.value(), valueNode.as<glm::ivec2>());
 								break;
 							case ShaderDataType::Int3:
-								material->SetInt3(index.value(), valueNode.as<glm::ivec3>());
+								material->WriteParameterValue(index.value(), valueNode.as<glm::ivec3>());
 								break;
 							case ShaderDataType::Int4:
-								material->SetInt4(index.value(), valueNode.as<glm::ivec4>());
+								material->WriteParameterValue(index.value(), valueNode.as<glm::ivec4>());
 								break;
 
 							case ShaderDataType::Float:
-								material->SetFloat(index.value(), valueNode.as<float>());
+								material->WriteParameterValue(index.value(), valueNode.as<float>());
 								break;
 							case ShaderDataType::Float2:
-								material->SetFloat2(index.value(), valueNode.as<glm::vec2>());
+								material->WriteParameterValue(index.value(), valueNode.as<glm::vec2>());
 								break;
 							case ShaderDataType::Float3:
-								material->SetFloat3(index.value(), valueNode.as<glm::vec3>());
+								material->WriteParameterValue(index.value(), valueNode.as<glm::vec3>());
 								break;
 							case ShaderDataType::Float4:
 								auto a = valueNode.as<glm::vec4>();
-								material->SetFloat4(index.value(), valueNode.as<glm::vec4>());
+								material->WriteParameterValue(index.value(), valueNode.as<glm::vec4>());
 								break;
 							}
 						}

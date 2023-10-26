@@ -123,7 +123,7 @@ namespace Flare
 		if (!transformIndex.has_value())
 			return;
 
-		material->SetMatrix4(transformIndex.value(), transform);
+		material->WriteParameterValue(transformIndex.value(), transform);
 		DrawMesh(mesh->GetSubMesh().MeshVertexArray, material);
 	}
 
