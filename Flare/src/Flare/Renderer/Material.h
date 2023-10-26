@@ -2,9 +2,19 @@
 
 #include "Flare/AssetManager/Asset.h"
 #include "Flare/Renderer/Shader.h"
+#include "Flare/Renderer/RendererAPI.h"
 
 namespace Flare
 {
+	struct MaterialFeatures
+	{
+		MaterialFeatures()
+			: Culling(CullingMode::Back), DepthTesting(true) {}
+
+		CullingMode Culling;
+		bool DepthTesting;
+	};
+
 	class FLARE_API Material : public Asset
 	{
 	public:
@@ -42,10 +52,11 @@ namespace Flare
 		void SetShaderParameters();
 	private:
 		void Initialize();
+	public:
+		MaterialFeatures Features;
 	private:
 		Ref<Shader> m_Shader;
 
-		size_t m_ShaderParametersCount;
 		size_t m_BufferSize;
 		uint8_t* m_Buffer;
 	};

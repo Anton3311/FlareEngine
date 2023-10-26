@@ -41,7 +41,7 @@ namespace Flare
 
 		uint32_t indices[] = {
 			0, 1, 2,
-			2, 0, 3,
+			0, 2, 3,
 		};
 
 		Ref<VertexBuffer> vertexBuffer = VertexBuffer::Create(sizeof(vertices), (const void*)vertices);
@@ -93,9 +93,16 @@ namespace Flare
 		return s_RendererData.FullscreenQuad;
 	}
 
+	static void ApplyMaterialFeatures(MaterialFeatures features)
+	{
+		RenderCommand::SetDepthTestEnabled(features.DepthTesting);
+		RenderCommand::SetCullingMode(features.Culling);
+	}
+
 	void Renderer::DrawFullscreenQuad(const Ref<Material>& material)
 	{
 		material->SetShaderParameters();
+		ApplyMaterialFeatures(material->Features);
 
 		const ShaderOutputs& shaderOutputs = material->GetShader()->GetOutputs();
 
@@ -115,6 +122,7 @@ namespace Flare
 	void Renderer::DrawMesh(const Ref<VertexArray>& mesh, const Ref<Material>& material, size_t indicesCount)
 	{
 		material->SetShaderParameters();
+		ApplyMaterialFeatures(material->Features);
 
 		const ShaderOutputs& shaderOutputs = material->GetShader()->GetOutputs();
 

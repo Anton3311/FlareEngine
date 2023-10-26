@@ -7,6 +7,13 @@
 
 namespace Flare
 {
+	enum class CullingMode : uint8_t
+	{
+		None,
+		Back,
+		Front,
+	};
+
 	class FLARE_API RendererAPI
 	{
 	public:
@@ -23,6 +30,7 @@ namespace Flare
 		virtual void Clear() = 0;
 
 		virtual void SetDepthTestEnabled(bool enabled) = 0;
+		virtual void SetCullingMode(CullingMode mode) = 0;
 
 		virtual void SetLineWidth(float width) = 0;
 

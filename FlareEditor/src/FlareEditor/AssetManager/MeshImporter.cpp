@@ -36,8 +36,13 @@ namespace Flare
 			for (int32_t face = 0; face < nodeMesh->mNumFaces; face++)
 			{
 				aiFace& f = nodeMesh->mFaces[face];
+
+				size_t start = indices.size();
 				for (int32_t i = 0; i < f.mNumIndices; i++)
 					indices.push_back(f.mIndices[i]);
+
+				// Swap winding order
+				std::swap(indices[start], indices[start + 1]);
 			}
 
 			// TODO: import all meshes, when the submeshes are fully implemented

@@ -184,11 +184,10 @@ namespace Flare
 		up *= arrowScale;
 		triangleHeight *= arrowScale;
 
-		s_DebugRendererData.RaysBuffer[0].Position = origin + up;
-		s_DebugRendererData.RaysBuffer[1].Position = origin - up;
-		s_DebugRendererData.RaysBuffer[2].Position = end - up;
-		s_DebugRendererData.RaysBuffer[3].Position = end + up;
-
+		s_DebugRendererData.RaysBuffer[0].Position = origin - up;
+		s_DebugRendererData.RaysBuffer[1].Position = origin + up;
+		s_DebugRendererData.RaysBuffer[2].Position = end + up;
+		s_DebugRendererData.RaysBuffer[3].Position = end - up;
 
 		s_DebugRendererData.RaysBuffer[4].Position = end + up * 2.0f;
 		s_DebugRendererData.RaysBuffer[5].Position = end + glm::normalize(direction) * triangleHeight;
