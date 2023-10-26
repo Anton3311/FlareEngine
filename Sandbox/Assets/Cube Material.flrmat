@@ -6,3 +6,6 @@ Parameters:
   - Name: u_InstanceData.Roughness
     Type: 4
     Value: 0.100000001
+Features:
+  CullingMode: Back
+  DepthTest: true

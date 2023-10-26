@@ -178,6 +178,31 @@ namespace Flare
 
 		if (EditorGUI::BeginPropertyGrid())
 		{
+			EditorGUI::BoolPropertyField("Depth Test", material->Features.DepthTesting);
+			EditorGUI::PropertyName("Culling Mode");
+
+			const char* preview = CullingModeToString(material->Features.Culling);
+			
+			ImGui::PushID("CullingMode");
+			if (ImGui::BeginCombo("", preview, ImGuiComboFlags_HeightRegular))
+			{
+				if (ImGui::MenuItem("None"))
+					material->Features.Culling = CullingMode::None;
+				if (ImGui::MenuItem("Front"))
+					material->Features.Culling = CullingMode::Front;
+				if (ImGui::MenuItem("Back"))
+					material->Features.Culling = CullingMode::Back;
+
+				ImGui::EndCombo();
+			}
+
+			ImGui::PopID();
+
+			EditorGUI::EndPropertyGrid();
+		}
+
+		if (EditorGUI::BeginPropertyGrid())
+		{
 			Ref<Shader> shader = material->GetShader();
 			const ShaderParameters& shaderParameters = shader->GetParameters();
 			for (uint32_t i = 0; i < (uint32_t)shaderParameters.size(); i++)

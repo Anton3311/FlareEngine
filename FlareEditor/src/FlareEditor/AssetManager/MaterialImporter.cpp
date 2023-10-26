@@ -69,6 +69,11 @@ namespace Flare
 
 		emitter << YAML::EndSeq; // Parameters
 
+		emitter << YAML::Key << "Features" << YAML::BeginMap;
+		emitter << YAML::Key << "CullingMode" << YAML::Value << CullingModeToString(material->Features.Culling);
+		emitter << YAML::Key << "DepthTest" << YAML::Value << material->Features.DepthTesting;
+		emitter << YAML::EndMap; // Features
+
 		emitter << YAML::EndMap;
 
 		std::ofstream output(path);
@@ -156,7 +161,15 @@ namespace Flare
 							}
 						}
 					}
-				}
+				} // Parameters
+
+				if (YAML::Node featuresNode = node["Features"])
+				{
+					if (YAML::Node cullingMode = featuresNode["CullingMode"])
+						material->Features.Culling = CullinModeFromString(cullingMode.as<std::string>());
+					if (YAML::Node depthTest = featuresNode["DepthTest"])
+						material->Features.DepthTesting = depthTest.as<bool>();
+				} // Features
 			}
 		}
 		catch (std::exception& e)

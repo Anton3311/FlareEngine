@@ -14,6 +14,35 @@ namespace Flare
 		Front,
 	};
 
+	inline const char* CullingModeToString(CullingMode mode)
+	{
+		switch (mode)
+		{
+		case CullingMode::Front:
+			return "Front";
+		case CullingMode::Back:
+			return "Back";
+		case CullingMode::None:
+			return "None";
+		}
+
+		FLARE_CORE_ASSERT(false, "Unhandled culling mode");
+		return nullptr;
+	}
+
+	inline CullingMode CullinModeFromString(std::string_view mode)
+	{
+		if (mode == "None")
+			return CullingMode::None;
+		if (mode == "Front")
+			return CullingMode::Front;
+		if (mode == "Back")
+			return CullingMode::Back;
+		
+		FLARE_CORE_ASSERT(false, "Invalid culling mode");
+		return CullingMode::None;
+	}
+
 	class FLARE_API RendererAPI
 	{
 	public:
