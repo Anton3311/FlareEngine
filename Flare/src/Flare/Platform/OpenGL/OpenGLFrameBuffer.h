@@ -22,6 +22,9 @@ namespace Flare
 		virtual void Blit(const Ref<FrameBuffer>& source, uint32_t destinationAttachment, uint32_t sourceAttachment) override;
 		virtual void BindAttachmentTexture(uint32_t attachment, uint32_t slot = 0) override;
 
+		virtual void SetWriteMask(FrameBufferAttachmentsMask mask) override;
+		virtual FrameBufferAttachmentsMask GetWriteMask() override;
+
 		virtual const FrameBufferSpecifications& GetSpecifications() const override { return m_Specifications; }
 	private:
 		void Create();
@@ -33,5 +36,7 @@ namespace Flare
 		uint32_t m_Id;
 		std::vector<uint32_t> m_ColorAttachments;
 		uint32_t m_DepthAttachment;
+
+		FrameBufferAttachmentsMask m_WriteMask;
 	};
 }

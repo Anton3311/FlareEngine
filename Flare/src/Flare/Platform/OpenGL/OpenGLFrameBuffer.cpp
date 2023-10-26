@@ -118,21 +118,38 @@ namespace Flare
             sourceFrameBuffer->m_Specifications.Height,
             GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
-        GLenum drawBuffers[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };
-        glDrawBuffers((int32_t)m_ColorAttachments.size(), drawBuffers);
+        SetWriteMask(m_WriteMask);
 
         glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-
-        auto t = glGetError();
-        if (t != GL_NO_ERROR)
-            FLARE_CORE_INFO("{0}", t);
     }
 
     void OpenGLFrameBuffer::BindAttachmentTexture(uint32_t attachment, uint32_t slot)
     {
         FLARE_CORE_ASSERT(attachment < (uint32_t)m_ColorAttachments.size());
         glBindTextureUnit(slot, m_ColorAttachments[attachment]);
+    }
+
+    void OpenGLFrameBuffer::SetWriteMask(FrameBufferAttachmentsMask mask)
+    {
+        static GLenum s_Attachments[32];
+
+        uint32_t insertionIndex = 0;
+        for (FrameBufferAttachmentsMask i = 0; i < m_ColorAttachments.size(); i++)
+        {
+            if (HAS_BIT(mask, 1 << i))
+            {
+                s_Attachments[insertionIndex] = GL_COLOR_ATTACHMENT0 + i;
+                insertionIndex++;
+            }
+        }
+
+        glDrawBuffers((int32_t)insertionIndex, s_Attachments);
+    }
+
+    FrameBufferAttachmentsMask OpenGLFrameBuffer::GetWriteMask()
+    {
+        return m_WriteMask;
     }
 
     void OpenGLFrameBuffer::Create()
@@ -151,14 +168,14 @@ namespace Flare
                 AttachColorTexture((uint32_t)i);
         }
 
-        FLARE_CORE_ASSERT(m_ColorAttachments.size() <= 3);
-        GLenum drawBuffers[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };
-        glDrawBuffers((int32_t)m_ColorAttachments.size(), drawBuffers);
+        m_WriteMask = (1 << ((uint32_t)m_ColorAttachments.size())) - 1;
+        SetWriteMask(m_WriteMask);
 
         FLARE_CORE_ASSERT(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE, "Frame buffer is incomplete");
 
         glBindTexture(GL_TEXTURE_2D, 0);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
     }
 
     void OpenGLFrameBuffer::AttachColorTexture(uint32_t index)

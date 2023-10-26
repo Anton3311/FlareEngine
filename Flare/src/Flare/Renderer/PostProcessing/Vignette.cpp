@@ -23,11 +23,15 @@ namespace Flare
 		if (!Enabled)
 			return;
 
+		FrameBufferAttachmentsMask writeMask = context.RenderTarget->GetWriteMask();
+
 		m_Shader->Bind();
 		m_Shader->SetFloat4("u_Params.Color", Color);
 		m_Shader->SetFloat("u_Params.Radius", Radius);
 		m_Shader->SetFloat("u_Params.Smoothness", Smoothness);
 
+		context.RenderTarget->SetWriteMask(0x1);
 		RenderCommand::DrawIndexed(Renderer::GetFullscreenQuad());
+		context.RenderTarget->SetWriteMask(writeMask);
 	}
 }

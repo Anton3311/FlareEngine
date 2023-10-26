@@ -34,6 +34,8 @@ namespace Flare
 		return false;
 	}
 
+	using FrameBufferAttachmentsMask = uint32_t;
+
 	struct FrameBufferAttachmentSpecifications
 	{
 		FrameBufferTextureFormat Format;
@@ -70,6 +72,9 @@ namespace Flare
 		virtual void ReadPixel(uint32_t attachmentIndex, uint32_t x, uint32_t y, void* pixelOutput) = 0;
 		virtual void Blit(const Ref<FrameBuffer>& source, uint32_t destinationAttachment, uint32_t sourceAttachment) = 0;
 		virtual void BindAttachmentTexture(uint32_t attachment, uint32_t slot = 0) = 0;
+
+		virtual void SetWriteMask(FrameBufferAttachmentsMask mask) = 0;
+		virtual FrameBufferAttachmentsMask GetWriteMask() = 0;
 
 		virtual const FrameBufferSpecifications& GetSpecifications() const = 0;
 	public:
