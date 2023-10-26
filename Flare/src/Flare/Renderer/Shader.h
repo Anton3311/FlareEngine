@@ -96,6 +96,8 @@ namespace Flare
 	};
 
 	using ShaderParameters = std::vector<ShaderParameter>;
+	// Indices of frame buffer attachments to which the shader writes
+	using ShaderOutputs = std::vector<uint32_t>;
 
 	class FLARE_API Shader : public Asset
 	{
@@ -108,6 +110,7 @@ namespace Flare
 		virtual void Bind() = 0;
 
 		virtual const ShaderParameters& GetParameters() const = 0;
+		virtual const ShaderOutputs& GetOutputs() const = 0;
 		virtual std::optional<uint32_t> GetParameterIndex(std::string_view name) const = 0;
 
 		virtual void SetInt(const std::string& name, int value) = 0;

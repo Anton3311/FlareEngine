@@ -20,6 +20,7 @@ namespace Flare
 		virtual void Bind() override;
 
 		virtual const ShaderParameters& GetParameters() const override;
+		virtual const ShaderOutputs& GetOutputs() const override;
 		virtual std::optional<uint32_t> GetParameterIndex(std::string_view name) const override;
 		
 		virtual void SetInt(const std::string& name, int value) override;
@@ -56,6 +57,8 @@ namespace Flare
 	private:
 		uint32_t m_Id;
 		ShaderParameters m_Parameters;
+		ShaderOutputs m_Outputs;
+
 		std::vector<int32_t> m_UniformLocations;
 		std::unordered_map<std::string_view, uint32_t> m_NameToIndex;
 	};

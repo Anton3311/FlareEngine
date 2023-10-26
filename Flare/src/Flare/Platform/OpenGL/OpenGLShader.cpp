@@ -59,6 +59,11 @@ namespace Flare
         return m_Parameters;
     }
 
+    const ShaderOutputs& OpenGLShader::GetOutputs() const
+    {
+        return m_Outputs;
+    }
+
     std::optional<uint32_t> OpenGLShader::GetParameterIndex(std::string_view name) const
     {
         auto it = m_NameToIndex.find(name);
@@ -366,133 +371,140 @@ namespace Flare
             FLARE_CORE_INFO("\t\t{0}: {1} {2}", i, compiler.get_name(bufferType.member_types[i]), compiler.get_member_name(resource.base_type_id, i));
     }
 
-    static void Reflect(const std::string& shaderPath, const SpirvData& shader, ShaderParameters& parameters)
+    static void Reflect(spirv_cross::Compiler& compiler, ShaderParameters& parameters)
     {
-        try
+        const spirv_cross::ShaderResources& resources = compiler.get_shader_resources();
+
+        FLARE_CORE_INFO("Uniform buffers:");
+
+        for (const auto& resource : resources.uniform_buffers)
+            PrintResourceInfo(compiler, resource);
+
+        FLARE_CORE_INFO("Samplers:");
+        for (const auto& resource : resources.sampled_images)
         {
-            spirv_cross::Compiler compiler(shader);
-            spirv_cross::ShaderResources resources = compiler.get_shader_resources();
+            const auto& samplerType = compiler.get_type(resource.type_id);
+            uint32_t membersCount = (uint32_t)samplerType.member_types.size();
 
-            FLARE_CORE_INFO("Shader reflection '{0}'", shaderPath);
-            FLARE_CORE_INFO("Uniform buffers:");
-
-            for (const auto& resource : resources.uniform_buffers)
-                PrintResourceInfo(compiler, resource);
-
-            FLARE_CORE_INFO("Samplers:");
-            for (const auto& resource : resources.sampled_images)
+            ShaderDataType type = ShaderDataType::Sampler;
+            size_t size = ShaderDataTypeSize(type);
+            if (samplerType.array.size() > 0)
             {
-                const auto& samplerType = compiler.get_type(resource.type_id);
-                uint32_t membersCount = (uint32_t)samplerType.member_types.size();
-
-                ShaderDataType type = ShaderDataType::Sampler;
-                size_t size = ShaderDataTypeSize(type);
-                if (samplerType.array.size() > 0)
+                if (samplerType.array.size() == 1)
                 {
-                    if (samplerType.array.size() == 1)
-                    {
-                        type = ShaderDataType::SamplerArray;
-                        size *= samplerType.array[0];
-                    }
-                    else
-                    {
-                        FLARE_CORE_ERROR("Unsupported sampler array dimensions: {0}", samplerType.array.size());
-                        continue;
-                    }
+                    type = ShaderDataType::SamplerArray;
+                    size *= samplerType.array[0];
                 }
-                
-                parameters.emplace_back(resource.name, type, size, 0);
-            }
-
-            FLARE_CORE_INFO("Push constant buffers:");
-            for (const auto& resource : resources.push_constant_buffers)
-            {
-                const auto& bufferType = compiler.get_type(resource.base_type_id);
-                size_t bufferSize = compiler.get_declared_struct_size(bufferType);
-                uint32_t binding = compiler.get_decoration(resource.id, spv::DecorationBinding);
-
-                uint32_t membersCount = (uint32_t)bufferType.member_types.size();
-
-                FLARE_CORE_INFO("\tName = {0} Size = {1} Binding = {2} MembersCount = {3}", resource.name, bufferSize, binding, membersCount);
-
-                for (uint32_t i = 0; i < membersCount; i++)
+                else
                 {
-                    const std::string& memberName = compiler.get_member_name(resource.base_type_id, i);
-                    spirv_cross::TypeID memberTypeId = bufferType.member_types[i];
-                    size_t offset = compiler.type_struct_member_offset(bufferType, i);
+                    FLARE_CORE_ERROR("Unsupported sampler array dimensions: {0}", samplerType.array.size());
+                    continue;
+                }
+            }
+                
+            parameters.emplace_back(resource.name, type, size, 0);
+        }
 
-                    const auto& memberType = compiler.get_type(memberTypeId);
+        FLARE_CORE_INFO("Push constant buffers:");
+        for (const auto& resource : resources.push_constant_buffers)
+        {
+            const auto& bufferType = compiler.get_type(resource.base_type_id);
+            size_t bufferSize = compiler.get_declared_struct_size(bufferType);
+            uint32_t binding = compiler.get_decoration(resource.id, spv::DecorationBinding);
 
-                    ShaderDataType dataType = ShaderDataType::Int;
-                    uint32_t componentsCount = memberType.vecsize;
+            uint32_t membersCount = (uint32_t)bufferType.member_types.size();
 
-                    bool error = false;
+            FLARE_CORE_INFO("\tName = {0} Size = {1} Binding = {2} MembersCount = {3}", resource.name, bufferSize, binding, membersCount);
+
+            for (uint32_t i = 0; i < membersCount; i++)
+            {
+                const std::string& memberName = compiler.get_member_name(resource.base_type_id, i);
+                spirv_cross::TypeID memberTypeId = bufferType.member_types[i];
+                size_t offset = compiler.type_struct_member_offset(bufferType, i);
+
+                const auto& memberType = compiler.get_type(memberTypeId);
+
+                ShaderDataType dataType = ShaderDataType::Int;
+                uint32_t componentsCount = memberType.vecsize;
+
+                bool error = false;
                     
-                    switch (memberType.basetype)
+                switch (memberType.basetype)
+                {
+                case spirv_cross::SPIRType::BaseType::Int:
+                    switch (componentsCount)
                     {
-                    case spirv_cross::SPIRType::BaseType::Int:
-                        switch (componentsCount)
-                        {
-                        case 1:
-                            dataType = ShaderDataType::Int;
-                            break;
-                        case 2:
-                            dataType = ShaderDataType::Int2;
-                            break;
-                        case 3:
-                            dataType = ShaderDataType::Int3;
-                            break;
-                        case 4:
-                            dataType = ShaderDataType::Int4;
-                            break;
-                        default:
-                            error = true;
-                            FLARE_CORE_ERROR("Unsupported components count");
-                        }
-
+                    case 1:
+                        dataType = ShaderDataType::Int;
                         break;
-                    case spirv_cross::SPIRType::BaseType::Float:
-                        switch (componentsCount)
-                        {
-                        case 1:
-                            dataType = ShaderDataType::Float;
-                            break;
-                        case 2:
-                            dataType = ShaderDataType::Float2;
-                            break;
-                        case 3:
-                            dataType = ShaderDataType::Float3;
-                            break;
-                        case 4:
-                            if (memberType.columns == 4)
-                                dataType = ShaderDataType::Matrix4x4;
-                            else
-                                dataType = ShaderDataType::Float4;
-                            break;
-                        default:
-                            error = true;
-                            FLARE_CORE_ERROR("Unsupported components count");
-                        }
-
+                    case 2:
+                        dataType = ShaderDataType::Int2;
+                        break;
+                    case 3:
+                        dataType = ShaderDataType::Int3;
+                        break;
+                    case 4:
+                        dataType = ShaderDataType::Int4;
                         break;
                     default:
                         error = true;
-                        FLARE_CORE_ERROR("Unsupported shader data type");
+                        FLARE_CORE_ERROR("Unsupported components count");
                     }
 
-                    if (error)
-                        continue;
+                    break;
+                case spirv_cross::SPIRType::BaseType::Float:
+                    switch (componentsCount)
+                    {
+                    case 1:
+                        dataType = ShaderDataType::Float;
+                        break;
+                    case 2:
+                        dataType = ShaderDataType::Float2;
+                        break;
+                    case 3:
+                        dataType = ShaderDataType::Float3;
+                        break;
+                    case 4:
+                        if (memberType.columns == 4)
+                            dataType = ShaderDataType::Matrix4x4;
+                        else
+                            dataType = ShaderDataType::Float4;
+                        break;
+                    default:
+                        error = true;
+                        FLARE_CORE_ERROR("Unsupported components count");
+                    }
 
-                    if (resource.name.empty())
-                        parameters.emplace_back(memberName, dataType, offset);
-                    else
-                        parameters.emplace_back(fmt::format("{0}.{1}", resource.name, memberName), dataType, offset);
+                    break;
+                default:
+                    error = true;
+                    FLARE_CORE_ERROR("Unsupported shader data type");
                 }
+
+                if (error)
+                    continue;
+
+                if (resource.name.empty())
+                    parameters.emplace_back(memberName, dataType, offset);
+                else
+                    parameters.emplace_back(fmt::format("{0}.{1}", resource.name, memberName), dataType, offset);
             }
         }
-        catch (spirv_cross::CompilerError& e)
+    }
+
+    static void ExtractShaderOutputs(spirv_cross::Compiler& compiler, ShaderOutputs& outputs)
+    {
+        const spirv_cross::ShaderResources& resources = compiler.get_shader_resources();
+
+        FLARE_CORE_INFO("Pixel stage outputs");
+
+        outputs.reserve(resources.stage_outputs.size());
+        for (const auto& output : resources.stage_outputs)
         {
-            FLARE_CORE_ERROR("Shader '{0}' reflection failed: {1}", shaderPath, e.what());
+            uint32_t location = compiler.get_decoration(output.id, spv::DecorationLocation);
+            FLARE_CORE_INFO("\tName = {} Location = {}", output.name, location);
+
+            outputs.push_back(location);
         }
     }
 
@@ -539,7 +551,20 @@ namespace Flare
                 WriteSpirvData(cachePath, compiledShaderData);
             }
 
-            Reflect(filePath, compiledShaderData, m_Parameters);
+            FLARE_CORE_INFO("Shader reflection '{0}'", filePath);
+
+            try
+            {
+                spirv_cross::Compiler compiler(compiledShaderData);
+                Reflect(compiler, m_Parameters);
+
+                if (program.Type == GL_FRAGMENT_SHADER)
+                    ExtractShaderOutputs(compiler, m_Outputs);
+            }
+            catch (spirv_cross::CompilerError& e)
+            {
+                FLARE_CORE_ERROR("Shader '{0}' reflection failed: {1}", filePath, e.what());
+            }
 
             for (const auto& p : m_Parameters)
                 FLARE_CORE_INFO("\t\tName = {0} Size = {1} Offset = {2}", p.Name, p.Size, p.Offset);
