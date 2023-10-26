@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Flare/Renderer/RenderPass.h"
-#include "Flare/Renderer/Shader.h"
+#include "Flare/Renderer/Material.h"
 
 namespace Flare
 {
@@ -16,6 +16,6 @@ namespace Flare
 	public:
 		bool Enabled;
 	private:
-		Ref<Shader> m_Shader;
+		Ref<Material> m_Material;
 	};
 }

@@ -54,7 +54,7 @@ namespace Flare
 		Ref<Texture> Textures[MaxTexturesCount];
 		uint32_t TextureIndex = 0;
 
-		Ref<Shader> DefaultShader = nullptr;
+		Ref<Material> DefaultMaterial = nullptr;
 		Ref<Shader> TextShader = nullptr;
 		Ref<Material> CurrentMaterial = nullptr;
 
@@ -75,7 +75,7 @@ namespace Flare
 		s_Renderer2DData.Vertices.resize(maxQuads * 4);
 		s_Renderer2DData.TextVertices.resize(maxQuads * 4);
 
-		s_Renderer2DData.DefaultShader = Shader::Create("Assets/Shaders/QuadShader.glsl");
+		s_Renderer2DData.DefaultMaterial = CreateRef<Material>(Shader::Create("Assets/Shaders/QuadShader.glsl"));
 		s_Renderer2DData.TextShader = Shader::Create("Assets/Shaders/Text.glsl");
 
 		std::vector<uint32_t> indices(maxQuads * 6);
@@ -449,25 +449,19 @@ namespace Flare
 		for (uint32_t i = 0; i < s_Renderer2DData.TextureIndex; i++)
 			s_Renderer2DData.Textures[i]->Bind(i);
 
-		if (s_Renderer2DData.CurrentMaterial)
-		{
-			Ref<Shader> shader = s_Renderer2DData.CurrentMaterial->GetShader();
-			FLARE_CORE_ASSERT(shader);
+		Ref<Material> material = s_Renderer2DData.CurrentMaterial;
+		if (!material)
+			material = s_Renderer2DData.DefaultMaterial;
 
-			std::optional<uint32_t> texturesParameterIndex = shader->GetParameterIndex("u_Textures");
+		Ref<Shader> shader = material->GetShader();
+		FLARE_CORE_ASSERT(shader);
 
-			if (texturesParameterIndex.has_value())
-				s_Renderer2DData.CurrentMaterial->SetIntArray(texturesParameterIndex.value(), slots, s_Renderer2DData.TextureIndex);
+		std::optional<uint32_t> texturesParameterIndex = shader->GetParameterIndex("u_Textures");
 
-			Renderer::DrawMesh(s_Renderer2DData.QuadsMesh, s_Renderer2DData.CurrentMaterial, s_Renderer2DData.QuadIndex * 6);
-		}
-		else
-		{
-			s_Renderer2DData.DefaultShader->Bind();
-			s_Renderer2DData.DefaultShader->SetIntArray("u_Textures", slots, s_Renderer2DData.TextureIndex);
+		if (texturesParameterIndex.has_value())
+			material->SetIntArray(texturesParameterIndex.value(), slots, s_Renderer2DData.TextureIndex);
 
-			RenderCommand::DrawIndexed(s_Renderer2DData.QuadsMesh, s_Renderer2DData.QuadIndex * 6);
-		}
+		Renderer::DrawMesh(s_Renderer2DData.QuadsMesh, material, s_Renderer2DData.QuadIndex * 6);
 
 		s_Renderer2DData.QuadIndex = 0;
 		s_Renderer2DData.TextureIndex = 1;

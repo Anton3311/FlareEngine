@@ -15,7 +15,7 @@ Entities:
   - Components:
       - Name: struct Flare::TransformComponent
         Position: [0, 0, -1.20000005]
-        Rotation: [168.311813, -9.40043068, -68.1223984]
+        Rotation: [168.311813, 171, -68.1223984]
         Scale: [5.63262272, 8.70941257, 5.79757786]
       - Name: struct Flare::SpriteComponent
         Color: [0, 0, 1, 2]

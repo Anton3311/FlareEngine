@@ -10,7 +10,8 @@ namespace Flare
 	ToneMapping::ToneMapping()
 		: Enabled(false)
 	{
-		m_Shader = Shader::Create("assets/Shaders/AcesToneMapping.glsl");
+		m_Material = CreateRef<Material>(Shader::Create("assets/Shaders/AcesToneMapping.glsl"));
+		m_Material->Features.DepthTesting = false;
 	}
 
 	void ToneMapping::OnRender(RenderingContext& context)
@@ -23,8 +24,7 @@ namespace Flare
 		context.RenderTarget->BindAttachmentTexture(0, 0);
 		output->Bind();
 
-		m_Shader->Bind();
-		RenderCommand::DrawIndexed(Renderer::GetFullscreenQuad());
+		Renderer::DrawFullscreenQuad(m_Material);
 
 		context.RenderTarget->Blit(output, 0, 0);
 		context.RTPool.Release(output);

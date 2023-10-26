@@ -21,6 +21,7 @@ namespace Flare
 	{
 		Ref<Shader> shader = Shader::Create("assets/Shaders/Vignette.glsl");
 		m_Material = CreateRef<Material>(shader);
+		m_Material->Features.DepthTesting = false;
 
 		s_ColorParameterIndex = shader->GetParameterIndex("u_Params.Color").value_or(UINT32_MAX);
 		s_RadiusParameterIndex = shader->GetParameterIndex("u_Params.Radius").value_or(UINT32_MAX);
