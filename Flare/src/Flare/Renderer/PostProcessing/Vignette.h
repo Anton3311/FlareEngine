@@ -2,6 +2,7 @@
 
 #include "Flare/Renderer/RenderPass.h"
 #include "Flare/Renderer/Shader.h"
+#include "Flare/Renderer/Material.h"
 
 namespace Flare
 {
@@ -19,6 +20,6 @@ namespace Flare
 		float Radius;
 		float Smoothness;
 	private:
-		Ref<Shader> m_Shader;
+		Ref<Material> m_Material;
 	};
 }

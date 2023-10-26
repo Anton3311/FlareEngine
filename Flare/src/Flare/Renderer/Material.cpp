@@ -58,77 +58,12 @@ namespace Flare
 			delete[] m_Buffer;
 	}
 
-	//void Material::SetInt(uint32_t index, int32_t value)
-	//{
-	//	const ShaderParameters& parameters = m_Shader->GetParameters();
-	//	FLARE_CORE_ASSERT((size_t)index < m_ShaderParametersCount);
-	//	memcpy_s(m_Buffer + parameters[index].Offset, parameters[index].Size, &value, sizeof(value));
-	//}
-
-	//void Material::SetInt2(uint32_t index, glm::ivec2 value)
-	//{
-	//	const ShaderParameters& parameters = m_Shader->GetParameters();
-	//	FLARE_CORE_ASSERT((size_t)index < m_ShaderParametersCount);
-	//	memcpy_s(m_Buffer + parameters[index].Offset, parameters[index].Size, &value, sizeof(value));
-	//}
-
-	//void Material::SetInt3(uint32_t index, const glm::ivec3& value)
-	//{
-	//	const ShaderParameters& parameters = m_Shader->GetParameters();
-	//	FLARE_CORE_ASSERT((size_t)index < m_ShaderParametersCount);
-	//	memcpy_s(m_Buffer + parameters[index].Offset, parameters[index].Size, &value, sizeof(value));
-	//}
-
-	//void Material::SetInt4(uint32_t index, const glm::ivec4& value)
-	//{
-	//	const ShaderParameters& parameters = m_Shader->GetParameters();
-	//	FLARE_CORE_ASSERT((size_t)index < m_ShaderParametersCount);
-	//	memcpy_s(m_Buffer + parameters[index].Offset, parameters[index].Size, &value, sizeof(value));
-	//}
-
-	//void Material::SetFloat(uint32_t index, float value)
-	//{
-	//	const ShaderParameters& parameters = m_Shader->GetParameters();
-	//	FLARE_CORE_ASSERT((size_t)index < m_ShaderParametersCount);
-	//	memcpy_s(m_Buffer + parameters[index].Offset, parameters[index].Size, &value, sizeof(value));
-	//}
-
-	//void Material::SetFloat2(uint32_t index, glm::vec2 value)
-	//{
-	//	const ShaderParameters& parameters = m_Shader->GetParameters();
-	//	FLARE_CORE_ASSERT((size_t)index < m_ShaderParametersCount);
-	//	memcpy_s(m_Buffer + parameters[index].Offset, parameters[index].Size, &value, sizeof(value));
-	//}
-
-	//void Material::SetFloat3(uint32_t index, const glm::vec3& value)
-	//{
-	//	const ShaderParameters& parameters = m_Shader->GetParameters();
-	//	FLARE_CORE_ASSERT((size_t)index < m_ShaderParametersCount);
-	//	memcpy_s(m_Buffer + parameters[index].Offset, parameters[index].Size, &value, sizeof(value));
-	//}
-
-	//void Material::SetFloat4(uint32_t index, const glm::vec4& value)
-	//{
-	//	const ShaderParameters& parameters = m_Shader->GetParameters();
-	//	FLARE_CORE_ASSERT((size_t)index < m_ShaderParametersCount);
-	//	memcpy_s(m_Buffer + parameters[index].Offset, parameters[index].Size, &value, sizeof(value));
-	//}
-
 	void Material::SetIntArray(uint32_t index, const int32_t* values, uint32_t count)
 	{
 		const ShaderParameters& parameters = m_Shader->GetParameters();
 		FLARE_CORE_ASSERT((size_t)index < m_ShaderParametersCount);
 		memcpy_s(m_Buffer + parameters[index].Offset, parameters[index].Size, values, sizeof(*values) * count);
 	}
-
-	//void Material::SetMatrix4(uint32_t index, const glm::mat4& matrix)
-	//{
-	//	const ShaderParameters& parameters = m_Shader->GetParameters();
-	//	FLARE_CORE_ASSERT((size_t)index < m_ShaderParametersCount);
-
-	//	const float* values = glm::value_ptr(matrix);
-	//	memcpy_s(m_Buffer + parameters[index].Offset, parameters[index].Size, values, sizeof(*values) * 16);
-	//}
 
 	void Material::SetShaderParameters()
 	{

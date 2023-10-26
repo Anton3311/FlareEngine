@@ -12,12 +12,12 @@ namespace Flare
 {
 	void MaterialImporter::SerializeMaterial(Ref<Material> material, const std::filesystem::path& path)
 	{
-		Ref<Shader> shader = AssetManager::GetAsset<Shader>(material->GetShaderHandle());
+		Ref<Shader> shader = material->GetShader();
 
 		YAML::Emitter emitter;
 		emitter << YAML::BeginMap;
 
-		emitter << YAML::Key << "Shader" << YAML::Value << material->GetShaderHandle();
+		emitter << YAML::Key << "Shader" << YAML::Value << shader->Handle;
 
 		emitter << YAML::Key << "Parameters" << YAML::BeginSeq;
 

@@ -178,10 +178,8 @@ namespace Flare
 
 		if (EditorGUI::BeginPropertyGrid())
 		{
-			Ref<Shader> shader = AssetManager::GetAsset<Shader>(material->GetShaderHandle());
-
+			Ref<Shader> shader = material->GetShader();
 			const ShaderParameters& shaderParameters = shader->GetParameters();
-
 			for (uint32_t i = 0; i < (uint32_t)shaderParameters.size(); i++)
 			{
 				switch (shaderParameters[i].Type)

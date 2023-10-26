@@ -93,12 +93,30 @@ namespace Flare
 		return s_RendererData.FullscreenQuad;
 	}
 
+	void Renderer::DrawFullscreenQuad(const Ref<Material>& material)
+	{
+		material->SetShaderParameters();
+
+		const ShaderOutputs& shaderOutputs = material->GetShader()->GetOutputs();
+
+		FrameBufferAttachmentsMask shaderOutputsMask = 0;
+		for (uint32_t output : shaderOutputs)
+			shaderOutputsMask |= (1 << output);
+
+		FrameBufferAttachmentsMask previousMask = s_RendererData.CurrentViewport->RenderTarget->GetWriteMask();
+		s_RendererData.CurrentViewport->RenderTarget->SetWriteMask(shaderOutputsMask);
+
+		RenderCommand::DrawIndexed(s_RendererData.FullscreenQuad);
+		s_RendererData.Statistics.DrawCallsCount++;
+
+		s_RendererData.CurrentViewport->RenderTarget->SetWriteMask(previousMask);
+	}
+
 	void Renderer::DrawMesh(const Ref<VertexArray>& mesh, const Ref<Material>& material, size_t indicesCount)
 	{
 		material->SetShaderParameters();
 
-		Ref<Shader> shader = AssetManager::GetAsset<Shader>(material->GetShaderHandle());
-		const ShaderOutputs& shaderOutputs = shader->GetOutputs();
+		const ShaderOutputs& shaderOutputs = material->GetShader()->GetOutputs();
 
 		FrameBufferAttachmentsMask shaderOutputsMask = 0;
 		for (uint32_t output : shaderOutputs)
@@ -115,7 +133,7 @@ namespace Flare
 
 	void Renderer::DrawMesh(const Ref<Mesh>& mesh, const Ref<Material>& material, const glm::mat4& transform)
 	{
-		Ref<Shader> shader = AssetManager::GetAsset<Shader>(material->GetShaderHandle());
+		Ref<Shader> shader = material->GetShader();
 		if (shader == nullptr)
 			return;
 
