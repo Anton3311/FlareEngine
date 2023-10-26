@@ -5,6 +5,13 @@
 
 namespace Flare
 {
+	FLARE_IMPL_TYPE(Vignette,
+		FLARE_FIELD(Vignette, Enabled),
+		FLARE_FIELD(Vignette, Color),
+		FLARE_FIELD(Vignette, Radius),
+		FLARE_FIELD(Vignette, Smoothness),
+	);
+
 	Vignette::Vignette()
 		: Enabled(false), Color(0.0f, 0.0f, 0.0f, 0.5f), Radius(1.0f), Smoothness(1.0f)
 	{

@@ -107,7 +107,23 @@ namespace Flare
 		for (Entity entity : scene->m_World.Entities)
 			SerializeEntity(emitter, scene->m_World, entity);
 
-		emitter << YAML::EndSeq;
+		emitter << YAML::EndSeq; // Entities
+
+		emitter << YAML::Key << "PostProcessing" << YAML::BeginSeq;
+		
+		{
+			Ref<ToneMapping> toneMapping = scene->GetPostProcessingManager().ToneMappingPass;
+			emitter << YAML::Value;
+			SerializeType(emitter, *toneMapping);
+		}
+
+		{
+			Ref<Vignette> vignette = scene->GetPostProcessingManager().VignettePass;
+			emitter << YAML::Value;
+			SerializeType(emitter, *vignette);
+		}
+
+		emitter << YAML::EndMap; // PostProcessing
 
 		emitter << YAML::EndMap;
 
@@ -152,6 +168,22 @@ namespace Flare
 			YAML::Node componentsNode = entity["Components"];
 
 			DeserializeEntity(componentsNode, scene->m_World);
+		}
+
+		YAML::Node postProcessing = node["PostProcessing"];
+		if (!postProcessing)
+			return;
+
+		for (YAML::Node effectSettings : postProcessing)
+		{
+			if (YAML::Node nameNode = effectSettings["Name"])
+			{
+				std::string name = nameNode.as<std::string>();
+				if (name == ToneMapping::_Type.TypeName)
+					DeserializeType<ToneMapping>(effectSettings, *scene->GetPostProcessingManager().ToneMappingPass);
+				else if (name == Vignette::_Type.TypeName)
+					DeserializeType(effectSettings, *scene->GetPostProcessingManager().VignettePass);
+			}
 		}
 	}
 }

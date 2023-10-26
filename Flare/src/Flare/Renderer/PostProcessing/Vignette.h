@@ -8,6 +8,8 @@ namespace Flare
 	class FLARE_API Vignette : public RenderPass
 	{
 	public:
+		FLARE_TYPE;
+
 		Vignette();
 
 		void OnRender(RenderingContext& context) override;

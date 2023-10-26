@@ -171,3 +171,11 @@ Entities:
         Position: [0, 0, 0]
         Rotation: [0, 0, 0]
         Scale: [1, 1, 1]
+PostProcessing:
+  - Name: class Flare::ToneMapping
+    Enabled: true
+  - Name: class Flare::Vignette
+    Enabled: true
+    Color: [0, 0, 0, 0.5]
+    Radius: 0.800000012
+    Smoothness: 0.899999976
