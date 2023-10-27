@@ -178,6 +178,18 @@ namespace Flare
 
 		if (EditorGUI::BeginPropertyGrid())
 		{
+			AssetHandle shaderHandle = material->GetShader()->Handle;
+			if (EditorGUI::AssetField("Shader", shaderHandle))
+			{
+				if (AssetManager::IsAssetHandleValid(shaderHandle))
+				{
+					if (AssetManager::GetAssetMetadata(shaderHandle)->Type == AssetType::Shader)
+						material->SetShader(AssetManager::GetAsset<Shader>(shaderHandle));
+					else
+						FLARE_CORE_ERROR("Provided asset is not a shader");
+				}
+			}
+
 			EditorGUI::BoolPropertyField("Depth Test", material->Features.DepthTesting);
 			EditorGUI::PropertyName("Culling Mode");
 

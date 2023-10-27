@@ -118,12 +118,12 @@ Entities:
         Font: 0
   - Components:
       - Name: struct Flare::TransformComponent
-        Position: [-0.460810214, 4.18309498, 0]
-        Rotation: [0, 0, -13.5794916]
+        Position: [0.595486522, 4.35153198, -1.88886654]
+        Rotation: [0, -0, -13.5794983]
         Scale: [1, 1, 1]
       - Name: struct Flare::MeshComponent
         Mesh: 10490832977963679498
-        Material: 13576769737354600278
+        Material: 15677979409362088946
   - Components:
       - Name: struct Flare::NameComponent
         Value: Light

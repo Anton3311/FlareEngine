@@ -23,6 +23,7 @@ namespace Flare
 		virtual ~Material();
 
 		inline Ref<Shader> GetShader() const { return m_Shader; }
+		void SetShader(const Ref<Shader>& shader);
 
 		void SetIntArray(uint32_t index, const int32_t* values, uint32_t count);
 

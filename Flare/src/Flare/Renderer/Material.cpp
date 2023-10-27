@@ -57,6 +57,19 @@ namespace Flare
 			delete[] m_Buffer;
 	}
 
+	void Material::SetShader(const Ref<Shader>& shader)
+	{
+		if (m_Buffer != nullptr)
+		{
+			delete[] m_Buffer;
+			m_Buffer = nullptr;
+			m_BufferSize = 0;
+		}
+
+		m_Shader = shader;
+		Initialize();
+	}
+
 	void Material::SetIntArray(uint32_t index, const int32_t* values, uint32_t count)
 	{
 		const ShaderParameters& parameters = m_Shader->GetParameters();

@@ -44,6 +44,12 @@ AssetRegistry:
   - Handle: 14915581624512801748
     Type: Scene
     Path: Test 3.flare
+  - Handle: 15397728423229482669
+    Type: Shader
+    Path: Normals.glsl
+  - Handle: 15677979409362088946
+    Type: Material
+    Path: NormalsMaterial.flrmat
   - Handle: 16883279782608513727
     Type: Scene
     Path: Test.flare
