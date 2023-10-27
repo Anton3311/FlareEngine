@@ -231,6 +231,8 @@ namespace Flare
         size_t size = inputStream.tellg();
         inputStream.seekg(0, std::ios::beg);
 
+        FLARE_CORE_INFO("Reading SPIRV: Size = {}", size);
+
         output.resize(size / sizeof(uint32_t));
         inputStream.read((char*)output.data(), size);
 
@@ -537,7 +539,8 @@ namespace Flare
             std::filesystem::path cachePath = cacheDirectory / Shader::GetCacheFileName(path.filename().string(), "vulkan", stageName);
             if (std::filesystem::exists(cachePath))
             {
-                FLARE_CORE_ASSERT(ReadSpirvData(cachePath, compiledShaderData));
+                bool result = ReadSpirvData(cachePath, compiledShaderData);
+                FLARE_CORE_ASSERT(result);
             }
             else
             {
@@ -572,7 +575,8 @@ namespace Flare
             cachePath = cacheDirectory / Shader::GetCacheFileName(path.filename().string(), "opengl", stageName);
             if (std::filesystem::exists(cachePath))
             {
-                FLARE_CORE_ASSERT(ReadSpirvData(cachePath, compiledShaderData));
+                bool result = ReadSpirvData(cachePath, compiledShaderData);
+                FLARE_CORE_ASSERT(result);
             }
             else
             {

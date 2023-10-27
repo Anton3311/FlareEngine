@@ -40,7 +40,7 @@ LIBRARIES = {
 	spriv_cross_glsl_release = vulkan_lib .. "spirv-cross-glsl.lib",
 
 	assimp_debug = assimp_path .. "/lib/Debug/assimp-vc143-mtd.lib",
-	assimp_release = assimp_path .. "/lib/Release/assimp-vc143-mtd.lib",
+	assimp_release = assimp_path .. "/lib/Release/assimp-vc143-mt.lib",
 
 	assimp_zlib_debug = assimp_path .. "contrib/zlib/Debug/zlibstaticd.lib",
 	assimp_zlib_release = assimp_path .. "contrib/zlib/Release/zlibstatic.lib",
