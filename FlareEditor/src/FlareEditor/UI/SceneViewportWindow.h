@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Flare/Renderer/Shader.h"
+#include "Flare/Renderer/Material.h"
 #include "Flare/Renderer/VertexArray.h"
 
 #include "FlareECS/Entity/Entity.h"
@@ -29,7 +30,7 @@ namespace Flare
 	private:
 		EditorCamera& m_Camera;
 		Ref<Shader> m_SelectionOutlineShader;
-		Ref<Shader> m_GridShader;
+		Ref<Material> m_GridMaterial;
 		Ref<FrameBuffer> m_ScreenBuffer;
 		Ref<FrameBuffer> m_FinalImageBuffer;
 	};

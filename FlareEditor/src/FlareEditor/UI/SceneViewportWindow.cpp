@@ -23,11 +23,33 @@
 
 namespace Flare
 {
+	struct GridPropertyIndices
+	{
+		uint32_t Offset = UINT32_MAX;
+		uint32_t Scale = UINT32_MAX;
+		uint32_t Thickness = UINT32_MAX;
+		uint32_t CellScale = UINT32_MAX;
+		uint32_t Color = UINT32_MAX;
+		uint32_t FallOffThreshold = UINT32_MAX;
+	};
+
+	static GridPropertyIndices s_GridPropertyIndices;
+
 	SceneViewportWindow::SceneViewportWindow(EditorCamera& camera)
 		: ViewportWindow("Scene Viewport", true), m_Camera(camera)
 	{
 		m_SelectionOutlineShader = Shader::Create("assets/Shaders/SelectionOutline.glsl");
-		m_GridShader = Shader::Create("assets/Shaders/Grid.glsl");
+		m_GridMaterial = CreateRef<Material>(Shader::Create("assets/Shaders/Grid.glsl"));
+
+		m_GridMaterial->Features.Culling = CullingMode::None;
+
+		Ref<Shader> gridShader = m_GridMaterial->GetShader();
+		s_GridPropertyIndices.Color = gridShader->GetParameterIndex("u_Data.Color").value_or(UINT32_MAX);
+		s_GridPropertyIndices.Offset = gridShader->GetParameterIndex("u_Data.Offset").value_or(UINT32_MAX);
+		s_GridPropertyIndices.Scale = gridShader->GetParameterIndex("u_Data.GridScale").value_or(UINT32_MAX);
+		s_GridPropertyIndices.Thickness = gridShader->GetParameterIndex("u_Data.Thickness").value_or(UINT32_MAX);
+		s_GridPropertyIndices.CellScale = gridShader->GetParameterIndex("u_Data.CellScale").value_or(UINT32_MAX);
+		s_GridPropertyIndices.FallOffThreshold = gridShader->GetParameterIndex("u_Data.FallOffThreshold").value_or(UINT32_MAX);
 	}
 
 	void SceneViewportWindow::OnRenderViewport()
@@ -296,14 +318,13 @@ namespace Flare
 
 		glm::vec3 cameraPosition = m_Camera.GetRotationOrigin();
 
-		m_GridShader->Bind();
-		m_GridShader->SetFloat3("u_Data.Offset", glm::vec3(cameraPosition.x, 0.0f, cameraPosition.z));
-		m_GridShader->SetFloat("u_Data.GridScale", scale);
-		m_GridShader->SetFloat("u_Data.Thickness", 0.01f);
-		m_GridShader->SetFloat("u_Data.CellScale", 1.0f / cellScale);
-		m_GridShader->SetFloat3("u_Data.Color", gridColor);
-		m_GridShader->SetFloat("u_Data.FallOffThreshold", 0.8f);
-		RenderCommand::DrawIndexed(Renderer::GetFullscreenQuad());
+		m_GridMaterial->WriteParameterValue(s_GridPropertyIndices.Offset, glm::vec3(cameraPosition.x, 0.0f, cameraPosition.z));
+		m_GridMaterial->WriteParameterValue(s_GridPropertyIndices.Scale, scale);
+		m_GridMaterial->WriteParameterValue(s_GridPropertyIndices.Thickness, 0.01f);
+		m_GridMaterial->WriteParameterValue(s_GridPropertyIndices.CellScale, 1.0f / cellScale);
+		m_GridMaterial->WriteParameterValue(s_GridPropertyIndices.Color, gridColor);
+		m_GridMaterial->WriteParameterValue(s_GridPropertyIndices.FallOffThreshold, 0.8f);
+		Renderer::DrawFullscreenQuad(m_GridMaterial);
 	}
 
 	Entity SceneViewportWindow::GetEntityUnderCursor() const
