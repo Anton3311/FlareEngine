@@ -51,14 +51,14 @@ namespace Flare
 	public:
 		virtual void Apply(CommandContext& context, World& world) override
 		{
-			FLARE_CORE_ASSERT(world.IsEntityAlive(context.GetEntity(m_Entity)));
-			world.GetEntityComponent<T>(context.GetEntity(m_Entity)) = m_Data;
+			std::optional<T*> component = world.TryGetEntityComponent<T>(context.GetEntity(m_Entity));
+			if (component)
+				*(component.value()) = m_Data;
 		}
 	private:
 		FutureEntity m_Entity;
 		T m_Data;
 	};
-
 
 	class FLAREECS_API RemoveComponentCommand : public Command
 	{

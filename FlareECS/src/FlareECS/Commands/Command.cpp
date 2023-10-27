@@ -14,6 +14,7 @@ namespace Flare
 
     void CommandContext::SetEntity(FutureEntity futureEntity, Entity entity)
     {
-        FLARE_CORE_ASSERT(m_Storage.Write<Entity>(futureEntity.Location, entity));
+        bool result = m_Storage.Write<Entity>(futureEntity.Location, entity);
+        FLARE_CORE_ASSERT(result);
     }
 }
