@@ -36,13 +36,13 @@ namespace Flare
 
 	void Material::Initialize()
 	{
-		const ShaderParameters& parameters = m_Shader->GetParameters();
+		const ShaderProperties& properties = m_Shader->GetProperties();
 
-		for (const auto& param : parameters)
+		for (const auto& param : properties)
 			m_BufferSize += param.Offset;
 
-		if (parameters.size() > 0)
-			m_BufferSize += parameters.back().Size;
+		if (properties.size() > 0)
+			m_BufferSize += properties.back().Size;
 
 		if (m_BufferSize != 0)
 		{
@@ -72,29 +72,29 @@ namespace Flare
 
 	void Material::SetIntArray(uint32_t index, const int32_t* values, uint32_t count)
 	{
-		const ShaderParameters& parameters = m_Shader->GetParameters();
-		FLARE_CORE_ASSERT((size_t)index < parameters.size());
-		memcpy_s(m_Buffer + parameters[index].Offset, parameters[index].Size, values, sizeof(*values) * count);
+		const ShaderProperties& properties = m_Shader->GetProperties();
+		FLARE_CORE_ASSERT((size_t)index < properties.size());
+		memcpy_s(m_Buffer + properties[index].Offset, properties[index].Size, values, sizeof(*values) * count);
 	}
 
-	void Material::SetShaderParameters()
+	void Material::SetShaderProperties()
 	{
-		const ShaderParameters& parameters = m_Shader->GetParameters();
+		const ShaderProperties& properties = m_Shader->GetProperties();
 
 		if (RendererAPI::GetAPI() == RendererAPI::API::OpenGL)
 		{
 			Ref<OpenGLShader> glShader = As<OpenGLShader>(m_Shader);
 			glShader->Bind();
 
-			if (parameters.size() == 0)
+			if (properties.size() == 0)
 				return;
 			
 			FLARE_CORE_ASSERT(m_Buffer);
-			for (uint32_t i = 0; i < (uint32_t)parameters.size(); i++)
+			for (uint32_t i = 0; i < (uint32_t)properties.size(); i++)
 			{
-				uint8_t* paramData = m_Buffer + parameters[i].Offset;
+				uint8_t* paramData = m_Buffer + properties[i].Offset;
 				
-				switch (parameters[i].Type)
+				switch (properties[i].Type)
 				{
 				case ShaderDataType::Int:
 				case ShaderDataType::Sampler:
@@ -129,7 +129,7 @@ namespace Flare
 					break;
 				case ShaderDataType::SamplerArray:
 				{
-					uint32_t arraySize = (uint32_t)parameters[i].Size / ShaderDataTypeSize(ShaderDataType::Sampler);
+					uint32_t arraySize = (uint32_t)properties[i].Size / ShaderDataTypeSize(ShaderDataType::Sampler);
 					glShader->SetIntArray(i, (int32_t*)paramData, arraySize);
 					break;
 				}

@@ -19,9 +19,9 @@ namespace Flare
 	public:
 		virtual void Bind() override;
 
-		virtual const ShaderParameters& GetParameters() const override;
+		virtual const ShaderProperties& GetProperties() const override;
 		virtual const ShaderOutputs& GetOutputs() const override;
-		virtual std::optional<uint32_t> GetParameterIndex(std::string_view name) const override;
+		virtual std::optional<uint32_t> GetPropertyIndex(std::string_view name) const override;
 		
 		virtual void SetInt(const std::string& name, int value) override;
 		virtual void SetFloat(const std::string& name, float value) override;
@@ -56,7 +56,7 @@ namespace Flare
 		void Compile(const std::filesystem::path& path, const std::filesystem::path& cacheDirectory, std::string_view source);
 	private:
 		uint32_t m_Id;
-		ShaderParameters m_Parameters;
+		ShaderProperties m_Properties;
 		ShaderOutputs m_Outputs;
 
 		std::vector<int32_t> m_UniformLocations;

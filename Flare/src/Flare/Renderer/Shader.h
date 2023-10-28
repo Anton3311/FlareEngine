@@ -95,7 +95,7 @@ namespace Flare
 		size_t Size;
 	};
 
-	using ShaderParameters = std::vector<ShaderParameter>;
+	using ShaderProperties = std::vector<ShaderParameter>;
 	// Indices of frame buffer attachments to which the shader writes
 	using ShaderOutputs = std::vector<uint32_t>;
 
@@ -109,9 +109,9 @@ namespace Flare
 
 		virtual void Bind() = 0;
 
-		virtual const ShaderParameters& GetParameters() const = 0;
+		virtual const ShaderProperties& GetProperties() const = 0;
 		virtual const ShaderOutputs& GetOutputs() const = 0;
-		virtual std::optional<uint32_t> GetParameterIndex(std::string_view name) const = 0;
+		virtual std::optional<uint32_t> GetPropertyIndex(std::string_view name) const = 0;
 
 		virtual void SetInt(const std::string& name, int value) = 0;
 		virtual void SetFloat(const std::string& name, float value) = 0;

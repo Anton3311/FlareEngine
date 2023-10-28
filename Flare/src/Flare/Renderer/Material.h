@@ -28,29 +28,29 @@ namespace Flare
 		void SetIntArray(uint32_t index, const int32_t* values, uint32_t count);
 
 		template<typename T>
-		T ReadParameterValue(uint32_t index)
+		T ReadPropertyValue(uint32_t index)
 		{
-			const ShaderParameters& parameters = m_Shader->GetParameters();
-			FLARE_CORE_ASSERT((size_t)index < parameters.size());
-			FLARE_CORE_ASSERT(sizeof(T) == parameters[index].Size);
+			const ShaderProperties& properties = m_Shader->GetProperties();
+			FLARE_CORE_ASSERT((size_t)index < properties.size());
+			FLARE_CORE_ASSERT(sizeof(T) == properties[index].Size);
 
 			T value;
 
-			memcpy_s(&value, sizeof(value), m_Buffer + parameters[index].Offset, parameters[index].Size);
+			memcpy_s(&value, sizeof(value), m_Buffer + properties[index].Offset, properties[index].Size);
 			return value;
 		}
 
 		template<typename T>
-		void WriteParameterValue(uint32_t index, const T& value)
+		void WritePropertyValue(uint32_t index, const T& value)
 		{
-			const ShaderParameters& parameters = m_Shader->GetParameters();
-			FLARE_CORE_ASSERT((size_t)index < parameters.size());
-			FLARE_CORE_ASSERT(sizeof(T) == parameters[index].Size);
+			const ShaderProperties& properties = m_Shader->GetProperties();
+			FLARE_CORE_ASSERT((size_t)index < properties.size());
+			FLARE_CORE_ASSERT(sizeof(T) == properties[index].Size);
 
-			memcpy_s(m_Buffer + parameters[index].Offset, sizeof(value), &value, parameters[index].Size);
+			memcpy_s(m_Buffer + properties[index].Offset, sizeof(value), &value, properties[index].Size);
 		}
 
-		void SetShaderParameters();
+		void SetShaderProperties();
 	private:
 		void Initialize();
 	public:

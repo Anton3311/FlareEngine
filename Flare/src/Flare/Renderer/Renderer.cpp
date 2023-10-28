@@ -101,7 +101,7 @@ namespace Flare
 
 	void Renderer::DrawFullscreenQuad(const Ref<Material>& material)
 	{
-		material->SetShaderParameters();
+		material->SetShaderProperties();
 		ApplyMaterialFeatures(material->Features);
 
 		const ShaderOutputs& shaderOutputs = material->GetShader()->GetOutputs();
@@ -121,7 +121,7 @@ namespace Flare
 
 	void Renderer::DrawMesh(const Ref<VertexArray>& mesh, const Ref<Material>& material, size_t indicesCount)
 	{
-		material->SetShaderParameters();
+		material->SetShaderProperties();
 		ApplyMaterialFeatures(material->Features);
 
 		const ShaderOutputs& shaderOutputs = material->GetShader()->GetOutputs();
@@ -145,11 +145,11 @@ namespace Flare
 		if (shader == nullptr)
 			return;
 
-		auto transformIndex = shader->GetParameterIndex("u_InstanceData.Transform");
+		auto transformIndex = shader->GetPropertyIndex("u_InstanceData.Transform");
 		if (!transformIndex.has_value())
 			return;
 
-		material->WriteParameterValue(transformIndex.value(), transform);
+		material->WritePropertyValue(transformIndex.value(), transform);
 		DrawMesh(mesh->GetSubMesh().MeshVertexArray, material);
 	}
 

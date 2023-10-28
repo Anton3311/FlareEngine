@@ -44,12 +44,12 @@ namespace Flare
 		m_GridMaterial->Features.Culling = CullingMode::None;
 
 		Ref<Shader> gridShader = m_GridMaterial->GetShader();
-		s_GridPropertyIndices.Color = gridShader->GetParameterIndex("u_Data.Color").value_or(UINT32_MAX);
-		s_GridPropertyIndices.Offset = gridShader->GetParameterIndex("u_Data.Offset").value_or(UINT32_MAX);
-		s_GridPropertyIndices.Scale = gridShader->GetParameterIndex("u_Data.GridScale").value_or(UINT32_MAX);
-		s_GridPropertyIndices.Thickness = gridShader->GetParameterIndex("u_Data.Thickness").value_or(UINT32_MAX);
-		s_GridPropertyIndices.CellScale = gridShader->GetParameterIndex("u_Data.CellScale").value_or(UINT32_MAX);
-		s_GridPropertyIndices.FallOffThreshold = gridShader->GetParameterIndex("u_Data.FallOffThreshold").value_or(UINT32_MAX);
+		s_GridPropertyIndices.Color = gridShader->GetPropertyIndex("u_Data.Color").value_or(UINT32_MAX);
+		s_GridPropertyIndices.Offset = gridShader->GetPropertyIndex("u_Data.Offset").value_or(UINT32_MAX);
+		s_GridPropertyIndices.Scale = gridShader->GetPropertyIndex("u_Data.GridScale").value_or(UINT32_MAX);
+		s_GridPropertyIndices.Thickness = gridShader->GetPropertyIndex("u_Data.Thickness").value_or(UINT32_MAX);
+		s_GridPropertyIndices.CellScale = gridShader->GetPropertyIndex("u_Data.CellScale").value_or(UINT32_MAX);
+		s_GridPropertyIndices.FallOffThreshold = gridShader->GetPropertyIndex("u_Data.FallOffThreshold").value_or(UINT32_MAX);
 	}
 
 	void SceneViewportWindow::OnRenderViewport()
@@ -318,12 +318,12 @@ namespace Flare
 
 		glm::vec3 cameraPosition = m_Camera.GetRotationOrigin();
 
-		m_GridMaterial->WriteParameterValue(s_GridPropertyIndices.Offset, glm::vec3(cameraPosition.x, 0.0f, cameraPosition.z));
-		m_GridMaterial->WriteParameterValue(s_GridPropertyIndices.Scale, scale);
-		m_GridMaterial->WriteParameterValue(s_GridPropertyIndices.Thickness, 0.01f);
-		m_GridMaterial->WriteParameterValue(s_GridPropertyIndices.CellScale, 1.0f / cellScale);
-		m_GridMaterial->WriteParameterValue(s_GridPropertyIndices.Color, gridColor);
-		m_GridMaterial->WriteParameterValue(s_GridPropertyIndices.FallOffThreshold, 0.8f);
+		m_GridMaterial->WritePropertyValue(s_GridPropertyIndices.Offset, glm::vec3(cameraPosition.x, 0.0f, cameraPosition.z));
+		m_GridMaterial->WritePropertyValue(s_GridPropertyIndices.Scale, scale);
+		m_GridMaterial->WritePropertyValue(s_GridPropertyIndices.Thickness, 0.01f);
+		m_GridMaterial->WritePropertyValue(s_GridPropertyIndices.CellScale, 1.0f / cellScale);
+		m_GridMaterial->WritePropertyValue(s_GridPropertyIndices.Color, gridColor);
+		m_GridMaterial->WritePropertyValue(s_GridPropertyIndices.FallOffThreshold, 0.8f);
 		Renderer::DrawFullscreenQuad(m_GridMaterial);
 	}
 

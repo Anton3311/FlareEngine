@@ -216,48 +216,48 @@ namespace Flare
 		if (EditorGUI::BeginPropertyGrid())
 		{
 			Ref<Shader> shader = material->GetShader();
-			const ShaderParameters& shaderParameters = shader->GetParameters();
-			for (uint32_t i = 0; i < (uint32_t)shaderParameters.size(); i++)
+			const ShaderProperties& shaderProperties = shader->GetProperties();
+			for (uint32_t i = 0; i < (uint32_t)shaderProperties.size(); i++)
 			{
-				switch (shaderParameters[i].Type)
+				switch (shaderProperties[i].Type)
 				{
 				case ShaderDataType::Int:
 				{
-					int32_t value = material->ReadParameterValue<int32_t>(i);
-					if (EditorGUI::IntPropertyField(shaderParameters[i].Name.c_str(), value))
-						material->WriteParameterValue(i, value);
+					int32_t value = material->ReadPropertyValue<int32_t>(i);
+					if (EditorGUI::IntPropertyField(shaderProperties[i].Name.c_str(), value))
+						material->WritePropertyValue(i, value);
 
 					break;
 				}
 				case ShaderDataType::Float:
 				{
-					float value = material->ReadParameterValue<float>(i);
-					if (EditorGUI::FloatPropertyField(shaderParameters[i].Name.c_str(), value))
-						material->WriteParameterValue(i, value);
+					float value = material->ReadPropertyValue<float>(i);
+					if (EditorGUI::FloatPropertyField(shaderProperties[i].Name.c_str(), value))
+						material->WritePropertyValue(i, value);
 
 					break;
 				}
 				case ShaderDataType::Float2:
 				{
-					glm::vec2 value = material->ReadParameterValue<glm::vec2>(i);
-					if (EditorGUI::Vector2PropertyField(shaderParameters[i].Name.c_str(), value))
-						material->WriteParameterValue(i, value);
+					glm::vec2 value = material->ReadPropertyValue<glm::vec2>(i);
+					if (EditorGUI::Vector2PropertyField(shaderProperties[i].Name.c_str(), value))
+						material->WritePropertyValue(i, value);
 
 					break;
 				}
 				case ShaderDataType::Float3:
 				{
-					glm::vec3 value = material->ReadParameterValue<glm::vec3>(i);
-					if (EditorGUI::Vector3PropertyField(shaderParameters[i].Name.c_str(), value))
-						material->WriteParameterValue(i, value);
+					glm::vec3 value = material->ReadPropertyValue<glm::vec3>(i);
+					if (EditorGUI::Vector3PropertyField(shaderProperties[i].Name.c_str(), value))
+						material->WritePropertyValue(i, value);
 
 					break;
 				}
 				case ShaderDataType::Float4:
 				{
-					glm::vec4 value = material->ReadParameterValue<glm::vec4>(i);
-					if (EditorGUI::Vector4PropertyField(shaderParameters[i].Name.c_str(), value))
-						material->WriteParameterValue(i, value);
+					glm::vec4 value = material->ReadPropertyValue<glm::vec4>(i);
+					if (EditorGUI::Vector4PropertyField(shaderProperties[i].Name.c_str(), value))
+						material->WritePropertyValue(i, value);
 
 					break;
 				}

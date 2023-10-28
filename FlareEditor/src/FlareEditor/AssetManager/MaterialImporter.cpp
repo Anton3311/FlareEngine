@@ -19,12 +19,12 @@ namespace Flare
 
 		emitter << YAML::Key << "Shader" << YAML::Value << shader->Handle;
 
-		emitter << YAML::Key << "Parameters" << YAML::BeginSeq;
+		emitter << YAML::Key << "Properties" << YAML::BeginSeq;
 
-		const ShaderParameters& parameters = shader->GetParameters();
-		for (uint32_t index = 0; index < (uint32_t)parameters.size(); index++)
+		const ShaderProperties& properties = shader->GetProperties();
+		for (uint32_t index = 0; index < (uint32_t)properties.size(); index++)
 		{
-			const ShaderParameter& parameter = parameters[index];
+			const ShaderParameter& parameter = properties[index];
 
 			if (parameter.Type == ShaderDataType::Matrix4x4)
 				continue; // Skip matrices
@@ -38,29 +38,29 @@ namespace Flare
 			switch (parameter.Type)
 			{
 			case ShaderDataType::Int:
-				emitter << material->ReadParameterValue<int32_t>(index);
+				emitter << material->ReadPropertyValue<int32_t>(index);
 				break;
 			case ShaderDataType::Int2:
-				emitter << material->ReadParameterValue<glm::ivec2>(index);
+				emitter << material->ReadPropertyValue<glm::ivec2>(index);
 				break;
 			case ShaderDataType::Int3:
-				emitter << material->ReadParameterValue<glm::ivec3>(index);
+				emitter << material->ReadPropertyValue<glm::ivec3>(index);
 				break;
 			case ShaderDataType::Int4:
-				emitter << material->ReadParameterValue<glm::ivec4>(index);
+				emitter << material->ReadPropertyValue<glm::ivec4>(index);
 				break;
 
 			case ShaderDataType::Float:
-				emitter << material->ReadParameterValue<float>(index);
+				emitter << material->ReadPropertyValue<float>(index);
 				break;
 			case ShaderDataType::Float2:
-				emitter << material->ReadParameterValue<glm::vec2>(index);
+				emitter << material->ReadPropertyValue<glm::vec2>(index);
 				break;
 			case ShaderDataType::Float3:
-				emitter << material->ReadParameterValue<glm::vec3>(index);
+				emitter << material->ReadPropertyValue<glm::vec3>(index);
 				break;
 			case ShaderDataType::Float4:
-				emitter << material->ReadParameterValue<glm::vec4>(index);
+				emitter << material->ReadPropertyValue<glm::vec4>(index);
 				break;
 			}
 
@@ -106,9 +106,9 @@ namespace Flare
 			if (shaderHandle.has_value())
 			{
 				Ref<Shader> shader = AssetManager::GetAsset<Shader>(shaderHandle.value());
-				const ShaderParameters& shaderParameters = shader->GetParameters();
+				const ShaderProperties& shaderProperties = shader->GetProperties();
 
-				if (YAML::Node parameters = node["Parameters"])
+				if (YAML::Node parameters = node["Properties"])
 				{
 					for (YAML::Node parameter : parameters)
 					{
@@ -118,7 +118,7 @@ namespace Flare
 						if (YAML::Node nameNode = parameter["Name"])
 						{
 							std::string name = nameNode.as<std::string>();
-							index = shader->GetParameterIndex(name);
+							index = shader->GetPropertyIndex(name);
 						}
 
 						if (YAML::Node typeNode = parameter["Type"])
@@ -133,30 +133,30 @@ namespace Flare
 							switch (type.value())
 							{
 							case ShaderDataType::Int:
-								material->WriteParameterValue(index.value(), valueNode.as<int32_t>());
+								material->WritePropertyValue(index.value(), valueNode.as<int32_t>());
 								break;
 							case ShaderDataType::Int2:
-								material->WriteParameterValue(index.value(), valueNode.as<glm::ivec2>());
+								material->WritePropertyValue(index.value(), valueNode.as<glm::ivec2>());
 								break;
 							case ShaderDataType::Int3:
-								material->WriteParameterValue(index.value(), valueNode.as<glm::ivec3>());
+								material->WritePropertyValue(index.value(), valueNode.as<glm::ivec3>());
 								break;
 							case ShaderDataType::Int4:
-								material->WriteParameterValue(index.value(), valueNode.as<glm::ivec4>());
+								material->WritePropertyValue(index.value(), valueNode.as<glm::ivec4>());
 								break;
 
 							case ShaderDataType::Float:
-								material->WriteParameterValue(index.value(), valueNode.as<float>());
+								material->WritePropertyValue(index.value(), valueNode.as<float>());
 								break;
 							case ShaderDataType::Float2:
-								material->WriteParameterValue(index.value(), valueNode.as<glm::vec2>());
+								material->WritePropertyValue(index.value(), valueNode.as<glm::vec2>());
 								break;
 							case ShaderDataType::Float3:
-								material->WriteParameterValue(index.value(), valueNode.as<glm::vec3>());
+								material->WritePropertyValue(index.value(), valueNode.as<glm::vec3>());
 								break;
 							case ShaderDataType::Float4:
 								auto a = valueNode.as<glm::vec4>();
-								material->WriteParameterValue(index.value(), valueNode.as<glm::vec4>());
+								material->WritePropertyValue(index.value(), valueNode.as<glm::vec4>());
 								break;
 							}
 						}

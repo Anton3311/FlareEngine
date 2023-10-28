@@ -54,9 +54,9 @@ namespace Flare
         glUseProgram(m_Id);
     }
 
-    const ShaderParameters& OpenGLShader::GetParameters() const
+    const ShaderProperties& OpenGLShader::GetProperties() const
     {
-        return m_Parameters;
+        return m_Properties;
     }
 
     const ShaderOutputs& OpenGLShader::GetOutputs() const
@@ -64,7 +64,7 @@ namespace Flare
         return m_Outputs;
     }
 
-    std::optional<uint32_t> OpenGLShader::GetParameterIndex(std::string_view name) const
+    std::optional<uint32_t> OpenGLShader::GetPropertyIndex(std::string_view name) const
     {
         auto it = m_NameToIndex.find(name);
         if (it == m_NameToIndex.end())
@@ -116,61 +116,61 @@ namespace Flare
 
     void OpenGLShader::SetInt(uint32_t index, int32_t value)
     {
-        FLARE_CORE_ASSERT((size_t)index < m_Parameters.size());
+        FLARE_CORE_ASSERT((size_t)index < m_Properties.size());
         glUniform1i(m_UniformLocations[index], value);
     }
 
     void OpenGLShader::SetInt2(uint32_t index, glm::ivec2 value)
     {
-        FLARE_CORE_ASSERT((size_t)index < m_Parameters.size());
+        FLARE_CORE_ASSERT((size_t)index < m_Properties.size());
         glUniform2i(m_UniformLocations[index], value.x, value.y);
     }
 
     void OpenGLShader::SetInt3(uint32_t index, const glm::ivec3& value)
     {
-        FLARE_CORE_ASSERT((size_t)index < m_Parameters.size());
+        FLARE_CORE_ASSERT((size_t)index < m_Properties.size());
         glUniform3i(m_UniformLocations[index], value.x, value.y, value.z);
     }
 
     void OpenGLShader::SetInt4(uint32_t index, const glm::ivec4& value)
     {
-        FLARE_CORE_ASSERT((size_t)index < m_Parameters.size());
+        FLARE_CORE_ASSERT((size_t)index < m_Properties.size());
         glUniform4i(m_UniformLocations[index], value.x, value.y, value.z, value.w);
     }
 
     void OpenGLShader::SetFloat(uint32_t index, float value)
     {
-        FLARE_CORE_ASSERT((size_t)index < m_Parameters.size());
+        FLARE_CORE_ASSERT((size_t)index < m_Properties.size());
         glUniform1f(m_UniformLocations[index], value);
     }
 
     void OpenGLShader::SetFloat2(uint32_t index, glm::vec2 value)
     {
-        FLARE_CORE_ASSERT((size_t)index < m_Parameters.size());
+        FLARE_CORE_ASSERT((size_t)index < m_Properties.size());
         glUniform2f(m_UniformLocations[index], value.x, value.y);
     }
 
     void OpenGLShader::SetFloat3(uint32_t index, const glm::vec3& value)
     {
-        FLARE_CORE_ASSERT((size_t)index < m_Parameters.size());
+        FLARE_CORE_ASSERT((size_t)index < m_Properties.size());
         glUniform3f(m_UniformLocations[index], value.x, value.y, value.z);
     }
 
     void OpenGLShader::SetFloat4(uint32_t index, const glm::vec4& value)
     {
-        FLARE_CORE_ASSERT((size_t)index < m_Parameters.size());
+        FLARE_CORE_ASSERT((size_t)index < m_Properties.size());
         glUniform4f(m_UniformLocations[index], value.x, value.y, value.z, value.w);
     }
 
     void OpenGLShader::SetIntArray(uint32_t index, const int* values, uint32_t count)
     {
-        FLARE_CORE_ASSERT((size_t)index < m_Parameters.size());
+        FLARE_CORE_ASSERT((size_t)index < m_Properties.size());
         glUniform1iv(m_UniformLocations[index], count, values);
     }
 
     void OpenGLShader::SetMatrix4(uint32_t index, const glm::mat4& matrix)
     {
-        FLARE_CORE_ASSERT((size_t)index < m_Parameters.size());
+        FLARE_CORE_ASSERT((size_t)index < m_Properties.size());
         glUniformMatrix4fv(m_UniformLocations[index], 1, GL_FALSE, glm::value_ptr(matrix));
     }
 
@@ -373,7 +373,7 @@ namespace Flare
             FLARE_CORE_INFO("\t\t{0}: {1} {2}", i, compiler.get_name(bufferType.member_types[i]), compiler.get_member_name(resource.base_type_id, i));
     }
 
-    static void Reflect(spirv_cross::Compiler& compiler, ShaderParameters& parameters)
+    static void Reflect(spirv_cross::Compiler& compiler, ShaderProperties& properties)
     {
         const spirv_cross::ShaderResources& resources = compiler.get_shader_resources();
 
@@ -404,7 +404,7 @@ namespace Flare
                 }
             }
                 
-            parameters.emplace_back(resource.name, type, size, 0);
+            properties.emplace_back(resource.name, type, size, 0);
         }
 
         FLARE_CORE_INFO("Push constant buffers:");
@@ -487,9 +487,9 @@ namespace Flare
                     continue;
 
                 if (resource.name.empty())
-                    parameters.emplace_back(memberName, dataType, offset);
+                    properties.emplace_back(memberName, dataType, offset);
                 else
-                    parameters.emplace_back(fmt::format("{0}.{1}", resource.name, memberName), dataType, offset);
+                    properties.emplace_back(fmt::format("{0}.{1}", resource.name, memberName), dataType, offset);
             }
         }
     }
@@ -559,7 +559,7 @@ namespace Flare
             try
             {
                 spirv_cross::Compiler compiler(compiledShaderData);
-                Reflect(compiler, m_Parameters);
+                Reflect(compiler, m_Properties);
 
                 if (program.Type == GL_FRAGMENT_SHADER)
                     ExtractShaderOutputs(compiler, m_Outputs);
@@ -569,7 +569,7 @@ namespace Flare
                 FLARE_CORE_ERROR("Shader '{0}' reflection failed: {1}", filePath, e.what());
             }
 
-            for (const auto& p : m_Parameters)
+            for (const auto& p : m_Properties)
                 FLARE_CORE_INFO("\t\tName = {0} Size = {1} Offset = {2}", p.Name, p.Size, p.Offset);
 
             cachePath = cacheDirectory / Shader::GetCacheFileName(path.filename().string(), "opengl", stageName);
@@ -621,11 +621,11 @@ namespace Flare
         for (auto id : shaderIds)
             glDetachShader(m_Id, id);
 
-        for (size_t i = 0; i < m_Parameters.size(); i++)
-            m_NameToIndex.emplace(m_Parameters[i].Name, (uint32_t)i);
+        for (size_t i = 0; i < m_Properties.size(); i++)
+            m_NameToIndex.emplace(m_Properties[i].Name, (uint32_t)i);
 
-        m_UniformLocations.reserve(m_Parameters.size());
-        for (const auto& param : m_Parameters)
+        m_UniformLocations.reserve(m_Properties.size());
+        for (const auto& param : m_Properties)
         {
             int32_t location = glGetUniformLocation(m_Id, param.Name.c_str());
             FLARE_CORE_ASSERT(location != -1);
