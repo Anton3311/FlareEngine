@@ -1,0 +1,4 @@
+AssetRegistry:
+  - Handle: 17504616539540010642
+    Type: Shader
+    Path: Mesh.glsl

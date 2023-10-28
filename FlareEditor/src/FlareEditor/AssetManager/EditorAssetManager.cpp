@@ -37,13 +37,35 @@ namespace Flare
             return scene;
         });
 
-        m_AssetImporters.emplace(AssetType::Shader, [](const AssetMetadata& metadata) -> Ref<Asset>
+        m_AssetImporters.emplace(AssetType::Shader, [this](const AssetMetadata& metadata) -> Ref<Asset>
         {
             std::filesystem::path assetsPath = Project::GetActive()->Location / "Assets";
-            std::filesystem::path cacheDirectory = Project::GetActive()->Location
-                / "Cache/Shaders/"
-                / std::filesystem::relative(metadata.Path.parent_path(), assetsPath);
-            return Shader::Create(metadata.Path, cacheDirectory);
+
+            const auto& entry = m_Registry[metadata.Handle];
+            if (entry.OwnerType == AssetOwner::Project)
+            {
+                std::filesystem::path cacheDirectory = Project::GetActive()->Location
+                    / "Cache/Shaders/"
+                    / std::filesystem::relative(metadata.Path.parent_path(), assetsPath);
+                return Shader::Create(metadata.Path, cacheDirectory);
+            }
+            else if (entry.OwnerType == AssetOwner::Package)
+            {
+                FLARE_CORE_ASSERT(entry.PackageId.has_value());
+                const AssetsPackage& package = m_AssetPackages[entry.PackageId.value()];
+                std::filesystem::path packageAssetsPath = std::filesystem::absolute(AssetsPackage::InernalPackagesLocation / package.Name / "Assets");
+
+                std::filesystem::path cacheDirectory = Project::GetActive()->Location
+                    / "Cache/Shaders/"
+                    / std::filesystem::relative(
+                        std::filesystem::absolute(metadata.Path)
+                        .parent_path(),
+                        packageAssetsPath) / package.Name;
+
+                return Shader::Create(metadata.Path, cacheDirectory);
+            }
+
+            return nullptr;
         });
 
         m_AssetImporters.emplace(AssetType::Font, [](const AssetMetadata& metadata) -> Ref<Asset>
@@ -56,6 +78,7 @@ namespace Flare
     {
         m_LoadedAssets.clear();
         m_Registry.clear();
+        m_AssetPackages.clear();
         m_FilepathToAssetHandle.clear();
 
         FLARE_CORE_ASSERT(Project::GetActive());
@@ -65,6 +88,25 @@ namespace Flare
             std::filesystem::create_directories(root);
 
         DeserializeRegistry();
+
+        static std::filesystem::path internalPackagesLocation = "../Packages";
+
+        std::filesystem::path packagesFile = Project::GetActive()->Location / PackageDependenciesSerializer::PackagesFileName;
+        if (std::filesystem::exists(packagesFile))
+        {
+            PackageDependenciesSerializer::Deserialize(m_AssetPackages, Project::GetActive()->Location);
+
+            for (const auto& [id, package] : m_AssetPackages)
+            {
+                if (package.PackageType == AssetsPackage::Type::Internal)
+                {
+                    AssetRegistrySerializer::Deserialize(m_Registry, internalPackagesLocation / package.Name, id);
+
+                    for (const auto& [handle, entry] : m_Registry)
+                        m_FilepathToAssetHandle.emplace(entry.Metadata.Path, handle);
+                }
+            }
+        }
     }
 
     Ref<Asset> EditorAssetManager::GetAsset(AssetHandle handle)
@@ -207,6 +249,25 @@ namespace Flare
             m_Registry.erase(handle);
             SerializeRegistry();
         }
+    }
+
+    void EditorAssetManager::AddAssetsPackage(const std::filesystem::path& path)
+    {
+        if (!std::filesystem::exists(path))
+            return;
+
+        {
+            AssetsPackage package;
+            package.Id = UUID();
+            package.PackageType = AssetsPackage::Type::Internal;
+
+            PackageDependenciesSerializer::DeserializePackage(package, path);
+
+            m_AssetPackages.emplace(package.Id, std::move(package));
+        }
+
+        PackageDependenciesSerializer::Serialize(m_AssetPackages, Project::GetActive()->Location);
+        AssetRegistrySerializer::Deserialize(m_Registry, path.parent_path());
     }
 
     Ref<Asset> EditorAssetManager::LoadAsset(const AssetMetadata& metadata)

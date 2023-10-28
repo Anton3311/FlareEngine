@@ -28,7 +28,7 @@ namespace Flare
 	{
 	public:
 		static void Serialize(const EditorAssetRegistry& registry, const std::filesystem::path& path);
-		static bool Deserialize(EditorAssetRegistry& registry, const std::filesystem::path& path);
+		static bool Deserialize(EditorAssetRegistry& registry, const std::filesystem::path& path, std::optional<UUID> packageId = {});
 
 		inline static std::filesystem::path GetAssetsRoot()
 		{

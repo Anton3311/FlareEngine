@@ -179,7 +179,9 @@ namespace Flare
 		if (EditorGUI::BeginPropertyGrid())
 		{
 			AssetHandle shaderHandle = material->GetShader()->Handle;
-			if (EditorGUI::AssetField("Shader", shaderHandle))
+			EditorGUI::AssetField("Shader", shaderHandle);
+
+			if (shaderHandle != material->GetShader()->Handle)
 			{
 				if (AssetManager::IsAssetHandleValid(shaderHandle))
 				{

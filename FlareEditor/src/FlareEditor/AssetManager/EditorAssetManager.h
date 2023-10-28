@@ -4,6 +4,7 @@
 #include "Flare/AssetManager/AssetManagerBase.h"
 
 #include "FlareEditor/AssetManager/EditorAssetRegistry.h"
+#include "FlareEditor/AssetManager/AssetsPackage.h"
 
 #include <filesystem>
 #include <map>
@@ -15,13 +16,6 @@
 namespace Flare
 {
 	constexpr char* ASSET_PAYLOAD_NAME = "ASSET_PAYLOAD";
-
-	struct PackageEntry
-	{
-		UUID Id;
-		std::string Name;
-		std::filesystem::path Path;
-	};
 
 	class EditorAssetManager : public AssetManagerBase
 	{
@@ -49,6 +43,8 @@ namespace Flare
 		void RemoveFromRegistry(AssetHandle handle);
 
 		inline const EditorAssetRegistry& GetRegistry() const { return m_Registry; }
+
+		void AddAssetsPackage(const std::filesystem::path& path);
 	private:
 		Ref<Asset> LoadAsset(const AssetMetadata& metadata);
 
@@ -63,6 +59,6 @@ namespace Flare
 		std::unordered_map<std::filesystem::path, AssetHandle> m_FilepathToAssetHandle;
 		std::unordered_map<AssetType, AssetImporter> m_AssetImporters;
 
-		std::map<UUID, PackageEntry> m_AssetPackages;
+		std::map<UUID, AssetsPackage> m_AssetPackages;
 	};
 }

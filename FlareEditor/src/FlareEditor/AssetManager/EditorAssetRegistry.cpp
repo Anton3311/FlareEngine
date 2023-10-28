@@ -51,7 +51,7 @@ namespace Flare
         outputFile << emitter.c_str();
 	}
 
-    bool AssetRegistrySerializer::Deserialize(EditorAssetRegistry& registry, const std::filesystem::path& path)
+    bool AssetRegistrySerializer::Deserialize(EditorAssetRegistry& registry, const std::filesystem::path& path, std::optional<UUID> packageId)
     {
         std::filesystem::path registryPath = path / RegistryFileName;
         std::filesystem::path root = path / AssetsDirectoryName;
@@ -76,8 +76,8 @@ namespace Flare
 
 
             AssetRegistryEntry entry;
-            entry.OwnerType = AssetOwner::Project;
-            entry.PackageId = {};
+            entry.OwnerType = packageId.has_value() ? AssetOwner::Package : AssetOwner::Project;
+            entry.PackageId = packageId;
 
             AssetMetadata& metadata = entry.Metadata;
             metadata.Path = path;

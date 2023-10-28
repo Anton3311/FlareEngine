@@ -63,6 +63,16 @@ namespace Flare
 					Project::OpenProject(projectPath.value());
 			}
 
+			if (ImGui::MenuItem("Add Package"))
+			{
+				std::optional<std::filesystem::path> packagePath = Platform::ShowOpenFileDialog(
+					L"Flare package (*.yaml)\0*.yaml\0",
+					Application::GetInstance().GetWindow());
+
+				if (packagePath.has_value())
+					As<EditorAssetManager>(AssetManager::GetInstance())->AddAssetsPackage(packagePath.value());
+			}
+
 			if (ImGui::MenuItem("Settings"))
 				ProjectSettingsWindow::Show();
 			
