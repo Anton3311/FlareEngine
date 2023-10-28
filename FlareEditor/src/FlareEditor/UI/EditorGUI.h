@@ -33,6 +33,7 @@ namespace Flare
 
 		static bool TextProperty(const char* name, std::string& text);
 		static bool TextField(const char* name, std::string& text);
+		static bool TextField(UUID id, std::string& text);
 
 		static bool AssetField(const char* name, AssetHandle& handle);
 		static bool EntityField(const char* name, const World& world, Entity& entity);

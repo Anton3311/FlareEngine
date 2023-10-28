@@ -1,5 +1,6 @@
 #include "QuickSearch.h"
 
+#include "Flare/Core/Application.h"
 #include "Flare/AssetManager/AssetManager.h"
 
 #include "FlareEditor/AssetManager/EditorAssetManager.h"
@@ -31,50 +32,19 @@ namespace Flare
 		if (!m_Show)
 			return;
 
-		ImGui::Begin("Quick Search", &m_Show);
+		ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoDecoration
+			| ImGuiWindowFlags_NoDocking;
+
+		ImGui::Begin("Quick Search", &m_Show, windowFlags);
 
 		if (ImGui::IsKeyPressed(ImGuiKey_Escape))
 			Close();
 
-		if (EditorGUI::TextField("Search", m_CurrentInput))
-		{
-			Ref<EditorAssetManager> assetManager = As<EditorAssetManager>(AssetManager::GetInstance());
-			const auto& assetRegistry = assetManager->GetRegistry();
+		ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
+		if (EditorGUI::TextField((uint64_t)"Search", m_CurrentInput))
+			CollectMatchedAssets();
 
-			m_AssetSearchResult.clear();
-			
-			for (const auto& [key, entry] : assetRegistry)
-			{
-				const wchar_t* path = entry.Metadata.Path.c_str();
-				size_t pathLength = wcslen(path);
-
-				if (pathLength < m_CurrentInput.size())
-					continue;
-
-				bool contains = false;
-				for (size_t i = 0; i < pathLength - m_CurrentInput.size() + 1; i++)
-				{
-					contains = true;
-					for (size_t j = 0; j < m_CurrentInput.size(); j++)
-					{
-						wchar_t chr = 0;
-						mbstowcs(&chr, &m_CurrentInput[j], 1);
-
-						if (chr != path[i + j])
-						{
-							contains = false;
-							break;
-						}
-					}
-
-					if (contains)
-						break;
-				}
-
-				if (contains)
-					m_AssetSearchResult.push_back(key);
-			}
-		}
+		ImGui::PopItemWidth();
 
 		if (ImGui::BeginChild("SearchResultList"))
 		{
@@ -126,7 +96,9 @@ namespace Flare
 	{
 		m_ResultToken = resultToken;
 		m_Show = true;
-		m_AssetSearchResult.clear();
+		m_CurrentInput.clear();
+
+		CollectMatchedAssets();
 	}
 
 	std::optional<QuickSearch::AssetSearchResult> QuickSearch::AcceptAssetResult(UUID resultToken)
@@ -156,6 +128,46 @@ namespace Flare
 	{
 		FLARE_CORE_ASSERT(s_Instance);
 		return *s_Instance;
+	}
+
+	void QuickSearch::CollectMatchedAssets()
+	{
+		Ref<EditorAssetManager> assetManager = As<EditorAssetManager>(AssetManager::GetInstance());
+		const auto& assetRegistry = assetManager->GetRegistry();
+
+		m_AssetSearchResult.clear();
+
+		for (const auto& [key, entry] : assetRegistry)
+		{
+			const wchar_t* path = entry.Metadata.Path.c_str();
+			size_t pathLength = wcslen(path);
+
+			if (pathLength < m_CurrentInput.size())
+				continue;
+
+			bool contains = false;
+			for (size_t i = 0; i < pathLength - m_CurrentInput.size() + 1; i++)
+			{
+				contains = true;
+				for (size_t j = 0; j < m_CurrentInput.size(); j++)
+				{
+					wchar_t chr = 0;
+					mbstowcs(&chr, &m_CurrentInput[j], 1);
+
+					if (chr != path[i + j])
+					{
+						contains = false;
+						break;
+					}
+				}
+
+				if (contains)
+					break;
+			}
+
+			if (contains)
+				m_AssetSearchResult.push_back(key);
+		}
 	}
 
 	void QuickSearch::Close()

@@ -185,7 +185,12 @@ namespace Flare
 
 		ImGui::SetCursorPosY(y);
 
-		ImGui::PushID(name);
+		return TextField((uint64_t)name, text);
+	}
+
+	bool EditorGUI::TextField(UUID id, std::string& text)
+	{
+		ImGui::PushID(id);
 		bool result = ImGui::InputText("",
 			text.data(),
 			text.size(),
