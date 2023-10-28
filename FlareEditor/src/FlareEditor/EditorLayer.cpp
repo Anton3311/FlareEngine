@@ -266,6 +266,7 @@ namespace Flare
 		m_SceneWindow.OnImGuiRender();
 		m_PropertiesWindow.OnImGuiRender();
 		m_AssetManagerWindow.OnImGuiRender();
+		m_QuickSearch.OnImGuiRender();
 
 		ECSInspector::GetInstance().OnImGuiRender();
 

@@ -4,6 +4,7 @@
 #include "Flare/Scene/Scene.h"
 
 #include "FlareEditor/AssetManager/EditorAssetManager.h"
+#include "FlareEditor/UI/QuickSearch/QuickSearch.h"
 
 #include <spdlog/spdlog.h>
 
@@ -204,7 +205,7 @@ namespace Flare
 
 	bool EditorGUI::AssetField(AssetHandle& handle)
 	{
-		ImVec2 buttonSize = ImVec2(ImGui::GetContentRegionAvail().x - 60.0f, 0);
+		ImVec2 buttonSize = ImVec2(ImGui::GetContentRegionAvail().x - 120.0f, 0);
 
 		if (handle == NULL_ASSET_HANDLE)
 			ImGui::Button("None", buttonSize);
@@ -230,12 +231,22 @@ namespace Flare
 			ImGui::EndDragDropTarget();
 		}
 
-		ImGui::SameLine();
-
-		if (ImGui::Button("Reset", ImVec2(ImGui::GetContentRegionAvail().x, 0.0f)))
 		{
-			handle = NULL_ASSET_HANDLE;
-			return true;
+			ImGui::SameLine();
+			if (ImGui::Button("Find", ImVec2(45.0f, 0.0f)))
+			{
+				QuickSearch::GetInstance().FindAsset([&handle](AssetHandle result)
+				{
+					handle = result;
+				});
+			}
+
+			ImGui::SameLine();
+			if (ImGui::Button("Reset", ImVec2(ImGui::GetContentRegionAvail().x, 0.0f)))
+			{
+				handle = NULL_ASSET_HANDLE;
+				return true;
+			}
 		}
 
 		return result;
