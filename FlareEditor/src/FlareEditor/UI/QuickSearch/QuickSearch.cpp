@@ -17,6 +17,8 @@ namespace Flare
 		: m_Show(false)
 	{
 		s_Instance = this;
+		Close();
+		ClearResult();
 	}
 
 	QuickSearch::~QuickSearch()
@@ -107,9 +109,10 @@ namespace Flare
 				drawList->AddText(buttonRect.Min + ImVec2(padding, padding), textColor, path.c_str(), path.c_str() + path.size());
 			}
 
-			if (selectedHandle && m_Callback)
+			if (selectedHandle)
 			{
-				m_Callback(selectedHandle.value());
+				m_AssetResult.Handle = selectedHandle.value();
+				m_AssetResult.Type = AssetSearchResult::ResultType::Ok;
 				Close();
 			}
 
@@ -119,11 +122,34 @@ namespace Flare
 		ImGui::End();
 	}
 
-	void QuickSearch::FindAsset(const AssetSearchCallback& callback)
+	void QuickSearch::FindAsset(UUID resultToken)
 	{
-		m_Callback = callback;
+		m_ResultToken = resultToken;
 		m_Show = true;
 		m_AssetSearchResult.clear();
+	}
+
+	std::optional<QuickSearch::AssetSearchResult> QuickSearch::AcceptAssetResult(UUID resultToken)
+	{
+		if (resultToken == m_ResultToken)
+		{
+			auto result = m_AssetResult;
+			switch (m_AssetResult.Type)
+			{
+			case AssetSearchResult::ResultType::None:
+				return {};
+			case AssetSearchResult::ResultType::NotFound:
+			case AssetSearchResult::ResultType::Ok:
+			{
+				ClearResult();
+				break;
+			}
+			}
+
+			return result;
+		}
+
+		return {};
 	}
 
 	QuickSearch& QuickSearch::GetInstance()
@@ -136,5 +162,12 @@ namespace Flare
 	{
 		m_CurrentInput.clear();
 		m_Show = false;
+	}
+
+	void QuickSearch::ClearResult()
+	{
+		m_ResultToken = 0;
+		m_AssetResult.Handle = NULL_ASSET_HANDLE;
+		m_AssetResult.Type = AssetSearchResult::ResultType::None;
 	}
 }

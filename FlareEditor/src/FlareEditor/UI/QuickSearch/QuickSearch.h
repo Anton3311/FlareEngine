@@ -11,23 +11,38 @@ namespace Flare
 	class QuickSearch
 	{
 	public:
-		using AssetSearchCallback = std::function<void(AssetHandle)>;
+		struct AssetSearchResult
+		{
+			enum class ResultType
+			{
+				None,
+				Ok,
+				NotFound,
+			};
+
+			AssetHandle Handle;
+			ResultType Type;
+		};
 
 		QuickSearch();
 		~QuickSearch();
 
 		void OnImGuiRender();
 
-		void FindAsset(const AssetSearchCallback& callback);
+		void FindAsset(UUID resultToken);
+		std::optional<AssetSearchResult> AcceptAssetResult(UUID resultToken);
 	public:
 		static QuickSearch& GetInstance();
 	private:
 		void Close();
+		void ClearResult();
 	private:
 		bool m_Show;
 		std::string m_CurrentInput;
 
 		std::vector<AssetHandle> m_AssetSearchResult;
-		AssetSearchCallback m_Callback;
+
+		AssetSearchResult m_AssetResult;
+		UUID m_ResultToken;
 	};
 }

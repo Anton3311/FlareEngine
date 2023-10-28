@@ -233,12 +233,18 @@ namespace Flare
 
 		{
 			ImGui::SameLine();
+
+			UUID resultToken = (uint64_t)&handle;
 			if (ImGui::Button("Find", ImVec2(45.0f, 0.0f)))
+				QuickSearch::GetInstance().FindAsset(resultToken);
+
+			if (auto searchResult = QuickSearch::GetInstance().AcceptAssetResult(resultToken))
 			{
-				QuickSearch::GetInstance().FindAsset([&handle](AssetHandle result)
+				if (searchResult->Type == QuickSearch::AssetSearchResult::ResultType::Ok)
 				{
-					handle = result;
-				});
+					handle = searchResult->Handle;
+					result = true;
+				}
 			}
 
 			ImGui::SameLine();
