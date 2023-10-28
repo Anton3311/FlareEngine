@@ -22,20 +22,8 @@
 #include <fstream>
 #include <string>
 
-namespace YAML
-{
-    Emitter& operator<<(Emitter& emitter, std::string_view string)
-    {
-        emitter << std::string(string.data(), string.size());
-        return emitter;
-    }
-}
-
 namespace Flare
 {
-    std::filesystem::path EditorAssetManager::s_RegistryFileName = "AssetRegistry.yaml";
-    std::filesystem::path EditorAssetManager::s_AssetsDirectoryName = "Assets";
-
     EditorAssetManager::EditorAssetManager()
     {
         m_AssetImporters.emplace(AssetType::Texture, TextureImporter::ImportTexture);
@@ -72,10 +60,9 @@ namespace Flare
 
         FLARE_CORE_ASSERT(Project::GetActive());
 
-        m_Root = Project::GetActive()->Location / s_AssetsDirectoryName;
-
-        if (!std::filesystem::exists(m_Root))
-            std::filesystem::create_directories(m_Root);
+        std::filesystem::path root = AssetRegistrySerializer::GetAssetsRoot();
+        if (!std::filesystem::exists(root))
+            std::filesystem::create_directories(root);
 
         DeserializeRegistry();
     }
@@ -90,7 +77,7 @@ namespace Flare
         if (registryIterator == m_Registry.end())
             return nullptr;
 
-        return LoadAsset(registryIterator->second);
+        return LoadAsset(registryIterator->second.Metadata);
     }
 
     const AssetMetadata* EditorAssetManager::GetAssetMetadata(AssetHandle handle)
@@ -98,7 +85,7 @@ namespace Flare
         auto it = m_Registry.find(handle);
         if (it == m_Registry.end())
             return nullptr;
-        return &it->second;
+        return &it->second.Metadata;
     }
 
     bool EditorAssetManager::IsAssetHandleValid(AssetHandle handle)
@@ -140,12 +127,17 @@ namespace Flare
             type = AssetType::Mesh;
 
         AssetHandle handle;
-        AssetMetadata metadata;
+
+        AssetRegistryEntry entry;
+        entry.OwnerType = AssetOwner::Project;
+        entry.PackageId = {};
+
+        AssetMetadata& metadata = entry.Metadata;
         metadata.Path = path;
         metadata.Type = type;
         metadata.Handle = handle;
 
-        m_Registry.emplace(handle, metadata);
+        m_Registry.emplace(handle, entry);
         m_FilepathToAssetHandle.emplace(path, handle);
 
         SerializeRegistry();
@@ -157,14 +149,18 @@ namespace Flare
     {
         AssetHandle handle;
 
-        AssetMetadata metadata;
+        AssetRegistryEntry entry;
+        entry.OwnerType = AssetOwner::Project;
+        entry.PackageId = {};
+
+        AssetMetadata& metadata = entry.Metadata;
         metadata.Handle = handle;
         metadata.Path = path;
         metadata.Type = asset->GetType();
 
         asset->Handle = handle;
 
-        m_Registry.emplace(handle, metadata);
+        m_Registry.emplace(handle, entry);
         m_LoadedAssets.emplace(asset->Handle, asset);
         m_FilepathToAssetHandle.emplace(path, handle);
 
@@ -181,7 +177,7 @@ namespace Flare
         if (registryIterator == m_Registry.end())
             return;
 
-        LoadAsset(registryIterator->second);
+        LoadAsset(registryIterator->second.Metadata);
     }
 
     void EditorAssetManager::UnloadAsset(AssetHandle handle)
@@ -197,7 +193,7 @@ namespace Flare
     {
         for (const auto& [handle, asset] : m_Registry)
         {
-            if (asset.Type == AssetType::Prefab && IsAssetLoaded(handle))
+            if (asset.Metadata.Type == AssetType::Prefab && IsAssetLoaded(handle))
                 ReloadAsset(handle);
         }
     }
@@ -230,59 +226,15 @@ namespace Flare
 
     void EditorAssetManager::SerializeRegistry()
     {
-        std::filesystem::path path = Project::GetActive()->Location / s_RegistryFileName;
-
-        YAML::Emitter emitter;
-        emitter << YAML::BeginMap;
-        emitter << YAML::Key << "AssetRegistry" << YAML::Value << YAML::BeginSeq; // Asset Registry
-
-        for (const auto& [handle, metadata] : m_Registry)
-        {
-            std::filesystem::path assetPath = std::filesystem::relative(metadata.Path, m_Root);
-
-            emitter << YAML::BeginMap;
-            emitter << YAML::Key << "Handle" << YAML::Value << handle;
-            emitter << YAML::Key << "Type" << YAML::Value << AssetTypeToString(metadata.Type);
-            emitter << YAML::Key << "Path" << YAML::Value << assetPath.generic_string();
-            emitter << YAML::EndMap;
-        }
-
-        emitter << YAML::EndSeq; // Asset Registry
-        emitter << YAML::EndMap;
-
-        std::ofstream outputFile(path);
-        outputFile << emitter.c_str();
+        AssetRegistrySerializer::Serialize(m_Registry, Project::GetActive()->Location);
     }
 
     void EditorAssetManager::DeserializeRegistry()
     {
-        std::filesystem::path registryPath = Project::GetActive()->Location / s_RegistryFileName;
+        m_Registry.clear();
+        AssetRegistrySerializer::Deserialize(m_Registry, Project::GetActive()->Location);
 
-        std::ifstream inputFile(registryPath);
-        if (!inputFile)
-        {
-            FLARE_CORE_ERROR("Failed to read scene file: {0}", registryPath.string());
-            return;
-        }
-
-        YAML::Node node = YAML::Load(inputFile);
-
-        YAML::Node registry = node["AssetRegistry"];
-        if (!registry)
-            return;
-
-        for (auto assetNode : registry)
-        {
-            AssetHandle handle = assetNode["Handle"].as<AssetHandle>();
-            std::filesystem::path path = m_Root / std::filesystem::path(assetNode["Path"].as<std::string>());
-
-            AssetMetadata metadata;
-            metadata.Path = path;
-            metadata.Handle = handle;
-            metadata.Type = AssetTypeFromString(assetNode["Type"].as<std::string>());
-
-            m_Registry.emplace(handle, metadata);
-            m_FilepathToAssetHandle.emplace(path, handle);
-        }
+        for (const auto& [handle, entry] : m_Registry)
+            m_FilepathToAssetHandle.emplace(entry.Metadata.Path, handle);
     }
 }

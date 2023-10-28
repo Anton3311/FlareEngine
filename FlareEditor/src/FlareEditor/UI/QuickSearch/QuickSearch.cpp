@@ -41,9 +41,9 @@ namespace Flare
 
 			m_AssetSearchResult.clear();
 			
-			for (const auto& [key, value] : assetRegistry)
+			for (const auto& [key, entry] : assetRegistry)
 			{
-				const wchar_t* path = value.Path.c_str();
+				const wchar_t* path = entry.Metadata.Path.c_str();
 				size_t pathLength = wcslen(path);
 
 				if (pathLength < m_CurrentInput.size())

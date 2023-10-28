@@ -66,9 +66,10 @@ namespace Flare
 		m_AssetTree.clear();
 
 		uint32_t rootIndex = 0;
-		m_AssetTree.emplace_back("Assets", m_AssetManager->GetRoot());
+		std::filesystem::path root = AssetRegistrySerializer::GetAssetsRoot();
+		m_AssetTree.emplace_back("Assets", root);
 
-		BuildDirectory(rootIndex, m_AssetManager->GetRoot());
+		BuildDirectory(rootIndex, root);
 	}
 
 	void AssetManagerWindow::SetOpenAction(AssetType assetType, const std::function<void(AssetHandle)>& action)

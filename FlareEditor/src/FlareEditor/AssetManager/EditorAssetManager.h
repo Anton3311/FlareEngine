@@ -3,6 +3,8 @@
 #include "FlareCore/Core.h"
 #include "Flare/AssetManager/AssetManagerBase.h"
 
+#include "FlareEditor/AssetManager/EditorAssetRegistry.h"
+
 #include <filesystem>
 #include <map>
 #include <string_view>
@@ -13,6 +15,13 @@
 namespace Flare
 {
 	constexpr char* ASSET_PAYLOAD_NAME = "ASSET_PAYLOAD";
+
+	struct PackageEntry
+	{
+		UUID Id;
+		std::string Name;
+		std::filesystem::path Path;
+	};
 
 	class EditorAssetManager : public AssetManagerBase
 	{
@@ -27,7 +36,6 @@ namespace Flare
 		virtual bool IsAssetHandleValid(AssetHandle handle) override;
 		virtual bool IsAssetLoaded(AssetHandle handle) override;
 
-		const std::filesystem::path& GetRoot() const { return m_Root; }
 		std::optional<AssetHandle> FindAssetByPath(const std::filesystem::path& path);
 
 		AssetHandle ImportAsset(const std::filesystem::path& path);
@@ -40,7 +48,7 @@ namespace Flare
 
 		void RemoveFromRegistry(AssetHandle handle);
 
-		inline const std::map<AssetHandle, AssetMetadata>& GetRegistry() const { return m_Registry; }
+		inline const EditorAssetRegistry& GetRegistry() const { return m_Registry; }
 	private:
 		Ref<Asset> LoadAsset(const AssetMetadata& metadata);
 
@@ -49,15 +57,12 @@ namespace Flare
 	private:
 		using AssetImporter = std::function<Ref<Asset>(const AssetMetadata&)>;
 
-		std::filesystem::path m_Root;
-
 		std::unordered_map<AssetHandle, Ref<Asset>> m_LoadedAssets;
-		std::map<AssetHandle, AssetMetadata> m_Registry;
+		EditorAssetRegistry m_Registry;
 
 		std::unordered_map<std::filesystem::path, AssetHandle> m_FilepathToAssetHandle;
 		std::unordered_map<AssetType, AssetImporter> m_AssetImporters;
 
-		static std::filesystem::path s_RegistryFileName;
-		static std::filesystem::path s_AssetsDirectoryName;
+		std::map<UUID, PackageEntry> m_AssetPackages;
 	};
 }
