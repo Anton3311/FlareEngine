@@ -113,8 +113,8 @@ namespace Flare
 			const auto& viewports = EditorLayer::GetInstance().GetViewportWindows();
 			for (const Ref<ViewportWindow>& viewportWindow : viewports)
 			{
-				if (ImGui::MenuItem(viewportWindow->GetName().c_str(), nullptr, viewportWindow->IsWindowVisible))
-					viewportWindow->IsWindowVisible = !viewportWindow->IsWindowVisible;
+				if (ImGui::MenuItem(viewportWindow->GetName().c_str(), nullptr, viewportWindow->ShowWindow))
+					viewportWindow->ShowWindow = !viewportWindow->ShowWindow;
 			}
 
 			EditorGUI::EndMenu();

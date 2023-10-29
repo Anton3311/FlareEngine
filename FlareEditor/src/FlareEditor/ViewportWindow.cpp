@@ -16,7 +16,7 @@ namespace Flare
 		: m_Name(name),
 		m_IsFocused(false),
 		m_IsHovered(false),
-		IsWindowVisible(true),
+		ShowWindow(true),
 		m_RelativeMousePosition(glm::ivec2(0)),
 		m_ViewportOffset(glm::uvec2(0))
 	{
@@ -25,7 +25,7 @@ namespace Flare
 
 	void ViewportWindow::OnRenderViewport()
 	{
-		if (!IsWindowVisible)
+		if (!ShowWindow || !m_IsVisible)
 			return;
 
 		Ref<Scene> scene = Scene::GetActive();
@@ -70,7 +70,10 @@ namespace Flare
 	void ViewportWindow::BeginImGui()
 	{
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-		ImGui::Begin(m_Name.c_str(), &IsWindowVisible);
+		m_IsVisible = ImGui::Begin(m_Name.c_str(), &ShowWindow);
+
+		if (!m_IsVisible)
+			return;
 
 		m_IsHovered = ImGui::IsWindowHovered();
 		m_IsFocused = ImGui::IsWindowFocused();
@@ -135,7 +138,7 @@ namespace Flare
 	void ViewportWindow::EndImGui()
 	{
 		ImGui::End();
-		ImGui::PopStyleVar();
+		ImGui::PopStyleVar(); // Pop window padding
 	}
 
 	void ViewportWindow::CreateFrameBuffer()
@@ -155,7 +158,7 @@ namespace Flare
 
 	void ViewportWindow::OnRenderImGui()
 	{
-		if (!IsWindowVisible)
+		if (!ShowWindow)
 			return;
 
 		BeginImGui();

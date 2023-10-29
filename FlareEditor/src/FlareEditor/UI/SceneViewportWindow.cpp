@@ -54,7 +54,7 @@ namespace Flare
 
 	void SceneViewportWindow::OnRenderViewport()
 	{
-		if (Scene::GetActive() == nullptr || !IsWindowVisible)
+		if (Scene::GetActive() == nullptr || !ShowWindow || !m_IsVisible)
 			return;
 
 		if (m_Viewport.FrameData.IsEditorCamera)
@@ -135,11 +135,74 @@ namespace Flare
 
 	void SceneViewportWindow::OnRenderImGui()
 	{
-		if (!IsWindowVisible)
+		if (!ShowWindow)
 			return;
 
 		BeginImGui();
 
+		if (m_IsVisible)
+			RenderWindowContents();
+
+		EndImGui();
+	}
+
+	void SceneViewportWindow::OnEvent(Event& event)
+	{
+		if (!m_IsFocused)
+			return;
+
+		if (m_IsHovered)
+			m_Camera.ProcessEvents(event);
+
+		EventDispatcher dispatcher(event);
+		dispatcher.Dispatch<KeyReleasedEvent>([this](KeyReleasedEvent& e) -> bool
+		{
+			GuizmoMode guizmoMode = GuizmoMode::None;
+			switch (e.GetKeyCode())
+			{
+			case KeyCode::G:
+				guizmoMode = GuizmoMode::Translate;
+				break;
+			case KeyCode::R:
+				guizmoMode = GuizmoMode::Rotate;
+				break;
+			case KeyCode::S:
+				guizmoMode = GuizmoMode::Scale;
+				break;
+			default:
+				return false;
+			}
+
+			EditorLayer::GetInstance().Guizmo = guizmoMode;
+			return false;
+		});
+	}
+
+	void SceneViewportWindow::CreateFrameBuffer()
+	{
+		FrameBufferSpecifications specifications(m_Viewport.GetSize().x, m_Viewport.GetSize().y, {
+			{ FrameBufferTextureFormat::RGB8, TextureWrap::Clamp, TextureFiltering::Closest },
+			});
+
+		FrameBufferSpecifications screenBufferSpecs(m_Viewport.GetSize().x, m_Viewport.GetSize().y, {
+			{ FrameBufferTextureFormat::RGB8, TextureWrap::Clamp, TextureFiltering::Closest },
+			{ FrameBufferTextureFormat::RedInteger, TextureWrap::Clamp, TextureFiltering::Closest },
+			{ FrameBufferTextureFormat::Depth, TextureWrap::Clamp, TextureFiltering::Closest },
+			});
+
+		m_FinalImageBuffer = FrameBuffer::Create(specifications);
+		m_Viewport.RenderTarget = m_FinalImageBuffer;
+		m_ScreenBuffer = FrameBuffer::Create(screenBufferSpecs);
+	}
+
+	void SceneViewportWindow::OnClear()
+	{
+		RenderCommand::Clear();
+		m_ScreenBuffer->ClearAttachment(1, INT32_MAX);
+	}
+
+	void SceneViewportWindow::RenderWindowContents()
+	{
 		if (Scene::GetActive() == nullptr)
 		{
 			EndImGui();
@@ -254,63 +317,6 @@ namespace Flare
 			if (io.MouseClicked[ImGuiMouseButton_Left] && m_Viewport.RenderTarget != nullptr && m_IsHovered && m_RelativeMousePosition.x >= 0 && m_RelativeMousePosition.y >= 0)
 				EditorLayer::GetInstance().Selection.SetEntity(GetEntityUnderCursor());
 		}
-
-		EndImGui();
-	}
-
-	void SceneViewportWindow::OnEvent(Event& event)
-	{
-		if (!m_IsFocused)
-			return;
-
-		if (m_IsHovered)
-			m_Camera.ProcessEvents(event);
-
-		EventDispatcher dispatcher(event);
-		dispatcher.Dispatch<KeyReleasedEvent>([this](KeyReleasedEvent& e) -> bool
-		{
-			GuizmoMode guizmoMode = GuizmoMode::None;
-			switch (e.GetKeyCode())
-			{
-			case KeyCode::G:
-				guizmoMode = GuizmoMode::Translate;
-				break;
-			case KeyCode::R:
-				guizmoMode = GuizmoMode::Rotate;
-				break;
-			case KeyCode::S:
-				guizmoMode = GuizmoMode::Scale;
-				break;
-			default:
-				return false;
-			}
-
-			EditorLayer::GetInstance().Guizmo = guizmoMode;
-			return false;
-		});
-	}
-
-	void SceneViewportWindow::CreateFrameBuffer()
-	{
-		FrameBufferSpecifications specifications(m_Viewport.GetSize().x, m_Viewport.GetSize().y, {
-			{ FrameBufferTextureFormat::RGB8, TextureWrap::Clamp, TextureFiltering::Closest },
-			});
-
-		FrameBufferSpecifications screenBufferSpecs(m_Viewport.GetSize().x, m_Viewport.GetSize().y, {
-			{ FrameBufferTextureFormat::RGB8, TextureWrap::Clamp, TextureFiltering::Closest },
-			{ FrameBufferTextureFormat::RedInteger, TextureWrap::Clamp, TextureFiltering::Closest },
-			{ FrameBufferTextureFormat::Depth, TextureWrap::Clamp, TextureFiltering::Closest },
-			});
-
-		m_FinalImageBuffer = FrameBuffer::Create(specifications);
-		m_Viewport.RenderTarget = m_FinalImageBuffer;
-		m_ScreenBuffer = FrameBuffer::Create(screenBufferSpecs);
-	}
-
-	void SceneViewportWindow::OnClear()
-	{
-		RenderCommand::Clear();
-		m_ScreenBuffer->ClearAttachment(1, INT32_MAX);
 	}
 
 	void SceneViewportWindow::RenderGrid()

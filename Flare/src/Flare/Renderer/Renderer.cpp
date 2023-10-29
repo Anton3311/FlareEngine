@@ -70,6 +70,11 @@ namespace Flare
 		return s_RendererData.Statistics;
 	}
 
+	void Renderer::ClearStatistics()
+	{
+		s_RendererData.Statistics.DrawCallsCount = 0;
+	}
+
 	void Renderer::SetMainViewport(Viewport& viewport)
 	{
 		s_RendererData.MainViewport = &viewport;
@@ -77,8 +82,6 @@ namespace Flare
 
 	void Renderer::BeginScene(Viewport& viewport)
 	{
-		s_RendererData.Statistics.DrawCallsCount = 0;
-
 		s_RendererData.CurrentViewport = &viewport;
 		s_RendererData.CameraBuffer->SetData(&viewport.FrameData.Camera, sizeof(CameraData), 0);
 		s_RendererData.LightBuffer->SetData(&viewport.FrameData.Light, sizeof(LightData), 0);

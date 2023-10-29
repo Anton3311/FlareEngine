@@ -24,6 +24,7 @@ namespace Flare
 		virtual void CreateFrameBuffer() override;
 		virtual void OnClear() override;
 	private:
+		void RenderWindowContents();
 		void RenderGrid();
 
 		Entity GetEntityUnderCursor() const;

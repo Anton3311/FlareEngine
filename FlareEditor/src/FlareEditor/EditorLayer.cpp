@@ -134,6 +134,7 @@ namespace Flare
 		m_PreviousFrameTime = deltaTime;
 
 		Renderer2D::ResetStats();
+		Renderer::ClearStatistics();
 
 		Renderer::SetMainViewport(m_GameWindow->GetViewport());
 		InputManager::SetMousePositionOffset(-m_GameWindow->GetViewport().GetPosition());

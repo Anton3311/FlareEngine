@@ -40,12 +40,15 @@ namespace Flare
 		virtual void OnClear();
 		virtual void OnViewportChanged() {}
 	public:
-		bool IsWindowVisible;
+		bool ShowWindow;
 	protected:
 		std::string m_Name;
 		Viewport m_Viewport;
 		bool m_IsFocused;
 		bool m_IsHovered;
+
+		bool m_IsVisible;
+
 		glm::ivec2 m_RelativeMousePosition;
 		glm::ivec2 m_ViewportOffset;
 	};
