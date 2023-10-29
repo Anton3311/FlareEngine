@@ -210,6 +210,23 @@ namespace Flare
 
 			ImGui::PopID();
 
+			preview = MaterialBlendModeToString(material->Features.BlendMode);
+
+			EditorGUI::PropertyName("Blend Mode");
+
+			ImGui::PushID("BlendMode");
+			if (ImGui::BeginCombo("", preview, ImGuiComboFlags_HeightRegular))
+			{
+				if (ImGui::MenuItem("Opaque"))
+					material->Features.BlendMode = MaterialBlendMode::Opaque;
+				if (ImGui::MenuItem("Transparent"))
+					material->Features.BlendMode = MaterialBlendMode::Transparent;
+
+				ImGui::EndCombo();
+			}
+
+			ImGui::PopID();
+
 			EditorGUI::EndPropertyGrid();
 		}
 

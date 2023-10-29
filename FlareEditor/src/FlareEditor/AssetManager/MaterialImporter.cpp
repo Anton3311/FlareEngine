@@ -72,6 +72,7 @@ namespace Flare
 		emitter << YAML::Key << "Features" << YAML::BeginMap;
 		emitter << YAML::Key << "CullingMode" << YAML::Value << CullingModeToString(material->Features.Culling);
 		emitter << YAML::Key << "DepthTest" << YAML::Value << material->Features.DepthTesting;
+		emitter << YAML::Key << "BlendMode" << YAML::Value << MaterialBlendModeToString(material->Features.BlendMode);
 		emitter << YAML::EndMap; // Features
 
 		emitter << YAML::EndMap;
@@ -169,6 +170,8 @@ namespace Flare
 						material->Features.Culling = CullinModeFromString(cullingMode.as<std::string>());
 					if (YAML::Node depthTest = featuresNode["DepthTest"])
 						material->Features.DepthTesting = depthTest.as<bool>();
+					if (YAML::Node blendMode = featuresNode["BlendMode"])
+						material->Features.BlendMode = MaterialBlendModeFromString(blendMode.as<std::string>());
 				} // Features
 			}
 		}

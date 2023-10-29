@@ -6,12 +6,44 @@
 
 namespace Flare
 {
+	enum class MaterialBlendMode
+	{
+		Opaque,
+		Transparent,
+	};
+
+	inline const char* MaterialBlendModeToString(MaterialBlendMode blendMode)
+	{
+		switch (blendMode)
+		{
+		case MaterialBlendMode::Opaque:
+			return "Opaque";
+		case MaterialBlendMode::Transparent:
+			return "Transparent";
+		}
+
+		FLARE_CORE_ASSERT(false, "Unhandled material blend mode");
+		return "";
+	}
+
+	inline MaterialBlendMode MaterialBlendModeFromString(std::string_view string)
+	{
+		if (string == "Opaque")
+			return MaterialBlendMode::Opaque;
+		if (string == "Transparent")
+			return MaterialBlendMode::Transparent;
+
+		FLARE_CORE_ASSERT(false, "Unknown material blend mode");
+		return MaterialBlendMode::Opaque;
+	}
+
 	struct MaterialFeatures
 	{
 		MaterialFeatures()
-			: Culling(CullingMode::Back), DepthTesting(true) {}
+			: Culling(CullingMode::Back), DepthTesting(true), BlendMode(MaterialBlendMode::Opaque) {}
 
 		CullingMode Culling;
+		MaterialBlendMode BlendMode;
 		bool DepthTesting;
 	};
 

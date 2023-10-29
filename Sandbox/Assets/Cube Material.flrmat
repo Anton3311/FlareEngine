@@ -9,3 +9,4 @@ Properties:
 Features:
   CullingMode: Back
   DepthTest: true
+  BlendMode: Transparent
