@@ -1,11 +1,11 @@
-Shader: 586196719532265385
+Shader: 17504616539540010642
 Properties:
   - Name: u_InstanceData.Color
     Type: 7
     Value: [1, 1, 1, 1]
   - Name: u_InstanceData.Roughness
     Type: 4
-    Value: 0.100000001
+    Value: 0
 Features:
   CullingMode: Back
   DepthTest: true

@@ -1,7 +1,4 @@
 AssetRegistry:
-  - Handle: 586196719532265385
-    Type: Shader
-    Path: Mesh.glsl
   - Handle: 1220645617260660817
     Type: Scene
     Path: Test.flare
