@@ -13,8 +13,10 @@
 namespace Flare
 {
 	ViewportWindow::ViewportWindow(std::string_view name, bool useEditorCamera)
-		: m_Name(name), m_IsFocused(false),
+		: m_Name(name),
+		m_IsFocused(false),
 		m_IsHovered(false),
+		IsWindowVisible(true),
 		m_RelativeMousePosition(glm::ivec2(0)),
 		m_ViewportOffset(glm::uvec2(0))
 	{
@@ -23,6 +25,9 @@ namespace Flare
 
 	void ViewportWindow::OnRenderViewport()
 	{
+		if (!IsWindowVisible)
+			return;
+
 		Ref<Scene> scene = Scene::GetActive();
 		if (scene == nullptr)
 			return;
@@ -65,7 +70,7 @@ namespace Flare
 	void ViewportWindow::BeginImGui()
 	{
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-		ImGui::Begin(m_Name.c_str());
+		ImGui::Begin(m_Name.c_str(), &IsWindowVisible);
 
 		m_IsHovered = ImGui::IsWindowHovered();
 		m_IsFocused = ImGui::IsWindowFocused();
@@ -150,6 +155,9 @@ namespace Flare
 
 	void ViewportWindow::OnRenderImGui()
 	{
+		if (!IsWindowVisible)
+			return;
+
 		BeginImGui();
 		EndImGui();
 	}

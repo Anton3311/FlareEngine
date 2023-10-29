@@ -75,7 +75,7 @@ namespace Flare
 
 			if (ImGui::MenuItem("Settings"))
 				ProjectSettingsWindow::Show();
-			
+
 			ImGui::EndDisabled();
 
 			EditorGUI::EndMenu();
@@ -109,6 +109,13 @@ namespace Flare
 		{
 			if (ImGui::MenuItem("ECS Inspector"))
 				ECSInspector::Show();
+
+			const auto& viewports = EditorLayer::GetInstance().GetViewportWindows();
+			for (const Ref<ViewportWindow>& viewportWindow : viewports)
+			{
+				if (ImGui::MenuItem(viewportWindow->GetName().c_str(), nullptr, viewportWindow->IsWindowVisible))
+					viewportWindow->IsWindowVisible = !viewportWindow->IsWindowVisible;
+			}
 
 			EditorGUI::EndMenu();
 		}

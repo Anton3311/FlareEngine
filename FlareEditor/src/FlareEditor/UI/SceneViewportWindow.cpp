@@ -54,7 +54,7 @@ namespace Flare
 
 	void SceneViewportWindow::OnRenderViewport()
 	{
-		if (Scene::GetActive() == nullptr)
+		if (Scene::GetActive() == nullptr || !IsWindowVisible)
 			return;
 
 		if (m_Viewport.FrameData.IsEditorCamera)
@@ -135,6 +135,9 @@ namespace Flare
 
 	void SceneViewportWindow::OnRenderImGui()
 	{
+		if (!IsWindowVisible)
+			return;
+
 		BeginImGui();
 
 		if (Scene::GetActive() == nullptr)

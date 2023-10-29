@@ -28,8 +28,9 @@ namespace Flare
 		Viewport& GetViewport() { return m_Viewport; }
 		const Viewport& GetViewport() const { return m_Viewport; }
 
-		void PrepareViewport();
+		const std::string& GetName() const { return m_Name; }
 
+		void PrepareViewport();
 		void SetViewProjection(const glm::mat4& projection) { m_Viewport.FrameData.Camera.Projection = projection; }
 	protected:
 		void BeginImGui();
@@ -38,6 +39,8 @@ namespace Flare
 		virtual void CreateFrameBuffer();
 		virtual void OnClear();
 		virtual void OnViewportChanged() {}
+	public:
+		bool IsWindowVisible;
 	protected:
 		std::string m_Name;
 		Viewport m_Viewport;
