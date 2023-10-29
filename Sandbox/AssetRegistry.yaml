@@ -50,6 +50,9 @@ AssetRegistry:
   - Handle: 16883279782608513727
     Type: Scene
     Path: Test.flare
+  - Handle: 16893689106147778316
+    Type: Shader
+    Path: Instancing.glsl
   - Handle: 18007753805608336408
     Type: Prefab
     Path: test dir/prefab 0.flrprefab

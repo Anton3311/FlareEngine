@@ -47,6 +47,12 @@ namespace Flare
 		m_SubMesh.Normals->SetData(normals, count * sizeof(glm::vec3));
 	}
 
+	void Mesh::SetInstanceBuffer(const Ref<VertexBuffer>& instanceBuffer)
+	{
+		m_SubMesh.InstanceBuffer = instanceBuffer;
+		m_SubMesh.MeshVertexArray->AddInstanceBuffer(instanceBuffer);
+	}
+
 	void Mesh::InitializeBuffers()
 	{
 		m_SubMesh.Vertices->SetLayout({

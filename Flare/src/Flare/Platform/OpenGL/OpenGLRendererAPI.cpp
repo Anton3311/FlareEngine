@@ -103,6 +103,13 @@ namespace Flare
 		glDrawElements(GL_TRIANGLES, (int32_t)indicesCount, GL_UNSIGNED_INT, (const void*)0);
 	}
 
+	void OpenGLRendererAPI::DrawInstanced(const Ref<const VertexArray>& mesh, size_t instancesCount)
+	{
+		mesh->Bind();
+		glDrawElementsInstanced(GL_TRIANGLES, mesh->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, (const void*)0, instancesCount);
+		mesh->Unbind();
+	}
+
 	void OpenGLRendererAPI::DrawLines(const Ref<const VertexArray>& vertexArray, size_t verticesCount)
 	{
 		vertexArray->Bind();

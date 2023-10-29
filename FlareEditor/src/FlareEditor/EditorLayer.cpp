@@ -207,7 +207,7 @@ namespace Flare
 			if (ImGui::CollapsingHeader("Renderer"))
 			{
 				const auto& stats = Renderer::GetStatistics();
-				ImGui::Text("Draw calls %d", stats.DrawCallsCount);
+				ImGui::Text("Draw calls (Saved by instancing: %d): %d", stats.DrawCallsSavedByInstances, stats.DrawCallsCount);
 			}
 
 			if (ImGui::TreeNodeEx("Post Processing", ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_SpanAvailWidth))

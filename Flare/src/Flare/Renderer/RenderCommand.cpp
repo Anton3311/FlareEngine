@@ -39,6 +39,11 @@ namespace Flare
 		s_API->DrawIndexed(mesh, indicesCount);
 	}
 
+	void RenderCommand::DrawInstanced(const Ref<const VertexArray>& mesh, size_t instancesCount)
+	{
+		s_API->DrawInstanced(mesh, instancesCount);
+	}
+
 	void RenderCommand::DrawLines(const Ref<const VertexArray>& lines, size_t verticesCount)
 	{
 		s_API->DrawLines(lines, verticesCount);

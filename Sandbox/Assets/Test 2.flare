@@ -171,6 +171,22 @@ Entities:
         Position: [0, 0, 0]
         Rotation: [0, 0, 0]
         Scale: [1, 1, 1]
+  - Components:
+      - Name: struct Flare::TransformComponent
+        Position: [-2.18900919, 4.43495607, -2.17981029]
+        Rotation: [0, -0, 0]
+        Scale: [1, 0.999999523, 1]
+      - Name: struct Flare::MeshComponent
+        Mesh: 10342322337781790464
+        Material: 13576769737354600278
+  - Components:
+      - Name: struct Flare::TransformComponent
+        Position: [3.34872603, 3.94029737, -5.26746559]
+        Rotation: [46.6819, 39.1222305, 61.9741783]
+        Scale: [0.999999344, 0.999999166, 0.999999344]
+      - Name: struct Flare::MeshComponent
+        Mesh: 10342322337781790464
+        Material: 13576769737354600278
 PostProcessing:
   - Name: class Flare::ToneMapping
     Enabled: true

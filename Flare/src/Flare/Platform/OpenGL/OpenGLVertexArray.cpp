@@ -60,10 +60,35 @@ namespace Flare
 					layout.GetStride(),
 					(const void*)(size_t)element.Offset);
 				break;
+			case ShaderDataType::Matrix4x4:
+				uint32_t offset = element.Offset;
+				for (uint32_t i = 0; i < 4; i++)
+				{
+					glEnableVertexAttribArray(m_VertexBufferIndex);
+					glVertexAttribPointer(m_VertexBufferIndex,
+						4,
+						GL_FLOAT,
+						element.IsNormalized,
+						layout.GetStride(),
+						(const void*)(size_t)(offset + sizeof(glm::vec4) * i));
+
+					m_VertexBufferIndex++;
+				}
+
+				return;
 			}
 
 			m_VertexBufferIndex++;
 		}
+	}
+
+	void OpenGLVertexArray::AddInstanceBuffer(const Ref<VertexBuffer>& instanceBuffer)
+	{
+		uint32_t attributeIndex = m_VertexBufferIndex;
+		AddVertexBuffer(instanceBuffer);
+		
+		for (uint32_t i = attributeIndex; i < m_VertexBufferIndex; i++)
+			glVertexAttribDivisor(i, 1);
 	}
 
 	void OpenGLVertexArray::SetIndexBuffer(const Ref<IndexBuffer>& indexbuffer)

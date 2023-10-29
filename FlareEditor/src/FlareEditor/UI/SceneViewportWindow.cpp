@@ -84,6 +84,8 @@ namespace Flare
 
 			scene->OnRender(m_Viewport);
 			
+			Renderer::Flush();
+
 			m_ScreenBuffer->Unbind();
 			m_Viewport.RenderTarget = m_FinalImageBuffer;
 			m_Viewport.RenderTarget->Blit(m_ScreenBuffer, 0, 0);
@@ -121,9 +123,9 @@ namespace Flare
 				RenderCommand::DrawIndexed(Renderer::GetFullscreenQuad());
 			}
 
-			m_Viewport.RenderTarget->Unbind();
-
 			Renderer::EndScene();
+
+			m_Viewport.RenderTarget->Unbind();
 		}
 	}
 

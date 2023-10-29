@@ -12,6 +12,8 @@ namespace Flare
 		Ref<IndexBuffer> Indicies = nullptr;
 		Ref<VertexBuffer> Vertices = nullptr;
 		Ref<VertexBuffer> Normals = nullptr;
+
+		Ref<VertexBuffer> InstanceBuffer = nullptr;
 	};
 
 	class FLARE_API Mesh : public Asset
@@ -26,6 +28,8 @@ namespace Flare
 		void SetIndices(const uint32_t* data, size_t count);
 		void SetVertices(const glm::vec3* data, size_t count);
 		void SetNormals(const glm::vec3* normals, size_t count);
+
+		void SetInstanceBuffer(const Ref<VertexBuffer>& instanceBuffer);
 
 		const SubMesh& GetSubMesh() { return m_SubMesh; }
 		inline const SubMesh& GetSubMesh() const { return m_SubMesh; }
