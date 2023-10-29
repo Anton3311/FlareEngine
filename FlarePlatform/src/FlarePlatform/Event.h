@@ -52,6 +52,9 @@ namespace Flare
 		template<typename T, typename F>
 		bool Dispatch(const F& function)
 		{
+			if (m_Event.Handled)
+				return false;
+
 			EventType type = m_Event.GetType();
 			if (m_Event.GetType() == T::StaticEventType)
 			{

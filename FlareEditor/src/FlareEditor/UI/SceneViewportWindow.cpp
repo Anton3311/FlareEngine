@@ -151,8 +151,6 @@ namespace Flare
 		if (!m_IsFocused)
 			return;
 
-		m_Camera.ProcessEvents(event);
-
 		EventDispatcher dispatcher(event);
 		dispatcher.Dispatch<KeyReleasedEvent>([this](KeyReleasedEvent& e) -> bool
 		{
@@ -175,6 +173,17 @@ namespace Flare
 			EditorLayer::GetInstance().Guizmo = guizmoMode;
 			return false;
 		});
+
+		if (!m_IsHovered)
+		{
+			// Block the scroll event when the window is not hovered, to dsiallow camera zooming
+			dispatcher.Dispatch<MouseScrollEvent>([this](MouseScrollEvent& e) -> bool
+			{
+				return true;
+			});
+		}
+
+		m_Camera.ProcessEvents(event);
 	}
 
 	void SceneViewportWindow::CreateFrameBuffer()
