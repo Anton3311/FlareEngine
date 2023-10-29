@@ -151,8 +151,7 @@ namespace Flare
 		if (!m_IsFocused)
 			return;
 
-		if (m_IsHovered)
-			m_Camera.ProcessEvents(event);
+		m_Camera.ProcessEvents(event);
 
 		EventDispatcher dispatcher(event);
 		dispatcher.Dispatch<KeyReleasedEvent>([this](KeyReleasedEvent& e) -> bool
