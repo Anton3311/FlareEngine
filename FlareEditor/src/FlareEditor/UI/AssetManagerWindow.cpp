@@ -26,6 +26,11 @@ namespace Flare
 		ImGui::SameLine();
 
 		ImGuiStyle& style = ImGui::GetStyle();
+
+		const float maxTreeWidth = 300.0f;
+
+		ImVec2 treeSize = ImGui::GetContentRegionAvail();
+		treeSize.x = glm::min(maxTreeWidth, treeSize.x);
 		
 		if (EditorGUI::BeginToggleGroup("Mode", 2))
 		{
@@ -36,13 +41,13 @@ namespace Flare
 
 			EditorGUI::EndToggleGroup();
 		}
-		
-		ImGui::Separator();
 
+		ImGui::Separator();
+		
 		ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, 14.0f);
 		ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0.0f, 0.0f));
 
-		if (ImGui::BeginChild("Tree"))
+		if (ImGui::BeginChild("Tree", treeSize))
 		{
 			m_NodeRenderIndex = 0;
 			if (m_AssetTree.size())

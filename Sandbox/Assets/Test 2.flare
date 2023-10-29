@@ -129,8 +129,8 @@ Entities:
         Value: Light
       - Name: struct Flare::TransformComponent
         Position: [-0.993040681, 0, 1.44894576]
-        Rotation: [0, 0, 0]
-        Scale: [0.999985158, 0.999985516, 0.999984324]
+        Rotation: [-45.183567, 71.166214, 3.67906046]
+        Scale: [0.999983847, 0.999984443, 0.999983132]
       - Name: struct Flare::DirectionalLight
         Color: [1, 1, 1]
         Intensity: 3
