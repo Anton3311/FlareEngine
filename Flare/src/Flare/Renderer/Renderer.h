@@ -46,7 +46,10 @@ namespace Flare
 
 		static Ref<const VertexArray> GetFullscreenQuad();
 		static Ref<Texture> GetWhiteTexture();
+
+		static Ref<FrameBuffer> GetShadowsRenderTarget();
 	private:
+		static void DrawQueued(bool shadowPass);
 		static void FlushInstances();
 	};
 }

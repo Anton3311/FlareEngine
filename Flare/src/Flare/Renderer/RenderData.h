@@ -47,6 +47,9 @@ namespace Flare
 		float Intensity;
 
 		glm::vec3 Direction;
+		float Unused;
+
+		glm::mat4 LightProjection;
 	};
 
 	struct RenderData

@@ -163,7 +163,7 @@ namespace Flare
         for (size_t i = 0; i < m_ColorAttachments.size(); i++)
         {
             if (IsDepthFormat(m_Specifications.Attachments[i].Format))
-                AttachDethTexture((uint32_t)i);
+                AttachDepthTexture((uint32_t)i);
             else
                 AttachColorTexture((uint32_t)i);
         }
@@ -196,7 +196,7 @@ namespace Flare
         glFramebufferTexture2D(GL_FRAMEBUFFER, (GLenum)(GL_COLOR_ATTACHMENT0 + index), GL_TEXTURE_2D, m_ColorAttachments[index], 0);
     }
 
-    void OpenGLFrameBuffer::AttachDethTexture(uint32_t index)
+    void OpenGLFrameBuffer::AttachDepthTexture(uint32_t index)
     {
         glBindTexture(GL_TEXTURE_2D, m_ColorAttachments[index]);
 

@@ -188,6 +188,14 @@ namespace Flare
 		m_TitleBar.OnRenderImGui();
 
 		{
+			ImGui::Begin("Shadows");
+			auto shadows = Renderer::GetShadowsRenderTarget();
+
+			ImGui::Image(shadows->GetColorAttachmentRendererId(0), ImVec2(256, 256), ImVec2(0, 1), ImVec2(1, 0));
+			ImGui::End();
+		}
+
+		{
 			ImGui::Begin("Renderer");
 
 			ImGui::Text("Frame time %f", m_PreviousFrameTime);

@@ -115,7 +115,7 @@ namespace Flare
 
 	void* OpenGLTexture::GetRendererId() const
 	{
-		return (void*)m_Id;
+		return (void*)(size_t)m_Id;
 	}
 
 	void OpenGLTexture::SetFiltering(TextureFiltering filtering)

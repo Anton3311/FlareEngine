@@ -29,7 +29,7 @@ namespace Flare
 	private:
 		void Create();
 		void AttachColorTexture(uint32_t index);
-		void AttachDethTexture(uint32_t index);
+		void AttachDepthTexture(uint32_t index);
 	private:
 		FrameBufferSpecifications m_Specifications;
 

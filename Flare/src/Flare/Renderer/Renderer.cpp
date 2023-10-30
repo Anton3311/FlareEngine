@@ -39,7 +39,8 @@ namespace Flare
 		std::vector<InstanceData> InstanceDataBuffer;
 		uint32_t MaxInstances = 1024;
 
-		Ref<Mesh> CurrentInstencingMesh = nullptr;
+		Ref<Mesh> CurrentInstancingMesh = nullptr;
+		Ref<FrameBuffer> ShadowsRenderTarget = nullptr;
 	};
 	
 	RendererData s_RendererData;
@@ -84,6 +85,13 @@ namespace Flare
 		s_RendererData.InstanceBuffer->SetLayout({
 			{ "i_Transform", ShaderDataType::Matrix4x4 }
 		});
+
+		FrameBufferSpecifications specs = FrameBufferSpecifications(
+			1024, 1024,
+			{ { FrameBufferTextureFormat::Depth, TextureWrap::Clamp, TextureFiltering::Closest } }
+		);
+
+		s_RendererData.ShadowsRenderTarget = FrameBuffer::Create(specs);
 	}
 
 	void Renderer::Shutdown()
@@ -138,18 +146,56 @@ namespace Flare
 	{
 		std::sort(s_RendererData.Queue.begin(), s_RendererData.Queue.end(), CompareRenderableObjects);
 
-		Ref<Material> currentMaterial = nullptr;
+		CameraData lightCamera;
+		LightData& lightData = s_RendererData.CurrentViewport->FrameData.Light;
+
+		lightCamera.Position = -s_RendererData.CurrentViewport->FrameData.Light.Direction * 30.0f;
+		lightCamera.View = glm::lookAt(-lightCamera.Position,
+			glm::vec3(0.0f),
+			glm::vec3(0.0f, 1.0f, 0.0f)) * glm::toMat4(glm::quat(glm::vec3(0.0f, -glm::radians(90.0f), 0.0f)));
+
+		float size = 10.0f;
+
+		lightCamera.Projection = glm::ortho(-size, size, -size, size, 0.01f, 100.0f);
+		lightCamera.CalculateViewProjection();
+
+		s_RendererData.CurrentViewport->FrameData.Light.LightProjection = lightCamera.ViewProjection;
+		s_RendererData.LightBuffer->SetData(&s_RendererData.CurrentViewport->FrameData.Light, sizeof(LightData), 0);
+		s_RendererData.CameraBuffer->SetData(&lightCamera, sizeof(lightCamera), 0);
+
+		s_RendererData.WhiteTexture->Bind(2);
+
+		s_RendererData.ShadowsRenderTarget->Bind();
+		RenderCommand::Clear();
+		DrawQueued(true);
+		s_RendererData.CurrentViewport->RenderTarget->Bind();
+
+		s_RendererData.CameraBuffer->SetData(&s_RendererData.CurrentViewport->FrameData.Camera, sizeof(CameraData), 0);
+
 		FrameBufferAttachmentsMask previousMask = s_RendererData.CurrentViewport->RenderTarget->GetWriteMask();
+
+		s_RendererData.ShadowsRenderTarget->BindAttachmentTexture(0, 2);
+
+		DrawQueued(false);
+		s_RendererData.CurrentViewport->RenderTarget->SetWriteMask(previousMask);
+
+		s_RendererData.InstanceDataBuffer.clear();
+		s_RendererData.Queue.clear();
+	}
+
+	void Renderer::DrawQueued(bool shadowPass)
+	{
+		Ref<Material> currentMaterial = nullptr;
 
 		for (const RenderableObject& object : s_RendererData.Queue)
 		{
 			if (object.Mesh->GetSubMesh().InstanceBuffer == nullptr)
 				object.Mesh->SetInstanceBuffer(s_RendererData.InstanceBuffer);
 
-			if (s_RendererData.CurrentInstencingMesh.get() != object.Mesh.get())
+			if (s_RendererData.CurrentInstancingMesh.get() != object.Mesh.get())
 			{
 				FlushInstances();
-				s_RendererData.CurrentInstencingMesh = object.Mesh;
+				s_RendererData.CurrentInstancingMesh = object.Mesh;
 			}
 
 			if (object.Material.get() != currentMaterial.get())
@@ -160,15 +206,18 @@ namespace Flare
 				ApplyMaterialFeatures(object.Material->Features);
 				currentMaterial->SetShaderProperties();
 
-				Ref<Shader> shader = object.Material->GetShader();
-				if (shader == nullptr)
-					continue;
+				if (!shadowPass)
+				{
+					Ref<Shader> shader = object.Material->GetShader();
+					if (shader == nullptr)
+						continue;
 
-				FrameBufferAttachmentsMask shaderOutputsMask = 0;
-				for (uint32_t output : shader->GetOutputs())
-					shaderOutputsMask |= (1 << output);
+					FrameBufferAttachmentsMask shaderOutputsMask = 0;
+					for (uint32_t output : shader->GetOutputs())
+						shaderOutputsMask |= (1 << output);
 
-				s_RendererData.CurrentViewport->RenderTarget->SetWriteMask(shaderOutputsMask);
+					s_RendererData.CurrentViewport->RenderTarget->SetWriteMask(shaderOutputsMask);
+				}
 			}
 
 			auto& instanceData = s_RendererData.InstanceDataBuffer.emplace_back();
@@ -179,23 +228,18 @@ namespace Flare
 		}
 
 		FlushInstances();
-		s_RendererData.CurrentInstencingMesh = nullptr;
-
-		s_RendererData.CurrentViewport->RenderTarget->SetWriteMask(previousMask);
-
-		s_RendererData.InstanceDataBuffer.clear();
-		s_RendererData.Queue.clear();
+		s_RendererData.CurrentInstancingMesh = nullptr;
 	}
 
 	void Renderer::FlushInstances()
 	{
 		size_t instancesCount = s_RendererData.InstanceDataBuffer.size();
-		if (instancesCount == 0 || s_RendererData.CurrentInstencingMesh == nullptr)
+		if (instancesCount == 0 || s_RendererData.CurrentInstancingMesh == nullptr)
 			return;
 
 		s_RendererData.InstanceBuffer->SetData(s_RendererData.InstanceDataBuffer.data(), sizeof(InstanceData) * instancesCount);
 
-		RenderCommand::DrawInstanced(s_RendererData.CurrentInstencingMesh->GetSubMesh().MeshVertexArray, instancesCount);
+		RenderCommand::DrawInstanced(s_RendererData.CurrentInstancingMesh->GetSubMesh().MeshVertexArray, instancesCount);
 		s_RendererData.Statistics.DrawCallsCount++;
 		s_RendererData.Statistics.DrawCallsSavedByInstances += instancesCount - 1;
 
@@ -288,5 +332,10 @@ namespace Flare
 	Ref<const VertexArray> Renderer::GetFullscreenQuad()
 	{
 		return s_RendererData.FullscreenQuad;
+	}
+
+	Ref<FrameBuffer> Renderer::GetShadowsRenderTarget()
+	{
+		return s_RendererData.ShadowsRenderTarget;
 	}
 }
