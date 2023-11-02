@@ -17,9 +17,9 @@ Entities:
         Color: [1, 1, 1]
         Intensity: 3
       - Name: struct Flare::TransformComponent
-        Position: [-4.48597717, 0, -9.83735752]
-        Rotation: [-111.439842, -18.9467926, 60.1869926]
-        Scale: [0.999998093, 0.999999642, 0.999998391]
+        Position: [-38.0153198, 4.85855675, -23.8320732]
+        Rotation: [-111.439865, -18.9467945, 60.1869774]
+        Scale: [0.999998033, 0.999999821, 0.999998569]
       - Name: struct Flare::NameComponent
         Value: Light
   - Components:
@@ -27,17 +27,33 @@ Entities:
         Mesh: 10342322337781790464
         Material: 13576769737354600278
       - Name: struct Flare::TransformComponent
-        Position: [-1.41076672, 0.391516805, -8.93382263]
-        Rotation: [0, -0, 0]
-        Scale: [1, 1, 1]
+        Position: [-7.88637781, 6.72619295, -11.9880238]
+        Rotation: [33.46101, -28.2564716, -20.8113079]
+        Scale: [3.08999848, 3.08999896, 3.0899992]
   - Components:
       - Name: struct Flare::MeshComponent
         Mesh: 10342322337781790464
-        Material: 13576769737354600278
+        Material: 7732178757911584553
       - Name: struct Flare::TransformComponent
         Position: [-1.41076672, 0, -8.93382263]
         Rotation: [0, -0, 0]
-        Scale: [10, 0.100000001, 10]
+        Scale: [30, 0.100000001, 30]
+  - Components:
+      - Name: struct Flare::MeshComponent
+        Mesh: 10490832977963679498
+        Material: 13900636449532140235
+      - Name: struct Flare::TransformComponent
+        Position: [6.42447662, 0, -4.61328697]
+        Rotation: [0, -0, 0]
+        Scale: [6.19999981, 6.19999981, 6.19999981]
+  - Components:
+      - Name: struct Flare::MeshComponent
+        Mesh: 10490832977963679498
+        Material: 13576769737354600278
+      - Name: struct Flare::TransformComponent
+        Position: [-7.80068541, 13.3045902, -25.0823612]
+        Rotation: [98.9314117, 21.0086765, -104.31665]
+        Scale: [6.19998932, 10.2393436, 11.2713175]
 PostProcessing:
   - Name: class Flare::ToneMapping
     Enabled: false

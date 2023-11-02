@@ -88,7 +88,7 @@ namespace Flare
 
 		FrameBufferSpecifications specs = FrameBufferSpecifications(
 			1024, 1024,
-			{ { FrameBufferTextureFormat::Depth, TextureWrap::Clamp, TextureFiltering::Closest } }
+			{ { FrameBufferTextureFormat::Depth, TextureWrap::Clamp, TextureFiltering::Linear } }
 		);
 
 		s_RendererData.ShadowsRenderTarget = FrameBuffer::Create(specs);
@@ -118,8 +118,9 @@ namespace Flare
 	void Renderer::BeginScene(Viewport& viewport)
 	{
 		s_RendererData.CurrentViewport = &viewport;
+
+		s_RendererData.LightBuffer->SetData(&viewport.FrameData.Light, sizeof(viewport.FrameData.Light), 0);
 		s_RendererData.CameraBuffer->SetData(&viewport.FrameData.Camera, sizeof(CameraData), 0);
-		s_RendererData.LightBuffer->SetData(&viewport.FrameData.Light, sizeof(LightData), 0);
 	}
 
 	static void ApplyMaterialFeatures(MaterialFeatures features)
@@ -146,31 +147,29 @@ namespace Flare
 	{
 		std::sort(s_RendererData.Queue.begin(), s_RendererData.Queue.end(), CompareRenderableObjects);
 
-		CameraData lightCamera;
-		LightData& lightData = s_RendererData.CurrentViewport->FrameData.Light;
-
-		lightCamera.Position = -s_RendererData.CurrentViewport->FrameData.Light.Direction * 30.0f;
-		lightCamera.View = glm::lookAt(-lightCamera.Position,
-			glm::vec3(0.0f),
-			glm::vec3(0.0f, 1.0f, 0.0f)) * glm::toMat4(glm::quat(glm::vec3(0.0f, -glm::radians(90.0f), 0.0f)));
-
-		float size = 10.0f;
-
-		lightCamera.Projection = glm::ortho(-size, size, -size, size, 0.01f, 100.0f);
-		lightCamera.CalculateViewProjection();
-
-		s_RendererData.CurrentViewport->FrameData.Light.LightProjection = lightCamera.ViewProjection;
-		s_RendererData.LightBuffer->SetData(&s_RendererData.CurrentViewport->FrameData.Light, sizeof(LightData), 0);
-		s_RendererData.CameraBuffer->SetData(&lightCamera, sizeof(lightCamera), 0);
+		s_RendererData.CameraBuffer->SetData(
+			&s_RendererData.CurrentViewport->FrameData.LightView, 
+			sizeof(s_RendererData.CurrentViewport->FrameData.LightView), 0);
 
 		s_RendererData.WhiteTexture->Bind(2);
 
+		const FrameBufferSpecifications& shadowMapSpecs = s_RendererData.ShadowsRenderTarget->GetSpecifications();
+		RenderCommand::SetViewport(0, 0, shadowMapSpecs.Width, shadowMapSpecs.Height);
+
 		s_RendererData.ShadowsRenderTarget->Bind();
+
 		RenderCommand::Clear();
+		RenderCommand::SetDepthTestEnabled(true);
+		RenderCommand::SetCullingMode(CullingMode::Front);
+
 		DrawQueued(true);
+
+		RenderCommand::SetViewport(0, 0, s_RendererData.CurrentViewport->GetSize().x, s_RendererData.CurrentViewport->GetSize().y);
 		s_RendererData.CurrentViewport->RenderTarget->Bind();
 
-		s_RendererData.CameraBuffer->SetData(&s_RendererData.CurrentViewport->FrameData.Camera, sizeof(CameraData), 0);
+		s_RendererData.CameraBuffer->SetData(
+			&s_RendererData.CurrentViewport->FrameData.Camera,
+			sizeof(s_RendererData.CurrentViewport->FrameData.Camera), 0);
 
 		FrameBufferAttachmentsMask previousMask = s_RendererData.CurrentViewport->RenderTarget->GetWriteMask();
 
@@ -203,7 +202,10 @@ namespace Flare
 				FlushInstances();
 
 				currentMaterial = object.Material;
-				ApplyMaterialFeatures(object.Material->Features);
+
+				if (!shadowPass)
+					ApplyMaterialFeatures(object.Material->Features);
+
 				currentMaterial->SetShaderProperties();
 
 				if (!shadowPass)

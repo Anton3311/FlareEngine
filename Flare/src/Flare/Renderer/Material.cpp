@@ -98,7 +98,7 @@ namespace Flare
 				{
 				case ShaderDataType::Int:
 				case ShaderDataType::Sampler:
-					glShader->SetInt(i, *(int32_t*)paramData);
+					//glShader->SetInt(i, *(int32_t*)paramData);
 					break;
 
 				case ShaderDataType::Int2:

@@ -72,8 +72,11 @@ float CalculateShadow(vec4 lightSpacePosition)
 	vec3 projected = lightSpacePosition.xyz / lightSpacePosition.w;
 	projected = projected * 0.5 + vec3(0.5);
 
+	if (abs(projected.x) > 1.0 && abs(projected.y) > 1.0)
+		return 1.0;
+
 	float sampledDepth = texture(u_ShadowMap, projected.xy).r;
-	return (projected.z > sampledDepth) ? 1.0 : 0.0;
+	return 1.0 - (sampledDepth < projected.z ? 1.0 : 0.0);
 }
 
 void main()
@@ -81,7 +84,7 @@ void main()
 	if (u_InstanceData.Color.a <= 0.0001)
 		discard;
 
-	float shadow = 1.0 - CalculateShadow(i_Vertex.LightSpacePosition);
+	float shadow = CalculateShadow(i_Vertex.LightSpacePosition);
 
 	vec3 N = normalize(i_Vertex.Normal);
 	vec3 V = normalize(u_Camera.Position - i_Vertex.Position);

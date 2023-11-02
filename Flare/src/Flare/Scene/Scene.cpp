@@ -78,13 +78,23 @@ namespace Flare
 
 			for (EntityViewElement entity : entityView)
 			{
-				glm::vec3 direction = transforms[entity].TransformDirection(glm::vec3(0.0f, 0.0f, -1.0f));
+				TransformComponent& transform = transforms[entity];
+				glm::vec3 direction = transform.TransformDirection(glm::vec3(0.0f, 0.0f, -1.0f));
 
 				LightData& light = viewport.FrameData.Light;
 				light.Color = lights[entity].Color;
 				light.Intensity = lights[entity].Intensity;
 				light.Direction = -direction;
 
+				float lightProjectionSize = 50.0f;
+				CameraData& lightView = viewport.FrameData.LightView;
+				lightView.Position = transform.Position;
+				lightView.View = glm::inverse(transforms[entity].GetTransformationMatrix());
+				lightView.Projection = glm::ortho(-lightProjectionSize, lightProjectionSize, -lightProjectionSize, lightProjectionSize, 0.01f, 100.0f);
+
+				lightView.CalculateViewProjection();
+
+				light.LightProjection = lightView.ViewProjection;
 				hasLight = true;
 				break;
 			}

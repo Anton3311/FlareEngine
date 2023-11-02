@@ -26,8 +26,8 @@ namespace Flare
 		{
 			const ShaderParameter& parameter = properties[index];
 
-			if (parameter.Type == ShaderDataType::Matrix4x4)
-				continue; // Skip matrices
+			if (parameter.Type == ShaderDataType::Matrix4x4 || parameter.Type == ShaderDataType::Sampler)
+				continue;
 
 			emitter << YAML::BeginMap;
 
@@ -177,7 +177,7 @@ namespace Flare
 		}
 		catch (std::exception& e)
 		{
-			FLARE_CORE_ERROR("Failed to import a material '{0}': ", metadata.Path.generic_string(), e.what());
+			FLARE_CORE_ERROR("Failed to import a material '{}': {}", metadata.Path.generic_string(), e.what());
 		}
 
 		return material;
