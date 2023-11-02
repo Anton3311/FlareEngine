@@ -11,9 +11,16 @@
 
 namespace Flare
 {
+
 	class SceneViewportWindow : public ViewportWindow
 	{
 	public:
+		enum class ViewportOverlay
+		{
+			Default,
+			Depth,
+		};
+
 		SceneViewportWindow(EditorCamera& camera);
 
 		virtual void OnRenderViewport() override;
@@ -25,11 +32,14 @@ namespace Flare
 		virtual void OnClear() override;
 	private:
 		void RenderWindowContents();
+		void RenderToolBar();
 		void RenderGrid();
 
 		Entity GetEntityUnderCursor() const;
 	private:
 		EditorCamera& m_Camera;
+
+		ViewportOverlay m_Overlay;
 		Ref<Shader> m_SelectionOutlineShader;
 		Ref<Material> m_GridMaterial;
 		Ref<FrameBuffer> m_ScreenBuffer;

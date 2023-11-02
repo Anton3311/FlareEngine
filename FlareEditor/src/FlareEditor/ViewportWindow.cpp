@@ -71,7 +71,7 @@ namespace Flare
 	void ViewportWindow::BeginImGui()
 	{
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-		m_IsVisible = ImGui::Begin(m_Name.c_str(), &ShowWindow);
+		m_IsVisible = ImGui::Begin(m_Name.c_str(), &ShowWindow, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
 
 		if (!m_IsVisible)
 			return;
@@ -94,13 +94,6 @@ namespace Flare
 			(int32_t)(io.MousePos.y - windowPosition.y)) - m_ViewportOffset;
 
 		m_RelativeMousePosition.y = newViewportSize.y - m_RelativeMousePosition.y;
-
-		if (m_Viewport.RenderTarget != nullptr)
-		{
-			const FrameBufferSpecifications frameBufferSpecs = m_Viewport.RenderTarget->GetSpecifications();
-			ImVec2 imageSize = ImVec2((float) frameBufferSpecs.Width, (float) frameBufferSpecs.Height);
-			ImGui::Image((ImTextureID)m_Viewport.RenderTarget->GetColorAttachmentRendererId(0), windowSize, ImVec2(0, 1), ImVec2(1, 0));
-		}
 
 		bool changed = false;
 		glm::ivec2 viewportSize = m_Viewport.GetSize();
@@ -136,6 +129,18 @@ namespace Flare
 		}
 	}
 
+	void ViewportWindow::RenderViewportBuffer(const Ref<FrameBuffer>& buffer, uint32_t attachmentIndex)
+	{
+		ImVec2 windowSize = ImGui::GetContentRegionAvail();
+
+		if (m_Viewport.RenderTarget != nullptr)
+		{
+			const FrameBufferSpecifications frameBufferSpecs = m_Viewport.RenderTarget->GetSpecifications();
+			ImVec2 imageSize = ImVec2((float)frameBufferSpecs.Width, (float)frameBufferSpecs.Height);
+			ImGui::Image((ImTextureID)buffer->GetColorAttachmentRendererId(attachmentIndex), windowSize, ImVec2(0, 1), ImVec2(1, 0));
+		}
+	}
+
 	void ViewportWindow::EndImGui()
 	{
 		ImGui::End();
@@ -163,6 +168,7 @@ namespace Flare
 			return;
 
 		BeginImGui();
+		RenderViewportBuffer(m_Viewport.RenderTarget, 0);
 		EndImGui();
 	}
 }

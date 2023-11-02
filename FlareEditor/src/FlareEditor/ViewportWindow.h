@@ -34,6 +34,7 @@ namespace Flare
 		void SetViewProjection(const glm::mat4& projection) { m_Viewport.FrameData.Camera.Projection = projection; }
 	protected:
 		void BeginImGui();
+		void RenderViewportBuffer(const Ref<FrameBuffer>& buffer, uint32_t attachmentIndex);
 		void EndImGui();
 
 		virtual void CreateFrameBuffer();

@@ -17,8 +17,6 @@
 
 #include "FlarePlatform//Events.h"
 
-#include <imgui.h>
-#include <imgui_internal.h>
 #include <ImGuizmo.h>
 
 namespace Flare
@@ -192,13 +190,13 @@ namespace Flare
 	{
 		FrameBufferSpecifications specifications(m_Viewport.GetSize().x, m_Viewport.GetSize().y, {
 			{ FrameBufferTextureFormat::RGB8, TextureWrap::Clamp, TextureFiltering::Closest },
-			});
+		});
 
 		FrameBufferSpecifications screenBufferSpecs(m_Viewport.GetSize().x, m_Viewport.GetSize().y, {
 			{ FrameBufferTextureFormat::RGB8, TextureWrap::Clamp, TextureFiltering::Closest },
 			{ FrameBufferTextureFormat::RedInteger, TextureWrap::Clamp, TextureFiltering::Closest },
 			{ FrameBufferTextureFormat::Depth, TextureWrap::Clamp, TextureFiltering::Closest },
-			});
+		});
 
 		m_FinalImageBuffer = FrameBuffer::Create(specifications);
 		m_Viewport.RenderTarget = m_FinalImageBuffer;
@@ -218,6 +216,19 @@ namespace Flare
 			EndImGui();
 			return;
 		}
+
+		switch (m_Overlay)
+		{
+		case ViewportOverlay::Default:
+			RenderViewportBuffer(m_Viewport.RenderTarget, 0);
+			break;
+		case ViewportOverlay::Depth:
+			RenderViewportBuffer(m_ScreenBuffer, 2);
+			break;
+		}
+
+		// Render scene toolbar
+		RenderToolBar();
 
 		World& world = Scene::GetActive()->GetECSWorld();
 		if (ImGui::BeginDragDropTarget())
@@ -327,6 +338,46 @@ namespace Flare
 			if (io.MouseClicked[ImGuiMouseButton_Left] && m_Viewport.RenderTarget != nullptr && m_IsHovered && m_RelativeMousePosition.x >= 0 && m_RelativeMousePosition.y >= 0)
 				EditorLayer::GetInstance().Selection.SetEntity(GetEntityUnderCursor());
 		}
+	}
+
+	void SceneViewportWindow::RenderToolBar()
+	{
+		ImVec2 initialCursorPosition = ImGui::GetCursorPos();
+
+		const ImGuiStyle& style = ImGui::GetStyle();
+
+		ImGui::SetCursorPos(ImVec2(m_ViewportOffset.x, m_ViewportOffset.y) + style.FramePadding * ImVec2(3, 1));
+
+		ImGui::PushItemWidth(100);
+		ImGui::PushID("Overlay");
+
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, style.FramePadding);
+		const char* overlayName = nullptr;
+		switch (m_Overlay)
+		{
+		case ViewportOverlay::Default:
+			overlayName = "Default";
+			break;
+		case ViewportOverlay::Depth:
+			overlayName = "Default";
+			break;
+		}
+
+		if (ImGui::BeginCombo("", overlayName))
+		{
+			if (ImGui::MenuItem("Default"))
+				m_Overlay = ViewportOverlay::Default;
+			if (ImGui::MenuItem("Depth"))
+				m_Overlay = ViewportOverlay::Depth;
+
+			ImGui::EndCombo();
+		}
+		ImGui::PopStyleVar();
+		ImGui::PopID();
+
+		ImGui::PopItemWidth();
+
+		ImGui::SetCursorPos(initialCursorPosition);
 	}
 
 	void SceneViewportWindow::RenderGrid()
