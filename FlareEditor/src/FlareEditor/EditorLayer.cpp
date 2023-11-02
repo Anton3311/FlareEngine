@@ -201,6 +201,12 @@ namespace Flare
 			ImGui::Text("Frame time %f", m_PreviousFrameTime);
 			ImGui::Text("FPS %f", 1.0f / m_PreviousFrameTime);
 
+			Ref<Window> window = Application::GetInstance().GetWindow();
+
+			bool vsync = window->GetProperties().VSyncEnabled;
+			if (ImGui::Checkbox("VSync", &vsync))
+				window->SetVSync(vsync);
+
 			if (ImGui::ColorEdit3("Clear Color", glm::value_ptr(m_ClearColor), ImGuiColorEditFlags_Float))
 				RenderCommand::SetClearColor(m_ClearColor.r, m_ClearColor.g, m_ClearColor.b, 1.0);
 
@@ -251,18 +257,6 @@ namespace Flare
 
 				ImGui::TreePop();
 			}
-
-			ImGui::End();
-		}
-
-		{
-			ImGui::Begin("Settings");
-
-			Ref<Window> window = Application::GetInstance().GetWindow();
-
-			bool vsync = window->GetProperties().VSyncEnabled;
-			if (ImGui::Checkbox("VSync", &vsync))
-				window->SetVSync(vsync);
 
 			ImGui::End();
 		}
