@@ -14,6 +14,7 @@
 #include "FlareEditor/AssetManager/EditorAssetManager.h"
 #include "FlareEditor/ImGui/ImGuiLayer.h"
 #include "FlareEditor/EditorLayer.h"
+#include "FlareEditor/UI/EditorGUI.h"
 
 #include "FlarePlatform//Events.h"
 
@@ -34,7 +35,7 @@ namespace Flare
 	static GridPropertyIndices s_GridPropertyIndices;
 
 	SceneViewportWindow::SceneViewportWindow(EditorCamera& camera)
-		: ViewportWindow("Scene Viewport", true), m_Camera(camera)
+		: ViewportWindow("Scene Viewport", true), m_Camera(camera), m_Overlay(ViewportOverlay::Default)
 	{
 		m_SelectionOutlineShader = Shader::Create("assets/Shaders/SelectionOutline.glsl");
 		m_GridMaterial = CreateRef<Material>(Shader::Create("assets/Shaders/Grid.glsl"));
@@ -340,11 +341,41 @@ namespace Flare
 		}
 	}
 
+	static bool GuizmoButton(const char* text, bool active)
+	{
+		bool result = false;
+		ImDrawList* drawList = ImGui::GetCurrentWindow()->DrawList;
+		ImGuiStyle& style = ImGui::GetStyle();
+
+		if (ImGui::InvisibleButton(text, ImVec2(30, style.FramePadding.y * 2 + ImGui::GetFontSize())))
+			result = true;
+
+		ImRect buttonRect = { ImGui::GetItemRectMin(), ImGui::GetItemRectMax() };
+		ImU32 buttonColor = 0;
+
+		ImVec2 textSize = ImGui::CalcTextSize(text, text + 1);
+		ImVec2 textPosition = buttonRect.Min + buttonRect.GetSize() / 2.0f - (textSize / 2.0f);
+
+		if (ImGui::IsItemHovered())
+			buttonColor = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_ButtonHovered]);
+		if (active)
+			buttonColor = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_ButtonActive]);
+
+		if (buttonColor != 0)
+			drawList->AddRectFilled(buttonRect.Min, buttonRect.Max, buttonColor, style.FrameRounding);
+
+		drawList->AddText(textPosition, ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Text]), text, text + 1);
+
+		return result;
+	}
+
 	void SceneViewportWindow::RenderToolBar()
 	{
+		ImDrawList* drawList = ImGui::GetCurrentWindow()->DrawList;
 		ImVec2 initialCursorPosition = ImGui::GetCursorPos();
 
 		const ImGuiStyle& style = ImGui::GetStyle();
+		ImRect viewportImageRect = { ImGui::GetItemRectMin() + style.FramePadding * ImVec2(3, 1), ImGui::GetItemRectMax() };
 
 		ImGui::SetCursorPos(ImVec2(m_ViewportOffset.x, m_ViewportOffset.y) + style.FramePadding * ImVec2(3, 1));
 
@@ -372,9 +403,48 @@ namespace Flare
 
 			ImGui::EndCombo();
 		}
+
+		ImRect comboBoxRect = { ImGui::GetItemRectMin(), ImGui::GetItemRectMax() };
+		drawList->AddRect(
+			comboBoxRect.Min,
+			comboBoxRect.Max,
+			ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Border]), style.FrameRounding, 0, 1.5f);
+
 		ImGui::PopStyleVar();
 		ImGui::PopID();
 
+
+		// Guizmos
+		float width = 30.0f * 3.0f;
+		float offset = style.ItemSpacing.x + ImGui::GetItemRectSize().x;
+		float buttonHeight = style.FramePadding.y * 2 + ImGui::GetFontSize();
+
+		EditorLayer& editorLayer = EditorLayer::GetInstance();
+		drawList->AddRectFilled(
+			viewportImageRect.Min + ImVec2(offset, 0.0f), 
+			viewportImageRect.Min + ImVec2(offset + width, buttonHeight),
+			ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_FrameBg]), style.FrameRounding);
+
+		drawList->AddRect(
+			viewportImageRect.Min + ImVec2(offset, 0.0f),
+			viewportImageRect.Min + ImVec2(offset + width, buttonHeight),
+			ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Border]), style.FrameRounding, 0, 1.5f);
+
+		ImGui::SameLine();
+		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
+		if (GuizmoButton("T", editorLayer.Guizmo == GuizmoMode::Translate))
+			editorLayer.Guizmo = GuizmoMode::Translate;
+		
+		ImGui::SameLine();
+		if (GuizmoButton("R", editorLayer.Guizmo == GuizmoMode::Rotate))
+			editorLayer.Guizmo = GuizmoMode::Rotate;
+
+		ImGui::SameLine();
+		if (GuizmoButton("S", editorLayer.Guizmo == GuizmoMode::Scale))
+			editorLayer.Guizmo = GuizmoMode::Scale;
+		
+
+		ImGui::PopStyleVar();
 		ImGui::PopItemWidth();
 
 		ImGui::SetCursorPos(initialCursorPosition);

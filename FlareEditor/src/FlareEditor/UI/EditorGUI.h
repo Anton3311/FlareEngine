@@ -8,6 +8,8 @@
 #include "FlareECS/Entity/Entity.h"
 #include "FlareECS/World.h"
 
+#include "FlareEditor/ImGui/ImGuiLayer.h"
+
 namespace Flare
 {
 	constexpr char* ENTITY_PAYLOAD_NAME = "ENTITY_PAYLOAD";
@@ -17,6 +19,8 @@ namespace Flare
 	public:
 		static bool BeginPropertyGrid();
 		static void EndPropertyGrid();
+
+		static void MoveCursor(ImVec2 offset);
 
 		static bool BeginMenu(const char* name);
 		static void EndMenu();

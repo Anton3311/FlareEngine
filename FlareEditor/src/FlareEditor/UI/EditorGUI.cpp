@@ -30,6 +30,11 @@ namespace Flare
 		ImGui::EndTable();
 	}
 
+	void EditorGUI::MoveCursor(ImVec2 offset)
+	{
+		ImGui::SetCursorPos(ImGui::GetCursorPos() + offset);
+	}
+
 	bool EditorGUI::BeginMenu(const char* name)
 	{
 		ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0.0f);
