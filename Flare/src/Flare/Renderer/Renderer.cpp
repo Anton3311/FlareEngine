@@ -87,7 +87,7 @@ namespace Flare
 		});
 
 		FrameBufferSpecifications specs = FrameBufferSpecifications(
-			1024, 1024,
+			2048, 2048,
 			{ { FrameBufferTextureFormat::Depth, TextureWrap::Clamp, TextureFiltering::Linear } }
 		);
 

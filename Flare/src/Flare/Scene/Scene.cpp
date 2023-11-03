@@ -85,12 +85,19 @@ namespace Flare
 				light.Color = lights[entity].Color;
 				light.Intensity = lights[entity].Intensity;
 				light.Direction = -direction;
+				light.Near = 0.01f;
+				light.Far = 100.0f;
 
 				float lightProjectionSize = 50.0f;
 				CameraData& lightView = viewport.FrameData.LightView;
 				lightView.Position = transform.Position;
 				lightView.View = glm::inverse(transforms[entity].GetTransformationMatrix());
-				lightView.Projection = glm::ortho(-lightProjectionSize, lightProjectionSize, -lightProjectionSize, lightProjectionSize, 0.01f, 100.0f);
+				lightView.Projection = glm::ortho(-lightProjectionSize,
+					lightProjectionSize,
+					-lightProjectionSize,
+					lightProjectionSize,
+					light.Near,
+					light.Far);
 
 				lightView.CalculateViewProjection();
 

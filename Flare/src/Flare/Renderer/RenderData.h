@@ -50,6 +50,8 @@ namespace Flare
 		float Unused;
 
 		glm::mat4 LightProjection;
+		float Near;
+		float Far;
 	};
 
 	struct RenderData
