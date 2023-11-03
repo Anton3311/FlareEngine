@@ -35,7 +35,10 @@ namespace Flare
 	static GridPropertyIndices s_GridPropertyIndices;
 
 	SceneViewportWindow::SceneViewportWindow(EditorCamera& camera)
-		: ViewportWindow("Scene Viewport", true), m_Camera(camera), m_Overlay(ViewportOverlay::Default)
+		: ViewportWindow("Scene Viewport", true),
+		m_Camera(camera),
+		m_Overlay(ViewportOverlay::Default),
+		m_IsToolbarHovered(false)
 	{
 		m_SelectionOutlineShader = Shader::Create("assets/Shaders/SelectionOutline.glsl");
 		m_GridMaterial = CreateRef<Material>(Shader::Create("assets/Shaders/Grid.glsl"));
@@ -234,6 +237,8 @@ namespace Flare
 		// Render scene toolbar
 		RenderToolBar();
 
+		m_IsToolbarHovered = ImGui::IsAnyItemHovered();
+
 		World& world = Scene::GetActive()->GetECSWorld();
 		if (ImGui::BeginDragDropTarget())
 		{
@@ -337,7 +342,7 @@ namespace Flare
 			}
 		}
 
-		if (!ImGuizmo::IsUsingAny())
+		if (!ImGuizmo::IsUsingAny() && !m_IsToolbarHovered)
 		{
 			if (io.MouseClicked[ImGuiMouseButton_Left] && m_Viewport.RenderTarget != nullptr && m_IsHovered && m_RelativeMousePosition.x >= 0 && m_RelativeMousePosition.y >= 0)
 				EditorLayer::GetInstance().Selection.SetEntity(GetEntityUnderCursor());

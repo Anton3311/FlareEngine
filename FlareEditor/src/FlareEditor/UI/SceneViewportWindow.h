@@ -38,6 +38,7 @@ namespace Flare
 		Entity GetEntityUnderCursor() const;
 	private:
 		EditorCamera& m_Camera;
+		bool m_IsToolbarHovered;
 
 		ViewportOverlay m_Overlay;
 		Ref<Shader> m_SelectionOutlineShader;
