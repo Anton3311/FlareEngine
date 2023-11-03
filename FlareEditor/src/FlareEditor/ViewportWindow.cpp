@@ -44,7 +44,6 @@ namespace Flare
 
 			Renderer::BeginScene(m_Viewport);
 			scene->OnRender(m_Viewport);
-			Renderer::Flush();
 			Renderer::EndScene();
 
 			m_Viewport.RenderTarget->Unbind();

@@ -82,11 +82,9 @@ namespace Flare
 			m_ScreenBuffer->Bind();
 			OnClear();
 
-			RenderGrid();
-
 			scene->OnRender(m_Viewport);
-			
-			Renderer::Flush();
+
+			RenderGrid();
 
 			m_ScreenBuffer->Unbind();
 			m_Viewport.RenderTarget = m_FinalImageBuffer;

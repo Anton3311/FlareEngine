@@ -147,6 +147,7 @@ namespace Flare
 
 		Renderer2D::End();
 
+		Renderer::Flush();
 		Renderer::ExecuteRenderPasses();
 	}
 
