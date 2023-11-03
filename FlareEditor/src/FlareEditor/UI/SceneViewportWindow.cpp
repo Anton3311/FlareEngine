@@ -142,11 +142,13 @@ namespace Flare
 
 		BeginImGui();
 
-		if (ImGui::IsMouseDown(ImGuiMouseButton_Middle))
-			ImGui::SetWindowFocus();
-
 		if (m_IsVisible)
+		{
+			if (ImGui::IsMouseDown(ImGuiMouseButton_Middle))
+				ImGui::SetWindowFocus();
+
 			RenderWindowContents();
+		}
 
 		EndImGui();
 	}
