@@ -72,10 +72,10 @@ namespace Flare
 						layout.GetStride(),
 						(const void*)(size_t)(offset + sizeof(glm::vec4) * i));
 
-					m_VertexBufferIndex++;
+					if (i != 3)
+						m_VertexBufferIndex++;
 				}
-
-				return;
+				break;
 			}
 
 			m_VertexBufferIndex++;

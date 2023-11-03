@@ -124,16 +124,18 @@ namespace Flare
 			auto transforms = view.View<TransformComponent>();
 			auto meshes = view.View<MeshComponent>();
 
-			for (EntityViewElement entity : view)
+			for (EntityViewIterator entity = view.begin(); entity != view.end(); ++entity)
 			{
-				Ref<Mesh> mesh = AssetManager::GetAsset<Mesh>(meshes[entity].Mesh);
-				Ref<Material> material = AssetManager::GetAsset<Material>(meshes[entity].Material);
+				Ref<Mesh> mesh = AssetManager::GetAsset<Mesh>(meshes[*entity].Mesh);
+				Ref<Material> material = AssetManager::GetAsset<Material>(meshes[*entity].Material);
 
-				if (mesh == nullptr || material == nullptr)
+				std::optional<Entity> id = view.GetEntity(entity.GetEntityIndex());
+				if (!id || mesh == nullptr || material == nullptr)
 					continue;
 
-				const TransformComponent& transform = transforms[entity];
-			 	Renderer::DrawMesh(mesh, material, transform.GetTransformationMatrix());
+				const TransformComponent& transform = transforms[*entity];
+			 	Renderer::DrawMesh(mesh, material, transform.GetTransformationMatrix(),
+					id.value().GetIndex());
 			}
 		}
 	}

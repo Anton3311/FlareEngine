@@ -36,7 +36,7 @@ namespace Flare
 
 		static void DrawFullscreenQuad(const Ref<Material>& material);
 		static void DrawMesh(const Ref<VertexArray>& mesh, const Ref<Material>& material, size_t indicesCount = SIZE_MAX);
-		static void DrawMesh(const Ref<Mesh>& mesh, const Ref<Material>& material, const glm::mat4& transform);
+		static void DrawMesh(const Ref<Mesh>& mesh, const Ref<Material>& material, const glm::mat4& transform, int32_t entityIndex = INT32_MAX);
 
 		static void AddRenderPass(Ref<RenderPass> pass);
 		static void ExecuteRenderPasses();

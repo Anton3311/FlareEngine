@@ -10,6 +10,7 @@ namespace Flare
 	struct InstanceData
 	{
 		glm::mat4 Transform;
+		int32_t EntityIndex;
 	};
 
 	struct RenderableObject
@@ -17,6 +18,7 @@ namespace Flare
 		Ref<Mesh> Mesh;
 		Ref<Material> Material;
 		glm::mat4 Transform;
+		int32_t EntityIndex;
 	};
 
 	struct RendererData
@@ -83,7 +85,8 @@ namespace Flare
 
 		s_RendererData.InstanceBuffer = VertexBuffer::Create(s_RendererData.MaxInstances * sizeof(InstanceData));
 		s_RendererData.InstanceBuffer->SetLayout({
-			{ "i_Transform", ShaderDataType::Matrix4x4 }
+			{ "i_Transform", ShaderDataType::Matrix4x4 },
+			{ "i_EntityIndex", ShaderDataType::Int },
 		});
 
 		FrameBufferSpecifications specs = FrameBufferSpecifications(
@@ -224,6 +227,7 @@ namespace Flare
 
 			auto& instanceData = s_RendererData.InstanceDataBuffer.emplace_back();
 			instanceData.Transform = object.Transform;
+			instanceData.EntityIndex = object.EntityIndex;
 
 			if (s_RendererData.InstanceDataBuffer.size() == (size_t)s_RendererData.MaxInstances)
 				FlushInstances();
@@ -292,12 +296,13 @@ namespace Flare
 		s_RendererData.CurrentViewport->RenderTarget->SetWriteMask(previousMask);
 	}
 
-	void Renderer::DrawMesh(const Ref<Mesh>& mesh, const Ref<Material>& material, const glm::mat4& transform)
+	void Renderer::DrawMesh(const Ref<Mesh>& mesh, const Ref<Material>& material, const glm::mat4& transform, int32_t entityIndex)
 	{
 		RenderableObject& object = s_RendererData.Queue.emplace_back();
 		object.Material = material;
 		object.Mesh = mesh;
 		object.Transform = transform;
+		object.EntityIndex = entityIndex;
 	}
 
 	void Renderer::AddRenderPass(Ref<RenderPass> pass)
