@@ -56,17 +56,6 @@ namespace Flare
 					return;
 			}
 		});
-
-		InputManager::Initialize();
-
-		RenderCommand::Initialize();
-		Renderer::Initialize();
-		Renderer2D::Initialize();
-		DebugRenderer::Initialize();
-
-		ScriptingEngine::Initialize();
-
-		RenderCommand::SetLineWidth(1.2f);
 	}
 
 	Application::~Application()
@@ -79,6 +68,17 @@ namespace Flare
 
 	void Application::Run()
 	{
+		InputManager::Initialize();
+
+		RenderCommand::Initialize();
+		Renderer::Initialize();
+		Renderer2D::Initialize();
+		DebugRenderer::Initialize();
+
+		ScriptingEngine::Initialize();
+
+		RenderCommand::SetLineWidth(1.2f);
+
 		for (const Ref<Layer>& layer : m_LayersStack.GetLayers())
 			layer->OnAttach();
 

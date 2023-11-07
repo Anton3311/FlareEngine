@@ -8,6 +8,7 @@
 
 #include "Flare/Renderer/Texture.h"
 #include "Flare/Renderer/Font.h"
+#include "Flare/Renderer/ShaderLibrary.h"
 
 #include "FlareEditor/EditorLayer.h"
 
@@ -81,6 +82,8 @@ namespace Flare
         m_AssetPackages.clear();
         m_FilepathToAssetHandle.clear();
 
+        ShaderLibrary::Clear();
+
         FLARE_CORE_ASSERT(Project::GetActive());
 
         std::filesystem::path root = AssetRegistrySerializer::GetAssetsRoot();
@@ -105,6 +108,21 @@ namespace Flare
                     for (const auto& [handle, entry] : m_Registry)
                         m_FilepathToAssetHandle.emplace(entry.Metadata.Path, handle);
                 }
+            }
+        }
+
+        for (const auto& entry : m_Registry)
+        {
+            if (entry.second.Metadata.Type == AssetType::Shader)
+            {
+                std::string shaderFileName = entry.second.Metadata.Path.filename().string();
+                size_t dotPosition = shaderFileName.find_first_of(".");
+
+                std::string_view shaderName = shaderFileName;
+                if (dotPosition != std::string_view::npos)
+                    shaderName = std::string_view(shaderFileName).substr(0, dotPosition);
+
+                ShaderLibrary::AddShader(shaderName, entry.second.Metadata.Handle);
             }
         }
     }

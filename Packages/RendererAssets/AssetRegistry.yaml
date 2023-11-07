@@ -1,4 +1,10 @@
 AssetRegistry:
+  - Handle: 4547075642872350196
+    Type: Shader
+    Path: Text.glsl
+  - Handle: 12987452337681434979
+    Type: Shader
+    Path: QuadShader.glsl
   - Handle: 17504616539540010642
     Type: Shader
     Path: Mesh.glsl

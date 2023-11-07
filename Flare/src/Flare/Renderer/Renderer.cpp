@@ -23,21 +23,21 @@ namespace Flare
 
 	struct RendererData
 	{
-		Viewport* MainViewport;
-		Viewport* CurrentViewport;
+		Viewport* MainViewport = nullptr;
+		Viewport* CurrentViewport = nullptr;
 
-		Ref<UniformBuffer> CameraBuffer;
-		Ref<UniformBuffer> LightBuffer;
-		Ref<VertexArray> FullscreenQuad;
+		Ref<UniformBuffer> CameraBuffer = nullptr;
+		Ref<UniformBuffer> LightBuffer = nullptr;
+		Ref<VertexArray> FullscreenQuad = nullptr;
 
-		Ref<Texture> WhiteTexture;
+		Ref<Texture> WhiteTexture = nullptr;
 		
 		std::vector<Ref<RenderPass>> RenderPasses;
 		RendererStatistics Statistics;
 
 		std::vector<RenderableObject> Queue;
 
-		Ref<VertexBuffer> InstanceBuffer;
+		Ref<VertexBuffer> InstanceBuffer = nullptr;
 		std::vector<InstanceData> InstanceDataBuffer;
 		uint32_t MaxInstances = 1024;
 
@@ -49,10 +49,6 @@ namespace Flare
 
 	void Renderer::Initialize()
 	{
-		s_RendererData.MainViewport = nullptr;
-		s_RendererData.CurrentViewport = nullptr;
-		s_RendererData.InstanceBuffer = nullptr;
-
 		s_RendererData.CameraBuffer = UniformBuffer::Create(sizeof(CameraData), 0);
 		s_RendererData.LightBuffer = UniformBuffer::Create(sizeof(LightData), 1);
 

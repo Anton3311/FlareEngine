@@ -7,6 +7,9 @@
 #include "Flare/Renderer/RenderCommand.h"
 #include "Flare/Renderer/Viewport.h"
 #include "Flare/Renderer/Renderer.h"
+#include "Flare/Renderer/ShaderLibrary.h"
+
+#include "Flare/Project/Project.h"
 
 #include <algorithm>
 #include <cctype>
@@ -68,15 +71,14 @@ namespace Flare
 
 	Renderer2DData s_Renderer2DData;
 
+	static void ReloadShaders();
+
 	void Renderer2D::Initialize(size_t maxQuads)
 	{
 		s_Renderer2DData.QuadIndex = 0;
 		s_Renderer2DData.MaxQuadCount = maxQuads;
 		s_Renderer2DData.Vertices.resize(maxQuads * 4);
 		s_Renderer2DData.TextVertices.resize(maxQuads * 4);
-
-		s_Renderer2DData.DefaultMaterial = CreateRef<Material>(Shader::Create("Assets/Shaders/QuadShader.glsl"));
-		s_Renderer2DData.TextShader = Shader::Create("Assets/Shaders/Text.glsl");
 
 		std::vector<uint32_t> indices(maxQuads * 6);
 
@@ -137,6 +139,28 @@ namespace Flare
 
 		s_Renderer2DData.Stats.DrawCalls = 0;
 		s_Renderer2DData.Stats.QuadsCount = 0;
+
+		Project::OnProjectOpen.Bind(ReloadShaders);
+	}
+
+	static void ReloadShaders()
+	{
+		std::optional<AssetHandle> quadShaderHandle = ShaderLibrary::FindShader("QuadShader");
+
+		if (!quadShaderHandle || !AssetManager::IsAssetHandleValid(quadShaderHandle.value()))
+			FLARE_CORE_ERROR("Renderer 2D: Failed to find Quad shader");
+		else
+		{
+			Ref<Shader> quadShader = AssetManager::GetAsset<Shader>(quadShaderHandle.value());
+			s_Renderer2DData.DefaultMaterial = CreateRef<Material>(quadShader);
+			s_Renderer2DData.CurrentMaterial = s_Renderer2DData.DefaultMaterial;
+		}
+
+		std::optional<AssetHandle> textShaderHandle = ShaderLibrary::FindShader("Text");
+		if (!textShaderHandle || !AssetManager::IsAssetHandleValid(textShaderHandle.value()))
+			FLARE_CORE_ERROR("Renderer 2D: Failed to find text shader");
+		else
+			s_Renderer2DData.TextShader = AssetManager::GetAsset<Shader>(textShaderHandle.value());
 	}
 
 	void Renderer2D::Shutdown()
@@ -440,6 +464,13 @@ namespace Flare
 
 	void Renderer2D::FlushQuads()
 	{
+		if (s_Renderer2DData.DefaultMaterial == nullptr)
+		{
+			s_Renderer2DData.QuadIndex = 0;
+			s_Renderer2DData.TextureIndex = 0;
+			return;
+		}
+
 		s_Renderer2DData.QuadsVertexBuffer->SetData(s_Renderer2DData.Vertices.data(), sizeof(QuadVertex) * s_Renderer2DData.QuadIndex * 4);
 
 		int32_t slots[MaxTexturesCount];
@@ -471,6 +502,12 @@ namespace Flare
 
 	void Renderer2D::FlushText()
 	{
+		if (s_Renderer2DData.TextShader == nullptr)
+		{
+			s_Renderer2DData.TextQuadIndex = 0;
+			return;
+		}
+
 		if (!s_Renderer2DData.CurrentFont)
 			s_Renderer2DData.CurrentFont = Font::GetDefault();
 
