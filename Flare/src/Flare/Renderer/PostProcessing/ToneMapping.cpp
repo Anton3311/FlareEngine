@@ -1,7 +1,10 @@
 #include "Tonemapping.h"
 
+#include "Flare/AssetManager/AssetManager.h"
+
 #include "Flare/Renderer/Renderer.h"
 #include "Flare/Renderer/RenderCommand.h"
+#include "Flare/Renderer/ShaderLibrary.h"
 
 namespace Flare
 {
@@ -10,7 +13,14 @@ namespace Flare
 	ToneMapping::ToneMapping()
 		: Enabled(false)
 	{
-		m_Material = CreateRef<Material>(Shader::Create("assets/Shaders/AcesToneMapping.glsl"));
+		std::optional<AssetHandle> shaderHandle = ShaderLibrary::FindShader("AcesToneMapping");
+		if (!shaderHandle || !AssetManager::IsAssetHandleValid(shaderHandle.value()))
+		{
+			FLARE_CORE_ERROR("ToneMapping: Failed to find ToneMapping shader");
+			return;
+		}
+
+		m_Material = CreateRef<Material>(AssetManager::GetAsset<Shader>(shaderHandle.value()));
 		m_Material->Features.DepthTesting = false;
 	}
 

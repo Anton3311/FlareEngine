@@ -1,7 +1,10 @@
 #include "Vignette.h"
 
+#include "Flare/AssetManager/AssetManager.h"
+
 #include "Flare/Renderer/Renderer.h"
 #include "Flare/Renderer/RenderCommand.h"
+#include "Flare/Renderer/ShaderLibrary.h"
 
 namespace Flare
 {
@@ -19,7 +22,14 @@ namespace Flare
 	Vignette::Vignette()
 		: Enabled(false), Color(0.0f, 0.0f, 0.0f, 0.5f), Radius(1.0f), Smoothness(1.0f)
 	{
-		Ref<Shader> shader = Shader::Create("assets/Shaders/Vignette.glsl");
+		std::optional<AssetHandle> shaderHandle = ShaderLibrary::FindShader("Vignette");
+		if (!shaderHandle || !AssetManager::IsAssetHandleValid(shaderHandle.value()))
+		{
+			FLARE_CORE_ERROR("Vignette: Failed to find Vignette shader");
+			return;
+		}
+
+		Ref<Shader> shader = AssetManager::GetAsset<Shader>(shaderHandle.value());
 		m_Material = CreateRef<Material>(shader);
 		m_Material->Features.DepthTesting = false;
 
