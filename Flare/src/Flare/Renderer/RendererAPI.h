@@ -14,34 +14,25 @@ namespace Flare
 		Front,
 	};
 
-	inline const char* CullingModeToString(CullingMode mode)
+	enum class DepthComparisonFunction : uint8_t
 	{
-		switch (mode)
-		{
-		case CullingMode::Front:
-			return "Front";
-		case CullingMode::Back:
-			return "Back";
-		case CullingMode::None:
-			return "None";
-		}
+		Less,
+		Greater,
 
-		FLARE_CORE_ASSERT(false, "Unhandled culling mode");
-		return nullptr;
-	}
+		LessOrEqual,
+		GreaterOrEqual,
 
-	inline CullingMode CullinModeFromString(std::string_view mode)
-	{
-		if (mode == "None")
-			return CullingMode::None;
-		if (mode == "Front")
-			return CullingMode::Front;
-		if (mode == "Back")
-			return CullingMode::Back;
-		
-		FLARE_CORE_ASSERT(false, "Invalid culling mode");
-		return CullingMode::None;
-	}
+		Equal,
+		NotEqual,
+
+		Never,
+		Always,
+	};
+
+	FLARE_API const char* CullingModeToString(CullingMode mode);
+	FLARE_API CullingMode CullinModeFromString(std::string_view mode);
+	FLARE_API const char* DepthComparisonFunctionToString(DepthComparisonFunction function);
+	FLARE_API std::optional<DepthComparisonFunction> DepthComparisonFunctionFromString(std::string_view function);
 
 	class FLARE_API RendererAPI
 	{
@@ -60,6 +51,7 @@ namespace Flare
 
 		virtual void SetDepthTestEnabled(bool enabled) = 0;
 		virtual void SetCullingMode(CullingMode mode) = 0;
+		virtual void SetDepthComparisonFunction(DepthComparisonFunction function) = 0;
 
 		virtual void SetLineWidth(float width) = 0;
 

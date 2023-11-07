@@ -210,6 +210,8 @@ namespace Flare
 
 			ImGui::PopID();
 
+			// Blend Mode
+
 			preview = MaterialBlendModeToString(material->Features.BlendMode);
 
 			EditorGUI::PropertyName("Blend Mode");
@@ -222,6 +224,37 @@ namespace Flare
 				if (ImGui::MenuItem("Transparent"))
 					material->Features.BlendMode = MaterialBlendMode::Transparent;
 
+				ImGui::EndCombo();
+			}
+
+			ImGui::PopID();
+
+			// Depth Comaprison Function
+
+			preview = DepthComparisonFunctionToString(material->Features.DepthFunction);
+
+			EditorGUI::PropertyName("Depth Function");
+
+			ImGui::PushID("Depth Function");
+			if (ImGui::BeginCombo("", preview, ImGuiComboFlags_HeightRegular))
+			{
+				if (ImGui::MenuItem("Less"))
+					material->Features.DepthFunction = DepthComparisonFunction::Less;
+				if (ImGui::MenuItem("Greater"))
+					material->Features.DepthFunction = DepthComparisonFunction::Greater;
+				if (ImGui::MenuItem("Less or equal"))
+					material->Features.DepthFunction = DepthComparisonFunction::LessOrEqual;
+				if (ImGui::MenuItem("Greater or equal"))
+					material->Features.DepthFunction = DepthComparisonFunction::GreaterOrEqual;
+				if (ImGui::MenuItem("Equal"))
+					material->Features.DepthFunction = DepthComparisonFunction::Equal;
+				if (ImGui::MenuItem("Not equal"))
+					material->Features.DepthFunction = DepthComparisonFunction::NotEqual;
+				if (ImGui::MenuItem("Never"))
+					material->Features.DepthFunction = DepthComparisonFunction::Never;
+				if (ImGui::MenuItem("Always"))
+					material->Features.DepthFunction = DepthComparisonFunction::Always;
+				
 				ImGui::EndCombo();
 			}
 

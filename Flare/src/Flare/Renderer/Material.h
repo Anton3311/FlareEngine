@@ -40,10 +40,14 @@ namespace Flare
 	struct MaterialFeatures
 	{
 		MaterialFeatures()
-			: Culling(CullingMode::Back), DepthTesting(true), BlendMode(MaterialBlendMode::Opaque) {}
+			: Culling(CullingMode::Back),
+			BlendMode(MaterialBlendMode::Opaque),
+			DepthTesting(true),
+			DepthFunction(DepthComparisonFunction::Less) {}
 
 		CullingMode Culling;
 		MaterialBlendMode BlendMode;
+		DepthComparisonFunction DepthFunction;
 		bool DepthTesting;
 	};
 

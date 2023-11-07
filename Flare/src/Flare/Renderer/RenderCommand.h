@@ -21,5 +21,6 @@ namespace Flare
 		static void DrawLines(const Ref<const VertexArray>& lines, size_t verticesCount);
 		static void SetDepthTestEnabled(bool enabled);
 		static void SetCullingMode(CullingMode mode);
+		static void SetDepthComparisonFunction(DepthComparisonFunction function);
 	};
 }

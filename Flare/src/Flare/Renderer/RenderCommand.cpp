@@ -58,4 +58,9 @@ namespace Flare
 	{
 		s_API->SetCullingMode(mode);
 	}
+
+	void RenderCommand::SetDepthComparisonFunction(DepthComparisonFunction function)
+	{
+		s_API->SetDepthComparisonFunction(function);
+	}
 }

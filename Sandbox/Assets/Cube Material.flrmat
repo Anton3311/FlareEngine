@@ -10,3 +10,4 @@ Features:
   CullingMode: Back
   DepthTest: true
   BlendMode: Transparent
+  DepthFunction: Less

@@ -86,6 +86,37 @@ namespace Flare
 		}
 	}
 
+	void OpenGLRendererAPI::SetDepthComparisonFunction(DepthComparisonFunction function)
+	{
+		switch (function)
+		{
+		case DepthComparisonFunction::Less:
+			glDepthFunc(GL_LESS);
+			break;
+		case DepthComparisonFunction::Greater:
+			glDepthFunc(GL_GREATER);
+			break;
+		case DepthComparisonFunction::LessOrEqual:
+			glDepthFunc(GL_LEQUAL);
+			break;
+		case DepthComparisonFunction::GreaterOrEqual:
+			glDepthFunc(GL_GEQUAL);
+			break;
+		case DepthComparisonFunction::Equal:
+			glDepthFunc(GL_EQUAL);
+			break;
+		case DepthComparisonFunction::NotEqual:
+			glDepthFunc(GL_NOTEQUAL);
+			break;
+		case DepthComparisonFunction::Always:
+			glDepthFunc(GL_ALWAYS);
+			break;
+		case DepthComparisonFunction::Never:
+			glDepthFunc(GL_LESS);
+			break;
+		}
+	}
+
 	void OpenGLRendererAPI::SetLineWidth(float width)
 	{
 		glLineWidth(width);
