@@ -39,6 +39,8 @@ project "FlareEditor"
 		INCLUDE_DIRS.imgui,
 		INCLUDE_DIRS.imguizmo,
 		INCLUDE_DIRS.yaml_cpp,
+
+		INCLUDE_DIRS.vulkan_sdk,
     }
 
 	links
@@ -77,6 +79,11 @@ project "FlareEditor"
 		{
 			LIBRARIES.assimp_debug,
 			LIBRARIES.assimp_zlib_debug,
+
+			LIBRARIES.shaderc_debug,
+			LIBRARIES.spriv_cross_glsl_debug,
+			LIBRARIES.spriv_cross_debug,
+			LIBRARIES.spriv_tools_debug,
 		}
 
 	filter "configurations:Release"
@@ -88,6 +95,14 @@ project "FlareEditor"
 		{
 			LIBRARIES.assimp_release,
 			LIBRARIES.assimp_zlib_release,
+
+			LIBRARIES.shaderc_release,
+			LIBRARIES.spriv_cross_glsl_release,
+			LIBRARIES.spriv_cross_release,
+
+
+			LIBRARIES.assimp_debug,
+			LIBRARIES.assimp_zlib_debug,
 		}
 
 	filter "configurations:Dist"
@@ -97,6 +112,13 @@ project "FlareEditor"
 
 		links
 		{
+			LIBRARIES.assimp_release,
+			LIBRARIES.assimp_zlib_release,
+
+			LIBRARIES.shaderc_release,
+			LIBRARIES.spriv_cross_glsl_release,
+			LIBRARIES.spriv_cross_release,
+
 			LIBRARIES.assimp_release,
 			LIBRARIES.assimp_zlib_release,
 		}

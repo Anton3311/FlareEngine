@@ -17,7 +17,11 @@ namespace Flare
 		std::optional<std::vector<uint32_t>> FindCache(AssetHandle shaderHandle,
 			ShaderTargetEnvironment targetEnvironment,
 			ShaderStageType stageType) override;
-	private:
+
+		bool HasCache(AssetHandle shaderHandle,
+			ShaderTargetEnvironment targetEnvironment,
+			ShaderStageType stage) override;
+
 		std::filesystem::path GetCacheDirectoryPath(AssetHandle shaderHandle);
 		std::string GetCacheFileName(std::string_view shaderName, ShaderTargetEnvironment targetEnvironemt, ShaderStageType stageType);
 	};

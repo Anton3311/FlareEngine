@@ -23,6 +23,10 @@ namespace Flare
 		virtual std::optional<std::vector<uint32_t>> FindCache(AssetHandle shaderHandle,
 			ShaderTargetEnvironment targetEnvironment,
 			ShaderStageType stageType) = 0;
+
+		virtual bool HasCache(AssetHandle shaderHandle,
+			ShaderTargetEnvironment targetEnvironment,
+			ShaderStageType stage) = 0;
 	public:
 		static void Uninitialize();
 		static void SetInstance(Scope<ShaderCacheManager>&& cacheManager);
