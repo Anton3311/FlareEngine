@@ -14,9 +14,12 @@ namespace Flare
 	class OpenGLShader : public Shader
 	{
 	public:
+		OpenGLShader();
 		OpenGLShader(const std::filesystem::path& path, const std::filesystem::path& cacheDirectory);
 		~OpenGLShader();
+
 	public:
+		virtual void Load() override;
 		virtual void Bind() override;
 
 		virtual const ShaderProperties& GetProperties() const override;

@@ -43,6 +43,7 @@ namespace Flare
 		void RemoveFromRegistry(AssetHandle handle);
 
 		inline const EditorAssetRegistry& GetRegistry() const { return m_Registry; }
+		inline const std::map<UUID, AssetsPackage>& GetAssetPackages() const { return m_AssetPackages; }
 
 		void AddAssetsPackage(const std::filesystem::path& path);
 	private:

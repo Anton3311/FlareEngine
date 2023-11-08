@@ -8,7 +8,7 @@
 
 namespace Flare
 {
-    const std::filesystem::path AssetsPackage::InernalPackagesLocation = "../Packages";
+    const std::filesystem::path AssetsPackage::InternalPackagesLocation = "../Packages";
     const std::filesystem::path PackageDependenciesSerializer::PackagesFileName = "Packages.yaml";
 
 	void PackageDependenciesSerializer::Serialize(const std::map<UUID, AssetsPackage>& packages, const std::filesystem::path& path)

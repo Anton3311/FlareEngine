@@ -20,6 +20,7 @@
 
 #include "FlareEditor/Serialization/SceneSerializer.h"
 #include "FlareEditor/AssetManager/EditorAssetManager.h"
+#include "FlareEditor/AssetManager/EditorShaderCache.h"
 
 #include "FlareEditor/ImGui/ImGuiLayer.h"
 #include "FlareEditor/UI/EditorGUI.h"
@@ -69,6 +70,8 @@ namespace Flare
 
     void EditorLayer::OnAttach()
     {
+        ShaderCacheManager::SetInstance(CreateScope<EditorShaderCache>());
+
         m_PropertiesWindow.OnAttach();
         ImGuiLayer::OnAttach();
 

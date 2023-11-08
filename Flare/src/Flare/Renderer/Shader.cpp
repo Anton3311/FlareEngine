@@ -20,6 +20,17 @@ namespace Flare
 		return cachePath;
 	}
 
+	Ref<Shader> Shader::Create()
+	{
+		switch (RendererAPI::GetAPI())
+		{
+		case RendererAPI::API::OpenGL:
+			return CreateRef<OpenGLShader>();
+		}
+
+		return nullptr;
+	}
+
 	Ref<Shader> Shader::Create(const std::filesystem::path& path)
 	{
 		std::filesystem::path cacheDirection = SHADER_CACHE_LOCATION / std::filesystem::relative(path.parent_path(), std::filesystem::current_path());

@@ -10,7 +10,7 @@ namespace Flare
 {
 	struct AssetsPackage
 	{
-		static const std::filesystem::path InernalPackagesLocation;
+		static const std::filesystem::path InternalPackagesLocation;
 
 		enum class Type
 		{

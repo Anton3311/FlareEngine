@@ -11,6 +11,12 @@
 
 namespace Flare
 {
+	enum class ShaderTargetEnvironment
+	{
+		OpenGL,
+		Vulkan,
+	};
+
 	enum class ShaderDataType
 	{
 		Int,
@@ -95,6 +101,12 @@ namespace Flare
 		size_t Size;
 	};
 
+	enum class ShaderStageType
+	{
+		Vertex,
+		Pixel
+	};
+
 	using ShaderProperties = std::vector<ShaderParameter>;
 	// Indices of frame buffer attachments to which the shader writes
 	using ShaderOutputs = std::vector<uint32_t>;
@@ -106,6 +118,8 @@ namespace Flare
 			: Asset(AssetType::Shader) {}
 
 		virtual ~Shader() = default;
+
+		virtual void Load() = 0;
 
 		virtual void Bind() = 0;
 
@@ -121,6 +135,7 @@ namespace Flare
 		virtual void SetIntArray(const std::string& name, const int* values, uint32_t count) = 0;
 		virtual void SetMatrix4(const std::string& name, const glm::mat4& matrix) = 0;
 	public:
+		static Ref<Shader> Create();
 		static Ref<Shader> Create(const std::filesystem::path& path);
 		static Ref<Shader> Create(const std::filesystem::path& path, const std::filesystem::path& cacheDirectory);
 

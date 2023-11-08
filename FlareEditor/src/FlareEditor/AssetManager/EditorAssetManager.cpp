@@ -17,6 +17,7 @@
 #include "FlareEditor/Serialization/SceneSerializer.h"
 #include "FlareEditor/AssetManager/MaterialImporter.h"
 #include "FlareEditor/AssetManager/MeshImporter.h"
+#include "FlareEditor/AssetManager/ShaderImporter.h"
 
 #include <yaml-cpp/yaml.h>
 
@@ -38,6 +39,9 @@ namespace Flare
             return scene;
         });
 
+        m_AssetImporters.emplace(AssetType::Shader, ShaderImporter::ImportShader);
+
+#if 0
         m_AssetImporters.emplace(AssetType::Shader, [this](const AssetMetadata& metadata) -> Ref<Asset>
         {
             std::filesystem::path assetsPath = Project::GetActive()->Location / "Assets";
@@ -54,7 +58,7 @@ namespace Flare
             {
                 FLARE_CORE_ASSERT(entry.PackageId.has_value());
                 const AssetsPackage& package = m_AssetPackages[entry.PackageId.value()];
-                std::filesystem::path packageAssetsPath = std::filesystem::absolute(AssetsPackage::InernalPackagesLocation / package.Name / "Assets");
+                std::filesystem::path packageAssetsPath = std::filesystem::absolute(AssetsPackage::InternalPackagesLocation / package.Name / "Assets");
 
                 std::filesystem::path cacheDirectory = Project::GetActive()->Location
                     / "Cache/Shaders/"
@@ -63,11 +67,16 @@ namespace Flare
                         .parent_path(),
                         packageAssetsPath) / package.Name;
 
-                return Shader::Create(metadata.Path, cacheDirectory);
+                Ref<Shader> shader = Shader::Create(metadata.Path, cacheDirectory);
+                shader->Handle = metadata.Handle;
+                shader->Load();
+
+                return shader;
             }
 
             return nullptr;
         });
+#endif
 
         m_AssetImporters.emplace(AssetType::Font, [](const AssetMetadata& metadata) -> Ref<Asset>
         {
