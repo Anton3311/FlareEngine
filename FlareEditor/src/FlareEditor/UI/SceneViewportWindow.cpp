@@ -3,6 +3,7 @@
 #include "Flare/Renderer/Renderer.h"
 #include "Flare/Renderer/RenderCommand.h"
 #include "Flare/Renderer/DebugRenderer.h"
+#include "Flare/Renderer/ShaderLibrary.h"
 #include "Flare/Scene/Components.h"
 #include "Flare/Scene/Scene.h"
 #include "Flare/Scene/Prefab.h"
@@ -38,20 +39,32 @@ namespace Flare
 		: ViewportWindow("Scene Viewport", true),
 		m_Camera(camera),
 		m_Overlay(ViewportOverlay::Default),
-		m_IsToolbarHovered(false)
+		m_IsToolbarHovered(false) {}
+
+	void SceneViewportWindow::OnAttach()
 	{
-		m_SelectionOutlineShader = Shader::Create("assets/Shaders/SelectionOutline.glsl");
-		m_GridMaterial = CreateRef<Material>(Shader::Create("assets/Shaders/Grid.glsl"));
+		AssetHandle selectionOutlineShader = ShaderLibrary::FindShader("SelectionOutline").value_or(NULL_ASSET_HANDLE);
+		if (AssetManager::IsAssetHandleValid(selectionOutlineShader))
+			m_SelectionOutlineShader = AssetManager::GetAsset<Shader>(selectionOutlineShader);
+		else
+			FLARE_CORE_ERROR("Failed to load selection outline shader");
 
-		m_GridMaterial->Features.Culling = CullingMode::None;
+		AssetHandle gridShaderHandle = ShaderLibrary::FindShader("SceneViewGrid").value_or(NULL_ASSET_HANDLE);
+		if (AssetManager::IsAssetHandleValid(gridShaderHandle))
+		{
+			m_GridMaterial = CreateRef<Material>(AssetManager::GetAsset<Shader>(gridShaderHandle));
+			m_GridMaterial->Features.Culling = CullingMode::None;
 
-		Ref<Shader> gridShader = m_GridMaterial->GetShader();
-		s_GridPropertyIndices.Color = gridShader->GetPropertyIndex("u_Data.Color").value_or(UINT32_MAX);
-		s_GridPropertyIndices.Offset = gridShader->GetPropertyIndex("u_Data.Offset").value_or(UINT32_MAX);
-		s_GridPropertyIndices.Scale = gridShader->GetPropertyIndex("u_Data.GridScale").value_or(UINT32_MAX);
-		s_GridPropertyIndices.Thickness = gridShader->GetPropertyIndex("u_Data.Thickness").value_or(UINT32_MAX);
-		s_GridPropertyIndices.CellScale = gridShader->GetPropertyIndex("u_Data.CellScale").value_or(UINT32_MAX);
-		s_GridPropertyIndices.FallOffThreshold = gridShader->GetPropertyIndex("u_Data.FallOffThreshold").value_or(UINT32_MAX);
+			Ref<Shader> gridShader = m_GridMaterial->GetShader();
+			s_GridPropertyIndices.Color = gridShader->GetPropertyIndex("u_Data.Color").value_or(UINT32_MAX);
+			s_GridPropertyIndices.Offset = gridShader->GetPropertyIndex("u_Data.Offset").value_or(UINT32_MAX);
+			s_GridPropertyIndices.Scale = gridShader->GetPropertyIndex("u_Data.GridScale").value_or(UINT32_MAX);
+			s_GridPropertyIndices.Thickness = gridShader->GetPropertyIndex("u_Data.Thickness").value_or(UINT32_MAX);
+			s_GridPropertyIndices.CellScale = gridShader->GetPropertyIndex("u_Data.CellScale").value_or(UINT32_MAX);
+			s_GridPropertyIndices.FallOffThreshold = gridShader->GetPropertyIndex("u_Data.FallOffThreshold").value_or(UINT32_MAX);
+		}
+		else
+			FLARE_CORE_ERROR("Failed to load scene view grid shader");
 	}
 
 	void SceneViewportWindow::OnRenderViewport()
@@ -107,7 +120,7 @@ namespace Flare
 			}
 
 			Entity selectedEntity = EditorLayer::GetInstance().Selection.TryGetEntity().value_or(Entity());
-			if (selectedEntity != Entity())
+			if (selectedEntity != Entity() && m_SelectionOutlineShader)
 			{
 				m_ScreenBuffer->BindAttachmentTexture(1);
 
@@ -460,6 +473,9 @@ namespace Flare
 
 	void SceneViewportWindow::RenderGrid()
 	{
+		if (!m_GridMaterial)
+			return;
+
 		float scale = m_Camera.GetZoom() * 3.0f;
 		float cellScale = 5.0f + glm::floor(m_Camera.GetZoom() / 20.0f) * 5.0f;
 		glm::vec3 gridColor = glm::vec3(0.5f);

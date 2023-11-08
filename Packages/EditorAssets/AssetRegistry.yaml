@@ -1,0 +1,7 @@
+AssetRegistry:
+  - Handle: 2112106268366627755
+    Type: Shader
+    Path: SelectionOutline.glsl
+  - Handle: 15621002237596126193
+    Type: Shader
+    Path: SceneViewGrid.glsl

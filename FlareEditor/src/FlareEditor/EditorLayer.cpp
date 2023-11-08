@@ -117,6 +117,9 @@ namespace Flare
         {
             m_PrefabEditor->Open(handle);
         });
+
+        for (auto& viewportWindow : m_ViewportWindows)
+            viewportWindow->OnAttach();
     }
 
     void EditorLayer::OnDetach()

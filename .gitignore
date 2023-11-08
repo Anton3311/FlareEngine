@@ -12,3 +12,6 @@ bin-int
 FlareEditor/Cache
 
 Sandbox/Cache
+
+Packages/RendererAssets/Cache/
+Packages/EditorAssets/Cache/

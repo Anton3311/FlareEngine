@@ -1,4 +1,7 @@
 Packages:
+  - Id: 6196556884465908308
+    Type: Internal
+    Name: EditorAssets
   - Id: 10472405050502362910
     Type: Internal
     Name: RendererAssets
