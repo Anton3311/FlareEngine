@@ -307,6 +307,9 @@ namespace Flare
         }
 
         Ref<Asset> asset = importerIterator->second(metadata);
+        if (!asset)
+            return nullptr;
+
         asset->Handle = metadata.Handle;
         m_LoadedAssets[metadata.Handle] = asset;
         return asset;

@@ -168,7 +168,7 @@ namespace Flare
 				if (YAML::Node featuresNode = node["Features"])
 				{
 					if (YAML::Node cullingMode = featuresNode["CullingMode"])
-						material->Features.Culling = CullinModeFromString(cullingMode.as<std::string>());
+						material->Features.Culling = CullingModeFromString(cullingMode.as<std::string>());
 					if (YAML::Node depthTest = featuresNode["DepthTest"])
 						material->Features.DepthTesting = depthTest.as<bool>();
 					if (YAML::Node blendMode = featuresNode["BlendMode"])

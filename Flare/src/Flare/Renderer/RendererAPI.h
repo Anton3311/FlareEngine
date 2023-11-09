@@ -7,33 +7,6 @@
 
 namespace Flare
 {
-	enum class CullingMode : uint8_t
-	{
-		None,
-		Back,
-		Front,
-	};
-
-	enum class DepthComparisonFunction : uint8_t
-	{
-		Less,
-		Greater,
-
-		LessOrEqual,
-		GreaterOrEqual,
-
-		Equal,
-		NotEqual,
-
-		Never,
-		Always,
-	};
-
-	FLARE_API const char* CullingModeToString(CullingMode mode);
-	FLARE_API CullingMode CullinModeFromString(std::string_view mode);
-	FLARE_API const char* DepthComparisonFunctionToString(DepthComparisonFunction function);
-	FLARE_API std::optional<DepthComparisonFunction> DepthComparisonFunctionFromString(std::string_view function);
-
 	class FLARE_API RendererAPI
 	{
 	public:

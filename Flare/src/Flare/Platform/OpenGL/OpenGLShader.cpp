@@ -196,6 +196,10 @@ namespace Flare
 
     void OpenGLShader::Load()
     {
+        FLARE_CORE_ASSERT(AssetManager::IsAssetHandleValid(Handle));
+
+        m_Features = ShaderCacheManager::GetInstance()->FindShaderFeatures(Handle).value_or(ShaderFeatures());
+
         m_Id = glCreateProgram();
 
         struct Program
@@ -316,6 +320,11 @@ namespace Flare
     const ShaderOutputs& OpenGLShader::GetOutputs() const
     {
         return m_Outputs;
+    }
+
+    ShaderFeatures OpenGLShader::GetFeatures() const
+    {
+        return m_Features;
     }
 
     std::optional<uint32_t> OpenGLShader::GetPropertyIndex(std::string_view name) const

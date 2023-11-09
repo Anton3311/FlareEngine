@@ -3,6 +3,8 @@
 #include "FlareCore/Core.h"
 
 #include "Flare/AssetManager/Asset.h"
+#include "Flare/Renderer/RendererAPI.h"
+#include "Flare/Renderer/ShaderMetadata.h"
 
 #include <glm/glm.hpp>
 
@@ -11,97 +13,6 @@
 
 namespace Flare
 {
-	enum class ShaderTargetEnvironment
-	{
-		OpenGL,
-		Vulkan,
-	};
-
-	enum class ShaderDataType
-	{
-		Int,
-		Int2,
-		Int3,
-		Int4,
-		Float,
-		Float2,
-		Float3,
-		Float4,
-
-		Sampler,
-		SamplerArray,
-
-		Matrix4x4,
-	};
-
-	constexpr uint32_t ShaderDataTypeSize(ShaderDataType dataType)
-	{
-		switch (dataType)
-		{
-		case ShaderDataType::Int:
-		case ShaderDataType::Float:
-			return 4;
-		case ShaderDataType::Float2:
-			return 4 * 2;
-		case ShaderDataType::Float3:
-			return 4 * 3;
-		case ShaderDataType::Float4:
-			return 4 * 4;
-		case ShaderDataType::Matrix4x4:
-			return 4 * 4 * 4;
-		case ShaderDataType::Sampler:
-			return 4;
-		}
-
-		return 0;
-	}
-
-	constexpr uint32_t ShaderDataTypeComponentCount(ShaderDataType dataType)
-	{
-		switch (dataType)
-		{
-		case ShaderDataType::Int:
-		case ShaderDataType::Float:
-			return 1;
-		case ShaderDataType::Float2:
-			return 2;
-		case ShaderDataType::Float3:
-			return 3;
-		case ShaderDataType::Float4:
-			return 4;
-		case ShaderDataType::Matrix4x4:
-			return 16;
-		}
-
-		return 0;
-	}
-
-	struct ShaderParameter
-	{
-		ShaderParameter(std::string_view name, ShaderDataType type, size_t offset)
-			: Name(name),
-			Type(type),
-			Offset(offset),
-			Size(ShaderDataTypeSize(type)) {}
-
-		ShaderParameter(std::string_view name, ShaderDataType type, size_t size, size_t offset)
-			: Name(name),
-			Type(type),
-			Size(size),
-			Offset(offset) {}
-
-		std::string Name;
-		ShaderDataType Type;
-		size_t Offset;
-		size_t Size;
-	};
-
-	enum class ShaderStageType
-	{
-		Vertex,
-		Pixel
-	};
-
 	using ShaderProperties = std::vector<ShaderParameter>;
 	// Indices of frame buffer attachments to which the shader writes
 	using ShaderOutputs = std::vector<uint32_t>;
@@ -120,6 +31,7 @@ namespace Flare
 
 		virtual const ShaderProperties& GetProperties() const = 0;
 		virtual const ShaderOutputs& GetOutputs() const = 0;
+		virtual ShaderFeatures GetFeatures() const = 0;
 		virtual std::optional<uint32_t> GetPropertyIndex(std::string_view name) const = 0;
 
 		virtual void SetInt(const std::string& name, int value) = 0;

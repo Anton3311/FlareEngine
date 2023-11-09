@@ -2,7 +2,7 @@
 
 #include "FlareCore/Core.h"
 
-#include "Flare/Renderer/Shader.h"
+#include "Flare/Renderer/ShaderMetadata.h"
 
 #include <stdint.h>
 #include <string>

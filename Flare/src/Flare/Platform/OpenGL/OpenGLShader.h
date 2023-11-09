@@ -22,6 +22,7 @@ namespace Flare
 
 		virtual const ShaderProperties& GetProperties() const override;
 		virtual const ShaderOutputs& GetOutputs() const override;
+		virtual ShaderFeatures GetFeatures() const override;
 		virtual std::optional<uint32_t> GetPropertyIndex(std::string_view name) const override;
 		
 		virtual void SetInt(const std::string& name, int value) override;
@@ -47,6 +48,7 @@ namespace Flare
 		uint32_t m_Id;
 		ShaderProperties m_Properties;
 		ShaderOutputs m_Outputs;
+		ShaderFeatures m_Features;
 
 		std::vector<int32_t> m_UniformLocations;
 		std::unordered_map<std::string_view, uint32_t> m_NameToIndex;

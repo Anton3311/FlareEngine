@@ -5,6 +5,9 @@ AssetRegistry:
   - Handle: 1354932369586028623
     Type: Scene
     Path: 3D Test.flare
+  - Handle: 2558145921418293985
+    Type: Shader
+    Path: Test.glsl
   - Handle: 5193090395626261884
     Type: Texture
     Path: Texture.png

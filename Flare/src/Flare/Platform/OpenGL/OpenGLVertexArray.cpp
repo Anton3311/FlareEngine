@@ -1,5 +1,6 @@
 #include "OpenGLVertexArray.h"
 
+#include <glm/glm.hpp>
 #include <glad/glad.h>
 
 namespace Flare

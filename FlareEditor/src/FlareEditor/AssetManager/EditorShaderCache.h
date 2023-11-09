@@ -18,11 +18,17 @@ namespace Flare
 			ShaderTargetEnvironment targetEnvironment,
 			ShaderStageType stageType) override;
 
+		std::optional<ShaderFeatures> FindShaderFeatures(AssetHandle shaderHandle) override;
+
 		bool HasCache(AssetHandle shaderHandle,
 			ShaderTargetEnvironment targetEnvironment,
 			ShaderStageType stage) override;
 
+		void SetShaderFeatures(AssetHandle shaderHandle, ShaderFeatures features);
+
 		std::filesystem::path GetCacheDirectoryPath(AssetHandle shaderHandle);
 		std::string GetCacheFileName(std::string_view shaderName, ShaderTargetEnvironment targetEnvironemt, ShaderStageType stageType);
+	private:
+		std::unordered_map<AssetHandle, ShaderFeatures> m_ShaderFeatures;
 	};
 }

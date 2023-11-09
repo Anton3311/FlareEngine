@@ -2,6 +2,7 @@
 
 #include "Flare/AssetManager/AssetManager.h"
 #include "FlareEditor/AssetManager/EditorShaderCache.h"
+#include "FlareEditor/ShaderCompiler/ShaderSourceParser.h"
 
 #include <shaderc/shaderc.hpp>
 #include <spirv_cross/spirv_cross.hpp>
@@ -138,30 +139,38 @@ namespace Flare
 
         return std::vector<uint32_t>(shaderModule.cbegin(), shaderModule.cend());
     }
-    
-    bool ShaderCompiler::Compile(AssetHandle shaderHandle)
-    {
-        FLARE_CORE_ASSERT(AssetManager::IsAssetHandleValid(shaderHandle));
 
-        const std::filesystem::path& shaderPath = AssetManager::GetAssetMetadata(shaderHandle)->Path;
-        std::string sourceString = "";
+    static bool Preprocess(const std::filesystem::path& shaderPath,
+        std::string_view source,
+        std::vector<PreprocessedShaderProgram>& programs,
+        ShaderFeatures& features)
+    {
+        std::string fileName = shaderPath.filename().string();
+        if (fileName == "Test.glsl")
         {
-            std::ifstream file(shaderPath);
-            if (!file.is_open())
+            ShaderSourceParser parser(source);
+            parser.Parse();
+
+            for (const auto& sourceBlock : parser.GetSourceBlocks())
             {
-                FLARE_CORE_ERROR("Could not read file {0}", shaderPath.string());
-                return false;
+                PreprocessedShaderProgram& program = programs.emplace_back();
+                program.Source = sourceBlock.Source;
+                program.Stage = sourceBlock.Stage;
             }
 
-            std::stringstream buffer;
-            buffer << file.rdbuf();
+            const Block& rootBlock = parser.GetBlock(0);
+            for (const auto& element : rootBlock.Elements)
+            {
+                if (element.Name.Value == "Culling")
+                    features.Culling = CullingModeFromString(element.Value.Value);
 
-            sourceString = buffer.str();
+                if (element.Name.Value == "DepthTest")
+                    features.DepthTesting = element.Value.Value == "true";
+            }
+
+            return true;
         }
 
-        std::vector<PreprocessedShaderProgram> programs;
-
-        std::string_view source = sourceString;
         std::string_view typeToken = "#type";
 
         size_t position = source.find_first_of(typeToken);
@@ -194,7 +203,40 @@ namespace Flare
             program.Source = programSource;
         }
 
+        return true;
+    }
+    
+    bool ShaderCompiler::Compile(AssetHandle shaderHandle)
+    {
+        FLARE_CORE_ASSERT(AssetManager::IsAssetHandleValid(shaderHandle));
+
+        const std::filesystem::path& shaderPath = AssetManager::GetAssetMetadata(shaderHandle)->Path;
+        std::string sourceString = "";
+        {
+            std::ifstream file(shaderPath);
+            if (!file.is_open())
+            {
+                FLARE_CORE_ERROR("Could not read file {0}", shaderPath.string());
+                return false;
+            }
+
+            std::stringstream buffer;
+            buffer << file.rdbuf();
+
+            sourceString = buffer.str();
+        }
+
         std::string pathString = shaderPath.string();
+        std::vector<PreprocessedShaderProgram> programs;
+
+        ShaderFeatures shaderFeatures;
+        std::string_view source = sourceString;
+        if (!Preprocess(shaderPath, source, programs, shaderFeatures))
+        {
+            FLARE_CORE_ERROR("Failed to compile shader '{}'", pathString);
+            return false;
+        }
+        
         for (const PreprocessedShaderProgram& program : programs)
         {
             shaderc_shader_kind shaderKind = (shaderc_shader_kind)0;
@@ -235,6 +277,8 @@ namespace Flare
 
                 ShaderCacheManager::GetInstance()->SetCache(shaderHandle, ShaderTargetEnvironment::OpenGL, program.Stage, compiledOpenGLShader.value());
             }
+
+            ((EditorShaderCache*)ShaderCacheManager::GetInstance().get())->SetShaderFeatures(shaderHandle, shaderFeatures);
         }
 
         return true;

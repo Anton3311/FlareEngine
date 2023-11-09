@@ -24,6 +24,8 @@ namespace Flare
 			ShaderTargetEnvironment targetEnvironment,
 			ShaderStageType stageType) = 0;
 
+		virtual std::optional<ShaderFeatures> FindShaderFeatures(AssetHandle shaderHandle) = 0;
+
 		virtual bool HasCache(AssetHandle shaderHandle,
 			ShaderTargetEnvironment targetEnvironment,
 			ShaderStageType stage) = 0;
