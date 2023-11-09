@@ -122,7 +122,7 @@ namespace Flare
 		s_RendererData.CameraBuffer->SetData(&viewport.FrameData.Camera, sizeof(CameraData), 0);
 	}
 
-	static void ApplyMaterialFeatures(MaterialFeatures features)
+	static void ApplyMaterialFeatures(ShaderFeatures features)
 	{
 		RenderCommand::SetDepthTestEnabled(features.DepthTesting);
 		RenderCommand::SetCullingMode(features.Culling);

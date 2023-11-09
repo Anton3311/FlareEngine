@@ -38,8 +38,12 @@ namespace Flare
 
 	FLARE_API const char* CullingModeToString(CullingMode mode);
 	FLARE_API CullingMode CullingModeFromString(std::string_view mode);
+
 	FLARE_API const char* DepthComparisonFunctionToString(DepthComparisonFunction function);
 	FLARE_API std::optional<DepthComparisonFunction> DepthComparisonFunctionFromString(std::string_view function);
+
+	FLARE_API const char* BlendModeToString(BlendMode blendMode);
+	FLARE_API std::optional<BlendMode> BlendModeFromString(std::string_view string);
 
 	enum class ShaderTargetEnvironment
 	{

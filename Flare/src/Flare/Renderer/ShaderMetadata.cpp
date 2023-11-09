@@ -78,4 +78,28 @@ namespace Flare
 
 		return {};
 	}
+
+	const char* BlendModeToString(BlendMode blendMode)
+	{
+		switch (blendMode)
+		{
+		case BlendMode::Opaque:
+			return "Opaque";
+		case BlendMode::Transparent:
+			return "Transparent";
+		}
+
+		FLARE_CORE_ASSERT(false, "Unhandled material blend mode");
+		return "";
+	}
+
+	std::optional<BlendMode> BlendModeFromString(std::string_view string)
+	{
+		if (string == "Opaque")
+			return BlendMode::Opaque;
+		if (string == "Transparent")
+			return BlendMode::Transparent;
+
+		return {};
+	}
 }

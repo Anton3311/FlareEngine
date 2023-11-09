@@ -3,54 +3,10 @@
 #include "Flare/AssetManager/Asset.h"
 #include "Flare/Renderer/Shader.h"
 #include "Flare/Renderer/RendererAPI.h"
+#include "Flare/Renderer/ShaderMetadata.h"
 
 namespace Flare
 {
-	enum class MaterialBlendMode
-	{
-		Opaque,
-		Transparent,
-	};
-
-	inline const char* MaterialBlendModeToString(MaterialBlendMode blendMode)
-	{
-		switch (blendMode)
-		{
-		case MaterialBlendMode::Opaque:
-			return "Opaque";
-		case MaterialBlendMode::Transparent:
-			return "Transparent";
-		}
-
-		FLARE_CORE_ASSERT(false, "Unhandled material blend mode");
-		return "";
-	}
-
-	inline MaterialBlendMode MaterialBlendModeFromString(std::string_view string)
-	{
-		if (string == "Opaque")
-			return MaterialBlendMode::Opaque;
-		if (string == "Transparent")
-			return MaterialBlendMode::Transparent;
-
-		FLARE_CORE_ASSERT(false, "Unknown material blend mode");
-		return MaterialBlendMode::Opaque;
-	}
-
-	struct MaterialFeatures
-	{
-		MaterialFeatures()
-			: Culling(CullingMode::Back),
-			BlendMode(MaterialBlendMode::Opaque),
-			DepthTesting(true),
-			DepthFunction(DepthComparisonFunction::Less) {}
-
-		CullingMode Culling;
-		MaterialBlendMode BlendMode;
-		DepthComparisonFunction DepthFunction;
-		bool DepthTesting;
-	};
-
 	class FLARE_API Material : public Asset
 	{
 	public:
@@ -90,7 +46,7 @@ namespace Flare
 	private:
 		void Initialize();
 	public:
-		MaterialFeatures Features;
+		ShaderFeatures Features;
 	private:
 		Ref<Shader> m_Shader;
 
