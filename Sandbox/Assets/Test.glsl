@@ -1,4 +1,4 @@
-Culling = Front
+Culling = Back
 DepthTest = true
 
 Properties =

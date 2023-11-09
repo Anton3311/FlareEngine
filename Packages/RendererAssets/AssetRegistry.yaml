@@ -5,6 +5,9 @@ AssetRegistry:
   - Handle: 7621327274929530761
     Type: Shader
     Path: Vignette.glsl
+  - Handle: 7980718708508351879
+    Type: Shader
+    Path: Error.glsl
   - Handle: 11758441454924447106
     Type: Shader
     Path: Debug.glsl
