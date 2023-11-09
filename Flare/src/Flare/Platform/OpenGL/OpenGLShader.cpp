@@ -198,6 +198,9 @@ namespace Flare
     {
         FLARE_CORE_ASSERT(AssetManager::IsAssetHandleValid(Handle));
 
+        if (m_Id != 0)
+            glDeleteProgram(m_Id);
+
         m_Features = ShaderCacheManager::GetInstance()->FindShaderFeatures(Handle).value_or(ShaderFeatures());
 
         m_Id = glCreateProgram();

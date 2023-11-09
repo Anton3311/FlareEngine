@@ -241,7 +241,7 @@ namespace Flare
         }
     }
     
-    bool ShaderCompiler::Compile(AssetHandle shaderHandle)
+    bool ShaderCompiler::Compile(AssetHandle shaderHandle, bool forceRecompile)
     {
         FLARE_CORE_ASSERT(AssetManager::IsAssetHandleValid(shaderHandle));
 
@@ -292,10 +292,15 @@ namespace Flare
                 break;
             }
 
-            std::optional<std::vector<uint32_t>> compiledVulkanShader = ShaderCacheManager::GetInstance()->FindCache(
-                shaderHandle,
-                ShaderTargetEnvironment::Vulkan,
-                program.Stage);
+            std::optional<std::vector<uint32_t>> compiledVulkanShader = {};
+
+            if (!forceRecompile)
+            {
+                compiledVulkanShader = ShaderCacheManager::GetInstance()->FindCache(
+                    shaderHandle,
+                    ShaderTargetEnvironment::Vulkan,
+                    program.Stage);
+            }
 
             if (!compiledVulkanShader)
             {
@@ -306,10 +311,15 @@ namespace Flare
                 ShaderCacheManager::GetInstance()->SetCache(shaderHandle, ShaderTargetEnvironment::Vulkan, program.Stage, compiledVulkanShader.value());
             }
 
-            std::optional<std::vector<uint32_t>> compiledOpenGLShader = ShaderCacheManager::GetInstance()->FindCache(
-                shaderHandle,
-                ShaderTargetEnvironment::OpenGL,
-                program.Stage);
+            std::optional<std::vector<uint32_t>> compiledOpenGLShader = {};
+            
+            if (!forceRecompile)
+            {
+                compiledOpenGLShader = ShaderCacheManager::GetInstance()->FindCache(
+                    shaderHandle,
+                    ShaderTargetEnvironment::OpenGL,
+                    program.Stage);
+            }
 
             if (!compiledOpenGLShader)
             {

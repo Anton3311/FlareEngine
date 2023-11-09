@@ -12,6 +12,8 @@
 
 #include "FlareEditor/EditorLayer.h"
 
+#include "FlareEditor/ShaderCompiler/ShaderCompiler.h"
+
 #include "FlareEditor/AssetManager/TextureImporter.h"
 #include "FlareEditor/AssetManager/PrefabImporter.h"
 #include "FlareEditor/Serialization/SceneSerializer.h"
@@ -245,6 +247,15 @@ namespace Flare
         auto registryIterator = m_Registry.find(handle);
         if (registryIterator == m_Registry.end())
             return;
+
+        if (registryIterator->second.Metadata.Type == AssetType::Shader)
+        {
+            ShaderCompiler::Compile(handle, true);
+
+            Ref<Shader> shader = As<Shader>(m_LoadedAssets[handle]);
+            shader->Load();
+            return;
+        }
 
         LoadAsset(registryIterator->second.Metadata);
     }
