@@ -59,7 +59,7 @@ namespace Flare
 	class ShaderSourceParser
 	{
 	public:
-		ShaderSourceParser(std::string_view shaderSource);
+		ShaderSourceParser(const std::filesystem::path& shaderPath, std::string_view shaderSource);
 
 		void Parse();
 
@@ -83,6 +83,7 @@ namespace Flare
 	private:
 		size_t m_ReadPosition;
 		SourcePosition m_CurrentPosition;
+		std::filesystem::path m_ShaderPath;
 		std::string_view m_ShaderSource;
 
 		uint32_t m_CurrentBlockIndex;

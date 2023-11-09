@@ -1,4 +1,4 @@
-#type vertex
+#begin vertex
 #version 450
 
 #include "Camera.glsl"
@@ -34,7 +34,9 @@ void main()
     gl_Position = position;
 }
 
-#type fragment
+#end
+
+#begin pixel
 #version 450
 
 #include "Camera.glsl"
@@ -53,3 +55,5 @@ void main()
 {
 	o_Color = i_Vertex.Color;
 }
+
+#end

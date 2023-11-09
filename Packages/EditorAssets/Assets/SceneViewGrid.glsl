@@ -1,4 +1,4 @@
-#type vertex
+#begin vertex
 #version 450
 
 #include "Camera.glsl"
@@ -39,8 +39,9 @@ void main()
 	o_CellData.Color = vec4(u_Data.Color, 1.0);
 	o_CellData.Thickness = u_Data.Thickness;
 }
+#end
 
-#type fragment
+#begin pixel
 #version 450
 
 struct CellData
@@ -83,3 +84,5 @@ void main()
 
 	o_Color = vec4(color.rgb / 2.0, a);
 }
+
+#end

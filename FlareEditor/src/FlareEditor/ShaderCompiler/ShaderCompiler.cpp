@@ -145,62 +145,31 @@ namespace Flare
         std::vector<PreprocessedShaderProgram>& programs,
         ShaderFeatures& features)
     {
-        std::string fileName = shaderPath.filename().string();
-        if (fileName == "Test.glsl")
+        ShaderSourceParser parser(shaderPath, source);
+        parser.Parse();
+
+        for (const auto& sourceBlock : parser.GetSourceBlocks())
         {
-            ShaderSourceParser parser(source);
-            parser.Parse();
-
-            for (const auto& sourceBlock : parser.GetSourceBlocks())
-            {
-                PreprocessedShaderProgram& program = programs.emplace_back();
-                program.Source = sourceBlock.Source;
-                program.Stage = sourceBlock.Stage;
-            }
-
-            const Block& rootBlock = parser.GetBlock(0);
-            for (const auto& element : rootBlock.Elements)
-            {
-                if (element.Name.Value == "Culling")
-                    features.Culling = CullingModeFromString(element.Value.Value);
-
-                if (element.Name.Value == "DepthTest")
-                    features.DepthTesting = element.Value.Value == "true";
-            }
-
-            return true;
+            PreprocessedShaderProgram& program = programs.emplace_back();
+            program.Source = sourceBlock.Source;
+            program.Stage = sourceBlock.Stage;
         }
 
-        std::string_view typeToken = "#type";
-
-        size_t position = source.find_first_of(typeToken);
-        while (position != std::string_view::npos)
+        const Block& rootBlock = parser.GetBlock(0);
+        for (const auto& element : rootBlock.Elements)
         {
-            size_t endOfLine = source.find_first_of("\r\n", position);
-            size_t typeStart = position + typeToken.size() + 1;
-            size_t nextLineStart = source.find_first_of("\r\n", endOfLine);
+            if (element.Name.Value == "Culling")
+                features.Culling = CullingModeFromString(element.Value.Value);
 
-            std::string_view type = source.substr(typeStart, endOfLine - typeStart);
+            if (element.Name.Value == "DepthTest")
+                features.DepthTesting = element.Value.Value == "true";
 
-            ShaderStageType stageType = ShaderStageType::Vertex;
-            if (type == "vertex")
-                stageType = ShaderStageType::Vertex;
-            else if (type == "fragment")
-                stageType = ShaderStageType::Pixel;
-            else
-                FLARE_CORE_ERROR("Invalid shader type {0}", type);
-
-            position = source.find(typeToken, nextLineStart);
-
-            std::string_view programSource;
-            if (position == std::string_view::npos)
-                programSource = source.substr(nextLineStart, source.size() - nextLineStart);
-            else
-                programSource = source.substr(nextLineStart, position - nextLineStart);
-
-            PreprocessedShaderProgram& program = programs.emplace_back();
-            program.Stage = stageType;
-            program.Source = programSource;
+            if (element.Name.Value == "DepthFunction")
+            {
+                auto depthFunction = DepthComparisonFunctionFromString(element.Value.Value);
+                if (depthFunction)
+                    features.DepthFunction = *depthFunction;
+            }
         }
 
         return true;

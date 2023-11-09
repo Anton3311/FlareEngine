@@ -1,4 +1,4 @@
-#type vertex
+#begin vertex
 #version 450
 
 layout(location = 0) in vec2 i_Position;
@@ -11,7 +11,9 @@ void main()
 	o_UV = i_Position;
 }
 
-#type fragment
+#end
+
+#begin pixel
 #version 450
 
 layout(std140, push_constant) uniform Params
@@ -29,3 +31,5 @@ void main()
 	float alpha = smoothstep(u_Params.Radius, u_Params.Radius + u_Params.Smoothness, length(i_UV));
 	o_Color = vec4(u_Params.Color.rgb, u_Params.Color.a * alpha);
 }
+
+#end

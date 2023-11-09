@@ -1,4 +1,4 @@
-#type vertex
+#begin vertex
 #version 450
 
 layout(location = 0) in vec2 i_Position;
@@ -11,7 +11,9 @@ void main()
 	o_UV = i_Position / 2.0 + vec2(0.5);
 }
 
-#type fragment
+#end
+
+#begin pixel
 #version 450
 
 layout(location = 0) in vec2 i_UV;
@@ -35,3 +37,5 @@ void main()
 {
 	o_Color = vec4(ACESFilm(texture(u_ScreenBuffer, i_UV).rgb), 1.0);
 }
+
+#end

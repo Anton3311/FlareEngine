@@ -1,4 +1,4 @@
-#type vertex
+#begin vertex
 #version 450
 
 layout(location = 0) in vec3 i_Position;
@@ -22,7 +22,9 @@ void main()
     gl_Position = u_Camera.ViewProjection * i_Transform * vec4(i_Position, 1.0);
 }
 
-#type fragment
+#end
+
+#begin pixel
 #version 450
 
 #include "Camera.glsl"
@@ -40,3 +42,5 @@ void main()
 {
 	o_Color = vec4(i_Vertex.Normal, 1.0);
 }
+
+#end

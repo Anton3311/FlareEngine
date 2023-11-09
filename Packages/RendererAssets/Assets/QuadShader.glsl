@@ -1,4 +1,4 @@
-#type vertex
+#begin vertex
 #version 450
 
 #include "Camera.glsl"
@@ -23,7 +23,9 @@ void main()
     gl_Position = u_Camera.ViewProjection * vec4(i_Position, 1.0);
 }
 
-#type fragment
+#end
+
+#begin pixel
 #version 450
 
 layout(binding = 0) uniform sampler2D u_Textures[32];
@@ -45,3 +47,5 @@ void main()
     o_Color *= VertexColor;
     o_EntityIndex = EntityIndex;
 }
+
+#end

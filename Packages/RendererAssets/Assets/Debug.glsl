@@ -1,4 +1,4 @@
-#type vertex
+#begin vertex
 #version 450
 
 #include "Camera.glsl"
@@ -14,7 +14,9 @@ void main()
 	gl_Position = u_Camera.ViewProjection * vec4(i_Position, 1.0);
 }
 
-#type fragment
+#end
+
+#begin pixel
 #version 450
 
 layout(location = 0) in vec4 VertexColor;
@@ -25,3 +27,5 @@ void main()
 {
 	o_Color = VertexColor;
 }
+
+#end

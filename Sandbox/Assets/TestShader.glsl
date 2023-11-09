@@ -1,18 +1,7 @@
-#type vertex
+#begin vertex
 #version 450
 
-struct CameraData
-{
-	vec3 Position;
-
-	mat4 Projection;
-	mat4 View;
-	mat4 ViewProjection;
-
-	mat4 InverseProjection;
-	mat4 InverseView;
-	mat4 InverseViewProjection;
-};
+#include "Camera.glsl"
 
 layout(std140, binding = 0) uniform Camera
 {
@@ -33,7 +22,9 @@ void main()
 	EntityIndex = i_EntityIndex;
 }
 
-#type fragment
+#end
+
+#begin pixel
 #version 450
 
 layout(std140, push_constant) uniform Constants
@@ -59,3 +50,5 @@ void main()
 
 	o_Color = vec4(Consts.Color.rgb, alpha);
 }
+
+#end

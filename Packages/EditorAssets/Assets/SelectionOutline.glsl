@@ -1,4 +1,4 @@
-#type vertex
+#begin vertex
 #version 420 
 
 layout(location = 0) in vec2 i_Position;
@@ -15,8 +15,9 @@ void main()
 	gl_Position = vec4(i_Position, 0.0, 1.0);
 	VertexData.UV = i_Position / 2.0 + vec2(0.5);
 }
+#end
 
-#type fragment
+#begin pixel
 #version 420
 
 struct Vertex
@@ -57,3 +58,5 @@ void main()
 
 	discard;
 }
+
+#end

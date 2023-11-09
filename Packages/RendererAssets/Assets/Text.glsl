@@ -1,4 +1,4 @@
-#type vertex
+#begin vertex
 #version 450
 
 #include "Camera.glsl"
@@ -20,7 +20,9 @@ void main()
 	EntityIndex = i_EntityIndex;
 }
 
-#type fragment
+#end
+
+#begin pixel
 #version 450
 
 layout(location = 0) in vec2 UV;
@@ -56,3 +58,5 @@ void main() {
     o_Color = mix(vec4(0.0), Color, opacity);
 	o_EntityIndex = EntityIndex;
 }
+
+#end

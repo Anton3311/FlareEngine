@@ -1,4 +1,4 @@
-#type vertex
+#begin vertex
 #version 450
 
 layout(location = 0) in vec3 i_Position;
@@ -40,7 +40,9 @@ void main()
     gl_Position = position;
 }
 
-#type fragment
+#end
+
+#begin pixel
 #version 450
 
 #include "Camera.glsl"
@@ -209,3 +211,5 @@ void main()
 	o_Color = vec4(shadow * brdf * incomingLight * max(0.0, dot(u_LightDirection, N)), u_InstanceData.Color.a);
 	o_EntityIndex = i_EntityIndex;
 }
+
+#end
