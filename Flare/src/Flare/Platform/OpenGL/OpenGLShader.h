@@ -15,9 +15,7 @@ namespace Flare
 	{
 	public:
 		OpenGLShader();
-		OpenGLShader(const std::filesystem::path& path, const std::filesystem::path& cacheDirectory);
 		~OpenGLShader();
-
 	public:
 		virtual void Load() override;
 		virtual void Bind() override;
@@ -45,18 +43,6 @@ namespace Flare
 		void SetFloat4(uint32_t index, const glm::vec4& value);
 		void SetIntArray(uint32_t index, const int* values, uint32_t count);
 		void SetMatrix4(uint32_t index, const glm::mat4& matrix);
-	private:
-		struct ShaderProgram
-		{
-			std::string Source;
-			uint32_t Type;
-
-			ShaderProgram(std::string_view source, uint32_t type)
-				: Source(source), Type(type) {}
-		};
-
-		std::vector<ShaderProgram> PreProcess(std::string_view source);
-		void Compile(const std::filesystem::path& path, const std::filesystem::path& cacheDirectory, std::string_view source);
 	private:
 		uint32_t m_Id;
 		ShaderProperties m_Properties;

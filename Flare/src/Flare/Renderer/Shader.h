@@ -76,11 +76,6 @@ namespace Flare
 		return 0;
 	}
 
-	std::filesystem::path GetShaderCachePath(const std::filesystem::path& cacheDirectory,
-		const std::filesystem::path& initialPath,
-		std::string_view apiName,
-		std::string_view stageName);
-
 	struct ShaderParameter
 	{
 		ShaderParameter(std::string_view name, ShaderDataType type, size_t offset)
@@ -136,9 +131,5 @@ namespace Flare
 		virtual void SetMatrix4(const std::string& name, const glm::mat4& matrix) = 0;
 	public:
 		static Ref<Shader> Create();
-		static Ref<Shader> Create(const std::filesystem::path& path);
-		static Ref<Shader> Create(const std::filesystem::path& path, const std::filesystem::path& cacheDirectory);
-
-		static std::string GetCacheFileName(const std::string& shaderFileName, std::string_view apiName, std::string_view stageName);
 	};
 }
