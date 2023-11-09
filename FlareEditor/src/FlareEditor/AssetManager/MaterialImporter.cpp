@@ -101,6 +101,9 @@ namespace Flare
 			if (shaderHandle.has_value())
 			{
 				Ref<Shader> shader = AssetManager::GetAsset<Shader>(shaderHandle.value());
+				if (!shader)
+					return material;
+
 				const ShaderProperties& shaderProperties = shader->GetProperties();
 
 				if (YAML::Node parameters = node["Properties"])

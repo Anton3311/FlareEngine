@@ -140,13 +140,39 @@ namespace Flare
         return std::vector<uint32_t>(shaderModule.cbegin(), shaderModule.cend());
     }
 
-    static bool Preprocess(const std::filesystem::path& shaderPath,
+    static void PrintError(const ShaderError& error)
+    {
+        if (error.Position.Line == UINT32_MAX || error.Position.Column == UINT32_MAX)
+            FLARE_CORE_ERROR(error.Message);
+        else
+        {
+            FLARE_CORE_ERROR("Line {} Column {}: {}",
+                error.Position.Line,
+                error.Position.Column,
+                error.Message);
+        }
+    }
+
+    static std::optional<bool> BoolFromString(std::string_view string)
+    {
+        if (string == "true")
+            return true;
+        if (string == "false")
+            return false;
+        return {};
+    }
+
+    static void Preprocess(const std::filesystem::path& shaderPath,
         std::string_view source,
         std::vector<PreprocessedShaderProgram>& programs,
-        ShaderFeatures& features)
+        ShaderFeatures& features,
+        std::vector<ShaderError>& errors)
     {
-        ShaderSourceParser parser(shaderPath, source);
+        ShaderSourceParser parser(shaderPath, source, errors);
         parser.Parse();
+
+        if (errors.size() > 0)
+            return;
 
         for (const auto& sourceBlock : parser.GetSourceBlocks())
         {
@@ -159,24 +185,38 @@ namespace Flare
         for (const auto& element : rootBlock.Elements)
         {
             if (element.Name.Value == "Culling")
-                features.Culling = CullingModeFromString(element.Value.Value);
+            {
+                auto culling = CullingModeFromString(element.Value.Value);
+                if (culling)
+                    features.Culling = *culling;
+                else
+                    errors.emplace_back(element.Value.Position, fmt::format("Unknown culling mode '{}'", element.Value.Value));
+            }
             else if (element.Name.Value == "BlendMode")
             {
                 auto blending = BlendModeFromString(element.Value.Value);
                 if (blending)
                     features.Blending = *blending;
+                else
+                    errors.emplace_back(element.Value.Position, fmt::format("Unknown blending mode '{}'", element.Value.Value));
             }
             else if (element.Name.Value == "DepthTest")
-                features.DepthTesting = element.Value.Value == "true";
+            {
+                std::optional<bool> value = BoolFromString(element.Value.Value);
+                if (value)
+                    features.DepthTesting = *value;
+                else
+                    errors.emplace_back(element.Value.Position, fmt::format("Expected bool, but got {}", element.Value.Value));
+            }
             else if (element.Name.Value == "DepthFunction")
             {
                 auto depthFunction = DepthComparisonFunctionFromString(element.Value.Value);
                 if (depthFunction)
                     features.DepthFunction = *depthFunction;
+                else
+                    errors.emplace_back(element.Value.Position, fmt::format("Unknown depth function '{}'", element.Value.Value));
             }
         }
-
-        return true;
     }
     
     bool ShaderCompiler::Compile(AssetHandle shaderHandle)
@@ -189,7 +229,7 @@ namespace Flare
             std::ifstream file(shaderPath);
             if (!file.is_open())
             {
-                FLARE_CORE_ERROR("Could not read file {0}", shaderPath.string());
+                FLARE_CORE_ERROR("Failed not read shader file {0}", shaderPath.string());
                 return false;
             }
 
@@ -202,14 +242,21 @@ namespace Flare
         std::string pathString = shaderPath.string();
         std::vector<PreprocessedShaderProgram> programs;
 
+        std::vector<ShaderError> errors;
+
         ShaderFeatures shaderFeatures;
         std::string_view source = sourceString;
-        if (!Preprocess(shaderPath, source, programs, shaderFeatures))
+
+        Preprocess(shaderPath, source, programs, shaderFeatures, errors);
+        if (errors.size() > 0)
         {
             FLARE_CORE_ERROR("Failed to compile shader '{}'", pathString);
+            for (const ShaderError& error : errors)
+                PrintError(error);
+
             return false;
         }
-        
+
         for (const PreprocessedShaderProgram& program : programs)
         {
             shaderc_shader_kind shaderKind = (shaderc_shader_kind)0;

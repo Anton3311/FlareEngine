@@ -2,6 +2,9 @@
 
 #include "Flare/Renderer/Shader.h"
 
+#include "FlareEditor/ShaderCompiler/ShaderSyntax.h"
+#include "FlareEditor/ShaderCompiler/ShaderError.h"
+
 #include <stdint.h>
 
 #include <string_view>
@@ -10,56 +13,12 @@
 
 namespace Flare
 {
-	struct SourcePosition
-	{
-		SourcePosition()
-			: Line(0), Column(0) {}
-
-		uint32_t Line;
-		uint32_t Column;
-	};
-
-	enum class BlockElementType
-	{
-		Value,
-		Block,
-	};
-
-	struct Identifier
-	{
-		Identifier() = default;
-		Identifier(std::string_view value, const SourcePosition& position)
-			: Value(value), Position(position) {}
-
-		SourcePosition Position;
-		std::string_view Value;
-	};
-
-	struct BlockElement
-	{
-		Identifier Name;
-		BlockElementType Type;
-		uint32_t ChildBlockIndex;
-		Identifier Value;
-	};
-
-	struct Block
-	{
-		uint32_t Index;
-		std::vector<BlockElement> Elements;
-	};
-
-	struct ShaderSourceBlock
-	{
-		SourcePosition Position;
-		std::string_view Source;
-		ShaderStageType Stage;
-	};
-
 	class ShaderSourceParser
 	{
 	public:
-		ShaderSourceParser(const std::filesystem::path& shaderPath, std::string_view shaderSource);
+		ShaderSourceParser(const std::filesystem::path& shaderPath,
+			std::string_view shaderSource,
+			std::vector<ShaderError>& errors);
 
 		void Parse();
 
@@ -81,6 +40,8 @@ namespace Flare
 		void SkipWhitespace();
 		bool IsReadPositionValid() const { return m_ReadPosition < m_ShaderSource.size(); }
 	private:
+		std::vector<ShaderError>& m_Errors;
+
 		size_t m_ReadPosition;
 		SourcePosition m_CurrentPosition;
 		std::filesystem::path m_ShaderPath;

@@ -37,7 +37,7 @@ namespace Flare
 	};
 
 	FLARE_API const char* CullingModeToString(CullingMode mode);
-	FLARE_API CullingMode CullingModeFromString(std::string_view mode);
+	FLARE_API std::optional<CullingMode> CullingModeFromString(std::string_view mode);
 
 	FLARE_API const char* DepthComparisonFunctionToString(DepthComparisonFunction function);
 	FLARE_API std::optional<DepthComparisonFunction> DepthComparisonFunctionFromString(std::string_view function);

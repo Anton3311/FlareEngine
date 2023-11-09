@@ -295,6 +295,9 @@ namespace Flare
 
 	void Renderer::DrawMesh(const Ref<Mesh>& mesh, const Ref<Material>& material, const glm::mat4& transform, int32_t entityIndex)
 	{
+		if (!material->GetShader())
+			return;
+
 		RenderableObject& object = s_RendererData.Queue.emplace_back();
 		object.Material = material;
 		object.Mesh = mesh;

@@ -8,9 +8,10 @@
 
 namespace Flare
 {
-	ShaderSourceParser::ShaderSourceParser(const std::filesystem::path& shaderPath, std::string_view shaderSource)
+	ShaderSourceParser::ShaderSourceParser(const std::filesystem::path& shaderPath, std::string_view shaderSource, std::vector<ShaderError>& errors)
 		: m_ShaderSource(shaderSource),
 		m_ReadPosition(0),
+		m_Errors(errors),
 		m_ShaderPath(shaderPath),
 		m_CurrentBlockIndex(UINT32_MAX) {}
 
@@ -32,28 +33,32 @@ namespace Flare
 
 				size_t shaderSourceStart = m_ReadPosition;
 
-				ShaderStageType shaderType;
+				std::optional<ShaderStageType> shaderType = {};
 				if (shaderTypeString.value().Value == "vertex")
 					shaderType = ShaderStageType::Vertex;
 				else if (shaderTypeString.value().Value == "pixel")
 					shaderType = ShaderStageType::Pixel;
 				else
 				{
-					FLARE_CORE_ERROR("{}: Unknown shader type {}", m_ShaderPath.string(), shaderTypeString.value().Value);
+					m_Errors.emplace_back(shaderTypeString->Position,
+						fmt::format("Unknown shader type: '{}'", shaderTypeString->Value));
 					break;
 				}
 
 				std::string_view endToken = "#end";
 				if (!SkipUntil(endToken))
 				{
-					FLARE_CORE_ERROR("Missing '#end' at the end of shader block");
+					m_Errors.emplace_back(SourcePosition(UINT32_MAX, UINT32_MAX), "Missing '#end' at the end of shader block");
 					break;
 				}
 
-				std::string_view shaderBlockSource = m_ShaderSource.substr(shaderSourceStart, m_ReadPosition - shaderSourceStart);
-				ShaderSourceBlock& shaderBlock = m_SourceBlocks.emplace_back();
-				shaderBlock.Stage = shaderType;
-				shaderBlock.Source = shaderBlockSource;
+				if (shaderType)
+				{
+					std::string_view shaderBlockSource = m_ShaderSource.substr(shaderSourceStart, m_ReadPosition - shaderSourceStart);
+					ShaderSourceBlock& shaderBlock = m_SourceBlocks.emplace_back();
+					shaderBlock.Stage = *shaderType;
+					shaderBlock.Source = shaderBlockSource;
+				}
 
 				m_ReadPosition += endToken.size() + 1;
 			}
@@ -89,7 +94,7 @@ namespace Flare
 	{
 		if (!IsReadPositionValid() || m_ShaderSource[m_ReadPosition] != '{')
 		{
-			FLARE_CORE_ERROR("Block must start with '{'");
+			m_Errors.emplace_back(m_CurrentPosition, "Shader block must start with '{'");
 			return UINT32_MAX;
 		}
 
@@ -113,7 +118,7 @@ namespace Flare
 
 		if (!IsReadPositionValid() || m_ShaderSource[m_ReadPosition] != '}')
 		{
-			FLARE_CORE_ERROR("Block must end with '}'");
+			m_Errors.emplace_back(m_CurrentPosition, "Shader block must end with '}'");
 			return UINT32_MAX;
 		}
 

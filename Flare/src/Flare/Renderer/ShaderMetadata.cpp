@@ -18,7 +18,7 @@ namespace Flare
 		return nullptr;
 	}
 
-	CullingMode CullingModeFromString(std::string_view mode)
+	std::optional<CullingMode> CullingModeFromString(std::string_view mode)
 	{
 		if (mode == "None")
 			return CullingMode::None;
@@ -27,8 +27,7 @@ namespace Flare
 		if (mode == "Back")
 			return CullingMode::Back;
 
-		FLARE_CORE_ASSERT(false, "Invalid culling mode");
-		return CullingMode::None;
+		return {};
 	}
 
 	const char* DepthComparisonFunctionToString(DepthComparisonFunction function)
