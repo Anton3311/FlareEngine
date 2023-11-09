@@ -1,3 +1,5 @@
+Culling = None
+
 #begin vertex
 #version 450
 

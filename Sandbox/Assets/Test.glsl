@@ -1,5 +1,5 @@
 Culling = Front
-DepthTest = false
+DepthTest = true
 
 Properties =
 {

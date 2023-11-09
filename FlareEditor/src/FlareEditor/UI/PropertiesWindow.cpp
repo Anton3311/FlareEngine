@@ -192,20 +192,22 @@ namespace Flare
 
 			ImGui::BeginDisabled(true);
 
-			EditorGUI::BoolPropertyField("Depth Test", material->Features.DepthTesting);
+			ShaderFeatures features = material->GetShader()->GetFeatures();
+
+			EditorGUI::BoolPropertyField("Depth Test", features.DepthTesting);
 			EditorGUI::PropertyName("Culling Mode");
 
-			const char* preview = CullingModeToString(material->Features.Culling);
+			const char* preview = CullingModeToString(features.Culling);
 			
 			ImGui::PushID("CullingMode");
 			if (ImGui::BeginCombo("", preview, ImGuiComboFlags_HeightRegular))
 			{
 				if (ImGui::MenuItem("None"))
-					material->Features.Culling = CullingMode::None;
+					features.Culling = CullingMode::None;
 				if (ImGui::MenuItem("Front"))
-					material->Features.Culling = CullingMode::Front;
+					features.Culling = CullingMode::Front;
 				if (ImGui::MenuItem("Back"))
-					material->Features.Culling = CullingMode::Back;
+					features.Culling = CullingMode::Back;
 
 				ImGui::EndCombo();
 			}
@@ -214,7 +216,7 @@ namespace Flare
 
 			// Blend Mode
 
-			preview = BlendModeToString(material->Features.Blending);
+			preview = BlendModeToString(features.Blending);
 
 			EditorGUI::PropertyName("Blend Mode");
 
@@ -222,9 +224,9 @@ namespace Flare
 			if (ImGui::BeginCombo("", preview, ImGuiComboFlags_HeightRegular))
 			{
 				if (ImGui::MenuItem("Opaque"))
-					material->Features.Blending = BlendMode::Opaque;
+					features.Blending = BlendMode::Opaque;
 				if (ImGui::MenuItem("Transparent"))
-					material->Features.Blending = BlendMode::Transparent;
+					features.Blending = BlendMode::Transparent;
 
 				ImGui::EndCombo();
 			}
@@ -233,7 +235,7 @@ namespace Flare
 
 			// Depth Comaprison Function
 
-			preview = DepthComparisonFunctionToString(material->Features.DepthFunction);
+			preview = DepthComparisonFunctionToString(features.DepthFunction);
 
 			EditorGUI::PropertyName("Depth Function");
 
@@ -241,21 +243,21 @@ namespace Flare
 			if (ImGui::BeginCombo("", preview, ImGuiComboFlags_HeightRegular))
 			{
 				if (ImGui::MenuItem("Less"))
-					material->Features.DepthFunction = DepthComparisonFunction::Less;
+					features.DepthFunction = DepthComparisonFunction::Less;
 				if (ImGui::MenuItem("Greater"))
-					material->Features.DepthFunction = DepthComparisonFunction::Greater;
+					features.DepthFunction = DepthComparisonFunction::Greater;
 				if (ImGui::MenuItem("Less or equal"))
-					material->Features.DepthFunction = DepthComparisonFunction::LessOrEqual;
+					features.DepthFunction = DepthComparisonFunction::LessOrEqual;
 				if (ImGui::MenuItem("Greater or equal"))
-					material->Features.DepthFunction = DepthComparisonFunction::GreaterOrEqual;
+					features.DepthFunction = DepthComparisonFunction::GreaterOrEqual;
 				if (ImGui::MenuItem("Equal"))
-					material->Features.DepthFunction = DepthComparisonFunction::Equal;
+					features.DepthFunction = DepthComparisonFunction::Equal;
 				if (ImGui::MenuItem("Not equal"))
-					material->Features.DepthFunction = DepthComparisonFunction::NotEqual;
+					features.DepthFunction = DepthComparisonFunction::NotEqual;
 				if (ImGui::MenuItem("Never"))
-					material->Features.DepthFunction = DepthComparisonFunction::Never;
+					features.DepthFunction = DepthComparisonFunction::Never;
 				if (ImGui::MenuItem("Always"))
-					material->Features.DepthFunction = DepthComparisonFunction::Always;
+					features.DepthFunction = DepthComparisonFunction::Always;
 				
 				ImGui::EndCombo();
 			}

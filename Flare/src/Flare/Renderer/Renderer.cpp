@@ -204,7 +204,7 @@ namespace Flare
 				currentMaterial = object.Material;
 
 				if (!shadowPass)
-					ApplyMaterialFeatures(object.Material->Features);
+					ApplyMaterialFeatures(object.Material->GetShader()->GetFeatures());
 
 				currentMaterial->SetShaderProperties();
 
@@ -256,7 +256,7 @@ namespace Flare
 	void Renderer::DrawFullscreenQuad(const Ref<Material>& material)
 	{
 		material->SetShaderProperties();
-		ApplyMaterialFeatures(material->Features);
+		ApplyMaterialFeatures(material->GetShader()->GetFeatures());
 
 		const ShaderOutputs& shaderOutputs = material->GetShader()->GetOutputs();
 
@@ -276,7 +276,7 @@ namespace Flare
 	void Renderer::DrawMesh(const Ref<VertexArray>& mesh, const Ref<Material>& material, size_t indicesCount)
 	{
 		material->SetShaderProperties();
-		ApplyMaterialFeatures(material->Features);
+		ApplyMaterialFeatures(material->GetShader()->GetFeatures());
 
 		const ShaderOutputs& shaderOutputs = material->GetShader()->GetOutputs();
 

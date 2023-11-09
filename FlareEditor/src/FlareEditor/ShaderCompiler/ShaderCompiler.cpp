@@ -160,11 +160,15 @@ namespace Flare
         {
             if (element.Name.Value == "Culling")
                 features.Culling = CullingModeFromString(element.Value.Value);
-
-            if (element.Name.Value == "DepthTest")
+            else if (element.Name.Value == "BlendMode")
+            {
+                auto blending = BlendModeFromString(element.Value.Value);
+                if (blending)
+                    features.Blending = *blending;
+            }
+            else if (element.Name.Value == "DepthTest")
                 features.DepthTesting = element.Value.Value == "true";
-
-            if (element.Name.Value == "DepthFunction")
+            else if (element.Name.Value == "DepthFunction")
             {
                 auto depthFunction = DepthComparisonFunctionFromString(element.Value.Value);
                 if (depthFunction)

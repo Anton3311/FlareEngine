@@ -1,3 +1,5 @@
+DepthTest = false
+
 #begin vertex
 #version 450
 

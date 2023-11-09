@@ -31,7 +31,6 @@ namespace Flare
 
 		Ref<Shader> shader = AssetManager::GetAsset<Shader>(shaderHandle.value());
 		m_Material = CreateRef<Material>(shader);
-		m_Material->Features.DepthTesting = false;
 
 		s_ColorPropertyIndex = shader->GetPropertyIndex("u_Params.Color").value_or(UINT32_MAX);
 		s_RadiusPropertyIndex = shader->GetPropertyIndex("u_Params.Radius").value_or(UINT32_MAX);

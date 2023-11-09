@@ -53,7 +53,6 @@ namespace Flare
 		if (AssetManager::IsAssetHandleValid(gridShaderHandle))
 		{
 			m_GridMaterial = CreateRef<Material>(AssetManager::GetAsset<Shader>(gridShaderHandle));
-			m_GridMaterial->Features.Culling = CullingMode::None;
 
 			Ref<Shader> gridShader = m_GridMaterial->GetShader();
 			s_GridPropertyIndices.Color = gridShader->GetPropertyIndex("u_Data.Color").value_or(UINT32_MAX);

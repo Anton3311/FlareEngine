@@ -45,8 +45,6 @@ namespace Flare
 		void SetShaderProperties();
 	private:
 		void Initialize();
-	public:
-		ShaderFeatures Features;
 	private:
 		Ref<Shader> m_Shader;
 

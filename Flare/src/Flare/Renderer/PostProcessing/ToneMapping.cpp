@@ -21,7 +21,6 @@ namespace Flare
 		}
 
 		m_Material = CreateRef<Material>(AssetManager::GetAsset<Shader>(shaderHandle.value()));
-		m_Material->Features.DepthTesting = false;
 	}
 
 	void ToneMapping::OnRender(RenderingContext& context)
