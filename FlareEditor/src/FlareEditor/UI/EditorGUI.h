@@ -3,6 +3,8 @@
 #include "Flare.h"
 
 #include "Flare/Scripting/ScriptingEngine.h"
+
+#include "FlareCore/Serialization/Serialization.h"
 #include "FlareCore/Serialization/TypeInitializer.h"
 
 #include "FlareECS/Entity/Entity.h"
@@ -24,6 +26,9 @@ namespace Flare
 
 		static bool BeginMenu(const char* name);
 		static void EndMenu();
+
+		static bool ObjectField(SerializableObject& object);
+		static bool PropertyField(SerializableProperty& property);
 
 		static bool BoolPropertyField(const char* name, bool& value);
 		static bool IntPropertyField(const char* name, int32_t& value);

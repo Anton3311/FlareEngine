@@ -24,7 +24,7 @@ namespace Flare
 		const ShaderProperties& properties = shader->GetProperties();
 		for (uint32_t index = 0; index < (uint32_t)properties.size(); index++)
 		{
-			const ShaderParameter& parameter = properties[index];
+			const ShaderProperty& parameter = properties[index];
 
 			if (parameter.Type == ShaderDataType::Matrix4x4 || parameter.Type == ShaderDataType::Sampler)
 				continue;

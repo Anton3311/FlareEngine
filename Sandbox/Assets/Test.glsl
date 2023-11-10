@@ -3,7 +3,8 @@ DepthTest = true
 
 Properties =
 {
-	u_InstanceData.Color = { Display = "Color", Type = HDR }
+	u_InstanceData.Color = {}
+	u_InstanceData.Value = {}
 }
 
 #begin vertex
@@ -27,12 +28,13 @@ void main()
 layout(std140, push_constant) uniform InstanceData
 {
 	vec4 Color;
+	float Value;
 } u_InstanceData;
 
 layout(location = 0) out vec4 o_Color;
 
 void main()
 {
-	o_Color = vec4(1.0);
+	o_Color = u_InstanceData.Color * u_InstanceData.Value;
 }
 #end

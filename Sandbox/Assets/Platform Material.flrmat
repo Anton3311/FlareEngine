@@ -1,8 +1,8 @@
 Shader: 2558145921418293985
 Properties:
-  []
-Features:
-  CullingMode: Back
-  DepthTest: true
-  BlendMode: Opaque
-  DepthFunction: Less
+  - Name: u_InstanceData.Color
+    Type: 7
+    Value: [1, 1, 1, 1]
+  - Name: u_InstanceData.Value
+    Type: 4
+    Value: 1

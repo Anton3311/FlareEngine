@@ -138,6 +138,47 @@ namespace Flare
 		return result;
 	}
 
+	bool EditorGUI::ObjectField(SerializableObject& object)
+	{
+		bool result = false;
+		size_t propertiesCount = object.Descriptor.Properties.size();
+		for (size_t index = 0; index < propertiesCount; index++)
+			result |= PropertyField(object.GetProperty(index));
+
+		return result;
+	}
+
+	bool EditorGUI::PropertyField(SerializableProperty& property)
+	{
+		bool result = false;
+
+		switch (property.Descriptor.PropertyType)
+		{
+		case SerializablePropertyType::Bool:
+			result |= BoolPropertyField(property.Descriptor.Name.c_str(), property.ValueAs<bool>());
+			break;
+
+		case SerializablePropertyType::Float:
+			result |= FloatPropertyField(property.Descriptor.Name.c_str(), property.ValueAs<float>());
+			break;
+		case SerializablePropertyType::Int:
+			result |= IntPropertyField(property.Descriptor.Name.c_str(), property.ValueAs<int32_t>());
+			break;
+
+		case SerializablePropertyType::FloatVector2:
+			result |= Vector2PropertyField(property.Descriptor.Name.c_str(), property.ValueAs<glm::vec2>());
+			break;
+		case SerializablePropertyType::FloatVector3:
+			result |= Vector3PropertyField(property.Descriptor.Name.c_str(), property.ValueAs<glm::vec3>());
+			break;
+		case SerializablePropertyType::FloatVector4:
+			result |= Vector4PropertyField(property.Descriptor.Name.c_str(), property.ValueAs<glm::vec4>());
+			break;
+		}
+		
+		return result;
+	}
+
 	bool EditorGUI::ColorPropertyField(const char* name, glm::vec4& color)
 	{
 		PropertyName(name);

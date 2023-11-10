@@ -110,15 +110,15 @@ namespace Flare
 		return 0;
 	}
 
-	struct ShaderParameter
+	struct ShaderProperty
 	{
-		ShaderParameter(std::string_view name, ShaderDataType type, size_t offset)
+		ShaderProperty(std::string_view name, ShaderDataType type, size_t offset)
 			: Name(name),
 			Type(type),
 			Offset(offset),
 			Size(ShaderDataTypeSize(type)) {}
 
-		ShaderParameter(std::string_view name, ShaderDataType type, size_t size, size_t offset)
+		ShaderProperty(std::string_view name, ShaderDataType type, size_t size, size_t offset)
 			: Name(name),
 			Type(type),
 			Size(size),

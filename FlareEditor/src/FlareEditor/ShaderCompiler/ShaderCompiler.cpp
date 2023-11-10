@@ -188,7 +188,9 @@ namespace Flare
         std::string_view source,
         std::vector<PreprocessedShaderProgram>& programs,
         ShaderFeatures& features,
-        std::vector<ShaderError>& errors)
+        SerializableObjectDescriptor& serializationDescriptor,
+        std::vector<ShaderError>& errors,
+        std::unordered_map<std::string_view, size_t>& propertyNameToIndex)
     {
         ShaderSourceParser parser(shaderPath, source, errors);
         parser.Parse();
@@ -238,6 +240,160 @@ namespace Flare
                 else
                     errors.emplace_back(element.Value.Position, fmt::format("Unknown depth function '{}'", element.Value.Value));
             }
+            else if (element.Name.Value == "Properties")
+            {
+                if (element.Type != BlockElementType::Block)
+                    errors.emplace_back(element.Value.Position, fmt::format("Expected an array of properties, instead of a value"));
+                else
+                {
+                    const Block& block = parser.GetBlock(element.ChildBlockIndex);
+                    for (const BlockElement& property : block.Elements)
+                    {
+                        SerializablePropertyDescriptor& propertyDescriptor = serializationDescriptor.Properties.emplace_back(
+                            property.Name.Value, SIZE_MAX,
+                            SerializablePropertyType::Int);
+
+                        propertyNameToIndex.emplace(propertyDescriptor.Name, serializationDescriptor.Properties.size() - 1);
+                    }
+                }
+            }
+        }
+    }
+
+    static void Reflect(spirv_cross::Compiler& compiler,
+        SerializableObjectDescriptor& serializationDescriptor,
+        const std::unordered_map<std::string_view, size_t>& propertyNameToIndex)
+    {
+        const spirv_cross::ShaderResources& resources = compiler.get_shader_resources();
+      
+#if 0
+        for (const auto& resource : resources.sampled_images)
+        {
+            const auto& samplerType = compiler.get_type(resource.type_id);
+            uint32_t membersCount = (uint32_t)samplerType.member_types.size();
+
+            ShaderDataType type = ShaderDataType::Sampler;
+            size_t size = ShaderDataTypeSize(type);
+            if (samplerType.array.size() > 0)
+            {
+                if (samplerType.array.size() == 1)
+                {
+                    type = ShaderDataType::SamplerArray;
+                    size *= samplerType.array[0];
+                }
+                else
+                {
+                    FLARE_CORE_ERROR("Unsupported sampler array dimensions: {0}", samplerType.array.size());
+                    continue;
+                }
+            }
+
+            auto propertyIterator = propertyNameToIndex.find(resource.name);
+            if (propertyIterator != propertyNameToIndex.end())
+            {
+                SerializablePropertyDescriptor& propertyDescriptor = serializationDescriptor.Properties[propertyIterator->second];
+                propertyDescriptor.PropertyType = SerializablePropertyType::Texture2D;
+                // TODO: update property offset
+            }
+        }
+#endif
+
+        for (const auto& resource : resources.push_constant_buffers)
+        {
+            const auto& bufferType = compiler.get_type(resource.base_type_id);
+            size_t bufferSize = compiler.get_declared_struct_size(bufferType);
+            uint32_t binding = compiler.get_decoration(resource.id, spv::DecorationBinding);
+
+            uint32_t membersCount = (uint32_t)bufferType.member_types.size();
+
+            for (uint32_t i = 0; i < membersCount; i++)
+            {
+                const std::string& memberName = compiler.get_member_name(resource.base_type_id, i);
+                spirv_cross::TypeID memberTypeId = bufferType.member_types[i];
+                size_t offset = compiler.type_struct_member_offset(bufferType, i);
+
+                const auto& memberType = compiler.get_type(memberTypeId);
+
+                SerializablePropertyType dataType = SerializablePropertyType::Int;
+                uint32_t componentsCount = memberType.vecsize;
+
+                bool error = false;
+
+                switch (memberType.basetype)
+                {
+                case spirv_cross::SPIRType::BaseType::Int:
+                    switch (componentsCount)
+                    {
+                    case 1:
+                        dataType = SerializablePropertyType::Int;
+                        break;
+                    case 2:
+                        dataType = SerializablePropertyType::IntVector2;
+                        break;
+                    case 3:
+                        dataType = SerializablePropertyType::IntVector3;
+                        break;
+                    case 4:
+                        dataType = SerializablePropertyType::IntVector4;
+                        break;
+                    default:
+                        error = true;
+                        FLARE_CORE_ERROR("Unsupported components count");
+                    }
+
+                    break;
+                case spirv_cross::SPIRType::BaseType::Float:
+                    switch (componentsCount)
+                    {
+                    case 1:
+                        dataType = SerializablePropertyType::Float;
+                        break;
+                    case 2:
+                        dataType = SerializablePropertyType::FloatVector2;
+                        break;
+                    case 3:
+                        dataType = SerializablePropertyType::FloatVector3;
+                        break;
+                    case 4:
+                        if (memberType.columns == 4)
+                            dataType = SerializablePropertyType::Matrix4x4;
+                        else
+                            dataType = SerializablePropertyType::FloatVector4;
+                        break;
+                    default:
+                        error = true;
+                        FLARE_CORE_ERROR("Unsupported components count");
+                    }
+
+                    break;
+                default:
+                    error = true;
+                    FLARE_CORE_ERROR("Unsupported shader data type");
+                }
+
+                if (error)
+                    continue;
+
+                SerializablePropertyDescriptor* property = nullptr;
+                if (resource.name.empty())
+                {
+                    auto propertyIterator = propertyNameToIndex.find(resource.name);
+                    if (propertyIterator != propertyNameToIndex.end())
+                        property = &serializationDescriptor.Properties[propertyIterator->second];
+                }
+                else
+                {
+                    auto propertyIterator = propertyNameToIndex.find(fmt::format("{0}.{1}", resource.name, memberName));
+                    if (propertyIterator != propertyNameToIndex.end())
+                        property = &serializationDescriptor.Properties[propertyIterator->second];
+                }
+
+                if (property)
+                {
+                    property->PropertyType = dataType;
+                    property->Offset = offset;
+                }
+            }
         }
     }
     
@@ -263,13 +419,15 @@ namespace Flare
 
         std::string pathString = shaderPath.string();
         std::vector<PreprocessedShaderProgram> programs;
+        SerializableObjectDescriptor serializationDescriptor;
+        std::unordered_map<std::string_view, size_t> propertyNameToIndex;
 
         std::vector<ShaderError> errors;
 
         ShaderFeatures shaderFeatures;
         std::string_view source = sourceString;
 
-        Preprocess(shaderPath, source, programs, shaderFeatures, errors);
+        Preprocess(shaderPath, source, programs, shaderFeatures, serializationDescriptor, errors, propertyNameToIndex);
         if (errors.size() > 0)
         {
             FLARE_CORE_ERROR("Failed to compile shader '{}'", pathString);
@@ -311,6 +469,23 @@ namespace Flare
                 ShaderCacheManager::GetInstance()->SetCache(shaderHandle, ShaderTargetEnvironment::Vulkan, program.Stage, compiledVulkanShader.value());
             }
 
+            if (serializationDescriptor.Properties.size() > 0)
+            {
+                try
+                {
+                    std::unordered_map<std::string_view, size_t> propertyNameToIndex;
+                    for (size_t i = 0; i < serializationDescriptor.Properties.size(); i++)
+                        propertyNameToIndex.emplace(serializationDescriptor.Properties[i].Name, i);
+
+                    spirv_cross::Compiler compiler(compiledVulkanShader.value());
+                    Reflect(compiler, serializationDescriptor, propertyNameToIndex);
+                }
+                catch (spirv_cross::CompilerError& e)
+                {
+                    FLARE_CORE_ERROR("Shader reflection failed: {}", e.what());
+                }
+            }
+
             std::optional<std::vector<uint32_t>> compiledOpenGLShader = {};
             
             if (!forceRecompile)
@@ -329,9 +504,12 @@ namespace Flare
 
                 ShaderCacheManager::GetInstance()->SetCache(shaderHandle, ShaderTargetEnvironment::OpenGL, program.Stage, compiledOpenGLShader.value());
             }
-
-            ((EditorShaderCache*)ShaderCacheManager::GetInstance().get())->SetShaderFeatures(shaderHandle, shaderFeatures);
         }
+
+        ((EditorShaderCache*)ShaderCacheManager::GetInstance().get())->SetShaderEntry(
+            shaderHandle,
+            shaderFeatures,
+            std::move(serializationDescriptor));
 
         return true;
     }

@@ -9,6 +9,7 @@
 #include "FlareEditor/UI/ECS/EntityProperties.h"
 
 #include "FlareEditor/EditorLayer.h"
+#include "FlareEditor/AssetManager/EditorShaderCache.h"
 #include "FlareEditor/AssetManager/MaterialImporter.h"
 
 #include <imgui.h>
@@ -176,9 +177,14 @@ namespace Flare
 		if (ImGui::Button("Save"))
 			MaterialImporter::SerializeMaterial(material, metadata->Path);
 
+		AssetHandle shaderHandle = NULL_ASSET_HANDLE;
+		bool hasShader = material->GetShader() != nullptr;
+
+		if (hasShader)
+			shaderHandle = material->GetShader()->Handle;
+
 		if (EditorGUI::BeginPropertyGrid())
 		{
-			AssetHandle shaderHandle = material->GetShader()->Handle;
 			if (EditorGUI::AssetField("Shader", shaderHandle))
 			{
 				if (AssetManager::IsAssetHandleValid(shaderHandle))
@@ -192,84 +198,100 @@ namespace Flare
 
 			ImGui::BeginDisabled(true);
 
-			ShaderFeatures features = material->GetShader()->GetFeatures();
+			if (hasShader)
+			{
+				ShaderFeatures features = material->GetShader()->GetFeatures();
 
-			EditorGUI::BoolPropertyField("Depth Test", features.DepthTesting);
-			EditorGUI::PropertyName("Culling Mode");
+				EditorGUI::BoolPropertyField("Depth Test", features.DepthTesting);
+				EditorGUI::PropertyName("Culling Mode");
 
-			const char* preview = CullingModeToString(features.Culling);
+				const char* preview = CullingModeToString(features.Culling);
 			
-			ImGui::PushID("CullingMode");
-			if (ImGui::BeginCombo("", preview, ImGuiComboFlags_HeightRegular))
-			{
-				if (ImGui::MenuItem("None"))
-					features.Culling = CullingMode::None;
-				if (ImGui::MenuItem("Front"))
-					features.Culling = CullingMode::Front;
-				if (ImGui::MenuItem("Back"))
-					features.Culling = CullingMode::Back;
+				ImGui::PushID("CullingMode");
+				if (ImGui::BeginCombo("", preview, ImGuiComboFlags_HeightRegular))
+				{
+					if (ImGui::MenuItem("None"))
+						features.Culling = CullingMode::None;
+					if (ImGui::MenuItem("Front"))
+						features.Culling = CullingMode::Front;
+					if (ImGui::MenuItem("Back"))
+						features.Culling = CullingMode::Back;
 
-				ImGui::EndCombo();
-			}
+					ImGui::EndCombo();
+				}
 
-			ImGui::PopID();
+				ImGui::PopID();
 
-			// Blend Mode
+				// Blend Mode
 
-			preview = BlendModeToString(features.Blending);
+				preview = BlendModeToString(features.Blending);
 
-			EditorGUI::PropertyName("Blend Mode");
+				EditorGUI::PropertyName("Blend Mode");
 
-			ImGui::PushID("BlendMode");
-			if (ImGui::BeginCombo("", preview, ImGuiComboFlags_HeightRegular))
-			{
-				if (ImGui::MenuItem("Opaque"))
-					features.Blending = BlendMode::Opaque;
-				if (ImGui::MenuItem("Transparent"))
-					features.Blending = BlendMode::Transparent;
+				ImGui::PushID("BlendMode");
+				if (ImGui::BeginCombo("", preview, ImGuiComboFlags_HeightRegular))
+				{
+					if (ImGui::MenuItem("Opaque"))
+						features.Blending = BlendMode::Opaque;
+					if (ImGui::MenuItem("Transparent"))
+						features.Blending = BlendMode::Transparent;
 
-				ImGui::EndCombo();
-			}
+					ImGui::EndCombo();
+				}
 
-			ImGui::PopID();
+				ImGui::PopID();
 
-			// Depth Comaprison Function
+				// Depth Comaprison Function
 
-			preview = DepthComparisonFunctionToString(features.DepthFunction);
+				preview = DepthComparisonFunctionToString(features.DepthFunction);
 
-			EditorGUI::PropertyName("Depth Function");
+				EditorGUI::PropertyName("Depth Function");
 
-			ImGui::PushID("Depth Function");
-			if (ImGui::BeginCombo("", preview, ImGuiComboFlags_HeightRegular))
-			{
-				if (ImGui::MenuItem("Less"))
-					features.DepthFunction = DepthComparisonFunction::Less;
-				if (ImGui::MenuItem("Greater"))
-					features.DepthFunction = DepthComparisonFunction::Greater;
-				if (ImGui::MenuItem("Less or equal"))
-					features.DepthFunction = DepthComparisonFunction::LessOrEqual;
-				if (ImGui::MenuItem("Greater or equal"))
-					features.DepthFunction = DepthComparisonFunction::GreaterOrEqual;
-				if (ImGui::MenuItem("Equal"))
-					features.DepthFunction = DepthComparisonFunction::Equal;
-				if (ImGui::MenuItem("Not equal"))
-					features.DepthFunction = DepthComparisonFunction::NotEqual;
-				if (ImGui::MenuItem("Never"))
-					features.DepthFunction = DepthComparisonFunction::Never;
-				if (ImGui::MenuItem("Always"))
-					features.DepthFunction = DepthComparisonFunction::Always;
+				ImGui::PushID("Depth Function");
+				if (ImGui::BeginCombo("", preview, ImGuiComboFlags_HeightRegular))
+				{
+					if (ImGui::MenuItem("Less"))
+						features.DepthFunction = DepthComparisonFunction::Less;
+					if (ImGui::MenuItem("Greater"))
+						features.DepthFunction = DepthComparisonFunction::Greater;
+					if (ImGui::MenuItem("Less or equal"))
+						features.DepthFunction = DepthComparisonFunction::LessOrEqual;
+					if (ImGui::MenuItem("Greater or equal"))
+						features.DepthFunction = DepthComparisonFunction::GreaterOrEqual;
+					if (ImGui::MenuItem("Equal"))
+						features.DepthFunction = DepthComparisonFunction::Equal;
+					if (ImGui::MenuItem("Not equal"))
+						features.DepthFunction = DepthComparisonFunction::NotEqual;
+					if (ImGui::MenuItem("Never"))
+						features.DepthFunction = DepthComparisonFunction::Never;
+					if (ImGui::MenuItem("Always"))
+						features.DepthFunction = DepthComparisonFunction::Always;
 				
-				ImGui::EndCombo();
-			}
+					ImGui::EndCombo();
+				}
 
-			ImGui::PopID();
+				ImGui::PopID();
+			}
 
 			ImGui::EndDisabled();
 
 			EditorGUI::EndPropertyGrid();
 		}
 
-		if (EditorGUI::BeginPropertyGrid())
+		EditorShaderCache* shaderCache = (EditorShaderCache*)ShaderCacheManager::GetInstance().get();
+
+		std::optional<const EditorShaderCache::ShaderEntry*> shaderEntry = shaderCache->GetShaderEntry(shaderHandle);
+		if (shaderEntry && EditorGUI::BeginPropertyGrid())
+		{
+			const SerializableObjectDescriptor& serializationDescriptor = shaderEntry.value()->SerializationDescriptor;
+			SerializableObject materialProperties = SerializableObject(material->GetPropertiesBuffer(), serializationDescriptor);
+
+			EditorGUI::ObjectField(materialProperties);
+
+			EditorGUI::EndPropertyGrid();
+		}
+#if 0
+		if (hasShader && EditorGUI::BeginPropertyGrid())
 		{
 			Ref<Shader> shader = material->GetShader();
 			const ShaderProperties& shaderProperties = shader->GetProperties();
@@ -324,6 +346,7 @@ namespace Flare
 
 			EditorGUI::EndPropertyGrid();
 		}
+#endif
 
 		return false;
 	}
