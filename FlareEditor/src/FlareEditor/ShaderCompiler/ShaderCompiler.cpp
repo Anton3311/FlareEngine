@@ -506,6 +506,22 @@ namespace Flare
             }
         }
 
+        size_t insertionIndex = 0;
+        for (size_t i = 0; i < serializationDescriptor.Properties.size(); i++)
+        {
+            if (serializationDescriptor.Properties[i].Offset == SIZE_MAX)
+                continue;
+
+            if (insertionIndex != i)
+                serializationDescriptor.Properties[insertionIndex] = std::move(serializationDescriptor.Properties[i]);
+
+            insertionIndex++;
+        }
+
+        serializationDescriptor.Properties.erase(
+            serializationDescriptor.Properties.begin() + insertionIndex,
+            serializationDescriptor.Properties.end());
+
         ((EditorShaderCache*)ShaderCacheManager::GetInstance().get())->SetShaderEntry(
             shaderHandle,
             shaderFeatures,
