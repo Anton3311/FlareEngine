@@ -54,9 +54,11 @@ namespace Flare
 		static bool ToggleGroupItem(const char* text, bool selected);
 		static void EndToggleGroup();
 
+		static bool TextureField(const char* name, AssetHandle& textureHandle);
+
 		static bool TypeEditor(const TypeInitializer& type, uint8_t* data);
 
-		static void PropertyName(const char* name);
+		static void PropertyName(const char* name, float minHeight = 0.0f);
 		static void PropertyIndex(size_t index);
 	};
 }

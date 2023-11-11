@@ -176,7 +176,7 @@ namespace Flare
 			break;
 
 		case SerializablePropertyType::Texture2D:
-			result |= AssetField(property.Descriptor.Name.c_str(), property.ValueAs<AssetHandle>());
+			result |= TextureField(property.Descriptor.Name.c_str(), property.ValueAs<AssetHandle>());
 			break;
 		}
 		
@@ -517,9 +517,9 @@ namespace Flare
 		return result;
 	}
 
-	void EditorGUI::PropertyName(const char* name)
+	void EditorGUI::PropertyName(const char* name, float minHeight)
 	{
-		ImGui::TableNextRow();
+		ImGui::TableNextRow(0, minHeight);
 		ImGui::TableSetColumnIndex(0);
 
 		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetStyle().FramePadding.y);
@@ -539,5 +539,87 @@ namespace Flare
 
 		ImGui::TableSetColumnIndex(1);
 		ImGui::PushItemWidth(-1);
+	}
+
+	bool EditorGUI::TextureField(const char* name, AssetHandle& textureHandle)
+	{
+		ImVec2 previewSize = ImVec2(48.0f, 48.0f);
+
+		bool result = false;
+		PropertyName(name, previewSize.y);
+
+		if (ImGui::Button("Reset"))
+		{
+			textureHandle = NULL_ASSET_HANDLE;
+			result = true;
+		}
+
+		ImGui::SameLine();
+
+		UUID resultToken = (uint64_t)&textureHandle;
+
+		if (ImGui::InvisibleButton(name, previewSize))
+			QuickSearch::GetInstance().FindAsset(resultToken);
+
+		if (ImGui::BeginDragDropTarget())
+		{
+			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(ASSET_PAYLOAD_NAME))
+			{
+				textureHandle = *(AssetHandle*)payload->Data;
+				result = true;
+			}
+
+			ImGui::EndDragDropTarget();
+		}
+
+		ImVec2 previewMin = ImGui::GetItemRectMin();
+		ImVec2 previewMax = previewMin + previewSize;
+
+		if (auto searchResult = QuickSearch::GetInstance().AcceptAssetResult(resultToken))
+		{
+			if (searchResult->Type == QuickSearch::AssetSearchResult::ResultType::Ok)
+			{
+				textureHandle = searchResult->Handle;
+				result = true;
+			}
+		}
+
+		bool hovered = ImGui::IsItemHovered();
+
+		ImU32 textureHoverColor = 0xffcccccc;
+
+		ImDrawList* drawList = ImGui::GetCurrentWindow()->DrawList;
+		const ImGuiStyle& style = ImGui::GetStyle();
+
+		if (AssetManager::IsAssetHandleValid(textureHandle))
+		{
+			Ref<Texture> texture = AssetManager::GetAsset<Texture>(textureHandle);
+			
+			drawList->AddImageRounded((ImTextureID)texture->GetRendererId(),
+				previewMin, previewMax,
+				ImVec2(0.0f, 1.0f),
+				ImVec2(1.0f, 0.0f),
+				hovered ? textureHoverColor : 0xffffffff,
+				style.FrameRounding);
+
+		}
+		else
+		{
+			std::string_view noneText = "None";
+			ImVec2 textSize = ImGui::CalcTextSize(noneText.data(), noneText.data() + noneText.size());
+
+			ImVec2 textPosition = previewMin + previewSize / 2.0f - textSize / 2.0f;
+			drawList->AddText(textPosition,
+				ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_TextDisabled]),
+				noneText.data(),
+				noneText.data() + noneText.size());
+		}
+
+		drawList->AddRect(previewMin,
+			previewMax,
+			ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Border]),
+			style.FrameRounding);
+
+		return result;
 	}
 }
