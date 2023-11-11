@@ -13,6 +13,14 @@
 
 namespace Flare
 {
+	enum class MeshRenderFlags : uint8_t
+	{
+		None = 0,
+		DontCastShadows = 1,
+	};
+
+	FLARE_IMPL_ENUM_BITFIELD(MeshRenderFlags);
+
 	struct RendererStatistics
 	{
 		uint32_t DrawCallsCount;
@@ -36,7 +44,11 @@ namespace Flare
 
 		static void DrawFullscreenQuad(const Ref<Material>& material);
 		static void DrawMesh(const Ref<VertexArray>& mesh, const Ref<Material>& material, size_t indicesCount = SIZE_MAX);
-		static void DrawMesh(const Ref<Mesh>& mesh, const Ref<Material>& material, const glm::mat4& transform, int32_t entityIndex = INT32_MAX);
+		static void DrawMesh(const Ref<Mesh>& mesh,
+			const Ref<Material>& material,
+			const glm::mat4& transform,
+			MeshRenderFlags flags = MeshRenderFlags::None,
+			int32_t entityIndex = INT32_MAX);
 
 		static void AddRenderPass(Ref<RenderPass> pass);
 		static void ExecuteRenderPasses();

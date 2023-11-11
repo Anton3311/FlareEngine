@@ -2,6 +2,7 @@
 
 #include "Flare.h"
 #include "Flare/Renderer2D/Renderer2D.h"
+#include "Flare/Renderer/Renderer.h"
 
 #include "Flare/Renderer/Mesh.h"
 #include "Flare/Renderer/Material.h"
@@ -112,11 +113,12 @@ namespace Flare
 	{
 		FLARE_COMPONENT;
 
-		MeshComponent();
-		MeshComponent(AssetHandle mesh, AssetHandle material);
+		MeshComponent(MeshRenderFlags flags = MeshRenderFlags::None);
+		MeshComponent(AssetHandle mesh, AssetHandle material, MeshRenderFlags flags = MeshRenderFlags::None);
 
 		AssetHandle Mesh;
 		AssetHandle Material;
+		MeshRenderFlags Flags;
 	};
 
 	struct FLARE_API DirectionalLight

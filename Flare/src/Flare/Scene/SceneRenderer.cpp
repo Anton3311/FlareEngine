@@ -134,7 +134,10 @@ namespace Flare
 					continue;
 
 				const TransformComponent& transform = transforms[*entity];
-			 	Renderer::DrawMesh(mesh, material, transform.GetTransformationMatrix(),
+			 	Renderer::DrawMesh(mesh,
+					material,
+					transform.GetTransformationMatrix(),
+					meshes[*entity].Flags,
 					id.value().GetIndex());
 			}
 		}

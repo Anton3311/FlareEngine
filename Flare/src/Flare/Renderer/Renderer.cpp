@@ -5,6 +5,7 @@
 #include "Flare/Renderer/UniformBuffer.h"
 #include "Flare/Renderer/ShaderLibrary.h"
 #include "Flare/Renderer2D/Renderer2D.h"
+#include "Flare/Renderer/Renderer.h"
 
 #include "Flare/Project/Project.h"
 
@@ -21,6 +22,7 @@ namespace Flare
 		Ref<Mesh> Mesh;
 		Ref<Material> Material;
 		glm::mat4 Transform;
+		MeshRenderFlags Flags;
 		int32_t EntityIndex;
 	};
 
@@ -205,6 +207,9 @@ namespace Flare
 
 		for (const RenderableObject& object : s_RendererData.Queue)
 		{
+			if (shadowPass && HAS_BIT(object.Flags, MeshRenderFlags::DontCastShadows))
+				continue;
+
 			if (object.Mesh->GetSubMesh().InstanceBuffer == nullptr)
 				object.Mesh->SetInstanceBuffer(s_RendererData.InstanceBuffer);
 
@@ -310,7 +315,7 @@ namespace Flare
 		s_RendererData.CurrentViewport->RenderTarget->SetWriteMask(previousMask);
 	}
 
-	void Renderer::DrawMesh(const Ref<Mesh>& mesh, const Ref<Material>& material, const glm::mat4& transform, int32_t entityIndex)
+	void Renderer::DrawMesh(const Ref<Mesh>& mesh, const Ref<Material>& material, const glm::mat4& transform, MeshRenderFlags flags, int32_t entityIndex)
 	{
 		if (s_RendererData.ErrorMaterial == nullptr)
 			return;
@@ -322,6 +327,7 @@ namespace Flare
 		else
 			object.Material = s_RendererData.ErrorMaterial;
 
+		object.Flags = flags;
 		object.Mesh = mesh;
 		object.Transform = transform;
 		object.EntityIndex = entityIndex;

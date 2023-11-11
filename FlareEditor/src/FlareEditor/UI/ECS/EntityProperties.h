@@ -13,9 +13,10 @@ namespace Flare
 
 		void OnRenderImGui(Entity entity);
 	private:
-		void EntityProperties::RenderCameraComponent(CameraComponent& cameraComponent);
-		void EntityProperties::RenderTransformComponent(TransformComponent& transform);
-		void EntityProperties::RenderSpriteComponent(SpriteComponent& sprite);
+		void RenderCameraComponent(CameraComponent& cameraComponent);
+		void RenderTransformComponent(TransformComponent& transform);
+		void RenderSpriteComponent(SpriteComponent& sprite);
+		void RenderMeshComponent(MeshComponent& mesh);
 
 		void EntityProperties::RenderAddComponentMenu(Entity entity);
 	private:

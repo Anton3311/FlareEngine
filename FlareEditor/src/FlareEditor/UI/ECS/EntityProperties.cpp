@@ -1,5 +1,7 @@
 #include "EntityProperties.h"
 
+#include "Flare/Renderer/Renderer.h"
+
 #include "FlareEditor/UI/EditorGUI.h"
 
 #include <imgui.h>
@@ -54,6 +56,8 @@ namespace Flare
 						RenderTransformComponent(m_World.GetEntityComponent<TransformComponent>(entity));
 					else if (component == COMPONENT_ID(SpriteComponent))
 						RenderSpriteComponent(m_World.GetEntityComponent<SpriteComponent>(entity));
+					else if (component == COMPONENT_ID(MeshComponent))
+						RenderMeshComponent(m_World.GetEntityComponent<MeshComponent>(entity));
 					else
 					{
 						std::optional<void*> componentData = m_World.Entities.GetEntityComponent(entity, component);
@@ -140,6 +144,32 @@ namespace Flare
 					sprite.Flags |= SpriteRenderFlags::FlipX;
 				if (flipY)
 					sprite.Flags |= SpriteRenderFlags::FlipY;
+			}
+
+			EditorGUI::EndPropertyGrid();
+		}
+	}
+
+	void EntityProperties::RenderMeshComponent(MeshComponent& mesh)
+	{
+		if (EditorGUI::BeginPropertyGrid())
+		{
+			EditorGUI::AssetField("Mesh", mesh.Mesh);
+			EditorGUI::AssetField("Material", mesh.Material);
+
+			const char* propertyName = "Don't cast shadows";
+			EditorGUI::PropertyName(propertyName);
+			{
+				bool value = HAS_BIT(mesh.Flags, MeshRenderFlags::DontCastShadows);
+
+				ImGui::PushID(propertyName);
+				ImGui::Checkbox("", &value);
+				ImGui::PopID();
+
+				if (value)
+					mesh.Flags |= MeshRenderFlags::DontCastShadows;
+				else
+					mesh.Flags &= ~MeshRenderFlags::DontCastShadows;
 			}
 
 			EditorGUI::EndPropertyGrid();

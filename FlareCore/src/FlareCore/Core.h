@@ -36,6 +36,8 @@
 	constexpr enumName operator&(enumName a, enumName b) { return (enumName) ((uint64_t)a & (uint64_t)b); } \
 	constexpr enumName operator|(enumName a, enumName b) { return (enumName) ((uint64_t)a | (uint64_t)b); } \
 	constexpr enumName operator~(enumName a) { return (enumName) (~(uint64_t)a); } \
+	constexpr enumName& operator|=(enumName& a, enumName b) { a = (enumName) ((uint64_t)a | (uint64_t)b); return a; } \
+	constexpr enumName& operator&=(enumName& a, enumName b) { a = (enumName) ((uint64_t)a & (uint64_t)b); return a; } \
 	constexpr bool operator==(enumName a, int32_t b) { return (int32_t)a == b; } \
 	constexpr bool operator!=(enumName a, int32_t b) { return (int32_t)a != b; }
 

@@ -124,6 +124,7 @@ Entities:
       - Name: struct Flare::MeshComponent
         Mesh: 10490832977963679498
         Material: 15677979409362088946
+        Flags: 0
   - Components:
       - Name: struct Flare::NameComponent
         Value: Light
@@ -142,6 +143,7 @@ Entities:
       - Name: struct Flare::MeshComponent
         Mesh: 10342322337781790464
         Material: 13576769737354600278
+        Flags: 0
   - Components:
       - Name: struct Flare::TransformComponent
         Position: [0, -15.2780323, 0]
@@ -150,6 +152,7 @@ Entities:
       - Name: struct Flare::MeshComponent
         Mesh: 10342322337781790464
         Material: 7732178757911584553
+        Flags: 0
   - Components:
       - Name: struct Flare::TransformComponent
         Position: [-5.98301411, 0.991551697, -4.10717392]
@@ -158,6 +161,7 @@ Entities:
       - Name: struct Flare::MeshComponent
         Mesh: 10490832977963679498
         Material: 13576769737354600278
+        Flags: 0
   - Components:
       - Name: struct Flare::TransformComponent
         Position: [4.01144505, 2.53233695, 0]
@@ -166,6 +170,7 @@ Entities:
       - Name: struct Flare::MeshComponent
         Mesh: 10342322337781790464
         Material: 13576769737354600278
+        Flags: 0
   - Components:
       - Name: struct Flare::TransformComponent
         Position: [0, 0, 0]
@@ -179,6 +184,7 @@ Entities:
       - Name: struct Flare::MeshComponent
         Mesh: 10342322337781790464
         Material: 13576769737354600278
+        Flags: 0
   - Components:
       - Name: struct Flare::TransformComponent
         Position: [7.21097279, -1.99544454, 7.39275408]
@@ -187,6 +193,7 @@ Entities:
       - Name: struct Flare::MeshComponent
         Mesh: 10342322337781790464
         Material: 13576769737354600278
+        Flags: 0
 PostProcessing:
   - Name: class Flare::ToneMapping
     Enabled: true
