@@ -15,6 +15,7 @@ namespace Flare
 		virtual void SetDepthTestEnabled(bool enabled) override;
 		virtual void SetCullingMode(CullingMode mode) override;
 		virtual void SetDepthComparisonFunction(DepthComparisonFunction function) override;
+		virtual void SetDepthWriteEnabled(bool enabled) override;
 
 		virtual void SetLineWidth(float width) override;
 

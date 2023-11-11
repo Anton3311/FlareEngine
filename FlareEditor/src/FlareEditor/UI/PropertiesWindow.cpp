@@ -203,6 +203,7 @@ namespace Flare
 				ShaderFeatures features = material->GetShader()->GetFeatures();
 
 				EditorGUI::BoolPropertyField("Depth Test", features.DepthTesting);
+				EditorGUI::BoolPropertyField("Depth Write", features.DepthWrite);
 				EditorGUI::PropertyName("Culling Mode");
 
 				const char* preview = CullingModeToString(features.Culling);
@@ -290,63 +291,6 @@ namespace Flare
 
 			EditorGUI::EndPropertyGrid();
 		}
-#if 0
-		if (hasShader && EditorGUI::BeginPropertyGrid())
-		{
-			Ref<Shader> shader = material->GetShader();
-			const ShaderProperties& shaderProperties = shader->GetProperties();
-			for (uint32_t i = 0; i < (uint32_t)shaderProperties.size(); i++)
-			{
-				switch (shaderProperties[i].Type)
-				{
-				case ShaderDataType::Int:
-				{
-					int32_t value = material->ReadPropertyValue<int32_t>(i);
-					if (EditorGUI::IntPropertyField(shaderProperties[i].Name.c_str(), value))
-						material->WritePropertyValue(i, value);
-
-					break;
-				}
-				case ShaderDataType::Float:
-				{
-					float value = material->ReadPropertyValue<float>(i);
-					if (EditorGUI::FloatPropertyField(shaderProperties[i].Name.c_str(), value))
-						material->WritePropertyValue(i, value);
-
-					break;
-				}
-				case ShaderDataType::Float2:
-				{
-					glm::vec2 value = material->ReadPropertyValue<glm::vec2>(i);
-					if (EditorGUI::Vector2PropertyField(shaderProperties[i].Name.c_str(), value))
-						material->WritePropertyValue(i, value);
-
-					break;
-				}
-				case ShaderDataType::Float3:
-				{
-					glm::vec3 value = material->ReadPropertyValue<glm::vec3>(i);
-					if (EditorGUI::Vector3PropertyField(shaderProperties[i].Name.c_str(), value))
-						material->WritePropertyValue(i, value);
-
-					break;
-				}
-				case ShaderDataType::Float4:
-				{
-					glm::vec4 value = material->ReadPropertyValue<glm::vec4>(i);
-					if (EditorGUI::Vector4PropertyField(shaderProperties[i].Name.c_str(), value))
-						material->WritePropertyValue(i, value);
-
-					break;
-				}
-				default:
-					FLARE_CORE_ASSERT("Unhandled shader data type");
-				}
-			}
-
-			EditorGUI::EndPropertyGrid();
-		}
-#endif
 
 		return false;
 	}

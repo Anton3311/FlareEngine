@@ -143,6 +143,7 @@ namespace Flare
 		RenderCommand::SetDepthTestEnabled(features.DepthTesting);
 		RenderCommand::SetCullingMode(features.Culling);
 		RenderCommand::SetDepthComparisonFunction(features.DepthFunction);
+		RenderCommand::SetDepthWriteEnabled(features.DepthWrite);
 	}
 
 	static bool CompareRenderableObjects(const RenderableObject& a, const RenderableObject& b)

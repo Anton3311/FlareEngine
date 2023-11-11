@@ -117,6 +117,14 @@ namespace Flare
 		}
 	}
 
+	void OpenGLRendererAPI::SetDepthWriteEnabled(bool enabled)
+	{
+		if (enabled)
+			glDepthMask(GL_TRUE);
+		else
+			glDepthMask(GL_FALSE);
+	}
+
 	void OpenGLRendererAPI::SetLineWidth(float width)
 	{
 		glLineWidth(width);

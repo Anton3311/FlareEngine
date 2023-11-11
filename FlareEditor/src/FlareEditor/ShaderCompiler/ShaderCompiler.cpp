@@ -232,6 +232,14 @@ namespace Flare
                 else
                     errors.emplace_back(element.Value.Position, fmt::format("Expected bool, but got {}", element.Value.Value));
             }
+            else if (element.Name.Value == "DepthWrite")
+            {
+                std::optional<bool> value = BoolFromString(element.Value.Value);
+                if (value)
+                    features.DepthWrite = *value;
+                else
+                    errors.emplace_back(element.Value.Position, fmt::format("Expected bool, but got {}", element.Value.Value));
+            }
             else if (element.Name.Value == "DepthFunction")
             {
                 auto depthFunction = DepthComparisonFunctionFromString(element.Value.Value);

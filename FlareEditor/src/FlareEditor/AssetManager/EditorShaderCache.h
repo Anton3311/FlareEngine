@@ -12,6 +12,7 @@ namespace Flare
 	public:
 		struct ShaderEntry
 		{
+			ShaderEntry() = default;
 			ShaderEntry(ShaderFeatures features, SerializableObjectDescriptor&& descriptor)
 				: Features(features), SerializationDescriptor(std::move(descriptor)) {}
 
