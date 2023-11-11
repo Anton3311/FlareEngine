@@ -26,7 +26,7 @@ namespace Flare
 		{
 			const ShaderProperty& parameter = properties[index];
 
-			if (parameter.Type == ShaderDataType::Matrix4x4 || parameter.Type == ShaderDataType::Sampler)
+			if (parameter.Type == ShaderDataType::Matrix4x4)
 				continue;
 
 			emitter << YAML::BeginMap;
@@ -48,6 +48,10 @@ namespace Flare
 				break;
 			case ShaderDataType::Int4:
 				emitter << material->ReadPropertyValue<glm::ivec4>(index);
+				break;
+
+			case ShaderDataType::Sampler:
+				emitter << material->ReadPropertyValue<AssetHandle>(index);
 				break;
 
 			case ShaderDataType::Float:
@@ -141,6 +145,10 @@ namespace Flare
 								break;
 							case ShaderDataType::Int4:
 								material->WritePropertyValue(index.value(), valueNode.as<glm::ivec4>());
+								break;
+
+							case ShaderDataType::Sampler:
+								material->WritePropertyValue(index.value(), valueNode.as<AssetHandle>());
 								break;
 
 							case ShaderDataType::Float:

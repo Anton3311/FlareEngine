@@ -6,3 +6,6 @@ Properties:
   - Name: u_InstanceData.Value
     Type: 4
     Value: 1
+  - Name: u_Texture
+    Type: 8
+    Value: 5193090395626261884

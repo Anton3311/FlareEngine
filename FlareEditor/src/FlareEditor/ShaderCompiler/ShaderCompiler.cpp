@@ -266,38 +266,7 @@ namespace Flare
     {
         const spirv_cross::ShaderResources& resources = compiler.get_shader_resources();
       
-#if 0
-        for (const auto& resource : resources.sampled_images)
-        {
-            const auto& samplerType = compiler.get_type(resource.type_id);
-            uint32_t membersCount = (uint32_t)samplerType.member_types.size();
-
-            ShaderDataType type = ShaderDataType::Sampler;
-            size_t size = ShaderDataTypeSize(type);
-            if (samplerType.array.size() > 0)
-            {
-                if (samplerType.array.size() == 1)
-                {
-                    type = ShaderDataType::SamplerArray;
-                    size *= samplerType.array[0];
-                }
-                else
-                {
-                    FLARE_CORE_ERROR("Unsupported sampler array dimensions: {0}", samplerType.array.size());
-                    continue;
-                }
-            }
-
-            auto propertyIterator = propertyNameToIndex.find(resource.name);
-            if (propertyIterator != propertyNameToIndex.end())
-            {
-                SerializablePropertyDescriptor& propertyDescriptor = serializationDescriptor.Properties[propertyIterator->second];
-                propertyDescriptor.PropertyType = SerializablePropertyType::Texture2D;
-                // TODO: update property offset
-            }
-        }
-#endif
-
+        size_t lastPropertyOffset = 0;
         for (const auto& resource : resources.push_constant_buffers)
         {
             const auto& bufferType = compiler.get_type(resource.base_type_id);
@@ -393,7 +362,41 @@ namespace Flare
                     property->PropertyType = dataType;
                     property->Offset = offset;
                 }
+
+                lastPropertyOffset = offset + compiler.get_declared_struct_member_size(bufferType, i);
             }
+        }
+
+        for (const auto& resource : resources.sampled_images)
+        {
+            const auto& samplerType = compiler.get_type(resource.type_id);
+            uint32_t membersCount = (uint32_t)samplerType.member_types.size();
+
+            ShaderDataType type = ShaderDataType::Sampler;
+            size_t size = ShaderDataTypeSize(type);
+            if (samplerType.array.size() > 0)
+            {
+                if (samplerType.array.size() == 1)
+                {
+                    type = ShaderDataType::SamplerArray;
+                    size *= samplerType.array[0];
+                }
+                else
+                {
+                    FLARE_CORE_ERROR("Unsupported sampler array dimensions: {0}", samplerType.array.size());
+                    continue;
+                }
+            }
+
+            auto propertyIterator = propertyNameToIndex.find(resource.name);
+            if (propertyIterator != propertyNameToIndex.end())
+            {
+                SerializablePropertyDescriptor& propertyDescriptor = serializationDescriptor.Properties[propertyIterator->second];
+                propertyDescriptor.PropertyType = SerializablePropertyType::Texture2D;
+                propertyDescriptor.Offset = lastPropertyOffset;
+            }
+
+            lastPropertyOffset += sizeof(AssetHandle);
         }
     }
     

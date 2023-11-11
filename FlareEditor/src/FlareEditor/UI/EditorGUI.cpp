@@ -174,6 +174,10 @@ namespace Flare
 		case SerializablePropertyType::FloatVector4:
 			result |= Vector4PropertyField(property.Descriptor.Name.c_str(), property.ValueAs<glm::vec4>());
 			break;
+
+		case SerializablePropertyType::Texture2D:
+			result |= AssetField(property.Descriptor.Name.c_str(), property.ValueAs<AssetHandle>());
+			break;
 		}
 		
 		return result;

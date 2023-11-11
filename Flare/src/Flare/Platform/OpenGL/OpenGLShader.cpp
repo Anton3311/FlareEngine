@@ -56,31 +56,7 @@ namespace Flare
         for (const auto& resource : resources.uniform_buffers)
             PrintResourceInfo(compiler, resource);
 
-        FLARE_CORE_INFO("Samplers:");
-        for (const auto& resource : resources.sampled_images)
-        {
-            const auto& samplerType = compiler.get_type(resource.type_id);
-            uint32_t membersCount = (uint32_t)samplerType.member_types.size();
-
-            ShaderDataType type = ShaderDataType::Sampler;
-            size_t size = ShaderDataTypeSize(type);
-            if (samplerType.array.size() > 0)
-            {
-                if (samplerType.array.size() == 1)
-                {
-                    type = ShaderDataType::SamplerArray;
-                    size *= samplerType.array[0];
-                }
-                else
-                {
-                    FLARE_CORE_ERROR("Unsupported sampler array dimensions: {0}", samplerType.array.size());
-                    continue;
-                }
-            }
-
-            properties.emplace_back(resource.name, type, size, 0);
-        }
-
+        size_t lastPropertyOffset = 0;
         FLARE_CORE_INFO("Push constant buffers:");
         for (const auto& resource : resources.push_constant_buffers)
         {
@@ -164,7 +140,40 @@ namespace Flare
                     properties.emplace_back(memberName, dataType, offset);
                 else
                     properties.emplace_back(fmt::format("{0}.{1}", resource.name, memberName), dataType, offset);
+
+                lastPropertyOffset = offset + compiler.get_declared_struct_member_size(bufferType, i);
             }
+        }
+
+        FLARE_CORE_INFO("Samplers:");
+        for (const auto& resource : resources.sampled_images)
+        {
+            const auto& samplerType = compiler.get_type(resource.type_id);
+            uint32_t membersCount = (uint32_t)samplerType.member_types.size();
+
+            uint32_t binding = compiler.get_decoration(resource.id, spv::DecorationBinding);
+
+            ShaderDataType type = ShaderDataType::Sampler;
+
+            // size = sizeof(AssetHandle) because for non-array samplers an asset handle to a texture is stored.
+            size_t size = sizeof(AssetHandle);
+            if (samplerType.array.size() > 0)
+            {
+                if (samplerType.array.size() == 1)
+                {
+                    type = ShaderDataType::SamplerArray;
+                    size = ShaderDataTypeSize(ShaderDataType::Sampler) * samplerType.array[0];
+                }
+                else
+                {
+                    FLARE_CORE_ERROR("Unsupported sampler array dimensions: {0}", samplerType.array.size());
+                    continue;
+                }
+            }
+
+            auto& property = properties.emplace_back(resource.name, type, size, lastPropertyOffset);
+            property.Location = binding;
+            lastPropertyOffset += sizeof(AssetHandle);
         }
     }
 

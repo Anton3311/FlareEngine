@@ -3,6 +3,7 @@
 #include "Flare/AssetManager/AssetManager.h"
 
 #include "Flare/Renderer/Shader.h"
+#include "Flare/Renderer/Texture.h"
 #include "Flare/Renderer/RendererAPI.h"
 
 #include "Flare/Platform/OpenGL/OpenGLShader.h"
@@ -103,9 +104,16 @@ namespace Flare
 				switch (properties[i].Type)
 				{
 				case ShaderDataType::Int:
-				case ShaderDataType::Sampler:
-					//glShader->SetInt(i, *(int32_t*)paramData);
+					glShader->SetInt(i, *(int32_t*)paramData);
 					break;
+				case ShaderDataType::Sampler:
+				{
+					Ref<Texture> texture = AssetManager::GetAsset<Texture>(*(AssetHandle*)paramData);
+					if (texture && properties[i].Location != UINT32_MAX)
+						texture->Bind(properties[i].Location);
+
+					break;
+				}
 
 				case ShaderDataType::Int2:
 					glShader->SetInt2(i, *(glm::ivec2*)paramData);
