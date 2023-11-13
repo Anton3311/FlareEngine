@@ -43,9 +43,8 @@ namespace Flare
 		bool m_IsToolbarHovered;
 
 		ViewportOverlay m_Overlay;
-		Ref<Shader> m_SelectionOutlineShader;
+		Ref<Material> m_SelectionOutlineMaterial;
 		Ref<Material> m_GridMaterial;
 		Ref<FrameBuffer> m_ScreenBuffer;
-		Ref<FrameBuffer> m_FinalImageBuffer;
 	};
 }

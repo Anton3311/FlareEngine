@@ -43,12 +43,6 @@ namespace Flare
 
 	void SceneViewportWindow::OnAttach()
 	{
-		AssetHandle selectionOutlineShader = ShaderLibrary::FindShader("SelectionOutline").value_or(NULL_ASSET_HANDLE);
-		if (AssetManager::IsAssetHandleValid(selectionOutlineShader))
-			m_SelectionOutlineShader = AssetManager::GetAsset<Shader>(selectionOutlineShader);
-		else
-			FLARE_CORE_ERROR("Failed to load selection outline shader");
-
 		AssetHandle gridShaderHandle = ShaderLibrary::FindShader("SceneViewGrid").value_or(NULL_ASSET_HANDLE);
 		if (AssetManager::IsAssetHandleValid(gridShaderHandle))
 		{
@@ -64,6 +58,24 @@ namespace Flare
 		}
 		else
 			FLARE_CORE_ERROR("Failed to load scene view grid shader");
+
+		AssetHandle selectionOutlineShader = ShaderLibrary::FindShader("SelectionOutline").value_or(NULL_ASSET_HANDLE);
+		if (AssetManager::IsAssetHandleValid(selectionOutlineShader))
+			m_SelectionOutlineMaterial = CreateRef<Material>(AssetManager::GetAsset<Shader>(selectionOutlineShader));
+		else
+			FLARE_CORE_ERROR("Failed to load selection outline shader");
+
+		{
+			Ref<Shader> shader = m_SelectionOutlineMaterial->GetShader();
+
+			ImVec4 primaryColor = ImGuiTheme::Primary;
+			glm::vec4 selectionColor = glm::vec4(primaryColor.x, primaryColor.y, primaryColor.z, 1.0f);
+
+			std::optional<uint32_t> colorProperty = shader->GetPropertyIndex("u_Outline.Color");
+
+			if (colorProperty)
+				m_SelectionOutlineMaterial->WritePropertyValue(*colorProperty, selectionColor);
+		}
 	}
 
 	void SceneViewportWindow::OnRenderViewport()
@@ -87,7 +99,6 @@ namespace Flare
 		{
 			std::optional<SystemGroupId> debugRenderingGroup = scene->GetECSWorld().GetSystemsManager().FindGroup("Debug Rendering");
 
-			m_Viewport.RenderTarget = m_ScreenBuffer;
 			scene->OnBeforeRender(m_Viewport);
 
 			Renderer::BeginScene(m_Viewport);
@@ -97,11 +108,6 @@ namespace Flare
 			scene->OnRender(m_Viewport);
 
 			RenderGrid();
-
-			m_ScreenBuffer->Unbind();
-			m_Viewport.RenderTarget = m_FinalImageBuffer;
-			m_Viewport.RenderTarget->Blit(m_ScreenBuffer, 0, 0);
-			m_Viewport.RenderTarget->Bind();
 
 			if (debugRenderingGroup.has_value())
 			{
@@ -119,20 +125,26 @@ namespace Flare
 			}
 
 			Entity selectedEntity = EditorLayer::GetInstance().Selection.TryGetEntity().value_or(Entity());
-			if (selectedEntity != Entity() && m_SelectionOutlineShader)
+			if (selectedEntity != Entity() && m_SelectionOutlineMaterial)
 			{
 				m_ScreenBuffer->BindAttachmentTexture(1);
 
-				ImVec4 primaryColor = ImGuiTheme::Primary;
-				glm::vec4 selectionColor = glm::vec4(primaryColor.x, primaryColor.y, primaryColor.z, 1.0f);
+				std::optional<uint32_t> idPropertyIndex = m_SelectionOutlineMaterial->GetShader()->GetPropertyIndex("u_Outline.SelectedId");
 
-				m_SelectionOutlineShader->Bind();
-				m_SelectionOutlineShader->SetInt("u_Outline.SelectedId", (int32_t)selectedEntity.GetIndex());
-				m_SelectionOutlineShader->SetInt("u_IdsTexture", 0);
-				m_SelectionOutlineShader->SetFloat4("u_Outline.Color", selectionColor);
-				m_SelectionOutlineShader->SetFloat2("u_Outline.Thickness", glm::vec2(4.0f) / (glm::vec2)m_Viewport.GetSize() / 2.0f);
+				if (idPropertyIndex)
+				{
+					Ref<Shader> shader = m_SelectionOutlineMaterial->GetShader();
 
-				RenderCommand::DrawIndexed(Renderer::GetFullscreenQuad());
+					m_SelectionOutlineMaterial->WritePropertyValue<int32_t>(
+						*idPropertyIndex,
+						(int32_t)selectedEntity.GetIndex());
+
+					std::optional<uint32_t> thicknessProperty = shader->GetPropertyIndex("u_Outline.Thickness");
+					if (thicknessProperty)
+						m_SelectionOutlineMaterial->WritePropertyValue(*thicknessProperty, glm::vec2(4.0f) / (glm::vec2)m_Viewport.GetSize() / 2.0f);
+
+					Renderer::DrawFullscreenQuad(m_SelectionOutlineMaterial);
+				}
 			}
 
 			Renderer::EndScene();
@@ -207,19 +219,14 @@ namespace Flare
 
 	void SceneViewportWindow::CreateFrameBuffer()
 	{
-		FrameBufferSpecifications specifications(m_Viewport.GetSize().x, m_Viewport.GetSize().y, {
-			{ FrameBufferTextureFormat::RGB8, TextureWrap::Clamp, TextureFiltering::Closest },
-		});
-
 		FrameBufferSpecifications screenBufferSpecs(m_Viewport.GetSize().x, m_Viewport.GetSize().y, {
 			{ FrameBufferTextureFormat::RGB8, TextureWrap::Clamp, TextureFiltering::Closest },
 			{ FrameBufferTextureFormat::RedInteger, TextureWrap::Clamp, TextureFiltering::Closest },
 			{ FrameBufferTextureFormat::Depth, TextureWrap::Clamp, TextureFiltering::Closest },
 		});
 
-		m_FinalImageBuffer = FrameBuffer::Create(specifications);
-		m_Viewport.RenderTarget = m_FinalImageBuffer;
 		m_ScreenBuffer = FrameBuffer::Create(screenBufferSpecs);
+		m_Viewport.RenderTarget = m_ScreenBuffer;
 	}
 
 	void SceneViewportWindow::OnClear()
