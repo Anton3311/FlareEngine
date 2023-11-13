@@ -1,3 +1,9 @@
+Properties = 
+{
+	u_InstanceData.Color = {}
+	u_InstanceData.Roughness = {}
+}
+
 #begin vertex
 #version 450
 
