@@ -68,7 +68,7 @@ namespace Flare
 		const aiScene* scene = importer.ReadFile(metadata.Path.string(), aiProcess_Triangulate | aiProcess_FlipUVs);
 
 		if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
-			FLARE_CORE_ERROR("Failed to load mesh: {}", metadata.Path.generic_string());
+			FLARE_CORE_ERROR("Failed to load mesh {}: {}", metadata.Path.generic_string(), importer.GetErrorString());
 		else
 			return ProcessMeshNode(scene->mRootNode, scene);
 
