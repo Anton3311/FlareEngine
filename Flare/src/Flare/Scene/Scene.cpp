@@ -5,6 +5,7 @@
 
 #include "Flare/AssetManager/AssetManager.h"
 
+#include "Flare/Math/Math.h"
 #include "Flare/Scene/Components.h"
 #include "Flare/Input/InputManager.h"
 
@@ -70,46 +71,6 @@ namespace Flare
 
 	void Scene::OnBeforeRender(Viewport& viewport)
 	{
-		bool hasLight = false;
-		for (EntityView entityView : m_DirectionalLightQuery)
-		{
-			auto transforms = entityView.View<TransformComponent>();
-			auto lights = entityView.View<DirectionalLight>();
-
-			for (EntityViewElement entity : entityView)
-			{
-				TransformComponent& transform = transforms[entity];
-				glm::vec3 direction = transform.TransformDirection(glm::vec3(0.0f, 0.0f, -1.0f));
-
-				LightData& light = viewport.FrameData.Light;
-				light.Color = lights[entity].Color;
-				light.Intensity = lights[entity].Intensity;
-				light.Direction = -direction;
-				light.Near = 0.01f;
-				light.Far = 100.0f;
-
-				float lightProjectionSize = 50.0f;
-				CameraData& lightView = viewport.FrameData.LightView;
-				lightView.Position = transform.Position;
-				lightView.View = glm::inverse(transforms[entity].GetTransformationMatrix());
-				lightView.Projection = glm::ortho(-lightProjectionSize,
-					lightProjectionSize,
-					-lightProjectionSize,
-					lightProjectionSize,
-					light.Near,
-					light.Far);
-
-				lightView.CalculateViewProjection();
-
-				light.LightProjection = lightView.ViewProjection;
-				hasLight = true;
-				break;
-			}
-
-			if (hasLight)
-				break;
-		}
-
 		if (!viewport.FrameData.IsEditorCamera)
 		{
 			float aspectRation = viewport.GetAspectRatio();
@@ -136,6 +97,76 @@ namespace Flare
 					viewport.FrameData.Camera.CalculateViewProjection();
 				}
 			}
+		}
+
+		bool hasLight = false;
+		for (EntityView entityView : m_DirectionalLightQuery)
+		{
+			auto transforms = entityView.View<TransformComponent>();
+			auto lights = entityView.View<DirectionalLight>();
+
+			for (EntityViewElement entity : entityView)
+			{
+				float maxShadowDistance = 40.0f;
+
+				TransformComponent& transform = transforms[entity];
+				glm::vec3 direction = transform.TransformDirection(glm::vec3(0.0f, 0.0f, -1.0f));
+
+				std::array<glm::vec4, 8> frustumCorners =
+				{
+					glm::vec4(-1.0f, -1.0f, 0.0f, 1.0f),
+					glm::vec4( 1.0f, -1.0f, 0.0f, 1.0f),
+					glm::vec4(-1.0f,  1.0f, 0.0f, 1.0f),
+					glm::vec4( 1.0f,  1.0f, 0.0f, 1.0f),
+					glm::vec4(-1.0f, -1.0f, 1.0f, 1.0f),
+					glm::vec4( 1.0f, -1.0f, 1.0f, 1.0f),
+					glm::vec4(-1.0f,  1.0f, 1.0f, 1.0f),
+					glm::vec4( 1.0f,  1.0f, 1.0f, 1.0f),
+				};
+
+				for (size_t i = 0; i < frustumCorners.size(); i++)
+				{
+					frustumCorners[i] = viewport.FrameData.Camera.InverseViewProjection * frustumCorners[i];
+					frustumCorners[i] /= frustumCorners[i].w;
+				}
+
+				glm::vec3 frustumCenter = glm::vec3(0.0f);
+				for (size_t i = 0; i < frustumCorners.size(); i++)
+					frustumCenter += (glm::vec3)frustumCorners[i];
+				frustumCenter /= 8.0f;
+
+				float boundingSphereRadius = 0.0f;
+				for (size_t i = 0; i < frustumCorners.size(); i++)
+					boundingSphereRadius = glm::max(boundingSphereRadius, glm::distance(frustumCenter, (glm::vec3)frustumCorners[i]));
+
+				LightData& light = viewport.FrameData.Light;
+				light.Color = lights[entity].Color;
+				light.Intensity = lights[entity].Intensity;
+				light.Direction = -direction;
+				light.Near = 0.01f;
+				light.Far = boundingSphereRadius * 2.0f;
+
+				glm::mat4 view = glm::lookAt(frustumCenter - direction * light.Far, frustumCenter, glm::vec3(0.0f, 1.0f, 0.0f));
+
+				CameraData& lightView = viewport.FrameData.LightView;
+				lightView.Position = transform.Position;
+				lightView.View = view;
+				lightView.Projection = glm::ortho(
+					-boundingSphereRadius,
+					boundingSphereRadius,
+					-boundingSphereRadius,
+					boundingSphereRadius,
+					light.Near, light.Far);
+
+				lightView.CalculateViewProjection();
+
+				light.LightProjection = lightView.ViewProjection;
+				hasLight = true;
+				break;
+			}
+
+			if (hasLight)
+				break;
 		}
 	}
 

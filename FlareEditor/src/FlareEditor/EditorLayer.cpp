@@ -92,7 +92,7 @@ namespace Flare
         EditorCameraSettings& settings = m_Camera.GetSettings();
         settings.FOV = 60.0f;
         settings.Near = 0.1f;
-        settings.Far = 1000.0f;
+        settings.Far = 200.0f;
         settings.RotationSpeed = 1.0f;
 
         if (Application::GetInstance().GetCommandLineArguments().ArgumentsCount >= 2)
