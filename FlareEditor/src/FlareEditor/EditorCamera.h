@@ -38,6 +38,8 @@ namespace Flare
 		void Zoom(float amount);
 		void Rotate(glm::vec2 mouseInput);
 		void Drag(glm::vec2 mouseInput);
+
+		inline glm::vec3 GetViewDirection() const { return TransformDirection(glm::vec3(0.0f, 0.0f, -1.0f)); }
 	private:
 		void RecalculateViewMatrix();
 		glm::vec3 CalculateTranslationPoint(glm::vec2 mousePosition, const glm::mat4& inverseProjection, const glm::mat4& inverseView);

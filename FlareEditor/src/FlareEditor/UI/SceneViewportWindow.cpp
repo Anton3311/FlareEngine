@@ -90,6 +90,11 @@ namespace Flare
 			m_Viewport.FrameData.Camera.InverseProjection = glm::inverse(m_Viewport.FrameData.Camera.Projection);
 			m_Viewport.FrameData.Camera.CalculateViewProjection();
 			m_Viewport.FrameData.Camera.Position = m_Camera.GetPosition();
+
+			m_Viewport.FrameData.Camera.ViewDirection = m_Camera.GetViewDirection();
+
+			m_Viewport.FrameData.Camera.Near = m_Camera.GetSettings().Near;
+			m_Viewport.FrameData.Camera.Far = m_Camera.GetSettings().Far;
 		}
 
 		PrepareViewport();

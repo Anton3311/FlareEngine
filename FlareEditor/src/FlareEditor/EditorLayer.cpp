@@ -92,7 +92,7 @@ namespace Flare
         EditorCameraSettings& settings = m_Camera.GetSettings();
         settings.FOV = 60.0f;
         settings.Near = 0.1f;
-        settings.Far = 200.0f;
+        settings.Far = 1000.0f;
         settings.RotationSpeed = 1.0f;
 
         if (Application::GetInstance().GetCommandLineArguments().ArgumentsCount >= 2)
@@ -197,7 +197,36 @@ namespace Flare
             ImGui::Begin("Shadows");
             auto shadows = Renderer::GetShadowsRenderTarget();
 
-            ImGui::Image(shadows->GetColorAttachmentRendererId(0), ImVec2(256, 256), ImVec2(0, 1), ImVec2(1, 0));
+            if (shadows)
+                ImGui::Image(shadows->GetColorAttachmentRendererId(0), ImVec2(256, 256), ImVec2(0, 1), ImVec2(1, 0));
+
+            ShadowSettings& settings = Renderer::GetShadowSettings();
+
+            ImGui::DragFloat("Max Distance", &settings.MaxDistance, 1.0f, 0.0f, 1000.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
+            const char* resolutionPreviews[] = { "512", "1024", "2048", "4096" };
+            uint32_t resolutions[] = { 512, 1024, 2048, 4096 };
+
+            uint32_t resolutionIndex = 0;
+            for (size_t i = 0; i < sizeof(resolutions) / sizeof(uint32_t); i++)
+            {
+                if (resolutions[i] == settings.Resolution)
+                {
+                    resolutionIndex = i;
+                    break;
+                }
+            }
+
+            if (ImGui::BeginCombo("Resolution", resolutionPreviews[resolutionIndex]))
+            {
+                for (size_t i = 0; i < sizeof(resolutions) / sizeof(uint32_t); i++)
+                {
+                    if (ImGui::MenuItem(resolutionPreviews[i]))
+                        settings.Resolution = resolutions[i];
+                }
+
+                ImGui::EndCombo();
+            }
+
             ImGui::End();
         }
 

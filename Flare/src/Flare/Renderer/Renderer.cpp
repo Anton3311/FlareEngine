@@ -50,6 +50,8 @@ namespace Flare
 		Ref<FrameBuffer> ShadowsRenderTarget = nullptr;
 
 		Ref<Material> ErrorMaterial = nullptr;
+
+		ShadowSettings ShadowMappingSettings;
 	};
 	
 	RendererData s_RendererData;
@@ -67,6 +69,9 @@ namespace Flare
 	{
 		s_RendererData.CameraBuffer = UniformBuffer::Create(sizeof(CameraData), 0);
 		s_RendererData.LightBuffer = UniformBuffer::Create(sizeof(LightData), 1);
+
+		s_RendererData.ShadowMappingSettings.MaxDistance = 40.0f;
+		s_RendererData.ShadowMappingSettings.Resolution = 2048;
 
 		float vertices[] = {
 			-1, -1,
@@ -101,13 +106,6 @@ namespace Flare
 			{ "i_EntityIndex", ShaderDataType::Int },
 		});
 
-		FrameBufferSpecifications specs = FrameBufferSpecifications(
-			2048, 2048,
-			{ { FrameBufferTextureFormat::Depth, TextureWrap::Clamp, TextureFiltering::Linear } }
-		);
-
-		s_RendererData.ShadowsRenderTarget = FrameBuffer::Create(specs);
-
 		Project::OnProjectOpen.Bind(ReloadShaders);
 	}
 
@@ -138,6 +136,27 @@ namespace Flare
 
 		s_RendererData.LightBuffer->SetData(&viewport.FrameData.Light, sizeof(viewport.FrameData.Light), 0);
 		s_RendererData.CameraBuffer->SetData(&viewport.FrameData.Camera, sizeof(CameraData), 0);
+
+		if (s_RendererData.ShadowsRenderTarget == nullptr)
+		{
+			FrameBufferSpecifications shadowMapSpecs;
+			shadowMapSpecs.Width = s_RendererData.ShadowMappingSettings.Resolution;
+			shadowMapSpecs.Height = s_RendererData.ShadowMappingSettings.Resolution;
+			shadowMapSpecs.Attachments = { { FrameBufferTextureFormat::Depth, TextureWrap::Clamp, TextureFiltering::Linear } };
+
+			s_RendererData.ShadowsRenderTarget = FrameBuffer::Create(shadowMapSpecs);
+		}
+		else
+		{
+			auto& shadowMapSpecs = s_RendererData.ShadowsRenderTarget->GetSpecifications();
+			if (shadowMapSpecs.Width != s_RendererData.ShadowMappingSettings.Resolution
+				|| shadowMapSpecs.Height != s_RendererData.ShadowMappingSettings.Resolution)
+			{
+				s_RendererData.ShadowsRenderTarget->Resize(
+					s_RendererData.ShadowMappingSettings.Resolution,
+					s_RendererData.ShadowMappingSettings.Resolution);
+			}
+		}
 	}
 
 	static void ApplyMaterialFeatures(ShaderFeatures features)
@@ -372,5 +391,10 @@ namespace Flare
 	Ref<FrameBuffer> Renderer::GetShadowsRenderTarget()
 	{
 		return s_RendererData.ShadowsRenderTarget;
+	}
+
+	ShadowSettings& Renderer::GetShadowSettings()
+	{
+		return s_RendererData.ShadowMappingSettings;
 	}
 }

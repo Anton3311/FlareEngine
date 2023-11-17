@@ -27,6 +27,12 @@ namespace Flare
 		uint32_t DrawCallsSavedByInstances;
 	};
 
+	struct ShadowSettings
+	{
+		float MaxDistance;
+		uint32_t Resolution;
+	};
+
 	class FLARE_API Renderer
 	{
 	public:
@@ -60,6 +66,7 @@ namespace Flare
 		static Ref<Texture> GetWhiteTexture();
 
 		static Ref<FrameBuffer> GetShadowsRenderTarget();
+		static ShadowSettings& GetShadowSettings();
 	private:
 		static void DrawQueued(bool shadowPass);
 		static void FlushInstances();

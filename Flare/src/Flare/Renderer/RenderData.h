@@ -39,6 +39,13 @@ namespace Flare
 		glm::mat4 InverseProjection;
 		glm::mat4 InverseView;
 		glm::mat4 InverseViewProjection;
+
+		float Near;
+		float Far;
+
+		float Padding[2];
+
+		glm::vec3 ViewDirection;
 	};
 
 	struct LightData

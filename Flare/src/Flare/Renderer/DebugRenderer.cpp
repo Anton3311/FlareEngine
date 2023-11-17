@@ -222,6 +222,46 @@ namespace Flare
 		DrawLine(position + halfSize, position + glm::vec3(halfSize.x, -halfSize.y, 0.0f), color);
 	}
 
+	void DebugRenderer::DrawWireQuad(const glm::vec3* corners, const glm::vec4& color)
+	{
+		DrawLine(corners[0], corners[1], color);
+		DrawLine(corners[1], corners[2], color);
+		DrawLine(corners[2], corners[3], color);
+		DrawLine(corners[3], corners[0], color);
+	}
+
+	void DebugRenderer::DrawFrustum(const glm::mat4& inverseViewProjection, const glm::vec4& color)
+	{
+		std::array<glm::vec4, 8> frustumCorners =
+		{
+			glm::vec4(-1.0f, -1.0f, 0.0f, 1.0f),
+			glm::vec4(1.0f, -1.0f, 0.0f, 1.0f),
+			glm::vec4(-1.0f,  1.0f, 0.0f, 1.0f),
+			glm::vec4(1.0f,  1.0f, 0.0f, 1.0f),
+			glm::vec4(-1.0f, -1.0f, 1.0f, 1.0f),
+			glm::vec4(1.0f, -1.0f, 1.0f, 1.0f),
+			glm::vec4(-1.0f,  1.0f, 1.0f, 1.0f),
+			glm::vec4(1.0f,  1.0f, 1.0f, 1.0f),
+		};
+
+		for (size_t i = 0; i < frustumCorners.size(); i++)
+		{
+			frustumCorners[i] = inverseViewProjection * frustumCorners[i];
+			frustumCorners[i] /= frustumCorners[i].w;
+		}
+
+		for (size_t i = 0; i < 8; i += 4)
+		{
+			DrawLine(frustumCorners[i + 0], frustumCorners[i + 1], color);
+			DrawLine(frustumCorners[i + 0], frustumCorners[i + 2], color);
+			DrawLine(frustumCorners[i + 2], frustumCorners[i + 3], color);
+			DrawLine(frustumCorners[i + 1], frustumCorners[i + 3], color);
+		}
+
+		for (size_t i = 0; i < 4; i++)
+			DrawLine(frustumCorners[i], frustumCorners[i + 4], color);
+	}
+
 	void DebugRenderer::FlushLines()
 	{
 		FLARE_CORE_ASSERT(s_DebugRendererData.FrameData);
