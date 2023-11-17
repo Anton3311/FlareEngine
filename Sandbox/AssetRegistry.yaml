@@ -1,10 +1,16 @@
 AssetRegistry:
+  - Handle: 708716781118912740
+    Type: Material
+    Path: Lighting Test/White.flrmat
   - Handle: 1220645617260660817
     Type: Scene
     Path: Test.flare
   - Handle: 1354932369586028623
     Type: Scene
     Path: 3D Test.flare
+  - Handle: 1414766314990490044
+    Type: Scene
+    Path: Lighting Test/LightingTest.flare
   - Handle: 2558145921418293985
     Type: Shader
     Path: Test.glsl

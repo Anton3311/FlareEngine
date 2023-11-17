@@ -1,0 +1,11 @@
+Shader: 17504616539540010642
+Properties:
+  - Name: u_InstanceData.Color
+    Type: 7
+    Value: [0.699999988, 0.699999988, 0.699999988, 1]
+  - Name: u_InstanceData.Roughness
+    Type: 4
+    Value: 0.100000001
+  - Name: u_ShadowMap
+    Type: 8
+    Value: 0

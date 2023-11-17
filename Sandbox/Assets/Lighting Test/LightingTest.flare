@@ -1,0 +1,68 @@
+Entities:
+  - Components:
+      - Name: struct Flare::CameraComponent
+        Projection: 1
+        Size: 10
+        FOV: 60
+        Near: 0.100000001
+        Far: 1000
+      - Name: struct Flare::TransformComponent
+        Position: [0, 2.56707096, 7.00491142]
+        Rotation: [0, -0, 0]
+        Scale: [1, 1, 1]
+      - Name: struct Flare::NameComponent
+        Value: Camera
+  - Components:
+      - Name: struct Flare::MeshComponent
+        Mesh: 10342322337781790464
+        Material: 708716781118912740
+        Flags: 0
+      - Name: struct Flare::TransformComponent
+        Position: [-3.06017709, 3.78316069, 0]
+        Rotation: [0, -0, 0]
+        Scale: [1, 1, 1]
+  - Components:
+      - Name: struct Flare::DirectionalLight
+        Color: [1, 1, 1]
+        Intensity: 3
+      - Name: struct Flare::TransformComponent
+        Position: [-4.14727783, 6.1417551, 9.36032104]
+        Rotation: [-68.1805267, 32.885437, -8.13352199e-06]
+        Scale: [0.999999464, 0.999997139, 0.999993861]
+      - Name: struct Flare::NameComponent
+        Value: Light
+  - Components:
+      - Name: struct Flare::MeshComponent
+        Mesh: 10342322337781790464
+        Material: 708716781118912740
+        Flags: 0
+      - Name: struct Flare::TransformComponent
+        Position: [0, 0.15228653, 0]
+        Rotation: [0, -0, 0]
+        Scale: [38.8028908, 0.115385525, 44.4916496]
+  - Components:
+      - Name: struct Flare::MeshComponent
+        Mesh: 10342322337781790464
+        Material: 708716781118912740
+        Flags: 0
+      - Name: struct Flare::TransformComponent
+        Position: [3.37842155, 1.24103189, 0]
+        Rotation: [2.5978086, -21.9413776, -34.6001244]
+        Scale: [0.999999583, 2.52220488, 0.999998748]
+  - Components:
+      - Name: struct Flare::MeshComponent
+        Mesh: 10342322337781790464
+        Material: 708716781118912740
+        Flags: 0
+      - Name: struct Flare::TransformComponent
+        Position: [6.74099207, 5.97819948, -3.31994915]
+        Rotation: [12.2712412, 48.8524284, 37.9122314]
+        Scale: [0.999998748, 1.62411737, 0.999998569]
+PostProcessing:
+  - Name: class Flare::ToneMapping
+    Enabled: true
+  - Name: class Flare::Vignette
+    Enabled: true
+    Color: [0, 0, 0, 0.5]
+    Radius: 1
+    Smoothness: 1
