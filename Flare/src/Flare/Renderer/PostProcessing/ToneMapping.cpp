@@ -8,7 +8,7 @@
 
 namespace Flare
 {
-	FLARE_IMPL_TYPE(ToneMapping, FLARE_FIELD(ToneMapping, Enabled));
+	FLARE_IMPL_TYPE(ToneMapping, FLARE_PROPERTY(ToneMapping, Enabled));
 
 	ToneMapping::ToneMapping()
 		: Enabled(false)

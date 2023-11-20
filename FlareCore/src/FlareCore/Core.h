@@ -26,6 +26,8 @@
 #define FLARE_API_EXPORT __declspec(dllexport)
 #define FLARE_API_IMPORT __declspec(dllimport)
 
+#define FLARE_TYPE_OF_FIELD(typeName, fieldName) decltype(((typeName*)nullptr)->fieldName)
+
 #define FLARE_EXPORT extern "C" __declspec(dllexport)
 #define FLARE_IMPORT extern "C" __declspec(dllimport)
 

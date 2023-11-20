@@ -84,7 +84,11 @@ namespace Flare
 			if (info.Initializer)
 			{
 				uint8_t* componentData = AddDeserializedComponent(world, entity, componentId.value());
-				DeserializeType(componentNode, info.Initializer->Type, componentData);
+				
+				const SerializableObjectDescriptor& serializationDescriptor = info.Initializer->Type.SerializationDescriptor;
+				SerializableObject serializableComponent = SerializableObject(componentData, serializationDescriptor);
+
+				DeserializeObject(componentNode, serializableComponent);
 			}
 		}
 
@@ -114,13 +118,13 @@ namespace Flare
 		{
 			Ref<ToneMapping> toneMapping = scene->GetPostProcessingManager().ToneMappingPass;
 			emitter << YAML::Value;
-			SerializeType(emitter, *toneMapping);
+			SerializeObject(emitter, SerializableObject::From(*toneMapping));
 		}
 
 		{
 			Ref<Vignette> vignette = scene->GetPostProcessingManager().VignettePass;
 			emitter << YAML::Value;
-			SerializeType(emitter, *vignette);
+			SerializeObject(emitter, SerializableObject::From(*vignette));
 		}
 
 		emitter << YAML::EndMap; // PostProcessing
@@ -180,9 +184,15 @@ namespace Flare
 			{
 				std::string name = nameNode.as<std::string>();
 				if (name == ToneMapping::_Type.TypeName)
-					DeserializeType<ToneMapping>(effectSettings, *scene->GetPostProcessingManager().ToneMappingPass);
+				{
+					SerializableObject object = SerializableObject::From(*scene->GetPostProcessingManager().ToneMappingPass);
+					DeserializeObject(effectSettings, object);
+				}
 				else if (name == Vignette::_Type.TypeName)
-					DeserializeType(effectSettings, *scene->GetPostProcessingManager().VignettePass);
+				{
+					SerializableObject object = SerializableObject::From(*scene->GetPostProcessingManager().VignettePass);
+					DeserializeObject(effectSettings, object);
+				}
 			}
 		}
 	}

@@ -5,17 +5,17 @@
 namespace Flare
 {
     TypeInitializer::TypeInitializer(std::string_view typeName, size_t size, 
+        const SerializableObjectDescriptor& serializationDescriptor,
         DestructorFunction destructor,
         DefaultConstructorFunction constructor,
         MoveConstructorFunction moveConstructor,
-        CopyConstructorFunction copyConstructor,
-        const std::initializer_list<FieldData>& fields)
+        CopyConstructorFunction copyConstructor)
         : TypeName(typeName), Size(size), 
+          SerializationDescriptor(serializationDescriptor),
           Destructor(destructor),
           DefaultConstructor(constructor),
           MoveConstructor(moveConstructor),
-          CopyConstructor(copyConstructor),
-          SerializedFields(fields)
+          CopyConstructor(copyConstructor)
     {
         GetInitializers().push_back(this);
     }

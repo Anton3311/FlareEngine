@@ -2,7 +2,7 @@
 
 namespace Flare
 {
-	FLARE_IMPL_COMPONENT(NameComponent, FLARE_FIELD(NameComponent, Value));
+	FLARE_IMPL_COMPONENT(NameComponent, FLARE_PROPERTY(NameComponent, Value));
 	NameComponent::NameComponent() {}
 
 	NameComponent::NameComponent(std::string_view name)
@@ -13,9 +13,9 @@ namespace Flare
 	}
 
 	FLARE_IMPL_COMPONENT(TransformComponent,
-		FLARE_FIELD(TransformComponent, Position),
-		FLARE_FIELD(TransformComponent, Rotation),
-		FLARE_FIELD(TransformComponent, Scale),
+		FLARE_PROPERTY(TransformComponent, Position),
+		FLARE_PROPERTY(TransformComponent, Rotation),
+		FLARE_PROPERTY(TransformComponent, Scale),
 	);
 	TransformComponent::TransformComponent()
 		: Position(glm::vec3(0.0f)),
@@ -37,11 +37,11 @@ namespace Flare
 	}
 
 	FLARE_IMPL_COMPONENT(CameraComponent,
-		FLARE_ENUM_FIELD(CameraComponent, Projection),
-		FLARE_FIELD(CameraComponent, Size),
-		FLARE_FIELD(CameraComponent, FOV),
-		FLARE_FIELD(CameraComponent, Near),
-		FLARE_FIELD(CameraComponent, Far),
+		FLARE_ENUM_PROPERTY(CameraComponent, Projection),
+		FLARE_PROPERTY(CameraComponent, Size),
+		FLARE_PROPERTY(CameraComponent, FOV),
+		FLARE_PROPERTY(CameraComponent, Near),
+		FLARE_PROPERTY(CameraComponent, Far),
 	);
 
 	CameraComponent::CameraComponent()
@@ -83,10 +83,10 @@ namespace Flare
 	}
 
 	FLARE_IMPL_COMPONENT(SpriteComponent,
-		FLARE_FIELD(SpriteComponent, Color),
-		FLARE_FIELD(SpriteComponent, TextureTiling),
-		FLARE_FIELD(SpriteComponent, Texture),
-		FLARE_ENUM_FIELD(SpriteComponent, Flags),
+		FLARE_PROPERTY(SpriteComponent, Color),
+		FLARE_PROPERTY(SpriteComponent, TextureTiling),
+		FLARE_PROPERTY(SpriteComponent, Texture),
+		FLARE_ENUM_PROPERTY(SpriteComponent, Flags),
 	);
 
 	SpriteComponent::SpriteComponent()
@@ -101,14 +101,14 @@ namespace Flare
 		Texture(texture),
 		Flags(SpriteRenderFlags::None) {}
 
-	FLARE_IMPL_COMPONENT(SpriteLayer, FLARE_FIELD(SpriteLayer, Layer));
+	FLARE_IMPL_COMPONENT(SpriteLayer, FLARE_PROPERTY(SpriteLayer, Layer));
 	SpriteLayer::SpriteLayer()
 		: Layer(0) {}
 
 	SpriteLayer::SpriteLayer(int32_t layer)
 		: Layer(layer) {}
 
-	FLARE_IMPL_COMPONENT(MaterialComponent, FLARE_FIELD(MaterialComponent, Material));
+	FLARE_IMPL_COMPONENT(MaterialComponent, FLARE_PROPERTY(MaterialComponent, Material));
 
 	MaterialComponent::MaterialComponent()
 		: Material(NULL_ASSET_HANDLE) {}
@@ -119,8 +119,8 @@ namespace Flare
 
 
 	FLARE_IMPL_COMPONENT(TextComponent,
-		FLARE_FIELD(TextComponent, Text),
-		FLARE_FIELD(TextComponent, Font),
+		FLARE_PROPERTY(TextComponent, Text),
+		FLARE_PROPERTY(TextComponent, Font),
 	);
 	TextComponent::TextComponent()
 		: Color(1.0f), Font(NULL_ASSET_HANDLE) {}
@@ -131,9 +131,9 @@ namespace Flare
 
 
 	FLARE_IMPL_COMPONENT(MeshComponent,
-		FLARE_FIELD(MeshComponent, Mesh),
-		FLARE_FIELD(MeshComponent, Material),
-		FLARE_ENUM_FIELD(MeshComponent, Flags),
+		FLARE_PROPERTY(MeshComponent, Mesh),
+		FLARE_PROPERTY(MeshComponent, Material),
+		FLARE_ENUM_PROPERTY(MeshComponent, Flags),
 	);
 	MeshComponent::MeshComponent(MeshRenderFlags flags)
 		: Mesh(NULL_ASSET_HANDLE), Material(NULL_ASSET_HANDLE), Flags(flags) {}
@@ -144,8 +144,8 @@ namespace Flare
 
 
 	FLARE_IMPL_COMPONENT(DirectionalLight,
-		FLARE_FIELD(DirectionalLight, Color),
-		FLARE_FIELD(DirectionalLight, Intensity)
+		FLARE_PROPERTY(DirectionalLight, Color),
+		FLARE_PROPERTY(DirectionalLight, Intensity)
 	);
 	DirectionalLight::DirectionalLight()
 		: Color(1.0f), Intensity(1.0f) {}

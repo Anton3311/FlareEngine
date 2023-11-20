@@ -143,7 +143,7 @@ namespace Flare
 		bool result = false;
 		size_t propertiesCount = object.Descriptor.Properties.size();
 		for (size_t index = 0; index < propertiesCount; index++)
-			result |= PropertyField(object.GetProperty(index));
+			result |= PropertyField(object.PropertyAt(index));
 
 		return result;
 	}
@@ -161,7 +161,7 @@ namespace Flare
 		case SerializablePropertyType::Float:
 			result |= FloatPropertyField(property.Descriptor.Name.c_str(), property.ValueAs<float>());
 			break;
-		case SerializablePropertyType::Int:
+		case SerializablePropertyType::Int32:
 			result |= IntPropertyField(property.Descriptor.Name.c_str(), property.ValueAs<int32_t>());
 			break;
 
@@ -447,6 +447,7 @@ namespace Flare
 
 	static bool RenderArrayEditor(const FieldData& field, uint8_t* data)
 	{
+#if 0
 		bool result = false;
 		EditorGUI::EndPropertyGrid();
 
@@ -477,11 +478,13 @@ namespace Flare
 		}
 
 		EditorGUI::BeginPropertyGrid();
-		return result;
+#endif
+		return false;
 	}
 
 	bool EditorGUI::TypeEditor(const TypeInitializer& type, uint8_t* data)
 	{
+#if 0
 		const auto& fields = type.SerializedFields;
 		bool result = false;
 
@@ -513,8 +516,9 @@ namespace Flare
 			}
 			EditorGUI::EndPropertyGrid();
 		}
+#endif
 
-		return result;
+		return false;
 	}
 
 	void EditorGUI::PropertyName(const char* name, float minHeight)

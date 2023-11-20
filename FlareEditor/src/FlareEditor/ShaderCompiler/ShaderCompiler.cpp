@@ -259,7 +259,7 @@ namespace Flare
                     {
                         SerializablePropertyDescriptor& propertyDescriptor = serializationDescriptor.Properties.emplace_back(
                             property.Name.Value, SIZE_MAX,
-                            SerializablePropertyType::Int);
+                            SerializablePropertyType::Int32);
 
                         propertyNameToIndex.emplace(propertyDescriptor.Name, serializationDescriptor.Properties.size() - 1);
                     }
@@ -291,7 +291,7 @@ namespace Flare
 
                 const auto& memberType = compiler.get_type(memberTypeId);
 
-                SerializablePropertyType dataType = SerializablePropertyType::Int;
+                SerializablePropertyType dataType = SerializablePropertyType::Int32;
                 uint32_t componentsCount = memberType.vecsize;
 
                 bool error = false;
@@ -302,7 +302,7 @@ namespace Flare
                     switch (componentsCount)
                     {
                     case 1:
-                        dataType = SerializablePropertyType::Int;
+                        dataType = SerializablePropertyType::Int32;
                         break;
                     case 2:
                         dataType = SerializablePropertyType::IntVector2;

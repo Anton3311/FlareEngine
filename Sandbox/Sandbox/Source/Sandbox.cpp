@@ -29,8 +29,8 @@ namespace Sandbox
 		AssetHandle PrefabHandle;
 	};
 	FLARE_IMPL_COMPONENT(RotatingQuadData,
-		FLARE_FIELD(RotatingQuadData, RotationSpeed),
-		FLARE_FIELD(RotatingQuadData, PrefabHandle)
+		FLARE_PROPERTY(RotatingQuadData, RotationSpeed),
+		FLARE_PROPERTY(RotatingQuadData, PrefabHandle)
 	);
 
 	struct SomeComponent
@@ -43,8 +43,8 @@ namespace Sandbox
 			: a(100), b(-234) {}
 	};
 	FLARE_IMPL_COMPONENT(SomeComponent,
-		FLARE_FIELD(SomeComponent, a),
-		FLARE_FIELD(SomeComponent, b),
+		FLARE_PROPERTY(SomeComponent, a),
+		FLARE_PROPERTY(SomeComponent, b),
 	);
 
 	struct TestComponent
@@ -55,7 +55,7 @@ namespace Sandbox
 		TestComponent()
 			: a(1000) {}
 	};
-	FLARE_IMPL_COMPONENT(TestComponent, FLARE_FIELD(TestComponent, a));
+	FLARE_IMPL_COMPONENT(TestComponent, FLARE_PROPERTY(TestComponent, a));
 
 	class RotatingQuadSystem : public Flare::System
 	{
