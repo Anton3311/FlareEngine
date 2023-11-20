@@ -84,9 +84,10 @@ namespace Flare
                             if (componentId)
                             {
                                 const ComponentInfo& info = world.Components.GetComponentInfo(componentId.value());
+                                SerializableObject componentObject = SerializableObject(prefabData + writeOffset, info.Initializer->Type.SerializationDescriptor);
 
                                 if (info.Initializer)
-                                    DeserializeType(componentNode, info.Initializer->Type, prefabData + writeOffset);
+                                    DeserializeObject(componentNode, componentObject);
 
                                 components[index].second = (void*)(prefabData + writeOffset);
 

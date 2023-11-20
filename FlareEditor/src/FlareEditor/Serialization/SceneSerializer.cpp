@@ -23,7 +23,10 @@ namespace Flare
 		const ComponentInfo& info = world.Components.GetComponentInfo(component);
 
 		if (entityData.has_value() && info.Initializer)
-			SerializeType(emitter, info.Initializer->Type, (const uint8_t*)entityData.value());
+		{
+			SerializableObject entityObject = SerializableObject((uint8_t*)entityData.value(), info.Initializer->Type.SerializationDescriptor);
+			SerializeObject(emitter, entityObject);
+		}
 	}
 
 	template<typename T>
