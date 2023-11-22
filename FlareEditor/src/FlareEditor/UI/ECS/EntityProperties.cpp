@@ -62,7 +62,10 @@ namespace Flare
 					{
 						std::optional<void*> componentData = m_World.Entities.GetEntityComponent(entity, component);
 						if (componentData.has_value() && componentInfo.Initializer)
-							EditorGUI::TypeEditor(componentInfo.Initializer->Type, (uint8_t*)componentData.value());
+						{
+							SerializableObject serializableEntity = SerializableObject((uint8_t*)componentData.value(), componentInfo.Initializer->Type.SerializationDescriptor);
+							EditorGUI::ObjectField(serializableEntity);
+						}
 					}
 
 					ImGui::TreePop();

@@ -141,9 +141,15 @@ namespace Flare
 	bool EditorGUI::ObjectField(SerializableObject& object)
 	{
 		bool result = false;
-		size_t propertiesCount = object.Descriptor.Properties.size();
-		for (size_t index = 0; index < propertiesCount; index++)
-			result |= PropertyField(object.PropertyAt(index));
+
+		if (EditorGUI::BeginPropertyGrid())
+		{
+			size_t propertiesCount = object.Descriptor.Properties.size();
+			for (size_t index = 0; index < propertiesCount; index++)
+				result |= PropertyField(object.PropertyAt(index));
+
+			EditorGUI::EndPropertyGrid();
+		}
 
 		return result;
 	}
@@ -177,6 +183,10 @@ namespace Flare
 
 		case SerializablePropertyType::Texture2D:
 			result |= TextureField(property.Descriptor.Name.c_str(), property.ValueAs<AssetHandle>());
+			break;
+
+		case SerializablePropertyType::String:
+			result |= EditorGUI::TextProperty(property.Descriptor.Name.c_str(), property.ValueAs<std::string>());
 			break;
 		}
 		
@@ -385,140 +395,6 @@ namespace Flare
 	{
 		ImGui::GetCurrentWindow()->DC.LayoutType = ImGuiLayoutType_Vertical;
 		ImGui::PopItemWidth();
-	}
-
-	static bool RenderFieldEditor(const FieldTypeInfo& field, uint8_t* fieldData)
-	{
-		bool result = false;
-		ImGui::PushID(fieldData);
-		if (field.FieldType == SerializableFieldType::Custom)
-		{
-			if (field.CustomType == &Entity::_Type)
-				result = EditorGUI::EntityField(World::GetCurrent(), *(Entity*)fieldData);
-			else if (field.CustomType == &AssetHandle::_Type)
-				result = EditorGUI::AssetField(*(AssetHandle*)fieldData);
-
-			ImGui::PopID();
-			return result;
-		}
-
-		switch (field.FieldType)
-		{
-		case SerializableFieldType::Bool:
-			result |= ImGui::Checkbox("", (bool*)fieldData);
-			break;
-		case SerializableFieldType::Int32:
-			result |= ImGui::DragInt("", (int32_t*)fieldData);
-			break;
-		case SerializableFieldType::Float32:
-			result |= ImGui::DragFloat("", (float*)fieldData);
-			break;
-
-		case SerializableFieldType::Int2:
-			result |= ImGui::DragInt2("", (int32_t*)fieldData);
-			break;
-		case SerializableFieldType::Int3:
-			result |= ImGui::DragInt3("", (int32_t*)fieldData);
-			break;
-		case SerializableFieldType::Int4:
-			result |= ImGui::DragInt4("", (int32_t*)fieldData);
-			break;
-
-		case SerializableFieldType::Float2:
-			result |= ImGui::DragFloat2("", (float*)fieldData);
-			break;
-		case SerializableFieldType::Float3:
-			result |= ImGui::DragFloat3("", (float*)fieldData);
-			break;
-		case SerializableFieldType::Float4:
-			result |= ImGui::DragFloat4("", (float*)fieldData);
-			break;
-		case SerializableFieldType::String:
-		{
-			std::string* string = (std::string*)fieldData;
-			result |= ImGui::InputTextMultiline("", string->data(), string->size() + 1, ImVec2(0.0f, 0.0f), ImGuiInputTextFlags_CallbackResize, InputTextCallback, (void*)string);
-			break;
-		}
-		}
-
-		ImGui::PopID();
-		return result;
-	}
-
-	static bool RenderArrayEditor(const FieldData& field, uint8_t* data)
-	{
-#if 0
-		bool result = false;
-		EditorGUI::EndPropertyGrid();
-
-		bool opened = ImGui::TreeNodeEx(field.Name, ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_SpanAvailWidth);
-		if (opened)
-		{
-			EditorGUI::BeginPropertyGrid();
-			float framePadding = ImGui::GetStyle().FramePadding.y;
-			size_t elementSize = field.ArrayElementType.GetSize();
-
-			{
-				// Array Size
-				EditorGUI::PropertyName("Size");
-
-				ImGui::SetCursorPosY(ImGui::GetCursorPosY() + framePadding);
-				ImGui::Text("%d", field.ElementsCount);
-				ImGui::SetCursorPosY(ImGui::GetCursorPosY() + framePadding);
-			}
-
-			for (size_t i = 0; i < field.ElementsCount; i++)
-			{
-				EditorGUI::PropertyIndex(i);
-				result |= RenderFieldEditor(field.ArrayElementType, data + i * elementSize);
-			}
-
-			EditorGUI::EndPropertyGrid();
-			ImGui::TreePop();
-		}
-
-		EditorGUI::BeginPropertyGrid();
-#endif
-		return false;
-	}
-
-	bool EditorGUI::TypeEditor(const TypeInitializer& type, uint8_t* data)
-	{
-#if 0
-		const auto& fields = type.SerializedFields;
-		bool result = false;
-
-		if (EditorGUI::BeginPropertyGrid())
-		{
-			for (size_t i = 0; i < fields.size(); i++)
-			{
-				const FieldData& field = fields[i];
-				uint8_t* fieldData = data + field.Offset;
-
-				if (field.TypeInfo.FieldType == SerializableFieldType::Array)
-					result |= RenderArrayEditor(field, fieldData);
-				else if (field.TypeInfo.FieldType == SerializableFieldType::Custom && field.TypeInfo.CustomType != &Entity::_Type && field.TypeInfo.CustomType != &AssetHandle::_Type)
-				{
-					EditorGUI::EndPropertyGrid();
-					bool opened = ImGui::TreeNodeEx(field.Name, ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_SpanAvailWidth);
-					if (opened)
-					{
-						result |= EditorGUI::TypeEditor(*field.TypeInfo.CustomType, fieldData);
-						ImGui::TreePop();
-					}
-					EditorGUI::BeginPropertyGrid();
-				}
-				else
-				{
-					PropertyName(field.Name);
-					result |= RenderFieldEditor(field.TypeInfo, data + field.Offset);
-				}
-			}
-			EditorGUI::EndPropertyGrid();
-		}
-#endif
-
-		return false;
 	}
 
 	void EditorGUI::PropertyName(const char* name, float minHeight)
