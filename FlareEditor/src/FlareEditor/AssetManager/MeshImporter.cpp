@@ -15,9 +15,11 @@ namespace Flare
 			std::vector<glm::vec3> vertices;
 			std::vector<glm::vec3> normals;
 			std::vector<uint32_t> indices;
+			std::vector<glm::vec2> uvs;
 
 			vertices.resize(nodeMesh->mNumVertices);
 			normals.resize(nodeMesh->mNumVertices);
+			uvs.resize(nodeMesh->mNumVertices);
 
 			for (size_t i = 0; i < vertices.size(); i++)
 			{
@@ -31,6 +33,14 @@ namespace Flare
 				normals[i].x = nodeMesh->mNormals[i].x;
 				normals[i].y = nodeMesh->mNormals[i].y;
 				normals[i].z = nodeMesh->mNormals[i].z;
+			}
+
+			if (nodeMesh->mTextureCoords != nullptr)
+			for (size_t i = 0; i < uvs.size(); i++)
+			{
+				auto uv = nodeMesh->mTextureCoords[0][i];
+				uvs[i].x = uv.x;
+				uvs[i].y = uv.y;
 			}
 
 			for (int32_t face = 0; face < nodeMesh->mNumFaces; face++)
@@ -49,7 +59,8 @@ namespace Flare
 			// Import the first mesh for now.
 			return CreateRef<Mesh>(vertices.data(), vertices.size(),
 				indices.data(), indices.size(),
-				normals.data());
+				normals.data(),
+				uvs.data());
 		}
 
 		for (int i = 0; i < node->mNumChildren; i++)

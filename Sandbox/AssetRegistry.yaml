@@ -11,6 +11,9 @@ AssetRegistry:
   - Handle: 1414766314990490044
     Type: Scene
     Path: Lighting Test/LightingTest.flare
+  - Handle: 2080111666818199829
+    Type: Texture
+    Path: White.png
   - Handle: 2558145921418293985
     Type: Shader
     Path: Test.glsl

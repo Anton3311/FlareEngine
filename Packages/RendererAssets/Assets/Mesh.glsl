@@ -2,6 +2,7 @@ Properties =
 {
 	u_InstanceData.Color = {}
 	u_InstanceData.Roughness = {}
+	u_Texture = {}
 }
 
 #begin vertex
@@ -9,8 +10,9 @@ Properties =
 
 layout(location = 0) in vec3 i_Position;
 layout(location = 1) in vec3 i_Normal;
-layout(location = 2) in mat4 i_Transform;
-layout(location = 6) in int i_EntityIndex;
+layout(location = 2) in vec2 i_UV;
+layout(location = 3) in mat4 i_Transform;
+layout(location = 7) in int i_EntityIndex;
 
 #include "Camera.glsl"
 
@@ -18,6 +20,7 @@ struct VertexData
 {
 	vec3 Position;
 	vec3 Normal;
+	vec2 UV;
 	vec4 LightSpacePosition;
 };
 
@@ -29,7 +32,7 @@ layout(std140, binding = 1) uniform DirLight
 };
 
 layout(location = 0) out VertexData o_Vertex;
-layout(location = 3) out flat int o_EntityIndex;
+layout(location = 4) out flat int o_EntityIndex;
 
 void main()
 {
@@ -40,7 +43,7 @@ void main()
 	o_Vertex.Position = (i_Transform * vec4(i_Position, 1.0)).xyz;
 
 	o_Vertex.LightSpacePosition = u_LightProjection * vec4(o_Vertex.Position, 1.0);
-	
+	o_Vertex.UV = i_UV;
 	o_EntityIndex = i_EntityIndex;
 
     gl_Position = position;
@@ -73,13 +76,15 @@ struct VertexData
 {
 	vec3 Position;
 	vec3 Normal;
+	vec2 UV;
 	vec4 LightSpacePosition;
 };
 
 layout(binding = 2) uniform sampler2D u_ShadowMap;
+layout(binding = 3) uniform sampler2D u_Texture;
 
 layout(location = 0) in VertexData i_Vertex;
-layout(location = 3) in flat int i_EntityIndex;
+layout(location = 4) in flat int i_EntityIndex;
 
 layout(location = 0) out vec4 o_Color;
 layout(location = 1) out int o_EntityIndex;
@@ -207,11 +212,13 @@ void main()
 	vec3 kS = Fresnel_Shlick(baseReflectivity, V, H);
 	vec3 kD = vec3(1.0) - kS;
 
-	vec3 diffuse = Diffuse_Lambertian(u_InstanceData.Color.rgb);
+	vec4 color = u_InstanceData.Color * texture(u_Texture, i_Vertex.UV);
+
+	vec3 diffuse = Diffuse_Lambertian(color.rgb);
 	vec3 specular = Specular_CookTorence(alpha, N, V, u_LightDirection);
 	vec3 brdf = kD * diffuse + specular;
 
-	o_Color = vec4(shadow * brdf * incomingLight * max(0.0, dot(u_LightDirection, N)), u_InstanceData.Color.a);
+	o_Color = vec4(shadow * brdf * incomingLight * max(0.0, dot(u_LightDirection, N)), color.a);
 	o_EntityIndex = i_EntityIndex;
 }
 

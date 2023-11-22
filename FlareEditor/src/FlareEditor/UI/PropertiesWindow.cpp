@@ -282,14 +282,12 @@ namespace Flare
 		EditorShaderCache* shaderCache = (EditorShaderCache*)ShaderCacheManager::GetInstance().get();
 
 		std::optional<const EditorShaderCache::ShaderEntry*> shaderEntry = shaderCache->GetShaderEntry(shaderHandle);
-		if (shaderEntry && EditorGUI::BeginPropertyGrid())
+		if (shaderEntry)
 		{
 			const SerializableObjectDescriptor& serializationDescriptor = shaderEntry.value()->SerializationDescriptor;
 			SerializableObject materialProperties = SerializableObject(material->GetPropertiesBuffer(), serializationDescriptor);
 
 			EditorGUI::ObjectField(materialProperties);
-
-			EditorGUI::EndPropertyGrid();
 		}
 
 		return false;

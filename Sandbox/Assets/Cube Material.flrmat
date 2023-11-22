@@ -6,8 +6,9 @@ Properties:
   - Name: u_InstanceData.Roughness
     Type: 4
     Value: 0.200000003
-Features:
-  CullingMode: Back
-  DepthTest: true
-  BlendMode: Transparent
-  DepthFunction: Less
+  - Name: u_ShadowMap
+    Type: 8
+    Value: 0
+  - Name: u_Texture
+    Type: 8
+    Value: 2080111666818199829
