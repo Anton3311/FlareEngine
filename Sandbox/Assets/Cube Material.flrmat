@@ -2,7 +2,7 @@ Shader: 17504616539540010642
 Properties:
   - Name: u_InstanceData.Color
     Type: 7
-    Value: [1.20000005, 0.100000001, 0.200000003, 1]
+    Value: [0.939999998, 0.899999976, 0.870000005, 1]
   - Name: u_InstanceData.Roughness
     Type: 4
     Value: 0.200000003

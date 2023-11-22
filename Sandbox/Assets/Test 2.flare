@@ -192,7 +192,7 @@ Entities:
         Scale: [4, 6, 2]
       - Name: struct Flare::MeshComponent
         Mesh: 10342322337781790464
-        Material: 13576769737354600278
+        Material: 13900636449532140235
         Flags: 0
   - Components:
       - Name: struct Flare::TransformComponent

@@ -258,16 +258,12 @@ namespace Flare
 			break;
 		}
 
-		// Render scene toolbar
-		RenderToolBar();
-
-		m_IsToolbarHovered = ImGui::IsAnyItemHovered();
-
 		World& world = Scene::GetActive()->GetECSWorld();
 		if (ImGui::BeginDragDropTarget())
 		{
 			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(ASSET_PAYLOAD_NAME))
 			{
+				Entity entity = GetEntityUnderCursor();
 				AssetHandle handle = *(AssetHandle*)payload->Data;
 				const AssetMetadata* metadata = AssetManager::GetAssetMetadata(handle);
 				if (metadata != nullptr)
@@ -279,13 +275,26 @@ namespace Flare
 						break;
 					case AssetType::Texture:
 					{
-						Entity entity = GetEntityUnderCursor();
 						if (!world.IsEntityAlive(entity))
 							break;
 
 						std::optional<SpriteComponent*> sprite = world.TryGetEntityComponent<SpriteComponent>(entity);
 						if (sprite.has_value())
 							sprite.value()->Texture = handle;
+
+						break;
+					}
+					case AssetType::Material:
+					{
+						std::optional<MeshComponent*> meshComponent = world.TryGetEntityComponent<MeshComponent>(entity);
+						if (meshComponent)
+							meshComponent.value()->Material = handle;
+						else
+						{
+							std::optional<MaterialComponent*> materialComponent = world.TryGetEntityComponent<MaterialComponent>(entity);
+							if (materialComponent)
+								materialComponent.value()->Material = handle;
+						}
 
 						break;
 					}
@@ -301,6 +310,12 @@ namespace Flare
 				ImGui::EndDragDropTarget();
 			}
 		}
+
+
+		// Render scene toolbar
+		RenderToolBar();
+
+		m_IsToolbarHovered = ImGui::IsAnyItemHovered();
 
 		ImGuiIO& io = ImGui::GetIO();
 
