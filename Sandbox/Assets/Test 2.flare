@@ -52,12 +52,6 @@ Entities:
         Position: [0, 0, 0]
         Rotation: [0, 0, 0]
         Scale: [0, 0, 0]
-      - Name: struct Sandbox::RotatingQuadData
-        RotationSpeed: 45
-        PrefabHandle: 12561055223819313244
-      - Name: struct Sandbox::SomeComponent
-        a: 34
-        b: -59
   - Components:
       - Name: struct Flare::TransformComponent
         Position: [-3.46407223, 0.69900316, 0.238736749]
@@ -202,6 +196,15 @@ Entities:
       - Name: struct Flare::MeshComponent
         Mesh: 10342322337781790464
         Material: 13576769737354600278
+        Flags: 0
+  - Components:
+      - Name: struct Flare::TransformComponent
+        Position: [-17.9693203, -2.18887258, 7.88954115]
+        Rotation: [-90, 0, 0]
+        Scale: [3.40999818, 3.40999627, 3.4099977]
+      - Name: struct Flare::MeshComponent
+        Mesh: 15517588840512804130
+        Material: 8591874641572217228
         Flags: 0
 PostProcessing:
   - Name: class Flare::ToneMapping

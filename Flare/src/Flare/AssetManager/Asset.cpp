@@ -4,6 +4,31 @@ namespace Flare
 {
 	FLARE_IMPL_TYPE(AssetHandle);
 
+	FLARE_API std::string_view AssetSourceToString(AssetSource source)
+	{
+		switch (source)
+		{
+		case AssetSource::File:
+			return "File";
+		case AssetSource::Memory:
+			return "Memory";
+		}
+
+		FLARE_CORE_ASSERT("Unhandled asset source type");
+		return "";
+	}
+
+	FLARE_API AssetSource AssetSourceFromString(std::string_view string)
+	{
+		if (string == "File")
+			return AssetSource::File;
+		if (string == "Memory")
+			return AssetSource::Memory;
+
+		FLARE_CORE_ASSERT("Unknown asset source type '{}'", string);
+		return AssetSource::File;
+	}
+
 	std::string_view AssetTypeToString(AssetType type)
 	{
 		switch (type)

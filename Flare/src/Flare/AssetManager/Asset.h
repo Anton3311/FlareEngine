@@ -44,14 +44,29 @@ namespace Flare
 		Mesh,
 	};
 
+	enum class AssetSource
+	{
+		File,
+		Memory,
+	};
+
+	FLARE_API std::string_view AssetSourceToString(AssetSource soruce);
+	FLARE_API AssetSource AssetSourceFromString(std::string_view string);
+
 	FLARE_API std::string_view AssetTypeToString(AssetType type);
 	FLARE_API AssetType AssetTypeFromString(std::string_view string);
 
 	struct AssetMetadata
 	{
 		AssetType Type;
+		AssetSource Source;
 		AssetHandle Handle;
+		AssetHandle Parent;
+
+		std::string Name;
 		std::filesystem::path Path;
+
+		std::vector<AssetHandle> SubAssets;
 	};
 
 	class FLARE_API Asset

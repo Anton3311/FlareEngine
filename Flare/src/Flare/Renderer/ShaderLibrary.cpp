@@ -6,7 +6,6 @@ namespace Flare
 
 	void ShaderLibrary::AddShader(const std::string_view& name, AssetHandle handle)
 	{
-		FLARE_CORE_INFO(name);
 		s_ShaderNameToHandle.emplace(name, handle);
 	}
 

@@ -148,7 +148,11 @@ namespace Flare
 		if (m_Mode == AssetTreeViewMode::Registry && !node.IsImported)
 			return;
 
-		ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_SpanFullWidth;
+		ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_SpanFullWidth;
+
+		const AssetMetadata* metadata = AssetManager::GetAssetMetadata(node.Handle);
+		if (metadata == nullptr || metadata->SubAssets.size() == 0)
+			flags |= ImGuiTreeNodeFlags_Leaf;
 
 		if (!node.IsImported)
 			ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled));
@@ -157,6 +161,21 @@ namespace Flare
 
 		if (!node.IsImported)
 			ImGui::PopStyleColor();
+
+		if (node.IsImported && ImGui::BeginDragDropSource())
+		{
+			ImGui::SetDragDropPayload(ASSET_PAYLOAD_NAME, &node.Handle, sizeof(AssetHandle));
+			ImGui::EndDragDropSource();
+		}
+
+		if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+			OnOpenFile(node);
+
+		if (ImGui::IsItemHovered() && ImGui::IsMouseReleased(ImGuiMouseButton_Left))
+		{
+			EditorLayer::GetInstance().Selection.SetAsset(node.Handle);
+			OnAssetSelectionChanged.Invoke(node.Handle);
+		}
 
 		if (opened)
 		{
@@ -217,23 +236,42 @@ namespace Flare
 				ImGui::EndMenu();
 			}
 
+			if (metadata != nullptr)
+			{
+				for (AssetHandle handle : metadata->SubAssets)
+				{
+					const AssetMetadata* meta = AssetManager::GetAssetMetadata(handle);
+					if (meta->Name.size() > 0)
+						RenderAssetItem(handle);
+				}
+			}
+
 			ImGui::TreePop();
 		}
+	}
 
-		if (node.IsImported && ImGui::BeginDragDropSource())
+	void AssetManagerWindow::RenderAssetItem(AssetHandle handle)
+	{
+		ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_SpanFullWidth;
+
+		const AssetMetadata* metadata = AssetManager::GetAssetMetadata(handle);
+
+		bool opened = ImGui::TreeNodeEx(metadata->Name.c_str(), flags, metadata->Name.c_str());
+
+		if (ImGui::BeginDragDropSource())
 		{
-			ImGui::SetDragDropPayload(ASSET_PAYLOAD_NAME, &node.Handle, sizeof(AssetHandle));
+			ImGui::SetDragDropPayload(ASSET_PAYLOAD_NAME, &handle, sizeof(AssetHandle));
 			ImGui::EndDragDropSource();
 		}
 
-		if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
-			OnOpenFile(node);
-
 		if (ImGui::IsItemHovered() && ImGui::IsMouseReleased(ImGuiMouseButton_Left))
 		{
-			EditorLayer::GetInstance().Selection.SetAsset(node.Handle);
-			OnAssetSelectionChanged.Invoke(node.Handle);
+			EditorLayer::GetInstance().Selection.SetAsset(handle);
+			OnAssetSelectionChanged.Invoke(handle);
 		}
+
+		if (opened)
+			ImGui::TreePop();
 	}
 
 	void AssetManagerWindow::BuildDirectory(uint32_t parentIndex, const std::filesystem::path& path)

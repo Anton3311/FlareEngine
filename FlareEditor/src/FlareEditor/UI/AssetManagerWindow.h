@@ -49,6 +49,7 @@ namespace Flare
 	private:
 		void RenderDirectory();
 		void RenderFile();
+		void RenderAssetItem(AssetHandle handle);
 
 		void BuildDirectory(uint32_t parentIndex, const std::filesystem::path& path);
 

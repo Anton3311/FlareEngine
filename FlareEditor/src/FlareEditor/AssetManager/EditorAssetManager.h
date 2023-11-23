@@ -32,8 +32,9 @@ namespace Flare
 
 		std::optional<AssetHandle> FindAssetByPath(const std::filesystem::path& path);
 
-		AssetHandle ImportAsset(const std::filesystem::path& path);
-		AssetHandle ImportAsset(const std::filesystem::path& path, const Ref<Asset> asset);
+		AssetHandle ImportAsset(const std::filesystem::path& path, AssetHandle parentAsset = NULL_ASSET_HANDLE);
+		AssetHandle ImportAsset(const std::filesystem::path& path, const Ref<Asset> asset, AssetHandle parentAsset = NULL_ASSET_HANDLE);
+		AssetHandle ImportMemoryOnlyAsset(std::string_view name, const Ref<Asset> asset, AssetHandle parentAsset);
 
 		void ReloadAsset(AssetHandle handle);
 		void UnloadAsset(AssetHandle handle);
@@ -41,14 +42,16 @@ namespace Flare
 		void ReloadPrefabs();
 
 		void RemoveFromRegistry(AssetHandle handle);
+		void SetLoadedAsset(AssetHandle handle, const Ref<Asset>& asset);
 
 		inline const EditorAssetRegistry& GetRegistry() const { return m_Registry; }
 		inline const std::map<UUID, AssetsPackage>& GetAssetPackages() const { return m_AssetPackages; }
 
 		void AddAssetsPackage(const std::filesystem::path& path);
+
+		Ref<Asset> LoadAsset(AssetHandle handle);
 	private:
 		Ref<Asset> LoadAsset(const AssetMetadata& metadata);
-
 		void SerializeRegistry();
 		void DeserializeRegistry();
 	private:

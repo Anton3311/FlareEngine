@@ -177,7 +177,7 @@ namespace Flare
         return it->second;
     }
 
-    AssetHandle EditorAssetManager::ImportAsset(const std::filesystem::path& path)
+    AssetHandle EditorAssetManager::ImportAsset(const std::filesystem::path& path, AssetHandle parentAsset)
     {
         AssetType type = AssetType::None;
         std::filesystem::path extension = path.extension();
@@ -207,16 +207,29 @@ namespace Flare
         metadata.Path = path;
         metadata.Type = type;
         metadata.Handle = handle;
+        metadata.Parent = parentAsset;
+        metadata.Source = AssetSource::File;
 
         m_Registry.emplace(handle, entry);
-        m_FilepathToAssetHandle.emplace(path, handle);
+
+        if (parentAsset != NULL_ASSET_HANDLE)
+            m_FilepathToAssetHandle.emplace(path, handle);
+        else
+        {
+            auto it = m_Registry.find(parentAsset);
+            if (it != m_Registry.end())
+            {
+                AssetRegistryEntry& parentAsset = it->second;
+                parentAsset.Metadata.SubAssets.push_back(handle);
+            }
+        }
 
         SerializeRegistry();
 
         return handle;
     }
 
-    AssetHandle EditorAssetManager::ImportAsset(const std::filesystem::path& path, const Ref<Asset> asset)
+    AssetHandle EditorAssetManager::ImportAsset(const std::filesystem::path& path, const Ref<Asset> asset, AssetHandle parentAsset)
     {
         AssetHandle handle;
 
@@ -228,12 +241,59 @@ namespace Flare
         metadata.Handle = handle;
         metadata.Path = path;
         metadata.Type = asset->GetType();
+        metadata.Parent = parentAsset;
+        metadata.Source = AssetSource::File;
 
         asset->Handle = handle;
 
+        if (parentAsset != NULL_ASSET_HANDLE)
+            m_FilepathToAssetHandle.emplace(path, handle);
+        else
+        {
+            auto it = m_Registry.find(parentAsset);
+            if (it != m_Registry.end())
+            {
+                AssetRegistryEntry& parent = it->second;
+                parent.Metadata.SubAssets.push_back(handle);
+            }
+        }
+
         m_Registry.emplace(handle, entry);
         m_LoadedAssets.emplace(asset->Handle, asset);
-        m_FilepathToAssetHandle.emplace(path, handle);
+
+        SerializeRegistry();
+
+        return handle;
+    }
+
+    AssetHandle EditorAssetManager::ImportMemoryOnlyAsset(std::string_view name, const Ref<Asset> asset, AssetHandle parentAsset)
+    {
+        AssetHandle handle;
+
+        AssetRegistryEntry entry;
+        entry.OwnerType = AssetOwner::Project;
+        entry.PackageId = {};
+
+        AssetMetadata& metadata = entry.Metadata;
+        metadata.Handle = handle;
+        metadata.Name = name;
+        metadata.Type = asset->GetType();
+        metadata.Source = AssetSource::Memory;
+        metadata.Parent = parentAsset;
+
+        asset->Handle = handle;
+
+        {
+            auto it = m_Registry.find(parentAsset);
+            if (it != m_Registry.end())
+            {
+                AssetRegistryEntry& parent = it->second;
+                parent.Metadata.SubAssets.push_back(handle);
+            }
+        }
+
+        m_Registry.emplace(handle, entry);
+        m_LoadedAssets.emplace(asset->Handle, asset);
 
         SerializeRegistry();
 
@@ -289,6 +349,17 @@ namespace Flare
         }
     }
 
+    void EditorAssetManager::SetLoadedAsset(AssetHandle handle, const Ref<Asset>& asset)
+    {
+        if (!IsAssetHandleValid(handle))
+            return;
+
+        const AssetMetadata* metadata = GetAssetMetadata(handle);
+        FLARE_CORE_ASSERT(metadata->Type == asset->GetType());
+
+        m_LoadedAssets[handle] = asset;
+    }
+
     void EditorAssetManager::AddAssetsPackage(const std::filesystem::path& path)
     {
         if (!std::filesystem::exists(path))
@@ -306,6 +377,12 @@ namespace Flare
 
         PackageDependenciesSerializer::Serialize(m_AssetPackages, Project::GetActive()->Location);
         AssetRegistrySerializer::Deserialize(m_Registry, path.parent_path());
+    }
+
+    Ref<Asset> EditorAssetManager::LoadAsset(AssetHandle handle)
+    {
+        FLARE_CORE_ASSERT(IsAssetHandleValid(handle));
+        return LoadAsset(*GetAssetMetadata(handle));
     }
 
     Ref<Asset> EditorAssetManager::LoadAsset(const AssetMetadata& metadata)

@@ -1,76 +1,257 @@
 AssetRegistry:
+  - Handle: 58408753792518442
+    Type: Material
+    Path: ""
+    Name: DefaultMaterial
+    Source: Memory
+    Parent: 10342322337781790464
+    SubAssets:
+      []
+  - Handle: 189433620407732915
+    Type: Material
+    Path: .
+    Name: DefaultMaterial
+    Source: Memory
+    Parent: 10342322337781790464
+    SubAssets:
+      []
   - Handle: 708716781118912740
     Type: Material
     Path: Lighting Test/White.flrmat
+    Name: ""
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
   - Handle: 1220645617260660817
     Type: Scene
     Path: Test.flare
+    Name: ""
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
   - Handle: 1354932369586028623
     Type: Scene
     Path: 3D Test.flare
+    Name: ""
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
   - Handle: 1414766314990490044
     Type: Scene
     Path: Lighting Test/LightingTest.flare
+    Name: ""
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
+  - Handle: 1806579514501821626
+    Type: Material
+    Path: ""
+    Name: DefaultMaterial
+    Source: Memory
+    Parent: 10490832977963679498
+    SubAssets:
+      []
   - Handle: 2080111666818199829
     Type: Texture
     Path: White.png
+    Name: ""
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
   - Handle: 2558145921418293985
     Type: Shader
     Path: Test.glsl
+    Name: ""
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
+  - Handle: 3278682457232475599
+    Type: Material
+    Path: .
+    Name: Material
+    Source: Memory
+    Parent: 15517588840512804130
+    SubAssets:
+      []
   - Handle: 5193090395626261884
     Type: Texture
     Path: Texture.png
+    Name: ""
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
   - Handle: 7732178757911584553
     Type: Material
     Path: Platform Material.flrmat
+    Name: ""
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
   - Handle: 8220382724088785445
     Type: Material
     Path: TestMaterial.flrmat
+    Name: ""
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
+  - Handle: 8591874641572217228
+    Type: Material
+    Path: ""
+    Name: Material
+    Source: Memory
+    Parent: 15517588840512804130
+    SubAssets:
+      []
   - Handle: 8952698402060583352
     Type: Shader
     Path: TestShader.glsl
+    Name: ""
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
+  - Handle: 9373102666595912975
+    Type: Material
+    Path: .
+    Name: DefaultMaterial
+    Source: Memory
+    Parent: 10490832977963679498
+    SubAssets:
+      []
   - Handle: 10342322337781790464
     Type: Mesh
     Path: Cube.fbx
+    Name: ""
+    Source: File
+    Parent: 0
+    SubAssets:
+      - 58408753792518442
   - Handle: 10490832977963679498
     Type: Mesh
     Path: Sphere.fbx
+    Name: ""
+    Source: File
+    Parent: 0
+    SubAssets:
+      - 1806579514501821626
   - Handle: 11273132474447840936
     Type: Scene
     Path: Test.flare
+    Name: ""
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
   - Handle: 11883254765048218712
     Type: Prefab
     Path: test dir/test prefab.flrprefab
+    Name: ""
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
   - Handle: 12144771466075799185
     Type: Prefab
     Path: test dir/WhiteQuad.flrprefab
+    Name: ""
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
   - Handle: 12443752963323924563
     Type: Scene
     Path: Test 2.flare
+    Name: ""
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
   - Handle: 12561055223819313244
     Type: Prefab
     Path: Sphere Prefab.flrprefab
+    Name: ""
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
   - Handle: 13576769737354600278
     Type: Material
     Path: Cube Material.flrmat
+    Name: ""
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
   - Handle: 13900636449532140235
     Type: Material
     Path: Red.flrmat
+    Name: ""
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
   - Handle: 14915581624512801748
     Type: Scene
     Path: Test 3.flare
+    Name: ""
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
   - Handle: 15397728423229482669
     Type: Shader
     Path: Normals.glsl
+    Name: ""
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
+  - Handle: 15517588840512804130
+    Type: Mesh
+    Path: Cone.fbx
+    Name: ""
+    Source: File
+    Parent: 0
+    SubAssets:
+      - 8591874641572217228
   - Handle: 15677979409362088946
     Type: Material
     Path: NormalsMaterial.flrmat
+    Name: ""
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
   - Handle: 16883279782608513727
     Type: Scene
     Path: Test.flare
+    Name: ""
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
   - Handle: 16893689106147778316
     Type: Shader
     Path: Instancing.glsl
+    Name: ""
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
   - Handle: 18007753805608336408
     Type: Prefab
     Path: test dir/prefab 0.flrprefab
+    Name: ""
+    Source: File
+    Parent: 0
+    SubAssets:
+      []

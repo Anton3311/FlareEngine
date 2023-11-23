@@ -41,6 +41,17 @@ namespace Flare
             emitter << YAML::Key << "Handle" << YAML::Value << handle;
             emitter << YAML::Key << "Type" << YAML::Value << AssetTypeToString(entry.Metadata.Type);
             emitter << YAML::Key << "Path" << YAML::Value << assetPath.generic_string();
+            emitter << YAML::Key << "Name" << YAML::Value << entry.Metadata.Name;
+
+            emitter << YAML::Key << "Source" << YAML::Value << AssetSourceToString(entry.Metadata.Source);
+            emitter << YAML::Key << "Parent" << YAML::Value << entry.Metadata.Parent;
+            emitter << YAML::Key << "SubAssets" << YAML::Value << YAML::BeginSeq; // Sub assets
+
+            for (AssetHandle subAsset : entry.Metadata.SubAssets)
+                emitter << YAML::Value << subAsset;
+
+            emitter << YAML::EndSeq;
+
             emitter << YAML::EndMap;
         }
 
@@ -74,7 +85,6 @@ namespace Flare
             AssetHandle handle = assetNode["Handle"].as<AssetHandle>();
             std::filesystem::path path = root / std::filesystem::path(assetNode["Path"].as<std::string>());
 
-
             AssetRegistryEntry entry;
             entry.OwnerType = packageId.has_value() ? AssetOwner::Package : AssetOwner::Project;
             entry.PackageId = packageId;
@@ -83,6 +93,22 @@ namespace Flare
             metadata.Path = path;
             metadata.Handle = handle;
             metadata.Type = AssetTypeFromString(assetNode["Type"].as<std::string>());
+
+            if (YAML::Node source = assetNode["Source"])
+                metadata.Source = AssetSourceFromString(source.as<std::string>());
+            if (YAML::Node name = assetNode["Name"])
+                metadata.Name = name.as<std::string>();
+
+            if (YAML::Node parent = assetNode["Parent"])
+                metadata.Parent = parent.as<AssetHandle>();
+            else
+                metadata.Parent = NULL_ASSET_HANDLE;
+
+            if (YAML::Node subAssets = assetNode["SubAssets"])
+            {
+                for (YAML::Node subAsset : subAssets)
+                    metadata.SubAssets.push_back(subAsset.as<AssetHandle>());
+            }
 
             registry.emplace(handle, entry);
         }

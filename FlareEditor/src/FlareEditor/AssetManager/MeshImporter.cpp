@@ -1,8 +1,15 @@
 #include "MeshImporter.h"
 
+#include "Flare/AssetManager/AssetManager.h"
+#include "Flare/Renderer/Material.h"
+#include "Flare/Renderer/ShaderLibrary.h"
+
+#include "FlareEditor/AssetManager/EditorAssetManager.h"
+
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
+#include <assimp/material.h>
 
 namespace Flare
 {
@@ -81,7 +88,61 @@ namespace Flare
 		if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
 			FLARE_CORE_ERROR("Failed to load mesh {}: {}", metadata.Path.generic_string(), importer.GetErrorString());
 		else
+		{
+			Ref<EditorAssetManager> assetManager = As<EditorAssetManager>(AssetManager::GetInstance());
+			std::optional<AssetHandle> defaultShader = ShaderLibrary::FindShader("Mesh");
+
+			std::unordered_map<std::string, AssetHandle> nameToHandle;
+
+			for (AssetHandle subAsset : metadata.SubAssets)
+			{
+				if (const auto* subAssetMetadata = AssetManager::GetAssetMetadata(subAsset))
+					nameToHandle[subAssetMetadata->Name] = subAsset;
+			}
+
+			if (defaultShader)
+			{
+				std::optional<uint32_t> colorProperty;
+				std::optional<uint32_t> roughnessProperty;
+				std::optional<uint32_t> textureProperty;
+
+				{
+					Ref<Shader> shader = AssetManager::GetAsset<Shader>(defaultShader.value());
+
+					colorProperty = shader->GetPropertyIndex("u_InstanceData.Color");
+					roughnessProperty = shader->GetPropertyIndex("u_InstanceData.Roughness");
+					textureProperty = shader->GetPropertyIndex("u_Texture");
+
+					FLARE_CORE_ASSERT(colorProperty && roughnessProperty && textureProperty);
+				}
+
+				for (uint32_t i = 0; i < scene->mNumMaterials; i++)
+				{
+					auto& material = scene->mMaterials[i];
+
+					std::string name = material->GetName().C_Str();
+
+					aiColor4D color;
+					material->Get(AI_MATKEY_COLOR_DIFFUSE, color);
+					float roughness;
+					material->Get(AI_MATKEY_ROUGHNESS_FACTOR, roughness);
+
+					Ref<Material> materialAsset = CreateRef<Material>(defaultShader.value());
+					materialAsset->WritePropertyValue(*colorProperty, glm::vec4(color.r, color.g, color.b, color.a));
+					materialAsset->WritePropertyValue(*roughnessProperty, 0.0f);
+
+					auto it = nameToHandle.find(name);
+					if (it != nameToHandle.end())
+						assetManager->SetLoadedAsset(it->second, materialAsset);
+					else
+						assetManager->ImportMemoryOnlyAsset(name, materialAsset, metadata.Handle);
+				}
+			}
+			else
+				FLARE_CORE_ERROR("Failed to find 'Mesh' shader");
+
 			return ProcessMeshNode(scene->mRootNode, scene);
+		}
 
 		return nullptr;
     }
