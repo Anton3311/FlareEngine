@@ -26,6 +26,14 @@ namespace Flare
 		int32_t EntityIndex;
 	};
 
+	struct ShadowData
+	{
+		float Smoothness;
+		float Bias;
+		float Resolution;
+		float TexelSize;
+	};
+
 	struct RendererData
 	{
 		Viewport* MainViewport = nullptr;
@@ -52,6 +60,7 @@ namespace Flare
 		Ref<Material> ErrorMaterial = nullptr;
 
 		ShadowSettings ShadowMappingSettings;
+		Ref<UniformBuffer> ShadowDataBuffer = nullptr;
 	};
 	
 	RendererData s_RendererData;
@@ -69,9 +78,12 @@ namespace Flare
 	{
 		s_RendererData.CameraBuffer = UniformBuffer::Create(sizeof(CameraData), 0);
 		s_RendererData.LightBuffer = UniformBuffer::Create(sizeof(LightData), 1);
+		s_RendererData.ShadowDataBuffer = UniformBuffer::Create(sizeof(ShadowData), 2);
 
 		s_RendererData.ShadowMappingSettings.MaxDistance = 40.0f;
 		s_RendererData.ShadowMappingSettings.Resolution = 2048;
+		s_RendererData.ShadowMappingSettings.Bias = 0.001f;
+		s_RendererData.ShadowMappingSettings.Smoothness = 2.0f;
 
 		float vertices[] = {
 			-1, -1,
@@ -188,6 +200,14 @@ namespace Flare
 		s_RendererData.CameraBuffer->SetData(
 			&s_RendererData.CurrentViewport->FrameData.LightView, 
 			sizeof(s_RendererData.CurrentViewport->FrameData.LightView), 0);
+
+		ShadowData shadowData;
+		shadowData.Bias = s_RendererData.ShadowMappingSettings.Bias;
+		shadowData.Resolution = (float)s_RendererData.ShadowMappingSettings.Resolution;
+		shadowData.TexelSize = 1.0f / shadowData.Resolution;
+		shadowData.Smoothness = s_RendererData.ShadowMappingSettings.Smoothness;
+
+		s_RendererData.ShadowDataBuffer->SetData(&shadowData, sizeof(shadowData), 0);
 
 		s_RendererData.WhiteTexture->Bind(2);
 

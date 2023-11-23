@@ -72,6 +72,14 @@ layout(std140, binding = 1) uniform DirLight
 	float u_LightFar;
 };
 
+layout(std140, binding = 2) uniform ShadowData
+{
+	float u_Smoothness;
+	float u_Bias;
+	float u_Resolution;
+	float u_TexelSize;
+};
+
 struct VertexData
 {
 	vec3 Position;
@@ -121,8 +129,6 @@ const vec2[] POISSON_POINTS = {
 };
 
 const int NUMBER_OF_SAMPLES = 24;
-const float TEXEL_SIZE = 1.0 / 2048.0;
-const float BIAS = 0.000;
 const float LIGHT_SIZE = 16.0;
 
 float Random(vec2 co)
@@ -135,16 +141,16 @@ float CalculateBlockerDistance(vec3 projectedLightSpacePosition)
 	float receieverDepth = projectedLightSpacePosition.z;
 	float blockerDistance = 0.0;
 	float samplesCount = 0;
-	float searchSize = ((receieverDepth - u_LightNear) * LIGHT_SIZE);
+	float searchSize = ((receieverDepth - u_LightNear) * LIGHT_SIZE * u_Smoothness);
 
 	float random = Random(projectedLightSpacePosition.xy);
 	vec2 rotation = vec2(cos(random), sin(random));
 
 	for (int i = 0; i < NUMBER_OF_SAMPLES; i++)
 	{
-		vec2 offset = searchSize * POISSON_POINTS[i] * TEXEL_SIZE * rotation;
+		vec2 offset = searchSize * POISSON_POINTS[i] * u_TexelSize * rotation;
 		float depth = texture(u_ShadowMap, projectedLightSpacePosition.xy + offset).r;
-		if (depth - BIAS < receieverDepth)
+		if (depth - u_Bias < receieverDepth)
 		{
 			samplesCount += 1.0;
 			blockerDistance += depth;
@@ -165,7 +171,7 @@ float CalculatePCFKernelSize(vec3 projectedLightSpacePosition)
 		return 1.0;
 
 	float receieverDepth = projectedLightSpacePosition.z;
-	float penumbraWidth = (receieverDepth - blockerDistance) * LIGHT_SIZE / blockerDistance;
+	float penumbraWidth = (receieverDepth - blockerDistance) * LIGHT_SIZE * u_Smoothness / blockerDistance;
 	return penumbraWidth;
 }
 
@@ -187,8 +193,8 @@ float CalculateShadow(vec4 lightSpacePosition)
 	vec2 rotation = vec2(cos(random), sin(random));
 	for (int i = 0; i < NUMBER_OF_SAMPLES; i++)
 	{
-		float sampledDepth = texture(u_ShadowMap, projected.xy + POISSON_POINTS[i] * TEXEL_SIZE * PCFKernelSize * rotation).r;
-		shadow += (projected.z - BIAS > sampledDepth ? 1.0 : 0.0);
+		float sampledDepth = texture(u_ShadowMap, projected.xy + POISSON_POINTS[i] * u_TexelSize * PCFKernelSize * rotation).r;
+		shadow += (projected.z - u_Bias > sampledDepth ? 1.0 : 0.0);
 	}
 	
 	shadow = shadow / NUMBER_OF_SAMPLES;
