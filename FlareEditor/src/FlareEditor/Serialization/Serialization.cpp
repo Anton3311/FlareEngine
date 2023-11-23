@@ -105,10 +105,10 @@ namespace Flare
 			property.SetValue<float>(propertyNode.as<float>());
 			break;
 		case SerializablePropertyType::Int8:
-			property.SetValue<int8_t>(propertyNode.as<int16_t>());
+			property.SetValue<int8_t>((int8_t)propertyNode.as<int16_t>());
 			break;
 		case SerializablePropertyType::UInt8:
-			property.SetValue<uint8_t>(propertyNode.as<uint16_t>());
+			property.SetValue<uint8_t>((uint8_t)propertyNode.as<uint16_t>());
 			break;
 		case SerializablePropertyType::Int16:
 			property.SetValue<int16_t>(propertyNode.as<int16_t>());

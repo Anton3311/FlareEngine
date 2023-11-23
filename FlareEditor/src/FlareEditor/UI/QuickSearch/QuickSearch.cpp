@@ -66,6 +66,8 @@ namespace Flare
 				AssetHandle handle = m_AssetSearchResult[itemIndex];
 
 				std::string path = AssetManager::GetAssetMetadata(handle)->Path.string();
+				if (path.empty())
+					continue;
 
 				ImVec2 size = ImVec2(areaSize.x, buttonHeight);
 				if (ImGui::InvisibleButton(path.c_str(), size))

@@ -50,12 +50,12 @@ namespace Flare
 				uvs[i].y = uv.y;
 			}
 
-			for (int32_t face = 0; face < nodeMesh->mNumFaces; face++)
+			for (uint32_t face = 0; face < nodeMesh->mNumFaces; face++)
 			{
 				aiFace& f = nodeMesh->mFaces[face];
 
 				size_t start = indices.size();
-				for (int32_t i = 0; i < f.mNumIndices; i++)
+				for (uint32_t i = 0; i < f.mNumIndices; i++)
 					indices.push_back(f.mIndices[i]);
 
 				// Swap winding order
@@ -70,7 +70,7 @@ namespace Flare
 				uvs.data());
 		}
 
-		for (int i = 0; i < node->mNumChildren; i++)
+		for (uint32_t i = 0; i < node->mNumChildren; i++)
 		{
 			Ref<Mesh> mesh = ProcessMeshNode(node->mChildren[i], scene);
 			if (mesh != nullptr)

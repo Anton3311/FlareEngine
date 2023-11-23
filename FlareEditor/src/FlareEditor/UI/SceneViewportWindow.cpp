@@ -424,7 +424,7 @@ namespace Flare
 		const ImGuiStyle& style = ImGui::GetStyle();
 		ImRect viewportImageRect = { ImGui::GetItemRectMin() + style.FramePadding * ImVec2(3, 1), ImGui::GetItemRectMax() };
 
-		ImGui::SetCursorPos(ImVec2(m_ViewportOffset.x, m_ViewportOffset.y) + style.FramePadding * ImVec2(3, 1));
+		ImGui::SetCursorPos(ImVec2((float)m_ViewportOffset.x, (float)m_ViewportOffset.y) + style.FramePadding * ImVec2(3, 1));
 
 		ImGui::PushItemWidth(100);
 		ImGui::PushID("Overlay");

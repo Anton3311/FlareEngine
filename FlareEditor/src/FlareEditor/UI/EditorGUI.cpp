@@ -250,7 +250,7 @@ namespace Flare
 
 	bool EditorGUI::TextField(UUID id, std::string& text)
 	{
-		ImGui::PushID(id);
+		ImGui::PushID((int32_t)(uint64_t)id);
 		bool result = ImGui::InputText("",
 			text.data(),
 			text.size(),

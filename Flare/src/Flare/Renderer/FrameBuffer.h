@@ -45,7 +45,9 @@ namespace Flare
 
 	struct FrameBufferSpecifications
 	{
-		FrameBufferSpecifications() = default;
+		FrameBufferSpecifications()
+			: Width(0), Height(0) {}
+
 		FrameBufferSpecifications(const std::initializer_list<FrameBufferAttachmentSpecifications>& attachments)
 			: Width(0), Height(0), Attachments(attachments) {}
 		FrameBufferSpecifications(uint32_t width, uint32_t height, const std::initializer_list<FrameBufferAttachmentSpecifications>& attachments)

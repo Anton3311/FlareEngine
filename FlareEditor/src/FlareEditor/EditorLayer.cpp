@@ -214,7 +214,7 @@ namespace Flare
             {
                 if (resolutions[i] == settings.Resolution)
                 {
-                    resolutionIndex = i;
+                    resolutionIndex = (uint32_t)i;
                     break;
                 }
             }

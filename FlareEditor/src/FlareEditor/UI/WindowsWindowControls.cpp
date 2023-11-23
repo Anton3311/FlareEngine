@@ -35,7 +35,7 @@ namespace Flare
 		const float iconSize = 0.35f;
 		ImU32 iconColor;
 
-		ImVec2 windowSize = ImVec2(window->GetProperties().Size.x, m_TitleBarHeight);
+		ImVec2 windowSize = ImVec2((float)window->GetProperties().Size.x, m_TitleBarHeight);
 
 		ImGui::InvisibleButton("##TitleBarDragArea", ImVec2(windowSize.x - buttonSize.x * 3 - ImGui::GetCursorPosX(), m_TitleBarHeight));
 		m_TitleBarHovered = ImGui::IsItemHovered();
@@ -141,7 +141,7 @@ namespace Flare
 		}
 
 		drawList->AddRectFilled(ImGui::GetItemRectMin(), ImGui::GetItemRectMax(), buttonColor);
-		ImGui::SetCursorPos(cursorPosition + ImVec2(buttonSize.x, 0));
+		ImGui::SetCursorPos(cursorPosition + ImVec2((float)buttonSize.x, 0));
 
 		return result;
 	}

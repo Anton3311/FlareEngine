@@ -305,7 +305,7 @@ namespace Flare
 
 		RenderCommand::DrawInstanced(s_RendererData.CurrentInstancingMesh->GetSubMesh().MeshVertexArray, instancesCount);
 		s_RendererData.Statistics.DrawCallsCount++;
-		s_RendererData.Statistics.DrawCallsSavedByInstances += instancesCount - 1;
+		s_RendererData.Statistics.DrawCallsSavedByInstances += (uint32_t)instancesCount - 1;
 
 		s_RendererData.InstanceDataBuffer.clear();
 	}
