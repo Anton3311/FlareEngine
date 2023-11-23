@@ -1,6 +1,7 @@
 #include "EditorCamera.h"
 
 #include "FlareCore/Log.h"
+#include "Flare/Math/Math.h"
 #include "Flare/Input/InputManager.h"
 
 #include "FlarePlatform/Events.h"
@@ -103,11 +104,6 @@ namespace Flare
 		RecalculateViewMatrix();
 	}
 
-	static float IntersectPlane(glm::vec3 planeNormal, glm::vec3 rayDirection, glm::vec3 rayOrigin)
-	{
-		return -glm::dot(planeNormal, rayOrigin) / glm::dot(rayDirection, planeNormal);
-	}
-
 	glm::vec3 EditorCamera::CalculateTranslationPoint(glm::vec2 mousePosition, const glm::mat4& inverseProjection, const glm::mat4& inverseView)
 	{
 		mousePosition = mousePosition / m_ViewportSize;
@@ -117,9 +113,14 @@ namespace Flare
 		direction = inverseView * glm::vec4(direction, 0.0f);
 
 		glm::vec3 cameraPosition = GetPosition();
-		glm::vec3 translationPlaneNormal = TransformDirection(glm::vec3(0.0f, 0.0f, -1.0f));
 
-		float t = IntersectPlane(translationPlaneNormal, direction, cameraPosition);
+		Math::Plane translationPlane = Math::Plane::TroughPoint(m_Origin, TransformDirection(glm::vec3(0.0f, 0.0f, -1.0f)));
+
+		Math::Ray ray;
+		ray.Direction = direction;
+		ray.Origin = cameraPosition;
+
+		float t = Math::IntersectPlane(translationPlane, ray);
 		return cameraPosition + direction * t;
 	}
 
