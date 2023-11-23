@@ -124,7 +124,7 @@ namespace Flare
 
         for (const auto& entry : m_Registry)
         {
-            if (entry.second.Metadata.Type == AssetType::Shader)
+            if (entry.second.Metadata.Type == AssetType::Shader && entry.second.Metadata.Source == AssetSource::File)
             {
                 std::string shaderFileName = entry.second.Metadata.Path.filename().string();
                 size_t dotPosition = shaderFileName.find_first_of(".");
@@ -208,6 +208,7 @@ namespace Flare
         metadata.Type = type;
         metadata.Handle = handle;
         metadata.Parent = parentAsset;
+        metadata.Name = metadata.Path.filename().generic_string();
         metadata.Source = AssetSource::File;
 
         m_Registry.emplace(handle, entry);
@@ -243,6 +244,7 @@ namespace Flare
         metadata.Type = asset->GetType();
         metadata.Parent = parentAsset;
         metadata.Source = AssetSource::File;
+        metadata.Name = metadata.Path.filename().generic_string();
 
         asset->Handle = handle;
 

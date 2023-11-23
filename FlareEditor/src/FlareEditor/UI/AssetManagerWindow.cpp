@@ -23,26 +23,12 @@ namespace Flare
 		if (ImGui::Button("Refresh"))
 			RebuildAssetTree();
 
-		ImGui::SameLine();
-
 		ImGuiStyle& style = ImGui::GetStyle();
 
 		const float maxTreeWidth = 300.0f;
 
 		ImVec2 treeSize = ImGui::GetContentRegionAvail();
 		treeSize.x = glm::min(maxTreeWidth, treeSize.x);
-		
-		if (EditorGUI::BeginToggleGroup("Mode", 2))
-		{
-			if (EditorGUI::ToggleGroupItem("All", m_Mode == AssetTreeViewMode::All))
-				m_Mode = AssetTreeViewMode::All;
-			if (EditorGUI::ToggleGroupItem("Registry", m_Mode == AssetTreeViewMode::Registry))
-				m_Mode = AssetTreeViewMode::Registry;
-
-			EditorGUI::EndToggleGroup();
-		}
-
-		ImGui::Separator();
 		
 		ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, 14.0f);
 		ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0.0f, 0.0f));
@@ -145,121 +131,49 @@ namespace Flare
 	{
 		AssetTreeNode& node = m_AssetTree[m_NodeRenderIndex];
 
-		if (m_Mode == AssetTreeViewMode::Registry && !node.IsImported)
+		if (node.IsImported)
+		{
+			RenderAssetItem(node.Handle);
 			return;
-
-		ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_SpanFullWidth;
-
-		const AssetMetadata* metadata = AssetManager::GetAssetMetadata(node.Handle);
-		if (metadata == nullptr || metadata->SubAssets.size() == 0)
-			flags |= ImGuiTreeNodeFlags_Leaf;
-
-		if (!node.IsImported)
-			ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled));
-
-		bool opened = ImGui::TreeNodeEx(node.Name.c_str(), flags, node.Name.c_str());
-
-		if (!node.IsImported)
-			ImGui::PopStyleColor();
-
-		if (node.IsImported && ImGui::BeginDragDropSource())
-		{
-			ImGui::SetDragDropPayload(ASSET_PAYLOAD_NAME, &node.Handle, sizeof(AssetHandle));
-			ImGui::EndDragDropSource();
 		}
-
-		if (!node.IsDirectory)
+		else
 		{
-			if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
-				OnOpenFile(node.Handle);
-		}
+			ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow
+				| ImGuiTreeNodeFlags_FramePadding
+				| ImGuiTreeNodeFlags_SpanFullWidth
+				| ImGuiTreeNodeFlags_Leaf;
 
-		if (ImGui::IsItemHovered() && ImGui::IsMouseReleased(ImGuiMouseButton_Left))
-		{
-			EditorLayer::GetInstance().Selection.SetAsset(node.Handle);
-			OnAssetSelectionChanged.Invoke(node.Handle);
-		}
+			bool opened = ImGui::TreeNodeEx(node.Name.c_str(), flags, node.Name.c_str());
 
-		if (opened)
-		{
-			if (ImGui::BeginPopupContextItem(node.Name.c_str()))
+			if (opened)
 			{
-				if (!node.IsDirectory && node.IsImported && ImGui::MenuItem("Open"))
-					OnOpenFile(node.Handle);
-
-				if (!node.IsDirectory && node.IsImported)
+				if (ImGui::BeginPopupContextItem(node.Name.c_str()))
 				{
-					FLARE_CORE_ASSERT(AssetManager::IsAssetHandleValid(node.Handle));
-					if (ImGui::MenuItem("Remove"))
+					if (ImGui::MenuItem("Import"))
 					{
-						m_AssetManager->RemoveFromRegistry(node.Handle);
-						node.IsImported = false;
-					}
-
-					if (ImGui::MenuItem("Reload"))
-					{
-						if (AssetManager::IsAssetLoaded(node.Handle))
-							m_AssetManager->ReloadAsset(node.Handle);
-					}
-				}
-
-				if (ImGui::BeginMenu("New"))
-				{
-					if (node.IsImported)
-					{
-						FLARE_CORE_ASSERT(AssetManager::IsAssetHandleValid(node.Handle));
-						const AssetMetadata* metadata = AssetManager::GetAssetMetadata(node.Handle);
-
-						if (metadata->Type == AssetType::Shader && ImGui::MenuItem("Material"))
-						{
-							m_ShowNewFileNamePopup = true;
-							m_OnNewFileNameEntered = [this, nodeIndex = m_NodeRenderIndex](std::string_view name)
-							{
-								FLARE_CORE_ASSERT(!m_AssetTree[nodeIndex].IsDirectory);
-								std::filesystem::path path = m_AssetTree[nodeIndex].Path.parent_path() / name;
-								path.replace_extension(".flrmat");
-
-								Ref<Material> material = CreateRef<Material>(m_AssetTree[nodeIndex].Handle);
-								MaterialImporter::SerializeMaterial(material, path);
-
-								m_AssetManager->ImportAsset(path, material);
-							};
-						}
+						node.Handle = m_AssetManager->ImportAsset(node.Path);
+						node.IsImported = node.Handle != NULL_ASSET_HANDLE;
 					}
 
 					ImGui::EndMenu();
 				}
 
-				if (!node.IsImported && ImGui::MenuItem("Import"))
-				{
-					node.Handle = m_AssetManager->ImportAsset(node.Path);
-					node.IsImported = node.Handle != NULL_ASSET_HANDLE;
-				}
-
-				ImGui::EndMenu();
+				ImGui::TreePop();
 			}
-
-			if (metadata != nullptr)
-			{
-				for (AssetHandle handle : metadata->SubAssets)
-				{
-					const AssetMetadata* meta = AssetManager::GetAssetMetadata(handle);
-					if (meta->Name.size() > 0)
-						RenderAssetItem(handle);
-				}
-			}
-
-			ImGui::TreePop();
 		}
 	}
 
 	void AssetManagerWindow::RenderAssetItem(AssetHandle handle)
 	{
-		ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_SpanFullWidth;
+		ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_SpanFullWidth;
 
 		const AssetMetadata* metadata = AssetManager::GetAssetMetadata(handle);
+		if (metadata->SubAssets.size() == 0)
+			flags |= ImGuiTreeNodeFlags_Leaf;
 
 		bool opened = ImGui::TreeNodeEx(metadata->Name.c_str(), flags, metadata->Name.c_str());
+
+		// Drag and drop
 
 		if (ImGui::BeginDragDropSource())
 		{
@@ -267,14 +181,73 @@ namespace Flare
 			ImGui::EndDragDropSource();
 		}
 
+		if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+			OnOpenFile(handle);
+
 		if (ImGui::IsItemHovered() && ImGui::IsMouseReleased(ImGuiMouseButton_Left))
 		{
 			EditorLayer::GetInstance().Selection.SetAsset(handle);
 			OnAssetSelectionChanged.Invoke(handle);
 		}
 
+		// Context menu
+
+		if (ImGui::BeginPopupContextItem(metadata->Name.c_str()))
+		{
+			if (ImGui::MenuItem("Open"))
+				OnOpenFile(handle);
+
+			if (ImGui::MenuItem("Remove"))
+			{
+				m_AssetManager->RemoveFromRegistry(handle);
+
+				for (AssetTreeNode& node : m_AssetTree)
+				{
+					if (node.Handle == handle)
+					{
+						node.IsImported = false;
+						break;
+					}
+				}
+			}
+
+			if (ImGui::MenuItem("Reload"))
+			{
+				if (AssetManager::IsAssetLoaded(handle))
+					m_AssetManager->ReloadAsset(handle);
+			}
+
+			if (ImGui::BeginMenu("New"))
+			{
+				if (metadata->Type == AssetType::Shader && metadata->Source == AssetSource::File && ImGui::MenuItem("Material"))
+				{
+					m_ShowNewFileNamePopup = true;
+					m_OnNewFileNameEntered = [this, nodeIndex = m_NodeRenderIndex](std::string_view name)
+					{
+						FLARE_CORE_ASSERT(!m_AssetTree[nodeIndex].IsDirectory);
+						std::filesystem::path path = m_AssetTree[nodeIndex].Path.parent_path() / name;
+						path.replace_extension(".flrmat");
+
+						Ref<Material> material = CreateRef<Material>(m_AssetTree[nodeIndex].Handle);
+						MaterialImporter::SerializeMaterial(material, path);
+
+						m_AssetManager->ImportAsset(path, material);
+					};
+				}
+
+				ImGui::EndMenu();
+			}
+
+			ImGui::EndMenu();
+		}
+
 		if (opened)
+		{
+			for (AssetHandle handle : metadata->SubAssets)
+				RenderAssetItem(handle);
+
 			ImGui::TreePop();
+		}
 	}
 
 	void AssetManagerWindow::BuildDirectory(uint32_t parentIndex, const std::filesystem::path& path)

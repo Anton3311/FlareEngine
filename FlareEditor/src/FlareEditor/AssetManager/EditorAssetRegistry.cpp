@@ -40,8 +40,11 @@ namespace Flare
             emitter << YAML::BeginMap;
             emitter << YAML::Key << "Handle" << YAML::Value << handle;
             emitter << YAML::Key << "Type" << YAML::Value << AssetTypeToString(entry.Metadata.Type);
-            emitter << YAML::Key << "Path" << YAML::Value << assetPath.generic_string();
-            emitter << YAML::Key << "Name" << YAML::Value << entry.Metadata.Name;
+
+            if (entry.Metadata.Source == AssetSource::Memory)
+                emitter << YAML::Key << "Name" << YAML::Value << entry.Metadata.Name;
+            else
+                emitter << YAML::Key << "Path" << YAML::Value << assetPath.generic_string();
 
             emitter << YAML::Key << "Source" << YAML::Value << AssetSourceToString(entry.Metadata.Source);
             emitter << YAML::Key << "Parent" << YAML::Value << entry.Metadata.Parent;
@@ -83,21 +86,31 @@ namespace Flare
         for (auto assetNode : registryNode)
         {
             AssetHandle handle = assetNode["Handle"].as<AssetHandle>();
-            std::filesystem::path path = root / std::filesystem::path(assetNode["Path"].as<std::string>());
-
+            
             AssetRegistryEntry entry;
             entry.OwnerType = packageId.has_value() ? AssetOwner::Package : AssetOwner::Project;
             entry.PackageId = packageId;
 
             AssetMetadata& metadata = entry.Metadata;
-            metadata.Path = path;
             metadata.Handle = handle;
+            metadata.Source = AssetSource::File;
             metadata.Type = AssetTypeFromString(assetNode["Type"].as<std::string>());
 
             if (YAML::Node source = assetNode["Source"])
                 metadata.Source = AssetSourceFromString(source.as<std::string>());
-            if (YAML::Node name = assetNode["Name"])
-                metadata.Name = name.as<std::string>();
+
+            if (metadata.Source == AssetSource::Memory)
+            {
+                if (YAML::Node name = assetNode["Name"])
+                    metadata.Name = name.as<std::string>();
+            }
+            else
+            {
+                if (YAML::Node pathNode = assetNode["Path"])
+                    metadata.Path = root / std::filesystem::path(pathNode.as<std::string>());
+
+                metadata.Name = metadata.Path.filename().generic_string();
+            }
 
             if (YAML::Node parent = assetNode["Parent"])
                 metadata.Parent = parent.as<AssetHandle>();

@@ -17,12 +17,6 @@ namespace Flare
 	class AssetManagerWindow
 	{
 	private:
-		enum class AssetTreeViewMode
-		{
-			All,
-			Registry,
-		};
-
 		struct AssetTreeNode
 		{
 			bool IsDirectory;
@@ -59,7 +53,6 @@ namespace Flare
 	public:
 		Signal<AssetHandle> OnAssetSelectionChanged;
 	private:
-		AssetTreeViewMode m_Mode = AssetTreeViewMode::All;
 		Ref<EditorAssetManager> m_AssetManager;
 
 		uint32_t m_NodeRenderIndex;
