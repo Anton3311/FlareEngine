@@ -157,7 +157,7 @@ namespace Flare
 		if (!node.IsImported)
 			ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled));
 
-		bool opened = ImGui::TreeNodeEx(node.Name.c_str(), flags, "%s", node.Name.c_str());
+		bool opened = ImGui::TreeNodeEx(node.Name.c_str(), flags, node.Name.c_str());
 
 		if (!node.IsImported)
 			ImGui::PopStyleColor();
@@ -168,8 +168,11 @@ namespace Flare
 			ImGui::EndDragDropSource();
 		}
 
-		if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
-			OnOpenFile(node);
+		if (!node.IsDirectory)
+		{
+			if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+				OnOpenFile(node.Handle);
+		}
 
 		if (ImGui::IsItemHovered() && ImGui::IsMouseReleased(ImGuiMouseButton_Left))
 		{
@@ -181,10 +184,10 @@ namespace Flare
 		{
 			if (ImGui::BeginPopupContextItem(node.Name.c_str()))
 			{
-				if (node.IsImported && ImGui::MenuItem("Open"))
-					OnOpenFile(node);
+				if (!node.IsDirectory && node.IsImported && ImGui::MenuItem("Open"))
+					OnOpenFile(node.Handle);
 
-				if (node.IsImported)
+				if (!node.IsDirectory && node.IsImported)
 				{
 					FLARE_CORE_ASSERT(AssetManager::IsAssetHandleValid(node.Handle));
 					if (ImGui::MenuItem("Remove"))
@@ -299,14 +302,11 @@ namespace Flare
 		}
 	}
 
-	void AssetManagerWindow::OnOpenFile(const AssetTreeNode& node)
+	void AssetManagerWindow::OnOpenFile(AssetHandle handle)
 	{
-		FLARE_CORE_ASSERT(!node.IsDirectory);
-		FLARE_CORE_ASSERT(node.Handle != NULL_ASSET_HANDLE);
-
-		if (AssetManager::IsAssetHandleValid(node.Handle))
+		if (AssetManager::IsAssetHandleValid(handle))
 		{
-			const AssetMetadata* metadata = AssetManager::GetAssetMetadata(node.Handle);
+			const AssetMetadata* metadata = AssetManager::GetAssetMetadata(handle);
 			if (metadata)
 			{
 				auto action = m_FileOpenActions.find(metadata->Type);

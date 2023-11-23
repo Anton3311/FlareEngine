@@ -53,7 +53,7 @@ namespace Flare
 
 		void BuildDirectory(uint32_t parentIndex, const std::filesystem::path& path);
 
-		void OnOpenFile(const AssetTreeNode& node);
+		void OnOpenFile(AssetHandle handle);
 
 		void RenderCreateNewFilePopup();
 	public:

@@ -279,7 +279,12 @@ namespace Flare
 			const AssetMetadata* metadata = AssetManager::GetAssetMetadata(handle);
 
 			if (metadata != nullptr)
-				ImGui::Button(metadata->Path.filename().string().c_str(), buttonSize);
+			{
+				if (metadata->Name.empty())
+					ImGui::Button(metadata->Path.filename().string().c_str(), buttonSize);
+				else
+					ImGui::Button(metadata->Name.c_str(), buttonSize);
+			}
 			else
 				ImGui::Button("Invalid", buttonSize);
 		}
