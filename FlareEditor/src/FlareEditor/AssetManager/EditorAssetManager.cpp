@@ -42,44 +42,6 @@ namespace Flare
         });
 
         m_AssetImporters.emplace(AssetType::Shader, ShaderImporter::ImportShader);
-
-#if 0
-        m_AssetImporters.emplace(AssetType::Shader, [this](const AssetMetadata& metadata) -> Ref<Asset>
-        {
-            std::filesystem::path assetsPath = Project::GetActive()->Location / "Assets";
-
-            const auto& entry = m_Registry[metadata.Handle];
-            if (entry.OwnerType == AssetOwner::Project)
-            {
-                std::filesystem::path cacheDirectory = Project::GetActive()->Location
-                    / "Cache/Shaders/"
-                    / std::filesystem::relative(metadata.Path.parent_path(), assetsPath);
-                return Shader::Create(metadata.Path, cacheDirectory);
-            }
-            else if (entry.OwnerType == AssetOwner::Package)
-            {
-                FLARE_CORE_ASSERT(entry.PackageId.has_value());
-                const AssetsPackage& package = m_AssetPackages[entry.PackageId.value()];
-                std::filesystem::path packageAssetsPath = std::filesystem::absolute(AssetsPackage::InternalPackagesLocation / package.Name / "Assets");
-
-                std::filesystem::path cacheDirectory = Project::GetActive()->Location
-                    / "Cache/Shaders/"
-                    / std::filesystem::relative(
-                        std::filesystem::absolute(metadata.Path)
-                        .parent_path(),
-                        packageAssetsPath) / package.Name;
-
-                Ref<Shader> shader = Shader::Create(metadata.Path, cacheDirectory);
-                shader->Handle = metadata.Handle;
-                shader->Load();
-
-                return shader;
-            }
-
-            return nullptr;
-        });
-#endif
-
         m_AssetImporters.emplace(AssetType::Font, [](const AssetMetadata& metadata) -> Ref<Asset>
         {
             return CreateRef<Font>(metadata.Path);
@@ -342,13 +304,8 @@ namespace Flare
 
     void EditorAssetManager::RemoveFromRegistry(AssetHandle handle)
     {
-        auto it = m_Registry.find(handle);
-        if (it != m_Registry.end())
-        {
-            UnloadAsset(handle);
-            m_Registry.erase(handle);
-            SerializeRegistry();
-        }
+        RemoveFromRegistryWithoutSerialization(handle);
+        SerializeRegistry();
     }
 
     void EditorAssetManager::SetLoadedAsset(AssetHandle handle, const Ref<Asset>& asset)
@@ -385,6 +342,20 @@ namespace Flare
     {
         FLARE_CORE_ASSERT(IsAssetHandleValid(handle));
         return LoadAsset(*GetAssetMetadata(handle));
+    }
+
+    void EditorAssetManager::RemoveFromRegistryWithoutSerialization(AssetHandle handle)
+    {
+        auto it = m_Registry.find(handle);
+        if (it != m_Registry.end())
+        {
+            const AssetMetadata* metadata = GetAssetMetadata(handle);
+            for (AssetHandle subAssetHandle : metadata->SubAssets)
+                RemoveFromRegistryWithoutSerialization(subAssetHandle);
+
+            UnloadAsset(handle);
+            m_Registry.erase(handle);
+        }
     }
 
     Ref<Asset> EditorAssetManager::LoadAsset(const AssetMetadata& metadata)

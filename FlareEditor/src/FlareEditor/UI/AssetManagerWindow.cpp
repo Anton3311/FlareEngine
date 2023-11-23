@@ -143,6 +143,9 @@ namespace Flare
 				| ImGuiTreeNodeFlags_SpanFullWidth
 				| ImGuiTreeNodeFlags_Leaf;
 
+			const ImGuiStyle& style = ImGui::GetStyle();
+			ImGui::PushStyleColor(ImGuiCol_Text, style.Colors[ImGuiCol_TextDisabled]);
+
 			bool opened = ImGui::TreeNodeEx(node.Name.c_str(), flags, node.Name.c_str());
 
 			if (opened)
@@ -160,12 +163,16 @@ namespace Flare
 
 				ImGui::TreePop();
 			}
+
+			ImGui::PopStyleColor();
 		}
 	}
 
 	void AssetManagerWindow::RenderAssetItem(AssetHandle handle)
 	{
 		ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_SpanFullWidth;
+
+		FLARE_CORE_ASSERT(AssetManager::IsAssetHandleValid(handle));
 
 		const AssetMetadata* metadata = AssetManager::GetAssetMetadata(handle);
 		if (metadata->SubAssets.size() == 0)
@@ -199,8 +206,6 @@ namespace Flare
 
 			if (ImGui::MenuItem("Remove"))
 			{
-				m_AssetManager->RemoveFromRegistry(handle);
-
 				for (AssetTreeNode& node : m_AssetTree)
 				{
 					if (node.Handle == handle)
@@ -209,6 +214,8 @@ namespace Flare
 						break;
 					}
 				}
+
+				m_AssetManager->RemoveFromRegistry(handle);
 			}
 
 			if (ImGui::MenuItem("Reload"))

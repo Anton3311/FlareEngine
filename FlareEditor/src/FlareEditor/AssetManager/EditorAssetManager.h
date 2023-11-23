@@ -51,6 +51,8 @@ namespace Flare
 
 		Ref<Asset> LoadAsset(AssetHandle handle);
 	private:
+		void RemoveFromRegistryWithoutSerialization(AssetHandle handle);
+
 		Ref<Asset> LoadAsset(const AssetMetadata& metadata);
 		void SerializeRegistry();
 		void DeserializeRegistry();
