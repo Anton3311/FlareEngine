@@ -42,6 +42,8 @@ namespace Flare
 
         String,
 
+        UUID,
+
         Color,
         Texture2D,
 

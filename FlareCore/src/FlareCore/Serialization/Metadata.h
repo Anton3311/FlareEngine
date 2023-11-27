@@ -1,6 +1,7 @@
 #pragma once
 
 #include "FlareCore/Core.h"
+#include "FlareCore/UUID.h"
 #include "FlareCore/Serialization/Serialization.h"
 
 #include <glm/glm.hpp>
@@ -56,6 +57,7 @@ namespace Flare
     TYPE_TO_PROPERTY_TYPE(glm::uvec4, Flare::SerializablePropertyType::UIntVector4);
     
     TYPE_TO_PROPERTY_TYPE(std::string, Flare::SerializablePropertyType::String);
+    TYPE_TO_PROPERTY_TYPE(UUID, Flare::SerializablePropertyType::UUID);
 
 #undef TYPE_TO_PROPERTY_TYPE
 

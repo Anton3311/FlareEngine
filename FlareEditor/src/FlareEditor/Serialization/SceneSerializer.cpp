@@ -9,6 +9,7 @@
 #include "FlareECS/Query/EntitiesIterator.h"
 
 #include "FlareEditor/Serialization/Serialization.h"
+#include "FlareEditor/Serialization/SerializationId.h"
 
 #include <yaml-cpp/yaml.h>
 #include <glm/glm.hpp>
@@ -72,7 +73,12 @@ namespace Flare
 	Entity SceneSerializer::DeserializeEntity(YAML::Node node, World& world)
 	{
 		Entity entity;
-		for (YAML::Node componentNode : node)
+		
+		YAML::Node componentsNode = node["Components"];
+		if (!componentsNode)
+			return entity;
+
+		for (YAML::Node componentNode : componentsNode)
 		{
 			std::string name = componentNode["Name"].as<std::string>();
 			std::optional<ComponentId> componentId = world.Components.FindComponnet(name);
@@ -86,14 +92,17 @@ namespace Flare
 			const ComponentInfo& info = world.Components.GetComponentInfo(componentId.value());
 			if (info.Initializer)
 			{
-				uint8_t* componentData = AddDeserializedComponent(world, entity, componentId.value());
-				
 				const SerializableObjectDescriptor& serializationDescriptor = info.Initializer->Type.SerializationDescriptor;
+
+				uint8_t* componentData = AddDeserializedComponent(world, entity, componentId.value());
 				SerializableObject serializableComponent = SerializableObject(componentData, serializationDescriptor);
 
 				DeserializeObject(componentNode, serializableComponent);
 			}
 		}
+
+		if (!world.HasComponent<SerializationId>(entity))
+			world.AddEntityComponent<SerializationId>(entity, SerializationId());
 
 		return entity;
 	}
@@ -172,9 +181,7 @@ namespace Flare
 
 		for (auto entity : entities)
 		{
-			YAML::Node componentsNode = entity["Components"];
-
-			DeserializeEntity(componentsNode, scene->m_World);
+			DeserializeEntity(entity, scene->m_World);
 		}
 
 		YAML::Node postProcessing = node["PostProcessing"];
