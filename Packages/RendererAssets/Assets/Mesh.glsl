@@ -136,20 +136,21 @@ float Random(vec2 co)
     return fract(sin(dot(co, vec2(12.9898, 78.233))) * 43758.5453);
 }
 
-float CalculateBlockerDistance(vec3 projectedLightSpacePosition)
+float CalculateBlockerDistance(vec3 projectedLightSpacePosition, vec2 rotation)
 {
 	float receieverDepth = projectedLightSpacePosition.z;
 	float blockerDistance = 0.0;
 	float samplesCount = 0;
 	float searchSize = ((receieverDepth - u_LightNear) * LIGHT_SIZE * u_Smoothness);
 
-	float random = Random(projectedLightSpacePosition.xy);
-	vec2 rotation = vec2(cos(random), sin(random));
-
 	for (int i = 0; i < NUMBER_OF_SAMPLES; i++)
 	{
-		vec2 offset = searchSize * POISSON_POINTS[i] * u_TexelSize * rotation;
-		float depth = texture(u_ShadowMap, projectedLightSpacePosition.xy + offset).r;
+		vec2 offset = vec2(
+			rotation.x * POISSON_POINTS[i].x - rotation.y * POISSON_POINTS[i].y,
+			rotation.y * POISSON_POINTS[i].x + rotation.x * POISSON_POINTS[i].y
+		);
+
+		float depth = texture(u_ShadowMap, projectedLightSpacePosition.xy + offset * searchSize * u_TexelSize).r;
 		if (depth - u_Bias < receieverDepth)
 		{
 			samplesCount += 1.0;
@@ -163,9 +164,9 @@ float CalculateBlockerDistance(vec3 projectedLightSpacePosition)
 	return max(0.01, blockerDistance / samplesCount);
 }
 
-float CalculatePCFKernelSize(vec3 projectedLightSpacePosition)
+float CalculatePCFKernelSize(vec3 projectedLightSpacePosition, vec2 rotation)
 {
-	float blockerDistance = CalculateBlockerDistance(projectedLightSpacePosition);
+	float blockerDistance = CalculateBlockerDistance(projectedLightSpacePosition, rotation);
 
 	if (blockerDistance == -1.0)
 		return 1.0;
@@ -186,14 +187,20 @@ float CalculateShadow(vec4 lightSpacePosition)
 	if (projected.x > 1.0 || projected.y > 1.0 || projected.x < 0 || projected.y < 0)
 		return 1.0;
 
-	float PCFKernelSize = max(0.1, CalculatePCFKernelSize(projected));
-	float shadow = 0.0;
-
 	float random = Random(projected.xy);
 	vec2 rotation = vec2(cos(random), sin(random));
+
+	float PCFKernelSize = max(0.1, CalculatePCFKernelSize(projected, rotation));
+	float shadow = 0.0;
+
 	for (int i = 0; i < NUMBER_OF_SAMPLES; i++)
 	{
-		float sampledDepth = texture(u_ShadowMap, projected.xy + POISSON_POINTS[i] * u_TexelSize * PCFKernelSize * rotation).r;
+		vec2 offset = vec2(
+			rotation.x * POISSON_POINTS[i].x - rotation.y * POISSON_POINTS[i].y,
+			rotation.y * POISSON_POINTS[i].x + rotation.x * POISSON_POINTS[i].y
+		);
+
+		float sampledDepth = texture(u_ShadowMap, projected.xy + offset * u_TexelSize * PCFKernelSize).r;
 		shadow += (projected.z - u_Bias > sampledDepth ? 1.0 : 0.0);
 	}
 	
