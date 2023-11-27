@@ -95,6 +95,8 @@ namespace Flare
 
 			m_Viewport.FrameData.Camera.Near = m_Camera.GetSettings().Near;
 			m_Viewport.FrameData.Camera.Far = m_Camera.GetSettings().Far;
+
+			m_Viewport.FrameData.Camera.FOV = m_Camera.GetSettings().FOV;
 		}
 
 		PrepareViewport();

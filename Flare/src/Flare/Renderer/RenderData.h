@@ -46,6 +46,7 @@ namespace Flare
 		float Padding[2];
 
 		glm::vec3 ViewDirection;
+		float FOV;
 	};
 
 	struct LightData

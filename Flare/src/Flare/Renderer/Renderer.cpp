@@ -28,10 +28,10 @@ namespace Flare
 
 	struct ShadowData
 	{
-		float Smoothness;
+		//float Smoothness;
 		float Bias;
-		float Resolution;
-		float TexelSize;
+		float FrustumSize;
+		//float TexelSize;
 	};
 
 	struct RendererData
@@ -203,11 +203,16 @@ namespace Flare
 
 		ShadowData shadowData;
 		shadowData.Bias = s_RendererData.ShadowMappingSettings.Bias;
-		shadowData.Resolution = (float)s_RendererData.ShadowMappingSettings.Resolution;
-		shadowData.TexelSize = 1.0f / shadowData.Resolution;
-		shadowData.Smoothness = s_RendererData.ShadowMappingSettings.Smoothness;
 
-		s_RendererData.ShadowDataBuffer->SetData(&shadowData, sizeof(shadowData), 0);
+#if 0
+		shadowData.FrustumSize = 2.0f * s_RendererData.CurrentViewport->FrameData.Light.Near
+			* glm::tan(glm::radians(s_RendererData.CurrentViewport->FrameData.Camera.FOV) / 2.0f)
+			* s_RendererData.CurrentViewport->GetAspectRatio();
+#else
+		shadowData.FrustumSize = s_RendererData.CurrentViewport->FrameData.Light.Far / 2.0f;
+#endif
+
+ 		s_RendererData.ShadowDataBuffer->SetData(&shadowData, sizeof(shadowData), 0);
 
 		s_RendererData.WhiteTexture->Bind(2);
 

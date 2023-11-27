@@ -148,6 +148,8 @@ namespace Flare
 					viewport.FrameData.Camera.Far = camera.Far;
 					viewport.FrameData.Camera.View = glm::inverse(transforms[entity].GetTransformationMatrix());
 
+					viewport.FrameData.Camera.FOV = cameras[entity].FOV;
+
 					if (camera.Projection == CameraComponent::ProjectionType::Orthographic)
 						viewport.FrameData.Camera.Projection = glm::ortho(-halfSize * aspectRation, halfSize * aspectRation, -halfSize, halfSize, camera.Near, camera.Far);
 					else
@@ -179,7 +181,7 @@ namespace Flare
 				light.Color = lights[entity].Color;
 				light.Intensity = lights[entity].Intensity;
 				light.Direction = -direction;
-				light.Near = 0.0f;
+				light.Near = 0.1f;
 				light.Far = params.BoundingSphereRadius * 2.0f;
 
 				CameraData& lightView = viewport.FrameData.LightView;
