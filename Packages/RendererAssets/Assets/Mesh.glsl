@@ -76,6 +76,7 @@ layout(std140, binding = 2) uniform ShadowData
 {
 	float u_Bias;
 	float u_LightFrustumSize;
+	float u_LightSize;
 };
 
 struct VertexData
@@ -127,7 +128,7 @@ const vec2[] POISSON_POINTS = {
 };
 
 const int NUMBER_OF_SAMPLES = 24;
-#define LIGHT_SIZE (1.0f / u_LightFrustumSize)
+#define LIGHT_SIZE (u_LightSize / u_LightFrustumSize)
 
 float Random(vec2 co)
 {

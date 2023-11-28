@@ -28,10 +28,9 @@ namespace Flare
 
 	struct ShadowData
 	{
-		//float Smoothness;
 		float Bias;
 		float FrustumSize;
-		//float TexelSize;
+		float LightSize;
 	};
 
 	struct RendererData
@@ -83,7 +82,7 @@ namespace Flare
 		s_RendererData.ShadowMappingSettings.MaxDistance = 40.0f;
 		s_RendererData.ShadowMappingSettings.Resolution = 2048;
 		s_RendererData.ShadowMappingSettings.Bias = 0.001f;
-		s_RendererData.ShadowMappingSettings.Smoothness = 2.0f;
+		s_RendererData.ShadowMappingSettings.LightSize = 0.02f;
 
 		float vertices[] = {
 			-1, -1,
@@ -203,14 +202,11 @@ namespace Flare
 
 		ShadowData shadowData;
 		shadowData.Bias = s_RendererData.ShadowMappingSettings.Bias;
+		shadowData.LightSize = s_RendererData.ShadowMappingSettings.LightSize;
 
-#if 0
-		shadowData.FrustumSize = 2.0f * s_RendererData.CurrentViewport->FrameData.Light.Near
-			* glm::tan(glm::radians(s_RendererData.CurrentViewport->FrameData.Camera.FOV) / 2.0f)
+		shadowData.FrustumSize = 2.0f * s_RendererData.CurrentViewport->FrameData.Camera.Near
+			* glm::tan(glm::radians(s_RendererData.CurrentViewport->FrameData.Camera.FOV / 2.0f))
 			* s_RendererData.CurrentViewport->GetAspectRatio();
-#else
-		shadowData.FrustumSize = s_RendererData.CurrentViewport->FrameData.Light.Far / 2.0f;
-#endif
 
  		s_RendererData.ShadowDataBuffer->SetData(&shadowData, sizeof(shadowData), 0);
 

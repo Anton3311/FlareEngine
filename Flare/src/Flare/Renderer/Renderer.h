@@ -32,11 +32,11 @@ namespace Flare
 		ShadowSettings()
 			: MaxDistance(0.0f),
 			Resolution(0),
-			Smoothness(0.0f),
+			LightSize(1.0f),
 			Bias(0.0f) {}
 
 		float MaxDistance;
-		float Smoothness;
+		float LightSize;
 		float Bias;
 		uint32_t Resolution;
 	};

@@ -203,7 +203,7 @@ namespace Flare
             ShadowSettings& settings = Renderer::GetShadowSettings();
 
             ImGui::DragFloat("Max Distance", &settings.MaxDistance, 1.0f, 0.0f, 1000.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
-            ImGui::DragFloat("Smoothnes", &settings.Smoothness, 1.0f, 0.0f, 1000.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
+            ImGui::DragFloat("Light size", &settings.LightSize, 1.0f, 0.0f, 1000.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
             ImGui::DragFloat("Bias", &settings.Bias, 1.0f, 0.0f, 1000.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
 
             const char* resolutionPreviews[] = { "512", "1024", "2048", "4096" };
