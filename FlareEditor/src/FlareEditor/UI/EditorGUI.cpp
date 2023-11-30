@@ -191,6 +191,13 @@ namespace Flare
 		case SerializablePropertyType::UUID:
 			EditorGUI::UUIDField(property.Descriptor.Name.c_str(), property.ValueAs<UUID>());
 			break;
+
+		case SerializablePropertyType::Color3:
+			EditorGUI::ColorPropertyField(property.Descriptor.Name.c_str(), property.ValueAs<glm::vec3>());
+			break;
+		case SerializablePropertyType::Color4:
+			EditorGUI::ColorPropertyField(property.Descriptor.Name.c_str(), property.ValueAs<glm::vec4>());
+			break;
 		}
 		
 		return result;
@@ -202,6 +209,16 @@ namespace Flare
 
 		ImGui::PushID(&color);
 		bool result = ImGui::ColorEdit4("", glm::value_ptr(color), ImGuiColorEditFlags_Float);
+		ImGui::PopID();
+		return result;
+	}
+
+	bool EditorGUI::ColorPropertyField(const char* name, glm::vec3& color)
+	{
+		PropertyName(name);
+
+		ImGui::PushID(&color);
+		bool result = ImGui::ColorEdit3("", glm::value_ptr(color), ImGuiColorEditFlags_Float);
 		ImGui::PopID();
 		return result;
 	}

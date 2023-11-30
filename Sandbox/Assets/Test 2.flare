@@ -131,6 +131,7 @@ Entities:
         Scale: [1, 1, 1]
       - Name: struct Flare::TextComponent
         Text: Hello world
+        Color: [0.967971504, 0.32036069, 0.32036069, 1]
         Font: 0
       - Name: struct Flare::SerializationId
         Id: 2344803501759243978

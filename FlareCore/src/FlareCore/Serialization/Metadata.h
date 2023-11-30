@@ -71,6 +71,34 @@ namespace Flare
         }
     };
 
+    template<typename T>
+    struct ColorTypeFromDataType
+    {
+        constexpr SerializablePropertyType GetType()
+        {
+            static_assert(false, "Not supported color data type");
+            return SerializablePropertyType::None;
+        }
+    };
+
+    template<>
+    struct ColorTypeFromDataType<glm::vec3>
+    {
+        constexpr SerializablePropertyType GetType()
+        {
+            return SerializablePropertyType::Color3;
+        }
+    };
+
+    template<>
+    struct ColorTypeFromDataType<glm::vec4>
+    {
+        constexpr SerializablePropertyType GetType()
+        {
+            return SerializablePropertyType::Color4;
+        }
+    };
+
 #define FLARE_SERIALIZABLE \
     static Flare::SerializableObjectDescriptor _SerializationDescriptor;
 
@@ -87,4 +115,9 @@ namespace Flare
     Flare::SerializablePropertyDescriptor(                                                                                    \
         #propertyName, offsetof(typeName, propertyName),                                                                      \
         Flare::SerializablePropertyDataFromType<std::underlying_type_t<FLARE_TYPE_OF_FIELD(typeName, propertyName)>>().Get())
+
+#define FLARE_COLOR_PROPERTY(typeName, propertyName)                                                                          \
+    Flare::SerializablePropertyDescriptor(                                                                                    \
+        #propertyName, offsetof(typeName, propertyName),                                                                      \
+        ColorTypeFromDataType<FLARE_TYPE_OF_FIELD(typeName, propertyName)>().GetType())
 }

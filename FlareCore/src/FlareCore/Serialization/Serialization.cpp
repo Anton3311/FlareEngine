@@ -82,7 +82,9 @@ namespace Flare
             return sizeof(glm::mat4);
         case SerializablePropertyType::String:
             return sizeof(std::string);
-        case SerializablePropertyType::Color:
+        case SerializablePropertyType::Color3:
+            return sizeof(glm::vec3);
+        case SerializablePropertyType::Color4:
             return sizeof(glm::vec4);
         case SerializablePropertyType::UUID:
             return sizeof(UUID);

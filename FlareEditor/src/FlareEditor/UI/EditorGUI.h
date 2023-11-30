@@ -39,6 +39,7 @@ namespace Flare
 		static bool Vector4PropertyField(const char* name, glm::vec4& value);
 
 		static bool ColorPropertyField(const char* name, glm::vec4& color);
+		static bool ColorPropertyField(const char* name, glm::vec3& color);
 
 		static bool TextProperty(const char* name, std::string& text);
 		static bool TextField(const char* name, std::string& text);

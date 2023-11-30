@@ -72,7 +72,10 @@ namespace Flare
 		case SerializablePropertyType::UUID:
 			emitter << property.ValueAs<UUID>();
 			break;
-		case SerializablePropertyType::Color:
+		case SerializablePropertyType::Color3:
+			emitter << property.ValueAs<glm::vec3>();
+			break;
+		case SerializablePropertyType::Color4:
 			emitter << property.ValueAs<glm::vec4>();
 			break;
 		case SerializablePropertyType::Object:
@@ -155,7 +158,10 @@ namespace Flare
 		case SerializablePropertyType::String:
 			property.SetValue<std::string>(propertyNode.as<std::string>());
 			break;
-		case SerializablePropertyType::Color:
+		case SerializablePropertyType::Color3:
+			property.SetValue<glm::vec3>(propertyNode.as<glm::vec3>());
+			break;
+		case SerializablePropertyType::Color4:
 			property.SetValue<glm::vec4>(propertyNode.as<glm::vec4>());
 			break;
 		case SerializablePropertyType::UUID:

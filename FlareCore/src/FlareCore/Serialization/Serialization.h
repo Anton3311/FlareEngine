@@ -44,7 +44,8 @@ namespace Flare
 
         UUID,
 
-        Color,
+        Color3,
+        Color4,
         Texture2D,
 
         Array,

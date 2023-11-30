@@ -120,6 +120,7 @@ namespace Flare
 
 	FLARE_IMPL_COMPONENT(TextComponent,
 		FLARE_PROPERTY(TextComponent, Text),
+		FLARE_COLOR_PROPERTY(TextComponent, Color),
 		FLARE_PROPERTY(TextComponent, Font),
 	);
 	TextComponent::TextComponent()
