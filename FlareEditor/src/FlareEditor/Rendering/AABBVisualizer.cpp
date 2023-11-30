@@ -7,6 +7,8 @@
 
 #include "FlareECS/World.h"
 
+#include "FlareEditor/EditorLayer.h"
+
 namespace Flare
 {
 	FLARE_IMPL_SYSTEM(AABBVisualizer);
@@ -23,6 +25,9 @@ namespace Flare
 
 	void AABBVisualizer::OnUpdate(SystemExecutionContext& context)
 	{
+		if (!EditorLayer::GetInstance().GetSceneViewSettings().ShowAABBs)
+			return;
+
 		for (EntityView view : m_Query)
 		{
 			auto transforms = view.View<TransformComponent>();
@@ -33,7 +38,7 @@ namespace Flare
 				glm::mat4 transform = transforms[entity].GetTransformationMatrix();
 
 				AssetHandle meshHandle = meshes[entity].Mesh;
-
+				
 				Ref<Mesh> mesh = AssetManager::GetAsset<Mesh>(meshHandle);
 				if (mesh != nullptr)
 				{

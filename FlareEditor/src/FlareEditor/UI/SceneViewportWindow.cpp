@@ -431,7 +431,7 @@ namespace Flare
 		ImGui::PushItemWidth(100);
 		ImGui::PushID("Overlay");
 
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, style.FramePadding);
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, style.FramePadding); // Window Padding
 		const char* overlayName = nullptr;
 		switch (m_Overlay)
 		{
@@ -459,7 +459,6 @@ namespace Flare
 			comboBoxRect.Max,
 			ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Border]), style.FrameRounding, 0, 1.5f);
 
-		ImGui::PopStyleVar();
 		ImGui::PopID();
 
 
@@ -491,10 +490,32 @@ namespace Flare
 		ImGui::SameLine();
 		if (GuizmoButton("S", editorLayer.Guizmo == GuizmoMode::Scale))
 			editorLayer.Guizmo = GuizmoMode::Scale;
-		
 
 		ImGui::PopStyleVar();
+		// Scene View Settings
+
+		ImGui::SameLine();
+		
+		{
+			ImGui::PushID("SceneViewSettings");
+			SceneViewSettings& settings = EditorLayer::GetInstance().GetSceneViewSettings();
+			if (ImGui::BeginCombo("", "Settings"))
+			{
+				if (ImGui::MenuItem("Show AABBs", nullptr, &settings.ShowAABBs))
+					settings.ShowAABBs = settings.ShowAABBs;
+				if (ImGui::MenuItem("Show Lights", nullptr, &settings.ShowLights))
+					settings.ShowLights = settings.ShowLights;
+				if (ImGui::MenuItem("Show Camera Frustums", nullptr, &settings.ShowCameraFrustum))
+					settings.ShowCameraFrustum = settings.ShowCameraFrustum;
+
+				ImGui::EndCombo();
+			}
+			ImGui::PopID();
+		}
+
 		ImGui::PopItemWidth();
+
+		ImGui::PopStyleVar(); // Window Padding
 
 		ImGui::SetCursorPos(initialCursorPosition);
 	}

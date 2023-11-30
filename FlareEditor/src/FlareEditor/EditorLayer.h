@@ -39,6 +39,13 @@ namespace Flare
 		Scale,
 	};
 
+	struct SceneViewSettings
+	{
+		bool ShowAABBs = false;
+		bool ShowLights = true;
+		bool ShowCameraFrustum = true;
+	};
+
 	class EditorLayer : public Layer
 	{
 	public:
@@ -73,12 +80,17 @@ namespace Flare
 
 		inline const std::vector<Ref<ViewportWindow>>& GetViewportWindows() const { return m_ViewportWindows; }
 
+		inline SceneViewSettings& GetSceneViewSettings() { return m_SceneViewSettings; }
+		inline const SceneViewSettings& GetSceneViewSettings() const { return m_SceneViewSettings; }
+
 		static EditorLayer& GetInstance();
 	private:
 		void UpdateWindowTitle();
 		void OnOpenProject();
 	private:
 		float m_PreviousFrameTime = 0.0f;
+
+		SceneViewSettings m_SceneViewSettings;
 
 		EditorTitleBar m_TitleBar;
 		Ref<ViewportWindow> m_GameWindow;

@@ -5,6 +5,8 @@
 #include "Flare/Scene/Components.h"
 #include "Flare/Renderer/DebugRenderer.h"
 
+#include "FlareEditor/EditorLayer.h"
+
 namespace Flare
 {
 	FLARE_IMPL_SYSTEM(LightVisualizer);
@@ -17,6 +19,9 @@ namespace Flare
 
 	void LightVisualizer::OnUpdate(SystemExecutionContext& context)
 	{
+		if (!EditorLayer::GetInstance().GetSceneViewSettings().ShowLights)
+			return;
+
 		for (EntityView view : m_Query)
 		{
 			auto transforms = view.View<TransformComponent>();

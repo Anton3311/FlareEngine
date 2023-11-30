@@ -11,7 +11,6 @@
 
 namespace Flare
 {
-
 	class SceneViewportWindow : public ViewportWindow
 	{
 	public:

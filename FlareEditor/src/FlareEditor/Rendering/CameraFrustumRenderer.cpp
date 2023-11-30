@@ -7,6 +7,8 @@
 
 #include "FlareECS/World.h"
 
+#include "FlareEditor/EditorLayer.h"
+
 namespace Flare
 {
 	FLARE_IMPL_SYSTEM(CameraFrustumRenderer);
@@ -19,6 +21,9 @@ namespace Flare
 
 	void CameraFrustumRenderer::OnUpdate(SystemExecutionContext& context)
 	{
+		if (!EditorLayer::GetInstance().GetSceneViewSettings().ShowCameraFrustum)
+			return;
+
 		glm::uvec2 viewportSize = Renderer::GetMainViewport().GetSize();
 		float viewportAspectRatio = (float)viewportSize.x / (float)viewportSize.y;
 
