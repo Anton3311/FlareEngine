@@ -34,4 +34,32 @@ namespace Flare::Math
 	{
 		return (-plane.Offset - glm::dot(plane.Normal, ray.Origin)) / glm::dot(plane.Normal, ray.Direction);
 	}
+
+	struct AABB
+	{
+		constexpr AABB()
+			: Min(0.0f), Max(0.0f) {}
+
+		constexpr AABB(glm::vec3 min, glm::vec3 max)
+			: Min(min), Max(max) {}
+
+		inline void GetCorners(glm::vec3* corners) const
+		{
+			corners[0] = Min;
+			corners[1] = glm::vec3(Min.x, Min.y, Max.z);
+			corners[2] = glm::vec3(Max.x, Min.y, Min.z);
+			corners[3] = glm::vec3(Max.x, Min.y, Max.z);
+
+			corners[4] = glm::vec3(Min.x, Max.y, Min.z);
+			corners[5] = glm::vec3(Min.x, Max.y, Max.z);
+			corners[6] = glm::vec3(Max.x, Max.y, Min.z);
+			corners[7] = Max;
+		}
+
+		inline glm::vec3 GetCenter() const { return (Max + Min) / 2.0f; }
+		inline glm::vec3 GetSize() const { return Max - Min; }
+
+		glm::vec3 Min;
+		glm::vec3 Max;
+	};
 }

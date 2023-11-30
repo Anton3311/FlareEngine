@@ -26,6 +26,17 @@ namespace Flare
 		m_SubMesh.Normals = VertexBuffer::Create(verticesCount * sizeof(glm::vec3), normals);
 		m_SubMesh.UVs = VertexBuffer::Create(verticesCount * sizeof(glm::vec2), uvs);
 
+		if (verticesCount > 0)
+		{
+			m_SubMesh.Bounds = Math::AABB(vertices[0], vertices[0]);
+
+			for (size_t i = 1; i < verticesCount; i++)
+			{
+				m_SubMesh.Bounds.Min = glm::min(m_SubMesh.Bounds.Min, vertices[i]);
+				m_SubMesh.Bounds.Max = glm::max(m_SubMesh.Bounds.Max, vertices[i]);
+			}
+		}
+
 		m_SubMesh.MeshVertexArray = VertexArray::Create();
 		InitializeBuffers();
 	}

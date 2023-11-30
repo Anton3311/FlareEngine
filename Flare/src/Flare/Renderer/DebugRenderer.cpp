@@ -278,6 +278,25 @@ namespace Flare
 		s_DebugRendererData.LinesBuffer = s_DebugRendererData.LinesBufferBase;
 	}
 
+	void DebugRenderer::DrawAABB(const Math::AABB& aabb, const glm::vec4& color)
+	{
+		glm::vec3 corners[8];
+		aabb.GetCorners(corners);
+
+		for (size_t i = 0; i < 8; i += 4)
+		{
+			DrawLine(corners[i], corners[i + 1], color);
+			DrawLine(corners[i], corners[i + 2], color);
+			DrawLine(corners[i + 1], corners[i + 3], color);
+			DrawLine(corners[i + 2], corners[i + 3], color);
+		}
+
+		for (size_t i = 0; i < 4; i++)
+		{
+			DrawLine(corners[i], corners[i + 4], color);
+		}
+	}
+
 	void DebugRenderer::FlushRays()
 	{
 		FLARE_CORE_ASSERT(s_DebugRendererData.FrameData);

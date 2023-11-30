@@ -64,8 +64,11 @@ namespace Flare
 			emitter << property.ValueAs<glm::ivec4>();
 			break;
 		case SerializablePropertyType::String:
-			emitter << property.ValueAs<std::string>();
+		{
+			std::string stringCopy = property.ValueAs<std::string>();
+			emitter << stringCopy;
 			break;
+		}
 		case SerializablePropertyType::UUID:
 			emitter << property.ValueAs<UUID>();
 			break;
