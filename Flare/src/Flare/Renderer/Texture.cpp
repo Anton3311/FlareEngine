@@ -72,4 +72,29 @@ namespace Flare
 			return TextureFiltering::Closest;
 		return {};
 	}
+
+
+
+
+	Ref<Texture3D> Texture3D::Create(const Texture3DSpecifications& specifications)
+	{
+		switch (RendererAPI::GetAPI())
+		{
+		case RendererAPI::API::OpenGL:
+			return CreateRef<OpenGLTexture3D>(specifications);
+		}
+
+		return nullptr;
+	}
+
+	Ref<Texture3D> Texture3D::Create(const Texture3DSpecifications& specifications, const void* data, glm::uvec3 dataSize)
+	{
+		switch (RendererAPI::GetAPI())
+		{
+		case RendererAPI::API::OpenGL:
+			return CreateRef<OpenGLTexture3D>(specifications, data, dataSize);
+		}
+
+		return nullptr;
+	}
 }

@@ -4,6 +4,8 @@
 
 #include "Flare/AssetManager/Asset.h"
 
+#include <glm/glm.hpp>
+
 #include <filesystem>
 #include <optional>
 
@@ -61,5 +63,28 @@ namespace Flare
 	public:
 		static Ref<Texture> Create(const std::filesystem::path& path, const TextureSpecifications& specifications);
 		static Ref<Texture> Create(uint32_t width, uint32_t height, const void* data, TextureFormat format, TextureFiltering filtering = TextureFiltering::Linear);
+	};
+
+
+
+	struct Texture3DSpecifications
+	{
+		glm::uvec3 Size;
+		TextureFormat Format;
+		TextureFiltering Filtering;
+		TextureWrap Wrap;
+	};
+
+	class FLARE_API Texture3D
+	{
+	public:
+		virtual void Bind(uint32_t slot = 0) = 0;
+		virtual void* GetRendererId() const = 0;
+
+		virtual void SetData(const void* data, glm::uvec3 dataSize) = 0;
+		virtual const Texture3DSpecifications& GetSpecifications() const = 0;
+	public:
+		static Ref<Texture3D> Create(const Texture3DSpecifications& specifications);
+		static Ref<Texture3D> Create(const Texture3DSpecifications& specifications, const void* data, glm::uvec3 dataSize);
 	};
 }

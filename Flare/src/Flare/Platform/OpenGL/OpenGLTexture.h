@@ -33,4 +33,27 @@ namespace Flare
 		GLenum m_InternalTextureFormat;
 		GLenum m_TextureDataType;
 	};
+
+
+
+	class OpenGLTexture3D : public Texture3D
+	{
+	public:
+		OpenGLTexture3D(const Texture3DSpecifications& specifications);
+		OpenGLTexture3D(const Texture3DSpecifications& specifications, const void* data, glm::uvec3 dataSize);
+	public:
+		virtual void Bind(uint32_t slot) override;
+		virtual void* GetRendererId() const override;
+		virtual void SetData(const void* data, glm::uvec3 dataSize);
+		virtual const Flare::Texture3DSpecifications& GetSpecifications() const;
+	private:
+		void CreateTexture();
+	private:
+		uint32_t m_Id;
+
+		Texture3DSpecifications m_Specifications;
+
+		GLenum m_InternalTextureFormat;
+		GLenum m_TextureDataType;
+	};
 }

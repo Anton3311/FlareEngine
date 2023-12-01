@@ -132,4 +132,85 @@ namespace Flare
 			break;
 		}
 	}
+
+
+
+	OpenGLTexture3D::OpenGLTexture3D(const Texture3DSpecifications& specifications)
+		: m_Id(0), m_InternalTextureFormat(0), m_TextureDataType(0), m_Specifications(specifications)
+	{
+		CreateTexture();
+	}
+
+	OpenGLTexture3D::OpenGLTexture3D(const Texture3DSpecifications& specifications, const void* data, glm::uvec3 dataSize)
+		: m_Id(0), m_InternalTextureFormat(0), m_TextureDataType(0), m_Specifications(specifications)
+	{
+		CreateTexture();
+		SetData(data, dataSize);
+	}
+
+	void OpenGLTexture3D::Bind(uint32_t slot)
+	{
+		glBindTextureUnit(slot, m_Id);
+	}
+
+	void* OpenGLTexture3D::GetRendererId() const
+	{
+		return (void*)(size_t)m_Id;
+	}
+
+	void OpenGLTexture3D::SetData(const void* data, glm::uvec3 dataSize)
+	{
+		glTextureSubImage3D(m_Id, 0, 0, 0, 0,
+			dataSize.x, dataSize.y, dataSize.z,
+			m_TextureDataType, GL_UNSIGNED_BYTE, data);
+	}
+
+	const Texture3DSpecifications& OpenGLTexture3D::GetSpecifications() const
+	{
+		return m_Specifications;
+	}
+
+	void OpenGLTexture3D::CreateTexture()
+	{
+		switch (m_Specifications.Format)
+		{
+		case TextureFormat::RGB8:
+			m_InternalTextureFormat = GL_RGB8;
+			m_TextureDataType = GL_RGB;
+			break;
+		case TextureFormat::RGBA8:
+			m_InternalTextureFormat = GL_RGBA8;
+			m_TextureDataType = GL_RGBA;
+			break;
+		}
+
+		glCreateTextures(GL_TEXTURE_2D, 1, &m_Id);
+		glTextureStorage3D(m_Id, 1, m_InternalTextureFormat, m_Specifications.Size.x, m_Specifications.Size.y, m_Specifications.Size.z);
+
+		switch (m_Specifications.Filtering)
+		{
+		case TextureFiltering::Closest:
+			glTextureParameteri(m_Id, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+			glTextureParameteri(m_Id, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+			break;
+		case TextureFiltering::Linear:
+			glTextureParameteri(m_Id, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			glTextureParameteri(m_Id, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			break;
+		}
+
+		switch (m_Specifications.Wrap)
+		{
+		case TextureWrap::Clamp:
+			glTextureParameteri(m_Id, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+			glTextureParameteri(m_Id, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+			glTextureParameteri(m_Id, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+			break;
+		case TextureWrap::Repeat:
+			glTextureParameteri(m_Id, GL_TEXTURE_WRAP_R, GL_REPEAT);
+			glTextureParameteri(m_Id, GL_TEXTURE_WRAP_S, GL_REPEAT);
+			glTextureParameteri(m_Id, GL_TEXTURE_WRAP_T, GL_REPEAT);
+			break;
+		}
+	}
 }
