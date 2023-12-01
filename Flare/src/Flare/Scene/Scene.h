@@ -49,6 +49,7 @@ namespace Flare
 
 		Query m_CameraDataUpdateQuery;
 		Query m_DirectionalLightQuery;
+		Query m_EnvironmentQuery;
 
 		PostProcessingManager m_PostProcessingManager;
 	private:

@@ -153,4 +153,16 @@ namespace Flare
 
 	DirectionalLight::DirectionalLight(const glm::vec3& color, float intensity)
 		: Color(color), Intensity(intensity) {}
+
+
+
+	FLARE_IMPL_COMPONENT(Environment,
+		FLARE_COLOR_PROPERTY(Environment, EnvironmentColor),
+		FLARE_PROPERTY(Environment, EnvironmentColorIntensity)
+	);
+	Environment::Environment()
+		: EnvironmentColor(0.0f), EnvironmentColorIntensity(0.0f) {}
+
+	Environment::Environment(glm::vec3 color, float intensity)
+		: EnvironmentColor(color), EnvironmentColorIntensity(intensity) {}
 }

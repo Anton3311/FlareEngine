@@ -121,6 +121,8 @@ namespace Flare
 		MeshRenderFlags Flags;
 	};
 
+
+
 	struct FLARE_API DirectionalLight
 	{
 		FLARE_COMPONENT;
@@ -130,5 +132,16 @@ namespace Flare
 
 		glm::vec3 Color;
 		float Intensity;
+	};
+
+	struct FLARE_API Environment
+	{
+		FLARE_COMPONENT;
+
+		Environment();
+		Environment(glm::vec3 color, float intensity);
+
+		glm::vec3 EnvironmentColor;
+		float EnvironmentColorIntensity;
 	};
 }

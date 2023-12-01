@@ -24,7 +24,7 @@ struct VertexData
 	vec4 LightSpacePosition;
 };
 
-layout(std140, binding = 1) uniform DirLight
+layout(std140, binding = 1) uniform LightData
 {
 	vec4 u_LightColor;
 	vec3 u_LightDirection;
@@ -68,6 +68,9 @@ layout(std140, binding = 1) uniform DirLight
 	vec4 u_LightColor;
 	vec3 u_LightDirection;
 	mat4 u_LightProjection;
+
+	vec4 u_EnvironmentLight;
+
 	float u_LightNear;
 	float u_LightFar;
 };
@@ -134,9 +137,11 @@ const vec2[] POISSON_POINTS = {
 const int NUMBER_OF_SAMPLES = 32;
 #define LIGHT_SIZE (u_LightSize / u_LightFrustumSize)
 
-float Random(vec2 co)
+float ValueNoise(vec3 pos)
 {
-    return fract(sin(dot(co, vec2(12.9898, 78.233))) * 43758.5453);
+	vec3 Noise_skew = pos + 0.2127 + pos.x * pos.y * pos.z * 0.3713;
+	vec3 Noise_rnd = 4.789 * sin(489.123 * (Noise_skew));
+	return fract(Noise_rnd.x * Noise_rnd.y * Noise_rnd.z * (1.0 + Noise_skew.x));
 }
 
 float CalculateBlockerDistance(vec3 projectedLightSpacePosition, vec2 rotation)
@@ -154,7 +159,7 @@ float CalculateBlockerDistance(vec3 projectedLightSpacePosition, vec2 rotation)
 		);
 
 		float depth = texture(u_ShadowMap, projectedLightSpacePosition.xy + offset * searchSize).r;
-		if (depth - u_Bias < receieverDepth)
+		if (depth < receieverDepth - u_Bias)
 		{
 			samplesCount += 1.0;
 			blockerDistance += depth;
@@ -198,7 +203,7 @@ float CalculateShadow(vec4 lightSpacePosition)
 	if (projected.x > 1.0 || projected.y > 1.0 || projected.x < 0 || projected.y < 0)
 		return 1.0;
 
-	float random = Random(lightSpacePosition.xz) * pi;
+	float random = ValueNoise(i_Vertex.Position) * pi;
 	vec2 rotation = vec2(cos(random), sin(random));
 
 	float blockerDistance = CalculateBlockerDistance(projected, rotation);
@@ -215,11 +220,11 @@ void main()
 	if (u_InstanceData.Color.a <= 0.0001)
 		discard;
 
-	float shadow = CalculateShadow(i_Vertex.LightSpacePosition);
-
 	vec3 N = normalize(i_Vertex.Normal);
 	vec3 V = normalize(u_Camera.Position - i_Vertex.Position);
 	vec3 H = normalize(V + u_LightDirection);
+
+	float shadow = CalculateShadow(i_Vertex.LightSpacePosition);
 
 	vec3 incomingLight = u_LightColor.rgb * u_LightColor.w;
 	float alpha = max(0.04, u_InstanceData.Roughness * u_InstanceData.Roughness);
@@ -233,7 +238,10 @@ void main()
 	vec3 specular = Specular_CookTorence(alpha, N, V, u_LightDirection);
 	vec3 brdf = kD * diffuse + specular;
 
-	o_Color = vec4(shadow * brdf * incomingLight * max(0.0, dot(u_LightDirection, N)), color.a);
+	vec3 finalColor = shadow * brdf * incomingLight * max(0.0, dot(u_LightDirection, N));
+	finalColor += u_EnvironmentLight.rgb * u_EnvironmentLight.w * color.rgb;
+
+	o_Color = vec4(finalColor, color.a);
 	o_EntityIndex = i_EntityIndex;
 }
 

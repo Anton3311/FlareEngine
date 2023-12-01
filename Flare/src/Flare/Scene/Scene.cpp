@@ -46,7 +46,8 @@ namespace Flare
 
 		m_CameraDataUpdateQuery = m_World.NewQuery().With<TransformComponent, CameraComponent>().Create();
 		m_DirectionalLightQuery = m_World.NewQuery().With<TransformComponent, DirectionalLight>().Create();
-
+		m_EnvironmentQuery = m_World.NewQuery().With<Environment>().Create();
+		
 		systemsManager.RegisterSystem("Sprites Renderer", m_2DRenderingGroup, new SpritesRendererSystem());
 		systemsManager.RegisterSystem("Meshes Renderer", m_2DRenderingGroup, new MeshesRendererSystem());
 
@@ -205,6 +206,27 @@ namespace Flare
 			if (hasLight)
 				break;
 		}
+
+		bool hasEnviroment = false;
+		for (EntityView view : m_EnvironmentQuery)
+		{
+			auto environments = view.View<const Environment>();
+
+			for (EntityViewElement entity : view)
+			{
+				viewport.FrameData.Light.EnvironmentLight = glm::vec4(
+					environments[entity].EnvironmentColor,
+					environments[entity].EnvironmentColorIntensity
+				);
+
+				hasEnviroment = true;
+				break;
+			}
+
+			if (hasEnviroment)
+				break;
+		}
+
 	}
 
 	void Scene::OnRender(const Viewport& viewport)
