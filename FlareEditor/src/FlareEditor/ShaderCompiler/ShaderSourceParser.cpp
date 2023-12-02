@@ -177,8 +177,19 @@ namespace Flare
 				matchPosition++;
 				if (matchPosition == token.size())
 				{
-					m_ReadPosition -= token.size();
-					return true;
+					if (m_ReadPosition + token.size() >= m_ShaderSource.size())
+					{
+						m_ReadPosition -= token.size();
+						return true;
+					}
+
+					if (std::isspace(m_ShaderSource[m_ReadPosition + 1]))
+					{
+						m_ReadPosition -= token.size();
+						return true;
+					}
+
+					matchPosition = 0;
 				}
 			}
 			else
