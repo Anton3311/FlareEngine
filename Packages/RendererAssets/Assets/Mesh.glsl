@@ -72,11 +72,15 @@ layout(std140, binding = 1) uniform DirLight
 	float u_LightNear;
 };
 
+const int CASCADES_COUNT = 4;
+
 layout(std140, binding = 2) uniform ShadowData
 {
 	float u_Bias;
 	float u_LightFrustumSize;
 	float u_LightSize;
+
+	int u_MaxCascadeIndex;
 
 	vec4 u_CascadeSplits;
 
@@ -235,24 +239,49 @@ void main()
 
 	float shadow = 1.0f;
 	float viewSpaceDistance = abs(i_Vertex.ViewSpacePosition.z);
+
+	int cascadeIndex = u_MaxCascadeIndex;
+	for (int i = 0; i < u_MaxCascadeIndex; i++)
+	{
+		if (viewSpaceDistance <= u_CascadeSplits[i])
+		{
+			cascadeIndex = i;
+			break;
+		}
+	}
+
 #if DEBUG_CASCADES
-	if (viewSpaceDistance <= u_CascadeSplits.x)
+	switch (cascadeIndex)
+	{
+	case 0:
 		color.xyz *= vec3(1.0f, 0.f, 0.0f);
-	else if (viewSpaceDistance <= u_CascadeSplits.y)
+		break;
+	case 1:
 		color.xyz *= vec3(0.0f, 1.0f, 0.0f);
-	else if (viewSpaceDistance <= u_CascadeSplits.z)
+		break;
+	case 2:
 		color.xyz *= vec3(0.0f, 0.0f, 1.0f);
-	else
+		break;
+	case 3:
 		color.xyz *= vec3(1.0f, 0.0f, 0.0f);
+		break;
+	}
 #else
-	if (viewSpaceDistance <= u_CascadeSplits.x)
+	switch (cascadeIndex)
+	{
+	case 0:
 		shadow = CalculateShadow(u_ShadowMap0, (u_CascadeProjection0 * vec4(i_Vertex.Position, 1.0f)));
-	else if (viewSpaceDistance <= u_CascadeSplits.y)
+		break;
+	case 1:
 		shadow = CalculateShadow(u_ShadowMap1, (u_CascadeProjection1 * vec4(i_Vertex.Position, 1.0f)));
-	else if (viewSpaceDistance <= u_CascadeSplits.z)
+		break;
+	case 2:
 		shadow = CalculateShadow(u_ShadowMap2, (u_CascadeProjection2 * vec4(i_Vertex.Position, 1.0f)));
-	else
+		break;
+	case 3:
 		shadow = CalculateShadow(u_ShadowMap3, (u_CascadeProjection3 * vec4(i_Vertex.Position, 1.0f)));
+		break;
+	}
 #endif
 
 	vec3 incomingLight = u_LightColor.rgb * u_LightColor.w;

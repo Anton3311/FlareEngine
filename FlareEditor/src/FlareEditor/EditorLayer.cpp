@@ -198,13 +198,14 @@ namespace Flare
 
             static int32_t s_CascadeIndex = 0;
 
-            ImGui::DragInt("Cascade Index", &s_CascadeIndex, 1, 0, 3, "%d", ImGuiSliderFlags_AlwaysClamp);
+            ShadowSettings& settings = Renderer::GetShadowSettings();
+
+            ImGui::SliderInt("Cascade Index", &s_CascadeIndex, 0, settings.Cascades - 1, "%d", ImGuiSliderFlags_AlwaysClamp);
+            ImGui::SliderInt("Cascade", &settings.Cascades, 1, settings.MaxCascades, "%d", ImGuiSliderFlags_AlwaysClamp);
 
             auto shadows = Renderer::GetShadowsRenderTarget(s_CascadeIndex);
             if (shadows)
                 ImGui::Image(shadows->GetColorAttachmentRendererId(0), ImVec2(256, 256), ImVec2(0, 1), ImVec2(1, 0));
-
-            ShadowSettings& settings = Renderer::GetShadowSettings();
 
             ImGui::DragFloat("Light size", &settings.LightSize, 1.0f, 0.0f, 1000.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
             ImGui::DragFloat("Bias", &settings.Bias, 1.0f, 0.0f, 1000.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp);

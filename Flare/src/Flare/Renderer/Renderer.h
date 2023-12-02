@@ -34,9 +34,12 @@ namespace Flare
 			LightSize(1.0f),
 			Bias(0.0f) {}
 
+		const uint32_t MaxCascades = 4;
+
 		float LightSize;
 		float Bias;
 		uint32_t Resolution;
+		int32_t Cascades;
 
 		float CascadeSplits[4] = { 0.0f };
 	};

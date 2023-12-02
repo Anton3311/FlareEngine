@@ -32,7 +32,7 @@ namespace Flare
 		float FrustumSize;
 		float LightSize;
 
-		float Padding0;
+		int32_t MaxCascadeIndex;
 
 		float CascadeSplits[4];
 
@@ -89,6 +89,7 @@ namespace Flare
 		s_RendererData.ShadowMappingSettings.Bias = 0.001f;
 		s_RendererData.ShadowMappingSettings.LightSize = 0.1f;
 
+		s_RendererData.ShadowMappingSettings.Cascades = s_RendererData.ShadowMappingSettings.MaxCascades;
 		s_RendererData.ShadowMappingSettings.CascadeSplits[0] = 15.0f;
 		s_RendererData.ShadowMappingSettings.CascadeSplits[1] = 25.0f;
 		s_RendererData.ShadowMappingSettings.CascadeSplits[2] = 50.0f;
@@ -167,7 +168,8 @@ namespace Flare
 
 		for (size_t i = 0; i < 4; i++)
 			shadowData.LightProjection[i] = viewport.FrameData.LightView[i].ViewProjection;
-			
+
+		shadowData.MaxCascadeIndex = s_RendererData.ShadowMappingSettings.Cascades - 1;
 		shadowData.FrustumSize = 2.0f * s_RendererData.CurrentViewport->FrameData.Camera.Near
 			* glm::tan(glm::radians(s_RendererData.CurrentViewport->FrameData.Camera.FOV / 2.0f))
 			* s_RendererData.CurrentViewport->GetAspectRatio();
@@ -211,7 +213,7 @@ namespace Flare
 			}
 		}
 
-		for (size_t i = 0; i < 4; i++)
+		for (size_t i = 0; i < s_RendererData.ShadowMappingSettings.Cascades; i++)
 		{
 			s_RendererData.ShadowsRenderTarget[i]->Bind();
 			RenderCommand::Clear();
@@ -253,7 +255,7 @@ namespace Flare
 		RenderCommand::SetDepthTestEnabled(true);
 		RenderCommand::SetCullingMode(CullingMode::Front);
 
-		for (size_t i = 0; i < 4; i++)
+		for (size_t i = 0; i < s_RendererData.ShadowMappingSettings.Cascades; i++)
 		{
 			const FrameBufferSpecifications& shadowMapSpecs = s_RendererData.ShadowsRenderTarget[i]->GetSpecifications();
 			RenderCommand::SetViewport(0, 0, shadowMapSpecs.Width, shadowMapSpecs.Height);
