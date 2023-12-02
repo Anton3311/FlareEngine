@@ -198,7 +198,7 @@ namespace Flare
 
             static int32_t s_CascadeIndex = 0;
 
-            ImGui::DragInt("Cascade Index", &s_CascadeIndex, 1.0f, 0.0f, 3.0f, "%d", ImGuiSliderFlags_AlwaysClamp);
+            ImGui::DragInt("Cascade Index", &s_CascadeIndex, 1, 0, 3, "%d", ImGuiSliderFlags_AlwaysClamp);
 
             auto shadows = Renderer::GetShadowsRenderTarget(s_CascadeIndex);
             if (shadows)
@@ -206,14 +206,13 @@ namespace Flare
 
             ShadowSettings& settings = Renderer::GetShadowSettings();
 
-            ImGui::DragFloat("Max Distance", &settings.MaxDistance, 1.0f, 0.0f, 1000.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
             ImGui::DragFloat("Light size", &settings.LightSize, 1.0f, 0.0f, 1000.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
             ImGui::DragFloat("Bias", &settings.Bias, 1.0f, 0.0f, 1000.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
 
             for (size_t i = 0; i < 4; i++)
             {
                 char label[] = "Split 0";
-                label[6] = '0' + i;
+                label[6] = '0' + (uint8_t)i;
 
                 ImGui::DragFloat(label, &settings.CascadeSplits[i], 1.0f, 0.0f, 1000.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
             }

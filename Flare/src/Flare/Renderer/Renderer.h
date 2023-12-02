@@ -30,12 +30,10 @@ namespace Flare
 	struct ShadowSettings
 	{
 		ShadowSettings()
-			: MaxDistance(0.0f),
-			Resolution(0),
+			: Resolution(0),
 			LightSize(1.0f),
 			Bias(0.0f) {}
 
-		float MaxDistance;
 		float LightSize;
 		float Bias;
 		uint32_t Resolution;

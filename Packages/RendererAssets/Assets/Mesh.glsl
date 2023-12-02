@@ -44,7 +44,7 @@ void main()
 	o_Vertex.Position = transformed.xyz;
 
 	o_Vertex.UV = i_UV;
-	o_Vertex.ViewSpacePosition = position.xyz;
+	o_Vertex.ViewSpacePosition = (u_Camera.View * transformed).xyz;
 	o_EntityIndex = i_EntityIndex;
 
     gl_Position = position;
@@ -223,29 +223,43 @@ float CalculateShadow(sampler2D shadowMap, vec4 lightSpacePosition)
 	return 1.0f - PCF(shadowMap, uv, receieverDepth, filterRadius, rotation);
 }
 
+#define DEBUG_CASCADES 0
+
 void main()
 {
 	vec3 N = normalize(i_Vertex.Normal);
 	vec3 V = normalize(u_Camera.Position - i_Vertex.Position);
 	vec3 H = normalize(V + u_LightDirection);
 
+	vec4 color = u_InstanceData.Color * texture(u_Texture, i_Vertex.UV);
+
 	float shadow = 1.0f;
-	if (i_Vertex.ViewSpacePosition.z <= u_CascadeSplits.x)
+	float viewSpaceDistance = abs(i_Vertex.ViewSpacePosition.z);
+#if DEBUG_CASCADES
+	if (viewSpaceDistance <= u_CascadeSplits.x)
+		color.xyz *= vec3(1.0f, 0.f, 0.0f);
+	else if (viewSpaceDistance <= u_CascadeSplits.y)
+		color.xyz *= vec3(0.0f, 1.0f, 0.0f);
+	else if (viewSpaceDistance <= u_CascadeSplits.z)
+		color.xyz *= vec3(0.0f, 0.0f, 1.0f);
+	else
+		color.xyz *= vec3(1.0f, 0.0f, 0.0f);
+#else
+	if (viewSpaceDistance <= u_CascadeSplits.x)
 		shadow = CalculateShadow(u_ShadowMap0, (u_CascadeProjection0 * vec4(i_Vertex.Position, 1.0f)));
-	else if (i_Vertex.ViewSpacePosition.z <= u_CascadeSplits.y)
+	else if (viewSpaceDistance <= u_CascadeSplits.y)
 		shadow = CalculateShadow(u_ShadowMap1, (u_CascadeProjection1 * vec4(i_Vertex.Position, 1.0f)));
-	else if (i_Vertex.ViewSpacePosition.z <= u_CascadeSplits.z)
+	else if (viewSpaceDistance <= u_CascadeSplits.z)
 		shadow = CalculateShadow(u_ShadowMap2, (u_CascadeProjection2 * vec4(i_Vertex.Position, 1.0f)));
 	else
 		shadow = CalculateShadow(u_ShadowMap3, (u_CascadeProjection3 * vec4(i_Vertex.Position, 1.0f)));
+#endif
 
 	vec3 incomingLight = u_LightColor.rgb * u_LightColor.w;
 	float alpha = max(0.04, u_InstanceData.Roughness * u_InstanceData.Roughness);
 
 	vec3 kS = Fresnel_Shlick(baseReflectivity, V, H);
 	vec3 kD = vec3(1.0) - kS;
-
-	vec4 color = u_InstanceData.Color * texture(u_Texture, i_Vertex.UV);
 
 	vec3 diffuse = Diffuse_Lambertian(color.rgb);
 	vec3 specular = Specular_CookTorence(alpha, N, V, u_LightDirection);

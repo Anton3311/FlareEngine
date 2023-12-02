@@ -85,15 +85,14 @@ namespace Flare
 		s_RendererData.LightBuffer = UniformBuffer::Create(sizeof(LightData), 1);
 		s_RendererData.ShadowDataBuffer = UniformBuffer::Create(sizeof(ShadowData), 2);
 
-		s_RendererData.ShadowMappingSettings.MaxDistance = 40.0f;
 		s_RendererData.ShadowMappingSettings.Resolution = 2048;
 		s_RendererData.ShadowMappingSettings.Bias = 0.001f;
-		s_RendererData.ShadowMappingSettings.LightSize = 0.02f;
+		s_RendererData.ShadowMappingSettings.LightSize = 0.1f;
 
 		s_RendererData.ShadowMappingSettings.CascadeSplits[0] = 15.0f;
-		s_RendererData.ShadowMappingSettings.CascadeSplits[1] = 45.0f;
-		s_RendererData.ShadowMappingSettings.CascadeSplits[2] = 75.0f;
-		s_RendererData.ShadowMappingSettings.CascadeSplits[3] = 200.0f;
+		s_RendererData.ShadowMappingSettings.CascadeSplits[1] = 25.0f;
+		s_RendererData.ShadowMappingSettings.CascadeSplits[2] = 50.0f;
+		s_RendererData.ShadowMappingSettings.CascadeSplits[3] = 100.0f;
 
 		float vertices[] = {
 			-1, -1,
