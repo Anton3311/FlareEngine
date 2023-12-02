@@ -195,8 +195,12 @@ namespace Flare
 
         {
             ImGui::Begin("Shadows");
-            auto shadows = Renderer::GetShadowsRenderTarget();
 
+            static int32_t s_CascadeIndex = 0;
+
+            ImGui::DragInt("Cascade Index", &s_CascadeIndex, 1.0f, 0.0f, 3.0f, "%d", ImGuiSliderFlags_AlwaysClamp);
+
+            auto shadows = Renderer::GetShadowsRenderTarget(s_CascadeIndex);
             if (shadows)
                 ImGui::Image(shadows->GetColorAttachmentRendererId(0), ImVec2(256, 256), ImVec2(0, 1), ImVec2(1, 0));
 
@@ -205,6 +209,14 @@ namespace Flare
             ImGui::DragFloat("Max Distance", &settings.MaxDistance, 1.0f, 0.0f, 1000.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
             ImGui::DragFloat("Light size", &settings.LightSize, 1.0f, 0.0f, 1000.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
             ImGui::DragFloat("Bias", &settings.Bias, 1.0f, 0.0f, 1000.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
+
+            for (size_t i = 0; i < 4; i++)
+            {
+                char label[] = "Split 0";
+                label[6] = '0' + i;
+
+                ImGui::DragFloat(label, &settings.CascadeSplits[i], 1.0f, 0.0f, 1000.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
+            }
 
             const char* resolutionPreviews[] = { "512", "1024", "2048", "4096" };
             uint32_t resolutions[] = { 512, 1024, 2048, 4096 };

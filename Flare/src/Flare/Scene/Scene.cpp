@@ -78,11 +78,10 @@ namespace Flare
 		float BoundingSphereRadius;
 	};
 
-	static void CalculateShadowParams(ShadowMappingParams& params, glm::vec3 lightDirection, const Viewport& viewport)
+	static void CalculateShadowParams(ShadowMappingParams& params, glm::vec3 lightDirection, const Viewport& viewport, float nearPlaneDistance, float farPlaneDistance)
 	{
 		const CameraData& camera = viewport.FrameData.Camera;
-		const ShadowSettings& shadowSettings = Renderer::GetShadowSettings();
-
+		
 		std::array<glm::vec4, 8> frustumCorners =
 		{
 			glm::vec4(-1.0f, -1.0f, 0.0f, 1.0f),
@@ -101,7 +100,8 @@ namespace Flare
 			frustumCorners[i] /= frustumCorners[i].w;
 		}
 
-		Math::Plane farPlane = Math::Plane::TroughPoint(camera.Position + camera.ViewDirection * shadowSettings.MaxDistance, camera.ViewDirection);
+		Math::Plane farPlane = Math::Plane::TroughPoint(camera.Position + camera.ViewDirection * farPlaneDistance, camera.ViewDirection);
+		Math::Plane nearPlane = Math::Plane::TroughPoint(camera.Position + camera.ViewDirection * nearPlaneDistance, camera.ViewDirection);
 		for (size_t i = 0; i < frustumCorners.size() / 2; i++)
 		{
 			Math::Ray ray;
@@ -109,6 +109,15 @@ namespace Flare
 			ray.Direction = frustumCorners[i + 4] - frustumCorners[i];
 
 			frustumCorners[i + 4] = glm::vec4(ray.Origin + ray.Direction * Math::IntersectPlane(farPlane, ray), 0.0f);
+		}
+
+		for (size_t i = 0; i < frustumCorners.size() / 2; i++)
+		{
+			Math::Ray ray;
+			ray.Origin = frustumCorners[i + 4];
+			ray.Direction = frustumCorners[i] - frustumCorners[i + 4];
+
+			frustumCorners[i] = glm::vec4(ray.Origin + ray.Direction * Math::IntersectPlane(nearPlane, ray), 0.0f);
 		}
 
 		glm::vec3 frustumCenter = glm::vec3(0.0f);
@@ -173,31 +182,34 @@ namespace Flare
 				TransformComponent& transform = transforms[entity];
 				glm::vec3 direction = transform.TransformDirection(glm::vec3(0.0f, 0.0f, -1.0f));
 
-				ShadowMappingParams params;
-				CalculateShadowParams(params, direction, viewport);
-
-				glm::mat4 view = glm::lookAt(params.ViewPosition, params.CameraFrustumCenter, glm::vec3(0.0f, 1.0f, 0.0f));
-
 				LightData& light = viewport.FrameData.Light;
 				light.Color = lights[entity].Color;
 				light.Intensity = lights[entity].Intensity;
 				light.Direction = -direction;
 				light.Near = 0.1f;
-				light.Far = params.BoundingSphereRadius * 2.0f;
 
-				CameraData& lightView = viewport.FrameData.LightView;
-				lightView.Position = transform.Position;
-				lightView.View = view;
-				lightView.Projection = glm::ortho(
-					-params.BoundingSphereRadius,
-					params.BoundingSphereRadius,
-					-params.BoundingSphereRadius,
-					params.BoundingSphereRadius,
-					light.Near, light.Far);
+				const ShadowSettings& shadowSettings = Renderer::GetShadowSettings();
+				float currentNearPlane = light.Near;
+				for (size_t i = 0; i < 4; i++)
+				{
+					ShadowMappingParams params;
+					CalculateShadowParams(params, direction, viewport, currentNearPlane, shadowSettings.CascadeSplits[i]);
 
-				lightView.CalculateViewProjection();
+					glm::mat4 view = glm::lookAt(params.ViewPosition, params.CameraFrustumCenter, glm::vec3(0.0f, 1.0f, 0.0f));
 
-				light.LightProjection = lightView.ViewProjection;
+					CameraData& lightView = viewport.FrameData.LightView[i];
+					lightView.Position = transform.Position;
+					lightView.View = view;
+					lightView.Projection = glm::ortho(
+						-params.BoundingSphereRadius,
+						params.BoundingSphereRadius,
+						-params.BoundingSphereRadius,
+						params.BoundingSphereRadius,
+						light.Near, params.BoundingSphereRadius * 2.0f);
+
+					lightView.CalculateViewProjection();
+					currentNearPlane = shadowSettings.CascadeSplits[i];
+				}
 				hasLight = true;
 
 				break;

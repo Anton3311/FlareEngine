@@ -31,6 +31,12 @@ namespace Flare
 		float Bias;
 		float FrustumSize;
 		float LightSize;
+
+		float Padding0;
+
+		float CascadeSplits[4];
+
+		glm::mat4 LightProjection[4];
 	};
 
 	struct RendererData
@@ -54,7 +60,7 @@ namespace Flare
 		uint32_t MaxInstances = 1024;
 
 		Ref<Mesh> CurrentInstancingMesh = nullptr;
-		Ref<FrameBuffer> ShadowsRenderTarget = nullptr;
+		Ref<FrameBuffer> ShadowsRenderTarget[4] = { nullptr };
 
 		Ref<Material> ErrorMaterial = nullptr;
 
@@ -83,6 +89,11 @@ namespace Flare
 		s_RendererData.ShadowMappingSettings.Resolution = 2048;
 		s_RendererData.ShadowMappingSettings.Bias = 0.001f;
 		s_RendererData.ShadowMappingSettings.LightSize = 0.02f;
+
+		s_RendererData.ShadowMappingSettings.CascadeSplits[0] = 15.0f;
+		s_RendererData.ShadowMappingSettings.CascadeSplits[1] = 45.0f;
+		s_RendererData.ShadowMappingSettings.CascadeSplits[2] = 75.0f;
+		s_RendererData.ShadowMappingSettings.CascadeSplits[3] = 200.0f;
 
 		float vertices[] = {
 			-1, -1,
@@ -148,26 +159,65 @@ namespace Flare
 		s_RendererData.LightBuffer->SetData(&viewport.FrameData.Light, sizeof(viewport.FrameData.Light), 0);
 		s_RendererData.CameraBuffer->SetData(&viewport.FrameData.Camera, sizeof(CameraData), 0);
 
-		if (s_RendererData.ShadowsRenderTarget == nullptr)
+		ShadowData shadowData;
+		shadowData.Bias = s_RendererData.ShadowMappingSettings.Bias;
+		shadowData.LightSize = s_RendererData.ShadowMappingSettings.LightSize;
+
+		for (size_t i = 0; i < 4; i++)
+			shadowData.CascadeSplits[i] = s_RendererData.ShadowMappingSettings.CascadeSplits[i];
+
+		for (size_t i = 0; i < 4; i++)
+			shadowData.LightProjection[i] = viewport.FrameData.LightView[i].ViewProjection;
+			
+		shadowData.FrustumSize = 2.0f * s_RendererData.CurrentViewport->FrameData.Camera.Near
+			* glm::tan(glm::radians(s_RendererData.CurrentViewport->FrameData.Camera.FOV / 2.0f))
+			* s_RendererData.CurrentViewport->GetAspectRatio();
+
+		s_RendererData.ShadowDataBuffer->SetData(&shadowData, sizeof(shadowData), 0);
+
+		if (s_RendererData.ShadowsRenderTarget[0] == nullptr)
 		{
 			FrameBufferSpecifications shadowMapSpecs;
 			shadowMapSpecs.Width = s_RendererData.ShadowMappingSettings.Resolution;
 			shadowMapSpecs.Height = s_RendererData.ShadowMappingSettings.Resolution;
 			shadowMapSpecs.Attachments = { { FrameBufferTextureFormat::Depth, TextureWrap::Clamp, TextureFiltering::Linear } };
 
-			s_RendererData.ShadowsRenderTarget = FrameBuffer::Create(shadowMapSpecs);
+			for (size_t i = 0; i < 2; i++)
+			{
+				s_RendererData.ShadowsRenderTarget[i] = FrameBuffer::Create(shadowMapSpecs);
+			}
+
+			shadowMapSpecs.Width /= 2;
+			shadowMapSpecs.Height /= 2;
+
+			for (size_t i = 2; i < 4; i++)
+			{
+				s_RendererData.ShadowsRenderTarget[i] = FrameBuffer::Create(shadowMapSpecs);
+			}
 		}
 		else
 		{
-			auto& shadowMapSpecs = s_RendererData.ShadowsRenderTarget->GetSpecifications();
+			auto& shadowMapSpecs = s_RendererData.ShadowsRenderTarget[0]->GetSpecifications();
 			if (shadowMapSpecs.Width != s_RendererData.ShadowMappingSettings.Resolution
 				|| shadowMapSpecs.Height != s_RendererData.ShadowMappingSettings.Resolution)
 			{
-				s_RendererData.ShadowsRenderTarget->Resize(
-					s_RendererData.ShadowMappingSettings.Resolution,
-					s_RendererData.ShadowMappingSettings.Resolution);
+				for (size_t i = 0; i < 4; i++)
+				{
+					uint32_t resolution = s_RendererData.ShadowMappingSettings.Resolution;
+					if (i >= 2)
+						resolution /= 2;
+
+					s_RendererData.ShadowsRenderTarget[i]->Resize(resolution, resolution);
+				}
 			}
 		}
+
+		for (size_t i = 0; i < 4; i++)
+		{
+			s_RendererData.ShadowsRenderTarget[i]->Bind();
+			RenderCommand::Clear();
+		}
+		viewport.RenderTarget->Bind();
 	}
 
 	static void ApplyMaterialFeatures(ShaderFeatures features)
@@ -196,32 +246,27 @@ namespace Flare
 	{
 		std::sort(s_RendererData.Queue.begin(), s_RendererData.Queue.end(), CompareRenderableObjects);
 
-		s_RendererData.CameraBuffer->SetData(
-			&s_RendererData.CurrentViewport->FrameData.LightView, 
-			sizeof(s_RendererData.CurrentViewport->FrameData.LightView), 0);
+		for (size_t i = 0; i < 4; i++)
+		{
+			s_RendererData.WhiteTexture->Bind(2 + (uint32_t)i);
+		}
 
-		ShadowData shadowData;
-		shadowData.Bias = s_RendererData.ShadowMappingSettings.Bias;
-		shadowData.LightSize = s_RendererData.ShadowMappingSettings.LightSize;
-
-		shadowData.FrustumSize = 2.0f * s_RendererData.CurrentViewport->FrameData.Camera.Near
-			* glm::tan(glm::radians(s_RendererData.CurrentViewport->FrameData.Camera.FOV / 2.0f))
-			* s_RendererData.CurrentViewport->GetAspectRatio();
-
- 		s_RendererData.ShadowDataBuffer->SetData(&shadowData, sizeof(shadowData), 0);
-
-		s_RendererData.WhiteTexture->Bind(2);
-
-		const FrameBufferSpecifications& shadowMapSpecs = s_RendererData.ShadowsRenderTarget->GetSpecifications();
-		RenderCommand::SetViewport(0, 0, shadowMapSpecs.Width, shadowMapSpecs.Height);
-
-		s_RendererData.ShadowsRenderTarget->Bind();
-
-		RenderCommand::Clear();
 		RenderCommand::SetDepthTestEnabled(true);
 		RenderCommand::SetCullingMode(CullingMode::Front);
 
-		DrawQueued(true);
+		for (size_t i = 0; i < 4; i++)
+		{
+			const FrameBufferSpecifications& shadowMapSpecs = s_RendererData.ShadowsRenderTarget[i]->GetSpecifications();
+			RenderCommand::SetViewport(0, 0, shadowMapSpecs.Width, shadowMapSpecs.Height);
+
+			s_RendererData.CameraBuffer->SetData(
+				&s_RendererData.CurrentViewport->FrameData.LightView[i],
+				sizeof(s_RendererData.CurrentViewport->FrameData.LightView[i]), 0);
+
+			s_RendererData.ShadowsRenderTarget[i]->Bind();
+
+			DrawQueued(true);
+		}
 
 		RenderCommand::SetViewport(0, 0, s_RendererData.CurrentViewport->GetSize().x, s_RendererData.CurrentViewport->GetSize().y);
 		s_RendererData.CurrentViewport->RenderTarget->Bind();
@@ -231,8 +276,11 @@ namespace Flare
 			sizeof(s_RendererData.CurrentViewport->FrameData.Camera), 0);
 
 		FrameBufferAttachmentsMask previousMask = s_RendererData.CurrentViewport->RenderTarget->GetWriteMask();
-
-		s_RendererData.ShadowsRenderTarget->BindAttachmentTexture(0, 2);
+		
+		for (size_t i = 0; i < 4; i++)
+		{
+			s_RendererData.ShadowsRenderTarget[i]->BindAttachmentTexture(0, 2 + (uint32_t)i);
+		}
 
 		DrawQueued(false);
 		s_RendererData.CurrentViewport->RenderTarget->SetWriteMask(previousMask);
@@ -409,9 +457,9 @@ namespace Flare
 		return s_RendererData.FullscreenQuad;
 	}
 
-	Ref<FrameBuffer> Renderer::GetShadowsRenderTarget()
+	Ref<FrameBuffer> Renderer::GetShadowsRenderTarget(size_t index)
 	{
-		return s_RendererData.ShadowsRenderTarget;
+		return s_RendererData.ShadowsRenderTarget[index];
 	}
 
 	ShadowSettings& Renderer::GetShadowSettings()

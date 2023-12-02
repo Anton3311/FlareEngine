@@ -57,18 +57,16 @@ namespace Flare
 		glm::vec3 Direction;
 		float Unused;
 		
-		glm::mat4 LightProjection;
 		glm::vec4 EnvironmentLight;
 
 		float Near;
-		float Far;
 	};
 
 	struct RenderData
 	{
 		CameraData Camera;
 		LightData Light;
-		CameraData LightView;
+		CameraData LightView[4];
 		bool IsEditorCamera = false;
 	};
 }

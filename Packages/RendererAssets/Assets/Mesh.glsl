@@ -21,18 +21,17 @@ struct VertexData
 	vec3 Position;
 	vec3 Normal;
 	vec2 UV;
-	vec4 LightSpacePosition;
+	vec3 ViewSpacePosition;
 };
 
 layout(std140, binding = 1) uniform LightData
 {
 	vec4 u_LightColor;
 	vec3 u_LightDirection;
-	mat4 u_LightProjection;
 };
 
 layout(location = 0) out VertexData o_Vertex;
-layout(location = 4) out flat int o_EntityIndex;
+layout(location = 5) out flat int o_EntityIndex;
 
 void main()
 {
@@ -40,15 +39,16 @@ void main()
 	o_Vertex.Normal = (normalTransform * vec4(i_Normal, 1.0)).xyz;
 
 	vec4 position = u_Camera.ViewProjection * i_Transform * vec4(i_Position, 1.0);
-	o_Vertex.Position = (i_Transform * vec4(i_Position, 1.0)).xyz;
 
-	o_Vertex.LightSpacePosition = u_LightProjection * vec4(o_Vertex.Position, 1.0);
+	vec4 transformed = i_Transform * vec4(i_Position, 1.0);
+	o_Vertex.Position = transformed.xyz;
+
 	o_Vertex.UV = i_UV;
+	o_Vertex.ViewSpacePosition = position.xyz;
 	o_EntityIndex = i_EntityIndex;
 
     gl_Position = position;
 }
-
 #end
 
 #begin pixel
@@ -67,12 +67,9 @@ layout(std140, binding = 1) uniform DirLight
 {
 	vec4 u_LightColor;
 	vec3 u_LightDirection;
-	mat4 u_LightProjection;
 
 	vec4 u_EnvironmentLight;
-
 	float u_LightNear;
-	float u_LightFar;
 };
 
 layout(std140, binding = 2) uniform ShadowData
@@ -80,6 +77,13 @@ layout(std140, binding = 2) uniform ShadowData
 	float u_Bias;
 	float u_LightFrustumSize;
 	float u_LightSize;
+
+	vec4 u_CascadeSplits;
+
+	mat4 u_CascadeProjection0;
+	mat4 u_CascadeProjection1;
+	mat4 u_CascadeProjection2;
+	mat4 u_CascadeProjection3;
 };
 
 struct VertexData
@@ -87,14 +91,18 @@ struct VertexData
 	vec3 Position;
 	vec3 Normal;
 	vec2 UV;
-	vec4 LightSpacePosition;
+	vec3 ViewSpacePosition;
 };
 
-layout(binding = 2) uniform sampler2D u_ShadowMap;
-layout(binding = 3) uniform sampler2D u_Texture;
+layout(binding = 2) uniform sampler2D u_ShadowMap0;
+layout(binding = 3) uniform sampler2D u_ShadowMap1;
+layout(binding = 4) uniform sampler2D u_ShadowMap2;
+layout(binding = 5) uniform sampler2D u_ShadowMap3;
+
+layout(binding = 6) uniform sampler2D u_Texture;
 
 layout(location = 0) in VertexData i_Vertex;
-layout(location = 4) in flat int i_EntityIndex;
+layout(location = 5) in flat int i_EntityIndex;
 
 layout(location = 0) out vec4 o_Color;
 layout(location = 1) out int o_EntityIndex;
@@ -144,7 +152,7 @@ float ValueNoise(vec3 pos)
 	return fract(Noise_rnd.x * Noise_rnd.y * Noise_rnd.z * (1.0 + Noise_skew.x));
 }
 
-float CalculateBlockerDistance(vec3 projectedLightSpacePosition, vec2 rotation)
+float CalculateBlockerDistance(sampler2D shadowMap, vec3 projectedLightSpacePosition, vec2 rotation)
 {
 	float receieverDepth = projectedLightSpacePosition.z;
 	float blockerDistance = 0.0;
@@ -158,7 +166,7 @@ float CalculateBlockerDistance(vec3 projectedLightSpacePosition, vec2 rotation)
 			rotation.y * POISSON_POINTS[i].x + rotation.x * POISSON_POINTS[i].y
 		);
 
-		float depth = texture(u_ShadowMap, projectedLightSpacePosition.xy + offset * searchSize).r;
+		float depth = texture(shadowMap, projectedLightSpacePosition.xy + offset * searchSize).r;
 		if (depth < receieverDepth - u_Bias)
 		{
 			samplesCount += 1.0;
@@ -172,7 +180,7 @@ float CalculateBlockerDistance(vec3 projectedLightSpacePosition, vec2 rotation)
 	return max(0.01, blockerDistance / samplesCount);
 }
 
-float PCF(vec2 uv, float receieverDepth, float filterRadius, vec2 rotation)
+float PCF(sampler2D shadowMap, vec2 uv, float receieverDepth, float filterRadius, vec2 rotation)
 {
 	float shadow = 0.0f;
 	for (int i = 0; i < NUMBER_OF_SAMPLES; i++)
@@ -182,14 +190,14 @@ float PCF(vec2 uv, float receieverDepth, float filterRadius, vec2 rotation)
 			rotation.y * POISSON_POINTS[i].x + rotation.x * POISSON_POINTS[i].y
 		);
 
-		float sampledDepth = texture(u_ShadowMap, uv + offset * filterRadius).r;
+		float sampledDepth = texture(shadowMap, uv + offset * filterRadius).r;
 		shadow += (receieverDepth - u_Bias > sampledDepth ? 1.0 : 0.0);
 	}
 	
 	return shadow / NUMBER_OF_SAMPLES;
 }
 
-float CalculateShadow(vec4 lightSpacePosition)
+float CalculateShadow(sampler2D shadowMap, vec4 lightSpacePosition)
 {
 	vec3 projected = lightSpacePosition.xyz / lightSpacePosition.w;
 	projected = projected * 0.5 + vec3(0.5);
@@ -206,25 +214,30 @@ float CalculateShadow(vec4 lightSpacePosition)
 	float random = ValueNoise(i_Vertex.Position) * pi;
 	vec2 rotation = vec2(cos(random), sin(random));
 
-	float blockerDistance = CalculateBlockerDistance(projected, rotation);
+	float blockerDistance = CalculateBlockerDistance(shadowMap, projected, rotation);
 	if (blockerDistance == -1.0f)
 		return 1.0f;
 
 	float penumbraWidth = (receieverDepth - blockerDistance) / blockerDistance;
 	float filterRadius = penumbraWidth * LIGHT_SIZE * u_LightNear / receieverDepth;
-	return 1.0f - PCF(uv, receieverDepth, filterRadius, rotation);
+	return 1.0f - PCF(shadowMap, uv, receieverDepth, filterRadius, rotation);
 }
 
 void main()
 {
-	if (u_InstanceData.Color.a <= 0.0001)
-		discard;
-
 	vec3 N = normalize(i_Vertex.Normal);
 	vec3 V = normalize(u_Camera.Position - i_Vertex.Position);
 	vec3 H = normalize(V + u_LightDirection);
 
-	float shadow = CalculateShadow(i_Vertex.LightSpacePosition);
+	float shadow = 1.0f;
+	if (i_Vertex.ViewSpacePosition.z <= u_CascadeSplits.x)
+		shadow = CalculateShadow(u_ShadowMap0, (u_CascadeProjection0 * vec4(i_Vertex.Position, 1.0f)));
+	else if (i_Vertex.ViewSpacePosition.z <= u_CascadeSplits.y)
+		shadow = CalculateShadow(u_ShadowMap1, (u_CascadeProjection1 * vec4(i_Vertex.Position, 1.0f)));
+	else if (i_Vertex.ViewSpacePosition.z <= u_CascadeSplits.z)
+		shadow = CalculateShadow(u_ShadowMap2, (u_CascadeProjection2 * vec4(i_Vertex.Position, 1.0f)));
+	else
+		shadow = CalculateShadow(u_ShadowMap3, (u_CascadeProjection3 * vec4(i_Vertex.Position, 1.0f)));
 
 	vec3 incomingLight = u_LightColor.rgb * u_LightColor.w;
 	float alpha = max(0.04, u_InstanceData.Roughness * u_InstanceData.Roughness);
