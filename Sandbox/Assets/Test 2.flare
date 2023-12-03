@@ -265,6 +265,17 @@ Entities:
         Flags: 0
       - Name: struct Flare::SerializationId
         Id: 5608678384290633286
+  - Components:
+      - Name: struct Flare::TransformComponent
+        Position: [-6.62748623, 20.1772366, -5.23394108]
+        Rotation: [0, -0, 0]
+        Scale: [2.36000013, 2.36000013, 2.36000013]
+      - Name: struct Flare::MeshComponent
+        Mesh: 10490832977963679498
+        Material: 13576769737354600278
+        Flags: 0
+      - Name: struct Flare::SerializationId
+        Id: 1799081568097725177
 PostProcessing:
   - Name: class Flare::ToneMapping
     Enabled: true

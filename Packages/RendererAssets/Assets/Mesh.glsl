@@ -103,7 +103,8 @@ layout(binding = 3) uniform sampler2D u_ShadowMap1;
 layout(binding = 4) uniform sampler2D u_ShadowMap2;
 layout(binding = 5) uniform sampler2D u_ShadowMap3;
 
-layout(binding = 6) uniform sampler2D u_Texture;
+layout(binding = 6) uniform sampler3D u_RandomAngles;
+layout(binding = 7) uniform sampler2D u_Texture;
 
 layout(location = 0) in VertexData i_Vertex;
 layout(location = 5) in flat int i_EntityIndex;
@@ -148,13 +149,6 @@ const vec2[] POISSON_POINTS = {
 
 const int NUMBER_OF_SAMPLES = 32;
 #define LIGHT_SIZE (u_LightSize / u_LightFrustumSize)
-
-float ValueNoise(vec3 pos)
-{
-	vec3 Noise_skew = pos + 0.2127 + pos.x * pos.y * pos.z * 0.3713;
-	vec3 Noise_rnd = 4.789 * sin(489.123 * (Noise_skew));
-	return fract(Noise_rnd.x * Noise_rnd.y * Noise_rnd.z * (1.0 + Noise_skew.x));
-}
 
 float CalculateBlockerDistance(sampler2D shadowMap, vec3 projectedLightSpacePosition, vec2 rotation)
 {
@@ -215,8 +209,8 @@ float CalculateShadow(sampler2D shadowMap, vec4 lightSpacePosition)
 	if (projected.x > 1.0 || projected.y > 1.0 || projected.x < 0 || projected.y < 0)
 		return 1.0;
 
-	float random = ValueNoise(i_Vertex.Position) * pi;
-	vec2 rotation = vec2(cos(random), sin(random));
+	float angle = texture(u_RandomAngles, lightSpacePosition.xyz).r;
+	vec2 rotation = vec2(cos(angle), sin(angle));
 
 	float blockerDistance = CalculateBlockerDistance(shadowMap, projected, rotation);
 	if (blockerDistance == -1.0f)

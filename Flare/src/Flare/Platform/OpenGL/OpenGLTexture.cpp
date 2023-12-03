@@ -84,6 +84,10 @@ namespace Flare
 			m_InternalTextureFormat = GL_RGBA8;
 			m_TextureDataType = GL_RGBA;
 			break;
+		case TextureFormat::RF32:
+			m_InternalTextureFormat = GL_R32F;
+			m_TextureDataType = GL_RED;
+			break;
 		}
 
 		m_Specifications.Width = width;
@@ -160,9 +164,22 @@ namespace Flare
 
 	void OpenGLTexture3D::SetData(const void* data, glm::uvec3 dataSize)
 	{
+		GLenum dataType = GL_UNSIGNED_BYTE;
+
+		switch (m_Specifications.Format)
+		{
+		case TextureFormat::RGB8:
+		case TextureFormat::RGBA8:
+			dataType = GL_UNSIGNED_BYTE;
+			break;
+		case TextureFormat::RF32:
+			dataType = GL_FLOAT;
+			break;
+		}
+
 		glTextureSubImage3D(m_Id, 0, 0, 0, 0,
 			dataSize.x, dataSize.y, dataSize.z,
-			m_TextureDataType, GL_UNSIGNED_BYTE, data);
+			m_TextureDataType, dataType, data);
 	}
 
 	const Texture3DSpecifications& OpenGLTexture3D::GetSpecifications() const
@@ -182,9 +199,13 @@ namespace Flare
 			m_InternalTextureFormat = GL_RGBA8;
 			m_TextureDataType = GL_RGBA;
 			break;
+		case TextureFormat::RF32:
+			m_InternalTextureFormat = GL_R32F;
+			m_TextureDataType = GL_RED;
+			break;
 		}
 
-		glCreateTextures(GL_TEXTURE_2D, 1, &m_Id);
+		glCreateTextures(GL_TEXTURE_3D, 1, &m_Id);
 		glTextureStorage3D(m_Id, 1, m_InternalTextureFormat, m_Specifications.Size.x, m_Specifications.Size.y, m_Specifications.Size.z);
 
 		switch (m_Specifications.Filtering)
