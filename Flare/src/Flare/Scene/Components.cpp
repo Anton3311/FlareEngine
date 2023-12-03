@@ -145,7 +145,7 @@ namespace Flare
 
 
 	FLARE_IMPL_COMPONENT(DirectionalLight,
-		FLARE_PROPERTY(DirectionalLight, Color),
+		FLARE_COLOR_PROPERTY(DirectionalLight, Color),
 		FLARE_PROPERTY(DirectionalLight, Intensity)
 	);
 	DirectionalLight::DirectionalLight()
