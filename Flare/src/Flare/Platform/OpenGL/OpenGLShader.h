@@ -18,6 +18,7 @@ namespace Flare
 		~OpenGLShader();
 	public:
 		virtual void Load() override;
+		virtual bool IsLoaded() override;
 		virtual void Bind() override;
 
 		virtual const ShaderProperties& GetProperties() const override;
@@ -46,6 +47,7 @@ namespace Flare
 		void SetMatrix4(uint32_t index, const glm::mat4& matrix);
 	private:
 		uint32_t m_Id;
+		bool m_IsValid;
 		ShaderProperties m_Properties;
 		ShaderOutputs m_Outputs;
 		ShaderFeatures m_Features;

@@ -26,6 +26,7 @@ namespace Flare
 		virtual ~Shader() = default;
 
 		virtual void Load() = 0;
+		virtual bool IsLoaded() = 0;
 
 		virtual void Bind() = 0;
 

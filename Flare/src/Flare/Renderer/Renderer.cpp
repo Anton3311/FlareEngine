@@ -87,7 +87,7 @@ namespace Flare
 
 		s_RendererData.ShadowMappingSettings.Resolution = 2048;
 		s_RendererData.ShadowMappingSettings.Bias = 0.001f;
-		s_RendererData.ShadowMappingSettings.LightSize = 0.1f;
+		s_RendererData.ShadowMappingSettings.LightSize = 0.05f;
 
 		s_RendererData.ShadowMappingSettings.Cascades = s_RendererData.ShadowMappingSettings.MaxCascades;
 		s_RendererData.ShadowMappingSettings.CascadeSplits[0] = 15.0f;

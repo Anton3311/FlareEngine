@@ -194,7 +194,7 @@ namespace Flare
     }
 
     OpenGLShader::OpenGLShader()
-        : m_Id(0)
+        : m_Id(0), m_IsValid(false)
     {
     }
 
@@ -210,7 +210,17 @@ namespace Flare
         if (m_Id != 0)
             glDeleteProgram(m_Id);
 
-        m_Features = ShaderCacheManager::GetInstance()->FindShaderFeatures(Handle).value_or(ShaderFeatures());
+        m_IsValid = true;
+
+        auto features = ShaderCacheManager::GetInstance()->FindShaderFeatures(Handle);
+        m_IsValid = features.has_value();
+        if (features)
+        {
+            m_Features = features.value();
+        }
+
+        if (!m_IsValid)
+            return;
 
         m_Id = glCreateProgram();
 
@@ -240,7 +250,13 @@ namespace Flare
             }
 
             auto vulkanShaderCache = ShaderCacheManager::GetInstance()->FindCache(Handle, ShaderTargetEnvironment::Vulkan, program.Stage);
-            FLARE_CORE_ASSERT(vulkanShaderCache);
+            if (!vulkanShaderCache.has_value())
+            {
+                FLARE_CORE_ERROR("Failed to find cached Vulkan shader code");
+
+                m_IsValid = false;
+                break;
+            }
 
             try
             {
@@ -258,7 +274,13 @@ namespace Flare
             }
 
             auto cachedShader = ShaderCacheManager::GetInstance()->FindCache(Handle, ShaderTargetEnvironment::OpenGL, program.Stage);
-            FLARE_CORE_ASSERT(cachedShader, "Failed to find shader cache");
+            if (!cachedShader.has_value())
+            {
+                FLARE_CORE_ERROR("Failed to find cached OpenGL shader code");
+
+                m_IsValid = false;
+                break;
+            }
 
             uint32_t shaderType = 0;
             switch (program.Stage)
@@ -283,40 +305,54 @@ namespace Flare
             program.Id = shaderId;
         }
 
-        glLinkProgram(m_Id);
-        GLint isLinked = 0;
-        glGetProgramiv(m_Id, GL_LINK_STATUS, (int*)&isLinked);
-
-        if (isLinked == GL_FALSE)
+        if (m_IsValid)
         {
-            GLint maxLength = 0;
-            glGetProgramiv(m_Id, GL_INFO_LOG_LENGTH, &maxLength);
+            glLinkProgram(m_Id);
+            GLint isLinked = 0;
+            glGetProgramiv(m_Id, GL_LINK_STATUS, (int*)&isLinked);
 
-            std::vector<GLchar> infoLog(maxLength + 1);
-            glGetProgramInfoLog(m_Id, maxLength, &maxLength, &infoLog[0]);
-            glDeleteProgram(m_Id);
+            if (isLinked == GL_FALSE)
+            {
+                GLint maxLength = 0;
+                glGetProgramiv(m_Id, GL_INFO_LOG_LENGTH, &maxLength);
 
-            FLARE_CORE_ERROR("Failed to link shader: {0}", infoLog.data());
+                std::vector<GLchar> infoLog(maxLength + 1);
+                glGetProgramInfoLog(m_Id, maxLength, &maxLength, &infoLog[0]);
+                glDeleteProgram(m_Id);
 
-            for (const auto& program : programs)
-                glDeleteShader(program.Id);
-            return;
+                FLARE_CORE_ERROR("Failed to link shader: {}", infoLog.data());
+                return;
+            }
         }
 
         for (const auto& program : programs)
-            glDetachShader(m_Id, program.Id);
-
-        for (size_t i = 0; i < m_Properties.size(); i++)
-            m_NameToIndex.emplace(m_Properties[i].Name, (uint32_t)i);
-
-        m_UniformLocations.reserve(m_Properties.size());
-        for (const auto& param : m_Properties)
         {
-            int32_t location = glGetUniformLocation(m_Id, param.Name.c_str());
-            FLARE_CORE_ASSERT(location != -1);
-
-            m_UniformLocations.push_back(location);
+            if (program.Id != 0)
+            {
+                glDetachShader(m_Id, program.Id);
+                glDeleteShader(program.Id);
+            }
         }
+
+        if (m_IsValid)
+        {
+            for (size_t i = 0; i < m_Properties.size(); i++)
+                m_NameToIndex.emplace(m_Properties[i].Name, (uint32_t)i);
+
+            m_UniformLocations.reserve(m_Properties.size());
+            for (const auto& param : m_Properties)
+            {
+                int32_t location = glGetUniformLocation(m_Id, param.Name.c_str());
+                FLARE_CORE_ASSERT(location != -1);
+
+                m_UniformLocations.push_back(location);
+            }
+        }
+    }
+
+    bool OpenGLShader::IsLoaded()
+    {
+        return m_IsValid;
     }
 
     void Flare::OpenGLShader::Bind()

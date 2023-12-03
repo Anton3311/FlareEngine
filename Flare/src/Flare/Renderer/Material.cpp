@@ -88,6 +88,9 @@ namespace Flare
 
 		const ShaderProperties& properties = m_Shader->GetProperties();
 
+		if (!m_Shader->IsLoaded())
+			return;
+
 		if (RendererAPI::GetAPI() == RendererAPI::API::OpenGL)
 		{
 			Ref<OpenGLShader> glShader = As<OpenGLShader>(m_Shader);

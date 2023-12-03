@@ -4,8 +4,8 @@
 #include "Camera.glsl"
 
 layout(location = 0) in vec3 i_Position;
-layout(location = 2) in mat4 i_Transform;
-layout(location = 6) in int i_EntityIndex;
+layout(location = 3) in mat4 i_Transform;
+layout(location = 7) in int i_EntityIndex;
 
 layout(location = 0) out flat int o_EntityIndex;
 
