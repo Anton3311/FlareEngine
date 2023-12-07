@@ -56,6 +56,7 @@ namespace Flare
 		RendererStatistics Statistics;
 
 		std::vector<RenderableObject> Queue;
+		std::vector<uint32_t> CulledObjectIndices;
 
 		Ref<VertexBuffer> InstanceBuffer = nullptr;
 		std::vector<InstanceData> InstanceDataBuffer;
@@ -282,10 +283,10 @@ namespace Flare
 			FrustumPlanes& frustumPlanes = viewport.FrameData.CameraFrustumPlanes;
 
 			// Near
-			frustumPlanes.Planes[FrustumPlanes::NearPlaneIndex] = Math::Plane::TroughPoint(frustumCorners[0], s_RendererData.MainViewport->FrameData.Camera.ViewDirection);
+			frustumPlanes.Planes[FrustumPlanes::NearPlaneIndex] = Math::Plane::TroughPoint(frustumCorners[0], s_RendererData.CurrentViewport->FrameData.Camera.ViewDirection);
 
 			// Far
-			frustumPlanes.Planes[FrustumPlanes::FarPlaneIndex] = Math::Plane::TroughPoint(frustumCorners[4], -s_RendererData.MainViewport->FrameData.Camera.ViewDirection);
+			frustumPlanes.Planes[FrustumPlanes::FarPlaneIndex] = Math::Plane::TroughPoint(frustumCorners[4], -s_RendererData.CurrentViewport->FrameData.Camera.ViewDirection);
 
 			// Left (Trough bottom left corner)
 			frustumPlanes.Planes[2] = Math::Plane::TroughPoint(frustumCorners[0], glm::normalize(glm::cross(
@@ -325,8 +326,11 @@ namespace Flare
 		RenderCommand::SetDepthWriteEnabled(features.DepthWrite);
 	}
 
-	static bool CompareRenderableObjects(const RenderableObject& a, const RenderableObject& b)
+	static bool CompareRenderableObjects(uint32_t aIndex, uint32_t bIndex)
 	{
+		const RenderableObject& a = s_RendererData.Queue[aIndex];
+		const RenderableObject& b = s_RendererData.Queue[bIndex];
+
 		if ((uint64_t)a.Material->Handle < (uint64_t)b.Material->Handle)
 			return true;
 
@@ -339,9 +343,53 @@ namespace Flare
 		return false;
 	}
 
+	static void PerformFrustumCulling()
+	{
+		std::array<glm::vec3, 8> aabbCorners;
+		Math::AABB objectAABB;
+
+		const FrustumPlanes& planes = s_RendererData.CurrentViewport->FrameData.CameraFrustumPlanes;
+		for (size_t i = 0; i < s_RendererData.Queue.size(); i++)
+		{
+			const RenderableObject& object = s_RendererData.Queue[i];
+			const Math::AABB& meshBounds = object.Mesh->GetSubMesh().Bounds;
+
+			meshBounds.GetCorners(aabbCorners.data());
+
+			for (size_t i = 0; i < 8; i++)
+			{
+				aabbCorners[i] = (glm::vec3)(object.Transform * glm::vec4(aabbCorners[i], 1.0f));
+			}
+
+			bool intersectsFrustum = false;
+
+			objectAABB.Min = aabbCorners[0];
+			objectAABB.Max = aabbCorners[0];
+
+			for (size_t i = 1; i < 8; i++)
+			{
+				objectAABB.Min = glm::min(objectAABB.Min, aabbCorners[i]);
+				objectAABB.Max = glm::max(objectAABB.Max, aabbCorners[i]);
+			}
+
+			bool intersects = true;
+			for (size_t i = 0; i < planes.PlanesCount; i++)
+			{
+				intersects &= objectAABB.IntersectsOrInFrontOfPlane(planes.Planes[i]);
+			}
+
+			if (intersects)
+			{
+				s_RendererData.CulledObjectIndices.push_back((uint32_t)i);
+			}
+		}
+	}
+
 	void Renderer::Flush()
 	{
-		std::sort(s_RendererData.Queue.begin(), s_RendererData.Queue.end(), CompareRenderableObjects);
+		PerformFrustumCulling();
+
+		std::sort(s_RendererData.CulledObjectIndices.begin(), s_RendererData.CulledObjectIndices.end(), CompareRenderableObjects);
 
 		// Bind white texture for each cascade
 		for (size_t i = 0; i < 4; i++)
@@ -386,6 +434,7 @@ namespace Flare
 		s_RendererData.CurrentViewport->RenderTarget->SetWriteMask(previousMask);
 
 		s_RendererData.InstanceDataBuffer.clear();
+		s_RendererData.CulledObjectIndices.clear();
 		s_RendererData.Queue.clear();
 	}
 
@@ -393,8 +442,10 @@ namespace Flare
 	{
 		Ref<Material> currentMaterial = nullptr;
 
-		for (const RenderableObject& object : s_RendererData.Queue)
+		for (uint32_t objectIndex : s_RendererData.CulledObjectIndices)
 		{
+			const RenderableObject& object = s_RendererData.Queue[objectIndex];
+
 			if (shadowPass && HAS_BIT(object.Flags, MeshRenderFlags::DontCastShadows))
 				continue;
 
@@ -508,41 +559,6 @@ namespace Flare
 		if (s_RendererData.ErrorMaterial == nullptr)
 			return;
 
-		std::array<glm::vec3, 8> aabbCorners;
-		const Math::AABB& meshBounds = mesh->GetSubMesh().Bounds;
-		meshBounds.GetCorners(aabbCorners.data());
-
-		for (size_t i = 0; i < 8; i++)
-		{
-			aabbCorners[i] = (glm::vec3)(transform * glm::vec4(aabbCorners[i], 1.0f));
-		}
-
-		bool intersectsFrustum = false;
-		const FrustumPlanes& planes = s_RendererData.MainViewport->FrameData.CameraFrustumPlanes;
-
-		for (size_t i = 0; i < 8; i++)
-		{
-			bool containsPoint = true;
-			if (planes.Planes[FrustumPlanes::NearPlaneIndex].ValueAt(aabbCorners[i]) < 0.0f)
-			{
-				containsPoint = false;
-			}
-		
-			if (planes.Planes[FrustumPlanes::FarPlaneIndex].ValueAt(aabbCorners[i]) < 0.0f)
-			{
-				containsPoint = false;
-			}
-
-			if (containsPoint)
-			{
-				intersectsFrustum = true;
-				break;
-			}
-		}
-
-		if (!intersectsFrustum)
-			return;
-		
 		RenderableObject& object = s_RendererData.Queue.emplace_back();
 
 		if (material)

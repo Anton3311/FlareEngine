@@ -20,7 +20,7 @@ namespace Flare
 		{
 			for (size_t i = 0; i < 6; i++)
 			{
-				if (Planes[i].ValueAt(point) < 0.0f)
+				if (Planes[i].SignedDistance(point) < 0.0f)
 					return false;
 			}
 
