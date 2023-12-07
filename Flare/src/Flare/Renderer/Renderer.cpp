@@ -253,6 +253,68 @@ namespace Flare
 			RenderCommand::Clear();
 		}
 		viewport.RenderTarget->Bind();
+
+		// Generate camera frustum planes
+		
+		std::array<glm::vec4, 8> frustumCorners =
+		{
+			// Near
+			glm::vec4(-1.0f, -1.0f, 0.0f, 1.0f),
+			glm::vec4(1.0f, -1.0f, 0.0f, 1.0f),
+			glm::vec4(-1.0f,  1.0f, 0.0f, 1.0f),
+			glm::vec4(1.0f,  1.0f, 0.0f, 1.0f),
+
+			// Far
+			glm::vec4(-1.0f, -1.0f, 1.0f, 1.0f),
+			glm::vec4(1.0f, -1.0f, 1.0f, 1.0f),
+			glm::vec4(-1.0f,  1.0f, 1.0f, 1.0f),
+			glm::vec4(1.0f,  1.0f, 1.0f, 1.0f),
+		};
+
+		for (size_t i = 0; i < frustumCorners.size(); i++)
+		{
+			frustumCorners[i] = viewport.FrameData.Camera.InverseViewProjection * frustumCorners[i];
+			frustumCorners[i] /= frustumCorners[i].w;
+		}
+
+		// Generate camera frustum planes
+		{
+			FrustumPlanes& frustumPlanes = viewport.FrameData.CameraFrustumPlanes;
+
+			// Near
+			frustumPlanes.Planes[FrustumPlanes::NearPlaneIndex] = Math::Plane::TroughPoint(frustumCorners[0], s_RendererData.MainViewport->FrameData.Camera.ViewDirection);
+
+			// Far
+			frustumPlanes.Planes[FrustumPlanes::FarPlaneIndex] = Math::Plane::TroughPoint(frustumCorners[4], -s_RendererData.MainViewport->FrameData.Camera.ViewDirection);
+
+			// Left (Trough bottom left corner)
+			frustumPlanes.Planes[2] = Math::Plane::TroughPoint(frustumCorners[0], glm::normalize(glm::cross(
+				// Bottom Left Near -> Bottom Left Far
+				(glm::vec3)(frustumCorners[4] - frustumCorners[0]),
+				// Bottom Left Near -> Top Left Near
+				(glm::vec3)(frustumCorners[2] - frustumCorners[0]))));
+
+			// Right (Trough top right corner)
+			frustumPlanes.Planes[3] = Math::Plane::TroughPoint(frustumCorners[1], glm::cross(
+				// Top Right Near -> Top Right Far
+				(glm::vec3)(frustumCorners[7] - frustumCorners[3]),
+				// Top Right Near -> Bottom Right Near
+				(glm::vec3)(frustumCorners[1] - frustumCorners[3])));
+
+			// Top (Trough top right corner)
+			frustumPlanes.Planes[4] = Math::Plane::TroughPoint(frustumCorners[3], glm::cross(
+				// Top Right Near -> Top Left Near
+				(glm::vec3)(frustumCorners[2] - frustumCorners[3]),
+				// Top Right Near -> Top Right Far
+				(glm::vec3)(frustumCorners[7] - frustumCorners[3])));
+
+			// Bottom (Trough bottom left corner)
+			frustumPlanes.Planes[5] = Math::Plane::TroughPoint(frustumCorners[0], glm::cross(
+				// Bottom left near => Bottom right near
+				(glm::vec3)(frustumCorners[1] - frustumCorners[0]),
+				// Bottom left near -> Bottom left far
+				(glm::vec3)(frustumCorners[4] - frustumCorners[0])));
+		}
 	}
 
 	static void ApplyMaterialFeatures(ShaderFeatures features)
@@ -446,6 +508,41 @@ namespace Flare
 		if (s_RendererData.ErrorMaterial == nullptr)
 			return;
 
+		std::array<glm::vec3, 8> aabbCorners;
+		const Math::AABB& meshBounds = mesh->GetSubMesh().Bounds;
+		meshBounds.GetCorners(aabbCorners.data());
+
+		for (size_t i = 0; i < 8; i++)
+		{
+			aabbCorners[i] = (glm::vec3)(transform * glm::vec4(aabbCorners[i], 1.0f));
+		}
+
+		bool intersectsFrustum = false;
+		const FrustumPlanes& planes = s_RendererData.MainViewport->FrameData.CameraFrustumPlanes;
+
+		for (size_t i = 0; i < 8; i++)
+		{
+			bool containsPoint = true;
+			if (planes.Planes[FrustumPlanes::NearPlaneIndex].ValueAt(aabbCorners[i]) < 0.0f)
+			{
+				containsPoint = false;
+			}
+		
+			if (planes.Planes[FrustumPlanes::FarPlaneIndex].ValueAt(aabbCorners[i]) < 0.0f)
+			{
+				containsPoint = false;
+			}
+
+			if (containsPoint)
+			{
+				intersectsFrustum = true;
+				break;
+			}
+		}
+
+		if (!intersectsFrustum)
+			return;
+		
 		RenderableObject& object = s_RendererData.Queue.emplace_back();
 
 		if (material)

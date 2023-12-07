@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Flare/Math/Math.h"
+
 #include "Flare/Renderer/FrameBuffer.h"
 #include "Flare/Renderer/RenderTargetsPool.h"
 

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Flare/Math/Math.h"
 #include "Flare/Renderer/UniformBuffer.h"
 
 #include "FlareCore/Core.h"
@@ -9,6 +10,26 @@
 
 namespace Flare
 {
+	struct FrustumPlanes
+	{
+		static constexpr size_t PlanesCount = 6;
+		static constexpr size_t NearPlaneIndex = 0;
+		static constexpr size_t FarPlaneIndex = 1;
+
+		inline bool ContainsPoint(const glm::vec3& point) const
+		{
+			for (size_t i = 0; i < 6; i++)
+			{
+				if (Planes[i].ValueAt(point) < 0.0f)
+					return false;
+			}
+
+			return true;
+		}
+
+		Math::Plane Planes[PlanesCount];
+	};
+
 	struct CameraData
 	{
 		CameraData()
@@ -65,6 +86,7 @@ namespace Flare
 	struct RenderData
 	{
 		CameraData Camera;
+		FrustumPlanes CameraFrustumPlanes;
 		LightData Light;
 		CameraData LightView[4];
 		bool IsEditorCamera = false;

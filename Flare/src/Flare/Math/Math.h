@@ -10,9 +10,21 @@ namespace Flare::Math
 
 	struct Plane
 	{
-		inline static Plane TroughPoint(glm::vec3 point, glm::vec3 planeNormmal)
+		inline float ValueAt(const glm::vec3& point) const
 		{
-			return { planeNormmal, -glm::dot(point, planeNormmal)};
+			return glm::dot(point, Normal) + Offset;
+		}
+
+		inline bool IntersectsSegment(const glm::vec3& segmentStart, const glm::vec3& segmentEnd) const
+		{
+			float startValue = ValueAt(segmentStart);
+			float endValue = ValueAt(segmentEnd);
+			return glm::sign(startValue) != glm::sign(endValue);
+		}
+
+		inline static Plane TroughPoint(glm::vec3 point, glm::vec3 planeNormal)
+		{
+			return { planeNormal, -glm::dot(point, planeNormal)};
 		}
 
 		glm::vec3 Normal;
