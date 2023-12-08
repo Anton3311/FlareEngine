@@ -227,7 +227,7 @@ void main()
 {
 	vec3 N = normalize(i_Vertex.Normal);
 	vec3 V = normalize(u_Camera.Position - i_Vertex.Position);
-	vec3 H = normalize(V + u_LightDirection);
+	vec3 H = normalize(V - u_LightDirection);
 
 	vec4 color = u_InstanceData.Color * texture(u_Texture, i_Vertex.UV);
 
@@ -262,7 +262,7 @@ void main()
 	}
 #else
 
-	float NoL = dot(N, u_LightDirection);
+	float NoL = dot(N, -u_LightDirection);
 	float bias = max(u_Bias * (1.0f - NoL), 0.0025f);
 
 	bias /= float(cascadeIndex + 1);
@@ -290,10 +290,10 @@ void main()
 	vec3 kD = vec3(1.0) - kS;
 
 	vec3 diffuse = Diffuse_Lambertian(color.rgb);
-	vec3 specular = Specular_CookTorence(alpha, N, V, u_LightDirection);
+	vec3 specular = Specular_CookTorence(alpha, N, V, -u_LightDirection);
 	vec3 brdf = kD * diffuse + specular;
 
-	vec3 finalColor = shadow * brdf * incomingLight * max(0.0, dot(u_LightDirection, N));
+	vec3 finalColor = shadow * brdf * incomingLight * max(0.0, dot(-u_LightDirection, N));
 	finalColor += u_EnvironmentLight.rgb * u_EnvironmentLight.w * color.rgb;
 
 	o_Color = vec4(finalColor, color.a);

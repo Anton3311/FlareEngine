@@ -187,13 +187,101 @@ namespace Flare
 		s_RendererData.MainViewport = &viewport;
 	}
 
-	void Renderer::BeginScene(Viewport& viewport)
+	struct ShadowMappingParams
 	{
-		s_RendererData.CurrentViewport = &viewport;
+		glm::vec3 ViewPosition;
+		glm::vec3 CameraFrustumCenter;
+		float BoundingSphereRadius;
+	};
 
-		s_RendererData.LightBuffer->SetData(&viewport.FrameData.Light, sizeof(viewport.FrameData.Light), 0);
-		s_RendererData.CameraBuffer->SetData(&viewport.FrameData.Camera, sizeof(CameraData), 0);
+	static void CalculateShadowFrustums(ShadowMappingParams& params, glm::vec3 lightDirection, const Viewport& viewport, float nearPlaneDistance, float farPlaneDistance)
+	{
+		const CameraData& camera = viewport.FrameData.Camera;
 
+		std::array<glm::vec4, 8> frustumCorners =
+		{
+			glm::vec4(-1.0f, -1.0f, 0.0f, 1.0f),
+			glm::vec4(1.0f, -1.0f, 0.0f, 1.0f),
+			glm::vec4(-1.0f,  1.0f, 0.0f, 1.0f),
+			glm::vec4(1.0f,  1.0f, 0.0f, 1.0f),
+			glm::vec4(-1.0f, -1.0f, 1.0f, 1.0f),
+			glm::vec4(1.0f, -1.0f, 1.0f, 1.0f),
+			glm::vec4(-1.0f,  1.0f, 1.0f, 1.0f),
+			glm::vec4(1.0f,  1.0f, 1.0f, 1.0f),
+		};
+
+		for (size_t i = 0; i < frustumCorners.size(); i++)
+		{
+			frustumCorners[i] = viewport.FrameData.Camera.InverseViewProjection * frustumCorners[i];
+			frustumCorners[i] /= frustumCorners[i].w;
+		}
+
+		Math::Plane farPlane = Math::Plane::TroughPoint(camera.Position + camera.ViewDirection * farPlaneDistance, camera.ViewDirection);
+		Math::Plane nearPlane = Math::Plane::TroughPoint(camera.Position + camera.ViewDirection * nearPlaneDistance, camera.ViewDirection);
+		for (size_t i = 0; i < frustumCorners.size() / 2; i++)
+		{
+			Math::Ray ray;
+			ray.Origin = frustumCorners[i];
+			ray.Direction = frustumCorners[i + 4] - frustumCorners[i];
+
+			frustumCorners[i + 4] = glm::vec4(ray.Origin + ray.Direction * Math::IntersectPlane(farPlane, ray), 0.0f);
+		}
+
+		for (size_t i = 0; i < frustumCorners.size() / 2; i++)
+		{
+			Math::Ray ray;
+			ray.Origin = frustumCorners[i + 4];
+			ray.Direction = frustumCorners[i] - frustumCorners[i + 4];
+
+			frustumCorners[i] = glm::vec4(ray.Origin + ray.Direction * Math::IntersectPlane(nearPlane, ray), 0.0f);
+		}
+
+		glm::vec3 frustumCenter = glm::vec3(0.0f);
+		for (size_t i = 0; i < frustumCorners.size(); i++)
+			frustumCenter += (glm::vec3)frustumCorners[i];
+		frustumCenter /= frustumCorners.size();
+
+		float boundingSphereRadius = 0.0f;
+		for (size_t i = 0; i < frustumCorners.size(); i++)
+			boundingSphereRadius = glm::max(boundingSphereRadius, glm::distance(frustumCenter, (glm::vec3)frustumCorners[i]));
+
+		params.ViewPosition = frustumCenter - lightDirection * boundingSphereRadius;
+		params.CameraFrustumCenter = frustumCenter;
+		params.BoundingSphereRadius = boundingSphereRadius;
+	}
+
+	static void CalculateShadowProjections()
+	{
+		Viewport* viewport = s_RendererData.CurrentViewport;
+
+		const ShadowSettings& shadowSettings = Renderer::GetShadowSettings();
+		float currentNearPlane = viewport->FrameData.Light.Near;
+		for (size_t i = 0; i < 4; i++)
+		{
+			ShadowMappingParams params;
+			CalculateShadowFrustums(params,
+				viewport->FrameData.Light.Direction,
+				*viewport, currentNearPlane,
+				shadowSettings.CascadeSplits[i]);
+
+			glm::mat4 view = glm::lookAt(params.ViewPosition, params.CameraFrustumCenter, glm::vec3(0.0f, 1.0f, 0.0f));
+
+			CameraData& lightView = viewport->FrameData.LightView[i];
+			lightView.View = view;
+			lightView.Projection = glm::ortho(
+				-params.BoundingSphereRadius,
+				params.BoundingSphereRadius,
+				-params.BoundingSphereRadius,
+				params.BoundingSphereRadius,
+				currentNearPlane, params.BoundingSphereRadius * 2.0f);
+
+			lightView.CalculateViewProjection();
+			currentNearPlane = shadowSettings.CascadeSplits[i];
+		}
+	}
+
+	static void CalculateShadowMappingParams()
+	{
 		ShadowData shadowData;
 		shadowData.Bias = s_RendererData.ShadowMappingSettings.Bias;
 		shadowData.LightSize = s_RendererData.ShadowMappingSettings.LightSize;
@@ -202,7 +290,7 @@ namespace Flare
 			shadowData.CascadeSplits[i] = s_RendererData.ShadowMappingSettings.CascadeSplits[i];
 
 		for (size_t i = 0; i < 4; i++)
-			shadowData.LightProjection[i] = viewport.FrameData.LightView[i].ViewProjection;
+			shadowData.LightProjection[i] = s_RendererData.CurrentViewport->FrameData.LightView[i].ViewProjection;
 
 		shadowData.MaxCascadeIndex = s_RendererData.ShadowMappingSettings.Cascades - 1;
 		shadowData.FrustumSize = 2.0f * s_RendererData.CurrentViewport->FrameData.Camera.Near
@@ -210,6 +298,17 @@ namespace Flare
 			* s_RendererData.CurrentViewport->GetAspectRatio();
 
 		s_RendererData.ShadowDataBuffer->SetData(&shadowData, sizeof(shadowData), 0);
+	}
+
+	void Renderer::BeginScene(Viewport& viewport)
+	{
+		s_RendererData.CurrentViewport = &viewport;
+
+		CalculateShadowProjections();
+		CalculateShadowMappingParams();
+
+		s_RendererData.LightBuffer->SetData(&viewport.FrameData.Light, sizeof(viewport.FrameData.Light), 0);
+		s_RendererData.CameraBuffer->SetData(&viewport.FrameData.Camera, sizeof(CameraData), 0);
 
 		if (s_RendererData.ShadowsRenderTarget[0] == nullptr)
 		{
