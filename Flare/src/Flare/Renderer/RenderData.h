@@ -15,6 +15,10 @@ namespace Flare
 		static constexpr size_t PlanesCount = 6;
 		static constexpr size_t NearPlaneIndex = 0;
 		static constexpr size_t FarPlaneIndex = 1;
+		static constexpr size_t LeftPlaneIndex = 2;
+		static constexpr size_t RightPlaneIndex = 3;
+		static constexpr size_t TopPlaneIndex = 4;
+		static constexpr size_t BottomPlaneIndex = 5;
 
 		inline bool ContainsPoint(const glm::vec3& point) const
 		{

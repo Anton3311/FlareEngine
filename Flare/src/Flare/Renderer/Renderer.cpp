@@ -189,7 +189,6 @@ namespace Flare
 
 	struct ShadowMappingParams
 	{
-		glm::vec3 ViewPosition;
 		glm::vec3 CameraFrustumCenter;
 		float BoundingSphereRadius;
 	};
@@ -245,9 +244,34 @@ namespace Flare
 		for (size_t i = 0; i < frustumCorners.size(); i++)
 			boundingSphereRadius = glm::max(boundingSphereRadius, glm::distance(frustumCenter, (glm::vec3)frustumCorners[i]));
 
-		params.ViewPosition = frustumCenter - lightDirection * boundingSphereRadius;
 		params.CameraFrustumCenter = frustumCenter;
 		params.BoundingSphereRadius = boundingSphereRadius;
+	}
+
+	static void CalculateShadowProjectionFrustum(Math::Plane* outPlanes, const ShadowMappingParams& params, glm::vec3 lightDirection, const Math::Basis& lightBasis)
+	{
+		// Near and far planes aren't calculated here
+		// because they are computed based on AABBs of scene objects
+
+		// Left
+		outPlanes[0] = Math::Plane::TroughPoint(
+			params.CameraFrustumCenter - lightBasis.Right * params.BoundingSphereRadius,
+			lightBasis.Right);
+
+		 // Right
+		outPlanes[1] = Math::Plane::TroughPoint(
+			params.CameraFrustumCenter + lightBasis.Right * params.BoundingSphereRadius,
+			-lightBasis.Right);
+
+		// Top
+		outPlanes[2] = Math::Plane::TroughPoint(
+			params.CameraFrustumCenter + lightBasis.Up * params.BoundingSphereRadius,
+			-lightBasis.Up);
+
+		// Bottom
+		outPlanes[3] = Math::Plane::TroughPoint(
+			params.CameraFrustumCenter - lightBasis.Up * params.BoundingSphereRadius,
+			lightBasis.Up);
 	}
 
 	static void CalculateShadowProjections()
@@ -260,6 +284,8 @@ namespace Flare
 		{
 			glm::vec3 lightDirection = viewport->FrameData.Light.Direction;
 
+			// 1. Calculate a fit frustum around camera's furstum
+
 			ShadowMappingParams params;
 			CalculateShadowFrustums(params, lightDirection,
 				*viewport, currentNearPlane,
@@ -267,37 +293,31 @@ namespace Flare
 
 			const Math::Basis& lightBasis = viewport->FrameData.LightBasis;
 
+			// 2. Calculate projection frustum planes (except near and far)
+
+			Math::Plane planes[4];
+			CalculateShadowProjectionFrustum(planes, params, lightDirection, lightBasis);
+
 			Math::Plane nearPlane = Math::Plane::TroughPoint(params.CameraFrustumCenter, -lightDirection);
 
+			// 3. Extend near and far planes
+
 			float planeDistance = 0;
-			
-			// Cascade frustum planes
-			Math::Plane left = Math::Plane::TroughPoint(
-				params.CameraFrustumCenter - lightBasis.Right * params.BoundingSphereRadius,
-				lightBasis.Right);
-
-			Math::Plane right = Math::Plane::TroughPoint(
-				params.CameraFrustumCenter + lightBasis.Right * params.BoundingSphereRadius,
-				-lightBasis.Right);
-
-			Math::Plane top = Math::Plane::TroughPoint(
-				params.CameraFrustumCenter + lightBasis.Up * params.BoundingSphereRadius,
-				-lightBasis.Up);
-
-			Math::Plane bottom = Math::Plane::TroughPoint(
-				params.CameraFrustumCenter - lightBasis.Up * params.BoundingSphereRadius,
-				lightBasis.Up);
-
 			for (size_t i = 0; i < s_RendererData.Queue.size(); i++)
 			{
 				const RenderableObject& object = s_RendererData.Queue[i];
 
 				Math::AABB objectAABB = object.Mesh->GetSubMesh().Bounds.Transformed(object.Transform);
 
-				bool intersects = objectAABB.IntersectsOrInFrontOfPlane(left)
-					&& objectAABB.IntersectsOrInFrontOfPlane(right)
-					&& objectAABB.IntersectsOrInFrontOfPlane(top)
-					&& objectAABB.IntersectsOrInFrontOfPlane(bottom);
+				bool intersects = true;
+				for (size_t i = 0; i < 4; i++)
+				{
+					if (!objectAABB.IntersectsOrInFrontOfPlane(planes[i]))
+					{
+						intersects = false;
+						break;
+					}
+				}
 
 				if (!intersects)
 					continue;
@@ -432,28 +452,28 @@ namespace Flare
 			frustumPlanes.Planes[FrustumPlanes::FarPlaneIndex] = Math::Plane::TroughPoint(frustumCorners[4], -s_RendererData.CurrentViewport->FrameData.Camera.ViewDirection);
 
 			// Left (Trough bottom left corner)
-			frustumPlanes.Planes[2] = Math::Plane::TroughPoint(frustumCorners[0], glm::normalize(glm::cross(
+			frustumPlanes.Planes[FrustumPlanes::LeftPlaneIndex] = Math::Plane::TroughPoint(frustumCorners[0], glm::normalize(glm::cross(
 				// Bottom Left Near -> Bottom Left Far
 				(glm::vec3)(frustumCorners[4] - frustumCorners[0]),
 				// Bottom Left Near -> Top Left Near
 				(glm::vec3)(frustumCorners[2] - frustumCorners[0]))));
 
 			// Right (Trough top right corner)
-			frustumPlanes.Planes[3] = Math::Plane::TroughPoint(frustumCorners[1], glm::cross(
+			frustumPlanes.Planes[FrustumPlanes::RightPlaneIndex] = Math::Plane::TroughPoint(frustumCorners[1], glm::cross(
 				// Top Right Near -> Top Right Far
 				(glm::vec3)(frustumCorners[7] - frustumCorners[3]),
 				// Top Right Near -> Bottom Right Near
 				(glm::vec3)(frustumCorners[1] - frustumCorners[3])));
 
 			// Top (Trough top right corner)
-			frustumPlanes.Planes[4] = Math::Plane::TroughPoint(frustumCorners[3], glm::cross(
+			frustumPlanes.Planes[FrustumPlanes::TopPlaneIndex] = Math::Plane::TroughPoint(frustumCorners[3], glm::cross(
 				// Top Right Near -> Top Left Near
 				(glm::vec3)(frustumCorners[2] - frustumCorners[3]),
 				// Top Right Near -> Top Right Far
 				(glm::vec3)(frustumCorners[7] - frustumCorners[3])));
 
 			// Bottom (Trough bottom left corner)
-			frustumPlanes.Planes[5] = Math::Plane::TroughPoint(frustumCorners[0], glm::cross(
+			frustumPlanes.Planes[FrustumPlanes::BottomPlaneIndex] = Math::Plane::TroughPoint(frustumCorners[0], glm::cross(
 				// Bottom left near => Bottom right near
 				(glm::vec3)(frustumCorners[1] - frustumCorners[0]),
 				// Bottom left near -> Bottom left far
