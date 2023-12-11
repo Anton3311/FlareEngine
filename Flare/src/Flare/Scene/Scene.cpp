@@ -118,6 +118,11 @@ namespace Flare
 			{
 				TransformComponent& transform = transforms[entity];
 				glm::vec3 direction = transform.TransformDirection(glm::vec3(0.0f, 0.0f, -1.0f));
+				glm::vec3 right = transform.TransformDirection(glm::vec3(1.0f, 0.0f, 0.0f));
+
+				viewport.FrameData.LightBasis.Right = right;
+				viewport.FrameData.LightBasis.Forward = direction;
+				viewport.FrameData.LightBasis.Up = glm::cross(right, direction);
 
 				LightData& light = viewport.FrameData.Light;
 				light.Color = lights[entity].Color;

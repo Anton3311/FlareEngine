@@ -2,11 +2,25 @@
 
 #include "FlareCore/Core.h"
 
+#include <array>
+
 #include <glm/glm.hpp>
 
 namespace Flare::Math
 {
 	FLARE_API bool DecomposeTransform(const glm::mat4& transform, glm::vec3& outTranslation, glm::vec3& outRotation, glm::vec3& outScale);
+
+	struct Basis
+	{
+		inline glm::mat3 AsMatrix()
+		{
+			return glm::mat3(Right, Up, Forward);
+		}
+
+		glm::vec3 Right;
+		glm::vec3 Up;
+		glm::vec3 Forward;
+	};
 
 	struct Plane
 	{
@@ -93,6 +107,30 @@ namespace Flare::Math
 
 			float projectedDistance = glm::dot(glm::abs(plane.Normal), extents);
 			return -projectedDistance <= plane.SignedDistance(center);
+		}
+
+		inline AABB Transformed(const glm::mat4& transform) const
+		{
+			AABB transformed;
+
+			std::array<glm::vec3, 8> corners;
+			GetCorners(corners.data());
+
+			for (size_t i = 0; i < 8; i++)
+			{
+				corners[i] = (glm::vec3)(transform * glm::vec4(corners[i], 1.0f));
+			}
+
+			transformed.Min = corners[0];
+			transformed.Max = corners[0];
+
+			for (size_t i = 1; i < 8; i++)
+			{
+				transformed.Min = glm::min(transformed.Min, corners[i]);
+				transformed.Max = glm::max(transformed.Max, corners[i]);
+			}
+
+			return transformed;
 		}
 
 		glm::vec3 Min;

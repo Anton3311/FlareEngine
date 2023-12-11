@@ -258,11 +258,60 @@ namespace Flare
 		float currentNearPlane = viewport->FrameData.Light.Near;
 		for (size_t i = 0; i < 4; i++)
 		{
+			glm::vec3 lightDirection = viewport->FrameData.Light.Direction;
+
 			ShadowMappingParams params;
-			CalculateShadowFrustums(params,
-				viewport->FrameData.Light.Direction,
+			CalculateShadowFrustums(params, lightDirection,
 				*viewport, currentNearPlane,
 				shadowSettings.CascadeSplits[i]);
+
+#if 0
+			const Math::Basis& lightBasis = viewport->FrameData.LightBasis;
+
+			Math::Plane nearPlane = Math::Plane::TroughPoint(params.CameraFrustumCenter, -lightDirection);
+
+			float planeDistance = 0;
+			
+			// Cascade frustum planes
+			Math::Plane left = Math::Plane::TroughPoint(
+				params.CameraFrustumCenter - lightBasis.Right * params.BoundingSphereRadius,
+				lightBasis.Right);
+
+			Math::Plane right = Math::Plane::TroughPoint(
+				params.CameraFrustumCenter + lightBasis.Right * params.BoundingSphereRadius,
+				-lightBasis.Right);
+
+			Math::Plane top = Math::Plane::TroughPoint(
+				params.CameraFrustumCenter + lightBasis.Up * params.BoundingSphereRadius,
+				-lightBasis.Up);
+
+			Math::Plane bottom = Math::Plane::TroughPoint(
+				params.CameraFrustumCenter - lightBasis.Up * params.BoundingSphereRadius,
+				lightBasis.Up);
+
+			for (size_t i = 0; i < s_RendererData.Queue.size(); i++)
+			{
+				const RenderableObject& object = s_RendererData.Queue[i];
+
+				Math::AABB objectAABB = object.Mesh->GetSubMesh().Bounds.Transformed(object.Transform);
+
+				bool intersects = objectAABB.IntersectsOrInFrontOfPlane(left)
+					&& objectAABB.IntersectsOrInFrontOfPlane(right)
+					&& objectAABB.IntersectsOrInFrontOfPlane(top)
+					&& objectAABB.IntersectsOrInFrontOfPlane(bottom);
+
+				if (!intersects)
+					continue;
+
+				glm::vec3 center = objectAABB.GetCenter();
+				glm::vec3 extents = objectAABB.Max - center;
+
+				float projectedDistance = glm::dot(glm::abs(nearPlane.Normal), extents);
+				planeDistance = glm::max(planeDistance, nearPlane.Distance(center) + projectedDistance);
+			}
+
+			float distance = glm::max(params.BoundingSphereRadius, planeDistance);
+#endif
 
 			glm::mat4 view = glm::lookAt(params.ViewPosition, params.CameraFrustumCenter, glm::vec3(0.0f, 1.0f, 0.0f));
 
@@ -273,7 +322,8 @@ namespace Flare
 				params.BoundingSphereRadius,
 				-params.BoundingSphereRadius,
 				params.BoundingSphereRadius,
-				currentNearPlane, params.BoundingSphereRadius * 2.0f);
+				viewport->FrameData.Light.Near,
+				params.BoundingSphereRadius * 2.0f);
 
 			lightView.CalculateViewProjection();
 			currentNearPlane = shadowSettings.CascadeSplits[i];
@@ -304,7 +354,6 @@ namespace Flare
 	{
 		s_RendererData.CurrentViewport = &viewport;
 
-		CalculateShadowProjections();
 		CalculateShadowMappingParams();
 
 		s_RendererData.LightBuffer->SetData(&viewport.FrameData.Light, sizeof(viewport.FrameData.Light), 0);
@@ -444,32 +493,13 @@ namespace Flare
 
 	static void PerformFrustumCulling()
 	{
-		std::array<glm::vec3, 8> aabbCorners;
 		Math::AABB objectAABB;
 
 		const FrustumPlanes& planes = s_RendererData.CurrentViewport->FrameData.CameraFrustumPlanes;
 		for (size_t i = 0; i < s_RendererData.Queue.size(); i++)
 		{
 			const RenderableObject& object = s_RendererData.Queue[i];
-			const Math::AABB& meshBounds = object.Mesh->GetSubMesh().Bounds;
-
-			meshBounds.GetCorners(aabbCorners.data());
-
-			for (size_t i = 0; i < 8; i++)
-			{
-				aabbCorners[i] = (glm::vec3)(object.Transform * glm::vec4(aabbCorners[i], 1.0f));
-			}
-
-			bool intersectsFrustum = false;
-
-			objectAABB.Min = aabbCorners[0];
-			objectAABB.Max = aabbCorners[0];
-
-			for (size_t i = 1; i < 8; i++)
-			{
-				objectAABB.Min = glm::min(objectAABB.Min, aabbCorners[i]);
-				objectAABB.Max = glm::max(objectAABB.Max, aabbCorners[i]);
-			}
+			objectAABB = object.Mesh->GetSubMesh().Bounds.Transformed(object.Transform);
 
 			bool intersects = true;
 			for (size_t i = 0; i < planes.PlanesCount; i++)
@@ -486,9 +516,14 @@ namespace Flare
 
 	void Renderer::Flush()
 	{
-		PerformFrustumCulling();
+		CalculateShadowProjections();
 
-		std::sort(s_RendererData.CulledObjectIndices.begin(), s_RendererData.CulledObjectIndices.end(), CompareRenderableObjects);
+		for (size_t i = 0; i < s_RendererData.Queue.size(); i++)
+		{
+			s_RendererData.CulledObjectIndices.push_back((uint32_t)i);
+		}
+
+		// Shadows
 
 		// Bind white texture for each cascade
 		for (size_t i = 0; i < 4; i++)
@@ -521,6 +556,14 @@ namespace Flare
 		s_RendererData.CameraBuffer->SetData(
 			&s_RendererData.CurrentViewport->FrameData.Camera,
 			sizeof(s_RendererData.CurrentViewport->FrameData.Camera), 0);
+
+		// Geometry
+
+		s_RendererData.CulledObjectIndices.clear();
+
+		PerformFrustumCulling();
+
+		std::sort(s_RendererData.CulledObjectIndices.begin(), s_RendererData.CulledObjectIndices.end(), CompareRenderableObjects);
 
 		FrameBufferAttachmentsMask previousMask = s_RendererData.CurrentViewport->RenderTarget->GetWriteMask();
 		

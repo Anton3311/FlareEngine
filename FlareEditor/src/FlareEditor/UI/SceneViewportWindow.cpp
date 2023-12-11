@@ -121,6 +121,23 @@ namespace Flare
 				DebugRenderer::Begin();
 				scene->GetECSWorld().GetSystemsManager().ExecuteGroup(debugRenderingGroup.value());
 
+				const auto& mainViewport = Renderer::GetMainViewport();
+				const auto& lightView = mainViewport.FrameData.LightView[0];
+
+				const auto& view = lightView.InverseView;
+
+				glm::vec3 axis0 = glm::vec3(view[0][0], view[0][1], view[0][2]);
+				glm::vec3 axis1 = glm::vec3(view[1][0], view[1][1], view[1][2]);
+				glm::vec3 axis2 = -glm::vec3(view[2][0], view[2][1], view[2][2]);
+
+				axis0 = mainViewport.FrameData.LightBasis.Right;
+				axis1 = mainViewport.FrameData.LightBasis.Up;
+				axis2 = mainViewport.FrameData.LightBasis.Forward;
+
+				DebugRenderer::DrawRay(lightView.Position, axis0, glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
+				DebugRenderer::DrawRay(lightView.Position, axis1, glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
+				DebugRenderer::DrawRay(lightView.Position, axis2, glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
+
 				for (uint32_t i = 0; i < 3; i++)
 				{
 					glm::vec3 direction = glm::vec3(0.0f);
