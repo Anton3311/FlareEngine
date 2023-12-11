@@ -265,7 +265,6 @@ namespace Flare
 				*viewport, currentNearPlane,
 				shadowSettings.CascadeSplits[i]);
 
-#if 0
 			const Math::Basis& lightBasis = viewport->FrameData.LightBasis;
 
 			Math::Plane nearPlane = Math::Plane::TroughPoint(params.CameraFrustumCenter, -lightDirection);
@@ -311,9 +310,7 @@ namespace Flare
 			}
 
 			float distance = glm::max(params.BoundingSphereRadius, planeDistance);
-#endif
-
-			glm::mat4 view = glm::lookAt(params.ViewPosition, params.CameraFrustumCenter, glm::vec3(0.0f, 1.0f, 0.0f));
+			glm::mat4 view = glm::lookAt(params.CameraFrustumCenter - lightDirection * distance, params.CameraFrustumCenter, glm::vec3(0.0f, 1.0f, 0.0f));
 
 			CameraData& lightView = viewport->FrameData.LightView[i];
 			lightView.View = view;
@@ -323,7 +320,7 @@ namespace Flare
 				-params.BoundingSphereRadius,
 				params.BoundingSphereRadius,
 				viewport->FrameData.Light.Near,
-				params.BoundingSphereRadius * 2.0f);
+				distance * 2.0f);
 
 			lightView.CalculateViewProjection();
 			currentNearPlane = shadowSettings.CascadeSplits[i];
@@ -353,8 +350,6 @@ namespace Flare
 	void Renderer::BeginScene(Viewport& viewport)
 	{
 		s_RendererData.CurrentViewport = &viewport;
-
-		CalculateShadowMappingParams();
 
 		s_RendererData.LightBuffer->SetData(&viewport.FrameData.Light, sizeof(viewport.FrameData.Light), 0);
 		s_RendererData.CameraBuffer->SetData(&viewport.FrameData.Camera, sizeof(CameraData), 0);
@@ -517,6 +512,7 @@ namespace Flare
 	void Renderer::Flush()
 	{
 		CalculateShadowProjections();
+		CalculateShadowMappingParams();
 
 		for (size_t i = 0; i < s_RendererData.Queue.size(); i++)
 		{
