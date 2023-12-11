@@ -298,11 +298,14 @@ namespace Flare
 			Math::Plane planes[4];
 			CalculateShadowProjectionFrustum(planes, params, lightDirection, lightBasis);
 
-			Math::Plane nearPlane = Math::Plane::TroughPoint(params.CameraFrustumCenter, -lightDirection);
-
 			// 3. Extend near and far planes
 
-			float planeDistance = 0;
+			Math::Plane nearPlane = Math::Plane::TroughPoint(params.CameraFrustumCenter, -lightDirection);
+			Math::Plane farPlane = Math::Plane::TroughPoint(params.CameraFrustumCenter, lightDirection);
+
+			float nearPlaneDistance = 0;
+			float farPlaneDistance = 0;
+
 			for (size_t i = 0; i < s_RendererData.Queue.size(); i++)
 			{
 				const RenderableObject& object = s_RendererData.Queue[i];
@@ -326,11 +329,16 @@ namespace Flare
 				glm::vec3 extents = objectAABB.Max - center;
 
 				float projectedDistance = glm::dot(glm::abs(nearPlane.Normal), extents);
-				planeDistance = glm::max(planeDistance, nearPlane.Distance(center) + projectedDistance);
+				nearPlaneDistance = glm::max(nearPlaneDistance, nearPlane.Distance(center) + projectedDistance);
+				farPlaneDistance = glm::max(farPlaneDistance, farPlane.Distance(center) + projectedDistance);
 			}
 
-			float distance = glm::max(params.BoundingSphereRadius, planeDistance);
-			glm::mat4 view = glm::lookAt(params.CameraFrustumCenter - lightDirection * distance, params.CameraFrustumCenter, glm::vec3(0.0f, 1.0f, 0.0f));
+			float distance = glm::max(params.BoundingSphereRadius, nearPlaneDistance);
+
+			nearPlaneDistance = -glm::max(params.BoundingSphereRadius, nearPlaneDistance);
+			farPlaneDistance = glm::max(params.BoundingSphereRadius, farPlaneDistance);
+
+			glm::mat4 view = glm::lookAt(params.CameraFrustumCenter + lightDirection * nearPlaneDistance, params.CameraFrustumCenter, glm::vec3(0.0f, 1.0f, 0.0f));
 
 			CameraData& lightView = viewport->FrameData.LightView[i];
 			lightView.View = view;
@@ -340,7 +348,7 @@ namespace Flare
 				-params.BoundingSphereRadius,
 				params.BoundingSphereRadius,
 				viewport->FrameData.Light.Near,
-				distance * 2.0f);
+				farPlaneDistance - nearPlaneDistance);
 
 			lightView.CalculateViewProjection();
 			currentNearPlane = shadowSettings.CascadeSplits[i];
