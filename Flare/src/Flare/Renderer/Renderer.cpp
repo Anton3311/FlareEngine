@@ -179,7 +179,9 @@ namespace Flare
 	void Renderer::ClearStatistics()
 	{
 		s_RendererData.Statistics.DrawCallsCount = 0;
-		s_RendererData.Statistics.DrawCallsSavedByInstances = 0;
+		s_RendererData.Statistics.DrawCallsSavedByInstancing = 0;
+		s_RendererData.Statistics.ObjectsCulled = 0;
+		s_RendererData.Statistics.ObjectsSubmitted = 0;
 	}
 
 	void Renderer::SetMainViewport(Viewport& viewport)
@@ -539,6 +541,8 @@ namespace Flare
 
 	void Renderer::Flush()
 	{
+		s_RendererData.Statistics.ObjectsSubmitted += (uint32_t)s_RendererData.Queue.size();
+
 		CalculateShadowProjections();
 		CalculateShadowMappingParams();
 
@@ -586,6 +590,8 @@ namespace Flare
 		s_RendererData.CulledObjectIndices.clear();
 
 		PerformFrustumCulling();
+
+		s_RendererData.Statistics.ObjectsCulled += (uint32_t)(s_RendererData.Queue.size() - s_RendererData.CulledObjectIndices.size());
 
 		std::sort(s_RendererData.CulledObjectIndices.begin(), s_RendererData.CulledObjectIndices.end(), CompareRenderableObjects);
 
@@ -671,7 +677,7 @@ namespace Flare
 
 		RenderCommand::DrawInstanced(s_RendererData.CurrentInstancingMesh->GetSubMesh().MeshVertexArray, instancesCount);
 		s_RendererData.Statistics.DrawCallsCount++;
-		s_RendererData.Statistics.DrawCallsSavedByInstances += (uint32_t)instancesCount - 1;
+		s_RendererData.Statistics.DrawCallsSavedByInstancing += (uint32_t)instancesCount - 1;
 
 		s_RendererData.InstanceDataBuffer.clear();
 	}

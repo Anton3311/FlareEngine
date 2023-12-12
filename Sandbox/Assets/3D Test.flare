@@ -9,8 +9,8 @@ Entities:
         Near: 0.100000001
         Far: 1000
       - Name: struct Flare::TransformComponent
-        Position: [0, 0, 0]
-        Rotation: [0, 0, 0]
+        Position: [0, 7.01948261, 9.62843704]
+        Rotation: [0, -0, 0]
         Scale: [1, 1, 1]
       - Name: struct Flare::NameComponent
         Value: Camera
@@ -70,6 +70,18 @@ Entities:
         Position: [-7.80068541, 13.3045902, -25.0823612]
         Rotation: [98.9314117, 21.0086765, -104.31665]
         Scale: [6.19998932, 10.2393436, 11.2713175]
+  - Components:
+      - Name: struct PrefabSpawner
+        Enabled: true
+        PrefabHandle: 12561055223819313244
+        Period: 0.100000001
+        TimeLeft: 0
+      - Name: struct Flare::SerializationId
+        Id: 11021437128477309460
+      - Name: struct Flare::TransformComponent
+        Position: [0, 0, 0]
+        Rotation: [0, 0, 0]
+        Scale: [1, 1, 1]
 PostProcessing:
   - Name: class Flare::ToneMapping
     Enabled: false

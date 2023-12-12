@@ -856,8 +856,11 @@ namespace Flare
 			{
 				const ArchetypeRecord& record = m_Archetypes.Records[i];
 
-				size_t entitySize = record.ComponentOffsets.back() + m_Components.GetComponentInfo(record.Components.back()).Size;
-				m_DeletedEntitiesStorages[i].DataStorage.SetEntitySize(entitySize);
+				if (record.ComponentOffsets.size() > 0)
+				{
+					size_t entitySize = record.ComponentOffsets.back() + m_Components.GetComponentInfo(record.Components.back()).Size;
+					m_DeletedEntitiesStorages[i].DataStorage.SetEntitySize(entitySize);
+				}
 			}
 		}
 	}

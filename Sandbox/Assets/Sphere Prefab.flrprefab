@@ -1,8 +1,9 @@
 Components:
+  - Name: struct Flare::MeshComponent
+    Mesh: 10490832977963679498
+    Material: 13576769737354600278
+    Flags: 0
   - Name: struct Flare::TransformComponent
     Position: [0, 0, 0]
     Rotation: [0, 0, 0]
     Scale: [1, 1, 1]
-  - Name: struct Flare::MeshComponent
-    Mesh: 10490832977963679498
-    Material: 13576769737354600278
