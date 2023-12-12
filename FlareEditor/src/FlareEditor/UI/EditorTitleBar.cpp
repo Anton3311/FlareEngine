@@ -12,6 +12,8 @@
 #include "FlareEditor/UI/ProjectSettingsWindow.h"
 #include "FlareEditor/UI/ECS/ECSInspector.h"
 
+#include "FlareEditor/UI/Profiler/ProfilerWindow.h"
+
 #include <imgui_internal.h>
 
 namespace Flare
@@ -109,6 +111,8 @@ namespace Flare
 		{
 			if (ImGui::MenuItem("ECS Inspector"))
 				ECSInspector::Show();
+			if (ImGui::MenuItem("Profiler"))
+				ProfilerWindow::GetInstance().ShowWindow();
 
 			const auto& viewports = EditorLayer::GetInstance().GetViewportWindows();
 			for (const Ref<ViewportWindow>& viewportWindow : viewports)

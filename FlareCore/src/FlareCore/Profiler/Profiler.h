@@ -8,6 +8,8 @@
 
 namespace Flare
 {
+    struct ProfilerScopeTimer;
+
     class FLARECORE_API Profiler
     {
     public:
@@ -31,14 +33,6 @@ namespace Flare
             inline bool IsEmpty() const { return Size == 0; }
             inline bool IsFull() const { return Size == Capacity; }
 
-            inline void AddRecord(const char* name, uint64_t start, uint64_t end)
-            {
-                FLARE_CORE_ASSERT(Size < Capacity);
-
-                Records[Size] = Record{ name, start, end };
-                Size++;
-            }
-
             Record* Records;
             size_t Capacity;
             size_t Size;
@@ -58,6 +52,8 @@ namespace Flare
         static void StartRecording();
         static void StopRecording();
 
+        static size_t GetRecordsCountPerBuffer();
+
         static size_t GetRecordsCount();
 
         static bool IsRecording();
@@ -66,27 +62,33 @@ namespace Flare
         static const std::vector<Frame>& GetFrames();
 
         static void ClearData();
+    private:
+        static Record* CreateRecord();
 
-        static void SubmitRecord(const char* name, uint64_t start, uint64_t end);
+        friend struct ProfilerScopeTimer;
     };
 
     struct ProfilerScopeTimer
     {
     public:
         ProfilerScopeTimer(const char* name)
-            : m_Name(name)
         {
-            m_StartTime = (uint64_t)std::chrono::high_resolution_clock::now().time_since_epoch().count();
+            m_Record = Profiler::CreateRecord();
+
+            if (m_Record)
+            {
+                m_Record->Name = name;
+                m_Record->StartTime = (uint64_t)std::chrono::high_resolution_clock::now().time_since_epoch().count();
+            }
         }
 
         ~ProfilerScopeTimer()
         {
-            uint64_t end = (uint64_t) std::chrono::high_resolution_clock::now().time_since_epoch().count();
-            Profiler::SubmitRecord(m_Name, m_StartTime, end);
+            if (m_Record)
+                m_Record->EndTime = (uint64_t) std::chrono::high_resolution_clock::now().time_since_epoch().count();
         }
     private:
-        const char* m_Name;
-        uint64_t m_StartTime;
+        Profiler::Record* m_Record;
     };
 
 #define FLARE_PROFILE_TIMER_NAME2(line) ___profileTimer___##line

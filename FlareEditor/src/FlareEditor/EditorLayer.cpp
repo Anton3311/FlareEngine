@@ -261,57 +261,6 @@ namespace Flare
         }
 
         {
-            ImGui::Begin("Profiler");
-
-            ImGui::BeginDisabled(Profiler::IsRecording());
-            if (ImGui::Button("Start recording"))
-            {
-                Profiler::ClearData();
-                Profiler::StartRecording();
-            }
-            ImGui::EndDisabled();
-
-            ImGui::SameLine();
-
-            ImGui::BeginDisabled(!Profiler::IsRecording());
-            if (ImGui::Button("Stop recording"))
-            {
-                Profiler::StopRecording();
-            }
-            ImGui::EndDisabled();
-
-            ImGui::SameLine();
-
-            ImGui::Text("Frames recorded: %d", (uint32_t)Profiler::GetFrames().size());
-
-            if (!Profiler::IsRecording())
-            {
-                size_t buffersCount = Profiler::GetBuffersCount();
-                for (size_t bufferIndex = 0; bufferIndex < buffersCount; bufferIndex++)
-                {
-                    const Profiler::RecordsBuffer& buffer = Profiler::GetRecordsBuffer(bufferIndex);
-                    for (size_t i = 0; i < buffer.Size; i++)
-                    {
-                        const Profiler::Record& record = buffer.Records[i];
-                        double duration = (double)(record.EndTime - record.StartTime);
-
-                        double milliseconds = duration / 1000000.0;
-                        double seconds = milliseconds / 1000.0;
-
-                        if (milliseconds < 0.001)
-                            ImGui::Text("%s %f ns", record.Name, (float)duration);
-                        else if (seconds < 0.01)
-                            ImGui::Text("%s %f ms", record.Name, (float)milliseconds);
-                        else
-                            ImGui::Text("%s %f s", record.Name, (float)seconds);
-                    }
-                }
-            }
-
-            ImGui::End();
-        }
-
-        {
             ImGui::Begin("Renderer");
 
             ImGui::Text("Frame time %f", m_PreviousFrameTime);
@@ -387,6 +336,7 @@ namespace Flare
         m_PropertiesWindow.OnImGuiRender();
         m_AssetManagerWindow.OnImGuiRender();
         m_QuickSearch.OnImGuiRender();
+        m_ProfilerWindow.OnImGuiRender();
 
         ECSInspector::GetInstance().OnImGuiRender();
 

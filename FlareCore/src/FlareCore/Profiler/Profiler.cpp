@@ -74,6 +74,11 @@ namespace Flare
             s_ProfilerData.RecordingStopRequested = true;
     }
 
+    size_t Profiler::GetRecordsCountPerBuffer()
+    {
+        return s_ProfilerData.BufferSize;
+    }
+
     size_t Profiler::GetRecordsCount()
     {
         if (s_ProfilerData.Buffers.empty())
@@ -120,11 +125,13 @@ namespace Flare
         return s_ProfilerData.Buffers.back();
     }
 
-    void Profiler::SubmitRecord(const char* name, uint64_t start, uint64_t end)
+    Profiler::Record* Profiler::CreateRecord()
     {
         if (!s_ProfilerData.IsRecording)
-            return;
+            return nullptr;
 
-        GetCurrentBuffer().AddRecord(name, start, end);
+        auto& buffer = GetCurrentBuffer();
+        buffer.Size++;
+        return &buffer.Records[buffer.Size - 1];
     }
 }
