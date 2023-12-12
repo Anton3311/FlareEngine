@@ -33,6 +33,8 @@
 
 #include "FlareEditor/Scripting/BuildSystem/BuildSystem.h"
 
+#include "FlareCore/Profiler/Profiler.h"
+
 #include <imgui.h>
 #include <imgui_internal.h>
 
@@ -137,6 +139,8 @@ namespace Flare
 
     void EditorLayer::OnUpdate(float deltaTime)
     {
+        Profiler::BeginFrame();
+
         m_PreviousFrameTime = deltaTime;
 
         Renderer2D::ResetStats();
@@ -145,11 +149,22 @@ namespace Flare
         Renderer::SetMainViewport(m_GameWindow->GetViewport());
         InputManager::SetMousePositionOffset(-m_GameWindow->GetViewport().GetPosition());
 
-        if (m_Mode == EditorMode::Play && !m_PlaymodePaused)
-            Scene::GetActive()->OnUpdateRuntime();
+        {
+            FLARE_PROFILE_SCOPE("Scene Runtime Update");
 
-        for (auto& viewport : m_ViewportWindows)
-            viewport->OnRenderViewport();
+            if (m_Mode == EditorMode::Play && !m_PlaymodePaused)
+                Scene::GetActive()->OnUpdateRuntime();
+        }
+
+        {
+            FLARE_PROFILE_SCOPE("Viewport Render");
+            for (auto& viewport : m_ViewportWindows)
+            {
+                viewport->OnRenderViewport();
+            }
+        }
+
+        Profiler::EndFrame();
     }
 
     void EditorLayer::OnEvent(Event& event)
@@ -240,6 +255,57 @@ namespace Flare
                 }
 
                 ImGui::EndCombo();
+            }
+
+            ImGui::End();
+        }
+
+        {
+            ImGui::Begin("Profiler");
+
+            ImGui::BeginDisabled(Profiler::IsRecording());
+            if (ImGui::Button("Start recording"))
+            {
+                Profiler::ClearData();
+                Profiler::StartRecording();
+            }
+            ImGui::EndDisabled();
+
+            ImGui::SameLine();
+
+            ImGui::BeginDisabled(!Profiler::IsRecording());
+            if (ImGui::Button("Stop recording"))
+            {
+                Profiler::StopRecording();
+            }
+            ImGui::EndDisabled();
+
+            ImGui::SameLine();
+
+            ImGui::Text("Frames recorded: %d", (uint32_t)Profiler::GetFrames().size());
+
+            if (!Profiler::IsRecording())
+            {
+                size_t buffersCount = Profiler::GetBuffersCount();
+                for (size_t bufferIndex = 0; bufferIndex < buffersCount; bufferIndex++)
+                {
+                    const Profiler::RecordsBuffer& buffer = Profiler::GetRecordsBuffer(bufferIndex);
+                    for (size_t i = 0; i < buffer.Size; i++)
+                    {
+                        const Profiler::Record& record = buffer.Records[i];
+                        double duration = (double)(record.EndTime - record.StartTime);
+
+                        double milliseconds = duration / 1000000.0;
+                        double seconds = milliseconds / 1000.0;
+
+                        if (milliseconds < 0.001)
+                            ImGui::Text("%s %f ns", record.Name, (float)duration);
+                        else if (seconds < 0.01)
+                            ImGui::Text("%s %f ms", record.Name, (float)milliseconds);
+                        else
+                            ImGui::Text("%s %f s", record.Name, (float)seconds);
+                    }
+                }
             }
 
             ImGui::End();

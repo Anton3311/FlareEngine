@@ -9,6 +9,8 @@
 
 #include "Flare/Project/Project.h"
 
+#include "FlareCore/Profiler/Profiler.h"
+
 #include <random>
 
 namespace Flare
@@ -278,6 +280,8 @@ namespace Flare
 
 	static void CalculateShadowProjections()
 	{
+		FLARE_PROFILE_FUNCTION();
+
 		Viewport* viewport = s_RendererData.CurrentViewport;
 
 		const ShadowSettings& shadowSettings = Renderer::GetShadowSettings();
@@ -379,6 +383,8 @@ namespace Flare
 
 	void Renderer::BeginScene(Viewport& viewport)
 	{
+		FLARE_PROFILE_FUNCTION();
+
 		s_RendererData.CurrentViewport = &viewport;
 
 		s_RendererData.LightBuffer->SetData(&viewport.FrameData.Light, sizeof(viewport.FrameData.Light), 0);
@@ -518,6 +524,8 @@ namespace Flare
 
 	static void PerformFrustumCulling()
 	{
+		FLARE_PROFILE_FUNCTION();
+
 		Math::AABB objectAABB;
 
 		const FrustumPlanes& planes = s_RendererData.CurrentViewport->FrameData.CameraFrustumPlanes;
@@ -541,6 +549,8 @@ namespace Flare
 
 	void Renderer::Flush()
 	{
+		FLARE_PROFILE_FUNCTION();
+
 		s_RendererData.Statistics.ObjectsSubmitted += (uint32_t)s_RendererData.Queue.size();
 
 		CalculateShadowProjections();
@@ -552,66 +562,75 @@ namespace Flare
 		}
 
 		// Shadows
-
-		// Bind white texture for each cascade
-		for (size_t i = 0; i < 4; i++)
 		{
-			s_RendererData.WhiteTexture->Bind(2 + (uint32_t)i);
+			FLARE_PROFILE_SCOPE("Renderer::ShadowPass");
+
+			// Bind white texture for each cascade
+			for (size_t i = 0; i < 4; i++)
+			{
+				s_RendererData.WhiteTexture->Bind(2 + (uint32_t)i);
+			}
+
+			s_RendererData.RandomAngles->Bind(6);
+
+			RenderCommand::SetDepthTestEnabled(true);
+			RenderCommand::SetCullingMode(CullingMode::Front);
+
+			for (size_t i = 0; i < s_RendererData.ShadowMappingSettings.Cascades; i++)
+			{
+				const FrameBufferSpecifications& shadowMapSpecs = s_RendererData.ShadowsRenderTarget[i]->GetSpecifications();
+				RenderCommand::SetViewport(0, 0, shadowMapSpecs.Width, shadowMapSpecs.Height);
+
+				s_RendererData.CameraBuffer->SetData(
+					&s_RendererData.CurrentViewport->FrameData.LightView[i],
+					sizeof(s_RendererData.CurrentViewport->FrameData.LightView[i]), 0);
+
+				s_RendererData.ShadowsRenderTarget[i]->Bind();
+
+				DrawQueued(true);
+			}
 		}
-
-		s_RendererData.RandomAngles->Bind(6);
-
-		RenderCommand::SetDepthTestEnabled(true);
-		RenderCommand::SetCullingMode(CullingMode::Front);
-
-		for (size_t i = 0; i < s_RendererData.ShadowMappingSettings.Cascades; i++)
-		{
-			const FrameBufferSpecifications& shadowMapSpecs = s_RendererData.ShadowsRenderTarget[i]->GetSpecifications();
-			RenderCommand::SetViewport(0, 0, shadowMapSpecs.Width, shadowMapSpecs.Height);
-
-			s_RendererData.CameraBuffer->SetData(
-				&s_RendererData.CurrentViewport->FrameData.LightView[i],
-				sizeof(s_RendererData.CurrentViewport->FrameData.LightView[i]), 0);
-
-			s_RendererData.ShadowsRenderTarget[i]->Bind();
-
-			DrawQueued(true);
-		}
-
-		RenderCommand::SetViewport(0, 0, s_RendererData.CurrentViewport->GetSize().x, s_RendererData.CurrentViewport->GetSize().y);
-		s_RendererData.CurrentViewport->RenderTarget->Bind();
-
-		s_RendererData.CameraBuffer->SetData(
-			&s_RendererData.CurrentViewport->FrameData.Camera,
-			sizeof(s_RendererData.CurrentViewport->FrameData.Camera), 0);
 
 		// Geometry
 
-		s_RendererData.CulledObjectIndices.clear();
-
-		PerformFrustumCulling();
-
-		s_RendererData.Statistics.ObjectsCulled += (uint32_t)(s_RendererData.Queue.size() - s_RendererData.CulledObjectIndices.size());
-
-		std::sort(s_RendererData.CulledObjectIndices.begin(), s_RendererData.CulledObjectIndices.end(), CompareRenderableObjects);
-
-		FrameBufferAttachmentsMask previousMask = s_RendererData.CurrentViewport->RenderTarget->GetWriteMask();
-		
-		for (size_t i = 0; i < 4; i++)
 		{
-			s_RendererData.ShadowsRenderTarget[i]->BindAttachmentTexture(0, 2 + (uint32_t)i);
+			FLARE_PROFILE_SCOPE("Renderer::GeometryPass");
+
+			RenderCommand::SetViewport(0, 0, s_RendererData.CurrentViewport->GetSize().x, s_RendererData.CurrentViewport->GetSize().y);
+			s_RendererData.CurrentViewport->RenderTarget->Bind();
+
+			s_RendererData.CameraBuffer->SetData(
+				&s_RendererData.CurrentViewport->FrameData.Camera,
+				sizeof(s_RendererData.CurrentViewport->FrameData.Camera), 0);
+
+			s_RendererData.CulledObjectIndices.clear();
+
+			PerformFrustumCulling();
+
+			s_RendererData.Statistics.ObjectsCulled += (uint32_t)(s_RendererData.Queue.size() - s_RendererData.CulledObjectIndices.size());
+
+			std::sort(s_RendererData.CulledObjectIndices.begin(), s_RendererData.CulledObjectIndices.end(), CompareRenderableObjects);
+
+			FrameBufferAttachmentsMask previousMask = s_RendererData.CurrentViewport->RenderTarget->GetWriteMask();
+		
+			for (size_t i = 0; i < 4; i++)
+			{
+				s_RendererData.ShadowsRenderTarget[i]->BindAttachmentTexture(0, 2 + (uint32_t)i);
+			}
+
+			DrawQueued(false);
+			s_RendererData.CurrentViewport->RenderTarget->SetWriteMask(previousMask);
+
+			s_RendererData.InstanceDataBuffer.clear();
+			s_RendererData.CulledObjectIndices.clear();
+			s_RendererData.Queue.clear();
 		}
-
-		DrawQueued(false);
-		s_RendererData.CurrentViewport->RenderTarget->SetWriteMask(previousMask);
-
-		s_RendererData.InstanceDataBuffer.clear();
-		s_RendererData.CulledObjectIndices.clear();
-		s_RendererData.Queue.clear();
 	}
 
 	void Renderer::DrawQueued(bool shadowPass)
 	{
+		FLARE_PROFILE_FUNCTION();
+
 		Ref<Material> currentMaterial = nullptr;
 
 		for (uint32_t objectIndex : s_RendererData.CulledObjectIndices)
@@ -669,6 +688,8 @@ namespace Flare
 
 	void Renderer::FlushInstances()
 	{
+		FLARE_PROFILE_FUNCTION();
+
 		size_t instancesCount = s_RendererData.InstanceDataBuffer.size();
 		if (instancesCount == 0 || s_RendererData.CurrentInstancingMesh == nullptr)
 			return;
