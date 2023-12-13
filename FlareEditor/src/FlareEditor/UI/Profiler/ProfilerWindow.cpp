@@ -14,10 +14,9 @@ namespace Flare
         : m_ShowWindow(false),
         m_BlockHeight(30.0f),
         m_WindowWidth(0.0f),
-        m_Scale(1.0f),
+        m_Zoom(1.0f),
         m_ScrollOffset(0.0f),
-        m_ScrollSpeed(10.0f),
-        m_ZoomSpeed(0.01f)
+        m_ScrollSpeed(10.0f)
     {
         s_Instance = this;
     }
@@ -80,16 +79,19 @@ namespace Flare
                 }
                 else
                 {
-                    float zoom = -glm::sign(scroll) * m_ZoomSpeed;
+                    const float maxZoomSpeed = 2.0f;
+                    const float minZoomSpeed = 0.001f;
+
+                    float zoomAmount = glm::sign(scroll) * glm::clamp(glm::exp(0.2f * m_Zoom - 4.0f), minZoomSpeed, maxZoomSpeed);
                     float mouseCursorOffset = ImGui::GetIO().MousePos.x - ImGui::GetCurrentWindow()->Pos.x - initialCursorPosition.x;
                     float initialPosition = mouseCursorOffset;
+
                     uint64_t timePointUnderCursor = CalculateTimeFromPosition(mouseCursorOffset);
 
-                    m_Scale = glm::clamp(m_Scale + zoom, 0.001f, 1000.0f);
+                    m_Zoom = glm::clamp(m_Zoom + zoomAmount, 0.001f, 1000.0f);
 
                     float position = CalculatePositionFromTime(timePointUnderCursor);
 
-                    FLARE_CORE_INFO("Position: {} {} Time: {}", initialPosition, position, timePointUnderCursor);
                     m_ScrollOffset += position - initialPosition;
                 }
             }
@@ -154,7 +156,7 @@ namespace Flare
 
         ImGui::Text("Frames recorded: %d", (uint32_t)Profiler::GetFrames().size());
 
-        ImGui::DragFloat("Scale", &m_Scale);
+        ImGui::DragFloat("Scale", &m_Zoom);
         ImGui::DragFloat("Offset", &m_ScrollOffset, 1.0f, -10000000.0f, 10000000.0f);
     }
 
@@ -234,14 +236,14 @@ namespace Flare
     float ProfilerWindow::CalculatePositionFromTime(uint64_t time)
     {
         double start = (double)time / 1000000.0;
-        double position = (start) * (double)(m_WindowWidth * m_Scale);
+        double position = (start) * (double)(m_WindowWidth * m_Zoom);
         return (float)position - m_ScrollOffset;
     }
 
     uint64_t ProfilerWindow::CalculateTimeFromPosition(float position)
     {
         position += m_ScrollOffset;
-        double milliseconds = (double)(position) / (double)(m_WindowWidth * m_Scale);
+        double milliseconds = (double)(position) / (double)(m_WindowWidth * m_Zoom);
         return (uint64_t)(milliseconds * 1000000.0);
     }
 }

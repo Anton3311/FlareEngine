@@ -33,10 +33,9 @@ namespace Flare
         std::vector<size_t> m_RecordsStack;
 
         float m_ScrollSpeed;
-        float m_ZoomSpeed;
         float m_BlockHeight;
         float m_ScrollOffset;
-        float m_Scale;
+        float m_Zoom;
 
         float m_WindowWidth;
         bool m_ShowWindow;
