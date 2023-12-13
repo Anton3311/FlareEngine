@@ -47,6 +47,7 @@ namespace Flare
         m_WindowWidth = contentAreaSize.x;
 
         ImGui::InvisibleButton("ProfilerViewport", contentAreaSize);
+        ImGui::SetItemUsingMouseWheel();
         ImRect viewportRect = { ImGui::GetItemRectMin(), ImGui::GetItemRectMax() };
 
         bool canInteractWithViewport = ImGui::IsItemHovered();
