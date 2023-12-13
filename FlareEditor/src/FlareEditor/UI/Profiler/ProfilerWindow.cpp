@@ -153,6 +153,7 @@ namespace Flare
             if (m_SelectedRecord != m_PreviousSelection && m_SelectedRecord.has_value())
             {
                 ReconstructSubCallsList(m_SelectedRecord.value());
+                ReconstructCallStack(m_SelectedRecord.value());
             }
 
             m_PreviousSelection = m_SelectedRecord;
@@ -263,44 +264,19 @@ namespace Flare
 
             ImGui::SeparatorText("Sub Calls");
 
-            ImGui::BeginTable("SubCallsTable", 2);
-
-            ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthFixed, contentAreaSize.x * 0.80f);
-            ImGui::TableSetupColumn("Time", ImGuiTableColumnFlags_WidthFixed, contentAreaSize.x * 0.20f);
-
-            const auto& style = ImGui::GetStyle();
-
-            for (size_t i = m_FirstSubCallRecordIndex; i < m_FirstSubCallRecordIndex + m_SubCallRecordsCount; i++)
+            ImGuiTreeNodeFlags treeNodeFlags = ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_OpenOnArrow;
+            if (ImGui::TreeNodeEx("Sub Calls", treeNodeFlags))
             {
-                size_t bufferIndex = i / Profiler::GetRecordsCountPerBuffer();
-                size_t recordIndex = i % Profiler::GetRecordsCountPerBuffer();
-
-                const auto& record = Profiler::GetRecordsBuffer(bufferIndex).Records[recordIndex];
-
-                ImGui::TableNextRow(0, ImGui::GetFontSize() + style.FramePadding.y * 2.0f);
-                ImGui::TableSetColumnIndex(0);
-
-                ImGui::SetCursorPosY(ImGui::GetCursorPosY() + style.FramePadding.y);
-                ImGui::TextUnformatted(record.Name);
-
-                ImGui::TableSetColumnIndex(1);
-
-                double duration = (double)(record.EndTime - record.StartTime);
-
-                double milliseconds = duration / 1000000.0;
-                double seconds = milliseconds / 1000.0;
-
-                ImGui::SetCursorPosY(ImGui::GetCursorPosY() + style.FramePadding.y);
-
-                if (milliseconds < 0.001f)
-                    ImGui::Text("%f ns", duration);
-                else if (seconds < 0.01f)
-                    ImGui::Text("%f ms", milliseconds);
-                else
-                    ImGui::Text("%f s", seconds);
+                RenderSubCallsList();
+                ImGui::TreePop();
             }
 
-            ImGui::EndTable();
+            if (ImGui::TreeNodeEx("Call Stack", treeNodeFlags))
+            {
+                RenderCallStack();
+                ImGui::TreePop();
+            }
+
         }
         else
         {
@@ -350,6 +326,72 @@ namespace Flare
         return (uint64_t)(milliseconds * 1000000.0);
     }
 
+    void ProfilerWindow::RenderSubCallsList()
+    {
+        ImVec2 contentAreaSize = ImGui::GetContentRegionAvail();
+
+        ImGui::BeginTable("SubCallsTable", 2);
+
+        ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthFixed, contentAreaSize.x * 0.80f);
+        ImGui::TableSetupColumn("Time", ImGuiTableColumnFlags_WidthFixed, contentAreaSize.x * 0.20f);
+
+        for (size_t i = m_FirstSubCallRecordIndex; i < m_FirstSubCallRecordIndex + m_SubCallRecordsCount; i++)
+        {
+            RenderRecordTableRow(i);
+        }
+
+        ImGui::EndTable();
+    }
+
+    void ProfilerWindow::RenderCallStack()
+    {
+        ImVec2 contentAreaSize = ImGui::GetContentRegionAvail();
+
+        ImGui::BeginTable("CallStackTable", 2);
+
+        ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthFixed, contentAreaSize.x * 0.80f);
+        ImGui::TableSetupColumn("Time", ImGuiTableColumnFlags_WidthFixed, contentAreaSize.x * 0.20f);
+
+        for (size_t i : m_CallStackRecords)
+        {
+            RenderRecordTableRow(i);
+        }
+
+        ImGui::EndTable();
+    }
+
+    void ProfilerWindow::RenderRecordTableRow(size_t index)
+    {
+        const auto& style = ImGui::GetStyle();
+
+        size_t bufferIndex = index / Profiler::GetRecordsCountPerBuffer();
+        size_t recordIndex = index % Profiler::GetRecordsCountPerBuffer();
+
+        const auto& record = Profiler::GetRecordsBuffer(bufferIndex).Records[recordIndex];
+
+        ImGui::TableNextRow(0, ImGui::GetFontSize() + style.FramePadding.y * 2.0f);
+        ImGui::TableSetColumnIndex(0);
+
+        ImGui::SetCursorPosY(ImGui::GetCursorPosY() + style.FramePadding.y);
+        ImGui::TextUnformatted(record.Name);
+
+        ImGui::TableSetColumnIndex(1);
+
+        double duration = (double)(record.EndTime - record.StartTime);
+
+        double milliseconds = duration / 1000000.0;
+        double seconds = milliseconds / 1000.0;
+
+        ImGui::SetCursorPosY(ImGui::GetCursorPosY() + style.FramePadding.y);
+
+        if (milliseconds < 0.001f)
+            ImGui::Text("%f ns", duration);
+        else if (seconds < 0.01f)
+            ImGui::Text("%f ms", milliseconds);
+        else
+            ImGui::Text("%f s", seconds);
+    }
+
     void ProfilerWindow::ReconstructSubCallsList(size_t start)
     {
         m_FirstSubCallRecordIndex = start + 1;
@@ -377,6 +419,43 @@ namespace Flare
                 currentBufferIndex++;
                 recordIndex = 0;
             }
+        }
+    }
+
+    void ProfilerWindow::ReconstructCallStack(size_t start)
+    {
+        m_CallStackRecords.clear();
+        
+        size_t currentBufferIndex = start / Profiler::GetRecordsCountPerBuffer();
+        size_t recordIndex = start % Profiler::GetRecordsCountPerBuffer();
+
+        const Profiler::Record& startRecord = Profiler::GetRecordsBuffer(currentBufferIndex).Records[recordIndex];
+
+        while (true)
+        {
+            const auto& currentRecord = Profiler::GetRecordsBuffer(currentBufferIndex).Records[recordIndex];
+            if (currentRecord.StartTime <= startRecord.StartTime && currentRecord.EndTime >= startRecord.EndTime)
+            {
+                m_CallStackRecords.push_back(currentBufferIndex * Profiler::GetRecordsCountPerBuffer() + recordIndex);
+            }
+
+            if (recordIndex == 0)
+            {
+                if (currentBufferIndex == 0)
+                    break;
+
+                currentBufferIndex--;
+                recordIndex = Profiler::GetRecordsCountPerBuffer() - 1;
+            }
+            else
+            {
+                recordIndex--;
+            }
+        }
+
+        for (size_t i = 0; i < m_CallStackRecords.size() / 2; i++)
+        {
+            std::swap(m_CallStackRecords[i], m_CallStackRecords[m_CallStackRecords.size() - 1 - i]);
         }
     }
 }

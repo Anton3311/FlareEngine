@@ -32,7 +32,12 @@ namespace Flare
         float CalculatePositionFromTime(uint64_t time);
         uint64_t CalculateTimeFromPosition(float position);
 
+        void RenderSubCallsList();
+        void RenderCallStack();
+        void RenderRecordTableRow(size_t recordIndex);
+
         void ReconstructSubCallsList(size_t start);
+        void ReconstructCallStack(size_t start);
     private:
         static ProfilerWindow* s_Instance;
 
@@ -43,6 +48,7 @@ namespace Flare
 
         size_t m_FirstSubCallRecordIndex;
         size_t m_SubCallRecordsCount;
+        std::vector<size_t> m_CallStackRecords;
 
         ImVec2 m_PreviousMousePosition;
 
