@@ -4,6 +4,8 @@
 #include "FlareCore/Profiler/Profiler.h"
 #include "FlareEditor/ImGui/ImGuiLayer.h"
 
+#include <optional>
+
 namespace Flare
 {
     class ProfilerWindow
@@ -23,14 +25,24 @@ namespace Flare
         inline void ShowWindow() { m_ShowWindow = true; }
     private:
         void RenderToolBar();
-        void DrawRecordBlock(const Profiler::Record& record, ImVec2 position, ImDrawList* drawList);
+        void DrawRecordBlock(const Profiler::Record& record, ImVec2 position, ImDrawList* drawList, size_t recordIndex);
+        void RenderSideBar();
+
         size_t CalculateRecordRow(size_t currentRecordIndex, const Profiler::Record& currentRecord);
         float CalculatePositionFromTime(uint64_t time);
         uint64_t CalculateTimeFromPosition(float position);
+
+        void ReconstructSubCallsList(size_t start);
     private:
         static ProfilerWindow* s_Instance;
 
         std::vector<size_t> m_RecordsStack;
+
+        std::optional<size_t> m_PreviousSelection;
+        std::optional<size_t> m_SelectedRecord;
+
+        size_t m_FirstSubCallRecordIndex;
+        size_t m_SubCallRecordsCount;
 
         float m_ScrollSpeed;
         float m_BlockHeight;
