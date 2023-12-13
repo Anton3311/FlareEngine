@@ -46,11 +46,11 @@ namespace Flare
         ImGui::BeginChild("ProfilerDataPreviewArea", contentAreaSize);
         m_WindowWidth = contentAreaSize.x;
 
-        bool canMoveViewport = ImGui::IsItemHovered() && ImGui::IsWindowFocused();
-        bool hasProfileData = !Profiler::IsRecording() && Profiler::GetFrames().size() > 0;
-
         ImGui::InvisibleButton("ProfilerViewport", contentAreaSize);
         ImRect viewportRect = { ImGui::GetItemRectMin(), ImGui::GetItemRectMax() };
+
+        bool canInteractWithViewport = ImGui::IsItemHovered();
+        bool hasProfileData = !Profiler::IsRecording() && Profiler::GetFrames().size() > 0;
 
         if (!hasProfileData)
         {
@@ -75,7 +75,8 @@ namespace Flare
 
             float maxScrollOffset = CalculatePositionFromTime(profileEndTime - profileStartTime) + m_ScrollOffset;
             float scroll = ImGui::GetIO().MouseWheel;
-            if (glm::abs(scroll) > 0.0f)
+
+            if (canInteractWithViewport && glm::abs(scroll) > 0.0f)
             {
                 if (ImGui::IsKeyDown(ImGuiKey_ModShift))
                 {
@@ -320,7 +321,7 @@ namespace Flare
 
     void ProfilerWindow::ReconstructSubCallsList(size_t start)
     {
-        m_FirstSubCallRecordIndex = start;
+        m_FirstSubCallRecordIndex = start + 1;
         m_SubCallRecordsCount = 0;
 
         size_t currentBufferIndex = start / Profiler::GetRecordsCountPerBuffer();
