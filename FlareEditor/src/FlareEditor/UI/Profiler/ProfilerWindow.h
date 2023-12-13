@@ -44,6 +44,8 @@ namespace Flare
         size_t m_FirstSubCallRecordIndex;
         size_t m_SubCallRecordsCount;
 
+        ImVec2 m_PreviousMousePosition;
+
         float m_ScrollSpeed;
         float m_BlockHeight;
         float m_ScrollOffset;

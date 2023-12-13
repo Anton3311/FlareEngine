@@ -53,6 +53,23 @@ namespace Flare
         bool canInteractWithViewport = ImGui::IsItemHovered();
         bool hasProfileData = !Profiler::IsRecording() && Profiler::GetFrames().size() > 0;
 
+        bool isDragging = ImGui::IsMouseDragging(ImGuiMouseButton_Middle);
+
+        float dragInput = 0.0f;
+
+        ImVec2 currentMousePosition = ImGui::GetIO().MousePos;
+        if (ImGui::IsItemClicked())
+        {
+            m_PreviousMousePosition = currentMousePosition;
+        }
+
+        if (canInteractWithViewport && isDragging)
+        {
+            dragInput = currentMousePosition.x - m_PreviousMousePosition.x;
+        }
+
+        m_PreviousMousePosition = currentMousePosition;
+
         if (!hasProfileData)
         {
             const char* text = "No profile data";
@@ -77,7 +94,13 @@ namespace Flare
             float maxScrollOffset = CalculatePositionFromTime(profileEndTime - profileStartTime) + m_ScrollOffset;
             float scroll = ImGui::GetIO().MouseWheel;
 
-            if (canInteractWithViewport && glm::abs(scroll) > 0.0f)
+            // Handle zooming and scrolling
+
+            if (isDragging && glm::abs(dragInput) > 0.0f)
+            {
+                m_ScrollOffset -= dragInput;
+            }
+            else if (canInteractWithViewport && glm::abs(scroll) > 0.0f)
             {
                 if (ImGui::IsKeyDown(ImGuiKey_ModShift))
                 {
@@ -103,6 +126,8 @@ namespace Flare
             }
 
             m_ScrollOffset = glm::clamp(m_ScrollOffset, 0.0f, maxScrollOffset);
+
+            // Draw records
 
             for (size_t bufferIndex = 0; bufferIndex < buffersCount; bufferIndex++)
             {
