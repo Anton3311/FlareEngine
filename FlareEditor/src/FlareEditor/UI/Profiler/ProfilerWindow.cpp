@@ -221,7 +221,12 @@ namespace Flare
 
         ImRect blockRect = { ImGui::GetItemRectMin(), ImGui::GetItemRectMax() };
         
-        drawList->AddRectFilled(blockRect.Min, blockRect.Max, ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_FrameBg]));
+        ImU32 blockColor = ImGui::ColorConvertFloat4ToU32(
+            recordIndex == m_SelectedRecord
+            ? style.Colors[ImGuiCol_FrameBgHovered]
+            : style.Colors[ImGuiCol_FrameBg]);
+
+        drawList->AddRectFilled(blockRect.Min, blockRect.Max, blockColor);
 
         const char* blockName = record.Name;
         
