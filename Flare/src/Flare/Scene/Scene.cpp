@@ -1,5 +1,7 @@
 #include "Scene.h"
 
+#include "FlareCore/Profiler/Profiler.h"
+
 #include "Flare/Renderer/Renderer.h"
 #include "Flare/Renderer2D/Renderer2D.h"
 #include "Flare/Renderer/DebugRenderer.h"
@@ -73,6 +75,8 @@ namespace Flare
 
 	void Scene::OnBeforeRender(Viewport& viewport)
 	{
+		FLARE_PROFILE_FUNCTION();
+
 		if (!viewport.FrameData.IsEditorCamera)
 		{
 			float aspectRation = viewport.GetAspectRatio();
@@ -168,6 +172,8 @@ namespace Flare
 
 	void Scene::OnRender(const Viewport& viewport)
 	{
+		FLARE_PROFILE_FUNCTION();
+
 		Renderer2D::Begin();
 
 		m_World.GetSystemsManager().ExecuteGroup(m_2DRenderingGroup);

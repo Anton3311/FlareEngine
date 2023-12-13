@@ -80,6 +80,8 @@ namespace Flare
 
 	void SceneViewportWindow::OnRenderViewport()
 	{
+		FLARE_PROFILE_FUNCTION();
+
 		if (Scene::GetActive() == nullptr || !ShowWindow || !m_IsVisible)
 			return;
 

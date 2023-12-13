@@ -6,6 +6,7 @@
 #include "Flare/Scene/Scene.h"
 
 #include "Flare/Core/Application.h"
+#include "FlareCore/Profiler/Profiler.h"
 
 #include <imgui.h>
 #include <imgui_internal.h>
@@ -25,6 +26,8 @@ namespace Flare
 
 	void ViewportWindow::OnRenderViewport()
 	{
+		FLARE_PROFILE_FUNCTION();
+
 		if (!ShowWindow || !m_IsVisible)
 			return;
 

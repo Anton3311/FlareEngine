@@ -363,6 +363,8 @@ namespace Flare
 
 	static void CalculateShadowMappingParams()
 	{
+		FLARE_PROFILE_FUNCTION();
+
 		ShadowData shadowData;
 		shadowData.Bias = s_RendererData.ShadowMappingSettings.Bias;
 		shadowData.LightSize = s_RendererData.ShadowMappingSettings.LightSize;
@@ -709,6 +711,8 @@ namespace Flare
 
 	void Renderer::DrawFullscreenQuad(const Ref<Material>& material)
 	{
+		FLARE_PROFILE_FUNCTION();
+
 		material->SetShaderProperties();
 		ApplyMaterialFeatures(material->GetShader()->GetFeatures());
 
@@ -729,6 +733,8 @@ namespace Flare
 
 	void Renderer::DrawMesh(const Ref<VertexArray>& mesh, const Ref<Material>& material, size_t indicesCount)
 	{
+		FLARE_PROFILE_FUNCTION();
+
 		material->SetShaderProperties();
 		ApplyMaterialFeatures(material->GetShader()->GetFeatures());
 
@@ -773,6 +779,8 @@ namespace Flare
 	void Renderer::ExecuteRenderPasses()
 	{
 		FLARE_CORE_ASSERT(s_RendererData.CurrentViewport);
+
+		FLARE_PROFILE_FUNCTION();
 		RenderingContext context(s_RendererData.CurrentViewport->RenderTarget, s_RendererData.CurrentViewport->RTPool);
 
 		for (Ref<RenderPass>& pass : s_RendererData.RenderPasses)

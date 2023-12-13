@@ -1,6 +1,7 @@
 #include "Renderer2D.h"
 
 #include "FlareCore/Core.h"
+#include "FlareCore/Profiler/Profiler.h"
 
 #include "Flare/AssetManager/AssetManager.h"
 
@@ -333,6 +334,8 @@ namespace Flare
 
 	void Renderer2D::DrawString(std::string_view text, const glm::mat4& transform, const Ref<Font>& font, const glm::vec4& color, int32_t entityIndex)
 	{
+		FLARE_PROFILE_FUNCTION();
+
 		if (s_Renderer2DData.CurrentFont.get() != font.get())
 		{
 			FlushText();
@@ -464,6 +467,8 @@ namespace Flare
 
 	void Renderer2D::FlushQuads()
 	{
+		FLARE_PROFILE_FUNCTION();
+
 		if (s_Renderer2DData.DefaultMaterial == nullptr)
 		{
 			s_Renderer2DData.QuadIndex = 0;
@@ -502,6 +507,8 @@ namespace Flare
 
 	void Renderer2D::FlushText()
 	{
+		FLARE_PROFILE_FUNCTION();
+
 		if (s_Renderer2DData.TextShader == nullptr)
 		{
 			s_Renderer2DData.TextQuadIndex = 0;
@@ -526,6 +533,8 @@ namespace Flare
 
 	void Renderer2D::FlushAll()
 	{
+		FLARE_PROFILE_FUNCTION();
+
 		FlushQuads();
 		FlushText();
 	}

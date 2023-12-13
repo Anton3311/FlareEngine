@@ -2,6 +2,7 @@
 
 #include "FlareCore/Assert.h"
 #include "FlareCore/Log.h"
+#include "FlareCore/Profiler/Profiler.h"
 
 #include "Flare/Serialization/Serialization.h"
 #include "Flare/Project/Project.h"
@@ -360,6 +361,8 @@ namespace Flare
 
     Ref<Asset> EditorAssetManager::LoadAsset(const AssetMetadata& metadata)
     {
+        FLARE_PROFILE_FUNCTION();
+
         auto importerIterator = m_AssetImporters.find(metadata.Type);
         if (importerIterator == m_AssetImporters.end())
         {
