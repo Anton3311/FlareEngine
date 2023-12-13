@@ -14,8 +14,10 @@ namespace Flare
         : m_ShowWindow(false),
         m_BlockHeight(30.0f),
         m_WindowWidth(0.0f),
-        m_Scale(10.0f),
-        m_ScrollOffset(0.0f)
+        m_Scale(1.0f),
+        m_ScrollOffset(0.0f),
+        m_ScrollSpeed(10.0f),
+        m_ZoomSpeed(0.01f)
     {
         s_Instance = this;
     }
@@ -63,40 +65,61 @@ namespace Flare
             size_t buffersCount = Profiler::GetBuffersCount();
             const auto& frames = Profiler::GetFrames();
 
+            const auto& lastRecordsBuffer = Profiler::GetRecordsBuffer(buffersCount - 1);
+
             uint64_t profileStartTime = Profiler::GetRecordsBuffer(0).Records[0].StartTime;
-            const auto& frame = Profiler::GetFrames()[0];
+            uint64_t profileEndTime = lastRecordsBuffer.Records[lastRecordsBuffer.Size - 1].EndTime;
+
+            float maxScrollOffset = CalculatePositionFromTime(profileEndTime - profileStartTime) + m_ScrollOffset;
+            float scroll = ImGui::GetIO().MouseWheel;
+            if (glm::abs(scroll) > 0.0f)
+            {
+                if (ImGui::IsKeyDown(ImGuiKey_ModShift))
+                {
+                    m_ScrollOffset -= scroll * m_ScrollSpeed;
+                }
+                else
+                {
+                    float zoom = -glm::sign(scroll) * m_ZoomSpeed;
+                    float mouseCursorOffset = ImGui::GetIO().MousePos.x - ImGui::GetCurrentWindow()->Pos.x - initialCursorPosition.x;
+                    float initialPosition = mouseCursorOffset;
+                    uint64_t timePointUnderCursor = CalculateTimeFromPosition(mouseCursorOffset);
+
+                    m_Scale = glm::clamp(m_Scale + zoom, 0.001f, 1000.0f);
+
+                    float position = CalculatePositionFromTime(timePointUnderCursor);
+
+                    FLARE_CORE_INFO("Position: {} {} Time: {}", initialPosition, position, timePointUnderCursor);
+                    m_ScrollOffset += position - initialPosition;
+                }
+            }
+
+            m_ScrollOffset = glm::clamp(m_ScrollOffset, 0.0f, maxScrollOffset);
 
             for (size_t bufferIndex = 0; bufferIndex < buffersCount; bufferIndex++)
             {
-                bool stop = false;
                 const Profiler::RecordsBuffer& buffer = Profiler::GetRecordsBuffer(bufferIndex);
-
                 for (size_t i = 0; i < buffer.Size; i++)
                 {
                     const Profiler::Record& record = buffer.Records[i];
                     size_t recordIndex = i + bufferIndex * Profiler::GetRecordsCountPerBuffer();
 
-                    if (recordIndex >= frame.RecordsCount)
-                    {
-                        stop = true;
-                        break;
-                    }
-
                     size_t row = CalculateRecordRow(recordIndex, record);
                     ImVec2 offset = ImVec2(CalculatePositionFromTime(record.StartTime - profileStartTime), (m_BlockHeight + 2.0f) * ((float)row));
 
+                    Profiler::Record recordCopy = record;
+                    recordCopy.StartTime -= profileStartTime;
+                    recordCopy.EndTime -= profileStartTime;
+
                     if (printBlockInfo)
                     {
-                        FLARE_CORE_INFO("Row: {} Position: {} {} -> {}", row, offset.x,
+                        FLARE_CORE_INFO("{} Row: {} Position: {} {}ms -> {}ms", record.Name, row, offset.x,
                             (double)(record.StartTime - profileStartTime) / 1000000.0,
                             (double)(record.EndTime - profileStartTime) / 1000000.0);
                     }
 
-                    DrawRecordBlock(record, offset + initialCursorPosition, drawList);
+                    DrawRecordBlock(recordCopy, offset + initialCursorPosition, drawList);
                 }
-
-                if (stop)
-                    break;
             }
 
             printBlockInfo = false;
@@ -132,7 +155,7 @@ namespace Flare
         ImGui::Text("Frames recorded: %d", (uint32_t)Profiler::GetFrames().size());
 
         ImGui::DragFloat("Scale", &m_Scale);
-        ImGui::DragFloat("Scroll offset", &m_ScrollOffset);
+        ImGui::DragFloat("Offset", &m_ScrollOffset, 1.0f, -10000000.0f, 10000000.0f);
     }
 
     void ProfilerWindow::DrawRecordBlock(const Profiler::Record& record, ImVec2 position, ImDrawList* drawList)
@@ -213,5 +236,12 @@ namespace Flare
         double start = (double)time / 1000000.0;
         double position = (start) * (double)(m_WindowWidth * m_Scale);
         return (float)position - m_ScrollOffset;
+    }
+
+    uint64_t ProfilerWindow::CalculateTimeFromPosition(float position)
+    {
+        position += m_ScrollOffset;
+        double milliseconds = (double)(position) / (double)(m_WindowWidth * m_Scale);
+        return (uint64_t)(milliseconds * 1000000.0);
     }
 }

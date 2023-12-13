@@ -26,11 +26,14 @@ namespace Flare
         void DrawRecordBlock(const Profiler::Record& record, ImVec2 position, ImDrawList* drawList);
         size_t CalculateRecordRow(size_t currentRecordIndex, const Profiler::Record& currentRecord);
         float CalculatePositionFromTime(uint64_t time);
+        uint64_t CalculateTimeFromPosition(float position);
     private:
         static ProfilerWindow* s_Instance;
 
         std::vector<size_t> m_RecordsStack;
 
+        float m_ScrollSpeed;
+        float m_ZoomSpeed;
         float m_BlockHeight;
         float m_ScrollOffset;
         float m_Scale;
