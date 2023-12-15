@@ -3,6 +3,7 @@
 #include "FlareCore/Core.h"
 #include "FlareCore/UUID.h"
 #include "FlareCore/Serialization/Serialization.h"
+#include "FlareCore/Serialization/SerializationStream.h"
 
 #include <glm/glm.hpp>
 
@@ -104,7 +105,8 @@ namespace Flare
 
 #define FLARE_SERIALIZABLE_IMPL(typeName, ...) \
     Flare::SerializableObjectDescriptor typeName::_SerializationDescriptor( \
-        typeid(typeName).name(), sizeof(typeName), { __VA_ARGS__ });
+        typeid(typeName).name(), sizeof(typeName), { __VA_ARGS__ },         \
+        [](void* object, SerializationStream& stream) { Flare::TypeSerializer<typeName>().OnSerialize(*(typeName*)object, stream); });
 
 #define FLARE_PROPERTY(typeName, propertyName)                                                        \
     Flare::SerializablePropertyDescriptor(                                                            \

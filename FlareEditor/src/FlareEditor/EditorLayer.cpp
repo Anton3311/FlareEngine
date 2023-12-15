@@ -35,11 +35,156 @@
 
 #include "FlareCore/Profiler/Profiler.h"
 
+#include "FlareCore/Serialization/SerializationStream.h"
+#include "FlareCore/Serialization/Serializer.h"
+
 #include <imgui.h>
 #include <imgui_internal.h>
+#include <string_view>
 
 namespace Flare
 {
+    template<typename T>
+    struct SerializationDescriptorOf<std::vector<T>>
+    {
+        const SerializableObjectDescriptor* Descriptor()
+        {
+            return nullptr;
+        }
+    };
+
+    template<typename T>
+    struct TypeSerializer<std::vector<T>>
+    {
+        void OnSerialize(std::vector<T>& vector, SerializationStream& stream)
+        {
+            stream.Serialize("Values", SerializationValue(Span(vector.data(), vector.size())));
+        }
+    };
+
+    struct CustomType
+    {
+        FLARE_SERIALIZABLE;
+
+        int32_t IntValue;
+        float FloatValue;
+        glm::vec2 Vector;
+
+        std::vector<int32_t> Ints;
+    };
+
+    template<>
+    struct TypeSerializer<CustomType>
+    {
+        void OnSerialize(CustomType& value, SerializationStream& stream)
+        {
+            stream.Serialize("Int", SerializationValue(value.IntValue));
+            stream.Serialize("Float", SerializationValue(value.FloatValue));
+            stream.Serialize("Vector", SerializationValue(value.Vector));
+            stream.Serialize("Ints", SerializationValue(value.Ints));
+        }
+    };
+
+    FLARE_SERIALIZABLE_IMPL(CustomType);
+
+    template<>
+    struct TypeSerializer<TransformComponent>
+    {
+        void OnSerialize(TransformComponent& transform, SerializationStream& stream)
+        {
+            stream.Serialize("Position", SerializationValue(transform.Position));
+            stream.Serialize("Rotation", SerializationValue(transform.Rotation));
+            stream.Serialize("Scale", SerializationValue(transform.Scale));
+        }
+    };
+
+    class TestSerializationStream : public SerializationStreamBase
+    {
+        void SerializeInt32(SerializationValue<int32_t> value) override
+        {
+            FLARE_CORE_INFO("{}", value.IsArray);
+
+            for (size_t i = 0; i < value.Values.GetSize(); i++)
+            {
+                FLARE_CORE_INFO("\t{} = {}", i, value.Values[i]);
+            }
+        }
+
+        void SerializeUInt32(SerializationValue<uint32_t> value) override
+        {
+            FLARE_CORE_INFO("{}", value.IsArray);
+
+            for (size_t i = 0; i < value.Values.GetSize(); i++)
+            {
+                FLARE_CORE_INFO("\t{} = {}", i, value.Values[i]);
+            }
+        }
+
+        void SerializeFloat(SerializationValue<float> value) override
+        {
+            FLARE_CORE_INFO("{} {}", value.IsArray, value.Values[0]);
+        }
+
+        void BeginArray(std::string_view key) override
+        {
+            FLARE_CORE_INFO("BeginArray {}", key);
+        }
+
+        void EndArray() override
+        {
+            FLARE_CORE_INFO("End Array");
+        }
+
+        void PropertyKey(std::string_view key) override
+        {
+            FLARE_CORE_INFO("Property {}", key);
+        }
+
+        void BeginObject(std::string_view key, const SerializableObjectDescriptor* descriptor) override
+        {
+            FLARE_CORE_INFO("Begin Object {}", key);
+        }
+
+        void EndObject() override
+        {
+            FLARE_CORE_INFO("End Object");
+        }
+
+        void SerializeFloatVector(SerializationValue<float> value, uint32_t componentsCount) override
+        {
+            char componentNames[] = "xyzw";
+
+            FLARE_CORE_ASSERT(componentsCount <= 4);
+            FLARE_CORE_INFO("Vector{}", componentsCount);
+
+            for (uint32_t i = 0; i < componentsCount; i++)
+            {
+                FLARE_CORE_INFO("\t{} = {}", componentNames[i], value.Values[i]);
+            }
+        }
+
+        void SerializeIntVector(SerializationValue<int32_t> value, uint32_t componentsCount) override
+        {
+            char componentNames[] = "xyzw";
+
+            FLARE_CORE_ASSERT(componentsCount <= 4);
+            FLARE_CORE_INFO("Vector{}", componentsCount);
+
+            for (uint32_t i = 0; i < componentsCount; i++)
+            {
+                FLARE_CORE_INFO("\t{} = {}", componentNames[i], value.Values[i]);
+            }
+        }
+
+        void BeginArrayElementObject(const SerializableObjectDescriptor* descriptor) override
+        {
+        }
+
+        void EndArratElementObject() override
+        {
+        }
+    };
+
     EditorLayer* EditorLayer::s_Instance = nullptr;
 
     EditorLayer::EditorLayer()
@@ -72,6 +217,22 @@ namespace Flare
 
     void EditorLayer::OnAttach()
     {
+        Scope<TestSerializationStream> serializationStream = CreateScope<TestSerializationStream>();
+        SerializationStream stream(*serializationStream);
+
+        CustomType t = { 10, 0.54545f };
+        t.Ints = { 10, 11, 12, 13 };
+        stream.Serialize("Object", SerializationValue(t));
+
+        TransformComponent transform;
+        transform.Position = glm::vec3(8, 92, 1);
+        transform.Rotation = glm::vec3(-993, 12, 1);
+        transform.Scale = glm::vec3(10, 10, 20);
+
+        stream.Serialize("Transform", SerializationValue(transform));
+
+
+
         ShaderCacheManager::SetInstance(CreateScope<EditorShaderCache>());
 
         m_PropertiesWindow.OnAttach();

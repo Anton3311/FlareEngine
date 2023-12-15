@@ -86,16 +86,32 @@ namespace Flare
         const SerializableObjectDescriptor* ObjectType;
     };
 
+
+
+    class SerializationStream;
+
     class SerializableObjectDescriptor
     {
     public:
+        using SerializationCallback = void(*)(void* object, SerializationStream& stream);
+
         SerializableObjectDescriptor() = default;
         SerializableObjectDescriptor(std::string_view name, size_t size, const std::initializer_list<SerializablePropertyDescriptor>& properties)
-            : Name(name), Size(size), Properties(properties) {}
+            : Name(name), Size(size), Properties(properties), Callback(nullptr) {}
+
+        SerializableObjectDescriptor(std::string_view name,
+            size_t size,
+            const std::initializer_list<SerializablePropertyDescriptor>& properties,
+            SerializationCallback callback)
+            : Name(name),
+            Size(size),
+            Properties(properties),
+            Callback(callback) {}
     public:
         std::string Name;
         size_t Size;
         std::vector<SerializablePropertyDescriptor> Properties;
+        SerializationCallback Callback;
     };
 
     class SerializableObject;
