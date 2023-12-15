@@ -3,7 +3,8 @@
 #include "FlareCore/Core.h"
 #include "FlareCore/UUID.h"
 #include "FlareCore/Serialization/Serialization.h"
-#include "FlareCore/Serialization/SerializationStream.h"
+
+#include "FlareCore/Serialization/TypeSerializer.h"
 
 #include <glm/glm.hpp>
 

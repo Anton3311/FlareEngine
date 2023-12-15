@@ -44,24 +44,6 @@
 
 namespace Flare
 {
-    template<typename T>
-    struct SerializationDescriptorOf<std::vector<T>>
-    {
-        const SerializableObjectDescriptor* Descriptor()
-        {
-            return nullptr;
-        }
-    };
-
-    template<typename T>
-    struct TypeSerializer<std::vector<T>>
-    {
-        void OnSerialize(std::vector<T>& vector, SerializationStream& stream)
-        {
-            stream.Serialize("Values", SerializationValue(Span(vector.data(), vector.size())));
-        }
-    };
-
     struct CustomType
     {
         FLARE_SERIALIZABLE;
@@ -71,6 +53,7 @@ namespace Flare
         glm::vec2 Vector;
 
         std::vector<int32_t> Ints;
+        std::vector<glm::vec3> Vectors;
     };
 
     template<>
@@ -82,6 +65,7 @@ namespace Flare
             stream.Serialize("Float", SerializationValue(value.FloatValue));
             stream.Serialize("Vector", SerializationValue(value.Vector));
             stream.Serialize("Ints", SerializationValue(value.Ints));
+            stream.Serialize("Vectors", SerializationValue(value.Vectors));
         }
     };
 
@@ -125,9 +109,9 @@ namespace Flare
             FLARE_CORE_INFO("{} {}", value.IsArray, value.Values[0]);
         }
 
-        void BeginArray(std::string_view key) override
+        void BeginArray() override
         {
-            FLARE_CORE_INFO("BeginArray {}", key);
+            FLARE_CORE_INFO("Begin Array");
         }
 
         void EndArray() override
@@ -140,9 +124,9 @@ namespace Flare
             FLARE_CORE_INFO("Property {}", key);
         }
 
-        void BeginObject(std::string_view key, const SerializableObjectDescriptor* descriptor) override
+        void BeginObject(const SerializableObjectDescriptor* descriptor) override
         {
-            FLARE_CORE_INFO("Begin Object {}", key);
+            FLARE_CORE_INFO("Begin Object");
         }
 
         void EndObject() override
@@ -157,9 +141,18 @@ namespace Flare
             FLARE_CORE_ASSERT(componentsCount <= 4);
             FLARE_CORE_INFO("Vector{}", componentsCount);
 
-            for (uint32_t i = 0; i < componentsCount; i++)
+            for (size_t j = 0; j < value.Values.GetSize(); j += (size_t)componentsCount)
             {
-                FLARE_CORE_INFO("\t{} = {}", componentNames[i], value.Values[i]);
+                if (value.IsArray)
+                    FLARE_CORE_INFO("\t{} = ", j / (size_t)componentsCount);
+
+                for (uint32_t i = 0; i < componentsCount; i++)
+                {
+                    if (value.IsArray)
+                        FLARE_CORE_INFO("\t\t{} = {}", componentNames[i], value.Values[(size_t)i + j]);
+                    else
+                        FLARE_CORE_INFO("\t{} = {}", componentNames[i], value.Values[(size_t)i + j]);
+                }
             }
         }
 
@@ -170,18 +163,19 @@ namespace Flare
             FLARE_CORE_ASSERT(componentsCount <= 4);
             FLARE_CORE_INFO("Vector{}", componentsCount);
 
-            for (uint32_t i = 0; i < componentsCount; i++)
+            for (size_t j = 0; j < value.Values.GetSize(); j += (size_t)componentsCount)
             {
-                FLARE_CORE_INFO("\t{} = {}", componentNames[i], value.Values[i]);
+                if (value.IsArray)
+                    FLARE_CORE_INFO("\t{} = ", j / (size_t)componentsCount);
+
+                for (uint32_t i = 0; i < componentsCount; i++)
+                {
+                    if (value.IsArray)
+                        FLARE_CORE_INFO("\t\t{} = {}", componentNames[i], value.Values[(size_t)i + j]);
+                    else
+                        FLARE_CORE_INFO("\t{} = {}", componentNames[i], value.Values[(size_t)i + j]);
+                }
             }
-        }
-
-        void BeginArrayElementObject(const SerializableObjectDescriptor* descriptor) override
-        {
-        }
-
-        void EndArratElementObject() override
-        {
         }
     };
 
@@ -222,6 +216,7 @@ namespace Flare
 
         CustomType t = { 10, 0.54545f };
         t.Ints = { 10, 11, 12, 13 };
+        t.Vectors = { glm::vec3(1.0f), glm::vec3(2.0f), glm::vec3(-10.0f) };
         stream.Serialize("Object", SerializationValue(t));
 
         TransformComponent transform;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "FlareCore/Collections/Span.h"
+#include "FlareCore/Serialization/TypeSerializer.h"
 
 #include <stdint.h>
 #include <string_view>
@@ -15,6 +16,9 @@ namespace Flare
     {
         SerializationValue(T& value)
             : Values(Span(value)), IsArray(false) {}
+
+        SerializationValue(T* values, size_t size)
+            : Values(Span(values, size)), IsArray(true) {}
 
         SerializationValue(const Span<T>& values)
             : Values(values), IsArray(true) {}
@@ -38,31 +42,11 @@ namespace Flare
         virtual void SerializeFloatVector(SerializationValue<float> value, uint32_t componentsCount) = 0;
         virtual void SerializeIntVector(SerializationValue<int32_t> value, uint32_t componentsCount) = 0;
 
-        virtual void BeginArray(std::string_view key) = 0;
+        virtual void BeginArray() = 0;
         virtual void EndArray() = 0;
 
-        virtual void BeginObject(std::string_view key, const SerializableObjectDescriptor* descriptor) = 0;
+        virtual void BeginObject(const SerializableObjectDescriptor* descriptor) = 0;
         virtual void EndObject() = 0;
-
-        virtual void BeginArrayElementObject(const SerializableObjectDescriptor* descriptor) = 0;
-        virtual void EndArratElementObject() = 0;
-    };
-
-    class SerializationStream;
-
-    template<typename T>
-    struct TypeSerializer
-    {
-        void OnSerialize(T& value, SerializationStream& stream) {}
-    };
-
-    template<typename T>
-    struct SerializationDescriptorOf
-    {
-        constexpr const SerializableObjectDescriptor* Descriptor()
-        {
-            return &T::_SerializationDescriptor;
-        }
     };
 
     class SerializationStream
@@ -72,27 +56,34 @@ namespace Flare
             : m_Stream(stream) {}
 
         template<typename T>
-        inline void Serialize(std::string_view key, SerializationValue<T> value)
+        inline void Serialize(SerializationValue<T> value)
         {
             TypeSerializer<T> serializer;
             const SerializableObjectDescriptor* descriptor = SerializationDescriptorOf<T>().Descriptor();
             if (value.IsArray)
             {
-                m_Stream.BeginArray(key);
+                m_Stream.BeginArray();
                 for (size_t i = 0; i < value.Values.GetSize(); i++)
                 {
-                    m_Stream.BeginArrayElementObject(descriptor);
+                    m_Stream.BeginObject(descriptor);
                     serializer.OnSerialize(value.Values[i], *this);
-                    m_Stream.EndArratElementObject();
+                    m_Stream.EndObject();
                 }
                 m_Stream.EndArray();
             }
             else
             {
-                m_Stream.BeginObject(key, descriptor);
+                m_Stream.BeginObject(descriptor);
                 serializer.OnSerialize(value.Values[0], *this);
                 m_Stream.EndObject();
             }
+        }
+
+        template<typename T>
+        inline void Serialize(std::string_view key, SerializationValue<T> value)
+        {
+            m_Stream.PropertyKey(key);
+            Serialize(value);
         }
 
         inline SerializationStreamBase& GetInternalStream() { return m_Stream; }
@@ -102,9 +93,8 @@ namespace Flare
 
 #define IMPL_SERIALIZATION_WRAPPER(typeName, functionName)                                                         \
     template<> 																								       \
-    inline void SerializationStream::Serialize<typeName>(std::string_view key, SerializationValue<typeName> value) \
+    inline void SerializationStream::Serialize<typeName>(SerializationValue<typeName> value) \
     {                                                                                                              \
-        m_Stream.PropertyKey(key);                                                                                 \
         m_Stream.functionName(value);                                                                              \
     }
 
@@ -113,16 +103,49 @@ namespace Flare
     IMPL_SERIALIZATION_WRAPPER(float, SerializeFloat);
 
     template<>
-    inline void SerializationStream::Serialize<glm::vec2>(std::string_view key, SerializationValue<glm::vec2> value)
+    inline void SerializationStream::Serialize<glm::vec2>(SerializationValue<glm::vec2> value)
     {
-        m_Stream.PropertyKey(key);
-        m_Stream.SerializeFloatVector(SerializationValue(*glm::value_ptr(value.Values[0])), 2);
+        if (value.IsArray)
+        {
+            float* vectors = glm::value_ptr(value.Values[0]);
+            m_Stream.SerializeFloatVector(SerializationValue(vectors, value.Values.GetSize() * 3), 2);
+        }
+        else
+        {
+            m_Stream.SerializeFloatVector(SerializationValue(*glm::value_ptr(value.Values[0])), 2);
+        }
     }
 
     template<>
-    inline void SerializationStream::Serialize<glm::vec3>(std::string_view key, SerializationValue<glm::vec3> value)
+    inline void SerializationStream::Serialize<glm::vec3>(SerializationValue<glm::vec3> value)
     {
-        m_Stream.PropertyKey(key);
-        m_Stream.SerializeFloatVector(SerializationValue(*glm::value_ptr(value.Values[0])), 3);
+        if (value.IsArray)
+        {
+            float* vectors = glm::value_ptr(value.Values[0]);
+            m_Stream.SerializeFloatVector(SerializationValue(vectors, value.Values.GetSize() * 3), 3);
+        }
+        else
+        {
+            m_Stream.SerializeFloatVector(SerializationValue(*glm::value_ptr(value.Values[0])), 3);
+        }
     }
+
+    template<typename T>
+    struct SerializationDescriptorOf<std::vector<T>>
+    {
+        const SerializableObjectDescriptor* Descriptor()
+        {
+            return nullptr;
+        }
+    };
+
+    template<typename T>
+    struct TypeSerializer<std::vector<T>>
+    {
+        void OnSerialize(std::vector<T>& vector, SerializationStream& stream)
+        {
+            auto v = SerializationValue(vector.data(), vector.size());
+            stream.Serialize(SerializationValue(vector.data(), vector.size()));
+        }
+    };
 }
