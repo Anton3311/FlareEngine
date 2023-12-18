@@ -5,7 +5,11 @@
 
 #include <filesystem>
 
-#ifdef FLARE_DEBUG
+#if defined(FLARE_DEBUG) || defined(FLARE_RELEASE)
+	#define FLARE_ENABLE_ASSERTIONS
+#endif
+
+#ifdef FLARE_ENABLE_ASSERTIONS
 	#define FLARE_ASSERT_IMPL(type, condition, msg, ...) { if (!(condition)) { FLARE##type##ERROR(msg, __VA_ARGS__); FLARE_DEBUGBREAK; } }
 	#define FLARE_ASSERT_IMPL_WITH_MSG(type, condition, ...) FLARE_EXPEND_MACRO(FLARE_ASSERT_IMPL(type, condition, "Assertion failed: {0}", __VA_ARGS__))
 	#define FLARE_ASSERT_IMPL_WITHOUT_MSG(type, condition, ...) FLARE_EXPEND_MACRO(FLARE_ASSERT_IMPL(type, condition, "Assertion '{0}' failed at {1}:{2}", FALRE_STRINGIFY_MACRO(condition), std::filesystem::path(__FILE__).filename().string(), __LINE__))

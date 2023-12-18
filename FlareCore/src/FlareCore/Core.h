@@ -11,7 +11,7 @@
 	#endif
 #endif
 
-#ifdef FLARE_DEBUG
+#if defined(FLARE_DEBUG) || defined(FLARE_RELEASE)
 	#ifdef FLARE_PLATFORM_WINDOWS
 		#define FLARE_DEBUGBREAK __debugbreak()
 	#else
