@@ -56,6 +56,14 @@ namespace Flare
         std::vector<glm::ivec3> IntVectors;
     };
 
+    struct Outer
+    {
+        FLARE_SERIALIZABLE;
+
+        CustomType t;
+        int32_t a;
+    };
+
     template<>
     struct TypeSerializer<CustomType>
     {
@@ -71,6 +79,18 @@ namespace Flare
     };
 
     FLARE_SERIALIZABLE_IMPL(CustomType);
+
+    template<>
+    struct TypeSerializer<Outer>
+    {
+        void OnSerialize(Outer& value, SerializationStream& stream)
+        {
+            stream.Serialize("a", SerializationValue(value.a));
+            stream.Serialize("t", SerializationValue(value.t));
+        }
+    };
+
+    FLARE_SERIALIZABLE_IMPL(Outer);
 
     template<>
     struct TypeSerializer<TransformComponent>
@@ -222,14 +242,14 @@ namespace Flare
         CustomType t = { 10, 0.54545f };
         t.Ints = { 10, 11, 12, 13 };
         t.Vectors = { glm::vec3(1.0f), glm::vec3(2.0f), glm::vec3(-10.0f) };
-        stream.Serialize("Object", SerializationValue(t));
+        //stream.Serialize("Object", SerializationValue(t));
 
         TransformComponent transform;
         transform.Position = glm::vec3(8, 92, 1);
         transform.Rotation = glm::vec3(-993, 12, 1);
         transform.Scale = glm::vec3(10, 10, 20);
 
-        stream.Serialize("Transform", SerializationValue(transform));
+        //stream.Serialize("Transform", SerializationValue(transform));
 
 
 
@@ -372,28 +392,26 @@ namespace Flare
         {
             ImGui::Begin("Test");
 
-            if (EditorGUI::BeginPropertyGrid())
-            {
-                SerializationStream stream(*s_PropertiesRenderer);
+            SerializationStream stream(*s_PropertiesRenderer);
 
-                CustomType t;
-                t.IntValue = 10;
-                t.FloatValue = 0.54545f;
-                t.Ints = { 10, 11, 12, 13 };
-                t.Vector = glm::vec2(1000, -99);
-                t.Vectors = { glm::vec3(1.0f), glm::vec3(2.0f), glm::vec3(-10.0f) };
-                t.IntVectors = { glm::ivec3(1), glm::ivec3(2), glm::ivec3(-993294) };
+            Outer o;
+            o.a = 88;
+            CustomType& t = o.t;
 
-                TransformComponent transform;
-                transform.Position = glm::vec3(8, 92, 1);
-                transform.Rotation = glm::vec3(-993, 12, 1);
-                transform.Scale = glm::vec3(10, 10, 20);
+            t.IntValue = 10;
+            t.FloatValue = 0.54545f;
+            t.Ints = { 10, 11, 12, 13 };
+            t.Vector = glm::vec2(1000, -99);
+            t.Vectors = { glm::vec3(1.0f), glm::vec3(2.0f), glm::vec3(-10.0f) };
+            t.IntVectors = { glm::ivec3(1), glm::ivec3(2), glm::ivec3(-993294) };
 
-                stream.Serialize(SerializationValue(t));
-                stream.Serialize(SerializationValue(transform));
+            TransformComponent transform;
+            transform.Position = glm::vec3(8, 92, 1);
+            transform.Rotation = glm::vec3(-993, 12, 1);
+            transform.Scale = glm::vec3(10, 10, 20);
 
-                EditorGUI::EndPropertyGrid();
-            }
+            stream.Serialize("Outer", SerializationValue(o));
+            stream.Serialize("Transform", SerializationValue(transform));
 
             ImGui::End();
         }

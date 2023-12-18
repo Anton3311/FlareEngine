@@ -21,9 +21,24 @@ namespace Flare
         void BeginObject(const SerializableObjectDescriptor* descriptor) override;
         void EndObject() override;
     private:
-        bool CurrentTreeNodeState();
+        struct PropertiesTreeState
+        {
+            bool GridStarted;
+            bool Expanded;
+        };
+
+        void BeginTreeNode();
+        void EndTreeNode();
+
+        void BeginPropertiesGridIfNeeded();
+
+        inline PropertiesTreeState& CurrentTreeNodeState()
+        {
+            FLARE_CORE_ASSERT(m_TreeNodeStates.size() > 0);
+            return m_TreeNodeStates.back();
+        }
     private:
-        std::vector<bool> m_TreeNodeStates;
+        std::vector<PropertiesTreeState> m_TreeNodeStates;
         std::string_view m_CurrentPropertyName;
     };
 }

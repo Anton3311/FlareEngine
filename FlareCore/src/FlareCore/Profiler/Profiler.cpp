@@ -39,8 +39,6 @@ namespace Flare
 
     void Profiler::EndFrame()
     {
-        FLARE_CORE_ASSERT(!s_ProfilerData.Frames.empty());
-
         if (s_ProfilerData.RecordingStopRequested)
         {
             s_ProfilerData.IsRecording = false;
@@ -49,6 +47,8 @@ namespace Flare
 
         if (!s_ProfilerData.IsRecording)
             return;
+
+        FLARE_CORE_ASSERT(!s_ProfilerData.Frames.empty());
 
         Frame& currentFrame = s_ProfilerData.Frames.back();
 

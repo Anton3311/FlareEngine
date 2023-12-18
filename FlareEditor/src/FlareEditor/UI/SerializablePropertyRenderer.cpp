@@ -12,8 +12,10 @@ namespace Flare
 
     void SerializablePropertyRenderer::SerializeInt32(SerializationValue<int32_t> value)
     {
-        if (!CurrentTreeNodeState())
+        if (!CurrentTreeNodeState().Expanded)
             return;
+
+        BeginPropertiesGridIfNeeded();
 
         if (!value.IsArray)
             EditorGUI::PropertyName(m_CurrentPropertyName.data());
@@ -31,25 +33,30 @@ namespace Flare
 
     void SerializablePropertyRenderer::SerializeUInt32(SerializationValue<uint32_t> value)
     {
-        if (!CurrentTreeNodeState())
+        if (!CurrentTreeNodeState().Expanded)
             return;
+
+        BeginPropertiesGridIfNeeded();
+
         EditorGUI::UIntPropertyField(m_CurrentPropertyName.data(), value.Values[0]);
     }
 
     void SerializablePropertyRenderer::SerializeFloat(SerializationValue<float> value)
     {
-        if (!CurrentTreeNodeState())
+        if (!CurrentTreeNodeState().Expanded)
             return;
+
+        BeginPropertiesGridIfNeeded();
+
         EditorGUI::FloatPropertyField(m_CurrentPropertyName.data(), value.Values[0]);
     }
 
     void SerializablePropertyRenderer::SerializeFloatVector(SerializationValue<float> value, uint32_t componentsCount)
     {
-        size_t elementsCount = value.Values.GetSize() / (size_t)componentsCount;
-        FLARE_CORE_ASSERT(!m_IsArray && elementsCount == 1 || m_IsArray);
-
-        if (!CurrentTreeNodeState())
+        if (!CurrentTreeNodeState().Expanded)
             return;
+
+        BeginPropertiesGridIfNeeded();
 
         if (!value.IsArray)
             EditorGUI::PropertyName(m_CurrentPropertyName.data());
@@ -82,11 +89,10 @@ namespace Flare
 
     void SerializablePropertyRenderer::SerializeIntVector(SerializationValue<int32_t> value, uint32_t componentsCount)
     {
-        size_t elementsCount = value.Values.GetSize() / (size_t)componentsCount;
-        FLARE_CORE_ASSERT(!m_IsArray && elementsCount == 1 || m_IsArray);
-
-        if (!CurrentTreeNodeState())
+        if (!CurrentTreeNodeState().Expanded)
             return;
+
+        BeginPropertiesGridIfNeeded();
 
         if (!value.IsArray)
             EditorGUI::PropertyName(m_CurrentPropertyName.data());
@@ -119,47 +125,69 @@ namespace Flare
 
     void SerializablePropertyRenderer::BeginArray()
     {
-        EditorGUI::EndPropertyGrid();
-        
-        ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_SpanFullWidth;
-        bool open = ImGui::TreeNodeEx(m_CurrentPropertyName.data(), flags);
-
-        m_TreeNodeStates.push_back(open);
-        if (open)
-        {
-            EditorGUI::BeginPropertyGrid();
-        }
+        BeginTreeNode();
     }
 
     void SerializablePropertyRenderer::EndArray()
     {
-        FLARE_CORE_ASSERT(m_TreeNodeStates.size() > 0);
-
-        if (m_TreeNodeStates.back())
-        {
-            EditorGUI::EndPropertyGrid();
-            ImGui::TreePop();
-        }
-
-        m_TreeNodeStates.pop_back();
-        EditorGUI::BeginPropertyGrid();
+        EndTreeNode();
     }
 
     void SerializablePropertyRenderer::BeginObject(const SerializableObjectDescriptor* descriptor)
     {
+        BeginTreeNode();
     }
 
     void SerializablePropertyRenderer::EndObject()
     {
+        EndTreeNode();
     }
 
-    bool SerializablePropertyRenderer::CurrentTreeNodeState()
+    void SerializablePropertyRenderer::BeginTreeNode()
     {
         if (m_TreeNodeStates.size() > 0)
         {
-            return m_TreeNodeStates.back();
+            PropertiesTreeState& currentState = CurrentTreeNodeState();
+            if (currentState.GridStarted)
+            {
+                EditorGUI::EndPropertyGrid();
+                currentState.GridStarted = false;
+            }
         }
 
-        return true;
+        ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_SpanFullWidth;
+        bool expanded = false;
+        if (m_TreeNodeStates.size() == 0 || CurrentTreeNodeState().Expanded)
+        {
+            expanded = ImGui::TreeNodeEx(m_CurrentPropertyName.data(), flags);
+        }
+
+        auto& state = m_TreeNodeStates.emplace_back();
+        state.Expanded = expanded;
+        state.GridStarted = false;
+    }
+
+    void SerializablePropertyRenderer::EndTreeNode()
+    {
+        PropertiesTreeState& state = CurrentTreeNodeState();
+
+        if (state.GridStarted)
+            EditorGUI::EndPropertyGrid();
+
+        if (state.Expanded)
+            ImGui::TreePop();
+
+        m_TreeNodeStates.pop_back();
+    }
+
+    void SerializablePropertyRenderer::BeginPropertiesGridIfNeeded()
+    {
+        PropertiesTreeState& state = CurrentTreeNodeState();
+        
+        if (!state.GridStarted)
+        {
+            EditorGUI::BeginPropertyGrid();
+            state.GridStarted = true;
+        }
     }
 }

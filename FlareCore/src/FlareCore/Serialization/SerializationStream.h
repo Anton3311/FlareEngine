@@ -73,9 +73,13 @@ namespace Flare
             }
             else
             {
-                m_Stream.BeginObject(descriptor);
+                if (descriptor)
+                    m_Stream.BeginObject(descriptor);
+
                 serializer.OnSerialize(value.Values[0], *this);
-                m_Stream.EndObject();
+
+                if (descriptor)
+                    m_Stream.EndObject();
             }
         }
 
