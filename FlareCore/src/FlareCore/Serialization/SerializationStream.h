@@ -91,11 +91,13 @@ namespace Flare
         SerializationStreamBase& m_Stream;
     };
 
-#define IMPL_SERIALIZATION_WRAPPER(typeName, functionName)                                                         \
-    template<> 																								       \
-    inline void SerializationStream::Serialize<typeName>(SerializationValue<typeName> value) \
-    {                                                                                                              \
-        m_Stream.functionName(value);                                                                              \
+#define IMPL_SERIALIZATION_WRAPPER(typeName, functionName)                                    \
+    template<> 																				  \
+    inline void SerializationStream::Serialize<typeName>(SerializationValue<typeName> value)  \
+    {                                                                                         \
+        if (value.IsArray) m_Stream.BeginArray();                                             \
+        m_Stream.functionName(value);                                                         \
+        if (value.IsArray) m_Stream.EndArray();                                               \
     }
 
     IMPL_SERIALIZATION_WRAPPER(int32_t, SerializeInt32);
@@ -103,12 +105,46 @@ namespace Flare
     IMPL_SERIALIZATION_WRAPPER(float, SerializeFloat);
 
     template<>
+    inline void SerializationStream::Serialize<glm::ivec2>(SerializationValue<glm::ivec2> value)
+    {
+        if (value.IsArray)
+        {
+            m_Stream.BeginArray();
+            int32_t* vectors = glm::value_ptr(value.Values[0]);
+            m_Stream.SerializeIntVector(SerializationValue(vectors, value.Values.GetSize() * 2), 2);
+            m_Stream.EndArray();
+        }
+        else
+        {
+            m_Stream.SerializeIntVector(SerializationValue(*glm::value_ptr(value.Values[0])), 2);
+        }
+    }
+
+    template<>
+    inline void SerializationStream::Serialize<glm::ivec3>(SerializationValue<glm::ivec3> value)
+    {
+        if (value.IsArray)
+        {
+            m_Stream.BeginArray();
+            int32_t* vectors = glm::value_ptr(value.Values[0]);
+            m_Stream.SerializeIntVector(SerializationValue(vectors, value.Values.GetSize() * 3), 3);
+            m_Stream.EndArray();
+        }
+        else
+        {
+            m_Stream.SerializeIntVector(SerializationValue(*glm::value_ptr(value.Values[0])), 3);
+        }
+    }
+
+    template<>
     inline void SerializationStream::Serialize<glm::vec2>(SerializationValue<glm::vec2> value)
     {
         if (value.IsArray)
         {
+            m_Stream.BeginArray();
             float* vectors = glm::value_ptr(value.Values[0]);
-            m_Stream.SerializeFloatVector(SerializationValue(vectors, value.Values.GetSize() * 3), 2);
+            m_Stream.SerializeFloatVector(SerializationValue(vectors, value.Values.GetSize() * 2), 2);
+            m_Stream.EndArray();
         }
         else
         {
@@ -121,8 +157,10 @@ namespace Flare
     {
         if (value.IsArray)
         {
+            m_Stream.BeginArray();
             float* vectors = glm::value_ptr(value.Values[0]);
             m_Stream.SerializeFloatVector(SerializationValue(vectors, value.Values.GetSize() * 3), 3);
+            m_Stream.EndArray();
         }
         else
         {
@@ -144,7 +182,6 @@ namespace Flare
     {
         void OnSerialize(std::vector<T>& vector, SerializationStream& stream)
         {
-            auto v = SerializationValue(vector.data(), vector.size());
             stream.Serialize(SerializationValue(vector.data(), vector.size()));
         }
     };

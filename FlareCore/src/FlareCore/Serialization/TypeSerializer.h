@@ -3,6 +3,7 @@
 namespace Flare
 {
     class SerializationStream;
+    class SerializableObjectDescriptor;
 
     template<typename T>
     struct TypeSerializer

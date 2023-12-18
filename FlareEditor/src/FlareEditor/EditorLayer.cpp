@@ -1,5 +1,9 @@
 #include "EditorLayer.h"
 
+#include "FlareCore/Profiler/Profiler.h"
+#include "FlareCore/Serialization/SerializationStream.h"
+#include "FlareCore/Serialization/Serializer.h"
+
 #include "Flare.h"
 #include "Flare/Core/Application.h"
 #include "Flare/Renderer2D/Renderer2D.h"
@@ -28,15 +32,10 @@
 #include "FlareEditor/UI/EditorTitleBar.h"
 #include "FlareEditor/UI/ProjectSettingsWindow.h"
 #include "FlareEditor/UI/ECS/ECSInspector.h"
-
 #include "FlareEditor/UI/PrefabEditor.h"
+#include "FlareEditor/UI/SerializablePropertyRenderer.h"
 
 #include "FlareEditor/Scripting/BuildSystem/BuildSystem.h"
-
-#include "FlareCore/Profiler/Profiler.h"
-
-#include "FlareCore/Serialization/SerializationStream.h"
-#include "FlareCore/Serialization/Serializer.h"
 
 #include <imgui.h>
 #include <imgui_internal.h>
@@ -54,6 +53,7 @@ namespace Flare
 
         std::vector<int32_t> Ints;
         std::vector<glm::vec3> Vectors;
+        std::vector<glm::ivec3> IntVectors;
     };
 
     template<>
@@ -66,6 +66,7 @@ namespace Flare
             stream.Serialize("Vector", SerializationValue(value.Vector));
             stream.Serialize("Ints", SerializationValue(value.Ints));
             stream.Serialize("Vectors", SerializationValue(value.Vectors));
+            stream.Serialize("IntVectors", SerializationValue(value.IntVectors));
         }
     };
 
@@ -209,8 +210,12 @@ namespace Flare
         s_Instance = nullptr;
     }
 
+    static Scope<SerializablePropertyRenderer> s_PropertiesRenderer;
+
     void EditorLayer::OnAttach()
     {
+        s_PropertiesRenderer = CreateScope<SerializablePropertyRenderer>();
+
         Scope<TestSerializationStream> serializationStream = CreateScope<TestSerializationStream>();
         SerializationStream stream(*serializationStream);
 
@@ -363,6 +368,35 @@ namespace Flare
         ImGui::DockSpace(dockspaceId, ImVec2(0.0f, 0.0f), dockspaceFlags);
 
         m_TitleBar.OnRenderImGui();
+
+        {
+            ImGui::Begin("Test");
+
+            if (EditorGUI::BeginPropertyGrid())
+            {
+                SerializationStream stream(*s_PropertiesRenderer);
+
+                CustomType t;
+                t.IntValue = 10;
+                t.FloatValue = 0.54545f;
+                t.Ints = { 10, 11, 12, 13 };
+                t.Vector = glm::vec2(1000, -99);
+                t.Vectors = { glm::vec3(1.0f), glm::vec3(2.0f), glm::vec3(-10.0f) };
+                t.IntVectors = { glm::ivec3(1), glm::ivec3(2), glm::ivec3(-993294) };
+
+                TransformComponent transform;
+                transform.Position = glm::vec3(8, 92, 1);
+                transform.Rotation = glm::vec3(-993, 12, 1);
+                transform.Scale = glm::vec3(10, 10, 20);
+
+                stream.Serialize(SerializationValue(t));
+                stream.Serialize(SerializationValue(transform));
+
+                EditorGUI::EndPropertyGrid();
+            }
+
+            ImGui::End();
+        }
 
         {
             ImGui::Begin("Shadows");
