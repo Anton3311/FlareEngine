@@ -107,7 +107,7 @@ namespace Flare
     // YAML Deserializer
 
     YAMLDeserializer::YAMLDeserializer(const YAML::Node& root)
-        : m_Root(root)
+        : m_Root(root), m_Skip(false), m_SkippedNodeDepth(SIZE_MAX), m_CurrentNodeDepth(0)
     {
         m_NodesStack.push_back(m_Root);
     }
@@ -117,64 +117,50 @@ namespace Flare
         m_CurrentPropertyKey = key;
     }
 
-    void YAMLDeserializer::SerializeInt32(SerializationValue<int32_t> value)
+    template<typename T>
+    void SerializeValue(SerializationValue<T>& value, const YAML::Node& currentNode, const std::string& currentPropertyName)
     {
         if (value.IsArray)
         {
             size_t index = 0;
-            for (const YAML::Node& node : CurrentNode())
+            for (const YAML::Node& node : currentNode)
             {
-                if (index > value.Values.GetSize())
+                if (index >= value.Values.GetSize())
                     break;
 
-                value.Values[index] = node.as<int32_t>();
+                value.Values[index] = node.as<T>();
+                index++;
             }
         }
         else
         {
-            if (YAML::Node node = CurrentNode()[m_CurrentPropertyKey])
-                value.Values[0] = node.as<int32_t>();
+            if (YAML::Node node = currentNode[currentPropertyName])
+                value.Values[0] = node.as<T>();
         }
+    }
+
+    void YAMLDeserializer::SerializeInt32(SerializationValue<int32_t> value)
+    {
+        if (m_Skip)
+            return;
+
+        SerializeValue(value, CurrentNode(), m_CurrentPropertyKey);
     }
 
     void YAMLDeserializer::SerializeUInt32(SerializationValue<uint32_t> value)
     {
-        if (value.IsArray)
-        {
-            size_t index = 0;
-            for (const YAML::Node& node : CurrentNode())
-            {
-                if (index > value.Values.GetSize())
-                    break;
+        if (m_Skip)
+            return;
 
-                value.Values[index] = node.as<uint32_t>();
-            }
-        }
-        else
-        {
-            if (YAML::Node node = CurrentNode()[m_CurrentPropertyKey])
-                value.Values[0] = node.as<uint32_t>();
-        }
+        SerializeValue(value, CurrentNode(), m_CurrentPropertyKey);
     }
 
     void YAMLDeserializer::SerializeFloat(SerializationValue<float> value)
     {
-        if (value.IsArray)
-        {
-            size_t index = 0;
-            for (const YAML::Node& node : CurrentNode())
-            {
-                if (index > value.Values.GetSize())
-                    break;
+        if (m_Skip)
+            return;
 
-                value.Values[index] = node.as<float>();
-            }
-        }
-        else
-        {
-            if (YAML::Node node = CurrentNode()[m_CurrentPropertyKey])
-                value.Values[0] = node.as<float>();
-        }
+        SerializeValue(value, CurrentNode(), m_CurrentPropertyKey);
     }
 
     template<typename T>
@@ -221,50 +207,77 @@ namespace Flare
         {
             SerializeSingleVector<T>(&value.Values[vectorIndex], node, (size_t)componentsCount);
             vectorIndex += (size_t)componentsCount;
+
+            if (vectorIndex >= value.Values.GetSize())
+                break;
         }
     }
 
     void YAMLDeserializer::SerializeFloatVector(SerializationValue<float> value, uint32_t componentsCount)
     {
+        if (m_Skip)
+            return;
+
         SerializeVector<float>(value, componentsCount, CurrentNode(), m_CurrentPropertyKey);
     }
 
     void YAMLDeserializer::SerializeIntVector(SerializationValue<int32_t> value, uint32_t componentsCount)
     {
+        if (m_Skip)
+            return;
+
         SerializeVector<int32_t>(value, componentsCount, CurrentNode(), m_CurrentPropertyKey);
     }
 
     void YAMLDeserializer::BeginArray()
     {
-        if (YAML::Node node = CurrentNode()[m_CurrentPropertyKey])
-        {
-            m_NodesStack.push_back(node);
-        }
-        else
-        {
-            // TODO: skip parsing this object
-        }
+        BeginNode();
     }
 
     void YAMLDeserializer::EndArray()
     {
-        m_NodesStack.pop_back();
+        EndNode();
     }
 
     void YAMLDeserializer::BeginObject(const SerializableObjectDescriptor* descriptor)
     {
-        if (YAML::Node node = CurrentNode()[m_CurrentPropertyKey])
-        {
-            m_NodesStack.push_back(node);
-        }
-        else
-        {
-            // TODO: skip parsing this object
-        }
+        BeginNode();
     }
 
     void YAMLDeserializer::EndObject()
     {
+        EndNode();
+    }
+
+    void YAMLDeserializer::BeginNode()
+    {
+        m_CurrentNodeDepth++;
+        if (m_Skip)
+            return;
+
+        if (YAML::Node node = CurrentNode()[m_CurrentPropertyKey])
+        {
+            m_NodesStack.push_back(node);
+        }
+        else if (!m_Skip)
+        {
+            m_SkippedNodeDepth = m_CurrentNodeDepth;
+            m_Skip = true;
+        }
+    }
+
+    void YAMLDeserializer::EndNode()
+    {
+        m_CurrentNodeDepth--;
+        if (m_SkippedNodeDepth == m_CurrentNodeDepth)
+        {
+            m_SkippedNodeDepth = SIZE_MAX;
+            m_Skip = false;
+        }
+
+        if (m_Skip)
+            return;
+
         m_NodesStack.pop_back();
     }
 }
