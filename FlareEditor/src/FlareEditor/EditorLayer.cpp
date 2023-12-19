@@ -23,6 +23,7 @@
 #include "FlarePlatform/Events.h"
 
 #include "FlareEditor/Serialization/SceneSerializer.h"
+#include "FlareEditor/Serialization/YAMLSerialization.h"
 #include "FlareEditor/AssetManager/EditorAssetManager.h"
 #include "FlareEditor/AssetManager/EditorShaderCache.h"
 
@@ -394,16 +395,23 @@ namespace Flare
 
             SerializationStream stream(*s_PropertiesRenderer);
 
-            Outer o;
-            o.a = 88;
-            CustomType& t = o.t;
+            static Outer o;
+            static CustomType& t = o.t;
+            static bool init = false;
 
-            t.IntValue = 10;
-            t.FloatValue = 0.54545f;
-            t.Ints = { 10, 11, 12, 13 };
-            t.Vector = glm::vec2(1000, -99);
-            t.Vectors = { glm::vec3(1.0f), glm::vec3(2.0f), glm::vec3(-10.0f) };
-            t.IntVectors = { glm::ivec3(1), glm::ivec3(2), glm::ivec3(-993294) };
+            if (!init)
+            {
+                o.a = 88;
+
+                t.IntValue = 10;
+                t.FloatValue = 0.54545f;
+                t.Ints = { 10, 11, 12, 13 };
+                t.Vector = glm::vec2(1000, -99);
+                t.Vectors = { glm::vec3(1.0f), glm::vec3(2.0f), glm::vec3(-10.0f) };
+                t.IntVectors = { glm::ivec3(1), glm::ivec3(2), glm::ivec3(-993294) };
+
+                init = true;
+            }
 
             TransformComponent transform;
             transform.Position = glm::vec3(8, 92, 1);
@@ -412,6 +420,33 @@ namespace Flare
 
             stream.Serialize("Outer", SerializationValue(o));
             stream.Serialize("Transform", SerializationValue(transform));
+
+            if (ImGui::Button("To YAML"))
+            {
+                YAML::Emitter emitter;
+                emitter << YAML::BeginMap;
+                Scope<YAMLSerializer> serializer = CreateScope<YAMLSerializer>(emitter);
+                SerializationStream stream(*serializer);
+
+                stream.Serialize("Outer", SerializationValue(o));
+                stream.Serialize("Transform", SerializationValue(transform));
+                emitter << YAML::EndMap;
+
+                FLARE_CORE_INFO(emitter.c_str());
+            }
+
+            static char s_Buffer[2048] = { 0 };
+            ImGui::InputTextMultiline("YAML", s_Buffer, 2048, ImVec2(600, 400));
+
+            if (ImGui::Button("From YAML"))
+            {
+                YAML::Node root = YAML::Load(s_Buffer);
+                Scope<YAMLDeserializer> serializer = CreateScope<YAMLDeserializer>(root);
+                SerializationStream stream(*serializer);
+
+                stream.Serialize("Outer", SerializationValue(o));
+                stream.Serialize("Transform", SerializationValue(transform));
+            }
 
             ImGui::End();
         }
