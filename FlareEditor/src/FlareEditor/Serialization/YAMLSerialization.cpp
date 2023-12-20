@@ -84,6 +84,14 @@ namespace Flare
         }
     }
 
+    void YAMLSerializer::SerializeString(SerializationValue<std::string> value)
+    {
+        for (size_t i = 0; i < value.Values.GetSize(); i++)
+        {
+            m_Emitter << YAML::Value << value.Values[i];
+        }
+    }
+
     void YAMLSerializer::BeginArray()
     {
         m_Emitter << YAML::BeginSeq;
@@ -118,7 +126,7 @@ namespace Flare
     }
 
     template<typename T>
-    void SerializeValue(SerializationValue<T>& value, const YAML::Node& currentNode, const std::string& currentPropertyName)
+    void DeserializeValue(SerializationValue<T>& value, const YAML::Node& currentNode, const std::string& currentPropertyName)
     {
         if (value.IsArray)
         {
@@ -144,7 +152,7 @@ namespace Flare
         if (m_Skip)
             return;
 
-        SerializeValue(value, CurrentNode(), m_CurrentPropertyKey);
+        DeserializeValue(value, CurrentNode(), m_CurrentPropertyKey);
     }
 
     void YAMLDeserializer::SerializeUInt32(SerializationValue<uint32_t> value)
@@ -152,7 +160,7 @@ namespace Flare
         if (m_Skip)
             return;
 
-        SerializeValue(value, CurrentNode(), m_CurrentPropertyKey);
+        DeserializeValue(value, CurrentNode(), m_CurrentPropertyKey);
     }
 
     void YAMLDeserializer::SerializeFloat(SerializationValue<float> value)
@@ -160,11 +168,11 @@ namespace Flare
         if (m_Skip)
             return;
 
-        SerializeValue(value, CurrentNode(), m_CurrentPropertyKey);
+        DeserializeValue(value, CurrentNode(), m_CurrentPropertyKey);
     }
 
     template<typename T>
-    static void SerializeSingleVector(T* destination, const YAML::Node& node, size_t componentsCount)
+    static void DeserializeSingleVector(T* destination, const YAML::Node& node, size_t componentsCount)
     {
         switch (componentsCount)
         {
@@ -193,19 +201,19 @@ namespace Flare
     }
 
     template<typename T>
-    static void SerializeVector(SerializationValue<T>& value, uint32_t componentsCount, YAML::Node& currentNode, const std::string& currentKey)
+    static void DeserializeVector(SerializationValue<T>& value, uint32_t componentsCount, YAML::Node& currentNode, const std::string& currentKey)
     {
         if (!value.IsArray)
         {
             const auto& node = currentNode[currentKey];
-            SerializeSingleVector<T>(&value.Values[0], node, (size_t)componentsCount);
+            DeserializeSingleVector<T>(&value.Values[0], node, (size_t)componentsCount);
             return;
         }
 
         size_t vectorIndex = 0;
         for (const YAML::Node& node : currentNode)
         {
-            SerializeSingleVector<T>(&value.Values[vectorIndex], node, (size_t)componentsCount);
+            DeserializeSingleVector<T>(&value.Values[vectorIndex], node, (size_t)componentsCount);
             vectorIndex += (size_t)componentsCount;
 
             if (vectorIndex >= value.Values.GetSize())
@@ -218,7 +226,7 @@ namespace Flare
         if (m_Skip)
             return;
 
-        SerializeVector<float>(value, componentsCount, CurrentNode(), m_CurrentPropertyKey);
+        DeserializeVector<float>(value, componentsCount, CurrentNode(), m_CurrentPropertyKey);
     }
 
     void YAMLDeserializer::SerializeIntVector(SerializationValue<int32_t> value, uint32_t componentsCount)
@@ -226,7 +234,12 @@ namespace Flare
         if (m_Skip)
             return;
 
-        SerializeVector<int32_t>(value, componentsCount, CurrentNode(), m_CurrentPropertyKey);
+        DeserializeVector<int32_t>(value, componentsCount, CurrentNode(), m_CurrentPropertyKey);
+    }
+
+    void YAMLDeserializer::SerializeString(SerializationValue<std::string> value)
+    {
+        DeserializeValue<std::string>(value, CurrentNode(), m_CurrentPropertyKey);
     }
 
     void YAMLDeserializer::BeginArray()

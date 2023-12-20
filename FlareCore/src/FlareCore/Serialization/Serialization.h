@@ -168,6 +168,8 @@ namespace Flare
             return SerializableObject((uint8_t*)&value, FLARE_SERIALIZATION_DESCRIPTOR_OF(T));
         }
 
+        inline void* GetBuffer() { return m_Buffer; }
+
         inline SerializableProperty PropertyAt(size_t index)
         {
             FLARE_CORE_ASSERT(index < Descriptor.Properties.size());

@@ -42,6 +42,8 @@ namespace Flare
         virtual void SerializeFloatVector(SerializationValue<float> value, uint32_t componentsCount) = 0;
         virtual void SerializeIntVector(SerializationValue<int32_t> value, uint32_t componentsCount) = 0;
 
+        virtual void SerializeString(SerializationValue<std::string> value) = 0;
+
         virtual void BeginArray() = 0;
         virtual void EndArray() = 0;
 
@@ -107,6 +109,19 @@ namespace Flare
     IMPL_SERIALIZATION_WRAPPER(int32_t, SerializeInt32);
     IMPL_SERIALIZATION_WRAPPER(uint32_t, SerializeUInt32);
     IMPL_SERIALIZATION_WRAPPER(float, SerializeFloat);
+
+    template<>
+    inline void SerializationStream::Serialize<std::string>(SerializationValue<std::string> value)
+    {
+        if (value.IsArray)
+        {
+            m_Stream.BeginArray();
+            m_Stream.SerializeString(value);
+            m_Stream.EndArray();
+        }
+        else
+            m_Stream.SerializeString(value);
+    }
 
     template<>
     inline void SerializationStream::Serialize<glm::ivec2>(SerializationValue<glm::ivec2> value)

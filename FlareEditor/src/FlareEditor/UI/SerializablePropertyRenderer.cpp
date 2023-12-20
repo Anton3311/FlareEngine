@@ -38,7 +38,18 @@ namespace Flare
 
         BeginPropertiesGridIfNeeded();
 
-        EditorGUI::UIntPropertyField(m_CurrentPropertyName.data(), value.Values[0]);
+        if (!value.IsArray)
+            EditorGUI::PropertyName(m_CurrentPropertyName.data());
+
+        for (size_t i = 0; i < value.Values.GetSize(); i++)
+        {
+            if (value.IsArray)
+                EditorGUI::PropertyIndex(i);
+
+            ImGui::PushID(&value.Values[i]);
+            ImGui::DragScalar("", ImGuiDataType_U32, &value.Values[i]);
+            ImGui::PopID();
+        }
     }
 
     void SerializablePropertyRenderer::SerializeFloat(SerializationValue<float> value)
@@ -47,8 +58,19 @@ namespace Flare
             return;
 
         BeginPropertiesGridIfNeeded();
+        
+        if (!value.IsArray)
+            EditorGUI::PropertyName(m_CurrentPropertyName.data());
 
-        EditorGUI::FloatPropertyField(m_CurrentPropertyName.data(), value.Values[0]);
+        for (size_t i = 0; i < value.Values.GetSize(); i++)
+        {
+            if (value.IsArray)
+                EditorGUI::PropertyIndex(i);
+
+            ImGui::PushID(&value.Values[i]);
+            ImGui::DragFloat("", &value.Values[i]);
+            ImGui::PopID();
+        }
     }
 
     void SerializablePropertyRenderer::SerializeFloatVector(SerializationValue<float> value, uint32_t componentsCount)
@@ -120,6 +142,25 @@ namespace Flare
             }
 
             ImGui::PopID();
+        }
+    }
+
+    void SerializablePropertyRenderer::SerializeString(SerializationValue<std::string> value)
+    {
+        if (!CurrentTreeNodeState().Expanded)
+            return;
+
+        BeginPropertiesGridIfNeeded();
+
+        if (!value.IsArray)
+            EditorGUI::PropertyName(m_CurrentPropertyName.data());
+
+        for (size_t i = 0; i < value.Values.GetSize(); i++)
+        {
+            if (value.IsArray)
+                EditorGUI::PropertyIndex(i);
+            
+            EditorGUI::TextField(value.Values[i]);
         }
     }
 
