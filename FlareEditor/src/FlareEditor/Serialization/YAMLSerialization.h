@@ -6,7 +6,7 @@
 
 namespace Flare
 {
-    class YAMLSerializer : public SerializationStreamBase
+    class YAMLSerializer : public SerializationStream
     {
     public:
         YAMLSerializer(YAML::Emitter& emitter);
@@ -26,7 +26,7 @@ namespace Flare
         YAML::Emitter& m_Emitter;
     };
 
-    class YAMLDeserializer : public SerializationStreamBase
+    class YAMLDeserializer : public SerializationStream
     {
     public:
         YAMLDeserializer(const YAML::Node& root);

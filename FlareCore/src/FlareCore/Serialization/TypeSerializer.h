@@ -14,7 +14,7 @@ namespace Flare
     template<typename T>
     struct SerializationDescriptorOf
     {
-        constexpr const SerializableObjectDescriptor* Descriptor()
+        static constexpr const SerializableObjectDescriptor* Descriptor()
         {
             return &T::_SerializationDescriptor;
         }

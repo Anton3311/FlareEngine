@@ -28,8 +28,7 @@ namespace Flare
     };
 
     class SerializableObjectDescriptor;
-
-    class SerializationStreamBase
+    class SerializationStream
     {
     public:
         virtual void PropertyKey(std::string_view key) = 0;
@@ -49,13 +48,6 @@ namespace Flare
 
         virtual void BeginObject(const SerializableObjectDescriptor* descriptor) = 0;
         virtual void EndObject() = 0;
-    };
-
-    class SerializationStream
-    {
-    public:
-        SerializationStream(SerializationStreamBase& stream)
-            : m_Stream(stream) {}
 
         template<typename T>
         inline void Serialize(SerializationValue<T> value)
@@ -64,46 +56,52 @@ namespace Flare
             const SerializableObjectDescriptor* descriptor = SerializationDescriptorOf<T>().Descriptor();
             if (value.IsArray)
             {
-                m_Stream.BeginArray();
-                for (size_t i = 0; i < value.Values.GetSize(); i++)
+                BeginArray();
+                if (descriptor != nullptr)
                 {
-                    m_Stream.BeginObject(descriptor);
-                    serializer.OnSerialize(value.Values[i], *this);
-                    m_Stream.EndObject();
+                    for (size_t i = 0; i < value.Values.GetSize(); i++)
+                    {
+                        BeginObject(descriptor);
+                        serializer.OnSerialize(value.Values[i], *this);
+                        EndObject();
+                    }
                 }
-                m_Stream.EndArray();
+                else
+                {
+                    for (size_t i = 0; i < value.Values.GetSize(); i++)
+                    {
+                        serializer.OnSerialize(value.Values[i], *this);
+                    }
+                }
+                EndArray();
             }
             else
             {
                 if (descriptor)
-                    m_Stream.BeginObject(descriptor);
+                    BeginObject(descriptor);
 
                 serializer.OnSerialize(value.Values[0], *this);
 
                 if (descriptor)
-                    m_Stream.EndObject();
+                    EndObject();
             }
         }
 
         template<typename T>
         inline void Serialize(std::string_view key, SerializationValue<T> value)
         {
-            m_Stream.PropertyKey(key);
+            PropertyKey(key);
             Serialize(value);
         }
-
-        inline SerializationStreamBase& GetInternalStream() { return m_Stream; }
-    private:
-        SerializationStreamBase& m_Stream;
     };
 
 #define IMPL_SERIALIZATION_WRAPPER(typeName, functionName)                                    \
     template<> 																				  \
     inline void SerializationStream::Serialize<typeName>(SerializationValue<typeName> value)  \
     {                                                                                         \
-        if (value.IsArray) m_Stream.BeginArray();                                             \
-        m_Stream.functionName(value);                                                         \
-        if (value.IsArray) m_Stream.EndArray();                                               \
+        if (value.IsArray) BeginArray();                                                      \
+        functionName(value);                                                                  \
+        if (value.IsArray) EndArray();                                                        \
     }
 
     IMPL_SERIALIZATION_WRAPPER(int32_t, SerializeInt32);
@@ -115,12 +113,12 @@ namespace Flare
     {
         if (value.IsArray)
         {
-            m_Stream.BeginArray();
-            m_Stream.SerializeString(value);
-            m_Stream.EndArray();
+            BeginArray();
+            SerializeString(value);
+            EndArray();
         }
         else
-            m_Stream.SerializeString(value);
+            SerializeString(value);
     }
 
     template<>
@@ -128,14 +126,14 @@ namespace Flare
     {
         if (value.IsArray)
         {
-            m_Stream.BeginArray();
+            BeginArray();
             int32_t* vectors = glm::value_ptr(value.Values[0]);
-            m_Stream.SerializeIntVector(SerializationValue(vectors, value.Values.GetSize() * 2), 2);
-            m_Stream.EndArray();
+            SerializeIntVector(SerializationValue(vectors, value.Values.GetSize() * 2), 2);
+            EndArray();
         }
         else
         {
-            m_Stream.SerializeIntVector(SerializationValue(*glm::value_ptr(value.Values[0])), 2);
+            SerializeIntVector(SerializationValue(*glm::value_ptr(value.Values[0])), 2);
         }
     }
 
@@ -144,14 +142,14 @@ namespace Flare
     {
         if (value.IsArray)
         {
-            m_Stream.BeginArray();
+            BeginArray();
             int32_t* vectors = glm::value_ptr(value.Values[0]);
-            m_Stream.SerializeIntVector(SerializationValue(vectors, value.Values.GetSize() * 3), 3);
-            m_Stream.EndArray();
+            SerializeIntVector(SerializationValue(vectors, value.Values.GetSize() * 3), 3);
+            EndArray();
         }
         else
         {
-            m_Stream.SerializeIntVector(SerializationValue(*glm::value_ptr(value.Values[0])), 3);
+            SerializeIntVector(SerializationValue(*glm::value_ptr(value.Values[0])), 3);
         }
     }
 
@@ -160,14 +158,14 @@ namespace Flare
     {
         if (value.IsArray)
         {
-            m_Stream.BeginArray();
+            BeginArray();
             float* vectors = glm::value_ptr(value.Values[0]);
-            m_Stream.SerializeFloatVector(SerializationValue(vectors, value.Values.GetSize() * 2), 2);
-            m_Stream.EndArray();
+            SerializeFloatVector(SerializationValue(vectors, value.Values.GetSize() * 2), 2);
+            EndArray();
         }
         else
         {
-            m_Stream.SerializeFloatVector(SerializationValue(*glm::value_ptr(value.Values[0])), 2);
+            SerializeFloatVector(SerializationValue(*glm::value_ptr(value.Values[0])), 2);
         }
     }
 
@@ -176,21 +174,21 @@ namespace Flare
     {
         if (value.IsArray)
         {
-            m_Stream.BeginArray();
+            BeginArray();
             float* vectors = glm::value_ptr(value.Values[0]);
-            m_Stream.SerializeFloatVector(SerializationValue(vectors, value.Values.GetSize() * 3), 3);
-            m_Stream.EndArray();
+            SerializeFloatVector(SerializationValue(vectors, value.Values.GetSize() * 3), 3);
+            EndArray();
         }
         else
         {
-            m_Stream.SerializeFloatVector(SerializationValue(*glm::value_ptr(value.Values[0])), 3);
+            SerializeFloatVector(SerializationValue(*glm::value_ptr(value.Values[0])), 3);
         }
     }
 
     template<typename T>
     struct SerializationDescriptorOf<std::vector<T>>
     {
-        const SerializableObjectDescriptor* Descriptor()
+        static const SerializableObjectDescriptor* Descriptor()
         {
             return nullptr;
         }
@@ -199,7 +197,7 @@ namespace Flare
     template<typename T>
     struct TypeSerializer<std::vector<T>>
     {
-        void OnSerialize(std::vector<T>& vector, SerializationStream& stream)
+        static void OnSerialize(std::vector<T>& vector, SerializationStream& stream)
         {
             stream.Serialize(SerializationValue(vector.data(), vector.size()));
         }

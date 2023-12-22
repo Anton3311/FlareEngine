@@ -7,7 +7,7 @@
 
 namespace Flare
 {
-    class SerializablePropertyRenderer : public SerializationStreamBase
+    class SerializablePropertyRenderer : public SerializationStream
     {
     public:
         void PropertyKey(std::string_view key) override;

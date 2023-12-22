@@ -126,12 +126,8 @@ namespace Flare
         s_Instance = nullptr;
     }
 
-    static Scope<SerializablePropertyRenderer> s_PropertiesRenderer;
-
     void EditorLayer::OnAttach()
     {
-        s_PropertiesRenderer = CreateScope<SerializablePropertyRenderer>();
-
         ShaderCacheManager::SetInstance(CreateScope<EditorShaderCache>());
 
         m_PropertiesWindow.OnAttach();
@@ -271,7 +267,7 @@ namespace Flare
         {
             ImGui::Begin("Test");
 
-            SerializationStream stream(*s_PropertiesRenderer);
+            SerializablePropertyRenderer stream;
 
             static Outer o;
             static CustomType& t = o.t;
@@ -303,8 +299,7 @@ namespace Flare
             {
                 YAML::Emitter emitter;
                 emitter << YAML::BeginMap;
-                Scope<YAMLSerializer> serializer = CreateScope<YAMLSerializer>(emitter);
-                SerializationStream stream(*serializer);
+                YAMLSerializer stream(emitter);
 
                 stream.Serialize("Outer", SerializationValue(o));
                 stream.Serialize("Transform", SerializationValue(transform));
@@ -319,8 +314,7 @@ namespace Flare
             if (ImGui::Button("From YAML"))
             {
                 YAML::Node root = YAML::Load(s_Buffer);
-                Scope<YAMLDeserializer> serializer = CreateScope<YAMLDeserializer>(root);
-                SerializationStream stream(*serializer);
+                YAMLDeserializer stream(root);
 
                 stream.Serialize("Outer", SerializationValue(o));
                 stream.Serialize("Transform", SerializationValue(transform));
@@ -413,7 +407,7 @@ namespace Flare
 
             if (ImGui::TreeNodeEx("Post Processing", ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_SpanAvailWidth))
             {
-                auto postProcessing = Scene::GetActive()->GetPostProcessingManager();
+                auto& postProcessing = Scene::GetActive()->GetPostProcessingManager();
 
                 if (ImGui::TreeNodeEx("Tone Mapping", ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_SpanAvailWidth))
                 {
