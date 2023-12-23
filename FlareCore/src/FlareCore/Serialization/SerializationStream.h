@@ -56,14 +56,14 @@ namespace Flare
         {
             const SerializableObjectDescriptor* descriptor = SerializationDescriptorOf<T>().Descriptor();
 
-			FLARE_CORE_ASSERT(descriptor);
+            FLARE_CORE_ASSERT(descriptor);
             if (value.IsArray)
             {
                 BeginArray();
-				for (size_t i = 0; i < value.Values.GetSize(); i++)
-				{
-					SerializeObject(*descriptor, &value.Values[i]);
-				}
+                for (size_t i = 0; i < value.Values.GetSize(); i++)
+                {
+                    SerializeObject(*descriptor, &value.Values[i]);
+                }
                 EndArray();
             }
             else
@@ -94,7 +94,7 @@ namespace Flare
     template<>
     inline void SerializationStream::Serialize<std::string>(SerializationValue<std::string> value)
     {
-		SerializeString(value);
+        SerializeString(value);
     }
 
     template<>
@@ -102,8 +102,8 @@ namespace Flare
     {
         if (value.IsArray)
         {
-			int32_t* vectors = glm::value_ptr(value.Values[0]);
-			SerializeIntVector(SerializationValue(vectors, value.Values.GetSize() * 2), 2);
+            int32_t* vectors = glm::value_ptr(value.Values[0]);
+            SerializeIntVector(SerializationValue(vectors, value.Values.GetSize() * 2), 2);
         }
         else
         {
@@ -116,8 +116,8 @@ namespace Flare
     {
         if (value.IsArray)
         {
-			int32_t* vectors = glm::value_ptr(value.Values[0]);
-			SerializeIntVector(SerializationValue(vectors, value.Values.GetSize() * 3), 3);
+            int32_t* vectors = glm::value_ptr(value.Values[0]);
+            SerializeIntVector(SerializationValue(vectors, value.Values.GetSize() * 3), 3);
         }
         else
         {
@@ -130,8 +130,8 @@ namespace Flare
     {
         if (value.IsArray)
         {
-			float* vectors = glm::value_ptr(value.Values[0]);
-			SerializeFloatVector(SerializationValue(vectors, value.Values.GetSize() * 2), 2);
+            float* vectors = glm::value_ptr(value.Values[0]);
+            SerializeFloatVector(SerializationValue(vectors, value.Values.GetSize() * 2), 2);
         }
         else
         {
@@ -144,8 +144,8 @@ namespace Flare
     {
         if (value.IsArray)
         {
-			float* vectors = glm::value_ptr(value.Values[0]);
-			SerializeFloatVector(SerializationValue(vectors, value.Values.GetSize() * 3), 3);
+            float* vectors = glm::value_ptr(value.Values[0]);
+            SerializeFloatVector(SerializationValue(vectors, value.Values.GetSize() * 3), 3);
         }
         else
         {

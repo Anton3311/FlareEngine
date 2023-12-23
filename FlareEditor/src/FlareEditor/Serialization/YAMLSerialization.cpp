@@ -5,39 +5,52 @@
 namespace Flare
 {
     YAMLSerializer::YAMLSerializer(YAML::Emitter& emitter)
-        : m_Emitter(emitter) {}
+        : m_Emitter(emitter), m_MapStarted(false), m_ObjectSerializationStarted(false) {}
 
     void YAMLSerializer::PropertyKey(std::string_view key)
     {
+        if (!m_MapStarted && m_ObjectSerializationStarted)
+        {
+            m_Emitter << YAML::BeginMap;
+            m_MapStarted = true;
+        }
+
         m_Emitter << YAML::Key << std::string(key);
+    }
+
+    template<typename T>
+    static void SerializeValue(YAML::Emitter& emitter, SerializationValue<T>& value)
+    {
+        if (value.IsArray)
+            emitter << YAML::BeginSeq;
+
+        for (size_t i = 0; i < value.Values.GetSize(); i++)
+            emitter << YAML::Value << value.Values[i];
+
+        if (value.IsArray)
+            emitter << YAML::EndSeq;
     }
 
     void YAMLSerializer::SerializeInt32(SerializationValue<int32_t> value)
     {
-        for (size_t i = 0; i < value.Values.GetSize(); i++)
-        {
-            m_Emitter << YAML::Value << value.Values[i];
-        }
+        SerializeValue(m_Emitter, value);
     }
 
     void YAMLSerializer::SerializeUInt32(SerializationValue<uint32_t> value)
     {
-        for (size_t i = 0; i < value.Values.GetSize(); i++)
-        {
-            m_Emitter << YAML::Value << value.Values[i];
-        }
+        SerializeValue(m_Emitter, value);
     }
 
     void YAMLSerializer::SerializeFloat(SerializationValue<float> value)
     {
-        for (size_t i = 0; i < value.Values.GetSize(); i++)
-        {
-            m_Emitter << YAML::Value << value.Values[i];
-        }
+        SerializeValue(m_Emitter, value);
     }
 
     void YAMLSerializer::SerializeFloatVector(SerializationValue<float> value, uint32_t componentsCount)
     {
+        if (value.IsArray)
+            m_Emitter << YAML::BeginSeq;
+
         for (size_t i = 0; i < value.Values.GetSize(); i += (size_t)componentsCount)
         {
             m_Emitter << YAML::Value;
@@ -58,10 +71,16 @@ namespace Flare
                 break;
             }
         }
+
+        if (value.IsArray)
+            m_Emitter << YAML::EndSeq;
     }
 
     void YAMLSerializer::SerializeIntVector(SerializationValue<int32_t> value, uint32_t componentsCount)
     {
+        if (value.IsArray)
+            m_Emitter << YAML::BeginSeq;
+
         for (size_t i = 0; i < value.Values.GetSize(); i += (size_t)componentsCount)
         {
             m_Emitter << YAML::Value;
@@ -82,34 +101,50 @@ namespace Flare
                 break;
             }
         }
+
+        if (value.IsArray)
+            m_Emitter << YAML::EndSeq;
     }
 
     void YAMLSerializer::SerializeString(SerializationValue<std::string> value)
     {
-        for (size_t i = 0; i < value.Values.GetSize(); i++)
-        {
-            m_Emitter << YAML::Value << value.Values[i];
-        }
+        SerializeValue(m_Emitter, value);
     }
 
     void YAMLSerializer::BeginArray()
     {
-        m_Emitter << YAML::BeginSeq;
     }
 
     void YAMLSerializer::EndArray()
     {
-        m_Emitter << YAML::EndSeq;
     }
 
     void YAMLSerializer::BeginObject(const SerializableObjectDescriptor* descriptor)
     {
-        m_Emitter << YAML::BeginMap;
     }
 
     void YAMLSerializer::EndObject()
     {
-        m_Emitter << YAML::EndMap;
+    }
+
+    void YAMLSerializer::SerializeObject(const SerializableObjectDescriptor& descriptor, void* objectData)
+    {
+        bool previousObjectSerializationState = m_ObjectSerializationStarted;
+        bool previousState = m_MapStarted;
+
+        m_ObjectSerializationStarted = true;
+        m_MapStarted = false;
+
+        // NOTE: Map starts when the serializer recieves a property with a key,
+        //       this prevents YAML-cpp from generating an invalid one when an
+        //       object serializes it's properties without any keys
+        descriptor.Callback(objectData, *this);
+
+        if (m_MapStarted)
+            m_Emitter << YAML::EndMap;
+
+        m_MapStarted = previousState;
+        m_ObjectSerializationStarted = previousObjectSerializationState;
     }
 
     // YAML Deserializer
@@ -260,6 +295,16 @@ namespace Flare
     void YAMLDeserializer::EndObject()
     {
         EndNode();
+    }
+
+    void YAMLDeserializer::SerializeObject(const SerializableObjectDescriptor& descriptor, void* objectData)
+    {
+        if (YAML::Node objectNode = CurrentNode()[m_CurrentPropertyKey])
+        {
+            m_NodesStack.push_back(objectNode);
+            descriptor.Callback(objectData, *this);
+            m_NodesStack.pop_back();
+        }
     }
 
     void YAMLDeserializer::BeginNode()

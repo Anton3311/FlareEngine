@@ -22,8 +22,11 @@ namespace Flare
         void EndArray() override;
         void BeginObject(const SerializableObjectDescriptor* descriptor) override;
         void EndObject() override;
+        void SerializeObject(const SerializableObjectDescriptor& descriptor, void* objectData) override;
     public:
         YAML::Emitter& m_Emitter;
+        bool m_ObjectSerializationStarted;
+        bool m_MapStarted;
     };
 
     class YAMLDeserializer : public SerializationStream
@@ -42,6 +45,7 @@ namespace Flare
         void EndArray() override;
         void BeginObject(const SerializableObjectDescriptor* descriptor) override;
         void EndObject() override;
+        void SerializeObject(const SerializableObjectDescriptor& descriptor, void* objectData) override;
     private:
         void BeginNode();
         void EndNode();
