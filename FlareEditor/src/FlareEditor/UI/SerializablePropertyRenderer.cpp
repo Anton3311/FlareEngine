@@ -12,9 +12,6 @@ namespace Flare
 
     void SerializablePropertyRenderer::SerializeInt32(SerializationValue<int32_t> value)
     {
-        if (!CurrentTreeNodeState().Expanded)
-            return;
-
         BeginPropertiesGridIfNeeded();
 
         if (!value.IsArray)
@@ -33,9 +30,6 @@ namespace Flare
 
     void SerializablePropertyRenderer::SerializeUInt32(SerializationValue<uint32_t> value)
     {
-        if (!CurrentTreeNodeState().Expanded)
-            return;
-
         BeginPropertiesGridIfNeeded();
 
         if (!value.IsArray)
@@ -54,9 +48,6 @@ namespace Flare
 
     void SerializablePropertyRenderer::SerializeFloat(SerializationValue<float> value)
     {
-        if (!CurrentTreeNodeState().Expanded)
-            return;
-
         BeginPropertiesGridIfNeeded();
         
         if (!value.IsArray)
@@ -75,9 +66,6 @@ namespace Flare
 
     void SerializablePropertyRenderer::SerializeFloatVector(SerializationValue<float> value, uint32_t componentsCount)
     {
-        if (!CurrentTreeNodeState().Expanded)
-            return;
-
         BeginPropertiesGridIfNeeded();
 
         if (!value.IsArray)
@@ -111,9 +99,6 @@ namespace Flare
 
     void SerializablePropertyRenderer::SerializeIntVector(SerializationValue<int32_t> value, uint32_t componentsCount)
     {
-        if (!CurrentTreeNodeState().Expanded)
-            return;
-
         BeginPropertiesGridIfNeeded();
 
         if (!value.IsArray)
@@ -147,9 +132,6 @@ namespace Flare
 
     void SerializablePropertyRenderer::SerializeString(SerializationValue<std::string> value)
     {
-        if (!CurrentTreeNodeState().Expanded)
-            return;
-
         BeginPropertiesGridIfNeeded();
 
         if (!value.IsArray)
@@ -166,59 +148,48 @@ namespace Flare
 
     void SerializablePropertyRenderer::BeginArray()
     {
-        BeginTreeNode();
     }
 
     void SerializablePropertyRenderer::EndArray()
     {
-        EndTreeNode();
     }
 
     void SerializablePropertyRenderer::BeginObject(const SerializableObjectDescriptor* descriptor)
     {
-        BeginTreeNode();
     }
 
     void SerializablePropertyRenderer::EndObject()
     {
-        EndTreeNode();
     }
 
-    void SerializablePropertyRenderer::BeginTreeNode()
+    void SerializablePropertyRenderer::SerializeObject(const SerializableObjectDescriptor& descriptor, void* objectData)
     {
         if (m_TreeNodeStates.size() > 0)
         {
-            PropertiesTreeState& currentState = CurrentTreeNodeState();
-            if (currentState.GridStarted)
-            {
-                EditorGUI::EndPropertyGrid();
-                currentState.GridStarted = false;
-            }
+			auto& currentState = CurrentTreeNodeState();
+			if (currentState.GridStarted)
+			{
+				EditorGUI::EndPropertyGrid();
+				currentState.GridStarted = false;
+			}
         }
 
         ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_SpanFullWidth;
-        bool expanded = false;
-        if (m_TreeNodeStates.size() == 0 || CurrentTreeNodeState().Expanded)
+        bool expanded = ImGui::TreeNodeEx(m_CurrentPropertyName.data(), flags);
+
+        if (expanded)
         {
-            expanded = ImGui::TreeNodeEx(m_CurrentPropertyName.data(), flags);
-        }
+			auto& newState = m_TreeNodeStates.emplace_back();
+			newState.GridStarted = false;
 
-        auto& state = m_TreeNodeStates.emplace_back();
-        state.Expanded = expanded;
-        state.GridStarted = false;
-    }
+            descriptor.Callback(objectData, *this);
 
-    void SerializablePropertyRenderer::EndTreeNode()
-    {
-        PropertiesTreeState& state = CurrentTreeNodeState();
+            if (CurrentTreeNodeState().GridStarted)
+                EditorGUI::EndPropertyGrid();
 
-        if (state.GridStarted)
-            EditorGUI::EndPropertyGrid();
-
-        if (state.Expanded)
+            m_TreeNodeStates.pop_back();
             ImGui::TreePop();
-
-        m_TreeNodeStates.pop_back();
+        }
     }
 
     void SerializablePropertyRenderer::BeginPropertiesGridIfNeeded()

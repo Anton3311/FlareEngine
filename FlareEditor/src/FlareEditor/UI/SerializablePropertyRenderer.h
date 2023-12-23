@@ -21,15 +21,12 @@ namespace Flare
         void EndArray() override;
         void BeginObject(const SerializableObjectDescriptor* descriptor) override;
         void EndObject() override;
+        void SerializeObject(const SerializableObjectDescriptor& descriptor, void* objectData) override;
     private:
         struct PropertiesTreeState
         {
             bool GridStarted;
-            bool Expanded;
         };
-
-        void BeginTreeNode();
-        void EndTreeNode();
 
         void BeginPropertiesGridIfNeeded();
 
