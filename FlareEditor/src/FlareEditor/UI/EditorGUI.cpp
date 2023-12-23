@@ -146,12 +146,9 @@ namespace Flare
 		bool result = false;
 
 		SerializablePropertyRenderer propertyRenderer;
-		SerializationStream stream(propertyRenderer);
 
 		propertyRenderer.PropertyKey(object.Descriptor.Name);
-		propertyRenderer.BeginObject(&object.Descriptor);
-		object.Descriptor.Callback(object.GetBuffer(), stream);
-		propertyRenderer.EndObject();
+		propertyRenderer.SerializeObject(object.Descriptor, object.GetBuffer());
 
 		// TODO: get the result from properties renderer
 		return result;

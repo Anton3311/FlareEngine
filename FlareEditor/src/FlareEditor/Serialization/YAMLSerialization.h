@@ -18,10 +18,6 @@ namespace Flare
         void SerializeFloatVector(SerializationValue<float> value, uint32_t componentsCount) override;
         void SerializeIntVector(SerializationValue<int32_t> value, uint32_t componentsCount) override;
         void SerializeString(SerializationValue<std::string> value) override;
-        void BeginArray() override;
-        void EndArray() override;
-        void BeginObject(const SerializableObjectDescriptor* descriptor) override;
-        void EndObject() override;
         void SerializeObject(const SerializableObjectDescriptor& descriptor, void* objectData) override;
     public:
         YAML::Emitter& m_Emitter;
@@ -41,15 +37,8 @@ namespace Flare
         void SerializeFloatVector(SerializationValue<float> value, uint32_t componentsCount) override;
         void SerializeIntVector(SerializationValue<int32_t> value, uint32_t componentsCount) override;
         void SerializeString(SerializationValue<std::string> value) override;
-        void BeginArray() override;
-        void EndArray() override;
-        void BeginObject(const SerializableObjectDescriptor* descriptor) override;
-        void EndObject() override;
         void SerializeObject(const SerializableObjectDescriptor& descriptor, void* objectData) override;
     private:
-        void BeginNode();
-        void EndNode();
-
         inline YAML::Node& CurrentNode()
         {
             FLARE_CORE_ASSERT(m_NodesStack.size() > 0);
@@ -58,9 +47,6 @@ namespace Flare
     private:
         const YAML::Node& m_Root;
 
-        size_t m_CurrentNodeDepth;
-        size_t m_SkippedNodeDepth;
-        bool m_Skip;
         std::string m_CurrentPropertyKey;
         std::vector<YAML::Node> m_NodesStack;
     };

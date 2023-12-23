@@ -5,6 +5,11 @@
 
 namespace Flare
 {
+    SerializablePropertyRenderer::SerializablePropertyRenderer()
+        : m_CurrentState({ false })
+    {
+    }
+
     void SerializablePropertyRenderer::PropertyKey(std::string_view key)
     {
         m_CurrentPropertyName = key;
@@ -146,32 +151,12 @@ namespace Flare
         }
     }
 
-    void SerializablePropertyRenderer::BeginArray()
-    {
-    }
-
-    void SerializablePropertyRenderer::EndArray()
-    {
-    }
-
-    void SerializablePropertyRenderer::BeginObject(const SerializableObjectDescriptor* descriptor)
-    {
-    }
-
-    void SerializablePropertyRenderer::EndObject()
-    {
-    }
-
     void SerializablePropertyRenderer::SerializeObject(const SerializableObjectDescriptor& descriptor, void* objectData)
     {
-        if (m_TreeNodeStates.size() > 0)
+        if (m_CurrentState.GridStarted)
         {
-			auto& currentState = CurrentTreeNodeState();
-			if (currentState.GridStarted)
-			{
-				EditorGUI::EndPropertyGrid();
-				currentState.GridStarted = false;
-			}
+            EditorGUI::EndPropertyGrid();
+            m_CurrentState.GridStarted = false;
         }
 
         ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_SpanFullWidth;
@@ -179,27 +164,25 @@ namespace Flare
 
         if (expanded)
         {
-			auto& newState = m_TreeNodeStates.emplace_back();
-			newState.GridStarted = false;
+            PropertiesTreeState previousState = m_CurrentState;
+            m_CurrentState.GridStarted = false;
 
             descriptor.Callback(objectData, *this);
 
-            if (CurrentTreeNodeState().GridStarted)
+            if (m_CurrentState.GridStarted)
                 EditorGUI::EndPropertyGrid();
 
-            m_TreeNodeStates.pop_back();
             ImGui::TreePop();
+            m_CurrentState = previousState;
         }
     }
 
     void SerializablePropertyRenderer::BeginPropertiesGridIfNeeded()
     {
-        PropertiesTreeState& state = CurrentTreeNodeState();
-        
-        if (!state.GridStarted)
+        if (!m_CurrentState.GridStarted)
         {
             EditorGUI::BeginPropertyGrid();
-            state.GridStarted = true;
+            m_CurrentState.GridStarted = true;
         }
     }
 }

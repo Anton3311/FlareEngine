@@ -111,22 +111,6 @@ namespace Flare
         SerializeValue(m_Emitter, value);
     }
 
-    void YAMLSerializer::BeginArray()
-    {
-    }
-
-    void YAMLSerializer::EndArray()
-    {
-    }
-
-    void YAMLSerializer::BeginObject(const SerializableObjectDescriptor* descriptor)
-    {
-    }
-
-    void YAMLSerializer::EndObject()
-    {
-    }
-
     void YAMLSerializer::SerializeObject(const SerializableObjectDescriptor& descriptor, void* objectData)
     {
         bool previousObjectSerializationState = m_ObjectSerializationStarted;
@@ -150,7 +134,7 @@ namespace Flare
     // YAML Deserializer
 
     YAMLDeserializer::YAMLDeserializer(const YAML::Node& root)
-        : m_Root(root), m_Skip(false), m_SkippedNodeDepth(SIZE_MAX), m_CurrentNodeDepth(0)
+        : m_Root(root)
     {
         m_NodesStack.push_back(m_Root);
     }
@@ -184,25 +168,16 @@ namespace Flare
 
     void YAMLDeserializer::SerializeInt32(SerializationValue<int32_t> value)
     {
-        if (m_Skip)
-            return;
-
         DeserializeValue(value, CurrentNode(), m_CurrentPropertyKey);
     }
 
     void YAMLDeserializer::SerializeUInt32(SerializationValue<uint32_t> value)
     {
-        if (m_Skip)
-            return;
-
         DeserializeValue(value, CurrentNode(), m_CurrentPropertyKey);
     }
 
     void YAMLDeserializer::SerializeFloat(SerializationValue<float> value)
     {
-        if (m_Skip)
-            return;
-
         DeserializeValue(value, CurrentNode(), m_CurrentPropertyKey);
     }
 
@@ -258,43 +233,17 @@ namespace Flare
 
     void YAMLDeserializer::SerializeFloatVector(SerializationValue<float> value, uint32_t componentsCount)
     {
-        if (m_Skip)
-            return;
-
         DeserializeVector<float>(value, componentsCount, CurrentNode(), m_CurrentPropertyKey);
     }
 
     void YAMLDeserializer::SerializeIntVector(SerializationValue<int32_t> value, uint32_t componentsCount)
     {
-        if (m_Skip)
-            return;
-
         DeserializeVector<int32_t>(value, componentsCount, CurrentNode(), m_CurrentPropertyKey);
     }
 
     void YAMLDeserializer::SerializeString(SerializationValue<std::string> value)
     {
         DeserializeValue<std::string>(value, CurrentNode(), m_CurrentPropertyKey);
-    }
-
-    void YAMLDeserializer::BeginArray()
-    {
-        BeginNode();
-    }
-
-    void YAMLDeserializer::EndArray()
-    {
-        EndNode();
-    }
-
-    void YAMLDeserializer::BeginObject(const SerializableObjectDescriptor* descriptor)
-    {
-        BeginNode();
-    }
-
-    void YAMLDeserializer::EndObject()
-    {
-        EndNode();
     }
 
     void YAMLDeserializer::SerializeObject(const SerializableObjectDescriptor& descriptor, void* objectData)
@@ -305,37 +254,5 @@ namespace Flare
             descriptor.Callback(objectData, *this);
             m_NodesStack.pop_back();
         }
-    }
-
-    void YAMLDeserializer::BeginNode()
-    {
-        m_CurrentNodeDepth++;
-        if (m_Skip)
-            return;
-
-        if (YAML::Node node = CurrentNode()[m_CurrentPropertyKey])
-        {
-            m_NodesStack.push_back(node);
-        }
-        else if (!m_Skip)
-        {
-            m_SkippedNodeDepth = m_CurrentNodeDepth;
-            m_Skip = true;
-        }
-    }
-
-    void YAMLDeserializer::EndNode()
-    {
-        m_CurrentNodeDepth--;
-        if (m_SkippedNodeDepth == m_CurrentNodeDepth)
-        {
-            m_SkippedNodeDepth = SIZE_MAX;
-            m_Skip = false;
-        }
-
-        if (m_Skip)
-            return;
-
-        m_NodesStack.pop_back();
     }
 }
