@@ -2,6 +2,8 @@
 
 #include "FlareCore/Serialization/SerializationStream.h"
 
+#include "Flare/AssetManager/Asset.h"
+
 #include <string_view>
 #include <vector>
 
@@ -20,6 +22,8 @@ namespace Flare
         void SerializeIntVector(SerializationValue<int32_t> value, uint32_t componentsCount) override;
         void SerializeString(SerializationValue<std::string> value) override;
         void SerializeObject(const SerializableObjectDescriptor& descriptor, void* objectData) override;
+    private:
+        void RenderAssetField(AssetHandle& handle);
     private:
         struct PropertiesTreeState
         {

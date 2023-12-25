@@ -17,31 +17,40 @@
 
 namespace Flare
 {
-	struct FLARE_API NameComponent
-	{
-		FLARE_COMPONENT;
+    struct FLARE_API NameComponent
+    {
+        FLARE_COMPONENT;
 
-		NameComponent();
-		NameComponent(std::string_view name);
-		~NameComponent();
+        NameComponent();
+        NameComponent(std::string_view name);
+        ~NameComponent();
 
-		std::string Value;
-	};
+        std::string Value;
+    };
 
-	struct FLARE_API TransformComponent
-	{
-		FLARE_COMPONENT;
+    template<>
+    struct TypeSerializer<NameComponent>
+    {
+        void OnSerialize(NameComponent& name, SerializationStream& stream)
+        {
+            stream.Serialize("Value", SerializationValue(name.Value));
+        }
+    };
 
-		TransformComponent();
-		TransformComponent(const glm::vec3& position);
-		
-		glm::mat4 GetTransformationMatrix() const;
-		glm::vec3 TransformDirection(const glm::vec3& direction) const;
+    struct FLARE_API TransformComponent
+    {
+        FLARE_COMPONENT;
 
-		glm::vec3 Position;
-		glm::vec3 Rotation;
-		glm::vec3 Scale;
-	};
+        TransformComponent();
+        TransformComponent(const glm::vec3& position);
+        
+        glm::mat4 GetTransformationMatrix() const;
+        glm::vec3 TransformDirection(const glm::vec3& direction) const;
+
+        glm::vec3 Position;
+        glm::vec3 Rotation;
+        glm::vec3 Scale;
+    };
 
     template<>
     struct TypeSerializer<TransformComponent>
@@ -54,117 +63,194 @@ namespace Flare
         }
     };
 
-	struct FLARE_API CameraComponent
-	{
-		FLARE_COMPONENT;
+    struct FLARE_API CameraComponent
+    {
+        FLARE_COMPONENT;
 
-		enum class ProjectionType : uint8_t
-		{
-			Orthographic,
-			Perspective,
-		};
+        enum class ProjectionType : uint8_t
+        {
+            Orthographic,
+            Perspective,
+        };
 
-		CameraComponent();
+        CameraComponent();
 
-		glm::mat4 GetProjection() const;
-		glm::vec3 ScreenToWorld(glm::vec2 point) const;
-		glm::vec3 ViewportToWorld(glm::vec2 point) const;
+        glm::mat4 GetProjection() const;
+        glm::vec3 ScreenToWorld(glm::vec2 point) const;
+        glm::vec3 ViewportToWorld(glm::vec2 point) const;
 
-		ProjectionType Projection;
+        ProjectionType Projection;
 
-		float Size;
-		float FOV;
-		float Near;
-		float Far;
-	};
+        float Size;
+        float FOV;
+        float Near;
+        float Far;
+    };
 
-	struct FLARE_API SpriteComponent
-	{
-		FLARE_COMPONENT;
+    template<>
+    struct TypeSerializer<CameraComponent>
+    {
+        void OnSerialize(CameraComponent& camera, SerializationStream& stream)
+        {
+            stream.Serialize("Size", SerializationValue(camera.Size));
+            stream.Serialize("FOV", SerializationValue(camera.FOV));
+            stream.Serialize("Near", SerializationValue(camera.Near));
+            stream.Serialize("Far", SerializationValue(camera.Far));
+        }
+    };
 
-		SpriteComponent();
-		SpriteComponent(AssetHandle texture);
+    struct FLARE_API SpriteComponent
+    {
+        FLARE_COMPONENT;
 
-		glm::vec4 Color;
-		glm::vec2 TextureTiling;
-		AssetHandle Texture;
-		SpriteRenderFlags Flags;
-	};
+        SpriteComponent();
+        SpriteComponent(AssetHandle texture);
 
-	struct FLARE_API SpriteLayer
-	{
-		FLARE_COMPONENT;
+        glm::vec4 Color;
+        glm::vec2 TextureTiling;
+        AssetHandle Texture;
+        SpriteRenderFlags Flags;
+    };
 
-		SpriteLayer();
-		SpriteLayer(int32_t layer);
+    template<>
+    struct TypeSerializer<SpriteComponent>
+    {
+        void OnSerialize(SpriteComponent& sprite, SerializationStream& stream)
+        {
+            stream.Serialize("Color", SerializationValue(sprite.Color));
+            stream.Serialize("TextureTiling", SerializationValue(sprite.TextureTiling));
+            stream.Serialize("Texture", SerializationValue(sprite.Texture));
+            
+            // TODO: serialize flags
+        }
+    };
 
-		int32_t Layer;
-	};
+    struct FLARE_API SpriteLayer
+    {
+        FLARE_COMPONENT;
 
-	template<>
-	struct TypeSerializer<SpriteLayer>
-	{
-		void OnSerialize(SpriteLayer& value, SerializationStream& stream)
-		{
-			stream.Serialize("Layer", SerializationValue(value.Layer));
-		}
-	};
+        SpriteLayer();
+        SpriteLayer(int32_t layer);
 
-	struct FLARE_API MaterialComponent
-	{
-		FLARE_COMPONENT;
+        int32_t Layer;
+    };
 
-		MaterialComponent();
-		MaterialComponent(AssetHandle handle);
+    template<>
+    struct TypeSerializer<SpriteLayer>
+    {
+        void OnSerialize(SpriteLayer& value, SerializationStream& stream)
+        {
+            stream.Serialize("Layer", SerializationValue(value.Layer));
+        }
+    };
 
-		AssetHandle Material;
-	};
+    struct FLARE_API MaterialComponent
+    {
+        FLARE_COMPONENT;
 
-	struct FLARE_API TextComponent
-	{
-		FLARE_COMPONENT;
+        MaterialComponent();
+        MaterialComponent(AssetHandle handle);
 
-		TextComponent();
-		TextComponent(std::string_view text, const glm::vec4& color = glm::vec4(1.0f), AssetHandle font = NULL_ASSET_HANDLE);
+        AssetHandle Material;
+    };
 
-		std::string Text;
-		glm::vec4 Color;
-		AssetHandle Font;
-	};
+    template<>
+    struct TypeSerializer<MaterialComponent>
+    {
+        void OnSerialize(MaterialComponent& material, SerializationStream& stream)
+        {
+            stream.Serialize("Material", SerializationValue(material.Material));
+        }
+    };
 
-	struct FLARE_API MeshComponent
-	{
-		FLARE_COMPONENT;
+    struct FLARE_API TextComponent
+    {
+        FLARE_COMPONENT;
 
-		MeshComponent(MeshRenderFlags flags = MeshRenderFlags::None);
-		MeshComponent(AssetHandle mesh, AssetHandle material, MeshRenderFlags flags = MeshRenderFlags::None);
+        TextComponent();
+        TextComponent(std::string_view text, const glm::vec4& color = glm::vec4(1.0f), AssetHandle font = NULL_ASSET_HANDLE);
 
-		AssetHandle Mesh;
-		AssetHandle Material;
-		MeshRenderFlags Flags;
-	};
+        std::string Text;
+        glm::vec4 Color;
+        AssetHandle Font;
+    };
+
+    template<>
+    struct TypeSerializer<TextComponent>
+    {
+        void OnSerialize(TextComponent& text, SerializationStream& stream)
+        {
+            stream.Serialize("Text", SerializationValue(text.Text));
+            stream.Serialize("Color", SerializationValue(text.Color));
+            stream.Serialize("Font", SerializationValue(text.Font));
+        }
+    };
+
+    struct FLARE_API MeshComponent
+    {
+        FLARE_COMPONENT;
+
+        MeshComponent(MeshRenderFlags flags = MeshRenderFlags::None);
+        MeshComponent(AssetHandle mesh, AssetHandle material, MeshRenderFlags flags = MeshRenderFlags::None);
+
+        AssetHandle Mesh;
+        AssetHandle Material;
+        MeshRenderFlags Flags;
+    };
+
+    template<>
+    struct TypeSerializer<MeshComponent>
+    {
+        void OnSerialize(MeshComponent& mesh, SerializationStream& stream)
+        {
+            stream.Serialize("Mesh", SerializationValue(mesh.Mesh));
+            stream.Serialize("Material", SerializationValue(mesh.Material));
+
+            // TODO: serialize flags
+        }
+    };
 
 
 
-	struct FLARE_API DirectionalLight
-	{
-		FLARE_COMPONENT;
+    struct FLARE_API DirectionalLight
+    {
+        FLARE_COMPONENT;
 
-		DirectionalLight();
-		DirectionalLight(const glm::vec3& color, float intensity);
+        DirectionalLight();
+        DirectionalLight(const glm::vec3& color, float intensity);
 
-		glm::vec3 Color;
-		float Intensity;
-	};
+        glm::vec3 Color;
+        float Intensity;
+    };
 
-	struct FLARE_API Environment
-	{
-		FLARE_COMPONENT;
+    template<>
+    struct TypeSerializer<DirectionalLight>
+    {
+        void OnSerialize(DirectionalLight& light, SerializationStream& stream)
+        {
+            stream.Serialize("Color", SerializationValue(light.Color));
+            stream.Serialize("Intensity", SerializationValue(light.Intensity));
+        }
+    };
 
-		Environment();
-		Environment(glm::vec3 color, float intensity);
+    struct FLARE_API Environment
+    {
+        FLARE_COMPONENT;
 
-		glm::vec3 EnvironmentColor;
-		float EnvironmentColorIntensity;
-	};
+        Environment();
+        Environment(glm::vec3 color, float intensity);
+
+        glm::vec3 EnvironmentColor;
+        float EnvironmentColorIntensity;
+    };
+
+    template<>
+    struct TypeSerializer<Environment>
+    {
+        void OnSerialize(Environment& environment, SerializationStream& stream)
+        {
+            stream.Serialize("EnvironmentColor", SerializationValue(environment.EnvironmentColor));
+            stream.Serialize("EnvironmentColorIntensity", SerializationValue(environment.EnvironmentColorIntensity));
+        }
+    };
 }

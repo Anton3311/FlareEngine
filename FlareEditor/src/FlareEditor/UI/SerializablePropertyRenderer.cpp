@@ -159,6 +159,12 @@ namespace Flare
             m_CurrentState.GridStarted = false;
         }
 
+        if (&descriptor == &FLARE_SERIALIZATION_DESCRIPTOR_OF(AssetHandle))
+        {
+            RenderAssetField(*reinterpret_cast<AssetHandle*>(objectData));
+            return;
+        }
+
         ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_SpanFullWidth;
         bool expanded = ImGui::TreeNodeEx(m_CurrentPropertyName.data(), flags);
 
@@ -175,6 +181,11 @@ namespace Flare
             ImGui::TreePop();
             m_CurrentState = previousState;
         }
+    }
+
+    void SerializablePropertyRenderer::RenderAssetField(AssetHandle& handle)
+    {
+        EditorGUI::AssetField(handle);
     }
 
     void SerializablePropertyRenderer::BeginPropertiesGridIfNeeded()

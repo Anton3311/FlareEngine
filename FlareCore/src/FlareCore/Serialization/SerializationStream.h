@@ -144,6 +144,20 @@ namespace Flare
         }
     }
 
+    template<>
+    inline void SerializationStream::Serialize<glm::vec4>(SerializationValue<glm::vec4> value)
+    {
+        if (value.IsArray)
+        {
+            float* vectors = glm::value_ptr(value.Values[0]);
+            SerializeFloatVector(SerializationValue(vectors, value.Values.GetSize() * 4), 4);
+        }
+        else
+        {
+            SerializeFloatVector(SerializationValue(*glm::value_ptr(value.Values[0])), 4);
+        }
+    }
+
     template<typename T>
     struct TypeSerializer<std::vector<T>>
     {
