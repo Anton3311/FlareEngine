@@ -10,6 +10,7 @@
 
 #include "FlareEditor/Serialization/Serialization.h"
 #include "FlareEditor/Serialization/SerializationId.h"
+#include "FlareEditor/Serialization/YAMLSerialization.h"
 
 #include <yaml-cpp/yaml.h>
 #include <glm/glm.hpp>
@@ -128,14 +129,28 @@ namespace Flare
 		
 		{
 			Ref<ToneMapping> toneMapping = scene->GetPostProcessingManager().ToneMappingPass;
-			emitter << YAML::Value;
-			SerializeObject(emitter, SerializableObject::From(*toneMapping));
+			const auto* descriptor = &FLARE_SERIALIZATION_DESCRIPTOR_OF(ToneMapping);
+
+			emitter << YAML::Value << YAML::BeginMap;
+			emitter << YAML::Key << "Name" << YAML::Value << descriptor->Name;
+
+			YAMLSerializer serialzier(emitter);
+			serialzier.Serialize("Data", SerializationValue(*toneMapping));
+
+			emitter << YAML::EndMap;
 		}
 
 		{
 			Ref<Vignette> vignette = scene->GetPostProcessingManager().VignettePass;
-			emitter << YAML::Value;
-			SerializeObject(emitter, SerializableObject::From(*vignette));
+			const auto* descriptor = &FLARE_SERIALIZATION_DESCRIPTOR_OF(Vignette);
+
+			emitter << YAML::Value << YAML::BeginMap;
+			emitter << YAML::Key << "Name" << YAML::Value << descriptor->Name;
+
+			YAMLSerializer serialzier(emitter);
+			serialzier.Serialize("Data", SerializationValue(*vignette));
+
+			emitter << YAML::EndMap;
 		}
 
 		emitter << YAML::EndMap; // PostProcessing
@@ -187,20 +202,19 @@ namespace Flare
 		if (!postProcessing)
 			return;
 
-		for (YAML::Node effectSettings : postProcessing)
+		for (YAML::Node effectNode : postProcessing)
 		{
-			if (YAML::Node nameNode = effectSettings["Name"])
+			if (YAML::Node nameNode = effectNode["Name"])
 			{
 				std::string name = nameNode.as<std::string>();
+				YAMLDeserializer deserializer(effectNode);
 				if (name == ToneMapping::_Type.TypeName)
 				{
-					SerializableObject object = SerializableObject::From(*scene->GetPostProcessingManager().ToneMappingPass);
-					DeserializeObject(effectSettings, object);
+					deserializer.Serialize("Data", SerializationValue(*scene->GetPostProcessingManager().ToneMappingPass));
 				}
 				else if (name == Vignette::_Type.TypeName)
 				{
-					SerializableObject object = SerializableObject::From(*scene->GetPostProcessingManager().VignettePass);
-					DeserializeObject(effectSettings, object);
+					deserializer.Serialize("Data", SerializationValue(*scene->GetPostProcessingManager().VignettePass));
 				}
 			}
 		}

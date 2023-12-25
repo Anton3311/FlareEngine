@@ -278,9 +278,11 @@ Entities:
         Id: 1799081568097725177
 PostProcessing:
   - Name: class Flare::ToneMapping
-    Enabled: true
+    Data:
+      Enabled: true
   - Name: class Flare::Vignette
-    Enabled: true
-    Color: [0, 0, 0, 0.5]
-    Radius: 0.800000012
-    Smoothness: 0.899999976
+    Data:
+      Enabled: true
+      Color: [0, 0, 0, 0.5]
+      Radius: 1
+      Smoothness: 1
