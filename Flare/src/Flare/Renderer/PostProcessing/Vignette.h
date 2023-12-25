@@ -29,12 +29,6 @@ namespace Flare
 	template<>
 	struct TypeSerializer<Vignette>
 	{
-		void OnSerialize(Vignette& vignette, SerializationStream& stream)
-		{
-			stream.Serialize("Enabled", SerializationValue(vignette.Enabled));
-			stream.Serialize("Color", SerializationValue(vignette.Color));
-			stream.Serialize("Radius", SerializationValue(vignette.Radius));
-			stream.Serialize("Smoothness", SerializationValue(vignette.Smoothness));
-		}
+		FLARE_API static void OnSerialize(Vignette& vignette, SerializationStream& stream);
 	};
 }

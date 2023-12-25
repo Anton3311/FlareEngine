@@ -11,20 +11,29 @@
 
 namespace Flare
 {
+    enum class SerializationValueFlags
+    {
+        None = 0,
+        Color = 1
+    };
+
+    FLARE_IMPL_ENUM_BITFIELD(SerializationValueFlags);
+
     template<typename T>
     struct SerializationValue
     {
-        SerializationValue(T& value)
-            : Values(Span(value)), IsArray(false) {}
+        SerializationValue(T& value, SerializationValueFlags flags = SerializationValueFlags::None)
+            : Values(Span(value)), IsArray(false), Flags(flags) {}
 
-        SerializationValue(T* values, size_t size)
-            : Values(Span(values, size)), IsArray(true) {}
+        SerializationValue(T* values, size_t size, SerializationValueFlags flags = SerializationValueFlags::None)
+            : Values(Span(values, size)), IsArray(true), Flags(flags) {}
 
-        SerializationValue(const Span<T>& values)
-            : Values(values), IsArray(true) {}
+        SerializationValue(const Span<T>& values, SerializationValueFlags flags = SerializationValueFlags::None)
+            : Values(values), IsArray(true), Flags(flags) {}
 
         Span<T> Values;
-        bool IsArray;
+        const bool IsArray;
+        const SerializationValueFlags Flags;
     };
 
     class SerializableObjectDescriptor;
@@ -97,11 +106,11 @@ namespace Flare
         if (value.IsArray)
         {
             int32_t* vectors = glm::value_ptr(value.Values[0]);
-            SerializeIntVector(SerializationValue(vectors, value.Values.GetSize() * 2), 2);
+            SerializeIntVector(SerializationValue(vectors, value.Values.GetSize() * 2, value.Flags), 2);
         }
         else
         {
-            SerializeIntVector(SerializationValue(*glm::value_ptr(value.Values[0])), 2);
+            SerializeIntVector(SerializationValue(*glm::value_ptr(value.Values[0]), value.Flags), 2);
         }
     }
 
@@ -111,11 +120,11 @@ namespace Flare
         if (value.IsArray)
         {
             int32_t* vectors = glm::value_ptr(value.Values[0]);
-            SerializeIntVector(SerializationValue(vectors, value.Values.GetSize() * 3), 3);
+            SerializeIntVector(SerializationValue(vectors, value.Values.GetSize() * 3, value.Flags), 3);
         }
         else
         {
-            SerializeIntVector(SerializationValue(*glm::value_ptr(value.Values[0])), 3);
+            SerializeIntVector(SerializationValue(*glm::value_ptr(value.Values[0]), value.Flags), 3);
         }
     }
 
@@ -125,11 +134,11 @@ namespace Flare
         if (value.IsArray)
         {
             float* vectors = glm::value_ptr(value.Values[0]);
-            SerializeFloatVector(SerializationValue(vectors, value.Values.GetSize() * 2), 2);
+            SerializeFloatVector(SerializationValue(vectors, value.Values.GetSize() * 2, value.Flags), 2);
         }
         else
         {
-            SerializeFloatVector(SerializationValue(*glm::value_ptr(value.Values[0])), 2);
+            SerializeFloatVector(SerializationValue(*glm::value_ptr(value.Values[0]), value.Flags), 2);
         }
     }
 
@@ -139,11 +148,11 @@ namespace Flare
         if (value.IsArray)
         {
             float* vectors = glm::value_ptr(value.Values[0]);
-            SerializeFloatVector(SerializationValue(vectors, value.Values.GetSize() * 3), 3);
+            SerializeFloatVector(SerializationValue(vectors, value.Values.GetSize() * 3, value.Flags), 3);
         }
         else
         {
-            SerializeFloatVector(SerializationValue(*glm::value_ptr(value.Values[0])), 3);
+            SerializeFloatVector(SerializationValue(*glm::value_ptr(value.Values[0]), value.Flags), 3);
         }
     }
 
@@ -153,11 +162,11 @@ namespace Flare
         if (value.IsArray)
         {
             float* vectors = glm::value_ptr(value.Values[0]);
-            SerializeFloatVector(SerializationValue(vectors, value.Values.GetSize() * 4), 4);
+            SerializeFloatVector(SerializationValue(vectors, value.Values.GetSize() * 4, value.Flags), 4);
         }
         else
         {
-            SerializeFloatVector(SerializationValue(*glm::value_ptr(value.Values[0])), 4);
+            SerializeFloatVector(SerializationValue(*glm::value_ptr(value.Values[0]), value.Flags), 4);
         }
     }
 

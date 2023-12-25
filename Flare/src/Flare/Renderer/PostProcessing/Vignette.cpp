@@ -52,4 +52,12 @@ namespace Flare
 		Renderer::DrawFullscreenQuad(m_Material);
 		context.RenderTarget->SetWriteMask(writeMask);
 	}
+
+	void TypeSerializer<Vignette>::OnSerialize(Vignette& vignette, SerializationStream& stream)
+	{
+		stream.Serialize("Enabled", SerializationValue(vignette.Enabled));
+		stream.Serialize("Color", SerializationValue(vignette.Color, SerializationValueFlags::Color));
+		stream.Serialize("Radius", SerializationValue(vignette.Radius));
+		stream.Serialize("Smoothness", SerializationValue(vignette.Smoothness));
+	}
 }
