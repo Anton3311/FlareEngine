@@ -37,6 +37,8 @@ namespace Flare
         }
     };
 
+
+
     struct FLARE_API TransformComponent
     {
         FLARE_COMPONENT;
@@ -62,6 +64,8 @@ namespace Flare
             stream.Serialize("Scale", SerializationValue(transform.Scale));
         }
     };
+
+
 
     struct FLARE_API CameraComponent
     {
@@ -99,6 +103,8 @@ namespace Flare
         }
     };
 
+
+
     struct FLARE_API SpriteComponent
     {
         FLARE_COMPONENT;
@@ -125,6 +131,8 @@ namespace Flare
         }
     };
 
+
+
     struct FLARE_API SpriteLayer
     {
         FLARE_COMPONENT;
@@ -144,6 +152,8 @@ namespace Flare
         }
     };
 
+
+
     struct FLARE_API MaterialComponent
     {
         FLARE_COMPONENT;
@@ -162,6 +172,8 @@ namespace Flare
             stream.Serialize("Material", SerializationValue(material.Material));
         }
     };
+
+
 
     struct FLARE_API TextComponent
     {
@@ -185,6 +197,8 @@ namespace Flare
             stream.Serialize("Font", SerializationValue(text.Font));
         }
     };
+
+
 
     struct FLARE_API MeshComponent
     {
@@ -232,6 +246,8 @@ namespace Flare
             stream.Serialize("Intensity", SerializationValue(light.Intensity));
         }
     };
+
+
 
     struct FLARE_API Environment
     {

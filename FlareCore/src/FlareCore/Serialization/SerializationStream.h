@@ -36,17 +36,51 @@ namespace Flare
         const SerializationValueFlags Flags;
     };
 
+    enum class SerializableIntType
+    {
+        Int8,
+        UInt8,
+        Int16,
+        UInt16,
+        Int32,
+        UInt32,
+        Int64,
+        UInt64,
+    };
+
+    inline size_t SizeOfSerializableIntType(SerializableIntType type)
+    {
+#define SIZEOF_INT(intType, enumType)       \
+		case SerializableIntType::enumType: \
+			return sizeof(intType)
+
+        switch (type)
+        {
+            SIZEOF_INT(int8_t, Int8);
+            SIZEOF_INT(uint8_t, UInt8);
+            SIZEOF_INT(int16_t, Int16);
+            SIZEOF_INT(uint16_t, UInt16);
+            SIZEOF_INT(int32_t, Int32);
+            SIZEOF_INT(uint32_t, UInt32);
+            SIZEOF_INT(int64_t, Int64);
+            SIZEOF_INT(uint64_t, UInt64);
+        }
+
+#undef SIZEOF_INT
+
+        FLARE_CORE_ASSERT(false);
+        return 0;
+    }
+
     class SerializableObjectDescriptor;
     class SerializationStream
     {
     public:
+
         virtual void PropertyKey(std::string_view key) = 0;
 
-        virtual void SerializeInt32(SerializationValue<int32_t> value) = 0;
-        virtual void SerializeUInt32(SerializationValue<uint32_t> value) = 0;
-
+        virtual void SerializeInt(SerializationValue<uint8_t> intValues, SerializableIntType type) = 0;
         virtual void SerializeBool(SerializationValue<bool> value) = 0;
-
         virtual void SerializeFloat(SerializationValue<float> value) = 0;
 
         virtual void SerializeFloatVector(SerializationValue<float> value, uint32_t componentsCount) = 0;
@@ -89,10 +123,25 @@ namespace Flare
         functionName(value);                                                                  \
     }
 
-    IMPL_SERIALIZATION_WRAPPER(int32_t, SerializeInt32);
-    IMPL_SERIALIZATION_WRAPPER(uint32_t, SerializeUInt32);
+#define IMPL_INT_SERIALIZATION_WRAPPER(typeName, intType)                                     \
+    template<> 																				  \
+    inline void SerializationStream::Serialize<typeName>(SerializationValue<typeName> value)  \
+    {                                                                                         \
+        if (value.IsArray)                                                                    \
+            SerializeInt(SerializationValue(                                                  \
+                (uint8_t*)(value.Values.GetData()),                                           \
+                value.Values.GetSize() * sizeof(typeName), value.Flags), intType);            \
+        else                                                                                  \
+            SerializeInt(SerializationValue(                                                  \
+                *(uint8_t*)(value.Values.GetData()),                                          \
+                value.Flags), intType);                                                       \
+    }
+
     IMPL_SERIALIZATION_WRAPPER(float, SerializeFloat);
     IMPL_SERIALIZATION_WRAPPER(bool, SerializeBool);
+
+    IMPL_INT_SERIALIZATION_WRAPPER(int32_t, SerializableIntType::Int32);
+    IMPL_INT_SERIALIZATION_WRAPPER(uint32_t, SerializableIntType::UInt32);
 
     template<>
     inline void SerializationStream::Serialize<std::string>(SerializationValue<std::string> value)

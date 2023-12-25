@@ -15,38 +15,42 @@ namespace Flare
         m_CurrentPropertyName = key;
     }
 
-    void SerializablePropertyRenderer::SerializeInt32(SerializationValue<int32_t> value)
+    void SerializablePropertyRenderer::SerializeInt(SerializationValue<uint8_t> intValues, SerializableIntType type)
     {
         BeginPropertiesGridIfNeeded();
 
-        if (!value.IsArray)
+        if (!intValues.IsArray)
             EditorGUI::PropertyName(m_CurrentPropertyName.data());
 
-        for (size_t i = 0; i < value.Values.GetSize(); i++)
-        {
-            if (value.IsArray)
-                EditorGUI::PropertyIndex(i);
+        ImGuiDataType dataType = (ImGuiDataType)0;
+        size_t intSize = SizeOfSerializableIntType(type);
 
-            ImGui::PushID(&value.Values[i]);
-            ImGui::DragInt("", &value.Values[i]);
-            ImGui::PopID();
+        switch (type)
+        {
+#define INT_TYPE_TO_IMGUI_TYPE(intType, imGuiType)  \
+        case SerializableIntType::intType: \
+            dataType = imGuiType;          \
+            break;
+
+        INT_TYPE_TO_IMGUI_TYPE(Int8, ImGuiDataType_S8);
+        INT_TYPE_TO_IMGUI_TYPE(UInt8, ImGuiDataType_U8);
+        INT_TYPE_TO_IMGUI_TYPE(Int16, ImGuiDataType_S16);
+        INT_TYPE_TO_IMGUI_TYPE(UInt16, ImGuiDataType_U16);
+        INT_TYPE_TO_IMGUI_TYPE(Int32, ImGuiDataType_S32);
+        INT_TYPE_TO_IMGUI_TYPE(UInt32, ImGuiDataType_U32);
+        INT_TYPE_TO_IMGUI_TYPE(Int64, ImGuiDataType_S64);
+        INT_TYPE_TO_IMGUI_TYPE(UInt64, ImGuiDataType_U64);
+
+#undef INT_TYPE_TO_IMGUI_SCALAR_TYPE
         }
-    }
 
-    void SerializablePropertyRenderer::SerializeUInt32(SerializationValue<uint32_t> value)
-    {
-        BeginPropertiesGridIfNeeded();
-
-        if (!value.IsArray)
-            EditorGUI::PropertyName(m_CurrentPropertyName.data());
-
-        for (size_t i = 0; i < value.Values.GetSize(); i++)
+        for (size_t i = 0; i < intValues.Values.GetSize(); i += intSize)
         {
-            if (value.IsArray)
+            if (intValues.IsArray)
                 EditorGUI::PropertyIndex(i);
 
-            ImGui::PushID(&value.Values[i]);
-            ImGui::DragScalar("", ImGuiDataType_U32, &value.Values[i]);
+            ImGui::PushID(&intValues.Values[i]);
+            ImGui::DragScalar("", dataType, &intValues.Values[i]);
             ImGui::PopID();
         }
     }

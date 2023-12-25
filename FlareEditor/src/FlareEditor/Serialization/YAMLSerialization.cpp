@@ -18,6 +18,45 @@ namespace Flare
         m_Emitter << YAML::Key << std::string(key);
     }
 
+    void YAMLSerializer::SerializeInt(SerializationValue<uint8_t> intValues, SerializableIntType type)
+    {
+        if (intValues.IsArray)
+            m_Emitter << YAML::BeginSeq;
+
+        size_t intSize = SizeOfSerializableIntType(type);
+        for (size_t i = 0; i < intValues.Values.GetSize(); i += intSize)
+        {
+            m_Emitter << YAML::Value;
+            
+#define SERIALIZE_INT(intType, serializableIntType)                           \
+            case SerializableIntType::serializableIntType:                    \
+                m_Emitter << reinterpret_cast<intType&>(intValues.Values[i]); \
+                break;
+
+            switch (type)
+            {
+            case SerializableIntType::Int8:
+                m_Emitter << (int16_t)reinterpret_cast<int8_t&>(intValues.Values[i]);
+                break;
+            case SerializableIntType::UInt8:
+                m_Emitter << (uint16_t)reinterpret_cast<uint8_t&>(intValues.Values[i]);
+                break;
+
+                SERIALIZE_INT(int16_t, Int16);
+                SERIALIZE_INT(uint16_t, UInt16);
+                SERIALIZE_INT(int32_t, Int32);
+                SERIALIZE_INT(uint32_t, UInt32);
+                SERIALIZE_INT(int64_t, Int64);
+                SERIALIZE_INT(uint64_t, UInt64);
+            }
+
+#undef SERIALIZE_INT
+        }
+
+        if (intValues.IsArray)
+            m_Emitter << YAML::EndSeq;
+    }
+
     template<typename T>
     static void SerializeValue(YAML::Emitter& emitter, SerializationValue<T>& value)
     {
@@ -29,16 +68,6 @@ namespace Flare
 
         if (value.IsArray)
             emitter << YAML::EndSeq;
-    }
-
-    void YAMLSerializer::SerializeInt32(SerializationValue<int32_t> value)
-    {
-        SerializeValue(m_Emitter, value);
-    }
-
-    void YAMLSerializer::SerializeUInt32(SerializationValue<uint32_t> value)
-    {
-        SerializeValue(m_Emitter, value);
     }
 
     void YAMLSerializer::SerializeBool(SerializationValue<bool> value)
@@ -149,6 +178,55 @@ namespace Flare
         m_CurrentPropertyKey = key;
     }
 
+    static void DeserializeIntValue(uint8_t* outValue, const YAML::Node& node, SerializableIntType type)
+    {
+#define DESERIALIZE_INT(intType, serializableIntType)       \
+            case SerializableIntType::serializableIntType:  \
+                *(intType*)(outValue) = node.as<intType>(); \
+                break;
+
+        switch (type)
+        {
+        case SerializableIntType::Int8:
+            reinterpret_cast<int8_t&>(outValue) = (int8_t)node.as<int16_t>();
+            break;
+        case SerializableIntType::UInt8:
+            reinterpret_cast<uint8_t&>(outValue) = (uint8_t)node.as<uint16_t>();
+            break;
+
+            DESERIALIZE_INT(int16_t, Int16);
+            DESERIALIZE_INT(uint16_t, UInt16);
+            DESERIALIZE_INT(int32_t, Int32);
+            DESERIALIZE_INT(uint32_t, UInt32);
+            DESERIALIZE_INT(int64_t, Int64);
+            DESERIALIZE_INT(uint64_t, UInt64);
+        }
+
+#undef DESERIALIZE_INT
+    }
+
+    void YAMLDeserializer::SerializeInt(SerializationValue<uint8_t> intValues, SerializableIntType type)
+    {
+        size_t intSize = SizeOfSerializableIntType(type);
+        if (intValues.IsArray)
+        {
+            size_t index = 0;
+            for (const YAML::Node& node : CurrentNode())
+            {
+                if (index >= intValues.Values.GetSize())
+                    break;
+                
+                DeserializeIntValue(&intValues.Values[index], node, type);
+                index += intSize;
+            }
+        }
+        else
+        {
+            if (YAML::Node node = CurrentNode()[m_CurrentPropertyKey])
+                DeserializeIntValue(intValues.Values.GetData(), node, type);
+        }
+    }
+
     template<typename T>
     void DeserializeValue(SerializationValue<T>& value, const YAML::Node& currentNode, const std::string& currentPropertyName)
     {
@@ -169,16 +247,6 @@ namespace Flare
             if (YAML::Node node = currentNode[currentPropertyName])
                 value.Values[0] = node.as<T>();
         }
-    }
-
-    void YAMLDeserializer::SerializeInt32(SerializationValue<int32_t> value)
-    {
-        DeserializeValue(value, CurrentNode(), m_CurrentPropertyKey);
-    }
-
-    void YAMLDeserializer::SerializeUInt32(SerializationValue<uint32_t> value)
-    {
-        DeserializeValue(value, CurrentNode(), m_CurrentPropertyKey);
     }
 
     void YAMLDeserializer::SerializeBool(SerializationValue<bool> value)

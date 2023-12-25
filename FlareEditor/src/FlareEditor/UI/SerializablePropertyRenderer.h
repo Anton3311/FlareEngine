@@ -15,8 +15,7 @@ namespace Flare
         SerializablePropertyRenderer();
 
         void PropertyKey(std::string_view key) override;
-        void SerializeInt32(SerializationValue<int32_t> value) override;
-        void SerializeUInt32(SerializationValue<uint32_t> value) override;
+        void SerializeInt(SerializationValue<uint8_t> intValues, SerializableIntType type) override;
         void SerializeBool(SerializationValue<bool> value) override;
         void SerializeFloat(SerializationValue<float> value) override;
         void SerializeFloatVector(SerializationValue<float> value, uint32_t componentsCount) override;

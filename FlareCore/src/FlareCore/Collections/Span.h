@@ -26,6 +26,8 @@ namespace Flare
 		constexpr const T* end() const { return m_Values + m_Size; }
 
 		constexpr size_t GetSize() const { return m_Size; }
+		constexpr T* GetData() { return m_Values; }
+		constexpr const T* GetData() const { return m_Values; }
 
 		inline T& operator[](size_t index)
 		{
