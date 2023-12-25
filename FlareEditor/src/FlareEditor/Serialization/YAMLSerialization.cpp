@@ -41,6 +41,11 @@ namespace Flare
         SerializeValue(m_Emitter, value);
     }
 
+    void YAMLSerializer::SerializeBool(SerializationValue<bool> value)
+    {
+        SerializeValue(m_Emitter, value);
+    }
+
     void YAMLSerializer::SerializeFloat(SerializationValue<float> value)
     {
         SerializeValue(m_Emitter, value);
@@ -172,6 +177,11 @@ namespace Flare
     }
 
     void YAMLDeserializer::SerializeUInt32(SerializationValue<uint32_t> value)
+    {
+        DeserializeValue(value, CurrentNode(), m_CurrentPropertyKey);
+    }
+
+    void YAMLDeserializer::SerializeBool(SerializationValue<bool> value)
     {
         DeserializeValue(value, CurrentNode(), m_CurrentPropertyKey);
     }

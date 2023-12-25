@@ -36,6 +36,8 @@ namespace Flare
         virtual void SerializeInt32(SerializationValue<int32_t> value) = 0;
         virtual void SerializeUInt32(SerializationValue<uint32_t> value) = 0;
 
+        virtual void SerializeBool(SerializationValue<bool> value) = 0;
+
         virtual void SerializeFloat(SerializationValue<float> value) = 0;
 
         virtual void SerializeFloatVector(SerializationValue<float> value, uint32_t componentsCount) = 0;
@@ -81,6 +83,7 @@ namespace Flare
     IMPL_SERIALIZATION_WRAPPER(int32_t, SerializeInt32);
     IMPL_SERIALIZATION_WRAPPER(uint32_t, SerializeUInt32);
     IMPL_SERIALIZATION_WRAPPER(float, SerializeFloat);
+    IMPL_SERIALIZATION_WRAPPER(bool, SerializeBool);
 
     template<>
     inline void SerializationStream::Serialize<std::string>(SerializationValue<std::string> value)

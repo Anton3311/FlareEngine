@@ -51,6 +51,24 @@ namespace Flare
         }
     }
 
+    void SerializablePropertyRenderer::SerializeBool(SerializationValue<bool> value)
+    {
+        BeginPropertiesGridIfNeeded();
+
+        if (!value.IsArray)
+            EditorGUI::PropertyName(m_CurrentPropertyName.data());
+
+        for (size_t i = 0; i < value.Values.GetSize(); i++)
+        {
+            if (value.IsArray)
+                EditorGUI::PropertyIndex(i);
+
+            ImGui::PushID(&value.Values[i]);
+            ImGui::Checkbox("", &value.Values[i]);
+            ImGui::PopID();
+        }
+    }
+
     void SerializablePropertyRenderer::SerializeFloat(SerializationValue<float> value)
     {
         BeginPropertiesGridIfNeeded();

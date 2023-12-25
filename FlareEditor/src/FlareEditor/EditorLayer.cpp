@@ -409,32 +409,12 @@ namespace Flare
             {
                 auto& postProcessing = Scene::GetActive()->GetPostProcessingManager();
 
-                if (ImGui::TreeNodeEx("Tone Mapping", ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_SpanAvailWidth))
-                {
-                    Ref<ToneMapping> toneMapping = postProcessing.ToneMappingPass;
-                    if (EditorGUI::BeginPropertyGrid())
-                    {
-                        EditorGUI::BoolPropertyField("Enabled", toneMapping->Enabled);
-                        EditorGUI::EndPropertyGrid();
-                    }
-
-                    ImGui::TreePop();
-                }
-
-                if (ImGui::TreeNodeEx("Vignette", ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_SpanAvailWidth))
-                {
-                    Ref<Vignette> vignette = postProcessing.VignettePass;
-                    if (EditorGUI::BeginPropertyGrid())
-                    {
-                        EditorGUI::BoolPropertyField("Enabled", vignette->Enabled);
-                        EditorGUI::ColorPropertyField("Color", vignette->Color);
-                        EditorGUI::FloatPropertyField("Radius", vignette->Radius);
-                        EditorGUI::FloatPropertyField("Smoothness", vignette->Smoothness);
-                        EditorGUI::EndPropertyGrid();
-                    }
-
-                    ImGui::TreePop();
-                }
+                EditorGUI::ObjectField(SerializableObject(
+                    (uint8_t*)postProcessing.ToneMappingPass.get(),
+                    FLARE_SERIALIZATION_DESCRIPTOR_OF(ToneMapping)));
+                EditorGUI::ObjectField(SerializableObject(
+                    (uint8_t*)postProcessing.VignettePass.get(),
+                    FLARE_SERIALIZATION_DESCRIPTOR_OF(Vignette)));
 
                 ImGui::TreePop();
             }
