@@ -1,15 +1,11 @@
+#include "Sandbox.h"
+
 #include <FlareECS/World.h>
 #include <FlareECS/System/System.h>
-
-#include <FlareECS/System/SystemInitializer.h>
-#include <FlareECS/Entity/ComponentInitializer.h>
 
 #include <FlareECS/Commands/CommandBuffer.h>
 
 #include <Flare/Core/Time.h>
-#include <FlareCore/Serialization/TypeInitializer.h>
-
-#include <Flare/AssetManager/AssetManager.h>
 
 #include <Flare/Scene/Components.h>
 #include <Flare/Scene/Prefab.h>
@@ -21,40 +17,16 @@
 
 namespace Sandbox
 {
-	using namespace Flare;
-	struct RotatingQuadData
-	{
-		FLARE_COMPONENT;
-		float RotationSpeed;
-		AssetHandle PrefabHandle;
-	};
 	FLARE_IMPL_COMPONENT(RotatingQuadData,
 		FLARE_PROPERTY(RotatingQuadData, RotationSpeed),
 		FLARE_PROPERTY(RotatingQuadData, PrefabHandle)
 	);
 
-	struct SomeComponent
-	{
-		FLARE_COMPONENT;
-
-		int a, b;
-
-		SomeComponent()
-			: a(100), b(-234) {}
-	};
 	FLARE_IMPL_COMPONENT(SomeComponent,
 		FLARE_PROPERTY(SomeComponent, a),
 		FLARE_PROPERTY(SomeComponent, b),
 	);
 
-	struct TestComponent
-	{
-		FLARE_COMPONENT;
-		int a;
-
-		TestComponent()
-			: a(1000) {}
-	};
 	FLARE_IMPL_COMPONENT(TestComponent, FLARE_PROPERTY(TestComponent, a));
 
 	class RotatingQuadSystem : public Flare::System

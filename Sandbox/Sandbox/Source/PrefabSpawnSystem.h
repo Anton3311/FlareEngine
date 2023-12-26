@@ -1,5 +1,8 @@
 #pragma once
 
+#include <FlareCore/Serialization/TypeSerializer.h>
+#include <FlareCore/Serialization/SerializationStream.h>
+
 #include <FlareECS/System/SystemInitializer.h>
 #include <FlareECS/Entity/ComponentInitializer.h>
 
@@ -18,6 +21,18 @@ struct PrefabSpawner
 
 	float TimeLeft;
 	float Period;
+};
+
+template<>
+struct Flare::TypeSerializer<PrefabSpawner>
+{
+	void OnSerialize(PrefabSpawner& prefabSpawner, Flare::SerializationStream& stream)
+	{
+		stream.Serialize("Enabled", Flare::SerializationValue(prefabSpawner.Enabled));
+		stream.Serialize("PrefabHandle", Flare::SerializationValue(prefabSpawner.PrefabHandle));
+		stream.Serialize("TimeLeft", Flare::SerializationValue(prefabSpawner.TimeLeft));
+		stream.Serialize("Period", Flare::SerializationValue(prefabSpawner.Period));
+	}
 };
 
 struct PrefabSpawnSystem : Flare::System
