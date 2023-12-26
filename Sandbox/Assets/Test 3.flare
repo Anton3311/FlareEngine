@@ -1,56 +1,93 @@
 Entities:
   - Components:
+      - Name: struct Flare::TransformComponent
+        Data:
+          Position: [0, 0, 0]
+          Rotation: [0, 0, 0]
+          Scale: [1, 1, 1]
       - Name: struct Flare::CameraComponent
-        Projection: 1
-        Size: 10
-        FOV: 60
-        Near: 0.100000001
-        Far: 1000
-      - Name: struct Flare::TransformComponent
-        Position: [0, 0, 0]
-        Rotation: [0, 0, 0]
-        Scale: [1, 1, 1]
+        Data:
+          Size: 10
+          FOV: 60
+          Near: 0.100000001
+          Far: 1000
+      - Name: struct Flare::SerializationId
+        Data:
+          Id: 7555812038792243010
   - Components:
+      - Name: struct Flare::TransformComponent
+        Data:
+          Position: [0, 0, -1.59063542]
+          Rotation: [0, -0, 0]
+          Scale: [1, 1, 1]
       - Name: struct Flare::SpriteComponent
-        Color: [1, 1, 1, 1]
-        TextureTiling: [1, 1]
-        Texture: 0
-        Flags: 0
-      - Name: struct Flare::TransformComponent
-        Position: [0, 0, -1.59063542]
-        Rotation: [0, -0, 0]
-        Scale: [1, 1, 1]
+        Data:
+          Color: [1, 1, 1, 1]
+          TextureTiling: [1, 1]
+          Texture: 0
+      - Name: struct Flare::SerializationId
+        Data:
+          Id: 6452973691642003854
   - Components:
+      - Name: struct Flare::TransformComponent
+        Data:
+          Position: [0, 0, 0]
+          Rotation: [0, 0, 0]
+          Scale: [1, 1, 1]
+      - Name: struct Flare::SerializationId
+        Data:
+          Id: 16745540195396606432
       - Name: struct Sandbox::SomeComponent
-        a: 100
-        b: -234
-      - Name: struct Flare::TransformComponent
-        Position: [0, 0, 0]
-        Rotation: [0, 0, 0]
-        Scale: [1, 1, 1]
+        Data:
+          a: 100
+          b: -234
   - Components:
+      - Name: struct Flare::TransformComponent
+        Data:
+          Position: [0, 0, 0]
+          Rotation: [0, 0, 0]
+          Scale: [1, 1, 1]
+      - Name: struct Flare::SerializationId
+        Data:
+          Id: 5158001393272608777
       - Name: struct Sandbox::SomeComponent
-        a: 100
-        b: -234
-      - Name: struct Flare::TransformComponent
-        Position: [0, 0, 0]
-        Rotation: [0, 0, 0]
-        Scale: [1, 1, 1]
+        Data:
+          a: 100
+          b: -234
   - Components:
+      - Name: struct Flare::TransformComponent
+        Data:
+          Position: [0, 0, 0]
+          Rotation: [0, 0, 0]
+          Scale: [1, 1, 1]
+      - Name: struct Flare::SerializationId
+        Data:
+          Id: 11566462952644520348
       - Name: struct Sandbox::SomeComponent
-        a: 100
-        b: -234
-      - Name: struct Flare::TransformComponent
-        Position: [0, 0, 0]
-        Rotation: [0, 0, 0]
-        Scale: [1, 1, 1]
+        Data:
+          a: 100
+          b: -234
   - Components:
+      - Name: struct Flare::TransformComponent
+        Data:
+          Position: [-1.28212106, 0, -1.59063542]
+          Rotation: [0, -0, 0]
+          Scale: [1, 1, 1]
       - Name: struct Flare::SpriteComponent
-        Color: [1, 1, 1, 1]
-        TextureTiling: [1, 1]
-        Texture: 0
-        Flags: 0
-      - Name: struct Flare::TransformComponent
-        Position: [-1.28212106, 0, -1.59063542]
-        Rotation: [0, -0, 0]
-        Scale: [1, 1, 1]
+        Data:
+          Color: [1, 1, 1, 1]
+          TextureTiling: [1, 1]
+          Texture: 0
+      - Name: struct Flare::SerializationId
+        Data:
+          Id: 15276607075436424191
+PostProcessing:
+  - Name: class Flare::ToneMapping
+    Data:
+      Enabled: false
+  - Name: class Flare::Vignette
+    Data:
+      Enabled: false
+      Color: [0, 0, 0, 0.5]
+      Radius: 1
+      Smoothness: 1

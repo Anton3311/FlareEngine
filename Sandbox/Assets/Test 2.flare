@@ -1,281 +1,342 @@
 Entities:
   - Components:
-      - Name: struct Flare::NameComponent
-        Value: Camera
-      - Name: struct Flare::TransformComponent
-        Position: [18.3444405, 6.84962273, 24.2589722]
-        Rotation: [0, -0, 0]
-        Scale: [0.999999821, 0.999997437, 0.999998569]
+      - Name: struct Flare::SerializationId
+        Data:
+          Id: 3482381988035497719
       - Name: struct Flare::CameraComponent
-        Projection: 1
-        Size: 10
-        FOV: 60
-        Near: 0.100000001
-        Far: 100
-      - Name: struct Flare::SerializationId
-        Id: 3482381988035497719
-  - Components:
+        Data:
+          Size: 10
+          FOV: 60
+          Near: 0.100000001
+          Far: 100
       - Name: struct Flare::TransformComponent
-        Position: [0, 0, -1.20000005]
-        Rotation: [168.311813, 171, -68.1223984]
-        Scale: [5.63262272, 8.70941257, 5.79757786]
+        Data:
+          Position: [18.3444405, 6.84962273, 24.2589722]
+          Rotation: [0, -0, 0]
+          Scale: [0.999999821, 0.999997437, 0.999998569]
+      - Name: struct Flare::NameComponent
+        Data:
+          Value: Camera
+  - Components:
+      - Name: struct Flare::SerializationId
+        Data:
+          Id: 871891275760363965
       - Name: struct Flare::SpriteComponent
-        Color: [0, 0, 1, 2]
-        TextureTiling: [1, 1]
-        Texture: 5193090395626261884
-        Flags: 0
-      - Name: struct Flare::SerializationId
-        Id: 871891275760363965
-  - Components:
+        Data:
+          Color: [0, 0, 1, 2]
+          TextureTiling: [1, 1]
+          Texture: 5193090395626261884
       - Name: struct Flare::TransformComponent
-        Position: [-4.0128355, 0.29252696, 0]
-        Rotation: [-13.2410898, 0, 46.5036278]
-        Scale: [3.99999523, 0.999998748, 0.999999285]
+        Data:
+          Position: [0, 0, -1.20000005]
+          Rotation: [168.311813, 171, -68.1223984]
+          Scale: [5.63262272, 8.70941257, 5.79757786]
+  - Components:
+      - Name: struct Flare::SerializationId
+        Data:
+          Id: 14019033064352813952
       - Name: struct Flare::SpriteComponent
-        Color: [1, 1, 1, 1]
-        TextureTiling: [4, 1]
-        Texture: 5193090395626261884
-        Flags: 0
-      - Name: struct Flare::SerializationId
-        Id: 14019033064352813952
-  - Components:
+        Data:
+          Color: [1, 1, 1, 1]
+          TextureTiling: [4, 1]
+          Texture: 5193090395626261884
       - Name: struct Flare::TransformComponent
-        Position: [0, 0, 0]
-        Rotation: [0, 0, 0]
-        Scale: [0, 0, 0]
-      - Name: struct Flare::SerializationId
-        Id: 18020658007293373824
+        Data:
+          Position: [-4.0128355, 0.29252696, 0]
+          Rotation: [-13.2410898, 0, 46.5036278]
+          Scale: [3.99999523, 0.999998748, 0.999999285]
   - Components:
-      - Name: struct Flare::TransformComponent
-        Position: [0, 0, 0]
-        Rotation: [0, 0, 0]
-        Scale: [0, 0, 0]
       - Name: struct Flare::SerializationId
-        Id: 12213814967473832747
-  - Components:
+        Data:
+          Id: 18020658007293373824
       - Name: struct Flare::TransformComponent
-        Position: [0, 0, 0]
-        Rotation: [0, 0, 0]
-        Scale: [0, 0, 0]
+        Data:
+          Position: [0, 0, 0]
+          Rotation: [0, 0, 0]
+          Scale: [0, 0, 0]
+  - Components:
       - Name: struct Flare::SerializationId
-        Id: 2961932603647700048
-  - Components:
+        Data:
+          Id: 12213814967473832747
       - Name: struct Flare::TransformComponent
-        Position: [0, 0, 0]
-        Rotation: [0, 0, 0]
-        Scale: [0, 0, 0]
+        Data:
+          Position: [0, 0, 0]
+          Rotation: [0, 0, 0]
+          Scale: [0, 0, 0]
+  - Components:
       - Name: struct Flare::SerializationId
-        Id: 278814202216803251
-  - Components:
+        Data:
+          Id: 2961932603647700048
       - Name: struct Flare::TransformComponent
-        Position: [-3.46407223, 0.69900316, 0.238736749]
-        Rotation: [0, -0, 0]
-        Scale: [1.70000005, 1.70000005, 1]
-      - Name: struct Flare::SpriteComponent
-        Color: [0.142348766, 0.142348766, 0.142348766, 1]
-        TextureTiling: [1, 1]
-        Texture: 0
-        Flags: 0
+        Data:
+          Position: [0, 0, 0]
+          Rotation: [0, 0, 0]
+          Scale: [0, 0, 0]
+  - Components:
+      - Name: struct Flare::SerializationId
+        Data:
+          Id: 278814202216803251
+      - Name: struct Flare::TransformComponent
+        Data:
+          Position: [0, 0, 0]
+          Rotation: [0, 0, 0]
+          Scale: [0, 0, 0]
+  - Components:
+      - Name: struct Flare::SerializationId
+        Data:
+          Id: 11083316172995715235
       - Name: struct Flare::SpriteLayer
-        Layer: 37
-      - Name: struct Flare::SerializationId
-        Id: 11083316172995715235
-  - Components:
-      - Name: struct Flare::TransformComponent
-        Position: [-4.22397041, 0, 0.144194305]
-        Rotation: [0, -0, 0]
-        Scale: [1, 1, 1]
+        Data:
+          Layer: 37
       - Name: struct Flare::SpriteComponent
-        Color: [1, 1, 1, 1]
-        TextureTiling: [1, 1]
-        Texture: 0
-        Flags: 0
-      - Name: struct Flare::SpriteLayer
-        Layer: 16
-      - Name: struct Flare::SerializationId
-        Id: 11925671007852071186
-  - Components:
+        Data:
+          Color: [0.142348766, 0.142348766, 0.142348766, 1]
+          TextureTiling: [1, 1]
+          Texture: 0
       - Name: struct Flare::TransformComponent
-        Position: [-2.66137695, 0, -0.421218872]
-        Rotation: [0, -0, 0]
-        Scale: [1, 1, 1]
-      - Name: struct Flare::SpriteComponent
-        Color: [1, 1, 1, 1]
-        TextureTiling: [1, 1]
-        Texture: 0
-        Flags: 0
+        Data:
+          Position: [-3.46407223, 0.69900316, 0.238736749]
+          Rotation: [0, -0, 0]
+          Scale: [1.70000005, 1.70000005, 1]
+  - Components:
+      - Name: struct Flare::SerializationId
+        Data:
+          Id: 11925671007852071186
       - Name: struct Flare::SpriteLayer
-        Layer: 35
+        Data:
+          Layer: 16
+      - Name: struct Flare::SpriteComponent
+        Data:
+          Color: [1, 1, 1, 1]
+          TextureTiling: [1, 1]
+          Texture: 0
+      - Name: struct Flare::TransformComponent
+        Data:
+          Position: [-4.22397041, 0, 0.144194305]
+          Rotation: [0, -0, 0]
+          Scale: [1, 1, 1]
+  - Components:
+      - Name: struct Flare::SerializationId
+        Data:
+          Id: 2133858472635987343
       - Name: struct Flare::MaterialComponent
-        Material: 8220382724088785445
-      - Name: struct Flare::SerializationId
-        Id: 2133858472635987343
-  - Components:
-      - Name: struct Flare::TransformComponent
-        Position: [-1.53645539, 0, 0]
-        Rotation: [0, -0, 0]
-        Scale: [1, 1, 1]
+        Data:
+          Material: 8220382724088785445
+      - Name: struct Flare::SpriteLayer
+        Data:
+          Layer: 35
       - Name: struct Flare::SpriteComponent
-        Color: [1, 1, 1, 1]
-        TextureTiling: [1, 1]
-        Texture: 0
-        Flags: 0
-      - Name: struct Flare::MaterialComponent
-        Material: 8220382724088785445
-      - Name: struct Flare::SerializationId
-        Id: 7393910204992008844
-  - Components:
+        Data:
+          Color: [1, 1, 1, 1]
+          TextureTiling: [1, 1]
+          Texture: 0
       - Name: struct Flare::TransformComponent
-        Position: [0.808461308, 5.98115349, -0.00459730625]
-        Rotation: [0, -0, 0]
-        Scale: [1, 1, 1]
+        Data:
+          Position: [-2.66137695, 0, -0.421218872]
+          Rotation: [0, -0, 0]
+          Scale: [1, 1, 1]
+  - Components:
+      - Name: struct Flare::SerializationId
+        Data:
+          Id: 7393910204992008844
+      - Name: struct Flare::MaterialComponent
+        Data:
+          Material: 8220382724088785445
+      - Name: struct Flare::SpriteComponent
+        Data:
+          Color: [1, 1, 1, 1]
+          TextureTiling: [1, 1]
+          Texture: 0
+      - Name: struct Flare::TransformComponent
+        Data:
+          Position: [-1.53645539, 0, 0]
+          Rotation: [0, -0, 0]
+          Scale: [1, 1, 1]
+  - Components:
+      - Name: struct Flare::SerializationId
+        Data:
+          Id: 2344803501759243978
       - Name: struct Flare::TextComponent
-        Text: Hello world
-        Color: [0.967971504, 0.32036069, 0.32036069, 1]
-        Font: 0
-      - Name: struct Flare::SerializationId
-        Id: 2344803501759243978
-  - Components:
+        Data:
+          Text: Hello world
+          Color: [0.967971504, 0.32036069, 0.32036069, 1]
+          Font: 0
       - Name: struct Flare::TransformComponent
-        Position: [0.595486522, 4.35153198, -1.88886654]
-        Rotation: [0, -0, -13.5794983]
-        Scale: [1, 1, 1]
+        Data:
+          Position: [0.808461308, 5.98115349, -0.00459730625]
+          Rotation: [0, -0, 0]
+          Scale: [1, 1, 1]
+  - Components:
+      - Name: struct Flare::SerializationId
+        Data:
+          Id: 13882585560893568042
       - Name: struct Flare::MeshComponent
-        Mesh: 10490832977963679498
-        Material: 15677979409362088946
-        Flags: 0
-      - Name: struct Flare::SerializationId
-        Id: 13882585560893568042
-  - Components:
-      - Name: struct Flare::NameComponent
-        Value: Light
+        Data:
+          Mesh: 10490832977963679498
+          Material: 15677979409362088946
       - Name: struct Flare::TransformComponent
-        Position: [20.131834, 14.7698135, 1.30390739]
-        Rotation: [-54.2879829, -51.9226837, 1.93811593e-05]
-        Scale: [0.999958038, 0.999956131, 0.999959528]
+        Data:
+          Position: [0.595486522, 4.35153198, -1.88886654]
+          Rotation: [0, -0, -13.5794983]
+          Scale: [1, 1, 1]
+  - Components:
+      - Name: struct Flare::SerializationId
+        Data:
+          Id: 14157206350593136549
       - Name: struct Flare::DirectionalLight
-        Color: [1, 1, 1]
-        Intensity: 3
-      - Name: struct Flare::SerializationId
-        Id: 14157206350593136549
-  - Components:
+        Data:
+          Color: [1, 1, 1]
+          Intensity: 3
       - Name: struct Flare::TransformComponent
-        Position: [-9.48346424, -4.75191927, 5.19856167]
-        Rotation: [15.0018377, -39.6241188, -31.7767696]
-        Scale: [0.999999523, 0.999998868, 0.999999344]
-      - Name: struct Flare::MeshComponent
-        Mesh: 10342322337781790464
-        Material: 13576769737354600278
-        Flags: 0
-      - Name: struct Flare::SerializationId
-        Id: 5404373360498434256
-  - Components:
-      - Name: struct Flare::TransformComponent
-        Position: [0, 0, 0]
-        Rotation: [0, 0, 0]
-        Scale: [1, 1, 1]
-      - Name: struct Flare::Environment
-        EnvironmentColor: [0.55160141, 0.526082516, 0.526082516]
-        EnvironmentColorIntensity: 0.699999988
-      - Name: struct Flare::SerializationId
-        Id: 9033985062031990177
-  - Components:
-      - Name: struct Flare::TransformComponent
-        Position: [1.57640791, 21.3515987, 4.643682]
-        Rotation: [0, -0, 0]
-        Scale: [5.72494268, 5.72494268, 5.72494268]
-      - Name: struct Flare::MeshComponent
-        Mesh: 10490832977963679498
-        Material: 13576769737354600278
-        Flags: 0
-      - Name: struct Flare::SerializationId
-        Id: 1799081568097725177
-  - Components:
-      - Name: struct Flare::TransformComponent
-        Position: [4.01144505, 2.53233695, 0]
-        Rotation: [12.5882301, -26.2796116, 63.2349968]
-        Scale: [0.999999404, 0.999999225, 0.999999821]
-      - Name: struct Flare::MeshComponent
-        Mesh: 10342322337781790464
-        Material: 13576769737354600278
-        Flags: 0
-      - Name: struct Flare::SerializationId
-        Id: 7485847360438181345
-  - Components:
-      - Name: struct Flare::TransformComponent
-        Position: [0, 0, 0]
-        Rotation: [0, 0, 0]
-        Scale: [1, 1, 1]
-      - Name: struct Flare::SerializationId
-        Id: 12721426740858710615
-  - Components:
-      - Name: struct Flare::TransformComponent
-        Position: [-6.93126678, 8.46841621, -6.32897806]
-        Rotation: [3.89661264, -64.6273727, -16.4232502]
-        Scale: [5.46719933, 5.4671979, 5.4671979]
-      - Name: struct Flare::MeshComponent
-        Mesh: 10342322337781790464
-        Material: 13576769737354600278
-        Flags: 0
-      - Name: struct Flare::SerializationId
-        Id: 12419434241386121723
-  - Components:
-      - Name: struct Flare::TransformComponent
-        Position: [7.21097279, -0.667932749, 7.39275408]
-        Rotation: [0, -0, 0]
-        Scale: [4, 6, 2]
-      - Name: struct Flare::MeshComponent
-        Mesh: 10342322337781790464
-        Material: 13900636449532140235
-        Flags: 0
-      - Name: struct Flare::SerializationId
-        Id: 9985011133420560302
-  - Components:
-      - Name: struct Flare::TransformComponent
-        Position: [-2.06211805, 8.46842003, -0.484459758]
-        Rotation: [0, -0, 0]
-        Scale: [1, 0.999999523, 1]
-      - Name: struct Flare::MeshComponent
-        Mesh: 10342322337781790464
-        Material: 13576769737354600278
-        Flags: 0
-      - Name: struct Flare::SerializationId
-        Id: 16947923577129417410
-  - Components:
-      - Name: struct Flare::TransformComponent
-        Position: [-17.9693203, 2.98832726, 7.88954115]
-        Rotation: [-90, -0, 0]
-        Scale: [3.40999818, 3.40998626, 3.40998769]
-      - Name: struct Flare::MeshComponent
-        Mesh: 15517588840512804130
-        Material: 8591874641572217228
-        Flags: 0
-      - Name: struct Flare::SerializationId
-        Id: 1308719575674716970
-  - Components:
+        Data:
+          Position: [20.131834, 14.7698135, 1.30390739]
+          Rotation: [-54.2879829, -51.9226837, 1.93811593e-05]
+          Scale: [0.999958038, 0.999956131, 0.999959528]
       - Name: struct Flare::NameComponent
-        Value: Terrain
-      - Name: struct Flare::TransformComponent
-        Position: [0, 0, 0]
-        Rotation: [-90, 0, 0]
-        Scale: [30, 30, 30]
-      - Name: struct Flare::MeshComponent
-        Mesh: 3478378963703612906
-        Material: 7922235498107244779
-        Flags: 0
-      - Name: struct Flare::SerializationId
-        Id: 5608678384290633286
+        Data:
+          Value: Light
   - Components:
-      - Name: struct Flare::TransformComponent
-        Position: [-6.62748623, 20.1772366, -5.23394108]
-        Rotation: [0, -0, 0]
-        Scale: [2.36000013, 2.36000013, 2.36000013]
-      - Name: struct Flare::MeshComponent
-        Mesh: 10490832977963679498
-        Material: 13576769737354600278
-        Flags: 0
       - Name: struct Flare::SerializationId
-        Id: 1799081568097725177
+        Data:
+          Id: 5404373360498434256
+      - Name: struct Flare::MeshComponent
+        Data:
+          Mesh: 10342322337781790464
+          Material: 13576769737354600278
+      - Name: struct Flare::TransformComponent
+        Data:
+          Position: [-9.48346424, -4.75191927, 5.19856167]
+          Rotation: [15.0018377, -39.6241188, -31.7767696]
+          Scale: [0.999999523, 0.999998868, 0.999999344]
+  - Components:
+      - Name: struct Flare::SerializationId
+        Data:
+          Id: 9033985062031990177
+      - Name: struct Flare::Environment
+        Data:
+          EnvironmentColor: [0.55160141, 0.526082516, 0.526082516]
+          EnvironmentColorIntensity: 0.699999988
+      - Name: struct Flare::TransformComponent
+        Data:
+          Position: [0, 0, 0]
+          Rotation: [0, 0, 0]
+          Scale: [1, 1, 1]
+  - Components:
+      - Name: struct Flare::SerializationId
+        Data:
+          Id: 1799081568097725177
+      - Name: struct Flare::MeshComponent
+        Data:
+          Mesh: 10490832977963679498
+          Material: 13576769737354600278
+      - Name: struct Flare::TransformComponent
+        Data:
+          Position: [1.57640791, 21.3515987, 4.643682]
+          Rotation: [0, -0, 0]
+          Scale: [5.72494268, 5.72494268, 5.72494268]
+  - Components:
+      - Name: struct Flare::SerializationId
+        Data:
+          Id: 7485847360438181345
+      - Name: struct Flare::MeshComponent
+        Data:
+          Mesh: 10342322337781790464
+          Material: 13576769737354600278
+      - Name: struct Flare::TransformComponent
+        Data:
+          Position: [4.01144505, 2.53233695, 0]
+          Rotation: [12.5882301, -26.2796116, 63.2349968]
+          Scale: [0.999999404, 0.999999225, 0.999999821]
+  - Components:
+      - Name: struct Flare::SerializationId
+        Data:
+          Id: 12721426740858710615
+      - Name: struct Flare::TransformComponent
+        Data:
+          Position: [0, 0, 0]
+          Rotation: [0, 0, 0]
+          Scale: [1, 1, 1]
+  - Components:
+      - Name: struct Flare::SerializationId
+        Data:
+          Id: 12419434241386121723
+      - Name: struct Flare::MeshComponent
+        Data:
+          Mesh: 10342322337781790464
+          Material: 13576769737354600278
+      - Name: struct Flare::TransformComponent
+        Data:
+          Position: [-6.93126678, 8.46841621, -6.32897806]
+          Rotation: [3.89661264, -64.6273727, -16.4232502]
+          Scale: [5.46719933, 5.4671979, 5.4671979]
+  - Components:
+      - Name: struct Flare::SerializationId
+        Data:
+          Id: 9985011133420560302
+      - Name: struct Flare::MeshComponent
+        Data:
+          Mesh: 10342322337781790464
+          Material: 13900636449532140235
+      - Name: struct Flare::TransformComponent
+        Data:
+          Position: [7.21097279, -0.667932749, 7.39275408]
+          Rotation: [0, -0, 0]
+          Scale: [4, 6, 2]
+  - Components:
+      - Name: struct Flare::SerializationId
+        Data:
+          Id: 16947923577129417410
+      - Name: struct Flare::MeshComponent
+        Data:
+          Mesh: 10342322337781790464
+          Material: 13576769737354600278
+      - Name: struct Flare::TransformComponent
+        Data:
+          Position: [-2.06211805, 8.46842003, -0.484459758]
+          Rotation: [0, -0, 0]
+          Scale: [1, 0.999999523, 1]
+  - Components:
+      - Name: struct Flare::SerializationId
+        Data:
+          Id: 1308719575674716970
+      - Name: struct Flare::MeshComponent
+        Data:
+          Mesh: 15517588840512804130
+          Material: 8591874641572217228
+      - Name: struct Flare::TransformComponent
+        Data:
+          Position: [-17.9693203, 2.98832726, 7.88954115]
+          Rotation: [-90, -0, 0]
+          Scale: [3.40999818, 3.40998626, 3.40998769]
+  - Components:
+      - Name: struct Flare::SerializationId
+        Data:
+          Id: 5608678384290633286
+      - Name: struct Flare::MeshComponent
+        Data:
+          Mesh: 3478378963703612906
+          Material: 7922235498107244779
+      - Name: struct Flare::TransformComponent
+        Data:
+          Position: [0, 0, 0]
+          Rotation: [-90, 0, 0]
+          Scale: [30, 30, 30]
+      - Name: struct Flare::NameComponent
+        Data:
+          Value: Terrain
+  - Components:
+      - Name: struct Flare::SerializationId
+        Data:
+          Id: 1799081568097725177
+      - Name: struct Flare::MeshComponent
+        Data:
+          Mesh: 10490832977963679498
+          Material: 13576769737354600278
+      - Name: struct Flare::TransformComponent
+        Data:
+          Position: [-6.62748623, 20.1772366, -5.23394108]
+          Rotation: [0, -0, 0]
+          Scale: [2.36000013, 2.36000013, 2.36000013]
 PostProcessing:
   - Name: class Flare::ToneMapping
     Data:
