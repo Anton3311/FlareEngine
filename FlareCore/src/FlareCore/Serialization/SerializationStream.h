@@ -15,7 +15,8 @@ namespace Flare
     enum class SerializationValueFlags
     {
         None = 0,
-        Color = 1
+        Color = 1,
+        HDRColor = 2,
     };
 
     FLARE_IMPL_ENUM_BITFIELD(SerializationValueFlags);

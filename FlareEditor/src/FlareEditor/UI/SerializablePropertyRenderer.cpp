@@ -131,12 +131,16 @@ namespace Flare
             case 3:
                 if (HAS_BIT(value.Flags, SerializationValueFlags::Color))
                     ImGui::ColorEdit3("", &value.Values[i], ImGuiColorEditFlags_Float);
+                else if (HAS_BIT(value.Flags, SerializationValueFlags::Color))
+                    ImGui::ColorEdit3("", &value.Values[i], ImGuiColorEditFlags_Float | ImGuiColorEditFlags_HDR);
                 else
                     ImGui::DragFloat3("", &value.Values[i]);
                 break;
             case 4:
                 if (HAS_BIT(value.Flags, SerializationValueFlags::Color))
                     ImGui::ColorEdit4("", &value.Values[i], ImGuiColorEditFlags_Float);
+                else if (HAS_BIT(value.Flags, SerializationValueFlags::Color))
+                    ImGui::ColorEdit4("", &value.Values[i], ImGuiColorEditFlags_Float | ImGuiColorEditFlags_HDR);
                 else
                     ImGui::DragFloat4("", &value.Values[i]);
                 break;

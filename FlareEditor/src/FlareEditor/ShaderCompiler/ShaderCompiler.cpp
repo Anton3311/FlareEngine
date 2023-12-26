@@ -184,7 +184,7 @@ namespace Flare
         return {};
     }
 
-    static void ParseShaderPropertiesMetaData(ShaderSourceParser& parser,
+    static void ParseShaderMetadata(const ShaderSourceParser& parser,
         ShaderFeatures& features,
         std::vector<ShaderError>& errors,
         const std::unordered_map<std::string, size_t>& propertyNameToIndex,
@@ -236,18 +236,68 @@ namespace Flare
             else if (element.Name.Value == "Properties")
             {
                 if (element.Type != BlockElementType::Block)
-                    errors.emplace_back(element.Value.Position, fmt::format("Expected an array of properties, instead of a value"));
-                else
                 {
-                    const Block& block = parser.GetBlock(element.ChildBlockIndex);
-                    for (const BlockElement& property : block.Elements)
-                    {
-                        auto it = propertyNameToIndex.find(std::string(property.Name.Value));
-                        if (it == propertyNameToIndex.end())
-                            continue;
+                    errors.emplace_back(element.Value.Position, fmt::format("Expected an array of properties, instead of a value"));
+                    continue;
+                }
 
-                        ShaderProperty& shaderProperty = properties[it->second];
-                        shaderProperty.Hidden = false;
+                const Block& block = parser.GetBlock(element.ChildBlockIndex);
+                for (const BlockElement& property : block.Elements)
+                {
+                    auto it = propertyNameToIndex.find(std::string(property.Name.Value));
+                    if (it == propertyNameToIndex.end())
+                        continue;
+
+                    ShaderProperty& shaderProperty = properties[it->second];
+                    shaderProperty.Hidden = false;
+
+                    if (property.Type != BlockElementType::Block)
+                        continue;
+
+                    const Block& childBlock = parser.GetBlock(property.ChildBlockIndex);
+                    for (const BlockElement& element : childBlock.Elements)
+                    {
+                        if (element.Name.Value == "Type")
+                        {
+                            if (element.Type != BlockElementType::Value)
+                            {
+                                errors.emplace_back(element.Value.Position, "Expected a property type not a block");
+                                continue;
+                            }
+
+                            std::string_view typeString = element.Value.Value;
+                            if (typeString == "Color")
+                            {
+                                switch (shaderProperty.Type)
+                                {
+                                case ShaderDataType::Float3:
+                                case ShaderDataType::Float4:
+                                    shaderProperty.Flags |= SerializationValueFlags::Color;
+                                    break;
+                                default:
+                                    errors.emplace_back(element.Value.Position, "Property type 'Color' is only compatible with vec3 or vec4");
+                                    break;
+                                }
+                            }
+                            else if (typeString == "HDR")
+                            {
+                                switch (shaderProperty.Type)
+                                {
+                                case ShaderDataType::Float3:
+                                case ShaderDataType::Float4:
+                                    shaderProperty.Flags |= SerializationValueFlags::HDRColor;
+                                    break;
+                                default:
+                                    errors.emplace_back(element.Value.Position, "Property type 'HDR' is only compatible with vec3 or vec4");
+                                    break;
+                                }
+                            }
+                            else
+                            {
+                                errors.emplace_back(element.Value.Position, fmt::format("Unknown shader property type '{}'", element.Value.Value));
+                                continue;
+                            }
+                        }
                     }
                 }
             }
@@ -319,9 +369,9 @@ namespace Flare
                         break;
                     case 4:
                         if (memberType.columns == 4)
-							shaderDataType = ShaderDataType::Matrix4x4;
+                            shaderDataType = ShaderDataType::Matrix4x4;
                         else
-							shaderDataType = ShaderDataType::Float4;
+                            shaderDataType = ShaderDataType::Float4;
                         break;
                     default:
                         error = true;
@@ -339,16 +389,16 @@ namespace Flare
 
                 if (shaderDataType.has_value())
                 {
-					ShaderProperty& shaderProperty = properties.emplace_back();
-					shaderProperty.Location = UINT32_MAX;
+                    ShaderProperty& shaderProperty = properties.emplace_back();
+                    shaderProperty.Location = UINT32_MAX;
 
                     if (resource.name.empty())
                         shaderProperty.Name = resource.name;
                     else
                         shaderProperty.Name = fmt::format("{}.{}", resource.name, memberName);
 
-					shaderProperty.Offset = offset;
-					shaderProperty.Type = shaderDataType.value();
+                    shaderProperty.Offset = offset;
+                    shaderProperty.Type = shaderDataType.value();
                     shaderProperty.Size = compiler.get_declared_struct_member_size(bufferType, i);
                     shaderProperty.Hidden = true;
 
@@ -380,13 +430,13 @@ namespace Flare
                 }
             }
 
-			ShaderProperty& shaderProperty = properties.emplace_back();
-			shaderProperty.Location = UINT32_MAX;
-			shaderProperty.Name = resource.name;
-			shaderProperty.Offset = lastPropertyOffset;
-			shaderProperty.Type = type;
+            ShaderProperty& shaderProperty = properties.emplace_back();
+            shaderProperty.Location = UINT32_MAX;
+            shaderProperty.Name = resource.name;
+            shaderProperty.Offset = lastPropertyOffset;
+            shaderProperty.Type = type;
             shaderProperty.Size = size;
-			shaderProperty.Hidden = true;
+            shaderProperty.Hidden = true;
 
             propertyNameToIndex[shaderProperty.Name] = properties.size() - 1;
 
@@ -417,7 +467,7 @@ namespace Flare
         std::string pathString = shaderPath.string();
         std::vector<PreprocessedShaderProgram> programs;
         std::unordered_map<std::string, size_t> propertyNameToIndex;
-		ShaderProperties shaderProperties;
+        ShaderProperties shaderProperties;
 
         std::vector<ShaderError> errors;
 
@@ -429,12 +479,12 @@ namespace Flare
 
         if (errors.size() == 0)
         {
-			for (const auto& sourceBlock : parser.GetSourceBlocks())
-			{
-				PreprocessedShaderProgram& program = programs.emplace_back();
-				program.Source = sourceBlock.Source;
-				program.Stage = sourceBlock.Stage;
-			}
+            for (const auto& sourceBlock : parser.GetSourceBlocks())
+            {
+                PreprocessedShaderProgram& program = programs.emplace_back();
+                program.Source = sourceBlock.Source;
+                program.Stage = sourceBlock.Stage;
+            }
         }
         else
         {
@@ -477,15 +527,15 @@ namespace Flare
                 ShaderCacheManager::GetInstance()->SetCache(shaderHandle, ShaderTargetEnvironment::Vulkan, program.Stage, compiledVulkanShader.value());
             }
 
-			try
-			{
-				spirv_cross::Compiler compiler(compiledVulkanShader.value());
-				Reflect(compiler, propertyNameToIndex, shaderProperties);
-			}
-			catch (spirv_cross::CompilerError& e)
-			{
-				FLARE_CORE_ERROR("Shader reflection failed: {}", e.what());
-			}
+            try
+            {
+                spirv_cross::Compiler compiler(compiledVulkanShader.value());
+                Reflect(compiler, propertyNameToIndex, shaderProperties);
+            }
+            catch (spirv_cross::CompilerError& e)
+            {
+                FLARE_CORE_ERROR("Shader reflection failed: {}", e.what());
+            }
 
             std::optional<std::vector<uint32_t>> compiledOpenGLShader = {};
             
@@ -507,7 +557,7 @@ namespace Flare
             }
         }
 
-        ParseShaderPropertiesMetaData(parser, shaderFeatures, errors, propertyNameToIndex, shaderProperties);
+        ParseShaderMetadata(parser, shaderFeatures, errors, propertyNameToIndex, shaderProperties);
 
         ((EditorShaderCache*)ShaderCacheManager::GetInstance().get())->SetShaderEntry(
             shaderHandle,

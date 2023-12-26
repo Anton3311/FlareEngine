@@ -1,6 +1,6 @@
 Properties = 
 {
-	u_InstanceData.Color = {}
+	u_InstanceData.Color = { Type = Color }
 	u_InstanceData.Roughness = {}
 	u_Texture = {}
 }
