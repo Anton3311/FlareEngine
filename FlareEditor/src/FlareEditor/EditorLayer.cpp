@@ -44,58 +44,6 @@
 
 namespace Flare
 {
-    struct CustomType
-    {
-        FLARE_SERIALIZABLE;
-
-        int32_t IntValue;
-        float FloatValue;
-        glm::vec2 Vector;
-
-        std::string Text;
-
-        std::vector<int32_t> Ints;
-        std::vector<glm::vec3> Vectors;
-        std::vector<glm::ivec3> IntVectors;
-    };
-
-    struct Outer
-    {
-        FLARE_SERIALIZABLE;
-
-        CustomType t;
-        int32_t a;
-    };
-
-    template<>
-    struct TypeSerializer<CustomType>
-    {
-        void OnSerialize(CustomType& value, SerializationStream& stream)
-        {
-            stream.Serialize("Int", SerializationValue(value.IntValue));
-            stream.Serialize("Float", SerializationValue(value.FloatValue));
-            stream.Serialize("Vector", SerializationValue(value.Vector));
-            stream.Serialize("Ints", SerializationValue(value.Ints));
-            stream.Serialize("Vectors", SerializationValue(value.Vectors));
-            stream.Serialize("IntVectors", SerializationValue(value.IntVectors));
-            stream.Serialize("Text", SerializationValue(value.Text));
-        }
-    };
-
-    FLARE_SERIALIZABLE_IMPL(CustomType);
-
-    template<>
-    struct TypeSerializer<Outer>
-    {
-        void OnSerialize(Outer& value, SerializationStream& stream)
-        {
-            stream.Serialize("a", SerializationValue(value.a));
-            stream.Serialize("t", SerializationValue(value.t));
-        }
-    };
-
-    FLARE_SERIALIZABLE_IMPL(Outer);
-
     EditorLayer* EditorLayer::s_Instance = nullptr;
 
     EditorLayer::EditorLayer()
@@ -263,65 +211,6 @@ namespace Flare
         ImGui::DockSpace(dockspaceId, ImVec2(0.0f, 0.0f), dockspaceFlags);
 
         m_TitleBar.OnRenderImGui();
-
-        {
-            ImGui::Begin("Test");
-
-            SerializablePropertyRenderer stream;
-
-            static Outer o;
-            static CustomType& t = o.t;
-            static bool init = false;
-
-            if (!init)
-            {
-                o.a = 88;
-
-                t.IntValue = 10;
-                t.FloatValue = 0.54545f;
-                t.Ints = { 10, 11, 12, 13 };
-                t.Vector = glm::vec2(1000, -99);
-                t.Vectors = { glm::vec3(1.0f), glm::vec3(2.0f), glm::vec3(-10.0f) };
-                t.IntVectors = { glm::ivec3(1), glm::ivec3(2), glm::ivec3(-993294) };
-
-                init = true;
-            }
-
-            TransformComponent transform;
-            transform.Position = glm::vec3(8, 92, 1);
-            transform.Rotation = glm::vec3(-993, 12, 1);
-            transform.Scale = glm::vec3(10, 10, 20);
-
-            stream.Serialize("Outer", SerializationValue(o));
-            stream.Serialize("Transform", SerializationValue(transform));
-
-            if (ImGui::Button("To YAML"))
-            {
-                YAML::Emitter emitter;
-                emitter << YAML::BeginMap;
-                YAMLSerializer stream(emitter);
-
-                stream.Serialize("Outer", SerializationValue(o));
-                stream.Serialize("Transform", SerializationValue(transform));
-                emitter << YAML::EndMap;
-
-                FLARE_CORE_INFO(emitter.c_str());
-            }
-
-            static char s_Buffer[2048] = { 0 };
-            ImGui::InputTextMultiline("YAML", s_Buffer, 2048, ImVec2(600, 400));
-
-            if (ImGui::Button("From YAML"))
-            {
-                YAML::Node root = YAML::Load(s_Buffer);
-                YAMLDeserializer stream(root);
-
-                stream.Serialize("Outer", SerializationValue(o));
-                stream.Serialize("Transform", SerializationValue(transform));
-            }
-
-            ImGui::End();
-        }
 
         {
             ImGui::Begin("Shadows");
