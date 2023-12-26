@@ -416,7 +416,6 @@ namespace Flare
 
         std::string pathString = shaderPath.string();
         std::vector<PreprocessedShaderProgram> programs;
-        SerializableObjectDescriptor serializationDescriptor;
         std::unordered_map<std::string, size_t> propertyNameToIndex;
 		ShaderProperties shaderProperties;
 

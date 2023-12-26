@@ -206,10 +206,10 @@ namespace Flare
         switch (type)
         {
         case SerializableIntType::Int8:
-            reinterpret_cast<int8_t&>(outValue) = (int8_t)node.as<int16_t>();
+            (*(int8_t*)outValue) = (int8_t)node.as<int16_t>();
             break;
         case SerializableIntType::UInt8:
-            reinterpret_cast<uint8_t&>(outValue) = (uint8_t)node.as<uint16_t>();
+            (*(uint8_t*)outValue) = (uint8_t)node.as<uint16_t>();
             break;
 
             DESERIALIZE_INT(int16_t, Int16);

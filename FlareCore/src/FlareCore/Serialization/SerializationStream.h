@@ -144,8 +144,14 @@ namespace Flare
     IMPL_SERIALIZATION_WRAPPER(bool, SerializeBool);
     IMPL_SERIALIZATION_WRAPPER(UUID, SerializeUUID);
 
+    IMPL_INT_SERIALIZATION_WRAPPER(int8_t, SerializableIntType::Int8);
+    IMPL_INT_SERIALIZATION_WRAPPER(uint8_t, SerializableIntType::UInt8);
+    IMPL_INT_SERIALIZATION_WRAPPER(int16_t, SerializableIntType::Int16);
+    IMPL_INT_SERIALIZATION_WRAPPER(uint16_t, SerializableIntType::UInt16);
     IMPL_INT_SERIALIZATION_WRAPPER(int32_t, SerializableIntType::Int32);
     IMPL_INT_SERIALIZATION_WRAPPER(uint32_t, SerializableIntType::UInt32);
+    IMPL_INT_SERIALIZATION_WRAPPER(int64_t, SerializableIntType::Int64);
+    IMPL_INT_SERIALIZATION_WRAPPER(uint64_t, SerializableIntType::UInt64);
 
     template<>
     inline void SerializationStream::Serialize<std::string>(SerializationValue<std::string> value)

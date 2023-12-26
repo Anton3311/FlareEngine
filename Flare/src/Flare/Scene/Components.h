@@ -127,7 +127,8 @@ namespace Flare
             stream.Serialize("TextureTiling", SerializationValue(sprite.TextureTiling));
             stream.Serialize("Texture", SerializationValue(sprite.Texture));
             
-            // TODO: serialize flags
+            using FlagsUnderlyingType = std::underlying_type_t<decltype(sprite.Flags)>;
+            stream.Serialize("Flags", SerializationValue(reinterpret_cast<FlagsUnderlyingType&>(sprite.Flags)));
         }
     };
 
@@ -220,7 +221,8 @@ namespace Flare
             stream.Serialize("Mesh", SerializationValue(mesh.Mesh));
             stream.Serialize("Material", SerializationValue(mesh.Material));
 
-            // TODO: serialize flags
+            using FlagsUnderlyingType = std::underlying_type_t<decltype(mesh.Flags)>;
+            stream.Serialize("Flags", SerializationValue(reinterpret_cast<FlagsUnderlyingType&>(mesh.Flags)));
         }
     };
 
