@@ -182,6 +182,22 @@ namespace Flare
     }
 
     template<>
+    inline void SerializationStream::Serialize<glm::ivec4>(SerializationValue<glm::ivec4> value)
+    {
+        if (value.IsArray)
+        {
+            int32_t* vectors = glm::value_ptr(value.Values[0]);
+            SerializeIntVector(SerializationValue(vectors, value.Values.GetSize() * 4, value.Flags), 4);
+        }
+        else
+        {
+            SerializeIntVector(SerializationValue(*glm::value_ptr(value.Values[0]), value.Flags), 4);
+        }
+    }
+
+
+
+    template<>
     inline void SerializationStream::Serialize<glm::vec2>(SerializationValue<glm::vec2> value)
     {
         if (value.IsArray)

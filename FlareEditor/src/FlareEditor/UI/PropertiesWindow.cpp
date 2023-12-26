@@ -7,6 +7,7 @@
 
 #include "FlareEditor/UI/EditorGUI.h"
 #include "FlareEditor/UI/ECS/EntityProperties.h"
+#include "FlareEditor/UI/SerializablePropertyRenderer.h"
 
 #include "FlareEditor/EditorLayer.h"
 #include "FlareEditor/AssetManager/EditorShaderCache.h"
@@ -24,18 +25,18 @@ namespace Flare
 	void PropertiesWindow::OnAttach()
 	{
 		m_AssetManagerWindow.OnAssetSelectionChanged.Bind([](AssetHandle handle)
-		{
-			if (!AssetManager::IsAssetHandleValid(handle))
-				return;
-
-			switch (AssetManager::GetAssetMetadata(handle)->Type)
 			{
-			case AssetType::Texture:
-				s_SelectedTextureImportSettings = TextureImportSettings();
-				TextureImporter::DeserializeImportSettings(handle, s_SelectedTextureImportSettings);
-				break;
-			}
-		});
+				if (!AssetManager::IsAssetHandleValid(handle))
+					return;
+
+				switch (AssetManager::GetAssetMetadata(handle)->Type)
+				{
+				case AssetType::Texture:
+					s_SelectedTextureImportSettings = TextureImportSettings();
+					TextureImporter::DeserializeImportSettings(handle, s_SelectedTextureImportSettings);
+					break;
+				}
+			});
 	}
 
 	void PropertiesWindow::OnImGuiRender()
@@ -207,7 +208,7 @@ namespace Flare
 				EditorGUI::PropertyName("Culling Mode");
 
 				const char* preview = CullingModeToString(features.Culling);
-			
+
 				ImGui::PushID("CullingMode");
 				if (ImGui::BeginCombo("", preview, ImGuiComboFlags_HeightRegular))
 				{
@@ -267,7 +268,7 @@ namespace Flare
 						features.DepthFunction = DepthComparisonFunction::Never;
 					if (ImGui::MenuItem("Always"))
 						features.DepthFunction = DepthComparisonFunction::Always;
-				
+
 					ImGui::EndCombo();
 				}
 
@@ -284,12 +285,54 @@ namespace Flare
 		std::optional<const EditorShaderCache::ShaderEntry*> shaderEntry = shaderCache->GetShaderEntry(shaderHandle);
 		if (shaderEntry)
 		{
-			const SerializableObjectDescriptor& serializationDescriptor = shaderEntry.value()->SerializationDescriptor;
-			SerializableObject materialProperties = SerializableObject(material->GetPropertiesBuffer(), serializationDescriptor);
+			const ShaderProperties& properties = shaderEntry.value()->Properties;
 
-			EditorGUI::ObjectField(materialProperties);
+			SerializablePropertyRenderer propertyRenderer;
+			for (size_t propertyIndex = 0; propertyIndex < properties.size(); propertyIndex++)
+			{
+				const ShaderProperty& property = properties[propertyIndex];
+				if (property.Hidden)
+					continue;
+
+				propertyRenderer.PropertyKey(property.Name);
+				switch (property.Type)
+				{
+				case ShaderDataType::Int:
+					propertyRenderer.Serialize(SerializationValue(material->GetPropertyValue<int32_t>((uint32_t)propertyIndex), property.Flags));
+					break;
+				case ShaderDataType::Int2:
+					propertyRenderer.Serialize(SerializationValue(material->GetPropertyValue<glm::ivec2>((uint32_t)propertyIndex), property.Flags));
+					break;
+				case ShaderDataType::Int3:
+					propertyRenderer.Serialize(SerializationValue(material->GetPropertyValue<glm::ivec3>((uint32_t)propertyIndex), property.Flags));
+					break;
+				case ShaderDataType::Int4:
+					propertyRenderer.Serialize(SerializationValue(material->GetPropertyValue<glm::ivec4>((uint32_t)propertyIndex), property.Flags));
+					break;
+
+				case ShaderDataType::Float:
+					propertyRenderer.Serialize(SerializationValue(material->GetPropertyValue<float>((uint32_t)propertyIndex), property.Flags));
+					break;
+				case ShaderDataType::Float2:
+					propertyRenderer.Serialize(SerializationValue(material->GetPropertyValue<glm::vec2>((uint32_t)propertyIndex), property.Flags));
+					break;
+				case ShaderDataType::Float3:
+					propertyRenderer.Serialize(SerializationValue(material->GetPropertyValue<glm::vec3>((uint32_t)propertyIndex), property.Flags));
+					break;
+				case ShaderDataType::Float4:
+					propertyRenderer.Serialize(SerializationValue(material->GetPropertyValue<glm::vec4>((uint32_t)propertyIndex), property.Flags));
+					break;
+
+				case ShaderDataType::Sampler:
+					propertyRenderer.Serialize(SerializationValue(material->GetPropertyValue<AssetHandle>((uint32_t)propertyIndex), property.Flags));
+					break;
+				}
+			}
+
+			if (propertyRenderer.PropertiesGridStarted())
+				EditorGUI::EndPropertyGrid();
 		}
-
+		
 		return false;
 	}
 }

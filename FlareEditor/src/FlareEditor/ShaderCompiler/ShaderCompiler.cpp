@@ -184,27 +184,12 @@ namespace Flare
         return {};
     }
 
-    static void Preprocess(const std::filesystem::path& shaderPath,
-        std::string_view source,
-        std::vector<PreprocessedShaderProgram>& programs,
+    static void ParseShaderPropertiesMetaData(ShaderSourceParser& parser,
         ShaderFeatures& features,
-        SerializableObjectDescriptor& serializationDescriptor,
         std::vector<ShaderError>& errors,
-        std::unordered_map<std::string_view, size_t>& propertyNameToIndex)
+        const std::unordered_map<std::string, size_t>& propertyNameToIndex,
+        ShaderProperties& properties)
     {
-        ShaderSourceParser parser(shaderPath, source, errors);
-        parser.Parse();
-
-        if (errors.size() > 0)
-            return;
-
-        for (const auto& sourceBlock : parser.GetSourceBlocks())
-        {
-            PreprocessedShaderProgram& program = programs.emplace_back();
-            program.Source = sourceBlock.Source;
-            program.Stage = sourceBlock.Stage;
-        }
-
         const Block& rootBlock = parser.GetBlock(0);
         for (const auto& element : rootBlock.Elements)
         {
@@ -257,11 +242,12 @@ namespace Flare
                     const Block& block = parser.GetBlock(element.ChildBlockIndex);
                     for (const BlockElement& property : block.Elements)
                     {
-                        SerializablePropertyDescriptor& propertyDescriptor = serializationDescriptor.Properties.emplace_back(
-                            property.Name.Value, SIZE_MAX,
-                            SerializablePropertyType::Int32);
+                        auto it = propertyNameToIndex.find(std::string(property.Name.Value));
+                        if (it == propertyNameToIndex.end())
+                            continue;
 
-                        propertyNameToIndex.emplace(propertyDescriptor.Name, serializationDescriptor.Properties.size() - 1);
+                        ShaderProperty& shaderProperty = properties[it->second];
+                        shaderProperty.Hidden = false;
                     }
                 }
             }
@@ -269,8 +255,8 @@ namespace Flare
     }
 
     static void Reflect(spirv_cross::Compiler& compiler,
-        SerializableObjectDescriptor& serializationDescriptor,
-        const std::unordered_map<std::string_view, size_t>& propertyNameToIndex)
+        std::unordered_map<std::string, size_t>& propertyNameToIndex,
+        ShaderProperties& properties)
     {
         const spirv_cross::ShaderResources& resources = compiler.get_shader_resources();
       
@@ -291,7 +277,7 @@ namespace Flare
 
                 const auto& memberType = compiler.get_type(memberTypeId);
 
-                SerializablePropertyType dataType = SerializablePropertyType::Int32;
+                std::optional<ShaderDataType> shaderDataType = {};
                 uint32_t componentsCount = memberType.vecsize;
 
                 bool error = false;
@@ -302,16 +288,16 @@ namespace Flare
                     switch (componentsCount)
                     {
                     case 1:
-                        dataType = SerializablePropertyType::Int32;
+                        shaderDataType = ShaderDataType::Int;
                         break;
                     case 2:
-                        dataType = SerializablePropertyType::IntVector2;
+                        shaderDataType = ShaderDataType::Int2;
                         break;
                     case 3:
-                        dataType = SerializablePropertyType::IntVector3;
+                        shaderDataType = ShaderDataType::Int2;
                         break;
                     case 4:
-                        dataType = SerializablePropertyType::IntVector4;
+                        shaderDataType = ShaderDataType::Int2;
                         break;
                     default:
                         error = true;
@@ -323,19 +309,19 @@ namespace Flare
                     switch (componentsCount)
                     {
                     case 1:
-                        dataType = SerializablePropertyType::Float;
+                        shaderDataType = ShaderDataType::Float;
                         break;
                     case 2:
-                        dataType = SerializablePropertyType::FloatVector2;
+                        shaderDataType = ShaderDataType::Float2;
                         break;
                     case 3:
-                        dataType = SerializablePropertyType::FloatVector3;
+                        shaderDataType = ShaderDataType::Float3;
                         break;
                     case 4:
                         if (memberType.columns == 4)
-                            dataType = SerializablePropertyType::Matrix4x4;
+							shaderDataType = ShaderDataType::Matrix4x4;
                         else
-                            dataType = SerializablePropertyType::FloatVector4;
+							shaderDataType = ShaderDataType::Float4;
                         break;
                     default:
                         error = true;
@@ -351,24 +337,22 @@ namespace Flare
                 if (error)
                     continue;
 
-                SerializablePropertyDescriptor* property = nullptr;
-                if (resource.name.empty())
+                if (shaderDataType.has_value())
                 {
-                    auto propertyIterator = propertyNameToIndex.find(resource.name);
-                    if (propertyIterator != propertyNameToIndex.end())
-                        property = &serializationDescriptor.Properties[propertyIterator->second];
-                }
-                else
-                {
-                    auto propertyIterator = propertyNameToIndex.find(fmt::format("{0}.{1}", resource.name, memberName));
-                    if (propertyIterator != propertyNameToIndex.end())
-                        property = &serializationDescriptor.Properties[propertyIterator->second];
-                }
+					ShaderProperty& shaderProperty = properties.emplace_back();
+					shaderProperty.Location = UINT32_MAX;
 
-                if (property)
-                {
-                    property->PropertyType = dataType;
-                    property->Offset = offset;
+                    if (resource.name.empty())
+                        shaderProperty.Name = resource.name;
+                    else
+                        shaderProperty.Name = fmt::format("{}.{}", resource.name, memberName);
+
+					shaderProperty.Offset = offset;
+					shaderProperty.Type = shaderDataType.value();
+                    shaderProperty.Size = compiler.get_declared_struct_member_size(bufferType, i);
+                    shaderProperty.Hidden = true;
+
+                    propertyNameToIndex[shaderProperty.Name] = properties.size() - 1;
                 }
 
                 lastPropertyOffset = offset + compiler.get_declared_struct_member_size(bufferType, i);
@@ -391,20 +375,22 @@ namespace Flare
                 }
                 else
                 {
-                    FLARE_CORE_ERROR("Unsupported sampler array dimensions: {0}", samplerType.array.size());
+                    FLARE_CORE_ERROR("Unsupported sampler array dimensions: {}", samplerType.array.size());
                     continue;
                 }
             }
 
-            auto propertyIterator = propertyNameToIndex.find(resource.name);
-            if (propertyIterator != propertyNameToIndex.end())
-            {
-                SerializablePropertyDescriptor& propertyDescriptor = serializationDescriptor.Properties[propertyIterator->second];
-                propertyDescriptor.PropertyType = SerializablePropertyType::Texture2D;
-                propertyDescriptor.Offset = lastPropertyOffset;
-            }
+			ShaderProperty& shaderProperty = properties.emplace_back();
+			shaderProperty.Location = UINT32_MAX;
+			shaderProperty.Name = resource.name;
+			shaderProperty.Offset = lastPropertyOffset;
+			shaderProperty.Type = type;
+            shaderProperty.Size = size;
+			shaderProperty.Hidden = true;
 
-            lastPropertyOffset += sizeof(AssetHandle);
+            propertyNameToIndex[shaderProperty.Name] = properties.size() - 1;
+
+            lastPropertyOffset += size;
         }
     }
     
@@ -431,15 +417,27 @@ namespace Flare
         std::string pathString = shaderPath.string();
         std::vector<PreprocessedShaderProgram> programs;
         SerializableObjectDescriptor serializationDescriptor;
-        std::unordered_map<std::string_view, size_t> propertyNameToIndex;
+        std::unordered_map<std::string, size_t> propertyNameToIndex;
+		ShaderProperties shaderProperties;
 
         std::vector<ShaderError> errors;
 
         ShaderFeatures shaderFeatures;
         std::string_view source = sourceString;
 
-        Preprocess(shaderPath, source, programs, shaderFeatures, serializationDescriptor, errors, propertyNameToIndex);
-        if (errors.size() > 0)
+        ShaderSourceParser parser(shaderPath, source, errors);
+        parser.Parse();
+
+        if (errors.size() == 0)
+        {
+			for (const auto& sourceBlock : parser.GetSourceBlocks())
+			{
+				PreprocessedShaderProgram& program = programs.emplace_back();
+				program.Source = sourceBlock.Source;
+				program.Stage = sourceBlock.Stage;
+			}
+        }
+        else
         {
             FLARE_CORE_ERROR("Failed to compile shader '{}'", pathString);
             for (const ShaderError& error : errors)
@@ -480,22 +478,15 @@ namespace Flare
                 ShaderCacheManager::GetInstance()->SetCache(shaderHandle, ShaderTargetEnvironment::Vulkan, program.Stage, compiledVulkanShader.value());
             }
 
-            if (serializationDescriptor.Properties.size() > 0)
-            {
-                try
-                {
-                    std::unordered_map<std::string_view, size_t> propertyNameToIndex;
-                    for (size_t i = 0; i < serializationDescriptor.Properties.size(); i++)
-                        propertyNameToIndex.emplace(serializationDescriptor.Properties[i].Name, i);
-
-                    spirv_cross::Compiler compiler(compiledVulkanShader.value());
-                    Reflect(compiler, serializationDescriptor, propertyNameToIndex);
-                }
-                catch (spirv_cross::CompilerError& e)
-                {
-                    FLARE_CORE_ERROR("Shader reflection failed: {}", e.what());
-                }
-            }
+			try
+			{
+				spirv_cross::Compiler compiler(compiledVulkanShader.value());
+				Reflect(compiler, propertyNameToIndex, shaderProperties);
+			}
+			catch (spirv_cross::CompilerError& e)
+			{
+				FLARE_CORE_ERROR("Shader reflection failed: {}", e.what());
+			}
 
             std::optional<std::vector<uint32_t>> compiledOpenGLShader = {};
             
@@ -517,26 +508,12 @@ namespace Flare
             }
         }
 
-        size_t insertionIndex = 0;
-        for (size_t i = 0; i < serializationDescriptor.Properties.size(); i++)
-        {
-            if (serializationDescriptor.Properties[i].Offset == SIZE_MAX)
-                continue;
-
-            if (insertionIndex != i)
-                serializationDescriptor.Properties[insertionIndex] = std::move(serializationDescriptor.Properties[i]);
-
-            insertionIndex++;
-        }
-
-        serializationDescriptor.Properties.erase(
-            serializationDescriptor.Properties.begin() + insertionIndex,
-            serializationDescriptor.Properties.end());
+        ParseShaderPropertiesMetaData(parser, shaderFeatures, errors, propertyNameToIndex, shaderProperties);
 
         ((EditorShaderCache*)ShaderCacheManager::GetInstance().get())->SetShaderEntry(
             shaderHandle,
             shaderFeatures,
-            std::move(serializationDescriptor));
+            std::move(shaderProperties));
 
         return true;
     }

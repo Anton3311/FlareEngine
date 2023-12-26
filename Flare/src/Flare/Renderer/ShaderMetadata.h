@@ -3,6 +3,8 @@
 #include "FlareCore/Core.h"
 #include "FlareCore/Assert.h"
 
+#include "FlareCore/Serialization/SerializationStream.h"
+
 #include <optional>
 #include <stdint.h>
 
@@ -112,6 +114,7 @@ namespace Flare
 
 	struct ShaderProperty
 	{
+		ShaderProperty() = default;
 		ShaderProperty(std::string_view name, ShaderDataType type, size_t offset)
 			: Name(name),
 			Type(type),
@@ -131,6 +134,9 @@ namespace Flare
 		uint32_t Location;
 		size_t Offset;
 		size_t Size;
+
+		bool Hidden = true;
+		SerializationValueFlags Flags = SerializationValueFlags::None;
 	};
 
 	enum class ShaderStageType

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Flare/Renderer/ShaderCacheManager.h"
-#include "FlareCore/Serialization/Serialization.h"
 
 #include <filesystem>
 
@@ -13,11 +12,11 @@ namespace Flare
 		struct ShaderEntry
 		{
 			ShaderEntry() = default;
-			ShaderEntry(ShaderFeatures features, SerializableObjectDescriptor&& descriptor)
-				: Features(features), SerializationDescriptor(std::move(descriptor)) {}
+			ShaderEntry(ShaderFeatures features, ShaderProperties&& properties)
+				: Features(features), Properties(std::move(properties)) {}
 
 			ShaderFeatures Features;
-			SerializableObjectDescriptor SerializationDescriptor;
+			ShaderProperties Properties;
 		};
 
 		void SetCache(AssetHandle shaderHandle,
@@ -38,7 +37,7 @@ namespace Flare
 		std::optional<const ShaderEntry*> GetShaderEntry(AssetHandle shaderHandle) const;
 		void SetShaderEntry(AssetHandle shaderHandle,
 			ShaderFeatures features,
-			SerializableObjectDescriptor&& serializationDescriptor);
+			ShaderProperties&& properties);
 
 		std::filesystem::path GetCacheDirectoryPath(AssetHandle shaderHandle);
 		std::string GetCacheFileName(std::string_view shaderName, ShaderTargetEnvironment targetEnvironemt, ShaderStageType stageType);

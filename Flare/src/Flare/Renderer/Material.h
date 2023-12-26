@@ -20,6 +20,15 @@ namespace Flare
 		void SetIntArray(uint32_t index, const int32_t* values, uint32_t count);
 
 		template<typename T>
+		T& GetPropertyValue(uint32_t index)
+		{
+			const ShaderProperties& properties = m_Shader->GetProperties();
+			FLARE_CORE_ASSERT((size_t)index < properties.size());
+			FLARE_CORE_ASSERT(sizeof(T) == properties[index].Size);
+			return *(T*)(m_Buffer + properties[index].Offset);
+		}
+
+		template<typename T>
 		T ReadPropertyValue(uint32_t index)
 		{
 			const ShaderProperties& properties = m_Shader->GetProperties();

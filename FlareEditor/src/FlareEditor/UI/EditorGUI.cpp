@@ -141,14 +141,34 @@ namespace Flare
 		return result;
 	}
 
+	template<typename T>
+	static SerializationValue<T> SerializationValueFromProperty(SerializableProperty& property)
+	{
+	}
+
 	bool EditorGUI::ObjectField(SerializableObject& object)
 	{
 		bool result = false;
 
 		SerializablePropertyRenderer propertyRenderer;
-
 		propertyRenderer.PropertyKey(object.Descriptor.Name);
-		propertyRenderer.SerializeObject(object.Descriptor, object.GetBuffer());
+
+		if (object.Descriptor.Callback)
+			propertyRenderer.SerializeObject(object.Descriptor, object.GetBuffer());
+		else
+		{
+			for (size_t propertyIndex = 0; propertyIndex < object.Descriptor.Properties.size(); propertyIndex++)
+			{
+				auto& property = object.PropertyAt(propertyIndex);
+
+				propertyRenderer.PropertyKey(property.Descriptor.Name);
+				switch (property.Descriptor.PropertyType)
+				{
+				case SerializablePropertyType::Int8:
+					break;
+				}
+			}
+		}
 
 		// TODO: get the result from properties renderer
 		return result;

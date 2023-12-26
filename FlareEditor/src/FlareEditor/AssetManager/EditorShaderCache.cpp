@@ -94,9 +94,9 @@ namespace Flare
         return &it->second;
     }
 
-    void EditorShaderCache::SetShaderEntry(AssetHandle shaderHandle, ShaderFeatures features, SerializableObjectDescriptor&& serializationDescriptor)
+    void EditorShaderCache::SetShaderEntry(AssetHandle shaderHandle, ShaderFeatures features, ShaderProperties&& properties)
     {
-        m_Entries[shaderHandle] = ShaderEntry(features, std::move(serializationDescriptor));
+        m_Entries[shaderHandle] = ShaderEntry(features, std::move(properties));
     }
 
     std::filesystem::path EditorShaderCache::GetCacheDirectoryPath(AssetHandle shaderHandle)
