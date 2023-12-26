@@ -3,6 +3,7 @@
 #include "FlareECS/Entity/Archetype.h"
 
 #include "FlareCore/Serialization/TypeInitializer.h"
+#include "FlareCore/Serialization/TypeSerializer.h"
 
 #include <stdint.h>
 #include <xhash>

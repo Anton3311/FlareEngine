@@ -27,8 +27,7 @@ namespace Flare
 		static bool BeginMenu(const char* name);
 		static void EndMenu();
 
-		static bool ObjectField(SerializableObject& object);
-		static bool PropertyField(SerializableProperty& property);
+		static bool ObjectField(const SerializableObjectDescriptor& descriptor, void* data);
 
 		static bool BoolPropertyField(const char* name, bool& value);
 		static bool IntPropertyField(const char* name, int32_t& value);

@@ -44,11 +44,11 @@ namespace Flare
 #define FLARE_TYPE static Flare::TypeInitializer _Type; \
     FLARE_SERIALIZABLE
 
-#define FLARE_IMPL_TYPE(typeName, ...) Flare::TypeInitializer typeName::_Type =                       \
+#define FLARE_IMPL_TYPE(typeName) Flare::TypeInitializer typeName::_Type =                            \
     Flare::TypeInitializer(typeid(typeName).name(), sizeof(typeName),                                 \
     FLARE_SERIALIZATION_DESCRIPTOR_OF(typeName),                                                      \
     [](void* instance) { ((typeName*)instance)->~typeName(); },                                       \
     [](void* instance) { new(instance) typeName;},                                                    \
     [](void* instance, void* moveFrom) { (*(typeName*)instance) = std::move(*(typeName*)moveFrom); }, \
     [](void* instance, const void* copyFrom) { (*(typeName*)instance) = *(typeName*)copyFrom; });     \
-    FLARE_SERIALIZABLE_IMPL(typeName, __VA_ARGS__)
+    FLARE_SERIALIZABLE_IMPL(typeName)

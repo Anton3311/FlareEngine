@@ -8,12 +8,7 @@
 
 namespace Flare
 {
-	FLARE_IMPL_TYPE(Vignette,
-		FLARE_PROPERTY(Vignette, Enabled),
-		FLARE_PROPERTY(Vignette, Color),
-		FLARE_PROPERTY(Vignette, Radius),
-		FLARE_PROPERTY(Vignette, Smoothness),
-	);
+	FLARE_IMPL_TYPE(Vignette);
 
 	static uint32_t s_ColorPropertyIndex = UINT32_MAX;
 	static uint32_t s_RadiusPropertyIndex = UINT32_MAX;

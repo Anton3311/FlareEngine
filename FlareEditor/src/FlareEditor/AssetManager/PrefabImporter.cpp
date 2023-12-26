@@ -4,7 +4,6 @@
 
 #include "FlareECS/World.h"
 
-#include "FlareEditor/Serialization/Serialization.h"
 #include "FlareEditor/Serialization/SceneSerializer.h"
 #include "FlareEditor/Serialization/YAMLSerialization.h"
 
@@ -91,7 +90,6 @@ namespace Flare
                             continue;
 
 						const ComponentInfo& info = world.Components.GetComponentInfo(componentId.value());
-						SerializableObject componentObject = SerializableObject(prefabData + writeOffset, info.Initializer->Type.SerializationDescriptor);
 
                         YAML::Node dataNode = componentNode["Data"];
 						if (info.Initializer && dataNode)

@@ -2,7 +2,7 @@
 
 namespace Flare
 {
-	FLARE_IMPL_COMPONENT(NameComponent, FLARE_PROPERTY(NameComponent, Value));
+	FLARE_IMPL_COMPONENT(NameComponent);
 	NameComponent::NameComponent() {}
 
 	NameComponent::NameComponent(std::string_view name)
@@ -12,11 +12,7 @@ namespace Flare
 	{
 	}
 
-	FLARE_IMPL_COMPONENT(TransformComponent,
-		FLARE_PROPERTY(TransformComponent, Position),
-		FLARE_PROPERTY(TransformComponent, Rotation),
-		FLARE_PROPERTY(TransformComponent, Scale),
-	);
+	FLARE_IMPL_COMPONENT(TransformComponent);
 	TransformComponent::TransformComponent()
 		: Position(glm::vec3(0.0f)),
 		  Rotation(glm::vec3(0.0f)),
@@ -36,14 +32,7 @@ namespace Flare
 		return glm::rotate(glm::quat(glm::radians(Rotation)), direction);
 	}
 
-	FLARE_IMPL_COMPONENT(CameraComponent,
-		FLARE_ENUM_PROPERTY(CameraComponent, Projection),
-		FLARE_PROPERTY(CameraComponent, Size),
-		FLARE_PROPERTY(CameraComponent, FOV),
-		FLARE_PROPERTY(CameraComponent, Near),
-		FLARE_PROPERTY(CameraComponent, Far),
-	);
-
+	FLARE_IMPL_COMPONENT(CameraComponent);
 	CameraComponent::CameraComponent()
 		: Projection(ProjectionType::Perspective),
 		  Size(10.0f),
@@ -82,13 +71,7 @@ namespace Flare
 		return inverseProjection * glm::vec4(point, 0.0f, 1.0f);
 	}
 
-	FLARE_IMPL_COMPONENT(SpriteComponent,
-		FLARE_PROPERTY(SpriteComponent, Color),
-		FLARE_PROPERTY(SpriteComponent, TextureTiling),
-		FLARE_PROPERTY(SpriteComponent, Texture),
-		FLARE_ENUM_PROPERTY(SpriteComponent, Flags),
-	);
-
+	FLARE_IMPL_COMPONENT(SpriteComponent);
 	SpriteComponent::SpriteComponent()
 		: Color(glm::vec4(1.0f)),
 		  TextureTiling(glm::vec2(1.0f)),
@@ -101,15 +84,14 @@ namespace Flare
 		Texture(texture),
 		Flags(SpriteRenderFlags::None) {}
 
-	FLARE_IMPL_COMPONENT(SpriteLayer, FLARE_PROPERTY(SpriteLayer, Layer));
+	FLARE_IMPL_COMPONENT(SpriteLayer);
 	SpriteLayer::SpriteLayer()
 		: Layer(0) {}
 
 	SpriteLayer::SpriteLayer(int32_t layer)
 		: Layer(layer) {}
 
-	FLARE_IMPL_COMPONENT(MaterialComponent, FLARE_PROPERTY(MaterialComponent, Material));
-
+	FLARE_IMPL_COMPONENT(MaterialComponent);
 	MaterialComponent::MaterialComponent()
 		: Material(NULL_ASSET_HANDLE) {}
 
@@ -118,11 +100,7 @@ namespace Flare
 
 
 
-	FLARE_IMPL_COMPONENT(TextComponent,
-		FLARE_PROPERTY(TextComponent, Text),
-		FLARE_COLOR_PROPERTY(TextComponent, Color),
-		FLARE_PROPERTY(TextComponent, Font),
-	);
+	FLARE_IMPL_COMPONENT(TextComponent);
 	TextComponent::TextComponent()
 		: Color(1.0f), Font(NULL_ASSET_HANDLE) {}
 
@@ -131,11 +109,7 @@ namespace Flare
 
 
 
-	FLARE_IMPL_COMPONENT(MeshComponent,
-		FLARE_PROPERTY(MeshComponent, Mesh),
-		FLARE_PROPERTY(MeshComponent, Material),
-		FLARE_ENUM_PROPERTY(MeshComponent, Flags),
-	);
+	FLARE_IMPL_COMPONENT(MeshComponent);
 	MeshComponent::MeshComponent(MeshRenderFlags flags)
 		: Mesh(NULL_ASSET_HANDLE), Material(NULL_ASSET_HANDLE), Flags(flags) {}
 
@@ -144,10 +118,7 @@ namespace Flare
 
 
 
-	FLARE_IMPL_COMPONENT(DirectionalLight,
-		FLARE_COLOR_PROPERTY(DirectionalLight, Color),
-		FLARE_PROPERTY(DirectionalLight, Intensity)
-	);
+	FLARE_IMPL_COMPONENT(DirectionalLight);
 	DirectionalLight::DirectionalLight()
 		: Color(1.0f), Intensity(1.0f) {}
 
@@ -156,10 +127,7 @@ namespace Flare
 
 
 
-	FLARE_IMPL_COMPONENT(Environment,
-		FLARE_COLOR_PROPERTY(Environment, EnvironmentColor),
-		FLARE_PROPERTY(Environment, EnvironmentColorIntensity)
-	);
+	FLARE_IMPL_COMPONENT(Environment);
 	Environment::Environment()
 		: EnvironmentColor(0.0f), EnvironmentColorIntensity(0.0f) {}
 

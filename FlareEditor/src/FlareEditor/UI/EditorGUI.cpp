@@ -141,85 +141,17 @@ namespace Flare
 		return result;
 	}
 
-	template<typename T>
-	static SerializationValue<T> SerializationValueFromProperty(SerializableProperty& property)
-	{
-	}
-
-	bool EditorGUI::ObjectField(SerializableObject& object)
+	bool EditorGUI::ObjectField(const SerializableObjectDescriptor& descriptor, void* data)
 	{
 		bool result = false;
+
+		FLARE_CORE_ASSERT(descriptor.Callback);
 
 		SerializablePropertyRenderer propertyRenderer;
-		propertyRenderer.PropertyKey(object.Descriptor.Name);
-
-		if (object.Descriptor.Callback)
-			propertyRenderer.SerializeObject(object.Descriptor, object.GetBuffer());
-		else
-		{
-			for (size_t propertyIndex = 0; propertyIndex < object.Descriptor.Properties.size(); propertyIndex++)
-			{
-				auto& property = object.PropertyAt(propertyIndex);
-
-				propertyRenderer.PropertyKey(property.Descriptor.Name);
-				switch (property.Descriptor.PropertyType)
-				{
-				case SerializablePropertyType::Int8:
-					break;
-				}
-			}
-		}
+		propertyRenderer.PropertyKey(descriptor.Name);
+		propertyRenderer.SerializeObject(descriptor, data);
 
 		// TODO: get the result from properties renderer
-		return result;
-	}
-
-	bool EditorGUI::PropertyField(SerializableProperty& property)
-	{
-		bool result = false;
-
-		switch (property.Descriptor.PropertyType)
-		{
-		case SerializablePropertyType::Bool:
-			result |= BoolPropertyField(property.Descriptor.Name.c_str(), property.ValueAs<bool>());
-			break;
-
-		case SerializablePropertyType::Float:
-			result |= FloatPropertyField(property.Descriptor.Name.c_str(), property.ValueAs<float>());
-			break;
-		case SerializablePropertyType::Int32:
-			result |= IntPropertyField(property.Descriptor.Name.c_str(), property.ValueAs<int32_t>());
-			break;
-
-		case SerializablePropertyType::FloatVector2:
-			result |= Vector2PropertyField(property.Descriptor.Name.c_str(), property.ValueAs<glm::vec2>());
-			break;
-		case SerializablePropertyType::FloatVector3:
-			result |= Vector3PropertyField(property.Descriptor.Name.c_str(), property.ValueAs<glm::vec3>());
-			break;
-		case SerializablePropertyType::FloatVector4:
-			result |= Vector4PropertyField(property.Descriptor.Name.c_str(), property.ValueAs<glm::vec4>());
-			break;
-
-		case SerializablePropertyType::Texture2D:
-			result |= TextureField(property.Descriptor.Name.c_str(), property.ValueAs<AssetHandle>());
-			break;
-
-		case SerializablePropertyType::String:
-			result |= EditorGUI::TextProperty(property.Descriptor.Name.c_str(), property.ValueAs<std::string>());
-			break;
-		case SerializablePropertyType::UUID:
-			EditorGUI::UUIDField(property.Descriptor.Name.c_str(), property.ValueAs<UUID>());
-			break;
-
-		case SerializablePropertyType::Color3:
-			EditorGUI::ColorPropertyField(property.Descriptor.Name.c_str(), property.ValueAs<glm::vec3>());
-			break;
-		case SerializablePropertyType::Color4:
-			EditorGUI::ColorPropertyField(property.Descriptor.Name.c_str(), property.ValueAs<glm::vec4>());
-			break;
-		}
-		
 		return result;
 	}
 

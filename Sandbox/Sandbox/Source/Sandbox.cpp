@@ -17,17 +17,9 @@
 
 namespace Sandbox
 {
-	FLARE_IMPL_COMPONENT(RotatingQuadData,
-		FLARE_PROPERTY(RotatingQuadData, RotationSpeed),
-		FLARE_PROPERTY(RotatingQuadData, PrefabHandle)
-	);
-
-	FLARE_IMPL_COMPONENT(SomeComponent,
-		FLARE_PROPERTY(SomeComponent, a),
-		FLARE_PROPERTY(SomeComponent, b),
-	);
-
-	FLARE_IMPL_COMPONENT(TestComponent, FLARE_PROPERTY(TestComponent, a));
+	FLARE_IMPL_COMPONENT(RotatingQuadData);
+	FLARE_IMPL_COMPONENT(SomeComponent);
+	FLARE_IMPL_COMPONENT(TestComponent);
 
 	class RotatingQuadSystem : public Flare::System
 	{

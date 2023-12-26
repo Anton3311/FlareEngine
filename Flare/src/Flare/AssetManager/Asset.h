@@ -4,6 +4,7 @@
 #include "FlareCore/Assert.h"
 
 #include "FlareCore/Serialization/TypeInitializer.h"
+#include "FlareCore/Serialization/TypeSerializer.h"
 
 #include <filesystem>
 #include <string_view>

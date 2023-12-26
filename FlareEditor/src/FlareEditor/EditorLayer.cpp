@@ -298,12 +298,12 @@ namespace Flare
             {
                 auto& postProcessing = Scene::GetActive()->GetPostProcessingManager();
 
-                EditorGUI::ObjectField(SerializableObject(
-                    (uint8_t*)postProcessing.ToneMappingPass.get(),
-                    FLARE_SERIALIZATION_DESCRIPTOR_OF(ToneMapping)));
-                EditorGUI::ObjectField(SerializableObject(
-                    (uint8_t*)postProcessing.VignettePass.get(),
-                    FLARE_SERIALIZATION_DESCRIPTOR_OF(Vignette)));
+                EditorGUI::ObjectField(
+                    FLARE_SERIALIZATION_DESCRIPTOR_OF(ToneMapping),
+                    postProcessing.ToneMappingPass.get());
+                EditorGUI::ObjectField(
+                    FLARE_SERIALIZATION_DESCRIPTOR_OF(Vignette),
+                    postProcessing.VignettePass.get());
 
                 ImGui::TreePop();
             }

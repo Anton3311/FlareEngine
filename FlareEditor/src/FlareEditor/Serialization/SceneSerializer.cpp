@@ -8,7 +8,6 @@
 
 #include "FlareECS/Query/EntitiesIterator.h"
 
-#include "FlareEditor/Serialization/Serialization.h"
 #include "FlareEditor/Serialization/SerializationId.h"
 #include "FlareEditor/Serialization/YAMLSerialization.h"
 
@@ -111,11 +110,6 @@ namespace Flare
 					YAMLDeserializer deserializer(componentNode);
 					deserializer.PropertyKey("Data");
 					deserializer.SerializeObject(serializationDescriptor, (void*)componentData);
-				}
-				else
-				{
-					SerializableObject serializableComponent = SerializableObject(componentData, serializationDescriptor);
-					DeserializeObject(componentNode, serializableComponent);
 				}
 			}
 		}

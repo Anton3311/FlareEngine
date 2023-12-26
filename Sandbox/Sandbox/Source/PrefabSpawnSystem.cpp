@@ -10,12 +10,7 @@
 
 using namespace Flare;
 
-FLARE_IMPL_COMPONENT(PrefabSpawner,
-	FLARE_PROPERTY(PrefabSpawner, Enabled),
-	FLARE_PROPERTY(PrefabSpawner, PrefabHandle),
-	FLARE_PROPERTY(PrefabSpawner, Period),
-	FLARE_PROPERTY(PrefabSpawner, TimeLeft),
-);
+FLARE_IMPL_COMPONENT(PrefabSpawner);
 
 void PrefabSpawnSystem::OnConfig(SystemConfig& config)
 {

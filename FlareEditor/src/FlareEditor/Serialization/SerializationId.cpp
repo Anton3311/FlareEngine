@@ -2,5 +2,5 @@
 
 namespace Flare
 {
-	FLARE_IMPL_COMPONENT(SerializationId, FLARE_PROPERTY(SerializationId, Id));
+	FLARE_IMPL_COMPONENT(SerializationId);
 }

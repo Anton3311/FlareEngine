@@ -1,6 +1,5 @@
 #include "TextureImporter.h"
 
-#include "FlareEditor/Serialization/Serialization.h"
 #include "FlareEditor/AssetManager/EditorAssetManager.h"
 
 #include <fstream>
