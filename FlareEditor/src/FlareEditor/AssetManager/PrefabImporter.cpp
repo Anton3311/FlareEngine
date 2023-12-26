@@ -6,6 +6,7 @@
 
 #include "FlareEditor/Serialization/Serialization.h"
 #include "FlareEditor/Serialization/SceneSerializer.h"
+#include "FlareEditor/Serialization/YAMLSerialization.h"
 
 #include "FlareEditor/AssetManager/EditorAssetManager.h"
 
@@ -54,6 +55,10 @@ namespace Flare
                     {
                         std::string name = nameNode.as<std::string>();
                         auto componentId = world.Components.FindComponnet(name);
+
+                        if (!componentId.has_value())
+                            continue;
+
                         if (componentId.has_value())
                         {
                             prefabDataSize += world.Components.GetComponentInfo(componentId.value()).Size;
@@ -76,25 +81,30 @@ namespace Flare
                 {
                     for (YAML::Node componentNode : componentsNode)
                     {
-                        if (YAML::Node nameNode = componentNode["Name"])
-                        {
-                            std::string name = nameNode.as<std::string>();
-                            auto componentId = world.Components.FindComponnet(name);
-                            
-                            if (componentId)
-                            {
-                                const ComponentInfo& info = world.Components.GetComponentInfo(componentId.value());
-                                SerializableObject componentObject = SerializableObject(prefabData + writeOffset, info.Initializer->Type.SerializationDescriptor);
+                        YAML::Node nameNode = componentNode["Name"];
+                        if (!nameNode)
+                            continue;
 
-                                if (info.Initializer)
-                                    DeserializeObject(componentNode, componentObject);
+						std::string name = nameNode.as<std::string>();
+						auto componentId = world.Components.FindComponnet(name);
+                        if (!componentId)
+                            continue;
 
-                                components[index].second = (void*)(prefabData + writeOffset);
+						const ComponentInfo& info = world.Components.GetComponentInfo(componentId.value());
+						SerializableObject componentObject = SerializableObject(prefabData + writeOffset, info.Initializer->Type.SerializationDescriptor);
 
-                                writeOffset += info.Size;
-                                index++;
-                            }
-                        }
+                        YAML::Node dataNode = componentNode["Data"];
+						if (info.Initializer && dataNode)
+						{
+							YAMLDeserializer deserializer(componentNode);
+							deserializer.PropertyKey("Data");
+							deserializer.SerializeObject(info.Initializer->Type.SerializationDescriptor, prefabData + writeOffset);
+						}
+
+						components[index].second = (void*)(prefabData + writeOffset);
+
+						writeOffset += info.Size;
+						index++;
                     }
                 }
             }
