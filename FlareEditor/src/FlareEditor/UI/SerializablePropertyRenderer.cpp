@@ -91,6 +91,22 @@ namespace Flare
         }
     }
 
+    void SerializablePropertyRenderer::SerializeUUID(SerializationValue<UUID> uuids)
+    {
+        BeginPropertiesGridIfNeeded();
+        
+        if (!uuids.IsArray)
+            EditorGUI::PropertyName(m_CurrentPropertyName.data());
+
+        for (size_t i = 0; i < uuids.Values.GetSize(); i++)
+        {
+            if (uuids.IsArray)
+                EditorGUI::PropertyIndex(i);
+
+            ImGui::Text("%llu", (uint64_t)uuids.Values[i]);
+        }
+    }
+
     void SerializablePropertyRenderer::SerializeFloatVector(SerializationValue<float> value, uint32_t componentsCount)
     {
         BeginPropertiesGridIfNeeded();

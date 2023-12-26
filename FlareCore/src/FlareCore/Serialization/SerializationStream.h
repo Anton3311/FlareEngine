@@ -1,5 +1,6 @@
 #pragma once
 
+#include "FlareCore/UUID.h"
 #include "FlareCore/Collections/Span.h"
 #include "FlareCore/Serialization/TypeSerializer.h"
 
@@ -51,8 +52,8 @@ namespace Flare
     inline size_t SizeOfSerializableIntType(SerializableIntType type)
     {
 #define SIZEOF_INT(intType, enumType)       \
-		case SerializableIntType::enumType: \
-			return sizeof(intType)
+        case SerializableIntType::enumType: \
+            return sizeof(intType)
 
         switch (type)
         {
@@ -82,6 +83,8 @@ namespace Flare
         virtual void SerializeInt(SerializationValue<uint8_t> intValues, SerializableIntType type) = 0;
         virtual void SerializeBool(SerializationValue<bool> value) = 0;
         virtual void SerializeFloat(SerializationValue<float> value) = 0;
+
+        virtual void SerializeUUID(SerializationValue<UUID> uuids) = 0;
 
         virtual void SerializeFloatVector(SerializationValue<float> value, uint32_t componentsCount) = 0;
         virtual void SerializeIntVector(SerializationValue<int32_t> value, uint32_t componentsCount) = 0;
@@ -139,6 +142,7 @@ namespace Flare
 
     IMPL_SERIALIZATION_WRAPPER(float, SerializeFloat);
     IMPL_SERIALIZATION_WRAPPER(bool, SerializeBool);
+    IMPL_SERIALIZATION_WRAPPER(UUID, SerializeUUID);
 
     IMPL_INT_SERIALIZATION_WRAPPER(int32_t, SerializableIntType::Int32);
     IMPL_INT_SERIALIZATION_WRAPPER(uint32_t, SerializableIntType::UInt32);

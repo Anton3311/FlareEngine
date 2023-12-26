@@ -26,8 +26,13 @@ namespace Flare
 
 		if (entityData.has_value() && info.Initializer)
 		{
-			SerializableObject entityObject = SerializableObject((uint8_t*)entityData.value(), info.Initializer->Type.SerializationDescriptor);
-			SerializeObject(emitter, entityObject);
+			YAMLSerializer serializer(emitter);
+			emitter << YAML::BeginMap;
+			emitter << YAML::Key << "Name" << YAML::Value << info.Initializer->Type.SerializationDescriptor.Name;
+
+			emitter << YAML::Key << "Data" << YAML::Value;
+			serializer.SerializeObject(info.Initializer->Type.SerializationDescriptor, (void*)entityData.value());
+			emitter << YAML::EndMap;
 		}
 	}
 
@@ -80,7 +85,12 @@ namespace Flare
 
 		for (YAML::Node componentNode : componentsNode)
 		{
-			std::string name = componentNode["Name"].as<std::string>();
+			std::string name;
+			if (YAML::Node nameNode = componentNode["Name"])
+				name = nameNode.as<std::string>();
+			else
+				continue;
+
 			std::optional<ComponentId> componentId = world.Components.FindComponnet(name);
 
 			if (!componentId.has_value())
@@ -93,11 +103,20 @@ namespace Flare
 			if (info.Initializer)
 			{
 				const SerializableObjectDescriptor& serializationDescriptor = info.Initializer->Type.SerializationDescriptor;
-
 				uint8_t* componentData = AddDeserializedComponent(world, entity, componentId.value());
-				SerializableObject serializableComponent = SerializableObject(componentData, serializationDescriptor);
 
-				DeserializeObject(componentNode, serializableComponent);
+				YAML::Node componentDataNode = componentNode["Data"];
+				if (componentDataNode && !componentDataNode.IsNull())
+				{
+					YAMLDeserializer deserializer(componentNode);
+					deserializer.PropertyKey("Data");
+					deserializer.SerializeObject(serializationDescriptor, (void*)componentData);
+				}
+				else
+				{
+					SerializableObject serializableComponent = SerializableObject(componentData, serializationDescriptor);
+					DeserializeObject(componentNode, serializableComponent);
+				}
 			}
 		}
 

@@ -1,6 +1,8 @@
 #pragma once
 
 #include "FlareCore/UUID.h"
+#include "FlareCore/Serialization/TypeSerializer.h"
+#include "FlareCore/Serialization/SerializationStream.h"
 
 #include "FlareECS/World.h"
 #include "FlareECS/Entity/ComponentInitializer.h"
@@ -16,5 +18,14 @@ namespace Flare
 			: Id(id) {}
 
 		UUID Id;
+	};
+
+	template<>
+	struct TypeSerializer<SerializationId>
+	{
+		void OnSerialize(SerializationId& id, SerializationStream& stream)
+		{
+			stream.Serialize("Id", SerializationValue(id.Id));
+		}
 	};
 }

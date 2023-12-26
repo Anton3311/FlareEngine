@@ -123,7 +123,7 @@ namespace Flare
     {
         void OnSerialize(SpriteComponent& sprite, SerializationStream& stream)
         {
-            stream.Serialize("Color", SerializationValue(sprite.Color));
+            stream.Serialize("Color", SerializationValue(sprite.Color, SerializationValueFlags::Color));
             stream.Serialize("TextureTiling", SerializationValue(sprite.TextureTiling));
             stream.Serialize("Texture", SerializationValue(sprite.Texture));
             
@@ -193,7 +193,7 @@ namespace Flare
         void OnSerialize(TextComponent& text, SerializationStream& stream)
         {
             stream.Serialize("Text", SerializationValue(text.Text));
-            stream.Serialize("Color", SerializationValue(text.Color));
+            stream.Serialize("Color", SerializationValue(text.Color, SerializationValueFlags::Color));
             stream.Serialize("Font", SerializationValue(text.Font));
         }
     };
@@ -242,7 +242,7 @@ namespace Flare
     {
         void OnSerialize(DirectionalLight& light, SerializationStream& stream)
         {
-            stream.Serialize("Color", SerializationValue(light.Color));
+            stream.Serialize("Color", SerializationValue(light.Color, SerializationValueFlags::Color));
             stream.Serialize("Intensity", SerializationValue(light.Intensity));
         }
     };
@@ -265,7 +265,7 @@ namespace Flare
     {
         void OnSerialize(Environment& environment, SerializationStream& stream)
         {
-            stream.Serialize("EnvironmentColor", SerializationValue(environment.EnvironmentColor));
+            stream.Serialize("EnvironmentColor", SerializationValue(environment.EnvironmentColor, SerializationValueFlags::Color));
             stream.Serialize("EnvironmentColorIntensity", SerializationValue(environment.EnvironmentColorIntensity));
         }
     };

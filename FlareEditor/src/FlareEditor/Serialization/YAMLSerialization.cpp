@@ -80,6 +80,11 @@ namespace Flare
         SerializeValue(m_Emitter, value);
     }
 
+    void YAMLSerializer::SerializeUUID(SerializationValue<UUID> uuids)
+    {
+        SerializeValue(m_Emitter, uuids);
+    }
+
     void YAMLSerializer::SerializeFloatVector(SerializationValue<float> value, uint32_t componentsCount)
     {
         if (value.IsArray)
@@ -142,7 +147,14 @@ namespace Flare
 
     void YAMLSerializer::SerializeString(SerializationValue<std::string> value)
     {
-        SerializeValue(m_Emitter, value);
+        if (value.IsArray)
+            m_Emitter << YAML::BeginSeq;
+
+        for (size_t i = 0; i < value.Values.GetSize(); i++)
+            m_Emitter << YAML::Value << std::string(value.Values[i]);
+
+        if (value.IsArray)
+            m_Emitter << YAML::EndSeq;
     }
 
     void YAMLSerializer::SerializeObject(const SerializableObjectDescriptor& descriptor, void* objectData)
@@ -257,6 +269,11 @@ namespace Flare
     void YAMLDeserializer::SerializeFloat(SerializationValue<float> value)
     {
         DeserializeValue(value, CurrentNode(), m_CurrentPropertyKey);
+    }
+
+    void YAMLDeserializer::SerializeUUID(SerializationValue<UUID> uuids)
+    {
+        DeserializeValue(uuids, CurrentNode(), m_CurrentPropertyKey);
     }
 
     template<typename T>

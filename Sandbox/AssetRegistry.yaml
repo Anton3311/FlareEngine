@@ -76,6 +76,13 @@ AssetRegistry:
     Parent: 0
     SubAssets:
       - 7922235498107244779
+  - Handle: 4807793401433821598
+    Type: Scene
+    Path: Serialization Test.flare
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
   - Handle: 5193090395626261884
     Type: Texture
     Path: Texture.png

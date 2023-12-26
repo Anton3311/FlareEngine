@@ -17,6 +17,9 @@ Entities:
   - Components:
       - Name: struct Flare::SerializationId
         Id: 5756619974482326172
+      - Name: struct Flare::Environment
+        EnvironmentColor: [1, 1, 1]
+        EnvironmentColorIntensity: 0.200000003
       - Name: struct Flare::DirectionalLight
         Color: [1, 1, 1]
         Intensity: 3
@@ -84,9 +87,11 @@ Entities:
         Scale: [1, 1, 1]
 PostProcessing:
   - Name: class Flare::ToneMapping
-    Enabled: false
+    Data:
+      Enabled: false
   - Name: class Flare::Vignette
-    Enabled: false
-    Color: [0, 0, 0, 0.5]
-    Radius: 1
-    Smoothness: 1
+    Data:
+      Enabled: false
+      Color: [0, 0, 0, 0.5]
+      Radius: 1
+      Smoothness: 1

@@ -15,6 +15,7 @@ namespace Flare
         void SerializeInt(SerializationValue<uint8_t> intValues, SerializableIntType type) override;
         void SerializeBool(SerializationValue<bool> value) override;
         void SerializeFloat(SerializationValue<float> value) override;
+        void SerializeUUID(SerializationValue<UUID> uuids) override;
         void SerializeFloatVector(SerializationValue<float> value, uint32_t componentsCount) override;
         void SerializeIntVector(SerializationValue<int32_t> value, uint32_t componentsCount) override;
         void SerializeString(SerializationValue<std::string> value) override;
@@ -34,6 +35,7 @@ namespace Flare
         void SerializeInt(SerializationValue<uint8_t> intValues, SerializableIntType type) override;
         void SerializeBool(SerializationValue<bool> value) override;
         void SerializeFloat(SerializationValue<float> value) override;
+        void SerializeUUID(SerializationValue<UUID> uuids) override;
         void SerializeFloatVector(SerializationValue<float> value, uint32_t componentsCount) override;
         void SerializeIntVector(SerializationValue<int32_t> value, uint32_t componentsCount) override;
         void SerializeString(SerializationValue<std::string> value) override;

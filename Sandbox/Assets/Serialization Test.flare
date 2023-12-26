@@ -1,0 +1,29 @@
+Entities:
+  - Components:
+      - Name: struct Flare::SerializationId
+        Data:
+          Id: 14102858682743335153
+      - Name: struct Flare::CameraComponent
+        Data:
+          Size: 10
+          FOV: 60
+          Near: 0.100000001
+          Far: 1000
+      - Name: struct Flare::TransformComponent
+        Data:
+          Position: [-1.41519022, 0, -0.110453248]
+          Rotation: [0, -0, 0]
+          Scale: [1, 1, 1]
+      - Name: struct Flare::NameComponent
+        Data:
+          Value: Camera
+PostProcessing:
+  - Name: class Flare::ToneMapping
+    Data:
+      Enabled: false
+  - Name: class Flare::Vignette
+    Data:
+      Enabled: false
+      Color: [0, 0, 0, 0.5]
+      Radius: 1
+      Smoothness: 1
