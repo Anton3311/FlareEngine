@@ -159,6 +159,12 @@ namespace Flare
 
     void YAMLSerializer::SerializeObject(const SerializableObjectDescriptor& descriptor, void* objectData)
     {
+        if (&descriptor == &FLARE_SERIALIZATION_DESCRIPTOR_OF(AssetHandle))
+        {
+            m_Emitter << YAML::Value << *(AssetHandle*)(objectData);
+            return;
+        }
+
         bool previousObjectSerializationState = m_ObjectSerializationStarted;
         bool previousState = m_MapStarted;
 
@@ -343,6 +349,14 @@ namespace Flare
 
     void YAMLDeserializer::SerializeObject(const SerializableObjectDescriptor& descriptor, void* objectData)
     {
+        if (&descriptor == &FLARE_SERIALIZATION_DESCRIPTOR_OF(AssetHandle))
+        {
+            if (YAML::Node handleNode = CurrentNode()[m_CurrentPropertyKey])
+                (*(AssetHandle*)objectData) = handleNode.as<AssetHandle>();
+
+            return;
+        }
+
         if (YAML::Node objectNode = CurrentNode()[m_CurrentPropertyKey])
         {
             m_NodesStack.push_back(objectNode);
