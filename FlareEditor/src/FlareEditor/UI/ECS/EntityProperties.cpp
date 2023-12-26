@@ -46,27 +46,20 @@ namespace Flare
 			for (ComponentId component : m_World.GetEntityComponents(entity))
 			{
 				const ComponentInfo& componentInfo = m_World.Components.GetComponentInfo(component);
-
-				ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_FramePadding;
-				if (ImGui::TreeNodeEx((void*)std::hash<ComponentId>()(component), flags, "%s", componentInfo.Name.c_str()))
+				if (component == COMPONENT_ID(CameraComponent))
+					RenderCameraComponent(m_World.GetEntityComponent<CameraComponent>(entity));
+				else if (component == COMPONENT_ID(SpriteComponent))
+					RenderSpriteComponent(m_World.GetEntityComponent<SpriteComponent>(entity));
+				else if (component == COMPONENT_ID(MeshComponent))
+					RenderMeshComponent(m_World.GetEntityComponent<MeshComponent>(entity));
+				else
 				{
-					if (component == COMPONENT_ID(CameraComponent))
-						RenderCameraComponent(m_World.GetEntityComponent<CameraComponent>(entity));
-					else if (component == COMPONENT_ID(SpriteComponent))
-						RenderSpriteComponent(m_World.GetEntityComponent<SpriteComponent>(entity));
-					else if (component == COMPONENT_ID(MeshComponent))
-						RenderMeshComponent(m_World.GetEntityComponent<MeshComponent>(entity));
-					else
+					std::optional<void*> componentData = m_World.Entities.GetEntityComponent(entity, component);
+					if (componentData.has_value() && componentInfo.Initializer)
 					{
-						std::optional<void*> componentData = m_World.Entities.GetEntityComponent(entity, component);
-						if (componentData.has_value() && componentInfo.Initializer)
-						{
-							SerializableObject serializableEntity = SerializableObject((uint8_t*)componentData.value(), componentInfo.Initializer->Type.SerializationDescriptor);
-							EditorGUI::ObjectField(serializableEntity);
-						}
+						SerializableObject serializableEntity = SerializableObject((uint8_t*)componentData.value(), componentInfo.Initializer->Type.SerializationDescriptor);
+						EditorGUI::ObjectField(serializableEntity);
 					}
-
-					ImGui::TreePop();
 				}
 
 				if (ImGui::BeginPopupContextItem(componentInfo.Name.c_str()))
@@ -88,92 +81,98 @@ namespace Flare
 
 	void EntityProperties::RenderCameraComponent(CameraComponent& cameraComponent)
 	{
-		if (EditorGUI::BeginPropertyGrid())
+		ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_FramePadding;
+		if (ImGui::TreeNodeEx((void*)std::hash<ComponentId>()(COMPONENT_ID(CameraComponent)), flags, "Camera"))
 		{
-			EditorGUI::BeginToggleGroupProperty("Projection", 2);
-			if (EditorGUI::ToggleGroupItem("Orthographic", cameraComponent.Projection == CameraComponent::ProjectionType::Orthographic))
-				cameraComponent.Projection = CameraComponent::ProjectionType::Orthographic;
-			if (EditorGUI::ToggleGroupItem("Perspective", cameraComponent.Projection == CameraComponent::ProjectionType::Perspective))
-				cameraComponent.Projection = CameraComponent::ProjectionType::Perspective;
+			if (EditorGUI::BeginPropertyGrid())
+			{
+				EditorGUI::BeginToggleGroupProperty("Projection", 2);
+				if (EditorGUI::ToggleGroupItem("Orthographic", cameraComponent.Projection == CameraComponent::ProjectionType::Orthographic))
+					cameraComponent.Projection = CameraComponent::ProjectionType::Orthographic;
+				if (EditorGUI::ToggleGroupItem("Perspective", cameraComponent.Projection == CameraComponent::ProjectionType::Perspective))
+					cameraComponent.Projection = CameraComponent::ProjectionType::Perspective;
 
-			EditorGUI::EndToggleGroup();
+				EditorGUI::EndToggleGroup();
 
-			if (cameraComponent.Projection == CameraComponent::ProjectionType::Orthographic)
-				EditorGUI::FloatPropertyField("Size", cameraComponent.Size);
-			else
-				EditorGUI::FloatPropertyField("FOV", cameraComponent.FOV);
+				if (cameraComponent.Projection == CameraComponent::ProjectionType::Orthographic)
+					EditorGUI::FloatPropertyField("Size", cameraComponent.Size);
+				else
+					EditorGUI::FloatPropertyField("FOV", cameraComponent.FOV);
 
-			EditorGUI::FloatPropertyField("Near", cameraComponent.Near);
-			EditorGUI::FloatPropertyField("Far", cameraComponent.Far);
+				EditorGUI::FloatPropertyField("Near", cameraComponent.Near);
+				EditorGUI::FloatPropertyField("Far", cameraComponent.Far);
 
-			EditorGUI::EndPropertyGrid();
-		}
-	}
+				EditorGUI::EndPropertyGrid();
+			}
 
-	void EntityProperties::RenderTransformComponent(TransformComponent& transform)
-	{
-		if (EditorGUI::BeginPropertyGrid())
-		{
-			EditorGUI::Vector3PropertyField("Position", transform.Position);
-			EditorGUI::Vector3PropertyField("Rotation", transform.Rotation);
-			EditorGUI::Vector3PropertyField("Scale", transform.Scale);
-
-			EditorGUI::EndPropertyGrid();
+			ImGui::TreePop();
 		}
 	}
 
 	void EntityProperties::RenderSpriteComponent(SpriteComponent& sprite)
 	{
-		if (EditorGUI::BeginPropertyGrid())
+		ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_FramePadding;
+		if (ImGui::TreeNodeEx((void*)std::hash<ComponentId>()(COMPONENT_ID(SpriteComponent)), flags, "Sprite"))
 		{
-			EditorGUI::ColorPropertyField("Color", sprite.Color);
-			EditorGUI::AssetField("Texture", sprite.Texture);
-			EditorGUI::Vector2PropertyField("Tiling", sprite.TextureTiling);
-
-			EditorGUI::PropertyName("Flip");
+			if (EditorGUI::BeginPropertyGrid())
 			{
-				bool flipX = HAS_BIT(sprite.Flags, SpriteRenderFlags::FlipX);
-				bool flipY = HAS_BIT(sprite.Flags, SpriteRenderFlags::FlipY);
+				EditorGUI::ColorPropertyField("Color", sprite.Color);
+				EditorGUI::AssetField("Texture", sprite.Texture);
+				EditorGUI::Vector2PropertyField("Tiling", sprite.TextureTiling);
 
-				ImGui::Checkbox("X", &flipX);
-				ImGui::SameLine();
-				ImGui::Checkbox("Y", &flipY);
+				EditorGUI::PropertyName("Flip");
+				{
+					bool flipX = HAS_BIT(sprite.Flags, SpriteRenderFlags::FlipX);
+					bool flipY = HAS_BIT(sprite.Flags, SpriteRenderFlags::FlipY);
 
-				sprite.Flags = sprite.Flags & ~(SpriteRenderFlags::FlipX | SpriteRenderFlags::FlipY);
+					ImGui::Checkbox("X", &flipX);
+					ImGui::SameLine();
+					ImGui::Checkbox("Y", &flipY);
 
-				if (flipX)
-					sprite.Flags |= SpriteRenderFlags::FlipX;
-				if (flipY)
-					sprite.Flags |= SpriteRenderFlags::FlipY;
+					sprite.Flags = sprite.Flags & ~(SpriteRenderFlags::FlipX | SpriteRenderFlags::FlipY);
+
+					if (flipX)
+						sprite.Flags |= SpriteRenderFlags::FlipX;
+					if (flipY)
+						sprite.Flags |= SpriteRenderFlags::FlipY;
+				}
+
+				EditorGUI::EndPropertyGrid();
 			}
 
-			EditorGUI::EndPropertyGrid();
+			ImGui::TreePop();
 		}
 	}
 
 	void EntityProperties::RenderMeshComponent(MeshComponent& mesh)
 	{
-		if (EditorGUI::BeginPropertyGrid())
+		ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_FramePadding;
+		if (ImGui::TreeNodeEx((void*)std::hash<ComponentId>()(COMPONENT_ID(MeshComponent)), flags, "Mesh"))
 		{
-			EditorGUI::AssetField("Mesh", mesh.Mesh);
-			EditorGUI::AssetField("Material", mesh.Material);
-
-			const char* propertyName = "Don't cast shadows";
-			EditorGUI::PropertyName(propertyName);
+			if (EditorGUI::BeginPropertyGrid())
 			{
-				bool value = HAS_BIT(mesh.Flags, MeshRenderFlags::DontCastShadows);
+				EditorGUI::AssetField("Mesh", mesh.Mesh);
+				EditorGUI::AssetField("Material", mesh.Material);
 
-				ImGui::PushID(propertyName);
-				ImGui::Checkbox("", &value);
-				ImGui::PopID();
+				const char* propertyName = "Don't cast shadows";
+				EditorGUI::PropertyName(propertyName);
+				{
+					bool value = HAS_BIT(mesh.Flags, MeshRenderFlags::DontCastShadows);
 
-				if (value)
-					mesh.Flags |= MeshRenderFlags::DontCastShadows;
-				else
-					mesh.Flags &= ~MeshRenderFlags::DontCastShadows;
+					ImGui::PushID(propertyName);
+					ImGui::Checkbox("", &value);
+					ImGui::PopID();
+
+					if (value)
+						mesh.Flags |= MeshRenderFlags::DontCastShadows;
+					else
+						mesh.Flags &= ~MeshRenderFlags::DontCastShadows;
+				}
+
+				EditorGUI::EndPropertyGrid();
 			}
 
-			EditorGUI::EndPropertyGrid();
+			ImGui::TreePop();
 		}
 	}
 
