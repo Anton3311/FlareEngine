@@ -210,7 +210,12 @@ namespace Flare
         if (m_Id != 0)
             glDeleteProgram(m_Id);
 
+        m_Properties.clear();
+        m_NameToIndex.clear();
+        m_Features = ShaderFeatures();
+        m_Outputs.clear();
         m_IsValid = true;
+        m_Id = 0;
 
         auto features = ShaderCacheManager::GetInstance()->FindShaderFeatures(Handle);
         m_IsValid = features.has_value();
