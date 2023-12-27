@@ -336,14 +336,35 @@ namespace Flare
         {
             m_ProjectFilesWacher->Update();
             FileChangeEvent changes;
+
+            Ref<EditorAssetManager> editorAssetManager = As<EditorAssetManager>(AssetManager::GetInstance());
+
             while (true)
             {
                 auto result = m_ProjectFilesWacher->TryGetNextEvent(changes);
-
                 if (result != FileWatcher::Result::Ok)
                     break;
 
-                FLARE_CORE_INFO("Change: {}", changes.FilePath.string());
+                switch (changes.Action)
+                {
+                case FileChangeEvent::ActionType::Created:
+                    break;
+                case FileChangeEvent::ActionType::Modified:
+                    std::filesystem::path absoluteFilePath = Project::GetActive()->Location / changes.FilePath;
+                    std::optional<AssetHandle> handle = editorAssetManager->FindAssetByPath(absoluteFilePath);
+
+                    bool isValid = handle.has_value() && AssetManager::IsAssetHandleValid(handle.value());
+                    if (isValid && AssetManager::IsAssetLoaded(handle.value_or(NULL_ASSET_HANDLE)))
+                    {
+                        const AssetMetadata* metadata = AssetManager::GetAssetMetadata(handle.value());
+                        FLARE_CORE_ASSERT(metadata);
+
+                        if (metadata->Type == AssetType::Shader)
+                            editorAssetManager->ReloadAsset(handle.value());
+                    }
+
+                    break;
+                }
             }
         }
     }

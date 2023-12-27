@@ -59,8 +59,6 @@ namespace Flare
 
     WindowsFileWatcher::~WindowsFileWatcher()
     {
-        if (m_Overlapped.hEvent != nullptr)
-            CloseHandle(m_Overlapped.hEvent);
         if (m_CompletionPort != nullptr)
             CloseHandle(m_CompletionPort);
         if (m_DirectoryHandle != nullptr)
