@@ -39,7 +39,6 @@ void main()
 	o_Vertex.Normal = (normalTransform * vec4(i_Normal, 1.0)).xyz;
     
 	vec4 position = u_Camera.ViewProjection * i_Transform * vec4(i_Position, 1.0);
-
 	vec4 transformed = i_Transform * vec4(i_Position, 1.0);
 	o_Vertex.Position = transformed;
 
@@ -260,7 +259,7 @@ void main()
 		color.xyz *= vec3(1.0f, 0.0f, 0.0f);
 		break;
 	}
-#else
+#endif
 
 	float NoL = dot(N, -u_LightDirection);
 	float bias = max(u_Bias * (1.0f - NoL), 0.0025f);
@@ -281,7 +280,6 @@ void main()
 		shadow = CalculateShadow(u_ShadowMap3, (u_CascadeProjection3 * i_Vertex.Position), bias);
 		break;
 	}
-#endif
 
 	vec3 incomingLight = u_LightColor.rgb * u_LightColor.w;
 	float alpha = max(0.04, u_InstanceData.Roughness * u_InstanceData.Roughness);
