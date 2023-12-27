@@ -339,7 +339,7 @@ namespace Flare
 				farPlaneDistance = glm::max(farPlaneDistance, farPlane.Distance(center) + projectedDistance);
 			}
 
-			float distance = glm::max(params.BoundingSphereRadius, nearPlaneDistance);
+			float distance = nearPlaneDistance;
 
 			nearPlaneDistance = -glm::max(params.BoundingSphereRadius, nearPlaneDistance);
 			farPlaneDistance = glm::max(params.BoundingSphereRadius, farPlaneDistance);

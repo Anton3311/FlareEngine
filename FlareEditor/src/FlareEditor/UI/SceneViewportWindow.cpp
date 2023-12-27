@@ -61,12 +61,9 @@ namespace Flare
 
 		AssetHandle selectionOutlineShader = ShaderLibrary::FindShader("SelectionOutline").value_or(NULL_ASSET_HANDLE);
 		if (AssetManager::IsAssetHandleValid(selectionOutlineShader))
-			m_SelectionOutlineMaterial = CreateRef<Material>(AssetManager::GetAsset<Shader>(selectionOutlineShader));
-		else
-			FLARE_CORE_ERROR("Failed to load selection outline shader");
-
 		{
-			Ref<Shader> shader = m_SelectionOutlineMaterial->GetShader();
+			Ref<Shader> shader = AssetManager::GetAsset<Shader>(selectionOutlineShader);
+			m_SelectionOutlineMaterial = CreateRef<Material>(shader);
 
 			ImVec4 primaryColor = ImGuiTheme::Primary;
 			glm::vec4 selectionColor = glm::vec4(primaryColor.x, primaryColor.y, primaryColor.z, 1.0f);
@@ -76,6 +73,8 @@ namespace Flare
 			if (colorProperty)
 				m_SelectionOutlineMaterial->WritePropertyValue(*colorProperty, selectionColor);
 		}
+		else
+			FLARE_CORE_ERROR("Failed to load selection outline shader");
 	}
 
 	void SceneViewportWindow::OnRenderViewport()
@@ -248,7 +247,6 @@ namespace Flare
 	{
 		if (Scene::GetActive() == nullptr)
 		{
-			EndImGui();
 			return;
 		}
 
@@ -481,19 +479,23 @@ namespace Flare
 			ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Border]), style.FrameRounding, 0, 1.5f);
 
 		ImGui::SameLine();
-		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
-		if (GuizmoButton("T", editorLayer.Guizmo == GuizmoMode::Translate))
-			editorLayer.Guizmo = GuizmoMode::Translate;
-		
-		ImGui::SameLine();
-		if (GuizmoButton("R", editorLayer.Guizmo == GuizmoMode::Rotate))
-			editorLayer.Guizmo = GuizmoMode::Rotate;
 
-		ImGui::SameLine();
-		if (GuizmoButton("S", editorLayer.Guizmo == GuizmoMode::Scale))
-			editorLayer.Guizmo = GuizmoMode::Scale;
+		{
+			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
+			if (GuizmoButton("T", editorLayer.Guizmo == GuizmoMode::Translate))
+				editorLayer.Guizmo = GuizmoMode::Translate;
 
-		ImGui::PopStyleVar();
+			ImGui::SameLine();
+			if (GuizmoButton("R", editorLayer.Guizmo == GuizmoMode::Rotate))
+				editorLayer.Guizmo = GuizmoMode::Rotate;
+
+			ImGui::SameLine();
+			if (GuizmoButton("S", editorLayer.Guizmo == GuizmoMode::Scale))
+				editorLayer.Guizmo = GuizmoMode::Scale;
+
+			ImGui::PopStyleVar(); // Item spacing
+		}
+
 		// Scene View Settings
 
 		ImGui::SameLine();
