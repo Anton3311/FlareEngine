@@ -1,5 +1,7 @@
 #include "FlarePlatform/Platform.h"
 
+#include "FlarePlatform/Windows/WindowsPlatform.h"
+
 #include "FlareCore/Assert.h"
 #include "FlareCore/Assert.h"
 
@@ -19,7 +21,7 @@
 
 namespace Flare
 {
-	static void LogError()
+	void LogError()
 	{
 		DWORD errorCode = GetLastError();
 		LPSTR messageBuffer = nullptr;

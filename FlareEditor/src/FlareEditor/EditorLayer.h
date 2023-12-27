@@ -6,6 +6,8 @@
 
 #include "FlareECS/ECSContext.h"
 
+#include "FlarePlatform/FileWatcher.h"
+
 #include "FlareEditor/UI/AssetEditor.h"
 
 #include "FlareEditor/UI/SceneWindow.h"
@@ -114,6 +116,8 @@ namespace Flare
 		EditorMode m_Mode;
 
 		ECSContext m_ECSContext;
+
+		Scope<FileWatcher> m_ProjectFilesWacher;
 	public:
 		GuizmoMode Guizmo;
 		EditorSelection Selection;
