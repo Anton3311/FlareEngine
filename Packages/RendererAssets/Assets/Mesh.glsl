@@ -18,7 +18,7 @@ layout(location = 7) in int i_EntityIndex;
 
 struct VertexData
 {
-	vec3 Position;
+	vec4 Position;
 	vec3 Normal;
 	vec2 UV;
 	vec3 ViewSpacePosition;
@@ -37,11 +37,11 @@ void main()
 {
 	mat4 normalTransform = transpose(inverse(i_Transform));
 	o_Vertex.Normal = (normalTransform * vec4(i_Normal, 1.0)).xyz;
-
+    
 	vec4 position = u_Camera.ViewProjection * i_Transform * vec4(i_Position, 1.0);
 
 	vec4 transformed = i_Transform * vec4(i_Position, 1.0);
-	o_Vertex.Position = transformed.xyz;
+	o_Vertex.Position = transformed;
 
 	o_Vertex.UV = i_UV;
 	o_Vertex.ViewSpacePosition = (u_Camera.View * transformed).xyz;
@@ -92,7 +92,7 @@ layout(std140, binding = 2) uniform ShadowData
 
 struct VertexData
 {
-	vec3 Position;
+	vec4 Position;
 	vec3 Normal;
 	vec2 UV;
 	vec3 ViewSpacePosition;
@@ -226,7 +226,7 @@ float CalculateShadow(sampler2D shadowMap, vec4 lightSpacePosition, float bias)
 void main()
 {
 	vec3 N = normalize(i_Vertex.Normal);
-	vec3 V = normalize(u_Camera.Position - i_Vertex.Position);
+	vec3 V = normalize(u_Camera.Position - i_Vertex.Position.xyz);
 	vec3 H = normalize(V - u_LightDirection);
 
 	vec4 color = u_InstanceData.Color * texture(u_Texture, i_Vertex.UV);
@@ -269,16 +269,16 @@ void main()
 	switch (cascadeIndex)
 	{
 	case 0:
-		shadow = CalculateShadow(u_ShadowMap0, (u_CascadeProjection0 * vec4(i_Vertex.Position, 1.0f)), bias);
+		shadow = CalculateShadow(u_ShadowMap0, (u_CascadeProjection0 * i_Vertex.Position), bias);
 		break;
 	case 1:
-		shadow = CalculateShadow(u_ShadowMap1, (u_CascadeProjection1 * vec4(i_Vertex.Position, 1.0f)), bias);
+		shadow = CalculateShadow(u_ShadowMap1, (u_CascadeProjection1 * i_Vertex.Position), bias);
 		break;
 	case 2:
-		shadow = CalculateShadow(u_ShadowMap2, (u_CascadeProjection2 * vec4(i_Vertex.Position, 1.0f)), bias);
+		shadow = CalculateShadow(u_ShadowMap2, (u_CascadeProjection2 * i_Vertex.Position), bias);
 		break;
 	case 3:
-		shadow = CalculateShadow(u_ShadowMap3, (u_CascadeProjection3 * vec4(i_Vertex.Position, 1.0f)), bias);
+		shadow = CalculateShadow(u_ShadowMap3, (u_CascadeProjection3 * i_Vertex.Position), bias);
 		break;
 	}
 #endif
