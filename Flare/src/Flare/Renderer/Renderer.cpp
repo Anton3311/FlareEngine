@@ -94,7 +94,7 @@ namespace Flare
 
 		s_RendererData.ShadowMappingSettings.Resolution = 2048;
 		s_RendererData.ShadowMappingSettings.Bias = 0.015f;
-		s_RendererData.ShadowMappingSettings.LightSize = 0.05f;
+		s_RendererData.ShadowMappingSettings.LightSize = 0.009f;
 
 		s_RendererData.ShadowMappingSettings.Cascades = s_RendererData.ShadowMappingSettings.MaxCascades;
 		s_RendererData.ShadowMappingSettings.CascadeSplits[0] = 15.0f;
@@ -339,10 +339,8 @@ namespace Flare
 				farPlaneDistance = glm::max(farPlaneDistance, farPlane.Distance(center) + projectedDistance);
 			}
 
-			float distance = nearPlaneDistance;
-
-			nearPlaneDistance = -glm::max(params.BoundingSphereRadius, nearPlaneDistance);
-			farPlaneDistance = glm::max(params.BoundingSphereRadius, farPlaneDistance);
+			nearPlaneDistance = -nearPlaneDistance;
+			farPlaneDistance = farPlaneDistance;
 
 			glm::mat4 view = glm::lookAt(params.CameraFrustumCenter + lightDirection * nearPlaneDistance, params.CameraFrustumCenter, glm::vec3(0.0f, 1.0f, 0.0f));
 

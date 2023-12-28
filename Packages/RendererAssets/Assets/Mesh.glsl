@@ -112,38 +112,38 @@ layout(location = 0) out vec4 o_Color;
 layout(location = 1) out int o_EntityIndex;
 
 const vec2[] POISSON_POINTS = {
-	vec2(0.06202323374764562, 0.030134247767888755),
-	vec2(-0.045215927419343105, 0.005259890307770521),
-	vec2(0.0291242311326263, -0.04890114852957095),
-	vec2(0.07166083913765608, -0.02294852802288938),
-	vec2(0.02930951265990056, 0.06235823231873705),
-	vec2(-0.03439345609698008, -0.0644393210968266),
-	vec2(0.008414144111760224, 0.0005320839441136371),
-	vec2(0.07192577830745317, -0.07552349918894519),
-	vec2(0.14685174257602096, -0.019889734709092388),
-	vec2(0.13896582071098118, -0.08256178359367672),
-	vec2(0.03488065847596844, -0.11782778487036805),
-	vec2(0.07961454571719973, -0.11842360357039117),
-	vec2(0.10188776480776296, 0.07044442536707529),
-	vec2(0.012440147980056215, 0.11589377626618025),
-	vec2(-0.04031003929448962, 0.07670902584296702),
-	vec2(0.058458178450993215, 0.12609988056611532),
-	vec2(0.16579407300606075, 0.09322781011405978),
-	vec2(0.10130612713134224, 0.11809713989856352),
-	vec2(0.13300349357681007, 0.04236448836072215),
-	vec2(-0.022269761146856748, -0.10558780201875617),
-	vec2(-0.04065826190642696, 0.1534486420249026),
-	vec2(0.03388887109888783, 0.16181425524795356),
-	vec2(-0.0993917409083892, 0.005977622350578526),
-	vec2(-0.07345402862775141, 0.039063582091554805),
-	vec2(-0.08493171557268842, -0.09935454388262643),
-	vec2(-0.06982783591943231, -0.03532949248364259),
-	vec2(-0.05641266424985536, -0.13722979133071522),
-	vec2(0.11495995731214825, -0.15831987898120004),
-	vec2(0.018152298528749666, -0.16331966023686706),
-	vec2(0.06826126670050803, -0.18496855551761537),
-	vec2(0.17632452763123485, -0.06704455776180784),
-	vec2(0.22072341483722613, -0.048569591547511504),
+	vec2(0.19720058313715616, -0.126486154070558),
+	vec2(0.0009889608544477646, -0.22664507218369004),
+	vec2(-0.2734364188916016, 0.16998219873785095),
+	vec2(-0.05627888319129203, 0.3417174487591548),
+	vec2(0.17630187577796308, 0.25626249198305373),
+	vec2(-0.22133066411936145, -0.11169131389810796),
+	vec2(0.07874947085941063, -0.49784888851498144),
+	vec2(0.3367516311138403, 0.061844425249618036),
+	vec2(0.24206212071523217, -0.3434060421929901),
+	vec2(-0.4584196133795251, -0.11921633394838857),
+	vec2(-0.610318625227714, 0.10216782955315853),
+	vec2(-0.40762380258089803, 0.44255622309867276),
+	vec2(-0.638870484170101, 0.29887844090022253),
+	vec2(-0.147488672409682, -0.6626000933377793),
+	vec2(-0.24754946856053187, -0.39087749108560194),
+	vec2(0.4395031222358684, -0.5345429932350132),
+	vec2(0.17424177636283178, -0.8615742535163032),
+	vec2(0.6296239472407246, -0.31454151036644407),
+	vec2(0.36219610480587505, -0.7430911110009584),
+	vec2(0.7109629465467581, -0.5879441048415303),
+	vec2(0.12880022486006107, 0.5033381465367552),
+	vec2(0.40976015405429883, 0.4739540494059923),
+	vec2(0.9059886417498543, -0.4233019974205821),
+	vec2(0.6973919978044718, -0.0006410703053913907),
+	vec2(0.40689966031564423, -0.1946107102756708),
+	vec2(-0.17072221121859749, 0.5096286422582593),
+	vec2(0.06862033329541031, 0.7072732106703834),
+	vec2(0.3946848418824804, 0.7895068805292053),
+	vec2(0.49510509842148803, 0.24741745331806023),
+	vec2(0.07581696369151561, 0.05748883597413473),
+	vec2(-0.7665664598386808, -0.06648209971836988),
+	vec2(-0.8026373723638186, -0.3079872104229894),
 };
 
 const int NUMBER_OF_SAMPLES = 32;
@@ -194,7 +194,7 @@ float PCF(sampler2D shadowMap, vec2 uv, float receieverDepth, float filterRadius
 	return shadow / NUMBER_OF_SAMPLES;
 }
 
-float CalculateShadow(sampler2D shadowMap, vec4 lightSpacePosition, float bias)
+float CalculateShadow(sampler2D shadowMap, vec4 lightSpacePosition, float bias, float poissonPointsRotationAngle)
 {
 	vec3 projected = lightSpacePosition.xyz / lightSpacePosition.w;
 	projected = projected * 0.5 + vec3(0.5);
@@ -208,8 +208,7 @@ float CalculateShadow(sampler2D shadowMap, vec4 lightSpacePosition, float bias)
 	if (projected.x > 1.0 || projected.y > 1.0 || projected.x < 0 || projected.y < 0)
 		return 1.0;
 
-	float angle = texture(u_RandomAngles, lightSpacePosition.xyz).r;
-	vec2 rotation = vec2(cos(angle), sin(angle));
+	vec2 rotation = vec2(cos(poissonPointsRotationAngle), sin(poissonPointsRotationAngle));
 
 	float blockerDistance = CalculateBlockerDistance(shadowMap, projected, rotation, bias);
 	if (blockerDistance == -1.0f)
@@ -233,8 +232,8 @@ void main()
 	float shadow = 1.0f;
 	float viewSpaceDistance = abs(i_Vertex.ViewSpacePosition.z);
 
-	int cascadeIndex = u_MaxCascadeIndex;
-	for (int i = 0; i < u_MaxCascadeIndex; i++)
+	int cascadeIndex = CASCADES_COUNT;
+	for (int i = 0; i < CASCADES_COUNT; i++)
 	{
 		if (viewSpaceDistance <= u_CascadeSplits[i])
 		{
@@ -265,19 +264,21 @@ void main()
 	float bias = max(u_Bias * (1.0f - NoL), 0.0025f);
 
 	bias /= float(cascadeIndex + 1);
+
+	float poissonPointsRotationAngle = texture(u_RandomAngles, i_Vertex.Position.xyz).r;
 	switch (cascadeIndex)
 	{
 	case 0:
-		shadow = CalculateShadow(u_ShadowMap0, (u_CascadeProjection0 * i_Vertex.Position), bias);
+		shadow = CalculateShadow(u_ShadowMap0, (u_CascadeProjection0 * i_Vertex.Position), bias, poissonPointsRotationAngle);
 		break;
 	case 1:
-		shadow = CalculateShadow(u_ShadowMap1, (u_CascadeProjection1 * i_Vertex.Position), bias);
+		shadow = CalculateShadow(u_ShadowMap1, (u_CascadeProjection1 * i_Vertex.Position), bias, poissonPointsRotationAngle);
 		break;
 	case 2:
-		shadow = CalculateShadow(u_ShadowMap2, (u_CascadeProjection2 * i_Vertex.Position), bias);
+		shadow = CalculateShadow(u_ShadowMap2, (u_CascadeProjection2 * i_Vertex.Position), bias, poissonPointsRotationAngle);
 		break;
 	case 3:
-		shadow = CalculateShadow(u_ShadowMap3, (u_CascadeProjection3 * i_Vertex.Position), bias);
+		shadow = CalculateShadow(u_ShadowMap3, (u_CascadeProjection3 * i_Vertex.Position), bias, poissonPointsRotationAngle);
 		break;
 	}
 
