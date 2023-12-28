@@ -80,6 +80,83 @@ namespace Flare
         return nullptr;
     }
 
+    static void ImportMaterials(const AssetMetadata& metadata, const aiScene* scene)
+    {
+		Ref<EditorAssetManager> assetManager = As<EditorAssetManager>(AssetManager::GetInstance());
+		std::optional<AssetHandle> defaultShader = ShaderLibrary::FindShader("Mesh");
+
+		std::unordered_map<std::string, AssetHandle> nameToHandle;
+
+		for (AssetHandle subAsset : metadata.SubAssets)
+		{
+			if (const auto* subAssetMetadata = AssetManager::GetAssetMetadata(subAsset))
+				nameToHandle[subAssetMetadata->Name] = subAsset;
+		}
+
+        if (!defaultShader)
+        {
+			FLARE_CORE_ERROR("Failed to find 'Mesh' shader");
+            return;
+        }
+
+		std::optional<uint32_t> colorProperty;
+		std::optional<uint32_t> roughnessProperty;
+		std::optional<uint32_t> textureProperty;
+
+		Ref<Shader> shader = AssetManager::GetAsset<Shader>(defaultShader.value());
+		if (shader != nullptr && shader->IsLoaded())
+		{
+			colorProperty = shader->GetPropertyIndex("u_InstanceData.Color");
+			roughnessProperty = shader->GetPropertyIndex("u_InstanceData.Roughness");
+			textureProperty = shader->GetPropertyIndex("u_Texture");
+		}
+
+		for (uint32_t i = 0; i < scene->mNumMaterials; i++)
+		{
+			auto& material = scene->mMaterials[i];
+
+			std::string name = material->GetName().C_Str();
+			aiString texturePath;
+			aiTextureMapping mapping;
+			uint32_t uvIndex;
+			material->GetTexture(aiTextureType_BASE_COLOR, 0, &texturePath, &mapping, &uvIndex);
+
+			AssetHandle baseColorTextureHandle = NULL_ASSET_HANDLE;
+			if (texturePath.length > 0)
+			{
+				std::filesystem::path baseColorTexturePath = metadata.Path.parent_path() / texturePath.C_Str();
+				if (std::filesystem::exists(baseColorTexturePath))
+				{
+					std::optional<AssetHandle> handle = assetManager->FindAssetByPath(baseColorTexturePath);
+					if (handle)
+						baseColorTextureHandle = handle.value();
+					else
+						baseColorTextureHandle = assetManager->ImportAsset(baseColorTexturePath);
+				}
+			}
+
+			aiColor4D color;
+			material->Get(AI_MATKEY_COLOR_DIFFUSE, color);
+			float roughness;
+			material->Get(AI_MATKEY_ROUGHNESS_FACTOR, roughness);
+
+			Ref<Material> materialAsset = CreateRef<Material>(defaultShader.value());
+
+			if (colorProperty)
+				materialAsset->WritePropertyValue(*colorProperty, glm::vec4(color.r, color.g, color.b, color.a));
+			if (roughnessProperty)
+				materialAsset->WritePropertyValue(*roughnessProperty, roughness);
+			if (textureProperty)
+				materialAsset->WritePropertyValue(*textureProperty, baseColorTextureHandle);
+
+			auto it = nameToHandle.find(name);
+			if (it != nameToHandle.end())
+				assetManager->SetLoadedAsset(it->second, materialAsset);
+			else
+				assetManager->ImportMemoryOnlyAsset(name, materialAsset, metadata.Handle);
+		}
+    }
+
     Ref<Mesh> MeshImporter::ImportMesh(const AssetMetadata& metadata)
     {
         std::underlying_type_t<aiPostProcessSteps> postProcessSteps = aiProcess_Triangulate;
@@ -90,87 +167,13 @@ namespace Flare
         const aiScene* scene = importer.ReadFile(metadata.Path.string(), postProcessSteps);
 
         if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
-            FLARE_CORE_ERROR("Failed to load mesh {}: {}", metadata.Path.generic_string(), importer.GetErrorString());
-        else
         {
-            Ref<EditorAssetManager> assetManager = As<EditorAssetManager>(AssetManager::GetInstance());
-            std::optional<AssetHandle> defaultShader = ShaderLibrary::FindShader("Mesh");
-
-            std::unordered_map<std::string, AssetHandle> nameToHandle;
-
-            for (AssetHandle subAsset : metadata.SubAssets)
-            {
-                if (const auto* subAssetMetadata = AssetManager::GetAssetMetadata(subAsset))
-                    nameToHandle[subAssetMetadata->Name] = subAsset;
-            }
-
-            if (defaultShader)
-            {
-                std::optional<uint32_t> colorProperty;
-                std::optional<uint32_t> roughnessProperty;
-                std::optional<uint32_t> textureProperty;
-
-                {
-                    Ref<Shader> shader = AssetManager::GetAsset<Shader>(defaultShader.value());
-                    if (shader != nullptr && shader->IsLoaded())
-                    {
-                        colorProperty = shader->GetPropertyIndex("u_InstanceData.Color");
-                        roughnessProperty = shader->GetPropertyIndex("u_InstanceData.Roughness");
-                        textureProperty = shader->GetPropertyIndex("u_Texture");
-                    }
-                }
-
-                for (uint32_t i = 0; i < scene->mNumMaterials; i++)
-                {
-                    auto& material = scene->mMaterials[i];
-
-                    std::string name = material->GetName().C_Str();
-                    aiString texturePath;
-                    aiTextureMapping mapping;
-                    uint32_t uvIndex;
-                    material->GetTexture(aiTextureType_BASE_COLOR, 0, &texturePath, &mapping, &uvIndex);
-
-                    AssetHandle baseColorTextureHandle = NULL_ASSET_HANDLE;
-                    if (texturePath.length > 0)
-                    {
-                        std::filesystem::path baseColorTexturePath = metadata.Path.parent_path() / texturePath.C_Str();
-                        if (std::filesystem::exists(baseColorTexturePath))
-                        {
-                            std::optional<AssetHandle> handle = assetManager->FindAssetByPath(baseColorTexturePath);
-                            if (handle)
-                                baseColorTextureHandle = handle.value();
-                            else
-                                baseColorTextureHandle = assetManager->ImportAsset(baseColorTexturePath);
-                        }
-                    }
-
-                    aiColor4D color;
-                    material->Get(AI_MATKEY_COLOR_DIFFUSE, color);
-                    float roughness;
-                    material->Get(AI_MATKEY_ROUGHNESS_FACTOR, roughness);
-
-                    Ref<Material> materialAsset = CreateRef<Material>(defaultShader.value());
-
-                    if (colorProperty)
-                        materialAsset->WritePropertyValue(*colorProperty, glm::vec4(color.r, color.g, color.b, color.a));
-                    if (roughnessProperty)
-                        materialAsset->WritePropertyValue(*roughnessProperty, roughness);
-                    if (textureProperty)
-                        materialAsset->WritePropertyValue(*textureProperty, baseColorTextureHandle);
-
-                    auto it = nameToHandle.find(name);
-                    if (it != nameToHandle.end())
-                        assetManager->SetLoadedAsset(it->second, materialAsset);
-                    else
-                        assetManager->ImportMemoryOnlyAsset(name, materialAsset, metadata.Handle);
-                }
-            }
-            else
-                FLARE_CORE_ERROR("Failed to find 'Mesh' shader");
-
-            return ProcessMeshNode(scene->mRootNode, scene);
+            FLARE_CORE_ERROR("Failed to load mesh {}: {}", metadata.Path.generic_string(), importer.GetErrorString());
+            return nullptr;
         }
 
-        return nullptr;
+        ImportMaterials(metadata, scene);
+
+		return ProcessMeshNode(scene->mRootNode, scene);
     }
 }
