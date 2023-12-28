@@ -15,6 +15,21 @@ namespace Flare
         m_CurrentPropertyName = key;
     }
 
+    SerializationStream::DynamicArrayAction SerializablePropertyRenderer::SerializeDynamicArraySize(size_t& size)
+    {
+        BeginPropertiesGridIfNeeded();
+        DynamicArrayAction action = DynamicArrayAction::None;
+
+        EditorGUI::PropertyName("Size");
+        ImGui::PushID(&size);
+        if (ImGui::InputScalar("", ImGuiDataType_U64, &size))
+            action = DynamicArrayAction::Resize;
+
+        ImGui::PopID();
+        
+        return action;
+    }
+
     void SerializablePropertyRenderer::SerializeInt(SerializationValue<uint8_t> intValues, SerializableIntType type)
     {
         BeginPropertiesGridIfNeeded();
@@ -47,7 +62,7 @@ namespace Flare
         for (size_t i = 0; i < intValues.Values.GetSize(); i += intSize)
         {
             if (intValues.IsArray)
-                EditorGUI::PropertyIndex(i);
+                EditorGUI::PropertyIndex(i / intSize);
 
             ImGui::PushID(&intValues.Values[i]);
             ImGui::DragScalar("", dataType, &intValues.Values[i]);

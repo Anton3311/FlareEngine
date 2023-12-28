@@ -78,8 +78,15 @@ namespace Flare
     class SerializationStream
     {
     public:
+        enum class DynamicArrayAction
+        {
+            None,
+            Resize,
+            Append,
+        };
 
         virtual void PropertyKey(std::string_view key) = 0;
+        virtual DynamicArrayAction SerializeDynamicArraySize(size_t& size) = 0;
 
         virtual void SerializeInt(SerializationValue<uint8_t> intValues, SerializableIntType type) = 0;
         virtual void SerializeBool(SerializationValue<bool> value) = 0;
@@ -251,6 +258,21 @@ namespace Flare
     {
         static void OnSerialize(std::vector<T>& vector, SerializationStream& stream)
         {
+            // TODO: should probably assert that T is default constructable
+
+            size_t size = vector.size();
+            switch (stream.SerializeDynamicArraySize(size))
+            {
+            case SerializationStream::DynamicArrayAction::None:
+                break;
+            case SerializationStream::DynamicArrayAction::Append:
+                vector.emplace_back();
+                break;
+            case SerializationStream::DynamicArrayAction::Resize:
+                vector.resize(size);
+                break;
+            }
+
             stream.Serialize(SerializationValue(vector.data(), vector.size()));
         }
     };
@@ -262,7 +284,7 @@ namespace Flare
         {
             static SerializableObjectDescriptor s_Descriptor(
                 typeid(std::vector<T>).name(),
-                sizeof(std::vector<T>), {},
+                sizeof(std::vector<T>),
                 [](void* vector, SerializationStream& stream)
                 {
                     TypeSerializer<std::vector<T>>::OnSerialize(*(std::vector<T>*)vector, stream);

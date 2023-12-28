@@ -12,6 +12,7 @@ namespace Flare
         YAMLSerializer(YAML::Emitter& emitter);
     public:
         void PropertyKey(std::string_view key) override;
+        DynamicArrayAction SerializeDynamicArraySize(size_t& size) override;
         void SerializeInt(SerializationValue<uint8_t> intValues, SerializableIntType type) override;
         void SerializeBool(SerializationValue<bool> value) override;
         void SerializeFloat(SerializationValue<float> value) override;
@@ -32,6 +33,7 @@ namespace Flare
         YAMLDeserializer(const YAML::Node& root);
 
         void PropertyKey(std::string_view key) override;
+        DynamicArrayAction SerializeDynamicArraySize(size_t& size) override;
         void SerializeInt(SerializationValue<uint8_t> intValues, SerializableIntType type) override;
         void SerializeBool(SerializationValue<bool> value) override;
         void SerializeFloat(SerializationValue<float> value) override;

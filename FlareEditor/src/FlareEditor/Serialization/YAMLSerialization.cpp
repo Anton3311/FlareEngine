@@ -18,6 +18,11 @@ namespace Flare
         m_Emitter << YAML::Key << std::string(key);
     }
 
+    SerializationStream::DynamicArrayAction YAMLSerializer::SerializeDynamicArraySize(size_t& size)
+    {
+        return DynamicArrayAction::None;
+    }
+
     void YAMLSerializer::SerializeInt(SerializationValue<uint8_t> intValues, SerializableIntType type)
     {
         if (intValues.IsArray)
@@ -194,6 +199,12 @@ namespace Flare
     void YAMLDeserializer::PropertyKey(std::string_view key)
     {
         m_CurrentPropertyKey = key;
+    }
+
+    SerializationStream::DynamicArrayAction YAMLDeserializer::SerializeDynamicArraySize(size_t& size)
+    {
+        size = CurrentNode().size();
+        return DynamicArrayAction::Resize;
     }
 
     static void DeserializeIntValue(uint8_t* outValue, const YAML::Node& node, SerializableIntType type)
