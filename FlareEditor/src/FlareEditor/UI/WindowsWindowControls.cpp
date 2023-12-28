@@ -11,8 +11,12 @@ namespace Flare
 	{
 		ImGuiViewport* viewport = ImGui::GetMainViewport();
 
-		ImGuiWindowFlags flags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDecoration 
-			| ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize;
+		ImGuiWindowFlags flags = ImGuiWindowFlags_NoCollapse
+			| ImGuiWindowFlags_NoDecoration 
+			| ImGuiWindowFlags_NoMove
+			| ImGuiWindowFlags_NoResize
+			| ImGuiWindowFlags_NoScrollWithMouse
+			| ImGuiWindowFlags_NoScrollbar;
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 		bool showTitleBar = ImGui::BeginViewportSideBar("TitleBar", viewport, ImGuiDir_Up, m_TitleBarHeight, flags);
