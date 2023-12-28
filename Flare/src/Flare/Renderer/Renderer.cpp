@@ -41,6 +41,8 @@ namespace Flare
 		float CascadeSplits[4];
 
 		glm::mat4 LightProjection[4];
+
+		float Resolution;
 	};
 
 	struct RendererData
@@ -366,6 +368,7 @@ namespace Flare
 		ShadowData shadowData;
 		shadowData.Bias = s_RendererData.ShadowMappingSettings.Bias;
 		shadowData.LightSize = s_RendererData.ShadowMappingSettings.LightSize;
+		shadowData.Resolution = (float)s_RendererData.ShadowMappingSettings.Resolution;
 
 		for (size_t i = 0; i < 4; i++)
 			shadowData.CascadeSplits[i] = s_RendererData.ShadowMappingSettings.CascadeSplits[i];
@@ -397,15 +400,7 @@ namespace Flare
 			shadowMapSpecs.Height = s_RendererData.ShadowMappingSettings.Resolution;
 			shadowMapSpecs.Attachments = { { FrameBufferTextureFormat::Depth, TextureWrap::Clamp, TextureFiltering::Linear } };
 
-			for (size_t i = 0; i < 2; i++)
-			{
-				s_RendererData.ShadowsRenderTarget[i] = FrameBuffer::Create(shadowMapSpecs);
-			}
-
-			shadowMapSpecs.Width /= 2;
-			shadowMapSpecs.Height /= 2;
-
-			for (size_t i = 2; i < 4; i++)
+			for (size_t i = 0; i < 4; i++)
 			{
 				s_RendererData.ShadowsRenderTarget[i] = FrameBuffer::Create(shadowMapSpecs);
 			}
@@ -419,9 +414,6 @@ namespace Flare
 				for (size_t i = 0; i < 4; i++)
 				{
 					uint32_t resolution = s_RendererData.ShadowMappingSettings.Resolution;
-					if (i >= 2)
-						resolution /= 2;
-
 					s_RendererData.ShadowsRenderTarget[i]->Resize(resolution, resolution);
 				}
 			}

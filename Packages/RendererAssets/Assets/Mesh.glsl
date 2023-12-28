@@ -87,6 +87,8 @@ layout(std140, binding = 2) uniform ShadowData
 	mat4 u_CascadeProjection1;
 	mat4 u_CascadeProjection2;
 	mat4 u_CascadeProjection3;
+
+	float u_ShadowResolution;
 };
 
 struct VertexData
@@ -216,7 +218,7 @@ float CalculateShadow(sampler2D shadowMap, vec4 lightSpacePosition, float bias, 
 
 	float penumbraWidth = (receieverDepth - blockerDistance) / blockerDistance;
 	float filterRadius = penumbraWidth * LIGHT_SIZE * u_LightNear / receieverDepth;
-	return 1.0f - PCF(shadowMap, uv, receieverDepth, filterRadius, rotation, bias);
+	return 1.0f - PCF(shadowMap, uv, receieverDepth, max(3.0f / u_ShadowResolution, filterRadius), rotation, bias);
 }
 
 #define DEBUG_CASCADES 0
