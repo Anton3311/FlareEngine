@@ -213,16 +213,10 @@ namespace Flare
 			return false;
 		});
 
-		if (!m_IsHovered)
+		if (m_IsHovered)
 		{
-			// Block the scroll event when the window is not hovered, to dsiallow camera zooming
-			dispatcher.Dispatch<MouseScrollEvent>([this](MouseScrollEvent& e) -> bool
-			{
-				return true;
-			});
+			m_Camera.ProcessEvents(event);
 		}
-
-		m_Camera.ProcessEvents(event);
 	}
 
 	void SceneViewportWindow::CreateFrameBuffer()
