@@ -57,7 +57,7 @@ namespace Flare
 					std::optional<void*> componentData = m_World.Entities.GetEntityComponent(entity, component);
 					if (componentData.has_value() && componentInfo.Initializer)
 					{
-						EditorGUI::ObjectField(componentInfo.Initializer->Type.SerializationDescriptor, componentData.value());
+						EditorGUI::ObjectField(componentInfo.Initializer->Type.SerializationDescriptor, componentData.value(), &m_World);
 					}
 				}
 

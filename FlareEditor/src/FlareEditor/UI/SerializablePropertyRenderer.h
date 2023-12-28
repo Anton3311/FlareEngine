@@ -4,6 +4,9 @@
 
 #include "Flare/AssetManager/Asset.h"
 
+#include "FlareECS/World.h"
+#include "FlareECS/Entity/Entity.h"
+
 #include <string_view>
 #include <vector>
 
@@ -12,7 +15,7 @@ namespace Flare
     class SerializablePropertyRenderer : public SerializationStream
     {
     public:
-        SerializablePropertyRenderer();
+        SerializablePropertyRenderer(const World* currentWorld = nullptr);
 
         void PropertyKey(std::string_view key) override;
         DynamicArrayAction SerializeDynamicArraySize(size_t& size) override;
@@ -38,5 +41,7 @@ namespace Flare
     private:
         PropertiesTreeState m_CurrentState;
         std::string_view m_CurrentPropertyName;
+
+        const World* m_CurrentWorld;
     };
 }

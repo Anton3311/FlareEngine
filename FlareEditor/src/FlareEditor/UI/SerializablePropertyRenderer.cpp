@@ -5,10 +5,8 @@
 
 namespace Flare
 {
-    SerializablePropertyRenderer::SerializablePropertyRenderer()
-        : m_CurrentState({ false })
-    {
-    }
+    SerializablePropertyRenderer::SerializablePropertyRenderer(const World* world)
+        : m_CurrentState({ false }), m_CurrentWorld(world) {}
 
     void SerializablePropertyRenderer::PropertyKey(std::string_view key)
     {
@@ -221,6 +219,16 @@ namespace Flare
             BeginPropertiesGridIfNeeded();
             EditorGUI::PropertyName(m_CurrentPropertyName.data());
             RenderAssetField(*reinterpret_cast<AssetHandle*>(objectData));
+            return;
+        }
+
+        if (&descriptor == &FLARE_SERIALIZATION_DESCRIPTOR_OF(Entity))
+        {
+            if (m_CurrentWorld == nullptr)
+                return;
+
+            BeginPropertiesGridIfNeeded();
+            EditorGUI::EntityField(m_CurrentPropertyName.data(), *m_CurrentWorld, *reinterpret_cast<Entity*>(objectData));
             return;
         }
 
