@@ -42,12 +42,14 @@ namespace Flare
                 normals[i].z = nodeMesh->mNormals[i].z;
             }
 
-            if (nodeMesh->mTextureCoords != nullptr)
-            for (size_t i = 0; i < uvs.size(); i++)
+            if (nodeMesh->mTextureCoords != nullptr && nodeMesh->mTextureCoords[0] != nullptr)
             {
-                auto uv = nodeMesh->mTextureCoords[0][i];
-                uvs[i].x = uv.x;
-                uvs[i].y = uv.y;
+				for (size_t i = 0; i < uvs.size(); i++)
+				{
+					auto uv = nodeMesh->mTextureCoords[0][i];
+					uvs[i].x = uv.x;
+					uvs[i].y = uv.y;
+				}
             }
 
             for (uint32_t face = 0; face < nodeMesh->mNumFaces; face++)
