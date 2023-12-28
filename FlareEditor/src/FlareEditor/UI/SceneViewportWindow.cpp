@@ -433,7 +433,7 @@ namespace Flare
 			overlayName = "Default";
 			break;
 		case ViewportOverlay::Depth:
-			overlayName = "Default";
+			overlayName = "Depth";
 			break;
 		}
 
