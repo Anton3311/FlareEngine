@@ -47,6 +47,7 @@ namespace Flare
 		bool ShowAABBs = false;
 		bool ShowLights = true;
 		bool ShowCameraFrustum = true;
+		bool ShowGrid = true;
 	};
 
 	class EditorLayer : public Layer

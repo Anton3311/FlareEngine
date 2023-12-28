@@ -499,12 +499,10 @@ namespace Flare
 			SceneViewSettings& settings = EditorLayer::GetInstance().GetSceneViewSettings();
 			if (ImGui::BeginCombo("", "Settings"))
 			{
-				if (ImGui::MenuItem("Show AABBs", nullptr, &settings.ShowAABBs))
-					settings.ShowAABBs = settings.ShowAABBs;
-				if (ImGui::MenuItem("Show Lights", nullptr, &settings.ShowLights))
-					settings.ShowLights = settings.ShowLights;
-				if (ImGui::MenuItem("Show Camera Frustums", nullptr, &settings.ShowCameraFrustum))
-					settings.ShowCameraFrustum = settings.ShowCameraFrustum;
+				ImGui::MenuItem("Show AABBs", nullptr, &settings.ShowAABBs);
+				ImGui::MenuItem("Show Lights", nullptr, &settings.ShowLights);
+				ImGui::MenuItem("Show Camera Frustums", nullptr, &settings.ShowCameraFrustum);
+				ImGui::MenuItem("Show Grid", nullptr, &settings.ShowGrid);
 
 				ImGui::EndCombo();
 			}
@@ -520,7 +518,7 @@ namespace Flare
 
 	void SceneViewportWindow::RenderGrid()
 	{
-		if (!m_GridMaterial)
+		if (!m_GridMaterial || !EditorLayer::GetInstance().GetSceneViewSettings().ShowGrid)
 			return;
 
 		float scale = m_Camera.GetZoom() * 3.0f;
