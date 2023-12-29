@@ -9,6 +9,9 @@ struct CameraData
 	mat4 InverseProjection;
 	mat4 InverseView;
 	mat4 InverseViewProjection;
+
+	float Near;
+	float Far;
 };
 
 layout(std140, binding = 0) uniform Camera

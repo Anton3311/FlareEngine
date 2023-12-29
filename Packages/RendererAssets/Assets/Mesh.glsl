@@ -111,7 +111,8 @@ layout(location = 0) in VertexData i_Vertex;
 layout(location = 5) in flat int i_EntityIndex;
 
 layout(location = 0) out vec4 o_Color;
-layout(location = 1) out int o_EntityIndex;
+layout(location = 1) out vec4 o_Normal;
+layout(location = 2) out int o_EntityIndex;
 
 const vec2[] POISSON_POINTS = {
 	vec2(0.19720058313715616, -0.126486154070558),
@@ -212,7 +213,7 @@ float CalculateShadow(sampler2D shadowMap, vec4 lightSpacePosition, float bias, 
 
 	vec2 rotation = vec2(cos(poissonPointsRotationAngle), sin(poissonPointsRotationAngle));
 
-	float blockerDistance = CalculateBlockerDistance(shadowMap, projected, rotation, bias);
+	float blockerDistance = CalculateBlockerDistance(shadowMap, projected, rotation, bias, scale);
 	if (blockerDistance == -1.0f)
 		return 1.0f;
 
@@ -297,6 +298,7 @@ void main()
 	vec3 finalColor = shadow * brdf * incomingLight * max(0.0, dot(-u_LightDirection, N));
 	finalColor += u_EnvironmentLight.rgb * u_EnvironmentLight.w * color.rgb;
 
+	o_Normal = vec4(N * 0.5f + vec3(0.5f), 1.0f);
 	o_Color = vec4(finalColor, color.a);
 	o_EntityIndex = i_EntityIndex;
 }

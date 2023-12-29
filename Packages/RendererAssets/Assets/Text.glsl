@@ -32,7 +32,7 @@ layout(location = 2) in flat int EntityIndex;
 layout(binding = 0) uniform sampler2D msdf;
 
 layout(location = 0) out vec4 o_Color;
-layout(location = 1) out int o_EntityIndex;
+layout(location = 2) out int o_EntityIndex;
 
 const float pxRange = 2.0;
 

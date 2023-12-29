@@ -348,7 +348,7 @@ namespace Flare
             for (const auto& param : m_Properties)
             {
                 int32_t location = glGetUniformLocation(m_Id, param.Name.c_str());
-                FLARE_CORE_ASSERT(location != -1);
+                //FLARE_CORE_ASSERT(location != -1);
 
                 m_UniformLocations.push_back(location);
             }

@@ -14,6 +14,8 @@
 
 #include "Flare/Scripting/ScriptingEngine.h"
 
+#include "Flare/Renderer/PostProcessing/SSAO.h"
+
 namespace Flare
 {
 
@@ -24,6 +26,7 @@ namespace Flare
 	{
 		m_PostProcessingManager.ToneMappingPass = CreateRef<ToneMapping>();
 		m_PostProcessingManager.VignettePass = CreateRef<Vignette>();
+		m_PostProcessingManager.SSAOPass = CreateRef<SSAO>();
 
 		m_World.MakeCurrent();
 		Initialize();
@@ -55,6 +58,7 @@ namespace Flare
 
 		Renderer::AddRenderPass(m_PostProcessingManager.ToneMappingPass);
 		Renderer::AddRenderPass(m_PostProcessingManager.VignettePass);
+		Renderer::AddRenderPass(m_PostProcessingManager.SSAOPass);
 	}
 
 	void Scene::InitializeRuntime()

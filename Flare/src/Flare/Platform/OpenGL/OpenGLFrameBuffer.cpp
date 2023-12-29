@@ -17,6 +17,8 @@ namespace Flare
             return GL_RGBA8;
         case FrameBufferTextureFormat::RedInteger:
             return GL_R32I;
+        case FrameBufferTextureFormat::RF32:
+            return GL_R32F;
         }
 
         FLARE_CORE_ASSERT(false, "Unhanded frame buffer texture format");
@@ -33,6 +35,8 @@ namespace Flare
             return GL_RGBA;
         case FrameBufferTextureFormat::RedInteger:
             return GL_RED_INTEGER;
+        case FrameBufferTextureFormat::RF32:
+            return GL_RED;
         }
 
         FLARE_CORE_ASSERT(false, "Unhanded frame buffer texture format");

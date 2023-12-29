@@ -36,7 +36,7 @@ layout(location = 2) flat in float TextureIndex;
 layout(location = 3) flat in int EntityIndex;
 
 layout(location = 0) out vec4 o_Color;
-layout(location = 1) out int o_EntityIndex;
+layout(location = 2) out int o_EntityIndex;
 
 void main()
 {

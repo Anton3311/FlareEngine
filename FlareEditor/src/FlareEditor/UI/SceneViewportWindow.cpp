@@ -135,7 +135,7 @@ namespace Flare
 			Entity selectedEntity = EditorLayer::GetInstance().Selection.TryGetEntity().value_or(Entity());
 			if (selectedEntity != Entity() && m_SelectionOutlineMaterial)
 			{
-				m_ScreenBuffer->BindAttachmentTexture(1);
+				m_ScreenBuffer->BindAttachmentTexture(2);
 
 				std::optional<uint32_t> idPropertyIndex = m_SelectionOutlineMaterial->GetShader()->GetPropertyIndex("u_Outline.SelectedId");
 
@@ -223,6 +223,7 @@ namespace Flare
 	{
 		FrameBufferSpecifications screenBufferSpecs(m_Viewport.GetSize().x, m_Viewport.GetSize().y, {
 			{ FrameBufferTextureFormat::RGB8, TextureWrap::Clamp, TextureFiltering::Closest },
+			{ FrameBufferTextureFormat::RGB8, TextureWrap::Clamp, TextureFiltering::Closest },
 			{ FrameBufferTextureFormat::RedInteger, TextureWrap::Clamp, TextureFiltering::Closest },
 			{ FrameBufferTextureFormat::Depth, TextureWrap::Clamp, TextureFiltering::Closest },
 		});
@@ -234,7 +235,7 @@ namespace Flare
 	void SceneViewportWindow::OnClear()
 	{
 		RenderCommand::Clear();
-		m_ScreenBuffer->ClearAttachment(1, INT32_MAX);
+		m_ScreenBuffer->ClearAttachment(2, INT32_MAX);
 	}
 
 	void SceneViewportWindow::RenderWindowContents()
@@ -249,8 +250,11 @@ namespace Flare
 		case ViewportOverlay::Default:
 			RenderViewportBuffer(m_Viewport.RenderTarget, 0);
 			break;
+		case ViewportOverlay::Normal:
+			RenderViewportBuffer(m_ScreenBuffer, 1);
+			break;
 		case ViewportOverlay::Depth:
-			RenderViewportBuffer(m_ScreenBuffer, 2);
+			RenderViewportBuffer(m_ScreenBuffer, 3);
 			break;
 		}
 
@@ -432,6 +436,9 @@ namespace Flare
 		case ViewportOverlay::Default:
 			overlayName = "Default";
 			break;
+		case ViewportOverlay::Normal:
+			overlayName = "Normal";
+			break;
 		case ViewportOverlay::Depth:
 			overlayName = "Depth";
 			break;
@@ -441,6 +448,8 @@ namespace Flare
 		{
 			if (ImGui::MenuItem("Default"))
 				m_Overlay = ViewportOverlay::Default;
+			if (ImGui::MenuItem("Normal"))
+				m_Overlay = ViewportOverlay::Normal;
 			if (ImGui::MenuItem("Depth"))
 				m_Overlay = ViewportOverlay::Depth;
 
@@ -541,7 +550,7 @@ namespace Flare
 		m_ScreenBuffer->Bind();
 
 		int32_t entityIndex;
-		m_ScreenBuffer->ReadPixel(1, m_RelativeMousePosition.x, m_RelativeMousePosition.y, &entityIndex);
+		m_ScreenBuffer->ReadPixel(2, m_RelativeMousePosition.x, m_RelativeMousePosition.y, &entityIndex);
 
 		std::optional<Entity> entity = Scene::GetActive()->GetECSWorld().Entities.FindEntityByIndex(entityIndex);
 

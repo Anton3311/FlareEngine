@@ -2,21 +2,56 @@ AssetRegistry:
   - Handle: 4547075642872350196
     Type: Shader
     Path: Text.glsl
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
   - Handle: 7621327274929530761
     Type: Shader
     Path: Vignette.glsl
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
   - Handle: 7980718708508351879
     Type: Shader
     Path: Error.glsl
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
+  - Handle: 8905914795240909789
+    Type: Shader
+    Path: SSAO.glsl
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
   - Handle: 11758441454924447106
     Type: Shader
     Path: Debug.glsl
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
   - Handle: 12987452337681434979
     Type: Shader
     Path: QuadShader.glsl
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
   - Handle: 13547750999134791996
     Type: Shader
     Path: AcesToneMapping.glsl
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
   - Handle: 17504616539540010642
     Type: Shader
     Path: Mesh.glsl
+    Source: File
+    Parent: 0
+    SubAssets:
+      []

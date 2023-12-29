@@ -21,7 +21,7 @@ void main()
 
 layout(location = 0) in flat int i_EntityIndex;
 layout(location = 0) out vec4 o_Color;
-layout(location = 1) out int o_EntityIndex;
+layout(location = 2) out int o_EntityIndex;
 
 void main()
 {

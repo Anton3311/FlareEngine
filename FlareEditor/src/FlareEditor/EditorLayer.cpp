@@ -306,6 +306,9 @@ namespace Flare
                 EditorGUI::ObjectField(
                     FLARE_SERIALIZATION_DESCRIPTOR_OF(Vignette),
                     postProcessing.VignettePass.get());
+                EditorGUI::ObjectField(
+                    FLARE_SERIALIZATION_DESCRIPTOR_OF(SSAO),
+                    postProcessing.SSAOPass.get());
 
                 ImGui::TreePop();
             }
