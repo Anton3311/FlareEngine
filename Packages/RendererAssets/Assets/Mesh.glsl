@@ -151,7 +151,7 @@ const vec2[] POISSON_POINTS = {
 const int NUMBER_OF_SAMPLES = 32;
 #define LIGHT_SIZE (u_LightSize / u_LightFrustumSize)
 
-float CalculateBlockerDistance(sampler2D shadowMap, vec3 projectedLightSpacePosition, vec2 rotation, float bias)
+float CalculateBlockerDistance(sampler2D shadowMap, vec3 projectedLightSpacePosition, vec2 rotation, float bias, float scale)
 {
 	float receieverDepth = projectedLightSpacePosition.z;
 	float blockerDistance = 0.0;
@@ -196,7 +196,7 @@ float PCF(sampler2D shadowMap, vec2 uv, float receieverDepth, float filterRadius
 	return shadow / NUMBER_OF_SAMPLES;
 }
 
-float CalculateShadow(sampler2D shadowMap, vec4 lightSpacePosition, float bias, float poissonPointsRotationAngle)
+float CalculateShadow(sampler2D shadowMap, vec4 lightSpacePosition, float bias, float poissonPointsRotationAngle, float scale)
 {
 	vec3 projected = lightSpacePosition.xyz / lightSpacePosition.w;
 	projected = projected * 0.5 + vec3(0.5);
@@ -218,7 +218,7 @@ float CalculateShadow(sampler2D shadowMap, vec4 lightSpacePosition, float bias, 
 
 	float penumbraWidth = (receieverDepth - blockerDistance) / blockerDistance;
 	float filterRadius = penumbraWidth * LIGHT_SIZE * u_LightNear / receieverDepth;
-	return 1.0f - PCF(shadowMap, uv, receieverDepth, max(3.0f / u_ShadowResolution, filterRadius), rotation, bias);
+	return 1.0f - PCF(shadowMap, uv, receieverDepth, max(3.0f / u_ShadowResolution, filterRadius * scale), rotation, bias);
 }
 
 #define DEBUG_CASCADES 0
@@ -271,16 +271,16 @@ void main()
 	switch (cascadeIndex)
 	{
 	case 0:
-		shadow = CalculateShadow(u_ShadowMap0, (u_CascadeProjection0 * i_Vertex.Position), bias, poissonPointsRotationAngle);
+		shadow = CalculateShadow(u_ShadowMap0, (u_CascadeProjection0 * i_Vertex.Position), bias, poissonPointsRotationAngle, 1.0f);
 		break;
 	case 1:
-		shadow = CalculateShadow(u_ShadowMap1, (u_CascadeProjection1 * i_Vertex.Position), bias, poissonPointsRotationAngle);
+		shadow = CalculateShadow(u_ShadowMap1, (u_CascadeProjection1 * i_Vertex.Position), bias, poissonPointsRotationAngle, 0.5f);
 		break;
 	case 2:
-		shadow = CalculateShadow(u_ShadowMap2, (u_CascadeProjection2 * i_Vertex.Position), bias, poissonPointsRotationAngle);
+		shadow = CalculateShadow(u_ShadowMap2, (u_CascadeProjection2 * i_Vertex.Position), bias, poissonPointsRotationAngle, 0.25f);
 		break;
 	case 3:
-		shadow = CalculateShadow(u_ShadowMap3, (u_CascadeProjection3 * i_Vertex.Position), bias, poissonPointsRotationAngle);
+		shadow = CalculateShadow(u_ShadowMap3, (u_CascadeProjection3 * i_Vertex.Position), bias, poissonPointsRotationAngle, 0.125f);
 		break;
 	}
 
