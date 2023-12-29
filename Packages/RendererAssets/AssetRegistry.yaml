@@ -27,6 +27,13 @@ AssetRegistry:
     Parent: 0
     SubAssets:
       []
+  - Handle: 10090821194737708900
+    Type: Shader
+    Path: SSAOBlur.glsl
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
   - Handle: 11758441454924447106
     Type: Shader
     Path: Debug.glsl

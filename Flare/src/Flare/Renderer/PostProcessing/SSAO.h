@@ -19,12 +19,17 @@ namespace Flare
 	public:
 		float Bias;
 		float Radius;
+		float BlurSize;
 	private:
 		Ref<FrameBuffer> m_AOTargets[2];
 		Ref<Material> m_Material;
+		Ref<Material> m_BlurMaterial;
 
 		std::optional<uint32_t> m_BiasPropertyIndex;
 		std::optional<uint32_t> m_RadiusPropertyIndex;
+
+		std::optional<uint32_t> m_BlurSizePropertyIndex;
+		std::optional<uint32_t> m_TexelSizePropertyIndex;
 	};
 
 	template<>
@@ -34,6 +39,7 @@ namespace Flare
 		{
 			stream.Serialize("Radius", SerializationValue(ssao.Radius));
 			stream.Serialize("Bias", SerializationValue(ssao.Bias));
+			stream.Serialize("BlurSize", SerializationValue(ssao.BlurSize));
 		}
 	};
 }
