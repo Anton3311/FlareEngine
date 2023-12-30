@@ -37,16 +37,17 @@ void main()
 	vec3 color = texture(u_ColorTexture, i_UV).rgb;
 
 	float ao = 0;
-	for (float y = -1.0f; y <= 1.0f; y++)
+	float blurHalfSize = u_Params.BlurSize / 2.0f;
+	for (float y = -blurHalfSize; y < blurHalfSize; y++)
 	{
-		for (float x = -1.0f; x <= 1.0f; x++)
+		for (float x = -blurHalfSize; x < blurHalfSize; x++)
 		{
-			vec2 offset = vec2(x, y) * u_Params.BlurSize * u_Params.TexelSize;
+			vec2 offset = vec2(float(x) + 0.5f, float(y) + 0.5f) * u_Params.TexelSize;
 			ao += texture(u_AOTexture, offset + i_UV).r;
 		}
 	}
 
-	o_Color = vec4(color * ao / 9.0f, 1.0);
+	o_Color = vec4(color * ao / (u_Params.BlurSize * u_Params.BlurSize), 1.0);
 }
 
 #end

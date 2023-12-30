@@ -5,12 +5,14 @@
 
 #include "Flare/AssetManager/AssetManager.h"
 
+#include <random>
+
 namespace Flare
 {
 	FLARE_SERIALIZABLE_IMPL(SSAO);
 
 	SSAO::SSAO()
-		: m_BiasPropertyIndex({}), m_RadiusPropertyIndex({}), Bias(0.00001f), Radius(0.05f), BlurSize(4.0f)
+		: m_BiasPropertyIndex({}), m_RadiusPropertyIndex({}), Bias(0.1f), Radius(0.9f), BlurSize(2.0f), NoiseScale(0.125)
 	{
 		{
 			std::optional<AssetHandle> shaderHandle = ShaderLibrary::FindShader("SSAO");
@@ -23,6 +25,7 @@ namespace Flare
 				m_Material = CreateRef<Material>(AssetManager::GetAsset<Shader>(shaderHandle.value()));
 				m_BiasPropertyIndex = m_Material->GetShader()->GetPropertyIndex("u_Params.Bias");
 				m_RadiusPropertyIndex = m_Material->GetShader()->GetPropertyIndex("u_Params.SampleRadius");
+				m_NoiseScalePropertyIndex = m_Material->GetShader()->GetPropertyIndex("u_Params.NoiseScale");
 			}
 
 		}
@@ -37,10 +40,25 @@ namespace Flare
 			else
 			{
 				m_BlurMaterial = CreateRef<Material>(AssetManager::GetAsset<Shader>(shaderHandle.value()));
-				m_BlurSizePropertyIndex = m_Material->GetShader()->GetPropertyIndex("u_Params.BlurSize");
-				m_TexelSizePropertyIndex = m_Material->GetShader()->GetPropertyIndex("u_Params.TexelSize");
+				m_BlurSizePropertyIndex = m_BlurMaterial->GetShader()->GetPropertyIndex("u_Params.BlurSize");
+				m_TexelSizePropertyIndex = m_BlurMaterial->GetShader()->GetPropertyIndex("u_Params.TexelSize");
 			}
 		}
+
+		std::random_device device;
+		std::mt19937_64 engine(device());
+		std::uniform_real_distribution<float> uniformDistribution(0.0f, 1.0f);
+
+		glm::vec2 randomVectors[8][8];
+		for (size_t y = 0; y < 8; y++)
+		{
+			for (size_t x = 0; x < 8; x++)
+			{
+				randomVectors[y][x] = glm::vec2(uniformDistribution(engine), uniformDistribution(engine));
+			}
+		}
+
+		m_RandomVectors = Texture::Create(8, 8, randomVectors, TextureFormat::RG16, TextureFiltering::Linear);
 	}
 
 	void SSAO::OnRender(RenderingContext& context)
@@ -78,8 +96,11 @@ namespace Flare
 		}
 
 		aoTarget->Bind();
+		
+		glm::vec2 texelSize = glm::vec2(1.0f / currentViewport.GetSize().x, 1.0f / currentViewport.GetSize().y);
 
 		currentViewport.RenderTarget->BindAttachmentTexture(1, 0);
+		m_RandomVectors->Bind(2);
 
 		if (&currentViewport == &Renderer::GetMainViewport())
 			currentViewport.RenderTarget->BindAttachmentTexture(2, 1);
@@ -90,6 +111,8 @@ namespace Flare
 			m_Material->WritePropertyValue(*m_BiasPropertyIndex, Bias);
 		if (m_RadiusPropertyIndex)
 			m_Material->WritePropertyValue(*m_RadiusPropertyIndex, Radius);
+		if (m_NoiseScalePropertyIndex)
+			m_Material->WritePropertyValue(*m_NoiseScalePropertyIndex, NoiseScale * texelSize);
 		
 		Renderer::DrawFullscreenQuad(m_Material);
 
@@ -103,9 +126,7 @@ namespace Flare
 			m_BlurMaterial->WritePropertyValue(*m_BlurSizePropertyIndex, BlurSize);
 		if (m_TexelSizePropertyIndex)
 		{
-			m_BlurMaterial->WritePropertyValue(*m_TexelSizePropertyIndex, glm::vec2(
-				1.0f / currentViewport.GetSize().x,
-				1.0f / currentViewport.GetSize().y));
+			m_BlurMaterial->WritePropertyValue(*m_TexelSizePropertyIndex, texelSize);
 		}
 
 		Renderer::DrawFullscreenQuad(m_BlurMaterial);

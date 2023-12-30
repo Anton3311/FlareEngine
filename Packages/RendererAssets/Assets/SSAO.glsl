@@ -25,11 +25,13 @@ layout(location = 0) in vec2 i_UV;
 
 layout(binding = 0) uniform sampler2D u_NormalsTexture;
 layout(binding = 1) uniform sampler2D u_DepthTexure;
+layout(binding = 2) uniform sampler2D u_RandomVectors;
 
 layout(std140, push_constant) uniform Params
 {
 	float Bias;
 	float SampleRadius;
+	vec2 NoiseScale;
 } u_Params;
 
 layout(location = 0) out vec4 o_Color;
@@ -41,24 +43,31 @@ vec3 ReconstructWorldSpacePositionFromDepth(vec2 screenPosition, float depth)
 	return worldSpacePosition.xyz / worldSpacePosition.w;
 }
 
+vec3 ReconstructViewSpacePositionFromDepth(vec2 screenPosition, float depth)
+{
+	vec4 clipSpacePosition = vec4(screenPosition, depth * 2.0f - 1.0f, 1.0f);
+	vec4 viewSpacePosition = u_Camera.InverseProjection * clipSpacePosition;
+	return viewSpacePosition.xyz / viewSpacePosition.w;
+}
+
 const vec3[] RANDOM_VECTORS = 
 {
-	vec3(0.40636955683783693, -0.32225178565910606, 0.9687690070046615),
-	vec3(1.8294227025319691, 2.3612833160558186, 1.3974106610868675),
-	vec3(-0.4565198813802882, -1.0312994760557594, 0.1845851912978406),
-	vec3(1.986230712460333, -0.44215256598148805, 2.9899495989379816),
-	vec3(-1.0741159103074374, -0.19367617003838744, 2.011362137559878),
-	vec3(1.222501985754348, -2.771981964606179, 2.7468334854703866),
-	vec3(-0.26110405258621006, -1.0109680765968878, 0.1593568851359476),
-	vec3(-0.8758363380675994, -1.1299983463835663, 0.5880219902902034),
-	vec3(1.9962415932614566, 0.627131604843255, 0.8183897870266011),
-	vec3(5.003835472362996, -3.1797444809531203, 1.7290124055705396),
-	vec3(0.8522821181090796, -0.7116103055661687, 0.4589231816748502),
-	vec3(-2.1859342935051536, 0.7568147773087225, 0.16902066232180035),
-	vec3(-0.8771823199124096, 0.49209199482988625, 1.3114859792638351),
-	vec3(-0.8169852264137277, -0.6274795585718771, 0.5493707280514889),
-	vec3(-1.570921636954846, -0.3831998984805417, 0.9237872225582945),
-	vec3(2.8610599687010247, -1.4166415178307539, 2.746448799003694)
+	vec3(0.2701420796672004, -0.16259540000848002, 0.14812016705548542),
+	vec3(-0.29048289380746367, 0.22307651233002976, 0.06497384172182932),
+	vec3(0.058883346362995574, -0.22294025027645392, 0.09686273442760837),
+	vec3(0.06692157068902395, -0.34362418702022024, 0.14927095145553365),
+	vec3(-0.16390731640895612, -0.14369652440860842, 0.045185039305914866),
+	vec3(0.05691037792560343, -0.2609889031713489, 0.18884381785457055),
+	vec3(-0.7235091568876681, 0.345426230040939, 0.0019103741191988425),
+	vec3(0.043712800235472, 0.033724546160143094, 0.040889340305886986),
+	vec3(-0.3178434227062447, -0.14312449449793735, 0.05905526934599541),
+	vec3(-0.09529351953754467, -0.21416338438538018, 0.04426958078246395),
+	vec3(-0.33116130122859977, 0.5923736046998866, 0.4941597460765092),
+	vec3(-0.5793342101387434, -0.35019345595183804, 0.4136550115620087),
+	vec3(0.034995080774583215, 0.34896247442824213, 0.7065582751974434),
+	vec3(0.12961814597406235, 0.099584814107574, 0.1107984233903666),
+	vec3(-0.24310780429748582, -0.5801881090519327, 0.5612803401610399),
+	vec3(-0.083850823850024, 0.13994988724867344, 0.2713956194382487),
 };
 
 const int SAMPLES_COUNT = 16;
@@ -66,25 +75,35 @@ const int SAMPLES_COUNT = 16;
 void main()
 {
 	float depth = texture(u_DepthTexure, i_UV).r;
-	vec3 worldSpacePosition = ReconstructWorldSpacePositionFromDepth(i_UV * 2.0f - vec2(1.0f), depth);
-	vec3 normal = texture(u_NormalsTexture, i_UV).xyz * 2.0f - vec3(1.0f);
+	vec3 viewSpacePosition = ReconstructViewSpacePositionFromDepth(i_UV * 2.0f - vec2(1.0f), depth);
 
-	vec3 tangent = cross(normal, vec3(0.0f, 1.0f, 0.0f));
+	mat4 worldNormalToView = transpose(u_Camera.InverseView);
+
+	vec3 worldSpaceNormal = normalize(texture(u_NormalsTexture, i_UV).xyz * 2.0f - vec3(1.0f));
+	vec3 normal = (worldNormalToView * vec4(worldSpaceNormal, 1.0)).xyz;
+	vec3 randomVector = texture(u_RandomVectors, i_UV * u_Params.NoiseScale).xyz;
+	randomVector.xy = randomVector.xy * 2.0f - vec2(1.0f);
+
+	randomVector = normalize(randomVector);
+
+	vec3 tangent = normalize(randomVector - normal * dot(randomVector, normal));
 	vec3 bitangent = cross(normal, tangent);
 
-	mat3 TBN = mat3(tangent, bitangent, normal);
+	mat3 tbn = mat3(tangent, bitangent, normal);
 
 	float aoFactor = 0.0f;
 	for (int i = 0; i < SAMPLES_COUNT; i++)
 	{
-		vec3 offset = TBN * (RANDOM_VECTORS[i] * u_Params.SampleRadius);
-		vec4 projected = u_Camera.ViewProjection * vec4(worldSpacePosition + offset, 1.0f);
+		vec3 samplePosition = viewSpacePosition + tbn * (RANDOM_VECTORS[i] * u_Params.SampleRadius);
+		vec4 projected = u_Camera.Projection * vec4(samplePosition, 1.0);
 		projected.xyz /= projected.w;
-		projected.xyz = projected.xyz / 2.0f + vec3(0.5f);
+		
+		vec2 uv = projected.xy * 0.5f + vec2(0.5f);
+		float sampleDepth = texture(u_DepthTexure, uv).r;
+		vec3 sampleViewSpace = ReconstructViewSpacePositionFromDepth(uv, sampleDepth);
 
-		float sampleDepth = texture(u_DepthTexure, projected.xy).r;
-		float rangeCheck = smoothstep(0.0, 1.0, u_Params.SampleRadius / abs(depth - sampleDepth));
-		if (projected.z > sampleDepth + u_Params.Bias)
+		float rangeCheck = smoothstep(0.0, 1.0, u_Params.SampleRadius / abs(sampleViewSpace.z - samplePosition.z));
+		if (samplePosition.z + u_Params.Bias <= sampleViewSpace.z)
 			aoFactor += rangeCheck;
 	}
 
