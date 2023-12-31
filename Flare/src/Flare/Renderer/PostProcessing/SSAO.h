@@ -11,7 +11,7 @@ namespace Flare
 	class FLARE_API SSAO : public RenderPass
 	{
 	public:
-		FLARE_SERIALIZABLE;
+		FLARE_TYPE;
 
 		SSAO();
 

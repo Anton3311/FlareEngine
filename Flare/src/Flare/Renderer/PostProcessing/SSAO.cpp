@@ -9,7 +9,7 @@
 
 namespace Flare
 {
-	FLARE_SERIALIZABLE_IMPL(SSAO);
+	FLARE_IMPL_TYPE(SSAO);
 
 	SSAO::SSAO()
 		: m_BiasPropertyIndex({}), m_RadiusPropertyIndex({}), Bias(0.1f), Radius(0.9f), BlurSize(2.0f), NoiseScale(0.125)
