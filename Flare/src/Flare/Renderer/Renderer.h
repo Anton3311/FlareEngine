@@ -32,19 +32,73 @@ namespace Flare
 
 	struct ShadowSettings
 	{
-		ShadowSettings()
-			: Resolution(0),
-			LightSize(1.0f),
-			Bias(0.0f) {}
+		FLARE_TYPE;
 
-		const uint32_t MaxCascades = 4;
+		static constexpr uint32_t MaxCascades = 4;
+
+		enum class ShadowResolution
+		{
+			_512 = 512,
+			_1024 = 1024,
+			_2048 = 2048,
+			_4096 = 4096,
+		};
+
+		static std::optional<ShadowResolution> ShadowResolutionFromSize(uint32_t size)
+		{
+			switch (size)
+			{
+			case 512:
+				return ShadowResolution::_512;
+			case 1024:
+				return ShadowResolution::_1024;
+			case 2048:
+				return ShadowResolution::_2048;
+			case 4096:
+				return ShadowResolution::_4096;
+			}
+
+			return {};
+		}
+
+		ShadowSettings()
+			: Resolution(ShadowResolution::_1024),
+			LightSize(0.009f),
+			Cascades(MaxCascades),
+			Bias(0.001f)
+		{
+			CascadeSplits[0] = 25.0f;
+			CascadeSplits[1] = 50.0f;
+			CascadeSplits[2] = 150.0f;
+			CascadeSplits[3] = 300.0f;
+		}
 
 		float LightSize;
 		float Bias;
-		uint32_t Resolution;
+		ShadowResolution Resolution;
 		int32_t Cascades;
 
 		float CascadeSplits[4] = { 0.0f };
+	};
+
+	template<>
+	struct TypeSerializer<ShadowSettings>
+	{
+		void OnSerialize(ShadowSettings& settings, SerializationStream& stream)
+		{
+			stream.Serialize("LightSize", SerializationValue(settings.LightSize));
+			stream.Serialize("Bias", SerializationValue(settings.Bias));
+
+			using Underlying = std::underlying_type_t<ShadowSettings::ShadowResolution>;
+			stream.Serialize("Resolution", SerializationValue(reinterpret_cast<Underlying&>(settings.Resolution)));
+
+			stream.Serialize("Cascades", SerializationValue(settings.Cascades));
+
+			stream.Serialize("CascadeSplit0", SerializationValue(settings.CascadeSplits[0]));
+			stream.Serialize("CascadeSplit1", SerializationValue(settings.CascadeSplits[1]));
+			stream.Serialize("CascadeSplit2", SerializationValue(settings.CascadeSplits[2]));
+			stream.Serialize("CascadeSplit3", SerializationValue(settings.CascadeSplits[3]));
+		}
 	};
 
 	class FLARE_API Renderer

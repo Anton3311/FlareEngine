@@ -17,6 +17,7 @@ namespace Flare
 		void RenderTransformComponent(TransformComponent& transform);
 		void RenderSpriteComponent(SpriteComponent& sprite);
 		void RenderMeshComponent(MeshComponent& mesh);
+		void RenderEnvironmentComponent(Environment& environment);
 
 		void EntityProperties::RenderAddComponentMenu(Entity entity);
 	private:

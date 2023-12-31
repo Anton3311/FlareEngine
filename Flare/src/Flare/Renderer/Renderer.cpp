@@ -15,6 +15,8 @@
 
 namespace Flare
 {
+	FLARE_IMPL_TYPE(ShadowSettings);
+
 	struct InstanceData
 	{
 		glm::mat4 Transform;
@@ -94,7 +96,7 @@ namespace Flare
 		s_RendererData.LightBuffer = UniformBuffer::Create(sizeof(LightData), 1);
 		s_RendererData.ShadowDataBuffer = UniformBuffer::Create(sizeof(ShadowData), 2);
 
-		s_RendererData.ShadowMappingSettings.Resolution = 2048;
+		s_RendererData.ShadowMappingSettings.Resolution = ShadowSettings::ShadowResolution::_2048;
 		s_RendererData.ShadowMappingSettings.Bias = 0.015f;
 		s_RendererData.ShadowMappingSettings.LightSize = 0.009f;
 
@@ -393,29 +395,24 @@ namespace Flare
 		s_RendererData.LightBuffer->SetData(&viewport.FrameData.Light, sizeof(viewport.FrameData.Light), 0);
 		s_RendererData.CameraBuffer->SetData(&viewport.FrameData.Camera, sizeof(CameraData), 0);
 
+		uint32_t size = (uint32_t)s_RendererData.ShadowMappingSettings.Resolution;
 		if (s_RendererData.ShadowsRenderTarget[0] == nullptr)
 		{
 			FrameBufferSpecifications shadowMapSpecs;
-			shadowMapSpecs.Width = s_RendererData.ShadowMappingSettings.Resolution;
-			shadowMapSpecs.Height = s_RendererData.ShadowMappingSettings.Resolution;
+			shadowMapSpecs.Width = size;
+			shadowMapSpecs.Height = size;
 			shadowMapSpecs.Attachments = { { FrameBufferTextureFormat::Depth, TextureWrap::Clamp, TextureFiltering::Linear } };
 
 			for (size_t i = 0; i < 4; i++)
-			{
 				s_RendererData.ShadowsRenderTarget[i] = FrameBuffer::Create(shadowMapSpecs);
-			}
 		}
 		else
 		{
 			auto& shadowMapSpecs = s_RendererData.ShadowsRenderTarget[0]->GetSpecifications();
-			if (shadowMapSpecs.Width != s_RendererData.ShadowMappingSettings.Resolution
-				|| shadowMapSpecs.Height != s_RendererData.ShadowMappingSettings.Resolution)
+			if (shadowMapSpecs.Width != size || shadowMapSpecs.Height != size)
 			{
 				for (size_t i = 0; i < 4; i++)
-				{
-					uint32_t resolution = s_RendererData.ShadowMappingSettings.Resolution;
-					s_RendererData.ShadowsRenderTarget[i]->Resize(resolution, resolution);
-				}
+					s_RendererData.ShadowsRenderTarget[i]->Resize(size, size);
 			}
 		}
 

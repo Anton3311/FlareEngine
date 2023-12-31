@@ -164,6 +164,8 @@ namespace Flare
 					environments[entity].EnvironmentColorIntensity
 				);
 
+				Renderer::GetShadowSettings() = environments[entity].ShadowSettings;
+
 				hasEnviroment = true;
 				break;
 			}

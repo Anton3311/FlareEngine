@@ -222,46 +222,10 @@ namespace Flare
             ShadowSettings& settings = Renderer::GetShadowSettings();
 
             ImGui::SliderInt("Cascade Index", &s_CascadeIndex, 0, settings.Cascades - 1, "%d", ImGuiSliderFlags_AlwaysClamp);
-            ImGui::SliderInt("Cascade", &settings.Cascades, 1, settings.MaxCascades, "%d", ImGuiSliderFlags_AlwaysClamp);
 
             auto shadows = Renderer::GetShadowsRenderTarget(s_CascadeIndex);
             if (shadows)
                 ImGui::Image(shadows->GetColorAttachmentRendererId(0), ImVec2(256, 256), ImVec2(0, 1), ImVec2(1, 0));
-
-            ImGui::DragFloat("Light size", &settings.LightSize, 1.0f, 0.0f, 1000.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
-            ImGui::DragFloat("Bias", &settings.Bias, 1.0f, 0.0f, 1000.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
-
-            for (size_t i = 0; i < 4; i++)
-            {
-                char label[] = "Split 0";
-                label[6] = '0' + (uint8_t)i;
-
-                ImGui::DragFloat(label, &settings.CascadeSplits[i], 1.0f, 0.0f, 1000.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
-            }
-
-            const char* resolutionPreviews[] = { "512", "1024", "2048", "4096" };
-            uint32_t resolutions[] = { 512, 1024, 2048, 4096 };
-
-            uint32_t resolutionIndex = 0;
-            for (size_t i = 0; i < sizeof(resolutions) / sizeof(uint32_t); i++)
-            {
-                if (resolutions[i] == settings.Resolution)
-                {
-                    resolutionIndex = (uint32_t)i;
-                    break;
-                }
-            }
-
-            if (ImGui::BeginCombo("Resolution", resolutionPreviews[resolutionIndex]))
-            {
-                for (size_t i = 0; i < sizeof(resolutions) / sizeof(uint32_t); i++)
-                {
-                    if (ImGui::MenuItem(resolutionPreviews[i]))
-                        settings.Resolution = resolutions[i];
-                }
-
-                ImGui::EndCombo();
-            }
 
             ImGui::End();
         }
