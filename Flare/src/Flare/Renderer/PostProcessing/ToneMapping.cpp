@@ -6,6 +6,8 @@
 #include "Flare/Renderer/RenderCommand.h"
 #include "Flare/Renderer/ShaderLibrary.h"
 
+#include "FlareCore/Profiler/Profiler.h"
+
 namespace Flare
 {
 	FLARE_IMPL_TYPE(ToneMapping);
@@ -25,6 +27,8 @@ namespace Flare
 
 	void ToneMapping::OnRender(RenderingContext& context)
 	{
+		FLARE_PROFILE_FUNCTION();
+
 		if (!Enabled)
 			return;
 

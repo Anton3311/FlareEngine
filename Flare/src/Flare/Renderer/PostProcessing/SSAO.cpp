@@ -5,6 +5,8 @@
 
 #include "Flare/AssetManager/AssetManager.h"
 
+#include "FlareCore/Profiler/Profiler.h"
+
 #include <random>
 
 namespace Flare
@@ -63,6 +65,8 @@ namespace Flare
 
 	void SSAO::OnRender(RenderingContext& context)
 	{
+		FLARE_PROFILE_FUNCTION();
+
 		if (!Enabled)
 			return;
 
@@ -102,6 +106,7 @@ namespace Flare
 		aoTarget->Bind();
 
 		{
+			FLARE_PROFILE_SCOPE("SSAO::MainPass");
 			currentViewport.RenderTarget->BindAttachmentTexture(1, 0);
 			m_RandomVectors->Bind(2);
 
@@ -123,6 +128,7 @@ namespace Flare
 		context.RenderTarget->Bind();
 
 		{
+			FLARE_PROFILE_SCOPE("SSAO::BlurAndCombinePass");
 			aoTarget->BindAttachmentTexture(0);
 			context.RenderTarget->BindAttachmentTexture(0, 1);
 
