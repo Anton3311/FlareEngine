@@ -12,7 +12,7 @@ namespace Flare
 	FLARE_IMPL_TYPE(SSAO);
 
 	SSAO::SSAO()
-		: m_BiasPropertyIndex({}), m_RadiusPropertyIndex({}), Bias(0.1f), Radius(0.9f), BlurSize(2.0f), NoiseScale(0.125)
+		: m_BiasPropertyIndex({}), m_RadiusPropertyIndex({}), Bias(0.1f), Radius(0.5f), BlurSize(2.0f)
 	{
 		{
 			std::optional<AssetHandle> shaderHandle = ShaderLibrary::FindShader("SSAO");
@@ -112,7 +112,7 @@ namespace Flare
 		if (m_RadiusPropertyIndex)
 			m_Material->WritePropertyValue(*m_RadiusPropertyIndex, Radius);
 		if (m_NoiseScalePropertyIndex)
-			m_Material->WritePropertyValue(*m_NoiseScalePropertyIndex, NoiseScale * texelSize);
+			m_Material->WritePropertyValue(*m_NoiseScalePropertyIndex, (glm::vec2)currentViewport.GetSize() / 8.0f);
 		
 		Renderer::DrawFullscreenQuad(m_Material);
 

@@ -74,6 +74,22 @@ namespace Flare
 
 	OpenGLTexture::OpenGLTexture(uint32_t width, uint32_t height, const void* data, TextureFormat format, TextureFiltering filtering)
 	{
+		GLenum dataType = GL_UNSIGNED_BYTE;
+		switch (m_Specifications.Format)
+		{
+		case TextureFormat::RGB8:
+		case TextureFormat::RGBA8:
+		case TextureFormat::RG8:
+			dataType = GL_UNSIGNED_BYTE;
+			break;
+		case TextureFormat::RF32:
+			dataType = GL_FLOAT;
+			break;
+		case TextureFormat::RG16:
+			dataType = GL_UNSIGNED_SHORT;
+			break;
+		}
+
 		switch (format)
 		{
 		case TextureFormat::RGB8:
@@ -107,7 +123,7 @@ namespace Flare
 
 		SetFiltering(m_Specifications.Filtering);
 
-		glTextureSubImage2D(m_Id, 0, 0, 0, m_Specifications.Width, m_Specifications.Height, m_TextureDataType, GL_UNSIGNED_BYTE, data);
+		glTextureSubImage2D(m_Id, 0, 0, 0, m_Specifications.Width, m_Specifications.Height, m_TextureDataType, dataType, data);
 	}
 	
 	OpenGLTexture::~OpenGLTexture()

@@ -20,7 +20,6 @@ namespace Flare
 		float Bias;
 		float Radius;
 		float BlurSize;
-		float NoiseScale;
 	private:
 		Ref<FrameBuffer> m_AOTargets[2];
 		Ref<Texture> m_RandomVectors;
@@ -43,7 +42,6 @@ namespace Flare
 			stream.Serialize("Radius", SerializationValue(ssao.Radius));
 			stream.Serialize("Bias", SerializationValue(ssao.Bias));
 			stream.Serialize("BlurSize", SerializationValue(ssao.BlurSize));
-			stream.Serialize("NoiseScale", SerializationValue(ssao.NoiseScale));
 		}
 	};
 }
