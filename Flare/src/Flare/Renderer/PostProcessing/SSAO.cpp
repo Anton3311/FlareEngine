@@ -12,7 +12,7 @@ namespace Flare
 	FLARE_IMPL_TYPE(SSAO);
 
 	SSAO::SSAO()
-		: m_BiasPropertyIndex({}), m_RadiusPropertyIndex({}), Bias(0.1f), Radius(0.5f), BlurSize(2.0f)
+		: m_BiasPropertyIndex({}), m_RadiusPropertyIndex({}), Bias(0.1f), Radius(0.5f), BlurSize(2.0f), Enabled(true)
 	{
 		{
 			std::optional<AssetHandle> shaderHandle = ShaderLibrary::FindShader("SSAO");
@@ -63,24 +63,28 @@ namespace Flare
 
 	void SSAO::OnRender(RenderingContext& context)
 	{
+		if (!Enabled)
+			return;
+
 		if (m_Material == nullptr || m_BlurMaterial == nullptr)
 			return;
 
 		Ref<FrameBuffer> aoTarget = nullptr;
 		size_t targetIndex = 0;
-		if (&Renderer::GetCurrentViewport() == &Renderer::GetMainViewport())
+
+		const Viewport& currentViewport = Renderer::GetCurrentViewport();
+		if (&currentViewport == &Renderer::GetMainViewport())
 			targetIndex = 0;
 		else
 			targetIndex = 1;
 
 		aoTarget = m_AOTargets[targetIndex];
 
-		const Viewport& currentViewport = Renderer::GetCurrentViewport();
 		if (!aoTarget)
 		{
 			FrameBufferSpecifications specifications = FrameBufferSpecifications(
 				currentViewport.GetSize().x, currentViewport.GetSize().y,
-				{ {FrameBufferTextureFormat::RF32, TextureWrap::Clamp, TextureFiltering::Linear } }
+				{ {FrameBufferTextureFormat::RF32, TextureWrap::Clamp, TextureFiltering::Closest } }
 			);
 
 			aoTarget = FrameBuffer::Create(specifications);
@@ -90,50 +94,44 @@ namespace Flare
 		{
 			const auto& specifications = aoTarget->GetSpecifications();
 			if (specifications.Width != currentViewport.GetSize().x || specifications.Height != currentViewport.GetSize().y)
-			{
 				aoTarget->Resize(currentViewport.GetSize().x, currentViewport.GetSize().y);
-			}
 		}
 
-		aoTarget->Bind();
-		
 		glm::vec2 texelSize = glm::vec2(1.0f / currentViewport.GetSize().x, 1.0f / currentViewport.GetSize().y);
 
-		currentViewport.RenderTarget->BindAttachmentTexture(1, 0);
-		m_RandomVectors->Bind(2);
+		aoTarget->Bind();
 
-		if (&currentViewport == &Renderer::GetMainViewport())
-			currentViewport.RenderTarget->BindAttachmentTexture(2, 1);
-		else
-			currentViewport.RenderTarget->BindAttachmentTexture(3, 1);
-
-		if (m_BiasPropertyIndex)
-			m_Material->WritePropertyValue(*m_BiasPropertyIndex, Bias);
-		if (m_RadiusPropertyIndex)
-			m_Material->WritePropertyValue(*m_RadiusPropertyIndex, Radius);
-		if (m_NoiseScalePropertyIndex)
-			m_Material->WritePropertyValue(*m_NoiseScalePropertyIndex, (glm::vec2)currentViewport.GetSize() / 8.0f);
-		
-		Renderer::DrawFullscreenQuad(m_Material);
-
-		Ref<FrameBuffer> temporaryColorOutput = context.RTPool.Get();
-		temporaryColorOutput->Bind();
-
-		aoTarget->BindAttachmentTexture(0);
-		context.RenderTarget->BindAttachmentTexture(0, 1);
-
-		if (m_BlurSizePropertyIndex)
-			m_BlurMaterial->WritePropertyValue(*m_BlurSizePropertyIndex, BlurSize);
-		if (m_TexelSizePropertyIndex)
 		{
-			m_BlurMaterial->WritePropertyValue(*m_TexelSizePropertyIndex, texelSize);
+			currentViewport.RenderTarget->BindAttachmentTexture(1, 0);
+			m_RandomVectors->Bind(2);
+
+			if (&currentViewport == &Renderer::GetMainViewport())
+				currentViewport.RenderTarget->BindAttachmentTexture(2, 1);
+			else
+				currentViewport.RenderTarget->BindAttachmentTexture(3, 1);
+
+			if (m_BiasPropertyIndex)
+				m_Material->WritePropertyValue(*m_BiasPropertyIndex, Bias);
+			if (m_RadiusPropertyIndex)
+				m_Material->WritePropertyValue(*m_RadiusPropertyIndex, Radius);
+			if (m_NoiseScalePropertyIndex)
+				m_Material->WritePropertyValue(*m_NoiseScalePropertyIndex, (glm::vec2)currentViewport.GetSize() / 8.0f);
+
+			Renderer::DrawFullscreenQuad(m_Material);
 		}
 
-		Renderer::DrawFullscreenQuad(m_BlurMaterial);
-
-		context.RenderTarget->Blit(temporaryColorOutput, 0, 0);
 		context.RenderTarget->Bind();
 
-		context.RTPool.Release(temporaryColorOutput);
+		{
+			aoTarget->BindAttachmentTexture(0);
+			context.RenderTarget->BindAttachmentTexture(0, 1);
+
+			if (m_BlurSizePropertyIndex)
+				m_BlurMaterial->WritePropertyValue(*m_BlurSizePropertyIndex, BlurSize);
+			if (m_TexelSizePropertyIndex)
+				m_BlurMaterial->WritePropertyValue(*m_TexelSizePropertyIndex, texelSize);
+
+			Renderer::DrawFullscreenQuad(m_BlurMaterial);
+		}
 	}
 }

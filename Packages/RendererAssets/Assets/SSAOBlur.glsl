@@ -1,5 +1,4 @@
 DepthTest = false
-DepthWrite = false
 
 #begin vertex
 #version 450

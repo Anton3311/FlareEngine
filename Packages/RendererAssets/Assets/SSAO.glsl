@@ -1,5 +1,4 @@
 DepthTest = false
-DepthWrite = false
 
 #begin vertex
 #version 450
@@ -121,7 +120,7 @@ void main()
 			aoFactor += rangeCheck;
 	}
 
-	o_Color = vec4(vec3(1.0f - aoFactor / float(SAMPLES_COUNT)), 1.0);
+	o_Color = vec4(vec3(1.0 - aoFactor / float(SAMPLES_COUNT)), 1.0);
 }
 
 #end

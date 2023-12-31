@@ -17,6 +17,8 @@ namespace Flare
 
 		void OnRender(RenderingContext& context) override;
 	public:
+		bool Enabled;
+
 		float Bias;
 		float Radius;
 		float BlurSize;
@@ -39,6 +41,7 @@ namespace Flare
 	{
 		void OnSerialize(SSAO& ssao, SerializationStream& stream)
 		{
+			stream.Serialize("Enabled", SerializationValue(ssao.Enabled));
 			stream.Serialize("Radius", SerializationValue(ssao.Radius));
 			stream.Serialize("Bias", SerializationValue(ssao.Bias));
 			stream.Serialize("BlurSize", SerializationValue(ssao.BlurSize));
