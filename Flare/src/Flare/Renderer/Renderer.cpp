@@ -72,6 +72,7 @@ namespace Flare
 		Ref<FrameBuffer> ShadowsRenderTarget[4] = { nullptr };
 
 		Ref<Material> ErrorMaterial = nullptr;
+		Ref<Material> DepthOnlyMeshMaterial = nullptr;
 
 		ShadowSettings ShadowMappingSettings;
 		Ref<UniformBuffer> ShadowDataBuffer = nullptr;
@@ -88,6 +89,12 @@ namespace Flare
 			s_RendererData.ErrorMaterial = CreateRef<Material>(AssetManager::GetAsset<Shader>(*errorShaderHandle));
 		else
 			FLARE_CORE_ERROR("Renderer: Failed to find Error shader");
+
+		std::optional<AssetHandle> depthOnlyMeshShaderHandle = ShaderLibrary::FindShader("Error");
+		if (errorShaderHandle && AssetManager::IsAssetHandleValid(*errorShaderHandle))
+			s_RendererData.DepthOnlyMeshMaterial= CreateRef<Material>(AssetManager::GetAsset<Shader>(*depthOnlyMeshShaderHandle));
+		else
+			FLARE_CORE_ERROR("Renderer: Failed to find MeshDepthOnly shader");
 	}
 
 	void Renderer::Initialize()
@@ -545,40 +552,7 @@ namespace Flare
 		CalculateShadowProjections();
 		CalculateShadowMappingParams();
 
-		for (size_t i = 0; i < s_RendererData.Queue.size(); i++)
-		{
-			s_RendererData.CulledObjectIndices.push_back((uint32_t)i);
-		}
-
-		// Shadows
-		{
-			FLARE_PROFILE_SCOPE("Renderer::ShadowPass");
-
-			// Bind white texture for each cascade
-			for (size_t i = 0; i < 4; i++)
-			{
-				s_RendererData.WhiteTexture->Bind(2 + (uint32_t)i);
-			}
-
-			s_RendererData.RandomAngles->Bind(6);
-
-			RenderCommand::SetDepthTestEnabled(true);
-			RenderCommand::SetCullingMode(CullingMode::Front);
-
-			for (size_t i = 0; i < s_RendererData.ShadowMappingSettings.Cascades; i++)
-			{
-				const FrameBufferSpecifications& shadowMapSpecs = s_RendererData.ShadowsRenderTarget[i]->GetSpecifications();
-				RenderCommand::SetViewport(0, 0, shadowMapSpecs.Width, shadowMapSpecs.Height);
-
-				s_RendererData.CameraBuffer->SetData(
-					&s_RendererData.CurrentViewport->FrameData.LightView[i],
-					sizeof(s_RendererData.CurrentViewport->FrameData.LightView[i]), 0);
-
-				s_RendererData.ShadowsRenderTarget[i]->Bind();
-
-				DrawQueued(true);
-			}
-		}
+		ExecuteShadowPass();
 
 		// Geometry
 
@@ -673,6 +647,62 @@ namespace Flare
 
 		FlushInstances();
 		s_RendererData.CurrentInstancingMesh = nullptr;
+	}
+
+	void Renderer::ExecuteShadowPass()
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		// Prepare objects for shadow pass
+
+		s_RendererData.CulledObjectIndices.clear();
+		s_RendererData.CulledObjectIndices.reserve(s_RendererData.Queue.size());
+		for (size_t i = 0; i < s_RendererData.Queue.size(); i++)
+			s_RendererData.CulledObjectIndices.push_back((uint32_t)i);
+
+		std::sort(s_RendererData.CulledObjectIndices.begin(), s_RendererData.CulledObjectIndices.end(), CompareRenderableObjects);
+
+		// Setup the material
+
+		RenderCommand::SetDepthTestEnabled(true);
+		RenderCommand::SetCullingMode(CullingMode::Front);
+
+		s_RendererData.DepthOnlyMeshMaterial->SetShaderProperties();
+
+		for (size_t i = 0; i < s_RendererData.ShadowMappingSettings.Cascades; i++)
+		{
+			const FrameBufferSpecifications& shadowMapSpecs = s_RendererData.ShadowsRenderTarget[i]->GetSpecifications();
+			RenderCommand::SetViewport(0, 0, shadowMapSpecs.Width, shadowMapSpecs.Height);
+
+			s_RendererData.CameraBuffer->SetData(
+				&s_RendererData.CurrentViewport->FrameData.LightView[i],
+				sizeof(s_RendererData.CurrentViewport->FrameData.LightView[i]), 0);
+
+			s_RendererData.ShadowsRenderTarget[i]->Bind();
+
+			s_RendererData.CurrentInstancingMesh = nullptr;
+			for (uint32_t objectIndex : s_RendererData.CulledObjectIndices)
+			{
+				const auto& queued = s_RendererData.Queue[objectIndex];
+
+				if (queued.Mesh->GetSubMesh().InstanceBuffer == nullptr)
+					queued.Mesh->SetInstanceBuffer(s_RendererData.InstanceBuffer);
+
+				if (queued.Mesh.get() != s_RendererData.CurrentInstancingMesh.get())
+				{
+					FlushInstances();
+					s_RendererData.CurrentInstancingMesh = queued.Mesh;
+				}
+
+				auto& instance = s_RendererData.InstanceDataBuffer.emplace_back();
+				instance.Transform = queued.Transform;
+
+				if (s_RendererData.InstanceDataBuffer.size() == (size_t)s_RendererData.MaxInstances)
+					FlushInstances();
+			}
+
+			FlushInstances();
+		}
 	}
 
 	void Renderer::FlushInstances()

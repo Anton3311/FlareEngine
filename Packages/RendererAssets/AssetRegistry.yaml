@@ -1,4 +1,11 @@
 AssetRegistry:
+  - Handle: 210448490909555515
+    Type: Shader
+    Path: MeshDepthOnly.glsl
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
   - Handle: 4547075642872350196
     Type: Shader
     Path: Text.glsl

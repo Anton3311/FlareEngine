@@ -137,6 +137,7 @@ namespace Flare
 		static ShadowSettings& GetShadowSettings();
 	private:
 		static void DrawQueued(bool shadowPass);
+		static void ExecuteShadowPass();
 		static void FlushInstances();
 	};
 }
