@@ -6,19 +6,19 @@
 
 namespace Flare
 {
-	SpritesRendererSystem::SpritesRendererSystem()
+	void SpritesRendererSystem::OnConfig(World& world, SystemConfig& config)
 	{
-		m_SpritesQuery = World::GetCurrent().NewQuery().With<TransformComponent, SpriteComponent>().Create();
-		m_TextQuery = World::GetCurrent().NewQuery().With<TransformComponent, TextComponent>().Create();
+		m_SpritesQuery = world.NewQuery().With<TransformComponent, SpriteComponent>().Create();
+		m_TextQuery = world.NewQuery().With<TransformComponent, TextComponent>().Create();
 	}
 
-	void SpritesRendererSystem::OnUpdate(SystemExecutionContext& context)
+	void SpritesRendererSystem::OnUpdate(World& world, SystemExecutionContext& context)
 	{
-		RenderQuads(context);
+		RenderQuads(world, context);
 		RenderText(context);
 	}
 
-	void SpritesRendererSystem::RenderQuads(SystemExecutionContext& context)
+	void SpritesRendererSystem::RenderQuads(World& world, SystemExecutionContext& context)
 	{
 		m_SortedEntities.clear();
 		m_SortedEntities.reserve(m_SpritesQuery.GetEntitiesCount());
@@ -50,13 +50,12 @@ namespace Flare
 		}
 
 		std::sort(m_SortedEntities.begin(), m_SortedEntities.end(), [](const EntityQueueElement& a, const EntityQueueElement& b) -> bool
-			{
-				if (a.SortingLayer == b.SortingLayer)
-					return (size_t)a.Material < (size_t)b.Material;
-				return a.SortingLayer < b.SortingLayer;
-			});
+		{
+			if (a.SortingLayer == b.SortingLayer)
+				return (size_t)a.Material < (size_t)b.Material;
+			return a.SortingLayer < b.SortingLayer;
+		});
 
-		const World& world = World::GetCurrent();
 		AssetHandle currentMaterial = NULL_ASSET_HANDLE;
 
 		for (const auto& [entity, layer, material] : m_SortedEntities)
@@ -110,14 +109,12 @@ namespace Flare
 
 	// Meshes Renderer
 
-	MeshesRendererSystem::MeshesRendererSystem()
+	void MeshesRendererSystem::OnConfig(World& world, SystemConfig& config)
 	{
-		m_Query = World::GetCurrent().NewQuery().With<TransformComponent, MeshComponent>().Create();
+		m_Query = world.NewQuery().With<TransformComponent, MeshComponent>().Create();
 	}
 
-	void MeshesRendererSystem::OnConfig(SystemConfig& config) {}
-
-	void MeshesRendererSystem::OnUpdate(SystemExecutionContext& context)
+	void MeshesRendererSystem::OnUpdate(World& world, SystemExecutionContext& context)
 	{
 		for (EntityView view : m_Query)
 		{

@@ -13,17 +13,17 @@ namespace Flare
 {
 	FLARE_IMPL_SYSTEM(AABBVisualizer);
 
-	void AABBVisualizer::OnConfig(SystemConfig& config)
+	void AABBVisualizer::OnConfig(World& world, SystemConfig& config)
 	{
-		m_Query = World::GetCurrent().NewQuery()
+		m_Query = world.NewQuery()
 			.With<TransformComponent>()
 			.With<MeshComponent>()
 			.Create();
 
-		config.Group = World::GetCurrent().GetSystemsManager().FindGroup("Debug Rendering");
+		config.Group = world.GetSystemsManager().FindGroup("Debug Rendering");
 	}
 
-	void AABBVisualizer::OnUpdate(SystemExecutionContext& context)
+	void AABBVisualizer::OnUpdate(World& world, SystemExecutionContext& context)
 	{
 		if (!EditorLayer::GetInstance().GetSceneViewSettings().ShowAABBs)
 			return;

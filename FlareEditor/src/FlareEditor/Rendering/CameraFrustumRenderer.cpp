@@ -13,13 +13,13 @@ namespace Flare
 {
 	FLARE_IMPL_SYSTEM(CameraFrustumRenderer);
 
-	void CameraFrustumRenderer::OnConfig(SystemConfig& config)
+	void CameraFrustumRenderer::OnConfig(World& world, SystemConfig& config)
 	{
-		config.Group = World::GetCurrent().GetSystemsManager().FindGroup("Debug Rendering");
-		m_Query = World::GetCurrent().NewQuery().With<CameraComponent, TransformComponent>().Create();
+		config.Group = world.GetSystemsManager().FindGroup("Debug Rendering");
+		m_Query = world.NewQuery().With<CameraComponent, TransformComponent>().Create();
 	}
 
-	void CameraFrustumRenderer::OnUpdate(SystemExecutionContext& context)
+	void CameraFrustumRenderer::OnUpdate(World& world, SystemExecutionContext& context)
 	{
 		if (!EditorLayer::GetInstance().GetSceneViewSettings().ShowCameraFrustum)
 			return;

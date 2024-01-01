@@ -12,12 +12,10 @@ namespace Flare
 	struct SpritesRendererSystem : public System
 	{
 	public:
-		SpritesRendererSystem();
-
-		virtual void OnConfig(SystemConfig& config) override {}
-		virtual void OnUpdate(SystemExecutionContext& context) override;
+		virtual void OnConfig(World& world, SystemConfig& config) override;
+		virtual void OnUpdate(World& world, SystemExecutionContext& context) override;
 	private:
-		void RenderQuads(SystemExecutionContext& context);
+		void RenderQuads(World& world, SystemExecutionContext& context);
 		void RenderText(SystemExecutionContext& context);
 	private:
 		struct EntityQueueElement
@@ -35,10 +33,8 @@ namespace Flare
 	struct MeshesRendererSystem : public System
 	{
 	public:
-		MeshesRendererSystem();
-
-		void OnConfig(SystemConfig& config) override;
-		void OnUpdate(SystemExecutionContext& context) override;
+		void OnConfig(World& world, SystemConfig& config) override;
+		void OnUpdate(World& world, SystemExecutionContext& context) override;
 	private:
 		Query m_Query;
 	};

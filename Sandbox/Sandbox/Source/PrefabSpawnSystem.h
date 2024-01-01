@@ -3,6 +3,7 @@
 #include <FlareCore/Serialization/TypeSerializer.h>
 #include <FlareCore/Serialization/SerializationStream.h>
 
+#include <FlareECS/World.h>
 #include <FlareECS/System/SystemInitializer.h>
 #include <FlareECS/Entity/ComponentInitializer.h>
 
@@ -39,8 +40,8 @@ struct PrefabSpawnSystem : Flare::System
 {
 	FLARE_SYSTEM;
 
-	virtual void OnConfig(Flare::SystemConfig& config) override;
-	virtual void OnUpdate(Flare::SystemExecutionContext& context) override;
+	virtual void OnConfig(Flare::World& world, Flare::SystemConfig& config) override;
+	virtual void OnUpdate(Flare::World& world, Flare::SystemExecutionContext& context) override;
 private:
 	Flare::Query m_Query;
 };

@@ -12,14 +12,14 @@ using namespace Flare;
 
 FLARE_IMPL_COMPONENT(PrefabSpawner);
 
-void PrefabSpawnSystem::OnConfig(SystemConfig& config)
+void PrefabSpawnSystem::OnConfig(Flare::World& world, SystemConfig& config)
 {
-	m_Query = World::GetCurrent().NewQuery()
+	m_Query = world.NewQuery()
 		.With<PrefabSpawner>()
 		.Create();
 }
 
-void PrefabSpawnSystem::OnUpdate(SystemExecutionContext& context)
+void PrefabSpawnSystem::OnUpdate(Flare::World& world, SystemExecutionContext& context)
 {
 	static std::random_device s_Device;
 	static std::mt19937_64 s_Engine(s_Device());

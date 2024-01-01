@@ -11,13 +11,13 @@ namespace Flare
 {
 	FLARE_IMPL_SYSTEM(LightVisualizer);
 
-	void LightVisualizer::OnConfig(SystemConfig& config)
+	void LightVisualizer::OnConfig(World& world, SystemConfig& config)
 	{
-		config.Group = World::GetCurrent().GetSystemsManager().FindGroup("Debug Rendering");
-		m_Query = World::GetCurrent().NewQuery().With<TransformComponent, DirectionalLight>().Create();
+		config.Group = world.GetSystemsManager().FindGroup("Debug Rendering");
+		m_Query = world.NewQuery().With<TransformComponent, DirectionalLight>().Create();
 	}
 
-	void LightVisualizer::OnUpdate(SystemExecutionContext& context)
+	void LightVisualizer::OnUpdate(World& world, SystemExecutionContext& context)
 	{
 		if (!EditorLayer::GetInstance().GetSceneViewSettings().ShowLights)
 			return;

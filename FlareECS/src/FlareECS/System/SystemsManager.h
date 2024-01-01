@@ -27,7 +27,7 @@ namespace Flare
 		std::optional<SystemGroupId> FindGroup(std::string_view name) const;
 
 		SystemId RegisterSystem(std::string_view name, SystemGroupId group, System* system);
-		SystemId RegisterSystem(std::string_view name, SystemGroupId group, const SystemEventFunction& onUpdate = nullptr);
+		SystemId RegisterSystem(std::string_view name, SystemGroupId group, const SystemEventFunction& onUpdate = nullptr, const SystemConfig* config = nullptr);
 		SystemId RegisterSystem(std::string_view name, const SystemEventFunction& onUpdate = nullptr);
 
 		void RegisterSystems(SystemGroupId defaultGroup);
@@ -44,6 +44,7 @@ namespace Flare
 
 		const std::vector<SystemData>& GetSystems() const;
 	private:
+		World& m_World;
 		CommandBuffer m_CommandBuffer;
 
 		std::vector<SystemData> m_Systems;

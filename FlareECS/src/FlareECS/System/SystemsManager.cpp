@@ -6,7 +6,7 @@
 namespace Flare
 {
 	SystemsManager::SystemsManager(World& world)
-		: m_CommandBuffer(world) {}
+		: m_CommandBuffer(world), m_World(world) {}
 
 	SystemsManager::~SystemsManager()
 	{
@@ -35,21 +35,30 @@ namespace Flare
 
 	SystemId SystemsManager::RegisterSystem(std::string_view name, SystemGroupId group, System* system)
 	{
-		SystemId id = RegisterSystem(name, group, [system](SystemExecutionContext& context)
+		SystemConfig config;
+		config.Group = {};
+
+		system->OnConfig(m_World, config);
+
+		SystemId id = RegisterSystem(name, group, [this, system](SystemExecutionContext& context)
 		{
-			system->OnUpdate(context);
-		});
+			system->OnUpdate(m_World, context);
+		}, &config);
 
 		m_ManagedSystems.push_back(system);
 		return id;
 	}
 
 	SystemId SystemsManager::RegisterSystem(std::string_view name, SystemGroupId group,
-		const SystemEventFunction& onUpdate)
+		const SystemEventFunction& onUpdate, const SystemConfig* config)
 	{
 		SystemId id = RegisterSystem(name, onUpdate);
 		AddSystemToGroup(id, group);
-		AddSystemExecutionSettings(id, nullptr);
+
+		if (config == nullptr)
+			AddSystemExecutionSettings(id, nullptr);
+		else
+			AddSystemExecutionSettings(id, &config->GetExecutionOrder());
 
 		return id;
 	}
@@ -80,9 +89,9 @@ namespace Flare
 		{
 			System* instance = initializer->CreateSystem();
 
-			SystemId id = RegisterSystem(initializer->TypeName, [instance](SystemExecutionContext& context)
+			SystemId id = RegisterSystem(initializer->TypeName, [this, instance](SystemExecutionContext& context)
 			{
-				instance->OnUpdate(context);
+				instance->OnUpdate(m_World, context);
 			});
 
 			instances[instanceIndex++] = { id, instance };
@@ -94,7 +103,7 @@ namespace Flare
 		{
 			SystemConfig& config = configs[instanceIndex];
 			config.Group = {};
-			system->OnConfig(config);
+			system->OnConfig(m_World, config);
 
 			AddSystemToGroup(id, config.Group.value_or(defaultGroup));
 			instanceIndex++;

@@ -28,18 +28,18 @@ namespace Sandbox
 
 		RotatingQuadSystem() {}
 
-		virtual void OnConfig(SystemConfig& config) override
+		virtual void OnConfig(World& world, SystemConfig& config) override
 		{
-			m_Query = World::GetCurrent().NewQuery().With<TransformComponent, SpriteComponent>().Create();
-			m_SingletonQuery = World::GetCurrent().NewQuery().With<RotatingQuadData>().Create();
+			m_Query = world.NewQuery().With<TransformComponent, SpriteComponent>().Create();
+			m_SingletonQuery = world.NewQuery().With<RotatingQuadData>().Create();
 
-			m_DeletionQuery = World::GetCurrent().NewQuery()
+			m_DeletionQuery = world.NewQuery()
 				.Deleted()
 				.With<SomeComponent>()
 				.Create();
 		}
 
-		virtual void OnUpdate(SystemExecutionContext& context) override
+		virtual void OnUpdate(World& world, SystemExecutionContext& context) override
 		{
 			std::optional<const RotatingQuadData*> data = World::GetCurrent().TryGetSingletonComponent<const RotatingQuadData>();
 			if (data.has_value())

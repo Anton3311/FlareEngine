@@ -33,7 +33,7 @@ namespace Flare
 	public:
 		virtual ~System() {}
 
-		virtual void OnConfig(SystemConfig& config) = 0;
-		virtual void OnUpdate(SystemExecutionContext& context) = 0;
+		virtual void OnConfig(World& world, SystemConfig& config) = 0;
+		virtual void OnUpdate(World& world, SystemExecutionContext& context) = 0;
 	};
 }
