@@ -1,11 +1,12 @@
 #include "YAMLSerialization.h"
 
 #include "Flare/Serialization/Serialization.h"
+#include "FlareEditor/Serialization/SerializationId.h"
 
 namespace Flare
 {
-    YAMLSerializer::YAMLSerializer(YAML::Emitter& emitter)
-        : m_Emitter(emitter), m_MapStarted(false), m_ObjectSerializationStarted(false) {}
+    YAMLSerializer::YAMLSerializer(YAML::Emitter& emitter, const World& world)
+        : m_Emitter(emitter), m_MapStarted(false), m_ObjectSerializationStarted(false), m_World(world) {}
 
     void YAMLSerializer::PropertyKey(std::string_view key)
     {
@@ -170,6 +171,24 @@ namespace Flare
             return;
         }
 
+        if (&descriptor == &FLARE_SERIALIZATION_DESCRIPTOR_OF(Entity))
+        {
+            Entity entityId = *(Entity*)objectData;
+
+            if (m_World.IsEntityAlive(entityId))
+            {
+                std::optional<const SerializationId*> id = m_World.TryGetEntityComponent<SerializationId>(entityId);
+                if (id)
+                {
+                    m_Emitter << YAML::Value << id.value()->Id;
+                    return;
+                }
+            }
+
+            m_Emitter << YAML::Value << 0;
+            return;
+        }
+
         bool previousObjectSerializationState = m_ObjectSerializationStarted;
         bool previousState = m_MapStarted;
 
@@ -190,8 +209,8 @@ namespace Flare
 
     // YAML Deserializer
 
-    YAMLDeserializer::YAMLDeserializer(const YAML::Node& root)
-        : m_Root(root)
+    YAMLDeserializer::YAMLDeserializer(const YAML::Node& root, std::unordered_map<UUID, Entity>* serializationIdToECSId)
+        : m_Root(root), m_SerializationIdToECSId(serializationIdToECSId)
     {
         m_NodesStack.push_back(m_Root);
     }
@@ -365,6 +384,27 @@ namespace Flare
             if (YAML::Node handleNode = CurrentNode()[m_CurrentPropertyKey])
                 (*(AssetHandle*)objectData) = handleNode.as<AssetHandle>();
 
+            return;
+        }
+
+        if (&descriptor == &FLARE_SERIALIZATION_DESCRIPTOR_OF(Entity))
+        {
+            Entity& entityId = *(Entity*)objectData;
+            YAML::Node idNode = CurrentNode()[m_CurrentPropertyKey];
+
+            if (idNode && m_SerializationIdToECSId != nullptr)
+            {
+                UUID serializationId = idNode.as<UUID>();
+                
+                auto it = m_SerializationIdToECSId->find(serializationId);
+                if (it != m_SerializationIdToECSId->end())
+                {
+                    entityId = it->second;
+                    return;
+                }
+            }
+
+            entityId = Entity();
             return;
         }
 

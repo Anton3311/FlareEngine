@@ -25,7 +25,7 @@ namespace Flare
 
 		if (entityData.has_value() && info.Initializer)
 		{
-			YAMLSerializer serializer(emitter);
+			YAMLSerializer serializer(emitter, world);
 			emitter << YAML::BeginMap;
 			emitter << YAML::Key << "Name" << YAML::Value << info.Initializer->Type.SerializationDescriptor.Name;
 
@@ -65,22 +65,49 @@ namespace Flare
 	void SceneSerializer::SerializeEntity(YAML::Emitter& emitter, World& world, Entity entity)
 	{
 		emitter << YAML::BeginMap;
+
+		{
+			std::optional<const SerializationId*> serializationId = world.TryGetEntityComponent<SerializationId>(entity);
+			emitter << YAML::Key << "SerializationId" << YAML::Value;
+
+			if (serializationId)
+				emitter << serializationId.value()->Id;
+			else
+				emitter << UUID();
+		}
+
 		emitter << YAML::Key << "Components" << YAML::BeginSeq; // Components
 
 		for (ComponentId component : world.GetEntityComponents(entity))
+		{
+			if (component == COMPONENT_ID(SerializationId))
+				continue;
+
 			SerializeComponent(emitter, world, entity, component);
+		}
 
 		emitter << YAML::EndSeq; // Components
 		emitter << YAML::EndMap;
 	}
 
-	Entity SceneSerializer::DeserializeEntity(const YAML::Node& node, World& world)
+	static void DeserializeEntitySerializationId(const YAML::Node& node, World& world, Entity& outEntity, UUID& outSerializationId)
 	{
-		Entity entity;
-		
+		UUID id;
+		const SerializableObjectDescriptor& idComponentDescriptor = FLARE_SERIALIZATION_DESCRIPTOR_OF(SerializationId);
+		if (YAML::Node idNode = node["SerializationId"])
+		{
+			id = idNode.as<UUID>();
+		}
+
+		outEntity = world.CreateEntity<SerializationId>(SerializationId(id));
+		outSerializationId = id;
+	}
+
+	void SceneSerializer::DeserializeEntity(Entity entity, const YAML::Node& node, World& world, std::unordered_map<UUID, Entity>& serializationIdToECSId)
+	{
 		YAML::Node componentsNode = node["Components"];
 		if (!componentsNode)
-			return entity;
+			return;
 
 		for (YAML::Node componentNode : componentsNode)
 		{
@@ -98,6 +125,9 @@ namespace Flare
 				continue;
 			}
 
+			if (componentId.value() == COMPONENT_ID(SerializationId))
+				continue;
+
 			const ComponentInfo& info = world.Components.GetComponentInfo(componentId.value());
 			if (info.Initializer)
 			{
@@ -107,17 +137,12 @@ namespace Flare
 				YAML::Node componentDataNode = componentNode["Data"];
 				if (componentDataNode && !componentDataNode.IsNull())
 				{
-					YAMLDeserializer deserializer(componentNode);
+					YAMLDeserializer deserializer(componentNode, &serializationIdToECSId);
 					deserializer.PropertyKey("Data");
 					deserializer.SerializeObject(serializationDescriptor, (void*)componentData);
 				}
 			}
 		}
-
-		if (!world.HasComponent<SerializationId>(entity))
-			world.AddEntityComponent<SerializationId>(entity, SerializationId());
-
-		return entity;
 	}
 
 	void SceneSerializer::Serialize(const Ref<Scene>& scene)
@@ -147,7 +172,7 @@ namespace Flare
 			emitter << YAML::Value << YAML::BeginMap;
 			emitter << YAML::Key << "Name" << YAML::Value << descriptor->Name;
 
-			YAMLSerializer serialzier(emitter);
+			YAMLSerializer serialzier(emitter, scene->GetECSWorld());
 			serialzier.Serialize("Data", SerializationValue(*toneMapping));
 
 			emitter << YAML::EndMap;
@@ -160,7 +185,7 @@ namespace Flare
 			emitter << YAML::Value << YAML::BeginMap;
 			emitter << YAML::Key << "Name" << YAML::Value << descriptor->Name;
 
-			YAMLSerializer serialzier(emitter);
+			YAMLSerializer serialzier(emitter, scene->GetECSWorld());
 			serialzier.Serialize("Data", SerializationValue(*vignette));
 
 			emitter << YAML::EndMap;
@@ -173,7 +198,7 @@ namespace Flare
 			emitter << YAML::Value << YAML::BeginMap;
 			emitter << YAML::Key << "Name" << YAML::Value << descriptor->Name;
 
-			YAMLSerializer serialzier(emitter);
+			YAMLSerializer serialzier(emitter, scene->GetECSWorld());
 			serialzier.Serialize("Data", SerializationValue(*ssao));
 
 			emitter << YAML::EndMap;
@@ -219,9 +244,24 @@ namespace Flare
 		if (!entities)
 			return;
 
+		std::unordered_map<UUID, Entity> serializationIdToECSId;
+		std::vector<Entity> entityIds;
 		for (auto entity : entities)
 		{
-			DeserializeEntity(entity, scene->m_World);
+			Entity entityId;
+			UUID serializationId;
+
+			DeserializeEntitySerializationId(entity, scene->m_World, entityId, serializationId);
+
+			serializationIdToECSId.emplace(serializationId, entityId);
+			entityIds.push_back(entityId);
+		}
+
+		size_t index = 0;
+		for (auto entityNode : entities)
+		{
+			DeserializeEntity(entityIds[index], entityNode, scene->m_World, serializationIdToECSId);
+			index++;
 		}
 
 		YAML::Node postProcessing = node["PostProcessing"];

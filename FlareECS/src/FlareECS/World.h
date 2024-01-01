@@ -83,6 +83,15 @@ namespace Flare
 		}
 
 		template<typename T>
+		constexpr std::optional<const T*> TryGetEntityComponent(Entity entity) const
+		{
+			std::optional<const void*> componentData = Entities.GetEntityComponent(entity, COMPONENT_ID(T));
+			if (componentData.has_value())
+				return (const T*)componentData.value();
+			return {};
+		}
+
+		template<typename T>
 		constexpr bool AddEntityComponent(Entity entity, T data)
 		{
 			return Entities.AddEntityComponent(entity, COMPONENT_ID(T), &data);

@@ -1,15 +1,20 @@
 #pragma once
 
 #include "FlareCore/Serialization/SerializationStream.h"
+#include "FlareCore/UUID.h"
+
+#include "FlareECS/World.h"
+#include "FlareECS/Entity/Entity.h"
 
 #include <yaml-cpp/yaml.h>
+#include <unordered_map>
 
 namespace Flare
 {
     class YAMLSerializer : public SerializationStream
     {
     public:
-        YAMLSerializer(YAML::Emitter& emitter);
+        YAMLSerializer(YAML::Emitter& emitter, const World& world);
     public:
         void PropertyKey(std::string_view key) override;
         DynamicArrayAction SerializeDynamicArraySize(size_t& size) override;
@@ -23,6 +28,7 @@ namespace Flare
         void SerializeObject(const SerializableObjectDescriptor& descriptor, void* objectData) override;
     public:
         YAML::Emitter& m_Emitter;
+        const World& m_World;
         bool m_ObjectSerializationStarted;
         bool m_MapStarted;
     };
@@ -30,7 +36,7 @@ namespace Flare
     class YAMLDeserializer : public SerializationStream
     {
     public:
-        YAMLDeserializer(const YAML::Node& root);
+        YAMLDeserializer(const YAML::Node& root, std::unordered_map<UUID, Entity>* serializationIdToECSId = nullptr);
 
         void PropertyKey(std::string_view key) override;
         DynamicArrayAction SerializeDynamicArraySize(size_t& size) override;
@@ -50,6 +56,7 @@ namespace Flare
         }
     private:
         const YAML::Node& m_Root;
+        std::unordered_map<UUID, Entity>* m_SerializationIdToECSId;
 
         std::string m_CurrentPropertyKey;
         std::vector<YAML::Node> m_NodesStack;
