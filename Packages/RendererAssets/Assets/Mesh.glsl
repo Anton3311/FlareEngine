@@ -22,6 +22,7 @@ struct VertexData
 	vec3 Normal;
 	vec2 UV;
 	vec3 ViewSpacePosition;
+	vec2 ScreenSpacePosition;
 };
 
 layout(std140, binding = 1) uniform LightData
@@ -45,6 +46,8 @@ void main()
 	o_Vertex.UV = i_UV;
 	o_Vertex.ViewSpacePosition = (u_Camera.View * transformed).xyz;
 	o_EntityIndex = i_EntityIndex;
+
+	o_Vertex.ScreenSpacePosition = (position.xy / position.w) * 0.5f + vec2(0.5f);
 
     gl_Position = position;
 }
@@ -97,6 +100,7 @@ struct VertexData
 	vec3 Normal;
 	vec2 UV;
 	vec3 ViewSpacePosition;
+	vec2 ScreenSpacePosition;
 };
 
 layout(binding = 2) uniform sampler2D u_ShadowMap0;
@@ -104,7 +108,6 @@ layout(binding = 3) uniform sampler2D u_ShadowMap1;
 layout(binding = 4) uniform sampler2D u_ShadowMap2;
 layout(binding = 5) uniform sampler2D u_ShadowMap3;
 
-layout(binding = 6) uniform sampler3D u_RandomAngles;
 layout(binding = 7) uniform sampler2D u_Texture;
 
 layout(location = 0) in VertexData i_Vertex;
@@ -224,6 +227,14 @@ float CalculateShadow(sampler2D shadowMap, vec4 lightSpacePosition, float bias, 
 
 #define DEBUG_CASCADES 0
 
+// From Next Generation Post Processing in Call of Duty Advancded Warfare
+float InterleavedGradientNoise(vec2 screenSpacePosition)
+{
+	const float scale = 64.0;
+	vec3 magic = vec3(0.06711056, 0.00583715, 52.9829189);
+	return -scale + 2.0 * scale * fract(magic.z * fract(dot(screenSpacePosition, magic.xy)));
+}
+
 void main()
 {
 	vec3 N = normalize(i_Vertex.Normal);
@@ -268,7 +279,8 @@ void main()
 
 	bias /= float(cascadeIndex + 1);
 
-	float poissonPointsRotationAngle = texture(u_RandomAngles, i_Vertex.Position.xyz).r;
+	float poissonPointsRotationAngle = 2.0f * pi * InterleavedGradientNoise(gl_FragCoord.xy);
+
 	switch (cascadeIndex)
 	{
 	case 0:

@@ -76,8 +76,6 @@ namespace Flare
 
 		ShadowSettings ShadowMappingSettings;
 		Ref<UniformBuffer> ShadowDataBuffer = nullptr;
-
-		Ref<Texture3D> RandomAngles = nullptr;
 	};
 	
 	RendererData s_RendererData;
@@ -147,36 +145,6 @@ namespace Flare
 		});
 
 		Project::OnProjectOpen.Bind(ReloadShaders);
-
-		// Random angles
-
-		{
-			constexpr size_t anglesTextureSize = 16;
-			float* angles = new float[anglesTextureSize * anglesTextureSize * anglesTextureSize];
-
-			std::random_device device;
-			std::mt19937_64 engine(device());
-			std::uniform_real_distribution<float> uniformDistribution(0.0f, glm::pi<float>() * 2.0f);
-
-			for (size_t z = 0; z < anglesTextureSize; z++)
-			{
-				for (size_t y = 0; y < anglesTextureSize; y++)
-				{
-					for (size_t x = 0; x < anglesTextureSize; x++)
-					{
-						angles[z * anglesTextureSize * anglesTextureSize + y * anglesTextureSize + x] = uniformDistribution(engine);
-					}
-				}
-			}
-
-			Texture3DSpecifications specifications;
-			specifications.Filtering = TextureFiltering::Linear;
-			specifications.Format = TextureFormat::RF32;
-			specifications.Size = glm::uvec3((uint32_t)anglesTextureSize);
-			s_RendererData.RandomAngles = Texture3D::Create(specifications, (const void*)angles, specifications.Size);
-
-			delete[] angles;
-		}
 	}
 
 	void Renderer::Shutdown()
