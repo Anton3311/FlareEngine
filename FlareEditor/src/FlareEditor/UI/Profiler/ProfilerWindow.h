@@ -38,10 +38,18 @@ namespace Flare
 
         void ReconstructSubCallsList(size_t start);
         void ReconstructCallStack(size_t start);
+        void CollectAverageTimeData();
     private:
         static ProfilerWindow* s_Instance;
 
+        struct Record
+        {
+            const char* Name;
+            float AverageTimeInMilliseconds;
+        };
+
         std::vector<size_t> m_RecordsStack;
+        std::vector<Record> m_RecordsByAverageTime;
 
         std::optional<size_t> m_PreviousSelection;
         std::optional<size_t> m_SelectedRecord;

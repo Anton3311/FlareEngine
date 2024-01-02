@@ -167,6 +167,36 @@ namespace Flare
         ImGui::SetCursorPos(ImVec2(initialCursorPosition.x + contentAreaSize.x + style.ItemSpacing.x, initialCursorPosition.y));
         RenderSideBar();
 
+        // Records by average time
+
+        ImGui::Begin("Average Execution Time");
+        ImVec2 windowSize = ImGui::GetContentRegionAvail();
+        
+        if (ImGui::BeginTable("AverageTime", 2))
+        {
+			ImGui::TableSetupColumn("Time", ImGuiTableColumnFlags_WidthFixed, windowSize.x * 0.10f);
+			ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthFixed, windowSize.x * 0.90f);
+
+            for (const Record& record : m_RecordsByAverageTime)
+            {
+                ImGui::TableNextRow();
+
+				ImGui::TableNextRow(0, ImGui::GetFontSize() + style.FramePadding.y * 2.0f);
+				ImGui::TableSetColumnIndex(0);
+
+                ImGui::Text("%f ms", record.AverageTimeInMilliseconds);
+
+				ImGui::TableSetColumnIndex(1);
+
+				ImGui::SetCursorPosY(ImGui::GetCursorPosY() + style.FramePadding.y);
+				ImGui::TextUnformatted(record.Name);
+			}
+
+            ImGui::EndTable();
+        }
+
+        ImGui::End();
+
         ImGui::End();
     }
 
@@ -189,6 +219,8 @@ namespace Flare
         if (ImGui::Button("Stop recording"))
         {
             Profiler::StopRecording();
+
+            CollectAverageTimeData();
         }
         ImGui::EndDisabled();
 
@@ -457,5 +489,52 @@ namespace Flare
         {
             std::swap(m_CallStackRecords[i], m_CallStackRecords[m_CallStackRecords.size() - 1 - i]);
         }
+    }
+
+    void ProfilerWindow::CollectAverageTimeData()
+    {
+        struct RecordData
+        {
+            float Time;
+            uint32_t RecordsCount;
+        };
+
+        std::unordered_map<const char*, RecordData> records;
+
+        for (size_t bufferIndex = 0; bufferIndex < Profiler::GetBuffersCount(); bufferIndex++)
+        {
+            const Profiler::RecordsBuffer& buffer = Profiler::GetRecordsBuffer(bufferIndex);
+            for (size_t i = 0; i < buffer.Size; i++)
+            {
+                const Profiler::Record& record = buffer.Records[i];
+
+				double duration = (double)(record.EndTime - record.StartTime);
+				double milliseconds = duration / 1000000.0;
+
+                auto it = records.find(record.Name);
+                if (it == records.end())
+                    records.emplace(record.Name, RecordData{ (float)milliseconds, 1 });
+                else
+                {
+                    it->second.RecordsCount++;
+                    it->second.Time += (float)milliseconds;
+                }
+            }
+        }
+
+        m_RecordsByAverageTime.clear();
+        m_RecordsByAverageTime.reserve(records.size());
+
+        for (const auto [name, data] : records)
+        {
+            Record& record = m_RecordsByAverageTime.emplace_back();
+            record.Name = name;
+            record.AverageTimeInMilliseconds = data.Time / (float)data.RecordsCount;
+        }
+
+        std::sort(m_RecordsByAverageTime.rbegin(), m_RecordsByAverageTime.rend(), [](const Record& a, const Record& b) -> bool
+		{
+			return a.AverageTimeInMilliseconds < b.AverageTimeInMilliseconds;
+		});
     }
 }
