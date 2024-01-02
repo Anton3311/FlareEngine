@@ -24,7 +24,6 @@ namespace Flare
 		float BlurSize;
 	private:
 		Ref<FrameBuffer> m_AOTargets[2];
-		Ref<Texture> m_RandomVectors;
 		Ref<Material> m_Material;
 		Ref<Material> m_BlurMaterial;
 

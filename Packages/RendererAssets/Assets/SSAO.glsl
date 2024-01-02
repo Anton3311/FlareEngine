@@ -24,7 +24,6 @@ layout(location = 0) in vec2 i_UV;
 
 layout(binding = 0) uniform sampler2D u_NormalsTexture;
 layout(binding = 1) uniform sampler2D u_DepthTexure;
-layout(binding = 2) uniform sampler2D u_RandomVectors;
 
 layout(std140, push_constant) uniform Params
 {
@@ -86,6 +85,15 @@ const vec3[] RANDOM_VECTORS =
 };
 
 const int SAMPLES_COUNT = 32;
+const float pi = 3.1415926535897932384626433832795;
+
+// From Next Generation Post Processing in Call of Duty Advancded Warfare
+float InterleavedGradientNoise(vec2 screenSpacePosition)
+{
+	const float scale = 64.0;
+	vec3 magic = vec3(0.06711056, 0.00583715, 52.9829189);
+	return -scale + 2.0 * scale * fract(magic.z * fract(dot(screenSpacePosition, magic.xy)));
+}
 
 void main()
 {
@@ -96,7 +104,9 @@ void main()
 
 	vec3 worldSpaceNormal = normalize(texture(u_NormalsTexture, i_UV).xyz * 2.0f - vec3(1.0f));
 	vec3 normal = (worldNormalToView * vec4(worldSpaceNormal, 1.0)).xyz;
-	vec3 randomVector = texture(u_RandomVectors, i_UV * u_Params.NoiseScale).xyz;
+
+	float angle = 2.0f * pi * InterleavedGradientNoise(gl_FragCoord.xy);
+	vec3 randomVector = vec3(cos(angle), sin(angle), 0.0f);
 	randomVector = normalize(randomVector.xyz * 2.0f - vec3(1.0f));
 
 	vec3 tangent = normalize(randomVector - normal * dot(randomVector, normal));

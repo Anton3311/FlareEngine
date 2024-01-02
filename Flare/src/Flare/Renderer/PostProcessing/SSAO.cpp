@@ -46,21 +46,6 @@ namespace Flare
 				m_TexelSizePropertyIndex = m_BlurMaterial->GetShader()->GetPropertyIndex("u_Params.TexelSize");
 			}
 		}
-
-		std::random_device device;
-		std::mt19937_64 engine(device());
-		std::uniform_real_distribution<float> uniformDistribution(0.0f, 1.0f);
-
-		glm::vec2 randomVectors[8][8];
-		for (size_t y = 0; y < 8; y++)
-		{
-			for (size_t x = 0; x < 8; x++)
-			{
-				randomVectors[y][x] = glm::vec2(uniformDistribution(engine), uniformDistribution(engine));
-			}
-		}
-
-		m_RandomVectors = Texture::Create(8, 8, randomVectors, TextureFormat::RG16, TextureFiltering::Linear);
 	}
 
 	void SSAO::OnRender(RenderingContext& context)
@@ -108,7 +93,6 @@ namespace Flare
 		{
 			FLARE_PROFILE_SCOPE("SSAO::MainPass");
 			currentViewport.RenderTarget->BindAttachmentTexture(1, 0);
-			m_RandomVectors->Bind(2);
 
 			if (&currentViewport == &Renderer::GetMainViewport())
 				currentViewport.RenderTarget->BindAttachmentTexture(2, 1);
