@@ -78,14 +78,7 @@ namespace Flare
         }
         else
         {
-            drawList->PushClipRect(viewportRect.Min, viewportRect.Max);
-
-            m_RecordsStack.clear();
-
-            size_t recordsPerBuffer = Profiler::GetRecordsCountPerBuffer();
             size_t buffersCount = Profiler::GetBuffersCount();
-            const auto& frames = Profiler::GetFrames();
-
             const auto& lastRecordsBuffer = Profiler::GetRecordsBuffer(buffersCount - 1);
 
             uint64_t profileStartTime = Profiler::GetRecordsBuffer(0).Records[0].StartTime;
@@ -127,28 +120,7 @@ namespace Flare
 
             m_ScrollOffset = glm::clamp(m_ScrollOffset, 0.0f, maxScrollOffset);
 
-            // Draw records
-
-            for (size_t bufferIndex = 0; bufferIndex < buffersCount; bufferIndex++)
-            {
-                const Profiler::RecordsBuffer& buffer = Profiler::GetRecordsBuffer(bufferIndex);
-                for (size_t i = 0; i < buffer.Size; i++)
-                {
-                    const Profiler::Record& record = buffer.Records[i];
-                    size_t recordIndex = i + bufferIndex * Profiler::GetRecordsCountPerBuffer();
-
-                    size_t row = CalculateRecordRow(recordIndex, record);
-                    ImVec2 offset = ImVec2(CalculatePositionFromTime(record.StartTime - profileStartTime), (m_BlockHeight + 2.0f) * ((float)row));
-
-                    Profiler::Record recordCopy = record;
-                    recordCopy.StartTime -= profileStartTime;
-                    recordCopy.EndTime -= profileStartTime;
-
-                    DrawRecordBlock(recordCopy, offset + initialCursorPosition, drawList, recordIndex);
-                }
-            }
-
-            drawList->PopClipRect();
+            RenderTimeLine(viewportRect, initialCursorPosition);
 
             if (m_SelectedRecord != m_PreviousSelection && m_SelectedRecord.has_value())
             {
@@ -168,35 +140,10 @@ namespace Flare
         RenderSideBar();
 
         // Records by average time
-
-        ImGui::Begin("Average Execution Time");
-        ImVec2 windowSize = ImGui::GetContentRegionAvail();
-        
-        if (ImGui::BeginTable("AverageTime", 2))
-        {
-			ImGui::TableSetupColumn("Time", ImGuiTableColumnFlags_WidthFixed, windowSize.x * 0.10f);
-			ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthFixed, windowSize.x * 0.90f);
-
-            for (const Record& record : m_RecordsByAverageTime)
-            {
-                ImGui::TableNextRow();
-
-				ImGui::TableNextRow(0, ImGui::GetFontSize() + style.FramePadding.y * 2.0f);
-				ImGui::TableSetColumnIndex(0);
-
-                ImGui::Text("%f ms", record.AverageTimeInMilliseconds);
-
-				ImGui::TableSetColumnIndex(1);
-
-				ImGui::SetCursorPosY(ImGui::GetCursorPosY() + style.FramePadding.y);
-				ImGui::TextUnformatted(record.Name);
-			}
-
-            ImGui::EndTable();
-        }
-
         ImGui::End();
 
+        if (ImGui::Begin("Average Execution Time"))
+            RenderAverageTimeData();
         ImGui::End();
     }
 
@@ -424,6 +371,129 @@ namespace Flare
             ImGui::Text("%f s", seconds);
     }
 
+    void ProfilerWindow::RenderAverageTimeData()
+    {
+        const auto& style = ImGui::GetStyle();
+        ImVec2 windowSize = ImGui::GetContentRegionAvail();
+
+        ImGuiListClipper clipper;
+        clipper.Begin((int32_t)m_RecordsByAverageTime.size());
+
+        while (clipper.Step())
+        {
+            if (ImGui::BeginTable("AverageTime", 2))
+            {
+                ImGui::TableSetupColumn("Time", ImGuiTableColumnFlags_WidthFixed, windowSize.x * 0.10f);
+                ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthFixed, windowSize.x * 0.90f);
+
+                for (int32_t i = clipper.DisplayStart; i < clipper.DisplayEnd; i++)
+                {
+                    if (i < 0 || i >= (int32_t)m_RecordsByAverageTime.size())
+                        continue;
+
+                    ImGui::TableNextRow();
+
+                    ImGui::TableNextRow(0, ImGui::GetFontSize() + style.FramePadding.y * 2.0f);
+                    ImGui::TableSetColumnIndex(0);
+
+                    ImGui::Text("%f ms", m_RecordsByAverageTime[i].AverageTimeInMilliseconds);
+
+                    ImGui::TableSetColumnIndex(1);
+
+                    ImGui::SetCursorPosY(ImGui::GetCursorPosY() + style.FramePadding.y);
+                    ImGui::TextUnformatted(m_RecordsByAverageTime[i].Name);
+                }
+
+                ImGui::EndTable();
+            }
+        }
+    }
+
+    void ProfilerWindow::RenderTimeLine(ImRect viewportRect, ImVec2 position)
+    {
+        ImDrawList* drawList = ImGui::GetCurrentWindow()->DrawList;
+
+        size_t recordsPerBuffer = Profiler::GetRecordsCountPerBuffer();
+        size_t buffersCount = Profiler::GetBuffersCount();
+        const auto& frames = Profiler::GetFrames();
+
+        const auto& lastRecordsBuffer = Profiler::GetRecordsBuffer(buffersCount - 1);
+
+        uint64_t profileStartTime = Profiler::GetRecordsBuffer(0).Records[0].StartTime;
+        uint64_t profileEndTime = lastRecordsBuffer.Records[lastRecordsBuffer.Size - 1].EndTime;
+
+        m_RecordsStack.clear();
+        drawList->PushClipRect(viewportRect.Min, viewportRect.Max);
+
+        size_t firstVisibleFrameIndex = 0;
+        size_t lastVisibleFrameIndex = 0;
+        for (size_t i = 0; i < frames.size(); i++)
+        {
+            const Profiler::Frame& frame = frames[i];
+            if (frame.RecordsCount == 0)
+                continue;
+
+            uint64_t frameStartTime = Profiler::GetRecord(frame.FirstRecordIndex).StartTime;
+            uint64_t frameEndTime = Profiler::GetRecord(frame.FirstRecordIndex + frame.RecordsCount - 1).EndTime;
+
+            float startPosition = CalculatePositionFromTime(frameStartTime - profileStartTime);
+            float endPosition = CalculatePositionFromTime(frameEndTime - profileStartTime);
+
+            if (endPosition <= 0.0f)
+            {
+                firstVisibleFrameIndex++;
+                continue;
+            }
+
+            if (startPosition >= viewportRect.Max.x - viewportRect.Min.x)
+            {
+                // All the other frames have records that will be rendered
+                // outside the timeline bounds, so there is no point in processing them
+                lastVisibleFrameIndex = i;
+                break;
+            }
+
+            if (i == frames.size() - 1)
+                lastVisibleFrameIndex = i;
+        }
+
+        size_t firstBuffer = frames[firstVisibleFrameIndex].FirstRecordIndex / Profiler::GetRecordsCountPerBuffer();
+        size_t lastBuffer = (frames[lastVisibleFrameIndex].FirstRecordIndex + frames[lastVisibleFrameIndex].RecordsCount - 1) / Profiler::GetRecordsCountPerBuffer();
+
+        size_t firstVisibleRecord = frames[firstVisibleFrameIndex].FirstRecordIndex % Profiler::GetRecordsCountPerBuffer();
+        size_t lastVisibleRecord = (frames[lastVisibleFrameIndex].FirstRecordIndex + frames[lastVisibleFrameIndex].RecordsCount - 1) % Profiler::GetRecordsCountPerBuffer();
+
+        for (size_t bufferIndex = firstBuffer; bufferIndex <= lastBuffer; bufferIndex++)
+        {
+            const Profiler::RecordsBuffer& buffer = Profiler::GetRecordsBuffer(bufferIndex);
+
+            size_t firstRecord = 0;
+            size_t lastRecord = buffer.Size - 1;
+
+            if (bufferIndex == firstBuffer)
+                firstRecord = firstVisibleRecord;
+            if (bufferIndex == lastBuffer)
+                lastRecord = lastVisibleRecord;
+
+            for (size_t i = firstRecord; i <= lastRecord; i++)
+            {
+                const Profiler::Record& record = buffer.Records[i];
+                size_t recordIndex = i + bufferIndex * Profiler::GetRecordsCountPerBuffer();
+
+                size_t row = CalculateRecordRow(recordIndex, record);
+                ImVec2 offset = ImVec2(CalculatePositionFromTime(record.StartTime - profileStartTime), (m_BlockHeight + 2.0f) * ((float)row));
+
+                Profiler::Record recordCopy = record;
+                recordCopy.StartTime -= profileStartTime;
+                recordCopy.EndTime -= profileStartTime;
+
+                DrawRecordBlock(recordCopy, offset + position, drawList, recordIndex);
+            }
+        }
+
+        drawList->PopClipRect();
+    }
+
     void ProfilerWindow::ReconstructSubCallsList(size_t start)
     {
         m_FirstSubCallRecordIndex = start + 1;
@@ -508,8 +578,8 @@ namespace Flare
             {
                 const Profiler::Record& record = buffer.Records[i];
 
-				double duration = (double)(record.EndTime - record.StartTime);
-				double milliseconds = duration / 1000000.0;
+                double duration = (double)(record.EndTime - record.StartTime);
+                double milliseconds = duration / 1000000.0;
 
                 auto it = records.find(record.Name);
                 if (it == records.end())
@@ -525,7 +595,7 @@ namespace Flare
         m_RecordsByAverageTime.clear();
         m_RecordsByAverageTime.reserve(records.size());
 
-        for (const auto [name, data] : records)
+        for (const auto& [name, data] : records)
         {
             Record& record = m_RecordsByAverageTime.emplace_back();
             record.Name = name;
@@ -533,8 +603,8 @@ namespace Flare
         }
 
         std::sort(m_RecordsByAverageTime.rbegin(), m_RecordsByAverageTime.rend(), [](const Record& a, const Record& b) -> bool
-		{
-			return a.AverageTimeInMilliseconds < b.AverageTimeInMilliseconds;
-		});
+        {
+            return a.AverageTimeInMilliseconds < b.AverageTimeInMilliseconds;
+        });
     }
 }

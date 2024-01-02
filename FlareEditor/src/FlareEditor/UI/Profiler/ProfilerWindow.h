@@ -35,6 +35,8 @@ namespace Flare
         void RenderSubCallsList();
         void RenderCallStack();
         void RenderRecordTableRow(size_t recordIndex);
+        void RenderAverageTimeData();
+        void RenderTimeLine(ImRect viewportRect, ImVec2 position);
 
         void ReconstructSubCallsList(size_t start);
         void ReconstructCallStack(size_t start);

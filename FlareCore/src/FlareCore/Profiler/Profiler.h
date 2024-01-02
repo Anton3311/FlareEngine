@@ -25,6 +25,17 @@ namespace Flare
             RecordsBuffer(size_t capacity)
                 : Records(new Record[capacity]), Size(0), Capacity(capacity) {}
 
+            RecordsBuffer(RecordsBuffer&& other) noexcept
+            {
+                Records = other.Records;
+                Size = other.Size;
+                Capacity = other.Capacity;
+
+                other.Records = nullptr;
+                other.Size = 0;
+                other.Capacity = 0;
+            }
+
             ~RecordsBuffer()
             {
                 delete[] Records;
@@ -53,8 +64,8 @@ namespace Flare
         static void StopRecording();
 
         static size_t GetRecordsCountPerBuffer();
-
         static size_t GetRecordsCount();
+        static Record& GetRecord(size_t index);
 
         static bool IsRecording();
         static size_t GetBuffersCount();

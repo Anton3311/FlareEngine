@@ -9,6 +9,9 @@ namespace Flare
         std::vector<Profiler::RecordsBuffer> Buffers;
         std::vector<Profiler::Frame> Frames;
 
+        size_t CurrentBufferIndex = 0;
+        size_t RecordsRecorded = 0;
+
         bool IsRecording = false;
         bool RecordingStartRequested = false;
         bool RecordingStopRequested = false;
@@ -24,41 +27,31 @@ namespace Flare
         {
             s_ProfilerData.IsRecording = true;
             s_ProfilerData.RecordingStartRequested = false;
+            s_ProfilerData.CurrentBufferIndex = 0;
+            s_ProfilerData.RecordsRecorded = 0;
         }
 
         if (!s_ProfilerData.IsRecording)
             return;
 
         Profiler::Frame& frame = s_ProfilerData.Frames.emplace_back();
-
-        if (s_ProfilerData.Buffers.empty())
-        {
-            frame.FirstRecordIndex = 0;
-        }
+		frame.FirstRecordIndex = s_ProfilerData.RecordsRecorded;
     }
 
     void Profiler::EndFrame()
     {
-        if (s_ProfilerData.RecordingStopRequested)
-        {
-            s_ProfilerData.IsRecording = false;
-            s_ProfilerData.RecordingStopRequested = false;
-        }
-
         if (!s_ProfilerData.IsRecording)
             return;
 
         FLARE_CORE_ASSERT(!s_ProfilerData.Frames.empty());
 
         Frame& currentFrame = s_ProfilerData.Frames.back();
+        currentFrame.RecordsCount = s_ProfilerData.RecordsRecorded - currentFrame.FirstRecordIndex;
 
-        if (s_ProfilerData.Buffers.empty())
+        if (s_ProfilerData.RecordingStopRequested)
         {
-            currentFrame.RecordsCount = 0;
-        }
-        else
-        {
-            currentFrame.RecordsCount = s_ProfilerData.Buffers.back().Size;
+            s_ProfilerData.IsRecording = false;
+            s_ProfilerData.RecordingStopRequested = false;
         }
     }
 
@@ -87,6 +80,17 @@ namespace Flare
         return s_ProfilerData.BufferSize * (s_ProfilerData.Buffers.size() - 1) + s_ProfilerData.Buffers.back().Size;
     }
 
+    Profiler::Record& Profiler::GetRecord(size_t index)
+    {
+        size_t bufferIndex = index / s_ProfilerData.BufferSize;
+        size_t recordIndex = index % s_ProfilerData.BufferSize;
+
+        FLARE_CORE_ASSERT(bufferIndex <= s_ProfilerData.CurrentBufferIndex);
+        FLARE_CORE_ASSERT(recordIndex < s_ProfilerData.Buffers[bufferIndex].Size);
+
+        return s_ProfilerData.Buffers[bufferIndex].Records[recordIndex];
+    }
+
     bool Profiler::IsRecording()
     {
         return s_ProfilerData.IsRecording;
@@ -112,23 +116,40 @@ namespace Flare
     {
         s_ProfilerData.Buffers.clear();
         s_ProfilerData.Frames.clear();
+        s_ProfilerData.CurrentBufferIndex = 0;
+        s_ProfilerData.RecordsRecorded = 0;
     }
 
     inline static Profiler::RecordsBuffer& GetCurrentBuffer()
     {
-        if (s_ProfilerData.Buffers.empty())
-            return s_ProfilerData.Buffers.emplace_back(s_ProfilerData.BufferSize);
+        if (s_ProfilerData.CurrentBufferIndex < s_ProfilerData.Buffers.size())
+        {
+            Profiler::RecordsBuffer& currentBuffer = s_ProfilerData.Buffers[s_ProfilerData.CurrentBufferIndex];
+            if (currentBuffer.Size < currentBuffer.Capacity)
+                return s_ProfilerData.Buffers[s_ProfilerData.CurrentBufferIndex];
+            
+            if (s_ProfilerData.CurrentBufferIndex + 1 < s_ProfilerData.Buffers.size())
+            {
+                s_ProfilerData.CurrentBufferIndex++;
+                return s_ProfilerData.Buffers[s_ProfilerData.CurrentBufferIndex];
+            }
+            else
+            {
+                s_ProfilerData.CurrentBufferIndex++;
+                return s_ProfilerData.Buffers.emplace_back(s_ProfilerData.BufferSize);
+            }
+        }
 
-        if (s_ProfilerData.Buffers.back().IsFull())
-            return s_ProfilerData.Buffers.emplace_back(s_ProfilerData.BufferSize);
-
-        return s_ProfilerData.Buffers.back();
+        s_ProfilerData.CurrentBufferIndex = s_ProfilerData.Buffers.size();
+        return s_ProfilerData.Buffers.emplace_back(s_ProfilerData.BufferSize);
     }
 
     Profiler::Record* Profiler::CreateRecord()
     {
         if (!s_ProfilerData.IsRecording)
             return nullptr;
+
+        s_ProfilerData.RecordsRecorded++;
 
         auto& buffer = GetCurrentBuffer();
         buffer.Size++;
