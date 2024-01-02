@@ -476,7 +476,10 @@ namespace Flare
 			return;
 		}
 
-		s_Renderer2DData.QuadsVertexBuffer->SetData(s_Renderer2DData.Vertices.data(), sizeof(QuadVertex) * s_Renderer2DData.QuadIndex * 4);
+		{
+			FLARE_PROFILE_SCOPE("Renderer2D::UpdateQuadsVertexBuffer");
+			s_Renderer2DData.QuadsVertexBuffer->SetData(s_Renderer2DData.Vertices.data(), sizeof(QuadVertex) * s_Renderer2DData.QuadIndex * 4);
+		}
 
 		int32_t slots[MaxTexturesCount];
 		for (uint32_t i = 0; i < MaxTexturesCount; i++)
@@ -497,7 +500,10 @@ namespace Flare
 		if (texturesParameterIndex.has_value())
 			material->SetIntArray(texturesParameterIndex.value(), slots, s_Renderer2DData.TextureIndex);
 
-		Renderer::DrawMesh(s_Renderer2DData.QuadsMesh, material, s_Renderer2DData.QuadIndex * 6);
+		{
+			FLARE_PROFILE_SCOPE("Renderer2D::DrawQuadsMesh");
+			Renderer::DrawMesh(s_Renderer2DData.QuadsMesh, material, s_Renderer2DData.QuadIndex * 6);
+		}
 
 		s_Renderer2DData.QuadIndex = 0;
 		s_Renderer2DData.TextureIndex = 1;

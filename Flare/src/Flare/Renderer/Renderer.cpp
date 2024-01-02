@@ -367,8 +367,15 @@ namespace Flare
 
 		s_RendererData.CurrentViewport = &viewport;
 
-		s_RendererData.LightBuffer->SetData(&viewport.FrameData.Light, sizeof(viewport.FrameData.Light), 0);
-		s_RendererData.CameraBuffer->SetData(&viewport.FrameData.Camera, sizeof(CameraData), 0);
+		{
+			FLARE_PROFILE_SCOPE("Renderer::UpdateLightUniformBuffer");
+			s_RendererData.LightBuffer->SetData(&viewport.FrameData.Light, sizeof(viewport.FrameData.Light), 0);
+		}
+
+		{
+			FLARE_PROFILE_SCOPE("Renderer::UpdateCameraUniformBuffer");
+			s_RendererData.CameraBuffer->SetData(&viewport.FrameData.Camera, sizeof(CameraData), 0);
+		}
 
 		uint32_t size = (uint32_t)s_RendererData.ShadowMappingSettings.Resolution;
 		if (s_RendererData.ShadowsRenderTarget[0] == nullptr)
@@ -399,30 +406,29 @@ namespace Flare
 		viewport.RenderTarget->Bind();
 
 		// Generate camera frustum planes
-		
-		std::array<glm::vec4, 8> frustumCorners =
 		{
-			// Near
-			glm::vec4(-1.0f, -1.0f, 0.0f, 1.0f),
-			glm::vec4(1.0f, -1.0f, 0.0f, 1.0f),
-			glm::vec4(-1.0f,  1.0f, 0.0f, 1.0f),
-			glm::vec4(1.0f,  1.0f, 0.0f, 1.0f),
+			FLARE_PROFILE_SCOPE("Renderer::GenerateFrustumPlanes");
+			std::array<glm::vec4, 8> frustumCorners =
+			{
+				// Near
+				glm::vec4(-1.0f, -1.0f, 0.0f, 1.0f),
+				glm::vec4(1.0f, -1.0f, 0.0f, 1.0f),
+				glm::vec4(-1.0f,  1.0f, 0.0f, 1.0f),
+				glm::vec4(1.0f,  1.0f, 0.0f, 1.0f),
 
-			// Far
-			glm::vec4(-1.0f, -1.0f, 1.0f, 1.0f),
-			glm::vec4(1.0f, -1.0f, 1.0f, 1.0f),
-			glm::vec4(-1.0f,  1.0f, 1.0f, 1.0f),
-			glm::vec4(1.0f,  1.0f, 1.0f, 1.0f),
-		};
+				// Far
+				glm::vec4(-1.0f, -1.0f, 1.0f, 1.0f),
+				glm::vec4(1.0f, -1.0f, 1.0f, 1.0f),
+				glm::vec4(-1.0f,  1.0f, 1.0f, 1.0f),
+				glm::vec4(1.0f,  1.0f, 1.0f, 1.0f),
+			};
 
-		for (size_t i = 0; i < frustumCorners.size(); i++)
-		{
-			frustumCorners[i] = viewport.FrameData.Camera.InverseViewProjection * frustumCorners[i];
-			frustumCorners[i] /= frustumCorners[i].w;
-		}
+			for (size_t i = 0; i < frustumCorners.size(); i++)
+			{
+				frustumCorners[i] = viewport.FrameData.Camera.InverseViewProjection * frustumCorners[i];
+				frustumCorners[i] /= frustumCorners[i].w;
+			}
 
-		// Generate camera frustum planes
-		{
 			FrustumPlanes& frustumPlanes = viewport.FrameData.CameraFrustumPlanes;
 
 			// Near
@@ -474,16 +480,32 @@ namespace Flare
 		const RenderableObject& a = s_RendererData.Queue[aIndex];
 		const RenderableObject& b = s_RendererData.Queue[bIndex];
 
+		glm::vec3 aPosition = glm::vec3(a.Transform[3]);
+		glm::vec3 bPosition = glm::vec3(b.Transform[3]);
+
+		float aDistance = glm::distance2(aPosition, s_RendererData.CurrentViewport->FrameData.Camera.Position);
+		float bDistance = glm::distance2(bPosition, s_RendererData.CurrentViewport->FrameData.Camera.Position);
+
+		return aDistance < bDistance;
+
+		// TODO: group objects based on material and mesh, then sort by distance
+
+#if 0
 		if ((uint64_t)a.Material->Handle < (uint64_t)b.Material->Handle)
 			return true;
 
 		if (a.Material->Handle == b.Material->Handle)
 		{
+			if (a.Mesh->Handle == b.Mesh->Handle)
+			{
+			}
+
 			if ((uint64_t)a.Mesh->Handle < (uint64_t)b.Mesh->Handle)
 				return true;
 		}
 
 		return false;
+#endif
 	}
 
 	static void PerformFrustumCulling()
@@ -681,7 +703,10 @@ namespace Flare
 		if (instancesCount == 0 || s_RendererData.CurrentInstancingMesh == nullptr)
 			return;
 
-		s_RendererData.InstanceBuffer->SetData(s_RendererData.InstanceDataBuffer.data(), sizeof(InstanceData) * instancesCount);
+		{
+			FLARE_PROFILE_SCOPE("Renderer::FlushInstance::SetInstancesData");
+			s_RendererData.InstanceBuffer->SetData(s_RendererData.InstanceDataBuffer.data(), sizeof(InstanceData) * instancesCount);
+		}
 
 		RenderCommand::DrawInstanced(s_RendererData.CurrentInstancingMesh->GetSubMesh().MeshVertexArray, instancesCount);
 		s_RendererData.Statistics.DrawCallsCount++;
@@ -732,7 +757,11 @@ namespace Flare
 		FrameBufferAttachmentsMask previousMask = s_RendererData.CurrentViewport->RenderTarget->GetWriteMask();
 		s_RendererData.CurrentViewport->RenderTarget->SetWriteMask(shaderOutputsMask);
 
-		RenderCommand::DrawIndexed(mesh, indicesCount == SIZE_MAX ? mesh->GetIndexBuffer()->GetCount() : indicesCount);
+		{
+			FLARE_PROFILE_SCOPE("Renderer::DrawMesh::DrawIndexed");
+			RenderCommand::DrawIndexed(mesh, indicesCount == SIZE_MAX ? mesh->GetIndexBuffer()->GetCount() : indicesCount);
+		}
+
 		s_RendererData.Statistics.DrawCallsCount++;
 
 		s_RendererData.CurrentViewport->RenderTarget->SetWriteMask(previousMask);
