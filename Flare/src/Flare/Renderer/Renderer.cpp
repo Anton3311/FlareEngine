@@ -176,7 +176,11 @@ namespace Flare
 		float BoundingSphereRadius;
 	};
 
-	static void CalculateShadowFrustums(ShadowMappingParams& params, glm::vec3 lightDirection, const Viewport& viewport, float nearPlaneDistance, float farPlaneDistance)
+	static void CalculateShadowFrustumParamsAroundCamera(ShadowMappingParams& params,
+		glm::vec3 lightDirection,
+		const Viewport& viewport,
+		float nearPlaneDistance,
+		float farPlaneDistance)
 	{
 		const CameraData& camera = viewport.FrameData.Camera;
 
@@ -262,21 +266,82 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 
 		Viewport* viewport = s_RendererData.CurrentViewport;
-
+		glm::vec3 lightDirection = viewport->FrameData.Light.Direction;
+		const Math::Basis& lightBasis = viewport->FrameData.LightBasis;
 		const ShadowSettings& shadowSettings = Renderer::GetShadowSettings();
-		float currentNearPlane = viewport->FrameData.Light.Near;
-		for (size_t i = 0; i < 4; i++)
-		{
-			glm::vec3 lightDirection = viewport->FrameData.Light.Direction;
 
-			// 1. Calculate a fit frustum around camera's furstum
+		std::vector<uint32_t> perCascadeObjects[ShadowSettings::MaxCascades];
+
+		{
+			FLARE_PROFILE_SCOPE("DivideIntoGroups");
 
 			ShadowMappingParams params;
-			CalculateShadowFrustums(params, lightDirection,
-				*viewport, currentNearPlane,
-				shadowSettings.CascadeSplits[i]);
+			CalculateShadowFrustumParamsAroundCamera(params,
+				lightDirection,
+				*viewport,
+				viewport->FrameData.Light.Near,
+				shadowSettings.CascadeSplits[shadowSettings.Cascades - 1]);
 
-			const Math::Basis& lightBasis = viewport->FrameData.LightBasis;
+			Math::Plane cameraNearPlane = Math::Plane::TroughPoint(
+				s_RendererData.CurrentViewport->FrameData.Camera.Position,
+				s_RendererData.CurrentViewport->FrameData.Camera.ViewDirection);
+			
+			for (size_t objectIndex = 0; objectIndex < s_RendererData.Queue.size(); objectIndex++)
+			{
+				const RenderableObject& object = s_RendererData.Queue[objectIndex];
+				Math::AABB objectAABB = object.Mesh->GetSubMesh().Bounds.Transformed(object.Transform);
+
+				float distanceToPlane = cameraNearPlane.SignedDistance(objectAABB.GetCenter());
+				float projectedDistance = glm::dot(glm::abs(cameraNearPlane.Normal), objectAABB.GetExtents());
+
+				size_t firstCascadeIndex = 0;
+				size_t lastCascadeIndex = shadowSettings.Cascades - 1;
+
+				for (size_t cascade = 0; cascade < shadowSettings.Cascades; cascade++)
+				{
+					if (distanceToPlane - projectedDistance <= shadowSettings.CascadeSplits[cascade])
+					{
+						firstCascadeIndex = cascade;
+						break;
+					}
+				}
+
+				for (size_t i = 0; i < shadowSettings.Cascades; i++)
+				{
+					if (distanceToPlane + projectedDistance <= shadowSettings.CascadeSplits[i])
+					{
+						lastCascadeIndex = i;
+						break;
+					}
+				}
+
+				if (firstCascadeIndex <= lastCascadeIndex)
+				{
+					for (size_t cascadeIndex = firstCascadeIndex; cascadeIndex <= lastCascadeIndex; cascadeIndex++)
+						perCascadeObjects[cascadeIndex].push_back((uint32_t)objectIndex);
+				}
+			}
+		}
+
+		ShadowMappingParams perCascadeParams[ShadowSettings::MaxCascades];
+
+		{
+			// 1. Calculate a fit frustum around camera's furstum
+			float currentNearPlane = viewport->FrameData.Light.Near;
+			for (size_t i = 0; i < shadowSettings.Cascades; i++)
+			{
+				CalculateShadowFrustumParamsAroundCamera(perCascadeParams[i], lightDirection,
+					*viewport, currentNearPlane,
+					shadowSettings.CascadeSplits[i]);
+
+				currentNearPlane = shadowSettings.CascadeSplits[i];
+			}
+		}
+
+		float currentNearPlane = viewport->FrameData.Light.Near;
+		for (size_t i = 0; i < shadowSettings.Cascades; i++)
+		{
+			ShadowMappingParams params = perCascadeParams[i];
 
 			// 2. Calculate projection frustum planes (except near and far)
 
@@ -290,10 +355,10 @@ namespace Flare
 
 			float nearPlaneDistance = 0;
 			float farPlaneDistance = 0;
-
-			for (size_t i = 0; i < s_RendererData.Queue.size(); i++)
+			
+			for (uint32_t objectIndex : perCascadeObjects[i])
 			{
-				const RenderableObject& object = s_RendererData.Queue[i];
+				const RenderableObject& object = s_RendererData.Queue[objectIndex];
 
 				Math::AABB objectAABB = object.Mesh->GetSubMesh().Bounds.Transformed(object.Transform);
 
@@ -539,9 +604,6 @@ namespace Flare
 
 		s_RendererData.Statistics.ObjectsSubmitted += (uint32_t)s_RendererData.Queue.size();
 
-		CalculateShadowProjections();
-		CalculateShadowMappingParams();
-
 		ExecuteShadowPass();
 
 		// Geometry
@@ -571,7 +633,7 @@ namespace Flare
 				s_RendererData.ShadowsRenderTarget[i]->BindAttachmentTexture(0, 2 + (uint32_t)i);
 			}
 
-			DrawQueued(false);
+			ExecuteGeomertyPass();
 			s_RendererData.CurrentViewport->RenderTarget->SetWriteMask(previousMask);
 
 			s_RendererData.InstanceDataBuffer.clear();
@@ -580,7 +642,7 @@ namespace Flare
 		}
 	}
 
-	void Renderer::DrawQueued(bool shadowPass)
+	void Renderer::ExecuteGeomertyPass()
 	{
 		FLARE_PROFILE_FUNCTION();
 
@@ -589,9 +651,6 @@ namespace Flare
 		for (uint32_t objectIndex : s_RendererData.CulledObjectIndices)
 		{
 			const RenderableObject& object = s_RendererData.Queue[objectIndex];
-
-			if (shadowPass && HAS_BIT(object.Flags, MeshRenderFlags::DontCastShadows))
-				continue;
 
 			if (object.Mesh->GetSubMesh().InstanceBuffer == nullptr)
 				object.Mesh->SetInstanceBuffer(s_RendererData.InstanceBuffer);
@@ -608,23 +667,19 @@ namespace Flare
 
 				currentMaterial = object.Material;
 
-				if (!shadowPass)
-					ApplyMaterialFeatures(object.Material->GetShader()->GetFeatures());
+				ApplyMaterialFeatures(object.Material->GetShader()->GetFeatures());
 
 				currentMaterial->SetShaderProperties();
 
-				if (!shadowPass)
-				{
-					Ref<Shader> shader = object.Material->GetShader();
-					if (shader == nullptr)
-						continue;
+				Ref<Shader> shader = object.Material->GetShader();
+				if (shader == nullptr)
+					continue;
 
-					FrameBufferAttachmentsMask shaderOutputsMask = 0;
-					for (uint32_t output : shader->GetOutputs())
-						shaderOutputsMask |= (1 << output);
+				FrameBufferAttachmentsMask shaderOutputsMask = 0;
+				for (uint32_t output : shader->GetOutputs())
+					shaderOutputsMask |= (1 << output);
 
-					s_RendererData.CurrentViewport->RenderTarget->SetWriteMask(shaderOutputsMask);
-				}
+				s_RendererData.CurrentViewport->RenderTarget->SetWriteMask(shaderOutputsMask);
 			}
 
 			auto& instanceData = s_RendererData.InstanceDataBuffer.emplace_back();
@@ -642,6 +697,9 @@ namespace Flare
 	void Renderer::ExecuteShadowPass()
 	{
 		FLARE_PROFILE_FUNCTION();
+
+		CalculateShadowProjections();
+		CalculateShadowMappingParams();
 
 		// Prepare objects for shadow pass
 

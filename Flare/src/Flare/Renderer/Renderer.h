@@ -136,7 +136,7 @@ namespace Flare
 		static Ref<FrameBuffer> GetShadowsRenderTarget(size_t index);
 		static ShadowSettings& GetShadowSettings();
 	private:
-		static void DrawQueued(bool shadowPass);
+		static void ExecuteGeomertyPass();
 		static void ExecuteShadowPass();
 		static void FlushInstances();
 	};

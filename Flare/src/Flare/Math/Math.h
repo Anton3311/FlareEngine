@@ -89,6 +89,7 @@ namespace Flare::Math
 
 		inline glm::vec3 GetCenter() const { return (Max + Min) / 2.0f; }
 		inline glm::vec3 GetSize() const { return Max - Min; }
+		inline glm::vec3 GetExtents() const { return Max - GetCenter(); }
 
 		// From https://gdbooks.gitbooks.io/3dcollisions/content/Chapter2/static_aabb_plane.html
 		inline bool IntersectsPlane(const Plane& plane) const
