@@ -26,6 +26,8 @@ namespace Flare
         s_Instance = nullptr;
     }
 
+    static double s_MillisecondToNanosecond = 1000000.0;
+
     void ProfilerWindow::OnImGuiRender()
     {
         if (!m_ShowWindow)
@@ -182,7 +184,7 @@ namespace Flare
 
         double duration = (double)(record.EndTime - record.StartTime);
 
-        double milliseconds = duration / 1000000.0;
+        double milliseconds = duration / s_MillisecondToNanosecond;
         double seconds = milliseconds / 1000.0;
 
         float width = glm::abs(CalculatePositionFromTime(record.StartTime) - CalculatePositionFromTime(record.EndTime));
@@ -293,7 +295,7 @@ namespace Flare
 
     float ProfilerWindow::CalculatePositionFromTime(uint64_t time)
     {
-        double start = (double)time / 1000000.0;
+        double start = (double)time / s_MillisecondToNanosecond;
         double position = (start) * (double)(m_WindowWidth * m_Zoom);
         return (float)position - m_ScrollOffset;
     }
@@ -302,7 +304,7 @@ namespace Flare
     {
         position += m_ScrollOffset;
         double milliseconds = (double)(position) / (double)(m_WindowWidth * m_Zoom);
-        return (uint64_t)(milliseconds * 1000000.0);
+        return (uint64_t)(milliseconds * s_MillisecondToNanosecond);
     }
 
     void ProfilerWindow::RenderSubCallsList()
@@ -358,7 +360,7 @@ namespace Flare
 
         double duration = (double)(record.EndTime - record.StartTime);
 
-        double milliseconds = duration / 1000000.0;
+        double milliseconds = duration / s_MillisecondToNanosecond;
         double seconds = milliseconds / 1000.0;
 
         ImGui::SetCursorPosY(ImGui::GetCursorPosY() + style.FramePadding.y);
@@ -579,7 +581,7 @@ namespace Flare
                 const Profiler::Record& record = buffer.Records[i];
 
                 double duration = (double)(record.EndTime - record.StartTime);
-                double milliseconds = duration / 1000000.0;
+                double milliseconds = duration / s_MillisecondToNanosecond;
 
                 auto it = records.find(record.Name);
                 if (it == records.end())
