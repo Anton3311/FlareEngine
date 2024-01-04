@@ -7,93 +7,75 @@ namespace Flare
 	{
 	}
 
-	Mesh::Mesh(size_t verticesCount, size_t indicesCount)
-		: Asset(AssetType::Mesh)
+	void Mesh::AddSubMesh(const Span<glm::vec3>& vertices, const Span<uint32_t>& indices, const Span<glm::vec3>* normals, const Span<glm::vec2>* uvs)
 	{
-		m_SubMesh.Vertices = VertexBuffer::Create(verticesCount * sizeof(glm::vec3));
-		m_SubMesh.Indicies = IndexBuffer::Create(indicesCount);
-		m_SubMesh.Normals = VertexBuffer::Create(verticesCount * sizeof(glm::vec3));
+		FLARE_CORE_ASSERT(vertices.GetSize() > 0);
+		
+		if (normals)
+			FLARE_CORE_ASSERT(vertices.GetSize() == normals->GetSize());
+		if (uvs)
+			FLARE_CORE_ASSERT(vertices.GetSize() == uvs->GetSize());
 
-		m_SubMesh.MeshVertexArray = VertexArray::Create();
-		InitializeBuffers();
-	}
+		SubMesh& subMesh = m_SubMeshes.emplace_back();
+		subMesh.Bounds = Math::AABB(vertices[0], vertices[0]);
 
-	Mesh::Mesh(const glm::vec3* vertices, size_t verticesCount, const uint32_t* indices, size_t indicesCount, const glm::vec3* normals, const glm::vec2* uvs)
-		: Asset(AssetType::Mesh)
-	{
-		m_SubMesh.Vertices = VertexBuffer::Create(verticesCount * sizeof(glm::vec3), vertices);
-		m_SubMesh.Indicies = IndexBuffer::Create(indicesCount, indices);
-		m_SubMesh.Normals = VertexBuffer::Create(verticesCount * sizeof(glm::vec3), normals);
-		m_SubMesh.UVs = VertexBuffer::Create(verticesCount * sizeof(glm::vec2), uvs);
-
-		if (verticesCount > 0)
+		for (size_t i = 1; i < vertices.GetSize(); i++)
 		{
-			m_SubMesh.Bounds = Math::AABB(vertices[0], vertices[0]);
-
-			for (size_t i = 1; i < verticesCount; i++)
-			{
-				m_SubMesh.Bounds.Min = glm::min(m_SubMesh.Bounds.Min, vertices[i]);
-				m_SubMesh.Bounds.Max = glm::max(m_SubMesh.Bounds.Max, vertices[i]);
-			}
+			subMesh.Bounds.Min = glm::min(subMesh.Bounds.Min, vertices[i]);
+			subMesh.Bounds.Max = glm::max(subMesh.Bounds.Max, vertices[i]);
 		}
 
-		m_SubMesh.MeshVertexArray = VertexArray::Create();
-		InitializeBuffers();
-	}
+		subMesh.Vertices = VertexBuffer::Create(vertices.GetSize() * sizeof(glm::vec3), vertices.GetData());
+		subMesh.Indicies = IndexBuffer::Create(indices.GetSize(), indices.GetData());
 
-	void Mesh::SetIndices(const uint32_t* data, size_t count)
-	{
-		FLARE_CORE_ASSERT(m_SubMesh.Indicies);
-		m_SubMesh.Indicies->SetData(data, count);
-	}
+		if (normals)
+		{
+			subMesh.Normals = VertexBuffer::Create(normals->GetSize() * sizeof(glm::vec3));
+			subMesh.Normals->SetData(normals->GetData(), normals->GetSize() * sizeof(glm::vec3));
+		}
 
-	void Mesh::SetVertices(const glm::vec3* data, size_t count)
-	{
-		FLARE_CORE_ASSERT(m_SubMesh.Vertices);
-		m_SubMesh.Vertices->SetData(data, count * sizeof(glm::vec3));
-	}
+		if (uvs)
+		{
+			subMesh.UVs = VertexBuffer::Create(uvs->GetSize() * sizeof(glm::vec2));
+			subMesh.UVs->SetData(uvs->GetData(), uvs->GetSize() * sizeof(glm::vec2));
+		}
 
-	void Mesh::SetNormals(const glm::vec3* normals, size_t count)
-	{
-		FLARE_CORE_ASSERT(m_SubMesh.Normals);
-		m_SubMesh.Normals->SetData(normals, count * sizeof(glm::vec3));
-	}
-
-	void Mesh::SetUVs(const glm::vec2* uvs, size_t count)
-	{
-		FLARE_CORE_ASSERT(m_SubMesh.UVs);
-		m_SubMesh.Normals->SetData(uvs, count * sizeof(glm::vec2));
+		InitializeLastSubMeshBuffers();
 	}
 
 	void Mesh::SetInstanceBuffer(const Ref<VertexBuffer>& instanceBuffer)
 	{
-		m_SubMesh.InstanceBuffer = instanceBuffer;
-		m_SubMesh.MeshVertexArray->AddInstanceBuffer(instanceBuffer);
-	}
-
-	void Mesh::InitializeBuffers()
-	{
-		m_SubMesh.Vertices->SetLayout({
-			{ "i_Position", ShaderDataType::Float3 },
-		});
-
-		m_SubMesh.Normals->SetLayout({
-			{ "i_Normal", ShaderDataType::Float3 },
-		});
-
-		m_SubMesh.MeshVertexArray->AddVertexBuffer(m_SubMesh.Vertices);
-		m_SubMesh.MeshVertexArray->AddVertexBuffer(m_SubMesh.Normals);
-
-		if (m_SubMesh.UVs)
+		for (SubMesh& subMesh : m_SubMeshes)
 		{
-			m_SubMesh.UVs->SetLayout({
-				{ "i_UV", ShaderDataType::Float2 },
-			});
-			m_SubMesh.MeshVertexArray->AddVertexBuffer(m_SubMesh.UVs);
+			subMesh.VertexArray->AddInstanceBuffer(instanceBuffer);
 		}
 
-		m_SubMesh.MeshVertexArray->SetIndexBuffer(m_SubMesh.Indicies);
+		m_InstanceBuffer = instanceBuffer;
+	}
 
-		m_SubMesh.MeshVertexArray->Unbind();
+	void Mesh::InitializeLastSubMeshBuffers()
+	{
+		FLARE_CORE_ASSERT(m_SubMeshes.size() > 0);
+
+		SubMesh& subMesh = m_SubMeshes.back();
+		subMesh.VertexArray = VertexArray::Create();
+
+		subMesh.Vertices->SetLayout({ { "i_Position", ShaderDataType::Float3 } });
+		subMesh.VertexArray->AddVertexBuffer(subMesh.Vertices);
+
+		if (subMesh.Normals)
+		{
+			subMesh.Normals->SetLayout({ { "i_Normal", ShaderDataType::Float3 } });
+			subMesh.VertexArray->AddVertexBuffer(subMesh.Normals);
+		}
+
+		if (subMesh.UVs)
+		{
+			subMesh.UVs->SetLayout({ { "i_UV", ShaderDataType::Float2 } });
+			subMesh.VertexArray->AddVertexBuffer(subMesh.UVs);
+		}
+
+		subMesh.VertexArray->SetIndexBuffer(subMesh.Indicies);
+		subMesh.VertexArray->Unbind();
 	}
 }

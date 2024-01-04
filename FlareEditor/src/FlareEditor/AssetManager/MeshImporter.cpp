@@ -15,6 +15,8 @@ namespace Flare
 {
     static Ref<Mesh> ProcessMeshNode(aiNode* node, const aiScene* scene)
     {
+        Ref<Mesh> mesh = nullptr;
+
         for (uint32_t i = 0; i < node->mNumMeshes; i++)
         {
             aiMesh* nodeMesh = scene->mMeshes[node->mMeshes[i]];
@@ -26,7 +28,6 @@ namespace Flare
 
             vertices.resize(nodeMesh->mNumVertices);
             normals.resize(nodeMesh->mNumVertices);
-            uvs.resize(nodeMesh->mNumVertices);
 
             for (size_t i = 0; i < vertices.size(); i++)
             {
@@ -42,8 +43,11 @@ namespace Flare
                 normals[i].z = nodeMesh->mNormals[i].z;
             }
 
+            bool hasUVs = false;
             if (nodeMesh->mTextureCoords != nullptr && nodeMesh->mTextureCoords[0] != nullptr)
             {
+                hasUVs = true;
+                uvs.resize(nodeMesh->mNumVertices);
                 for (size_t i = 0; i < uvs.size(); i++)
                 {
                     auto uv = nodeMesh->mTextureCoords[0][i];
@@ -64,13 +68,21 @@ namespace Flare
                 std::swap(indices[start], indices[start + 1]);
             }
 
-            // TODO: import all meshes, when the submeshes are fully implemented
-            // Import the first mesh for now.
-            return CreateRef<Mesh>(vertices.data(), vertices.size(),
-                indices.data(), indices.size(),
-                normals.data(),
-                uvs.data());
+            if (!mesh)
+				mesh = CreateRef<Mesh>();
+
+            Span<glm::vec3> normalsSpan = Span<glm::vec3>::FromVector(normals);
+            Span<glm::vec2> uvsSpan = Span<glm::vec2>::FromVector(uvs);
+
+            mesh->AddSubMesh(
+                Span<glm::vec3>::FromVector(vertices),
+                Span<uint32_t>::FromVector(indices),
+                &normalsSpan,
+                hasUVs ? &uvsSpan : nullptr);
         }
+
+        if (mesh)
+            return mesh;
 
         for (uint32_t i = 0; i < node->mNumChildren; i++)
         {

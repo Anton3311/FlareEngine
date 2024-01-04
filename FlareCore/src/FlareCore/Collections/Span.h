@@ -40,6 +40,11 @@ namespace Flare
 			FLARE_CORE_ASSERT(index < m_Size);
 			return m_Values[index];
 		}
+
+		inline static Span<T> FromVector(std::vector<T>& vector)
+		{
+			return Span<T>(vector.data(), vector.size());
+		}
 	private:
 		T* m_Values;
 		size_t m_Size;

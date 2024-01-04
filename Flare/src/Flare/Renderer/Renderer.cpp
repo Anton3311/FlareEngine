@@ -27,6 +27,7 @@ namespace Flare
 	{
 		Ref<Mesh> Mesh;
 		Ref<Material> Material;
+		uint32_t SubMeshIndex;
 		glm::mat4 Transform;
 		MeshRenderFlags Flags;
 		int32_t EntityIndex;
@@ -45,6 +46,18 @@ namespace Flare
 		glm::mat4 LightProjection[4];
 
 		float Resolution;
+	};
+
+	struct InstancingMesh
+	{
+		inline void Reset()
+		{
+			Mesh = nullptr;
+			SubMeshIndex = UINT32_MAX;
+		}
+
+		Ref<Mesh> Mesh = nullptr;
+		uint32_t SubMeshIndex = UINT32_MAX;
 	};
 
 	struct RendererData
@@ -68,7 +81,7 @@ namespace Flare
 		std::vector<InstanceData> InstanceDataBuffer;
 		uint32_t MaxInstances = 1024;
 
-		Ref<Mesh> CurrentInstancingMesh = nullptr;
+		InstancingMesh CurrentInstancingMesh;
 		Ref<FrameBuffer> ShadowsRenderTarget[4] = { nullptr };
 
 		Ref<Material> ErrorMaterial = nullptr;
@@ -289,7 +302,7 @@ namespace Flare
 			for (size_t objectIndex = 0; objectIndex < s_RendererData.Queue.size(); objectIndex++)
 			{
 				const RenderableObject& object = s_RendererData.Queue[objectIndex];
-				Math::AABB objectAABB = object.Mesh->GetSubMesh().Bounds.Transformed(object.Transform);
+				Math::AABB objectAABB = object.Mesh->GetSubMeshes()[object.SubMeshIndex].Bounds.Transformed(object.Transform);
 
 				float distanceToPlane = cameraNearPlane.SignedDistance(objectAABB.GetCenter());
 				float projectedDistance = glm::dot(glm::abs(cameraNearPlane.Normal), objectAABB.GetExtents());
@@ -359,8 +372,7 @@ namespace Flare
 			for (uint32_t objectIndex : perCascadeObjects[i])
 			{
 				const RenderableObject& object = s_RendererData.Queue[objectIndex];
-
-				Math::AABB objectAABB = object.Mesh->GetSubMesh().Bounds.Transformed(object.Transform);
+				Math::AABB objectAABB = object.Mesh->GetSubMeshes()[object.SubMeshIndex].Bounds.Transformed(object.Transform);
 
 				bool intersects = true;
 				for (size_t i = 0; i < 4; i++)
@@ -583,7 +595,7 @@ namespace Flare
 		for (size_t i = 0; i < s_RendererData.Queue.size(); i++)
 		{
 			const RenderableObject& object = s_RendererData.Queue[i];
-			objectAABB = object.Mesh->GetSubMesh().Bounds.Transformed(object.Transform);
+			objectAABB = object.Mesh->GetSubMeshes()[object.SubMeshIndex].Bounds.Transformed(object.Transform);
 
 			bool intersects = true;
 			for (size_t i = 0; i < planes.PlanesCount; i++)
@@ -651,14 +663,15 @@ namespace Flare
 		for (uint32_t objectIndex : s_RendererData.CulledObjectIndices)
 		{
 			const RenderableObject& object = s_RendererData.Queue[objectIndex];
-
-			if (object.Mesh->GetSubMesh().InstanceBuffer == nullptr)
+			if (object.Mesh->GetInstanceBuffer() == nullptr)
 				object.Mesh->SetInstanceBuffer(s_RendererData.InstanceBuffer);
 
-			if (s_RendererData.CurrentInstancingMesh.get() != object.Mesh.get())
+			if (s_RendererData.CurrentInstancingMesh.Mesh.get() != object.Mesh.get()
+				|| s_RendererData.CurrentInstancingMesh.SubMeshIndex != object.SubMeshIndex)
 			{
 				FlushInstances();
-				s_RendererData.CurrentInstancingMesh = object.Mesh;
+				s_RendererData.CurrentInstancingMesh.Mesh = object.Mesh;
+				s_RendererData.CurrentInstancingMesh.SubMeshIndex = object.SubMeshIndex;
 			}
 
 			if (object.Material.get() != currentMaterial.get())
@@ -691,7 +704,7 @@ namespace Flare
 		}
 
 		FlushInstances();
-		s_RendererData.CurrentInstancingMesh = nullptr;
+		s_RendererData.CurrentInstancingMesh.Reset();
 	}
 
 	void Renderer::ExecuteShadowPass()
@@ -728,18 +741,20 @@ namespace Flare
 
 			s_RendererData.ShadowsRenderTarget[i]->Bind();
 
-			s_RendererData.CurrentInstancingMesh = nullptr;
+			s_RendererData.CurrentInstancingMesh.Reset();
 			for (uint32_t objectIndex : s_RendererData.CulledObjectIndices)
 			{
 				const auto& queued = s_RendererData.Queue[objectIndex];
 
-				if (queued.Mesh->GetSubMesh().InstanceBuffer == nullptr)
+				if (queued.Mesh->GetInstanceBuffer()  == nullptr)
 					queued.Mesh->SetInstanceBuffer(s_RendererData.InstanceBuffer);
 
-				if (queued.Mesh.get() != s_RendererData.CurrentInstancingMesh.get())
+				if (queued.Mesh.get() != s_RendererData.CurrentInstancingMesh.Mesh.get()
+					|| queued.SubMeshIndex != s_RendererData.CurrentInstancingMesh.SubMeshIndex)
 				{
 					FlushInstances();
-					s_RendererData.CurrentInstancingMesh = queued.Mesh;
+					s_RendererData.CurrentInstancingMesh.Mesh = queued.Mesh;
+					s_RendererData.CurrentInstancingMesh.SubMeshIndex = queued.SubMeshIndex;
 				}
 
 				auto& instance = s_RendererData.InstanceDataBuffer.emplace_back();
@@ -751,6 +766,8 @@ namespace Flare
 
 			FlushInstances();
 		}
+
+		s_RendererData.CurrentInstancingMesh.Reset();
 	}
 
 	void Renderer::FlushInstances()
@@ -758,7 +775,7 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 
 		size_t instancesCount = s_RendererData.InstanceDataBuffer.size();
-		if (instancesCount == 0 || s_RendererData.CurrentInstancingMesh == nullptr)
+		if (instancesCount == 0 || s_RendererData.CurrentInstancingMesh.Mesh == nullptr)
 			return;
 
 		{
@@ -766,7 +783,11 @@ namespace Flare
 			s_RendererData.InstanceBuffer->SetData(s_RendererData.InstanceDataBuffer.data(), sizeof(InstanceData) * instancesCount);
 		}
 
-		RenderCommand::DrawInstanced(s_RendererData.CurrentInstancingMesh->GetSubMesh().MeshVertexArray, instancesCount);
+		auto mesh = s_RendererData.CurrentInstancingMesh;
+
+		const SubMesh& subMesh = mesh.Mesh->GetSubMeshes()[mesh.SubMeshIndex];
+		RenderCommand::DrawInstanced(mesh.Mesh->GetSubMeshes()[mesh.SubMeshIndex].VertexArray, instancesCount);
+
 		s_RendererData.Statistics.DrawCallsCount++;
 		s_RendererData.Statistics.DrawCallsSavedByInstancing += (uint32_t)instancesCount - 1;
 
@@ -825,7 +846,7 @@ namespace Flare
 		s_RendererData.CurrentViewport->RenderTarget->SetWriteMask(previousMask);
 	}
 
-	void Renderer::DrawMesh(const Ref<Mesh>& mesh, const Ref<Material>& material, const glm::mat4& transform, MeshRenderFlags flags, int32_t entityIndex)
+	void Renderer::DrawMesh(const Ref<Mesh>& mesh, uint32_t subMesh, const Ref<Material>& material, const glm::mat4& transform, MeshRenderFlags flags, int32_t entityIndex)
 	{
 		if (s_RendererData.ErrorMaterial == nullptr)
 			return;
@@ -839,6 +860,7 @@ namespace Flare
 
 		object.Flags = flags;
 		object.Mesh = mesh;
+		object.SubMeshIndex = subMesh;
 		object.Transform = transform;
 		object.EntityIndex = entityIndex;
 	}
@@ -874,6 +896,11 @@ namespace Flare
 	Ref<Texture> Renderer::GetWhiteTexture()
 	{
 		return s_RendererData.WhiteTexture;
+	}
+
+	Ref<Material> Renderer::GetErrorMaterial()
+	{
+		return s_RendererData.ErrorMaterial;
 	}
 
 	Ref<const VertexArray> Renderer::GetFullscreenQuad()

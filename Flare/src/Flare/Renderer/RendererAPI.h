@@ -33,6 +33,12 @@ namespace Flare
 		virtual void DrawIndexed(const Ref<const VertexArray>& vertexArray, size_t indicesCount) = 0;
 		virtual void DrawInstanced(const Ref<const VertexArray>& mesh, size_t instancesCount) = 0;
 		virtual void DrawLines(const Ref<const VertexArray>& vertexArray, size_t cverticesCountount) = 0;
+
+		virtual void DrawInstanced(const Ref<const VertexArray>& mesh,
+			size_t instancesCount,
+			size_t baseVertexIndex,
+			size_t startIndex,
+			size_t indicesCount) = 0;
 	public:
 		static Scope<RendererAPI> Create();
 		static API GetAPI();

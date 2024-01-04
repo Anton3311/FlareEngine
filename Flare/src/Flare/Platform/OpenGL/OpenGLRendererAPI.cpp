@@ -149,6 +149,13 @@ namespace Flare
 		mesh->Unbind();
 	}
 
+	void OpenGLRendererAPI::DrawInstanced(const Ref<const VertexArray>& mesh, size_t instancesCount, size_t baseVertexIndex, size_t startIndex, size_t indicesCount)
+	{
+		mesh->Bind();
+		glDrawElementsInstancedBaseVertex(GL_TRIANGLES, (int32_t)indicesCount, GL_UNSIGNED_INT, (const void*)0, (int32_t)instancesCount, (int32_t)baseVertexIndex);
+		mesh->Unbind();
+	}
+
 	void OpenGLRendererAPI::DrawLines(const Ref<const VertexArray>& vertexArray, size_t verticesCount)
 	{
 		vertexArray->Bind();

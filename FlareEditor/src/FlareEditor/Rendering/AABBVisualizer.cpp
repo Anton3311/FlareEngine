@@ -42,28 +42,33 @@ namespace Flare
 				Ref<Mesh> mesh = AssetManager::GetAsset<Mesh>(meshHandle);
 				if (mesh != nullptr)
 				{
-					const Math::AABB& bounds = mesh->GetSubMesh().Bounds;
+					const auto& subMeshes = mesh->GetSubMeshes();
 
-					glm::vec3 corners[8];
-					bounds.GetCorners(corners);
-
-					Math::AABB newBounds;
-					for (size_t i = 0; i < 8; i++)
+					for (const auto& subMesh : subMeshes)
 					{
-						glm::vec3 transformed = transform * glm::vec4(corners[i], 1.0f);
-						if (i == 0)
-						{
-							newBounds.Min = transformed;
-							newBounds.Max = transformed;
-						}
-						else
-						{
-							newBounds.Min = glm::min(newBounds.Min, transformed);
-							newBounds.Max = glm::max(newBounds.Max, transformed);
-						}
-					}
+						const Math::AABB& bounds = subMesh.Bounds;
 
-					DebugRenderer::DrawAABB(newBounds);
+						glm::vec3 corners[8];
+						bounds.GetCorners(corners);
+
+						Math::AABB newBounds;
+						for (size_t i = 0; i < 8; i++)
+						{
+							glm::vec3 transformed = transform * glm::vec4(corners[i], 1.0f);
+							if (i == 0)
+							{
+								newBounds.Min = transformed;
+								newBounds.Max = transformed;
+							}
+							else
+							{
+								newBounds.Min = glm::min(newBounds.Min, transformed);
+								newBounds.Max = glm::max(newBounds.Max, transformed);
+							}
+						}
+
+						DebugRenderer::DrawAABB(newBounds);
+					}
 				}
 			}
 		}

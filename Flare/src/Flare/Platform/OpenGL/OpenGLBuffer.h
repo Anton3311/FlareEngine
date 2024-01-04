@@ -14,7 +14,7 @@ namespace Flare
 		~OpenGLVertexBuffer();
 	public:
 		virtual void Bind() override;
-		virtual void SetData(const void* data, size_t size) override;
+		virtual void SetData(const void* data, size_t size, size_t offset = 0) override;
 
 		virtual const BufferLayout& GetLayout() const override { return m_Layout; }
 		virtual void SetLayout(const BufferLayout& layout) override { m_Layout = layout; }
@@ -31,7 +31,7 @@ namespace Flare
 		~OpenGLIndexBuffer();
 	public:
 		virtual void Bind() override;
-		virtual void SetData(const void* indices, size_t count) override;
+		virtual void SetData(const void* indices, size_t count, size_t offset = 0) override;
 		virtual size_t GetCount() const override { return m_Count; }
 	private:
 		uint32_t m_Id;

@@ -119,6 +119,7 @@ namespace Flare
 		static void DrawFullscreenQuad(const Ref<Material>& material);
 		static void DrawMesh(const Ref<VertexArray>& mesh, const Ref<Material>& material, size_t indicesCount = SIZE_MAX);
 		static void DrawMesh(const Ref<Mesh>& mesh,
+			uint32_t subMesh,
 			const Ref<Material>& material,
 			const glm::mat4& transform,
 			MeshRenderFlags flags = MeshRenderFlags::None,
@@ -132,6 +133,7 @@ namespace Flare
 
 		static Ref<const VertexArray> GetFullscreenQuad();
 		static Ref<Texture> GetWhiteTexture();
+		static Ref<Material> GetErrorMaterial();
 
 		static Ref<FrameBuffer> GetShadowsRenderTarget(size_t index);
 		static ShadowSettings& GetShadowSettings();

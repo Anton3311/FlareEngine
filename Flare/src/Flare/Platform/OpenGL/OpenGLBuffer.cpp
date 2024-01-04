@@ -26,10 +26,10 @@ namespace Flare
 		glBindBuffer(GL_ARRAY_BUFFER, m_Id);
 	}
 	
-	void OpenGLVertexBuffer::SetData(const void* data, size_t size)
+	void OpenGLVertexBuffer::SetData(const void* data, size_t size, size_t offset)
 	{
 		glBindBuffer(GL_ARRAY_BUFFER, m_Id);
-		glBufferSubData(GL_ARRAY_BUFFER, 0, size, data);
+		glBufferSubData(GL_ARRAY_BUFFER, offset, size, data);
 	}
 
 
@@ -59,10 +59,10 @@ namespace Flare
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_Id);
 	}
 
-	void OpenGLIndexBuffer::SetData(const void* indices, size_t count)
+	void OpenGLIndexBuffer::SetData(const void* indices, size_t count, size_t offset)
 	{
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_Id);
-		glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, count * sizeof(uint32_t), indices);
+		glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, offset, count * sizeof(uint32_t), indices);
 
 		m_Count = count;
 	}

@@ -23,6 +23,12 @@ namespace Flare
 		virtual void DrawIndexed(const Ref<const VertexArray>& vertexArray, size_t indicesCount) override;
 		virtual void DrawInstanced(const Ref<const VertexArray>& mesh, size_t instancesCount) override;
 
+		virtual void DrawInstanced(const Ref<const VertexArray>& mesh,
+			size_t instancesCount,
+			size_t baseVertexIndex,
+			size_t startIndex,
+			size_t indicesCount) override;
+
 		virtual void DrawLines(const Ref<const VertexArray>& vertexArray, size_t verticesCount) override;
 	};
 }

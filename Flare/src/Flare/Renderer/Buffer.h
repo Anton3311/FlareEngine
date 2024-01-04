@@ -59,7 +59,7 @@ namespace Flare
 		virtual void SetLayout(const BufferLayout& layout) = 0;
 
 		virtual void Bind() = 0;
-		virtual void SetData(const void* data, size_t size) = 0;
+		virtual void SetData(const void* data, size_t size, size_t offset = 0) = 0;
 	public:
 		static Ref<VertexBuffer> Create(size_t size);
 		static Ref<VertexBuffer> Create(size_t size, const void* data);
@@ -69,7 +69,7 @@ namespace Flare
 	{
 	public:
 		virtual void Bind() = 0;
-		virtual void SetData(const void* indices, size_t count) = 0;
+		virtual void SetData(const void* indices, size_t count, size_t offset = 0) = 0;
 		
 		virtual size_t GetCount() const = 0;
 	public:

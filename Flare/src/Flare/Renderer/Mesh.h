@@ -3,45 +3,41 @@
 #include "Flare/AssetManager/Asset.h"
 #include "Flare/Renderer/VertexArray.h"
 #include "Flare/Renderer/Buffer.h"
-#include "Flare//Math/Math.h"
+#include "Flare/Math/Math.h"
+
+#include "FlareCore/Collections/Span.h"
 
 namespace Flare
 {
 	struct SubMesh
 	{
-		Ref<VertexArray> MeshVertexArray = nullptr;
+		Math::AABB Bounds;
+
+		Ref<VertexArray> VertexArray = nullptr;
 		Ref<IndexBuffer> Indicies = nullptr;
 		Ref<VertexBuffer> Vertices = nullptr;
 		Ref<VertexBuffer> Normals = nullptr;
 		Ref<VertexBuffer> UVs = nullptr;
-
-		Ref<VertexBuffer> InstanceBuffer = nullptr;
-
-		Math::AABB Bounds;
 	};
 
 	class FLARE_API Mesh : public Asset
 	{
 	public:
 		Mesh();
-		Mesh(size_t verticesCount, size_t indicesCount);
-		Mesh(const glm::vec3* vertices, size_t verticesCount,
-			const uint32_t* indices, size_t indicesCount,
-			const glm::vec3* normals,
-			const glm::vec2* uvs);
 
-		void SetIndices(const uint32_t* data, size_t count);
-		void SetVertices(const glm::vec3* data, size_t count);
-		void SetNormals(const glm::vec3* normals, size_t count);
-		void SetUVs(const glm::vec2* uvs, size_t count);
+		void AddSubMesh(const Span<glm::vec3>& vertices,
+			const Span<uint32_t>& indices,
+			const Span<glm::vec3>* normals = nullptr,
+			const Span<glm::vec2>* uvs = nullptr);
 
+		inline Ref<VertexBuffer> GetInstanceBuffer() const { return m_InstanceBuffer; }
 		void SetInstanceBuffer(const Ref<VertexBuffer>& instanceBuffer);
 
-		const SubMesh& GetSubMesh() { return m_SubMesh; }
-		inline const SubMesh& GetSubMesh() const { return m_SubMesh; }
+		inline const std::vector<SubMesh>& GetSubMeshes() const { return m_SubMeshes; }
 	private:
-		void InitializeBuffers();
+		void InitializeLastSubMeshBuffers();
 	private:
-		SubMesh m_SubMesh;
+		Ref<VertexBuffer> m_InstanceBuffer = nullptr;
+		std::vector<SubMesh> m_SubMeshes;
 	};
 }
