@@ -1,6 +1,7 @@
 #include "SceneRenderer.h"
 
 #include "Flare/Renderer/Renderer.h"
+#include "Flare/Renderer/MaterialsTable.h"
 
 #include <algorithm>
 
@@ -124,21 +125,59 @@ namespace Flare
 			for (EntityViewIterator entity = view.begin(); entity != view.end(); ++entity)
 			{
 				Ref<Mesh> mesh = AssetManager::GetAsset<Mesh>(meshes[*entity].Mesh);
-				Ref<Material> material = AssetManager::GetAsset<Material>(meshes[*entity].Material);
-
-				std::optional<Entity> id = view.GetEntity(entity.GetEntityIndex());
-				if (!id || mesh == nullptr || material == nullptr)
-					continue;
 
 				const TransformComponent& transform = transforms[*entity];
-				for (size_t i = 0; i < mesh->GetSubMeshes().size(); i++)
+				const AssetMetadata* meta = AssetManager::GetAssetMetadata(meshes[*entity].Material);
+				if (!meta)
+					continue;
+
+				if (meta->Type == AssetType::Material)
 				{
-					Renderer::DrawMesh(mesh,
-						(uint32_t)i,
-						material,
-						transform.GetTransformationMatrix(),
-						meshes[*entity].Flags,
-						id.value().GetIndex());
+					Ref<Material> material = AssetManager::GetAsset<Material>(meshes[*entity].Material);
+					std::optional<Entity> id = view.GetEntity(entity.GetEntityIndex());
+					if (!id || mesh == nullptr || material == nullptr)
+						continue;
+
+					for (size_t i = 0; i < mesh->GetSubMeshes().size(); i++)
+					{
+						Renderer::DrawMesh(mesh,
+							(uint32_t)i,
+							material,
+							transform.GetTransformationMatrix(),
+							meshes[*entity].Flags,
+							id.value().GetIndex());
+					}
+				}
+				else if (meta->Type == AssetType::MaterialsTable)
+				{
+					Ref<MaterialsTable> table = AssetManager::GetAsset<MaterialsTable>(meshes[*entity].Material);
+
+					std::optional<Entity> id = view.GetEntity(entity.GetEntityIndex());
+					if (!id || mesh == nullptr || table == nullptr)
+						continue;
+
+					Ref<Material> errorMaterial = Renderer::GetErrorMaterial();
+					for (size_t i = 0; i < mesh->GetSubMeshes().size(); i++)
+					{
+						Ref<Material> material = nullptr;
+
+						if (i < table->Materials.size())
+							material = AssetManager::GetAsset<Material>(table->Materials[i]);
+
+						if (material == nullptr)
+							material = errorMaterial;
+
+						Renderer::DrawMesh(mesh,
+							(uint32_t)i,
+							material,
+							transform.GetTransformationMatrix(),
+							meshes[*entity].Flags,
+							id.value().GetIndex());
+					}
+				}
+				else
+				{
+					continue;
 				}
 			}
 		}

@@ -147,6 +147,8 @@ namespace Flare
 
         if (extension == ".png")
             type = AssetType::Texture;
+        if (extension == ".jpg")
+            type = AssetType::Texture;
         else if (extension == ".flare")
             type = AssetType::Scene;
         else if (extension == ".flrprefab")
