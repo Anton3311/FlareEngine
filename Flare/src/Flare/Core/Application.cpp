@@ -87,6 +87,7 @@ namespace Flare
 		while (m_Running)
 		{
 			Profiler::BeginFrame();
+			FLARE_PROFILE_BEGIN_FRAME("Main");
 
 			{
 				FLARE_PROFILE_SCOPE("Application::Update");
@@ -119,6 +120,7 @@ namespace Flare
 				m_PreviousFrameTime = currentTime;
 			}
 
+			FLARE_PROFILE_END_FRAME("Main");
 			Profiler::EndFrame();
 		}
 

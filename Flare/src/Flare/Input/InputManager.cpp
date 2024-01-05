@@ -2,6 +2,8 @@
 
 #include <stdint.h>
 
+#include "FlareCore/Profiler/Profiler.h"
+
 #include "FlarePlatform/Events.h"
 
 namespace Flare
@@ -47,12 +49,14 @@ namespace Flare
 
 	void InputManager::Update()
 	{
+		FLARE_PROFILE_FUNCTION();
 		std::memset(s_InputData->MouseButtonState, (int32_t)InputState::None, sizeof(s_InputData->MouseButtonState));
 		std::memset(s_InputData->KeyState, (int32_t)InputState::None, sizeof(s_InputData->KeyState));
 	}
 
 	void InputManager::ProcessEvent(Event& event)
 	{
+		FLARE_PROFILE_FUNCTION();
 		EventDispatcher dispatcher(event);
 
 		dispatcher.Dispatch<KeyPressedEvent>([](KeyPressedEvent& e) -> bool

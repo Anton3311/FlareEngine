@@ -18,7 +18,17 @@ project "FlareCore"
 		"src/",
 		INCLUDE_DIRS.spdlog,
 		INCLUDE_DIRS.glm,
+		INCLUDE_DIRS.tracy,
 	}
+
+	filter "configurations:Release"
+		files { "%{wks.location}/Flare/vendor/Tracy/TracyClient.cpp" }
+		includedirs
+		{
+			"%{wks.location}/Flare/vendor/Tracy/",
+		}
+
+		defines { "TRACY_ENABLE", "TRACY_EXPORTS" }
 
 	filter "system:windows"
 		systemversion "latest"

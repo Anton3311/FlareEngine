@@ -22,6 +22,7 @@ project "FlarePlatform"
 		INCLUDE_DIRS.GLFW,
 		INCLUDE_DIRS.glm,
 		INCLUDE_DIRS.spdlog,
+		INCLUDE_DIRS.tracy,
 	}
 
 	links
@@ -48,7 +49,7 @@ project "FlarePlatform"
 		symbols "on"
 
 	filter "configurations:Release"
-		defines "FLARE_RELEASE"
+		defines { "FLARE_RELEASE", "TRACY_ENABLE", "TRACY_IMPORTS" }
 		runtime "Release"
 		optimize "on"
 

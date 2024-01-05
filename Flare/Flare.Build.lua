@@ -40,6 +40,7 @@ project "Flare"
 
 		INCLUDE_DIRS.vulkan_sdk,
 		INCLUDE_DIRS.assimp,
+		INCLUDE_DIRS.tracy,
 	}
 
 	links
@@ -74,7 +75,7 @@ project "Flare"
 		symbols "on"
 
 	filter "configurations:Release"
-		defines "FLARE_RELEASE"
+		defines { "FLARE_RELEASE", "TRACY_ENABLE", "TRACY_IMPORTS" }
 		runtime "Release"
 		optimize "on"
 

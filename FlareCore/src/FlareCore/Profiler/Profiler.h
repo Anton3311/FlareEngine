@@ -6,6 +6,15 @@
 #include <stdint.h>
 #include <chrono>
 
+#ifdef FLARE_RELEASE
+    #define FLARE_PROFILING_ENABLED
+#endif
+
+#define FLARE_PROFILER_TRACY
+// #define FLARE_PROFILER_NATIVE
+
+#include <Tracy.hpp>
+
 namespace Flare
 {
     struct ProfilerScopeTimer;
@@ -88,9 +97,28 @@ namespace Flare
         Profiler::Record* m_Record;
     };
 
-#define FLARE_PROFILE_TIMER_NAME2(line) ___profileTimer___##line
-#define FLARE_PROFILE_TIMER_NAME(line) FLARE_PROFILE_TIMER_NAME2(line)
-#define FLARE_PROFILE_SCOPE(name) Flare::ProfilerScopeTimer FLARE_PROFILE_TIMER_NAME(__LINE__) = Flare::ProfilerScopeTimer(name)
+#ifdef FLARE_PROFILING_ENABLED
+    #ifdef FLARE_PROFILER_TRACY
+        #define FLARE_PROFILE_BEGIN_FRAME(name) FrameMarkStart(name)
+        #define FLARE_PROFILE_END_FRAME(name) FrameMarkEnd(name)
 
-#define FLARE_PROFILE_FUNCTION() FLARE_PROFILE_SCOPE(__FUNCSIG__)
+        #define FLARE_PROFILE_SCOPE(name) ZoneScopedN(name)
+        #define FLARE_PROFILE_FUNCTION() FLARE_PROFILE_SCOPE(__FUNCSIG__)
+    #elif defined(FLARE_PROFILER_NATIVE)
+        #define FLARE_PROFILE_BEGIN_FRAME(name) Flare::Profiler::BeginFrame()
+        #define FLARE_PROFILE_END_FRAME(name) Flare::Profiler::EndFrame()
+
+        #define FLARE_PROFILE_TIMER_NAME2(line) ___profileTimer___##line
+        #define FLARE_PROFILE_TIMER_NAME(line) FLARE_PROFILE_TIMER_NAME2(line)
+
+        #define FLARE_PROFILE_SCOPE(name) Flare::ProfilerScopeTimer FLARE_PROFILE_TIMER_NAME(__LINE__) = Flare::ProfilerScopeTimer(name)
+        #define FLARE_PROFILE_FUNCTION() FLARE_PROFILE_SCOPE(__FUNCSIG__)
+    #endif
+#else
+    #define FLARE_PROFILE_BEGIN_FRAME(name)
+    #define FLARE_PROFILE_END_FRAME(name)
+    #define FLARE_PROFILE_SCOPE(name)
+    #define FLARE_PROFILE_FUNCTION()
+#endif
+
 }

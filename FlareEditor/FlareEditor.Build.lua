@@ -41,6 +41,7 @@ project "FlareEditor"
 		INCLUDE_DIRS.yaml_cpp,
 
 		INCLUDE_DIRS.vulkan_sdk,
+		INCLUDE_DIRS.tracy,
     }
 
 	links
@@ -87,7 +88,7 @@ project "FlareEditor"
 		}
 
 	filter "configurations:Release"
-		defines "FLARE_RELEASE"
+		defines { "FLARE_RELEASE", "TRACY_ENABLE", "TRACY_IMPORTS" }
 		runtime "Release"
 		optimize "on"
 
