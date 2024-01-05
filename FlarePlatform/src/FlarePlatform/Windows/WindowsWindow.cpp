@@ -4,6 +4,8 @@
 #include "FlareCore/KeyCode.h"
 #include "FlareCore/MouseCode.h"
 
+#include "FlareCore/Profiler/Profiler.h"
+
 #include <optional>
 
 #include <windows.h>
@@ -511,6 +513,7 @@ namespace Flare
 
 	void WindowsWindow::OnUpdate()
 	{
+		FLARE_PROFILE_FUNCTION();
 		glfwPollEvents();
 	}
 

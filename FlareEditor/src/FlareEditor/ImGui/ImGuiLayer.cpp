@@ -1,6 +1,7 @@
 #include "ImGuiLayer.h"
 
 #include "Flare/Core/Application.h"
+#include "FlareCore/Profiler/Profiler.h"
 #include "FlarePlatform/Window.h"
 
 #include <imgui_internal.h>
@@ -86,6 +87,8 @@ namespace Flare
 
 	void ImGuiLayer::End()
 	{
+		FLARE_PROFILE_FUNCTION();
+
 		ImGuiIO& io = ImGui::GetIO();
 		Application& application = Application::GetInstance();
 

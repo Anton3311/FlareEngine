@@ -2,6 +2,8 @@
 
 #include "FlareCore/Assert.h"
 
+#include <Windows.h>
+
 namespace Flare
 {
     struct ProfilerData
@@ -35,7 +37,7 @@ namespace Flare
             return;
 
         Profiler::Frame& frame = s_ProfilerData.Frames.emplace_back();
-		frame.FirstRecordIndex = s_ProfilerData.RecordsRecorded;
+        frame.FirstRecordIndex = s_ProfilerData.RecordsRecorded;
     }
 
     void Profiler::EndFrame()
@@ -154,5 +156,24 @@ namespace Flare
         auto& buffer = GetCurrentBuffer();
         buffer.Size++;
         return &buffer.Records[buffer.Size - 1];
+    }
+
+    ProfilerScopeTimer::ProfilerScopeTimer(const char* name)
+    {
+        m_Record = Profiler::CreateRecord();
+
+        if (m_Record)
+        {
+            m_Record->Name = name;
+            m_Record->StartTime = (uint64_t)std::chrono::high_resolution_clock::now().time_since_epoch().count();
+        }
+    }
+
+    ProfilerScopeTimer::~ProfilerScopeTimer()
+    {
+        if (m_Record)
+        {
+            m_Record->EndTime = (uint64_t)std::chrono::high_resolution_clock::now().time_since_epoch().count();
+        }
     }
 }

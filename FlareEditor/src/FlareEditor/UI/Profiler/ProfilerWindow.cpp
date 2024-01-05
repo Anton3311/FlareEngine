@@ -30,6 +30,7 @@ namespace Flare
 
     void ProfilerWindow::OnImGuiRender()
     {
+        FLARE_PROFILE_FUNCTION();
         if (!m_ShowWindow)
             return;
 
@@ -187,7 +188,7 @@ namespace Flare
         double milliseconds = duration / s_MillisecondToNanosecond;
         double seconds = milliseconds / 1000.0;
 
-        float width = glm::abs(CalculatePositionFromTime(record.StartTime) - CalculatePositionFromTime(record.EndTime));
+        float width = CalculatePositionFromTime(record.EndTime) - CalculatePositionFromTime(record.StartTime);
         if (width < 1.0f)
             return;
 
@@ -215,9 +216,9 @@ namespace Flare
         const char* text;
         const char* textEnd;
 
-        if (milliseconds < 0.001f)
+        if (milliseconds < 0.001)
             ImFormatStringToTempBuffer(&text, &textEnd, "%s %f ns", blockName, (float)duration);
-        else if (seconds < 0.01f)
+        else if (seconds < 0.01)
             ImFormatStringToTempBuffer(&text, &textEnd, "%s %f ms", blockName, (float)milliseconds);
         else
             ImFormatStringToTempBuffer(&text, &textEnd, "%s %f s", blockName, (float)seconds);
@@ -359,15 +360,12 @@ namespace Flare
         ImGui::TableSetColumnIndex(1);
 
         double duration = (double)(record.EndTime - record.StartTime);
-
         double milliseconds = duration / s_MillisecondToNanosecond;
         double seconds = milliseconds / 1000.0;
 
-        ImGui::SetCursorPosY(ImGui::GetCursorPosY() + style.FramePadding.y);
-
-        if (milliseconds < 0.001f)
+        if (milliseconds < 0.001)
             ImGui::Text("%f ns", duration);
-        else if (seconds < 0.01f)
+        else if (seconds < 0.01)
             ImGui::Text("%f ms", milliseconds);
         else
             ImGui::Text("%f s", seconds);

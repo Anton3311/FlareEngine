@@ -2,6 +2,8 @@
 
 #include "Flare/Core/Time.h"
 
+#include "FlareCore/Profiler/Profiler.h"
+
 #include "Flare/Renderer/Renderer.h"
 #include "Flare/Renderer2D/Renderer2D.h"
 #include "Flare/Renderer/DebugRenderer.h"
@@ -84,22 +86,40 @@ namespace Flare
 
 		while (m_Running)
 		{
-			float currentTime = Platform::GetTime();
-			float deltaTime = currentTime - m_PreviousFrameTime;
+			Profiler::BeginFrame();
 
-			Time::UpdateDeltaTime();
+			{
+				FLARE_PROFILE_SCOPE("Application::Update");
 
-			InputManager::Update();
-			m_Window->OnUpdate();
+				float currentTime = Platform::GetTime();
+				float deltaTime = currentTime - m_PreviousFrameTime;
 
-			for (const Ref<Layer>& layer : m_LayersStack.GetLayers())
-				layer->OnUpdate(deltaTime);
+				Time::UpdateDeltaTime();
 
-			for (const Ref<Layer>& layer : m_LayersStack.GetLayers())
-				layer->OnImGUIRender();
+				InputManager::Update();
+				m_Window->OnUpdate();
 
-			m_GraphicsContext->SwapBuffers();
-			m_PreviousFrameTime = currentTime;
+				{
+					FLARE_PROFILE_SCOPE("Layers::OnUpdate");
+					for (const Ref<Layer>& layer : m_LayersStack.GetLayers())
+						layer->OnUpdate(deltaTime);
+				}
+
+				{
+					FLARE_PROFILE_SCOPE("Layers::OnImGui");
+					for (const Ref<Layer>& layer : m_LayersStack.GetLayers())
+						layer->OnImGUIRender();
+				}
+
+				{
+					FLARE_PROFILE_SCOPE("SwapBuffers");
+					m_GraphicsContext->SwapBuffers();
+				}
+
+				m_PreviousFrameTime = currentTime;
+			}
+
+			Profiler::EndFrame();
 		}
 
 		for (const Ref<Layer>& layer : m_LayersStack.GetLayers())

@@ -79,25 +79,11 @@ namespace Flare
         friend struct ProfilerScopeTimer;
     };
 
-    struct ProfilerScopeTimer
+    struct FLARECORE_API ProfilerScopeTimer
     {
     public:
-        ProfilerScopeTimer(const char* name)
-        {
-            m_Record = Profiler::CreateRecord();
-
-            if (m_Record)
-            {
-                m_Record->Name = name;
-                m_Record->StartTime = (uint64_t)std::chrono::high_resolution_clock::now().time_since_epoch().count();
-            }
-        }
-
-        ~ProfilerScopeTimer()
-        {
-            if (m_Record)
-                m_Record->EndTime = (uint64_t) std::chrono::high_resolution_clock::now().time_since_epoch().count();
-        }
+        ProfilerScopeTimer(const char* name);
+        ~ProfilerScopeTimer();
     private:
         Profiler::Record* m_Record;
     };
