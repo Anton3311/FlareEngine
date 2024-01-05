@@ -26,6 +26,7 @@ namespace Flare
 		emitter << YAML::BeginMap;
 		emitter << YAML::Key << "Filtering" << YAML::Value << TextureFilteringToString(settings.Filtering);
 		emitter << YAML::Key << "Wrap" << YAML::Value << TextureWrapToString(settings.WrapMode);
+		emitter << YAML::Key << "GenerateMipMaps" << YAML::Value << settings.GenerateMipMaps;
 		emitter << YAML::EndMap;
 
 		std::ofstream output(importSettingsPath);
@@ -61,6 +62,11 @@ namespace Flare
 				settings.WrapMode = TextureWrapFromString(wrap.as<std::string>()).value_or(TextureWrap::Repeat);
 			else
 				settings.WrapMode = TextureWrap::Repeat;
+
+			if (YAML::Node mipMaps = node["GenerateMipMaps"])
+				settings.GenerateMipMaps = mipMaps.as<bool>();
+			else
+				settings.GenerateMipMaps = false;
 		}
 		catch (std::exception& e)
 		{
@@ -76,6 +82,7 @@ namespace Flare
 		std::filesystem::path importSettingsPath = GetImportSettingsPath(metadata.Handle);
 
 		TextureImportSettings importSettings;
+		importSettings.GenerateMipMaps = true; // Generate mip maps by default
 		
 		if (std::filesystem::exists(importSettingsPath))
 			DeserializeImportSettings(metadata.Handle, importSettings);
@@ -83,6 +90,7 @@ namespace Flare
 		TextureSpecifications specifications;
 		specifications.Filtering = importSettings.Filtering;
 		specifications.Wrap = importSettings.WrapMode;
+		specifications.GenerateMipMaps = importSettings.GenerateMipMaps;
 
 		return Texture::Create(metadata.Path, specifications);
 	}

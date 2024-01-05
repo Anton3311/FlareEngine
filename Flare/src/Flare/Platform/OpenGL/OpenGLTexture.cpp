@@ -15,10 +15,13 @@ namespace Flare
 
 		if (data)
 		{
+			m_Specifications = specifications;
 			m_Specifications.Width = width;
 			m_Specifications.Height = height;
-			m_Specifications.Filtering = specifications.Filtering;
-			m_Specifications.Wrap = specifications.Wrap;
+
+			// Don't generate mip maps for small textures
+			if (m_Specifications.Width < 512 || m_Specifications.Height < 512)
+				m_Specifications.GenerateMipMaps = false;
 
 			m_InternalTextureFormat = 0;
 			m_TextureDataType = 0;
@@ -37,18 +40,35 @@ namespace Flare
 			}
 
 			glCreateTextures(GL_TEXTURE_2D, 1, &m_Id);
-			glTextureStorage2D(m_Id, 1, m_InternalTextureFormat, m_Specifications.Width, m_Specifications.Height);
+			glTextureStorage2D(m_Id, m_Specifications.GenerateMipMaps ? 4 : 1, m_InternalTextureFormat, m_Specifications.Width, m_Specifications.Height);
 
-			switch (m_Specifications.Filtering)
+			if (m_Specifications.GenerateMipMaps)
 			{
-			case TextureFiltering::Closest:
-				glTextureParameteri(m_Id, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-				glTextureParameteri(m_Id, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-				break;
-			case TextureFiltering::Linear:
-				glTextureParameteri(m_Id, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-				glTextureParameteri(m_Id, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-				break;
+				switch (m_Specifications.Filtering)
+				{
+				case TextureFiltering::Closest:
+					glTextureParameteri(m_Id, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
+					glTextureParameteri(m_Id, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+					break;
+				case TextureFiltering::Linear:
+					glTextureParameteri(m_Id, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+					glTextureParameteri(m_Id, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+					break;
+				}
+			}
+			else
+			{
+				switch (m_Specifications.Filtering)
+				{
+				case TextureFiltering::Closest:
+					glTextureParameteri(m_Id, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+					glTextureParameteri(m_Id, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+					break;
+				case TextureFiltering::Linear:
+					glTextureParameteri(m_Id, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+					glTextureParameteri(m_Id, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+					break;
+				}
 			}
 
 			switch (m_Specifications.Wrap)
@@ -66,6 +86,10 @@ namespace Flare
 			}
 
 			glTextureSubImage2D(m_Id, 0, 0, 0, m_Specifications.Width, m_Specifications.Height, m_TextureDataType, GL_UNSIGNED_BYTE, data);
+
+			if (m_Specifications.GenerateMipMaps)
+				glGenerateTextureMipmap(m_Id);
+
 			stbi_image_free(data);
 		}
 		else

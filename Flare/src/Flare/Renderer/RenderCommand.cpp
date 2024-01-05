@@ -1,5 +1,7 @@
 #include "RenderCommand.h"
 
+#include "FlareCore/Profiler/Profiler.h"
+
 namespace Flare
 {
 	Scope<RendererAPI> s_API = RendererAPI::Create();
@@ -31,26 +33,31 @@ namespace Flare
 
 	void RenderCommand::DrawIndexed(const Ref<const VertexArray>& mesh)
 	{
+		FLARE_PROFILE_FUNCTION();
 		s_API->DrawIndexed(mesh);
 	}
 
 	void RenderCommand::DrawIndexed(const Ref<const VertexArray>& mesh, size_t indicesCount)
 	{
+		FLARE_PROFILE_FUNCTION();
 		s_API->DrawIndexed(mesh, indicesCount);
 	}
 
 	void RenderCommand::DrawInstanced(const Ref<const VertexArray>& mesh, size_t instancesCount)
 	{
+		FLARE_PROFILE_FUNCTION();
 		s_API->DrawInstanced(mesh, instancesCount);
 	}
 
 	void RenderCommand::DrawInstanced(const Ref<const VertexArray>& mesh, size_t instancesCount, size_t baseVertexIndex, size_t startIndex, size_t indicesCount)
 	{
+		FLARE_PROFILE_FUNCTION();
 		s_API->DrawInstanced(mesh, instancesCount, baseVertexIndex, startIndex, indicesCount);
 	}
 
 	void RenderCommand::DrawLines(const Ref<const VertexArray>& lines, size_t verticesCount)
-	{
+	{	
+		FLARE_PROFILE_FUNCTION();
 		s_API->DrawLines(lines, verticesCount);
 	}
 

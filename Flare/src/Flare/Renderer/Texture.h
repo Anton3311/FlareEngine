@@ -41,6 +41,8 @@ namespace Flare
 		TextureFormat Format;
 		TextureFiltering Filtering;
 		TextureWrap Wrap;
+
+		bool GenerateMipMaps = false;
 	};
 
 	FLARE_API const char* TextureWrapToString(TextureWrap wrap);
