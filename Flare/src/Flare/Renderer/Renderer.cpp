@@ -131,7 +131,7 @@ namespace Flare
 			 1, -1,
 		};
 
-		uint32_t indices[] = {
+		uint16_t indices[] = {
 			0, 1, 2,
 			0, 2, 3,
 		};
@@ -142,7 +142,7 @@ namespace Flare
 		});
 
 		s_RendererData.FullscreenQuad = VertexArray::Create();
-		s_RendererData.FullscreenQuad->SetIndexBuffer(IndexBuffer::Create(6, (const void*)indices));
+		s_RendererData.FullscreenQuad->SetIndexBuffer(IndexBuffer::Create(IndexBuffer::IndexFormat::UInt16, MemorySpan(indices, 6)));
 		s_RendererData.FullscreenQuad->AddVertexBuffer(vertexBuffer);
 		s_RendererData.FullscreenQuad->Unbind();
 

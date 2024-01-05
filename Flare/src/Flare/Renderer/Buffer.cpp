@@ -33,23 +33,23 @@ namespace Flare
 		return vertexBuffer;
 	}
 	
-	Ref<IndexBuffer> IndexBuffer::Create(size_t count)
+	Ref<IndexBuffer> IndexBuffer::Create(IndexFormat format, size_t size)
 	{
 		switch (RendererAPI::GetAPI())
 		{
 		case RendererAPI::API::OpenGL:
-			return CreateRef<OpenGLIndexBuffer>(count);
+			return CreateRef<OpenGLIndexBuffer>(format, size);
 		}
 
 		return nullptr;
 	}
 	
-	Ref<IndexBuffer> IndexBuffer::Create(size_t count, const void* data)
+	Ref<IndexBuffer> IndexBuffer::Create(IndexBuffer::IndexFormat format, const MemorySpan& indices)
 	{
 		switch (RendererAPI::GetAPI())
 		{
 		case RendererAPI::API::OpenGL:
-			return CreateRef<OpenGLIndexBuffer>(count, data);
+			return CreateRef<OpenGLIndexBuffer>(format, indices);
 		}
 
 		return nullptr;

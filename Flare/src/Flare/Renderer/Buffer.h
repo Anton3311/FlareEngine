@@ -68,12 +68,19 @@ namespace Flare
 	class FLARE_API IndexBuffer
 	{
 	public:
+		enum class IndexFormat
+		{
+			UInt32,
+			UInt16,
+		};
+
 		virtual void Bind() = 0;
-		virtual void SetData(const void* indices, size_t count, size_t offset = 0) = 0;
+		virtual void SetData(const MemorySpan& indices, size_t offset = 0) = 0;
 		
 		virtual size_t GetCount() const = 0;
+		virtual IndexFormat GetIndexFormat() const = 0;
 	public:
-		static Ref<IndexBuffer> Create(size_t count);
-		static Ref<IndexBuffer> Create(size_t count, const void* data);
+		static Ref<IndexBuffer> Create(IndexFormat format, size_t size);
+		static Ref<IndexBuffer> Create(IndexFormat format, const MemorySpan& indices);
 	};
 }

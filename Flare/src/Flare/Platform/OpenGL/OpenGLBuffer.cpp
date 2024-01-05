@@ -34,19 +34,24 @@ namespace Flare
 
 
 
-	OpenGLIndexBuffer::OpenGLIndexBuffer(size_t count)
+	OpenGLIndexBuffer::OpenGLIndexBuffer(IndexFormat format, size_t size)
 	{
 		glGenBuffers(1, &m_Id);
 		glBindBuffer(GL_ARRAY_BUFFER, m_Id);
-		glBufferData(GL_ARRAY_BUFFER, count * sizeof(uint32_t), nullptr, GL_DYNAMIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, size * sizeof(uint32_t), nullptr, GL_DYNAMIC_DRAW);
+
+		m_Format = format;
+		m_SizeInBytes = size;
 	}
 
-	OpenGLIndexBuffer::OpenGLIndexBuffer(size_t count, const void* data)
+	OpenGLIndexBuffer::OpenGLIndexBuffer(IndexFormat format, const MemorySpan& indices)
 	{
 		glGenBuffers(1, &m_Id);
 		glBindBuffer(GL_ARRAY_BUFFER, m_Id);
-		glBufferData(GL_ARRAY_BUFFER, count * sizeof(uint32_t), data, GL_STATIC_DRAW);
-		m_Count = count;
+		glBufferData(GL_ARRAY_BUFFER, indices.GetSize(), indices.GetBuffer(), GL_STATIC_DRAW);
+
+		m_SizeInBytes = indices.GetSize();
+		m_Format = format;
 	}
 
 	OpenGLIndexBuffer::~OpenGLIndexBuffer()
@@ -59,11 +64,28 @@ namespace Flare
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_Id);
 	}
 
-	void OpenGLIndexBuffer::SetData(const void* indices, size_t count, size_t offset)
+	void OpenGLIndexBuffer::SetData(const MemorySpan& indices, size_t offset)
 	{
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_Id);
-		glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, offset, count * sizeof(uint32_t), indices);
+		glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, offset, indices.GetSize(), indices.GetBuffer());
+	}
 
-		m_Count = count;
+	size_t OpenGLIndexBuffer::GetCount() const
+	{
+		switch (m_Format)
+		{
+		case IndexBuffer::IndexFormat::UInt16:
+			return m_SizeInBytes / sizeof(uint16_t);
+		case IndexBuffer::IndexFormat::UInt32:
+			return m_SizeInBytes / sizeof(uint32_t);
+		}
+
+		FLARE_CORE_ASSERT(false);
+		return 0;
+	}
+
+	IndexBuffer::IndexFormat OpenGLIndexBuffer::GetIndexFormat() const
+	{
+		return m_Format;
 	}
 }

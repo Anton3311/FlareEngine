@@ -25,8 +25,8 @@ namespace Flare
 
             std::vector<glm::vec3> vertices;
             std::vector<glm::vec3> normals;
-            std::vector<uint32_t> indices;
             std::vector<glm::vec2> uvs;
+
 
             vertices.resize(nodeMesh->mNumVertices);
             normals.resize(nodeMesh->mNumVertices);
@@ -58,16 +58,50 @@ namespace Flare
                 }
             }
 
+            size_t indicesCount = 0;
             for (uint32_t face = 0; face < nodeMesh->mNumFaces; face++)
             {
                 aiFace& f = nodeMesh->mFaces[face];
+                indicesCount += (size_t)f.mNumIndices;
+            }
 
-                size_t start = indices.size();
-                for (uint32_t i = 0; i < f.mNumIndices; i++)
-                    indices.push_back(f.mIndices[i]);
+            std::vector<uint16_t> indices16;
+            std::vector<uint32_t> indices32;
 
-                // Swap winding order
-                std::swap(indices[start], indices[start + 1]);
+            IndexBuffer::IndexFormat indexFormat = IndexBuffer::IndexFormat::UInt32;
+            if (indicesCount < (size_t)std::numeric_limits<uint16_t>::max())
+            {
+                indexFormat = IndexBuffer::IndexFormat::UInt16;
+                indices16.reserve(indicesCount);
+
+                for (uint32_t face = 0; face < nodeMesh->mNumFaces; face++)
+                {
+                    aiFace& f = nodeMesh->mFaces[face];
+
+                    size_t start = indices16.size();
+                    for (uint32_t i = 0; i < f.mNumIndices; i++)
+                        indices16.push_back((uint16_t)f.mIndices[i]);
+
+                    // Swap winding order
+                    std::swap(indices16[start], indices16[start + 1]);
+                }
+            }
+            else
+            {
+                indexFormat = IndexBuffer::IndexFormat::UInt32;
+                indices32.reserve(indicesCount);
+
+                for (uint32_t face = 0; face < nodeMesh->mNumFaces; face++)
+                {
+                    aiFace& f = nodeMesh->mFaces[face];
+
+                    size_t start = indices32.size();
+                    for (uint32_t i = 0; i < f.mNumIndices; i++)
+                        indices32.push_back((uint32_t)f.mIndices[i]);
+
+                    // Swap winding order
+                    std::swap(indices32[start], indices32[start + 1]);
+                }
             }
 
             if (!mesh)
@@ -78,7 +112,10 @@ namespace Flare
 
             mesh->AddSubMesh(
                 Span<glm::vec3>::FromVector(vertices),
-                Span<uint32_t>::FromVector(indices),
+                indexFormat,
+                indexFormat == IndexBuffer::IndexFormat::UInt16
+                    ? MemorySpan::FromVector(indices16)
+                    : MemorySpan::FromVector(indices32),
                 &normalsSpan,
                 hasUVs ? &uvsSpan : nullptr);
         }
@@ -186,12 +223,12 @@ namespace Flare
             if (it != nameToHandle.end())
             {
                 assetManager->SetLoadedAsset(it->second, materialAsset);
-				materialsTable->Materials.push_back(it->second);
+                materialsTable->Materials.push_back(it->second);
             }
             else
             {
                 AssetHandle handle = assetManager->ImportMemoryOnlyAsset(name, materialAsset, metadata.Handle);
-				materialsTable->Materials.push_back(handle);
+                materialsTable->Materials.push_back(handle);
             }
 
         }

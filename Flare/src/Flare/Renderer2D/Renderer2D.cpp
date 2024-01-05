@@ -95,7 +95,7 @@ namespace Flare
 
 		s_Renderer2DData.QuadsMesh = VertexArray::Create();
 		s_Renderer2DData.QuadsVertexBuffer = VertexBuffer::Create(maxQuads * 4 * sizeof(QuadVertex));
-		s_Renderer2DData.IndexBuffer = IndexBuffer::Create(maxQuads * 6, indices.data());
+		s_Renderer2DData.IndexBuffer = IndexBuffer::Create(IndexBuffer::IndexFormat::UInt32, MemorySpan(indices.data(), maxQuads * 6));
 
 		s_Renderer2DData.QuadsVertexBuffer->SetLayout({
 			BufferLayoutElement("i_Position", ShaderDataType::Float3),

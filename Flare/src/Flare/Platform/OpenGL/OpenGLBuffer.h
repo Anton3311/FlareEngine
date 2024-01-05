@@ -26,16 +26,17 @@ namespace Flare
 	class OpenGLIndexBuffer : public IndexBuffer
 	{
 	public:
-		OpenGLIndexBuffer(size_t count);
-		OpenGLIndexBuffer(size_t count, const void* data);
+		OpenGLIndexBuffer(IndexFormat format, size_t size);
+		OpenGLIndexBuffer(IndexFormat format, const MemorySpan& indices);
 		~OpenGLIndexBuffer();
 	public:
 		virtual void Bind() override;
-		virtual void SetData(const void* indices, size_t count, size_t offset = 0) override;
-		virtual size_t GetCount() const override { return m_Count; }
+		virtual void SetData(const MemorySpan& indices, size_t offset = 0) override;
+		virtual size_t GetCount() const override;
+		virtual IndexFormat GetIndexFormat() const override;
 	private:
 		uint32_t m_Id;
-		size_t m_Count;
-
+		size_t m_SizeInBytes;
+		IndexFormat m_Format;
 	};
 }

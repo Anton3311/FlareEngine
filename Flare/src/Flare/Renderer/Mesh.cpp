@@ -7,7 +7,11 @@ namespace Flare
 	{
 	}
 
-	void Mesh::AddSubMesh(const Span<glm::vec3>& vertices, const Span<uint32_t>& indices, const Span<glm::vec3>* normals, const Span<glm::vec2>* uvs)
+	void Mesh::AddSubMesh(const Span<glm::vec3>& vertices,
+		IndexBuffer::IndexFormat indexFormat,
+		const MemorySpan& indices,
+		const Span<glm::vec3>* normals,
+		const Span<glm::vec2>* uvs)
 	{
 		FLARE_CORE_ASSERT(vertices.GetSize() > 0);
 		
@@ -26,7 +30,7 @@ namespace Flare
 		}
 
 		subMesh.Vertices = VertexBuffer::Create(vertices.GetSize() * sizeof(glm::vec3), vertices.GetData());
-		subMesh.Indicies = IndexBuffer::Create(indices.GetSize(), indices.GetData());
+		subMesh.Indicies = IndexBuffer::Create(indexFormat, indices);
 
 		if (normals)
 		{

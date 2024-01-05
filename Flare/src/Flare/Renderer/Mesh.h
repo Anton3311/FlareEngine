@@ -26,7 +26,8 @@ namespace Flare
 		Mesh();
 
 		void AddSubMesh(const Span<glm::vec3>& vertices,
-			const Span<uint32_t>& indices,
+			IndexBuffer::IndexFormat indexFormat,
+			const MemorySpan& indices,
 			const Span<glm::vec3>* normals = nullptr,
 			const Span<glm::vec2>* uvs = nullptr);
 

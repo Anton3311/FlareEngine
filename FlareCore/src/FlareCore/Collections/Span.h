@@ -49,4 +49,29 @@ namespace Flare
 		T* m_Values;
 		size_t m_Size;
 	};
+
+	class MemorySpan
+	{
+	public:
+		template<typename T>
+		MemorySpan(T* elements, size_t count)
+			: m_Buffer(elements), m_Size(count * sizeof(T)) {}
+
+		constexpr bool IsValid() const { return m_Buffer != nullptr; }
+		constexpr bool IsEmpty() const { return m_Size == 0 || m_Buffer == nullptr; }
+
+		constexpr void* GetBuffer() { return m_Buffer; }
+		constexpr const void* GetBuffer() const { return m_Buffer; }
+
+		constexpr size_t GetSize() const { return m_Size; }
+
+		template<typename T>
+		inline static MemorySpan FromVector(std::vector<T>& vector)
+		{
+			return MemorySpan(vector.data(), vector.size());
+		}
+	private:
+		void* m_Buffer;
+		size_t m_Size;
+	};
 }

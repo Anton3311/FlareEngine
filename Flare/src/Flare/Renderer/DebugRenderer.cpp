@@ -107,7 +107,7 @@ namespace Flare
 			vertexIndex += VerticesPerRay;
 		}
 
-		raysMesh->SetIndexBuffer(IndexBuffer::Create(s_DebugRendererData.MaxRaysCount * IndicesPerRay, indices));
+		raysMesh->SetIndexBuffer(IndexBuffer::Create(IndexBuffer::IndexFormat::UInt32, MemorySpan(indices, s_DebugRendererData.MaxRaysCount * IndicesPerRay)));
 		raysMesh->Unbind();
 
 		s_DebugRendererData.RayVertexBuffer = rayVertexBuffer;

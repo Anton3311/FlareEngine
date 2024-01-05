@@ -130,29 +130,65 @@ namespace Flare
 		glLineWidth(width);
 	}
 
+	inline static void GetIndexCountAndType(const Ref<IndexBuffer>& indexBuffer, int32_t* indicesCount, GLenum* indexType)
+	{
+		IndexBuffer::IndexFormat indexFormat = indexBuffer->GetIndexFormat();
+
+		if (indicesCount != nullptr)
+			*indicesCount = (int32_t)indexBuffer->GetCount();
+
+		switch (indexFormat)
+		{
+		case IndexBuffer::IndexFormat::UInt16:
+			*indexType = GL_UNSIGNED_SHORT;
+			break;
+		case IndexBuffer::IndexFormat::UInt32:
+			*indexType = GL_UNSIGNED_INT;
+			break;
+		}
+	}
+
 	void OpenGLRendererAPI::DrawIndexed(const Ref<const VertexArray>& vertexArray)
 	{
 		vertexArray->Bind();
-		glDrawElements(GL_TRIANGLES, (int32_t)vertexArray->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, (const void*)0);
+
+		int32_t indicesCount = 0;
+		GLenum indexType = 0;
+		GetIndexCountAndType(vertexArray->GetIndexBuffer(), &indicesCount, &indexType);
+
+		glDrawElements(GL_TRIANGLES, indicesCount, indexType, (const void*)0);
 	}
 
 	void OpenGLRendererAPI::DrawIndexed(const Ref<const VertexArray>& vertexArray, size_t indicesCount)
 	{
 		vertexArray->Bind();
-		glDrawElements(GL_TRIANGLES, (int32_t)indicesCount, GL_UNSIGNED_INT, (const void*)0);
+
+		GLenum indexType = 0;
+		GetIndexCountAndType(vertexArray->GetIndexBuffer(), nullptr, &indexType);
+
+		glDrawElements(GL_TRIANGLES, (int32_t)indicesCount, indexType, (const void*)0);
 	}
 
 	void OpenGLRendererAPI::DrawInstanced(const Ref<const VertexArray>& mesh, size_t instancesCount)
 	{
 		mesh->Bind();
-		glDrawElementsInstanced(GL_TRIANGLES, (int32_t)mesh->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, (const void*)0, (int32_t)instancesCount);
+
+		int32_t indicesCount = 0;
+		GLenum indexType = 0;
+		GetIndexCountAndType(mesh->GetIndexBuffer(), &indicesCount, &indexType);
+
+		glDrawElementsInstanced(GL_TRIANGLES, indicesCount, indexType, (const void*)0, (int32_t)instancesCount);
 		mesh->Unbind();
 	}
 
 	void OpenGLRendererAPI::DrawInstanced(const Ref<const VertexArray>& mesh, size_t instancesCount, size_t baseVertexIndex, size_t startIndex, size_t indicesCount)
 	{
 		mesh->Bind();
-		glDrawElementsInstancedBaseVertex(GL_TRIANGLES, (int32_t)indicesCount, GL_UNSIGNED_INT, (const void*)0, (int32_t)instancesCount, (int32_t)baseVertexIndex);
+
+		GLenum indexType = 0;
+		GetIndexCountAndType(mesh->GetIndexBuffer(), nullptr, &indexType);
+
+		glDrawElementsInstancedBaseVertex(GL_TRIANGLES, (int32_t)indicesCount, indexType, (const void*)0, (int32_t)instancesCount, (int32_t)baseVertexIndex);
 		mesh->Unbind();
 	}
 
