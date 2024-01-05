@@ -16,6 +16,7 @@ namespace Flare
 		virtual void SetCullingMode(CullingMode mode) override;
 		virtual void SetDepthComparisonFunction(DepthComparisonFunction function) override;
 		virtual void SetDepthWriteEnabled(bool enabled) override;
+		virtual void SetBlendMode(BlendMode mode) override;
 
 		virtual void SetLineWidth(float width) override;
 

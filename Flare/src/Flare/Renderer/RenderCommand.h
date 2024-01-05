@@ -29,5 +29,6 @@ namespace Flare
 		static void SetCullingMode(CullingMode mode);
 		static void SetDepthComparisonFunction(DepthComparisonFunction function);
 		static void SetDepthWriteEnabled(bool enabled);
+		static void SetBlendMode(BlendMode mode);
 	};
 }

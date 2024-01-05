@@ -1,4 +1,5 @@
 DepthTest = false
+BlendMode = Transparent
 
 #begin vertex
 #version 450

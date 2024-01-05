@@ -550,6 +550,7 @@ namespace Flare
 		RenderCommand::SetCullingMode(features.Culling);
 		RenderCommand::SetDepthComparisonFunction(features.DepthFunction);
 		RenderCommand::SetDepthWriteEnabled(features.DepthWrite);
+		RenderCommand::SetBlendMode(features.Blending);
 	}
 
 	static bool CompareRenderableObjects(uint32_t aIndex, uint32_t bIndex)

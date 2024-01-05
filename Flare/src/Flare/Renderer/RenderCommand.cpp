@@ -80,4 +80,9 @@ namespace Flare
 	{
 		s_API->SetDepthWriteEnabled(enabled);
 	}
+
+	void RenderCommand::SetBlendMode(BlendMode mode)
+	{
+		s_API->SetBlendMode(mode);
+	}
 }

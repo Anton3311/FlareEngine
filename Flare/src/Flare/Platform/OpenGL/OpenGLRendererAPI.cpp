@@ -125,6 +125,19 @@ namespace Flare
 			glDepthMask(GL_FALSE);
 	}
 
+	void OpenGLRendererAPI::SetBlendMode(BlendMode mode)
+	{
+		switch (mode)
+		{
+		case BlendMode::Opaque:
+			glDisable(GL_BLEND);
+			break;
+		case BlendMode::Transparent:
+			glEnable(GL_BLEND);
+			break;
+		}
+	}
+
 	void OpenGLRendererAPI::SetLineWidth(float width)
 	{
 		glLineWidth(width);
