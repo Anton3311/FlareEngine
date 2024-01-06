@@ -558,11 +558,14 @@ namespace Flare
 		const RenderableObject& a = s_RendererData.Queue[aIndex];
 		const RenderableObject& b = s_RendererData.Queue[bIndex];
 
-		glm::vec3 aPosition = glm::vec3(a.Transform[3]);
-		glm::vec3 bPosition = glm::vec3(b.Transform[3]);
+		glm::vec3 centerA = a.Mesh->GetSubMeshes()[a.SubMeshIndex].Bounds.GetCenter();
+		glm::vec3 centerB = b.Mesh->GetSubMeshes()[b.SubMeshIndex].Bounds.GetCenter();
 
-		float aDistance = glm::distance2(aPosition, s_RendererData.CurrentViewport->FrameData.Camera.Position);
-		float bDistance = glm::distance2(bPosition, s_RendererData.CurrentViewport->FrameData.Camera.Position);
+		centerA = a.Transform * glm::vec4(centerA, 1.0);
+		centerB = b.Transform * glm::vec4(centerB, 1.0);
+
+		float aDistance = glm::distance2(centerA, s_RendererData.CurrentViewport->FrameData.Camera.Position);
+		float bDistance = glm::distance2(centerB, s_RendererData.CurrentViewport->FrameData.Camera.Position);
 
 		return aDistance < bDistance;
 
