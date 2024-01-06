@@ -302,6 +302,9 @@ namespace Flare
 			for (size_t objectIndex = 0; objectIndex < s_RendererData.Queue.size(); objectIndex++)
 			{
 				const RenderableObject& object = s_RendererData.Queue[objectIndex];
+				if (HAS_BIT(object.Flags, MeshRenderFlags::DontCastShadows))
+					continue;
+
 				Math::AABB objectAABB = object.Mesh->GetSubMeshes()[object.SubMeshIndex].Bounds.Transformed(object.Transform);
 
 				float distanceToPlane = cameraNearPlane.SignedDistance(objectAABB.GetCenter());
@@ -749,6 +752,8 @@ namespace Flare
 			for (uint32_t objectIndex : s_RendererData.CulledObjectIndices)
 			{
 				const auto& queued = s_RendererData.Queue[objectIndex];
+				if (HAS_BIT(queued.Flags, MeshRenderFlags::DontCastShadows))
+					continue;
 
 				if (queued.Mesh->GetInstanceBuffer()  == nullptr)
 					queued.Mesh->SetInstanceBuffer(s_RendererData.InstanceBuffer);
