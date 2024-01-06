@@ -274,7 +274,7 @@ namespace Flare
 			lightBasis.Up);
 	}
 
-	static void CalculateShadowProjections()
+	static void CalculateShadowProjections(std::vector<uint32_t> perCascadeObjects[ShadowSettings::MaxCascades])
 	{
 		FLARE_PROFILE_FUNCTION();
 
@@ -283,17 +283,33 @@ namespace Flare
 		const Math::Basis& lightBasis = viewport->FrameData.LightBasis;
 		const ShadowSettings& shadowSettings = Renderer::GetShadowSettings();
 
-		std::vector<uint32_t> perCascadeObjects[ShadowSettings::MaxCascades];
+		ShadowMappingParams perCascadeParams[ShadowSettings::MaxCascades];
+		Math::Plane cascadePlanes[ShadowSettings::MaxCascades][4];
+
+		{
+			FLARE_PROFILE_SCOPE("CalculateCascadeFrustum");
+
+			float currentNearPlane = viewport->FrameData.Light.Near;
+			for (size_t i = 0; i < shadowSettings.Cascades; i++)
+			{
+				// 1. Calculate a fit frustum around camera's furstum
+				CalculateShadowFrustumParamsAroundCamera(perCascadeParams[i], lightDirection,
+					*viewport, currentNearPlane,
+					shadowSettings.CascadeSplits[i]);
+
+				// 2. Calculate projection frustum planes (except near and far)
+				CalculateShadowProjectionFrustum(
+					cascadePlanes[i],
+					perCascadeParams[i],
+					lightDirection,
+					lightBasis);
+
+				currentNearPlane = shadowSettings.CascadeSplits[i];
+			}
+		}
 
 		{
 			FLARE_PROFILE_SCOPE("DivideIntoGroups");
-
-			ShadowMappingParams params;
-			CalculateShadowFrustumParamsAroundCamera(params,
-				lightDirection,
-				*viewport,
-				viewport->FrameData.Light.Near,
-				shadowSettings.CascadeSplits[shadowSettings.Cascades - 1]);
 
 			Math::Plane cameraNearPlane = Math::Plane::TroughPoint(
 				s_RendererData.CurrentViewport->FrameData.Camera.Position,
@@ -307,62 +323,28 @@ namespace Flare
 
 				Math::AABB objectAABB = object.Mesh->GetSubMeshes()[object.SubMeshIndex].Bounds.Transformed(object.Transform);
 
-				float distanceToPlane = cameraNearPlane.SignedDistance(objectAABB.GetCenter());
-				float projectedDistance = glm::dot(glm::abs(cameraNearPlane.Normal), objectAABB.GetExtents());
-
-				size_t firstCascadeIndex = 0;
-				size_t lastCascadeIndex = shadowSettings.Cascades - 1;
-
-				for (size_t cascade = 0; cascade < shadowSettings.Cascades; cascade++)
+				for (size_t cascadeIndex = 0; cascadeIndex < shadowSettings.Cascades; cascadeIndex++)
 				{
-					if (distanceToPlane - projectedDistance <= shadowSettings.CascadeSplits[cascade])
+					bool intersects = true;
+					for (size_t i = 0; i < 4; i++)
 					{
-						firstCascadeIndex = cascade;
-						break;
+						if (!objectAABB.IntersectsOrInFrontOfPlane(cascadePlanes[cascadeIndex][i]))
+						{
+							intersects = false;
+							break;
+						}
 					}
-				}
 
-				for (size_t i = 0; i < shadowSettings.Cascades; i++)
-				{
-					if (distanceToPlane + projectedDistance <= shadowSettings.CascadeSplits[i])
-					{
-						lastCascadeIndex = i;
-						break;
-					}
-				}
-
-				if (firstCascadeIndex <= lastCascadeIndex)
-				{
-					for (size_t cascadeIndex = firstCascadeIndex; cascadeIndex <= lastCascadeIndex; cascadeIndex++)
+					if (intersects)
 						perCascadeObjects[cascadeIndex].push_back((uint32_t)objectIndex);
 				}
 			}
 		}
 
-		ShadowMappingParams perCascadeParams[ShadowSettings::MaxCascades];
-
-		{
-			// 1. Calculate a fit frustum around camera's furstum
-			float currentNearPlane = viewport->FrameData.Light.Near;
-			for (size_t i = 0; i < shadowSettings.Cascades; i++)
-			{
-				CalculateShadowFrustumParamsAroundCamera(perCascadeParams[i], lightDirection,
-					*viewport, currentNearPlane,
-					shadowSettings.CascadeSplits[i]);
-
-				currentNearPlane = shadowSettings.CascadeSplits[i];
-			}
-		}
-
 		float currentNearPlane = viewport->FrameData.Light.Near;
-		for (size_t i = 0; i < shadowSettings.Cascades; i++)
+		for (size_t cascadeIndex = 0; cascadeIndex < shadowSettings.Cascades; cascadeIndex++)
 		{
-			ShadowMappingParams params = perCascadeParams[i];
-
-			// 2. Calculate projection frustum planes (except near and far)
-
-			Math::Plane planes[4];
-			CalculateShadowProjectionFrustum(planes, params, lightDirection, lightBasis);
+			ShadowMappingParams params = perCascadeParams[cascadeIndex];
 
 			// 3. Extend near and far planes
 
@@ -372,23 +354,10 @@ namespace Flare
 			float nearPlaneDistance = 0;
 			float farPlaneDistance = 0;
 			
-			for (uint32_t objectIndex : perCascadeObjects[i])
+			for (uint32_t objectIndex : perCascadeObjects[cascadeIndex])
 			{
 				const RenderableObject& object = s_RendererData.Queue[objectIndex];
 				Math::AABB objectAABB = object.Mesh->GetSubMeshes()[object.SubMeshIndex].Bounds.Transformed(object.Transform);
-
-				bool intersects = true;
-				for (size_t i = 0; i < 4; i++)
-				{
-					if (!objectAABB.IntersectsOrInFrontOfPlane(planes[i]))
-					{
-						intersects = false;
-						break;
-					}
-				}
-
-				if (!intersects)
-					continue;
 
 				glm::vec3 center = objectAABB.GetCenter();
 				glm::vec3 extents = objectAABB.Max - center;
@@ -403,7 +372,7 @@ namespace Flare
 
 			glm::mat4 view = glm::lookAt(params.CameraFrustumCenter + lightDirection * nearPlaneDistance, params.CameraFrustumCenter, glm::vec3(0.0f, 1.0f, 0.0f));
 
-			CameraData& lightView = viewport->FrameData.LightView[i];
+			CameraData& lightView = viewport->FrameData.LightView[cascadeIndex];
 			lightView.View = view;
 			lightView.Projection = glm::ortho(
 				-params.BoundingSphereRadius,
@@ -414,7 +383,7 @@ namespace Flare
 				farPlaneDistance - nearPlaneDistance);
 
 			lightView.CalculateViewProjection();
-			currentNearPlane = shadowSettings.CascadeSplits[i];
+			currentNearPlane = shadowSettings.CascadeSplits[cascadeIndex];
 		}
 	}
 
@@ -718,7 +687,9 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		CalculateShadowProjections();
+		std::vector<uint32_t> perCascadeObjects[ShadowSettings::MaxCascades];
+
+		CalculateShadowProjections(perCascadeObjects);
 		CalculateShadowMappingParams();
 
 		// Prepare objects for shadow pass
@@ -737,23 +708,21 @@ namespace Flare
 
 		s_RendererData.DepthOnlyMeshMaterial->SetShaderProperties();
 
-		for (size_t i = 0; i < s_RendererData.ShadowMappingSettings.Cascades; i++)
+		for (size_t cascadeIndex = 0; cascadeIndex < s_RendererData.ShadowMappingSettings.Cascades; cascadeIndex++)
 		{
-			const FrameBufferSpecifications& shadowMapSpecs = s_RendererData.ShadowsRenderTarget[i]->GetSpecifications();
+			const FrameBufferSpecifications& shadowMapSpecs = s_RendererData.ShadowsRenderTarget[cascadeIndex]->GetSpecifications();
 			RenderCommand::SetViewport(0, 0, shadowMapSpecs.Width, shadowMapSpecs.Height);
 
 			s_RendererData.CameraBuffer->SetData(
-				&s_RendererData.CurrentViewport->FrameData.LightView[i],
-				sizeof(s_RendererData.CurrentViewport->FrameData.LightView[i]), 0);
+				&s_RendererData.CurrentViewport->FrameData.LightView[cascadeIndex],
+				sizeof(s_RendererData.CurrentViewport->FrameData.LightView[cascadeIndex]), 0);
 
-			s_RendererData.ShadowsRenderTarget[i]->Bind();
-
+			s_RendererData.ShadowsRenderTarget[cascadeIndex]->Bind();
 			s_RendererData.CurrentInstancingMesh.Reset();
-			for (uint32_t objectIndex : s_RendererData.CulledObjectIndices)
+
+			for (uint32_t objectIndex : perCascadeObjects[cascadeIndex])
 			{
 				const auto& queued = s_RendererData.Queue[objectIndex];
-				if (HAS_BIT(queued.Flags, MeshRenderFlags::DontCastShadows))
-					continue;
 
 				if (queued.Mesh->GetInstanceBuffer()  == nullptr)
 					queued.Mesh->SetInstanceBuffer(s_RendererData.InstanceBuffer);
