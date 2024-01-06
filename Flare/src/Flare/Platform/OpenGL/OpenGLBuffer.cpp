@@ -36,9 +36,20 @@ namespace Flare
 
 	OpenGLIndexBuffer::OpenGLIndexBuffer(IndexFormat format, size_t size)
 	{
+		size_t indexSize = 0;
+		switch (format)
+		{
+		case IndexFormat::UInt16:
+			indexSize = sizeof(uint16_t);
+			break;
+		case IndexFormat::UInt32:
+			indexSize = sizeof(uint32_t);
+			break;
+		}
+
 		glGenBuffers(1, &m_Id);
 		glBindBuffer(GL_ARRAY_BUFFER, m_Id);
-		glBufferData(GL_ARRAY_BUFFER, size * sizeof(uint32_t), nullptr, GL_DYNAMIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, size * indexSize, nullptr, GL_DYNAMIC_DRAW);
 
 		m_Format = format;
 		m_SizeInBytes = size;
