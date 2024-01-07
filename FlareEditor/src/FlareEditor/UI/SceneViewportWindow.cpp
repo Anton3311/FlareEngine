@@ -162,7 +162,6 @@ namespace Flare
 
 	void SceneViewportWindow::OnViewportChanged()
 	{
-		m_ScreenBuffer->Resize(m_Viewport.GetSize().x, m_Viewport.GetSize().y);
 		m_Camera.OnViewportChanged(m_Viewport.GetSize(), m_Viewport.GetPosition());
 	}
 
