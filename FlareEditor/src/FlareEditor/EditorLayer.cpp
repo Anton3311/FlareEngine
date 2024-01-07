@@ -168,6 +168,57 @@ namespace Flare
                 viewport->OnRenderViewport();
             }
         }
+
+        if (m_ProjectFilesWacher)
+        {
+            m_ProjectFilesWacher->Update();
+            FileChangeEvent changes;
+
+            Ref<EditorAssetManager> editorAssetManager = As<EditorAssetManager>(AssetManager::GetInstance());
+
+            bool shouldRebuildAssetTree = false;
+            while (true)
+            {
+                auto result = m_ProjectFilesWacher->TryGetNextEvent(changes);
+                if (result != FileWatcher::Result::Ok)
+                    break;
+
+                switch (changes.Action)
+                {
+                case FileChangeEvent::ActionType::Created:
+                    shouldRebuildAssetTree = true;
+                    break;
+                case FileChangeEvent::ActionType::Deleted:
+                    shouldRebuildAssetTree = true;
+                    break;
+                case FileChangeEvent::ActionType::Renamed:
+                    shouldRebuildAssetTree = true;
+                    break;
+                case FileChangeEvent::ActionType::Modified:
+                    std::filesystem::path absoluteFilePath = Project::GetActive()->Location / changes.FilePath;
+                    std::optional<AssetHandle> handle = editorAssetManager->FindAssetByPath(absoluteFilePath);
+
+                    bool isValid = handle.has_value() && AssetManager::IsAssetHandleValid(handle.value());
+                    if (isValid && AssetManager::IsAssetLoaded(handle.value_or(NULL_ASSET_HANDLE)))
+                    {
+                        const AssetMetadata* metadata = AssetManager::GetAssetMetadata(handle.value());
+                        FLARE_CORE_ASSERT(metadata);
+
+                        if (metadata->Type == AssetType::Shader)
+                        {
+                            editorAssetManager->ReloadAsset(handle.value());
+                        }
+                    }
+
+                    break;
+                }
+            }
+
+            if (shouldRebuildAssetTree)
+            {
+                m_AssetManagerWindow.RebuildAssetTree();
+            }
+        }
     }
 
     void EditorLayer::OnEvent(Event& event)
@@ -303,42 +354,6 @@ namespace Flare
 
         ImGui::End();
         ImGuiLayer::End();
-
-        if (m_ProjectFilesWacher)
-        {
-            m_ProjectFilesWacher->Update();
-            FileChangeEvent changes;
-
-            Ref<EditorAssetManager> editorAssetManager = As<EditorAssetManager>(AssetManager::GetInstance());
-
-            while (true)
-            {
-                auto result = m_ProjectFilesWacher->TryGetNextEvent(changes);
-                if (result != FileWatcher::Result::Ok)
-                    break;
-
-                switch (changes.Action)
-                {
-                case FileChangeEvent::ActionType::Created:
-                    break;
-                case FileChangeEvent::ActionType::Modified:
-                    std::filesystem::path absoluteFilePath = Project::GetActive()->Location / changes.FilePath;
-                    std::optional<AssetHandle> handle = editorAssetManager->FindAssetByPath(absoluteFilePath);
-
-                    bool isValid = handle.has_value() && AssetManager::IsAssetHandleValid(handle.value());
-                    if (isValid && AssetManager::IsAssetLoaded(handle.value_or(NULL_ASSET_HANDLE)))
-                    {
-                        const AssetMetadata* metadata = AssetManager::GetAssetMetadata(handle.value());
-                        FLARE_CORE_ASSERT(metadata);
-
-                        if (metadata->Type == AssetType::Shader)
-                            editorAssetManager->ReloadAsset(handle.value());
-                    }
-
-                    break;
-                }
-            }
-        }
     }
 
     void EditorLayer::UpdateWindowTitle()
