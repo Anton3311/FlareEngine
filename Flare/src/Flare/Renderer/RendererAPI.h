@@ -2,6 +2,7 @@
 
 #include "FlareCore/Core.h"
 #include "Flare/Renderer/VertexArray.h"
+#include "Flare/Renderer/Mesh.h"
 
 #include <stdint.h>
 
@@ -33,6 +34,7 @@ namespace Flare
 		virtual void DrawIndexed(const Ref<const VertexArray>& vertexArray) = 0;
 		virtual void DrawIndexed(const Ref<const VertexArray>& vertexArray, size_t indicesCount) = 0;
 		virtual void DrawInstanced(const Ref<const VertexArray>& mesh, size_t instancesCount) = 0;
+		virtual void DrawInstancesIndexed(const Ref<Mesh>& mesh, uint32_t subMeshIndex, size_t instacesCount) = 0;
 		virtual void DrawLines(const Ref<const VertexArray>& vertexArray, size_t cverticesCountount) = 0;
 
 		virtual void DrawInstanced(const Ref<const VertexArray>& mesh,

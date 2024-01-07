@@ -764,7 +764,7 @@ namespace Flare
 		auto mesh = s_RendererData.CurrentInstancingMesh;
 
 		const SubMesh& subMesh = mesh.Mesh->GetSubMeshes()[mesh.SubMeshIndex];
-		RenderCommand::DrawInstanced(mesh.Mesh->GetSubMeshes()[mesh.SubMeshIndex].VertexArray, instancesCount);
+		RenderCommand::DrawInstancesIndexed(mesh.Mesh, mesh.SubMeshIndex, instancesCount);
 
 		s_RendererData.Statistics.DrawCallsCount++;
 		s_RendererData.Statistics.DrawCallsSavedByInstancing += (uint32_t)instancesCount - 1;

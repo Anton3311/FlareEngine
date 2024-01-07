@@ -105,7 +105,7 @@ namespace Flare
             }
 
             if (!mesh)
-                mesh = CreateRef<Mesh>();
+                mesh = CreateRef<Mesh>(MeshTopology::Triangles);
 
             Span<glm::vec3> normalsSpan = Span<glm::vec3>::FromVector(normals);
             Span<glm::vec2> uvsSpan = Span<glm::vec2>::FromVector(uvs);

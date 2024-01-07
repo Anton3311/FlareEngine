@@ -20,10 +20,15 @@ namespace Flare
 		Ref<VertexBuffer> UVs = nullptr;
 	};
 
+	enum class MeshTopology
+	{
+		Triangles,
+	};
+
 	class FLARE_API Mesh : public Asset
 	{
 	public:
-		Mesh();
+		Mesh(MeshTopology topologyType);
 
 		void AddSubMesh(const Span<glm::vec3>& vertices,
 			IndexBuffer::IndexFormat indexFormat,
@@ -35,9 +40,11 @@ namespace Flare
 		void SetInstanceBuffer(const Ref<VertexBuffer>& instanceBuffer);
 
 		inline const std::vector<SubMesh>& GetSubMeshes() const { return m_SubMeshes; }
+		inline MeshTopology GetTopologyType() const { return m_TopologyType; }
 	private:
 		void InitializeLastSubMeshBuffers();
 	private:
+		MeshTopology m_TopologyType;
 		Ref<VertexBuffer> m_InstanceBuffer = nullptr;
 		std::vector<SubMesh> m_SubMeshes;
 	};

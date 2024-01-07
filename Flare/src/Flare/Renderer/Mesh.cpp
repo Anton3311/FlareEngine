@@ -2,8 +2,8 @@
 
 namespace Flare
 {
-	Mesh::Mesh()
-		: Asset(AssetType::Mesh)
+	Mesh::Mesh(MeshTopology topologyType)
+		: Asset(AssetType::Mesh), m_TopologyType(topologyType)
 	{
 	}
 

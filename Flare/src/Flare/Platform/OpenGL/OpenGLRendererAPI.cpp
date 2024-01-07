@@ -194,6 +194,30 @@ namespace Flare
 		mesh->Unbind();
 	}
 
+	inline static GLenum ConvertTopologyType(MeshTopology topology)
+	{
+		switch (topology)
+		{
+		case MeshTopology::Triangles:
+			return GL_TRIANGLES;
+		}
+
+		FLARE_CORE_ASSERT(false);
+		return 0;
+	}
+
+	void OpenGLRendererAPI::DrawInstancesIndexed(const Ref<Mesh>& mesh, uint32_t subMeshIndex, size_t instancesCount)
+	{
+		const SubMesh& subMesh = mesh->GetSubMeshes()[subMeshIndex];
+		subMesh.VertexArray->Bind();
+		
+		int32_t indicesCount = 0;
+		GLenum indexType = 0;
+		GetIndexCountAndType(subMesh.Indicies, &indicesCount, &indexType);
+
+		glDrawElementsInstanced(ConvertTopologyType(mesh->GetTopologyType()), indicesCount, indexType, (const void*)0, (int32_t)instancesCount);
+	}
+
 	void OpenGLRendererAPI::DrawInstanced(const Ref<const VertexArray>& mesh, size_t instancesCount, size_t baseVertexIndex, size_t startIndex, size_t indicesCount)
 	{
 		mesh->Bind();
