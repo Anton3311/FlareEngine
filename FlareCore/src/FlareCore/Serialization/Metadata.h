@@ -9,6 +9,6 @@
 #define FLARE_SERIALIZABLE_IMPL(typeName)                                              \
     Flare::SerializableObjectDescriptor typeName::_SerializationDescriptor(            \
         typeid(typeName).name(), sizeof(typeName),                                     \
-        [](void* object, SerializationStream& stream) {                                \
+        [](void* object, Flare::SerializationStream& stream) {                         \
             Flare::TypeSerializer<typeName>().OnSerialize(*(typeName*)object, stream); \
         });
