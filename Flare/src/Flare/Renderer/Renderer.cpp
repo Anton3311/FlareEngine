@@ -101,8 +101,8 @@ namespace Flare
 		else
 			FLARE_CORE_ERROR("Renderer: Failed to find Error shader");
 
-		std::optional<AssetHandle> depthOnlyMeshShaderHandle = ShaderLibrary::FindShader("Error");
-		if (errorShaderHandle && AssetManager::IsAssetHandleValid(*errorShaderHandle))
+		std::optional<AssetHandle> depthOnlyMeshShaderHandle = ShaderLibrary::FindShader("MeshDepthOnly");
+		if (depthOnlyMeshShaderHandle && AssetManager::IsAssetHandleValid(*depthOnlyMeshShaderHandle))
 			s_RendererData.DepthOnlyMeshMaterial= CreateRef<Material>(AssetManager::GetAsset<Shader>(*depthOnlyMeshShaderHandle));
 		else
 			FLARE_CORE_ERROR("Renderer: Failed to find MeshDepthOnly shader");

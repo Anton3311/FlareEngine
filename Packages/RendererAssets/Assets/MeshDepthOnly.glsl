@@ -1,4 +1,5 @@
 #begin vertex
+#version 450
 
 #include "Camera.glsl"
 
@@ -12,6 +13,7 @@ void main()
 #end
 
 #begin pixel
+#version 450
 
 void main() {}
 
