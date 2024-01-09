@@ -45,6 +45,7 @@ namespace Flare
 
         TransformComponent();
         TransformComponent(const glm::vec3& position);
+        TransformComponent(const glm::vec3& position, const glm::vec3& rotation, const glm::vec3& scale);
         
         glm::mat4 GetTransformationMatrix() const;
         glm::vec3 TransformDirection(const glm::vec3& direction) const;

@@ -21,6 +21,9 @@ namespace Flare
 	TransformComponent::TransformComponent(const glm::vec3& position)
 		: Position(position), Rotation(glm::vec3(0.0f)), Scale(glm::vec3(1.0f)) {}
 
+	TransformComponent::TransformComponent(const glm::vec3& position, const glm::vec3& rotation, const glm::vec3& scale)
+		: Position(position), Rotation(rotation), Scale(scale) {}
+
 	glm::mat4 TransformComponent::GetTransformationMatrix() const
 	{
 		return glm::translate(glm::identity<glm::mat4>(), Position) * glm::toMat4(glm::quat(glm::radians(Rotation))) *
