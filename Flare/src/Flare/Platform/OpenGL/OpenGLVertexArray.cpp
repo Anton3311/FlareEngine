@@ -83,15 +83,6 @@ namespace Flare
 		}
 	}
 
-	void OpenGLVertexArray::AddInstanceBuffer(const Ref<VertexBuffer>& instanceBuffer)
-	{
-		uint32_t attributeIndex = m_VertexBufferIndex;
-		AddVertexBuffer(instanceBuffer);
-		
-		for (uint32_t i = attributeIndex; i < m_VertexBufferIndex; i++)
-			glVertexAttribDivisor(i, 1);
-	}
-
 	void OpenGLVertexArray::SetIndexBuffer(const Ref<IndexBuffer>& indexbuffer)
 	{
 		m_IndexBuffer = indexbuffer;

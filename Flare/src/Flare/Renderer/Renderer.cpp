@@ -6,6 +6,7 @@
 #include "Flare/Renderer/ShaderLibrary.h"
 #include "Flare/Renderer2D/Renderer2D.h"
 #include "Flare/Renderer/Renderer.h"
+#include "Flare/Renderer/ShaderStorageBuffer.h"
 
 #include "Flare/Project/Project.h"
 
@@ -21,6 +22,7 @@ namespace Flare
 	{
 		glm::mat4 Transform;
 		int32_t EntityIndex;
+		int32_t Padding[3];
 	};
 
 	struct RenderableObject
@@ -77,7 +79,6 @@ namespace Flare
 		std::vector<RenderableObject> Queue;
 		std::vector<uint32_t> CulledObjectIndices;
 
-		Ref<VertexBuffer> InstanceBuffer = nullptr;
 		std::vector<InstanceData> InstanceDataBuffer;
 		uint32_t MaxInstances = 1024;
 
@@ -89,6 +90,8 @@ namespace Flare
 
 		ShadowSettings ShadowMappingSettings;
 		Ref<UniformBuffer> ShadowDataBuffer = nullptr;
+
+		Ref<ShaderStorageBuffer> InstancesShaderBuffer = nullptr;
 	};
 	
 	RendererData s_RendererData;
@@ -113,6 +116,7 @@ namespace Flare
 		s_RendererData.CameraBuffer = UniformBuffer::Create(sizeof(CameraData), 0);
 		s_RendererData.LightBuffer = UniformBuffer::Create(sizeof(LightData), 1);
 		s_RendererData.ShadowDataBuffer = UniformBuffer::Create(sizeof(ShadowData), 2);
+		s_RendererData.InstancesShaderBuffer = ShaderStorageBuffer::Create(3);
 
 		s_RendererData.ShadowMappingSettings.Resolution = ShadowSettings::ShadowResolution::_2048;
 		s_RendererData.ShadowMappingSettings.Bias = 0.015f;
@@ -150,12 +154,6 @@ namespace Flare
 			uint32_t whiteTextureData = 0xffffffff;
 			s_RendererData.WhiteTexture = Texture::Create(1, 1, &whiteTextureData, TextureFormat::RGBA8);
 		}
-
-		s_RendererData.InstanceBuffer = VertexBuffer::Create(s_RendererData.MaxInstances * sizeof(InstanceData));
-		s_RendererData.InstanceBuffer->SetLayout({
-			{ "i_Transform", ShaderDataType::Matrix4x4 },
-			{ "i_EntityIndex", ShaderDataType::Int },
-		});
 
 		Project::OnProjectOpen.Bind(ReloadShaders);
 	}
@@ -639,9 +637,6 @@ namespace Flare
 		for (uint32_t objectIndex : s_RendererData.CulledObjectIndices)
 		{
 			const RenderableObject& object = s_RendererData.Queue[objectIndex];
-			if (object.Mesh->GetInstanceBuffer() == nullptr)
-				object.Mesh->SetInstanceBuffer(s_RendererData.InstanceBuffer);
-
 			if (s_RendererData.CurrentInstancingMesh.Mesh.get() != object.Mesh.get()
 				|| s_RendererData.CurrentInstancingMesh.SubMeshIndex != object.SubMeshIndex)
 			{
@@ -692,15 +687,6 @@ namespace Flare
 		CalculateShadowProjections(perCascadeObjects);
 		CalculateShadowMappingParams();
 
-		// Prepare objects for shadow pass
-
-		s_RendererData.CulledObjectIndices.clear();
-		s_RendererData.CulledObjectIndices.reserve(s_RendererData.Queue.size());
-		for (size_t i = 0; i < s_RendererData.Queue.size(); i++)
-			s_RendererData.CulledObjectIndices.push_back((uint32_t)i);
-
-		std::sort(s_RendererData.CulledObjectIndices.begin(), s_RendererData.CulledObjectIndices.end(), CompareRenderableObjects);
-
 		// Setup the material
 
 		RenderCommand::SetDepthTestEnabled(true);
@@ -723,10 +709,6 @@ namespace Flare
 			for (uint32_t objectIndex : perCascadeObjects[cascadeIndex])
 			{
 				const auto& queued = s_RendererData.Queue[objectIndex];
-
-				if (queued.Mesh->GetInstanceBuffer()  == nullptr)
-					queued.Mesh->SetInstanceBuffer(s_RendererData.InstanceBuffer);
-
 				if (queued.Mesh.get() != s_RendererData.CurrentInstancingMesh.Mesh.get()
 					|| queued.SubMeshIndex != s_RendererData.CurrentInstancingMesh.SubMeshIndex)
 				{
@@ -758,7 +740,7 @@ namespace Flare
 
 		{
 			FLARE_PROFILE_SCOPE("Renderer::FlushInstance::SetInstancesData");
-			s_RendererData.InstanceBuffer->SetData(s_RendererData.InstanceDataBuffer.data(), sizeof(InstanceData) * instancesCount);
+			s_RendererData.InstancesShaderBuffer->SetData(MemorySpan::FromVector(s_RendererData.InstanceDataBuffer));
 		}
 
 		auto mesh = s_RendererData.CurrentInstancingMesh;

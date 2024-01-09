@@ -11,8 +11,6 @@ Properties =
 layout(location = 0) in vec3 i_Position;
 layout(location = 1) in vec3 i_Normal;
 layout(location = 2) in vec2 i_UV;
-layout(location = 3) in mat4 i_Transform;
-layout(location = 7) in int i_EntityIndex;
 
 #include "Camera.glsl"
 
@@ -31,21 +29,32 @@ layout(std140, binding = 1) uniform LightData
 	vec3 u_LightDirection;
 };
 
+struct InstanceData
+{
+	mat4 Transform;
+	int EntityIndex;
+};
+
+layout(std140, binding = 3) buffer InstacesData
+{
+	InstanceData Data[];
+} u_InstancesData;
+
 layout(location = 0) out VertexData o_Vertex;
 layout(location = 5) out flat int o_EntityIndex;
 
 void main()
 {
-	mat4 normalTransform = transpose(inverse(i_Transform));
+	mat4 normalTransform = transpose(inverse(u_InstancesData.Data[gl_InstanceIndex].Transform));
 	o_Vertex.Normal = (normalTransform * vec4(i_Normal, 1.0)).xyz;
     
-	vec4 position = u_Camera.ViewProjection * i_Transform * vec4(i_Position, 1.0);
-	vec4 transformed = i_Transform * vec4(i_Position, 1.0);
+	vec4 position = u_Camera.ViewProjection * u_InstancesData.Data[gl_InstanceIndex].Transform * vec4(i_Position, 1.0);
+	vec4 transformed = u_InstancesData.Data[gl_InstanceIndex].Transform * vec4(i_Position, 1.0);
 	o_Vertex.Position = transformed;
 
 	o_Vertex.UV = i_UV;
 	o_Vertex.ViewSpacePosition = (u_Camera.View * transformed).xyz;
-	o_EntityIndex = i_EntityIndex;
+	o_EntityIndex = u_InstancesData.Data[gl_InstanceIndex].EntityIndex;
 
 	o_Vertex.ScreenSpacePosition = (position.xy / position.w) * 0.5f + vec2(0.5f);
 

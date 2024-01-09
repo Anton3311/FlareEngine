@@ -36,9 +36,6 @@ namespace Flare
 			const Span<glm::vec3>* normals = nullptr,
 			const Span<glm::vec2>* uvs = nullptr);
 
-		inline Ref<VertexBuffer> GetInstanceBuffer() const { return m_InstanceBuffer; }
-		void SetInstanceBuffer(const Ref<VertexBuffer>& instanceBuffer);
-
 		inline const std::vector<SubMesh>& GetSubMeshes() const { return m_SubMeshes; }
 		inline MeshTopology GetTopologyType() const { return m_TopologyType; }
 	private:
