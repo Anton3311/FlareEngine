@@ -15,7 +15,6 @@ layout(std140, binding = 3) buffer InstacesData
 } u_InstancesData;
 
 layout(location = 0) in vec3 i_Position;
-layout(location = 3) in mat4 i_Transform;
 
 void main()
 {

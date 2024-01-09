@@ -92,6 +92,7 @@ namespace Flare
 		Ref<UniformBuffer> ShadowDataBuffer = nullptr;
 
 		Ref<ShaderStorageBuffer> InstancesShaderBuffer = nullptr;
+		std::vector<DrawIndirectCommandSubMeshData> IndirectDrawData;
 	};
 	
 	RendererData s_RendererData;
@@ -706,25 +707,54 @@ namespace Flare
 			s_RendererData.ShadowsRenderTarget[cascadeIndex]->Bind();
 			s_RendererData.CurrentInstancingMesh.Reset();
 
+			// Group objects with same meshes together
+			std::sort(perCascadeObjects[cascadeIndex].begin(), perCascadeObjects[cascadeIndex].end(), [](uint32_t a, uint32_t b) -> bool
+			{
+				return (uint64_t)s_RendererData.Queue[a].Mesh->Handle < (uint64_t)s_RendererData.Queue[b].Mesh->Handle;
+			});
+
+			s_RendererData.IndirectDrawData.clear();
+			s_RendererData.CurrentInstancingMesh.Reset();
 			for (uint32_t objectIndex : perCascadeObjects[cascadeIndex])
 			{
 				const auto& queued = s_RendererData.Queue[objectIndex];
-				if (queued.Mesh.get() != s_RendererData.CurrentInstancingMesh.Mesh.get()
-					|| queued.SubMeshIndex != s_RendererData.CurrentInstancingMesh.SubMeshIndex)
+				if (queued.Mesh.get() != s_RendererData.CurrentInstancingMesh.Mesh.get())
 				{
-					FlushInstances();
+					FlushShadowPassInstances();
 					s_RendererData.CurrentInstancingMesh.Mesh = queued.Mesh;
-					s_RendererData.CurrentInstancingMesh.SubMeshIndex = queued.SubMeshIndex;
+					auto& command = s_RendererData.IndirectDrawData.emplace_back();
+					command.InstancesCount = 1;
+					command.SubMeshIndex = queued.SubMeshIndex;
+				}
+				else
+				{
+					bool found = false;
+					for (size_t i = 0; i < s_RendererData.IndirectDrawData.size(); i++)
+					{
+						if (s_RendererData.IndirectDrawData[i].SubMeshIndex == queued.SubMeshIndex)
+						{
+							s_RendererData.IndirectDrawData[i].InstancesCount++;
+							found = true;
+							break;
+						}
+					}
+
+					if (!found)
+					{
+						auto& command = s_RendererData.IndirectDrawData.emplace_back();
+						command.InstancesCount = 1;
+						command.SubMeshIndex = queued.SubMeshIndex;
+					}
 				}
 
 				auto& instance = s_RendererData.InstanceDataBuffer.emplace_back();
 				instance.Transform = queued.Transform;
 
 				if (s_RendererData.InstanceDataBuffer.size() == (size_t)s_RendererData.MaxInstances)
-					FlushInstances();
+					FlushShadowPassInstances();
 			}
 
-			FlushInstances();
+			FlushShadowPassInstances();
 		}
 
 		s_RendererData.CurrentInstancingMesh.Reset();
@@ -752,6 +782,30 @@ namespace Flare
 		s_RendererData.Statistics.DrawCallsSavedByInstancing += (uint32_t)instancesCount - 1;
 
 		s_RendererData.InstanceDataBuffer.clear();
+	}
+
+	void Renderer::FlushShadowPassInstances()
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		size_t instancesCount = s_RendererData.InstanceDataBuffer.size();
+		if (instancesCount == 0 || s_RendererData.CurrentInstancingMesh.Mesh == nullptr)
+			return;
+
+		{
+			FLARE_PROFILE_SCOPE("Renderer::FlushShadowPassInstances::SetInstancesData");
+			s_RendererData.InstancesShaderBuffer->SetData(MemorySpan::FromVector(s_RendererData.InstanceDataBuffer));
+		}
+
+		RenderCommand::DrawInstancesIndexedIndirect(
+			s_RendererData.CurrentInstancingMesh.Mesh,
+			Span<DrawIndirectCommandSubMeshData>::FromVector(s_RendererData.IndirectDrawData));
+
+		s_RendererData.Statistics.DrawCallsCount++;
+		s_RendererData.Statistics.DrawCallsSavedByInstancing += (uint32_t)instancesCount - 1;
+
+		s_RendererData.InstanceDataBuffer.clear();
+		s_RendererData.IndirectDrawData.clear();
 	}
 
 	void Renderer::EndScene()

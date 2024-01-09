@@ -211,6 +211,7 @@ namespace Flare
 		const SubMesh& subMesh = mesh->GetSubMeshes()[subMeshIndex];
 		mesh->GetVertexArray()->Bind();
 		
+		size_t indexSize = mesh->GetVertexArray()->GetIndexBuffer()->GetIndexFormat() == IndexBuffer::IndexFormat::UInt16 ? sizeof(uint16_t) : sizeof(uint32_t);
 		int32_t indicesCount = 0;
 		GLenum indexType = 0;
 		GetIndexCountAndType(mesh->GetVertexArray()->GetIndexBuffer(), &indicesCount, &indexType);
@@ -219,9 +220,41 @@ namespace Flare
 			ConvertTopologyType(mesh->GetTopologyType()),
 			subMesh.IndicesCount,
 			indexType,
-			(const void*)subMesh.BaseIndex,
+			(const void*)(subMesh.BaseIndex * indexSize),
 			instancesCount,
 			subMesh.BaseVertex);
+	}
+
+	void OpenGLRendererAPI::DrawInstancesIndexedIndirect(const Ref<Mesh>& mesh, const Span<DrawIndirectCommandSubMeshData>& subMeshesData)
+	{
+		mesh->GetVertexArray()->Bind();
+		const auto& subMeshes = mesh->GetSubMeshes();
+		
+		GLenum indexType = 0;
+		GetIndexCountAndType(mesh->GetVertexArray()->GetIndexBuffer(), nullptr, &indexType);
+
+		m_IndirectCommandDataStorage.clear();
+
+		uint32_t baseInstance = 0;
+		for (const DrawIndirectCommandSubMeshData& data : subMeshesData)
+		{
+			auto& commandData = m_IndirectCommandDataStorage.emplace_back();
+			const SubMesh& subMesh = subMeshes[data.SubMeshIndex];
+
+			commandData.BaseInstance = baseInstance;
+			commandData.BaseVertex = subMesh.BaseVertex;
+			commandData.FirstIndex = subMesh.BaseIndex;
+			commandData.IndicesCount = subMesh.IndicesCount;
+			commandData.InstancesCount = data.InstancesCount;
+
+			baseInstance += data.InstancesCount;
+		}
+
+		glMultiDrawElementsIndirect(
+			ConvertTopologyType(mesh->GetTopologyType()),
+			indexType,
+			m_IndirectCommandDataStorage.data(),
+			subMeshesData.GetSize(), 0);
 	}
 
 	void OpenGLRendererAPI::DrawInstanced(const Ref<const VertexArray>& mesh, size_t instancesCount, size_t baseVertexIndex, size_t startIndex, size_t indicesCount)

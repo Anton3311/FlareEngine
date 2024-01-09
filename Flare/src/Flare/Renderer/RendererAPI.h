@@ -8,6 +8,12 @@
 
 namespace Flare
 {
+	struct DrawIndirectCommandSubMeshData
+	{
+		uint32_t SubMeshIndex;
+		uint32_t InstancesCount;
+	};
+
 	class FLARE_API RendererAPI
 	{
 	public:
@@ -35,6 +41,11 @@ namespace Flare
 		virtual void DrawIndexed(const Ref<const VertexArray>& vertexArray, size_t indicesCount) = 0;
 		virtual void DrawInstanced(const Ref<const VertexArray>& mesh, size_t instancesCount) = 0;
 		virtual void DrawInstancesIndexed(const Ref<Mesh>& mesh, uint32_t subMeshIndex, size_t instacesCount) = 0;
+
+		virtual void DrawInstancesIndexedIndirect(
+			const Ref<Mesh>& mesh,
+			const Span<DrawIndirectCommandSubMeshData>& subMeshesData) = 0;
+
 		virtual void DrawLines(const Ref<const VertexArray>& vertexArray, size_t cverticesCountount) = 0;
 
 		virtual void DrawInstanced(const Ref<const VertexArray>& mesh,

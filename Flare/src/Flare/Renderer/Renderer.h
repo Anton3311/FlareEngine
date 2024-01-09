@@ -141,5 +141,6 @@ namespace Flare
 		static void ExecuteGeomertyPass();
 		static void ExecuteShadowPass();
 		static void FlushInstances();
+		static void FlushShadowPassInstances();
 	};
 }

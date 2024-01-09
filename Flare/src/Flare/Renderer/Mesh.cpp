@@ -75,7 +75,7 @@ namespace Flare
 
 		size_t indicesCount = indices.GetSize() / indexSize;
 
-		subMesh.BaseIndex = m_IndexBufferOffset;
+		subMesh.BaseIndex = m_IndexBufferOffset / indexSize;
 		subMesh.BaseVertex = m_VertexBufferOffset;
 		subMesh.IndicesCount = indicesCount;
 

@@ -25,6 +25,10 @@ namespace Flare
 		virtual void DrawInstanced(const Ref<const VertexArray>& mesh, size_t instancesCount) override;
 		virtual void DrawInstancesIndexed(const Ref<Mesh>& mesh, uint32_t subMeshIndex, size_t instancesCount) override;
 
+		virtual void DrawInstancesIndexedIndirect(
+			const Ref<Mesh>& mesh,
+			const Span<DrawIndirectCommandSubMeshData>& subMeshesData) override;
+
 		virtual void DrawInstanced(const Ref<const VertexArray>& mesh,
 			size_t instancesCount,
 			size_t baseVertexIndex,
@@ -32,5 +36,16 @@ namespace Flare
 			size_t indicesCount) override;
 
 		virtual void DrawLines(const Ref<const VertexArray>& vertexArray, size_t verticesCount) override;
+	private:
+		struct DrawIndirectCommandData
+		{
+			uint32_t IndicesCount;
+			uint32_t InstancesCount;
+			uint32_t FirstIndex;
+			int32_t BaseVertex;
+			uint32_t BaseInstance;
+		};
+
+		std::vector<DrawIndirectCommandData> m_IndirectCommandDataStorage;
 	};
 }
