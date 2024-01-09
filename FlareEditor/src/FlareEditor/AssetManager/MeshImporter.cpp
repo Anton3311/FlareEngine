@@ -16,112 +16,121 @@ namespace Flare
 {
     static Ref<Mesh> ProcessMeshNode(aiNode* node, const aiScene* scene, std::vector<uint32_t>& usedMaterials)
     {
-        Ref<Mesh> mesh = nullptr;
-
-        for (uint32_t i = 0; i < node->mNumMeshes; i++)
+        if (node->mNumMeshes > 0)
         {
-            aiMesh* nodeMesh = scene->mMeshes[node->mMeshes[i]];
-            usedMaterials.push_back(nodeMesh->mMaterialIndex);
-
-            std::vector<glm::vec3> vertices;
-            std::vector<glm::vec3> normals;
-            std::vector<glm::vec2> uvs;
-
-
-            vertices.resize(nodeMesh->mNumVertices);
-            normals.resize(nodeMesh->mNumVertices);
-
-            for (size_t i = 0; i < vertices.size(); i++)
-            {
-                vertices[i].x = nodeMesh->mVertices[i].x;
-                vertices[i].y = nodeMesh->mVertices[i].y;
-                vertices[i].z = nodeMesh->mVertices[i].z;
-            }
-
-            for (size_t i = 0; i < normals.size(); i++)
-            {
-                normals[i].x = nodeMesh->mNormals[i].x;
-                normals[i].y = nodeMesh->mNormals[i].y;
-                normals[i].z = nodeMesh->mNormals[i].z;
-            }
-
-            bool hasUVs = false;
-            if (nodeMesh->mTextureCoords != nullptr && nodeMesh->mTextureCoords[0] != nullptr)
-            {
-                hasUVs = true;
-                uvs.resize(nodeMesh->mNumVertices);
-                for (size_t i = 0; i < uvs.size(); i++)
-                {
-                    auto uv = nodeMesh->mTextureCoords[0][i];
-                    uvs[i].x = uv.x;
-                    uvs[i].y = uv.y;
-                }
-            }
-
+            size_t verticesCount = 0;
             size_t indicesCount = 0;
-            for (uint32_t face = 0; face < nodeMesh->mNumFaces; face++)
-            {
-                aiFace& f = nodeMesh->mFaces[face];
-                indicesCount += (size_t)f.mNumIndices;
-            }
-
-            std::vector<uint16_t> indices16;
-            std::vector<uint32_t> indices32;
-
             IndexBuffer::IndexFormat indexFormat = IndexBuffer::IndexFormat::UInt32;
+
+            for (uint32_t i = 0; i < node->mNumMeshes; i++)
+            {
+                aiMesh* nodeMesh = scene->mMeshes[node->mMeshes[i]];
+                verticesCount += nodeMesh->mNumVertices;
+
+                for (uint32_t face = 0; face < nodeMesh->mNumFaces; face++)
+                {
+                    aiFace& f = nodeMesh->mFaces[face];
+                    indicesCount += (size_t)f.mNumIndices;
+                }
+            }
+
             if (indicesCount < (size_t)std::numeric_limits<uint16_t>::max())
-            {
                 indexFormat = IndexBuffer::IndexFormat::UInt16;
-                indices16.reserve(indicesCount);
 
-                for (uint32_t face = 0; face < nodeMesh->mNumFaces; face++)
-                {
-                    aiFace& f = nodeMesh->mFaces[face];
+            Ref<Mesh> mesh = CreateRef<Mesh>(MeshTopology::Triangles, verticesCount, indexFormat, indicesCount);
 
-                    size_t start = indices16.size();
-                    for (uint32_t i = 0; i < f.mNumIndices; i++)
-                        indices16.push_back((uint16_t)f.mIndices[i]);
-
-                    // Swap winding order
-                    std::swap(indices16[start], indices16[start + 1]);
-                }
-            }
-            else
+            for (uint32_t i = 0; i < node->mNumMeshes; i++)
             {
-                indexFormat = IndexBuffer::IndexFormat::UInt32;
-                indices32.reserve(indicesCount);
+                aiMesh* nodeMesh = scene->mMeshes[node->mMeshes[i]];
+                usedMaterials.push_back(nodeMesh->mMaterialIndex);
 
-                for (uint32_t face = 0; face < nodeMesh->mNumFaces; face++)
+                std::vector<glm::vec3> vertices;
+                std::vector<glm::vec3> normals;
+                std::vector<glm::vec2> uvs;
+
+                vertices.resize(nodeMesh->mNumVertices);
+                normals.resize(nodeMesh->mNumVertices);
+
+                for (size_t i = 0; i < vertices.size(); i++)
                 {
-                    aiFace& f = nodeMesh->mFaces[face];
-
-                    size_t start = indices32.size();
-                    for (uint32_t i = 0; i < f.mNumIndices; i++)
-                        indices32.push_back((uint32_t)f.mIndices[i]);
-
-                    // Swap winding order
-                    std::swap(indices32[start], indices32[start + 1]);
+                    vertices[i].x = nodeMesh->mVertices[i].x;
+                    vertices[i].y = nodeMesh->mVertices[i].y;
+                    vertices[i].z = nodeMesh->mVertices[i].z;
                 }
-            }
 
-            if (!mesh)
-                mesh = CreateRef<Mesh>(MeshTopology::Triangles);
+                for (size_t i = 0; i < normals.size(); i++)
+                {
+                    normals[i].x = nodeMesh->mNormals[i].x;
+                    normals[i].y = nodeMesh->mNormals[i].y;
+                    normals[i].z = nodeMesh->mNormals[i].z;
+                }
 
-            Span<glm::vec3> normalsSpan = Span<glm::vec3>::FromVector(normals);
-            Span<glm::vec2> uvsSpan = Span<glm::vec2>::FromVector(uvs);
+                uvs.resize(nodeMesh->mNumVertices);
+                if (nodeMesh->mTextureCoords != nullptr && nodeMesh->mTextureCoords[0] != nullptr)
+                {
+                    for (size_t i = 0; i < uvs.size(); i++)
+                    {
+                        auto uv = nodeMesh->mTextureCoords[0][i];
+                        uvs[i].x = uv.x;
+                        uvs[i].y = uv.y;
+                    }
+                }
+                else
+                {
+                    for (size_t i = 0; i < uvs.size(); i++)
+                        uvs[i] = glm::vec2(0.0f);
+                }
 
-            mesh->AddSubMesh(
-                Span<glm::vec3>::FromVector(vertices),
-                indexFormat,
-                indexFormat == IndexBuffer::IndexFormat::UInt16
+                std::vector<uint16_t> indices16;
+                std::vector<uint32_t> indices32;
+
+                if (indexFormat == IndexBuffer::IndexFormat::UInt16)
+                {
+                    indices16.reserve(indicesCount);
+
+                    for (uint32_t face = 0; face < nodeMesh->mNumFaces; face++)
+                    {
+                        aiFace& f = nodeMesh->mFaces[face];
+
+                        size_t start = indices16.size();
+                        for (uint32_t i = 0; i < f.mNumIndices; i++)
+                            indices16.push_back((uint16_t)f.mIndices[i]);
+
+                        // Swap winding order
+                        std::swap(indices16[start], indices16[start + 1]);
+                    }
+                }
+                else
+                {
+                    indices32.reserve(indicesCount);
+
+                    for (uint32_t face = 0; face < nodeMesh->mNumFaces; face++)
+                    {
+                        aiFace& f = nodeMesh->mFaces[face];
+
+                        size_t start = indices32.size();
+                        for (uint32_t i = 0; i < f.mNumIndices; i++)
+                            indices32.push_back((uint32_t)f.mIndices[i]);
+
+                        // Swap winding order
+                        std::swap(indices32[start], indices32[start + 1]);
+                    }
+                }
+
+                Span<glm::vec3> normalsSpan = Span<glm::vec3>::FromVector(normals);
+                Span<glm::vec2> uvsSpan = Span<glm::vec2>::FromVector(uvs);
+
+                mesh->AddSubMesh(
+                    Span<glm::vec3>::FromVector(vertices),
+                    indexFormat == IndexBuffer::IndexFormat::UInt16
                     ? MemorySpan::FromVector(indices16)
                     : MemorySpan::FromVector(indices32),
-                &normalsSpan,
-                hasUVs ? &uvsSpan : nullptr);
-        }
+                    normalsSpan,
+                    uvsSpan);
+            }
 
-        if (mesh)
             return mesh;
+        }
 
         for (uint32_t i = 0; i < node->mNumChildren; i++)
         {

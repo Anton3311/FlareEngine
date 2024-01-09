@@ -3,6 +3,7 @@
 namespace Flare
 {
 	OpenGLVertexBuffer::OpenGLVertexBuffer(size_t size)
+		: m_BufferSize(size)
 	{
 		glCreateBuffers(1, &m_Id);
 		glBindBuffer(GL_ARRAY_BUFFER, m_Id);
@@ -10,6 +11,7 @@ namespace Flare
 	}
 
 	OpenGLVertexBuffer::OpenGLVertexBuffer(size_t size, const void* data)
+		: m_BufferSize(size)
 	{
 		glCreateBuffers(1, &m_Id);
 		glBindBuffer(GL_ARRAY_BUFFER, m_Id);
@@ -28,6 +30,8 @@ namespace Flare
 	
 	void OpenGLVertexBuffer::SetData(const void* data, size_t size, size_t offset)
 	{
+		FLARE_CORE_ASSERT(offset + size <= m_BufferSize);
+
 		glBindBuffer(GL_ARRAY_BUFFER, m_Id);
 		glBufferSubData(GL_ARRAY_BUFFER, offset, size, data);
 	}
@@ -47,12 +51,12 @@ namespace Flare
 			break;
 		}
 
+		m_Format = format;
+		m_SizeInBytes = size * indexSize;
+
 		glGenBuffers(1, &m_Id);
 		glBindBuffer(GL_ARRAY_BUFFER, m_Id);
-		glBufferData(GL_ARRAY_BUFFER, size * indexSize, nullptr, GL_DYNAMIC_DRAW);
-
-		m_Format = format;
-		m_SizeInBytes = size;
+		glBufferData(GL_ARRAY_BUFFER, m_SizeInBytes, nullptr, GL_DYNAMIC_DRAW);
 	}
 
 	OpenGLIndexBuffer::OpenGLIndexBuffer(IndexFormat format, const MemorySpan& indices)

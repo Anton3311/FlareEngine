@@ -209,13 +209,19 @@ namespace Flare
 	void OpenGLRendererAPI::DrawInstancesIndexed(const Ref<Mesh>& mesh, uint32_t subMeshIndex, size_t instancesCount)
 	{
 		const SubMesh& subMesh = mesh->GetSubMeshes()[subMeshIndex];
-		subMesh.VertexArray->Bind();
+		mesh->GetVertexArray()->Bind();
 		
 		int32_t indicesCount = 0;
 		GLenum indexType = 0;
-		GetIndexCountAndType(subMesh.Indicies, &indicesCount, &indexType);
+		GetIndexCountAndType(mesh->GetVertexArray()->GetIndexBuffer(), &indicesCount, &indexType);
 
-		glDrawElementsInstanced(ConvertTopologyType(mesh->GetTopologyType()), indicesCount, indexType, (const void*)0, (int32_t)instancesCount);
+		glDrawElementsInstancedBaseVertex(
+			ConvertTopologyType(mesh->GetTopologyType()),
+			subMesh.IndicesCount,
+			indexType,
+			(const void*)subMesh.BaseIndex,
+			instancesCount,
+			subMesh.BaseVertex);
 	}
 
 	void OpenGLRendererAPI::DrawInstanced(const Ref<const VertexArray>& mesh, size_t instancesCount, size_t baseVertexIndex, size_t startIndex, size_t indicesCount)

@@ -21,6 +21,7 @@ namespace Flare
 	private:
 		uint32_t m_Id;
 		BufferLayout m_Layout;
+		size_t m_BufferSize;
 	};
 
 	class OpenGLIndexBuffer : public IndexBuffer
