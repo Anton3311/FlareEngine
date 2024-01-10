@@ -3,7 +3,26 @@ Culling = None
 #begin vertex
 #version 450
 
-#include "Camera.glsl"
+struct CameraData
+{
+	vec3 Position;
+
+	mat4 Projection;
+	mat4 View;
+	mat4 ViewProjection;
+
+	mat4 InverseProjection;
+	mat4 InverseView;
+	mat4 InverseViewProjection;
+
+	float Near;
+	float Far;
+};
+
+layout(std140, binding = 0) uniform Camera
+{
+	CameraData u_Camera;
+};
 
 layout(std140, push_constant) uniform GridData
 {

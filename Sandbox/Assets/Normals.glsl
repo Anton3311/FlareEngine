@@ -4,7 +4,7 @@
 layout(location = 0) in vec3 i_Position;
 layout(location = 1) in vec3 i_Normal;
 
-#include "Camera.glsl"
+#include "Packages/RendererAssets/Assets/Camera.glsl"
 
 struct InstanceData
 {
@@ -36,8 +36,6 @@ void main()
 
 #begin pixel
 #version 450
-
-#include "Camera.glsl"
 
 struct VertexData
 {

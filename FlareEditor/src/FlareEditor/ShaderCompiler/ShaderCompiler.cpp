@@ -32,8 +32,10 @@ namespace Flare
             std::filesystem::path parent = requestingPath.parent_path();
             std::filesystem::path includedFilePath = parent / requested_source;
 
-            if (!std::filesystem::exists(includedFilePath))
-                includedFilePath = std::filesystem::path("assets/Shaders/") / requested_source;
+            if (std::string_view(requested_source)._Starts_with("Packages"))
+            {
+                includedFilePath = std::filesystem::absolute(std::filesystem::path("../") / requested_source);
+            }
 
             shaderc_include_result* includeData = new shaderc_include_result();
             includeData->content = nullptr;
