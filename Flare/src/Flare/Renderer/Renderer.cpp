@@ -312,10 +312,6 @@ namespace Flare
 		{
 			FLARE_PROFILE_SCOPE("DivideIntoGroups");
 
-			Math::Plane cameraNearPlane = Math::Plane::TroughPoint(
-				s_RendererData.CurrentViewport->FrameData.Camera.Position,
-				s_RendererData.CurrentViewport->FrameData.Camera.ViewDirection);
-			
 			for (size_t objectIndex = 0; objectIndex < s_RendererData.Queue.size(); objectIndex++)
 			{
 				const RenderableObject& object = s_RendererData.Queue[objectIndex];
@@ -323,7 +319,6 @@ namespace Flare
 					continue;
 
 				Math::AABB objectAABB = object.Mesh->GetSubMeshes()[object.SubMeshIndex].Bounds.Transformed(object.Transform);
-
 				for (size_t cascadeIndex = 0; cascadeIndex < shadowSettings.Cascades; cascadeIndex++)
 				{
 					bool intersects = true;
@@ -342,49 +337,52 @@ namespace Flare
 			}
 		}
 
-		float currentNearPlane = viewport->FrameData.Light.Near;
-		for (size_t cascadeIndex = 0; cascadeIndex < shadowSettings.Cascades; cascadeIndex++)
 		{
-			ShadowMappingParams params = perCascadeParams[cascadeIndex];
-
-			// 3. Extend near and far planes
-
-			Math::Plane nearPlane = Math::Plane::TroughPoint(params.CameraFrustumCenter, -lightDirection);
-			Math::Plane farPlane = Math::Plane::TroughPoint(params.CameraFrustumCenter, lightDirection);
-
-			float nearPlaneDistance = 0;
-			float farPlaneDistance = 0;
-			
-			for (uint32_t objectIndex : perCascadeObjects[cascadeIndex])
+			FLARE_PROFILE_SCOPE("ExtendFrustums");
+			float currentNearPlane = viewport->FrameData.Light.Near;
+			for (size_t cascadeIndex = 0; cascadeIndex < shadowSettings.Cascades; cascadeIndex++)
 			{
-				const RenderableObject& object = s_RendererData.Queue[objectIndex];
-				Math::AABB objectAABB = object.Mesh->GetSubMeshes()[object.SubMeshIndex].Bounds.Transformed(object.Transform);
+				ShadowMappingParams params = perCascadeParams[cascadeIndex];
 
-				glm::vec3 center = objectAABB.GetCenter();
-				glm::vec3 extents = objectAABB.Max - center;
+				// 3. Extend near and far planes
 
-				float projectedDistance = glm::dot(glm::abs(nearPlane.Normal), extents);
-				nearPlaneDistance = glm::max(nearPlaneDistance, nearPlane.Distance(center) + projectedDistance);
-				farPlaneDistance = glm::max(farPlaneDistance, farPlane.Distance(center) + projectedDistance);
+				Math::Plane nearPlane = Math::Plane::TroughPoint(params.CameraFrustumCenter, -lightDirection);
+				Math::Plane farPlane = Math::Plane::TroughPoint(params.CameraFrustumCenter, lightDirection);
+
+				float nearPlaneDistance = 0;
+				float farPlaneDistance = 0;
+
+				for (uint32_t objectIndex : perCascadeObjects[cascadeIndex])
+				{
+					const RenderableObject& object = s_RendererData.Queue[objectIndex];
+					Math::AABB objectAABB = object.Mesh->GetSubMeshes()[object.SubMeshIndex].Bounds.Transformed(object.Transform);
+
+					glm::vec3 center = objectAABB.GetCenter();
+					glm::vec3 extents = objectAABB.Max - center;
+
+					float projectedDistance = glm::dot(glm::abs(nearPlane.Normal), extents);
+					nearPlaneDistance = glm::max(nearPlaneDistance, nearPlane.Distance(center) + projectedDistance);
+					farPlaneDistance = glm::max(farPlaneDistance, farPlane.Distance(center) + projectedDistance);
+				}
+
+				nearPlaneDistance = -nearPlaneDistance;
+				farPlaneDistance = farPlaneDistance;
+
+				glm::mat4 view = glm::lookAt(params.CameraFrustumCenter + lightDirection * nearPlaneDistance, params.CameraFrustumCenter, glm::vec3(0.0f, 1.0f, 0.0f));
+
+				CameraData& lightView = viewport->FrameData.LightView[cascadeIndex];
+				lightView.View = view;
+				lightView.Projection = glm::ortho(
+					-params.BoundingSphereRadius,
+					params.BoundingSphereRadius,
+					-params.BoundingSphereRadius,
+					params.BoundingSphereRadius,
+					viewport->FrameData.Light.Near,
+					farPlaneDistance - nearPlaneDistance);
+
+				lightView.CalculateViewProjection();
+				currentNearPlane = shadowSettings.CascadeSplits[cascadeIndex];
 			}
-
-			nearPlaneDistance = -nearPlaneDistance;
-			farPlaneDistance = farPlaneDistance;
-
-			glm::mat4 view = glm::lookAt(params.CameraFrustumCenter + lightDirection * nearPlaneDistance, params.CameraFrustumCenter, glm::vec3(0.0f, 1.0f, 0.0f));
-
-			CameraData& lightView = viewport->FrameData.LightView[cascadeIndex];
-			lightView.View = view;
-			lightView.Projection = glm::ortho(
-				-params.BoundingSphereRadius,
-				params.BoundingSphereRadius,
-				-params.BoundingSphereRadius,
-				params.BoundingSphereRadius,
-				viewport->FrameData.Light.Near,
-				farPlaneDistance - nearPlaneDistance);
-
-			lightView.CalculateViewProjection();
-			currentNearPlane = shadowSettings.CascadeSplits[cascadeIndex];
 		}
 	}
 
@@ -418,41 +416,48 @@ namespace Flare
 		s_RendererData.CurrentViewport = &viewport;
 
 		{
-			FLARE_PROFILE_SCOPE("Renderer::UpdateLightUniformBuffer");
+			FLARE_PROFILE_SCOPE("UpdateLightUniformBuffer");
 			s_RendererData.LightBuffer->SetData(&viewport.FrameData.Light, sizeof(viewport.FrameData.Light), 0);
 		}
 
 		{
-			FLARE_PROFILE_SCOPE("Renderer::UpdateCameraUniformBuffer");
+			FLARE_PROFILE_SCOPE("UpdateCameraUniformBuffer");
 			s_RendererData.CameraBuffer->SetData(&viewport.FrameData.Camera, sizeof(CameraData), 0);
 		}
 
-		uint32_t size = (uint32_t)s_RendererData.ShadowMappingSettings.Resolution;
-		if (s_RendererData.ShadowsRenderTarget[0] == nullptr)
 		{
-			FrameBufferSpecifications shadowMapSpecs;
-			shadowMapSpecs.Width = size;
-			shadowMapSpecs.Height = size;
-			shadowMapSpecs.Attachments = { { FrameBufferTextureFormat::Depth, TextureWrap::Clamp, TextureFiltering::Linear } };
-
-			for (size_t i = 0; i < 4; i++)
-				s_RendererData.ShadowsRenderTarget[i] = FrameBuffer::Create(shadowMapSpecs);
-		}
-		else
-		{
-			auto& shadowMapSpecs = s_RendererData.ShadowsRenderTarget[0]->GetSpecifications();
-			if (shadowMapSpecs.Width != size || shadowMapSpecs.Height != size)
+			FLARE_PROFILE_SCOPE("ResizeShadowBuffers");
+			uint32_t size = (uint32_t)s_RendererData.ShadowMappingSettings.Resolution;
+			if (s_RendererData.ShadowsRenderTarget[0] == nullptr)
 			{
+				FrameBufferSpecifications shadowMapSpecs;
+				shadowMapSpecs.Width = size;
+				shadowMapSpecs.Height = size;
+				shadowMapSpecs.Attachments = { { FrameBufferTextureFormat::Depth, TextureWrap::Clamp, TextureFiltering::Linear } };
+
 				for (size_t i = 0; i < 4; i++)
-					s_RendererData.ShadowsRenderTarget[i]->Resize(size, size);
+					s_RendererData.ShadowsRenderTarget[i] = FrameBuffer::Create(shadowMapSpecs);
+			}
+			else
+			{
+				auto& shadowMapSpecs = s_RendererData.ShadowsRenderTarget[0]->GetSpecifications();
+				if (shadowMapSpecs.Width != size || shadowMapSpecs.Height != size)
+				{
+					for (size_t i = 0; i < 4; i++)
+						s_RendererData.ShadowsRenderTarget[i]->Resize(size, size);
+				}
 			}
 		}
 
-		for (size_t i = 0; i < s_RendererData.ShadowMappingSettings.Cascades; i++)
 		{
-			s_RendererData.ShadowsRenderTarget[i]->Bind();
-			RenderCommand::Clear();
+			FLARE_PROFILE_SCOPE("ClearShadowBuffers");
+			for (size_t i = 0; i < s_RendererData.ShadowMappingSettings.Cascades; i++)
+			{
+				s_RendererData.ShadowsRenderTarget[i]->Bind();
+				RenderCommand::Clear();
+			}
 		}
+
 		viewport.RenderTarget->Bind();
 
 		// Generate camera frustum planes
