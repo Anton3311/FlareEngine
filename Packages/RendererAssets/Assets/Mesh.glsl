@@ -160,7 +160,7 @@ float CalculateBlockerDistance(sampler2D shadowMap, vec3 projectedLightSpacePosi
 	float receieverDepth = projectedLightSpacePosition.z;
 	float blockerDistance = 0.0;
 	float samplesCount = 0;
-	float searchSize = LIGHT_SIZE * (receieverDepth - u_LightNear) / receieverDepth;
+	float searchSize = LIGHT_SIZE * (receieverDepth - u_LightNear) / receieverDepth * scale;
 
 	for (int i = 0; i < NUMBER_OF_SAMPLES; i++)
 	{
