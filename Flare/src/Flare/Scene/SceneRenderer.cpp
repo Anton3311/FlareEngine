@@ -1,5 +1,7 @@
 #include "SceneRenderer.h"
 
+#include "FlareCore/Profiler/Profiler.h"
+
 #include "Flare/Renderer/Renderer.h"
 #include "Flare/Renderer/MaterialsTable.h"
 
@@ -117,6 +119,15 @@ namespace Flare
 
 	void MeshesRendererSystem::OnUpdate(World& world, SystemExecutionContext& context)
 	{
+		FLARE_PROFILE_FUNCTION();
+
+		AssetHandle currentMaterialHandle = NULL_ASSET_HANDLE;
+		Ref<Material> currentMaterial = nullptr;
+		Ref<MaterialsTable> currentMaterialsTable = nullptr;
+		Ref<Material> errorMaterial = Renderer::GetErrorMaterial();
+
+		bool isMaterialTable = false;
+
 		for (EntityView view : m_Query)
 		{
 			auto transforms = view.View<TransformComponent>();
@@ -125,51 +136,39 @@ namespace Flare
 			for (EntityViewIterator entity = view.begin(); entity != view.end(); ++entity)
 			{
 				Ref<Mesh> mesh = AssetManager::GetAsset<Mesh>(meshes[*entity].Mesh);
-
 				const TransformComponent& transform = transforms[*entity];
-				const AssetMetadata* meta = AssetManager::GetAssetMetadata(meshes[*entity].Material);
-				if (!meta)
+				std::optional<Entity> id = view.GetEntity(entity.GetEntityIndex());
+
+				if (!mesh || !id)
 					continue;
 
-				if (meta->Type == AssetType::Material)
+				if (meshes[*entity].Material != currentMaterialHandle)
 				{
-					Ref<Material> material = AssetManager::GetAsset<Material>(meshes[*entity].Material);
-					std::optional<Entity> id = view.GetEntity(entity.GetEntityIndex());
-					if (!id || mesh == nullptr || material == nullptr)
+					const AssetMetadata* meta = AssetManager::GetAssetMetadata(meshes[*entity].Material);
+					if (!meta)
 						continue;
 
-					for (size_t i = 0; i < mesh->GetSubMeshes().size(); i++)
+					if (meta->Type == AssetType::Material)
 					{
-						Renderer::DrawMesh(mesh,
-							(uint32_t)i,
-							material,
-							transform.GetTransformationMatrix(),
-							meshes[*entity].Flags,
-							id.value().GetIndex());
+						currentMaterial = AssetManager::GetAsset<Material>(meshes[*entity].Material);
+						isMaterialTable = false;
 					}
+					else if (meta->Type == AssetType::MaterialsTable)
+					{
+						currentMaterialsTable = AssetManager::GetAsset<MaterialsTable>(meshes[*entity].Material);
+						isMaterialTable = true;
+					}
+
+					currentMaterialHandle = meshes[*entity].Material;
 				}
-				else if (meta->Type == AssetType::MaterialsTable)
+
+				if (!isMaterialTable)
 				{
-					Ref<MaterialsTable> table = AssetManager::GetAsset<MaterialsTable>(meshes[*entity].Material);
-
-					std::optional<Entity> id = view.GetEntity(entity.GetEntityIndex());
-					if (!id || mesh == nullptr || table == nullptr)
-						continue;
-
-					Ref<Material> errorMaterial = Renderer::GetErrorMaterial();
 					for (size_t i = 0; i < mesh->GetSubMeshes().size(); i++)
 					{
-						Ref<Material> material = nullptr;
-
-						if (i < table->Materials.size())
-							material = AssetManager::GetAsset<Material>(table->Materials[i]);
-
-						if (material == nullptr)
-							material = errorMaterial;
-
 						Renderer::DrawMesh(mesh,
 							(uint32_t)i,
-							material,
+							currentMaterial,
 							transform.GetTransformationMatrix(),
 							meshes[*entity].Flags,
 							id.value().GetIndex());
@@ -177,7 +176,20 @@ namespace Flare
 				}
 				else
 				{
-					continue;
+					for (size_t i = 0; i < mesh->GetSubMeshes().size(); i++)
+					{
+						Ref<Material> material = nullptr;
+
+						if (i < currentMaterialsTable->Materials.size())
+							material = AssetManager::GetAsset<Material>(currentMaterialsTable->Materials[i]);
+
+						Renderer::DrawMesh(mesh,
+							(uint32_t)i,
+							material == nullptr ? errorMaterial : material,
+							transform.GetTransformationMatrix(),
+							meshes[*entity].Flags,
+							id.value().GetIndex());
+					}
 				}
 			}
 		}

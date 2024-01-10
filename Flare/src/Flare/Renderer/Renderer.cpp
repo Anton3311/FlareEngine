@@ -858,6 +858,7 @@ namespace Flare
 
 	void Renderer::DrawMesh(const Ref<Mesh>& mesh, uint32_t subMesh, const Ref<Material>& material, const glm::mat4& transform, MeshRenderFlags flags, int32_t entityIndex)
 	{
+		FLARE_PROFILE_FUNCTION();
 		if (s_RendererData.ErrorMaterial == nullptr)
 			return;
 
