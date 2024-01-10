@@ -13,6 +13,7 @@ layout(location = 1) in vec3 i_Normal;
 layout(location = 2) in vec2 i_UV;
 
 #include "Camera.glsl"
+#include "Instancing.glsl"
 
 struct VertexData
 {
@@ -29,27 +30,17 @@ layout(std140, binding = 1) uniform LightData
 	vec3 u_LightDirection;
 };
 
-struct InstanceData
-{
-	mat4 Transform;
-	int EntityIndex;
-};
-
-layout(std140, binding = 3) buffer InstacesData
-{
-	InstanceData Data[];
-} u_InstancesData;
-
 layout(location = 0) out VertexData o_Vertex;
 layout(location = 5) out flat int o_EntityIndex;
 
 void main()
 {
-	mat4 normalTransform = transpose(inverse(u_InstancesData.Data[gl_InstanceIndex].Transform));
+	mat4 transform = GetInstanceTransform();
+	mat4 normalTransform = transpose(inverse(transform));
 	o_Vertex.Normal = (normalTransform * vec4(i_Normal, 1.0)).xyz;
     
-	vec4 position = u_Camera.ViewProjection * u_InstancesData.Data[gl_InstanceIndex].Transform * vec4(i_Position, 1.0);
-	vec4 transformed = u_InstancesData.Data[gl_InstanceIndex].Transform * vec4(i_Position, 1.0);
+	vec4 position = u_Camera.ViewProjection * transform * vec4(i_Position, 1.0);
+	vec4 transformed = transform * vec4(i_Position, 1.0);
 	o_Vertex.Position = transformed;
 
 	o_Vertex.UV = i_UV;
