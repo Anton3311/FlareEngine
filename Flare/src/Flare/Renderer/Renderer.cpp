@@ -33,6 +33,8 @@ namespace Flare
 		glm::mat4 Transform;
 		MeshRenderFlags Flags;
 		int32_t EntityIndex;
+
+		float SortKey;
 	};
 
 	struct ShadowData
@@ -529,16 +531,7 @@ namespace Flare
 		const RenderableObject& a = s_RendererData.Queue[aIndex];
 		const RenderableObject& b = s_RendererData.Queue[bIndex];
 
-		glm::vec3 centerA = a.Mesh->GetSubMeshes()[a.SubMeshIndex].Bounds.GetCenter();
-		glm::vec3 centerB = b.Mesh->GetSubMeshes()[b.SubMeshIndex].Bounds.GetCenter();
-
-		centerA = a.Transform * glm::vec4(centerA, 1.0);
-		centerB = b.Transform * glm::vec4(centerB, 1.0);
-
-		float aDistance = glm::distance2(centerA, s_RendererData.CurrentViewport->FrameData.Camera.Position);
-		float bDistance = glm::distance2(centerB, s_RendererData.CurrentViewport->FrameData.Camera.Position);
-
-		return aDistance < bDistance;
+		return a.SortKey < b.SortKey;
 
 		// TODO: group objects based on material and mesh, then sort by distance
 
@@ -611,7 +604,10 @@ namespace Flare
 
 			s_RendererData.Statistics.ObjectsCulled += (uint32_t)(s_RendererData.Queue.size() - s_RendererData.CulledObjectIndices.size());
 
-			std::sort(s_RendererData.CulledObjectIndices.begin(), s_RendererData.CulledObjectIndices.end(), CompareRenderableObjects);
+			{
+				FLARE_PROFILE_SCOPE("REnderer::GeomeryPass::Sort");
+				std::sort(s_RendererData.CulledObjectIndices.begin(), s_RendererData.CulledObjectIndices.end(), CompareRenderableObjects);
+			}
 
 			FrameBufferAttachmentsMask previousMask = s_RendererData.CurrentViewport->RenderTarget->GetWriteMask();
 		
@@ -872,11 +868,15 @@ namespace Flare
 		else
 			object.Material = s_RendererData.ErrorMaterial;
 
+		glm::vec3 center = mesh->GetSubMeshes()[subMesh].Bounds.GetCenter();
+		center = transform * glm::vec4(center, 1.0f);
+
 		object.Flags = flags;
 		object.Mesh = mesh;
 		object.SubMeshIndex = subMesh;
 		object.Transform = transform;
 		object.EntityIndex = entityIndex;
+		object.SortKey = glm::distance2(center, s_RendererData.CurrentViewport->FrameData.Camera.Position);
 	}
 
 	void Renderer::AddRenderPass(Ref<RenderPass> pass)
