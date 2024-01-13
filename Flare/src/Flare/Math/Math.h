@@ -46,6 +46,12 @@ namespace Flare::Math
 			return { planeNormal, -glm::dot(point, planeNormal)};
 		}
 
+		inline static Plane FromPoints(glm::vec3 a, glm::vec3 b, glm::vec3 c)
+		{
+			glm::vec3 normal = glm::normalize(glm::cross(b - a, c - b));
+			return Plane::TroughPoint(a, normal);
+		}
+
 		glm::vec3 Normal;
 		float Offset;
 	};
