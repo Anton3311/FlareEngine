@@ -47,6 +47,9 @@ namespace Flare
 		SystemGroupId m_OnRuntimeStartGroup;
 		SystemGroupId m_OnRuntimeEndGroup;
 
+		SystemGroupId m_OnFrameStart;
+		SystemGroupId m_OnFrameEnd;
+
 		Query m_CameraDataUpdateQuery;
 		Query m_DirectionalLightQuery;
 		Query m_EnvironmentQuery;

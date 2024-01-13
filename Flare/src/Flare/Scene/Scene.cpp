@@ -49,6 +49,9 @@ namespace Flare
 		m_OnRuntimeStartGroup = systemsManager.CreateGroup("On Runtime Start");
 		m_OnRuntimeEndGroup = systemsManager.CreateGroup("On Runtime End");
 
+		m_OnFrameStart = systemsManager.CreateGroup("On Frame End");
+		m_OnFrameEnd = systemsManager.CreateGroup("On Frame End");
+
 		m_CameraDataUpdateQuery = m_World.NewQuery().With<TransformComponent, CameraComponent>().Create();
 		m_DirectionalLightQuery = m_World.NewQuery().With<TransformComponent, DirectionalLight>().Create();
 		m_EnvironmentQuery = m_World.NewQuery().With<Environment>().Create();
@@ -192,7 +195,10 @@ namespace Flare
 
 	void Scene::OnUpdateRuntime()
 	{
+		m_World.GetSystemsManager().ExecuteGroup(m_OnFrameStart);
 		m_World.GetSystemsManager().ExecuteGroup(m_ScriptingUpdateGroup);
+		m_World.GetSystemsManager().ExecuteGroup(m_OnFrameEnd);
+
 		m_World.Entities.ClearQueuedForDeletion();
 	}
 
