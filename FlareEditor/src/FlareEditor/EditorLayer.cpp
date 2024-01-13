@@ -227,7 +227,10 @@ namespace Flare
         for (Ref<ViewportWindow>& window : m_ViewportWindows)
             window->OnEvent(event);
         
-        InputManager::ProcessEvent(event);
+        // InputManager only works with Game viewport,
+        // so the events should only be processed when the Game window is focused
+        if (!event.Handled && m_GameWindow->IsFocused())
+			InputManager::ProcessEvent(event);
     }
 
     void EditorLayer::OnImGUIRender()

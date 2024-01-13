@@ -50,6 +50,7 @@ namespace Flare
 		glm::vec2 m_PreviousMousePosition = glm::vec2(0.0f);
 
 		bool m_IsMoved = false;
+		bool m_PreviousIsControlled = false;
 		bool m_IsControlled = false;
 
 		glm::mat4 m_ProjectionMatrix = glm::mat4(1.0f);

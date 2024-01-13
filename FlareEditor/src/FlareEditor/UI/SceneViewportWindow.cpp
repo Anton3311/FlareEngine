@@ -185,36 +185,44 @@ namespace Flare
 
 	void SceneViewportWindow::OnEvent(Event& event)
 	{
-		if (!m_IsFocused)
+		EventDispatcher dispatcher(event);
+
+		if (m_IsFocused)
+		{
+			dispatcher.Dispatch<KeyReleasedEvent>([this](KeyReleasedEvent& e) -> bool
+				{
+					GuizmoMode guizmoMode = GuizmoMode::None;
+					switch (e.GetKeyCode())
+					{
+					case KeyCode::G:
+						guizmoMode = GuizmoMode::Translate;
+						break;
+					case KeyCode::R:
+						guizmoMode = GuizmoMode::Rotate;
+						break;
+					case KeyCode::S:
+						guizmoMode = GuizmoMode::Scale;
+						break;
+					default:
+						return false;
+					}
+
+					EditorLayer::GetInstance().Guizmo = guizmoMode;
+					return false;
+				});
+		}
+
+		bool skipCamera = false;
+		if (!m_IsHovered || !m_IsFocused)
+		{
+			dispatcher.Dispatch<MouseMoveEvent>([&skipCamera](auto& e) -> bool { skipCamera = true; return false; });
+			dispatcher.Dispatch<MouseScrollEvent>([&skipCamera](auto& e) -> bool { skipCamera = true; return false; });
+		}
+
+		if (skipCamera)
 			return;
 
-		EventDispatcher dispatcher(event);
-		dispatcher.Dispatch<KeyReleasedEvent>([this](KeyReleasedEvent& e) -> bool
-		{
-			GuizmoMode guizmoMode = GuizmoMode::None;
-			switch (e.GetKeyCode())
-			{
-			case KeyCode::G:
-				guizmoMode = GuizmoMode::Translate;
-				break;
-			case KeyCode::R:
-				guizmoMode = GuizmoMode::Rotate;
-				break;
-			case KeyCode::S:
-				guizmoMode = GuizmoMode::Scale;
-				break;
-			default:
-				return false;
-			}
-
-			EditorLayer::GetInstance().Guizmo = guizmoMode;
-			return false;
-		});
-
-		if (m_IsHovered)
-		{
-			m_Camera.ProcessEvents(event);
-		}
+		m_Camera.ProcessEvents(event);
 	}
 
 	void SceneViewportWindow::CreateFrameBuffer()

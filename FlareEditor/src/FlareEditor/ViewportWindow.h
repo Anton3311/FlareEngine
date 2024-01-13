@@ -32,6 +32,8 @@ namespace Flare
 
 		const std::string& GetName() const { return m_Name; }
 
+		inline const bool IsFocused() const { return m_IsFocused; }
+
 		void PrepareViewport();
 		void SetViewProjection(const glm::mat4& projection) { m_Viewport.FrameData.Camera.Projection = projection; }
 	protected:

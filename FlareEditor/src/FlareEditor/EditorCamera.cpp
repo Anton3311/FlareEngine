@@ -26,6 +26,7 @@ namespace Flare
 		EventDispatcher dispatcher(event);
 		dispatcher.Dispatch<MouseButtonPressedEvent>([this](MouseButtonPressedEvent& event) -> bool
 		{
+			m_PreviousIsControlled = m_IsControlled;
 			m_IsControlled = event.GetMouseCode() == MouseCode::ButtonMiddle;
 			return false;
 		});
@@ -33,7 +34,11 @@ namespace Flare
 		dispatcher.Dispatch<MouseButtonReleasedEvent>([this](MouseButtonReleasedEvent& event) -> bool
 		{
 			if (m_IsControlled && event.GetMouseCode() == MouseCode::ButtonMiddle)
+			{
+				m_PreviousIsControlled = m_IsControlled;
 				m_IsControlled = false;
+			}
+
 			return false;
 		});
 
@@ -52,14 +57,13 @@ namespace Flare
 
 		dispatcher.Dispatch<MouseMoveEvent>([this](MouseMoveEvent& event) -> bool
 		{
-			bool isControlled = InputManager::IsMouseButtonHeld(MouseCode::ButtonMiddle);
-
 			glm::vec2 delta = event.GetPosition() - m_ViewportPosition - m_PreviousMousePosition;
 
-			if (isControlled && !m_IsControlled)
-				delta = glm::vec2(0, 0);
-
-			m_IsControlled = isControlled;
+			if (!m_PreviousIsControlled && m_IsControlled)
+			{
+				delta = glm::vec2(0.0f);
+				m_PreviousIsControlled = m_IsControlled;
+			}
 
 			if (m_IsControlled && !m_IsMoved)
 				Rotate(delta);
