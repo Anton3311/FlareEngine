@@ -23,11 +23,14 @@ namespace Flare
 
 	struct RendererStatistics
 	{
-		uint32_t DrawCallsCount;
-		uint32_t DrawCallsSavedByInstancing;
+		uint32_t DrawCallsCount = 0;
+		uint32_t DrawCallsSavedByInstancing = 0;
 
-		uint32_t ObjectsSubmitted;
-		uint32_t ObjectsCulled;
+		uint32_t ObjectsSubmitted = 0;
+		uint32_t ObjectsCulled = 0;
+
+		float ShadowPassTime = 0.0f;
+		float GeometryPassTime = 0.0f;
 	};
 
 	struct ShadowSettings

@@ -7,6 +7,7 @@
 #include "Flare/Renderer2D/Renderer2D.h"
 #include "Flare/Renderer/Renderer.h"
 #include "Flare/Renderer/ShaderStorageBuffer.h"
+#include "Flare/Renderer/GPUTimer.h"
 
 #include "Flare/Project/Project.h"
 
@@ -95,6 +96,9 @@ namespace Flare
 
 		Ref<ShaderStorageBuffer> InstancesShaderBuffer = nullptr;
 		std::vector<DrawIndirectCommandSubMeshData> IndirectDrawData;
+
+		Ref<GPUTimer> ShadowPassTimer = nullptr;
+		Ref<GPUTimer> GeometryPassTimer = nullptr;
 	};
 	
 	RendererData s_RendererData;
@@ -120,6 +124,9 @@ namespace Flare
 		s_RendererData.LightBuffer = UniformBuffer::Create(sizeof(LightData), 1);
 		s_RendererData.ShadowDataBuffer = UniformBuffer::Create(sizeof(ShadowData), 2);
 		s_RendererData.InstancesShaderBuffer = ShaderStorageBuffer::Create(3);
+
+		s_RendererData.ShadowPassTimer = GPUTimer::Create();
+		s_RendererData.GeometryPassTimer = GPUTimer::Create();
 
 		s_RendererData.ShadowMappingSettings.Resolution = ShadowSettings::ShadowResolution::_2048;
 		s_RendererData.ShadowMappingSettings.Bias = 0.015f;
@@ -177,6 +184,8 @@ namespace Flare
 		s_RendererData.Statistics.DrawCallsSavedByInstancing = 0;
 		s_RendererData.Statistics.ObjectsCulled = 0;
 		s_RendererData.Statistics.ObjectsSubmitted = 0;
+		s_RendererData.Statistics.GeometryPassTime = 0.0f;
+		s_RendererData.Statistics.ShadowPassTime = 0.0f;
 	}
 
 	void Renderer::SetMainViewport(Viewport& viewport)
@@ -595,6 +604,7 @@ namespace Flare
 
 		{
 			FLARE_PROFILE_SCOPE("Renderer::GeometryPass");
+			s_RendererData.GeometryPassTimer->Start();
 
 			RenderCommand::SetViewport(0, 0, s_RendererData.CurrentViewport->GetSize().x, s_RendererData.CurrentViewport->GetSize().y);
 			s_RendererData.CurrentViewport->RenderTarget->Bind();
@@ -627,6 +637,8 @@ namespace Flare
 			s_RendererData.InstanceDataBuffer.clear();
 			s_RendererData.CulledObjectIndices.clear();
 			s_RendererData.Queue.clear();
+
+			s_RendererData.GeometryPassTimer->Stop();
 		}
 	}
 
@@ -683,6 +695,8 @@ namespace Flare
 	void Renderer::ExecuteShadowPass()
 	{
 		FLARE_PROFILE_FUNCTION();
+
+		s_RendererData.ShadowPassTimer->Start();
 
 		std::vector<uint32_t> perCascadeObjects[ShadowSettings::MaxCascades];
 
@@ -759,6 +773,7 @@ namespace Flare
 		}
 
 		s_RendererData.CurrentInstancingMesh.Reset();
+		s_RendererData.ShadowPassTimer->Stop();
 	}
 
 	void Renderer::FlushInstances()
@@ -811,6 +826,8 @@ namespace Flare
 
 	void Renderer::EndScene()
 	{
+		s_RendererData.Statistics.ShadowPassTime += s_RendererData.ShadowPassTimer->GetElapsedTime().value_or(0.0f);
+		s_RendererData.Statistics.GeometryPassTime += s_RendererData.GeometryPassTimer->GetElapsedTime().value_or(0.0f);
 	}
 
 	void Renderer::DrawFullscreenQuad(const Ref<Material>& material)

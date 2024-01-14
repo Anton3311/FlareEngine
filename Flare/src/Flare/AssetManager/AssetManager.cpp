@@ -1,5 +1,7 @@
 #include "AssetManager.h"
 
+#include "FlareCore/Profiler/Profiler.h"
+
 namespace Flare
 {
 	Ref<AssetManagerBase> s_Instance = nullptr;
@@ -16,21 +18,25 @@ namespace Flare
 
 	const AssetMetadata* AssetManager::GetAssetMetadata(AssetHandle handle)
 	{
+		FLARE_PROFILE_FUNCTION();
 		return s_Instance->GetAssetMetadata(handle);
 	}
 
 	Ref<Asset> AssetManager::GetRawAsset(AssetHandle handle)
 	{
+		FLARE_PROFILE_FUNCTION();
 		return s_Instance->GetAsset(handle);
 	}
 
 	bool AssetManager::IsAssetHandleValid(AssetHandle handle)
 	{
+		FLARE_PROFILE_FUNCTION();
 		return s_Instance->IsAssetHandleValid(handle);
 	}
 
 	bool AssetManager::IsAssetLoaded(AssetHandle handle)
 	{
+		FLARE_PROFILE_FUNCTION();
 		return s_Instance->IsAssetLoaded(handle);
 	}
 }

@@ -285,9 +285,12 @@ namespace Flare
 
         {
             ImGui::Begin("Renderer");
+			const auto& stats = Renderer::GetStatistics();
 
-            ImGui::Text("Frame time %f", m_PreviousFrameTime);
+            ImGui::Text("Frame time %f ms", m_PreviousFrameTime * 1000.0f);
             ImGui::Text("FPS %f", 1.0f / m_PreviousFrameTime);
+            ImGui::Text("Shadow Pass %f ms", stats.ShadowPassTime);
+            ImGui::Text("Geometry Pass %f ms", stats.GeometryPassTime);
 
             Ref<Window> window = Application::GetInstance().GetWindow();
 
@@ -308,7 +311,6 @@ namespace Flare
 
             if (ImGui::CollapsingHeader("Renderer"))
             {
-                const auto& stats = Renderer::GetStatistics();
                 ImGui::Text("Submitted: %d Culled: %d", stats.ObjectsSubmitted, stats.ObjectsCulled);
                 ImGui::Text("Draw calls (Saved by instancing: %d): %d", stats.DrawCallsSavedByInstancing, stats.DrawCallsCount);
             }
