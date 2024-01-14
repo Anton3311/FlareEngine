@@ -59,6 +59,7 @@ M.setup_project = function(name)
 		root .. "Flare/vendor/glm",
 		root .. "Flare/vendor/msdf/msdf-atlas-gen/msdf-atlas-gen",
 		root .. "Flare/vendor/msdf/msdf-atlas-gen/msdfgen",
+		root .. "Flare/vendor/Tracy/tracy/",
 	})
 
 	filter "configurations:not Dist"
@@ -76,10 +77,10 @@ M.setup_project = function(name)
 		symbols "on"
 
 	filter "configurations:Release"
-		defines "FLARE_RELEASE"
+		defines { "FLARE_RELEASE", "TRACY_ENABLE", "TRACY_IMPORTS" }
 		runtime "Release"
 		optimize "on"
-		
+
 	filter "configurations:Dist"
 		defines "FLARE_DIST"
 		runtime "Release"
