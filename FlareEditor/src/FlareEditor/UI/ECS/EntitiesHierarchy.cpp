@@ -83,20 +83,14 @@ namespace Flare
 				Entity entity = records[i].Id;
 				ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow
 					| ImGuiTreeNodeFlags_FramePadding
-					| ImGuiTreeNodeFlags_Bullet
+					| ImGuiTreeNodeFlags_Leaf
 					| ImGuiTreeNodeFlags_SpanFullWidth;
 
 				ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImGui::GetStyle().FramePadding / 2);
 
 				bool selected = entity == selectedEntity;
 				if (selected)
-				{
-					flags |= ImGuiTreeNodeFlags_Framed;
-					ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0.0f);
-					ImGui::PushStyleColor(ImGuiCol_Header, ImGuiTheme::Primary);
-					ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImGuiTheme::Primary);
-					ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImGuiTheme::PrimaryVariant);
-				}
+					flags |= ImGuiTreeNodeFlags_Selected;
 
 				std::optional<NameComponent*> entityName = m_World->TryGetEntityComponent<NameComponent>(entity);
 
@@ -105,12 +99,6 @@ namespace Flare
 					opened = ImGui::TreeNodeEx((void*)std::hash<Entity>()(entity), flags, entityName.value()->Value.c_str());
 				else
 					opened = ImGui::TreeNodeEx((void*)std::hash<Entity>()(entity), flags, "Entity %d", entity.GetIndex());
-
-				if (selected)
-				{
-					ImGui::PopStyleVar(1);
-					ImGui::PopStyleColor(3);
-				}
 
 				ImGui::PopStyleVar(1);
 
