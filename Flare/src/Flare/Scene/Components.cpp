@@ -43,6 +43,13 @@ namespace Flare
 		  Near(0.1f),
 		  Far(1000.0f) {}
 
+	CameraComponent::CameraComponent(ProjectionType projection)
+		: Projection(projection),
+		  Size(10.0f),
+		  FOV(60.0f),
+		  Near(0.1f),
+		  Far(1000.0f) {}
+
 	glm::mat4 CameraComponent::GetProjection() const
 	{
 		glm::uvec2 viewportSize = Renderer::GetMainViewport().GetSize();

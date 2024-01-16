@@ -31,8 +31,43 @@ namespace Flare
 
 		if (ImGui::BeginPopupContextWindow("Entity Hierarchy Context Menu"))
 		{
-			if (HAS_BIT(m_Features, EntitiesHierarchyFeatures::CreateEntity) && ImGui::MenuItem("Create Entity"))
-				m_World->CreateEntity<TransformComponent, SerializationId>();
+			if (HAS_BIT(m_Features, EntitiesHierarchyFeatures::CreateEntity))
+			{
+				if (ImGui::BeginMenu("Create"))
+				{
+					if (ImGui::MenuItem("Entity"))
+						m_World->CreateEntity<TransformComponent, SerializationId>();
+
+					if (ImGui::MenuItem("Perspective Camera"))
+					{
+						m_World->CreateEntity(
+							TransformComponent(),
+							SerializationId(),
+							CameraComponent(CameraComponent::ProjectionType::Perspective));
+					}
+
+					if (ImGui::MenuItem("Orthographic Camera"))
+					{
+						m_World->CreateEntity(
+							TransformComponent(),
+							SerializationId(),
+							CameraComponent(CameraComponent::ProjectionType::Orthographic));
+					}
+
+					if (ImGui::MenuItem("Directional Light"))
+					{
+						m_World->CreateEntity(TransformComponent(), SerializationId(), DirectionalLight());
+					}
+
+					if (ImGui::MenuItem("Environment"))
+					{
+						m_World->CreateEntity(TransformComponent(), SerializationId(), Environment());
+					}
+
+					ImGui::EndMenu();
+				}
+
+			}
 
 			ImGui::EndMenu();
 		}

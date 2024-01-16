@@ -79,6 +79,7 @@ namespace Flare
         };
 
         CameraComponent();
+        CameraComponent(ProjectionType projection);
 
         glm::mat4 GetProjection() const;
         glm::vec3 ScreenToWorld(glm::vec2 point) const;
