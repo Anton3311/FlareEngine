@@ -72,7 +72,9 @@ namespace Flare
     void AssetManagerWindow::RenderDirectory()
     {
         const AssetTreeNode& node = m_AssetTree[m_NodeRenderIndex];
-        ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_SpanFullWidth;
+        ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow
+            | ImGuiTreeNodeFlags_FramePadding
+            | ImGuiTreeNodeFlags_SpanFullWidth;
 
         bool opened = ImGui::TreeNodeEx(node.Name.c_str(), flags, "%s", node.Name.c_str());
         if (ImGui::BeginPopupContextItem(node.Name.c_str()))
@@ -169,6 +171,10 @@ namespace Flare
                 | ImGuiTreeNodeFlags_SpanFullWidth
                 | ImGuiTreeNodeFlags_Leaf;
 
+			const auto& editorSelection = EditorLayer::GetInstance().Selection;
+			if (editorSelection.GetType() == EditorSelectionType::Asset && node.Handle == editorSelection.GetAssetHandle())
+				flags |= ImGuiTreeNodeFlags_Selected;
+
             const ImGuiStyle& style = ImGui::GetStyle();
             ImGui::PushStyleColor(ImGuiCol_Text, style.Colors[ImGuiCol_TextDisabled]);
 
@@ -196,7 +202,13 @@ namespace Flare
 
     void AssetManagerWindow::RenderAssetItem(AssetHandle handle)
     {
-        ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_SpanFullWidth;
+        ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow
+            | ImGuiTreeNodeFlags_FramePadding
+            | ImGuiTreeNodeFlags_SpanFullWidth;
+
+        const auto& editorSelection = EditorLayer::GetInstance().Selection;
+        if (editorSelection.GetType() == EditorSelectionType::Asset && handle == editorSelection.GetAssetHandle())
+            flags |= ImGuiTreeNodeFlags_Selected;
 
         FLARE_CORE_ASSERT(AssetManager::IsAssetHandleValid(handle));
 
