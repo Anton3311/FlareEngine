@@ -32,6 +32,8 @@ namespace Flare
 		inline glm::vec3 GetRotationOrigin() const { return m_Origin; }
 		inline float GetZoom() const { return m_DistanceToOrigin; }
 
+		void SetPosition(glm::vec3 position);
+
 		void ProcessEvents(Event& event);
 		void OnViewportChanged(glm::ivec2 viewportSize, glm::ivec2 viewportPosition);
 

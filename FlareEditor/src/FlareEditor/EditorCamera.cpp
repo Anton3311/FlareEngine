@@ -21,6 +21,12 @@ namespace Flare
 		return m_Origin - TransformDirection(glm::vec3(0.0f, 0.0f, -1.0f)) * m_DistanceToOrigin;
 	}
 
+	void EditorCamera::SetPosition(glm::vec3 position)
+	{
+		m_Origin = position;
+		RecalculateViewMatrix();
+	}
+
 	void EditorCamera::ProcessEvents(Event& event)
 	{
 		EventDispatcher dispatcher(event);

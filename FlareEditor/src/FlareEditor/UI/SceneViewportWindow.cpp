@@ -203,6 +203,19 @@ namespace Flare
 					case KeyCode::S:
 						guizmoMode = GuizmoMode::Scale;
 						break;
+					case KeyCode::F:
+					{
+						const auto& editorSelection = EditorLayer::GetInstance().Selection;
+						if (editorSelection.GetType() == EditorSelectionType::Entity)
+						{
+							const World& world = Scene::GetActive()->GetECSWorld();
+							const TransformComponent* transform = world.TryGetEntityComponent<TransformComponent>(editorSelection.GetEntity()).value_or(nullptr);
+
+							if (transform)
+								m_Camera.SetPosition(transform->Position);
+						}
+						break;
+					}
 					default:
 						return false;
 					}
