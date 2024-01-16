@@ -53,12 +53,12 @@ namespace Flare
 		if (world.IsEntityAlive(entity))
 		{
 			world.Entities.AddEntityComponent(entity, id, nullptr);
-			return (uint8_t*)world.Entities.GetEntityComponent(entity, id).value();
+			return (uint8_t*)world.Entities.GetEntityComponent(entity, id);
 		}
 		else
 		{
 			entity = world.Entities.CreateEntity(ComponentSet(&id, 1));
-			return (uint8_t*)world.Entities.GetEntityComponent(entity, id).value();
+			return (uint8_t*)world.Entities.GetEntityComponent(entity, id);
 		}
 	}
 
@@ -67,11 +67,11 @@ namespace Flare
 		emitter << YAML::BeginMap;
 
 		{
-			std::optional<const SerializationId*> serializationId = world.TryGetEntityComponent<SerializationId>(entity);
+			const SerializationId* serializationId = world.TryGetEntityComponent<SerializationId>(entity);
 			emitter << YAML::Key << "SerializationId" << YAML::Value;
 
 			if (serializationId)
-				emitter << serializationId.value()->Id;
+				emitter << serializationId->Id;
 			else
 				emitter << UUID();
 		}

@@ -41,10 +41,10 @@ namespace Sandbox
 
 		virtual void OnUpdate(World& world, SystemExecutionContext& context) override
 		{
-			std::optional<const RotatingQuadData*> data = World::GetCurrent().TryGetSingletonComponent<const RotatingQuadData>();
-			if (data.has_value())
+			const RotatingQuadData* data = World::GetCurrent().TryGetSingletonComponent<const RotatingQuadData>();
+			if (data)
 			{
-				Ref<Prefab> prefab = AssetManager::GetAsset<Prefab>(data.value()->PrefabHandle);
+				Ref<Prefab> prefab = AssetManager::GetAsset<Prefab>(data->PrefabHandle);
 
 				static std::random_device s_Device;
 				static std::mt19937_64 s_Engine(s_Device());
@@ -102,7 +102,7 @@ namespace Sandbox
 							break;
 						}
 
-						transforms[entity].Rotation.z += data.value()->RotationSpeed * Time::GetDeltaTime();
+						transforms[entity].Rotation.z += data->RotationSpeed * Time::GetDeltaTime();
 
 						entityIndex++;
 					}

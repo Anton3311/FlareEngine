@@ -74,21 +74,15 @@ namespace Flare
 		}
 
 		template<typename T>
-		constexpr std::optional<T*> TryGetEntityComponent(Entity entity)
+		constexpr T* TryGetEntityComponent(Entity entity)
 		{
-			std::optional<void*> componentData = Entities.GetEntityComponent(entity, COMPONENT_ID(T));
-			if (componentData.has_value())
-				return (T*)componentData.value();
-			return {};
+			return (T*)Entities.GetEntityComponent(entity, COMPONENT_ID(T));
 		}
 
 		template<typename T>
-		constexpr std::optional<const T*> TryGetEntityComponent(Entity entity) const
+		constexpr const T* TryGetEntityComponent(Entity entity) const
 		{
-			std::optional<const void*> componentData = Entities.GetEntityComponent(entity, COMPONENT_ID(T));
-			if (componentData.has_value())
-				return (const T*)componentData.value();
-			return {};
+			return (const T*) Entities.GetEntityComponent(entity, COMPONENT_ID(T));
 		}
 
 		template<typename T>
@@ -123,12 +117,9 @@ namespace Flare
 		}
 
 		template<typename T>
-		constexpr std::optional<T*> TryGetSingletonComponent()
+		constexpr T* TryGetSingletonComponent()
 		{
-			auto result = Entities.GetSingletonComponent(COMPONENT_ID(T));
-			if (result.has_value())
-				return (T*)result.value();
-			return {};
+			return (T*)Entities.GetSingletonComponent(COMPONENT_ID(T));
 		}
 
 		inline QueryBuilder NewQuery()

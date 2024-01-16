@@ -523,7 +523,7 @@ namespace Flare
 		return GetEntityStorage(record.Archetype).GetEntitySize();
 	}
 
-	std::optional<void*> Entities::GetEntityComponent(Entity entity, ComponentId component)
+	void* Entities::GetEntityComponent(Entity entity, ComponentId component)
 	{
 		auto it = FindEntity(entity);
 		if (it == m_EntityToRecord.end())
@@ -541,11 +541,11 @@ namespace Flare
 		return entityData + archetype.ComponentOffsets[componentIndex.value()];
 	}
 
-	std::optional<const void*> Entities::GetEntityComponent(Entity entity, ComponentId component) const
+	const void* Entities::GetEntityComponent(Entity entity, ComponentId component) const
 	{
 		auto it = FindEntity(entity);
 		if (it == m_EntityToRecord.end())
-			return {};
+			return nullptr;
 
 		const EntityRecord& entityRecord = m_EntityRecords[it->second];
 		const ArchetypeRecord& archetype = m_Archetypes.Records[entityRecord.Archetype];
@@ -553,13 +553,13 @@ namespace Flare
 
 		std::optional<size_t> componentIndex = m_Archetypes.GetArchetypeComponentIndex(entityRecord.Archetype, component);
 		if (!componentIndex.has_value())
-			return {};
+			return nullptr;
 
 		const uint8_t* entityData = storage.GetEntityData(entityRecord.BufferIndex);
 		return entityData + archetype.ComponentOffsets[componentIndex.value()];
 	}
 
-	std::optional<void*> Entities::GetSingletonComponent(ComponentId id) const
+	void* Entities::GetSingletonComponent(ComponentId id) const
 	{
 		FLARE_CORE_ASSERT(m_Components.IsComponentIdValid(id));
 
@@ -567,7 +567,7 @@ namespace Flare
 		if (it == m_Archetypes.ComponentToArchetype.end())
 		{
 			FLARE_CORE_ERROR("Failed to get singleton component: World doesn't contain any entities with component '{0}'", m_Components.GetComponentInfo(id).Name);
-			return {};
+			return nullptr;
 		}
 
 		const auto& archetypes = it->second;
@@ -587,7 +587,7 @@ namespace Flare
 				else
 				{
 					FLARE_CORE_ERROR("Failed to get singleton component: World contains multiple entities with component '{0}'", m_Components.GetComponentInfo(id).Name);
-					return {};
+					return nullptr;
 				}
 			}
 		}
@@ -595,7 +595,7 @@ namespace Flare
 		if (archetype == INVALID_ARCHETYPE_ID)
 		{
 			FLARE_CORE_ERROR("Failed to get singleton component: World doesn't contain any entities with component '{0}'", m_Components.GetComponentInfo(id).Name);
-			return {};
+			return nullptr;
 		}
 
 		const ArchetypeRecord& record = m_Archetypes[archetype];
@@ -604,7 +604,7 @@ namespace Flare
 		if (storage.GetEntitiesCount() != 1)
 		{
 			FLARE_CORE_ERROR("Failed to get singleton component: World contains multiple entities with component '{0}'", m_Components.GetComponentInfo(id).Name);
-			return {};
+			return nullptr;
 		}
 
 		uint8_t* entityData = storage.GetEntityData(0);

@@ -209,7 +209,7 @@ namespace Flare
 						if (editorSelection.GetType() == EditorSelectionType::Entity)
 						{
 							const World& world = Scene::GetActive()->GetECSWorld();
-							const TransformComponent* transform = world.TryGetEntityComponent<TransformComponent>(editorSelection.GetEntity()).value_or(nullptr);
+							const TransformComponent* transform = world.TryGetEntityComponent<TransformComponent>(editorSelection.GetEntity());
 
 							if (transform)
 								m_Camera.SetPosition(transform->Position);
@@ -297,22 +297,22 @@ namespace Flare
 						if (!world.IsEntityAlive(entity))
 							break;
 
-						std::optional<SpriteComponent*> sprite = world.TryGetEntityComponent<SpriteComponent>(entity);
-						if (sprite.has_value())
-							sprite.value()->Texture = handle;
+						SpriteComponent* sprite = world.TryGetEntityComponent<SpriteComponent>(entity);
+						if (sprite)
+							sprite->Texture = handle;
 
 						break;
 					}
 					case AssetType::Material:
 					{
-						std::optional<MeshComponent*> meshComponent = world.TryGetEntityComponent<MeshComponent>(entity);
+						MeshComponent* meshComponent = world.TryGetEntityComponent<MeshComponent>(entity);
 						if (meshComponent)
-							meshComponent.value()->Material = handle;
+							meshComponent->Material = handle;
 						else
 						{
-							std::optional<MaterialComponent*> materialComponent = world.TryGetEntityComponent<MaterialComponent>(entity);
+							MaterialComponent* materialComponent = world.TryGetEntityComponent<MaterialComponent>(entity);
 							if (materialComponent)
-								materialComponent.value()->Material = handle;
+								materialComponent->Material = handle;
 						}
 
 						break;
@@ -354,10 +354,10 @@ namespace Flare
 				(float)m_Viewport.GetSize().x,
 				(float)m_Viewport.GetSize().y);
 
-			std::optional<TransformComponent*> transform = world.TryGetEntityComponent<TransformComponent>(selectedEntity);
-			if (transform.has_value())
+			TransformComponent* transform = world.TryGetEntityComponent<TransformComponent>(selectedEntity);
+			if (transform)
 			{
-				glm::mat4 transformationMatrix = transform.value()->GetTransformationMatrix();
+				glm::mat4 transformationMatrix = transform->GetTransformationMatrix();
 
 				// TODO: move snap values to editor settings
 				float snapValue = 0.5f;
@@ -391,11 +391,11 @@ namespace Flare
 					nullptr, snappingEnabled ? &snapValue : nullptr))
 				{
 					Math::DecomposeTransform(transformationMatrix,
-						transform.value()->Position,
-						transform.value()->Rotation,
-						transform.value()->Scale);
+						transform->Position,
+						transform->Rotation,
+						transform->Scale);
 
-					transform.value()->Rotation = glm::degrees(transform.value()->Rotation);
+					transform->Rotation = glm::degrees(transform->Rotation);
 				}
 			}
 		}

@@ -92,11 +92,11 @@ namespace Flare
 				if (selected)
 					flags |= ImGuiTreeNodeFlags_Selected;
 
-				std::optional<NameComponent*> entityName = m_World->TryGetEntityComponent<NameComponent>(entity);
+				NameComponent* entityName = m_World->TryGetEntityComponent<NameComponent>(entity);
 
 				bool opened = false;
-				if (entityName.has_value())
-					opened = ImGui::TreeNodeEx((void*)std::hash<Entity>()(entity), flags, entityName.value()->Value.c_str());
+				if (entityName)
+					opened = ImGui::TreeNodeEx((void*)std::hash<Entity>()(entity), flags, entityName->Value.c_str());
 				else
 					opened = ImGui::TreeNodeEx((void*)std::hash<Entity>()(entity), flags, "Entity %d", entity.GetIndex());
 

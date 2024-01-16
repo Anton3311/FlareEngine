@@ -87,13 +87,13 @@ namespace Flare
 
 		// Component operations
 
-		std::optional<void*> GetEntityComponent(Entity entity, ComponentId component);
-		std::optional<const void*> GetEntityComponent(Entity entity, ComponentId component) const;
+		void* GetEntityComponent(Entity entity, ComponentId component);
+		const void* GetEntityComponent(Entity entity, ComponentId component) const;
 
 		const std::vector<ComponentId>& GetEntityComponents(Entity entity);
 		bool HasComponent(Entity entity, ComponentId component) const;
 
-		std::optional<void*> GetSingletonComponent(ComponentId id) const;
+		void* GetSingletonComponent(ComponentId id) const;
 		std::optional<Entity> GetSingletonEntity(const Query& query) const;
 
 		// Archetypes
