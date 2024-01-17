@@ -104,6 +104,16 @@ namespace Flare
 		}
 	};
 
+	struct PointLightData
+	{
+		PointLightData(glm::vec3 position, glm::vec4 color)
+			: Position(position), Color(color) {}
+
+		glm::vec3 Position;
+		float Padding0;
+		glm::vec4 Color;
+	};
+
 	class FLARE_API Renderer
 	{
 	public:
@@ -118,6 +128,8 @@ namespace Flare
 		static void BeginScene(Viewport& viewport);
 		static void Flush();
 		static void EndScene();
+
+		static void SubmitPointLight(const PointLightData& light);
 
 		static void DrawFullscreenQuad(const Ref<Material>& material);
 		static void DrawMesh(const Ref<VertexArray>& mesh, const Ref<Material>& material, size_t indicesCount = SIZE_MAX);

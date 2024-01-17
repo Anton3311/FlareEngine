@@ -253,6 +253,31 @@ namespace Flare
 
 
 
+    struct FLARE_API PointLight
+    {
+        FLARE_COMPONENT;
+
+        PointLight()
+            : Color(glm::vec3(1.0f)), Intensity(1.0f) {}
+        PointLight(const glm::vec3& color, float intensity)
+            : Color(color), Intensity(intensity) {}
+
+        glm::vec3 Color;
+        float Intensity;
+    };
+
+    template<>
+    struct TypeSerializer<PointLight>
+    {
+        void OnSerialize(PointLight& light, SerializationStream& stream)
+        {
+            stream.Serialize("Color", SerializationValue(light.Color, SerializationValueFlags::Color));
+            stream.Serialize("Intensity", SerializationValue(light.Intensity));
+        }
+    };
+
+
+
     struct FLARE_API Environment
     {
         FLARE_COMPONENT;

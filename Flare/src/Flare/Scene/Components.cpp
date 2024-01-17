@@ -137,6 +137,9 @@ namespace Flare
 
 
 
+	FLARE_IMPL_COMPONENT(PointLight);
+
+
 	FLARE_IMPL_COMPONENT(Environment);
 	Environment::Environment()
 		: EnvironmentColor(0.0f), EnvironmentColorIntensity(0.0f) {}

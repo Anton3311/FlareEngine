@@ -55,6 +55,7 @@ namespace Flare
 		m_CameraDataUpdateQuery = m_World.NewQuery().With<TransformComponent, CameraComponent>().Create();
 		m_DirectionalLightQuery = m_World.NewQuery().With<TransformComponent, DirectionalLight>().Create();
 		m_EnvironmentQuery = m_World.NewQuery().With<Environment>().Create();
+		m_PointLightsQuery = m_World.NewQuery().With<TransformComponent>().With<PointLight>().Create();
 		
 		systemsManager.RegisterSystem("Sprites Renderer", m_2DRenderingGroup, new SpritesRendererSystem());
 		systemsManager.RegisterSystem("Meshes Renderer", m_2DRenderingGroup, new MeshesRendererSystem());
@@ -177,6 +178,19 @@ namespace Flare
 				break;
 		}
 
+		for (EntityView view : m_PointLightsQuery)
+		{
+			auto transforms = view.View<const TransformComponent>();
+			auto lights = view.View<const PointLight>();
+
+			for (EntityViewElement entity : view)
+			{
+				Renderer::SubmitPointLight(PointLightData{
+					transforms[entity].Position,
+					glm::vec4(lights[entity].Color, lights[entity].Intensity)
+				});
+			}
+		}
 	}
 
 	void Scene::OnRender(const Viewport& viewport)

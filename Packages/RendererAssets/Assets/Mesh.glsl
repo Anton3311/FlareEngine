@@ -65,14 +65,27 @@ layout(std140, push_constant) uniform InstanceData
 	float Roughness;
 } u_InstanceData;
 
-layout(std140, binding = 1) uniform DirLight
+layout(std140, binding = 1) uniform LightData
 {
 	vec4 u_LightColor;
 	vec3 u_LightDirection;
 
 	vec4 u_EnvironmentLight;
 	float u_LightNear;
+
+	uint u_PointLightsCount;
 };
+
+struct PointLightData
+{
+	vec3 Position;
+	vec4 Color;
+};
+
+layout(std140, binding = 4) buffer LightsData
+{
+	PointLightData[] PointLights;
+} u_LightsData;
 
 const int CASCADES_COUNT = 4;
 
@@ -235,6 +248,20 @@ float InterleavedGradientNoise(vec2 screenSpacePosition)
 	return -scale + 2.0 * scale * fract(magic.z * fract(dot(screenSpacePosition, magic.xy)));
 }
 
+vec3 CalculateLight(vec3 N, vec3 V, vec3 H, vec4 color, vec3 incomingLight, vec3 lightDirection)
+{
+	float alpha = max(0.04, u_InstanceData.Roughness * u_InstanceData.Roughness);
+
+	vec3 kS = Fresnel_Shlick(baseReflectivity, V, H);
+	vec3 kD = vec3(1.0) - kS;
+
+	vec3 diffuse = Diffuse_Lambertian(color.rgb);
+	vec3 specular = Specular_CookTorence(alpha, N, V, lightDirection);
+	vec3 brdf = kD * diffuse + specular;
+
+	return brdf * incomingLight * max(0.0, dot(lightDirection, N));
+}
+
 void main()
 {
 	vec3 N = normalize(i_Vertex.Normal);
@@ -297,17 +324,19 @@ void main()
 		break;
 	}
 
-	vec3 incomingLight = u_LightColor.rgb * u_LightColor.w;
-	float alpha = max(0.04, u_InstanceData.Roughness * u_InstanceData.Roughness);
+	vec3 finalColor = CalculateLight(N, V, H, color, u_LightColor.rgb * u_LightColor.w, -u_LightDirection) * shadow;
 
-	vec3 kS = Fresnel_Shlick(baseReflectivity, V, H);
-	vec3 kD = vec3(1.0) - kS;
+	for (uint i = 0; i < u_PointLightsCount; i++)
+	{
+		vec3 direction = u_LightsData.PointLights[i].Position - i_Vertex.Position.xyz;
+		float distance = length(direction);
+		float attenuation = 1.0f / (distance * distance);
 
-	vec3 diffuse = Diffuse_Lambertian(color.rgb);
-	vec3 specular = Specular_CookTorence(alpha, N, V, -u_LightDirection);
-	vec3 brdf = kD * diffuse + specular;
+		finalColor += CalculateLight(N, V, H, color,
+			u_LightsData.PointLights[i].Color.rgb * u_LightsData.PointLights[i].Color.w * attenuation,
+			direction / distance);
+	}
 
-	vec3 finalColor = shadow * brdf * incomingLight * max(0.0, dot(-u_LightDirection, N));
 	finalColor += u_EnvironmentLight.rgb * u_EnvironmentLight.w * color.rgb;
 
 	o_Normal = vec4(N * 0.5f + vec3(0.5f), 1.0f);
