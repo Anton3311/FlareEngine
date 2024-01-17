@@ -36,37 +36,49 @@ namespace Flare
 				if (ImGui::BeginMenu("Create"))
 				{
 					if (ImGui::MenuItem("Entity"))
-						m_World->CreateEntity<TransformComponent, SerializationId>();
+					{
+						selectedEntity = m_World->CreateEntity<TransformComponent, SerializationId>();
+						result = true;
+					}
 
 					if (ImGui::MenuItem("Perspective Camera"))
 					{
-						m_World->CreateEntity(
+						selectedEntity = m_World->CreateEntity(
 							TransformComponent(),
 							SerializationId(),
 							CameraComponent(CameraComponent::ProjectionType::Perspective));
+						result = true;
 					}
 
 					if (ImGui::MenuItem("Orthographic Camera"))
 					{
-						m_World->CreateEntity(
+						selectedEntity = m_World->CreateEntity(
 							TransformComponent(),
 							SerializationId(),
 							CameraComponent(CameraComponent::ProjectionType::Orthographic));
+						result = true;
 					}
 
 					if (ImGui::MenuItem("Directional Light"))
 					{
-						m_World->CreateEntity(TransformComponent(), SerializationId(), DirectionalLight());
+						selectedEntity = m_World->CreateEntity(TransformComponent(), SerializationId(), DirectionalLight());
+						result = true;
+					}
+
+					if (ImGui::MenuItem("Point Light"))
+					{
+						selectedEntity = m_World->CreateEntity(TransformComponent(), SerializationId(), PointLight());
+						result = true;
 					}
 
 					if (ImGui::MenuItem("Environment"))
 					{
-						m_World->CreateEntity(TransformComponent(), SerializationId(), Environment());
+						selectedEntity = m_World->CreateEntity(TransformComponent(), SerializationId(), Environment());
+						result = true;
 					}
 
 					ImGui::EndMenu();
 				}
-
 			}
 
 			ImGui::EndMenu();
