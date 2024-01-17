@@ -723,9 +723,15 @@ namespace Flare
 			s_RendererData.CurrentInstancingMesh.Reset();
 
 			// Group objects with same meshes together
-			std::sort(perCascadeObjects[cascadeIndex].begin(), perCascadeObjects[cascadeIndex].end(), [](uint32_t a, uint32_t b) -> bool
+			std::sort(perCascadeObjects[cascadeIndex].begin(), perCascadeObjects[cascadeIndex].end(), [](uint32_t aIndex, uint32_t bIndex) -> bool
 			{
-				return (uint64_t)s_RendererData.Queue[a].Mesh->Handle < (uint64_t)s_RendererData.Queue[b].Mesh->Handle;
+				const auto& a = s_RendererData.Queue[aIndex];
+				const auto& b = s_RendererData.Queue[bIndex];
+
+				if (a.Mesh->Handle == b.Mesh->Handle)
+					return a.SubMeshIndex < b.SubMeshIndex;
+
+				return (uint64_t)a.Mesh->Handle < (uint64_t)b.Mesh->Handle;
 			});
 
 			s_RendererData.IndirectDrawData.clear();
