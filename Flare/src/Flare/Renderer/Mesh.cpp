@@ -50,21 +50,21 @@ namespace Flare
 		{
 			m_Vertices = VertexBuffer::Create(m_VertexBufferSize * sizeof(glm::vec3));
 			m_Vertices->SetLayout({ { "i_Position", ShaderDataType::Float3 } });
-			m_VertexArray->AddVertexBuffer(m_Vertices);
+			m_VertexArray->AddVertexBuffer(m_Vertices, 0);
 		}
 
 		if (!m_Normals)
 		{
 			m_Normals = VertexBuffer::Create(m_VertexBufferSize * sizeof(glm::vec3));
 			m_Normals->SetLayout({ { "i_Normal", ShaderDataType::Float3 } });
-			m_VertexArray->AddVertexBuffer(m_Normals);
+			m_VertexArray->AddVertexBuffer(m_Normals, 1);
 		}
 
 		if (!m_UVs)
 		{
 			m_UVs = VertexBuffer::Create(m_VertexBufferSize * sizeof(glm::vec2));
 			m_UVs->SetLayout({ { "i_UV", ShaderDataType::Float2 } });
-			m_VertexArray->AddVertexBuffer(m_UVs);
+			m_VertexArray->AddVertexBuffer(m_UVs, 2);
 		}
 
 		m_Vertices->SetData(vertices.GetData(), vertices.GetSize() * sizeof(glm::vec3), m_VertexBufferOffset * sizeof(glm::vec3));

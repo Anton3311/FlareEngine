@@ -28,8 +28,8 @@ namespace Flare
 	{
 		glBindVertexArray(0);
 	}
-	
-	void OpenGLVertexArray::AddVertexBuffer(const Ref<VertexBuffer>& vertexBuffer)
+
+	void OpenGLVertexArray::AddVertexBuffer(const Ref<VertexBuffer>& vertexBuffer, std::optional<uint32_t> baseBinding)
 	{
 		glBindVertexArray(m_Id);
 		vertexBuffer->Bind();
@@ -37,6 +37,9 @@ namespace Flare
 		const BufferLayout& layout = vertexBuffer->GetLayout();
 
 		m_VertexBuffers.push_back(vertexBuffer);
+
+		if (baseBinding)
+			m_VertexBufferIndex = *baseBinding;
 
 		for (const auto& element : layout.GetElements())
 		{

@@ -12,7 +12,7 @@ namespace Flare
 	public:
 		virtual void Bind() const override;
 		virtual void Unbind() const override;
-		virtual void AddVertexBuffer(const Ref<VertexBuffer>& vertexBuffer) override;
+		virtual void AddVertexBuffer(const Ref<VertexBuffer>& vertexBuffer, std::optional<uint32_t> baseBinding) override;
 		virtual const VertexBuffers& GetVertexBuffers() const override { return m_VertexBuffers; }
 
 		virtual void SetIndexBuffer(const Ref<IndexBuffer>& indexbuffer) override;

@@ -18,7 +18,7 @@ namespace Flare
 
 		virtual void Bind() const = 0;
 		virtual void Unbind() const = 0;
-		virtual void AddVertexBuffer(const Ref<VertexBuffer>& vertexBuffer) = 0;
+		virtual void AddVertexBuffer(const Ref<VertexBuffer>& vertexBuffer, std::optional<uint32_t> baseBinding = {}) = 0;
 	public:
 		static Ref<VertexArray> Create();
 	};
