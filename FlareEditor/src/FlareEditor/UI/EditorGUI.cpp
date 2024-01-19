@@ -433,6 +433,19 @@ namespace Flare
 		if (ImGui::InvisibleButton(name, previewSize))
 			QuickSearch::GetInstance().FindAsset(resultToken);
 
+		if (ImGui::IsItemHovered() && ImGui::BeginTooltip())
+		{
+			bool validHandle = AssetManager::IsAssetHandleValid(handle);
+			if (handle == NULL_ASSET_HANDLE)
+				ImGui::TextUnformatted("Handle: NULL");
+			else if (validHandle)
+				ImGui::Text("Handle: %llu", (uint64_t)handle);
+			else
+				ImGui::TextUnformatted("Handle: Invalid");
+
+			ImGui::EndTooltip();
+		}
+
 		if (ImGui::BeginDragDropTarget())
 		{
 			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(ASSET_PAYLOAD_NAME))
