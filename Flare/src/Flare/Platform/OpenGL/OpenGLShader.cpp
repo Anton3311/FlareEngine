@@ -207,6 +207,33 @@ namespace Flare
     {
         FLARE_CORE_ASSERT(AssetManager::IsAssetHandleValid(Handle));
 
+        struct Program
+        {
+            uint32_t Id;
+            ShaderStageType Stage;
+        };
+
+        Program programs[2];
+        programs[0].Id = 0;
+        programs[0].Stage = ShaderStageType::Vertex;
+        programs[1].Id = 0;
+        programs[1].Stage = ShaderStageType::Pixel;
+
+        bool hasValidCache = true;
+
+        for (const Program& program : programs)
+        {
+            if (!ShaderCacheManager::GetInstance()->HasCache(Handle, ShaderTargetEnvironment::OpenGL, program.Stage)
+                || !ShaderCacheManager::GetInstance()->HasCache(Handle, ShaderTargetEnvironment::Vulkan, program.Stage))
+            {
+                hasValidCache = false;
+                break;
+            }
+        }
+
+        if (!hasValidCache)
+            return;
+
         if (m_Id != 0)
             glDeleteProgram(m_Id);
 
@@ -228,18 +255,6 @@ namespace Flare
             return;
 
         m_Id = glCreateProgram();
-
-        struct Program
-        {
-            uint32_t Id;
-            ShaderStageType Stage;
-        };
-
-        Program programs[2];
-        programs[0].Id = 0;
-        programs[0].Stage = ShaderStageType::Vertex;
-        programs[1].Id = 0;
-        programs[1].Stage = ShaderStageType::Pixel;
 
         for (Program& program : programs)
         {
