@@ -1,6 +1,8 @@
 #include "YAMLSerialization.h"
 
+#include "Flare/AssetManager/AssetManager.h"
 #include "Flare/Serialization/Serialization.h"
+
 #include "FlareEditor/Serialization/SerializationId.h"
 
 namespace Flare
@@ -209,7 +211,24 @@ namespace Flare
 
     void YAMLSerializer::SerializeReference(const SerializableObjectDescriptor& valueDescriptor, void* referenceData, void* valueData)
     {
-        FLARE_CORE_WARN("YAMLSerializer: Reference serialization not supported");
+        const AssetDescriptor* assetDescriptor = AssetDescriptor::FindBySerializationDescriptor(valueDescriptor);
+        if (assetDescriptor)
+        {
+            FLARE_CORE_ASSERT(referenceData);
+            Ref<Asset>& asset = *(Ref<Asset>*)referenceData;
+
+            if (asset == nullptr)
+                m_Emitter << YAML::Value << NULL_ASSET_HANDLE;
+            else if (AssetManager::IsAssetHandleValid(asset->Handle))
+                m_Emitter << YAML::Value << asset->Handle;
+            else
+                m_Emitter << YAML::Value << NULL_ASSET_HANDLE;
+        }
+        else
+        {
+            FLARE_CORE_WARN("YAMLSerializer: Reference serialization not supported");
+            m_Emitter << YAML::Value << YAML::Null;
+        }
     }
 
     // YAML Deserializer
@@ -434,6 +453,31 @@ namespace Flare
 
     void YAMLDeserializer::SerializeReference(const SerializableObjectDescriptor& valueDescriptor, void* referenceData, void* valueData)
     {
-        FLARE_CORE_WARN("YAMLDeserializer: Reference deserialization not supported");
+        const AssetDescriptor* assetDescriptor = AssetDescriptor::FindBySerializationDescriptor(valueDescriptor);
+        if (assetDescriptor)
+        {
+            FLARE_CORE_ASSERT(referenceData);
+            Ref<Asset>& asset = *(Ref<Asset>*)referenceData;
+
+            YAML::Node node = CurrentNode()[m_CurrentPropertyKey];
+            if (node)
+            {
+                AssetHandle handle = node.as<AssetHandle>();
+                if (!AssetManager::IsAssetHandleValid(handle))
+                    asset = nullptr;
+                else
+                {
+                    Ref<Asset> deserializedAsset = AssetManager::GetRawAsset(handle);
+                    if (&deserializedAsset->GetDescriptor() == assetDescriptor)
+                        asset = deserializedAsset;
+                    else
+                        asset = nullptr;
+                }
+            }
+        }
+        else
+        {
+            FLARE_CORE_WARN("YAMLDeserializer: Reference deserialization not supported");
+        }
     }
 }
