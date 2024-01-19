@@ -66,6 +66,8 @@ namespace Flare
 
             Ref<EditorAssetManager> assetManager = As<EditorAssetManager>(AssetManager::GetInstance());
 
+            Scene::GetActive()->UninitializePostProcessing();
+
             assetManager->UnloadAsset(Scene::GetActive()->Handle);
             Scene::SetActive(nullptr);
         });
@@ -485,7 +487,10 @@ namespace Flare
         }
 
         active = nullptr;
+
+        Scene::GetActive()->UninitializePostProcessing();
         Scene::SetActive(nullptr);
+
         ScriptingEngine::UnloadAllModules();
         m_ECSContext.Clear();
 
@@ -494,6 +499,7 @@ namespace Flare
         active = CreateRef<Scene>(m_ECSContext);
         active->Initialize();
         active->InitializeRuntime();
+        active->InitializePostProcessing();
         Scene::SetActive(active);
 
         m_EditedSceneHandle = 0;
@@ -510,6 +516,8 @@ namespace Flare
 
         Ref<EditorAssetManager> assetManager = As<EditorAssetManager>(AssetManager::GetInstance());
         std::filesystem::path activeScenePath = assetManager->GetAssetMetadata(active->Handle)->Path;
+
+        Scene::GetActive()->UninitializePostProcessing();
         SaveActiveScene();
 
         m_PlaymodePaused = false;
@@ -531,6 +539,7 @@ namespace Flare
         assetManager->ReloadPrefabs();
 
         playModeScene->InitializeRuntime();
+        playModeScene->InitializePostProcessing();
         Scene::GetActive()->OnRuntimeStart();
     }
 
@@ -540,6 +549,7 @@ namespace Flare
         Ref<EditorAssetManager> assetManager = As<EditorAssetManager>(AssetManager::GetInstance());
 
         Scene::GetActive()->OnRuntimeEnd();
+        Scene::GetActive()->UninitializePostProcessing();
 
         Scene::SetActive(nullptr);
         ScriptingEngine::UnloadAllModules();
@@ -549,6 +559,7 @@ namespace Flare
         ScriptingEngine::LoadModules();
         Ref<Scene> editorScene = AssetManager::GetAsset<Scene>(m_EditedSceneHandle);
         editorScene->InitializeRuntime();
+        editorScene->InitializePostProcessing();
 
         Scene::SetActive(editorScene);
         m_Mode = EditorMode::Edit;

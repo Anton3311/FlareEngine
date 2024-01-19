@@ -141,6 +141,7 @@ namespace Flare
 			int32_t entityIndex = INT32_MAX);
 
 		static void AddRenderPass(Ref<RenderPass> pass);
+		static void RemoveRenderPass(Ref<RenderPass> pass);
 		static void ExecuteRenderPasses();
 
 		static Viewport& GetMainViewport();

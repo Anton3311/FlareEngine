@@ -23,6 +23,9 @@ namespace Flare
 
 		void Initialize();
 		void InitializeRuntime();
+
+		void InitializePostProcessing();
+		void UninitializePostProcessing();
 	public:
 		void OnRuntimeStart();
 		void OnRuntimeEnd();

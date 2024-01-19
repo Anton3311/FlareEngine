@@ -59,16 +59,26 @@ namespace Flare
 		
 		systemsManager.RegisterSystem("Sprites Renderer", m_2DRenderingGroup, new SpritesRendererSystem());
 		systemsManager.RegisterSystem("Meshes Renderer", m_2DRenderingGroup, new MeshesRendererSystem());
-
-		Renderer::AddRenderPass(m_PostProcessingManager.ToneMappingPass);
-		Renderer::AddRenderPass(m_PostProcessingManager.VignettePass);
-		Renderer::AddRenderPass(m_PostProcessingManager.SSAOPass);
 	}
 
 	void Scene::InitializeRuntime()
 	{
 		ScriptingEngine::RegisterSystems();
 		m_World.GetSystemsManager().RebuildExecutionGraphs();
+	}
+
+	void Scene::InitializePostProcessing()
+	{
+		Renderer::AddRenderPass(m_PostProcessingManager.ToneMappingPass);
+		Renderer::AddRenderPass(m_PostProcessingManager.VignettePass);
+		Renderer::AddRenderPass(m_PostProcessingManager.SSAOPass);
+	}
+
+	void Scene::UninitializePostProcessing()
+	{
+		Renderer::RemoveRenderPass(m_PostProcessingManager.ToneMappingPass);
+		Renderer::RemoveRenderPass(m_PostProcessingManager.VignettePass);
+		Renderer::RemoveRenderPass(m_PostProcessingManager.SSAOPass);
 	}
 
 	void Scene::OnRuntimeStart()
