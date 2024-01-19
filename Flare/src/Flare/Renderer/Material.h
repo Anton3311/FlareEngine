@@ -1,5 +1,7 @@
 #pragma once
 
+#include "FlareCore/Serialization/TypeInitializer.h"
+
 #include "Flare/AssetManager/Asset.h"
 #include "Flare/Renderer/Shader.h"
 #include "Flare/Renderer/RendererAPI.h"
@@ -10,6 +12,10 @@ namespace Flare
 	class FLARE_API Material : public Asset
 	{
 	public:
+		FLARE_ASSET;
+		FLARE_TYPE;
+
+		Material();
 		Material(Ref<Shader> shader);
 		Material(AssetHandle shaderHandle);
 		virtual ~Material();

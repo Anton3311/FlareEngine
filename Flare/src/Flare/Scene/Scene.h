@@ -18,6 +18,9 @@ namespace Flare
 	class FLARE_API Scene : public Asset
 	{
 	public:
+		FLARE_ASSET;
+		FLARE_SERIALIZABLE;
+
 		Scene(ECSContext& context);
 		~Scene();
 

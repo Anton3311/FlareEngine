@@ -5,6 +5,9 @@
 
 namespace Flare
 {
+	FLARE_IMPL_ASSET(Texture);
+	FLARE_SERIALIZABLE_IMPL(Texture);
+
 	Ref<Texture> Texture::Create(const std::filesystem::path& path, const TextureSpecifications& specifications)
 	{
 		switch (RendererAPI::GetAPI())

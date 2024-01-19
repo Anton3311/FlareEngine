@@ -18,8 +18,10 @@
 
 namespace Flare
 {
-
 	Ref<Scene> s_Active = nullptr;
+
+	FLARE_SERIALIZABLE_IMPL(Scene);
+	FLARE_IMPL_ASSET(Scene);
 
 	Scene::Scene(ECSContext& context)
 		: Asset(AssetType::Scene), m_World(context)

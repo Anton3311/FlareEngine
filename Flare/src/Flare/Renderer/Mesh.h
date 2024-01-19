@@ -6,6 +6,7 @@
 #include "Flare/Math/Math.h"
 
 #include "FlareCore/Collections/Span.h"
+#include "FlareCore/Serialization/Metadata.h"
 
 namespace Flare
 {
@@ -26,6 +27,9 @@ namespace Flare
 	class FLARE_API Mesh : public Asset
 	{
 	public:
+		FLARE_SERIALIZABLE;
+		FLARE_ASSET;
+
 		Mesh(MeshTopology topologyType,
 			size_t vertexBufferSize,
 			IndexBuffer::IndexFormat indexFormat,

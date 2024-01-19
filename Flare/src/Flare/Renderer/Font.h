@@ -23,6 +23,9 @@ namespace Flare
 	class FLARE_API Font : public Asset
 	{
 	public:
+		FLARE_SERIALIZABLE;
+		FLARE_ASSET;
+
 		Font(const std::filesystem::path& path);
 
 		Ref<Texture> GetAtlas() const { return m_FontAtlas; }

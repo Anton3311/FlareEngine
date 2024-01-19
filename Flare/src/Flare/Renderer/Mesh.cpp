@@ -2,6 +2,9 @@
 
 namespace Flare
 {
+	FLARE_SERIALIZABLE_IMPL(Mesh);
+	FLARE_IMPL_ASSET(Mesh);
+
 	Mesh::Mesh(MeshTopology topologyType, size_t vertexBufferSize, IndexBuffer::IndexFormat indexFormat, size_t indexBufferSize)
 		: Asset(AssetType::Mesh),
 		m_TopologyType(topologyType),

@@ -79,4 +79,30 @@ namespace Flare
 		FLARE_CORE_ASSERT(false, "Unknown asset type string");
 		return AssetType::None;
 	}
+
+
+
+	AssetDescriptor::AssetDescriptor(const SerializableObjectDescriptor& descriptor)
+		: SerializationDescriptor(descriptor)
+	{
+		auto& container = GetDescriptors();
+		container.Descriptors.push_back(this);
+		container.SerializationDescritproToAsset.emplace(&descriptor, this);
+	}
+
+	FLARE_API AssetDescriptor::DescriptorsContainer& AssetDescriptor::GetDescriptors()
+	{
+		static DescriptorsContainer s_Descriptors;
+		return s_Descriptors;
+	}
+
+	FLARE_API const AssetDescriptor* AssetDescriptor::FindBySerializationDescriptor(const SerializableObjectDescriptor& descriptor)
+	{
+		auto& container = GetDescriptors();
+		auto it = container.SerializationDescritproToAsset.find(&descriptor);
+
+		if (it != container.SerializationDescritproToAsset.end())
+			return it->second;
+		return nullptr;
+	}
 }

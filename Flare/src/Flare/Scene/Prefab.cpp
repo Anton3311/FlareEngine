@@ -6,6 +6,9 @@
 
 namespace Flare
 {
+    FLARE_IMPL_ASSET(Prefab);
+    FLARE_SERIALIZABLE_IMPL(Prefab);
+
     Entity Prefab::CreateInstance(World& world)
     {
         return world.Entities.CreateEntity(m_Components.data(), m_Components.size(), true);

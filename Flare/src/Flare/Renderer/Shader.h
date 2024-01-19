@@ -20,6 +20,9 @@ namespace Flare
 	class FLARE_API Shader : public Asset
 	{
 	public:
+		FLARE_SERIALIZABLE;
+		FLARE_ASSET;
+
 		Shader()
 			: Asset(AssetType::Shader) {}
 

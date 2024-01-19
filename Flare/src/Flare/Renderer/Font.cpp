@@ -9,6 +9,9 @@ namespace Flare
 {
     static Ref<Font> s_DefualtFont = nullptr;
 
+    FLARE_SERIALIZABLE_IMPL(Font);
+    FLARE_IMPL_ASSET(Font);
+
 	Font::Font(const std::filesystem::path& path)
         : Asset(AssetType::Font)
 	{

@@ -1,6 +1,8 @@
 #pragma once
 
 #include "FlareCore/Core.h"
+#include "FlareCore/Serialization/TypeInitializer.h"
+#include "FlareCore/Serialization/Metadata.h"
 
 #include "Flare/AssetManager/Asset.h"
 
@@ -56,6 +58,9 @@ namespace Flare
 	class FLARE_API Texture : public Asset
 	{
 	public:
+		FLARE_ASSET;
+		FLARE_SERIALIZABLE;
+
 		Texture()
 			: Asset(AssetType::Texture) {}
 
