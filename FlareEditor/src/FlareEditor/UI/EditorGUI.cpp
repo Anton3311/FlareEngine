@@ -413,7 +413,7 @@ namespace Flare
 		ImGui::Text("%llu", (uint64_t)uuid);
 	}
 
-	bool EditorGUI::TextureField(const char* name, AssetHandle& textureHandle)
+	bool EditorGUI::AssetField(const char* name, AssetHandle& handle, const AssetDescriptor* assetType)
 	{
 		ImVec2 previewSize = ImVec2(48.0f, 48.0f);
 
@@ -422,13 +422,13 @@ namespace Flare
 
 		if (ImGui::Button("Reset"))
 		{
-			textureHandle = NULL_ASSET_HANDLE;
+			handle = NULL_ASSET_HANDLE;
 			result = true;
 		}
 
 		ImGui::SameLine();
 
-		UUID resultToken = (uint64_t)&textureHandle;
+		UUID resultToken = (uint64_t)&handle;
 
 		if (ImGui::InvisibleButton(name, previewSize))
 			QuickSearch::GetInstance().FindAsset(resultToken);
@@ -437,8 +437,19 @@ namespace Flare
 		{
 			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(ASSET_PAYLOAD_NAME))
 			{
-				textureHandle = *(AssetHandle*)payload->Data;
-				result = true;
+				AssetHandle newHandle = *(AssetHandle*)payload->Data;
+				Ref<Asset> asset = AssetManager::GetRawAsset(newHandle);
+				
+				if (!asset)
+				{
+					handle = NULL_ASSET_HANDLE;
+					result = true;
+				}
+				else if (&asset->GetDescriptor() == assetType || assetType == nullptr)
+				{
+					handle = newHandle;
+					result = true;
+				}
 			}
 
 			ImGui::EndDragDropTarget();
@@ -451,29 +462,38 @@ namespace Flare
 		{
 			if (searchResult->Type == QuickSearch::AssetSearchResult::ResultType::Ok)
 			{
-				textureHandle = searchResult->Handle;
+				handle = searchResult->Handle;
 				result = true;
 			}
 		}
 
 		bool hovered = ImGui::IsItemHovered();
 
-		ImU32 textureHoverColor = 0xffcccccc;
+		ImU32 previewHoverColor = 0xffcccccc;
 
 		ImDrawList* drawList = ImGui::GetCurrentWindow()->DrawList;
 		const ImGuiStyle& style = ImGui::GetStyle();
 
-		if (AssetManager::IsAssetHandleValid(textureHandle))
+		if (AssetManager::IsAssetHandleValid(handle))
 		{
-			Ref<Texture> texture = AssetManager::GetAsset<Texture>(textureHandle);
-			
-			drawList->AddImageRounded((ImTextureID)texture->GetRendererId(),
-				previewMin, previewMax,
-				ImVec2(0.0f, 1.0f),
-				ImVec2(1.0f, 0.0f),
-				hovered ? textureHoverColor : 0xffffffff,
-				style.FrameRounding);
+			if (assetType == &Texture::_Asset)
+			{
+				Ref<Texture> texture = AssetManager::GetAsset<Texture>(handle);
 
+				drawList->AddImageRounded((ImTextureID)texture->GetRendererId(),
+					previewMin, previewMax,
+					ImVec2(0.0f, 1.0f),
+					ImVec2(1.0f, 0.0f),
+					hovered ? previewHoverColor : 0xffffffff,
+					style.FrameRounding);
+			}
+			else
+			{
+				drawList->AddRect(
+					previewMin, previewMax,
+					hovered ? previewHoverColor : 0xffffffff,
+					style.FrameRounding);
+			}
 		}
 		else
 		{
