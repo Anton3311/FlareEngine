@@ -171,9 +171,9 @@ namespace Flare
                 | ImGuiTreeNodeFlags_SpanFullWidth
                 | ImGuiTreeNodeFlags_Leaf;
 
-			const auto& editorSelection = EditorLayer::GetInstance().Selection;
-			if (editorSelection.GetType() == EditorSelectionType::Asset && node.Handle == editorSelection.GetAssetHandle())
-				flags |= ImGuiTreeNodeFlags_Selected;
+            const auto& editorSelection = EditorLayer::GetInstance().Selection;
+            if (editorSelection.GetType() == EditorSelectionType::Asset && node.Handle == editorSelection.GetAssetHandle())
+                flags |= ImGuiTreeNodeFlags_Selected;
 
             const ImGuiStyle& style = ImGui::GetStyle();
             ImGui::PushStyleColor(ImGuiCol_Text, style.Colors[ImGuiCol_TextDisabled]);
@@ -239,6 +239,16 @@ namespace Flare
 
         if (ImGui::BeginPopupContextItem(metadata->Name.c_str()))
         {
+            ImGui::Text("Handle: %llu", (uint64_t)handle);
+
+            if (ImGui::MenuItem("Copy Handle"))
+            {
+                std::string text = std::to_string((uint64_t)handle);
+                ImGui::SetClipboardText(text.c_str());
+            }
+
+            ImGui::Separator();
+
             if (ImGui::MenuItem("Open"))
                 OnOpenFile(handle);
 
