@@ -26,6 +26,8 @@ namespace Flare
 		RG16,
 
 		RF32,
+
+		R8,
 	};
 
 	enum class TextureFiltering

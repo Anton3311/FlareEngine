@@ -104,6 +104,7 @@ namespace Flare
 		case TextureFormat::RGB8:
 		case TextureFormat::RGBA8:
 		case TextureFormat::RG8:
+		case TextureFormat::R8:
 			dataType = GL_UNSIGNED_BYTE;
 			break;
 		case TextureFormat::RF32:
@@ -131,6 +132,10 @@ namespace Flare
 		case TextureFormat::RG8:
 			m_InternalTextureFormat = GL_RG8;
 			m_TextureDataType = GL_RG;
+			break;
+		case TextureFormat::R8:
+			m_InternalTextureFormat = GL_R8;
+			m_TextureDataType = GL_RED;
 			break;
 		case TextureFormat::RG16:
 			m_InternalTextureFormat = GL_RG16;
