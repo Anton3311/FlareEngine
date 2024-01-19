@@ -5,6 +5,7 @@
 #include "FlareCore/MouseCode.h"
 
 #include "FlarePlatform/Event.h"
+#include "FlarePlatform/Window.h"
 
 #include <glm/glm.hpp>
 
@@ -35,5 +36,7 @@ namespace Flare
 		static glm::ivec2 GetRawMousePosition();
 
 		static glm::ivec2 GetMouseDelta();
+		static void SetCursorMode(CursorMode mode);
+		static CursorMode GetCursorMode();
 	};
 }

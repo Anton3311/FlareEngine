@@ -24,6 +24,14 @@ namespace Flare
 		bool VSyncEnabled = true;
 	};
 
+	enum class CursorMode
+	{
+		Normal,
+		Hidden,
+		Captured,
+		Disabled,
+	};
+
 	class FLAREPLATFORM_API Window
 	{
 	public:
@@ -43,6 +51,8 @@ namespace Flare
 		virtual void SetWindowControls(const Ref<WindowControls>& controls) = 0;
 		virtual Ref<WindowControls> GetWindowControls() const = 0;
 		virtual glm::uvec2 GetControlsButtonSize() const = 0;
+		
+		virtual void SetCursorMode(CursorMode mode) = 0;
 	public:
 		static Scope<Window> Create(WindowProperties& properties);
 	};

@@ -32,6 +32,8 @@ namespace Flare
 		virtual void SetWindowControls(const Ref<WindowControls>& controls) { m_Data.Controls = controls; }
 		virtual Ref<WindowControls> GetWindowControls() const override { return m_Data.Controls; }
 		virtual glm::uvec2 GetControlsButtonSize() const override;
+
+		virtual void SetCursorMode(CursorMode mode) override;
 	private:
 		void Initialize();
 		void Release();

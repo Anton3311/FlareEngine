@@ -16,6 +16,7 @@ namespace Flare
 	ViewportWindow::ViewportWindow(std::string_view name, bool useEditorCamera)
 		: m_Name(name),
 		m_IsFocused(false),
+		m_PreviousFocusState(false),
 		m_IsHovered(false),
 		ShowWindow(true),
 		m_RelativeMousePosition(glm::ivec2(0)),
@@ -75,11 +76,19 @@ namespace Flare
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 		m_IsVisible = ImGui::Begin(m_Name.c_str(), &ShowWindow, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
 
-		if (!m_IsVisible)
-			return;
+		if (m_WindowFocusRequested)
+		{
+			ImGui::FocusWindow(ImGui::GetCurrentWindow());
+			m_WindowFocusRequested = false;
+		}
+
+		m_PreviousFocusState = m_IsFocused;
 
 		m_IsHovered = ImGui::IsWindowHovered();
 		m_IsFocused = ImGui::IsWindowFocused();
+
+		if (!m_IsVisible)
+			return;
 
 		ImGuiIO& io = ImGui::GetIO();
 

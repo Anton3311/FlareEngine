@@ -94,6 +94,8 @@ namespace Flare
 	private:
 		float m_PreviousFrameTime = 0.0f;
 
+		bool m_UpdateCursorModeNextFrame = false;
+
 		SceneViewSettings m_SceneViewSettings;
 
 		EditorTitleBar m_TitleBar;

@@ -148,6 +148,31 @@ namespace Flare
         FLARE_PROFILE_FUNCTION();
         m_PreviousFrameTime = deltaTime;
 
+        if (m_Mode == EditorMode::Play)
+        {
+            if (m_GameWindow->HasFocusChanged())
+            {
+                if (!m_GameWindow->IsFocused())
+                    ImGui::GetIO().ConfigFlags &= ~ImGuiConfigFlags_NoMouseCursorChange;
+                else
+                    m_UpdateCursorModeNextFrame = true;
+            }
+
+            if (m_UpdateCursorModeNextFrame)
+            {
+                Application::GetInstance().GetWindow()->SetCursorMode(InputManager::GetCursorMode());
+                m_UpdateCursorModeNextFrame = false;
+
+                switch (InputManager::GetCursorMode())
+                {
+                case CursorMode::Hidden:
+                case CursorMode::Disabled:
+                    ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange;
+                    break;
+                }
+            }
+        }
+
         Renderer2D::ResetStats();
         Renderer::ClearStatistics();
 
@@ -226,11 +251,19 @@ namespace Flare
         FLARE_PROFILE_FUNCTION();
         for (Ref<ViewportWindow>& window : m_ViewportWindows)
             window->OnEvent(event);
+
+        EventDispatcher dispatcher(event);
+        dispatcher.Dispatch<KeyPressedEvent>([](KeyPressedEvent& e) -> bool
+        {
+            if (e.GetKeyCode() == KeyCode::Escape)
+                Application::GetInstance().GetWindow()->SetCursorMode(CursorMode::Normal);
+            return false;
+        });
         
         // InputManager only works with Game viewport,
         // so the events should only be processed when the Game window is focused
         if (!event.Handled && m_GameWindow->IsFocused())
-			InputManager::ProcessEvent(event);
+            InputManager::ProcessEvent(event);
     }
 
     void EditorLayer::OnImGUIRender()
@@ -285,7 +318,7 @@ namespace Flare
 
         {
             ImGui::Begin("Renderer");
-			const auto& stats = Renderer::GetStatistics();
+            const auto& stats = Renderer::GetStatistics();
 
             ImGui::Text("Frame time %f ms", m_PreviousFrameTime * 1000.0f);
             ImGui::Text("FPS %f", 1.0f / m_PreviousFrameTime);
@@ -470,6 +503,9 @@ namespace Flare
     {
         FLARE_CORE_ASSERT(m_Mode == EditorMode::Edit);
 
+        m_GameWindow->RequestFocus();
+        m_UpdateCursorModeNextFrame = true;
+
         Ref<Scene> active = Scene::GetActive();
 
         Ref<EditorAssetManager> assetManager = As<EditorAssetManager>(AssetManager::GetInstance());
@@ -518,6 +554,8 @@ namespace Flare
         m_Mode = EditorMode::Edit;
 
         assetManager->ReloadPrefabs();
+
+        InputManager::SetCursorMode(CursorMode::Normal);
     }
 
     void EditorLayer::ReloadScriptingModules()

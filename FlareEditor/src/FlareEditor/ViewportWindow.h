@@ -32,7 +32,10 @@ namespace Flare
 
 		const std::string& GetName() const { return m_Name; }
 
+		inline const bool HasFocusChanged() const { return m_PreviousFocusState != m_IsFocused; }
 		inline const bool IsFocused() const { return m_IsFocused; }
+
+		inline void RequestFocus() { m_WindowFocusRequested = true; }
 
 		void PrepareViewport();
 		void SetViewProjection(const glm::mat4& projection) { m_Viewport.FrameData.Camera.Projection = projection; }
@@ -49,8 +52,11 @@ namespace Flare
 	protected:
 		std::string m_Name;
 		Viewport m_Viewport;
+		bool m_PreviousFocusState;
 		bool m_IsFocused;
 		bool m_IsHovered;
+
+		bool m_WindowFocusRequested;
 
 		bool m_IsVisible;
 

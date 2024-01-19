@@ -354,6 +354,25 @@ namespace Flare
 		return glm::uvec2(width, height);
 	}
 
+	void WindowsWindow::SetCursorMode(CursorMode mode)
+	{
+		switch (mode)
+		{
+		case CursorMode::Normal:
+			glfwSetInputMode(m_Window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+			break;
+		case CursorMode::Hidden:
+			glfwSetInputMode(m_Window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+			break;
+		case CursorMode::Captured:
+			glfwSetInputMode(m_Window, GLFW_CURSOR, GLFW_CURSOR_CAPTURED);
+			break;
+		case CursorMode::Disabled:
+			glfwSetInputMode(m_Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+			break;
+		}
+	}
+
 	void WindowsWindow::Initialize()
 	{
 		{

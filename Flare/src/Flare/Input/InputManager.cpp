@@ -4,6 +4,8 @@
 
 #include "FlareCore/Profiler/Profiler.h"
 
+#include "Flare/Core/Application.h"
+
 #include "FlarePlatform/Events.h"
 
 namespace Flare
@@ -28,6 +30,8 @@ namespace Flare
 
 		bool KeyHeld[(size_t)KeyCode::Menu + 1];
 		bool MouseButtonHeld[(size_t)MouseCode::ButtonLast + 1];
+
+		CursorMode CursorMode;
 	};
 
 	InputManagerData* s_InputData;
@@ -171,5 +175,16 @@ namespace Flare
 	glm::ivec2 InputManager::GetMouseDelta()
 	{
 		return s_InputData->MousePosition - s_InputData->PreviousMousePosition;
+	}
+
+	void InputManager::SetCursorMode(CursorMode mode)
+	{
+		s_InputData->CursorMode = mode;
+		Application::GetInstance().GetWindow()->SetCursorMode(mode);
+	}
+
+	CursorMode InputManager::GetCursorMode()
+	{
+		return s_InputData->CursorMode;
 	}
 }
