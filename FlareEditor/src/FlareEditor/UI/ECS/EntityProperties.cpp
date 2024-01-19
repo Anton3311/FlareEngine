@@ -180,50 +180,56 @@ namespace Flare
 
 	void EntityProperties::RenderEnvironmentComponent(Environment& environment)
 	{
-		if (EditorGUI::BeginPropertyGrid())
+		ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_FramePadding;
+		if (ImGui::TreeNodeEx((void*)std::hash<ComponentId>()(COMPONENT_ID(CameraComponent)), flags, "Environment"))
 		{
-			EditorGUI::ColorPropertyField("Environment Color", environment.EnvironmentColor);
-			EditorGUI::FloatPropertyField("Environment Color Intensity", environment.EnvironmentColorIntensity);
-
-			EditorGUI::PropertyName("Shadow Resolution");
-
-            const char* resolutionPreviews[] = { "512", "1024", "2048", "4096" };
-			ShadowSettings::ShadowResolution resolutions[] =
+			if (EditorGUI::BeginPropertyGrid())
 			{
-				ShadowSettings::ShadowResolution::_512,
-				ShadowSettings::ShadowResolution::_1024,
-				ShadowSettings::ShadowResolution::_2048,
-				ShadowSettings::ShadowResolution::_4096,
-			};
+				EditorGUI::ColorPropertyField("Environment Color", environment.EnvironmentColor);
+				EditorGUI::FloatPropertyField("Environment Color Intensity", environment.EnvironmentColorIntensity);
 
-            uint32_t resolutionIndex = 0;
-			for (uint32_t i = 0; i < 4; i++)
-			{
-				if (resolutions[i] == environment.ShadowSettings.Resolution)
-					resolutionIndex = i;
+				EditorGUI::PropertyName("Shadow Resolution");
+
+				const char* resolutionPreviews[] = { "512", "1024", "2048", "4096" };
+				ShadowSettings::ShadowResolution resolutions[] =
+				{
+					ShadowSettings::ShadowResolution::_512,
+					ShadowSettings::ShadowResolution::_1024,
+					ShadowSettings::ShadowResolution::_2048,
+					ShadowSettings::ShadowResolution::_4096,
+				};
+
+				uint32_t resolutionIndex = 0;
+				for (uint32_t i = 0; i < 4; i++)
+				{
+					if (resolutions[i] == environment.ShadowSettings.Resolution)
+						resolutionIndex = i;
+				}
+
+				if (ImGui::BeginCombo("Resolution", resolutionPreviews[resolutionIndex]))
+				{
+					for (size_t i = 0; i < 4; i++)
+					{
+						if (ImGui::MenuItem(resolutionPreviews[i]))
+							environment.ShadowSettings.Resolution = resolutions[i];
+					}
+
+					ImGui::EndCombo();
+				}
+
+				EditorGUI::FloatPropertyField("Shadow Bias", environment.ShadowSettings.Bias);
+				EditorGUI::IntPropertyField("Shadow Cascades", environment.ShadowSettings.Cascades);
+				EditorGUI::FloatPropertyField("Light Size", environment.ShadowSettings.LightSize);
+
+				EditorGUI::FloatPropertyField("Shadow Cascade 0", environment.ShadowSettings.CascadeSplits[0]);
+				EditorGUI::FloatPropertyField("Shadow Cascade 1", environment.ShadowSettings.CascadeSplits[1]);
+				EditorGUI::FloatPropertyField("Shadow Cascade 2", environment.ShadowSettings.CascadeSplits[2]);
+				EditorGUI::FloatPropertyField("Shadow Cascade 3", environment.ShadowSettings.CascadeSplits[3]);
+
+				EditorGUI::EndPropertyGrid();
 			}
 
-            if (ImGui::BeginCombo("Resolution", resolutionPreviews[resolutionIndex]))
-            {
-                for (size_t i = 0; i < 4; i++)
-                {
-                    if (ImGui::MenuItem(resolutionPreviews[i]))
-                        environment.ShadowSettings.Resolution = resolutions[i];
-                }
-
-                ImGui::EndCombo();
-            }
-
-			EditorGUI::FloatPropertyField("Shadow Bias", environment.ShadowSettings.Bias);
-			EditorGUI::IntPropertyField("Shadow Cascades", environment.ShadowSettings.Cascades);
-			EditorGUI::FloatPropertyField("Light Size", environment.ShadowSettings.LightSize);
-
-			EditorGUI::FloatPropertyField("Shadow Cascade 0", environment.ShadowSettings.CascadeSplits[0]);
-			EditorGUI::FloatPropertyField("Shadow Cascade 1", environment.ShadowSettings.CascadeSplits[1]);
-			EditorGUI::FloatPropertyField("Shadow Cascade 2", environment.ShadowSettings.CascadeSplits[2]);
-			EditorGUI::FloatPropertyField("Shadow Cascade 3", environment.ShadowSettings.CascadeSplits[3]);
-
-			EditorGUI::EndPropertyGrid();
+			ImGui::TreePop();
 		}
 	}
 
