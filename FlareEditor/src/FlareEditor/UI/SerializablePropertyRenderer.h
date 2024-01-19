@@ -28,6 +28,10 @@ namespace Flare
         void SerializeString(SerializationValue<std::string> value) override;
         void SerializeObject(const SerializableObjectDescriptor& descriptor, void* objectData) override;
 
+        void SerializeReference(const SerializableObjectDescriptor& valueDescriptor,
+            void* referenceData,
+            void* valueData) override;
+
         inline bool PropertiesGridStarted() const { return m_CurrentState.GridStarted; }
     private:
         void RenderAssetField(AssetHandle& handle);

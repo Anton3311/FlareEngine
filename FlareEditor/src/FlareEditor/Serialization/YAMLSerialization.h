@@ -26,6 +26,10 @@ namespace Flare
         void SerializeIntVector(SerializationValue<int32_t> value, uint32_t componentsCount) override;
         void SerializeString(SerializationValue<std::string> value) override;
         void SerializeObject(const SerializableObjectDescriptor& descriptor, void* objectData) override;
+
+        void SerializeReference(const SerializableObjectDescriptor& valueDescriptor,
+            void* referenceData,
+            void* valueData) override;
     public:
         YAML::Emitter& m_Emitter;
         const World& m_World;
@@ -48,6 +52,10 @@ namespace Flare
         void SerializeIntVector(SerializationValue<int32_t> value, uint32_t componentsCount) override;
         void SerializeString(SerializationValue<std::string> value) override;
         void SerializeObject(const SerializableObjectDescriptor& descriptor, void* objectData) override;
+
+        void SerializeReference(const SerializableObjectDescriptor& valueDescriptor,
+            void* referenceData,
+            void* valueData) override;
     private:
         inline YAML::Node& CurrentNode()
         {

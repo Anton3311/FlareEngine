@@ -1,5 +1,10 @@
 #include "SerializablePropertyRenderer.h"
 
+#include "Flare/Renderer/Material.h"
+#include "Flare/Renderer/Texture.h"
+
+#include "Flare/AssetManager/AssetManager.h"
+
 #include "FlareEditor/UI/EditorGUI.h"
 #include "FlareEditor/ImGui/ImGuiLayer.h"
 
@@ -254,6 +259,10 @@ namespace Flare
             ImGui::TreePop();
             m_CurrentState = previousState;
         }
+    }
+
+    void SerializablePropertyRenderer::SerializeReference(const SerializableObjectDescriptor& valueDescriptor, void* referenceData, void* valueData)
+    {
     }
 
     void SerializablePropertyRenderer::RenderAssetField(AssetHandle& handle)

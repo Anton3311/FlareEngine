@@ -74,6 +74,44 @@ namespace Flare
         return 0;
     }
 
+    template<typename T>
+    constexpr bool IsReferenceCounted = false;
+
+    template<typename T>
+    constexpr bool IsReferenceCounted<Ref<T>> = true;
+
+    template<typename T>
+    struct ReferenceCountUnderlyingType
+    {
+        using Type = void;
+    };
+
+    template<typename T>
+    struct ReferenceCountUnderlyingType<Ref<T>>
+    {
+        using Type = T;
+    };
+
+    template<typename T>
+    struct ReferenceCountValuePointer
+    {
+		inline void* Get(T& ref)
+		{
+			return nullptr;
+		}
+    };
+
+    template<typename T>
+    struct ReferenceCountValuePointer<Ref<T>>
+    {
+		inline void* Get(Ref<T>& ref)
+		{
+			return ref.get();
+		}
+    };
+
+
+
     class SerializableObjectDescriptor;
     class SerializationStream
     {
@@ -100,9 +138,22 @@ namespace Flare
         virtual void SerializeString(SerializationValue<std::string> value) = 0;
         virtual void SerializeObject(const SerializableObjectDescriptor& descriptor, void* objectData) {}
 
+        virtual void SerializeReference(const SerializableObjectDescriptor& valueDescriptor,
+            void* referenceData,
+            void* valueData) = 0;
+
         template<typename T>
         inline void Serialize(SerializationValue<T> value)
         {
+            if constexpr (IsReferenceCounted<T>)
+            {
+                SerializeReference(
+                    *SerializationDescriptorOf<ReferenceCountUnderlyingType<T>::Type>().Descriptor(),
+                    &value.Values[0],
+                    ReferenceCountValuePointer<T>().Get(value.Values[0]));
+                return;
+            }
+
             const SerializableObjectDescriptor* descriptor = SerializationDescriptorOf<T>().Descriptor();
 
             FLARE_CORE_ASSERT(descriptor);
@@ -288,6 +339,37 @@ namespace Flare
                 [](void* vector, SerializationStream& stream)
                 {
                     TypeSerializer<std::vector<T>>::OnSerialize(*(std::vector<T>*)vector, stream);
+                });
+
+            return &s_Descriptor;
+        }
+    };
+
+
+
+    template<typename T>
+    struct TypeSerializer<Ref<T>>
+    {
+        static void OnSerialize(Ref<T>& ref, SerializationStream& stream)
+        {
+            const auto* descriptor = SerializationDescriptorOf<T>().Descriptor();
+            FLARE_CORE_ASSERT(descriptor);
+
+            stream.SerializeReference(*descriptor, &ref, ref.get());
+        }
+    };
+
+    template<typename T>
+    struct SerializationDescriptorOf<Ref<T>>
+    {
+        static const SerializableObjectDescriptor* Descriptor()
+        {
+            static SerializableObjectDescriptor s_Descriptor(
+                typeid(Ref<T>).name(),
+                sizeof(Ref<T>),
+                [](void* vector, SerializationStream& stream)
+                {
+                    TypeSerializer<Ref<T>>::OnSerialize(*(Ref<T>*)vector, stream);
                 });
 
             return &s_Descriptor;

@@ -2,7 +2,6 @@
 
 #include "FlareCore/Profiler/Profiler.h"
 #include "FlareCore/Serialization/SerializationStream.h"
-#include "FlareCore/Serialization/Serializer.h"
 
 #include "Flare.h"
 #include "Flare/Core/Application.h"
