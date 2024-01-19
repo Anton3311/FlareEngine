@@ -21,9 +21,21 @@ namespace Flare
 		return m_Origin - TransformDirection(glm::vec3(0.0f, 0.0f, -1.0f)) * m_DistanceToOrigin;
 	}
 
-	void EditorCamera::SetPosition(glm::vec3 position)
+	void EditorCamera::SetRotationOrigin(glm::vec3 position)
 	{
 		m_Origin = position;
+		RecalculateViewMatrix();
+	}
+
+	void EditorCamera::SetRotation(glm::vec3 rotation)
+	{
+		m_Rotation = rotation;
+		RecalculateViewMatrix();
+	}
+
+	void EditorCamera::SetZoom(float zoom)
+	{
+		m_DistanceToOrigin = glm::max(zoom, MinZoom);
 		RecalculateViewMatrix();
 	}
 
@@ -100,7 +112,7 @@ namespace Flare
 
 	void EditorCamera::Zoom(float amount)
 	{
-		m_DistanceToOrigin = glm::max(m_DistanceToOrigin + amount, 0.1f);
+		m_DistanceToOrigin = glm::max(m_DistanceToOrigin + amount, MinZoom);
 		RecalculateViewMatrix();
 	}
 

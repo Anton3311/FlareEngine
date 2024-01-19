@@ -145,13 +145,13 @@ namespace Flare
 		}
 	}
 
-	void SceneSerializer::Serialize(const Ref<Scene>& scene)
+	void SceneSerializer::Serialize(const Ref<Scene>& scene, const EditorCamera& editorCamera, const SceneViewSettings& sceneViewSettings)
 	{
 		FLARE_CORE_ASSERT(AssetManager::IsAssetHandleValid(scene->Handle));
-		Serialize(scene, AssetManager::GetAssetMetadata(scene->Handle)->Path);
+		Serialize(scene, AssetManager::GetAssetMetadata(scene->Handle)->Path, editorCamera, sceneViewSettings);
 	}
 
-	void SceneSerializer::Serialize(const Ref<Scene>& scene, const std::filesystem::path& path)
+	void SceneSerializer::Serialize(const Ref<Scene>& scene, const std::filesystem::path& path, const EditorCamera& editorCamera, const SceneViewSettings& sceneViewSettings)
 	{
 		YAML::Emitter emitter;
 		emitter << YAML::BeginMap;
@@ -162,6 +162,25 @@ namespace Flare
 			SerializeEntity(emitter, scene->m_World, entity);
 
 		emitter << YAML::EndSeq; // Entities
+
+		{
+			emitter << YAML::Key << "Editor" << YAML::BeginMap; // Editor
+
+			emitter << YAML::Key << "Camera" << YAML::BeginMap; // Camera
+			emitter << YAML::Key << "RotationOrigin" << YAML::Value << editorCamera.GetRotationOrigin();
+			emitter << YAML::Key << "Rotation" << YAML::Value << editorCamera.GetRotation();
+			emitter << YAML::Key << "Zoom" << YAML::Value << editorCamera.GetZoom();
+			emitter << YAML::EndMap; // Camera
+
+			emitter << YAML::Key << "SceneViewSettings" << YAML::BeginMap; // SceneViewSettings
+			emitter << YAML::Key << "ShowAABBs" << YAML::Value << sceneViewSettings.ShowAABBs;
+			emitter << YAML::Key << "ShowCameraFrustum" << YAML::Value << sceneViewSettings.ShowCameraFrustum;
+			emitter << YAML::Key << "ShowLights" << YAML::Value << sceneViewSettings.ShowLights;
+			emitter << YAML::Key << "ShowGrid" << YAML::Value << sceneViewSettings.ShowGrid;
+			emitter << YAML::EndMap; // SceneViewSettings
+
+			emitter << YAML::EndMap; // Editor
+		}
 
 		emitter << YAML::Key << "PostProcessing" << YAML::BeginSeq;
 		
@@ -219,7 +238,7 @@ namespace Flare
 		output.close();
 	}
 
-	void SceneSerializer::Deserialize(const Ref<Scene>& scene, const std::filesystem::path& path)
+	void SceneSerializer::Deserialize(const Ref<Scene>& scene, const std::filesystem::path& path, EditorCamera& editorCamera, SceneViewSettings& sceneViewSettings)
 	{
 		std::ifstream inputFile(path);
 		if (!inputFile)
@@ -286,6 +305,32 @@ namespace Flare
 				{
 					deserializer.Serialize("Data", SerializationValue(*scene->GetPostProcessingManager().SSAOPass));
 				}
+			}
+		}
+
+		YAML::Node editorSettings = node["Editor"];
+		if (editorSettings)
+		{
+			if (YAML::Node camera = editorSettings["Camera"])
+			{
+				if (YAML::Node rotationOrigin = camera["RotationOrigin"])
+					editorCamera.SetRotationOrigin(rotationOrigin.as<glm::vec3>());
+				if (YAML::Node rotation = camera["Rotation"])
+					editorCamera.SetRotation(rotation.as<glm::vec3>());
+				if (YAML::Node zoom = camera["Zoom"])
+					editorCamera.SetZoom(zoom.as<float>());
+			}
+
+			if (YAML::Node sceneSettings = editorSettings["SceneViewSettings"])
+			{
+				if (YAML::Node node = sceneSettings["ShowAABBs"])
+					sceneViewSettings.ShowAABBs = node.as<bool>();
+				if (YAML::Node node = sceneSettings["ShowCameraFrustum"])
+					sceneViewSettings.ShowCameraFrustum = node.as<bool>();
+				if (YAML::Node node = sceneSettings["ShowLights"])
+					sceneViewSettings.ShowLights = node.as<bool>();
+				if (YAML::Node node = sceneSettings["ShowGrid"])
+					sceneViewSettings.ShowGrid = node.as<bool>();
 			}
 		}
 	}

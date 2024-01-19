@@ -38,7 +38,10 @@ namespace Flare
         m_AssetImporters.emplace(AssetType::Scene, [](const AssetMetadata& metadata) -> Ref<Asset>
         {
             Ref<Scene> scene = CreateRef<Scene>(EditorLayer::GetInstance().GetECSContext());
-            SceneSerializer::Deserialize(scene, metadata.Path);
+            SceneSerializer::Deserialize(scene, metadata.Path,
+                EditorLayer::GetInstance().GetCamera(),
+                EditorLayer::GetInstance().GetSceneViewSettings());
+
             return scene;
         });
 

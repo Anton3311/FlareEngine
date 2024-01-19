@@ -29,10 +29,13 @@ namespace Flare
 		const glm::mat4& GetViewMatrix() const { return m_ViewMatrix; }
 
 		glm::vec3 GetPosition() const;
+		inline glm::vec3 GetRotation() const { return m_Rotation; }
 		inline glm::vec3 GetRotationOrigin() const { return m_Origin; }
 		inline float GetZoom() const { return m_DistanceToOrigin; }
 
-		void SetPosition(glm::vec3 position);
+		void SetRotationOrigin(glm::vec3 position);
+		void SetRotation(glm::vec3 rotation);
+		void SetZoom(float zoom);
 
 		void ProcessEvents(Event& event);
 		void OnViewportChanged(glm::ivec2 viewportSize, glm::ivec2 viewportPosition);
@@ -42,6 +45,8 @@ namespace Flare
 		void Drag(glm::vec2 mouseInput);
 
 		inline glm::vec3 GetViewDirection() const { return TransformDirection(glm::vec3(0.0f, 0.0f, -1.0f)); }
+	public:
+		static constexpr float MinZoom = 0.1f;
 	private:
 		void RecalculateViewMatrix();
 		glm::vec3 CalculateTranslationPoint(glm::vec2 mousePosition, const glm::mat4& inverseProjection, const glm::mat4& inverseView);

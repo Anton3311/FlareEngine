@@ -23,6 +23,7 @@
 #include "FlareEditor/EditorCamera.h"
 
 #include "FlareEditor/EditorSelection.h"
+#include "FlareEditor/SceneViewSettings.h"
 
 #include <vector>
 
@@ -40,14 +41,6 @@ namespace Flare
 		Translate,
 		Rotate,
 		Scale,
-	};
-
-	struct SceneViewSettings
-	{
-		bool ShowAABBs = false;
-		bool ShowLights = true;
-		bool ShowCameraFrustum = true;
-		bool ShowGrid = true;
 	};
 
 	class EditorLayer : public Layer
@@ -78,6 +71,9 @@ namespace Flare
 		inline void SetPlaymodePaused(bool value) { m_PlaymodePaused = value; }
 
 		inline EditorMode GetMode() const { return m_Mode; }
+
+		inline EditorCamera& GetCamera() { return m_Camera; }
+		inline const EditorCamera& GetCamera() const { return m_Camera; }
 
 		inline ECSContext& GetECSContext() { return m_ECSContext; }
 		inline const ECSContext& GetECSContext() const { return m_ECSContext; }

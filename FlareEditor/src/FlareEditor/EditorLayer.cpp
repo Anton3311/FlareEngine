@@ -29,11 +29,11 @@
 
 #include "FlareEditor/ImGui/ImGuiLayer.h"
 #include "FlareEditor/UI/EditorGUI.h"
-#include "FlareEditor/UI/SceneViewportWindow.h"
 #include "FlareEditor/UI/EditorTitleBar.h"
 #include "FlareEditor/UI/ProjectSettingsWindow.h"
 #include "FlareEditor/UI/ECS/ECSInspector.h"
 #include "FlareEditor/UI/PrefabEditor.h"
+#include "FlareEditor/UI/SceneViewportWindow.h"
 #include "FlareEditor/UI/SerializablePropertyRenderer.h"
 
 #include "FlareEditor/Scripting/BuildSystem/BuildSystem.h"
@@ -424,7 +424,7 @@ namespace Flare
     {
         FLARE_CORE_ASSERT(Scene::GetActive());
         if (AssetManager::IsAssetHandleValid(Scene::GetActive()->Handle))
-            SceneSerializer::Serialize(Scene::GetActive());
+            SceneSerializer::Serialize(Scene::GetActive(), m_Camera, m_SceneViewSettings);
         else
             SaveActiveSceneAs();
     }
@@ -441,7 +441,7 @@ namespace Flare
             if (!path.has_extension())
                 path.replace_extension(".flare");
 
-            SceneSerializer::Serialize(Scene::GetActive(), path);
+            SceneSerializer::Serialize(Scene::GetActive(), path, m_Camera, m_SceneViewSettings);
             AssetHandle handle = As<EditorAssetManager>(AssetManager::GetInstance())->ImportAsset(path);
             OpenScene(handle);
         }
@@ -469,6 +469,7 @@ namespace Flare
             Scene::SetActive(active);
 
             active->InitializeRuntime();
+            active->InitializePostProcessing();
 
             m_EditedSceneHandle = handle;
         }
@@ -531,7 +532,7 @@ namespace Flare
 
         ScriptingEngine::LoadModules();
         Ref<Scene> playModeScene = CreateRef<Scene>(m_ECSContext);
-        SceneSerializer::Deserialize(playModeScene, activeScenePath);
+        SceneSerializer::Deserialize(playModeScene, activeScenePath, m_Camera, m_SceneViewSettings);
 
         Scene::SetActive(playModeScene);
         m_Mode = EditorMode::Play;
@@ -592,7 +593,7 @@ namespace Flare
         ScriptingEngine::LoadModules();
         active = CreateRef<Scene>(m_ECSContext);
         active->Handle = activeSceneHandle;
-        SceneSerializer::Deserialize(active, activeScenePath);
+        SceneSerializer::Deserialize(active, activeScenePath, m_Camera, m_SceneViewSettings);
 
         active->InitializeRuntime();
         Scene::SetActive(active);
