@@ -52,6 +52,7 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 
 		s_InputData->MouseScroll = glm::vec2(0.0f);
+		s_InputData->PreviousMousePosition = s_InputData->MousePosition;
 
 		std::memset(s_InputData->MouseButtonState, (int32_t)InputState::None, sizeof(s_InputData->MouseButtonState));
 		std::memset(s_InputData->KeyState, (int32_t)InputState::None, sizeof(s_InputData->KeyState));
