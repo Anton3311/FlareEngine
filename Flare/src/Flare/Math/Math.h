@@ -72,6 +72,11 @@ namespace Flare::Math
 		return (-plane.Offset - glm::dot(plane.Normal, ray.Origin)) / glm::dot(plane.Normal, ray.Direction);
 	}
 
+	inline glm::vec3 ProjectOnPlane(glm::vec3 vector, glm::vec3 planeNormal)
+	{
+		return vector - planeNormal * glm::dot(vector, planeNormal);
+	}
+
 	struct AABB
 	{
 		constexpr AABB()
