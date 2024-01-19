@@ -160,7 +160,7 @@ namespace Flare
                     m_UpdateCursorModeNextFrame = true;
             }
 
-            if (m_UpdateCursorModeNextFrame)
+            if (m_UpdateCursorModeNextFrame && !m_PlaymodePaused)
             {
                 Application::GetInstance().GetWindow()->SetCursorMode(InputManager::GetCursorMode());
                 m_UpdateCursorModeNextFrame = false;
