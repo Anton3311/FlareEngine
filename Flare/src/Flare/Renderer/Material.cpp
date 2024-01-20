@@ -5,6 +5,7 @@
 #include "Flare/Renderer/Shader.h"
 #include "Flare/Renderer/Texture.h"
 #include "Flare/Renderer/RendererAPI.h"
+#include "Flare/Renderer/Renderer.h"
 
 #include "Flare/Platform/OpenGL/OpenGLShader.h"
 
@@ -13,6 +14,33 @@
 
 namespace Flare
 {
+	void TexturePropertyValue::SetTexture(const Ref<Flare::Texture>& texture)
+	{
+		ValueType = Type::Texture;
+		Texture = texture;
+		FrameBuffer = nullptr;
+		FrameBufferAttachmentIndex = UINT32_MAX;
+	}
+
+	void TexturePropertyValue::SetFrameBuffer(const Ref<Flare::FrameBuffer>& frameBuffer, uint32_t attachment)
+	{
+		FLARE_CORE_ASSERT(frameBuffer);
+		FLARE_CORE_ASSERT(attachment < frameBuffer->GetAttachmentsCount());
+
+		ValueType = Type::FrameBufferAttachment;
+		Texture = nullptr;
+		FrameBuffer = frameBuffer;
+		FrameBufferAttachmentIndex = attachment;
+	}
+
+	void TexturePropertyValue::Clear()
+	{
+		ValueType = Type::Texture;
+		Texture = nullptr;
+		FrameBuffer = nullptr;
+		FrameBufferAttachmentIndex = UINT32_MAX;
+	}
+
 	FLARE_IMPL_ASSET(Material);
 	FLARE_IMPL_TYPE(Material);
 
@@ -47,9 +75,17 @@ namespace Flare
 			return;
 
 		const ShaderProperties& properties = m_Shader->GetProperties();
+		size_t samplers = 0;
 
-		for (const auto& param : properties)
-			m_BufferSize += param.Offset;
+		for (const auto& prop : properties)
+		{
+			m_BufferSize += prop.Offset;
+
+			if (prop.Type == ShaderDataType::Sampler)
+				samplers++;
+		}
+
+		m_Textures.resize(samplers, TexturePropertyValue());
 
 		if (properties.size() > 0)
 			m_BufferSize += properties.back().Size;
@@ -76,6 +112,7 @@ namespace Flare
 			m_BufferSize = 0;
 		}
 
+		m_Textures.clear();
 		m_Shader = shader;
 		Initialize();
 	}
@@ -117,9 +154,21 @@ namespace Flare
 					break;
 				case ShaderDataType::Sampler:
 				{
-					Ref<Texture> texture = AssetManager::GetAsset<Texture>(*(AssetHandle*)paramData);
-					if (texture && properties[i].Location != UINT32_MAX)
-						texture->Bind(properties[i].Location);
+					const auto& textureValue = m_Textures[properties[i].SamplerIndex];
+
+					switch (textureValue.ValueType)
+					{
+					case TexturePropertyValue::Type::FrameBufferAttachment:
+						FLARE_CORE_ASSERT(textureValue.FrameBuffer);
+						textureValue.FrameBuffer->BindAttachmentTexture(textureValue.FrameBufferAttachmentIndex, properties[i].Location);
+						break;
+					case TexturePropertyValue::Type::Texture:
+						if (textureValue.Texture)
+							textureValue.Texture->Bind(properties[i].Location);
+;						break;
+					default:
+						FLARE_CORE_ASSERT(false);
+					}
 
 					break;
 				}
@@ -159,5 +208,38 @@ namespace Flare
 				}
 			}
 		}
+	}
+
+	template<>
+	FLARE_API TexturePropertyValue& Material::GetPropertyValue(uint32_t index)
+	{
+		const ShaderProperties& properties = m_Shader->GetProperties();
+		FLARE_CORE_ASSERT((size_t)index < properties.size());
+		FLARE_CORE_ASSERT(properties[index].Type == ShaderDataType::Sampler);
+		FLARE_CORE_ASSERT(properties[index].SamplerIndex < (uint32_t)m_Textures.size());
+
+		return m_Textures[properties[index].SamplerIndex];
+	}
+
+	template<>
+	FLARE_API TexturePropertyValue Material::ReadPropertyValue(uint32_t index)
+	{
+		const ShaderProperties& properties = m_Shader->GetProperties();
+		FLARE_CORE_ASSERT((size_t)index < properties.size());
+		FLARE_CORE_ASSERT(properties[index].Type == ShaderDataType::Sampler);
+		FLARE_CORE_ASSERT(properties[index].SamplerIndex < (uint32_t)m_Textures.size());
+
+		return m_Textures[properties[index].SamplerIndex];
+	}
+
+	template<>
+	FLARE_API void Material::WritePropertyValue(uint32_t index, const TexturePropertyValue& value)
+	{
+		const ShaderProperties& properties = m_Shader->GetProperties();
+		FLARE_CORE_ASSERT((size_t)index < properties.size());
+		FLARE_CORE_ASSERT(properties[index].Type == ShaderDataType::Sampler);
+		FLARE_CORE_ASSERT(properties[index].SamplerIndex < (uint32_t)m_Textures.size());
+
+		m_Textures[properties[index].SamplerIndex] = value;
 	}
 }

@@ -6,9 +6,34 @@
 #include "Flare/Renderer/Shader.h"
 #include "Flare/Renderer/RendererAPI.h"
 #include "Flare/Renderer/ShaderMetadata.h"
+#include "Flare/Renderer/FrameBuffer.h"
 
 namespace Flare
 {
+	struct FLARE_API TexturePropertyValue
+	{
+		enum class Type : uint8_t
+		{
+			Texture,
+			FrameBufferAttachment,
+		};
+
+		TexturePropertyValue()
+		{
+			Clear();
+		}
+
+		void SetTexture(const Ref<Texture>& texture);
+		void SetFrameBuffer(const Ref<FrameBuffer>& frameBuffer, uint32_t attachment);
+		void Clear();
+
+		Type ValueType = Type::Texture;
+
+		Ref<Texture> Texture = nullptr;
+		Ref<FrameBuffer> FrameBuffer = nullptr;
+		uint32_t FrameBufferAttachmentIndex = UINT32_MAX;
+	};
+
 	class FLARE_API Material : public Asset
 	{
 	public:
@@ -31,6 +56,7 @@ namespace Flare
 			const ShaderProperties& properties = m_Shader->GetProperties();
 			FLARE_CORE_ASSERT((size_t)index < properties.size());
 			FLARE_CORE_ASSERT(sizeof(T) == properties[index].Size);
+			FLARE_CORE_ASSERT(properties[index].Type != ShaderDataType::Sampler);
 			return *(T*)(m_Buffer + properties[index].Offset);
 		}
 
@@ -40,6 +66,8 @@ namespace Flare
 			const ShaderProperties& properties = m_Shader->GetProperties();
 			FLARE_CORE_ASSERT((size_t)index < properties.size());
 			FLARE_CORE_ASSERT(sizeof(T) == properties[index].Size);
+
+			FLARE_CORE_ASSERT(properties[index].Type != ShaderDataType::Sampler);
 
 			T value;
 
@@ -54,6 +82,7 @@ namespace Flare
 			FLARE_CORE_ASSERT((size_t)index < properties.size());
 			FLARE_CORE_ASSERT(sizeof(T) == properties[index].Size);
 
+			FLARE_CORE_ASSERT(properties[index].Type != ShaderDataType::Sampler);
 			memcpy_s(m_Buffer + properties[index].Offset, sizeof(value), &value, properties[index].Size);
 		}
 
@@ -65,7 +94,18 @@ namespace Flare
 	private:
 		Ref<Shader> m_Shader;
 
+		std::vector<TexturePropertyValue> m_Textures;
+
 		size_t m_BufferSize;
 		uint8_t* m_Buffer;
 	};
+
+	template<>
+	FLARE_API TexturePropertyValue& Material::GetPropertyValue(uint32_t index);
+
+	template<>
+	FLARE_API TexturePropertyValue Material::ReadPropertyValue(uint32_t index);
+
+	template<>
+	FLARE_API void Material::WritePropertyValue(uint32_t index, const TexturePropertyValue& value);
 }

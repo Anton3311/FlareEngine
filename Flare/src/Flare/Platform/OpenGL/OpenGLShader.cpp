@@ -146,6 +146,7 @@ namespace Flare
         }
 
         FLARE_CORE_INFO("Samplers:");
+        uint32_t samplerIndex = 0;
         for (const auto& resource : resources.sampled_images)
         {
             const auto& samplerType = compiler.get_type(resource.type_id);
@@ -173,7 +174,10 @@ namespace Flare
 
             auto& property = properties.emplace_back(resource.name, type, size, lastPropertyOffset);
             property.Location = binding;
+            property.SamplerIndex = samplerIndex;
+
             lastPropertyOffset += sizeof(AssetHandle);
+            samplerIndex++;
         }
     }
 

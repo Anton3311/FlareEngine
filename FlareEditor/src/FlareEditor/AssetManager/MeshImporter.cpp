@@ -4,6 +4,7 @@
 #include "Flare/Renderer/Material.h"
 #include "Flare/Renderer/MaterialsTable.h"
 #include "Flare/Renderer/ShaderLibrary.h"
+#include "Flare/Renderer/Renderer.h"
 
 #include "FlareEditor/AssetManager/EditorAssetManager.h"
 
@@ -226,7 +227,14 @@ namespace Flare
             if (roughnessProperty)
                 materialAsset->WritePropertyValue(*roughnessProperty, roughness);
             if (textureProperty)
-                materialAsset->WritePropertyValue(*textureProperty, baseColorTextureHandle);
+            {
+                auto& value = materialAsset->GetPropertyValue<TexturePropertyValue>(*textureProperty);
+
+                if (baseColorTextureHandle == NULL_ASSET_HANDLE)
+                    value.SetTexture(Renderer::GetWhiteTexture());
+                else
+                    value.SetTexture(AssetManager::GetAsset<Texture>(baseColorTextureHandle));
+            }
 
             auto it = nameToHandle.find(name);
             if (it != nameToHandle.end())

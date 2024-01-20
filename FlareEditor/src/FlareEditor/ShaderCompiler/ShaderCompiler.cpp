@@ -411,6 +411,7 @@ namespace Flare
             }
         }
 
+        uint32_t samplerIndex = 0;
         for (const auto& resource : resources.sampled_images)
         {
             const auto& samplerType = compiler.get_type(resource.type_id);
@@ -439,10 +440,12 @@ namespace Flare
             shaderProperty.Type = type;
             shaderProperty.Size = size;
             shaderProperty.Hidden = true;
+            shaderProperty.SamplerIndex = samplerIndex;
 
             propertyNameToIndex[shaderProperty.Name] = properties.size() - 1;
 
             lastPropertyOffset += size;
+            samplerIndex++;
         }
     }
     

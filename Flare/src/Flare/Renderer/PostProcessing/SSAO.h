@@ -27,10 +27,14 @@ namespace Flare
 		Ref<Material> m_Material;
 		Ref<Material> m_BlurMaterial;
 
+		std::optional<uint32_t> m_NormalsTextureIndex;
+		std::optional<uint32_t> m_DepthTextureIndex;
 		std::optional<uint32_t> m_BiasPropertyIndex;
 		std::optional<uint32_t> m_RadiusPropertyIndex;
 		std::optional<uint32_t> m_NoiseScalePropertyIndex;
 
+		std::optional<uint32_t> m_ColorTexture;
+		std::optional<uint32_t> m_AOTexture;
 		std::optional<uint32_t> m_BlurSizePropertyIndex;
 		std::optional<uint32_t> m_TexelSizePropertyIndex;
 	};

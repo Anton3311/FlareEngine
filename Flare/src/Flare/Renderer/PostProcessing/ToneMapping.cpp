@@ -22,7 +22,10 @@ namespace Flare
 			return;
 		}
 
-		m_Material = CreateRef<Material>(AssetManager::GetAsset<Shader>(shaderHandle.value()));
+		Ref<Shader> shader = AssetManager::GetAsset<Shader>(shaderHandle.value());
+		m_Material = CreateRef<Material>(shader);
+
+		m_ColorTexture = shader->GetPropertyIndex("u_ScreenBuffer");
 	}
 
 	void ToneMapping::OnRender(RenderingContext& context)
@@ -34,7 +37,9 @@ namespace Flare
 
 		Ref<FrameBuffer> output = context.RTPool.Get();
 
-		context.RenderTarget->BindAttachmentTexture(0, 0);
+		if (m_ColorTexture)
+			m_Material->GetPropertyValue<TexturePropertyValue>(*m_ColorTexture).SetFrameBuffer(context.RenderTarget, 0);
+
 		output->Bind();
 
 		Renderer::DrawFullscreenQuad(m_Material);

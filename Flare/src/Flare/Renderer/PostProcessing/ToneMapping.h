@@ -19,6 +19,7 @@ namespace Flare
 	public:
 		bool Enabled;
 	private:
+		std::optional<uint32_t> m_ColorTexture;
 		Ref<Material> m_Material;
 	};
 

@@ -53,8 +53,14 @@ namespace Flare
 				break;
 
 			case ShaderDataType::Sampler:
-				emitter << material->ReadPropertyValue<AssetHandle>(index);
+			{
+				const auto& value = material->GetPropertyValue<TexturePropertyValue>(index);
+				if (value.ValueType == TexturePropertyValue::Type::Texture)
+					emitter << (value.Texture ? value.Texture->Handle : NULL_ASSET_HANDLE);
+				else
+					emitter << NULL_ASSET_HANDLE;
 				break;
+			}
 
 			case ShaderDataType::Float:
 				emitter << material->ReadPropertyValue<float>(index);
@@ -156,8 +162,17 @@ namespace Flare
 								break;
 
 							case ShaderDataType::Sampler:
-								material->WritePropertyValue(index.value(), valueNode.as<AssetHandle>());
+							{
+								auto& value = material->GetPropertyValue<TexturePropertyValue>(index.value());
+								
+								AssetHandle handle = valueNode.as<AssetHandle>();
+								if (AssetManager::IsAssetHandleValid(handle))
+									value.SetTexture(AssetManager::GetAsset<Texture>(handle));
+								else
+									value.Clear();
+
 								break;
+							}
 
 							case ShaderDataType::Float:
 								material->WritePropertyValue(index.value(), valueNode.as<float>());

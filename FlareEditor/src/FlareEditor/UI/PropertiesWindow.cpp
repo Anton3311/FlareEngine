@@ -343,8 +343,13 @@ namespace Flare
 					break;
 
 				case ShaderDataType::Sampler:
-					propertyRenderer.Serialize(SerializationValue(material->GetPropertyValue<AssetHandle>((uint32_t)propertyIndex), property.Flags));
+				{
+					auto& value = material->GetPropertyValue<TexturePropertyValue>((uint32_t)propertyIndex);
+					FLARE_CORE_ASSERT(value.ValueType == TexturePropertyValue::Type::Texture);
+
+					propertyRenderer.Serialize(SerializationValue(value.Texture, property.Flags));
 					break;
+				}
 				}
 			}
 

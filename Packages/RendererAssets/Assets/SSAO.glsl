@@ -23,7 +23,7 @@ void main()
 layout(location = 0) in vec2 i_UV;
 
 layout(binding = 0) uniform sampler2D u_NormalsTexture;
-layout(binding = 1) uniform sampler2D u_DepthTexure;
+layout(binding = 1) uniform sampler2D u_DepthTexture;
 
 layout(std140, push_constant) uniform Params
 {
@@ -97,7 +97,7 @@ float InterleavedGradientNoise(vec2 screenSpacePosition)
 
 void main()
 {
-	float depth = texture(u_DepthTexure, i_UV).r;
+	float depth = texture(u_DepthTexture, i_UV).r;
 	vec3 viewSpacePosition = ReconstructViewSpacePositionFromDepth(i_UV * 2.0f - vec2(1.0f), depth);
 
 	mat4 worldNormalToView = transpose(u_Camera.InverseView);
@@ -122,7 +122,7 @@ void main()
 		projected.xyz /= projected.w;
 		
 		vec2 uv = projected.xy * 0.5f + vec2(0.5f);
-		float sampleDepth = texture(u_DepthTexure, uv).r;
+		float sampleDepth = texture(u_DepthTexture, uv).r;
 		vec3 sampleViewSpace = ReconstructViewSpacePositionFromDepth(uv, sampleDepth);
 
 		float rangeCheck = smoothstep(0.0, 1.0, u_Params.SampleRadius / abs(sampleViewSpace.z - samplePosition.z));

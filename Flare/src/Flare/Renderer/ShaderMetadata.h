@@ -120,6 +120,7 @@ namespace Flare
 			Type(type),
 			Offset(offset),
 			Location(UINT32_MAX),
+			SamplerIndex(UINT32_MAX),
 			Size(ShaderDataTypeSize(type)) {}
 
 		ShaderProperty(std::string_view name, ShaderDataType type, size_t size, size_t offset)
@@ -127,11 +128,13 @@ namespace Flare
 			Type(type),
 			Size(size),
 			Location(UINT32_MAX),
+			SamplerIndex(UINT32_MAX),
 			Offset(offset) {}
 
 		std::string Name;
 		ShaderDataType Type;
 		uint32_t Location;
+		uint32_t SamplerIndex;
 		size_t Offset;
 		size_t Size;
 

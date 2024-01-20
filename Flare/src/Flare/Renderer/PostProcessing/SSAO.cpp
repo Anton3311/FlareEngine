@@ -28,6 +28,9 @@ namespace Flare
 				m_BiasPropertyIndex = m_Material->GetShader()->GetPropertyIndex("u_Params.Bias");
 				m_RadiusPropertyIndex = m_Material->GetShader()->GetPropertyIndex("u_Params.SampleRadius");
 				m_NoiseScalePropertyIndex = m_Material->GetShader()->GetPropertyIndex("u_Params.NoiseScale");
+
+				m_NormalsTextureIndex = m_Material->GetShader()->GetPropertyIndex("u_NormalsTexture");
+				m_DepthTextureIndex= m_Material->GetShader()->GetPropertyIndex("u_DepthTexture");
 			}
 
 		}
@@ -44,6 +47,9 @@ namespace Flare
 				m_BlurMaterial = CreateRef<Material>(AssetManager::GetAsset<Shader>(shaderHandle.value()));
 				m_BlurSizePropertyIndex = m_BlurMaterial->GetShader()->GetPropertyIndex("u_Params.BlurSize");
 				m_TexelSizePropertyIndex = m_BlurMaterial->GetShader()->GetPropertyIndex("u_Params.TexelSize");
+
+				m_ColorTexture = m_BlurMaterial->GetShader()->GetPropertyIndex("u_ColorTexture");
+				m_AOTexture = m_BlurMaterial->GetShader()->GetPropertyIndex("u_AOTexture");
 			}
 		}
 	}
@@ -92,12 +98,17 @@ namespace Flare
 
 		{
 			FLARE_PROFILE_SCOPE("SSAO::MainPass");
-			currentViewport.RenderTarget->BindAttachmentTexture(1, 0);
 
-			if (&currentViewport == &Renderer::GetMainViewport())
-				currentViewport.RenderTarget->BindAttachmentTexture(2, 1);
-			else
-				currentViewport.RenderTarget->BindAttachmentTexture(3, 1);
+			if (m_NormalsTextureIndex)
+				m_Material->GetPropertyValue<TexturePropertyValue>(*m_NormalsTextureIndex).SetFrameBuffer(currentViewport.RenderTarget, 1);
+
+			if (m_DepthTextureIndex)
+			{
+				if (&currentViewport == &Renderer::GetMainViewport())
+					m_Material->GetPropertyValue<TexturePropertyValue>(*m_DepthTextureIndex).SetFrameBuffer(currentViewport.RenderTarget, 2);
+				else
+					m_Material->GetPropertyValue<TexturePropertyValue>(*m_DepthTextureIndex).SetFrameBuffer(currentViewport.RenderTarget, 3);
+			}
 
 			if (m_BiasPropertyIndex)
 				m_Material->WritePropertyValue(*m_BiasPropertyIndex, Bias);
@@ -113,8 +124,11 @@ namespace Flare
 
 		{
 			FLARE_PROFILE_SCOPE("SSAO::BlurAndCombinePass");
-			aoTarget->BindAttachmentTexture(0);
-			context.RenderTarget->BindAttachmentTexture(0, 1);
+
+			if (m_AOTexture)
+				m_BlurMaterial->GetPropertyValue<TexturePropertyValue>(*m_AOTexture).SetFrameBuffer(aoTarget, 0);
+			if (m_ColorTexture)
+				m_BlurMaterial->GetPropertyValue<TexturePropertyValue>(*m_ColorTexture).SetFrameBuffer(currentViewport.RenderTarget, 0);
 
 			if (m_BlurSizePropertyIndex)
 				m_BlurMaterial->WritePropertyValue(*m_BlurSizePropertyIndex, BlurSize);
