@@ -17,6 +17,20 @@ namespace Flare
 		EVENT_CLASS(WindowClose);
 	};
 
+	class WindowFocusEvent : public Event
+	{
+	public:
+		WindowFocusEvent(bool focused)
+			: m_Focused(focused) {}
+
+		constexpr bool IsFocused() const { return m_Focused; }
+
+		EVENT_CLASS(WindowFocus);
+	public:
+	private:
+		bool m_Focused;
+	};
+
 	class WindowResizeEvent : public Event
 	{
 	public:

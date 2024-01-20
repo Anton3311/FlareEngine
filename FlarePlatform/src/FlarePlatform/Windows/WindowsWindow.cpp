@@ -399,6 +399,15 @@ namespace Flare
 			}
 		});
 
+		glfwSetWindowFocusCallback(m_Window, [](GLFWwindow* window, int focus)
+		{
+			WindowData* data = (WindowData*)glfwGetWindowUserPointer(window);
+			data->Properties.IsFocused = focus;
+			
+			WindowFocusEvent event(focus);
+			data->Callback(event);
+		});
+
 		glfwSetWindowCloseCallback(m_Window, [](GLFWwindow* window)
 		{
 			WindowData* data = (WindowData*)glfwGetWindowUserPointer(window);

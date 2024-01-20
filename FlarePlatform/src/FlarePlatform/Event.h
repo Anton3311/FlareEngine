@@ -10,6 +10,7 @@ namespace Flare
 	enum class EventType
 	{
 		WindowClose,
+		WindowFocus,
 		WindowResize,
 		WindowMove,
 
