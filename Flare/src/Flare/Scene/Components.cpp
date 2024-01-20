@@ -138,6 +138,7 @@ namespace Flare
 
 
 	FLARE_IMPL_COMPONENT(PointLight);
+	FLARE_IMPL_COMPONENT(SpotLight);
 
 
 	FLARE_IMPL_COMPONENT(Environment);

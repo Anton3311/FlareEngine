@@ -278,6 +278,36 @@ namespace Flare
 
 
 
+    struct FLARE_API SpotLight
+    {
+        FLARE_COMPONENT;
+
+        SpotLight()
+            : Color(glm::vec3(1.0f)), Intensity(1.0f), InnerAngle(30.0f), OuterAngle(45.0f) {}
+        SpotLight(const glm::vec3& color, float intensity, float innerAngle, float outerAngle)
+            : Color(color), Intensity(intensity), InnerAngle(innerAngle), OuterAngle(outerAngle) {}
+
+        glm::vec3 Color;
+        float Intensity;
+
+        float InnerAngle;
+        float OuterAngle;
+    };
+
+    template<>
+    struct TypeSerializer<SpotLight>
+    {
+        void OnSerialize(SpotLight& light, SerializationStream& stream)
+        {
+            stream.Serialize("Color", SerializationValue(light.Color, SerializationValueFlags::Color));
+            stream.Serialize("Intensity", SerializationValue(light.Intensity));
+            stream.Serialize("InnerAngle", SerializationValue(light.InnerAngle));
+            stream.Serialize("OuterAngle", SerializationValue(light.OuterAngle));
+        }
+    };
+
+
+
     struct FLARE_API Environment
     {
         FLARE_COMPONENT;

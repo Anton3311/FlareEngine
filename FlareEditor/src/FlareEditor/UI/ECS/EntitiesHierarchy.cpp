@@ -71,6 +71,12 @@ namespace Flare
 						result = true;
 					}
 
+					if (ImGui::MenuItem("Spot Light"))
+					{
+						selectedEntity = m_World->CreateEntity(TransformComponent(), SerializationId(), SpotLight());
+						result = true;
+					}
+
 					if (ImGui::MenuItem("Environment"))
 					{
 						selectedEntity = m_World->CreateEntity(TransformComponent(), SerializationId(), Environment());

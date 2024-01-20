@@ -110,7 +110,23 @@ namespace Flare
 			: Position(position), Color(color) {}
 
 		glm::vec3 Position;
-		float Padding0;
+		float Padding0 = 0.0f;
+		glm::vec4 Color;
+	};
+
+	struct SpotLightData
+	{
+		SpotLightData(glm::vec3 position, glm::vec3 direction, float innerAngle, float outerAngle, glm::vec4 color)
+			: Position(position),
+			InnerAngleCos(glm::cos(glm::radians(innerAngle))),
+			Direction(glm::normalize(direction)),
+			OuterAngleCos(glm::cos(glm::radians(outerAngle))),
+			Color(color) {}
+
+		glm::vec3 Position;
+		float InnerAngleCos;
+		glm::vec3 Direction;
+		float OuterAngleCos;
 		glm::vec4 Color;
 	};
 
@@ -130,6 +146,7 @@ namespace Flare
 		static void EndScene();
 
 		static void SubmitPointLight(const PointLightData& light);
+		static void SubmitSpotLight(const SpotLightData& light);
 
 		static void DrawFullscreenQuad(const Ref<Material>& material);
 		static void DrawMesh(const Ref<VertexArray>& mesh, const Ref<Material>& material, size_t indicesCount = SIZE_MAX);

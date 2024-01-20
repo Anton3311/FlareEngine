@@ -58,6 +58,7 @@ namespace Flare
 		m_DirectionalLightQuery = m_World.NewQuery().With<TransformComponent, DirectionalLight>().Create();
 		m_EnvironmentQuery = m_World.NewQuery().With<Environment>().Create();
 		m_PointLightsQuery = m_World.NewQuery().With<TransformComponent>().With<PointLight>().Create();
+		m_SpotLightsQuery = m_World.NewQuery().With<TransformComponent>().With<SpotLight>().Create();
 		
 		systemsManager.RegisterSystem("Sprites Renderer", m_2DRenderingGroup, new SpritesRendererSystem());
 		systemsManager.RegisterSystem("Meshes Renderer", m_2DRenderingGroup, new MeshesRendererSystem());
@@ -201,6 +202,26 @@ namespace Flare
 					transforms[entity].Position,
 					glm::vec4(lights[entity].Color, lights[entity].Intensity)
 				});
+			}
+		}
+
+		for (EntityView view : m_SpotLightsQuery)
+		{
+			auto transforms = view.View<const TransformComponent>();
+			auto lights = view.View<const SpotLight>();
+
+			for (EntityViewElement entity : view)
+			{
+				if (lights[entity].OuterAngle - lights[entity].InnerAngle <= 0.0f)
+					continue;
+
+				Renderer::SubmitSpotLight(SpotLightData(
+					transforms[entity].Position,
+					transforms[entity].TransformDirection(glm::vec3(0.0f, 0.0f, -1.0f)),
+					lights[entity].InnerAngle,
+					lights[entity].OuterAngle,
+					glm::vec4(lights[entity].Color, lights[entity].Intensity)
+				));
 			}
 		}
 	}

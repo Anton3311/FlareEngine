@@ -122,6 +122,7 @@ void main()
 		u_Material.Roughness) * shadow;
 
 	finalColor += CalculatePointLightsContribution(N, V, H, color.rgb, i_Vertex.Position.xyz, u_Material.Roughness);
+	finalColor += CalculateSpotLightsContribution(N, V, H, color.rgb, i_Vertex.Position.xyz, u_Material.Roughness);
 	finalColor += u_EnvironmentLight.rgb * u_EnvironmentLight.w * color.rgb;
 
 	o_Normal = vec4(N * 0.5f + vec3(0.5f), 1.0f);

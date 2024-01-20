@@ -10,6 +10,7 @@ layout(std140, binding = 1) uniform LightData
 	float u_LightNear;
 
 	uint u_PointLightsCount;
+	uint u_SpotLightsCount;
 };
 
 struct PointLightData
@@ -18,10 +19,24 @@ struct PointLightData
 	vec4 Color;
 };
 
-layout(std140, binding = 4) buffer LightsData
+struct SpotLightData
 {
-	PointLightData[] PointLights;
-} u_LightsData;
+	vec3 Position;
+	float InnerrRadiusCos;
+	vec3 Direction;
+	float OuterRadiusCos;
+	vec4 Color;
+};
+
+layout(std140, binding = 4) buffer PointLightsData
+{
+	PointLightData[] Lights;
+} u_PointLights;
+
+layout(std140, binding = 5) buffer SpotLightsData
+{
+	SpotLightData[] Lights;
+} u_SpotLights;
 
 vec3 CalculateLight(vec3 N, vec3 V, vec3 H, vec3 color, vec3 incomingLight, vec3 lightDirection, float roughness)
 {
@@ -42,15 +57,41 @@ vec3 CalculatePointLightsContribution(vec3 N, vec3 V, vec3 H, vec3 color, vec3 p
 	vec3 finalColor = vec3(0.0);
 	for (uint i = 0; i < u_PointLightsCount; i++)
 	{
-		vec3 direction = u_LightsData.PointLights[i].Position - position;
+		vec3 direction = u_PointLights.Lights[i].Position - position;
 		float distance = length(direction);
 		float attenuation = 1.0f / (distance * distance);
 
-		vec3 incomingLight = u_LightsData.PointLights[i].Color.rgb * u_LightsData.PointLights[i].Color.w;
+		vec3 incomingLight = u_PointLights.Lights[i].Color.rgb * u_PointLights.Lights[i].Color.w;
 
 		finalColor += CalculateLight(N, V, H, color,
 			incomingLight * attenuation,
 			direction / distance, roughness);
+	}
+
+	return finalColor;
+}
+
+vec3 CalculateSpotLightsContribution(vec3 N, vec3 V, vec3 H, vec3 color, vec3 position, float roughness)
+{
+	vec3 finalColor = vec3(0.0);
+	for (uint i = 0; i < u_SpotLightsCount; i++)
+	{
+		SpotLightData spotLight = u_SpotLights.Lights[i];
+
+		vec3 direction = u_SpotLights.Lights[i].Position - position;
+		float distance = length(direction);
+		float attenuation = 1.0f / (distance * distance);
+
+		direction /= distance;
+
+		float angleCos = dot(direction, spotLight.Direction);
+
+		float fade = 1.0f - smoothstep(spotLight.InnerrRadiusCos, spotLight.OuterRadiusCos, angleCos);
+		vec3 incomingLight = spotLight.Color.rgb * spotLight.Color.w * fade;
+
+		finalColor += CalculateLight(N, V, H, color,
+			incomingLight * attenuation,
+			direction, roughness);
 	}
 
 	return finalColor;

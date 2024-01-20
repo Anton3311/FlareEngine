@@ -87,6 +87,7 @@ namespace Flare
 
 		float Near;
 		uint32_t PointLightsCount;
+		uint32_t SpotLightsCount;
 	};
 
 	struct RenderData
