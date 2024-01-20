@@ -18,7 +18,7 @@ void main()
 #begin pixel
 #version 450
 
-#include "Camera.glsl"
+#include "Common/Camera.glsl"
 
 layout(location = 0) in vec2 i_UV;
 

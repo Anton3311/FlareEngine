@@ -1,8 +1,8 @@
 #begin vertex
 #version 450
 
-#include "Camera.glsl"
-#include "Instancing.glsl"
+#include "Common/Camera.glsl"
+#include "Common/Instancing.glsl"
 
 layout(location = 0) in vec3 i_Position;
 

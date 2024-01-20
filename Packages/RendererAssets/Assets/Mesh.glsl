@@ -12,8 +12,8 @@ layout(location = 0) in vec3 i_Position;
 layout(location = 1) in vec3 i_Normal;
 layout(location = 2) in vec2 i_UV;
 
-#include "Camera.glsl"
-#include "Instancing.glsl"
+#include "Common/Camera.glsl"
+#include "Common/Instancing.glsl"
 
 struct VertexData
 {
@@ -56,8 +56,8 @@ void main()
 #begin pixel
 #version 450
 
-#include "Camera.glsl"
-#include "BRDF.glsl"
+#include "Common/Camera.glsl"
+#include "Common/BRDF.glsl"
 #include "Common/ShadowMapping.glsl"
 #include "Common/Light.glsl"
 
