@@ -232,7 +232,10 @@ namespace Flare
 
                         if (metadata->Type == AssetType::Shader)
                         {
-                            editorAssetManager->ReloadAsset(handle.value());
+                            if (Application::GetInstance().GetWindow()->GetProperties().IsFocused)
+                                editorAssetManager->ReloadAsset(*handle);
+                            else
+                                m_AssetReloadQueue.emplace(*handle);
                         }
                     }
 
@@ -258,6 +261,20 @@ namespace Flare
         {
             if (e.GetKeyCode() == KeyCode::Escape)
                 Application::GetInstance().GetWindow()->SetCursorMode(CursorMode::Normal);
+            return false;
+        });
+
+        dispatcher.Dispatch<WindowFocusEvent>([this](WindowFocusEvent& e) -> bool
+        {
+            if (e.IsFocused())
+            {
+                Ref<EditorAssetManager> assetManager = As<EditorAssetManager>(AssetManager::GetInstance());
+                for (AssetHandle handle : m_AssetReloadQueue)
+                    assetManager->ReloadAsset(handle);
+
+                m_AssetReloadQueue.clear();
+                m_AssetManagerWindow.RebuildAssetTree();
+            }
             return false;
         });
         
