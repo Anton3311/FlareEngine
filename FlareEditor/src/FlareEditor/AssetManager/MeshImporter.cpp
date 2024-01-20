@@ -174,8 +174,8 @@ namespace Flare
         Ref<Shader> shader = AssetManager::GetAsset<Shader>(defaultShader.value());
         if (shader != nullptr && shader->IsLoaded())
         {
-            colorProperty = shader->GetPropertyIndex("u_InstanceData.Color");
-            roughnessProperty = shader->GetPropertyIndex("u_InstanceData.Roughness");
+            colorProperty = shader->GetPropertyIndex("u_Material.Color");
+            roughnessProperty = shader->GetPropertyIndex("u_Material.Roughness");
             textureProperty = shader->GetPropertyIndex("u_Texture");
         }
 
