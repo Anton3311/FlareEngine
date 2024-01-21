@@ -664,20 +664,39 @@ namespace Flare
 
 		Ref<Material> currentMaterial = nullptr;
 
+		s_RendererData.InstanceDataBuffer.clear();
 		for (uint32_t objectIndex : s_RendererData.CulledObjectIndices)
 		{
+			auto& instanceData = s_RendererData.InstanceDataBuffer.emplace_back();
+			instanceData.Transform = s_RendererData.Queue[objectIndex].Transform;
+			instanceData.EntityIndex = s_RendererData.Queue[objectIndex].EntityIndex;
+		}
+
+		{
+			FLARE_PROFILE_SCOPE("SetIntancesData");
+			s_RendererData.InstancesShaderBuffer->SetData(MemorySpan::FromVector(s_RendererData.InstanceDataBuffer));
+		}
+
+		uint32_t baseInstance = 0;
+		for (uint32_t currentInstance = 0; currentInstance < (uint32_t)s_RendererData.CulledObjectIndices.size(); currentInstance++)
+		{
+			uint32_t objectIndex = s_RendererData.CulledObjectIndices[currentInstance];
 			const RenderableObject& object = s_RendererData.Queue[objectIndex];
+
 			if (s_RendererData.CurrentInstancingMesh.Mesh.get() != object.Mesh.get()
 				|| s_RendererData.CurrentInstancingMesh.SubMeshIndex != object.SubMeshIndex)
 			{
-				FlushInstances();
+				FlushInstances(currentInstance - baseInstance, baseInstance);
+				baseInstance = currentInstance;
+
 				s_RendererData.CurrentInstancingMesh.Mesh = object.Mesh;
 				s_RendererData.CurrentInstancingMesh.SubMeshIndex = object.SubMeshIndex;
 			}
 
 			if (object.Material.get() != currentMaterial.get())
 			{
-				FlushInstances();
+				FlushInstances(currentInstance - baseInstance, baseInstance);
+				baseInstance = currentInstance;
 
 				currentMaterial = object.Material;
 
@@ -695,16 +714,9 @@ namespace Flare
 
 				s_RendererData.CurrentViewport->RenderTarget->SetWriteMask(shaderOutputsMask);
 			}
-
-			auto& instanceData = s_RendererData.InstanceDataBuffer.emplace_back();
-			instanceData.Transform = object.Transform;
-			instanceData.EntityIndex = object.EntityIndex;
-
-			if (s_RendererData.InstanceDataBuffer.size() == (size_t)s_RendererData.MaxInstances)
-				FlushInstances();
 		}
 
-		FlushInstances();
+		FlushInstances((uint32_t)s_RendererData.CulledObjectIndices.size() - baseInstance, baseInstance);
 		s_RendererData.CurrentInstancingMesh.Reset();
 	}
 
@@ -807,28 +819,20 @@ namespace Flare
 		s_RendererData.InstanceDataBuffer.clear();
 	}
 
-	void Renderer::FlushInstances()
+	void Renderer::FlushInstances(uint32_t count, uint32_t baseInstance)
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		size_t instancesCount = s_RendererData.InstanceDataBuffer.size();
-		if (instancesCount == 0 || s_RendererData.CurrentInstancingMesh.Mesh == nullptr)
+		if (count == 0 || s_RendererData.CurrentInstancingMesh.Mesh == nullptr)
 			return;
-
-		{
-			FLARE_PROFILE_SCOPE("Renderer::FlushInstance::SetInstancesData");
-			s_RendererData.InstancesShaderBuffer->SetData(MemorySpan::FromVector(s_RendererData.InstanceDataBuffer));
-		}
 
 		auto mesh = s_RendererData.CurrentInstancingMesh;
 
 		const SubMesh& subMesh = mesh.Mesh->GetSubMeshes()[mesh.SubMeshIndex];
-		RenderCommand::DrawInstancesIndexed(mesh.Mesh, mesh.SubMeshIndex, instancesCount);
+		RenderCommand::DrawInstancesIndexed(mesh.Mesh, mesh.SubMeshIndex, count, baseInstance);
 
 		s_RendererData.Statistics.DrawCallsCount++;
-		s_RendererData.Statistics.DrawCallsSavedByInstancing += (uint32_t)instancesCount - 1;
-
-		s_RendererData.InstanceDataBuffer.clear();
+		s_RendererData.Statistics.DrawCallsSavedByInstancing += count - 1;
 	}
 
 	void Renderer::FlushShadowPassInstances(uint32_t baseInstance)

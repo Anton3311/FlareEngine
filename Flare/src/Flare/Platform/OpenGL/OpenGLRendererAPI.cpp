@@ -206,7 +206,7 @@ namespace Flare
 		return 0;
 	}
 
-	void OpenGLRendererAPI::DrawInstancesIndexed(const Ref<Mesh>& mesh, uint32_t subMeshIndex, size_t instancesCount)
+	void OpenGLRendererAPI::DrawInstancesIndexed(const Ref<Mesh>& mesh, uint32_t subMeshIndex, uint32_t instancesCount, uint32_t baseInstance)
 	{
 		const SubMesh& subMesh = mesh->GetSubMeshes()[subMeshIndex];
 		mesh->GetVertexArray()->Bind();
@@ -216,13 +216,14 @@ namespace Flare
 		GLenum indexType = 0;
 		GetIndexCountAndType(mesh->GetVertexArray()->GetIndexBuffer(), &indicesCount, &indexType);
 
-		glDrawElementsInstancedBaseVertex(
+		glDrawElementsInstancedBaseVertexBaseInstance(
 			ConvertTopologyType(mesh->GetTopologyType()),
 			subMesh.IndicesCount,
 			indexType,
 			(const void*)(subMesh.BaseIndex * indexSize),
 			instancesCount,
-			subMesh.BaseVertex);
+			subMesh.BaseVertex,
+			baseInstance);
 	}
 
 	void OpenGLRendererAPI::DrawInstancesIndexedIndirect(const Ref<Mesh>& mesh, const Span<DrawIndirectCommandSubMeshData>& subMeshesData, uint32_t baseInstance)

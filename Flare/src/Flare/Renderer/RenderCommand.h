@@ -19,7 +19,10 @@ namespace Flare
 		static void DrawIndexed(const Ref<const VertexArray>& mesh, size_t indicesCount);
 		static void DrawInstanced(const Ref<const VertexArray>& mesh, size_t instancesCount);
 
-		static void DrawInstancesIndexed(const Ref<Mesh>& mesh, uint32_t subMeshIndex, size_t instancesCount);
+		static void DrawInstancesIndexed(const Ref<Mesh>& mesh,
+			uint32_t subMeshIndex,
+			uint32_t instancesCount,
+			uint32_t baseInstance);
 
 		static void DrawInstancesIndexedIndirect(
 			const Ref<Mesh>& mesh,

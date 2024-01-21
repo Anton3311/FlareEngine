@@ -173,7 +173,7 @@ namespace Flare
 	private:
 		static void ExecuteGeomertyPass();
 		static void ExecuteShadowPass();
-		static void FlushInstances();
+		static void FlushInstances(uint32_t count, uint32_t baseInstance);
 		static void FlushShadowPassInstances(uint32_t baseInstance);
 	};
 }
