@@ -44,7 +44,8 @@ namespace Flare
 
 		virtual void DrawInstancesIndexedIndirect(
 			const Ref<Mesh>& mesh,
-			const Span<DrawIndirectCommandSubMeshData>& subMeshesData) = 0;
+			const Span<DrawIndirectCommandSubMeshData>& subMeshesData,
+			uint32_t baseInstance) = 0;
 
 		virtual void DrawLines(const Ref<const VertexArray>& vertexArray, size_t cverticesCountount) = 0;
 

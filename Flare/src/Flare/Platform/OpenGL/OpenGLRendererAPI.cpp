@@ -225,7 +225,7 @@ namespace Flare
 			subMesh.BaseVertex);
 	}
 
-	void OpenGLRendererAPI::DrawInstancesIndexedIndirect(const Ref<Mesh>& mesh, const Span<DrawIndirectCommandSubMeshData>& subMeshesData)
+	void OpenGLRendererAPI::DrawInstancesIndexedIndirect(const Ref<Mesh>& mesh, const Span<DrawIndirectCommandSubMeshData>& subMeshesData, uint32_t baseInstance)
 	{
 		mesh->GetVertexArray()->Bind();
 		const auto& subMeshes = mesh->GetSubMeshes();
@@ -235,7 +235,6 @@ namespace Flare
 
 		m_IndirectCommandDataStorage.clear();
 
-		uint32_t baseInstance = 0;
 		for (const DrawIndirectCommandSubMeshData& data : subMeshesData)
 		{
 			auto& commandData = m_IndirectCommandDataStorage.emplace_back();

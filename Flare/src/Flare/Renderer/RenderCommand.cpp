@@ -55,10 +55,10 @@ namespace Flare
 		s_API->DrawInstancesIndexed(mesh, subMeshIndex, instancesCount);
 	}
 
-	void RenderCommand::DrawInstancesIndexedIndirect(const Ref<Mesh>& mesh, const Span<DrawIndirectCommandSubMeshData>& subMeshesData)
+	void RenderCommand::DrawInstancesIndexedIndirect(const Ref<Mesh>& mesh, const Span<DrawIndirectCommandSubMeshData>& subMeshesData, uint32_t baseInstance)
 	{
 		FLARE_PROFILE_FUNCTION();
-		s_API->DrawInstancesIndexedIndirect(mesh, subMeshesData);
+		s_API->DrawInstancesIndexedIndirect(mesh, subMeshesData, baseInstance);
 	}
 
 	void RenderCommand::DrawInstanced(const Ref<const VertexArray>& mesh, size_t instancesCount, size_t baseVertexIndex, size_t startIndex, size_t indicesCount)
