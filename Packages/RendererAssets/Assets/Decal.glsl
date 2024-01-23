@@ -2,6 +2,7 @@ DepthTest = false
 
 Properties = 
 {
+	u_Material.Color = { Type = Color }
 	u_ColorTexture = {}
 }
 
@@ -42,6 +43,11 @@ layout(location = 1) in flat mat4 i_ViewToObjectSpace;
 layout(location = 0) out vec4 o_Color;
 layout(location = 2) out int o_EntityIndex;
 
+layout(std140, push_constant) uniform MaterialData
+{
+	vec4 Color;
+} u_Material;
+
 void main()
 {
 	vec2 depthUV = vec2(gl_FragCoord.xy) / vec2(u_Camera.ViewportSize);
@@ -54,7 +60,11 @@ void main()
 	if (abs(objectSpacePosition.x) > 0.5f || abs(objectSpacePosition.y) > 0.5f || abs(objectSpacePosition.z) > 0.5f)
 		discard;
 
-	o_Color = texture(u_ColorTexture, objectSpacePosition.xz);
+	vec4 color = texture(u_ColorTexture, objectSpacePosition.xz) * u_Material.Color;
+	if (color.a == 0)
+		discard;
+
+	o_Color = color;
 	o_EntityIndex = i_EntityIndex;
 }
 
