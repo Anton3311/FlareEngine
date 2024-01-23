@@ -65,6 +65,13 @@ namespace Flare
 		uint32_t SubMeshIndex = UINT32_MAX;
 	};
 
+	struct DecalData
+	{
+		glm::mat4 Transform;
+		int32_t EntityIndex;
+		Ref<Material> Material;
+	};
+
 	struct RendererData
 	{
 		Viewport* MainViewport = nullptr;
@@ -75,12 +82,14 @@ namespace Flare
 		Ref<VertexArray> FullscreenQuad = nullptr;
 
 		Ref<Texture> WhiteTexture = nullptr;
+		Ref<Mesh> CubeMesh = nullptr;
 		
 		std::vector<Ref<RenderPass>> RenderPasses;
 		RendererStatistics Statistics;
 
 		std::vector<RenderableObject> Queue;
 		std::vector<uint32_t> CulledObjectIndices;
+		std::vector<DecalData> Decals;
 
 		std::vector<InstanceData> InstanceDataBuffer;
 		uint32_t MaxInstances = 1024;
@@ -170,6 +179,81 @@ namespace Flare
 		{
 			uint32_t whiteTextureData = 0xffffffff;
 			s_RendererData.WhiteTexture = Texture::Create(1, 1, &whiteTextureData, TextureFormat::RGBA8);
+		}
+
+		{
+			glm::vec3 cubeVertices[] =
+			{
+				glm::vec3(-0.5f, -0.5f, -0.5f),
+				glm::vec3(+0.5f, -0.5f, -0.5f),
+				glm::vec3(+0.5f, +0.5f, -0.5f),
+				glm::vec3(-0.5f, +0.5f, -0.5f),
+
+				glm::vec3(-0.5f, -0.5f, +0.5f),
+				glm::vec3(+0.5f, -0.5f, +0.5f),
+				glm::vec3(+0.5f, +0.5f, +0.5f),
+				glm::vec3(-0.5f, +0.5f, +0.5f),
+			};
+
+			glm::vec3 cubeNormals[] =
+			{
+				glm::vec3(0.0f),
+				glm::vec3(0.0f),
+				glm::vec3(0.0f),
+				glm::vec3(0.0f),
+
+				glm::vec3(0.0f),
+				glm::vec3(0.0f),
+				glm::vec3(0.0f),
+				glm::vec3(0.0f),
+			};
+
+			glm::vec2 cubeUVs[] =
+			{
+				glm::vec2(0.0f),
+				glm::vec2(0.0f),
+				glm::vec2(0.0f),
+				glm::vec2(0.0f),
+
+				glm::vec2(0.0f),
+				glm::vec2(0.0f),
+				glm::vec2(0.0f),
+				glm::vec2(0.0f),
+			};
+
+			uint16_t cubeIndices[] =
+			{
+				// Front
+				1, 2, 0,
+				2, 3, 0,
+
+				// Left
+				3, 4, 0,
+				4, 3, 7,
+
+				// Right
+				6, 2, 1,
+				6, 1, 5,
+
+				// Back
+				6, 5, 4,
+				7, 6, 4,
+
+				// Bottom
+				0, 4, 1,
+				1, 4, 5,
+
+				// Top
+				7, 3, 2,
+				6, 7, 2
+			};
+
+			s_RendererData.CubeMesh = CreateRef<Mesh>(MeshTopology::Triangles, 8, IndexBuffer::IndexFormat::UInt16, sizeof(cubeIndices) / 2);
+			s_RendererData.CubeMesh->AddSubMesh(
+				Span(cubeVertices, 8),
+				MemorySpan(cubeIndices, sizeof(cubeIndices) / 2),
+				Span(cubeNormals, 8),
+				Span(cubeUVs, 8));
 		}
 
 		Project::OnProjectOpen.Bind(ReloadShaders);
@@ -440,6 +524,8 @@ namespace Flare
 
 		{
 			FLARE_PROFILE_SCOPE("UpdateCameraUniformBuffer");
+			const auto& spec = viewport.RenderTarget->GetSpecifications();
+			viewport.FrameData.Camera.ViewportSize = glm::ivec2(spec.Width, spec.Height);
 			s_RendererData.CameraBuffer->SetData(&viewport.FrameData.Camera, sizeof(CameraData), 0);
 		}
 
@@ -718,6 +804,62 @@ namespace Flare
 
 		FlushInstances((uint32_t)s_RendererData.CulledObjectIndices.size() - baseInstance, baseInstance);
 		s_RendererData.CurrentInstancingMesh.Reset();
+
+		// Decals
+
+		s_RendererData.InstanceDataBuffer.clear();
+
+		std::sort(s_RendererData.Decals.begin(), s_RendererData.Decals.end(), [](const DecalData& a, const DecalData& b) -> bool
+		{
+			return (uint64_t)a.Material->Handle < (uint64_t)b.Material->Handle;
+		});
+
+		for (const DecalData& decal : s_RendererData.Decals)
+		{
+			auto& instance = s_RendererData.InstanceDataBuffer.emplace_back();
+			instance.Transform = decal.Transform;
+			instance.EntityIndex = decal.EntityIndex;
+		}
+
+		s_RendererData.InstancesShaderBuffer->SetData(MemorySpan::FromVector(s_RendererData.InstanceDataBuffer));
+
+		if (s_RendererData.Decals.size() > 0)
+		{
+			if (s_RendererData.CurrentViewport == s_RendererData.MainViewport)
+				s_RendererData.CurrentViewport->RenderTarget->BindAttachmentTexture(2, 1);
+			else
+				s_RendererData.CurrentViewport->RenderTarget->BindAttachmentTexture(3, 1);
+
+			uint32_t baseInstance = 0;
+			Ref<Material> currentMaterial = s_RendererData.Decals[0].Material;
+
+			uint32_t instanceIndex = 0;
+			for (; instanceIndex < (uint32_t)s_RendererData.Decals.size(); instanceIndex++)
+			{
+				if (s_RendererData.Decals[instanceIndex].Material.get() != currentMaterial.get())
+				{
+					ApplyMaterialFeatures(currentMaterial->GetShader()->GetFeatures());
+					currentMaterial->SetShaderProperties();
+
+					RenderCommand::DrawInstancesIndexed(s_RendererData.CubeMesh, 0, instanceIndex - baseInstance, baseInstance);
+					baseInstance = instanceIndex;
+
+					currentMaterial = s_RendererData.Decals[instanceIndex].Material;
+				}
+			}
+
+			if (instanceIndex != baseInstance)
+			{
+				FLARE_CORE_ASSERT(currentMaterial->GetShader());
+				ApplyMaterialFeatures(currentMaterial->GetShader()->GetFeatures());
+				currentMaterial->SetShaderProperties();
+
+				RenderCommand::DrawInstancesIndexed(s_RendererData.CubeMesh, 0, instanceIndex - baseInstance, baseInstance);
+			}
+		}
+
+		s_RendererData.Decals.clear();
+		s_RendererData.InstanceDataBuffer.clear();
 	}
 
 	void Renderer::ExecuteShadowPass()
@@ -951,6 +1093,17 @@ namespace Flare
 		object.SortKey = glm::distance2(center, s_RendererData.CurrentViewport->FrameData.Camera.Position);
 	}
 
+	void Renderer::SubmitDecal(const Ref<Material>& material, const glm::mat4& transform, int32_t entityIndex)
+	{
+		if (material == nullptr || material->GetShader() == nullptr)
+			return;
+
+		auto& decal = s_RendererData.Decals.emplace_back();
+		decal.EntityIndex = entityIndex;
+		decal.Material = material;
+		decal.Transform = transform;
+	}
+
 	void Renderer::AddRenderPass(Ref<RenderPass> pass)
 	{
 		s_RendererData.RenderPasses.push_back(pass);
@@ -994,6 +1147,11 @@ namespace Flare
 	Ref<Texture> Renderer::GetWhiteTexture()
 	{
 		return s_RendererData.WhiteTexture;
+	}
+
+	Ref<Mesh> Renderer::GetCubeMesh()
+	{
+		return s_RendererData.CubeMesh;
 	}
 
 	Ref<Material> Renderer::GetErrorMaterial()

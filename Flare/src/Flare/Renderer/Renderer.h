@@ -157,6 +157,8 @@ namespace Flare
 			MeshRenderFlags flags = MeshRenderFlags::None,
 			int32_t entityIndex = INT32_MAX);
 
+		static void SubmitDecal(const Ref<Material>& material, const glm::mat4& transform, int32_t entityIndex);
+
 		static void AddRenderPass(Ref<RenderPass> pass);
 		static void RemoveRenderPass(Ref<RenderPass> pass);
 		static void ExecuteRenderPasses();
@@ -166,6 +168,7 @@ namespace Flare
 
 		static Ref<const VertexArray> GetFullscreenQuad();
 		static Ref<Texture> GetWhiteTexture();
+		static Ref<Mesh> GetCubeMesh();
 		static Ref<Material> GetErrorMaterial();
 
 		static Ref<FrameBuffer> GetShadowsRenderTarget(size_t index);

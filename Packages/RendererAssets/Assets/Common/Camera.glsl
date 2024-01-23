@@ -12,6 +12,8 @@ struct CameraData
 
 	float Near;
 	float Far;
+
+	ivec2 ViewportSize;
 };
 
 layout(std140, binding = 0) uniform Camera

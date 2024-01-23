@@ -48,6 +48,13 @@ AssetRegistry:
     Parent: 0
     SubAssets:
       []
+  - Handle: 11810476805849321214
+    Type: Shader
+    Path: Decal.glsl
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
   - Handle: 12987452337681434979
     Type: Shader
     Path: QuadShader.glsl

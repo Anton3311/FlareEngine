@@ -230,6 +230,24 @@ namespace Flare
 
 
 
+    struct FLARE_API Decal
+    {
+        FLARE_COMPONENT;
+
+        Ref<Material> Material;
+    };
+
+    template<>
+    struct TypeSerializer<Decal>
+    {
+        static void OnSerialize(Decal& decal, SerializationStream& stream)
+        {
+            stream.Serialize("Material", SerializationValue(decal.Material));
+        }
+    };
+
+
+
     struct FLARE_API DirectionalLight
     {
         FLARE_COMPONENT;

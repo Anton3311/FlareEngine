@@ -19,7 +19,10 @@ namespace Flare
 		YAML::Emitter emitter;
 		emitter << YAML::BeginMap;
 
-		emitter << YAML::Key << "Shader" << YAML::Value << shader->Handle;
+		if (shader == nullptr)
+			emitter << YAML::Key << "Shader" << YAML::Value << NULL_ASSET_HANDLE;
+		else
+			emitter << YAML::Key << "Shader" << YAML::Value << shader->Handle;
 
 		emitter << YAML::Key << "Properties" << YAML::BeginSeq;
 

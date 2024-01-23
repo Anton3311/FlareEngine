@@ -115,6 +115,7 @@ namespace Flare
 	void MeshesRendererSystem::OnConfig(World& world, SystemConfig& config)
 	{
 		m_Query = world.NewQuery().With<TransformComponent, MeshComponent>().Create();
+		m_DecalsQuery = world.NewQuery().With<TransformComponent, Decal>().Create();
 	}
 
 	void MeshesRendererSystem::OnUpdate(World& world, SystemExecutionContext& context)
@@ -191,6 +192,23 @@ namespace Flare
 							id.value().GetIndex());
 					}
 				}
+			}
+		}
+
+		for (EntityView view : m_DecalsQuery)
+		{
+			auto transforms = view.View<TransformComponent>();
+			auto decals = view.View<Decal>();
+
+			for (EntityViewIterator entity = view.begin(); entity != view.end(); ++entity)
+			{
+				const TransformComponent& transform = transforms[*entity];
+				std::optional<Entity> id = view.GetEntity(entity.GetEntityIndex());
+
+				if (!id)
+					continue;
+
+				Renderer::SubmitDecal(decals[*entity].Material, transform.GetTransformationMatrix(), id->GetIndex());
 			}
 		}
 	}

@@ -128,6 +128,10 @@ namespace Flare
 
 
 
+	FLARE_IMPL_COMPONENT(Decal);
+
+
+
 	FLARE_IMPL_COMPONENT(DirectionalLight);
 	DirectionalLight::DirectionalLight()
 		: Color(1.0f), Intensity(1.0f) {}

@@ -19,6 +19,10 @@ namespace Flare
 			.With<TransformComponent>()
 			.With<MeshComponent>()
 			.Create();
+		m_DecalsQuery = world.NewQuery()
+			.With<TransformComponent>()
+			.With<Decal>()
+			.Create();
 
 		config.Group = world.GetSystemsManager().FindGroup("Debug Rendering");
 	}
@@ -70,6 +74,18 @@ namespace Flare
 						DebugRenderer::DrawAABB(newBounds);
 					}
 				}
+			}
+		}
+
+		Math::AABB cubeAABB = Renderer::GetCubeMesh()->GetSubMeshes()[0].Bounds;
+		for (EntityView view : m_DecalsQuery)
+		{
+			auto transforms = view.View<TransformComponent>();
+			auto decals = view.View<Decal>();
+
+			for (EntityViewElement entity : view)
+			{
+				DebugRenderer::DrawAABB(cubeAABB.Transformed(transforms[entity].GetTransformationMatrix()));
 			}
 		}
 	}

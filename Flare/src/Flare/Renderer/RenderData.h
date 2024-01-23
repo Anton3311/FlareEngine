@@ -69,7 +69,7 @@ namespace Flare
 		float Near;
 		float Far;
 
-		float Padding[2];
+		glm::ivec2 ViewportSize;
 
 		glm::vec3 ViewDirection;
 		float FOV;
