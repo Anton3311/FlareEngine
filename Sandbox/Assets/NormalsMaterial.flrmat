@@ -1,7 +1,0 @@
-Shader: 15397728423229482669
-Properties:
-  []
-Features:
-  CullingMode: Back
-  DepthTest: true
-  BlendMode: Opaque

@@ -1,0 +1,246 @@
+Entities:
+  - SerializationId: 6879222354018861521
+    Components:
+      - Name: struct Flare::NameComponent
+        Data:
+          Value: Camera
+      - Name: struct Flare::TransformComponent
+        Data:
+          Position: [0, 0, 0]
+          Rotation: [0, 0, 0]
+          Scale: [1, 1, 1]
+      - Name: struct Flare::CameraComponent
+        Data:
+          Size: 10
+          FOV: 60
+          Near: 0.100000001
+          Far: 1000
+  - SerializationId: 5112676808506839086
+    Components:
+      - Name: struct Flare::NameComponent
+        Data:
+          Value: Light
+      - Name: struct Flare::TransformComponent
+        Data:
+          Position: [0, 1.96195173, 7.10875416]
+          Rotation: [-47.6773415, -34.0421906, -2.06069831e-06]
+          Scale: [0.999999881, 0.999998748, 0.999998868]
+      - Name: struct Flare::DirectionalLight
+        Data:
+          Color: [0.895885348, 0.960160494, 0.960854113]
+          Intensity: 2
+  - SerializationId: 8606298404987489329
+    Components:
+      - Name: struct Flare::NameComponent
+        Data:
+          Value: Environment
+      - Name: struct Flare::Environment
+        Data:
+          EnvironmentColor: [0.967971504, 0.954756439, 0.919745147]
+          EnvironmentColorIntensity: 0.300000012
+          ShadowSettings:
+            LightSize: 0.00899999961
+            Bias: 0.00100000005
+            Resolution: 1024
+            Cascades: 4
+            CascadeSplit0: 25
+            CascadeSplit1: 50
+            CascadeSplit2: 150
+            CascadeSplit3: 300
+  - SerializationId: 5429343776136486452
+    Components:
+      - Name: struct Flare::NameComponent
+        Data:
+          Value: Cube
+      - Name: struct Flare::TransformComponent
+        Data:
+          Position: [-4.67081642, 0, -9.77812767]
+          Rotation: [0, -0, 0]
+          Scale: [1, 1, 1]
+      - Name: struct Flare::MeshComponent
+        Data:
+          Mesh: 10342322337781790464
+          Material: 2768644555319864744
+          Flags: 0
+  - SerializationId: 12495803614744137463
+    Components:
+      - Name: struct Flare::TransformComponent
+        Data:
+          Position: [0, -4.02802563, 0]
+          Rotation: [0, -0, 0]
+          Scale: [40, 0.571664393, 40]
+      - Name: struct Flare::MeshComponent
+        Data:
+          Mesh: 10342322337781790464
+          Material: 2768644555319864744
+          Flags: 0
+  - SerializationId: 10392799965563644219
+    Components:
+      - Name: struct Flare::NameComponent
+        Data:
+          Value: Cone
+      - Name: struct Flare::TransformComponent
+        Data:
+          Position: [-0.0616625547, 0, -9.77812767]
+          Rotation: [-90, -0, 0]
+          Scale: [1, 1, 1]
+      - Name: struct Flare::MeshComponent
+        Data:
+          Mesh: 15517588840512804130
+          Material: 9410272321376708478
+          Flags: 0
+  - SerializationId: 4486894099065327795
+    Components:
+      - Name: struct Flare::TransformComponent
+        Data:
+          Position: [-3.42949963, 3.6701169, -12.693181]
+          Rotation: [0, -0, 0]
+          Scale: [3.62999964, 3.62999964, 3.62999964]
+      - Name: struct Flare::TextComponent
+        Data:
+          Text: 3D
+          Color: [0.89679718, 0.210635632, 0.210635632, 1]
+          Font: 0
+  - SerializationId: 15799785695220381521
+    Components:
+      - Name: struct Flare::TransformComponent
+        Data:
+          Position: [8.73184109, 9.13318253, -12.693182]
+          Rotation: [0, -0, 0]
+          Scale: [3.62999964, 3.62999964, 3.62999964]
+      - Name: struct Flare::TextComponent
+        Data:
+          Text: Decals
+          Color: [0.89679718, 0.210635632, 0.210635632, 1]
+          Font: 0
+  - SerializationId: 12457681439659901596
+    Components:
+      - Name: struct Flare::TransformComponent
+        Data:
+          Position: [10.6670866, -2.72236538, -9.55473804]
+          Rotation: [0, -0, 0]
+          Scale: [3.11999965, 3.11999965, 3.11999965]
+      - Name: struct Flare::Decal
+        Data:
+          Material: 8007099998881589886
+  - SerializationId: 8317481162844878243
+    Components:
+      - Name: struct Flare::TransformComponent
+        Data:
+          Position: [10.6200171, -3.9022398, -9.77812767]
+          Rotation: [-50.9320412, -0, 0]
+          Scale: [1, 0.999999642, 0.999999642]
+      - Name: struct Flare::MeshComponent
+        Data:
+          Mesh: 10342322337781790464
+          Material: 2768644555319864744
+          Flags: 0
+  - SerializationId: 8195331949024818936
+    Components:
+      - Name: struct Flare::NameComponent
+        Data:
+          Value: Point light
+      - Name: struct Flare::TransformComponent
+        Data:
+          Position: [-3.19203019, 2.9339509, -7.11802721]
+          Rotation: [0, -0, 0]
+          Scale: [1, 1, 1]
+      - Name: struct Flare::PointLight
+        Data:
+          Color: [0.287989527, 0.953736663, 0.0916401967]
+          Intensity: 22
+  - SerializationId: 5600492058128415083
+    Components:
+      - Name: struct Flare::NameComponent
+        Data:
+          Value: Spotlight 1
+      - Name: struct Flare::TransformComponent
+        Data:
+          Position: [-14.2633619, 4.80785513, -8.2634058]
+          Rotation: [90, -0, 0]
+          Scale: [1, 0.99995029, 0.99995029]
+      - Name: struct Flare::SpotLight
+        Data:
+          Color: [0.33807832, 0.455857933, 1]
+          Intensity: 40
+          InnerAngle: 7
+          OuterAngle: 31
+  - SerializationId: 12725389737198954025
+    Components:
+      - Name: struct Flare::NameComponent
+        Data:
+          Value: Wall
+      - Name: struct Flare::TransformComponent
+        Data:
+          Position: [-12.316617, 0, -9.77812767]
+          Rotation: [0, -0, 0]
+          Scale: [4.12645626, 6.32400322, 1]
+      - Name: struct Flare::MeshComponent
+        Data:
+          Mesh: 10342322337781790464
+          Material: 2768644555319864744
+          Flags: 0
+  - SerializationId: 237578395046688509
+    Components:
+      - Name: struct Flare::NameComponent
+        Data:
+          Value: Spotlight 2
+      - Name: struct Flare::TransformComponent
+        Data:
+          Position: [-10.7210655, 4.80785513, -8.2634058]
+          Rotation: [90, -0, 0]
+          Scale: [1, 0.999947965, 0.999947965]
+      - Name: struct Flare::SpotLight
+        Data:
+          Color: [0.754448414, 0.464482516, 0.668800175]
+          Intensity: 102
+          InnerAngle: 7
+          OuterAngle: 31
+  - SerializationId: 1694589035617075651
+    Components:
+      - Name: struct Flare::TransformComponent
+        Data:
+          Position: [15.6301889, -0.480205297, -9.77812767]
+          Rotation: [0, -0, 0]
+          Scale: [2.27964044, 2.20861769, 0.999999642]
+      - Name: struct Flare::MeshComponent
+        Data:
+          Mesh: 10342322337781790464
+          Material: 2768644555319864744
+          Flags: 0
+  - SerializationId: 13839467288061322450
+    Components:
+      - Name: struct Flare::TransformComponent
+        Data:
+          Position: [15.57831, -0.018430233, -8.72948074]
+          Rotation: [-90.0000534, 8.53773656e-07, -26.1180172]
+          Scale: [2.15280008, 0.424019426, 2.15277934]
+      - Name: struct Flare::Decal
+        Data:
+          Material: 8007099998881589886
+Editor:
+  Camera:
+    RotationOrigin: [-2.47099066, -8.36085606, -14.1731911]
+    Rotation: [37, -685, 0]
+    Zoom: 36.4083405
+  SceneViewSettings:
+    ShowAABBs: false
+    ShowCameraFrustum: true
+    ShowLights: true
+    ShowGrid: false
+PostProcessing:
+  - Name: class Flare::ToneMapping
+    Data:
+      Enabled: true
+  - Name: class Flare::Vignette
+    Data:
+      Enabled: true
+      Color: [0, 0, 0, 0.5]
+      Radius: 1
+      Smoothness: 1
+  - Name: class Flare::SSAO
+    Data:
+      Enabled: true
+      Radius: 0.5
+      Bias: 0.100000001
+      BlurSize: 2

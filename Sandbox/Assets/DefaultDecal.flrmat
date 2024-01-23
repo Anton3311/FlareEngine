@@ -1,0 +1,11 @@
+Shader: 11810476805849321214
+Properties:
+  - Name: u_Material.Color
+    Type: 7
+    Value: [1, 1, 1, 1]
+  - Name: u_DepthTexture
+    Type: 8
+    Value: 0
+  - Name: u_ColorTexture
+    Type: 8
+    Value: 5193090395626261884
