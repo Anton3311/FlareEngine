@@ -128,6 +128,35 @@ namespace Flare
 					DebugRenderer::DrawRay(glm::vec3(0.0f), direction * 0.5f, glm::vec4(direction * 0.66f, 1.0f));
 				}
 
+				// Draw bouding box for decal projectors
+				std::optional<Entity> selectedEntity = EditorLayer::GetInstance().Selection.TryGetEntity();
+				if (selectedEntity)
+				{
+					const Decal* decal = scene->GetECSWorld().TryGetEntityComponent<const Decal>(*selectedEntity);
+					const TransformComponent* transform = scene->GetECSWorld().TryGetEntityComponent<const TransformComponent>(*selectedEntity);
+					if (decal && transform)
+					{
+						glm::vec3 cubeCorners[] =
+						{
+							glm::vec3(-0.5f, -0.5f, -0.5f),
+							glm::vec3(+0.5f, -0.5f, -0.5f),
+							glm::vec3(-0.5f, +0.5f, -0.5f),
+							glm::vec3(+0.5f, +0.5f, -0.5f),
+
+							glm::vec3(-0.5f, -0.5f, +0.5f),
+							glm::vec3(+0.5f, -0.5f, +0.5f),
+							glm::vec3(-0.5f, +0.5f, +0.5f),
+							glm::vec3(+0.5f, +0.5f, +0.5f),
+						};
+
+						glm::mat4 transformationMatrix = transform->GetTransformationMatrix();
+						for (size_t i = 0; i < 8; i++)
+							cubeCorners[i] = transformationMatrix * glm::vec4(cubeCorners[i], 1.0f);
+
+						DebugRenderer::DrawWireBox(cubeCorners);
+					}
+				}
+
 				DebugRenderer::End();
 			}
 
@@ -191,9 +220,12 @@ namespace Flare
 		{
 			dispatcher.Dispatch<KeyReleasedEvent>([this](KeyReleasedEvent& e) -> bool
 				{
-					GuizmoMode guizmoMode = GuizmoMode::None;
+					GuizmoMode guizmoMode = EditorLayer::GetInstance().Guizmo;
 					switch (e.GetKeyCode())
 					{
+					case KeyCode::Escape:
+						guizmoMode = GuizmoMode::None;
+						break;
 					case KeyCode::G:
 						guizmoMode = GuizmoMode::Translate;
 						break;
