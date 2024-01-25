@@ -150,7 +150,7 @@ float CalculateShadow(vec3 N, vec4 position, int cascadeIndex)
 {
 	float shadow = 1.0f;
 	float NoL = dot(N, -u_LightDirection);
-	float bias = max(u_Bias * (1.0f - NoL), 0.0025f);
+	float bias = max(u_Bias * (1.0f - NoL), 0.0005f);
 
 	bias /= float(cascadeIndex + 1);
 
