@@ -144,7 +144,7 @@ namespace Flare
 		s_RendererData.ShadowPassTimer = GPUTimer::Create();
 		s_RendererData.GeometryPassTimer = GPUTimer::Create();
 
-		s_RendererData.ShadowMappingSettings.Resolution = ShadowSettings::ShadowResolution::_2048;
+		s_RendererData.ShadowMappingSettings.Quality = ShadowQuality::Medium;
 		s_RendererData.ShadowMappingSettings.Bias = 0.015f;
 		s_RendererData.ShadowMappingSettings.LightSize = 0.009f;
 
@@ -493,7 +493,7 @@ namespace Flare
 		ShadowData shadowData;
 		shadowData.Bias = s_RendererData.ShadowMappingSettings.Bias;
 		shadowData.LightSize = s_RendererData.ShadowMappingSettings.LightSize;
-		shadowData.Resolution = (float)s_RendererData.ShadowMappingSettings.Resolution;
+		shadowData.Resolution = (float)GetShadowMapResolution(s_RendererData.ShadowMappingSettings.Quality);
 
 		for (size_t i = 0; i < 4; i++)
 			shadowData.CascadeSplits[i] = s_RendererData.ShadowMappingSettings.CascadeSplits[i];
@@ -541,7 +541,7 @@ namespace Flare
 
 		{
 			FLARE_PROFILE_SCOPE("ResizeShadowBuffers");
-			uint32_t size = (uint32_t)s_RendererData.ShadowMappingSettings.Resolution;
+			uint32_t size = (uint32_t)GetShadowMapResolution(s_RendererData.ShadowMappingSettings.Quality);
 			if (s_RendererData.ShadowsRenderTarget[0] == nullptr)
 			{
 				FrameBufferSpecifications shadowMapSpecs;

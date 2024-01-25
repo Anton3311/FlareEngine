@@ -33,39 +33,21 @@ namespace Flare
 		float GeometryPassTime = 0.0f;
 	};
 
+	enum class ShadowQuality
+	{
+		Low = 0,
+		Medium = 1,
+		High = 2,
+	};
+
 	struct ShadowSettings
 	{
 		FLARE_TYPE;
 
 		static constexpr uint32_t MaxCascades = 4;
 
-		enum class ShadowResolution
-		{
-			_512 = 512,
-			_1024 = 1024,
-			_2048 = 2048,
-			_4096 = 4096,
-		};
-
-		static std::optional<ShadowResolution> ShadowResolutionFromSize(uint32_t size)
-		{
-			switch (size)
-			{
-			case 512:
-				return ShadowResolution::_512;
-			case 1024:
-				return ShadowResolution::_1024;
-			case 2048:
-				return ShadowResolution::_2048;
-			case 4096:
-				return ShadowResolution::_4096;
-			}
-
-			return {};
-		}
-
 		ShadowSettings()
-			: Resolution(ShadowResolution::_1024),
+			: Quality(ShadowQuality::Medium),
 			LightSize(0.009f),
 			Cascades(MaxCascades),
 			Bias(0.001f)
@@ -78,11 +60,27 @@ namespace Flare
 
 		float LightSize;
 		float Bias;
-		ShadowResolution Resolution;
+		ShadowQuality Quality;
 		int32_t Cascades;
 
-		float CascadeSplits[4] = { 0.0f };
+		float CascadeSplits[MaxCascades] = { 0.0f };
 	};
+
+	inline uint32_t GetShadowMapResolution(ShadowQuality quality)
+	{
+		switch (quality)
+		{
+		case ShadowQuality::Low:
+			return 512;
+		case ShadowQuality::Medium:
+			return 1024;
+		case ShadowQuality::High:
+			return 2048;
+		}
+
+		FLARE_CORE_ASSERT(false);
+		return 0;
+	}
 
 	template<>
 	struct TypeSerializer<ShadowSettings>
@@ -92,8 +90,18 @@ namespace Flare
 			stream.Serialize("LightSize", SerializationValue(settings.LightSize));
 			stream.Serialize("Bias", SerializationValue(settings.Bias));
 
-			using Underlying = std::underlying_type_t<ShadowSettings::ShadowResolution>;
-			stream.Serialize("Resolution", SerializationValue(reinterpret_cast<Underlying&>(settings.Resolution)));
+			using Underlying = std::underlying_type_t<ShadowQuality>;
+			stream.Serialize("Quality", SerializationValue(reinterpret_cast<Underlying&>(settings.Quality)));
+
+			switch (settings.Quality)
+			{
+			case ShadowQuality::Low:
+			case ShadowQuality::Medium:
+			case ShadowQuality::High:
+				break;
+			default:
+				settings.Quality = ShadowQuality::Medium;
+			}
 
 			stream.Serialize("Cascades", SerializationValue(settings.Cascades));
 

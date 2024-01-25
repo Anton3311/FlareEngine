@@ -41,7 +41,7 @@ Entities:
           ShadowSettings:
             LightSize: 0.00899999961
             Bias: 0.00100000005
-            Resolution: 1024
+            Quality: 2
             Cascades: 4
             CascadeSplit0: 25
             CascadeSplit1: 50
@@ -174,7 +174,7 @@ Entities:
         Data:
           Position: [-12.316617, 0, -9.77812767]
           Rotation: [0, -0, 0]
-          Scale: [4.12645626, 6.32400322, 1]
+          Scale: [4.12645626, 21.6443214, 1]
       - Name: struct Flare::MeshComponent
         Data:
           Mesh: 10342322337781790464
@@ -220,9 +220,9 @@ Entities:
           Material: 8007099998881589886
 Editor:
   Camera:
-    RotationOrigin: [-2.47099066, -8.36085606, -14.1731911]
-    Rotation: [37, -685, 0]
-    Zoom: 36.4083405
+    RotationOrigin: [-4.14470434, -11.8109541, -23.8197174]
+    Rotation: [60, -765, 0]
+    Zoom: 30.2166786
   SceneViewSettings:
     ShowAABBs: false
     ShowCameraFrustum: true

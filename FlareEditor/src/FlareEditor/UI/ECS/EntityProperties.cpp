@@ -188,30 +188,29 @@ namespace Flare
 				EditorGUI::ColorPropertyField("Environment Color", environment.EnvironmentColor);
 				EditorGUI::FloatPropertyField("Environment Color Intensity", environment.EnvironmentColorIntensity);
 
-				EditorGUI::PropertyName("Shadow Resolution");
+				EditorGUI::PropertyName("Shadow Quality");
 
-				const char* resolutionPreviews[] = { "512", "1024", "2048", "4096" };
-				ShadowSettings::ShadowResolution resolutions[] =
+				const char* qualityPreviews[] = { "Low", "Medium", "High" };
+				ShadowQuality qualityValues[] =
 				{
-					ShadowSettings::ShadowResolution::_512,
-					ShadowSettings::ShadowResolution::_1024,
-					ShadowSettings::ShadowResolution::_2048,
-					ShadowSettings::ShadowResolution::_4096,
+					ShadowQuality::Low,
+					ShadowQuality::Medium,
+					ShadowQuality::High,
 				};
 
-				uint32_t resolutionIndex = 0;
-				for (uint32_t i = 0; i < 4; i++)
+				uint32_t qualityIndex = 0;
+				for (uint32_t i = 0; i < 3; i++)
 				{
-					if (resolutions[i] == environment.ShadowSettings.Resolution)
-						resolutionIndex = i;
+					if (qualityValues[i] == environment.ShadowSettings.Quality)
+						qualityIndex = i;
 				}
 
-				if (ImGui::BeginCombo("Resolution", resolutionPreviews[resolutionIndex]))
+				if (ImGui::BeginCombo("Quality", qualityPreviews[qualityIndex]))
 				{
-					for (size_t i = 0; i < 4; i++)
+					for (size_t i = 0; i < 3; i++)
 					{
-						if (ImGui::MenuItem(resolutionPreviews[i]))
-							environment.ShadowSettings.Resolution = resolutions[i];
+						if (ImGui::MenuItem(qualityPreviews[i]))
+							environment.ShadowSettings.Quality = qualityValues[i];
 					}
 
 					ImGui::EndCombo();
