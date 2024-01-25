@@ -25,6 +25,10 @@ namespace Flare
 		RenderData FrameData;
 		Ref<FrameBuffer> RenderTarget;
 		RenderTargetsPool RTPool;
+
+		uint32_t ColorAttachmentIndex = UINT32_MAX;
+		uint32_t NormalsAttachmentIndex = UINT32_MAX;
+		uint32_t DepthAttachmentIndex = UINT32_MAX;
 	private:
 		bool m_IsDirty;
 

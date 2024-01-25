@@ -45,6 +45,5 @@ namespace Flare
 		ViewportOverlay m_Overlay;
 		Ref<Material> m_SelectionOutlineMaterial;
 		Ref<Material> m_GridMaterial;
-		Ref<FrameBuffer> m_ScreenBuffer;
 	};
 }

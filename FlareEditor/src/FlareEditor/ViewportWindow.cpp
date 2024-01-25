@@ -166,6 +166,9 @@ namespace Flare
 			{ FrameBufferTextureFormat::Depth, TextureWrap::Clamp, TextureFiltering::Closest },
 		});
 
+		m_Viewport.ColorAttachmentIndex = 0;
+		m_Viewport.NormalsAttachmentIndex = 1;
+		m_Viewport.DepthAttachmentIndex = 2;
 		m_Viewport.RenderTarget = FrameBuffer::Create(specifications);
 	}
 

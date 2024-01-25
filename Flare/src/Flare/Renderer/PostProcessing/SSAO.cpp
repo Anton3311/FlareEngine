@@ -100,15 +100,10 @@ namespace Flare
 			FLARE_PROFILE_SCOPE("SSAO::MainPass");
 
 			if (m_NormalsTextureIndex)
-				m_Material->GetPropertyValue<TexturePropertyValue>(*m_NormalsTextureIndex).SetFrameBuffer(currentViewport.RenderTarget, 1);
+				m_Material->GetPropertyValue<TexturePropertyValue>(*m_NormalsTextureIndex).SetFrameBuffer(currentViewport.RenderTarget, currentViewport.NormalsAttachmentIndex);
 
 			if (m_DepthTextureIndex)
-			{
-				if (&currentViewport == &Renderer::GetMainViewport())
-					m_Material->GetPropertyValue<TexturePropertyValue>(*m_DepthTextureIndex).SetFrameBuffer(currentViewport.RenderTarget, 2);
-				else
-					m_Material->GetPropertyValue<TexturePropertyValue>(*m_DepthTextureIndex).SetFrameBuffer(currentViewport.RenderTarget, 3);
-			}
+				m_Material->GetPropertyValue<TexturePropertyValue>(*m_DepthTextureIndex).SetFrameBuffer(currentViewport.RenderTarget, currentViewport.DepthAttachmentIndex);
 
 			if (m_BiasPropertyIndex)
 				m_Material->WritePropertyValue(*m_BiasPropertyIndex, Bias);

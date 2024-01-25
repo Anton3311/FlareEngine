@@ -109,7 +109,7 @@ namespace Flare
 			scene->OnBeforeRender(m_Viewport);
 
 			Renderer::BeginScene(m_Viewport);
-			m_ScreenBuffer->Bind();
+			m_Viewport.RenderTarget->Bind();
 			OnClear();
 
 			scene->OnRender(m_Viewport);
@@ -163,7 +163,7 @@ namespace Flare
 			Entity selectedEntity = EditorLayer::GetInstance().Selection.TryGetEntity().value_or(Entity());
 			if (selectedEntity != Entity() && m_SelectionOutlineMaterial)
 			{
-				m_ScreenBuffer->BindAttachmentTexture(2);
+				m_Viewport.RenderTarget->BindAttachmentTexture(2);
 
 				std::optional<uint32_t> idPropertyIndex = m_SelectionOutlineMaterial->GetShader()->GetPropertyIndex("u_Outline.SelectedId");
 
@@ -272,21 +272,24 @@ namespace Flare
 
 	void SceneViewportWindow::CreateFrameBuffer()
 	{
-		FrameBufferSpecifications screenBufferSpecs(m_Viewport.GetSize().x, m_Viewport.GetSize().y, {
+		FrameBufferSpecifications renderTargetSpec(m_Viewport.GetSize().x, m_Viewport.GetSize().y, {
 			{ FrameBufferTextureFormat::RGB8, TextureWrap::Clamp, TextureFiltering::Closest },
 			{ FrameBufferTextureFormat::RGB8, TextureWrap::Clamp, TextureFiltering::Closest },
 			{ FrameBufferTextureFormat::RedInteger, TextureWrap::Clamp, TextureFiltering::Closest },
 			{ FrameBufferTextureFormat::Depth, TextureWrap::Clamp, TextureFiltering::Closest },
 		});
 
-		m_ScreenBuffer = FrameBuffer::Create(screenBufferSpecs);
-		m_Viewport.RenderTarget = m_ScreenBuffer;
+		m_Viewport.ColorAttachmentIndex = 0;
+		m_Viewport.NormalsAttachmentIndex = 1;
+		m_Viewport.DepthAttachmentIndex = 3;
+
+		m_Viewport.RenderTarget = FrameBuffer::Create(renderTargetSpec);
 	}
 
 	void SceneViewportWindow::OnClear()
 	{
 		RenderCommand::Clear();
-		m_ScreenBuffer->ClearAttachment(2, INT32_MAX);
+		m_Viewport.RenderTarget->ClearAttachment(2, INT32_MAX);
 	}
 
 	void SceneViewportWindow::RenderWindowContents()
@@ -299,13 +302,13 @@ namespace Flare
 		switch (m_Overlay)
 		{
 		case ViewportOverlay::Default:
-			RenderViewportBuffer(m_Viewport.RenderTarget, 0);
+			RenderViewportBuffer(m_Viewport.RenderTarget, m_Viewport.ColorAttachmentIndex);
 			break;
 		case ViewportOverlay::Normal:
-			RenderViewportBuffer(m_ScreenBuffer, 1);
+			RenderViewportBuffer(m_Viewport.RenderTarget, m_Viewport.NormalsAttachmentIndex);
 			break;
 		case ViewportOverlay::Depth:
-			RenderViewportBuffer(m_ScreenBuffer, 3);
+			RenderViewportBuffer(m_Viewport.RenderTarget, m_Viewport.DepthAttachmentIndex);
 			break;
 		}
 
@@ -598,14 +601,14 @@ namespace Flare
 
 	Entity SceneViewportWindow::GetEntityUnderCursor() const
 	{
-		m_ScreenBuffer->Bind();
+		m_Viewport.RenderTarget->Bind();
 
 		int32_t entityIndex;
-		m_ScreenBuffer->ReadPixel(2, m_RelativeMousePosition.x, m_RelativeMousePosition.y, &entityIndex);
+		m_Viewport.RenderTarget->ReadPixel(2, m_RelativeMousePosition.x, m_RelativeMousePosition.y, &entityIndex);
 
 		std::optional<Entity> entity = Scene::GetActive()->GetECSWorld().Entities.FindEntityByIndex(entityIndex);
 
-		m_ScreenBuffer->Unbind();
+		m_Viewport.RenderTarget->Unbind();
 
 		return entity.value_or(Entity());
 	}
