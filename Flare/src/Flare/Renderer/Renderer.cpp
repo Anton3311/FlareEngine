@@ -647,13 +647,26 @@ namespace Flare
 		}
 	}
 
-	static void ApplyMaterialFeatures(ShaderFeatures features)
+	static void ApplyMaterial(const Ref<Material>& materail)
 	{
+		Ref<Shader> shader = materail->GetShader();
+		FLARE_CORE_ASSERT(shader);
+
+		ShaderFeatures features = materail->GetShader()->GetFeatures();
+
 		RenderCommand::SetDepthTestEnabled(features.DepthTesting);
 		RenderCommand::SetCullingMode(features.Culling);
 		RenderCommand::SetDepthComparisonFunction(features.DepthFunction);
 		RenderCommand::SetDepthWriteEnabled(features.DepthWrite);
 		RenderCommand::SetBlendMode(features.Blending);
+
+		FrameBufferAttachmentsMask shaderOutputsMask = 0;
+		for (uint32_t output : shader->GetOutputs())
+			shaderOutputsMask |= (1 << output);
+
+		s_RendererData.CurrentViewport->RenderTarget->SetWriteMask(shaderOutputsMask);
+
+		materail->SetShaderProperties();
 	}
 
 	static bool CompareRenderableObjects(uint32_t aIndex, uint32_t bIndex)
@@ -797,19 +810,7 @@ namespace Flare
 
 				currentMaterial = object.Material;
 
-				ApplyMaterialFeatures(object.Material->GetShader()->GetFeatures());
-
-				currentMaterial->SetShaderProperties();
-
-				Ref<Shader> shader = object.Material->GetShader();
-				if (shader == nullptr)
-					continue;
-
-				FrameBufferAttachmentsMask shaderOutputsMask = 0;
-				for (uint32_t output : shader->GetOutputs())
-					shaderOutputsMask |= (1 << output);
-
-				s_RendererData.CurrentViewport->RenderTarget->SetWriteMask(shaderOutputsMask);
+				ApplyMaterial(object.Material);
 			}
 		}
 
@@ -836,10 +837,7 @@ namespace Flare
 
 		if (s_RendererData.Decals.size() > 0)
 		{
-			if (s_RendererData.CurrentViewport == s_RendererData.MainViewport)
-				s_RendererData.CurrentViewport->RenderTarget->BindAttachmentTexture(2, 1);
-			else
-				s_RendererData.CurrentViewport->RenderTarget->BindAttachmentTexture(3, 1);
+			s_RendererData.CurrentViewport->RenderTarget->BindAttachmentTexture(s_RendererData.CurrentViewport->DepthAttachmentIndex, 1);
 
 			uint32_t baseInstance = 0;
 			Ref<Material> currentMaterial = s_RendererData.Decals[0].Material;
@@ -849,8 +847,7 @@ namespace Flare
 			{
 				if (s_RendererData.Decals[instanceIndex].Material.get() != currentMaterial.get())
 				{
-					ApplyMaterialFeatures(currentMaterial->GetShader()->GetFeatures());
-					currentMaterial->SetShaderProperties();
+					ApplyMaterial(currentMaterial);
 
 					RenderCommand::DrawInstancesIndexed(s_RendererData.CubeMesh, 0, instanceIndex - baseInstance, baseInstance);
 					baseInstance = instanceIndex;
@@ -862,8 +859,7 @@ namespace Flare
 			if (instanceIndex != baseInstance)
 			{
 				FLARE_CORE_ASSERT(currentMaterial->GetShader());
-				ApplyMaterialFeatures(currentMaterial->GetShader()->GetFeatures());
-				currentMaterial->SetShaderProperties();
+				ApplyMaterial(currentMaterial);
 
 				RenderCommand::DrawInstancesIndexed(s_RendererData.CubeMesh, 0, instanceIndex - baseInstance, baseInstance);
 			}
@@ -1036,39 +1032,17 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		material->SetShaderProperties();
-		ApplyMaterialFeatures(material->GetShader()->GetFeatures());
-
-		const ShaderOutputs& shaderOutputs = material->GetShader()->GetOutputs();
-
-		FrameBufferAttachmentsMask shaderOutputsMask = 0;
-		for (uint32_t output : shaderOutputs)
-			shaderOutputsMask |= (1 << output);
-
-		FrameBufferAttachmentsMask previousMask = s_RendererData.CurrentViewport->RenderTarget->GetWriteMask();
-		s_RendererData.CurrentViewport->RenderTarget->SetWriteMask(shaderOutputsMask);
+		ApplyMaterial(material);
 
 		RenderCommand::DrawIndexed(s_RendererData.FullscreenQuad);
 		s_RendererData.Statistics.DrawCallsCount++;
-
-		s_RendererData.CurrentViewport->RenderTarget->SetWriteMask(previousMask);
 	}
 
 	void Renderer::DrawMesh(const Ref<VertexArray>& mesh, const Ref<Material>& material, size_t indicesCount)
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		material->SetShaderProperties();
-		ApplyMaterialFeatures(material->GetShader()->GetFeatures());
-
-		const ShaderOutputs& shaderOutputs = material->GetShader()->GetOutputs();
-
-		FrameBufferAttachmentsMask shaderOutputsMask = 0;
-		for (uint32_t output : shaderOutputs)
-			shaderOutputsMask |= (1 << output);
-
-		FrameBufferAttachmentsMask previousMask = s_RendererData.CurrentViewport->RenderTarget->GetWriteMask();
-		s_RendererData.CurrentViewport->RenderTarget->SetWriteMask(shaderOutputsMask);
+		ApplyMaterial(material);
 
 		{
 			FLARE_PROFILE_SCOPE("Renderer::DrawMesh::DrawIndexed");
@@ -1076,8 +1050,6 @@ namespace Flare
 		}
 
 		s_RendererData.Statistics.DrawCallsCount++;
-
-		s_RendererData.CurrentViewport->RenderTarget->SetWriteMask(previousMask);
 	}
 
 	void Renderer::DrawMesh(const Ref<Mesh>& mesh, uint32_t subMesh, const Ref<Material>& material, const glm::mat4& transform, MeshRenderFlags flags, int32_t entityIndex)
