@@ -17,6 +17,8 @@ namespace Flare
 		static constexpr glm::ivec2 PauseIcon = glm::ivec2(3, 0);
 		static constexpr glm::ivec2 StopIcon = glm::ivec2(4, 0);
 		static constexpr glm::ivec2 ContinueIcon = glm::ivec2(0, 1);
+		static constexpr glm::ivec2 PointLightIcon = glm::ivec2(1, 1);
+		static constexpr glm::ivec2 SpotlightIcon = glm::ivec2(2, 1);
 	public:
 		EditorIcons(int32_t iconSize);
 

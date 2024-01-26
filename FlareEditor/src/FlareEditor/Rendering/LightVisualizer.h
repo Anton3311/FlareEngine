@@ -4,6 +4,8 @@
 #include "FlareECS/System/System.h"
 #include "FlareECS/System/SystemInitializer.h"
 
+#include "Flare/Renderer/Material.h"
+
 namespace Flare
 {
 	class LightVisualizer : public System
@@ -14,6 +16,13 @@ namespace Flare
 		void OnConfig(World& world, SystemConfig& config) override;
 		void OnUpdate(World& world, SystemExecutionContext& context) override;
 	private:
-		Query m_Query;
+		void ReloadShaders();
+	private:
+		Query m_DirectionalLightQuery;
+		Query m_PointLightsQuery;
+		Query m_SpotlightsQuery;
+
+		Ref<Material> m_DebugIconsMaterial;
+		bool m_HasProjectOpenHandler = false;
 	};
 }

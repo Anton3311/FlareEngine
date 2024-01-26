@@ -212,12 +212,12 @@ namespace Flare
 	{
 		return s_Renderer2DData.CurrentMaterial;
 	}
-	
+
 	void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color)
 	{
-		glm::vec2 halfSize = size / 2.0f;
-
 		if (s_Renderer2DData.QuadIndex >= s_Renderer2DData.MaxQuadCount)
+			FlushQuads();
+		if (s_Renderer2DData.TextureIndex == MaxTexturesCount)
 			FlushQuads();
 
 		size_t vertexIndex = s_Renderer2DData.QuadIndex * 4;
@@ -228,6 +228,54 @@ namespace Flare
 			vertex.Color = color;
 			vertex.UV = s_Renderer2DData.QuadUV[i];
 			vertex.TextuteIndex = 0; // White texture
+			vertex.EntityIndex = INT32_MAX;
+		}
+
+		s_Renderer2DData.QuadIndex++;
+		s_Renderer2DData.Stats.QuadsCount++;
+	}
+
+	void Renderer2D::DrawQuad(const glm::vec3& position,
+		const glm::vec2& size,
+		const glm::vec4& color,
+		const Ref<Texture> texture,
+		glm::vec2 uvMin, glm::vec2 uvMax)
+	{
+		if (s_Renderer2DData.QuadIndex >= s_Renderer2DData.MaxQuadCount)
+			FlushQuads();
+		if (s_Renderer2DData.TextureIndex == MaxTexturesCount)
+			FlushQuads();
+
+		uint32_t textureIndex = 0;
+		size_t vertexIndex = s_Renderer2DData.QuadIndex * 4;
+
+		if (texture != nullptr)
+		{
+			for (textureIndex = 0; textureIndex < s_Renderer2DData.TextureIndex; textureIndex++)
+			{
+				if (s_Renderer2DData.Textures[textureIndex].get() == texture.get())
+					break;
+			}
+
+			if (textureIndex >= s_Renderer2DData.TextureIndex)
+				s_Renderer2DData.Textures[s_Renderer2DData.TextureIndex++] = texture;
+		}
+
+		glm::vec2 uvs[] =
+		{
+			uvMin,
+			glm::vec2(uvMin.x, uvMax.y),
+			uvMax,
+			glm::vec2(uvMax.x, uvMin.y)
+		};
+
+		for (uint32_t i = 0; i < 4; i++)
+		{
+			QuadVertex& vertex = s_Renderer2DData.Vertices[vertexIndex + i];
+			vertex.Position = s_Renderer2DData.QuadVertices[i] * glm::vec3(size, 0.0f) + position;
+			vertex.Color = color;
+			vertex.UV = uvs[i];
+			vertex.TextuteIndex = (float)textureIndex;
 			vertex.EntityIndex = INT32_MAX;
 		}
 
