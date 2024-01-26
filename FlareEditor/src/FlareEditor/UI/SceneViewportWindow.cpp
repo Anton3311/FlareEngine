@@ -290,6 +290,7 @@ namespace Flare
 	{
 		RenderCommand::Clear();
 		m_Viewport.RenderTarget->ClearAttachment(2, INT32_MAX);
+		m_Viewport.RenderTarget->ClearAttachment(m_Viewport.NormalsAttachmentIndex, 0);
 	}
 
 	void SceneViewportWindow::RenderWindowContents()

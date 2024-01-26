@@ -175,6 +175,7 @@ namespace Flare
 	void ViewportWindow::OnClear()
 	{
 		RenderCommand::Clear();
+		m_Viewport.RenderTarget->ClearAttachment(m_Viewport.NormalsAttachmentIndex, 0);
 	}
 
 	void ViewportWindow::OnAttach() {}
