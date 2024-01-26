@@ -218,6 +218,7 @@ namespace Flare
 
 				EditorGUI::FloatPropertyField("Shadow Bias", environment.ShadowSettings.Bias);
 				EditorGUI::IntPropertyField("Shadow Cascades", environment.ShadowSettings.Cascades);
+				EditorGUI::FloatPropertyField("Softness", environment.ShadowSettings.Softness);
 				EditorGUI::FloatPropertyField("Light Size", environment.ShadowSettings.LightSize);
 
 				EditorGUI::FloatPropertyField("Shadow Cascade 0", environment.ShadowSettings.CascadeSplits[0]);

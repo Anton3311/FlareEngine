@@ -43,6 +43,7 @@ Entities:
             Bias: 0.00100000005
             Quality: 2
             Cascades: 4
+            Softness: 16
             CascadeSplit0: 25
             CascadeSplit1: 50
             CascadeSplit2: 150
@@ -220,9 +221,9 @@ Entities:
           Material: 8007099998881589886
 Editor:
   Camera:
-    RotationOrigin: [-4.14470434, -11.8109541, -23.8197174]
-    Rotation: [60, -765, 0]
-    Zoom: 30.2166786
+    RotationOrigin: [-9.59728241, -11.9912071, -24.5721855]
+    Rotation: [55, -747, 0]
+    Zoom: 32.2166786
   SceneViewSettings:
     ShowAABBs: false
     ShowCameraFrustum: true

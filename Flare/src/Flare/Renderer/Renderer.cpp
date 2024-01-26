@@ -53,6 +53,7 @@ namespace Flare
 		glm::mat4 LightProjection[4];
 
 		float Resolution;
+		float Softness;
 	};
 
 	struct InstancingMesh
@@ -503,6 +504,7 @@ namespace Flare
 		shadowData.Bias = s_RendererData.ShadowMappingSettings.Bias;
 		shadowData.LightSize = s_RendererData.ShadowMappingSettings.LightSize;
 		shadowData.Resolution = (float)GetShadowMapResolution(s_RendererData.ShadowMappingSettings.Quality);
+		shadowData.Softness = s_RendererData.ShadowMappingSettings.Softness;
 
 		for (size_t i = 0; i < 4; i++)
 			shadowData.CascadeSplits[i] = s_RendererData.ShadowMappingSettings.CascadeSplits[i];
