@@ -59,7 +59,8 @@ namespace Flare
 		uint32_t TextureIndex = 0;
 
 		Ref<Material> DefaultMaterial = nullptr;
-		Ref<Shader> TextShader = nullptr;
+		Ref<Material> TextMaterial = nullptr;
+		std::optional<uint32_t> FontAtlasPropertyIndex = {};
 		Ref<Material> CurrentMaterial = nullptr;
 
 		glm::vec3 QuadVertices[4];
@@ -161,7 +162,11 @@ namespace Flare
 		if (!textShaderHandle || !AssetManager::IsAssetHandleValid(textShaderHandle.value()))
 			FLARE_CORE_ERROR("Renderer 2D: Failed to find text shader");
 		else
-			s_Renderer2DData.TextShader = AssetManager::GetAsset<Shader>(textShaderHandle.value());
+		{
+			Ref<Shader> textShader = AssetManager::GetAsset<Shader>(textShaderHandle.value());
+			s_Renderer2DData.TextMaterial = CreateRef<Material>(textShader);
+			s_Renderer2DData.FontAtlasPropertyIndex = textShader->GetPropertyIndex("u_MSDF");
+		}
 	}
 
 	void Renderer2D::Shutdown()
@@ -515,7 +520,7 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		if (s_Renderer2DData.TextShader == nullptr)
+		if (s_Renderer2DData.TextMaterial == nullptr || !s_Renderer2DData.FontAtlasPropertyIndex.has_value())
 		{
 			s_Renderer2DData.TextQuadIndex = 0;
 			return;
@@ -528,10 +533,10 @@ namespace Flare
 		{
 			s_Renderer2DData.TextVertexBuffer->SetData(s_Renderer2DData.TextVertices.data(), s_Renderer2DData.TextQuadIndex * sizeof(TextVertex) * 4);
 
-			s_Renderer2DData.CurrentFont->GetAtlas()->Bind();
-			s_Renderer2DData.TextShader->Bind();
+			auto& fontAtlas = s_Renderer2DData.TextMaterial->GetPropertyValue<TexturePropertyValue>(*s_Renderer2DData.FontAtlasPropertyIndex);
+			fontAtlas.SetTexture(s_Renderer2DData.CurrentFont->GetAtlas());
 
-			RenderCommand::DrawIndexed(s_Renderer2DData.TextMesh, s_Renderer2DData.TextQuadIndex * 6);
+			Renderer::DrawMesh(s_Renderer2DData.TextMesh, s_Renderer2DData.TextMaterial, s_Renderer2DData.TextQuadIndex * 6);
 		}
 
 		s_Renderer2DData.TextQuadIndex = 0;

@@ -1044,10 +1044,7 @@ namespace Flare
 
 		ApplyMaterial(material);
 
-		{
-			FLARE_PROFILE_SCOPE("Renderer::DrawMesh::DrawIndexed");
-			RenderCommand::DrawIndexed(mesh, indicesCount == SIZE_MAX ? mesh->GetIndexBuffer()->GetCount() : indicesCount);
-		}
+		RenderCommand::DrawIndexed(mesh, indicesCount == SIZE_MAX ? mesh->GetIndexBuffer()->GetCount() : indicesCount);
 
 		s_RendererData.Statistics.DrawCallsCount++;
 	}
