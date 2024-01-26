@@ -178,6 +178,8 @@ namespace Flare
         Renderer2D::ResetStats();
         Renderer::ClearStatistics();
 
+		RenderCommand::SetClearColor(m_ClearColor.r, m_ClearColor.g, m_ClearColor.b, 1.0);
+
         Renderer::SetMainViewport(m_GameWindow->GetViewport());
         InputManager::SetMousePositionOffset(-m_GameWindow->GetViewport().GetPosition());
 
@@ -350,8 +352,7 @@ namespace Flare
             if (ImGui::Checkbox("VSync", &vsync))
                 window->SetVSync(vsync);
 
-            if (ImGui::ColorEdit3("Clear Color", glm::value_ptr(m_ClearColor), ImGuiColorEditFlags_Float))
-                RenderCommand::SetClearColor(m_ClearColor.r, m_ClearColor.g, m_ClearColor.b, 1.0);
+            ImGui::ColorEdit3("Clear Color", glm::value_ptr(m_ClearColor), ImGuiColorEditFlags_Float);
 
             if (ImGui::CollapsingHeader("Renderer 2D"))
             {

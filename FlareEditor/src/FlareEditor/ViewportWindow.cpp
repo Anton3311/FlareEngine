@@ -174,8 +174,12 @@ namespace Flare
 
 	void ViewportWindow::OnClear()
 	{
+		m_Viewport.RenderTarget->SetWriteMask(0b1); // Clear first attachment
 		RenderCommand::Clear();
-		m_Viewport.RenderTarget->ClearAttachment(m_Viewport.NormalsAttachmentIndex, 0);
+
+		m_Viewport.RenderTarget->SetWriteMask(0b10); // Clear second attachment
+		RenderCommand::SetClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+		RenderCommand::Clear();
 	}
 
 	void ViewportWindow::OnAttach() {}

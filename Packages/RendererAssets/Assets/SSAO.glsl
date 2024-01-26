@@ -101,8 +101,15 @@ void main()
 	vec3 viewSpacePosition = ReconstructViewSpacePositionFromDepth(i_UV * 2.0f - vec2(1.0f), depth);
 
 	mat4 worldNormalToView = transpose(u_Camera.InverseView);
+	vec3 sampledNormal = texture(u_NormalsTexture, i_UV).xyz;
 
-	vec3 worldSpaceNormal = normalize(texture(u_NormalsTexture, i_UV).xyz * 2.0f - vec3(1.0f));
+	if (length(sampledNormal) < 0.01)
+	{
+		o_Color = vec4(1.0f); // No AO
+	 	return;
+	}
+
+	vec3 worldSpaceNormal = normalize(sampledNormal * 2.0f - vec3(1.0f));
 	vec3 normal = (worldNormalToView * vec4(worldSpaceNormal, 1.0)).xyz;
 
 	float angle = 2.0f * pi * InterleavedGradientNoise(gl_FragCoord.xy);
@@ -120,7 +127,7 @@ void main()
 		vec3 samplePosition = viewSpacePosition + tbn * (RANDOM_VECTORS[i] * u_Params.SampleRadius);
 		vec4 projected = u_Camera.Projection * vec4(samplePosition, 1.0);
 		projected.xyz /= projected.w;
-		
+
 		vec2 uv = projected.xy * 0.5f + vec2(0.5f);
 		float sampleDepth = texture(u_DepthTexture, uv).r;
 		vec3 sampleViewSpace = ReconstructViewSpacePositionFromDepth(uv, sampleDepth);

@@ -288,9 +288,15 @@ namespace Flare
 
 	void SceneViewportWindow::OnClear()
 	{
+		m_Viewport.RenderTarget->SetWriteMask(0b1); // Clear first attachment
 		RenderCommand::Clear();
-		m_Viewport.RenderTarget->ClearAttachment(2, INT32_MAX);
-		m_Viewport.RenderTarget->ClearAttachment(m_Viewport.NormalsAttachmentIndex, 0);
+
+		m_Viewport.RenderTarget->SetWriteMask(0b10); // Clear second attachment
+		RenderCommand::SetClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+		RenderCommand::Clear();
+
+		int32_t invalidEntityIndex = INT32_MAX;
+		m_Viewport.RenderTarget->ClearAttachment(2, &invalidEntityIndex);
 	}
 
 	void SceneViewportWindow::RenderWindowContents()

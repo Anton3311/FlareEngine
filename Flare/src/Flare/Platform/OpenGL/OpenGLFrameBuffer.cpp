@@ -90,7 +90,7 @@ namespace Flare
         return (uint32_t)m_ColorAttachments.size();
     }
 
-    void OpenGLFrameBuffer::ClearAttachment(uint32_t index, uint32_t value)
+    void OpenGLFrameBuffer::ClearAttachment(uint32_t index, const void* value)
     {
         FLARE_PROFILE_FUNCTION();
 
