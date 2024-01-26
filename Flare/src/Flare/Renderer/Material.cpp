@@ -79,7 +79,7 @@ namespace Flare
 
 		for (const auto& prop : properties)
 		{
-			m_BufferSize += prop.Offset;
+			m_BufferSize += prop.Size;
 
 			if (prop.Type == ShaderDataType::Sampler)
 				samplers++;
