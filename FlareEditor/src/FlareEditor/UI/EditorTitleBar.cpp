@@ -124,32 +124,69 @@ namespace Flare
 			EditorGUI::EndMenu();
 		}
 
-		float buttonHeight = window->MenuBarHeight();
+		const auto& style = ImGui::GetStyle();
+		float buttonSize = ImGui::GetFontSize() + style.FramePadding.y * 2.0f;
 
-		ImVec2 buttonSize = ImVec2(60.0f, buttonHeight);
+		float buttonsWidth = buttonSize * 2.0f + style.ItemSpacing.x;
+
+		ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2.0f - buttonsWidth / 2.0f);
+
 		if (EditorLayer::GetInstance().GetMode() == EditorMode::Edit)
 		{
-			if (ImGui::Button("Play", buttonSize))
+			if (RenderButton("Play", EditorIcons::PlayIcon))
 				EditorLayer::GetInstance().EnterPlayMode();
 		}
 		else
 		{
-			if (ImGui::Button("Stop", buttonSize))
+			if (RenderButton("Stop", EditorIcons::StopIcon))
 				EditorLayer::GetInstance().ExitPlayMode();
 
-			// TODO: replace with icons
 			if (!EditorLayer::GetInstance().IsPlaymodePaused())
 			{
-				if (ImGui::Button("Pause"))
+				if (RenderButton("Pause", EditorIcons::PauseIcon))
 					EditorLayer::GetInstance().SetPlaymodePaused(true);
 			}
 			else
 			{
-				if (ImGui::Button("Continue"))
+				if (RenderButton("Continue", EditorIcons::ContinueIcon))
 					EditorLayer::GetInstance().SetPlaymodePaused(false);
 			}
 		}
 
 		window->DC.LayoutType = prevLayout;
+	}
+
+	bool EditorTitleBar::RenderButton(const char* id, glm::ivec2 iconPosition)
+	{
+		const auto& style = ImGui::GetStyle();
+		const auto& icons = EditorGUI::GetIcons();
+		float buttonSize = ImGui::GetFontSize() + style.FramePadding.y * 2.0f;
+
+		const ImU32 buttonHoverColor = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_ButtonHovered]);
+		const ImU32 buttonActiveColor = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_ButtonActive]);
+		const ImU32 buttonColor = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Button]);
+
+		ImDrawList* drawList = ImGui::GetCurrentWindow()->DrawList;
+
+		ImGui::InvisibleButton(id, ImVec2(buttonSize, buttonSize));
+
+		ImU32 color = buttonColor;
+		if (ImGui::IsItemHovered())
+			color = buttonHoverColor;
+
+		if (ImGui::IsItemActive())
+			color = buttonActiveColor;
+
+		ImRect buttonRect = { ImGui::GetItemRectMin(), ImGui::GetItemRectMax() };
+		drawList->AddRectFilled(buttonRect.Min, buttonRect.Max, color, style.FrameRounding);
+
+		ImRect iconUVs = icons.GetIconUVs(iconPosition);
+		drawList->AddImage(
+			icons.GetTexture()->GetRendererId(),
+			buttonRect.Min,
+			buttonRect.Max,
+			iconUVs.Min, iconUVs.Max);
+
+		return ImGui::IsItemClicked();
 	}
 }

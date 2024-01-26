@@ -11,6 +11,7 @@
 #include "FlareECS/World.h"
 
 #include "FlareEditor/ImGui/ImGuiLayer.h"
+#include "FlareEditor/UI/EditorIcons.h"
 
 namespace Flare
 {
@@ -19,8 +20,13 @@ namespace Flare
 	class EditorGUI
 	{
 	public:
+		static void Initialize();
+
 		static bool BeginPropertyGrid();
 		static void EndPropertyGrid();
+
+		static void DrawIcon(glm::ivec2 iconPosition, float size = 0.0f);
+		static const EditorIcons& GetIcons();
 
 		static void MoveCursor(ImVec2 offset);
 

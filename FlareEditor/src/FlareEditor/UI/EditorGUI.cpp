@@ -16,6 +16,13 @@
 
 namespace Flare
 {
+	static EditorIcons s_EditorIcons(48);
+
+	void EditorGUI::Initialize()
+	{
+		s_EditorIcons.Initialize();
+	}
+
 	bool EditorGUI::BeginPropertyGrid()
 	{
 		ImVec2 windowSize = ImGui::GetContentRegionAvail();
@@ -31,6 +38,23 @@ namespace Flare
 	void EditorGUI::EndPropertyGrid()
 	{
 		ImGui::EndTable();
+	}
+
+	void EditorGUI::DrawIcon(glm::ivec2 iconPosition, float size)
+	{
+		if (size == 0.0f)
+		{
+			const float defaultIconSize = 32.0f;
+			size = defaultIconSize;
+		}
+
+		ImRect uvs = s_EditorIcons.GetIconUVs(iconPosition);
+		ImGui::Image(s_EditorIcons.GetTexture()->GetRendererId(), ImVec2(size, size), uvs.Min, uvs.Max);
+	}
+
+	const EditorIcons& EditorGUI::GetIcons()
+	{
+		return s_EditorIcons;
 	}
 
 	void EditorGUI::MoveCursor(ImVec2 offset)
