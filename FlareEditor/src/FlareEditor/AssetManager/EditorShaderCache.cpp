@@ -65,12 +65,12 @@ namespace Flare
         return compiledShader;
     }
 
-    std::optional<ShaderFeatures> EditorShaderCache::FindShaderFeatures(AssetHandle shaderHandle)
+    Ref<const ShaderMetadata> EditorShaderCache::FindShaderMetadata(AssetHandle shaderHandle)
     {
         auto it = m_Entries.find(shaderHandle);
         if (it == m_Entries.end())
-            return {};
-        return it->second.Features;
+            return nullptr;
+        return it->second;
     }
 
     bool EditorShaderCache::HasCache(AssetHandle shaderHandle, ShaderTargetEnvironment targetEnvironment, ShaderStageType stage)
@@ -86,17 +86,9 @@ namespace Flare
         return std::filesystem::exists(cacheFile);
     }
 
-    std::optional<const EditorShaderCache::ShaderEntry*> EditorShaderCache::GetShaderEntry(AssetHandle shaderHandle) const
+    void EditorShaderCache::SetShaderEntry(AssetHandle shaderHandle, Ref<const ShaderMetadata> metadata)
     {
-        auto it = m_Entries.find(shaderHandle);
-        if (it == m_Entries.end())
-            return {};
-        return &it->second;
-    }
-
-    void EditorShaderCache::SetShaderEntry(AssetHandle shaderHandle, ShaderFeatures features, ShaderProperties&& properties)
-    {
-        m_Entries[shaderHandle] = ShaderEntry(features, std::move(properties));
+        m_Entries[shaderHandle] = metadata;
     }
 
     std::filesystem::path EditorShaderCache::GetCacheDirectoryPath(AssetHandle shaderHandle)

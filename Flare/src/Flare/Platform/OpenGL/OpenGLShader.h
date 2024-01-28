@@ -48,9 +48,8 @@ namespace Flare
 	private:
 		uint32_t m_Id;
 		bool m_IsValid;
-		ShaderProperties m_Properties;
-		ShaderOutputs m_Outputs;
-		ShaderFeatures m_Features;
+
+		Ref<const ShaderMetadata> m_Metadata;
 
 		std::vector<int32_t> m_UniformLocations;
 		std::unordered_map<std::string_view, uint32_t> m_NameToIndex;

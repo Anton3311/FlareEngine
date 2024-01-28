@@ -301,10 +301,10 @@ namespace Flare
 
 		EditorShaderCache* shaderCache = (EditorShaderCache*)ShaderCacheManager::GetInstance().get();
 
-		std::optional<const EditorShaderCache::ShaderEntry*> shaderEntry = shaderCache->GetShaderEntry(shaderHandle);
+		Ref<const ShaderMetadata> shaderEntry = shaderCache->FindShaderMetadata(shaderHandle);
 		if (shaderEntry)
 		{
-			const ShaderProperties& properties = shaderEntry.value()->Properties;
+			const ShaderProperties& properties = shaderEntry->Properties;
 
 			SerializablePropertyRenderer propertyRenderer;
 			for (size_t propertyIndex = 0; propertyIndex < properties.size(); propertyIndex++)

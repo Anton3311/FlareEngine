@@ -165,7 +165,7 @@ namespace Flare
 					case TexturePropertyValue::Type::Texture:
 						if (textureValue.Texture)
 							textureValue.Texture->Bind(properties[i].Location);
-;						break;
+						break;
 					default:
 						FLARE_CORE_ASSERT(false);
 					}

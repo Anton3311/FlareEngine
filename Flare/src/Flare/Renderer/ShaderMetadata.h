@@ -142,6 +142,11 @@ namespace Flare
 		SerializationValueFlags Flags = SerializationValueFlags::None;
 	};
 
+	using ShaderProperties = std::vector<ShaderProperty>;
+
+	// Indices of frame buffer attachments to which the shader writes
+	using ShaderOutputs = std::vector<uint32_t>;
+
 	enum class ShaderStageType
 	{
 		Vertex,
@@ -162,5 +167,13 @@ namespace Flare
 		DepthComparisonFunction DepthFunction;
 		bool DepthTesting;
 		bool DepthWrite;
+	};
+	
+	struct ShaderMetadata
+	{
+		ShaderFeatures Features;
+		ShaderOutputs Outputs;
+		std::vector<ShaderProperty> Properties;
+		std::vector<ShaderStageType> Stages;
 	};
 }

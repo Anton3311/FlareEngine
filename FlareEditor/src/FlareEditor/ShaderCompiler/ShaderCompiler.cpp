@@ -416,6 +416,7 @@ namespace Flare
         {
             const auto& samplerType = compiler.get_type(resource.type_id);
             uint32_t membersCount = (uint32_t)samplerType.member_types.size();
+            uint32_t binding = compiler.get_decoration(resource.id, spv::DecorationBinding);
 
             ShaderDataType type = ShaderDataType::Sampler;
             size_t size = ShaderDataTypeSize(type);
@@ -434,7 +435,7 @@ namespace Flare
             }
 
             ShaderProperty& shaderProperty = properties.emplace_back();
-            shaderProperty.Location = UINT32_MAX;
+            shaderProperty.Location = binding;
             shaderProperty.Name = resource.name;
             shaderProperty.Offset = lastPropertyOffset;
             shaderProperty.Type = type;
@@ -446,6 +447,18 @@ namespace Flare
 
             lastPropertyOffset += size;
             samplerIndex++;
+        }
+    }
+
+    static void ExtractShaderOutputs(spirv_cross::Compiler& compiler, ShaderOutputs& outputs)
+    {
+        const spirv_cross::ShaderResources& resources = compiler.get_shader_resources();
+
+        outputs.reserve(resources.stage_outputs.size());
+        for (const auto& output : resources.stage_outputs)
+        {
+            uint32_t location = compiler.get_decoration(output.id, spv::DecorationLocation);
+            outputs.push_back(location);
         }
     }
     
@@ -472,6 +485,7 @@ namespace Flare
         std::string pathString = shaderPath.string();
         std::vector<PreprocessedShaderProgram> programs;
         std::unordered_map<std::string, size_t> propertyNameToIndex;
+        ShaderOutputs shaderOutputs;
         ShaderProperties shaderProperties;
 
         std::vector<ShaderError> errors;
@@ -499,7 +513,7 @@ namespace Flare
 
             return false;
         }
-
+        
         for (const PreprocessedShaderProgram& program : programs)
         {
             shaderc_shader_kind shaderKind = (shaderc_shader_kind)0;
@@ -536,6 +550,9 @@ namespace Flare
             {
                 spirv_cross::Compiler compiler(compiledVulkanShader.value());
                 Reflect(compiler, propertyNameToIndex, shaderProperties);
+
+                if (program.Stage == ShaderStageType::Pixel)
+                    ExtractShaderOutputs(compiler, shaderOutputs);
             }
             catch (spirv_cross::CompilerError& e)
             {
@@ -564,10 +581,15 @@ namespace Flare
 
         ParseShaderMetadata(parser, shaderFeatures, errors, propertyNameToIndex, shaderProperties);
 
-        ((EditorShaderCache*)ShaderCacheManager::GetInstance().get())->SetShaderEntry(
-            shaderHandle,
-            shaderFeatures,
-            std::move(shaderProperties));
+        Ref<ShaderMetadata> metadata = CreateRef<ShaderMetadata>();
+        metadata->Properties = std::move(shaderProperties);
+        metadata->Features = shaderFeatures;
+        metadata->Outputs = std::move(shaderOutputs);
+
+        for (const auto& program : programs)
+            metadata->Stages.push_back(program.Stage);
+
+        ((EditorShaderCache*)ShaderCacheManager::GetInstance().get())->SetShaderEntry(shaderHandle, metadata);
 
         return true;
     }
