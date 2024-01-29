@@ -1032,6 +1032,9 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
+		if (!material || !material->GetShader())
+			return;
+
 		ApplyMaterial(material);
 
 		RenderCommand::DrawIndexed(s_RendererData.FullscreenQuad);

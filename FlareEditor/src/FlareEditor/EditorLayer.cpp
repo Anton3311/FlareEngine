@@ -381,6 +381,9 @@ namespace Flare
                 EditorGUI::ObjectField(
                     FLARE_SERIALIZATION_DESCRIPTOR_OF(SSAO),
                     postProcessing.SSAOPass.get());
+                EditorGUI::ObjectField(
+                    FLARE_SERIALIZATION_DESCRIPTOR_OF(AtmospherePass),
+                    postProcessing.Atmosphere.get());
 
                 ImGui::TreePop();
             }
