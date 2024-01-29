@@ -1,0 +1,23 @@
+Shader: 1086096787552207233
+Properties:
+  - Name: u_Sky.AtmoshpereHeight
+    Type: 4
+    Value: 14000
+  - Name: u_Sky.AtmoshpericDensity
+    Type: 4
+    Value: 1
+  - Name: u_Sky.PlanetRadius
+    Type: 4
+    Value: 1000
+  - Name: u_Sky.ScatteringStrength
+    Type: 4
+    Value: 9.99999972e-10
+  - Name: u_Sky.RaySteps
+    Type: 0
+    Value: 10
+  - Name: u_Sky.ViewRaySteps
+    Type: 0
+    Value: 10
+  - Name: u_Sky.SunColor
+    Type: 6
+    Value: [700, 500, 450]
