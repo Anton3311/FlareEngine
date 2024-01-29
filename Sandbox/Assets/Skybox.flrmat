@@ -11,7 +11,7 @@ Properties:
     Value: 1000
   - Name: u_Sky.ScatteringStrength
     Type: 4
-    Value: 9.99999972e-10
+    Value: 1.3e-09
   - Name: u_Sky.RaySteps
     Type: 0
     Value: 10

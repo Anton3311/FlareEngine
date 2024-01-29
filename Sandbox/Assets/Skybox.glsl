@@ -52,11 +52,16 @@ layout(location = 0) in vec3 i_Position;
 
 layout(location = 0) out vec4 o_Color;
 
-float CalculatePhase(float angleCos, float g)
+float MiePhaseFunction(float angleCos, float g)
 {
 	float g2 = g * g;
 	float a = (1 + g2 - 2 * g * angleCos);
 	return (3 * (1 - g2)) / (2 * (2 + g2)) * (1 + angleCos * angleCos) / sqrt(pow(a, 3.0f));
+}
+
+float RayleighPhaseFunction(float cosTheta)
+{
+	return 3.0f / (16.0f * pi) * (1 + cosTheta * cosTheta);
 }
 
 float CalculateOpticalDepth(vec3 rayOrigin, vec3 rayDirection, vec3 waveLength)
@@ -134,7 +139,7 @@ void main()
 		viewRayPoint += viewRayStep;
 	}
 
-	float phase = CalculatePhase(dot(viewDirection, -u_LightDirection), 0.25f);
+	float phase = RayleighPhaseFunction(dot(viewDirection, -u_LightDirection));
 	o_Color = vec4(u_LightColor.w * finalColor * phase, 1.0f);
 }
 
