@@ -14,6 +14,8 @@ namespace Flare
         {
         case FrameBufferTextureFormat::RGB8:
             return GL_RGB8;
+        case FrameBufferTextureFormat::R11G11B10:
+            return GL_R11F_G11F_B10F;
         case FrameBufferTextureFormat::RGBA8:
             return GL_RGBA8;
         case FrameBufferTextureFormat::RedInteger:
@@ -31,6 +33,7 @@ namespace Flare
         switch (format)
         {
         case FrameBufferTextureFormat::RGB8:
+        case FrameBufferTextureFormat::R11G11B10:
             return GL_RGB;
         case FrameBufferTextureFormat::RGBA8:
             return GL_RGBA;
