@@ -6,7 +6,7 @@ Entities:
           Value: Camera
       - Name: struct Flare::TransformComponent
         Data:
-          Position: [0, 0, 0]
+          Position: [0, 7, 0]
           Rotation: [0, -113, 0]
           Scale: [0.999996543, 1, 0.999996483]
       - Name: struct Flare::CameraComponent
@@ -23,8 +23,8 @@ Entities:
       - Name: struct Flare::TransformComponent
         Data:
           Position: [0, 1.96195173, 7.10875416]
-          Rotation: [-75.3460007, 0, 0]
-          Scale: [0.999994636, 0.999995947, 0.999988675]
+          Rotation: [-59.7261543, -54.2580147, -95.2077332]
+          Scale: [0.999990582, 1.00000095, 0.999978006]
       - Name: struct Flare::DirectionalLight
         Data:
           Color: [0.895885348, 0.960160494, 0.960854113]
@@ -219,26 +219,11 @@ Entities:
       - Name: struct Flare::Decal
         Data:
           Material: 8007099998881589886
-  - SerializationId: 4967275153930257225
-    Components:
-      - Name: struct Flare::NameComponent
-        Data:
-          Value: Sky
-      - Name: struct Flare::TransformComponent
-        Data:
-          Position: [0, 0, 0]
-          Rotation: [0, 0, 0]
-          Scale: [500, 500, 500]
-      - Name: struct Flare::MeshComponent
-        Data:
-          Mesh: 10342322337781790464
-          Material: 6603499577536286740
-          Flags: 0
 Editor:
   Camera:
-    RotationOrigin: [0, -4.02802563, 0]
-    Rotation: [29, -1559, 0]
-    Zoom: 140.02504
+    RotationOrigin: [-14.0873737, -19.3491058, 0.258239746]
+    Rotation: [-12, -3130, 0]
+    Zoom: 163.241653
   SceneViewSettings:
     ShowAABBs: false
     ShowCameraFrustum: true
@@ -260,3 +245,7 @@ PostProcessing:
       Radius: 0.5
       Bias: 0.100000001
       BlurSize: 2
+  - Name: class Flare::AtmospherePass
+    Data:
+      AtmosphereMaterial: 6603499577536286740
+      SunLightWaveLengths: [700, 500, 450]
