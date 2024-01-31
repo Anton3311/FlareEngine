@@ -21,7 +21,7 @@ layout(location = 0) in vec2 i_Position;
 
 void main()
 {
-	gl_Position = vec4(i_Position, 0.999999f, 1.0f);
+	gl_Position = vec4(i_Position, 0.9999999f, 1.0f);
 }
 
 #end
@@ -138,7 +138,7 @@ vec3 ComputeSunTransmittance(vec3 rayOrigin)
 		float height = length(rayPoint) - u_Sky.PlanetRadius;
 
 		ScatteringCoefficients scatteringCoefficients = ComputeScatteringCoefficients(height);
-		transmittance *= exp(-scatteringCoefficients.Extinction * stepLength);
+		transmittance *= exp(-scatteringCoefficients.Extinction * stepLength / u_Sky.AtmosphereThickness);
 		opticalDepth += scatteringCoefficients.Extinction;
 	}
 
@@ -170,8 +170,9 @@ void main()
 		float height = length(viewRayPoint) - u_Sky.PlanetRadius;
 
 		ScatteringCoefficients scatteringCoefficients = ComputeScatteringCoefficients(height);
-		vec3 sampleTransmittance = exp(-scatteringCoefficients.Extinction / u_Sky.AtmosphereThickness);
+		vec3 sampleTransmittance = exp(-scatteringCoefficients.Extinction * viewRayStepLength / u_Sky.AtmosphereThickness);
 
+		vec3 sunTransmittance = ComputeSunTransmittance(viewRayPoint);
 		vec3 rayleighInScatter = scatteringCoefficients.Rayleigh * rayleighPhase * sunTransmittance;
 		vec3 mieInScatter = scatteringCoefficients.Mie * miePhase * sunTransmittance;
 		vec3 inScatter = rayleighInScatter + mieInScatter;

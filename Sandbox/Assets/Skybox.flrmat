@@ -5,7 +5,7 @@ Properties:
     Value: 7000
   - Name: u_Sky.AtmosphereThickness
     Type: 4
-    Value: 1000
+    Value: 100000
   - Name: u_Sky.RaySteps
     Type: 0
     Value: 10
@@ -20,7 +20,7 @@ Properties:
     Value: 8000
   - Name: u_Sky.MieCoefficient
     Type: 4
-    Value: 0.379999995
+    Value: 0.399599999
   - Name: u_Sky.MieAbsorbtion
     Type: 4
     Value: 4.4000001

@@ -222,8 +222,8 @@ Entities:
 Editor:
   Camera:
     RotationOrigin: [-14.0873737, -19.3491058, 0.258239746]
-    Rotation: [-12, -3130, 0]
-    Zoom: 163.241653
+    Rotation: [-4, -3151, 0]
+    Zoom: 172.016647
   SceneViewSettings:
     ShowAABBs: false
     ShowCameraFrustum: true
@@ -235,7 +235,7 @@ PostProcessing:
       Enabled: true
   - Name: class Flare::Vignette
     Data:
-      Enabled: true
+      Enabled: false
       Color: [0, 0, 0, 0.5]
       Radius: 1
       Smoothness: 1
