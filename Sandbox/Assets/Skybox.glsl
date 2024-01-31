@@ -14,6 +14,8 @@ Properties =
 	u_Sky.MieAbsorbtion = {}
 	u_Sky.RayleighAbsobtion = {}
 	u_Sky.OzoneAbsorbtion = {}
+
+	u_Sky.GroundColor = { Type = Color }
 }
 
 #begin vertex
@@ -55,6 +57,8 @@ layout(std140, push_constant) uniform Sky
 	vec3 OzoneAbsorbtion;
 	vec3 RayleighCoefficient;
 
+	vec3 GroundColor;
+
 } u_Sky;
 
 layout(location = 0) out vec4 o_Color;
@@ -87,13 +91,11 @@ float CalculateOpticalDepth(vec3 rayOrigin, vec3 rayDirection)
 	return opticalDepth;
 }
 
-float FindSpehereRayIntersection(vec3 rayOrigin, vec3 rayDirection)
+float FindSpehereRayIntersection(vec3 rayOrigin, vec3 rayDirection, float radius)
 {
-	float atmosphereMaxHeight = u_Sky.AtmosphereThickness + u_Sky.PlanetRadius;
-
 	vec3 d = rayOrigin;
 	float p1 = -dot(rayDirection, d);
-	float p2sqr = p1 * p1 - dot(d, d) + atmosphereMaxHeight * atmosphereMaxHeight;
+	float p2sqr = p1 * p1 - dot(d, d) + radius * radius;
 
 	if (p2sqr < 0)
 		return -1.0f;
@@ -137,8 +139,8 @@ ScatteringCoefficients ComputeScatteringCoefficients(float height)
 
 vec3 ComputeSunTransmittance(vec3 rayOrigin)
 {
-	float atmosphereDistance = FindSpehereRayIntersection(rayOrigin, -u_LightDirection);
-	if (atmosphereDistance == -1.0f)
+	float atmosphereDistance = FindSpehereRayIntersection(rayOrigin, -u_LightDirection, u_Sky.PlanetRadius + u_Sky.AtmosphereThickness);
+	if (atmosphereDistance < 0.0f)
 		return vec3(0.0f);
 
 	vec3 transmittance = vec3(1.0f);
@@ -163,11 +165,20 @@ vec3 ComputeSunTransmittance(vec3 rayOrigin)
 void main()
 {
 	vec3 viewDirection = CalculateViewDirection();
+	vec3 viewRayPoint = vec3(0.0f, u_Sky.PlanetRadius + u_Sky.ObserverHeight, 0.0f);
 
-	vec3 viewRayPoint = u_Camera.Position + vec3(0.0f, u_Sky.PlanetRadius + u_Sky.ObserverHeight, 0.0f);
-	float distanceThroughAtmosphere = FindSpehereRayIntersection(
-		viewRayPoint,
-		viewDirection);
+	float groudDistance = FindSpehereRayIntersection(viewRayPoint, viewDirection, u_Sky.PlanetRadius);
+	if (groudDistance > 0.0f)
+	{
+		o_Color = vec4(u_Sky.GroundColor, 1.0f);
+		return;
+	}
+
+	float distanceThroughAtmosphere = FindSpehereRayIntersection(viewRayPoint,
+		viewDirection, u_Sky.PlanetRadius + u_Sky.AtmosphereThickness);
+
+	if (distanceThroughAtmosphere < 0.0f)
+		discard;
  
 	if (distanceThroughAtmosphere == -1.0f)
 		discard;

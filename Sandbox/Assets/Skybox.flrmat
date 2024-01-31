@@ -14,7 +14,7 @@ Properties:
     Value: 10
   - Name: u_Sky.ObserverHeight
     Type: 4
-    Value: 6300
+    Value: 6200
   - Name: u_Sky.MieHeight
     Type: 4
     Value: 1200
@@ -36,3 +36,6 @@ Properties:
   - Name: u_Sky.RayleighCoefficient
     Type: 6
     Value: [5.80200005, 13.5579996, 33.0999985]
+  - Name: u_Sky.GroundColor
+    Type: 6
+    Value: [0.0965033397, 0.0965033546, 0.106761575]
