@@ -23,8 +23,8 @@ Entities:
       - Name: struct Flare::TransformComponent
         Data:
           Position: [0, 1.96195173, 7.10875416]
-          Rotation: [-9.27843857, -21.2835217, -54.0600929]
-          Scale: [0.999998808, 1.00000727, 0.999975681]
+          Rotation: [-8.66227531, -20.4866447, -54.279911]
+          Scale: [0.99999392, 0.999993682, 0.999967635]
       - Name: struct Flare::DirectionalLight
         Data:
           Color: [0.895885348, 0.960160494, 0.960854113]
@@ -37,7 +37,7 @@ Entities:
       - Name: struct Flare::Environment
         Data:
           EnvironmentColor: [0.967971504, 0.954756439, 0.919745147]
-          EnvironmentColorIntensity: 0.300000012
+          EnvironmentColorIntensity: 0.100000001
           ShadowSettings:
             LightSize: 0.00899999961
             Bias: 0.00100000005
@@ -221,9 +221,9 @@ Entities:
           Material: 8007099998881589886
 Editor:
   Camera:
-    RotationOrigin: [-4.14610577, 5.19851303, 1.99659967]
-    Rotation: [-4, -3774, 0]
-    Zoom: 19.649992
+    RotationOrigin: [-8.48991966, -6.23166084, -11.3800793]
+    Rotation: [8, -3762, 0]
+    Zoom: 128.091629
   SceneViewSettings:
     ShowAABBs: false
     ShowCameraFrustum: true

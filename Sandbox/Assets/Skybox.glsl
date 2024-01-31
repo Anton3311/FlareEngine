@@ -160,7 +160,7 @@ void main()
 {
 	vec3 viewDirection = CalculateViewDirection();
 
-	vec3 viewRayPoint = u_Camera.Position + vec3(0.0f, u_Sky.PlanetRadius + 1000.0f, 0.0f);
+	vec3 viewRayPoint = u_Camera.Position + vec3(0.0f, u_Sky.PlanetRadius + 5000.0f, 0.0f);
 	float distanceThroughAtmosphere = FindSpehereRayIntersection(
 		viewRayPoint,
 		viewDirection);
@@ -173,7 +173,7 @@ void main()
 
 	float rayleighPhase = RayleighPhaseFunction(-dot(viewDirection, -u_LightDirection));
 	float miePhase = MiePhaseFunction(dot(viewDirection, -u_LightDirection), 0.84f);
-	
+
 	vec3 luminance = vec3(0.0f);
 	vec3 transmittance = vec3(1.0f);
 	float viewOpticalDepth = 0.0f;
@@ -184,19 +184,11 @@ void main()
 		ScatteringCoefficients scatteringCoefficients = ComputeScatteringCoefficients(height);
 		float density = exp(-height / u_Sky.AtmosphereThickness);
 		vec3 sampleTransmittance = exp(-scatteringCoefficients.Extinction * viewRayStepLength / u_Sky.AtmosphereThickness);
-		sampleTransmittance = exp(-scatteringCoefficients.Extinction * (density + viewOpticalDepth));
 		viewOpticalDepth += density;
 
-#if 0
-		o_Color = vec4(sampleTransmittance * 1000.0f, 1.0f);
-		return;
-#endif
-
+		sampleTransmittance = exp(-u_Sky.RayleighCoefficient * viewOpticalDepth);
 		vec3 sunTransmittance = ComputeSunTransmittance(viewRayPoint);
-#if 0
-		o_Color = vec4(sunTransmittance, 1.0f);
-		return;
-#endif
+
 		vec3 rayleighInScatter = scatteringCoefficients.Rayleigh * rayleighPhase * sunTransmittance;
 		vec3 mieInScatter = scatteringCoefficients.Mie * miePhase * sunTransmittance;
 		vec3 inScatter = rayleighInScatter + mieInScatter;

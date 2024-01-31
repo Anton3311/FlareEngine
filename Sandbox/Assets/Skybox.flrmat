@@ -20,7 +20,7 @@ Properties:
     Value: 8000
   - Name: u_Sky.MieCoefficient
     Type: 4
-    Value: 0.399599999
+    Value: 0.398999989
   - Name: u_Sky.MieAbsorbtion
     Type: 4
     Value: 4.4000001
@@ -29,7 +29,7 @@ Properties:
     Value: 0
   - Name: u_Sky.OzoneAbsorbtion
     Type: 6
-    Value: [0.605000019, 1.88100004, 0.0850000009]
+    Value: [0.605000019, 1.88100004, 0.850000024]
   - Name: u_Sky.RayleighCoefficient
     Type: 6
     Value: [5.80200005, 13.5579996, 33.0999985]
