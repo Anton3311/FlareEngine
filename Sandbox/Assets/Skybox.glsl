@@ -5,6 +5,8 @@ Properties =
 	u_Sky.RaySteps = {}
 	u_Sky.ViewRaySteps = {}
 
+	u_Sky.ObserverHeight = {}
+
 	u_Sky.MieHeight = {}
 	u_Sky.RayleighHeight = {}
 	u_Sky.RayleighCoefficient = {}
@@ -41,6 +43,8 @@ layout(std140, push_constant) uniform Sky
 	float AtmosphereThickness;
 	int RaySteps;
 	int ViewRaySteps;
+
+	float ObserverHeight;
 
 	float MieHeight;
 	float RayleighHeight;
@@ -160,7 +164,7 @@ void main()
 {
 	vec3 viewDirection = CalculateViewDirection();
 
-	vec3 viewRayPoint = u_Camera.Position + vec3(0.0f, u_Sky.PlanetRadius + 6100.0f, 0.0f);
+	vec3 viewRayPoint = u_Camera.Position + vec3(0.0f, u_Sky.PlanetRadius + u_Sky.ObserverHeight, 0.0f);
 	float distanceThroughAtmosphere = FindSpehereRayIntersection(
 		viewRayPoint,
 		viewDirection);

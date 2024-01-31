@@ -12,6 +12,9 @@ Properties:
   - Name: u_Sky.ViewRaySteps
     Type: 0
     Value: 10
+  - Name: u_Sky.ObserverHeight
+    Type: 4
+    Value: 6300
   - Name: u_Sky.MieHeight
     Type: 4
     Value: 1200
