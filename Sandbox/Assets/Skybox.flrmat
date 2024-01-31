@@ -2,10 +2,10 @@ Shader: 1086096787552207233
 Properties:
   - Name: u_Sky.PlanetRadius
     Type: 4
-    Value: 7000
+    Value: 6360
   - Name: u_Sky.AtmosphereThickness
     Type: 4
-    Value: 100000
+    Value: 6460
   - Name: u_Sky.RaySteps
     Type: 0
     Value: 10
@@ -24,6 +24,12 @@ Properties:
   - Name: u_Sky.MieAbsorbtion
     Type: 4
     Value: 4.4000001
+  - Name: u_Sky.RayleighAbsobtion
+    Type: 4
+    Value: 0
+  - Name: u_Sky.OzoneAbsorbtion
+    Type: 6
+    Value: [0.605000019, 1.88100004, 0.0850000009]
   - Name: u_Sky.RayleighCoefficient
     Type: 6
     Value: [5.80200005, 13.5579996, 33.0999985]

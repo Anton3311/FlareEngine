@@ -10,6 +10,8 @@ Properties =
 	u_Sky.RayleighCoefficient = {}
 	u_Sky.MieCoefficient = {}
 	u_Sky.MieAbsorbtion = {}
+	u_Sky.RayleighAbsobtion = {}
+	u_Sky.OzoneAbsorbtion = {}
 }
 
 #begin vertex
@@ -45,6 +47,8 @@ layout(std140, push_constant) uniform Sky
 
 	float MieCoefficient;
 	float MieAbsorbtion;
+	float RayleighAbsobtion;
+	vec3 OzoneAbsorbtion;
 	vec3 RayleighCoefficient;
 
 } u_Sky;
@@ -118,7 +122,9 @@ ScatteringCoefficients ComputeScatteringCoefficients(float height)
 	ScatteringCoefficients coefficients;
 	coefficients.Mie = u_Sky.MieCoefficient * mieDensity;
 	coefficients.Rayleigh = u_Sky.RayleighCoefficient * rayleighDensity;
-	coefficients.Extinction = coefficients.Rayleigh + u_Sky.MieAbsorbtion + coefficients.Mie;
+
+	vec3 ozoneAbsorbtion = u_Sky.OzoneAbsorbtion * max(0.0f, 1.0f - abs(height - 25000) / 15000);
+	coefficients.Extinction = coefficients.Rayleigh + vec3(u_Sky.RayleighAbsobtion) + u_Sky.MieAbsorbtion + coefficients.Mie + ozoneAbsorbtion;
 
 	return coefficients;
 }
@@ -126,6 +132,8 @@ ScatteringCoefficients ComputeScatteringCoefficients(float height)
 vec3 ComputeSunTransmittance(vec3 rayOrigin)
 {
 	float atmosphereDistance = FindSpehereRayIntersection(rayOrigin, -u_LightDirection);
+	if (atmosphereDistance == -1.0f)
+		return vec3(0.0f);
 
 	vec3 transmittance = vec3(1.0f);
 	vec3 opticalDepth = vec3(0.0f);
@@ -160,7 +168,7 @@ void main()
 	vec3 viewRayPoint = u_Camera.Position;
 	float viewRayStepLength = length(viewRayStep);
 
-	float rayleighPhase = RayleighPhaseFunction(dot(viewDirection, -u_LightDirection));
+	float rayleighPhase = RayleighPhaseFunction(-dot(viewDirection, -u_LightDirection));
 	float miePhase = MiePhaseFunction(dot(viewDirection, -u_LightDirection), 0.84f);
 	
 	vec3 luminance = vec3(0.0f);
@@ -180,6 +188,11 @@ void main()
 		vec3 scatteringIntegral = (inScatter - inScatter * sampleTransmittance) / scatteringCoefficients.Extinction;
 		luminance += scatteringIntegral * transmittance;
 		transmittance *= sampleTransmittance;
+
+#if 0
+		o_Color = vec4(vec3(scatteringCoefficients.Extinction), 1.0f);
+		return;
+#endif
 
 		viewRayPoint += viewRayStep;
 	}
