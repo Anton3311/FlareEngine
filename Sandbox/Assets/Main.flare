@@ -23,8 +23,8 @@ Entities:
       - Name: struct Flare::TransformComponent
         Data:
           Position: [0, 1.96195173, 7.10875416]
-          Rotation: [-59.7261543, -54.2580147, -95.2077332]
-          Scale: [0.999990582, 1.00000095, 0.999978006]
+          Rotation: [-59.7260284, -54.2580605, 49.4803314]
+          Scale: [0.999990582, 0.999999583, 0.999975443]
       - Name: struct Flare::DirectionalLight
         Data:
           Color: [0.895885348, 0.960160494, 0.960854113]
@@ -221,9 +221,9 @@ Entities:
           Material: 8007099998881589886
 Editor:
   Camera:
-    RotationOrigin: [-14.0873737, -19.3491058, 0.258239746]
-    Rotation: [-4, -3151, 0]
-    Zoom: 172.016647
+    RotationOrigin: [0, 1.96195173, 7.10875416]
+    Rotation: [7, -3329, 0]
+    Zoom: 150.416626
   SceneViewSettings:
     ShowAABBs: false
     ShowCameraFrustum: true

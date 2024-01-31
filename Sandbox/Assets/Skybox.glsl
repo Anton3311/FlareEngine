@@ -125,6 +125,7 @@ ScatteringCoefficients ComputeScatteringCoefficients(float height)
 
 	vec3 ozoneAbsorbtion = u_Sky.OzoneAbsorbtion * max(0.0f, 1.0f - abs(height - 25000) / 15000);
 	coefficients.Extinction = coefficients.Rayleigh + vec3(u_Sky.RayleighAbsobtion) + u_Sky.MieAbsorbtion + coefficients.Mie + ozoneAbsorbtion;
+	coefficients.Extinction = coefficients.Rayleigh;
 
 	return coefficients;
 }
@@ -150,22 +151,22 @@ vec3 ComputeSunTransmittance(vec3 rayOrigin)
 		opticalDepth += scatteringCoefficients.Extinction;
 	}
 
-	return transmittance;
+	return exp(-opticalDepth);
 }
 
 void main()
 {
 	vec3 viewDirection = CalculateViewDirection();
 
+	vec3 viewRayPoint = u_Camera.Position + vec3(0.0f, u_Sky.PlanetRadius + 1500.0f, 0.0f);
 	float distanceThroughAtmosphere = FindSpehereRayIntersection(
-		vec3(0.0f, u_Sky.PlanetRadius, 0.0f),
+		viewRayPoint,
 		viewDirection);
  
 	if (distanceThroughAtmosphere == -1.0f)
 		discard;
 
 	vec3 viewRayStep = viewDirection * distanceThroughAtmosphere / max(1, u_Sky.ViewRaySteps - 1);
-	vec3 viewRayPoint = u_Camera.Position;
 	float viewRayStepLength = length(viewRayStep);
 
 	float rayleighPhase = RayleighPhaseFunction(-dot(viewDirection, -u_LightDirection));
@@ -173,12 +174,16 @@ void main()
 	
 	vec3 luminance = vec3(0.0f);
 	vec3 transmittance = vec3(1.0f);
+	float viewOpticalDepth = 0.0f;
 	for (int i = 0; i < u_Sky.ViewRaySteps; i++)
 	{
 		float height = length(viewRayPoint) - u_Sky.PlanetRadius;
 
 		ScatteringCoefficients scatteringCoefficients = ComputeScatteringCoefficients(height);
+		float density = exp(-height / u_Sky.AtmosphereThickness);
 		vec3 sampleTransmittance = exp(-scatteringCoefficients.Extinction * viewRayStepLength / u_Sky.AtmosphereThickness);
+		sampleTransmittance = exp(-scatteringCoefficients.Extinction * (density + viewOpticalDepth));
+		viewOpticalDepth += density;
 
 		vec3 sunTransmittance = ComputeSunTransmittance(viewRayPoint);
 		vec3 rayleighInScatter = scatteringCoefficients.Rayleigh * rayleighPhase * sunTransmittance;
@@ -188,11 +193,6 @@ void main()
 		vec3 scatteringIntegral = (inScatter - inScatter * sampleTransmittance) / scatteringCoefficients.Extinction;
 		luminance += scatteringIntegral * transmittance;
 		transmittance *= sampleTransmittance;
-
-#if 0
-		o_Color = vec4(vec3(scatteringCoefficients.Extinction), 1.0f);
-		return;
-#endif
 
 		viewRayPoint += viewRayStep;
 	}
