@@ -13,6 +13,7 @@ namespace Flare
 	{
 	public:
 		WindowsWindow(WindowProperties& properties);
+		virtual ~WindowsWindow();
 	public:
 		virtual const WindowProperties& GetProperties() const override { return m_Data.Properties; }
 
@@ -36,7 +37,6 @@ namespace Flare
 		virtual void SetCursorMode(CursorMode mode) override;
 	private:
 		void Initialize();
-		void Release();
 		
 		static LRESULT CALLBACK CustomWindowDecorationProc(HWND windowHandle, UINT message, WPARAM wParam, LPARAM lParam);
 		static const wchar_t* s_WindowPropertyName;

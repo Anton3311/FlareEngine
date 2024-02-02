@@ -36,6 +36,7 @@ namespace Flare
 	class FLAREPLATFORM_API Window
 	{
 	public:
+		virtual ~Window() {}
 		virtual const WindowProperties& GetProperties() const = 0;
 
 		virtual void SetTitle(const std::string& title) = 0;

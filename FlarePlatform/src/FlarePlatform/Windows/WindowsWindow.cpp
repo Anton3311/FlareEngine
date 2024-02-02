@@ -334,6 +334,14 @@ namespace Flare
 		Initialize();
 	}
 
+	WindowsWindow::~WindowsWindow()
+	{
+		glfwDestroyWindow(m_Window);
+		glfwTerminate();
+
+		m_Window = nullptr;
+	}
+
 	// From https://github.com/bitsdojo/bitsdojo_window
 	//
 	// see: https://github.com/bitsdojo/bitsdojo_window/blob/816d217e770303035494653bd80f67484ca159e7/bitsdojo_window_windows/lib/src/window.dart#L122
@@ -543,14 +551,6 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 		glfwPollEvents();
-	}
-
-	void WindowsWindow::Release()
-	{
-		glfwDestroyWindow(m_Window);
-		glfwTerminate();
-
-		m_Window = nullptr;
 	}
 
 	void WindowsWindow::SetTitle(const std::string& title)
