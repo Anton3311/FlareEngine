@@ -71,10 +71,10 @@ namespace Flare
 
 	void Scene::InitializePostProcessing()
 	{
-		Renderer::AddRenderPass(m_PostProcessingManager.ToneMappingPass);
 		Renderer::AddRenderPass(m_PostProcessingManager.VignettePass);
 		Renderer::AddRenderPass(m_PostProcessingManager.SSAOPass);
 		Renderer::AddRenderPass(m_PostProcessingManager.Atmosphere);
+		Renderer::AddRenderPass(m_PostProcessingManager.ToneMappingPass);
 	}
 
 	void Scene::UninitializePostProcessing()
