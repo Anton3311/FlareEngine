@@ -399,7 +399,7 @@ namespace Flare
                     else
                         shaderProperty.Name = fmt::format("{}.{}", resource.name, memberName);
 
-                    shaderProperty.Offset = offset;
+                    shaderProperty.Offset = lastPropertyOffset;
                     shaderProperty.Type = shaderDataType.value();
                     shaderProperty.Size = compiler.get_declared_struct_member_size(bufferType, i);
                     shaderProperty.Hidden = true;
@@ -407,7 +407,7 @@ namespace Flare
                     propertyNameToIndex[shaderProperty.Name] = properties.size() - 1;
                 }
 
-                lastPropertyOffset = offset + compiler.get_declared_struct_member_size(bufferType, i);
+                lastPropertyOffset += compiler.get_declared_struct_member_size(bufferType, i);
             }
         }
 

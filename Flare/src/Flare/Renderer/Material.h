@@ -57,6 +57,7 @@ namespace Flare
 			FLARE_CORE_ASSERT((size_t)index < properties.size());
 			FLARE_CORE_ASSERT(sizeof(T) == properties[index].Size);
 			FLARE_CORE_ASSERT(properties[index].Type != ShaderDataType::Sampler);
+			FLARE_CORE_ASSERT(properties[index].Offset + properties[index].Size <= m_BufferSize);
 			return *(T*)(m_Buffer + properties[index].Offset);
 		}
 
@@ -68,6 +69,7 @@ namespace Flare
 			FLARE_CORE_ASSERT(sizeof(T) == properties[index].Size);
 
 			FLARE_CORE_ASSERT(properties[index].Type != ShaderDataType::Sampler);
+			FLARE_CORE_ASSERT(properties[index].Offset + properties[index].Size <= m_BufferSize);
 
 			T value;
 
@@ -81,6 +83,7 @@ namespace Flare
 			const ShaderProperties& properties = m_Shader->GetProperties();
 			FLARE_CORE_ASSERT((size_t)index < properties.size());
 			FLARE_CORE_ASSERT(sizeof(T) == properties[index].Size);
+			FLARE_CORE_ASSERT(properties[index].Offset + properties[index].Size <= m_BufferSize);
 
 			FLARE_CORE_ASSERT(properties[index].Type != ShaderDataType::Sampler);
 			memcpy_s(m_Buffer + properties[index].Offset, sizeof(value), &value, properties[index].Size);
