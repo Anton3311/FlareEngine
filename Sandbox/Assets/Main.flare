@@ -23,8 +23,8 @@ Entities:
       - Name: struct Flare::TransformComponent
         Data:
           Position: [0, 1.96195173, 7.10875416]
-          Rotation: [-15.8889999, -0, 0]
-          Scale: [0.999993384, 0.999993026, 0.999966681]
+          Rotation: [-51.1195145, -4.89517832, 9.18564034]
+          Scale: [0.999992669, 0.99999249, 0.999965787]
       - Name: struct Flare::DirectionalLight
         Data:
           Color: [0.895885348, 0.960160494, 0.960854113]
@@ -61,7 +61,7 @@ Entities:
       - Name: struct Flare::MeshComponent
         Data:
           Mesh: 10342322337781790464
-          Material: 13900636449532140235
+          Material: 2768644555319864744
           Flags: 0
   - SerializationId: 12495803614744137463
     Components:
@@ -73,7 +73,7 @@ Entities:
       - Name: struct Flare::MeshComponent
         Data:
           Mesh: 10342322337781790464
-          Material: 13900636449532140235
+          Material: 2768644555319864744
           Flags: 0
   - SerializationId: 10392799965563644219
     Components:
@@ -179,7 +179,7 @@ Entities:
       - Name: struct Flare::MeshComponent
         Data:
           Mesh: 10342322337781790464
-          Material: 13900636449532140235
+          Material: 2768644555319864744
           Flags: 0
   - SerializationId: 237578395046688509
     Components:
@@ -207,7 +207,7 @@ Entities:
       - Name: struct Flare::MeshComponent
         Data:
           Mesh: 10342322337781790464
-          Material: 13900636449532140235
+          Material: 2768644555319864744
           Flags: 0
   - SerializationId: 13839467288061322450
     Components:
@@ -222,8 +222,8 @@ Entities:
 Editor:
   Camera:
     RotationOrigin: [-8.48991966, -6.23166084, -11.3800793]
-    Rotation: [0, -3801, 0]
-    Zoom: 190.533447
+    Rotation: [49, -4307, 0]
+    Zoom: 42.3251534
   SceneViewSettings:
     ShowAABBs: false
     ShowCameraFrustum: true
