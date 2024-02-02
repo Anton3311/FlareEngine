@@ -136,7 +136,7 @@ namespace Flare
 
 			for (EntityViewIterator entity = view.begin(); entity != view.end(); ++entity)
 			{
-				Ref<Mesh> mesh = AssetManager::GetAsset<Mesh>(meshes[*entity].Mesh);
+				const Ref<Mesh>& mesh = meshes[*entity].Mesh;
 				const TransformComponent& transform = transforms[*entity];
 				std::optional<Entity> id = view.GetEntity(entity.GetEntityIndex());
 

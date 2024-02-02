@@ -121,9 +121,9 @@ namespace Flare
 
 	FLARE_IMPL_COMPONENT(MeshComponent);
 	MeshComponent::MeshComponent(MeshRenderFlags flags)
-		: Mesh(NULL_ASSET_HANDLE), Material(NULL_ASSET_HANDLE), Flags(flags) {}
+		: Mesh(nullptr), Material(NULL_ASSET_HANDLE), Flags(flags) {}
 
-	MeshComponent::MeshComponent(AssetHandle mesh, AssetHandle material, MeshRenderFlags flags)
+	MeshComponent::MeshComponent(const Ref<Flare::Mesh>& mesh, AssetHandle material, MeshRenderFlags flags)
 		: Mesh(mesh), Material(material), Flags(flags) {}
 
 

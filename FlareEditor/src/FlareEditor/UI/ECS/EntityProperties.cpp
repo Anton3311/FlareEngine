@@ -1,5 +1,6 @@
 #include "EntityProperties.h"
 
+#include "Flare/AssetManager/AssetManager.h"
 #include "Flare/Renderer/Renderer.h"
 
 #include "FlareEditor/UI/EditorGUI.h"
@@ -153,7 +154,12 @@ namespace Flare
 		{
 			if (EditorGUI::BeginPropertyGrid())
 			{
-				EditorGUI::AssetField("Mesh", mesh.Mesh);
+				AssetHandle meshHandle = NULL_ASSET_HANDLE;
+				if (mesh.Mesh)
+					meshHandle = mesh.Mesh->Handle;
+				if (EditorGUI::AssetField("Mesh", meshHandle, &Mesh::_Asset))
+					mesh.Mesh = AssetManager::GetAsset<Mesh>(meshHandle);
+
 				EditorGUI::AssetField("Material", mesh.Material);
 
 				const char* propertyName = "Don't cast shadows";

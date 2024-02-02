@@ -208,9 +208,9 @@ namespace Flare
         FLARE_COMPONENT;
 
         MeshComponent(MeshRenderFlags flags = MeshRenderFlags::None);
-        MeshComponent(AssetHandle mesh, AssetHandle material, MeshRenderFlags flags = MeshRenderFlags::None);
+        MeshComponent(const Ref<Mesh>& mesh, AssetHandle material, MeshRenderFlags flags = MeshRenderFlags::None);
 
-        AssetHandle Mesh;
+        Ref<Mesh> Mesh;
         AssetHandle Material;
         MeshRenderFlags Flags;
     };
