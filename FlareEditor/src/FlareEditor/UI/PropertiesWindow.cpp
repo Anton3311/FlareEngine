@@ -210,7 +210,11 @@ namespace Flare
 				if (AssetManager::IsAssetHandleValid(shaderHandle))
 				{
 					if (AssetManager::GetAssetMetadata(shaderHandle)->Type == AssetType::Shader)
-						material->SetShader(AssetManager::GetAsset<Shader>(shaderHandle));
+					{
+						Ref<Shader> newShader = AssetManager::GetAsset<Shader>(shaderHandle);
+						hasShader = newShader != nullptr;
+						material->SetShader(newShader);
+					}
 					else
 						FLARE_CORE_ERROR("Provided asset is not a shader");
 				}
