@@ -101,92 +101,83 @@ namespace Flare
 
 		PrepareViewport();
 
+		if (m_Viewport.GetSize() == glm::ivec2(0))
+			return;
+
 		Ref<Scene> scene = Scene::GetActive();
-		if (m_Viewport.GetSize() != glm::ivec2(0))
+		std::optional<SystemGroupId> debugRenderingGroup = scene->GetECSWorld().GetSystemsManager().FindGroup("Debug Rendering");
+
+		scene->OnBeforeRender(m_Viewport);
+
+		Renderer::BeginScene(m_Viewport);
+		OnClear();
+
+		scene->OnRender(m_Viewport);
+
+		RenderGrid();
+
+		std::optional<Entity> selectedEntity = EditorLayer::GetInstance().Selection.TryGetEntity();
+		if (debugRenderingGroup.has_value())
 		{
-			std::optional<SystemGroupId> debugRenderingGroup = scene->GetECSWorld().GetSystemsManager().FindGroup("Debug Rendering");
+			DebugRenderer::Begin();
+			scene->GetECSWorld().GetSystemsManager().ExecuteGroup(debugRenderingGroup.value());
 
-			scene->OnBeforeRender(m_Viewport);
-
-			Renderer::BeginScene(m_Viewport);
-			m_Viewport.RenderTarget->Bind();
-			OnClear();
-
-			scene->OnRender(m_Viewport);
-
-			RenderGrid();
-
-			if (debugRenderingGroup.has_value())
+			// Draw bouding box for decal projectors
+			if (selectedEntity)
 			{
-				DebugRenderer::Begin();
-				scene->GetECSWorld().GetSystemsManager().ExecuteGroup(debugRenderingGroup.value());
-
-				for (uint32_t i = 0; i < 3; i++)
+				const Decal* decal = scene->GetECSWorld().TryGetEntityComponent<const Decal>(*selectedEntity);
+				const TransformComponent* transform = scene->GetECSWorld().TryGetEntityComponent<const TransformComponent>(*selectedEntity);
+				if (decal && transform)
 				{
-					glm::vec3 direction = glm::vec3(0.0f);
-					direction[i] = 1.0f;
-					DebugRenderer::DrawRay(glm::vec3(0.0f), direction * 0.5f, glm::vec4(direction * 0.66f, 1.0f));
-				}
-
-				// Draw bouding box for decal projectors
-				std::optional<Entity> selectedEntity = EditorLayer::GetInstance().Selection.TryGetEntity();
-				if (selectedEntity)
-				{
-					const Decal* decal = scene->GetECSWorld().TryGetEntityComponent<const Decal>(*selectedEntity);
-					const TransformComponent* transform = scene->GetECSWorld().TryGetEntityComponent<const TransformComponent>(*selectedEntity);
-					if (decal && transform)
+					glm::vec3 cubeCorners[] =
 					{
-						glm::vec3 cubeCorners[] =
-						{
-							glm::vec3(-0.5f, -0.5f, -0.5f),
-							glm::vec3(+0.5f, -0.5f, -0.5f),
-							glm::vec3(-0.5f, +0.5f, -0.5f),
-							glm::vec3(+0.5f, +0.5f, -0.5f),
+						glm::vec3(-0.5f, -0.5f, -0.5f),
+						glm::vec3(+0.5f, -0.5f, -0.5f),
+						glm::vec3(-0.5f, +0.5f, -0.5f),
+						glm::vec3(+0.5f, +0.5f, -0.5f),
 
-							glm::vec3(-0.5f, -0.5f, +0.5f),
-							glm::vec3(+0.5f, -0.5f, +0.5f),
-							glm::vec3(-0.5f, +0.5f, +0.5f),
-							glm::vec3(+0.5f, +0.5f, +0.5f),
-						};
+						glm::vec3(-0.5f, -0.5f, +0.5f),
+						glm::vec3(+0.5f, -0.5f, +0.5f),
+						glm::vec3(-0.5f, +0.5f, +0.5f),
+						glm::vec3(+0.5f, +0.5f, +0.5f),
+					};
 
-						glm::mat4 transformationMatrix = transform->GetTransformationMatrix();
-						for (size_t i = 0; i < 8; i++)
-							cubeCorners[i] = transformationMatrix * glm::vec4(cubeCorners[i], 1.0f);
+					glm::mat4 transformationMatrix = transform->GetTransformationMatrix();
+					for (size_t i = 0; i < 8; i++)
+						cubeCorners[i] = transformationMatrix * glm::vec4(cubeCorners[i], 1.0f);
 
-						DebugRenderer::DrawWireBox(cubeCorners);
-					}
-				}
-
-				DebugRenderer::End();
-			}
-
-			Entity selectedEntity = EditorLayer::GetInstance().Selection.TryGetEntity().value_or(Entity());
-			if (selectedEntity != Entity() && m_SelectionOutlineMaterial)
-			{
-				m_Viewport.RenderTarget->BindAttachmentTexture(2);
-
-				std::optional<uint32_t> idPropertyIndex = m_SelectionOutlineMaterial->GetShader()->GetPropertyIndex("u_Outline.SelectedId");
-
-				if (idPropertyIndex)
-				{
-					Ref<Shader> shader = m_SelectionOutlineMaterial->GetShader();
-
-					m_SelectionOutlineMaterial->WritePropertyValue<int32_t>(
-						*idPropertyIndex,
-						(int32_t)selectedEntity.GetIndex());
-
-					std::optional<uint32_t> thicknessProperty = shader->GetPropertyIndex("u_Outline.Thickness");
-					if (thicknessProperty)
-						m_SelectionOutlineMaterial->WritePropertyValue(*thicknessProperty, glm::vec2(4.0f) / (glm::vec2)m_Viewport.GetSize() / 2.0f);
-
-					Renderer::DrawFullscreenQuad(m_SelectionOutlineMaterial);
+					DebugRenderer::DrawWireBox(cubeCorners);
 				}
 			}
 
-			Renderer::EndScene();
-
-			m_Viewport.RenderTarget->Unbind();
+			DebugRenderer::End();
 		}
+
+		if (selectedEntity && m_SelectionOutlineMaterial)
+		{
+			m_Viewport.RenderTarget->BindAttachmentTexture(2);
+
+			Ref<Shader> shader = m_SelectionOutlineMaterial->GetShader();
+			std::optional<uint32_t> idPropertyIndex = shader->GetPropertyIndex("u_Outline.SelectedId");
+			std::optional<uint32_t> thicknessPropertyIndex = shader->GetPropertyIndex("u_Outline.Thickness");
+
+			if (idPropertyIndex && thicknessPropertyIndex)
+			{
+				m_SelectionOutlineMaterial->WritePropertyValue<int32_t>(
+					*idPropertyIndex,
+					(int32_t)selectedEntity->GetIndex());
+
+				m_SelectionOutlineMaterial->WritePropertyValue(
+					*thicknessPropertyIndex,
+					glm::vec2(4.0f) / (glm::vec2)m_Viewport.GetSize() / 2.0f);
+
+				Renderer::DrawFullscreenQuad(m_SelectionOutlineMaterial);
+			}
+		}
+
+		Renderer::EndScene();
+
+		m_Viewport.RenderTarget->Unbind();
 	}
 
 	void SceneViewportWindow::OnViewportChanged()
