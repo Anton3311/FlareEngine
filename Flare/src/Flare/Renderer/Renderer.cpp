@@ -756,7 +756,7 @@ namespace Flare
 
 		FrameBufferAttachmentsMask previousMask = s_RendererData.CurrentViewport->RenderTarget->GetWriteMask();
 		for (size_t i = 0; i < 4; i++)
-			s_RendererData.ShadowsRenderTarget[i]->BindAttachmentTexture(0, 2 + (uint32_t)i);
+			s_RendererData.ShadowsRenderTarget[i]->BindAttachmentTexture(0, 28 + (uint32_t)i);
 
 		ExecuteGeomertyPass();
 		s_RendererData.CurrentViewport->RenderTarget->SetWriteMask(previousMask);

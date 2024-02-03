@@ -24,10 +24,10 @@ layout(std140, binding = 2) uniform ShadowData
 	float u_ShadowSoftness;
 };
 
-layout(binding = 2) uniform sampler2D u_ShadowMap0;
-layout(binding = 3) uniform sampler2D u_ShadowMap1;
-layout(binding = 4) uniform sampler2D u_ShadowMap2;
-layout(binding = 5) uniform sampler2D u_ShadowMap3;
+layout(binding = 28) uniform sampler2D u_ShadowMap0;
+layout(binding = 29) uniform sampler2D u_ShadowMap1;
+layout(binding = 30) uniform sampler2D u_ShadowMap2;
+layout(binding = 31) uniform sampler2D u_ShadowMap3;
 
 // Vogel disk points
 const vec2[] SAMPLE_POINTS = {
