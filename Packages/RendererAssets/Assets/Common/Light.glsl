@@ -1,6 +1,8 @@
 #ifndef LIGHT_H
 #define LIGHT_H
 
+#include "BRDF.glsl"
+
 layout(std140, binding = 1) uniform LightData
 {
 	vec4 u_LightColor;

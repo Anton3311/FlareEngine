@@ -1,3 +1,6 @@
+#ifndef BRDF_H
+#define BRDF_H
+
 const float pi = 3.1415926535897932384626433832795;
 const vec3 baseReflectivity = vec3(0.04);
 
@@ -41,3 +44,5 @@ vec3 Specular_CookTorence(float alpha, vec3 N, vec3 V, vec3 L)
 
 	return numer / max(denom, 0.000001);
 }
+
+#endif
