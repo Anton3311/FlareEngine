@@ -13,13 +13,6 @@ AssetRegistry:
     Parent: 10342322337781790464
     SubAssets:
       []
-  - Handle: 1086096787552207233
-    Type: Shader
-    Path: Skybox.glsl
-    Source: File
-    Parent: 0
-    SubAssets:
-      []
   - Handle: 1806579514501821626
     Type: Material
     Name: DefaultMaterial

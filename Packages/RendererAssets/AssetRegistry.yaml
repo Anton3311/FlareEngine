@@ -13,6 +13,13 @@ AssetRegistry:
     Parent: 0
     SubAssets:
       []
+  - Handle: 6886941864537358923
+    Type: Shader
+    Path: Atmosphere.glsl
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
   - Handle: 7621327274929530761
     Type: Shader
     Path: Vignette.glsl

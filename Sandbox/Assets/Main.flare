@@ -222,8 +222,8 @@ Entities:
 Editor:
   Camera:
     RotationOrigin: [-8.48991966, -6.23166084, -11.3800793]
-    Rotation: [49, -4307, 0]
-    Zoom: 42.3251534
+    Rotation: [4, -4264, 0]
+    Zoom: 133.308487
   SceneViewSettings:
     ShowAABBs: false
     ShowCameraFrustum: true
@@ -247,5 +247,5 @@ PostProcessing:
       BlurSize: 2
   - Name: class Flare::AtmospherePass
     Data:
+      Enabled: true
       AtmosphereMaterial: 6603499577536286740
-      SunLightWaveLengths: [700, 500, 450]

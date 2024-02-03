@@ -15,8 +15,8 @@ namespace Flare
 
 		void OnRender(RenderingContext& context) override;
 	public:
+		bool Enabled = true;
 		Ref<Material> AtmosphereMaterial = nullptr;
-		glm::vec3 SunLightWaveLengths;
 	};
 
 	template<>
@@ -24,8 +24,8 @@ namespace Flare
 	{
 		void OnSerialize(AtmospherePass& atmosphere, SerializationStream& stream)
 		{
+			stream.Serialize("Enabled", SerializationValue(atmosphere.Enabled));
 			stream.Serialize("AtmosphereMaterial", SerializationValue(atmosphere.AtmosphereMaterial));
-			stream.Serialize("SunLightWaveLengths", SerializationValue(atmosphere.SunLightWaveLengths));
 		}
 	};
 }

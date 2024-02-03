@@ -1,27 +1,27 @@
 Properties =
 {
-	u_Sky.PlanetRadius = {}
-	u_Sky.AtmosphereThickness = {}
-	u_Sky.RaySteps = {}
-	u_Sky.ViewRaySteps = {}
+	u_Params.PlanetRadius = {}
+	u_Params.AtmosphereThickness = {}
+	u_Params.RaySteps = {}
+	u_Params.ViewRaySteps = {}
 
-	u_Sky.ObserverHeight = {}
+	u_Params.ObserverHeight = {}
 
-	u_Sky.MieHeight = {}
-	u_Sky.RayleighHeight = {}
-	u_Sky.RayleighCoefficient = {}
-	u_Sky.MieCoefficient = {}
-	u_Sky.MieAbsorbtion = {}
-	u_Sky.RayleighAbsobtion = {}
-	u_Sky.OzoneAbsorbtion = {}
+	u_Params.MieHeight = {}
+	u_Params.RayleighHeight = {}
+	u_Params.RayleighCoefficient = {}
+	u_Params.MieCoefficient = {}
+	u_Params.MieAbsorbtion = {}
+	u_Params.RayleighAbsobtion = {}
+	u_Params.OzoneAbsorbtion = {}
 
-	u_Sky.GroundColor = { Type = Color }
+	u_Params.GroundColor = { Type = Color }
 }
 
 #begin vertex
 #version 450
 
-#include "Packages/RendererAssets/Assets/Common/Camera.glsl"
+#include "Common/Camera.glsl"
 
 layout(location = 0) in vec2 i_Position;
 
@@ -35,9 +35,9 @@ void main()
 #begin pixel
 #version 450
 
-#include "Packages/RendererAssets/Assets/Common/BRDF.glsl"
-#include "Packages/RendererAssets/Assets/Common/Light.glsl"
-#include "Packages/RendererAssets/Assets/Common/Camera.glsl"
+#include "Common/BRDF.glsl"
+#include "Common/Light.glsl"
+#include "Common/Camera.glsl"
 
 layout(std140, push_constant) uniform Sky
 {
@@ -59,7 +59,7 @@ layout(std140, push_constant) uniform Sky
 
 	vec3 GroundColor;
 
-} u_Sky;
+} u_Params;
 
 layout(location = 0) out vec4 o_Color;
 
@@ -108,72 +108,72 @@ struct ScatteringCoefficients
 
 ScatteringCoefficients ComputeScatteringCoefficients(float height)
 {
-	float rayleighDensity = exp(-height / u_Sky.RayleighHeight);
-	float mieDensity = exp(-height / u_Sky.MieHeight);
+	float rayleighDensity = exp(-height / u_Params.RayleighHeight);
+	float mieDensity = exp(-height / u_Params.MieHeight);
 
 	ScatteringCoefficients coefficients;
-	coefficients.Mie = u_Sky.MieCoefficient * mieDensity;
-	coefficients.Rayleigh = u_Sky.RayleighCoefficient * rayleighDensity;
+	coefficients.Mie = u_Params.MieCoefficient * mieDensity;
+	coefficients.Rayleigh = u_Params.RayleighCoefficient * rayleighDensity;
 
-	vec3 ozoneAbsorbtion = u_Sky.OzoneAbsorbtion * max(0.0f, 1.0f - abs(height - 25000) / 15000);
-	coefficients.Extinction = coefficients.Rayleigh + vec3(u_Sky.RayleighAbsobtion) + u_Sky.MieAbsorbtion + coefficients.Mie + ozoneAbsorbtion;
+	vec3 ozoneAbsorbtion = u_Params.OzoneAbsorbtion * max(0.0f, 1.0f - abs(height - 25000) / 15000);
+	coefficients.Extinction = coefficients.Rayleigh + vec3(u_Params.RayleighAbsobtion) + u_Params.MieAbsorbtion + coefficients.Mie + ozoneAbsorbtion;
 
 	return coefficients;
 }
 
 vec3 ComputeSunTransmittance(vec3 rayOrigin)
 {
-	float atmosphereDistance = FindSpehereRayIntersection(rayOrigin, -u_LightDirection, u_Sky.PlanetRadius + u_Sky.AtmosphereThickness);
+	float atmosphereDistance = FindSpehereRayIntersection(rayOrigin, -u_LightDirection, u_Params.PlanetRadius + u_Params.AtmosphereThickness);
 	if (atmosphereDistance < 0.0f)
 		return vec3(0.0f);
 
 	vec3 opticalDepth = vec3(0.0f);
-	float stepLength = atmosphereDistance / max(1, u_Sky.RaySteps - 1);
+	float stepLength = atmosphereDistance / max(1, u_Params.RaySteps - 1);
 	vec3 rayStep = -u_LightDirection * stepLength;
 	vec3 rayPoint = rayOrigin;
 
-	for (int i = 0; i < u_Sky.RaySteps; i++)
+	for (int i = 0; i < u_Params.RaySteps; i++)
 	{
-		float height = length(rayPoint) - u_Sky.PlanetRadius;
+		float height = length(rayPoint) - u_Params.PlanetRadius;
 
 		ScatteringCoefficients scatteringCoefficients = ComputeScatteringCoefficients(height);
 
 		opticalDepth += scatteringCoefficients.Extinction;
 	}
 
-	return exp(-opticalDepth / u_Sky.AtmosphereThickness * stepLength);
+	return exp(-opticalDepth / u_Params.AtmosphereThickness * stepLength);
 }
 
 void main()
 {
 	vec3 viewDirection = CalculateViewDirection();
-	vec3 viewRayPoint = vec3(0.0f, u_Sky.PlanetRadius + u_Sky.ObserverHeight, 0.0f);
+	vec3 viewRayPoint = vec3(0.0f, u_Params.PlanetRadius + u_Params.ObserverHeight, 0.0f);
 
-	float groudDistance = FindSpehereRayIntersection(viewRayPoint, viewDirection, u_Sky.PlanetRadius);
+	float groudDistance = FindSpehereRayIntersection(viewRayPoint, viewDirection, u_Params.PlanetRadius);
 	if (groudDistance > 0.0f)
 	{
-		o_Color = vec4(u_Sky.GroundColor, 1.0f);
+		o_Color = vec4(u_Params.GroundColor, 1.0f);
 		return;
 	}
 
 	float distanceThroughAtmosphere = FindSpehereRayIntersection(viewRayPoint,
-		viewDirection, u_Sky.PlanetRadius + u_Sky.AtmosphereThickness);
+		viewDirection, u_Params.PlanetRadius + u_Params.AtmosphereThickness);
 
 	if (distanceThroughAtmosphere < 0.0f)
 		discard;
 
-	vec3 viewRayStep = viewDirection * distanceThroughAtmosphere / max(1, u_Sky.ViewRaySteps - 1);
+	vec3 viewRayStep = viewDirection * distanceThroughAtmosphere / max(1, u_Params.ViewRaySteps - 1);
 	float viewRayStepLength = length(viewRayStep);
-	float scaledViewRayStepLength = viewRayStepLength / u_Sky.AtmosphereThickness;
+	float scaledViewRayStepLength = viewRayStepLength / u_Params.AtmosphereThickness;
 
 	float rayleighPhase = RayleighPhaseFunction(-dot(viewDirection, -u_LightDirection));
 	float miePhase = MiePhaseFunction(dot(viewDirection, -u_LightDirection), 0.84f);
 
 	vec3 luminance = vec3(0.0f);
 	vec3 transmittance = vec3(1.0f);
-	for (int i = 0; i < u_Sky.ViewRaySteps; i++)
+	for (int i = 0; i < u_Params.ViewRaySteps; i++)
 	{
-		float height = length(viewRayPoint) - u_Sky.PlanetRadius;
+		float height = length(viewRayPoint) - u_Params.PlanetRadius;
 
 		ScatteringCoefficients scatteringCoefficients = ComputeScatteringCoefficients(height);
 		vec3 sampleTransmittance = exp(-scatteringCoefficients.Extinction * scaledViewRayStepLength);
