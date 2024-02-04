@@ -17,7 +17,6 @@ namespace Flare
 		: m_Components(components), m_Queries(queries), m_Archetypes(archetypes)
 	{
 		EntityChunksPool::Initialize(16);
-		ValidateEntityStorages();
 	}
 
 	Entities::~Entities()
@@ -777,7 +776,6 @@ namespace Flare
 	EntityStorage& Entities::GetEntityStorage(ArchetypeId archetype)
 	{
 		FLARE_CORE_ASSERT(m_Archetypes.IsIdValid(archetype));
-		ValidateEntityStorages();
 		return m_EntityStorages[archetype];
 	}
 
@@ -790,21 +788,47 @@ namespace Flare
 	DeletedEntitiesStorage& Entities::GetDeletedEntityStorage(ArchetypeId archetype)
 	{
 		FLARE_CORE_ASSERT(m_Archetypes.IsIdValid(archetype));
-		ValidateEntityStorages();
-		return m_DeletedEntitiesStorages[archetype];
+
+		auto it = m_DeletedEntitiesStorages.find(archetype);
+		if (it == m_DeletedEntitiesStorages.end())
+		{
+			DeletedEntitiesStorage& storage = m_DeletedEntitiesStorages.insert({ archetype, DeletedEntitiesStorage() }).first->second;
+
+			size_t entitySize = 0;
+			const auto& archetypeRecord = m_Archetypes[archetype];
+
+			FLARE_CORE_ASSERT(archetypeRecord.ComponentOffsets.size() > 0);
+			FLARE_CORE_ASSERT(archetypeRecord.Components.size() > 0);
+
+			entitySize = archetypeRecord.ComponentOffsets.back() + m_Components.GetComponentInfo(archetypeRecord.Components.back()).Size;
+
+			FLARE_CORE_ASSERT(entitySize > 0);
+
+			storage.DataStorage.SetEntitySize(entitySize);
+			return storage;
+		}
+
+		return it->second;
 	}
 
 	const DeletedEntitiesStorage& Entities::GetDeletedEntityStorage(ArchetypeId archetype) const
 	{
 		FLARE_CORE_ASSERT(m_Archetypes.IsIdValid(archetype));
-		return m_DeletedEntitiesStorages[archetype];
+		auto it = m_DeletedEntitiesStorages.find(archetype);
+		FLARE_CORE_ASSERT(it != m_DeletedEntitiesStorages.end());
+
+		return it->second;
 	}
 
 	void Entities::ClearQueuedForDeletion()
 	{
 		for (const ArchetypeRecord& archetype : m_Archetypes.Records)
 		{
-			DeletedEntitiesStorage& storage = m_DeletedEntitiesStorages[archetype.Id];
+			auto it = m_DeletedEntitiesStorages.find(archetype.Id);
+			if (it == m_DeletedEntitiesStorages.end())
+				continue;
+
+			DeletedEntitiesStorage& storage = it->second;
 			for (size_t entityIndex = 0; entityIndex < storage.DataStorage.EntitiesCount; entityIndex++)
 			{
 				uint8_t* entityData = storage.DataStorage.GetEntityData(entityIndex);
@@ -816,6 +840,8 @@ namespace Flare
 
 			storage.Clear();
 		}
+
+		m_DeletedEntitiesStorages.clear();
 	}
 
 	void Entities::RemoveEntityData(ArchetypeId archetype, size_t entityBufferIndex)
@@ -827,42 +853,6 @@ namespace Flare
 
 		storage.RemoveEntityData(entityBufferIndex);
 		lastEntityRecord.BufferIndex = entityBufferIndex;
-	}
-
-	void Entities::ValidateEntityStorages()
-	{
-		if (m_EntityStorages.size() < m_Archetypes.Records.size())
-		{
-			size_t oldSize = m_EntityStorages.size();
-			m_EntityStorages.resize(m_Archetypes.Records.size());
-			m_DeletedEntitiesStorages.resize(m_Archetypes.Records.size());
-
-			for (size_t i = oldSize; i < m_EntityStorages.size(); i++)
-			{
-				const ArchetypeRecord& record = m_Archetypes.Records[i];
-
-				size_t entitySize = record.ComponentOffsets.back() + m_Components.GetComponentInfo(record.Components.back()).Size;
-				m_EntityStorages[i].SetEntitySize(entitySize);
-				m_DeletedEntitiesStorages[i].DataStorage.SetEntitySize(entitySize);
-			}
-		}
-
-		if (m_DeletedEntitiesStorages.size() < m_Archetypes.Records.size())
-		{
-			size_t oldSize = m_DeletedEntitiesStorages.size();
-			m_DeletedEntitiesStorages.resize(m_Archetypes.Records.size());
-
-			for (size_t i = oldSize; i < m_DeletedEntitiesStorages.size(); i++)
-			{
-				const ArchetypeRecord& record = m_Archetypes.Records[i];
-
-				if (record.ComponentOffsets.size() > 0)
-				{
-					size_t entitySize = record.ComponentOffsets.back() + m_Components.GetComponentInfo(record.Components.back()).Size;
-					m_DeletedEntitiesStorages[i].DataStorage.SetEntitySize(entitySize);
-				}
-			}
-		}
 	}
 
 	std::unordered_map<Entity, size_t>::iterator Entities::FindEntity(Entity entity)

@@ -188,6 +188,8 @@ namespace Flare
 
             if (m_Mode == EditorMode::Play && !m_PlaymodePaused)
                 Scene::GetActive()->OnUpdateRuntime();
+            else if (m_Mode == EditorMode::Edit)
+                Scene::GetActive()->OnUpdateEditor();
         }
 
         {

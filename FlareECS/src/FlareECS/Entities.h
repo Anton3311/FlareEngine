@@ -122,7 +122,6 @@ namespace Flare
 		ArchetypeId CreateArchetype();
 
 		void RemoveEntityData(ArchetypeId archetype, size_t entityBufferIndex);
-		void ValidateEntityStorages();
 
 		std::unordered_map<Entity, size_t>::iterator FindEntity(Entity entity);
 		std::unordered_map<Entity, size_t>::const_iterator FindEntity(Entity entity) const;
@@ -134,7 +133,7 @@ namespace Flare
 		Components& m_Components;
 
 		std::vector<EntityStorage> m_EntityStorages;
-		std::vector<DeletedEntitiesStorage> m_DeletedEntitiesStorages;
+		std::unordered_map<ArchetypeId, DeletedEntitiesStorage> m_DeletedEntitiesStorages;
 
 		std::vector<EntityRecord> m_EntityRecords;
 		std::unordered_map<Entity, size_t> m_EntityToRecord;

@@ -246,6 +246,14 @@ namespace Flare
 		m_World.GetSystemsManager().ExecuteGroup(m_ScriptingUpdateGroup);
 		m_World.GetSystemsManager().ExecuteGroup(m_OnFrameEnd);
 
+		// TODO: should probably move out of here, because OnUpdateRuntime is called
+		//       only if the game isn't paused, however clearing deleted entites should
+		//       be done regardless of the pause state
+		m_World.Entities.ClearQueuedForDeletion();
+	}
+
+	void Scene::OnUpdateEditor()
+	{
 		m_World.Entities.ClearQueuedForDeletion();
 	}
 
