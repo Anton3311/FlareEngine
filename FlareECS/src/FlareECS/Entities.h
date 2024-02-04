@@ -2,6 +2,7 @@
 
 #include "FlareCore/Assert.h"
 #include "FlareCore/Core.h"
+#include "FlareCore/Collections/Span.h"
 
 #include "FlareECS/Entity/Entity.h"
 #include "FlareECS/Entity/Component.h"
@@ -115,6 +116,8 @@ namespace Flare
 			ArchetypeId Archetype = INVALID_ARCHETYPE_ID;
 			uint8_t* Data = nullptr;
 		};
+
+		void MoveEntityData(uint8_t* source, uint8_t* destination, const ArchetypeRecord& entityArchetype, size_t firstComponentIndex, size_t componentsCount);
 
 		void CreateEntity(const ComponentSet& components, EntityCreationResult& result);
 		void InitializeEntity(const EntityCreationResult& entityResult, ComponentInitializationStrategy initStrategy);

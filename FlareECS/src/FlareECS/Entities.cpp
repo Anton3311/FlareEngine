@@ -187,10 +187,11 @@ namespace Flare
 			deletedEntities.Ids.push_back(record.Id);
 
 			size_t index = deletedEntities.DataStorage.AddEntity();
-			const uint8_t* oldEntityData = storage.GetEntityData(record.BufferIndex);
+			uint8_t* oldEntityData = storage.GetEntityData(record.BufferIndex);
 			uint8_t* newEntityData = deletedEntities.DataStorage.GetEntityData(index);
 
-			std::memcpy(newEntityData, oldEntityData, storage.GetEntitySize());
+			InitializeEntity(EntityCreationResult{ Entity(), archetype.Id, newEntityData }, ComponentInitializationStrategy::DefaultConstructor);
+			MoveEntityData(oldEntityData, newEntityData, archetype, 0, archetype.Components.size());
 		}
 		else
 		{
@@ -682,6 +683,15 @@ namespace Flare
 	{
 		FLARE_CORE_ASSERT(index < m_EntityRecords.size());
 		return m_EntityRecords[index];
+	}
+
+	void Entities::MoveEntityData(uint8_t* source, uint8_t* destination, const ArchetypeRecord& entityArchetype, size_t firstComponentIndex, size_t componentsCount)
+	{
+		for (size_t i = firstComponentIndex; i < firstComponentIndex + componentsCount; i++)
+		{
+			const ComponentInfo& componentInfo = m_Components.GetComponentInfo(entityArchetype.Components[i]);
+			componentInfo.Initializer->Type.MoveConstructor(destination + entityArchetype.ComponentOffsets[i], source + entityArchetype.ComponentOffsets[i]);
+		}
 	}
 
 	void Entities::CreateEntity(const ComponentSet& components, EntityCreationResult& result)
