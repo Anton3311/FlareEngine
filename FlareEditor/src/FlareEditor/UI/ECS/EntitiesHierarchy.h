@@ -27,6 +27,9 @@ namespace Flare
 
 		inline void SetWorld(World& world) { m_World = &world; }
 	private:
+		bool RenderEntityItem(Entity entity, Entity& selectedEntity);
+		bool RenderEntityContextMenu(Entity entity, Entity& selectedEntity);
+	private:
 		EntitiesHierarchyFeatures m_Features;
 		World* m_World;
 	};
