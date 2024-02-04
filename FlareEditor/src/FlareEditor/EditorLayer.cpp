@@ -178,7 +178,7 @@ namespace Flare
         Renderer2D::ResetStats();
         Renderer::ClearStatistics();
 
-		RenderCommand::SetClearColor(m_ClearColor.r, m_ClearColor.g, m_ClearColor.b, 1.0);
+        RenderCommand::SetClearColor(m_ClearColor.r, m_ClearColor.g, m_ClearColor.b, 1.0);
 
         Renderer::SetMainViewport(m_GameWindow->GetViewport());
         InputManager::SetMousePositionOffset(-m_GameWindow->GetViewport().GetPosition());

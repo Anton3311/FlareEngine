@@ -177,9 +177,10 @@ namespace Flare
 	void ECSInspector::RenderArchetypeInfo(ArchetypeId archetype)
 	{
 		World& world = World::GetCurrent();
+		const ArchetypeRecord& record = world.GetArchetypes()[archetype];
+
 		if (EditorGUI::BeginPropertyGrid())
 		{
-			const ArchetypeRecord& record = world.GetArchetypes()[archetype];
 			const EntityStorage& storage = world.Entities.GetEntityStorage(archetype);
 
 			ImGui::BeginDisabled(true);
@@ -198,6 +199,19 @@ namespace Flare
 			ImGui::EndDisabled();
 
 			EditorGUI::EndPropertyGrid();
+		}
+
+		ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_FramePadding;
+		if (ImGui::TreeNodeEx("Components", flags))
+		{
+			const ImGuiStyle& style = ImGui::GetStyle();
+			for (ComponentId id : record.Components)
+			{
+				ImGui::SetCursorPosY(ImGui::GetCursorPosY() + style.FramePadding.y);
+				ImGui::TextUnformatted(world.Entities.GetComponents().GetComponentInfo(id).Name.c_str());
+				ImGui::SetCursorPosY(ImGui::GetCursorPosY() + style.FramePadding.y);
+			}
+			ImGui::TreePop();
 		}
 	}
 
