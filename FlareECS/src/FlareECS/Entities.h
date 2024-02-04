@@ -120,7 +120,7 @@ namespace Flare
 		void MoveEntityData(uint8_t* source, uint8_t* destination, const ArchetypeRecord& entityArchetype, size_t firstComponentIndex, size_t componentsCount);
 
 		void CreateEntity(const ComponentSet& components, EntityCreationResult& result);
-		void InitializeEntity(const EntityCreationResult& entityResult, ComponentInitializationStrategy initStrategy);
+		void InitializeEntity(const ArchetypeRecord& archetype, uint8_t* entityData, ComponentInitializationStrategy initStrategy);
 
 		ArchetypeId CreateArchetype();
 

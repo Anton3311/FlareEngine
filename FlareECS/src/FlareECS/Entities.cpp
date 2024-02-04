@@ -77,7 +77,7 @@ namespace Flare
 
 		EntityCreationResult result;
 		CreateEntity(components, result);
-		InitializeEntity(result, initStrategy);
+		InitializeEntity(m_Archetypes[result.Archetype], result.Data, initStrategy);
 
 		return result.Id;
 	}
@@ -190,7 +190,7 @@ namespace Flare
 			uint8_t* oldEntityData = storage.GetEntityData(record.BufferIndex);
 			uint8_t* newEntityData = deletedEntities.DataStorage.GetEntityData(index);
 
-			InitializeEntity(EntityCreationResult{ Entity(), archetype.Id, newEntityData }, ComponentInitializationStrategy::DefaultConstructor);
+			InitializeEntity(archetype, newEntityData, ComponentInitializationStrategy::DefaultConstructor);
 			MoveEntityData(oldEntityData, newEntityData, archetype, 0, archetype.Components.size());
 		}
 		else
@@ -744,23 +744,22 @@ namespace Flare
 		result.Data = storage.GetEntityData(record.BufferIndex);
 	}
 
-	void Entities::InitializeEntity(const EntityCreationResult& entityResult, ComponentInitializationStrategy initStrategy)
+	void Entities::InitializeEntity(const ArchetypeRecord& archetype, uint8_t* entityData, ComponentInitializationStrategy initStrategy)
 	{
 		switch (initStrategy)
 		{
 		case ComponentInitializationStrategy::Zero:
 		{
 			// Intialize entity data to 0
-			std::memset(entityResult.Data, 0, GetEntityStorage(entityResult.Archetype).GetEntitySize());
+			std::memset(entityData, 0, GetEntityStorage(archetype.Id).GetEntitySize());
 			break;
 		}
 		case ComponentInitializationStrategy::DefaultConstructor:
 		{
-			const ArchetypeRecord& archetypeRecord = m_Archetypes[entityResult.Archetype];
-			for (size_t i = 0; i < archetypeRecord.Components.size(); i++)
+			for (size_t i = 0; i < archetype.Components.size(); i++)
 			{
-				const ComponentInfo& info = m_Components.GetComponentInfo(archetypeRecord.Components[i]);
-				uint8_t* componentData = entityResult.Data + archetypeRecord.ComponentOffsets[i];
+				const ComponentInfo& info = m_Components.GetComponentInfo(archetype.Components[i]);
+				uint8_t* componentData = entityData + archetype.ComponentOffsets[i];
 
 				if (info.Initializer)
 					info.Initializer->Type.DefaultConstructor(componentData);
