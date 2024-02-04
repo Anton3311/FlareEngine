@@ -51,9 +51,9 @@ namespace Flare
 	public:
 		virtual void Apply(CommandContext& context, World& world) override
 		{
-			std::optional<T*> component = world.TryGetEntityComponent<T>(context.GetEntity(m_Entity));
+			T* component = world.TryGetEntityComponent<T>(context.GetEntity(m_Entity));
 			if (component)
-				*(component.value()) = m_Data;
+				*component = m_Data;
 		}
 	private:
 		FutureEntity m_Entity;
