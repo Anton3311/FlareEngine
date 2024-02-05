@@ -30,7 +30,7 @@ namespace Flare
 			emitter << YAML::Key << "Name" << YAML::Value << info.Initializer->Type.SerializationDescriptor.Name;
 
 			emitter << YAML::Key << "Data" << YAML::Value;
-			serializer.SerializeObject(info.Initializer->Type.SerializationDescriptor, (void*)entityData.value());
+			serializer.SerializeObject(info.Initializer->Type.SerializationDescriptor, (void*)entityData.value(), false, 0);
 			emitter << YAML::EndMap;
 		}
 	}
@@ -141,7 +141,7 @@ namespace Flare
 				{
 					YAMLDeserializer deserializer(componentNode, &serializationIdToECSId);
 					deserializer.PropertyKey("Data");
-					deserializer.SerializeObject(serializationDescriptor, (void*)componentData);
+					deserializer.SerializeObject(serializationDescriptor, (void*)componentData, false, 0);
 				}
 			}
 		}

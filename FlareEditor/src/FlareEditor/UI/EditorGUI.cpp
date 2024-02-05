@@ -174,7 +174,7 @@ namespace Flare
 
         SerializablePropertyRenderer propertyRenderer(currentWorld);
         propertyRenderer.PropertyKey(descriptor.Name);
-        propertyRenderer.SerializeObject(descriptor, data);
+        propertyRenderer.SerializeObject(descriptor, data, false, 0);
 
         // TODO: get the result from properties renderer
         return result;

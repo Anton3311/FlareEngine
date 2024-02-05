@@ -165,48 +165,98 @@ namespace Flare
             m_Emitter << YAML::EndSeq;
     }
 
-    void YAMLSerializer::SerializeObject(const SerializableObjectDescriptor& descriptor, void* objectData)
+    template<typename T>
+    static void SerializeObjects(YAML::Emitter& emitter, bool isArray, T* values, size_t arraySize)
+    {
+        if (isArray)
+        {
+            emitter << YAML::BeginSeq;
+
+            for (size_t i = 0; i < arraySize; i++)
+                emitter << YAML::Value << values[i];
+
+            emitter << YAML::EndSeq;
+        }
+        else
+        {
+            emitter << YAML::Value << values[0];
+        }
+    }
+
+    static void SerializeEntityId(YAML::Emitter& emitter, const World& world, Entity id)
+    {
+        if (world.IsEntityAlive(id))
+        {
+            const SerializationId* serializationId = world.TryGetEntityComponent<const SerializationId>(id);
+            if (serializationId)
+            {
+                emitter << YAML::Value << serializationId->Id;
+                return;
+            }
+        }
+
+        emitter << YAML::Value << 0;
+        return;
+    }
+
+    void YAMLSerializer::SerializeObject(const SerializableObjectDescriptor& descriptor, void* objectData, bool isArray, size_t arraySize)
     {
         if (&descriptor == &FLARE_SERIALIZATION_DESCRIPTOR_OF(AssetHandle))
         {
-            m_Emitter << YAML::Value << *(AssetHandle*)(objectData);
+            SerializeObjects<AssetHandle>(m_Emitter, isArray, (AssetHandle*)objectData, arraySize);
             return;
         }
 
         if (&descriptor == &FLARE_SERIALIZATION_DESCRIPTOR_OF(Entity))
         {
-            Entity entityId = *(Entity*)objectData;
-
-            if (m_World.IsEntityAlive(entityId))
+            Entity* entityIds = (Entity*)objectData;
+            if (isArray)
             {
-                std::optional<const SerializationId*> id = m_World.TryGetEntityComponent<SerializationId>(entityId);
-                if (id)
-                {
-                    m_Emitter << YAML::Value << id.value()->Id;
-                    return;
-                }
+                m_Emitter << YAML::BeginSeq;
+                for (size_t i = 0; i < arraySize; i++)
+                    SerializeEntityId(m_Emitter, m_World, entityIds[i]);
+                m_Emitter << YAML::EndSeq;
+            }
+            else
+            {
+                SerializeEntityId(m_Emitter, m_World, entityIds[0]);
             }
 
-            m_Emitter << YAML::Value << 0;
             return;
         }
 
         bool previousObjectSerializationState = m_ObjectSerializationStarted;
         bool previousState = m_MapStarted;
 
-        m_ObjectSerializationStarted = true;
-        m_MapStarted = false;
+        auto serializeSingleObject = [=](void* object)
+		{
+			m_ObjectSerializationStarted = true;
+			m_MapStarted = false;
 
-        // NOTE: Map starts when the serializer recieves a property with a key,
-        //       this prevents YAML-cpp from generating an invalid one when an
-        //       object serializes it's properties without any keys
-        descriptor.Callback(objectData, *this);
+			// NOTE: Map starts when the serializer recieves a property with a key,
+			//       this prevents YAML-cpp from generating an invalid one when an
+			//       object serializes it's properties without any keys
+			descriptor.Callback(object, *this);
 
-        if (m_MapStarted)
-            m_Emitter << YAML::EndMap;
+			if (m_MapStarted)
+				m_Emitter << YAML::EndMap;
 
-        m_MapStarted = previousState;
-        m_ObjectSerializationStarted = previousObjectSerializationState;
+			m_MapStarted = previousState;
+			m_ObjectSerializationStarted = previousObjectSerializationState;
+		};
+
+        if (isArray)
+        {
+            m_Emitter << YAML::Value << YAML::BeginSeq;
+            for (size_t i = 0; i < arraySize; i++)
+                serializeSingleObject((uint8_t*)objectData + i * descriptor.Size);
+
+            m_Emitter << YAML::EndSeq;
+        }
+        else
+        {
+            serializeSingleObject(objectData);
+        }
     }
 
     void YAMLSerializer::SerializeReference(const SerializableObjectDescriptor& valueDescriptor, void* referenceData, void* valueData)
@@ -401,7 +451,7 @@ namespace Flare
         DeserializeValue<std::string>(value, CurrentNode(), m_CurrentPropertyKey);
     }
 
-    void YAMLDeserializer::SerializeObject(const SerializableObjectDescriptor& descriptor, void* objectData)
+    void YAMLDeserializer::SerializeObject(const SerializableObjectDescriptor& descriptor, void* objectData, bool isArray, size_t arraySize)
     {
         try
         {
@@ -415,30 +465,72 @@ namespace Flare
 
             if (&descriptor == &FLARE_SERIALIZATION_DESCRIPTOR_OF(Entity))
             {
-                Entity& entityId = *(Entity*)objectData;
-                YAML::Node idNode = CurrentNode()[m_CurrentPropertyKey];
+                if (m_SerializationIdToECSId == nullptr)
+                    return;
 
-                if (idNode && m_SerializationIdToECSId != nullptr)
+                Entity* entities = (Entity*)objectData;
+                if (isArray)
                 {
-                    UUID serializationId = idNode.as<UUID>();
+                    YAML::Node node = CurrentNode();
+                    size_t index = 0;
+
+                    for (YAML::Node itemNode : node)
+                    {
+                        if (index >= arraySize)
+                            break;
+
+                        UUID serializationId = itemNode.as<UUID>();
+
+                        auto it = m_SerializationIdToECSId->find(serializationId);
+                        if (it != m_SerializationIdToECSId->end())
+                            entities[index] = it->second;
+                        else
+                            entities[index] = Entity();
+
+                        index++;
+                    }
+                }
+                else
+                {
+					YAML::Node node = CurrentNode()[m_CurrentPropertyKey];
+                    UUID serializationId = node.as<UUID>();
 
                     auto it = m_SerializationIdToECSId->find(serializationId);
                     if (it != m_SerializationIdToECSId->end())
                     {
-                        entityId = it->second;
+                        entities[0] = it->second;
                         return;
                     }
+
+                    entities[0] = Entity();
                 }
 
-                entityId = Entity();
                 return;
             }
 
-            if (YAML::Node objectNode = CurrentNode()[m_CurrentPropertyKey])
+            if (isArray)
             {
-                m_NodesStack.push_back(objectNode);
-                descriptor.Callback(objectData, *this);
-                m_NodesStack.pop_back();
+                size_t index = 0;
+                for (YAML::Node itemNode : CurrentNode())
+                {
+                    if (index >= arraySize)
+                        break;
+
+					m_NodesStack.push_back(itemNode);
+					descriptor.Callback((uint8_t*)objectData + index * descriptor.Size, *this);
+					m_NodesStack.pop_back();
+
+                    index++;
+                }
+            }
+            else
+            {
+				if (YAML::Node objectNode = CurrentNode()[m_CurrentPropertyKey])
+				{
+					m_NodesStack.push_back(objectNode);
+					descriptor.Callback(objectData, *this);
+					m_NodesStack.pop_back();
+				}
             }
         }
         catch (YAML::BadConversion& e)

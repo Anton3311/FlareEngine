@@ -136,7 +136,7 @@ namespace Flare
         virtual void SerializeIntVector(SerializationValue<int32_t> value, uint32_t componentsCount) = 0;
 
         virtual void SerializeString(SerializationValue<std::string> value) = 0;
-        virtual void SerializeObject(const SerializableObjectDescriptor& descriptor, void* objectData) {}
+        virtual void SerializeObject(const SerializableObjectDescriptor& descriptor, void* objectData, bool isArray, size_t arraySize) {}
 
         virtual void SerializeReference(const SerializableObjectDescriptor& valueDescriptor,
             void* referenceData,
@@ -159,14 +159,11 @@ namespace Flare
             FLARE_CORE_ASSERT(descriptor);
             if (value.IsArray)
             {
-                for (size_t i = 0; i < value.Values.GetSize(); i++)
-                {
-                    SerializeObject(*descriptor, &value.Values[i]);
-                }
+				SerializeObject(*descriptor, value.Values.GetData(), true, value.Values.GetSize());
             }
             else
             {
-                SerializeObject(*descriptor, &value.Values[0]);
+                SerializeObject(*descriptor, &value.Values[0], false, 0);
             }
         }
 

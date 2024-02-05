@@ -25,7 +25,7 @@ namespace Flare
         void SerializeFloatVector(SerializationValue<float> value, uint32_t componentsCount) override;
         void SerializeIntVector(SerializationValue<int32_t> value, uint32_t componentsCount) override;
         void SerializeString(SerializationValue<std::string> value) override;
-        void SerializeObject(const SerializableObjectDescriptor& descriptor, void* objectData) override;
+        void SerializeObject(const SerializableObjectDescriptor& descriptor, void* objectData, bool isArray, size_t arraySize) override;
 
         void SerializeReference(const SerializableObjectDescriptor& valueDescriptor,
             void* referenceData,
@@ -51,7 +51,7 @@ namespace Flare
         void SerializeFloatVector(SerializationValue<float> value, uint32_t componentsCount) override;
         void SerializeIntVector(SerializationValue<int32_t> value, uint32_t componentsCount) override;
         void SerializeString(SerializationValue<std::string> value) override;
-        void SerializeObject(const SerializableObjectDescriptor& descriptor, void* objectData) override;
+        void SerializeObject(const SerializableObjectDescriptor& descriptor, void* objectData, bool isArray, size_t arraySize) override;
 
         void SerializeReference(const SerializableObjectDescriptor& valueDescriptor,
             void* referenceData,

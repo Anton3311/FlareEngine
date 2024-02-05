@@ -96,7 +96,7 @@ namespace Flare
 						{
 							YAMLDeserializer deserializer(componentNode);
 							deserializer.PropertyKey("Data");
-							deserializer.SerializeObject(info.Initializer->Type.SerializationDescriptor, prefabData + writeOffset);
+							deserializer.SerializeObject(info.Initializer->Type.SerializationDescriptor, prefabData + writeOffset, false, 0);
 						}
 
 						components[index].second = (void*)(prefabData + writeOffset);

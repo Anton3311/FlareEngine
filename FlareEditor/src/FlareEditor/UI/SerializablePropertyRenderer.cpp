@@ -11,7 +11,7 @@
 namespace Flare
 {
     SerializablePropertyRenderer::SerializablePropertyRenderer(const World* world)
-        : m_CurrentState({ false }), m_CurrentWorld(world) {}
+        : m_CurrentState({ false, false }), m_CurrentWorld(world) {}
 
     void SerializablePropertyRenderer::PropertyKey(std::string_view key)
     {
@@ -217,13 +217,28 @@ namespace Flare
         }
     }
 
-    void SerializablePropertyRenderer::SerializeObject(const SerializableObjectDescriptor& descriptor, void* objectData)
+    void SerializablePropertyRenderer::SerializeObject(const SerializableObjectDescriptor& descriptor, void* objectData, bool isArray, size_t arraySize)
     {
         if (&descriptor == &FLARE_SERIALIZATION_DESCRIPTOR_OF(AssetHandle))
         {
             BeginPropertiesGridIfNeeded();
-            EditorGUI::PropertyName(m_CurrentPropertyName.data());
-            RenderAssetField(*reinterpret_cast<AssetHandle*>(objectData));
+
+            AssetHandle* handles = (AssetHandle*)objectData;
+
+            if (isArray)
+            {
+                for (size_t i = 0; i < arraySize; i++)
+                {
+                    EditorGUI::PropertyIndex(i);
+                    RenderAssetField(handles[i]);
+                }
+            }
+            else
+            {
+                EditorGUI::PropertyName(m_CurrentPropertyName.data());
+                RenderAssetField(handles[0]);
+            }
+
             return;
         }
 
@@ -233,18 +248,71 @@ namespace Flare
                 return;
 
             BeginPropertiesGridIfNeeded();
-            EditorGUI::EntityField(m_CurrentPropertyName.data(), *m_CurrentWorld, *reinterpret_cast<Entity*>(objectData));
+
+            Entity* entities = (Entity*)objectData;
+
+            if (isArray)
+            {
+                for (size_t i = 0; i < arraySize; i++)
+                {
+                    EditorGUI::PropertyIndex(i);
+                    EditorGUI::EntityField(*m_CurrentWorld, entities[i]);
+                }
+            }
+            else
+            {
+                EditorGUI::PropertyName(m_CurrentPropertyName.data());
+                EditorGUI::EntityField(*m_CurrentWorld, entities[0]);
+            }
+
             return;
         }
 
         if (m_CurrentState.GridStarted)
         {
+            // End previous grid, because properties grid uses an ImGui table and it doesn't allow nested tables
             EditorGUI::EndPropertyGrid();
             m_CurrentState.GridStarted = false;
         }
 
         ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_SpanFullWidth;
-        bool expanded = ImGui::TreeNodeEx(m_CurrentPropertyName.data(), flags);
+
+        if (isArray)
+        {
+            PropertiesTreeState previousState = m_CurrentState;
+            m_CurrentState.GridStarted = false;
+            m_CurrentState.IsArrayElement = true;
+
+            uint8_t* data = (uint8_t*)objectData;
+            for (size_t i = 0; i < arraySize; i++)
+            {
+                uint8_t* itemData = data + i * descriptor.Size;
+                bool itemOpen = ImGui::TreeNodeEx(itemData, flags, "%d", (uint32_t)i);
+                if (!itemOpen)
+                    continue;
+
+                descriptor.Callback(itemData, *this);
+
+                if (m_CurrentState.GridStarted)
+                {
+                    EditorGUI::EndPropertyGrid();
+                    m_CurrentState.GridStarted = false;
+                }
+
+                ImGui::TreePop();
+            }
+
+            m_CurrentState = previousState;
+
+            return;
+        }
+
+        bool expanded = false;
+
+        if (m_CurrentState.IsArrayElement)
+            expanded = true;
+        else
+            expanded = ImGui::TreeNodeEx(m_CurrentPropertyName.data(), flags);
 
         if (expanded)
         {
@@ -256,7 +324,9 @@ namespace Flare
             if (m_CurrentState.GridStarted)
                 EditorGUI::EndPropertyGrid();
 
-            ImGui::TreePop();
+            if (!m_CurrentState.IsArrayElement)
+                ImGui::TreePop();
+
             m_CurrentState = previousState;
         }
     }
