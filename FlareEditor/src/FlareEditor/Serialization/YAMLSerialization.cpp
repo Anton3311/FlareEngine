@@ -229,21 +229,28 @@ namespace Flare
         bool previousState = m_MapStarted;
 
         auto serializeSingleObject = [=](void* object)
-		{
-			m_ObjectSerializationStarted = true;
-			m_MapStarted = false;
+        {
+            m_ObjectSerializationStarted = true;
+            m_MapStarted = false;
 
-			// NOTE: Map starts when the serializer recieves a property with a key,
-			//       this prevents YAML-cpp from generating an invalid one when an
-			//       object serializes it's properties without any keys
-			descriptor.Callback(object, *this);
+            // NOTE: Map starts when the serializer recieves a property with a key,
+            //       this prevents YAML-cpp from generating an invalid one when an
+            //       object serializes it's properties without any keys
+            descriptor.Callback(object, *this);
 
-			if (m_MapStarted)
-				m_Emitter << YAML::EndMap;
+            // NOTE: 'm_MapStarted' whether YAML::BeginMap was emited which only happens when the first property of the object is being serialized
+            //       if 'm_MapStarted' is false, it means that the object doens't have any serializable properties
+            if (!m_MapStarted)
+                m_Emitter << YAML::Block << YAML::BeginMap << YAML::EndMap;
 
-			m_MapStarted = previousState;
-			m_ObjectSerializationStarted = previousObjectSerializationState;
-		};
+            if (m_MapStarted)
+            {
+                m_Emitter << YAML::EndMap;
+            }
+
+            m_MapStarted = previousState;
+            m_ObjectSerializationStarted = previousObjectSerializationState;
+        };
 
         if (isArray)
         {
@@ -492,7 +499,7 @@ namespace Flare
                 }
                 else
                 {
-					YAML::Node node = CurrentNode()[m_CurrentPropertyKey];
+                    YAML::Node node = CurrentNode()[m_CurrentPropertyKey];
                     UUID serializationId = node.as<UUID>();
 
                     auto it = m_SerializationIdToECSId->find(serializationId);
@@ -516,21 +523,21 @@ namespace Flare
                     if (index >= arraySize)
                         break;
 
-					m_NodesStack.push_back(itemNode);
-					descriptor.Callback((uint8_t*)objectData + index * descriptor.Size, *this);
-					m_NodesStack.pop_back();
+                    m_NodesStack.push_back(itemNode);
+                    descriptor.Callback((uint8_t*)objectData + index * descriptor.Size, *this);
+                    m_NodesStack.pop_back();
 
                     index++;
                 }
             }
             else
             {
-				if (YAML::Node objectNode = CurrentNode()[m_CurrentPropertyKey])
-				{
-					m_NodesStack.push_back(objectNode);
-					descriptor.Callback(objectData, *this);
-					m_NodesStack.pop_back();
-				}
+                if (YAML::Node objectNode = CurrentNode()[m_CurrentPropertyKey])
+                {
+                    m_NodesStack.push_back(objectNode);
+                    descriptor.Callback(objectData, *this);
+                    m_NodesStack.pop_back();
+                }
             }
         }
         catch (YAML::BadConversion& e)
