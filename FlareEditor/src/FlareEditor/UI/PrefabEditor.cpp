@@ -7,44 +7,61 @@
 
 namespace Flare
 {
-	PrefabEditor::PrefabEditor(ECSContext& context)
-		: m_Entities(m_PrefabWorld, EntitiesHierarchyFeatures::None), m_PrefabWorld(context), m_Properties(m_PrefabWorld), m_SelectedEntity(Entity())
-	{
-	}
+    PrefabEditor::PrefabEditor(ECSContext& context)
+        : m_PreviewScene(CreateRef<Scene>(context)),
+        m_Entities(GetWorld(), EntitiesHierarchyFeatures::None),
+        m_Properties(GetWorld()), m_SelectedEntity(Entity()),
+        m_ViewportWindow(m_EditorCamera, "Prefab Preview")
+    {
+        m_ViewportWindow.SetScene(m_PreviewScene);
 
-	void PrefabEditor::OnOpen(AssetHandle asset)
-	{
-		FLARE_CORE_ASSERT(AssetManager::IsAssetHandleValid(asset));
-		m_Prefab = AssetManager::GetAsset<Prefab>(asset);
+        EditorCameraSettings& settings = m_EditorCamera.GetSettings();
+        settings.FOV = 60.0f;
+        settings.Near = 0.1f;
+        settings.Far = 1000.0f;
+        settings.RotationSpeed = 1.0f;
 
-		m_Prefab->CreateInstance(m_PrefabWorld);
-	}
+        m_PreviewScene->Initialize();
+    }
 
-	void PrefabEditor::OnClose()
-	{
-		AssetHandle prefabHandle = m_Prefab->Handle;
-		Entity entity = Entity();
-		if (m_PrefabWorld.Entities.GetEntityRecords().size() > 0)
-			entity = m_PrefabWorld.Entities.GetEntityRecords()[0].Id;
+    void PrefabEditor::OnOpen(AssetHandle asset)
+    {
+        FLARE_CORE_ASSERT(AssetManager::IsAssetHandleValid(asset));
+        m_Prefab = AssetManager::GetAsset<Prefab>(asset);
+        m_Prefab->CreateInstance(GetWorld());
 
-		PrefabImporter::SerializePrefab(prefabHandle, m_PrefabWorld, entity);
+        m_PreviewScene->InitializeRuntime();
 
-		m_Prefab = nullptr;
-		m_PrefabWorld.Entities.Clear();
-	}
+        m_ViewportWindow.ShowWindow = true;
+    }
 
-	void PrefabEditor::OnRenderImGui(bool& show)
-	{
-		ImGui::Begin("Prefab Preview", &show);
+    void PrefabEditor::OnClose()
+    {
+        AssetHandle prefabHandle = m_Prefab->Handle;
+        Entity entity = Entity();
+        World& world = GetWorld();
+        if (world.Entities.GetEntityRecords().size() > 0)
+            entity = world.Entities.GetEntityRecords()[0].Id;
 
-		ImGui::End();
+        PrefabImporter::SerializePrefab(prefabHandle, world, entity);
 
-		ImGui::Begin("Prefab Entities");
-		m_Entities.OnRenderImGui(m_SelectedEntity);
-		ImGui::End();
+        m_Prefab = nullptr;
+        world.Entities.Clear();
+    }
 
-		ImGui::Begin("Prefab Entity Properties");
-		m_Properties.OnRenderImGui(m_SelectedEntity);
-		ImGui::End();
-	}
+    void PrefabEditor::OnRenderImGui(bool& show)
+    {
+        m_ViewportWindow.OnRenderViewport();
+        m_ViewportWindow.OnRenderImGui();
+
+        ImGui::Begin("Prefab Entities");
+        m_Entities.OnRenderImGui(m_SelectedEntity);
+        ImGui::End();
+
+        ImGui::Begin("Prefab Entity Properties");
+        m_Properties.OnRenderImGui(m_SelectedEntity);
+        ImGui::End();
+
+        show = m_ViewportWindow.ShowWindow;
+    }
 }

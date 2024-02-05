@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Flare/Scene/Scene.h"
 #include "Flare/Renderer/FrameBuffer.h"
 #include "Flare/Renderer/RenderData.h"
 #include "Flare/Renderer/Viewport.h"
@@ -37,9 +38,13 @@ namespace Flare
 
 		inline void RequestFocus() { m_WindowFocusRequested = true; }
 
+		void SetScene(const Ref<Scene>& scene) { m_Scene = scene; }
+
 		void PrepareViewport();
 		void SetViewProjection(const glm::mat4& projection) { m_Viewport.FrameData.Camera.Projection = projection; }
 	protected:
+		inline Ref<Scene> GetScene() const { return m_Scene == nullptr ? Scene::GetActive() : m_Scene; }
+
 		void BeginImGui();
 		void RenderViewportBuffer(const Ref<FrameBuffer>& buffer, uint32_t attachmentIndex);
 		void EndImGui();
@@ -51,6 +56,7 @@ namespace Flare
 		bool ShowWindow;
 	protected:
 		std::string m_Name;
+		Ref<Scene> m_Scene;
 		Viewport m_Viewport;
 		bool m_PreviousFocusState;
 		bool m_IsFocused;

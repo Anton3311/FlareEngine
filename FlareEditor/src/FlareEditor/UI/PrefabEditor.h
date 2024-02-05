@@ -1,12 +1,15 @@
 #pragma once
 
 #include "Flare/Scene/Prefab.h"
+#include "Flare/Scene/Scene.h"
 
 #include "FlareECS/World.h"
 
 #include "FlareEditor/UI/AssetEditor.h"
 #include "FlareEditor/UI/ECS/EntitiesHierarchy.h"
 #include "FlareEditor/UI/ECS/EntityProperties.h"
+
+#include "FlareEditor/UI/SceneViewportWindow.h"
 
 namespace Flare
 {
@@ -19,7 +22,13 @@ namespace Flare
 		virtual void OnClose() override;
 		virtual void OnRenderImGui(bool& show) override;
 	private:
-		World m_PrefabWorld;
+		inline World& GetWorld() { return m_PreviewScene->GetECSWorld(); }
+	private:
+		Ref<Scene> m_PreviewScene;
+		
+		EditorCamera m_EditorCamera;
+		SceneViewportWindow m_ViewportWindow;
+
 		EntitiesHierarchy m_Entities;
 		EntityProperties m_Properties;
 		Ref<Prefab> m_Prefab;

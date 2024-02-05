@@ -41,7 +41,6 @@ namespace Flare
 	void Scene::Initialize()
 	{
 		ScriptingEngine::SetCurrentECSWorld(m_World);
-		m_World.Components.RegisterComponents();
 
 		SystemsManager& systemsManager = m_World.GetSystemsManager();
 		systemsManager.CreateGroup("Debug Rendering");

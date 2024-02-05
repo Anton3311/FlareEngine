@@ -35,8 +35,8 @@ namespace Flare
 
 	static GridPropertyIndices s_GridPropertyIndices;
 
-	SceneViewportWindow::SceneViewportWindow(EditorCamera& camera)
-		: ViewportWindow("Scene Viewport", true),
+	SceneViewportWindow::SceneViewportWindow(EditorCamera& camera, std::string_view name)
+		: ViewportWindow(name, true),
 		m_Camera(camera),
 		m_Overlay(ViewportOverlay::Default),
 		m_IsToolbarHovered(false) {}
@@ -81,7 +81,8 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		if (Scene::GetActive() == nullptr || !ShowWindow || !m_IsVisible)
+		Ref<Scene> scene = GetScene();
+		if (scene == nullptr || !ShowWindow || !m_IsVisible)
 			return;
 
 		if (m_Viewport.FrameData.IsEditorCamera)
@@ -104,7 +105,6 @@ namespace Flare
 		if (m_Viewport.GetSize() == glm::ivec2(0))
 			return;
 
-		Ref<Scene> scene = Scene::GetActive();
 		std::optional<SystemGroupId> debugRenderingGroup = scene->GetECSWorld().GetSystemsManager().FindGroup("Debug Rendering");
 
 		scene->OnBeforeRender(m_Viewport);
@@ -231,7 +231,7 @@ namespace Flare
 						const auto& editorSelection = EditorLayer::GetInstance().Selection;
 						if (editorSelection.GetType() == EditorSelectionType::Entity)
 						{
-							const World& world = Scene::GetActive()->GetECSWorld();
+							const World& world = GetScene()->GetECSWorld();
 							const TransformComponent* transform = world.TryGetEntityComponent<TransformComponent>(editorSelection.GetEntity());
 
 							if (transform)
@@ -292,10 +292,8 @@ namespace Flare
 
 	void SceneViewportWindow::RenderWindowContents()
 	{
-		if (Scene::GetActive() == nullptr)
-		{
+		if (GetScene() == nullptr)
 			return;
-		}
 
 		switch (m_Overlay)
 		{
@@ -310,7 +308,7 @@ namespace Flare
 			break;
 		}
 
-		World& world = Scene::GetActive()->GetECSWorld();
+		World& world = GetScene()->GetECSWorld();
 		if (ImGui::BeginDragDropTarget())
 		{
 			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(ASSET_PAYLOAD_NAME))
@@ -353,7 +351,7 @@ namespace Flare
 					case AssetType::Prefab:
 					{
 						Ref<Prefab> prefab = AssetManager::GetAsset<Prefab>(handle);
-						prefab->CreateInstance(Scene::GetActive()->GetECSWorld());
+						prefab->CreateInstance(GetScene()->GetECSWorld());
 						break;
 					}
 					}
@@ -604,7 +602,7 @@ namespace Flare
 		int32_t entityIndex;
 		m_Viewport.RenderTarget->ReadPixel(2, m_RelativeMousePosition.x, m_RelativeMousePosition.y, &entityIndex);
 
-		std::optional<Entity> entity = Scene::GetActive()->GetECSWorld().Entities.FindEntityByIndex(entityIndex);
+		std::optional<Entity> entity = GetScene()->GetECSWorld().Entities.FindEntityByIndex(entityIndex);
 
 		m_Viewport.RenderTarget->Unbind();
 

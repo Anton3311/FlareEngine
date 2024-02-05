@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Flare/Scene/Scene.h"
 #include "Flare/Renderer/Shader.h"
 #include "Flare/Renderer/Material.h"
 #include "Flare/Renderer/VertexArray.h"
@@ -21,7 +22,7 @@ namespace Flare
 			Depth,
 		};
 
-		SceneViewportWindow(EditorCamera& camera);
+		SceneViewportWindow(EditorCamera& camera, std::string_view name = "Scene Viewport");
 
 		virtual void OnAttach() override;
 
