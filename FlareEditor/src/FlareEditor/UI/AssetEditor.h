@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Flare/AssetManager/Asset.h"
+#include "FlarePlatform/Event.h"
 
 namespace Flare
 {
@@ -16,6 +17,8 @@ namespace Flare
 		void Open(AssetHandle asset);
 		void Close();
 		void OnUpdate();
+
+		virtual void OnEvent(Event& event) = 0;
 	protected:
 		virtual void OnOpen(AssetHandle asset) = 0;
 		virtual void OnClose() = 0;
