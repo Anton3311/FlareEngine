@@ -18,6 +18,8 @@ namespace Flare
 		void Close();
 		void OnUpdate();
 
+		virtual void OnAttach() {}
+		virtual void OnDetach() {}
 		virtual void OnEvent(Event& event) = 0;
 	protected:
 		virtual void OnOpen(AssetHandle asset) = 0;

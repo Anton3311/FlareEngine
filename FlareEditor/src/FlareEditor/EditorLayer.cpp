@@ -134,6 +134,8 @@ namespace Flare
 
         for (auto& viewportWindow : m_ViewportWindows)
             viewportWindow->OnAttach();
+
+        m_PrefabEditor->OnAttach();
     }
 
     void EditorLayer::OnDetach()
@@ -145,6 +147,8 @@ namespace Flare
 
         if (Scene::GetActive() != nullptr && AssetManager::IsAssetHandleValid(Scene::GetActive()->Handle))
             As<EditorAssetManager>(AssetManager::GetInstance())->UnloadAsset(Scene::GetActive()->Handle);
+
+        m_PrefabEditor->OnDetach();
 
         Scene::SetActive(nullptr);
     }

@@ -18,6 +18,7 @@ namespace Flare
 	public:
 		PrefabEditor(ECSContext& context);
 
+		virtual void OnAttach() override;
 		virtual void OnEvent(Event& event) override;
 	protected:
 		virtual void OnOpen(AssetHandle asset) override;

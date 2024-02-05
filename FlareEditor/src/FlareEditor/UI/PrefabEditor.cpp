@@ -66,6 +66,11 @@ namespace Flare
         show = m_ViewportWindow.ShowWindow;
     }
 
+    void PrefabEditor::OnAttach()
+    {
+        m_ViewportWindow.OnAttach();
+    }
+
     void PrefabEditor::OnEvent(Event& event)
     {
         m_ViewportWindow.OnEvent(event);
