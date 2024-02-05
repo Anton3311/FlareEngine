@@ -160,7 +160,7 @@ namespace Flare
 				if (EditorGUI::AssetField("Mesh", meshHandle, &Mesh::_Asset))
 					mesh.Mesh = AssetManager::GetAsset<Mesh>(meshHandle);
 
-				EditorGUI::AssetField("Material", mesh.Material);
+				EditorGUI::AssetField("Material", mesh.Material, nullptr);
 
 				const char* propertyName = "Don't cast shadows";
 				EditorGUI::PropertyName(propertyName);

@@ -34,8 +34,6 @@ namespace Flare
 
         inline bool PropertiesGridStarted() const { return m_CurrentState.GridStarted; }
     private:
-        void RenderAssetField(AssetHandle& handle);
-    private:
         struct PropertiesTreeState
         {
             bool GridStarted;

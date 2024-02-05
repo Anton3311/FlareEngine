@@ -230,13 +230,12 @@ namespace Flare
                 for (size_t i = 0; i < arraySize; i++)
                 {
                     EditorGUI::PropertyIndex(i);
-                    RenderAssetField(handles[i]);
+                    EditorGUI::AssetField(handles[i], nullptr);
                 }
             }
             else
             {
-                EditorGUI::PropertyName(m_CurrentPropertyName.data());
-                RenderAssetField(handles[0]);
+				EditorGUI::AssetField(m_CurrentPropertyName.data(), handles[0], nullptr);
             }
 
             return;
@@ -346,11 +345,6 @@ namespace Flare
             if (EditorGUI::AssetField(m_CurrentPropertyName.data(), handle, descriptor))
                 asset = AssetManager::GetRawAsset(handle);
         }
-    }
-
-    void SerializablePropertyRenderer::RenderAssetField(AssetHandle& handle)
-    {
-        EditorGUI::AssetField(handle);
     }
 
     void SerializablePropertyRenderer::BeginPropertiesGridIfNeeded()

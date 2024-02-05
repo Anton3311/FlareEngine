@@ -51,10 +51,8 @@ namespace Flare
 		static bool TextField(std::string& text);
 		static bool TextField(UUID id, std::string& text);
 
-		static bool AssetField(const char* name, AssetHandle& handle);
 		static void UUIDField(const char* name, UUID uuid);
 		static bool EntityField(const char* name, const World& world, Entity& entity);
-		static bool AssetField(AssetHandle& handle);
 		static bool EntityField(const World& world, Entity& entity);
 
 		static bool BeginToggleGroup(const char* name, uint32_t itemsCount);
@@ -62,7 +60,8 @@ namespace Flare
 		static bool ToggleGroupItem(const char* text, bool selected);
 		static void EndToggleGroup();
 
-		static bool AssetField(const char* name, AssetHandle& handle, const AssetDescriptor* assetType);
+		static bool AssetField(AssetHandle& handle, const AssetDescriptor* assetType = nullptr);
+		static bool AssetField(const char* name, AssetHandle& handle, const AssetDescriptor* assetType = nullptr);
 
 		static void PropertyName(const char* name, float minHeight = 0.0f);
 		static void PropertyIndex(size_t index);

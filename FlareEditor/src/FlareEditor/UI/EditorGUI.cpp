@@ -200,12 +200,6 @@ namespace Flare
         return result;
     }
 
-    bool EditorGUI::AssetField(const char* name, AssetHandle& handle)
-    {
-        PropertyName(name);
-        return AssetField(handle);
-    }
-
     static int32_t InputTextCallback(ImGuiInputTextCallbackData* data)
     {
         if (data->EventFlag == ImGuiInputTextFlags_CallbackResize)
@@ -267,66 +261,6 @@ namespace Flare
     {
         PropertyName(name);
         return EntityField(world, entity);
-    }
-
-    bool EditorGUI::AssetField(AssetHandle& handle)
-    {
-        ImVec2 buttonSize = ImVec2(ImGui::GetContentRegionAvail().x - 120.0f, 0);
-
-        if (handle == NULL_ASSET_HANDLE)
-            ImGui::Button("None", buttonSize);
-        else
-        {
-            const AssetMetadata* metadata = AssetManager::GetAssetMetadata(handle);
-
-            if (metadata != nullptr)
-            {
-                if (metadata->Name.empty())
-                    ImGui::Button(metadata->Path.filename().string().c_str(), buttonSize);
-                else
-                    ImGui::Button(metadata->Name.c_str(), buttonSize);
-            }
-            else
-                ImGui::Button("Invalid", buttonSize);
-        }
-
-        bool result = false;
-        if (ImGui::BeginDragDropTarget())
-        {
-            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(ASSET_PAYLOAD_NAME))
-            {
-                handle = *(AssetHandle*)payload->Data;
-                result = true;
-            }
-
-            ImGui::EndDragDropTarget();
-        }
-
-        {
-            ImGui::SameLine();
-
-            UUID resultToken = (uint64_t)&handle;
-            if (ImGui::Button("Find", ImVec2(45.0f, 0.0f)))
-                QuickSearch::GetInstance().FindAsset(resultToken);
-
-            if (auto searchResult = QuickSearch::GetInstance().AcceptAssetResult(resultToken))
-            {
-                if (searchResult->Type == QuickSearch::AssetSearchResult::ResultType::Ok)
-                {
-                    handle = searchResult->Handle;
-                    result = true;
-                }
-            }
-
-            ImGui::SameLine();
-            if (ImGui::Button("Reset", ImVec2(ImGui::GetContentRegionAvail().x, 0.0f)))
-            {
-                handle = NULL_ASSET_HANDLE;
-                return true;
-            }
-        }
-
-        return result;
     }
 
     bool EditorGUI::EntityField(const World& world, Entity& entity)
@@ -438,19 +372,27 @@ namespace Flare
         ImGui::Text("%llu", (uint64_t)uuid);
     }
 
-    bool EditorGUI::AssetField(const char* name, AssetHandle& handle, const AssetDescriptor* assetType)
+    inline static float CalculateAssetPreviewSize()
     {
-        ImDrawList* drawList = ImGui::GetCurrentWindow()->DrawList;
         const ImGuiStyle& style = ImGui::GetStyle();
 
         float buttonHeight = style.FramePadding.y * 2.0f + ImGui::GetFontSize();
-        float previewSize = buttonHeight * 2.0f + style.ItemSpacing.y;
+        return buttonHeight * 2.0f + style.ItemSpacing.y;
+    }
 
+    bool EditorGUI::AssetField(AssetHandle& handle, const AssetDescriptor* assetType)
+    {
         bool result = false;
-        PropertyName(name, previewSize);
+        ImDrawList* drawList = ImGui::GetCurrentWindow()->DrawList;
+        const ImGuiStyle& style = ImGui::GetStyle();
 
-        if (ImGui::InvisibleButton(name, ImVec2(previewSize, previewSize)))
+        float previewSize = CalculateAssetPreviewSize();
+        float buttonHeight = style.FramePadding.y * 2.0f + ImGui::GetFontSize();
+
+        ImGui::PushID(&handle);
+        if (ImGui::InvisibleButton("", ImVec2(previewSize, previewSize)))
             EditorLayer::GetInstance().Selection.SetAsset(handle);
+        ImGui::PopID();
 
         if (ImGui::IsItemHovered() && ImGui::BeginTooltip())
         {
@@ -571,5 +513,17 @@ namespace Flare
         }
 
         return result;
+	}
+
+    bool EditorGUI::AssetField(const char* name, AssetHandle& handle, const AssetDescriptor* assetType)
+    {
+        ImDrawList* drawList = ImGui::GetCurrentWindow()->DrawList;
+        const ImGuiStyle& style = ImGui::GetStyle();
+
+        float buttonHeight = style.FramePadding.y * 2.0f + ImGui::GetFontSize();
+        float previewSize = CalculateAssetPreviewSize();
+
+        PropertyName(name, previewSize);
+        return AssetField(handle, assetType);
     }
 }
