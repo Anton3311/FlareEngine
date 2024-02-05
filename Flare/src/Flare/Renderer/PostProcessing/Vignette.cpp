@@ -38,7 +38,7 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		if (!Enabled)
+		if (!Enabled || !Renderer::GetCurrentViewport().PostProcessingEnabled)
 			return;
 
 		FrameBufferAttachmentsMask writeMask = context.RenderTarget->GetWriteMask();

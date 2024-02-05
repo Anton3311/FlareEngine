@@ -58,7 +58,7 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		if (!Enabled)
+		if (!Enabled || !Renderer::GetCurrentViewport().PostProcessingEnabled)
 			return;
 
 		if (m_Material == nullptr || m_BlurMaterial == nullptr)
