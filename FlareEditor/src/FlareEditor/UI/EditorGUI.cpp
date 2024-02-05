@@ -462,6 +462,15 @@ namespace Flare
             else
                 ImGui::TextUnformatted("Handle: Invalid");
 
+            if (validHandle)
+            {
+                const AssetMetadata* metadata = AssetManager::GetAssetMetadata(handle);
+                if (metadata->Name.empty())
+                    ImGui::Text("Name: %s", metadata->Path.string().c_str());
+                else
+                    ImGui::Text("Name: %s", metadata->Name.c_str());
+            }
+
             ImGui::EndTooltip();
         }
 
