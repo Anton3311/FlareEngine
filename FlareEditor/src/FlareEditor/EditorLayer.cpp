@@ -68,6 +68,10 @@ namespace Flare
             Scene::GetActive()->UninitializePostProcessing();
 
             assetManager->UnloadAsset(Scene::GetActive()->Handle);
+
+            ScriptingEngine::UnloadAllModules();
+            m_ECSContext.Clear();
+
             Scene::SetActive(nullptr);
         });
     }
@@ -435,7 +439,12 @@ namespace Flare
         m_AssetManagerWindow.RebuildAssetTree();
 
         AssetHandle startScene = Project::GetActive()->StartScene;
+
+        ScriptingEngine::LoadModules();
+        m_ECSContext.Components.RegisterComponents();
+
         OpenScene(startScene);
+        assetManager->ReloadPrefabs(); // HACK: component ids have changed after reregistering components, so reload prefabs
 
         m_ProjectFilesWacher.reset(FileWatcher::Create(Project::GetActive()->Location, EventsMask::FileName | EventsMask::DirectoryName | EventsMask::LastWrite));
     }
@@ -480,10 +489,6 @@ namespace Flare
 
             active = nullptr;
             Scene::SetActive(nullptr);
-            ScriptingEngine::UnloadAllModules();
-            m_ECSContext.Clear();
-
-            ScriptingEngine::LoadModules();
 
             active = AssetManager::GetAsset<Scene>(handle);
             Scene::SetActive(active);
@@ -510,12 +515,6 @@ namespace Flare
         active = nullptr;
 
         Scene::GetActive()->UninitializePostProcessing();
-        Scene::SetActive(nullptr);
-
-        ScriptingEngine::UnloadAllModules();
-        m_ECSContext.Clear();
-
-        ScriptingEngine::LoadModules();
 
         active = CreateRef<Scene>(m_ECSContext);
         active->Initialize();
@@ -523,7 +522,7 @@ namespace Flare
         active->InitializePostProcessing();
         Scene::SetActive(active);
 
-        m_EditedSceneHandle = 0;
+        m_EditedSceneHandle = NULL_ASSET_HANDLE;
     }
 
     void EditorLayer::EnterPlayMode()
@@ -547,17 +546,11 @@ namespace Flare
         assetManager->UnloadAsset(active->Handle);
         active = nullptr;
 
-        ScriptingEngine::UnloadAllModules();
-        m_ECSContext.Clear();
-
-        ScriptingEngine::LoadModules();
         Ref<Scene> playModeScene = CreateRef<Scene>(m_ECSContext);
         SceneSerializer::Deserialize(playModeScene, activeScenePath, m_Camera, m_SceneViewSettings);
 
         Scene::SetActive(playModeScene);
         m_Mode = EditorMode::Play;
-
-        assetManager->ReloadPrefabs();
 
         playModeScene->InitializeRuntime();
         playModeScene->InitializePostProcessing();
@@ -573,19 +566,13 @@ namespace Flare
         Scene::GetActive()->UninitializePostProcessing();
 
         Scene::SetActive(nullptr);
-        ScriptingEngine::UnloadAllModules();
-        m_ECSContext.Clear();
 
-
-        ScriptingEngine::LoadModules();
         Ref<Scene> editorScene = AssetManager::GetAsset<Scene>(m_EditedSceneHandle);
         editorScene->InitializeRuntime();
         editorScene->InitializePostProcessing();
 
         Scene::SetActive(editorScene);
         m_Mode = EditorMode::Edit;
-
-        assetManager->ReloadPrefabs();
 
         InputManager::SetCursorMode(CursorMode::Normal);
     }
@@ -601,22 +588,30 @@ namespace Flare
         std::filesystem::path activeScenePath = assetManager->GetAssetMetadata(active->Handle)->Path;
         SaveActiveScene();
 
+        active->UninitializePostProcessing();
+
         Scene::SetActive(nullptr);
         assetManager->UnloadAsset(active->Handle);
         active = nullptr;
 
         ScriptingEngine::UnloadAllModules();
-        m_ECSContext.Clear();
 
         BuildSystem::BuildModules();
 
         ScriptingEngine::LoadModules();
+        m_ECSContext.Components.RegisterComponents();
+
         active = CreateRef<Scene>(m_ECSContext);
         active->Handle = activeSceneHandle;
         SceneSerializer::Deserialize(active, activeScenePath, m_Camera, m_SceneViewSettings);
 
+        ScriptingEngine::SetCurrentECSWorld(active->GetECSWorld());
+        ScriptingEngine::RegisterSystems();
         active->InitializeRuntime();
+        active->InitializePostProcessing();
         Scene::SetActive(active);
+
+        assetManager->ReloadPrefabs();
     }
 
     EditorLayer& EditorLayer::GetInstance()

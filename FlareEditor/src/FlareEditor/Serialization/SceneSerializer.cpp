@@ -52,7 +52,9 @@ namespace Flare
 	{
 		if (world.IsEntityAlive(entity))
 		{
-			world.Entities.AddEntityComponent(entity, id, nullptr);
+			bool result = world.Entities.AddEntityComponent(entity, id, nullptr);
+			FLARE_CORE_ASSERT(result);
+
 			return (uint8_t*)world.Entities.GetEntityComponent(entity, id);
 		}
 		else

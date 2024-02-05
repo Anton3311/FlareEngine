@@ -95,6 +95,8 @@ namespace Flare
 		EntityCreationResult result;
 		CreateEntity(ComponentSet(m_TemporaryComponentSet.data(), count), result);
 
+		FLARE_CORE_ASSERT(result.Data);
+
 		const ArchetypeRecord& archetypeRecord = m_Archetypes[result.Archetype];
 		for (size_t i = 0; i < count; i++)
 		{
@@ -707,6 +709,25 @@ namespace Flare
 		return m_EntityRecords[index];
 	}
 
+	void Entities::EnsureValidEntityStorages()
+	{
+		if (m_Archetypes.Records.size()  >= m_EntityStorages.size())
+		{
+			size_t oldSize = m_EntityStorages.size();
+			m_EntityStorages.resize(m_Archetypes.Records.size());
+			
+			for (size_t i = oldSize; i < m_EntityStorages.size(); i++)
+			{
+				FLARE_CORE_ASSERT(m_Archetypes[i].Components.size() > 0);
+				ComponentId lastComponent = m_Archetypes[i].Components.back();
+				size_t entitySize = m_Archetypes[i].ComponentOffsets.back() + m_Components.GetComponentInfo(lastComponent).Size;
+
+				m_EntityStorages[i].SetEntitySize(entitySize);
+			}
+		}
+
+	}
+
 	void Entities::MoveEntityComponents(uint8_t* source, uint8_t* destination, const ArchetypeRecord& entityArchetype, size_t firstComponentIndex, size_t componentsCount)
 	{
 		size_t destinationOffset = 0;
@@ -816,6 +837,7 @@ namespace Flare
 	EntityStorage& Entities::GetEntityStorage(ArchetypeId archetype)
 	{
 		FLARE_CORE_ASSERT(m_Archetypes.IsIdValid(archetype));
+		EnsureValidEntityStorages();
 		return m_EntityStorages[archetype];
 	}
 

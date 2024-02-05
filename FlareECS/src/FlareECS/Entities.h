@@ -117,6 +117,9 @@ namespace Flare
 			uint8_t* Data = nullptr;
 		};
 
+		// Ensures that each archetype has a valid entity storage
+		void EnsureValidEntityStorages();
+
 		// Moves entity components starting from `firstComponentIndex` into a destination buffer
 		//
 		// First component is moved into the buffer at offest 0

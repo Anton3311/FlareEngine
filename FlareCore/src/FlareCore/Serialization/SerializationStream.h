@@ -95,19 +95,19 @@ namespace Flare
     template<typename T>
     struct ReferenceCountValuePointer
     {
-		inline void* Get(T& ref)
-		{
-			return nullptr;
-		}
+        inline void* Get(T& ref)
+        {
+            return nullptr;
+        }
     };
 
     template<typename T>
     struct ReferenceCountValuePointer<Ref<T>>
     {
-		inline void* Get(Ref<T>& ref)
-		{
-			return ref.get();
-		}
+        inline void* Get(Ref<T>& ref)
+        {
+            return ref.get();
+        }
     };
 
 
