@@ -36,6 +36,8 @@ namespace Flare
 			return {};
 		}
 
+		constexpr bool HasComponent() const { return m_HasComponent; }
+
 		constexpr T& GetOrDefault(EntityViewElement& entity, T& defaultValue) const
 		{
 			if (m_HasComponent)

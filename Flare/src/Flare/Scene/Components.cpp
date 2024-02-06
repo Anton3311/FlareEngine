@@ -12,6 +12,8 @@ namespace Flare
 	{
 	}
 
+
+
 	FLARE_IMPL_COMPONENT(TransformComponent);
 	TransformComponent::TransformComponent()
 		: Position(glm::vec3(0.0f)),
@@ -34,6 +36,33 @@ namespace Flare
 	{
 		return glm::rotate(glm::quat(glm::radians(Rotation)), direction);
 	}
+
+
+
+	FLARE_IMPL_COMPONENT(GlobalTransform);
+	GlobalTransform::GlobalTransform()
+		: Position(glm::vec3(0.0f)),
+		  Rotation(glm::vec3(0.0f)),
+		  Scale(glm::vec3(1.0f)) {}
+
+	GlobalTransform::GlobalTransform(const glm::vec3& position)
+		: Position(position), Rotation(glm::vec3(0.0f)), Scale(glm::vec3(1.0f)) {}
+
+	GlobalTransform::GlobalTransform(const glm::vec3& position, const glm::vec3& rotation, const glm::vec3& scale)
+		: Position(position), Rotation(rotation), Scale(scale) {}
+
+	glm::mat4 GlobalTransform::GetTransformationMatrix() const
+	{
+		return glm::translate(glm::identity<glm::mat4>(), Position) * glm::toMat4(glm::quat(glm::radians(Rotation))) *
+			glm::scale(glm::identity<glm::mat4>(), Scale);
+	}
+
+	glm::vec3 GlobalTransform::TransformDirection(const glm::vec3& direction) const
+	{
+		return glm::rotate(glm::quat(glm::radians(Rotation)), direction);
+	}
+
+
 
 	FLARE_IMPL_COMPONENT(CameraComponent);
 	CameraComponent::CameraComponent()

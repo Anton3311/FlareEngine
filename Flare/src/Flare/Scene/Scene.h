@@ -51,6 +51,7 @@ namespace Flare
 
 		SystemGroupId m_2DRenderingGroup;
 		SystemGroupId m_ScriptingUpdateGroup;
+		SystemGroupId m_LateUpdateGroup;
 		SystemGroupId m_OnRuntimeStartGroup;
 		SystemGroupId m_OnRuntimeEndGroup;
 

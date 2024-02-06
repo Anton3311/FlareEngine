@@ -36,6 +36,21 @@ namespace Flare
 		void AddSystemExecutionSettings(SystemId system, const std::vector<ExecutionOrder>* executionOrder);
 
 		void ExecuteGroup(SystemGroupId id);
+
+		template<typename T>
+		void ExecuteSystem()
+		{
+			static_assert(std::is_base_of_v<System, T>);
+			SystemId id = T::_SystemInitializer.GetId();
+
+			if (id < (uint32_t)m_Systems.size())
+			{
+				SystemExecutionContext context;
+				context.Commands = &m_CommandBuffer;
+				m_Systems[id].OnUpdate(context);
+			}
+		}
+
 		bool IsGroupIdValid(SystemGroupId id);
 		void RebuildExecutionGraphs();
 		

@@ -41,7 +41,7 @@ namespace Flare
 			return *this;
 		}
 
-		template<typename T>
+		template<typename... T>
 		QueryBuilder& Without()
 		{
 			size_t count = sizeof...(T);

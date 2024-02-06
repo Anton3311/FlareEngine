@@ -5,6 +5,9 @@
 
 #include "FlareECS/World.h"
 #include "FlareECS/Entity/ComponentInitializer.h"
+#include "FlareECS/System/SystemInitializer.h"
+
+#include "Flare/Scene/Components.h"
 
 namespace Flare
 {
@@ -45,5 +48,18 @@ namespace Flare
 			stream.Serialize("ParentEntity", SerializationValue(parent.ParentEntity));
 			stream.Serialize("IndexInParent", SerializationValue(parent.IndexInParent));
 		}
+	};
+
+	
+
+	class TransformPropagationSystem : public System
+	{
+	public:
+		FLARE_SYSTEM;
+
+		void OnConfig(World& world, SystemConfig& config) override;
+		void OnUpdate(World& world, SystemExecutionContext& context) override;
+	private:
+		Query m_Qeury;
 	};
 }
