@@ -7,8 +7,6 @@
 #include "FlareECS/Entity/ComponentInitializer.h"
 #include "FlareECS/System/SystemInitializer.h"
 
-#include "Flare/Scene/Components.h"
-
 namespace Flare
 {
 	struct FLARE_API Children

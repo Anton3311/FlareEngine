@@ -3,6 +3,7 @@
 #include "FlareECS/World.h"
 
 #include "Flare/Scene/Components.h"
+#include "Flare/Scene/Transform.h"
 #include "Flare/Renderer/DebugRenderer.h"
 #include "Flare/Renderer/ShaderLibrary.h"
 

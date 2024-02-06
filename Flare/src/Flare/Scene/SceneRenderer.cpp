@@ -5,6 +5,8 @@
 #include "Flare/Renderer/Renderer.h"
 #include "Flare/Renderer/MaterialsTable.h"
 
+#include "Flare/Scene/Transform.h"
+
 #include <algorithm>
 
 namespace Flare

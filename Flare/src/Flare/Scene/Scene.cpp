@@ -11,6 +11,7 @@
 #include "Flare/Math/Math.h"
 #include "Flare/Scene/Components.h"
 #include "Flare/Scene/Hierarchy.h"
+#include "Flare/Scene/Transform.h"
 #include "Flare/Input/InputManager.h"
 
 #include "Flare/Scripting/ScriptingEngine.h"

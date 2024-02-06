@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Flare/Scene/Components.h"
+#include "Flare/Scene/Transform.h"
 
 #include "FlareECS/World.h"
 
