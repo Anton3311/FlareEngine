@@ -380,6 +380,63 @@ namespace Flare
         return buttonHeight * 2.0f + style.ItemSpacing.y;
     }
 
+    static void RenderAssetPreview(ImVec2 previewSize, ImVec2 previewPosition, bool hovered, AssetHandle handle)
+    {
+        ImDrawList* drawList = ImGui::GetCurrentWindow()->DrawList;
+        const ImGuiStyle& style = ImGui::GetStyle();
+
+        ImU32 previewHoverColor = 0xffcccccc;
+        const AssetMetadata* metadata = AssetManager::GetAssetMetadata(handle);
+        if (AssetManager::IsAssetHandleValid(handle))
+        {
+            Ref<Texture> previewTexture = nullptr;
+            ImVec2 uvMin = ImVec2(0.0f, 1.0f);
+            ImVec2 uvMax = ImVec2(1.0f, 0.0f);
+
+            if (metadata->Type == AssetType::Texture)
+            {
+                previewTexture = AssetManager::GetAsset<Texture>(handle);
+            }
+            else if (metadata->Type == AssetType::Sprite)
+            {
+                Ref<Sprite> sprite = AssetManager::GetAsset<Sprite>(handle);
+                previewTexture = sprite->GetTexture();
+
+                // NOTE: Flipped vertically
+                uvMin = ImVec2(sprite->UVMin.x, sprite->UVMax.y);
+                uvMax = ImVec2(sprite->UVMax.x, sprite->UVMin.y);
+            }
+
+            if (previewTexture)
+            {
+                drawList->AddImageRounded((ImTextureID)previewTexture->GetRendererId(),
+                    previewPosition, previewPosition + previewSize,
+                    uvMin, uvMax,
+                    hovered ? previewHoverColor : 0xffffffff,
+                    style.FrameRounding);
+            }
+            else
+            {
+                // Empty preview
+                drawList->AddRect(
+                    previewPosition, previewPosition + previewSize,
+                    hovered ? previewHoverColor : 0xffffffff,
+                    style.FrameRounding);
+            }
+        }
+        else
+        {
+            std::string_view noneText = "None";
+            ImVec2 textSize = ImGui::CalcTextSize(noneText.data(), noneText.data() + noneText.size());
+
+            ImVec2 textPosition = previewPosition + previewSize / 2.0f - textSize / 2.0f;
+            drawList->AddText(textPosition,
+                ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_TextDisabled]),
+                noneText.data(),
+                noneText.data() + noneText.size());
+        }
+    }
+
     bool EditorGUI::AssetField(AssetHandle& handle, const AssetDescriptor* assetType)
     {
         bool result = false;
@@ -442,41 +499,7 @@ namespace Flare
         ImVec2 previewMax = previewMin + ImVec2(previewSize, previewSize);
 
         bool hovered = ImGui::IsItemHovered();
-        ImU32 previewHoverColor = 0xffcccccc;
-
-        if (AssetManager::IsAssetHandleValid(handle))
-        {
-            // Draw thumbnail
-            if (assetType == &Texture::_Asset)
-            {
-                Ref<Texture> texture = AssetManager::GetAsset<Texture>(handle);
-
-                drawList->AddImageRounded((ImTextureID)texture->GetRendererId(),
-                    previewMin, previewMax,
-                    ImVec2(0.0f, 1.0f),
-                    ImVec2(1.0f, 0.0f),
-                    hovered ? previewHoverColor : 0xffffffff,
-                    style.FrameRounding);
-            }
-            else
-            {
-                drawList->AddRect(
-                    previewMin, previewMax,
-                    hovered ? previewHoverColor : 0xffffffff,
-                    style.FrameRounding);
-            }
-        }
-        else
-        {
-            std::string_view noneText = "None";
-            ImVec2 textSize = ImGui::CalcTextSize(noneText.data(), noneText.data() + noneText.size());
-
-            ImVec2 textPosition = previewMin + ImVec2(previewSize, previewSize) / 2.0f - textSize / 2.0f;
-            drawList->AddText(textPosition,
-                ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_TextDisabled]),
-                noneText.data(),
-                noneText.data() + noneText.size());
-        }
+        RenderAssetPreview(previewMax - previewMin, previewMin, hovered, handle);
 
         drawList->AddRect(previewMin,
             previewMax,
@@ -513,7 +536,7 @@ namespace Flare
         }
 
         return result;
-	}
+    }
 
     bool EditorGUI::AssetField(const char* name, AssetHandle& handle, const AssetDescriptor* assetType)
     {
