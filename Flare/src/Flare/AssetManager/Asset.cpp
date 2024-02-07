@@ -39,6 +39,8 @@ namespace Flare
 			return "Scene";
 		case AssetType::Texture:
 			return "Texture";
+		case AssetType::Sprite:
+			return "Sprite";
 		case AssetType::Prefab:
 			return "Prefab";
 		case AssetType::Shader:
@@ -61,6 +63,8 @@ namespace Flare
 	{
 		if (string == "Texture")
 			return AssetType::Texture;
+		else if (string == "Sprite")
+			return AssetType::Sprite;
 		else if (string == "Scene")
 			return AssetType::Scene;
 		else if (string == "Prefab")

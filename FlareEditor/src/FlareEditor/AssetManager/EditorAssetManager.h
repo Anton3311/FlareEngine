@@ -1,6 +1,7 @@
 #pragma once
 
 #include "FlareCore/Core.h"
+#include "Flare/AssetManager/AssetManager.h"
 #include "Flare/AssetManager/AssetManagerBase.h"
 
 #include "FlareEditor/AssetManager/EditorAssetRegistry.h"
@@ -50,6 +51,8 @@ namespace Flare
 		void AddAssetsPackage(const std::filesystem::path& path);
 
 		Ref<Asset> LoadAsset(AssetHandle handle);
+
+		inline static Ref<EditorAssetManager> GetInstance() { return As<EditorAssetManager>(AssetManager::GetInstance()); }
 	private:
 		void RemoveFromRegistryWithoutSerialization(AssetHandle handle);
 

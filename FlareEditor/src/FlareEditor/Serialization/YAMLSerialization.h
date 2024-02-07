@@ -14,7 +14,7 @@ namespace Flare
     class YAMLSerializer : public SerializationStream
     {
     public:
-        YAMLSerializer(YAML::Emitter& emitter, const World& world);
+        YAMLSerializer(YAML::Emitter& emitter, const World* world);
     public:
         void PropertyKey(std::string_view key) override;
         DynamicArrayAction SerializeDynamicArraySize(size_t& size) override;
@@ -32,7 +32,7 @@ namespace Flare
             void* valueData) override;
     public:
         YAML::Emitter& m_Emitter;
-        const World& m_World;
+        const World* m_World;
         bool m_ObjectSerializationStarted;
         bool m_MapStarted;
     };

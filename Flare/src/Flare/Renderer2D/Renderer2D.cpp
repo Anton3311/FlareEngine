@@ -341,13 +341,13 @@ namespace Flare
 	{
 		glm::vec2 uv[4] =
 		{
-			sprite.GetUVMin(),
-			glm::vec2(sprite.GetUVMin().x, sprite.GetUVMax().y),
-			sprite.GetUVMax(),
-			glm::vec2(sprite.GetUVMax().x, sprite.GetUVMin().y),
+			sprite.UVMin,
+			glm::vec2(sprite.UVMin.x, sprite.UVMax.y),
+			sprite.UVMax,
+			glm::vec2(sprite.UVMax.x, sprite.UVMin.y),
 		};
 
-		DrawQuad(position, size, sprite.GetAtlas(), color, glm::vec2(1.0f), uv);
+		DrawQuad(position, size, sprite.GetTexture(), color, glm::vec2(1.0f), uv);
 	}
 	
 	void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const Ref<Texture>& texture, const glm::vec4& tint, const glm::vec2& tiling, const glm::vec2* uv)

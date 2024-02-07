@@ -13,6 +13,7 @@
 #include "FlareEditor/EditorLayer.h"
 #include "FlareEditor/AssetManager/EditorShaderCache.h"
 #include "FlareEditor/AssetManager/MaterialImporter.h"
+#include "FlareEditor/AssetManager/SpriteImporter.h"
 
 #include <imgui.h>
 
@@ -104,6 +105,21 @@ namespace Flare
 
 				EditorGUI::EndPropertyGrid();
 			}
+
+			break;
+		}
+		case AssetType::Sprite:
+		{
+			Ref<Sprite> sprite = AssetManager::GetAsset<Sprite>(handle);
+			FLARE_CORE_ASSERT(sprite);
+
+			if (ImGui::Button("Save"))
+			{
+				SpriteImporter::SerializeSprite(sprite, AssetManager::GetAssetMetadata(handle)->Path);
+			}
+
+			SerializablePropertyRenderer propertiesRenderer;
+			propertiesRenderer.Serialize("Sprite", SerializationValue(*sprite));
 
 			break;
 		}

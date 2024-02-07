@@ -38,6 +38,7 @@ namespace Flare
 		None,
 		Scene,
 		Texture,
+		Sprite,
 		Prefab,
 		Shader,
 		Material,

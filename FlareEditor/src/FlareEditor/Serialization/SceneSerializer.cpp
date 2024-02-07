@@ -25,7 +25,7 @@ namespace Flare
 
 		if (entityData.has_value() && info.Initializer)
 		{
-			YAMLSerializer serializer(emitter, world);
+			YAMLSerializer serializer(emitter, &world);
 			emitter << YAML::BeginMap;
 			emitter << YAML::Key << "Name" << YAML::Value << info.Initializer->Type.SerializationDescriptor.Name;
 
@@ -193,7 +193,7 @@ namespace Flare
 			emitter << YAML::Value << YAML::BeginMap;
 			emitter << YAML::Key << "Name" << YAML::Value << descriptor->Name;
 
-			YAMLSerializer serialzier(emitter, scene->GetECSWorld());
+			YAMLSerializer serialzier(emitter, &scene->GetECSWorld());
 			serialzier.Serialize("Data", SerializationValue(*toneMapping));
 
 			emitter << YAML::EndMap;
@@ -206,7 +206,7 @@ namespace Flare
 			emitter << YAML::Value << YAML::BeginMap;
 			emitter << YAML::Key << "Name" << YAML::Value << descriptor->Name;
 
-			YAMLSerializer serialzier(emitter, scene->GetECSWorld());
+			YAMLSerializer serialzier(emitter, &scene->GetECSWorld());
 			serialzier.Serialize("Data", SerializationValue(*vignette));
 
 			emitter << YAML::EndMap;
@@ -219,7 +219,7 @@ namespace Flare
 			emitter << YAML::Value << YAML::BeginMap;
 			emitter << YAML::Key << "Name" << YAML::Value << descriptor->Name;
 
-			YAMLSerializer serialzier(emitter, scene->GetECSWorld());
+			YAMLSerializer serialzier(emitter, &scene->GetECSWorld());
 			serialzier.Serialize("Data", SerializationValue(*ssao));
 
 			emitter << YAML::EndMap;
