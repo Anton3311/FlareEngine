@@ -27,6 +27,8 @@ namespace Flare
 
 	void WindowsWindowControls::EndTitleBar()
 	{
+		m_TitleBarHovered = ImGui::IsWindowHovered() && !ImGui::IsAnyItemHovered();
+
 		ImGui::End();
 	}
 
@@ -40,9 +42,6 @@ namespace Flare
 		ImU32 iconColor;
 
 		ImVec2 windowSize = ImVec2((float)window->GetProperties().Size.x, m_TitleBarHeight);
-
-		ImGui::InvisibleButton("##TitleBarDragArea", ImVec2(windowSize.x - buttonSize.x * 3 - ImGui::GetCursorPosX(), m_TitleBarHeight));
-		m_TitleBarHovered = ImGui::IsItemHovered();
 
 		ImGui::SetCursorPos(ImVec2(windowSize.x - buttonSize.x * 3, 0));
 
