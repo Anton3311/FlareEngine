@@ -443,9 +443,23 @@ namespace Flare
         ImDrawList* drawList = ImGui::GetCurrentWindow()->DrawList;
         const ImGuiStyle& style = ImGui::GetStyle();
 
-        float previewSize = CalculateAssetPreviewSize();
-        float buttonHeight = style.FramePadding.y * 2.0f + ImGui::GetFontSize();
+        const float previewSize = CalculateAssetPreviewSize();
+        const float buttonHeight = style.FramePadding.y * 2.0f + ImGui::GetFontSize();
+        const ImVec2 controlButtonSize = ImVec2(buttonHeight - 4.0f, buttonHeight - 4.0f);
 
+        const float availableContentWidth = ImGui::GetContentRegionAvail().x;
+        const float previewAndControlsWidth = previewSize + style.ItemSpacing.x + controlButtonSize.x;
+
+        const bool validHandle = AssetManager::IsAssetHandleValid(handle);
+
+        const ImVec2 initialCursorPosition = ImGui::GetCursorPos();
+        const float previewXPosition = initialCursorPosition.x;
+        const float nameXPosition = initialCursorPosition.x + previewSize + style.ItemSpacing.x;
+
+        const AssetMetadata* metadata = validHandle ? AssetManager::GetAssetMetadata(handle) : nullptr;
+
+        // Preview
+        
         ImGui::PushID(&handle);
         if (ImGui::InvisibleButton("", ImVec2(previewSize, previewSize)))
             EditorLayer::GetInstance().Selection.SetAsset(handle);
@@ -453,22 +467,12 @@ namespace Flare
 
         if (ImGui::IsItemHovered() && ImGui::BeginTooltip())
         {
-            bool validHandle = AssetManager::IsAssetHandleValid(handle);
             if (handle == NULL_ASSET_HANDLE)
                 ImGui::TextUnformatted("Handle: NULL");
             else if (validHandle)
                 ImGui::Text("Handle: %llu", (uint64_t)handle);
             else
                 ImGui::TextUnformatted("Handle: Invalid");
-
-            if (validHandle)
-            {
-                const AssetMetadata* metadata = AssetManager::GetAssetMetadata(handle);
-                if (metadata->Name.empty())
-                    ImGui::Text("Name: %s", metadata->Path.string().c_str());
-                else
-                    ImGui::Text("Name: %s", metadata->Name.c_str());
-            }
 
             ImGui::EndTooltip();
         }
@@ -506,22 +510,50 @@ namespace Flare
             ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Border]),
             style.FrameRounding);
 
-        // Draw control buttons
+        // Asset name
+        
+        float maxTextWidth = availableContentWidth - style.ItemSpacing.x * 2.0f - previewAndControlsWidth;
+        ImGui::SetCursorPosX(nameXPosition);
+        ImGui::SetCursorPosY(initialCursorPosition.y + previewSize / 2.0f - buttonHeight / 2.0f);
 
-        ImGui::SameLine();
-        ImVec2 cursorPosition = ImGui::GetCursorPos();
+        bool showSearchWindow = false;
+        if (validHandle)
+        {
+            showSearchWindow = ImGui::Button(metadata->Name.c_str(), ImVec2(maxTextWidth, buttonHeight));
+        }
+        else
+        {
+            ImGui::PushID(&handle);
+            showSearchWindow = ImGui::Button("", ImVec2(maxTextWidth, buttonHeight));
+            ImGui::PopID();
+        }
 
-        if (ImGui::Button("Reset"))
+        // Draw control button
+
+        ImGui::SetCursorPos(ImVec2(
+            initialCursorPosition.x + availableContentWidth - controlButtonSize.x - style.ItemSpacing.x,
+            initialCursorPosition.y + previewSize / 2.0f - controlButtonSize.y / 2.0f));
+
+        if (ImGui::InvisibleButton("Reset", controlButtonSize))
         {
             handle = NULL_ASSET_HANDLE;
             result = true;
         }
 
-        ImGui::SetCursorPos(cursorPosition + ImVec2(0.0f, buttonHeight + style.ItemSpacing.y));
+        ImRect resetButtonRect = { ImGui::GetItemRectMin(), ImGui::GetItemRectMax() };
+        ImRect iconUVs = s_EditorIcons.GetIconUVs(EditorIcons::CloseIcon);
+
+        ImU32 hoverColor = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_TextDisabled]);
+
+        drawList->AddImage((ImTextureID)s_EditorIcons.GetTexture()->GetRendererId(),
+            resetButtonRect.Min,
+            resetButtonRect.Max,
+            iconUVs.Min,
+            iconUVs.Max,
+            ImGui::IsItemHovered() ? hoverColor : 0xffffffff);
 
         UUID resultToken = (uint64_t)&handle;
-        ImVec2 resetButtonSize = ImGui::GetItemRectSize();
-        if (ImGui::Button("Find", resetButtonSize))
+        if (showSearchWindow)
         {
             QuickSearch::GetInstance().FindAsset(resultToken);
         }
