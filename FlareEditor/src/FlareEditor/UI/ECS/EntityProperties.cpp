@@ -120,8 +120,12 @@ namespace Flare
 			if (EditorGUI::BeginPropertyGrid())
 			{
 				EditorGUI::ColorPropertyField("Color", sprite.Color);
-				EditorGUI::AssetField("Texture", sprite.Texture, &Texture::_Asset);
-				EditorGUI::Vector2PropertyField("Tiling", sprite.TextureTiling);
+
+				AssetHandle spriteHandle = sprite.Sprite == nullptr ? NULL_ASSET_HANDLE : sprite.Sprite->Handle;
+				if (EditorGUI::AssetField("Sprite", spriteHandle, &Sprite::_Asset))
+					sprite.Sprite = AssetManager::GetAsset<Sprite>(spriteHandle);
+
+				EditorGUI::Vector2PropertyField("Tiling", sprite.Tilling);
 
 				EditorGUI::PropertyName("Flip");
 				{

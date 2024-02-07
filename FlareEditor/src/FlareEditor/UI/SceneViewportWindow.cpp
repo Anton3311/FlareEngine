@@ -323,14 +323,14 @@ namespace Flare
 					case AssetType::Scene:
 						EditorLayer::GetInstance().OpenScene(handle);
 						break;
-					case AssetType::Texture:
+					case AssetType::Sprite:
 					{
 						if (!world.IsEntityAlive(entity))
 							break;
 
 						SpriteComponent* sprite = world.TryGetEntityComponent<SpriteComponent>(entity);
 						if (sprite)
-							sprite->Texture = handle;
+							sprite->Sprite = AssetManager::GetAsset<Sprite>(handle);
 
 						break;
 					}

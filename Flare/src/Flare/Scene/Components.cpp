@@ -1,5 +1,7 @@
 #include "Components.h"
 
+#include "Flare/AssetManager/AssetManager.h"
+
 namespace Flare
 {
 	FLARE_IMPL_COMPONENT(NameComponent);
@@ -63,14 +65,14 @@ namespace Flare
 	FLARE_IMPL_COMPONENT(SpriteComponent);
 	SpriteComponent::SpriteComponent()
 		: Color(glm::vec4(1.0f)),
-		  TextureTiling(glm::vec2(1.0f)),
-		  Texture(0),
+		  Tilling(glm::vec2(1.0f)),
+		  Sprite(nullptr),
 		  Flags(SpriteRenderFlags::None) {}
 
-	SpriteComponent::SpriteComponent(AssetHandle texture)
+	SpriteComponent::SpriteComponent(AssetHandle sprite)
 		: Color(glm::vec4(1.0f)),
-		TextureTiling(glm::vec2(1.0f)),
-		Texture(texture),
+		Tilling(glm::vec2(1.0f)),
+		Sprite(AssetManager::GetAsset<Flare::Sprite>(sprite)),
 		Flags(SpriteRenderFlags::None) {}
 
 	FLARE_IMPL_COMPONENT(SpriteLayer);

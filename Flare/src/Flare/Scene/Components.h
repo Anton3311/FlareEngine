@@ -83,11 +83,11 @@ namespace Flare
         FLARE_COMPONENT;
 
         SpriteComponent();
-        SpriteComponent(AssetHandle texture);
+        SpriteComponent(AssetHandle sprite);
 
         glm::vec4 Color;
-        glm::vec2 TextureTiling;
-        AssetHandle Texture;
+        glm::vec2 Tilling;
+        Ref<Sprite> Sprite;
         SpriteRenderFlags Flags;
     };
 
@@ -97,8 +97,8 @@ namespace Flare
         void OnSerialize(SpriteComponent& sprite, SerializationStream& stream)
         {
             stream.Serialize("Color", SerializationValue(sprite.Color, SerializationValueFlags::Color));
-            stream.Serialize("TextureTiling", SerializationValue(sprite.TextureTiling));
-            stream.Serialize("Texture", SerializationValue(sprite.Texture));
+            stream.Serialize("Tiling", SerializationValue(sprite.Tilling));
+            stream.Serialize("Sprite", SerializationValue(sprite.Sprite));
             
             using FlagsUnderlyingType = std::underlying_type_t<decltype(sprite.Flags)>;
             stream.Serialize("Flags", SerializationValue(reinterpret_cast<FlagsUnderlyingType&>(sprite.Flags)));

@@ -82,6 +82,13 @@ namespace Flare
 
 		static void DrawSprite(const Sprite& sprite, const glm::vec3& position, const glm::vec2& size, const glm::vec4& color = glm::vec4(1.0f));
 
+		static void DrawSprite(const Ref<Sprite>& sprite,
+			const glm::mat4& transform,
+			const glm::vec4& color = glm::vec4(1.0f),
+			glm::vec2 tilling = glm::vec2(1.0f),
+			SpriteRenderFlags flags = SpriteRenderFlags::None,
+			int32_t entityIndex = INT32_MAX);
+
 		// Text
 
 		static void DrawString(
@@ -104,5 +111,12 @@ namespace Flare
 			const glm::vec4& tint,
 			const glm::vec2& tiling, 
 			const glm::vec2* uv);
+
+		static void DrawQuad(const glm::vec3* vertices, 
+			const Ref<Texture>& texture, 
+			const glm::vec4& tint,
+			const glm::vec2& tiling, 
+			const glm::vec2* uv,
+			int32_t entityIndex);
 	};
 }

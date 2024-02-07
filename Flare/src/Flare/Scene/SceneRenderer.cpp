@@ -81,12 +81,7 @@ namespace Flare
 					Renderer2D::SetMaterial(nullptr);
 			}
 
-			Renderer2D::DrawQuad(transform.GetTransformationMatrix(), sprite.Color,
-				sprite.Texture == NULL_ASSET_HANDLE
-				? nullptr
-				: AssetManager::GetAsset<Texture>(sprite.Texture),
-				sprite.TextureTiling, entity.GetIndex(),
-				sprite.Flags);
+			Renderer2D::DrawSprite(sprite.Sprite, transform.GetTransformationMatrix(), sprite.Color, sprite.Tilling, sprite.Flags, entity.GetIndex());
 		}
 	}
 
