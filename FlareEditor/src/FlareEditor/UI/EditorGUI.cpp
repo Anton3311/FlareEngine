@@ -29,8 +29,10 @@ namespace Flare
         ImVec2 windowSize = ImGui::GetContentRegionAvail();
         if (ImGui::BeginTable("Property Grid", 2))
         {
-            ImGui::TableSetupColumn("Property", ImGuiTableColumnFlags_WidthFixed, windowSize.x * 0.25f);
-            ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthFixed, windowSize.x * 0.75f);
+            const float nameColumnWidthPercetage = 0.3f;
+
+            ImGui::TableSetupColumn("Property", ImGuiTableColumnFlags_WidthFixed, windowSize.x * nameColumnWidthPercetage);
+            ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthFixed, windowSize.x * (1.0f - nameColumnWidthPercetage));
             return true;
         }
         return false;
