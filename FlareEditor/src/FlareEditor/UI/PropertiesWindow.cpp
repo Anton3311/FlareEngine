@@ -85,7 +85,7 @@ namespace Flare
 		case AssetType::Scene:
 			break;
 		case AssetType::Texture:
-			RenderTextureImportSettingsEditor(handle, s_SelectedTextureImportSettings);
+			RenderTextureSettingsEditor(handle, s_SelectedTextureImportSettings);
 			break;
 		case AssetType::Material:
 			RenderMaterialEditor(handle);
@@ -126,7 +126,7 @@ namespace Flare
 		}
 	}
 
-	bool PropertiesWindow::RenderTextureImportSettingsEditor(AssetHandle handle, TextureImportSettings& importSettings)
+	bool PropertiesWindow::RenderTextureSettingsEditor(AssetHandle handle, TextureImportSettings& importSettings)
 	{
 		FLARE_CORE_ASSERT(AssetManager::IsAssetHandleValid(handle));
 		FLARE_CORE_ASSERT(AssetManager::GetAssetMetadata(handle)->Type == AssetType::Texture);
@@ -137,15 +137,30 @@ namespace Flare
 			As<EditorAssetManager>(AssetManager::GetInstance())->ReloadAsset(handle);
 		}
 
-		if (ImGui::BeginChild("Texture Import Settings"))
+		Ref<const Texture> texture = AssetManager::GetAsset<Texture>(handle);
+		FLARE_CORE_ASSERT(texture);
+
+		if (ImGui::BeginChild("Texture Settings"))
 		{
+			const ImGuiStyle& style = ImGui::GetStyle();
 			if (EditorGUI::BeginPropertyGrid())
 			{
-				const char* previewText = TextureFilteringToString(importSettings.Filtering);
+				EditorGUI::PropertyName("Size");
 
-				EditorGUI::PropertyName("Filtering");
+				EditorGUI::MoveCursor(ImVec2(0, style.FramePadding.y));
+				ImGui::Text("%u x %u", texture->GetWidth(), texture->GetHeight());
+				EditorGUI::MoveCursor(ImVec2(0, style.FramePadding.y));
+
+				EditorGUI::PropertyName("Format");
+
+				EditorGUI::MoveCursor(ImVec2(0, style.FramePadding.y));
+				ImGui::TextUnformatted(TextureFormatToString(texture->GetSpecifications().Format));
+				EditorGUI::MoveCursor(ImVec2(0, style.FramePadding.y));
 
 				{
+					const char* previewText = TextureFilteringToString(importSettings.Filtering);
+
+					EditorGUI::PropertyName("Filtering");
 					ImGui::PushID(&importSettings.Filtering);
 					if (ImGui::BeginCombo("", previewText, ImGuiComboFlags_HeightRegular))
 					{
@@ -169,7 +184,7 @@ namespace Flare
 				}
 
 				{
-					previewText = TextureWrapToString(importSettings.WrapMode);
+					const char* previewText = TextureWrapToString(importSettings.WrapMode);
 					EditorGUI::PropertyName("Wrap");
 
 					ImGui::PushID(&importSettings.WrapMode);
@@ -194,8 +209,20 @@ namespace Flare
 					ImGui::PopID();
 				}
 
+				EditorGUI::BoolPropertyField("Generate Mip Maps", importSettings.GenerateMipMaps);
+
 				EditorGUI::EndPropertyGrid();
 			}
+
+			// Preview
+
+			ImVec2 availiableContentSize = ImGui::GetContentRegionAvail();
+			float width = texture->GetWidth();
+			float height = texture->GetHeight();
+
+			float aspectRatio = width / height;
+
+			ImGui::Image((ImTextureID)texture->GetRendererId(), ImVec2(availiableContentSize.x, availiableContentSize.x / aspectRatio));
 
 			ImGui::EndChild();
 		}

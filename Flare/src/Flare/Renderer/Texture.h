@@ -32,6 +32,28 @@ namespace Flare
 		R8,
 	};
 
+	inline const char* TextureFormatToString(TextureFormat format)
+	{
+		switch (format)
+		{
+		case TextureFormat::RGB8:
+			return "RGB8";
+		case TextureFormat::RGBA8:
+			return "RGBA8";
+		case TextureFormat::RG8:
+			return "RG8";
+		case TextureFormat::RG16:
+			return "RG16";
+		case TextureFormat::RF32:
+			return "RF32";
+		case TextureFormat::R8:
+			return "R8";
+		}
+
+		FLARE_CORE_ASSERT(false);
+		return nullptr;
+	}
+
 	enum class TextureFiltering
 	{
 		Closest,
