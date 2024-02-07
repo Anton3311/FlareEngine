@@ -78,9 +78,14 @@ namespace Flare
 		static void DrawQuad(const glm::vec3& position, const glm::vec2& size, 
 			const Ref<Texture>& texture, 
 			glm::vec4 tint = glm::vec4(1), 
-			glm::vec2 tilling = glm::vec2(1));
+			glm::vec2 tilling = glm::vec2(1),
+			int32_t entityIndex = INT32_MAX);
 
-		static void DrawSprite(const Sprite& sprite, const glm::vec3& position, const glm::vec2& size, const glm::vec4& color = glm::vec4(1.0f));
+		static void DrawSprite(const Sprite& sprite,
+			const glm::vec3& position,
+			const glm::vec2& size,
+			const glm::vec4& color = glm::vec4(1.0f),
+			int32_t entityIndex = INT32_MAX);
 
 		static void DrawSprite(const Ref<Sprite>& sprite,
 			const glm::mat4& transform,
@@ -105,13 +110,6 @@ namespace Flare
 		static void FlushText();
 		static void FlushAll();
 	private:
-		static void DrawQuad(const glm::vec3& position, 
-			const glm::vec2& size, 
-			const Ref<Texture>& texture, 
-			const glm::vec4& tint,
-			const glm::vec2& tiling, 
-			const glm::vec2* uv);
-
 		static void DrawQuad(const glm::vec3* vertices, 
 			const Ref<Texture>& texture, 
 			const glm::vec4& tint,
