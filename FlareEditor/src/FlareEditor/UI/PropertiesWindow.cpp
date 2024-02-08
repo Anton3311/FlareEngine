@@ -216,13 +216,18 @@ namespace Flare
 
 			// Preview
 
-			ImVec2 availiableContentSize = ImGui::GetContentRegionAvail();
+			float scrollbarWidth = ImGui::GetCurrentWindow()->ScrollbarSizes.x;
+
+			ImVec2 availiableContentSize = ImGui::GetContentRegionAvail() - ImVec2(scrollbarWidth, 0.0f);
 			float width = texture->GetWidth();
 			float height = texture->GetHeight();
 
 			float aspectRatio = width / height;
 
-			ImGui::Image((ImTextureID)texture->GetRendererId(), ImVec2(availiableContentSize.x, availiableContentSize.x / aspectRatio));
+			ImGui::Image(
+				(ImTextureID)texture->GetRendererId(),
+				ImVec2(availiableContentSize.x, availiableContentSize.x / aspectRatio),
+				ImVec2(0, 1), ImVec2(1, 0), ImVec4(1.0f, 1.0f, 1.0f, 1.0f), style.Colors[ImGuiCol_Border]);
 
 			ImGui::EndChild();
 		}
