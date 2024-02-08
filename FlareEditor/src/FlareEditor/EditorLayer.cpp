@@ -194,10 +194,12 @@ namespace Flare
         {
             FLARE_PROFILE_SCOPE("Scene Runtime Update");
 
+            Ref<Scene> activeScene = Scene::GetActive();
+
             if (m_Mode == EditorMode::Play && !m_PlaymodePaused)
-                Scene::GetActive()->OnUpdateRuntime();
-            else if (m_Mode == EditorMode::Edit)
-                Scene::GetActive()->OnUpdateEditor();
+                activeScene->OnUpdateRuntime();
+            else if (m_Mode == EditorMode::Edit && activeScene)
+                activeScene->OnUpdateEditor();
         }
 
         {
@@ -513,6 +515,7 @@ namespace Flare
 
         if (active != nullptr)
         {
+			active->UninitializePostProcessing();
             Ref<EditorAssetManager> editorAssetManager = As<EditorAssetManager>(AssetManager::GetInstance());
 
             if (active != nullptr && AssetManager::IsAssetHandleValid(active->Handle))
@@ -520,8 +523,6 @@ namespace Flare
         }
 
         active = nullptr;
-
-        Scene::GetActive()->UninitializePostProcessing();
 
         active = CreateRef<Scene>(m_ECSContext);
         active->Initialize();
