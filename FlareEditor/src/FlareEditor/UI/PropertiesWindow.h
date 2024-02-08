@@ -20,7 +20,7 @@ namespace Flare
 	private:
 		void RenderAssetProperties(AssetHandle handle);
 
-		bool RenderTextureImportSettingsEditor(AssetHandle handle, TextureImportSettings& importSettings);
+		bool RenderTextureSettingsEditor(AssetHandle handle, TextureImportSettings& importSettings);
 		bool RenderMaterialEditor(AssetHandle handle);
 	private:
 		AssetManagerWindow& m_AssetManagerWindow;
