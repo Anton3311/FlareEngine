@@ -96,9 +96,26 @@ namespace Flare
     void OpenGLFrameBuffer::ClearAttachment(uint32_t index, const void* value)
     {
         FLARE_PROFILE_FUNCTION();
-
         FLARE_CORE_ASSERT(index < m_ColorAttachments.size());
-        glClearTexImage(m_ColorAttachments[index], 0, FrameBufferTextureFormatToOpenGLFormat(m_Specifications.Attachments[index].Format), GL_INT, &value);
+
+        GLenum type = 0;
+        switch (m_Specifications.Attachments[index].Format)
+        {
+        case FrameBufferTextureFormat::RGB8:
+        case FrameBufferTextureFormat::RGBA8:
+            type = GL_UNSIGNED_BYTE;
+            break;
+        case FrameBufferTextureFormat::RF32:
+            type = GL_FLOAT;
+            break;
+        case FrameBufferTextureFormat::RedInteger:
+            type = GL_INT;
+            break;
+        default:
+            FLARE_CORE_ASSERT(false);
+        }
+
+        glClearTexImage(m_ColorAttachments[index], 0, FrameBufferTextureFormatToOpenGLFormat(m_Specifications.Attachments[index].Format), type, &value);
     }
 
     void OpenGLFrameBuffer::ReadPixel(uint32_t attachmentIndex, uint32_t x, uint32_t y, void* pixelOutput)
