@@ -367,6 +367,10 @@ namespace Flare
             glm::vec2(m_SelectionStart.x, m_SelectionStart.y),
             glm::vec2(m_SelectionEnd.x, m_SelectionEnd.y)) / glm::vec2(textureSize.x, textureSize.y);
 
+        // Flip vertically because ImGui's Y axis is opposite to texture coordinates Y
+        uvMin.y = 1.0f - uvMin.y;
+        uvMax.y = 1.0f - uvMax.y;
+        std::swap(uvMin.y, uvMax.y);
         return Math::Rect(uvMin, uvMax);
     }
 
@@ -390,6 +394,10 @@ namespace Flare
             ImVec2 textureSize = ImVec2((float)texture->GetWidth(), (float)texture->GetHeight());
             m_SelectionStart = ImVec2(textureSize.x * m_Sprite->UVMin.x, textureSize.y * m_Sprite->UVMin.y);
             m_SelectionEnd = ImVec2(textureSize.x * m_Sprite->UVMax.x, textureSize.y * m_Sprite->UVMax.y);
+
+            // Flip vertically
+            m_SelectionStart.y = textureSize.y - m_SelectionStart.y;
+            m_SelectionEnd.y = textureSize.y - m_SelectionEnd.y;
         }
     }
 
