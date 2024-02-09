@@ -27,8 +27,7 @@ namespace Flare
         SpriteEditor()
             : m_Sprite(nullptr) {}
 
-        SpriteEditor(const Ref<Sprite>& sprite)
-            : m_Sprite(sprite) {}
+        SpriteEditor(const Ref<Sprite>& sprite);
 
         bool OnImGuiRenderer();
     private:

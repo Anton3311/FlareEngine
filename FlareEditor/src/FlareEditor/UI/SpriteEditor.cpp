@@ -8,6 +8,18 @@ namespace Flare
 {
     FLARE_IMPL_ENUM_BITFIELD(SpriteEditor::SelectionRectSide);
 
+    SpriteEditor::SpriteEditor(const Ref<Sprite>& sprite)
+        : m_Sprite(sprite)
+    {
+        const Ref<Texture>& texture = sprite->GetTexture();
+        if (texture)
+        {
+            ImVec2 textureSize = ImVec2(texture->GetWidth(), texture->GetHeight());
+            m_SelectionStart = ImVec2(textureSize.x * sprite->UVMin.x, textureSize.y * sprite->UVMin.y);
+            m_SelectionEnd = ImVec2(textureSize.x * sprite->UVMax.x, textureSize.y * sprite->UVMax.y);
+        }
+    }
+
     bool SpriteEditor::OnImGuiRenderer()
     {
         bool result = false;
