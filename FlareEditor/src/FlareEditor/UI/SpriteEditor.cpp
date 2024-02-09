@@ -64,13 +64,17 @@ namespace Flare
 
         SelectionRectSide selectionSides = RenderSelectionRect(imageRect);
 
-        if (selectionSides == SelectionRectSide::TopLeft || selectionSides == SelectionRectSide::BottomRight)
+        SelectionRectSide currentSelectionSides = selectionSides;
+        if (m_ResizedSides != SelectionRectSide::None)
+            currentSelectionSides = m_ResizedSides;
+
+        if (currentSelectionSides == SelectionRectSide::TopLeft || currentSelectionSides == SelectionRectSide::BottomRight)
             ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNWSE);
-        else if (selectionSides == SelectionRectSide::BottomLeft || selectionSides == SelectionRectSide::TopRight)
+        else if (currentSelectionSides == SelectionRectSide::BottomLeft || currentSelectionSides == SelectionRectSide::TopRight)
             ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNESW);
-        else if (HAS_BIT(selectionSides, SelectionRectSide::Left) || HAS_BIT(selectionSides, SelectionRectSide::Right))
+        else if (HAS_BIT(currentSelectionSides, SelectionRectSide::Left) || HAS_BIT(currentSelectionSides, SelectionRectSide::Right))
             ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW);
-        else if (HAS_BIT(selectionSides, SelectionRectSide::Top) || HAS_BIT(selectionSides, SelectionRectSide::Bottom))
+        else if (HAS_BIT(currentSelectionSides, SelectionRectSide::Top) || HAS_BIT(currentSelectionSides, SelectionRectSide::Bottom))
             ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNS);
 
         if (m_ResizedSides != SelectionRectSide::None)
