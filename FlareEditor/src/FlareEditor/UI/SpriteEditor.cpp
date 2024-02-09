@@ -12,102 +12,34 @@ namespace Flare
 {
     FLARE_IMPL_ENUM_BITFIELD(SpriteEditor::SelectionRectSide);
 
-    bool SpriteEditor::RendererWindowContent()
+    void SpriteEditor::RenderWindowContent()
     {
-        bool result = false;
+        RenderViewport();
+        ImGui::SameLine();
+        RenderSidebar();
+
+        return;
+    }
+
+    void SpriteEditor::RenderViewport()
+    {
+        ImVec2 availableAreaSize = ImGui::GetContentRegionAvail();
+        const Ref<Texture>& texture = m_Sprite->GetTexture();
         ImGuiWindowFlags windowFlags = ImGuiWindowFlags_AlwaysHorizontalScrollbar
             | ImGuiWindowFlags_AlwaysVerticalScrollbar
             | ImGuiWindowFlags_NoScrollWithMouse
             | ImGuiWindowFlags_NoMove;
 
-        const Ref<Texture>& texture = m_Sprite->GetTexture();
-
-        ImGui::BeginDisabled(texture == nullptr);
-
-        ImVec2 initialCursorPosition = ImGui::GetCursorPos();
-        const float selectionInfoWidth = 300.0f;
-        if (EditorGUI::BeginPropertyGrid(selectionInfoWidth))
-        {
-            Math::Rect uvRect = SelectionToUVRect();
-
-            glm::vec2 textureSize(0.0f);
-            glm::ivec2 position(0);
-            glm::ivec2 size(0);
-
-            if (texture)
-            {
-                textureSize = glm::vec2((float)texture->GetWidth(), (float)texture->GetHeight());
-
-                position = (glm::ivec2)(uvRect.Min * textureSize);
-                size = (glm::ivec2)(uvRect.GetSize() * textureSize);
-            }
-
-            bool shouldClamp = false;
-            if (EditorGUI::IntVector2PropertyField("Position", position))
-            {
-                ValidateSelectionRect();
-                m_SelectionStart = ImVec2((float)position.x, (float)position.y);
-                m_SelectionEnd = ImVec2((float)(position.x + size.x), (float)(position.y + size.y));
-
-                shouldClamp = true;
-            }
-
-            if (EditorGUI::IntVector2PropertyField("Size", size))
-            {
-                ValidateSelectionRect();
-                m_SelectionEnd = ImVec2((float)(position.x + size.x), (float)(position.y + size.y));
-                shouldClamp = true;
-            }
-
-            if (shouldClamp)
-            {
-                m_SelectionStart.x = glm::clamp(m_SelectionStart.x, 0.0f, textureSize.x);
-                m_SelectionStart.y = glm::clamp(m_SelectionStart.y, 0.0f, textureSize.y);
-
-                m_SelectionEnd.x = glm::clamp(m_SelectionEnd.x, 0.0f, textureSize.x);
-                m_SelectionEnd.y = glm::clamp(m_SelectionEnd.y, 0.0f, textureSize.y);
-            }
-
-            EditorGUI::EndPropertyGrid();
-        }
-
-        ImVec2 viewportPosition = ImGui::GetCursorPos();
-
-        const auto& style = ImGui::GetStyle();
-        ImGui::SetCursorPos(ImVec2(
-            initialCursorPosition.x + selectionInfoWidth + style.ItemSpacing.x * 2.0f,
-            initialCursorPosition.y + style.ItemInnerSpacing.y));
-
-        if (ImGui::Button("Save"))
-        {
-            Math::Rect uvRect = SelectionToUVRect();
-
-            m_Sprite->UVMin = uvRect.Min;
-            m_Sprite->UVMax = uvRect.Max;
-
-            if (AssetManager::IsAssetHandleValid(m_Sprite->Handle))
-            {
-                const AssetMetadata* metadata = AssetManager::GetAssetMetadata(m_Sprite->Handle);
-                SpriteImporter::SerializeSprite(m_Sprite, metadata->Path);
-            }
-        }
-
-        ImGui::SetCursorPos(viewportPosition);
-
-        ImGui::EndDisabled();
-
-        // Viewport
-
-        if (!ImGui::BeginChild("Viewport", ImVec2(0, 0), false, windowFlags))
+        if (!ImGui::BeginChild("Viewport", ImVec2(availableAreaSize.x - m_SideBarWidth, availableAreaSize.y), false, windowFlags))
         {
             ImGui::EndChild();
-            return false;
+            return;
         }
 
         if (!texture)
         {
             ImGui::EndChild();
-            return false;
+            return;
         }
 
         ImGuiWindow* window = ImGui::GetCurrentWindow();
@@ -229,7 +161,95 @@ namespace Flare
         }
 
         ImGui::EndChild();
-        return result;
+    }
+
+    void SpriteEditor::RenderSidebar()
+    {
+        if (ImGui::BeginChild("Sidebar"))
+        {
+            RenderSidebarContent();
+            ImGui::EndChild();
+        }
+    }
+
+    void SpriteEditor::RenderSidebarContent()
+    {
+        const Ref<Texture>& texture = m_Sprite->GetTexture();
+
+        const auto& style = ImGui::GetStyle();
+        const float buttonHeight = ImGui::GetFontSize() + style.FramePadding.y * 2.0f;
+        if (ImGui::Button("Save", ImVec2(ImGui::GetContentRegionAvail().x, buttonHeight)))
+        {
+            if (texture)
+            {
+                Math::Rect uvRect = SelectionToUVRect();
+
+                m_Sprite->UVMin = uvRect.Min;
+                m_Sprite->UVMax = uvRect.Max;
+            }
+            else
+            {
+                m_Sprite->UVMin = glm::vec2(0.0f);
+                m_Sprite->UVMax = glm::vec2(1.0f);
+            }
+
+            if (AssetManager::IsAssetHandleValid(m_Sprite->Handle))
+            {
+                const AssetMetadata* metadata = AssetManager::GetAssetMetadata(m_Sprite->Handle);
+                SpriteImporter::SerializeSprite(m_Sprite, metadata->Path);
+            }
+        }
+
+        if (EditorGUI::BeginPropertyGrid())
+        {
+            AssetHandle textureHandle = texture ? texture->Handle : NULL_ASSET_HANDLE;
+            if (EditorGUI::AssetField("Texture", textureHandle, &Texture::_Asset))
+                m_Sprite->SetTexture(AssetManager::GetAsset<Texture>(textureHandle));
+
+            glm::vec2 textureSize(0.0f);
+            glm::ivec2 position(0);
+            glm::ivec2 size(0);
+
+            if (texture)
+            {
+                Math::Rect uvRect = SelectionToUVRect();
+                textureSize = glm::vec2((float)texture->GetWidth(), (float)texture->GetHeight());
+
+                position = (glm::ivec2)(uvRect.Min * textureSize);
+                size = (glm::ivec2)(uvRect.GetSize() * textureSize);
+            }
+
+            ImGui::BeginDisabled(texture == nullptr);
+
+            bool shouldClamp = false;
+            if (EditorGUI::IntVector2PropertyField("Position", position))
+            {
+                ValidateSelectionRect();
+                m_SelectionStart = ImVec2((float)position.x, (float)position.y);
+                m_SelectionEnd = ImVec2((float)(position.x + size.x), (float)(position.y + size.y));
+
+                shouldClamp = true;
+            }
+
+            if (EditorGUI::IntVector2PropertyField("Size", size))
+            {
+                ValidateSelectionRect();
+                m_SelectionEnd = ImVec2((float)(position.x + size.x), (float)(position.y + size.y));
+                shouldClamp = true;
+            }
+
+            if (shouldClamp)
+            {
+                m_SelectionStart.x = glm::clamp(m_SelectionStart.x, 0.0f, textureSize.x);
+                m_SelectionStart.y = glm::clamp(m_SelectionStart.y, 0.0f, textureSize.y);
+
+                m_SelectionEnd.x = glm::clamp(m_SelectionEnd.x, 0.0f, textureSize.x);
+                m_SelectionEnd.y = glm::clamp(m_SelectionEnd.y, 0.0f, textureSize.y);
+            }
+
+            ImGui::EndDisabled();
+            EditorGUI::EndPropertyGrid();
+        }
     }
 
     ImVec2 SpriteEditor::WindowToTextureSpace(ImVec2 windowSpace)
@@ -387,7 +407,7 @@ namespace Flare
     void SpriteEditor::OnRenderImGui(bool& show)
     {
         if (ImGui::Begin("Sprite Editor", &show))
-            RendererWindowContent();
+            RenderWindowContent();
 
         ImGui::End();
     }

@@ -32,7 +32,10 @@ namespace Flare
         void OnClose() override;
         void OnRenderImGui(bool& show) override;
     private:
-        bool RendererWindowContent();
+        void RenderWindowContent();
+        void RenderViewport();
+        void RenderSidebar();
+        void RenderSidebarContent();
 
         ImVec2 WindowToTextureSpace(ImVec2 windowSpace);
         ImVec2 TextureToWindowSpace(ImVec2 textureSpace);
@@ -48,6 +51,7 @@ namespace Flare
 
         float m_Zoom = 1.0f;
         float m_SelectionRectCornerSize = 8.0f;
+        float m_SideBarWidth = 300.0f;
 
         bool m_HasSelection = false;
         bool m_SelectionStarted = false;

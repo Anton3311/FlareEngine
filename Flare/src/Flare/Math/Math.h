@@ -148,4 +148,19 @@ namespace Flare::Math
 		glm::vec3 Min;
 		glm::vec3 Max;
 	};
+
+	struct Rect
+	{
+		Rect()
+			: Min(0.0f), Max(0.0f) {}
+		Rect(glm::vec2 min, glm::vec2 max)
+			: Min(min), Max(max) {}
+
+		inline glm::vec2 GetSize() const { return Max - Min; }
+		inline float GetWidth() const { return Max.x - Min.x; }
+		inline float GetHeight() const { return Max.y - Min.y; }
+
+		glm::vec2 Min;
+		glm::vec2 Max;
+	};
 }

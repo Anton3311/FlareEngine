@@ -19,6 +19,7 @@ namespace Flare
 		Sprite(const Ref<Texture>& texture, glm::i32vec2 pixelsMin, glm::i32vec2 pixelsMax);
 
 		inline const Ref<Texture>& GetTexture() const { return m_Texture; }
+		inline void SetTexture(const Ref<Texture>& texture) { m_Texture = texture; }
 	public:
 		glm::vec2 UVMin;
 		glm::vec2 UVMax;
