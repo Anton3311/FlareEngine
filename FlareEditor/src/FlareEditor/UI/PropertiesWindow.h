@@ -4,6 +4,7 @@
 
 #include "FlareEditor/AssetManager/TextureImporter.h"
 #include "FlareEditor/UI/AssetManagerWindow.h"
+#include "FlareEditor/UI/SpriteEditor.h"
 
 #include <unordered_map>
 #include <functional>
@@ -24,5 +25,6 @@ namespace Flare
 		bool RenderMaterialEditor(AssetHandle handle);
 	private:
 		AssetManagerWindow& m_AssetManagerWindow;
+		SpriteEditor m_SpriteEditor;
 	};
 }

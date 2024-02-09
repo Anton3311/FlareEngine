@@ -8,6 +8,7 @@
 
 #include "FlareEditor/UI/EditorGUI.h"
 #include "FlareEditor/UI/ECS/EntityProperties.h"
+#include "FlareEditor/UI/SpriteEditor.h"
 #include "FlareEditor/UI/SerializablePropertyRenderer.h"
 
 #include "FlareEditor/EditorLayer.h"
@@ -26,19 +27,26 @@ namespace Flare
 
 	void PropertiesWindow::OnAttach()
 	{
-		m_AssetManagerWindow.OnAssetSelectionChanged.Bind([](AssetHandle handle)
-			{
-				if (!AssetManager::IsAssetHandleValid(handle))
-					return;
+		m_AssetManagerWindow.OnAssetSelectionChanged.Bind([this](AssetHandle handle)
+		{
+			if (!AssetManager::IsAssetHandleValid(handle))
+				return;
 
-				switch (AssetManager::GetAssetMetadata(handle)->Type)
-				{
-				case AssetType::Texture:
-					s_SelectedTextureImportSettings = TextureImportSettings();
-					TextureImporter::DeserializeImportSettings(handle, s_SelectedTextureImportSettings);
-					break;
-				}
-			});
+			switch (AssetManager::GetAssetMetadata(handle)->Type)
+			{
+			case AssetType::Texture:
+				s_SelectedTextureImportSettings = TextureImportSettings();
+				TextureImporter::DeserializeImportSettings(handle, s_SelectedTextureImportSettings);
+				break;
+			case AssetType::Sprite:
+			{
+				Ref<Sprite> sprite = AssetManager::GetAsset<Sprite>(handle);
+				FLARE_CORE_ASSERT(sprite);
+				m_SpriteEditor = SpriteEditor(sprite);
+				break;
+			}
+			}
+		});
 	}
 
 	void PropertiesWindow::OnImGuiRender()
@@ -120,6 +128,12 @@ namespace Flare
 
 			SerializablePropertyRenderer propertiesRenderer;
 			propertiesRenderer.Serialize("Sprite", SerializationValue(*sprite));
+
+			if (ImGui::Begin("Sprite Editor"))
+			{
+				m_SpriteEditor.OnImGuiRenderer();
+				ImGui::End();
+			}
 
 			break;
 		}
@@ -408,7 +422,7 @@ namespace Flare
 			if (propertyRenderer.PropertiesGridStarted())
 				EditorGUI::EndPropertyGrid();
 		}
-		
+
 		return false;
 	}
 }
