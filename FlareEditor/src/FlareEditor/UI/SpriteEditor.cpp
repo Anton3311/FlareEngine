@@ -14,7 +14,7 @@ namespace Flare
         const Ref<Texture>& texture = sprite->GetTexture();
         if (texture)
         {
-            ImVec2 textureSize = ImVec2(texture->GetWidth(), texture->GetHeight());
+            ImVec2 textureSize = ImVec2((float)texture->GetWidth(), (float)texture->GetHeight());
             m_SelectionStart = ImVec2(textureSize.x * sprite->UVMin.x, textureSize.y * sprite->UVMin.y);
             m_SelectionEnd = ImVec2(textureSize.x * sprite->UVMax.x, textureSize.y * sprite->UVMax.y);
         }
@@ -46,7 +46,7 @@ namespace Flare
         ImVec2 windowScroll = window->Scroll;
         ImVec2 mousePosition = ImGui::GetMousePos() - window->Pos;
 
-        ImVec2 textureSize = ImVec2(texture->GetWidth(), texture->GetHeight());
+        ImVec2 textureSize = ImVec2((float)texture->GetWidth(), (float)texture->GetHeight());
         float textureAspectRatio = textureSize.x / textureSize.y;
 
         ImVec2 maxTextureSize = window->Size - window->ScrollbarSizes;
@@ -149,6 +149,12 @@ namespace Flare
                 m_SelectionStarted = false;
             }
         }
+
+        glm::vec2 uvMin = glm::min(glm::vec2(m_SelectionStart.x, m_SelectionStart.y), glm::vec2(m_SelectionEnd.x, m_SelectionEnd.y)) / glm::vec2(textureSize.x, textureSize.y);
+        glm::vec2 uvMax = glm::max(glm::vec2(m_SelectionStart.x, m_SelectionStart.y), glm::vec2(m_SelectionEnd.x, m_SelectionEnd.y)) / glm::vec2(textureSize.x, textureSize.y);
+
+        m_Sprite->UVMin = uvMin;
+        m_Sprite->UVMax = uvMax;
 
         ImGui::EndChild();
         return result;

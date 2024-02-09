@@ -233,8 +233,8 @@ namespace Flare
 			float scrollbarWidth = ImGui::GetCurrentWindow()->ScrollbarSizes.x;
 
 			ImVec2 availiableContentSize = ImGui::GetContentRegionAvail() - ImVec2(scrollbarWidth, 0.0f);
-			float width = texture->GetWidth();
-			float height = texture->GetHeight();
+			float width = (float)texture->GetWidth();
+			float height = (float)texture->GetHeight();
 
 			float aspectRatio = width / height;
 
