@@ -61,9 +61,8 @@ namespace Flare
         }
 
         ImGui::Image((ImTextureID)texture->GetRendererId(), textureSize * m_Zoom, ImVec2(0, 1), ImVec2(1, 0));
-        bool imageHovered = ImGui::IsItemHovered();
-
         ImRect imageRect = { ImGui::GetItemRectMin(), ImGui::GetItemRectMax() };
+        bool imageHovered = ImGui::IsMouseHoveringRect(imageRect.Min, imageRect.Max);
 
         ImVec2 mousePositionTextureSpace = WindowToTextureSpace(mousePosition);
         mousePositionTextureSpace.x = glm::round(mousePositionTextureSpace.x);
@@ -133,30 +132,37 @@ namespace Flare
                 ValidateSelectionRect();
             }
         }
-        else if (imageHovered)
+        else
         {
-            if (ImGui::IsMouseDown(ImGuiMouseButton_Left))
+            bool leftButtonDown = ImGui::IsMouseDown(ImGuiMouseButton_Left);
+            if (leftButtonDown && imageHovered)
             {
-                if (selectionSides == SelectionRectSide::None)
-                {
-                    if (!m_SelectionStarted)
-                    {
-                        m_SelectionStart = mousePositionTextureSpace;
-                        m_SelectionStarted = true;
-                    }
-
-                    m_SelectionEnd = mousePositionTextureSpace;
-                }
-                else
-                {
-                    m_ResizedSides = selectionSides;
-                    ValidateSelectionRect();
-                }
+				m_CanResize = true;
             }
+
+			if (leftButtonDown && m_CanResize)
+			{
+				if (selectionSides == SelectionRectSide::None)
+				{
+					if (!m_SelectionStarted)
+					{
+						m_SelectionStart = mousePositionTextureSpace;
+						m_SelectionStarted = true;
+					}
+
+					m_SelectionEnd = mousePositionTextureSpace;
+				}
+				else
+				{
+					m_ResizedSides = selectionSides;
+					ValidateSelectionRect();
+				}
+			}
 
             if (ImGui::IsMouseReleased(ImGuiMouseButton_Left))
             {
                 m_SelectionStarted = false;
+                m_CanResize = false;
             }
         }
 

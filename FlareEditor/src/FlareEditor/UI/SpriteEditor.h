@@ -53,6 +53,7 @@ namespace Flare
         float m_SelectionRectCornerSize = 8.0f;
         float m_SideBarWidth = 300.0f;
 
+        bool m_CanResize;
         bool m_HasSelection = false;
         bool m_SelectionStarted = false;
 
