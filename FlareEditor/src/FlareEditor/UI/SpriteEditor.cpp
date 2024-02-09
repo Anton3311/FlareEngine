@@ -17,31 +17,40 @@ namespace Flare
         RenderViewport();
         ImGui::SameLine();
         RenderSidebar();
-
-        return;
     }
 
     void SpriteEditor::RenderViewport()
     {
         ImVec2 availableAreaSize = ImGui::GetContentRegionAvail();
-        const Ref<Texture>& texture = m_Sprite->GetTexture();
         ImGuiWindowFlags windowFlags = ImGuiWindowFlags_AlwaysHorizontalScrollbar
             | ImGuiWindowFlags_AlwaysVerticalScrollbar
             | ImGuiWindowFlags_NoScrollWithMouse
             | ImGuiWindowFlags_NoMove;
 
-        if (!ImGui::BeginChild("Viewport", ImVec2(availableAreaSize.x - m_SideBarWidth, availableAreaSize.y), false, windowFlags))
+        const auto& style = ImGui::GetStyle();
+        const ImVec4 windowBackground = style.Colors[ImGuiCol_WindowBg];
+        const float viewportBackgroundBrightness = 0.5f;
+
+        ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(
+            windowBackground.x * viewportBackgroundBrightness,
+            windowBackground.y * viewportBackgroundBrightness,
+            windowBackground.z * viewportBackgroundBrightness,
+            windowBackground.w));
+
+        if (ImGui::BeginChild("Viewport", ImVec2(availableAreaSize.x - m_SideBarWidth, availableAreaSize.y), false, windowFlags))
         {
+            if (m_Sprite->GetTexture())
+                RenderViewportContent();
+
             ImGui::EndChild();
-            return;
         }
 
-        if (!texture)
-        {
-            ImGui::EndChild();
-            return;
-        }
+        ImGui::PopStyleColor();
+    }
 
+    void SpriteEditor::RenderViewportContent()
+    {
+        const Ref<Texture>& texture = m_Sprite->GetTexture();
         ImGuiWindow* window = ImGui::GetCurrentWindow();
 
         ImVec2 windowScroll = window->Scroll;
@@ -137,28 +146,28 @@ namespace Flare
             bool leftButtonDown = ImGui::IsMouseDown(ImGuiMouseButton_Left);
             if (leftButtonDown && imageHovered)
             {
-				m_CanResize = true;
+                m_CanResize = true;
             }
 
-			if (leftButtonDown && m_CanResize)
-			{
-				if (selectionSides == SelectionRectSide::None)
-				{
-					if (!m_SelectionStarted)
-					{
-						m_SelectionStart = mousePositionTextureSpace;
-						m_SelectionStarted = true;
+            if (leftButtonDown && m_CanResize)
+            {
+                if (selectionSides == SelectionRectSide::None)
+                {
+                    if (!m_SelectionStarted)
+                    {
+                        m_SelectionStart = mousePositionTextureSpace;
+                        m_SelectionStarted = true;
                         m_HasSelection = true;
-					}
+                    }
 
-					m_SelectionEnd = mousePositionTextureSpace;
-				}
-				else
-				{
-					m_ResizedSides = selectionSides;
-					ValidateSelectionRect();
-				}
-			}
+                    m_SelectionEnd = mousePositionTextureSpace;
+                }
+                else
+                {
+                    m_ResizedSides = selectionSides;
+                    ValidateSelectionRect();
+                }
+            }
 
             if (ImGui::IsMouseReleased(ImGuiMouseButton_Left))
             {
@@ -166,8 +175,6 @@ namespace Flare
                 m_CanResize = false;
             }
         }
-
-        ImGui::EndChild();
     }
 
     void SpriteEditor::RenderSidebar()
@@ -214,10 +221,10 @@ namespace Flare
             {
                 Ref<Texture> texture = AssetManager::GetAsset<Texture>(textureHandle);
 
-				m_Sprite->SetTexture(texture);
+                m_Sprite->SetTexture(texture);
 
                 if (!texture)
-					ResetSelection();
+                    ResetSelection();
             }
 
             glm::vec2 textureSize(0.0f);

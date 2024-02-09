@@ -34,6 +34,7 @@ namespace Flare
     private:
         void RenderWindowContent();
         void RenderViewport();
+        void RenderViewportContent();
         void RenderSidebar();
         void RenderSidebarContent();
 
