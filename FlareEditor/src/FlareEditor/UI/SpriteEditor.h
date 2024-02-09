@@ -37,6 +37,8 @@ namespace Flare
         void RenderSidebar();
         void RenderSidebarContent();
 
+        void ResetSelection();
+
         ImVec2 WindowToTextureSpace(ImVec2 windowSpace);
         ImVec2 TextureToWindowSpace(ImVec2 textureSpace);
 
@@ -53,7 +55,7 @@ namespace Flare
         float m_SelectionRectCornerSize = 8.0f;
         float m_SideBarWidth = 300.0f;
 
-        bool m_CanResize;
+        bool m_CanResize = false;
         bool m_HasSelection = false;
         bool m_SelectionStarted = false;
 

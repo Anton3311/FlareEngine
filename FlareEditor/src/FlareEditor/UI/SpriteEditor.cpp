@@ -148,6 +148,7 @@ namespace Flare
 					{
 						m_SelectionStart = mousePositionTextureSpace;
 						m_SelectionStarted = true;
+                        m_HasSelection = true;
 					}
 
 					m_SelectionEnd = mousePositionTextureSpace;
@@ -210,7 +211,14 @@ namespace Flare
         {
             AssetHandle textureHandle = texture ? texture->Handle : NULL_ASSET_HANDLE;
             if (EditorGUI::AssetField("Texture", textureHandle, &Texture::_Asset))
-                m_Sprite->SetTexture(AssetManager::GetAsset<Texture>(textureHandle));
+            {
+                Ref<Texture> texture = AssetManager::GetAsset<Texture>(textureHandle);
+
+				m_Sprite->SetTexture(texture);
+
+                if (!texture)
+					ResetSelection();
+            }
 
             glm::vec2 textureSize(0.0f);
             glm::ivec2 position(0);
@@ -258,6 +266,15 @@ namespace Flare
         }
     }
 
+    void SpriteEditor::ResetSelection()
+    {
+        m_HasSelection = false;
+        m_SelectionStarted = false;
+        m_SelectionStart = ImVec2(0.0f, 0.0f);
+        m_SelectionEnd = ImVec2(0.0f, 0.0f);
+        m_ResizedSides = SelectionRectSide::None;
+    }
+
     ImVec2 SpriteEditor::WindowToTextureSpace(ImVec2 windowSpace)
     {
         return ImVec2((windowSpace + ImGui::GetCurrentWindow()->Scroll) / m_Zoom);
@@ -270,6 +287,9 @@ namespace Flare
 
     SpriteEditor::SelectionRectSide SpriteEditor::RenderSelectionRect(ImRect imageRect)
     {
+        if (!m_HasSelection)
+            return SelectionRectSide::None;
+        
         ImGuiWindow* window = ImGui::GetCurrentWindow();
         ImDrawList* drawList = window->DrawList;
 
@@ -404,18 +424,18 @@ namespace Flare
             // Flip vertically
             m_SelectionStart.y = textureSize.y - m_SelectionStart.y;
             m_SelectionEnd.y = textureSize.y - m_SelectionEnd.y;
+            
+            m_HasSelection = true;
         }
     }
 
     void SpriteEditor::OnClose()
     {
         m_Sprite = nullptr;
-        m_SelectionStart = ImVec2(0.0f, 0.0f);
-        m_SelectionEnd = ImVec2(0.0f, 0.0f);
         m_Zoom = 1.0f;
-        m_HasSelection = false;
-        m_SelectionStarted = false;
-        m_ResizedSides = SelectionRectSide::None;
+        m_CanResize = false;
+
+        ResetSelection();
     }
 
     void SpriteEditor::OnRenderImGui(bool& show)
