@@ -3,6 +3,8 @@
 #include "Flare/Renderer/Texture.h"
 #include "Flare/Renderer/Sprite.h"
 
+#include "Flare/Math/Math.h"
+
 #include "FlareEditor/ImGui/ImGuiLayer.h"
 
 namespace Flare
@@ -38,6 +40,7 @@ namespace Flare
         bool RenderSelectionSide(const char* name, ImVec2 position, ImVec2 size);
 
         void ValidateSelectionRect();
+        Math::Rect SelectionToUVRect();
     private:
         Ref<Sprite> m_Sprite = nullptr;
         SelectionRectSide m_ResizedSides = SelectionRectSide::None;

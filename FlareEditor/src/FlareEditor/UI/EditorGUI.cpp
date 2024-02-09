@@ -24,15 +24,15 @@ namespace Flare
         s_EditorIcons.Initialize();
     }
 
-    bool EditorGUI::BeginPropertyGrid()
+    bool EditorGUI::BeginPropertyGrid(float width)
     {
-        ImVec2 windowSize = ImGui::GetContentRegionAvail();
+        float windowWidth = width == 0.0f ? ImGui::GetContentRegionAvail().x : width;
         if (ImGui::BeginTable("Property Grid", 2))
         {
             const float nameColumnWidthPercetage = 0.3f;
 
-            ImGui::TableSetupColumn("Property", ImGuiTableColumnFlags_WidthFixed, windowSize.x * nameColumnWidthPercetage);
-            ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthFixed, windowSize.x * (1.0f - nameColumnWidthPercetage));
+            ImGui::TableSetupColumn("Property", ImGuiTableColumnFlags_WidthFixed, windowWidth * nameColumnWidthPercetage);
+            ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthFixed, windowWidth * (1.0f - nameColumnWidthPercetage));
             return true;
         }
         return false;
@@ -120,6 +120,18 @@ namespace Flare
 
         ImGui::PushID(&value);
         bool result = ImGui::DragScalar("", ImGuiDataType_U32, &value);
+        ImGui::PopID();
+
+        ImGui::PopItemWidth();
+        return result;
+    }
+
+    bool EditorGUI::IntVector2PropertyField(const char* name, glm::ivec2& value)
+    {
+        PropertyName(name);
+
+        ImGui::PushID(&value);
+        bool result = ImGui::DragInt2("", glm::value_ptr(value));
         ImGui::PopID();
 
         ImGui::PopItemWidth();

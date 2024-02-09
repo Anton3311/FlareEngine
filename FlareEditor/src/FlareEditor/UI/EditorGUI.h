@@ -22,7 +22,7 @@ namespace Flare
 	public:
 		static void Initialize();
 
-		static bool BeginPropertyGrid();
+		static bool BeginPropertyGrid(float width = 0.0f);
 		static void EndPropertyGrid();
 
 		static void DrawIcon(glm::ivec2 iconPosition, float size = 0.0f);
@@ -38,6 +38,9 @@ namespace Flare
 		static bool BoolPropertyField(const char* name, bool& value);
 		static bool IntPropertyField(const char* name, int32_t& value);
 		static bool UIntPropertyField(const char* name, uint32_t& value);
+
+		static bool IntVector2PropertyField(const char* name, glm::ivec2& value);
+
 		static bool FloatPropertyField(const char* name, float& value);
 		static bool Vector2PropertyField(const char* name, glm::vec2& value);
 		static bool Vector3PropertyField(const char* name, glm::vec3& value);
