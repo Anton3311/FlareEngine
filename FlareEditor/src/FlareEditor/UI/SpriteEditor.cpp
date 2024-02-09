@@ -11,7 +11,8 @@ namespace Flare
         bool result = false;
         ImGuiWindowFlags windowFlags = ImGuiWindowFlags_AlwaysHorizontalScrollbar
             | ImGuiWindowFlags_AlwaysVerticalScrollbar
-            | ImGuiWindowFlags_NoScrollWithMouse;
+            | ImGuiWindowFlags_NoScrollWithMouse
+            | ImGuiWindowFlags_NoMove;
 
         if (!ImGui::BeginChild("Viewport", ImVec2(0, 0), false, windowFlags))
         {
@@ -20,6 +21,12 @@ namespace Flare
         }
 
         const Ref<Texture>& texture = m_Sprite->GetTexture();
+        if (!texture)
+        {
+            ImGui::EndChild();
+            return false;
+        }
+
         ImGuiWindow* window = ImGui::GetCurrentWindow();
 
         ImVec2 windowScroll = window->Scroll;
@@ -43,7 +50,48 @@ namespace Flare
 
         ImGui::Image((ImTextureID)texture->GetRendererId(), textureSize * m_Zoom, ImVec2(0, 1), ImVec2(1, 0));
 
+        ImRect imageRect = { ImGui::GetItemRectMin(), ImGui::GetItemRectMax() };
+
+        ImVec2 mousePositionTextureSpace = WindowToTextureSpace(mousePosition);
+        mousePositionTextureSpace.x = glm::round(mousePositionTextureSpace.x);
+        mousePositionTextureSpace.y = glm::round(mousePositionTextureSpace.y);
+
+        mousePositionTextureSpace.x = glm::clamp(mousePositionTextureSpace.x, 0.0f, textureSize.x);
+        mousePositionTextureSpace.y = glm::clamp(mousePositionTextureSpace.y, 0.0f, textureSize.y);
+
+        if (ImGui::IsMouseDown(ImGuiMouseButton_Left))
+        {
+			if (!m_SelectionStarted)
+			{
+				m_SelectionStart = mousePositionTextureSpace;
+				m_SelectionStarted = true;
+			}
+
+            m_SelectionEnd = mousePositionTextureSpace;
+        }
+
+        if (ImGui::IsMouseReleased(ImGuiMouseButton_Left))
+        {
+            m_SelectionStarted = false;
+        }
+
+        ImDrawList* drawList = window->DrawList;
+        drawList->AddRect(
+            imageRect.Min + TextureToWindowSpace(m_SelectionStart) + window->Scroll,
+            imageRect.Min + TextureToWindowSpace(m_SelectionEnd) + window->Scroll,
+            0xffffffff);
+
         ImGui::EndChild();
         return result;
+    }
+
+    ImVec2 SpriteEditor::WindowToTextureSpace(ImVec2 windowSpace)
+    {
+        return ImVec2((windowSpace + ImGui::GetCurrentWindow()->Scroll) / m_Zoom);
+    }
+
+    ImVec2 SpriteEditor::TextureToWindowSpace(ImVec2 textureSpace)
+    {
+        return ImVec2(textureSpace * m_Zoom - ImGui::GetCurrentWindow()->Scroll);
     }
 }
