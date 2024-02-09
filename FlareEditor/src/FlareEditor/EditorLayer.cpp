@@ -125,11 +125,19 @@ namespace Flare
         }
 
         m_PrefabEditor = CreateRef<PrefabEditor>(m_ECSContext);
+        m_SpriteEditor = CreateRef<SpriteEditor>();
+
         m_AssetEditorWindows.push_back(m_PrefabEditor);
+        m_AssetEditorWindows.push_back(m_SpriteEditor);
 
         m_AssetManagerWindow.SetOpenAction(AssetType::Prefab, [this](AssetHandle handle)
         {
             m_PrefabEditor->Open(handle);
+        });
+
+        m_AssetManagerWindow.SetOpenAction(AssetType::Sprite, [this](AssetHandle handle)
+        {
+            m_SpriteEditor->Open(handle);
         });
 
         for (auto& viewportWindow : m_ViewportWindows)
@@ -515,7 +523,7 @@ namespace Flare
 
         if (active != nullptr)
         {
-			active->UninitializePostProcessing();
+            active->UninitializePostProcessing();
             Ref<EditorAssetManager> editorAssetManager = As<EditorAssetManager>(AssetManager::GetInstance());
 
             if (active != nullptr && AssetManager::IsAssetHandleValid(active->Handle))

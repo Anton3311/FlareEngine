@@ -38,13 +38,6 @@ namespace Flare
 				s_SelectedTextureImportSettings = TextureImportSettings();
 				TextureImporter::DeserializeImportSettings(handle, s_SelectedTextureImportSettings);
 				break;
-			case AssetType::Sprite:
-			{
-				Ref<Sprite> sprite = AssetManager::GetAsset<Sprite>(handle);
-				FLARE_CORE_ASSERT(sprite);
-				m_SpriteEditor = SpriteEditor(sprite);
-				break;
-			}
 			}
 		});
 	}
@@ -128,12 +121,6 @@ namespace Flare
 
 			SerializablePropertyRenderer propertiesRenderer;
 			propertiesRenderer.Serialize("Sprite", SerializationValue(*sprite));
-
-			if (ImGui::Begin("Sprite Editor"))
-			{
-				m_SpriteEditor.OnImGuiRenderer();
-				ImGui::End();
-			}
 
 			break;
 		}

@@ -16,6 +16,7 @@
 
 #include "FlareEditor/UI/EditorTitleBar.h"
 #include "FlareEditor/UI/PrefabEditor.h"
+#include "FlareEditor/UI/SpriteEditor.h"
 #include "FlareEditor/UI/QuickSearch/QuickSearch.h"
 #include "FlareEditor/UI/Profiler/ProfilerWindow.h"
 
@@ -102,6 +103,7 @@ namespace Flare
 
 		std::vector<Ref<AssetEditor>> m_AssetEditorWindows;
 		Ref<PrefabEditor> m_PrefabEditor;
+		Ref<SpriteEditor> m_SpriteEditor;
 
 		SceneWindow m_SceneWindow;
 		PropertiesWindow m_PropertiesWindow;

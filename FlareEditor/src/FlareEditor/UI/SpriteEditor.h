@@ -6,10 +6,11 @@
 #include "Flare/Math/Math.h"
 
 #include "FlareEditor/ImGui/ImGuiLayer.h"
+#include "FlareEditor/UI/AssetEditor.h"
 
 namespace Flare
 {
-    class SpriteEditor
+    class SpriteEditor : public AssetEditor
     {
     public:
         enum class SelectionRectSide
@@ -26,13 +27,13 @@ namespace Flare
             BottomRight = Bottom | Right,
         };
 
-        SpriteEditor()
-            : m_Sprite(nullptr) {}
-
-        SpriteEditor(const Ref<Sprite>& sprite);
-
-        bool OnImGuiRenderer();
+        void OnEvent(Event& event) override;
+        void OnOpen(AssetHandle asset) override;
+        void OnClose() override;
+        void OnRenderImGui(bool& show) override;
     private:
+        bool RendererWindowContent();
+
         ImVec2 WindowToTextureSpace(ImVec2 windowSpace);
         ImVec2 TextureToWindowSpace(ImVec2 textureSpace);
 

@@ -12,19 +12,7 @@ namespace Flare
 {
     FLARE_IMPL_ENUM_BITFIELD(SpriteEditor::SelectionRectSide);
 
-    SpriteEditor::SpriteEditor(const Ref<Sprite>& sprite)
-        : m_Sprite(sprite)
-    {
-        const Ref<Texture>& texture = sprite->GetTexture();
-        if (texture)
-        {
-            ImVec2 textureSize = ImVec2((float)texture->GetWidth(), (float)texture->GetHeight());
-            m_SelectionStart = ImVec2(textureSize.x * sprite->UVMin.x, textureSize.y * sprite->UVMin.y);
-            m_SelectionEnd = ImVec2(textureSize.x * sprite->UVMax.x, textureSize.y * sprite->UVMax.y);
-        }
-    }
-
-    bool SpriteEditor::OnImGuiRenderer()
+    bool SpriteEditor::RendererWindowContent()
     {
         bool result = false;
         ImGuiWindowFlags windowFlags = ImGuiWindowFlags_AlwaysHorizontalScrollbar
@@ -360,5 +348,47 @@ namespace Flare
             glm::vec2(m_SelectionEnd.x, m_SelectionEnd.y)) / glm::vec2(textureSize.x, textureSize.y);
 
         return Math::Rect(uvMin, uvMax);
+    }
+
+    void SpriteEditor::OnEvent(Event& event)
+    {
+    }
+
+    void SpriteEditor::OnOpen(AssetHandle asset)
+    {
+        FLARE_CORE_ASSERT(AssetManager::IsAssetHandleValid(asset));
+        const AssetMetadata* metadata = AssetManager::GetAssetMetadata(asset);
+
+        FLARE_CORE_ASSERT(metadata->Type == AssetType::Sprite);
+
+        m_Sprite = AssetManager::GetAsset<Sprite>(asset);
+        FLARE_CORE_ASSERT(m_Sprite);
+
+        const Ref<Texture>& texture = m_Sprite->GetTexture();
+        if (texture)
+        {
+            ImVec2 textureSize = ImVec2((float)texture->GetWidth(), (float)texture->GetHeight());
+            m_SelectionStart = ImVec2(textureSize.x * m_Sprite->UVMin.x, textureSize.y * m_Sprite->UVMin.y);
+            m_SelectionEnd = ImVec2(textureSize.x * m_Sprite->UVMax.x, textureSize.y * m_Sprite->UVMax.y);
+        }
+    }
+
+    void SpriteEditor::OnClose()
+    {
+        m_Sprite = nullptr;
+        m_SelectionStart = ImVec2(0.0f, 0.0f);
+        m_SelectionEnd = ImVec2(0.0f, 0.0f);
+        m_Zoom = 1.0f;
+        m_HasSelection = false;
+        m_SelectionStarted = false;
+        m_ResizedSides = SelectionRectSide::None;
+    }
+
+    void SpriteEditor::OnRenderImGui(bool& show)
+    {
+        if (ImGui::Begin("Sprite Editor", &show))
+            RendererWindowContent();
+
+        ImGui::End();
     }
 }
