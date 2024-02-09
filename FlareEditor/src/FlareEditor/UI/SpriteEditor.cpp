@@ -52,9 +52,6 @@ namespace Flare
         ImVec2 maxTextureSize = window->Size - window->ScrollbarSizes;
         ImVec2 scaledTextureSize = ImVec2(maxTextureSize.x, maxTextureSize.x / textureAspectRatio);
 
-        float scrollInput = ImGui::GetIO().MouseWheel;
-        m_Zoom = glm::max(1.0f, m_Zoom + scrollInput);
-
         if (ImGui::IsMouseDown(ImGuiMouseButton_Middle))
         {
             ImVec2 viewportDragDelta = ImGui::GetIO().MouseDelta;
@@ -73,6 +70,18 @@ namespace Flare
 
         mousePositionTextureSpace.x = glm::clamp(mousePositionTextureSpace.x, 0.0f, textureSize.x);
         mousePositionTextureSpace.y = glm::clamp(mousePositionTextureSpace.y, 0.0f, textureSize.y);
+
+        float scrollInput = ImGui::GetIO().MouseWheel;
+        m_Zoom = glm::max(1.0f, m_Zoom + scrollInput);
+
+        if (glm::abs(scrollInput) > 0.0f)
+        {
+            ImVec2 position = TextureToWindowSpace(mousePositionTextureSpace);
+            ImVec2 newScroll = position - mousePosition;
+
+            ImGui::SetScrollX(window->Scroll.x + newScroll.x);
+            ImGui::SetScrollY(window->Scroll.y + newScroll.y);
+        }
 
         SelectionRectSide selectionSides = RenderSelectionRect(imageRect);
 
