@@ -42,6 +42,12 @@ namespace Flare
 						result = true;
 					}
 
+					if (ImGui::MenuItem("Sprite"))
+					{
+						selectedEntity = m_World->CreateEntity<TransformComponent, SpriteComponent, SerializationId>();
+						result = true;
+					}
+
 					if (ImGui::MenuItem("Perspective Camera"))
 					{
 						selectedEntity = m_World->CreateEntity(
