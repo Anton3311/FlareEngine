@@ -69,6 +69,9 @@ namespace Flare
     {
         void OnSerialize(CameraComponent& camera, SerializationStream& stream)
         {
+            using ProjectionUnderlyingType = std::underlying_type_t<decltype(camera.Projection)>;
+            stream.Serialize("Projection", SerializationValue(reinterpret_cast<ProjectionUnderlyingType&>(camera.Projection)));
+
             stream.Serialize("Size", SerializationValue(camera.Size));
             stream.Serialize("FOV", SerializationValue(camera.FOV));
             stream.Serialize("Near", SerializationValue(camera.Near));
