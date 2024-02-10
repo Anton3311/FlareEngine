@@ -82,6 +82,23 @@ namespace Flare
         {
             if (ImGui::BeginMenu("New"))
             {
+                if (ImGui::MenuItem("Folder"))
+                {
+                    m_ShowNewFileNamePopup = true;
+                    m_OnNewFileNameEntered = [this, nodeIndex = m_NodeRenderIndex](std::string_view name)
+					{
+                        FLARE_CORE_ASSERT(m_AssetTree[nodeIndex].IsDirectory);
+
+                        std::filesystem::path path = m_AssetTree[nodeIndex].Path / name;
+                        if (std::filesystem::create_directory(path))
+                            FLARE_CORE_ERROR("Failed to create directory: '{}'", path.string());
+                        else
+                            RebuildAssetTree();
+					};
+                }
+
+                ImGui::Separator();
+
                 if (ImGui::MenuItem("Prefab"))
                 {
                     m_ShowNewFileNamePopup = true;
