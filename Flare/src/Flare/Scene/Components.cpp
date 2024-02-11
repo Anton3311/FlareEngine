@@ -75,6 +75,9 @@ namespace Flare
 		Sprite(AssetManager::GetAsset<Flare::Sprite>(sprite)),
 		Flags(SpriteRenderFlags::None) {}
 
+	SpriteComponent::SpriteComponent(const Ref<Flare::Sprite>& sprite)
+		: Sprite(sprite), Color(1.0f), Tilling(1.0f), Flags(SpriteRenderFlags::None) {}
+
 	FLARE_IMPL_COMPONENT(SpriteLayer);
 	SpriteLayer::SpriteLayer()
 		: Layer(0) {}
