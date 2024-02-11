@@ -6,5 +6,6 @@ namespace Flare
 	{
 	public:
 		static void BuildModules();
+		static void LinkModules();
 	};
 }

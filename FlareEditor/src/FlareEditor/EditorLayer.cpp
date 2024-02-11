@@ -612,7 +612,10 @@ namespace Flare
 
         ScriptingEngine::UnloadAllModules();
 
+        FLARE_CORE_INFO("Compiling...");
         BuildSystem::BuildModules();
+        FLARE_CORE_INFO("Linking...");
+        BuildSystem::LinkModules();
 
         ScriptingEngine::LoadModules();
         m_ECSContext.Components.RegisterComponents();
