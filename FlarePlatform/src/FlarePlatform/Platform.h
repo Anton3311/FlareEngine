@@ -27,6 +27,8 @@ namespace Flare
 		static void FreeSharedLibrary(void* library);
 		static void* LoadFunction(void* library, const std::string& name);
 
+		static bool IsDebuggerAttached();
+
 		static int32_t CreateProcess(std::filesystem::path& path, const ProcessCreationSettings& settings);
 
 		static std::optional<std::filesystem::path> ShowOpenFileDialog(const wchar_t* filter, const Ref<Window>& window);

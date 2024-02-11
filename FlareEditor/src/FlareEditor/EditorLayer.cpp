@@ -595,6 +595,7 @@ namespace Flare
 
     void EditorLayer::ReloadScriptingModules()
     {
+        FLARE_CORE_ASSERT(!Platform::IsDebuggerAttached());
         FLARE_CORE_ASSERT(m_Mode == EditorMode::Edit);
 
         Ref<Scene> active = Scene::GetActive();
