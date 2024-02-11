@@ -30,6 +30,7 @@ namespace Flare
 		}
 
 		void RegisterComponents();
+		void ReregisterComponents();
 
 		inline void Clear()
 		{

@@ -619,7 +619,7 @@ namespace Flare
         BuildSystem::LinkModules();
 
         ScriptingEngine::LoadModules();
-        m_ECSContext.Components.RegisterComponents();
+        m_ECSContext.Components.ReregisterComponents();
 
         active = CreateRef<Scene>(m_ECSContext);
         active->Handle = activeSceneHandle;
