@@ -31,6 +31,8 @@ namespace Flare
 
 		static int32_t CreateProcess(std::filesystem::path& path, const ProcessCreationSettings& settings);
 
+		static bool OpenFileExplorer(const std::filesystem::path& path);
+
 		static std::optional<std::filesystem::path> ShowOpenFileDialog(const wchar_t* filter, const Ref<Window>& window);
 		static std::optional<std::filesystem::path> ShowSaveFileDialog(const wchar_t* filter, const Ref<Window>& window);
 	};

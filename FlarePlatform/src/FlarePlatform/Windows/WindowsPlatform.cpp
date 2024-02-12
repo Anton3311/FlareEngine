@@ -13,6 +13,7 @@
 #ifdef FLARE_PLATFORM_WINDOWS
 
 #include <windows.h>
+#include <shellapi.h>
 #include <commdlg.h>
 
 #define GLFW_EXPOSE_NATIVE_WIN32
@@ -120,6 +121,41 @@ namespace Flare
 		CloseHandle(processInfo.hThread);
 
 		return (int32_t)exitCode;
+	}
+
+	bool Platform::OpenFileExplorer(const std::filesystem::path& path)
+	{
+		bool isDirectory = std::filesystem::is_directory(path);
+		std::wstring pathString = std::filesystem::absolute(path).wstring();
+
+		INT_PTR result = 0;
+		if (isDirectory)
+			result = (INT_PTR)ShellExecuteW(nullptr, nullptr, L"explorer.exe", pathString.c_str(), nullptr, SW_SHOWNORMAL);
+		else
+			result = (INT_PTR)ShellExecuteW(nullptr, nullptr, L"explorer.exe", (std::wstring(L"/select,") + pathString).c_str(), nullptr, SW_SHOWNORMAL);
+
+		if (result > 32)
+			return true;
+
+		const char* errorName = "";
+		switch (result)
+		{
+#define ERROR_CASE(error) case error: errorName = #error; break;
+			ERROR_CASE(ERROR_FILE_NOT_FOUND);
+			ERROR_CASE(ERROR_PATH_NOT_FOUND);
+			ERROR_CASE(ERROR_BAD_FORMAT);
+			ERROR_CASE(SE_ERR_ACCESSDENIED);
+			ERROR_CASE(SE_ERR_ASSOCINCOMPLETE);
+			ERROR_CASE(SE_ERR_DDEBUSY);
+			ERROR_CASE(SE_ERR_DDEFAIL);
+			ERROR_CASE(SE_ERR_DDETIMEOUT);
+			ERROR_CASE(SE_ERR_DLLNOTFOUND);
+			ERROR_CASE(SE_ERR_OOM);
+			ERROR_CASE(SE_ERR_SHARE);
+		}
+
+		FLARE_CORE_ERROR("Failed to open explorer: {}", errorName);
+		return false;
 	}
 
 	std::optional<std::filesystem::path> Platform::ShowOpenFileDialog(const wchar_t* filter, const Ref<Window>& window)

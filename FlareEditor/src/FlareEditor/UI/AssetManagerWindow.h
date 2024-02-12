@@ -43,13 +43,16 @@ namespace Flare
 	private:
 		void RenderDirectory();
 		void RenderFile();
-		void RenderAssetItem(AssetHandle handle);
+		void RenderAssetItem(AssetTreeNode* node, AssetHandle handle);
 
 		void BuildDirectory(uint32_t parentIndex, const std::filesystem::path& path);
 
 		void OnOpenFile(AssetHandle handle);
 
 		void RenderCreateNewFilePopup();
+
+		void RenderFileOrDirectoryMenuItems(const AssetTreeNode& node);
+		void RenderCreateAssetMenuItems(const AssetTreeNode& rootNode);
 	public:
 		Signal<AssetHandle> OnAssetSelectionChanged;
 	private:

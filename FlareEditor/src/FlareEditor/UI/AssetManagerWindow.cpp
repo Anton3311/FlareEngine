@@ -13,6 +13,8 @@
 #include "FlareEditor/AssetManager/MaterialImporter.h"
 #include "FlareEditor/AssetManager/SpriteImporter.h"
 
+#include "FlarePlatform/Platform.h"
+
 #include <fstream>
 #include <imgui.h>
 
@@ -86,7 +88,7 @@ namespace Flare
                 {
                     m_ShowNewFileNamePopup = true;
                     m_OnNewFileNameEntered = [this, nodeIndex = m_NodeRenderIndex](std::string_view name)
-					{
+                    {
                         FLARE_CORE_ASSERT(m_AssetTree[nodeIndex].IsDirectory);
 
                         std::filesystem::path path = m_AssetTree[nodeIndex].Path / name;
@@ -94,75 +96,17 @@ namespace Flare
                             FLARE_CORE_ERROR("Failed to create directory: '{}'", path.string());
                         else
                             RebuildAssetTree();
-					};
+                    };
                 }
 
                 ImGui::Separator();
 
-                if (ImGui::MenuItem("Prefab"))
-                {
-                    m_ShowNewFileNamePopup = true;
-                    m_OnNewFileNameEntered = [this, nodeIndex = m_NodeRenderIndex](std::string_view name)
-                    {
-                        FLARE_CORE_ASSERT(m_AssetTree[nodeIndex].IsDirectory);
-                        std::filesystem::path path = m_AssetTree[nodeIndex].Path / name;
-                        path.replace_extension(".flrprefab");
-
-                        if (!std::filesystem::exists(path))
-                        {
-                            std::ofstream output(path);
-                            output << R"(Components:
-  - Name: struct Flare::TransformComponent
-    Position: [0, 0, 0]
-    Rotation: [0, 0, 0]
-    Scale: [1, 1, 1])";
-                        }
-                    };
-                }
-
-                if (ImGui::MenuItem("Sprite"))
-                {
-                    m_ShowNewFileNamePopup = true;
-                    m_OnNewFileNameEntered = [this, nodeIndex = m_NodeRenderIndex](std::string_view name)
-                    {
-						std::filesystem::path path = m_AssetTree[nodeIndex].Path / name;
-                        path.replace_extension(".flrsprite");
-
-						Ref<Sprite> sprite = CreateRef<Sprite>();
-						Ref<EditorAssetManager> editorAssetManager = EditorAssetManager::GetInstance();
-
-						SpriteImporter::SerializeSprite(sprite, path);
-                        editorAssetManager->ImportAsset(path, sprite);
-                    };
-                }
-
-                if (ImGui::MenuItem("Material"))
-                {
-                    m_ShowNewFileNamePopup = true;
-                    m_OnNewFileNameEntered = [this, nodeIndex = m_NodeRenderIndex](std::string_view name)
-                    {
-                        std::filesystem::path path = m_AssetTree[nodeIndex].Path / name;
-                        path.replace_extension(".flrmat");
-
-                        std::optional<AssetHandle> meshShaderHandle = ShaderLibrary::FindShader("Mesh");
-
-                        if (meshShaderHandle)
-                        {
-                            Ref<Material> material = CreateRef<Material>(meshShaderHandle.value());
-                            MaterialImporter::SerializeMaterial(material, path);
-
-                            m_AssetManager->ImportAsset(path, material);
-                            RebuildAssetTree();
-                        }
-                        else
-                        {
-                            FLARE_CORE_ERROR("Failed to find Mesh shader");
-                        }
-                    };
-                }
+                RenderCreateAssetMenuItems(node);
 
                 ImGui::EndMenu();
             }
+
+            RenderFileOrDirectoryMenuItems(node);
 
             ImGui::EndMenu();
         }
@@ -195,7 +139,7 @@ namespace Flare
 
         if (node.IsImported)
         {
-            RenderAssetItem(node.Handle);
+            RenderAssetItem(&node, node.Handle);
             return;
         }
         else
@@ -211,8 +155,8 @@ namespace Flare
 
             const ImGuiStyle& style = ImGui::GetStyle();
             ImGui::PushStyleColor(ImGuiCol_Text, style.Colors[ImGuiCol_TextDisabled]);
-
             bool opened = ImGui::TreeNodeEx(node.Name.c_str(), flags, node.Name.c_str());
+            ImGui::PopStyleColor();
 
             if (opened)
             {
@@ -224,17 +168,17 @@ namespace Flare
                         node.IsImported = node.Handle != NULL_ASSET_HANDLE;
                     }
 
+                    RenderFileOrDirectoryMenuItems(node);
+
                     ImGui::EndMenu();
                 }
 
                 ImGui::TreePop();
             }
-
-            ImGui::PopStyleColor();
         }
     }
 
-    void AssetManagerWindow::RenderAssetItem(AssetHandle handle)
+    void AssetManagerWindow::RenderAssetItem(AssetTreeNode* node, AssetHandle handle)
     {
         ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow
             | ImGuiTreeNodeFlags_FramePadding
@@ -288,13 +232,10 @@ namespace Flare
 
             if (ImGui::MenuItem("Remove"))
             {
-                for (AssetTreeNode& node : m_AssetTree)
+                if (node)
                 {
-                    if (node.Handle == handle)
-                    {
-                        node.IsImported = false;
-                        break;
-                    }
+                    node->IsImported = false;
+                    node->Handle = NULL_ASSET_HANDLE;
                 }
 
                 m_AssetManager->RemoveFromRegistry(handle);
@@ -306,13 +247,16 @@ namespace Flare
                     m_AssetManager->ReloadAsset(handle);
             }
 
+            if (node)
+				RenderFileOrDirectoryMenuItems(*node);
+
             ImGui::EndMenu();
         }
 
         if (opened)
         {
             for (AssetHandle handle : metadata->SubAssets)
-                RenderAssetItem(handle);
+                RenderAssetItem(nullptr, handle);
 
             ImGui::TreePop();
         }
@@ -409,6 +353,79 @@ namespace Flare
                 m_OnNewFileNameEntered(fileName);
                 m_OnNewFileNameEntered = nullptr;
             }
+        }
+    }
+
+    void AssetManagerWindow::RenderFileOrDirectoryMenuItems(const AssetTreeNode& node)
+    {
+        ImGui::Separator();
+
+        if (ImGui::MenuItem("Show In File Explorer"))
+            Platform::OpenFileExplorer(node.Path);
+    }
+
+    void AssetManagerWindow::RenderCreateAssetMenuItems(const AssetTreeNode& rootNode)
+    {
+        if (ImGui::MenuItem("Prefab"))
+        {
+            m_ShowNewFileNamePopup = true;
+            m_OnNewFileNameEntered = [this, nodeIndex = m_NodeRenderIndex](std::string_view name)
+                {
+                    FLARE_CORE_ASSERT(m_AssetTree[nodeIndex].IsDirectory);
+                    std::filesystem::path path = m_AssetTree[nodeIndex].Path / name;
+                    path.replace_extension(".flrprefab");
+
+                    if (!std::filesystem::exists(path))
+                    {
+                        std::ofstream output(path);
+                        output << R"(Components:
+  - Name: struct Flare::TransformComponent
+    Position: [0, 0, 0]
+    Rotation: [0, 0, 0]
+    Scale: [1, 1, 1])";
+                    }
+                };
+        }
+
+        if (ImGui::MenuItem("Sprite"))
+        {
+            m_ShowNewFileNamePopup = true;
+            m_OnNewFileNameEntered = [this, nodeIndex = m_NodeRenderIndex](std::string_view name)
+                {
+                    std::filesystem::path path = m_AssetTree[nodeIndex].Path / name;
+                    path.replace_extension(".flrsprite");
+
+                    Ref<Sprite> sprite = CreateRef<Sprite>();
+                    Ref<EditorAssetManager> editorAssetManager = EditorAssetManager::GetInstance();
+
+                    SpriteImporter::SerializeSprite(sprite, path);
+                    editorAssetManager->ImportAsset(path, sprite);
+                };
+        }
+
+        if (ImGui::MenuItem("Material"))
+        {
+            m_ShowNewFileNamePopup = true;
+            m_OnNewFileNameEntered = [this, nodeIndex = m_NodeRenderIndex](std::string_view name)
+                {
+                    std::filesystem::path path = m_AssetTree[nodeIndex].Path / name;
+                    path.replace_extension(".flrmat");
+
+                    std::optional<AssetHandle> meshShaderHandle = ShaderLibrary::FindShader("Mesh");
+
+                    if (meshShaderHandle)
+                    {
+                        Ref<Material> material = CreateRef<Material>(meshShaderHandle.value());
+                        MaterialImporter::SerializeMaterial(material, path);
+
+                        m_AssetManager->ImportAsset(path, material);
+                        RebuildAssetTree();
+                    }
+                    else
+                    {
+                        FLARE_CORE_ERROR("Failed to find Mesh shader");
+                    }
+                };
         }
     }
 }
