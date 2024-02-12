@@ -86,8 +86,7 @@ namespace Flare
             {
                 if (ImGui::MenuItem("Folder"))
                 {
-                    m_ShowNewFileNamePopup = true;
-                    m_OnNewFileNameEntered = [this, nodeIndex = m_NodeRenderIndex](std::string_view name)
+                    ShowCreateNewFilePopup([this, nodeIndex = m_NodeRenderIndex](std::string_view name)
                     {
                         FLARE_CORE_ASSERT(m_AssetTree[nodeIndex].IsDirectory);
 
@@ -96,7 +95,7 @@ namespace Flare
                             FLARE_CORE_ERROR("Failed to create directory: '{}'", path.string());
                         else
                             RebuildAssetTree();
-                    };
+                    });
                 }
 
                 ImGui::Separator();
@@ -248,7 +247,7 @@ namespace Flare
             }
 
             if (node)
-				RenderFileOrDirectoryMenuItems(*node);
+                RenderFileOrDirectoryMenuItems(*node);
 
             ImGui::EndMenu();
         }
@@ -301,6 +300,14 @@ namespace Flare
         }
     }
 
+    void AssetManagerWindow::ShowCreateNewFilePopup(const FileNameCallback& callback)
+    {
+        std::memset(m_TextInputBuffer, 0, sizeof(m_TextInputBuffer));
+
+        m_ShowNewFilePopup = true;
+        m_OnNewFileNameCallback = callback;
+    }
+
     void AssetManagerWindow::RenderCreateNewFilePopup()
     {
         bool createNewFile = false;
@@ -308,32 +315,36 @@ namespace Flare
         ImVec2 center = ImGui::GetMainViewport()->GetCenter();
         ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
 
-        if (m_ShowNewFileNamePopup)
+        if (m_ShowNewFilePopup)
         {
-            m_ShowNewFileNamePopup = false;
-            std::memset(m_TextInputBuffer, 0, sizeof(m_TextInputBuffer));
-            ImGui::OpenPopup("EnterNewFileName");
+            ImGui::OpenPopup(m_FileNamePopupId);
+            m_ShowNewFilePopup = false;
         }
 
-        if (ImGui::BeginPopupModal("EnterNewFileName", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+        const auto& style = ImGui::GetStyle();
+
+        const float popupWidth = 300.0f;
+        const float popupContentWidth = popupWidth - style.WindowPadding.x * 2.0f;
+        ImGui::SetNextWindowSize(ImVec2(popupWidth, 100.0f));
+        if (ImGui::BeginPopupModal(m_FileNamePopupId, nullptr, ImGuiWindowFlags_AlwaysAutoResize))
         {
-            ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetStyle().FramePadding.y);
-            ImGui::Text("Name");
-            ImGui::SameLine();
+            ImGui::PushItemWidth(popupContentWidth);
 
             ImGui::PushID("FileNameField");
             ImGui::InputText("", m_TextInputBuffer, 512);
             ImGui::PopID();
 
+            ImGui::PopItemWidth();
+
             if (ImGui::Button("Create"))
                 createNewFile = true;
+
+            ImGui::SameLine();
 
             if (ImGui::IsKeyPressed(ImGuiKey_Enter))
                 createNewFile = true;
             if (ImGui::IsKeyPressed(ImGuiKey_Escape))
                 ImGui::CloseCurrentPopup();
-
-            ImGui::SameLine();
 
             if (ImGui::Button("Cancel"))
                 ImGui::CloseCurrentPopup();
@@ -348,10 +359,10 @@ namespace Flare
         {
             std::string_view fileName = m_TextInputBuffer;
 
-            if (m_OnNewFileNameEntered)
+            if (m_OnNewFileNameCallback)
             {
-                m_OnNewFileNameEntered(fileName);
-                m_OnNewFileNameEntered = nullptr;
+                m_OnNewFileNameCallback(fileName);
+                m_OnNewFileNameCallback = nullptr;
             }
         }
     }
@@ -368,64 +379,61 @@ namespace Flare
     {
         if (ImGui::MenuItem("Prefab"))
         {
-            m_ShowNewFileNamePopup = true;
-            m_OnNewFileNameEntered = [this, nodeIndex = m_NodeRenderIndex](std::string_view name)
-                {
-                    FLARE_CORE_ASSERT(m_AssetTree[nodeIndex].IsDirectory);
-                    std::filesystem::path path = m_AssetTree[nodeIndex].Path / name;
-                    path.replace_extension(".flrprefab");
+            ShowCreateNewFilePopup([this, nodeIndex = m_NodeRenderIndex](std::string_view name)
+            {
+                FLARE_CORE_ASSERT(m_AssetTree[nodeIndex].IsDirectory);
+                std::filesystem::path path = m_AssetTree[nodeIndex].Path / name;
+                path.replace_extension(".flrprefab");
 
-                    if (!std::filesystem::exists(path))
-                    {
-                        std::ofstream output(path);
-                        output << R"(Components:
-  - Name: struct Flare::TransformComponent
+                if (!std::filesystem::exists(path))
+                {
+                    std::ofstream output(path);
+                    output << R"(Components:
+- Name: struct Flare::TransformComponent
     Position: [0, 0, 0]
     Rotation: [0, 0, 0]
     Scale: [1, 1, 1])";
-                    }
-                };
+                }
+            });
         }
 
         if (ImGui::MenuItem("Sprite"))
         {
-            m_ShowNewFileNamePopup = true;
-            m_OnNewFileNameEntered = [this, nodeIndex = m_NodeRenderIndex](std::string_view name)
-                {
-                    std::filesystem::path path = m_AssetTree[nodeIndex].Path / name;
-                    path.replace_extension(".flrsprite");
+            ShowCreateNewFilePopup([this, nodeIndex = m_NodeRenderIndex](std::string_view name)
+            {
+                std::filesystem::path path = m_AssetTree[nodeIndex].Path / name;
+                path.replace_extension(".flrsprite");
 
-                    Ref<Sprite> sprite = CreateRef<Sprite>();
-                    Ref<EditorAssetManager> editorAssetManager = EditorAssetManager::GetInstance();
+                Ref<Sprite> sprite = CreateRef<Sprite>();
+                Ref<EditorAssetManager> editorAssetManager = EditorAssetManager::GetInstance();
 
-                    SpriteImporter::SerializeSprite(sprite, path);
-                    editorAssetManager->ImportAsset(path, sprite);
-                };
+                SpriteImporter::SerializeSprite(sprite, path);
+                editorAssetManager->ImportAsset(path, sprite);
+            });
         }
 
         if (ImGui::MenuItem("Material"))
         {
-            m_ShowNewFileNamePopup = true;
-            m_OnNewFileNameEntered = [this, nodeIndex = m_NodeRenderIndex](std::string_view name)
+            ShowCreateNewFilePopup([this, nodeIndex = m_NodeRenderIndex](std::string_view name)
+            {
+                std::filesystem::path path = m_AssetTree[nodeIndex].Path / name;
+                path.replace_extension(".flrmat");
+
+                std::optional<AssetHandle> meshShaderHandle = ShaderLibrary::FindShader("Mesh");
+
+                if (meshShaderHandle)
                 {
-                    std::filesystem::path path = m_AssetTree[nodeIndex].Path / name;
-                    path.replace_extension(".flrmat");
+                    Ref<Material> material = CreateRef<Material>(meshShaderHandle.value());
+                    MaterialImporter::SerializeMaterial(material, path);
 
-                    std::optional<AssetHandle> meshShaderHandle = ShaderLibrary::FindShader("Mesh");
-
-                    if (meshShaderHandle)
-                    {
-                        Ref<Material> material = CreateRef<Material>(meshShaderHandle.value());
-                        MaterialImporter::SerializeMaterial(material, path);
-
-                        m_AssetManager->ImportAsset(path, material);
-                        RebuildAssetTree();
-                    }
-                    else
-                    {
-                        FLARE_CORE_ERROR("Failed to find Mesh shader");
-                    }
-                };
+                    m_AssetManager->ImportAsset(path, material);
+                    RebuildAssetTree();
+                }
+                else
+                {
+                    FLARE_CORE_ERROR("Failed to find Mesh shader");
+                }
+            });
         }
     }
 }
