@@ -366,7 +366,7 @@ namespace Flare
 				if (property.Hidden)
 					continue;
 
-				propertyRenderer.PropertyKey(property.Name);
+				propertyRenderer.PropertyKey(property.DisplayName);
 				switch (property.Type)
 				{
 				case ShaderDataType::Int:

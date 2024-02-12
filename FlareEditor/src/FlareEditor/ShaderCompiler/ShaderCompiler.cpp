@@ -252,6 +252,7 @@ namespace Flare
 
                     ShaderProperty& shaderProperty = properties[it->second];
                     shaderProperty.Hidden = false;
+                    shaderProperty.DisplayName = shaderProperty.Name;
 
                     if (property.Type != BlockElementType::Block)
                         continue;
@@ -299,6 +300,14 @@ namespace Flare
                                 errors.emplace_back(element.Value.Position, fmt::format("Unknown shader property type '{}'", element.Value.Value));
                                 continue;
                             }
+                        }
+
+                        if (element.Name.Value == "DisplayName")
+                        {
+                            if (element.Type == BlockElementType::Value)
+                                shaderProperty.DisplayName = element.Value.Value;
+                            else
+                                errors.emplace_back(element.Value.Position, "Expected a string value");
                         }
                     }
                 }

@@ -74,15 +74,41 @@ namespace Flare
 		SourcePosition position = m_CurrentPosition;
 
 		size_t start = m_ReadPosition;
-		while (IsReadPositionValid())
+		size_t end = m_ReadPosition;
+		// String
+		if (m_ShaderSource[start] == '"')
 		{
-			if (iswspace(m_ShaderSource[m_ReadPosition]))
-				break;
-
 			Advance();
+			start = m_ReadPosition;
+			while (m_ShaderSource[m_ReadPosition] != '"')
+			{
+				if (!IsReadPositionValid() || m_ShaderSource[m_ReadPosition] == '#') // # is used for keywords
+				{
+					FLARE_CORE_INFO("invalid");
+					m_Errors.emplace_back(m_CurrentPosition, "Unmatched '\"'");
+					return {};
+				}
+
+				Advance();
+			}
+
+			end = m_ReadPosition;
+			Advance(); // Skip closing '"'
+		}
+		else
+		{
+			while (IsReadPositionValid())
+			{
+				if (iswspace(m_ShaderSource[m_ReadPosition]))
+					break;
+
+				Advance();
+			}
+
+			end = m_ReadPosition;
 		}
 
-		size_t identifierLength = m_ReadPosition - start;
+		size_t identifierLength = end - start;
 		if (identifierLength == 0)
 			return {};
 

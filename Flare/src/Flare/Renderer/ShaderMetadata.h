@@ -132,6 +132,7 @@ namespace Flare
 			Offset(offset) {}
 
 		std::string Name;
+		std::string DisplayName;
 		ShaderDataType Type;
 		uint32_t Location;
 		uint32_t SamplerIndex;
