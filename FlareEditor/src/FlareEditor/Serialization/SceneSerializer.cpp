@@ -232,7 +232,7 @@ namespace Flare
 			emitter << YAML::Value << YAML::BeginMap;
 			emitter << YAML::Key << "Name" << YAML::Value << descriptor->Name;
 
-			YAMLSerializer serialzier(emitter, scene->GetECSWorld());
+			YAMLSerializer serialzier(emitter, &scene->GetECSWorld());
 			serialzier.Serialize("Data", SerializationValue(*atmospherePass));
 
 			emitter << YAML::EndMap;
