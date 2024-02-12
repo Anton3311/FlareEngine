@@ -63,6 +63,20 @@ AssetRegistry:
     Parent: 0
     SubAssets:
       []
+  - Handle: 6603499577536286740
+    Type: Material
+    Path: Skybox.flrmat
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
+  - Handle: 6908186570440597389
+    Type: Shader
+    Path: Skybox.glsl
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
   - Handle: 7418829293977948505
     Type: MaterialsTable
     Name: DefaultMaterialsTable
@@ -171,6 +185,13 @@ AssetRegistry:
     SubAssets:
       - 8591874641572217228
       - 9410272321376708478
+  - Handle: 16424552927406339039
+    Type: Material
+    Path: Skybox.flrmat
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
   - Handle: 16707388620857689085
     Type: MaterialsTable
     Name: DefaultMaterialsTable
