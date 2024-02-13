@@ -203,53 +203,41 @@ namespace Flare
 
 		m_CameraController.Update(m_RelativeMousePosition);
 
+		if (m_IsFocused)
+		{
+			EditorLayer& editorLayer = EditorLayer::GetInstance();
+			GuizmoMode guizmoMode = editorLayer.Guizmo;
+
+			if (ImGui::IsKeyPressed(ImGuiKey_Escape))
+				guizmoMode = GuizmoMode::None;
+			if (ImGui::IsKeyPressed(ImGuiKey_G))
+				guizmoMode = GuizmoMode::Translate;
+			if (ImGui::IsKeyPressed(ImGuiKey_R))
+				guizmoMode = GuizmoMode::Rotate;
+			if (ImGui::IsKeyPressed(ImGuiKey_S))
+				guizmoMode = GuizmoMode::Scale;
+
+			if (ImGui::IsKeyPressed(ImGuiKey_F))
+			{
+				const auto& editorSelection = EditorLayer::GetInstance().Selection;
+				if (editorSelection.GetType() == EditorSelectionType::Entity)
+				{
+					const World& world = GetScene()->GetECSWorld();
+					const TransformComponent* transform = world.TryGetEntityComponent<TransformComponent>(editorSelection.GetEntity());
+
+					if (transform)
+						m_Camera.SetRotationOrigin(transform->Position);
+				}
+			}
+				
+			editorLayer.Guizmo = guizmoMode;
+		}
+
 		EndImGui();
 	}
 
 	void SceneViewportWindow::OnEvent(Event& event)
 	{
-		EventDispatcher dispatcher(event);
-
-		if (m_IsFocused)
-		{
-			dispatcher.Dispatch<KeyReleasedEvent>([this](KeyReleasedEvent& e) -> bool
-				{
-					GuizmoMode guizmoMode = EditorLayer::GetInstance().Guizmo;
-					switch (e.GetKeyCode())
-					{
-					case KeyCode::Escape:
-						guizmoMode = GuizmoMode::None;
-						break;
-					case KeyCode::G:
-						guizmoMode = GuizmoMode::Translate;
-						break;
-					case KeyCode::R:
-						guizmoMode = GuizmoMode::Rotate;
-						break;
-					case KeyCode::S:
-						guizmoMode = GuizmoMode::Scale;
-						break;
-					case KeyCode::F:
-					{
-						const auto& editorSelection = EditorLayer::GetInstance().Selection;
-						if (editorSelection.GetType() == EditorSelectionType::Entity)
-						{
-							const World& world = GetScene()->GetECSWorld();
-							const TransformComponent* transform = world.TryGetEntityComponent<TransformComponent>(editorSelection.GetEntity());
-
-							if (transform)
-								m_Camera.SetRotationOrigin(transform->Position);
-						}
-						break;
-					}
-					default:
-						return false;
-					}
-
-					EditorLayer::GetInstance().Guizmo = guizmoMode;
-					return false;
-				});
-		}
 	}
 
 	void SceneViewportWindow::CreateFrameBuffer()
