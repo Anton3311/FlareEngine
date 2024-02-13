@@ -558,6 +558,11 @@ namespace Flare
 			SceneViewSettings& settings = EditorLayer::GetInstance().GetSceneViewSettings();
 			if (ImGui::BeginCombo("", "Settings"))
 			{
+				ImGui::MenuItem("Shadows", nullptr, &m_Viewport.ShadowMappingEnabled);
+				ImGui::MenuItem("Post Processing", nullptr, &m_Viewport.PostProcessingEnabled);
+
+				ImGui::Separator();
+
 				ImGui::MenuItem("Show AABBs", nullptr, &settings.ShowAABBs);
 				ImGui::MenuItem("Show Lights", nullptr, &settings.ShowLights);
 				ImGui::MenuItem("Show Camera Frustums", nullptr, &settings.ShowCameraFrustum);

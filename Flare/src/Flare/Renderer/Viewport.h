@@ -23,6 +23,7 @@ namespace Flare
 		void Resize(glm::ivec2 position, glm::ivec2 size);
 	public:
 		bool PostProcessingEnabled = true;
+		bool ShadowMappingEnabled = true;
 
 		RenderData FrameData;
 		Ref<FrameBuffer> RenderTarget;

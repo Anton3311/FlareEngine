@@ -57,6 +57,7 @@ namespace Flare
 
                 memcpy_s(sourceName, path.size() + 1, pathString.c_str(), pathString.size());
 
+                // NOTE: Include result owns the shader path string
                 includeData->source_name = sourceName;
                 includeData->source_name_length = pathString.size();
             }

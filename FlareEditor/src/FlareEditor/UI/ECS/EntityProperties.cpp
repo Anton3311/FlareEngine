@@ -198,6 +198,10 @@ namespace Flare
 				EditorGUI::ColorPropertyField("Environment Color", environment.EnvironmentColor);
 				EditorGUI::FloatPropertyField("Environment Color Intensity", environment.EnvironmentColorIntensity);
 
+				EditorGUI::BoolPropertyField("Shadows Enabled", environment.ShadowSettings.Enabled);
+
+				ImGui::BeginDisabled(environment.ShadowSettings.Enabled);
+
 				EditorGUI::PropertyName("Shadow Quality");
 
 				const char* qualityPreviews[] = { "Low", "Medium", "High" };
@@ -235,6 +239,8 @@ namespace Flare
 				EditorGUI::FloatPropertyField("Shadow Cascade 1", environment.ShadowSettings.CascadeSplits[1]);
 				EditorGUI::FloatPropertyField("Shadow Cascade 2", environment.ShadowSettings.CascadeSplits[2]);
 				EditorGUI::FloatPropertyField("Shadow Cascade 3", environment.ShadowSettings.CascadeSplits[3]);
+
+				ImGui::EndDisabled();
 
 				EditorGUI::EndPropertyGrid();
 			}
