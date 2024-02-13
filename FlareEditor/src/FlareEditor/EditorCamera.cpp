@@ -116,25 +116,29 @@ namespace Flare
 		RecalculateViewMatrix();
 	}
 
-	void EditorCamera::Rotate(glm::vec2 mouseInput)
+	void EditorCamera::Rotate(glm::vec2 mouseDelta)
 	{
-		mouseInput *= m_Settings.RotationSpeed;
+		mouseDelta *= m_Settings.RotationSpeed;
 
-		m_Rotation.x += mouseInput.y;
-		m_Rotation.y += mouseInput.x;
+		m_Rotation.x += mouseDelta.y;
+		m_Rotation.y += mouseDelta.x;
 
 		RecalculateViewMatrix();
 	}
 
 	glm::vec3 EditorCamera::CalculateTranslationPoint(glm::vec2 mousePosition, const glm::mat4& inverseProjection, const glm::mat4& inverseView)
 	{
-		mousePosition = mousePosition / m_ViewportSize;
-		glm::vec2 clipSpaceMousePosition = glm::vec2(mousePosition.x, 1.0f - mousePosition.y) * 2.0f - glm::vec2(1.0f);
-
-		glm::vec3 direction = inverseProjection * glm::vec4(clipSpaceMousePosition, -1.0f, 1.0f);
-		direction = inverseView * glm::vec4(direction, 0.0f);
-
 		glm::vec3 cameraPosition = GetPosition();
+
+		mousePosition = mousePosition / m_ViewportSize;
+		glm::vec2 clipSpaceMousePosition = glm::vec2(mousePosition.x, mousePosition.y) * 2.0f - glm::vec2(1.0f);
+
+		glm::mat4 inverseViewProjection = glm::inverse(m_ProjectionMatrix * m_ViewMatrix);
+
+		glm::vec4 relativeWorldSpacePosition = inverseViewProjection * glm::vec4(clipSpaceMousePosition, 1.0f, 1.0f);
+		relativeWorldSpacePosition /= relativeWorldSpacePosition.w;
+
+		glm::vec3 direction = glm::normalize((glm::vec3)relativeWorldSpacePosition - cameraPosition);
 
 		Math::Plane translationPlane = Math::Plane::TroughPoint(m_Origin, TransformDirection(glm::vec3(0.0f, 0.0f, -1.0f)));
 
@@ -143,19 +147,21 @@ namespace Flare
 		ray.Origin = cameraPosition;
 
 		float t = Math::IntersectPlane(translationPlane, ray);
-		return cameraPosition + direction * t;
+		return cameraPosition + (glm::vec3)direction * t;
 	}
 
-	void EditorCamera::Drag(glm::vec2 mouseInput)
+	void EditorCamera::Drag(glm::vec2 mousePosition)
 	{
 		glm::mat4 inverseProjection = glm::inverse(m_ProjectionMatrix);
 		glm::mat4 inverseView = glm::inverse(m_ViewMatrix);
 
-		glm::vec3 previousPosition = CalculateTranslationPoint(mouseInput, inverseProjection, inverseView);
+		glm::vec3 previousPosition = CalculateTranslationPoint(mousePosition, inverseProjection, inverseView);
 		glm::vec3 currentPosition = CalculateTranslationPoint(m_PreviousMousePosition, inverseProjection, inverseView);
 
 		glm::vec3 movementDirection = (currentPosition - previousPosition);
 		m_Origin += movementDirection;
+
+		m_PreviousMousePosition = mousePosition;
 
 		RecalculateViewMatrix();
 	}

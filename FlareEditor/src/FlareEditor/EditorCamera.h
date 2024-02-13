@@ -41,8 +41,10 @@ namespace Flare
 		void OnViewportChanged(glm::ivec2 viewportSize, glm::ivec2 viewportPosition);
 
 		void Zoom(float amount);
-		void Rotate(glm::vec2 mouseInput);
-		void Drag(glm::vec2 mouseInput);
+		void Rotate(glm::vec2 mouseDelta);
+		void Drag(glm::vec2 mousePosition);
+
+		inline void ResetPreviousMousePosition(glm::vec2 newPosition) { m_PreviousMousePosition = newPosition; }
 
 		inline glm::vec3 GetViewDirection() const { return TransformDirection(glm::vec3(0.0f, 0.0f, -1.0f)); }
 	public:

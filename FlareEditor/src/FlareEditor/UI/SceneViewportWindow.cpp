@@ -39,7 +39,8 @@ namespace Flare
 		: ViewportWindow(name, true),
 		m_Camera(camera),
 		m_Overlay(ViewportOverlay::Default),
-		m_IsToolbarHovered(false) {}
+		m_IsToolbarHovered(false),
+		m_CameraController(m_Camera) {}
 
 	void SceneViewportWindow::OnAttach()
 	{
@@ -200,6 +201,8 @@ namespace Flare
 			RenderWindowContents();
 		}
 
+		m_CameraController.Update(m_RelativeMousePosition);
+
 		EndImGui();
 	}
 
@@ -247,18 +250,6 @@ namespace Flare
 					return false;
 				});
 		}
-
-		bool skipCamera = false;
-		if (!m_IsHovered || !m_IsFocused)
-		{
-			dispatcher.Dispatch<MouseMoveEvent>([&skipCamera](auto& e) -> bool { skipCamera = true; return false; });
-			dispatcher.Dispatch<MouseScrollEvent>([&skipCamera](auto& e) -> bool { skipCamera = true; return false; });
-		}
-
-		if (skipCamera)
-			return;
-
-		m_Camera.ProcessEvents(event);
 	}
 
 	void SceneViewportWindow::CreateFrameBuffer()
