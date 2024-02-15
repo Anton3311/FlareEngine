@@ -51,8 +51,7 @@ namespace Flare
         m_PropertiesWindow(m_AssetManagerWindow),
         m_PlaymodePaused(false),
         m_Mode(EditorMode::Edit),
-        m_ProjectFilesWacher(nullptr),
-        Guizmo(GuizmoMode::None)
+        m_ProjectFilesWacher(nullptr)
     {
         s_Instance = this;
 

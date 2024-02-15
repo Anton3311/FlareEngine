@@ -37,14 +37,6 @@ namespace Flare
 		Play,
 	};
 
-	enum class GuizmoMode
-	{
-		None,
-		Translate,
-		Rotate,
-		Scale,
-	};
-
 	class EditorLayer : public Layer
 	{
 	public:
@@ -123,7 +115,6 @@ namespace Flare
 
 		Scope<FileWatcher> m_ProjectFilesWacher;
 	public:
-		GuizmoMode Guizmo;
 		EditorSelection Selection;
 	private:
 		static EditorLayer* s_Instance;

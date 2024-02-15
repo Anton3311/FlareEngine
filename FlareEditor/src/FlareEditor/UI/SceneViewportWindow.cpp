@@ -40,7 +40,8 @@ namespace Flare
 		m_Camera(camera),
 		m_Overlay(ViewportOverlay::Default),
 		m_IsToolbarHovered(false),
-		m_CameraController(m_Camera) {}
+		m_CameraController(m_Camera),
+		m_Guizmo(GuizmoMode::None) {}
 
 	void SceneViewportWindow::OnAttach()
 	{
@@ -206,7 +207,7 @@ namespace Flare
 		if (m_IsFocused)
 		{
 			EditorLayer& editorLayer = EditorLayer::GetInstance();
-			GuizmoMode guizmoMode = editorLayer.Guizmo;
+			GuizmoMode guizmoMode = m_Guizmo;
 
 			if (ImGui::IsKeyPressed(ImGuiKey_Escape))
 				guizmoMode = GuizmoMode::None;
@@ -230,7 +231,7 @@ namespace Flare
 				}
 			}
 				
-			editorLayer.Guizmo = guizmoMode;
+			m_Guizmo = guizmoMode;
 		}
 
 		EndImGui();
@@ -350,7 +351,7 @@ namespace Flare
 
 		const EditorSelection& selection = EditorLayer::GetInstance().Selection;
 
-		bool showGuizmo = EditorLayer::GetInstance().Guizmo != GuizmoMode::None;
+		bool showGuizmo = m_Guizmo != GuizmoMode::None;
 		bool hasSelection = selection.GetType() == EditorSelectionType::Entity && world.IsEntityAlive(selection.GetEntity());
 		if (showGuizmo && hasSelection)
 		{
@@ -373,7 +374,7 @@ namespace Flare
 				float snapValue = 0.5f;
 
 				ImGuizmo::OPERATION operation = (ImGuizmo::OPERATION)-1;
-				switch (EditorLayer::GetInstance().Guizmo)
+				switch (m_Guizmo)
 				{
 				case GuizmoMode::Translate:
 					operation = ImGuizmo::TRANSLATE;
@@ -514,16 +515,16 @@ namespace Flare
 
 		{
 			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
-			if (GuizmoButton("T", editorLayer.Guizmo == GuizmoMode::Translate))
-				editorLayer.Guizmo = GuizmoMode::Translate;
+			if (GuizmoButton("T", m_Guizmo == GuizmoMode::Translate))
+				m_Guizmo = GuizmoMode::Translate;
 
 			ImGui::SameLine();
-			if (GuizmoButton("R", editorLayer.Guizmo == GuizmoMode::Rotate))
-				editorLayer.Guizmo = GuizmoMode::Rotate;
+			if (GuizmoButton("R", m_Guizmo == GuizmoMode::Rotate))
+				m_Guizmo = GuizmoMode::Rotate;
 
 			ImGui::SameLine();
-			if (GuizmoButton("S", editorLayer.Guizmo == GuizmoMode::Scale))
-				editorLayer.Guizmo = GuizmoMode::Scale;
+			if (GuizmoButton("S", m_Guizmo == GuizmoMode::Scale))
+				m_Guizmo = GuizmoMode::Scale;
 
 			ImGui::PopStyleVar(); // Item spacing
 		}

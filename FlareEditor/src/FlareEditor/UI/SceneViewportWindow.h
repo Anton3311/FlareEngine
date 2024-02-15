@@ -7,6 +7,7 @@
 
 #include "FlareECS/Entity/Entity.h"
 
+#include "FlareEditor/Guizmo.h"
 #include "FlareEditor/ViewportWindow.h"
 #include "FlareEditor/EditorCamera.h"
 #include "FlareEditor/EditorCameraController.h"
@@ -41,6 +42,7 @@ namespace Flare
 
 		Entity GetEntityUnderCursor() const;
 	private:
+		GuizmoMode m_Guizmo;
 		EditorCamera& m_Camera;
 		EditorCameraController m_CameraController;
 		bool m_IsToolbarHovered;
