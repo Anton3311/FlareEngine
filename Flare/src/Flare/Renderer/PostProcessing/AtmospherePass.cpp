@@ -8,7 +8,7 @@ namespace Flare
 
 	void AtmospherePass::OnRender(RenderingContext& context)
 	{
-		if (!AtmosphereMaterial || !Enabled)
+		if (!AtmosphereMaterial || !Enabled || !Renderer::GetCurrentViewport().PostProcessingEnabled)
 			return;
 
 		Renderer::DrawFullscreenQuad(AtmosphereMaterial);
