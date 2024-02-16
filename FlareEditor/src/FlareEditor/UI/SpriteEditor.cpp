@@ -41,9 +41,8 @@ namespace Flare
         {
             if (m_Sprite->GetTexture())
                 RenderViewportContent();
-
-            ImGui::EndChild();
         }
+		ImGui::EndChild();
 
         ImGui::PopStyleColor();
     }
@@ -180,10 +179,8 @@ namespace Flare
     void SpriteEditor::RenderSidebar()
     {
         if (ImGui::BeginChild("Sidebar"))
-        {
             RenderSidebarContent();
-            ImGui::EndChild();
-        }
+		ImGui::EndChild();
     }
 
     void SpriteEditor::RenderSidebarContent()
