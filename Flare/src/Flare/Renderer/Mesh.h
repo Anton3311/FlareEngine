@@ -40,6 +40,9 @@ namespace Flare
 			const Span<glm::vec3>& normals,
 			const Span<glm::vec2>& uvs);
 
+		constexpr size_t GetVertexBufferSize() const { return m_VertexBufferSize; }
+		constexpr size_t GetIndexBufferSize() const { return m_IndexBufferSize; }
+
 		inline const std::vector<SubMesh>& GetSubMeshes() const { return m_SubMeshes; }
 		inline MeshTopology GetTopologyType() const { return m_TopologyType; }
 

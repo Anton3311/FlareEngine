@@ -77,6 +77,38 @@ namespace Flare
 		ImGui::End();
 	}
 
+	static void RenderTableRow(const char* rowName, int32_t value)
+	{
+		const ImGuiStyle& style = ImGui::GetStyle();
+
+		ImGui::TableNextRow();
+		ImGui::TableSetColumnIndex(0);
+
+		EditorGUI::MoveCursor(ImVec2(0, style.FramePadding.y));
+		ImGui::TextUnformatted(rowName);
+
+		ImGui::TableSetColumnIndex(1);
+
+		EditorGUI::MoveCursor(ImVec2(0, style.FramePadding.y));
+		ImGui::Text("%d", value);
+	}
+
+	static void RenderTableRow(const char* rowName, const char* text)
+	{
+		const ImGuiStyle& style = ImGui::GetStyle();
+
+		ImGui::TableNextRow();
+		ImGui::TableSetColumnIndex(0);
+
+		EditorGUI::MoveCursor(ImVec2(0, style.FramePadding.y));
+		ImGui::TextUnformatted(rowName);
+
+		ImGui::TableSetColumnIndex(1);
+
+		EditorGUI::MoveCursor(ImVec2(0, style.FramePadding.y));
+		ImGui::TextUnformatted(text);
+	}
+
 	void PropertiesWindow::RenderAssetProperties(AssetHandle handle)
 	{
 		FLARE_CORE_ASSERT(AssetManager::IsAssetHandleValid(handle));
@@ -91,6 +123,37 @@ namespace Flare
 		case AssetType::Material:
 			RenderMaterialEditor(handle);
 			break;
+		case AssetType::Mesh:
+		{
+			Ref<const Mesh> mesh = AssetManager::GetAsset<const Mesh>(handle);
+
+			if (ImGui::BeginTable("MeshInfo", 2))
+			{
+				ImVec2 windowSize = ImGui::GetContentRegionAvail();
+				ImGui::TableSetupColumn("Property", ImGuiTableColumnFlags_WidthFixed, windowSize.x / 2.0f);
+				ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthFixed, windowSize.x / 2.0f);
+
+				RenderTableRow("Submeshes", (int32_t)mesh->GetSubMeshes().size());
+				RenderTableRow("Total Vertices", (int32_t)mesh->GetVertexBufferSize());
+				RenderTableRow("Total Indices", (int32_t)mesh->GetIndexBufferSize());
+
+				const char* indexFormatText = "";
+				switch (mesh->GetVertexArray()->GetIndexBuffer()->GetIndexFormat())
+				{
+				case IndexBuffer::IndexFormat::UInt16:
+					indexFormatText = "UInt16";
+					break;
+				case IndexBuffer::IndexFormat::UInt32:
+					indexFormatText = "UInt32";
+					break;
+				}
+
+				RenderTableRow("Index format", indexFormatText);
+
+				ImGui::EndTable();
+			}
+			break;
+		}
 		case AssetType::MaterialsTable:
 		{
 			Ref<MaterialsTable> table = AssetManager::GetAsset<MaterialsTable>(handle);
