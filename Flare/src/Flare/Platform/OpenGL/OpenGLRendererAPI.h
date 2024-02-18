@@ -24,13 +24,13 @@ namespace Flare
 		virtual void DrawIndexed(const Ref<const VertexArray>& vertexArray, size_t indicesCount) override;
 		virtual void DrawInstanced(const Ref<const VertexArray>& mesh, size_t instancesCount) override;
 
-		virtual void DrawInstancesIndexed(const Ref<Mesh>& mesh,
+		virtual void DrawInstancesIndexed(const Ref<const Mesh>& mesh,
 			uint32_t subMeshIndex,
 			uint32_t instancesCount,
 			uint32_t baseInstance) override;
 
 		virtual void DrawInstancesIndexedIndirect(
-			const Ref<Mesh>& mesh,
+			const Ref<const Mesh>& mesh,
 			const Span<DrawIndirectCommandSubMeshData>& subMeshesData,
 			uint32_t baseInstance) override;
 

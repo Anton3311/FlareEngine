@@ -206,7 +206,7 @@ namespace Flare
 		return 0;
 	}
 
-	void OpenGLRendererAPI::DrawInstancesIndexed(const Ref<Mesh>& mesh, uint32_t subMeshIndex, uint32_t instancesCount, uint32_t baseInstance)
+	void OpenGLRendererAPI::DrawInstancesIndexed(const Ref<const Mesh>& mesh, uint32_t subMeshIndex, uint32_t instancesCount, uint32_t baseInstance)
 	{
 		const SubMesh& subMesh = mesh->GetSubMeshes()[subMeshIndex];
 		mesh->GetVertexArray()->Bind();
@@ -226,7 +226,7 @@ namespace Flare
 			baseInstance);
 	}
 
-	void OpenGLRendererAPI::DrawInstancesIndexedIndirect(const Ref<Mesh>& mesh, const Span<DrawIndirectCommandSubMeshData>& subMeshesData, uint32_t baseInstance)
+	void OpenGLRendererAPI::DrawInstancesIndexedIndirect(const Ref<const Mesh>& mesh, const Span<DrawIndirectCommandSubMeshData>& subMeshesData, uint32_t baseInstance)
 	{
 		mesh->GetVertexArray()->Bind();
 		const auto& subMeshes = mesh->GetSubMeshes();

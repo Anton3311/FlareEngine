@@ -91,7 +91,7 @@ namespace Flare
 
 		inline uint8_t* GetPropertiesBuffer() { return m_Buffer; }
 
-		void SetShaderProperties();
+		void SetShaderProperties() const;
 	private:
 		void Initialize();
 	private:

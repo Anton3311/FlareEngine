@@ -4,6 +4,7 @@
 #include "Flare/Renderer/RenderData.h"
 #include "Flare/Renderer/Viewport.h"
 #include "Flare/Renderer/RenderPass.h"
+#include "Flare/Renderer/RendererSubmitionQueue.h"
 
 #include "Flare/Renderer/VertexArray.h"
 #include "Flare/Renderer/Material.h"
@@ -13,14 +14,6 @@
 
 namespace Flare
 {
-	enum class MeshRenderFlags : uint8_t
-	{
-		None = 0,
-		DontCastShadows = 1,
-	};
-
-	FLARE_IMPL_ENUM_BITFIELD(MeshRenderFlags);
-
 	struct RendererStatistics
 	{
 		uint32_t DrawCallsCount = 0;
@@ -178,6 +171,8 @@ namespace Flare
 		static void RemoveRenderPass(Ref<RenderPass> pass);
 		static void ExecuteRenderPasses();
 
+		static RendererSubmitionQueue& GetOpaqueSubmitionQueue();
+
 		static Viewport& GetMainViewport();
 		static Viewport& GetCurrentViewport();
 
@@ -193,5 +188,6 @@ namespace Flare
 		static void ExecuteShadowPass();
 		static void FlushInstances(uint32_t count, uint32_t baseInstance);
 		static void FlushShadowPassInstances(uint32_t baseInstance);
+		static void ReloadShaders();
 	};
 }

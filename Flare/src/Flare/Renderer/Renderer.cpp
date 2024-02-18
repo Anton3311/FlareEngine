@@ -30,18 +30,6 @@ namespace Flare
 		int32_t Padding[3];
 	};
 
-	struct RenderableObject
-	{
-		Ref<Mesh> Mesh;
-		Ref<Material> Material;
-		uint32_t SubMeshIndex;
-	 	Math::Compact3DTransform Transform;
-		MeshRenderFlags Flags;
-		int32_t EntityIndex;
-
-		float SortKey;
-	};
-
 	struct ShadowData
 	{
 		float Bias;
@@ -66,7 +54,7 @@ namespace Flare
 			SubMeshIndex = UINT32_MAX;
 		}
 
-		Ref<Mesh> Mesh = nullptr;
+		Ref<const Mesh> Mesh = nullptr;
 		uint32_t SubMeshIndex = UINT32_MAX;
 	};
 
@@ -92,7 +80,7 @@ namespace Flare
 		std::vector<Ref<RenderPass>> RenderPasses;
 		RendererStatistics Statistics;
 
-		std::vector<RenderableObject> OpaqueQueue;
+		RendererSubmitionQueue OpaqueQueue;
 		std::vector<uint32_t> CulledObjectIndices;
 		std::vector<DecalData> Decals;
 
@@ -122,11 +110,14 @@ namespace Flare
 	
 	RendererData s_RendererData;
 
-	static void ReloadShaders()
+	void Renderer::ReloadShaders()
 	{
 		std::optional<AssetHandle> errorShaderHandle = ShaderLibrary::FindShader("Error");
 		if (errorShaderHandle && AssetManager::IsAssetHandleValid(*errorShaderHandle))
+		{
 			s_RendererData.ErrorMaterial = CreateRef<Material>(AssetManager::GetAsset<Shader>(*errorShaderHandle));
+			s_RendererData.OpaqueQueue.m_ErrorMaterial = s_RendererData.ErrorMaterial;
+		}
 		else
 			FLARE_CORE_ERROR("Renderer: Failed to find Error shader");
 
@@ -417,9 +408,9 @@ namespace Flare
 		{
 			FLARE_PROFILE_SCOPE("DivideIntoGroups");
 
-			for (size_t objectIndex = 0; objectIndex < s_RendererData.OpaqueQueue.size(); objectIndex++)
+			for (size_t objectIndex = 0; objectIndex < s_RendererData.OpaqueQueue.GetSize(); objectIndex++)
 			{
-				const RenderableObject& object = s_RendererData.OpaqueQueue[objectIndex];
+				const auto& object = s_RendererData.OpaqueQueue[objectIndex];
 				if (HAS_BIT(object.Flags, MeshRenderFlags::DontCastShadows))
 					continue;
 
@@ -527,6 +518,7 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 
 		s_RendererData.CurrentViewport = &viewport;
+		s_RendererData.OpaqueQueue.m_CameraPosition = viewport.FrameData.Camera.Position;
 
 		{
 			FLARE_PROFILE_SCOPE("UpdateLightUniformBuffer");
@@ -649,7 +641,7 @@ namespace Flare
 		}
 	}
 
-	static void ApplyMaterial(const Ref<Material>& materail)
+	static void ApplyMaterial(const Ref<const Material>& materail)
 	{
 		Ref<Shader> shader = materail->GetShader();
 		FLARE_CORE_ASSERT(shader);
@@ -673,8 +665,8 @@ namespace Flare
 
 	static bool CompareRenderableObjects(uint32_t aIndex, uint32_t bIndex)
 	{
-		const RenderableObject& a = s_RendererData.OpaqueQueue[aIndex];
-		const RenderableObject& b = s_RendererData.OpaqueQueue[bIndex];
+		const auto& a = s_RendererData.OpaqueQueue[aIndex];
+		const auto& b = s_RendererData.OpaqueQueue[bIndex];
 
 		return a.SortKey < b.SortKey;
 
@@ -705,9 +697,9 @@ namespace Flare
 		Math::AABB objectAABB;
 
 		const FrustumPlanes& planes = s_RendererData.CurrentViewport->FrameData.CameraFrustumPlanes;
-		for (size_t i = 0; i < s_RendererData.OpaqueQueue.size(); i++)
+		for (size_t i = 0; i < s_RendererData.OpaqueQueue.GetSize(); i++)
 		{
-			const RenderableObject& object = s_RendererData.OpaqueQueue[i];
+			const auto& object = s_RendererData.OpaqueQueue[i];
 			objectAABB = object.Mesh->GetSubMeshes()[object.SubMeshIndex].Bounds.Transformed(object.Transform.ToMatrix4x4());
 
 			bool intersects = true;
@@ -727,7 +719,7 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		s_RendererData.Statistics.ObjectsSubmitted += (uint32_t)s_RendererData.OpaqueQueue.size();
+		s_RendererData.Statistics.ObjectsSubmitted += (uint32_t)s_RendererData.OpaqueQueue.GetSize();
 
 		if (s_RendererData.ShadowMappingSettings.Enabled && s_RendererData.CurrentViewport->ShadowMappingEnabled)
 			ExecuteShadowPass();
@@ -749,7 +741,7 @@ namespace Flare
 
 			PerformFrustumCulling();
 
-			s_RendererData.Statistics.ObjectsCulled += (uint32_t)(s_RendererData.OpaqueQueue.size() - s_RendererData.CulledObjectIndices.size());
+			s_RendererData.Statistics.ObjectsCulled += (uint32_t)(s_RendererData.OpaqueQueue.GetSize() - s_RendererData.CulledObjectIndices.size());
 
 			{
 				FLARE_PROFILE_SCOPE("Sort");
@@ -775,7 +767,7 @@ namespace Flare
 
 		s_RendererData.InstanceDataBuffer.clear();
 		s_RendererData.CulledObjectIndices.clear();
-		s_RendererData.OpaqueQueue.clear();
+		s_RendererData.OpaqueQueue.m_Buffer.clear();
 
 		s_RendererData.GeometryPassTimer->Stop();
 	}
@@ -784,7 +776,7 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		Ref<Material> currentMaterial = nullptr;
+		Ref<const Material> currentMaterial = nullptr;
 
 		s_RendererData.InstanceDataBuffer.clear();
 		for (uint32_t objectIndex : s_RendererData.CulledObjectIndices)
@@ -803,7 +795,7 @@ namespace Flare
 		for (uint32_t currentInstance = 0; currentInstance < (uint32_t)s_RendererData.CulledObjectIndices.size(); currentInstance++)
 		{
 			uint32_t objectIndex = s_RendererData.CulledObjectIndices[currentInstance];
-			const RenderableObject& object = s_RendererData.OpaqueQueue[objectIndex];
+			const auto& object = s_RendererData.OpaqueQueue[objectIndex];
 
 			if (s_RendererData.CurrentInstancingMesh.Mesh.get() != object.Mesh.get()
 				|| s_RendererData.CurrentInstancingMesh.SubMeshIndex != object.SubMeshIndex)
@@ -1066,26 +1058,7 @@ namespace Flare
 
 	void Renderer::DrawMesh(const Ref<Mesh>& mesh, uint32_t subMesh, const Ref<Material>& material, const glm::mat4& transform, MeshRenderFlags flags, int32_t entityIndex)
 	{
-		FLARE_PROFILE_FUNCTION();
-		if (s_RendererData.ErrorMaterial == nullptr)
-			return;
-
-		RenderableObject& object = s_RendererData.OpaqueQueue.emplace_back();
-
-		if (material)
-			object.Material = material->GetShader() == nullptr ? s_RendererData.ErrorMaterial : material;
-		else
-			object.Material = s_RendererData.ErrorMaterial;
-
-		glm::vec3 center = mesh->GetSubMeshes()[subMesh].Bounds.GetCenter();
-		center = transform * glm::vec4(center, 1.0f);
-
-		object.Flags = flags;
-		object.Mesh = mesh;
-		object.SubMeshIndex = subMesh;
-		object.Transform = transform;
-		object.EntityIndex = entityIndex;
-		object.SortKey = glm::distance2(center, s_RendererData.CurrentViewport->FrameData.Camera.Position);
+		s_RendererData.OpaqueQueue.Submit(mesh, subMesh, material, transform, flags, entityIndex);
 	}
 
 	void Renderer::SubmitDecal(const Ref<Material>& material, const glm::mat4& transform, int32_t entityIndex)
@@ -1125,6 +1098,11 @@ namespace Flare
 
 		for (Ref<RenderPass>& pass : s_RendererData.RenderPasses)
 			pass->OnRender(context);
+	}
+
+	RendererSubmitionQueue& Renderer::GetOpaqueSubmitionQueue()
+	{
+		return s_RendererData.OpaqueQueue;
 	}
 
 	Viewport& Renderer::GetMainViewport()

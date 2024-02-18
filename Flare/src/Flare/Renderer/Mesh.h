@@ -19,6 +19,14 @@ namespace Flare
 		uint32_t BaseVertex = 0;
 	};
 
+	enum class MeshRenderFlags : uint8_t
+	{
+		None = 0,
+		DontCastShadows = 1,
+	};
+
+	FLARE_IMPL_ENUM_BITFIELD(MeshRenderFlags);
+
 	enum class MeshTopology
 	{
 		Triangles,
