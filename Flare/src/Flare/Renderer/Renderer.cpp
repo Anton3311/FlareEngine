@@ -2,6 +2,8 @@
 
 #include "Flare/AssetManager/AssetManager.h"
 
+#include "Flare/Math/Transform.h"
+
 #include "Flare/Renderer/UniformBuffer.h"
 #include "Flare/Renderer/ShaderLibrary.h"
 #include "Flare/Renderer2D/Renderer2D.h"
@@ -33,7 +35,7 @@ namespace Flare
 		Ref<Mesh> Mesh;
 		Ref<Material> Material;
 		uint32_t SubMeshIndex;
-		glm::mat4 Transform;
+	 	Math::Compact3DTransform Transform;
 		MeshRenderFlags Flags;
 		int32_t EntityIndex;
 
@@ -90,7 +92,7 @@ namespace Flare
 		std::vector<Ref<RenderPass>> RenderPasses;
 		RendererStatistics Statistics;
 
-		std::vector<RenderableObject> Queue;
+		std::vector<RenderableObject> OpaqueQueue;
 		std::vector<uint32_t> CulledObjectIndices;
 		std::vector<DecalData> Decals;
 
@@ -415,13 +417,13 @@ namespace Flare
 		{
 			FLARE_PROFILE_SCOPE("DivideIntoGroups");
 
-			for (size_t objectIndex = 0; objectIndex < s_RendererData.Queue.size(); objectIndex++)
+			for (size_t objectIndex = 0; objectIndex < s_RendererData.OpaqueQueue.size(); objectIndex++)
 			{
-				const RenderableObject& object = s_RendererData.Queue[objectIndex];
+				const RenderableObject& object = s_RendererData.OpaqueQueue[objectIndex];
 				if (HAS_BIT(object.Flags, MeshRenderFlags::DontCastShadows))
 					continue;
 
-				Math::AABB objectAABB = object.Mesh->GetSubMeshes()[object.SubMeshIndex].Bounds.Transformed(object.Transform);
+				Math::AABB objectAABB = object.Mesh->GetSubMeshes()[object.SubMeshIndex].Bounds.Transformed(object.Transform.ToMatrix4x4());
 				for (size_t cascadeIndex = 0; cascadeIndex < shadowSettings.Cascades; cascadeIndex++)
 				{
 					bool intersects = true;
@@ -671,8 +673,8 @@ namespace Flare
 
 	static bool CompareRenderableObjects(uint32_t aIndex, uint32_t bIndex)
 	{
-		const RenderableObject& a = s_RendererData.Queue[aIndex];
-		const RenderableObject& b = s_RendererData.Queue[bIndex];
+		const RenderableObject& a = s_RendererData.OpaqueQueue[aIndex];
+		const RenderableObject& b = s_RendererData.OpaqueQueue[bIndex];
 
 		return a.SortKey < b.SortKey;
 
@@ -703,10 +705,10 @@ namespace Flare
 		Math::AABB objectAABB;
 
 		const FrustumPlanes& planes = s_RendererData.CurrentViewport->FrameData.CameraFrustumPlanes;
-		for (size_t i = 0; i < s_RendererData.Queue.size(); i++)
+		for (size_t i = 0; i < s_RendererData.OpaqueQueue.size(); i++)
 		{
-			const RenderableObject& object = s_RendererData.Queue[i];
-			objectAABB = object.Mesh->GetSubMeshes()[object.SubMeshIndex].Bounds.Transformed(object.Transform);
+			const RenderableObject& object = s_RendererData.OpaqueQueue[i];
+			objectAABB = object.Mesh->GetSubMeshes()[object.SubMeshIndex].Bounds.Transformed(object.Transform.ToMatrix4x4());
 
 			bool intersects = true;
 			for (size_t i = 0; i < planes.PlanesCount; i++)
@@ -725,7 +727,7 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		s_RendererData.Statistics.ObjectsSubmitted += (uint32_t)s_RendererData.Queue.size();
+		s_RendererData.Statistics.ObjectsSubmitted += (uint32_t)s_RendererData.OpaqueQueue.size();
 
 		if (s_RendererData.ShadowMappingSettings.Enabled && s_RendererData.CurrentViewport->ShadowMappingEnabled)
 			ExecuteShadowPass();
@@ -747,7 +749,7 @@ namespace Flare
 
 			PerformFrustumCulling();
 
-			s_RendererData.Statistics.ObjectsCulled += (uint32_t)(s_RendererData.Queue.size() - s_RendererData.CulledObjectIndices.size());
+			s_RendererData.Statistics.ObjectsCulled += (uint32_t)(s_RendererData.OpaqueQueue.size() - s_RendererData.CulledObjectIndices.size());
 
 			{
 				FLARE_PROFILE_SCOPE("Sort");
@@ -773,7 +775,7 @@ namespace Flare
 
 		s_RendererData.InstanceDataBuffer.clear();
 		s_RendererData.CulledObjectIndices.clear();
-		s_RendererData.Queue.clear();
+		s_RendererData.OpaqueQueue.clear();
 
 		s_RendererData.GeometryPassTimer->Stop();
 	}
@@ -788,8 +790,8 @@ namespace Flare
 		for (uint32_t objectIndex : s_RendererData.CulledObjectIndices)
 		{
 			auto& instanceData = s_RendererData.InstanceDataBuffer.emplace_back();
-			instanceData.Transform = s_RendererData.Queue[objectIndex].Transform;
-			instanceData.EntityIndex = s_RendererData.Queue[objectIndex].EntityIndex;
+			instanceData.Transform = s_RendererData.OpaqueQueue[objectIndex].Transform.ToMatrix4x4();
+			instanceData.EntityIndex = s_RendererData.OpaqueQueue[objectIndex].EntityIndex;
 		}
 
 		{
@@ -801,7 +803,7 @@ namespace Flare
 		for (uint32_t currentInstance = 0; currentInstance < (uint32_t)s_RendererData.CulledObjectIndices.size(); currentInstance++)
 		{
 			uint32_t objectIndex = s_RendererData.CulledObjectIndices[currentInstance];
-			const RenderableObject& object = s_RendererData.Queue[objectIndex];
+			const RenderableObject& object = s_RendererData.OpaqueQueue[objectIndex];
 
 			if (s_RendererData.CurrentInstancingMesh.Mesh.get() != object.Mesh.get()
 				|| s_RendererData.CurrentInstancingMesh.SubMeshIndex != object.SubMeshIndex)
@@ -912,8 +914,8 @@ namespace Flare
 			// Group objects with same meshes together
 			std::sort(perCascadeObjects[cascadeIndex].begin(), perCascadeObjects[cascadeIndex].end(), [](uint32_t aIndex, uint32_t bIndex) -> bool
 			{
-				const auto& a = s_RendererData.Queue[aIndex];
-				const auto& b = s_RendererData.Queue[bIndex];
+				const auto& a = s_RendererData.OpaqueQueue[aIndex];
+				const auto& b = s_RendererData.OpaqueQueue[bIndex];
 
 				if (a.Mesh->Handle == b.Mesh->Handle)
 					return a.SubMeshIndex < b.SubMeshIndex;
@@ -926,7 +928,7 @@ namespace Flare
 			for (uint32_t i : perCascadeObjects[cascadeIndex])
 			{
 				auto& instanceData = s_RendererData.InstanceDataBuffer.emplace_back();
-				instanceData.Transform = s_RendererData.Queue[i].Transform;
+				instanceData.Transform = s_RendererData.OpaqueQueue[i].Transform.ToMatrix4x4();
 			}
 
 			{
@@ -941,7 +943,7 @@ namespace Flare
 			uint32_t currentInstance = 0;
 			for (uint32_t objectIndex : perCascadeObjects[cascadeIndex])
 			{
-				const auto& queued = s_RendererData.Queue[objectIndex];
+				const auto& queued = s_RendererData.OpaqueQueue[objectIndex];
 				if (queued.Mesh.get() != s_RendererData.CurrentInstancingMesh.Mesh.get())
 				{
 					FlushShadowPassInstances(baseInstance);
@@ -1068,7 +1070,7 @@ namespace Flare
 		if (s_RendererData.ErrorMaterial == nullptr)
 			return;
 
-		RenderableObject& object = s_RendererData.Queue.emplace_back();
+		RenderableObject& object = s_RendererData.OpaqueQueue.emplace_back();
 
 		if (material)
 			object.Material = material->GetShader() == nullptr ? s_RendererData.ErrorMaterial : material;
