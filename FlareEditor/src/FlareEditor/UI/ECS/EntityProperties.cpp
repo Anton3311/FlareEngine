@@ -200,7 +200,7 @@ namespace Flare
 
 				EditorGUI::BoolPropertyField("Shadows Enabled", environment.ShadowSettings.Enabled);
 
-				ImGui::BeginDisabled(environment.ShadowSettings.Enabled);
+				ImGui::BeginDisabled(!environment.ShadowSettings.Enabled);
 
 				EditorGUI::PropertyName("Shadow Quality");
 
