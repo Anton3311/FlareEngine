@@ -12,7 +12,7 @@ namespace Flare
 		constexpr ComponentView(size_t offset)
 			: m_ComponentOffset(offset) {}
 
-		constexpr ComponentT& operator[](EntityViewElement& entity) const
+		constexpr ComponentT& operator[](EntityViewElement entity) const
 		{
 			return *(ComponentT*)(entity.GetEntityData() + m_ComponentOffset);
 		}
