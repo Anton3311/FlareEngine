@@ -29,10 +29,20 @@ namespace Flare
 			float SortKey;
 		};
 
-		inline void Submit(const Ref<const Mesh>& mesh,
+		void Submit(const Ref<const Mesh>& mesh,
 			uint32_t subMesh,
 			const Ref<const Material>& material,
 			const glm::mat4& transform,
+			MeshRenderFlags flags,
+			int32_t entityIndex)
+		{
+			Submit(mesh, subMesh, material, Math::Compact3DTransform(transform), flags, entityIndex);
+		}
+
+		void Submit(const Ref<const Mesh>& mesh,
+			uint32_t subMesh,
+			const Ref<const Material>& material,
+			const Math::Compact3DTransform& transform,
 			MeshRenderFlags flags,
 			int32_t entityIndex)
 		{
@@ -47,14 +57,14 @@ namespace Flare
 			else
 				object.Material = m_ErrorMaterial;
 
-			glm::vec3 center = mesh->GetSubMeshes()[subMesh].Bounds.GetCenter();
-			center = transform * glm::vec4(center, 1.0f);
-
 			object.Flags = flags;
 			object.Mesh = mesh;
 			object.SubMeshIndex = subMesh;
 			object.Transform = transform;
 			object.EntityIndex = entityIndex;
+
+			glm::vec3 center = mesh->GetSubMeshes()[subMesh].Bounds.GetCenter();
+			center = object.Transform.RotationScale * center + object.Transform.Translation;
 			object.SortKey = glm::distance2(center, m_CameraPosition);
 		}
 
