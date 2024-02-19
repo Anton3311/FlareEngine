@@ -705,7 +705,11 @@ namespace Flare
 			bool intersects = true;
 			for (size_t i = 0; i < planes.PlanesCount; i++)
 			{
-				intersects &= objectAABB.IntersectsOrInFrontOfPlane(planes.Planes[i]);
+				if (!objectAABB.IntersectsOrInFrontOfPlane(planes.Planes[i]))
+				{
+					intersects = false;
+					break;
+				}
 			}
 
 			if (intersects)
