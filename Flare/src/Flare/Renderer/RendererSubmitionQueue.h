@@ -46,7 +46,6 @@ namespace Flare
 			MeshRenderFlags flags,
 			int32_t entityIndex)
 		{
-			FLARE_PROFILE_FUNCTION();
 			if (m_ErrorMaterial == nullptr)
 				return;
 

@@ -11,7 +11,7 @@ namespace Flare::Math
 		Compact3DTransform(const glm::mat3& rotationScale, const glm::vec3& translation)
 			: RotationScale(rotationScale), Translation(translation) {}
 
-		Compact3DTransform(const glm::mat4& transformationMatrix)
+		explicit Compact3DTransform(const glm::mat4& transformationMatrix)
 		{
 			RotationScale = transformationMatrix;
 			Translation = transformationMatrix[3];

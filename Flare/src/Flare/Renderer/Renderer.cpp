@@ -3,6 +3,7 @@
 #include "Flare/AssetManager/AssetManager.h"
 
 #include "Flare/Math/Transform.h"
+#include "Flare/Math/SIMD.h"
 
 #include "Flare/Renderer/UniformBuffer.h"
 #include "Flare/Renderer/ShaderLibrary.h"
@@ -414,7 +415,7 @@ namespace Flare
 				if (HAS_BIT(object.Flags, MeshRenderFlags::DontCastShadows))
 					continue;
 
-				Math::AABB objectAABB = object.Mesh->GetSubMeshes()[object.SubMeshIndex].Bounds.Transformed(object.Transform.ToMatrix4x4());
+				Math::AABB objectAABB = Math::SIMD::TransformAABB(object.Mesh->GetSubMeshes()[object.SubMeshIndex].Bounds, object.Transform.ToMatrix4x4());
 				for (size_t cascadeIndex = 0; cascadeIndex < shadowSettings.Cascades; cascadeIndex++)
 				{
 					bool intersects = true;
@@ -700,7 +701,7 @@ namespace Flare
 		for (size_t i = 0; i < s_RendererData.OpaqueQueue.GetSize(); i++)
 		{
 			const auto& object = s_RendererData.OpaqueQueue[i];
-			objectAABB = object.Mesh->GetSubMeshes()[object.SubMeshIndex].Bounds.Transformed(object.Transform.ToMatrix4x4());
+			objectAABB = Math::SIMD::TransformAABB(object.Mesh->GetSubMeshes()[object.SubMeshIndex].Bounds, object.Transform.ToMatrix4x4());
 
 			bool intersects = true;
 			for (size_t i = 0; i < planes.PlanesCount; i++)
