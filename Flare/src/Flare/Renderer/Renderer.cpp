@@ -782,17 +782,20 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 
 		Ref<const Material> currentMaterial = nullptr;
-
 		s_RendererData.InstanceDataBuffer.clear();
-		for (uint32_t objectIndex : s_RendererData.CulledObjectIndices)
+
 		{
-			auto& instanceData = s_RendererData.InstanceDataBuffer.emplace_back();
-			instanceData.Transform = s_RendererData.OpaqueQueue[objectIndex].Transform.ToMatrix4x4();
-			instanceData.EntityIndex = s_RendererData.OpaqueQueue[objectIndex].EntityIndex;
+			FLARE_PROFILE_SCOPE("Fill Instaces Data");
+			for (uint32_t objectIndex : s_RendererData.CulledObjectIndices)
+			{
+				auto& instanceData = s_RendererData.InstanceDataBuffer.emplace_back();
+				instanceData.Transform = s_RendererData.OpaqueQueue[objectIndex].Transform.ToMatrix4x4();
+				instanceData.EntityIndex = s_RendererData.OpaqueQueue[objectIndex].EntityIndex;
+			}
 		}
 
 		{
-			FLARE_PROFILE_SCOPE("SetIntancesData");
+			FLARE_PROFILE_SCOPE("Set Intances Data");
 			s_RendererData.InstancesShaderBuffer->SetData(MemorySpan::FromVector(s_RendererData.InstanceDataBuffer));
 		}
 
