@@ -3,6 +3,7 @@
 #include "Flare/Scene/Components.h"
 #include "Flare/AssetManager/AssetManager.h"
 
+#include "Flare/Renderer/RendererPrimitives.h"
 #include "Flare/Renderer/DebugRenderer.h"
 
 #include "FlareECS/World.h"
@@ -74,7 +75,7 @@ namespace Flare
 			}
 		}
 
-		Math::AABB cubeAABB = Renderer::GetCubeMesh()->GetSubMeshes()[0].Bounds;
+		Math::AABB cubeAABB = RendererPrimitives::GetCube()->GetSubMeshes()[0].Bounds;
 		for (EntityView view : m_DecalsQuery)
 		{
 			auto transforms = view.View<TransformComponent>();

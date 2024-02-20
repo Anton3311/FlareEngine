@@ -1,5 +1,7 @@
 #include "Renderer.h"
 
+#include "Flare/Renderer/RendererPrimitives.h"
+
 #include "Flare/AssetManager/AssetManager.h"
 
 #include "Flare/Math/Transform.h"
@@ -73,10 +75,8 @@ namespace Flare
 
 		Ref<UniformBuffer> CameraBuffer = nullptr;
 		Ref<UniformBuffer> LightBuffer = nullptr;
-		Ref<VertexArray> FullscreenQuad = nullptr;
 
 		Ref<Texture> WhiteTexture = nullptr;
-		Ref<Mesh> CubeMesh = nullptr;
 		
 		std::vector<Ref<RenderPass>> RenderPasses;
 		RendererStatistics Statistics;
@@ -151,106 +151,9 @@ namespace Flare
 		s_RendererData.ShadowMappingSettings.CascadeSplits[2] = 50.0f;
 		s_RendererData.ShadowMappingSettings.CascadeSplits[3] = 100.0f;
 
-		float vertices[] = {
-			-1, -1,
-			-1,  1,
-			 1,  1,
-			 1, -1,
-		};
-
-		uint16_t indices[] = {
-			0, 1, 2,
-			0, 2, 3,
-		};
-
-		Ref<VertexBuffer> vertexBuffer = VertexBuffer::Create(sizeof(vertices), (const void*)vertices);
-		vertexBuffer->SetLayout({
-			BufferLayoutElement("i_Position", ShaderDataType::Float2),
-		});
-
-		s_RendererData.FullscreenQuad = VertexArray::Create();
-		s_RendererData.FullscreenQuad->SetIndexBuffer(IndexBuffer::Create(IndexBuffer::IndexFormat::UInt16, MemorySpan(indices, 6)));
-		s_RendererData.FullscreenQuad->AddVertexBuffer(vertexBuffer);
-		s_RendererData.FullscreenQuad->Unbind();
-
 		{
 			uint32_t whiteTextureData = 0xffffffff;
 			s_RendererData.WhiteTexture = Texture::Create(1, 1, &whiteTextureData, TextureFormat::RGBA8);
-		}
-
-		{
-			glm::vec3 cubeVertices[] =
-			{
-				glm::vec3(-0.5f, -0.5f, -0.5f),
-				glm::vec3(+0.5f, -0.5f, -0.5f),
-				glm::vec3(+0.5f, +0.5f, -0.5f),
-				glm::vec3(-0.5f, +0.5f, -0.5f),
-
-				glm::vec3(-0.5f, -0.5f, +0.5f),
-				glm::vec3(+0.5f, -0.5f, +0.5f),
-				glm::vec3(+0.5f, +0.5f, +0.5f),
-				glm::vec3(-0.5f, +0.5f, +0.5f),
-			};
-
-			glm::vec3 cubeNormals[] =
-			{
-				glm::vec3(0.0f),
-				glm::vec3(0.0f),
-				glm::vec3(0.0f),
-				glm::vec3(0.0f),
-
-				glm::vec3(0.0f),
-				glm::vec3(0.0f),
-				glm::vec3(0.0f),
-				glm::vec3(0.0f),
-			};
-
-			glm::vec2 cubeUVs[] =
-			{
-				glm::vec2(0.0f),
-				glm::vec2(0.0f),
-				glm::vec2(0.0f),
-				glm::vec2(0.0f),
-
-				glm::vec2(0.0f),
-				glm::vec2(0.0f),
-				glm::vec2(0.0f),
-				glm::vec2(0.0f),
-			};
-
-			uint16_t cubeIndices[] =
-			{
-				// Front
-				1, 2, 0,
-				2, 3, 0,
-
-				// Left
-				3, 4, 0,
-				4, 3, 7,
-
-				// Right
-				6, 2, 1,
-				6, 1, 5,
-
-				// Back
-				6, 5, 4,
-				7, 6, 4,
-
-				// Bottom
-				0, 4, 1,
-				1, 4, 5,
-
-				// Top
-				7, 3, 2,
-				6, 7, 2
-			};
-
-			s_RendererData.CubeMesh = CreateRef<Mesh>(MeshTopology::Triangles, 8, IndexBuffer::IndexFormat::UInt16, sizeof(cubeIndices) / 2);
-			s_RendererData.CubeMesh->AddSubMesh(
-				Span(cubeVertices, 8),
-				MemorySpan(cubeIndices, sizeof(cubeIndices) / 2),
-				Span(cubeNormals, 8),
-				Span(cubeUVs, 8));
 		}
 
 		Project::OnProjectOpen.Bind(ReloadShaders);
@@ -258,7 +161,6 @@ namespace Flare
 
 	void Renderer::Shutdown()
 	{
-		s_RendererData.FullscreenQuad = nullptr;
 	}
 
 	const RendererStatistics& Renderer::GetStatistics()
@@ -854,6 +756,8 @@ namespace Flare
 			uint32_t baseInstance = 0;
 			Ref<Material> currentMaterial = s_RendererData.Decals[0].Material;
 
+			Ref<const Mesh> cubeMesh = RendererPrimitives::GetCube();
+
 			uint32_t instanceIndex = 0;
 			for (; instanceIndex < (uint32_t)s_RendererData.Decals.size(); instanceIndex++)
 			{
@@ -861,7 +765,7 @@ namespace Flare
 				{
 					ApplyMaterial(currentMaterial);
 
-					RenderCommand::DrawInstancesIndexed(s_RendererData.CubeMesh, 0, instanceIndex - baseInstance, baseInstance);
+					RenderCommand::DrawInstancesIndexed(cubeMesh, 0, instanceIndex - baseInstance, baseInstance);
 					baseInstance = instanceIndex;
 
 					currentMaterial = s_RendererData.Decals[instanceIndex].Material;
@@ -873,7 +777,7 @@ namespace Flare
 				FLARE_CORE_ASSERT(currentMaterial->GetShader());
 				ApplyMaterial(currentMaterial);
 
-				RenderCommand::DrawInstancesIndexed(s_RendererData.CubeMesh, 0, instanceIndex - baseInstance, baseInstance);
+				RenderCommand::DrawInstancesIndexed(cubeMesh, 0, instanceIndex - baseInstance, baseInstance);
 			}
 		}
 
@@ -1049,7 +953,7 @@ namespace Flare
 
 		ApplyMaterial(material);
 
-		RenderCommand::DrawIndexed(s_RendererData.FullscreenQuad);
+		RenderCommand::DrawIndexed(RendererPrimitives::GetFullscreenQuad());
 		s_RendererData.Statistics.DrawCallsCount++;
 	}
 
@@ -1130,19 +1034,9 @@ namespace Flare
 		return s_RendererData.WhiteTexture;
 	}
 
-	Ref<Mesh> Renderer::GetCubeMesh()
-	{
-		return s_RendererData.CubeMesh;
-	}
-
 	Ref<Material> Renderer::GetErrorMaterial()
 	{
 		return s_RendererData.ErrorMaterial;
-	}
-
-	Ref<const VertexArray> Renderer::GetFullscreenQuad()
-	{
-		return s_RendererData.FullscreenQuad;
 	}
 
 	Ref<FrameBuffer> Renderer::GetShadowsRenderTarget(size_t index)

@@ -176,9 +176,7 @@ namespace Flare
 		static Viewport& GetMainViewport();
 		static Viewport& GetCurrentViewport();
 
-		static Ref<const VertexArray> GetFullscreenQuad();
 		static Ref<Texture> GetWhiteTexture();
-		static Ref<Mesh> GetCubeMesh();
 		static Ref<Material> GetErrorMaterial();
 
 		static Ref<FrameBuffer> GetShadowsRenderTarget(size_t index);
