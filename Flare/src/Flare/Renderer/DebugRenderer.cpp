@@ -213,6 +213,29 @@ namespace Flare
 			FlushRays();
 	}
 
+	void DebugRenderer::DrawCircle(const glm::vec3& position, const glm::vec3& normal, const glm::vec3& tangent, float radius, const glm::vec4& color, uint32_t segments)
+	{
+		glm::vec3 bitangent = glm::cross(tangent, normal);
+
+		float segmentAngle = glm::pi<float>() * 2.0f / (float)segments;
+		float currentAngle = 0.0f;
+
+		glm::vec3 previousPoint(0.0f);
+		for (uint32_t i = 0; i <= segments; i++)
+		{
+			glm::vec2 point = glm::vec2(glm::cos(currentAngle), glm::sin(currentAngle)) * radius;
+			glm::vec3 worldSpacePoint = position + tangent * point.x + bitangent * point.y;
+
+			if (i > 0)
+			{
+				DrawLine(previousPoint, worldSpacePoint, color);
+			}
+
+			previousPoint = worldSpacePoint;
+			currentAngle += segmentAngle;
+		}
+	}
+
 	void DebugRenderer::DrawWireQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color)
 	{
 		glm::vec3 halfSize = glm::vec3(size / 2.0f, 0.0f);

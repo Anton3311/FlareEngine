@@ -86,16 +86,49 @@ namespace Flare
 
 			for (EntityViewElement entity : view)
 			{
-				glm::vec3 position = transforms[entity].Position;
-				position = cameraView * glm::vec4(position, 1.0f);
+				glm::vec3 iconPosition = transforms[entity].Position;
+				iconPosition = cameraView * glm::vec4(iconPosition, 1.0f);
 
-				Renderer2D::DrawQuad(position,
+				Renderer2D::DrawQuad(iconPosition,
 					glm::vec2(1.0f),
 					glm::vec4(lights[entity].Color, 1.0f),
 					iconsTexture,
 					glm::vec2(spotlightIconUVs.Min.x, spotlightIconUVs.Max.y),
 					glm::vec2(spotlightIconUVs.Max.x, spotlightIconUVs.Min.y)
 				);
+
+				glm::vec3 lightDirection = transforms[entity].TransformDirection(glm::vec3(0.0f, 0.0f, 1.0f));
+				glm::vec3 tangent = transforms[entity].TransformDirection(glm::vec3(1.0f, 0.0f, 0.0f));
+				glm::vec3 bitangent = glm::cross(lightDirection, tangent);
+
+				const float intensityLimit = 0.1f;
+				float radius = lights[entity].Intensity / intensityLimit;
+				radius = glm::sqrt(radius);
+
+				float outerCircleRadius = radius * glm::tan(glm::radians(lights[entity].OuterAngle / 2.0f));
+				float innerCircleRadius = radius * glm::tan(glm::radians(lights[entity].InnerAngle / 2.0f));
+
+				DebugRenderer::DrawCircle(transforms[entity].Position + lightDirection * radius,
+					lightDirection,
+					tangent, outerCircleRadius);
+				DebugRenderer::DrawCircle(transforms[entity].Position + lightDirection * radius,
+					lightDirection,
+					tangent, innerCircleRadius);
+
+				glm::vec2 offsetSigns[] =
+				{
+					glm::vec2(1, 0),
+					glm::vec2(0, 1),
+					glm::vec2(-1, 0),
+					glm::vec2(0, -1)
+				};
+
+				for (size_t i = 0; i < 4; i++)
+				{
+					glm::vec3 offset = offsetSigns[i].x * tangent + offsetSigns[i].y * bitangent;
+					DebugRenderer::DrawLine(transforms[entity].Position,
+						transforms[entity].Position + lightDirection * radius + offset * outerCircleRadius);
+				}
 			}
 		}
 
