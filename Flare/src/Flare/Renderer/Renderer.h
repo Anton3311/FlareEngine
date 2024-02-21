@@ -165,7 +165,7 @@ namespace Flare
 			MeshRenderFlags flags = MeshRenderFlags::None,
 			int32_t entityIndex = INT32_MAX);
 
-		static void SubmitDecal(const Ref<Material>& material, const glm::mat4& transform, int32_t entityIndex);
+		static void SubmitDecal(const Ref<const Material>& material, const glm::mat4& transform, int32_t entityIndex);
 
 		static void AddRenderPass(Ref<RenderPass> pass);
 		static void RemoveRenderPass(Ref<RenderPass> pass);
@@ -183,6 +183,7 @@ namespace Flare
 		static ShadowSettings& GetShadowSettings();
 	private:
 		static void ExecuteGeomertyPass();
+		static void ExecuteDecalsPass();
 		static void ExecuteShadowPass();
 		static void FlushInstances(uint32_t count, uint32_t baseInstance);
 		static void FlushShadowPassInstances(uint32_t baseInstance);
