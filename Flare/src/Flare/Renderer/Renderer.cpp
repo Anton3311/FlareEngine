@@ -482,65 +482,15 @@ namespace Flare
 
 		viewport.RenderTarget->Bind();
 
-		// Generate camera frustum planes
 		{
-			FLARE_PROFILE_SCOPE("Renderer::GenerateFrustumPlanes");
-			std::array<glm::vec4, 8> frustumCorners =
-			{
-				// Near
-				glm::vec4(-1.0f, -1.0f, 0.0f, 1.0f),
-				glm::vec4(1.0f, -1.0f, 0.0f, 1.0f),
-				glm::vec4(-1.0f,  1.0f, 0.0f, 1.0f),
-				glm::vec4(1.0f,  1.0f, 0.0f, 1.0f),
+			// Generate camera frustum planes
+			FLARE_PROFILE_SCOPE("CalculateFrustumPlanes");
 
-				// Far
-				glm::vec4(-1.0f, -1.0f, 1.0f, 1.0f),
-				glm::vec4(1.0f, -1.0f, 1.0f, 1.0f),
-				glm::vec4(-1.0f,  1.0f, 1.0f, 1.0f),
-				glm::vec4(1.0f,  1.0f, 1.0f, 1.0f),
-			};
-
-			for (size_t i = 0; i < frustumCorners.size(); i++)
-			{
-				frustumCorners[i] = viewport.FrameData.Camera.InverseViewProjection * frustumCorners[i];
-				frustumCorners[i] /= frustumCorners[i].w;
-			}
-
-			FrustumPlanes& frustumPlanes = viewport.FrameData.CameraFrustumPlanes;
-
-			// Near
-			frustumPlanes.Planes[FrustumPlanes::NearPlaneIndex] = Math::Plane::TroughPoint(frustumCorners[0], s_RendererData.CurrentViewport->FrameData.Camera.ViewDirection);
-
-			// Far
-			frustumPlanes.Planes[FrustumPlanes::FarPlaneIndex] = Math::Plane::TroughPoint(frustumCorners[4], -s_RendererData.CurrentViewport->FrameData.Camera.ViewDirection);
-
-			// Left (Trough bottom left corner)
-			frustumPlanes.Planes[FrustumPlanes::LeftPlaneIndex] = Math::Plane::TroughPoint(frustumCorners[0], glm::normalize(glm::cross(
-				// Bottom Left Near -> Bottom Left Far
-				(glm::vec3)(frustumCorners[4] - frustumCorners[0]),
-				// Bottom Left Near -> Top Left Near
-				(glm::vec3)(frustumCorners[2] - frustumCorners[0]))));
-
-			// Right (Trough top right corner)
-			frustumPlanes.Planes[FrustumPlanes::RightPlaneIndex] = Math::Plane::TroughPoint(frustumCorners[1], glm::cross(
-				// Top Right Near -> Top Right Far
-				(glm::vec3)(frustumCorners[7] - frustumCorners[3]),
-				// Top Right Near -> Bottom Right Near
-				(glm::vec3)(frustumCorners[1] - frustumCorners[3])));
-
-			// Top (Trough top right corner)
-			frustumPlanes.Planes[FrustumPlanes::TopPlaneIndex] = Math::Plane::TroughPoint(frustumCorners[3], glm::cross(
-				// Top Right Near -> Top Left Near
-				(glm::vec3)(frustumCorners[2] - frustumCorners[3]),
-				// Top Right Near -> Top Right Far
-				(glm::vec3)(frustumCorners[7] - frustumCorners[3])));
-
-			// Bottom (Trough bottom left corner)
-			frustumPlanes.Planes[FrustumPlanes::BottomPlaneIndex] = Math::Plane::TroughPoint(frustumCorners[0], glm::cross(
-				// Bottom left near => Bottom right near
-				(glm::vec3)(frustumCorners[1] - frustumCorners[0]),
-				// Bottom left near -> Bottom left far
-				(glm::vec3)(frustumCorners[4] - frustumCorners[0])));
+			auto& frameData = s_RendererData.CurrentViewport->FrameData;
+			frameData.CameraFrustumPlanes.SetFromViewAndProjection(
+				frameData.Camera.View,
+				frameData.Camera.InverseViewProjection,
+				frameData.Camera.ViewDirection);
 		}
 	}
 
@@ -634,7 +584,7 @@ namespace Flare
 		// Geometry
 
 		{
-			FLARE_PROFILE_SCOPE("Renderer::PrepareGeometryPass");
+			FLARE_PROFILE_SCOPE("PrepareGeometryPass");
 			s_RendererData.GeometryPassTimer->Start();
 
 			RenderCommand::SetViewport(0, 0, s_RendererData.CurrentViewport->GetSize().x, s_RendererData.CurrentViewport->GetSize().y);
@@ -687,7 +637,7 @@ namespace Flare
 		s_RendererData.InstanceDataBuffer.clear();
 
 		{
-			FLARE_PROFILE_SCOPE("Fill Instaces Data");
+			FLARE_PROFILE_SCOPE("FillInstacesData");
 			for (uint32_t objectIndex : s_RendererData.CulledObjectIndices)
 			{
 				auto& instanceData = s_RendererData.InstanceDataBuffer.emplace_back();
@@ -697,7 +647,7 @@ namespace Flare
 		}
 
 		{
-			FLARE_PROFILE_SCOPE("Set Intances Data");
+			FLARE_PROFILE_SCOPE("SetIntancesData");
 			s_RendererData.InstancesShaderBuffer->SetData(MemorySpan::FromVector(s_RendererData.InstanceDataBuffer));
 		}
 
