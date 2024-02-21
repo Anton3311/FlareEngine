@@ -26,8 +26,6 @@ namespace Flare
 		virtual void OnRenderViewport();
 		virtual void OnEvent(Event& event) {}
 
-		const RenderData& GetRenderData() const { return m_Viewport.FrameData; }
-
 		Viewport& GetViewport() { return m_Viewport; }
 		const Viewport& GetViewport() const { return m_Viewport; }
 
@@ -41,7 +39,6 @@ namespace Flare
 		void SetScene(const Ref<Scene>& scene) { m_Scene = scene; }
 
 		void PrepareViewport();
-		void SetViewProjection(const glm::mat4& projection) { m_Viewport.FrameData.Camera.Projection = projection; }
 	protected:
 		inline Ref<Scene> GetScene() const { return m_Scene == nullptr ? Scene::GetActive() : m_Scene; }
 

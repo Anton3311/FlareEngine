@@ -36,69 +36,50 @@ namespace Flare
 		Math::Plane Planes[PlanesCount];
 	};
 
-	struct CameraData
+	struct FLARE_API RenderView
 	{
-		CameraData()
-			: Position(0.0f),
-			Unused(0.0f),
-			Projection(0.0f),
-			View(0.0f),
-			ViewProjection(0.0f),
-			InverseProjection(0.0f),
-			InverseView(0.0f),
-			InverseViewProjection(0.0f) {}
+		RenderView() = default;
 
-		void CalculateViewProjection()
-		{
-			ViewProjection = Projection * View;
-			InverseView = glm::inverse(View);
-			InverseViewProjection = glm::inverse(ViewProjection);
-			InverseProjection = glm::inverse(Projection);
-		}
+		void SetViewAndProjection(const glm::mat4& projection, const glm::mat4& view);
 
-		glm::vec3 Position;
+		glm::vec3 Position = glm::vec3(0.0f);
+		float Near = 0.0f;
+		glm::vec3 ViewDirection = glm::vec3(0.0f);
+		float Far = 0.0f;
 
-		float Unused; // Is needed to align the struct to 16 byte boundary
+		glm::mat4 Projection = glm::mat4(0.0f);
+		glm::mat4 View = glm::mat4(0.0f);
+		glm::mat4 ViewProjection = glm::mat4(0.0f);
 
-		glm::mat4 Projection;
-		glm::mat4 View;
-		glm::mat4 ViewProjection;
+		glm::mat4 InverseProjection = glm::mat4(0.0f);
+		glm::mat4 InverseView = glm::mat4(0.0f);
+		glm::mat4 InverseViewProjection = glm::mat4(0.0f);
 
-		glm::mat4 InverseProjection;
-		glm::mat4 InverseView;
-		glm::mat4 InverseViewProjection;
-
-		float Near;
-		float Far;
-
-		glm::ivec2 ViewportSize;
-
-		glm::vec3 ViewDirection;
-		float FOV;
+		glm::ivec2 ViewportSize = glm::ivec2(0);
+		float FOV = 0.0f;
 	};
 
 	struct LightData
 	{
-		glm::vec3 Color;
-		float Intensity;
+		glm::vec3 Color = glm::vec3(0.0f);
+		float Intensity = 0.0f;
 
-		glm::vec3 Direction;
-		float Unused;
+		glm::vec3 Direction = glm::vec3(0.0f);
+		float Near = 0.0f;
 		
-		glm::vec4 EnvironmentLight;
+		glm::vec4 EnvironmentLight = glm::vec4(0.0f);
 
-		float Near;
-		uint32_t PointLightsCount;
-		uint32_t SpotLightsCount;
+		uint32_t PointLightsCount = 0;
+		uint32_t SpotLightsCount = 0;
 	};
 
 	struct RenderData
 	{
-		CameraData Camera;
+		RenderView Camera;
 		FrustumPlanes CameraFrustumPlanes;
 		LightData Light;
 		Math::Basis LightBasis;
-		CameraData LightView[4];
+		RenderView LightView[4];
 		bool IsEditorCamera = false;
 	};
 }

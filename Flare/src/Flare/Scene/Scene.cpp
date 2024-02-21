@@ -107,31 +107,36 @@ namespace Flare
 
 			for (EntityView entityView : m_CameraDataUpdateQuery)
 			{
-				ComponentView<CameraComponent> cameras = entityView.View<CameraComponent>();
-				ComponentView<TransformComponent> transforms = entityView.View<TransformComponent>();
+				auto cameras = entityView.View<const CameraComponent>();
+				auto transforms = entityView.View<const TransformComponent>();
 
 				for (EntityViewElement entity : entityView)
 				{
-					CameraComponent& camera = cameras[entity];
-					TransformComponent& transform = transforms[entity];
+					const CameraComponent& camera = cameras[entity];
+					const TransformComponent& transform = transforms[entity];
 
 					float halfSize = camera.Size / 2;
 
 					viewport.FrameData.Camera.ViewDirection = transform.TransformDirection(glm::vec3(0.0f, 0.0f, -1.0f));
+					viewport.FrameData.Camera.Position = transforms[entity].Position;
 
 					viewport.FrameData.Camera.Near = camera.Near;
 					viewport.FrameData.Camera.Far = camera.Far;
-					viewport.FrameData.Camera.View = glm::inverse(transforms[entity].GetTransformationMatrix());
 
 					viewport.FrameData.Camera.FOV = cameras[entity].FOV;
 
 					if (camera.Projection == CameraComponent::ProjectionType::Orthographic)
-						viewport.FrameData.Camera.Projection = glm::ortho(-halfSize * aspectRation, halfSize * aspectRation, -halfSize, halfSize, camera.Near, camera.Far);
+					{
+						viewport.FrameData.Camera.SetViewAndProjection(
+							glm::ortho(-halfSize * aspectRation, halfSize * aspectRation, -halfSize, halfSize, camera.Near, camera.Far),
+							glm::inverse(transforms[entity].GetTransformationMatrix()));
+					}
 					else
-						viewport.FrameData.Camera.Projection = glm::perspective<float>(glm::radians(camera.FOV), aspectRation, camera.Near, camera.Far);
-
-					viewport.FrameData.Camera.Position = transforms[entity].Position;
-					viewport.FrameData.Camera.CalculateViewProjection();
+					{
+						viewport.FrameData.Camera.SetViewAndProjection(
+							viewport.FrameData.Camera.Projection = glm::perspective<float>(glm::radians(camera.FOV), aspectRation, camera.Near, camera.Far),
+							glm::inverse(transforms[entity].GetTransformationMatrix()));
+					}
 				}
 			}
 		}
@@ -160,7 +165,7 @@ namespace Flare
 
 				for (size_t i = 0; i < 4; i++)
 				{
-					CameraData& lightView = viewport.FrameData.LightView[i];
+					RenderView& lightView = viewport.FrameData.LightView[i];
 					lightView.Position = transform.Position;
 				}
 

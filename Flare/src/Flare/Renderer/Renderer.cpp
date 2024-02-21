@@ -131,7 +131,7 @@ namespace Flare
 
 	void Renderer::Initialize()
 	{
-		s_RendererData.CameraBuffer = UniformBuffer::Create(sizeof(CameraData), 0);
+		s_RendererData.CameraBuffer = UniformBuffer::Create(sizeof(RenderView), 0);
 		s_RendererData.LightBuffer = UniformBuffer::Create(sizeof(LightData), 1);
 		s_RendererData.ShadowDataBuffer = UniformBuffer::Create(sizeof(ShadowData), 2);
 		s_RendererData.InstancesShaderBuffer = ShaderStorageBuffer::Create(3);
@@ -195,7 +195,7 @@ namespace Flare
 		float nearPlaneDistance,
 		float farPlaneDistance)
 	{
-		const CameraData& camera = viewport.FrameData.Camera;
+		const RenderView& camera = viewport.FrameData.Camera;
 
 		std::array<glm::vec4, 8> frustumCorners =
 		{
@@ -374,19 +374,19 @@ namespace Flare
 				farPlaneDistance = fixedPlaneDistance;
 #endif
 
-				glm::mat4 view = glm::lookAt(params.CameraFrustumCenter + lightDirection * nearPlaneDistance, params.CameraFrustumCenter, glm::vec3(0.0f, 1.0f, 0.0f));
+				RenderView& lightView = viewport->FrameData.LightView[cascadeIndex];
+				lightView.SetViewAndProjection(
+					glm::ortho(
+						-params.BoundingSphereRadius,
+						params.BoundingSphereRadius,
+						-params.BoundingSphereRadius,
+						params.BoundingSphereRadius,
+						viewport->FrameData.Light.Near,
+						farPlaneDistance - nearPlaneDistance),
+					glm::lookAt(
+						params.CameraFrustumCenter + lightDirection * nearPlaneDistance,
+						params.CameraFrustumCenter, glm::vec3(0.0f, 1.0f, 0.0f)));
 
-				CameraData& lightView = viewport->FrameData.LightView[cascadeIndex];
-				lightView.View = view;
-				lightView.Projection = glm::ortho(
-					-params.BoundingSphereRadius,
-					params.BoundingSphereRadius,
-					-params.BoundingSphereRadius,
-					params.BoundingSphereRadius,
-					viewport->FrameData.Light.Near,
-					farPlaneDistance - nearPlaneDistance);
-
-				lightView.CalculateViewProjection();
 				currentNearPlane = shadowSettings.CascadeSplits[cascadeIndex];
 			}
 		}
@@ -434,7 +434,7 @@ namespace Flare
 			FLARE_PROFILE_SCOPE("UpdateCameraUniformBuffer");
 			const auto& spec = viewport.RenderTarget->GetSpecifications();
 			viewport.FrameData.Camera.ViewportSize = glm::ivec2(spec.Width, spec.Height);
-			s_RendererData.CameraBuffer->SetData(&viewport.FrameData.Camera, sizeof(CameraData), 0);
+			s_RendererData.CameraBuffer->SetData(&viewport.FrameData.Camera, sizeof(RenderView), 0);
 		}
 
 		{

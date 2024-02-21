@@ -59,4 +59,16 @@ namespace Flare
 			// Bottom left near -> Bottom left far
 			(glm::vec3)(frustumCorners[4] - frustumCorners[0])));
 	}
+
+	void RenderView::SetViewAndProjection(const glm::mat4& projection, const glm::mat4& view)
+	{
+		Projection = projection;
+		InverseProjection = glm::inverse(projection);
+
+		View = view;
+		InverseView = glm::inverse(view);
+
+		ViewProjection = projection * view;
+		InverseViewProjection = glm::inverse(ViewProjection);
+	}
 }

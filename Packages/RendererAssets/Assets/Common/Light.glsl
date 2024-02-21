@@ -7,9 +7,9 @@ layout(std140, binding = 1) uniform LightData
 {
 	vec4 u_LightColor;
 	vec3 u_LightDirection;
+	float u_LightNear;
 
 	vec4 u_EnvironmentLight;
-	float u_LightNear;
 
 	uint u_PointLightsCount;
 	uint u_SpotLightsCount;

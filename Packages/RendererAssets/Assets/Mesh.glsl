@@ -21,13 +21,6 @@ struct VertexData
 	vec3 Normal;
 	vec2 UV;
 	vec3 ViewSpacePosition;
-	vec2 ScreenSpacePosition;
-};
-
-layout(std140, binding = 1) uniform LightData
-{
-	vec4 u_LightColor;
-	vec3 u_LightDirection;
 };
 
 layout(location = 0) out VertexData o_Vertex;
@@ -46,8 +39,6 @@ void main()
 	o_Vertex.UV = i_UV;
 	o_Vertex.ViewSpacePosition = (u_Camera.View * transformed).xyz;
 	o_EntityIndex = u_InstancesData.Data[gl_InstanceIndex].EntityIndex;
-
-	o_Vertex.ScreenSpacePosition = (position.xy / position.w) * 0.5f + vec2(0.5f);
 
     gl_Position = position;
 }
