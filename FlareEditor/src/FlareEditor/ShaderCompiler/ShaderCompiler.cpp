@@ -130,24 +130,64 @@ namespace Flare
         return std::vector<uint32_t>(shaderModule.cbegin(), shaderModule.cend());
     }
 
-    static std::optional<std::vector<uint32_t>> CompileSpirvToGlsl(const std::string& path, const std::vector<uint32_t>& spirvData, shaderc_shader_kind programKind)
+    struct CrossCompilationOptions
     {
-        spirv_cross::CompilerGLSL glslCompiler(spirvData);
-        std::string glsl = glslCompiler.compile();
+        shaderc_shader_kind ProgramKind;
+        uint32_t LocationBase;
+    };
+
+    static uint32_t CountRegistersUsedByStruct(const spirv_cross::Compiler& compiler, const spirv_cross::SPIRType& structType)
+    {
+        const uint32_t fieldAlignment = 16; // in OpenGL everything is aligned to 16 bytes
+
+        size_t structSize = compiler.get_declared_struct_size(structType);
+        return (uint32_t)((structSize + fieldAlignment - 1) / fieldAlignment);
+    }
+
+    static std::optional<std::vector<uint32_t>> CompileSpirvToGlsl(const std::string& path, const std::vector<uint32_t>& spirvData, const CrossCompilationOptions& options)
+    {
+        Scope<spirv_cross::CompilerGLSL> glslCompiler = CreateScope<spirv_cross::CompilerGLSL>(spirvData);
+
+        {
+            uint32_t location = options.LocationBase;
+            spirv_cross::Compiler crossCompiler(spirvData.data(), spirvData.size());
+
+            const auto& resources = crossCompiler.get_shader_resources();
+            auto updateResourcesLocations = [&](const spirv_cross::SmallVector<spirv_cross::Resource>& resources, bool isStruct = false)
+            {
+                for (const auto& resource : resources)
+                {
+                    glslCompiler->set_decoration(resource.id, spv::DecorationLocation, location);
+
+                    uint32_t registers = 1;
+                    if (isStruct)
+                    {
+                        const spirv_cross::SPIRType& structType = crossCompiler.get_type(resource.base_type_id);
+                        registers = CountRegistersUsedByStruct(crossCompiler, structType);
+                    }
+
+                    location += registers;
+                }
+            };
+
+            updateResourcesLocations(resources.sampled_images);
+            updateResourcesLocations(resources.push_constant_buffers, true);
+        }
+
+        std::string glsl = glslCompiler->compile();
 
         shaderc::Compiler compiler;
-        shaderc::CompileOptions options;
-        options.SetTargetEnvironment(shaderc_target_env_opengl, shaderc_env_version_opengl_4_5);
-        options.SetSourceLanguage(shaderc_source_language_glsl);
-        options.SetAutoMapLocations(true);
-        options.SetGenerateDebugInfo();
-        options.SetOptimizationLevel(shaderc_optimization_level_performance);
+        shaderc::CompileOptions compilerOptions;
+        compilerOptions.SetTargetEnvironment(shaderc_target_env_opengl, shaderc_env_version_opengl_4_5);
+        compilerOptions.SetSourceLanguage(shaderc_source_language_glsl);
+        compilerOptions.SetGenerateDebugInfo();
+        compilerOptions.SetOptimizationLevel(shaderc_optimization_level_performance);
 
-        shaderc::SpvCompilationResult shaderModule = compiler.CompileGlslToSpv(glsl, programKind, path.c_str(), options);
+        shaderc::SpvCompilationResult shaderModule = compiler.CompileGlslToSpv(glsl, options.ProgramKind, path.c_str(), compilerOptions);
         if (shaderModule.GetCompilationStatus() != shaderc_compilation_status_success)
         {
             std::string_view stageName = "";
-            switch (programKind)
+            switch (options.ProgramKind)
             {
             case shaderc_vertex_shader:
                 stageName = "Vertex";
@@ -159,6 +199,7 @@ namespace Flare
 
             FLARE_CORE_ERROR("Failed to compile shader '{}' Stage = {}", path, stageName);
             FLARE_CORE_ERROR("Shader Error: {0}", shaderModule.GetErrorMessage());
+            FLARE_CORE_TRACE(glsl);
             return {};
         }
 
@@ -527,6 +568,7 @@ namespace Flare
         for (const PreprocessedShaderProgram& program : programs)
         {
             shaderc_shader_kind shaderKind = (shaderc_shader_kind)0;
+
             switch (program.Stage)
             {
             case ShaderStageType::Vertex:
@@ -534,7 +576,21 @@ namespace Flare
                 break;
             case ShaderStageType::Pixel:
                 shaderKind = shaderc_fragment_shader;
+
                 break;
+            }
+
+            CrossCompilationOptions options;
+            options.LocationBase = 0;
+            options.ProgramKind = shaderKind;
+
+            if (shaderKind == shaderc_fragment_shader)
+            {
+                // NOTE: Uniform locations in pixel shaders start at 100,
+                //       in order to avoid overlaps with vertex shader uniform locations
+
+                // TODO: Find a better solution
+                options.LocationBase = 100;
             }
 
             std::optional<std::vector<uint32_t>> compiledVulkanShader = {};
@@ -581,7 +637,7 @@ namespace Flare
 
             if (!compiledOpenGLShader)
             {
-                compiledOpenGLShader = CompileSpirvToGlsl(pathString, compiledVulkanShader.value(), shaderKind);
+                compiledOpenGLShader = CompileSpirvToGlsl(pathString, compiledVulkanShader.value(), options);
                 if (!compiledOpenGLShader)
                     return false;
 
