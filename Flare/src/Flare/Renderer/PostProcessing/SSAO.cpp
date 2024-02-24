@@ -14,7 +14,7 @@ namespace Flare
 	FLARE_IMPL_TYPE(SSAO);
 
 	SSAO::SSAO()
-		: m_BiasPropertyIndex({}), m_RadiusPropertyIndex({}), Bias(0.1f), Radius(0.5f), BlurSize(2.0f), Enabled(true)
+		: RenderPass(RenderPassQueue::PostProcessing), m_BiasPropertyIndex({}), m_RadiusPropertyIndex({}), Bias(0.1f), Radius(0.5f), BlurSize(2.0f), Enabled(true)
 	{
 		{
 			std::optional<AssetHandle> shaderHandle = ShaderLibrary::FindShader("SSAO");

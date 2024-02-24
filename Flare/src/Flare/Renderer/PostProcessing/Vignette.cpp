@@ -17,7 +17,7 @@ namespace Flare
 	static uint32_t s_SmoothnessPropertyIndex = UINT32_MAX;
 
 	Vignette::Vignette()
-		: Enabled(false), Color(0.0f, 0.0f, 0.0f, 0.5f), Radius(1.0f), Smoothness(1.0f)
+		: RenderPass(RenderPassQueue::PostProcessing), Enabled(false), Color(0.0f, 0.0f, 0.0f, 0.5f), Radius(1.0f), Smoothness(1.0f)
 	{
 		std::optional<AssetHandle> shaderHandle = ShaderLibrary::FindShader("Vignette");
 		if (!shaderHandle || !AssetManager::IsAssetHandleValid(shaderHandle.value()))

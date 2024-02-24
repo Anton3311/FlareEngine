@@ -13,7 +13,7 @@ namespace Flare
 	FLARE_IMPL_TYPE(ToneMapping);
 
 	ToneMapping::ToneMapping()
-		: Enabled(false)
+		: RenderPass(RenderPassQueue::PostProcessing), Enabled(false)
 	{
 		std::optional<AssetHandle> shaderHandle = ShaderLibrary::FindShader("AcesToneMapping");
 		if (!shaderHandle || !AssetManager::IsAssetHandleValid(shaderHandle.value()))

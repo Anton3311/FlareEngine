@@ -13,6 +13,9 @@ namespace Flare
 	public:
 		FLARE_TYPE;
 
+		AtmospherePass()
+			: RenderPass(RenderPassQueue::PostProcessing) {}
+
 		void OnRender(RenderingContext& context) override;
 	public:
 		bool Enabled = true;

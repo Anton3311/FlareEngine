@@ -33,6 +33,14 @@ namespace Flare
 		int32_t Padding[3];
 	};
 
+	struct RenderPasses
+	{
+		std::vector<Ref<RenderPass>> BeforeShadowsPasses;
+		std::vector<Ref<RenderPass>> BeforeOpaqueGeometryPasses;
+		std::vector<Ref<RenderPass>> AfterOpaqueGeometryPasses;
+		std::vector<Ref<RenderPass>> PostProcessingPasses;
+	};
+
 	struct ShadowData
 	{
 		float Bias;
@@ -78,7 +86,7 @@ namespace Flare
 
 		Ref<Texture> WhiteTexture = nullptr;
 		
-		std::vector<Ref<RenderPass>> RenderPasses;
+		RenderPasses Passes;
 		RendererStatistics Statistics;
 
 		RendererSubmitionQueue OpaqueQueue;
@@ -603,6 +611,11 @@ namespace Flare
 
 	void Renderer::ExecuteGeomertyPass()
 	{
+		{
+			FLARE_PROFILE_SCOPE("BeforeGeometryPasses");
+			ExecuteRenderPasses(s_RendererData.Passes.BeforeOpaqueGeometryPasses);
+		}
+
 		FLARE_PROFILE_FUNCTION();
 
 		s_RendererData.GeometryPassTimer->Start();
@@ -676,6 +689,11 @@ namespace Flare
 		s_RendererData.CurrentInstancingMesh.Reset();
 
 		s_RendererData.GeometryPassTimer->Stop();
+		
+		{
+			FLARE_PROFILE_SCOPE("AfterGeometryPasses");
+			ExecuteRenderPasses(s_RendererData.Passes.AfterOpaqueGeometryPasses);
+		}
 	}
 
 	void Renderer::ExecuteDecalsPass()
@@ -744,6 +762,11 @@ namespace Flare
 
 	void Renderer::ExecuteShadowPass()
 	{
+		{
+			FLARE_PROFILE_SCOPE("BeforeShadowsPasses");
+			ExecuteRenderPasses(s_RendererData.Passes.BeforeShadowsPasses);
+		}
+
 		FLARE_PROFILE_FUNCTION();
 
 		s_RendererData.ShadowPassTimer->Start();
@@ -943,30 +966,70 @@ namespace Flare
 
 	void Renderer::AddRenderPass(Ref<RenderPass> pass)
 	{
-		s_RendererData.RenderPasses.push_back(pass);
+		switch (pass->GetQueue())
+		{
+		case RenderPassQueue::BeforeShadows:
+			s_RendererData.Passes.BeforeShadowsPasses.push_back(pass);
+			break;
+		case RenderPassQueue::BeforeOpaqueGeometry:
+			s_RendererData.Passes.BeforeOpaqueGeometryPasses.push_back(pass);
+			break;
+		case RenderPassQueue::AfterOpaqueGeometry:
+			s_RendererData.Passes.AfterOpaqueGeometryPasses.push_back(pass);
+			break;
+		case RenderPassQueue::PostProcessing:
+			s_RendererData.Passes.PostProcessingPasses.push_back(pass);
+			break;
+		}
 	}
 
-	void Renderer::RemoveRenderPass(Ref<RenderPass> pass)
+	static void RemoveRenderPassFromList(std::vector<Ref<RenderPass>>& passes, const Ref<RenderPass>& pass)
 	{
-		for (size_t i = 0; i < s_RendererData.RenderPasses.size(); i++)
+		for (size_t i = 0; i < passes.size(); i++)
 		{
-			if (s_RendererData.RenderPasses[i] == pass)
+			if (passes[i] == pass)
 			{
-				s_RendererData.RenderPasses.erase(s_RendererData.RenderPasses.begin() + i);
+				passes.erase(passes.begin() + i);
 				break;
 			}
 		}
 	}
 
-	void Renderer::ExecuteRenderPasses()
+	void Renderer::RemoveRenderPass(Ref<RenderPass> pass)
+	{
+		switch (pass->GetQueue())
+		{
+		case RenderPassQueue::BeforeShadows:
+			RemoveRenderPassFromList(s_RendererData.Passes.BeforeShadowsPasses, pass);
+			break;
+		case RenderPassQueue::BeforeOpaqueGeometry:
+			RemoveRenderPassFromList(s_RendererData.Passes.BeforeOpaqueGeometryPasses, pass);
+			break;
+		case RenderPassQueue::AfterOpaqueGeometry:
+			RemoveRenderPassFromList(s_RendererData.Passes.AfterOpaqueGeometryPasses, pass);
+			break;
+		case RenderPassQueue::PostProcessing:
+			RemoveRenderPassFromList(s_RendererData.Passes.PostProcessingPasses, pass);
+			break;
+		}
+	}
+
+	void Renderer::ExecuteRenderPasses(std::vector<Ref<RenderPass>>& passes)
 	{
 		FLARE_CORE_ASSERT(s_RendererData.CurrentViewport);
 
-		FLARE_PROFILE_FUNCTION();
 		RenderingContext context(s_RendererData.CurrentViewport->RenderTarget, s_RendererData.CurrentViewport->RTPool);
-
-		for (Ref<RenderPass>& pass : s_RendererData.RenderPasses)
+		for (Ref<RenderPass>& pass : passes)
 			pass->OnRender(context);
+	}
+
+	void Renderer::ExecutePostProcessingPasses()
+	{
+		if (!s_RendererData.CurrentViewport->PostProcessingEnabled)
+			return;
+
+		FLARE_PROFILE_FUNCTION();
+		ExecuteRenderPasses(s_RendererData.Passes.PostProcessingPasses);
 	}
 
 	RendererSubmitionQueue& Renderer::GetOpaqueSubmitionQueue()

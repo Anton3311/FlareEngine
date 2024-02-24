@@ -169,7 +169,7 @@ namespace Flare
 
 		static void AddRenderPass(Ref<RenderPass> pass);
 		static void RemoveRenderPass(Ref<RenderPass> pass);
-		static void ExecuteRenderPasses();
+		static void ExecutePostProcessingPasses();
 
 		static RendererSubmitionQueue& GetOpaqueSubmitionQueue();
 
@@ -188,5 +188,6 @@ namespace Flare
 		static void FlushInstances(uint32_t count, uint32_t baseInstance);
 		static void FlushShadowPassInstances(uint32_t baseInstance);
 		static void ReloadShaders();
+		static void ExecuteRenderPasses(std::vector<Ref<RenderPass>>& passes);
 	};
 }
