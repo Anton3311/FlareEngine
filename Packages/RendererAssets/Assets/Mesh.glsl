@@ -86,6 +86,8 @@ void main()
 	vec3 H = normalize(V - u_LightDirection);
 
 	vec4 color = u_Material.Color * texture(u_Texture, i_Vertex.UV);
+	if (color.a == 0.0f)
+		discard;
 
 	int cascadeIndex = CalculateCascadeIndex(i_Vertex.ViewSpacePosition);
 
