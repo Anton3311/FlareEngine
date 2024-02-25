@@ -215,9 +215,9 @@ namespace Flare
                 }
             }
 
-            aiColor4D color;
+            aiColor4D color(1.0f, 1.0f, 1.0f, 1.0f);
             material->Get(AI_MATKEY_COLOR_DIFFUSE, color);
-            float roughness;
+            float roughness = 1.0f;
             material->Get(AI_MATKEY_ROUGHNESS_FACTOR, roughness);
 
             Ref<Material> materialAsset = CreateRef<Material>(defaultShader.value());
