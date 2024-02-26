@@ -256,28 +256,31 @@ namespace Flare
 		params.BoundingSphereRadius = boundingSphereRadius;
 	}
 
-	static void CalculateShadowProjectionFrustum(Math::Plane* outPlanes, const ShadowMappingParams& params, glm::vec3 lightDirection, const Math::Basis& lightBasis)
+	struct CascadeFrustum
 	{
-		// Near and far planes aren't calculated here
-		// because they are computed based on AABBs of scene objects
+		static constexpr size_t LeftIndex = 0;
+		static constexpr size_t RightIndex = 1;
+		static constexpr size_t TopIndex = 2;
+		static constexpr size_t BottomIndex = 3;
 
-		// Left
-		outPlanes[0] = Math::Plane::TroughPoint(
+		Math::Plane Planes[4];
+	};
+
+	static void CalculateShadowProjectionFrustum(CascadeFrustum* outPlanes, const ShadowMappingParams& params, glm::vec3 lightDirection, const Math::Basis& lightBasis)
+	{
+		outPlanes->Planes[CascadeFrustum::LeftIndex] = Math::Plane::TroughPoint(
 			params.CameraFrustumCenter - lightBasis.Right * params.BoundingSphereRadius,
 			lightBasis.Right);
 
-		 // Right
-		outPlanes[1] = Math::Plane::TroughPoint(
+		outPlanes->Planes[CascadeFrustum::RightIndex] = Math::Plane::TroughPoint(
 			params.CameraFrustumCenter + lightBasis.Right * params.BoundingSphereRadius,
 			-lightBasis.Right);
 
-		// Top
-		outPlanes[2] = Math::Plane::TroughPoint(
+		outPlanes->Planes[CascadeFrustum::TopIndex] = Math::Plane::TroughPoint(
 			params.CameraFrustumCenter + lightBasis.Up * params.BoundingSphereRadius,
 			-lightBasis.Up);
 
-		// Bottom
-		outPlanes[3] = Math::Plane::TroughPoint(
+		outPlanes->Planes[CascadeFrustum::BottomIndex] = Math::Plane::TroughPoint(
 			params.CameraFrustumCenter - lightBasis.Up * params.BoundingSphereRadius,
 			lightBasis.Up);
 	}
@@ -292,7 +295,7 @@ namespace Flare
 		const ShadowSettings& shadowSettings = Renderer::GetShadowSettings();
 
 		ShadowMappingParams perCascadeParams[ShadowSettings::MaxCascades];
-		Math::Plane cascadePlanes[ShadowSettings::MaxCascades][4];
+		CascadeFrustum cascadeFrustums[ShadowSettings::MaxCascades];
 
 		{
 			FLARE_PROFILE_SCOPE("CalculateCascadeFrustum");
@@ -307,7 +310,7 @@ namespace Flare
 
 				// 2. Calculate projection frustum planes (except near and far)
 				CalculateShadowProjectionFrustum(
-					cascadePlanes[i],
+					&cascadeFrustums[i],
 					perCascadeParams[i],
 					lightDirection,
 					lightBasis);
@@ -318,7 +321,6 @@ namespace Flare
 
 		{
 			FLARE_PROFILE_SCOPE("DivideIntoGroups");
-
 			for (size_t objectIndex = 0; objectIndex < s_RendererData.OpaqueQueue.GetSize(); objectIndex++)
 			{
 				const auto& object = s_RendererData.OpaqueQueue[objectIndex];
@@ -331,7 +333,7 @@ namespace Flare
 					bool intersects = true;
 					for (size_t i = 0; i < 4; i++)
 					{
-						if (!objectAABB.IntersectsOrInFrontOfPlane(cascadePlanes[cascadeIndex][i]))
+						if (!objectAABB.IntersectsOrInFrontOfPlane(cascadeFrustums[cascadeIndex].Planes[i]))
 						{
 							intersects = false;
 							break;
@@ -795,24 +797,32 @@ namespace Flare
 			s_RendererData.ShadowsRenderTarget[cascadeIndex]->Bind();
 			s_RendererData.CurrentInstancingMesh.Reset();
 
-			// Group objects with same meshes together
-			std::sort(perCascadeObjects[cascadeIndex].begin(), perCascadeObjects[cascadeIndex].end(), [](uint32_t aIndex, uint32_t bIndex) -> bool
 			{
-				const auto& a = s_RendererData.OpaqueQueue[aIndex];
-				const auto& b = s_RendererData.OpaqueQueue[bIndex];
+				FLARE_PROFILE_SCOPE("GroupByMesh");
 
-				if (a.Mesh->Handle == b.Mesh->Handle)
-					return a.SubMeshIndex < b.SubMeshIndex;
+				// Group objects with same meshes together
+				std::sort(perCascadeObjects[cascadeIndex].begin(), perCascadeObjects[cascadeIndex].end(), [](uint32_t aIndex, uint32_t bIndex) -> bool
+				{
+					const auto& a = s_RendererData.OpaqueQueue[aIndex];
+					const auto& b = s_RendererData.OpaqueQueue[bIndex];
 
-				return (uint64_t)a.Mesh->Handle < (uint64_t)b.Mesh->Handle;
-			});
+					if (a.Mesh->Handle == b.Mesh->Handle)
+						return a.SubMeshIndex < b.SubMeshIndex;
 
-			// Fill instances buffer
-			s_RendererData.InstanceDataBuffer.clear();
-			for (uint32_t i : perCascadeObjects[cascadeIndex])
+					return (uint64_t)a.Mesh->Handle < (uint64_t)b.Mesh->Handle;
+				});
+			}
+
 			{
-				auto& instanceData = s_RendererData.InstanceDataBuffer.emplace_back();
-				instanceData.Transform = s_RendererData.OpaqueQueue[i].Transform.ToMatrix4x4();
+				FLARE_PROFILE_SCOPE("FillInstancesData");
+
+				// Fill instances buffer
+				s_RendererData.InstanceDataBuffer.clear();
+				for (uint32_t i : perCascadeObjects[cascadeIndex])
+				{
+					auto& instanceData = s_RendererData.InstanceDataBuffer.emplace_back();
+					instanceData.Transform = s_RendererData.OpaqueQueue[i].Transform.ToMatrix4x4();
+				}
 			}
 
 			{
@@ -823,40 +833,44 @@ namespace Flare
 			s_RendererData.IndirectDrawData.clear();
 			s_RendererData.CurrentInstancingMesh.Reset();
 
-			uint32_t baseInstance = 0;
-			uint32_t currentInstance = 0;
-			for (uint32_t objectIndex : perCascadeObjects[cascadeIndex])
 			{
-				const auto& queued = s_RendererData.OpaqueQueue[objectIndex];
-				if (queued.Mesh.get() != s_RendererData.CurrentInstancingMesh.Mesh.get())
-				{
-					FlushShadowPassInstances(baseInstance);
+				FLARE_PROFILE_SCOPE("ExecuteDrawCalls");
 
-					baseInstance = currentInstance;
-
-					s_RendererData.CurrentInstancingMesh.Mesh = queued.Mesh;
-					auto& command = s_RendererData.IndirectDrawData.emplace_back();
-					command.InstancesCount = 1;
-					command.SubMeshIndex = queued.SubMeshIndex;
-				}
-				else
+				uint32_t baseInstance = 0;
+				uint32_t currentInstance = 0;
+				for (uint32_t objectIndex : perCascadeObjects[cascadeIndex])
 				{
-					if (s_RendererData.IndirectDrawData.size() > 0 && s_RendererData.IndirectDrawData.back().SubMeshIndex == queued.SubMeshIndex)
+					const auto& queued = s_RendererData.OpaqueQueue[objectIndex];
+					if (queued.Mesh.get() != s_RendererData.CurrentInstancingMesh.Mesh.get())
 					{
-						s_RendererData.IndirectDrawData.back().InstancesCount++;
-					}
-					else
-					{
+						FlushShadowPassInstances(baseInstance);
+
+						baseInstance = currentInstance;
+
+						s_RendererData.CurrentInstancingMesh.Mesh = queued.Mesh;
 						auto& command = s_RendererData.IndirectDrawData.emplace_back();
 						command.InstancesCount = 1;
 						command.SubMeshIndex = queued.SubMeshIndex;
 					}
+					else
+					{
+						if (s_RendererData.IndirectDrawData.size() > 0 && s_RendererData.IndirectDrawData.back().SubMeshIndex == queued.SubMeshIndex)
+						{
+							s_RendererData.IndirectDrawData.back().InstancesCount++;
+						}
+						else
+						{
+							auto& command = s_RendererData.IndirectDrawData.emplace_back();
+							command.InstancesCount = 1;
+							command.SubMeshIndex = queued.SubMeshIndex;
+						}
+					}
+
+					currentInstance++;
 				}
 
-				currentInstance++;
+				FlushShadowPassInstances(baseInstance);
 			}
-
-			FlushShadowPassInstances(baseInstance);
 		}
 
 		s_RendererData.CurrentInstancingMesh.Reset();
