@@ -119,7 +119,9 @@ float CalculateCascadeShadow(sampler2D shadowMap, vec4 lightSpacePosition, float
 
 	float penumbraWidth = (receieverDepth - blockerDistance) / blockerDistance;
 	float filterRadius = penumbraWidth * LIGHT_SIZE * u_LightNear / receieverDepth;
-	return 1.0f - PCF(shadowMap, uv, receieverDepth, max(3.0f / u_ShadowResolution, filterRadius * scale * u_ShadowSoftness), rotation, bias);
+	filterRadius = max(0.0f, filterRadius * scale * u_ShadowSoftness);
+
+	return 1.0f - PCF(shadowMap, uv, receieverDepth, filterRadius, rotation, bias);
 }
 
 // From Next Generation Post Processing in Call of Duty Advancded Warfare
@@ -151,7 +153,7 @@ float CalculateShadow(vec3 N, vec4 position, int cascadeIndex)
 {
 	float shadow = 1.0f;
 	float NoL = dot(N, -u_LightDirection);
-	float bias = max(u_Bias * (1.0f - NoL), 0.0005f);
+	float bias = max(u_Bias * (1.0f - NoL), 0.0f);
 
 	bias /= float(cascadeIndex + 1);
 

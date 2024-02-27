@@ -6,6 +6,7 @@ Entities:
           Value: Camera
       - Name: struct Flare::CameraComponent
         Data:
+          Projection: 1
           Size: 10
           FOV: 60
           Near: 0.100000001
@@ -39,8 +40,9 @@ Entities:
           EnvironmentColor: [0.967971504, 0.954756439, 0.919745147]
           EnvironmentColorIntensity: 0.300000012
           ShadowSettings:
+            Enabled: true
             LightSize: 0.00899999961
-            Bias: 0.00100000005
+            Bias: 0
             Quality: 2
             Cascades: 4
             Softness: 16
@@ -235,9 +237,9 @@ Entities:
           Scale: [2.15280008, 0.424019426, 2.15277934]
 Editor:
   Camera:
-    RotationOrigin: [-3.60637474, -9.46754551, -17.8702564]
-    Rotation: [34, -795, 0]
-    Zoom: 54.2166786
+    RotationOrigin: [-13.0828304, -5.08186245, -10.2559996]
+    Rotation: [48, -781, 0]
+    Zoom: 14.2166786
   SceneViewSettings:
     ShowAABBs: false
     ShowCameraFrustum: true
@@ -259,3 +261,7 @@ PostProcessing:
       Radius: 0.5
       Bias: 0.100000001
       BlurSize: 2
+  - Name: class Flare::AtmospherePass
+    Data:
+      Enabled: true
+      AtmosphereMaterial: 0
