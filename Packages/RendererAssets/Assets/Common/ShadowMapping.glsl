@@ -2,6 +2,7 @@
 #define SHADOW_MAPPING_H
 
 #include "Light.glsl"
+#include "Math.glsl"
 
 const int CASCADES_COUNT = 4;
 
@@ -126,14 +127,6 @@ float CalculateCascadeShadow(sampler2D shadowMap, vec4 lightSpacePosition, float
 	return 1.0f - PCF(shadowMap, uv, receieverDepth, filterRadius, rotation, bias);
 }
 
-// From Next Generation Post Processing in Call of Duty Advancded Warfare
-float InterleavedGradientNoise(vec2 screenSpacePosition)
-{
-	const float scale = 64.0;
-	vec3 magic = vec3(0.06711056, 0.00583715, 52.9829189);
-	return -scale + 2.0 * scale * fract(magic.z * fract(dot(screenSpacePosition, magic.xy)));
-}
-
 float CalculateShadow(vec3 N, vec4 position, vec3 viewSpacePosition)
 {
 	float viewSpaceDistance = abs(viewSpacePosition.z);
@@ -156,7 +149,7 @@ float CalculateShadow(vec3 N, vec4 position, vec3 viewSpacePosition)
 
 	bias /= float(cascadeIndex + 1);
 
-	float rotationAngle = 2.0f * pi * InterleavedGradientNoise(gl_FragCoord.xy);
+	float rotationAngle = 2.0f * PI * InterleavedGradientNoise(gl_FragCoord.xy);
 
 	switch (cascadeIndex)
 	{

@@ -1,8 +1,9 @@
 #ifndef BRDF_H
 #define BRDF_H
 
-const float pi = 3.1415926535897932384626433832795;
-const vec3 baseReflectivity = vec3(0.04);
+#include "Math.glsl"
+
+const vec3 BASE_REFLECTIVITY = vec3(0.04);
 
 vec3 Fresnel_Shlick(vec3 baseReflectivity, vec3 V, vec3 H)
 {
@@ -11,7 +12,7 @@ vec3 Fresnel_Shlick(vec3 baseReflectivity, vec3 V, vec3 H)
 
 vec3 Diffuse_Lambertian(vec3 color)
 {
-	return color / pi;
+	return color / PI;
 }
 
 float NDF_GGXThrowbridgeReitz(float alpha, vec3 N, vec3 H)
@@ -21,7 +22,7 @@ float NDF_GGXThrowbridgeReitz(float alpha, vec3 N, vec3 H)
 
 	float numer = alpha * alpha;
 	float denom = NdotH * (numer - 1.0) + 1.0;
-	return numer / (denom * denom * pi);
+	return numer / (denom * denom * PI);
 }
 
 float ShlickBeckmann(vec3 N, vec3 X, float k)
@@ -39,7 +40,7 @@ float ShlickGGX(float alpha, vec3 N, vec3 V, vec3 L)
 vec3 Specular_CookTorence(float alpha, vec3 N, vec3 V, vec3 L)
 {
 	vec3 H = normalize(V + L);
-	vec3 numer = NDF_GGXThrowbridgeReitz(alpha, N, H) * ShlickGGX(alpha, N, V, L) * Fresnel_Shlick(baseReflectivity, V, H);
+	vec3 numer = NDF_GGXThrowbridgeReitz(alpha, N, H) * ShlickGGX(alpha, N, V, L) * Fresnel_Shlick(BASE_REFLECTIVITY, V, H);
 	float denom = 4 * max(0.0, dot(V, N)) * max(0.0, dot(L, N));
 
 	return numer / max(denom, 0.000001);

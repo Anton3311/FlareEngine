@@ -19,6 +19,7 @@ void main()
 #version 450
 
 #include "Common/Camera.glsl"
+#include "Common/Math.glsl"
 
 layout(location = 0) in vec2 i_UV;
 
@@ -33,20 +34,6 @@ layout(std140, push_constant) uniform Params
 } u_Params;
 
 layout(location = 0) out vec4 o_Color;
-
-vec3 ReconstructWorldSpacePositionFromDepth(vec2 screenPosition, float depth)
-{
-	vec4 clipSpacePosition = vec4(screenPosition, depth * 2.0f - 1.0f, 1.0f);
-	vec4 worldSpacePosition = u_Camera.InverseViewProjection * clipSpacePosition;
-	return worldSpacePosition.xyz / worldSpacePosition.w;
-}
-
-vec3 ReconstructViewSpacePositionFromDepth(vec2 screenPosition, float depth)
-{
-	vec4 clipSpacePosition = vec4(screenPosition, depth * 2.0f - 1.0f, 1.0f);
-	vec4 viewSpacePosition = u_Camera.InverseProjection * clipSpacePosition;
-	return viewSpacePosition.xyz / viewSpacePosition.w;
-}
 
 const vec3[] RANDOM_VECTORS = 
 {
@@ -85,15 +72,6 @@ const vec3[] RANDOM_VECTORS =
 };
 
 const int SAMPLES_COUNT = 32;
-const float pi = 3.1415926535897932384626433832795;
-
-// From Next Generation Post Processing in Call of Duty Advancded Warfare
-float InterleavedGradientNoise(vec2 screenSpacePosition)
-{
-	const float scale = 64.0;
-	vec3 magic = vec3(0.06711056, 0.00583715, 52.9829189);
-	return -scale + 2.0 * scale * fract(magic.z * fract(dot(screenSpacePosition, magic.xy)));
-}
 
 void main()
 {
@@ -112,7 +90,7 @@ void main()
 	vec3 worldSpaceNormal = normalize(sampledNormal * 2.0f - vec3(1.0f));
 	vec3 normal = (worldNormalToView * vec4(worldSpaceNormal, 1.0)).xyz;
 
-	float angle = 2.0f * pi * InterleavedGradientNoise(gl_FragCoord.xy);
+	float angle = 2.0f * PI * InterleavedGradientNoise(gl_FragCoord.xy);
 	vec3 randomVector = vec3(cos(angle), sin(angle), 0.0f);
 	randomVector = normalize(randomVector.xyz * 2.0f - vec3(1.0f));
 

@@ -1,6 +1,8 @@
 #ifndef ATMOSPHERIC_SCATTERING
 #define ATMOSPHERIC_SCATTERING
 
+#include "Math.glsl"
+
 float MiePhaseFunction(float angleCos, float g)
 {
 	float g2 = g * g;
@@ -10,7 +12,7 @@ float MiePhaseFunction(float angleCos, float g)
 
 float RayleighPhaseFunction(float cosTheta)
 {
-	return 3.0f / (16.0f * pi) * (1 + cosTheta * cosTheta);
+	return 3.0f / (16.0f * PI) * (1 + cosTheta * cosTheta);
 }
 
 struct AtmosphereProperties

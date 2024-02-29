@@ -44,7 +44,7 @@ vec3 CalculateLight(vec3 N, vec3 V, vec3 H, vec3 color, vec3 incomingLight, vec3
 {
 	float alpha = max(0.04, roughness * roughness);
 
-	vec3 kS = Fresnel_Shlick(baseReflectivity, V, H);
+	vec3 kS = Fresnel_Shlick(BASE_REFLECTIVITY, V, H);
 	vec3 kD = vec3(1.0) - kS;
 
 	vec3 diffuse = Diffuse_Lambertian(color);
