@@ -122,7 +122,7 @@ float CalculateCascadeShadow(sampler2D shadowMap, vec4 lightSpacePosition, float
 
 	float penumbraWidth = (receieverDepth - blockerDistance) / blockerDistance;
 	float filterRadius = penumbraWidth * LIGHT_SIZE * u_LightNear / receieverDepth;
-	filterRadius = max(0.0f, filterRadius * scale * u_ShadowSoftness);
+	filterRadius = max(3.0f / u_ShadowResolution, filterRadius * scale * u_ShadowSoftness);
 
 	return 1.0f - PCF(shadowMap, uv, receieverDepth, filterRadius, rotation, bias);
 }
