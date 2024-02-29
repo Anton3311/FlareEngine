@@ -45,7 +45,8 @@ namespace Flare
 			LightSize(0.009f),
 			Cascades(MaxCascades),
 			Bias(0.001f),
-			Softness(1.0f)
+			Softness(1.0f),
+			FadeDistance(50.0f)
 		{
 			CascadeSplits[0] = 25.0f;
 			CascadeSplits[1] = 50.0f;
@@ -62,6 +63,7 @@ namespace Flare
 
 		float Softness;
 		float CascadeSplits[MaxCascades] = { 0.0f };
+		float FadeDistance;
 	};
 
 	inline uint32_t GetShadowMapResolution(ShadowQuality quality)
@@ -104,6 +106,7 @@ namespace Flare
 
 			stream.Serialize("Cascades", SerializationValue(settings.Cascades));
 			stream.Serialize("Softness", SerializationValue(settings.Softness));
+			stream.Serialize("FadeDistance", SerializationValue(settings.FadeDistance));
 
 			stream.Serialize("CascadeSplit0", SerializationValue(settings.CascadeSplits[0]));
 			stream.Serialize("CascadeSplit1", SerializationValue(settings.CascadeSplits[1]));

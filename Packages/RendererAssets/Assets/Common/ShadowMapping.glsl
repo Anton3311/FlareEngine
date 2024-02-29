@@ -22,6 +22,8 @@ layout(std140, binding = 2) uniform ShadowData
 
 	float u_ShadowResolution;
 	float u_ShadowSoftness;
+	float u_ShadowFadeDistance;
+	float u_MaxShadowDistance;
 };
 
 layout(binding = 28) uniform sampler2D u_ShadowMap0;
@@ -132,7 +134,7 @@ float InterleavedGradientNoise(vec2 screenSpacePosition)
 	return -scale + 2.0 * scale * fract(magic.z * fract(dot(screenSpacePosition, magic.xy)));
 }
 
-int CalculateCascadeIndex(vec3 viewSpacePosition)
+float CalculateShadow(vec3 N, vec4 position, vec3 viewSpacePosition)
 {
 	float viewSpaceDistance = abs(viewSpacePosition.z);
 
@@ -146,12 +148,9 @@ int CalculateCascadeIndex(vec3 viewSpacePosition)
 		}
 	}
 
-	return cascadeIndex;
-}
+	float shadowFade = smoothstep(u_ShadowFadeDistance, u_MaxShadowDistance, viewSpaceDistance);
 
-float CalculateShadow(vec3 N, vec4 position, int cascadeIndex)
-{
-	float shadow = 1.0f;
+	float shadow = 0.0f;
 	float NoL = dot(N, -u_LightDirection);
 	float bias = max(u_Bias * (1.0f - NoL), 0.0f);
 
@@ -175,7 +174,7 @@ float CalculateShadow(vec3 N, vec4 position, int cascadeIndex)
 		break;
 	}
 
-	return shadow;
+	return mix(shadow, 1.0f, shadowFade);
 }
 
 #endif

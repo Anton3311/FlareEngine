@@ -77,8 +77,6 @@ layout(location = 0) out vec4 o_Color;
 layout(location = 1) out vec4 o_Normal;
 layout(location = 2) out int o_EntityIndex;
 
-#define DEBUG_CASCADES 0
-
 void main()
 {
 	vec3 N = normalize(i_Vertex.Normal);
@@ -89,27 +87,7 @@ void main()
 	if (color.a == 0.0f)
 		discard;
 
-	int cascadeIndex = CalculateCascadeIndex(i_Vertex.ViewSpacePosition);
-
-#if DEBUG_CASCADES
-	switch (cascadeIndex)
-	{
-	case 0:
-		color.xyz *= vec3(1.0f, 0.f, 0.0f);
-		break;
-	case 1:
-		color.xyz *= vec3(0.0f, 1.0f, 0.0f);
-		break;
-	case 2:
-		color.xyz *= vec3(0.0f, 0.0f, 1.0f);
-		break;
-	case 3:
-		color.xyz *= vec3(1.0f, 0.0f, 0.0f);
-		break;
-	}
-#endif
-
-	float shadow = CalculateShadow(N, i_Vertex.Position, cascadeIndex);
+	float shadow = CalculateShadow(N, i_Vertex.Position, i_Vertex.ViewSpacePosition);
 	vec3 finalColor = CalculateLight(N, V, H, color.rgb,
 		u_LightColor.rgb * u_LightColor.w, -u_LightDirection,
 		u_Material.Roughness) * shadow;

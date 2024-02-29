@@ -55,6 +55,9 @@ namespace Flare
 
 		float Resolution;
 		float Softness;
+
+		float ShadowFadeStartDistance;
+		float MaxShadowDistance;
 	};
 
 	struct InstancingMesh
@@ -422,6 +425,9 @@ namespace Flare
 		shadowData.FrustumSize = 2.0f * s_RendererData.CurrentViewport->FrameData.Camera.Near
 			* glm::tan(glm::radians(s_RendererData.CurrentViewport->FrameData.Camera.FOV / 2.0f))
 			* s_RendererData.CurrentViewport->GetAspectRatio();
+
+		shadowData.MaxShadowDistance = shadowData.CascadeSplits[s_RendererData.ShadowMappingSettings.Cascades - 1];
+		shadowData.ShadowFadeStartDistance = shadowData.MaxShadowDistance - s_RendererData.ShadowMappingSettings.FadeDistance;
 
 		s_RendererData.ShadowDataBuffer->SetData(&shadowData, sizeof(shadowData), 0);
 	}

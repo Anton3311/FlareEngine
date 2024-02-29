@@ -30,7 +30,7 @@ Entities:
           Position: [0, 1.96195173, 7.10875416]
           Rotation: [-47.6773415, -34.0421906, -2.06069831e-06]
           Scale: [0.999999881, 0.999998748, 0.999998868]
-  - SerializationId: 8606298404987489329
+  - SerializationId: 8606298405624872960
     Components:
       - Name: struct Flare::NameComponent
         Data:
@@ -46,6 +46,7 @@ Entities:
             Quality: 2
             Cascades: 4
             Softness: 16
+            FadeDistance: 50
             CascadeSplit0: 25
             CascadeSplit1: 50
             CascadeSplit2: 150
@@ -238,8 +239,8 @@ Entities:
 Editor:
   Camera:
     RotationOrigin: [-13.0828304, -5.08186245, -10.2559996]
-    Rotation: [48, -781, 0]
-    Zoom: 14.2166786
+    Rotation: [38, -788, 0]
+    Zoom: 29.2166786
   SceneViewSettings:
     ShowAABBs: false
     ShowCameraFrustum: true
@@ -264,4 +265,4 @@ PostProcessing:
   - Name: class Flare::AtmospherePass
     Data:
       Enabled: true
-      AtmosphereMaterial: 0
+      AtmosphereMaterial: 6603499577536286740
