@@ -37,7 +37,6 @@ namespace Flare
 		void SetRotation(glm::vec3 rotation);
 		void SetZoom(float zoom);
 
-		void ProcessEvents(Event& event);
 		void OnViewportChanged(glm::ivec2 viewportSize, glm::ivec2 viewportPosition);
 
 		void Zoom(float amount);

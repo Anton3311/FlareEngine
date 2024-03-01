@@ -39,68 +39,6 @@ namespace Flare
 		RecalculateViewMatrix();
 	}
 
-	void EditorCamera::ProcessEvents(Event& event)
-	{
-		EventDispatcher dispatcher(event);
-		dispatcher.Dispatch<MouseButtonPressedEvent>([this](MouseButtonPressedEvent& event) -> bool
-		{
-			m_PreviousIsControlled = m_IsControlled;
-			m_IsControlled = event.GetMouseCode() == MouseCode::ButtonMiddle;
-			return false;
-		});
-
-		dispatcher.Dispatch<MouseButtonReleasedEvent>([this](MouseButtonReleasedEvent& event) -> bool
-		{
-			if (m_IsControlled && event.GetMouseCode() == MouseCode::ButtonMiddle)
-			{
-				m_PreviousIsControlled = m_IsControlled;
-				m_IsControlled = false;
-			}
-
-			return false;
-		});
-
-		dispatcher.Dispatch<KeyPressedEvent>([this](KeyPressedEvent& event) -> bool
-		{
-			m_IsMoved = event.GetKeyCode() == KeyCode::LeftShift;
-			return false;
-		});
-
-		dispatcher.Dispatch<KeyReleasedEvent>([this](KeyReleasedEvent& event) -> bool
-		{
-			if (m_IsMoved && event.GetKeyCode() == KeyCode::LeftShift)
-				m_IsMoved = false;
-			return false;
-		});
-
-		dispatcher.Dispatch<MouseMoveEvent>([this](MouseMoveEvent& event) -> bool
-		{
-			glm::vec2 delta = event.GetPosition() - m_ViewportPosition - m_PreviousMousePosition;
-
-			if (!m_PreviousIsControlled && m_IsControlled)
-			{
-				delta = glm::vec2(0.0f);
-				m_PreviousIsControlled = m_IsControlled;
-			}
-
-			if (m_IsControlled && !m_IsMoved)
-				Rotate(delta);
-			else if (m_IsControlled && m_IsMoved)
-				Drag(event.GetPosition() - m_ViewportPosition);
-
-			m_PreviousMousePosition = event.GetPosition() - m_ViewportPosition;
-
-			return false;
-		});
-
-		dispatcher.Dispatch<MouseScrollEvent>([this](MouseScrollEvent& event) -> bool
-		{
-			glm::vec2 scroll = event.GetOffset();
-			Zoom(-scroll.y);
-			return false;
-		});
-	}
-
 	void EditorCamera::OnViewportChanged(glm::ivec2 viewportSize, glm::ivec2 viewportPosition)
 	{
 		float aspectRatio = (float)viewportSize.x / (float)viewportSize.y;
