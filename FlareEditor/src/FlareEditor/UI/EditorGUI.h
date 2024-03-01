@@ -64,6 +64,9 @@ namespace Flare
 		static void EndToggleGroup();
 
 		static bool AssetField(AssetHandle& handle, const AssetDescriptor* assetType = nullptr);
+		static bool AssetField(Ref<Asset>& asset, const AssetDescriptor& assetDescriptor);
+
+		static bool AssetField(const char* name, Ref<Asset>& asset, const AssetDescriptor& assetDescriptor);
 		static bool AssetField(const char* name, AssetHandle& handle, const AssetDescriptor* assetType = nullptr);
 
 		static void PropertyName(const char* name, float minHeight = 0.0f);

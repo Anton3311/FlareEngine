@@ -9,6 +9,7 @@
 #include "FlareEditor/AssetManager/EditorAssetManager.h"
 #include "FlareEditor/UI/QuickSearch/QuickSearch.h"
 #include "FlareEditor/UI/SerializablePropertyRenderer.h"
+#include "FlareEditor/UI/AssetFieldRenderer.h"
 
 #include <spdlog/spdlog.h>
 
@@ -394,205 +395,28 @@ namespace Flare
         return buttonHeight * 2.0f + style.ItemSpacing.y;
     }
 
-    static void RenderAssetPreview(ImVec2 previewSize, ImVec2 previewPosition, bool hovered, AssetHandle handle)
-    {
-        ImDrawList* drawList = ImGui::GetCurrentWindow()->DrawList;
-        const ImGuiStyle& style = ImGui::GetStyle();
-
-        ImU32 previewHoverColor = 0xffcccccc;
-        const AssetMetadata* metadata = AssetManager::GetAssetMetadata(handle);
-        if (AssetManager::IsAssetHandleValid(handle))
-        {
-            Ref<Texture> previewTexture = nullptr;
-            ImVec2 uvMin = ImVec2(0.0f, 1.0f);
-            ImVec2 uvMax = ImVec2(1.0f, 0.0f);
-
-            if (metadata->Type == AssetType::Texture)
-            {
-                previewTexture = AssetManager::GetAsset<Texture>(handle);
-            }
-            else if (metadata->Type == AssetType::Sprite)
-            {
-                Ref<Sprite> sprite = AssetManager::GetAsset<Sprite>(handle);
-                previewTexture = sprite->GetTexture();
-
-                // NOTE: Flipped vertically
-                uvMin = ImVec2(sprite->UVMin.x, sprite->UVMax.y);
-                uvMax = ImVec2(sprite->UVMax.x, sprite->UVMin.y);
-            }
-
-            if (previewTexture)
-            {
-                drawList->AddImageRounded((ImTextureID)previewTexture->GetRendererId(),
-                    previewPosition, previewPosition + previewSize,
-                    uvMin, uvMax,
-                    hovered ? previewHoverColor : 0xffffffff,
-                    style.FrameRounding);
-            }
-            else
-            {
-                // Empty preview
-                drawList->AddRect(
-                    previewPosition, previewPosition + previewSize,
-                    hovered ? previewHoverColor : 0xffffffff,
-                    style.FrameRounding);
-            }
-        }
-        else
-        {
-            std::string_view noneText = "None";
-            ImVec2 textSize = ImGui::CalcTextSize(noneText.data(), noneText.data() + noneText.size());
-
-            ImVec2 textPosition = previewPosition + previewSize / 2.0f - textSize / 2.0f;
-            drawList->AddText(textPosition,
-                ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_TextDisabled]),
-                noneText.data(),
-                noneText.data() + noneText.size());
-        }
-    }
-
     bool EditorGUI::AssetField(AssetHandle& handle, const AssetDescriptor* assetType)
     {
-        bool result = false;
-        ImDrawList* drawList = ImGui::GetCurrentWindow()->DrawList;
-        const ImGuiStyle& style = ImGui::GetStyle();
+        AssetFieldRenderer fieldRenderer((uint64_t)&handle, handle);
+        return fieldRenderer.OnRenderImGui();
+    }
 
-        const float previewSize = CalculateAssetPreviewSize();
-        const float buttonHeight = style.FramePadding.y * 2.0f + ImGui::GetFontSize();
-        const ImVec2 controlButtonSize = ImVec2(buttonHeight - 4.0f, buttonHeight - 4.0f);
+    bool EditorGUI::AssetField(Ref<Asset>& asset, const AssetDescriptor& assetDescriptor)
+    {
+        AssetFieldRenderer fieldRenderer((uint64_t)&asset, asset, assetDescriptor);
+        return fieldRenderer.OnRenderImGui();
+    }
 
-        const float availableContentWidth = ImGui::GetContentRegionAvail().x;
-        const float previewAndControlsWidth = previewSize + style.ItemSpacing.x + controlButtonSize.x;
-
-        const bool validHandle = AssetManager::IsAssetHandleValid(handle);
-
-        const ImVec2 initialCursorPosition = ImGui::GetCursorPos();
-        const float previewXPosition = initialCursorPosition.x;
-        const float nameXPosition = initialCursorPosition.x + previewSize + style.ItemSpacing.x;
-
-        const AssetMetadata* metadata = validHandle ? AssetManager::GetAssetMetadata(handle) : nullptr;
-
-        // Preview
-        
-        ImGui::PushID(&handle);
-        if (ImGui::InvisibleButton("", ImVec2(previewSize, previewSize)))
-            EditorLayer::GetInstance().Selection.SetAsset(handle);
-        ImGui::PopID();
-
-        if (ImGui::IsItemHovered() && ImGui::BeginTooltip())
-        {
-            if (handle == NULL_ASSET_HANDLE)
-                ImGui::TextUnformatted("Handle: NULL");
-            else if (validHandle)
-                ImGui::Text("Handle: %llu", (uint64_t)handle);
-            else
-                ImGui::TextUnformatted("Handle: Invalid");
-
-            ImGui::EndTooltip();
-        }
-
-        if (ImGui::BeginDragDropTarget())
-        {
-            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(ASSET_PAYLOAD_NAME))
-            {
-                AssetHandle newHandle = *(AssetHandle*)payload->Data;
-                Ref<Asset> asset = AssetManager::GetRawAsset(newHandle);
-                
-                if (!asset)
-                {
-                    handle = NULL_ASSET_HANDLE;
-                    result = true;
-                }
-                else if (&asset->GetDescriptor() == assetType || assetType == nullptr)
-                {
-                    handle = newHandle;
-                    result = true;
-                }
-            }
-
-            ImGui::EndDragDropTarget();
-        }
-
-        ImVec2 previewMin = ImGui::GetItemRectMin();
-        ImVec2 previewMax = previewMin + ImVec2(previewSize, previewSize);
-
-        bool hovered = ImGui::IsItemHovered();
-        RenderAssetPreview(previewMax - previewMin, previewMin, hovered, handle);
-
-        drawList->AddRect(previewMin,
-            previewMax,
-            ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Border]),
-            style.FrameRounding);
-
-        // Asset name
-        
-        float maxTextWidth = availableContentWidth - style.ItemSpacing.x * 2.0f - previewAndControlsWidth;
-        ImGui::SetCursorPosX(nameXPosition);
-        ImGui::SetCursorPosY(initialCursorPosition.y + previewSize / 2.0f - buttonHeight / 2.0f);
-
-        bool showSearchWindow = false;
-        if (validHandle)
-        {
-            showSearchWindow = ImGui::Button(metadata->Name.c_str(), ImVec2(maxTextWidth, buttonHeight));
-        }
-        else
-        {
-            ImGui::PushID(&handle);
-            showSearchWindow = ImGui::Button("", ImVec2(maxTextWidth, buttonHeight));
-            ImGui::PopID();
-        }
-
-        // Draw control button
-
-        ImGui::SetCursorPos(ImVec2(
-            initialCursorPosition.x + availableContentWidth - controlButtonSize.x - style.ItemSpacing.x,
-            initialCursorPosition.y + previewSize / 2.0f - controlButtonSize.y / 2.0f));
-
-        if (ImGui::InvisibleButton("Reset", controlButtonSize))
-        {
-            handle = NULL_ASSET_HANDLE;
-            result = true;
-        }
-
-        ImRect resetButtonRect = { ImGui::GetItemRectMin(), ImGui::GetItemRectMax() };
-        ImRect iconUVs = s_EditorIcons.GetIconUVs(EditorIcons::CloseIcon);
-
-        ImU32 hoverColor = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_TextDisabled]);
-
-        drawList->AddImage((ImTextureID)s_EditorIcons.GetTexture()->GetRendererId(),
-            resetButtonRect.Min,
-            resetButtonRect.Max,
-            iconUVs.Min,
-            iconUVs.Max,
-            ImGui::IsItemHovered() ? hoverColor : 0xffffffff);
-
-        UUID resultToken = (uint64_t)&handle;
-        if (showSearchWindow)
-        {
-            QuickSearch::GetInstance().FindAsset(resultToken);
-        }
-
-        if (auto searchResult = QuickSearch::GetInstance().AcceptAssetResult(resultToken))
-        {
-            if (searchResult->Type == QuickSearch::AssetSearchResult::ResultType::Ok)
-            {
-                handle = searchResult->Handle;
-                result = true;
-            }
-        }
-
-        return result;
+    bool EditorGUI::AssetField(const char* name, Ref<Asset>& asset, const AssetDescriptor& assetDescriptor)
+    {
+        PropertyName(name, CalculateAssetPreviewSize());
+        AssetFieldRenderer fieldRenderer((uint64_t)&asset, asset, assetDescriptor);
+        return fieldRenderer.OnRenderImGui();
     }
 
     bool EditorGUI::AssetField(const char* name, AssetHandle& handle, const AssetDescriptor* assetType)
     {
-        ImDrawList* drawList = ImGui::GetCurrentWindow()->DrawList;
-        const ImGuiStyle& style = ImGui::GetStyle();
-
-        float buttonHeight = style.FramePadding.y * 2.0f + ImGui::GetFontSize();
-        float previewSize = CalculateAssetPreviewSize();
-
-        PropertyName(name, previewSize);
+        PropertyName(name, CalculateAssetPreviewSize());
         return AssetField(handle, assetType);
     }
 }
