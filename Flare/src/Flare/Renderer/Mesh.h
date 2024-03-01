@@ -46,6 +46,7 @@ namespace Flare
 		void AddSubMesh(const Span<glm::vec3>& vertices,
 			const MemorySpan& indices,
 			const Span<glm::vec3>& normals,
+			const Span<glm::vec3>& tangents,
 			const Span<glm::vec2>& uvs);
 
 		constexpr size_t GetVertexBufferSize() const { return m_VertexBufferSize; }
@@ -68,6 +69,7 @@ namespace Flare
 		Ref<IndexBuffer> m_IndexBuffer = nullptr;
 		Ref<VertexBuffer> m_Vertices = nullptr;
 		Ref<VertexBuffer> m_Normals = nullptr;
+		Ref<VertexBuffer> m_Tangents = nullptr;
 		Ref<VertexBuffer> m_UVs = nullptr;
 
 		MeshTopology m_TopologyType;

@@ -86,6 +86,7 @@ namespace Flare
 			Span(cubeVertices, 8),
 			MemorySpan(cubeIndices, sizeof(cubeIndices) / 2),
 			Span(cubeNormals, 8),
+			Span(cubeNormals, 8),
 			Span(cubeUVs, 8));
 
 		return s_Primitives.Cube;

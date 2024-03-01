@@ -47,24 +47,16 @@ namespace Flare
 
                 std::vector<glm::vec3> vertices;
                 std::vector<glm::vec3> normals;
+                std::vector<glm::vec3> tangents;
                 std::vector<glm::vec2> uvs;
 
                 vertices.resize(nodeMesh->mNumVertices);
                 normals.resize(nodeMesh->mNumVertices);
+                tangents.resize(nodeMesh->mNumVertices);
 
-                for (size_t i = 0; i < vertices.size(); i++)
-                {
-                    vertices[i].x = nodeMesh->mVertices[i].x;
-                    vertices[i].y = nodeMesh->mVertices[i].y;
-                    vertices[i].z = nodeMesh->mVertices[i].z;
-                }
-
-                for (size_t i = 0; i < normals.size(); i++)
-                {
-                    normals[i].x = nodeMesh->mNormals[i].x;
-                    normals[i].y = nodeMesh->mNormals[i].y;
-                    normals[i].z = nodeMesh->mNormals[i].z;
-                }
+                std::memcpy(vertices.data(), nodeMesh->mVertices, sizeof(glm::vec3) * vertices.size());
+                std::memcpy(normals.data(), nodeMesh->mNormals, sizeof(glm::vec3) * normals.size());
+                std::memcpy(tangents.data(), nodeMesh->mTangents, sizeof(glm::vec3) * tangents.size());
 
                 uvs.resize(nodeMesh->mNumVertices);
                 if (nodeMesh->mTextureCoords != nullptr && nodeMesh->mTextureCoords[0] != nullptr)
@@ -96,9 +88,6 @@ namespace Flare
                         size_t start = indices16.size();
                         for (uint32_t i = 0; i < f.mNumIndices; i++)
                             indices16.push_back((uint16_t)f.mIndices[i]);
-
-                        // Swap winding order
-                        std::swap(indices16[start], indices16[start + 1]);
                     }
                 }
                 else
@@ -112,22 +101,17 @@ namespace Flare
                         size_t start = indices32.size();
                         for (uint32_t i = 0; i < f.mNumIndices; i++)
                             indices32.push_back((uint32_t)f.mIndices[i]);
-
-                        // Swap winding order
-                        std::swap(indices32[start], indices32[start + 1]);
                     }
                 }
-
-                Span<glm::vec3> normalsSpan = Span<glm::vec3>::FromVector(normals);
-                Span<glm::vec2> uvsSpan = Span<glm::vec2>::FromVector(uvs);
 
                 mesh->AddSubMesh(
                     Span<glm::vec3>::FromVector(vertices),
                     indexFormat == IndexBuffer::IndexFormat::UInt16
-                    ? MemorySpan::FromVector(indices16)
-                    : MemorySpan::FromVector(indices32),
-                    normalsSpan,
-                    uvsSpan);
+                        ? MemorySpan::FromVector(indices16)
+                        : MemorySpan::FromVector(indices32),
+                    Span<glm::vec3>::FromVector(normals),
+                    Span<glm::vec3>::FromVector(tangents),
+                    Span<glm::vec2>::FromVector(uvs));
             }
 
             return mesh;
@@ -141,6 +125,38 @@ namespace Flare
         }
 
         return nullptr;
+    }
+
+    static AssetHandle FindTextureByPath(std::string_view path, const AssetMetadata& metadata, const Ref<EditorAssetManager>& assetManager)
+    {
+        AssetHandle textureHandle = NULL_ASSET_HANDLE;
+        if (path.size() > 0)
+        {
+            std::filesystem::path texturePath = metadata.Path.parent_path() / path;
+            if (std::filesystem::exists(texturePath))
+            {
+                std::optional<AssetHandle> handle = assetManager->FindAssetByPath(texturePath);
+                if (handle)
+                    textureHandle = handle.value();
+                else
+                    textureHandle = assetManager->ImportAsset(texturePath);
+            }
+        }
+
+        return textureHandle;
+    }
+
+    static void TrySetMaterialTexture(std::optional<uint32_t> propertyIndex, const Ref<Material>& material, AssetHandle handle, const Ref<Texture>& defaultValue)
+    {
+        if (propertyIndex)
+        {
+            auto& value = material->GetPropertyValue<TexturePropertyValue>(*propertyIndex);
+
+            if (handle == NULL_ASSET_HANDLE)
+                value.SetTexture(defaultValue);
+            else
+                value.SetTexture(AssetManager::GetAsset<Texture>(handle));
+        }
     }
 
     static void ImportMaterials(const AssetMetadata& metadata, const aiScene* scene, const std::vector<uint32_t>& usedMaterials)
@@ -171,6 +187,7 @@ namespace Flare
         std::optional<uint32_t> colorProperty;
         std::optional<uint32_t> roughnessProperty;
         std::optional<uint32_t> textureProperty;
+        std::optional<uint32_t> normalMapProperty;
 
         Ref<Shader> shader = AssetManager::GetAsset<Shader>(defaultShader.value());
         if (shader != nullptr && shader->IsLoaded())
@@ -178,6 +195,7 @@ namespace Flare
             colorProperty = shader->GetPropertyIndex("u_Material.Color");
             roughnessProperty = shader->GetPropertyIndex("u_Material.Roughness");
             textureProperty = shader->GetPropertyIndex("u_Texture");
+            normalMapProperty = shader->GetPropertyIndex("u_NormalMap");
         }
 
         Ref<MaterialsTable> materialsTable = CreateRef<MaterialsTable>();
@@ -196,23 +214,21 @@ namespace Flare
             if (name.empty())
                 name = fmt::format("Material {}", i);
 
-            aiString texturePath;
             aiTextureMapping mapping;
             uint32_t uvIndex;
-            material->GetTexture(aiTextureType_BASE_COLOR, 0, &texturePath, &mapping, &uvIndex);
-
             AssetHandle baseColorTextureHandle = NULL_ASSET_HANDLE;
-            if (texturePath.length > 0)
+            AssetHandle normalMapHandle = NULL_ASSET_HANDLE;
+
             {
-                std::filesystem::path baseColorTexturePath = metadata.Path.parent_path() / texturePath.C_Str();
-                if (std::filesystem::exists(baseColorTexturePath))
-                {
-                    std::optional<AssetHandle> handle = assetManager->FindAssetByPath(baseColorTexturePath);
-                    if (handle)
-                        baseColorTextureHandle = handle.value();
-                    else
-                        baseColorTextureHandle = assetManager->ImportAsset(baseColorTexturePath);
-                }
+                aiString texturePath;
+                material->GetTexture(aiTextureType_BASE_COLOR, 0, &texturePath, &mapping, &uvIndex);
+                baseColorTextureHandle = FindTextureByPath(std::string_view(texturePath.C_Str(), texturePath.length), metadata, assetManager);
+            }
+
+            {
+                aiString normalMapPath;
+                material->GetTexture(aiTextureType_NORMALS, 0, &normalMapPath, &mapping, &uvIndex);
+                normalMapHandle = FindTextureByPath(std::string_view(normalMapPath.C_Str(), normalMapPath.length), metadata, assetManager);
             }
 
             aiColor4D color(1.0f, 1.0f, 1.0f, 1.0f);
@@ -226,15 +242,9 @@ namespace Flare
                 materialAsset->WritePropertyValue(*colorProperty, glm::vec4(color.r, color.g, color.b, color.a));
             if (roughnessProperty)
                 materialAsset->WritePropertyValue(*roughnessProperty, roughness);
-            if (textureProperty)
-            {
-                auto& value = materialAsset->GetPropertyValue<TexturePropertyValue>(*textureProperty);
 
-                if (baseColorTextureHandle == NULL_ASSET_HANDLE)
-                    value.SetTexture(Renderer::GetWhiteTexture());
-                else
-                    value.SetTexture(AssetManager::GetAsset<Texture>(baseColorTextureHandle));
-            }
+            TrySetMaterialTexture(textureProperty, materialAsset, baseColorTextureHandle, Renderer::GetWhiteTexture());
+            TrySetMaterialTexture(normalMapProperty, materialAsset, normalMapHandle, Renderer::GetDefaultNormalMap());
 
             auto it = nameToHandle.find(name);
             if (it != nameToHandle.end())
@@ -253,7 +263,7 @@ namespace Flare
 
     Ref<Mesh> MeshImporter::ImportMesh(const AssetMetadata& metadata)
     {
-        std::underlying_type_t<aiPostProcessSteps> postProcessSteps = aiProcess_Triangulate;
+        std::underlying_type_t<aiPostProcessSteps> postProcessSteps = aiProcess_Triangulate | aiProcess_CalcTangentSpace | aiProcess_FlipWindingOrder;
         if (metadata.Path.extension() == ".fbx")
             postProcessSteps |= aiProcess_FlipUVs;
 

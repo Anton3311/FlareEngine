@@ -15,6 +15,7 @@ namespace Flare
 	void Mesh::AddSubMesh(const Span<glm::vec3>& vertices,
 		const MemorySpan& indices,
 		const Span<glm::vec3>& normals,
+		const Span<glm::vec3>& tangents,
 		const Span<glm::vec2>& uvs)
 	{
 		FLARE_CORE_ASSERT(vertices.GetSize() > 0);
@@ -63,24 +64,32 @@ namespace Flare
 			m_VertexArray->AddVertexBuffer(m_Normals, 1);
 		}
 
+		if (!m_Tangents)
+		{
+			m_Tangents = VertexBuffer::Create(m_VertexBufferSize * sizeof(glm::vec3));
+			m_Tangents->SetLayout({ { "i_Tangent", ShaderDataType::Float3 } });
+			m_VertexArray->AddVertexBuffer(m_Tangents, 2);
+		}
+
 		if (!m_UVs)
 		{
 			m_UVs = VertexBuffer::Create(m_VertexBufferSize * sizeof(glm::vec2));
 			m_UVs->SetLayout({ { "i_UV", ShaderDataType::Float2 } });
-			m_VertexArray->AddVertexBuffer(m_UVs, 2);
+			m_VertexArray->AddVertexBuffer(m_UVs, 3);
 		}
 
 		m_Vertices->SetData(vertices.GetData(), vertices.GetSize() * sizeof(glm::vec3), m_VertexBufferOffset * sizeof(glm::vec3));
 		m_Normals->SetData(normals.GetData(), normals.GetSize() * sizeof(glm::vec3), m_VertexBufferOffset * sizeof(glm::vec3));
+		m_Tangents->SetData(tangents.GetData(), tangents.GetSize() * sizeof(glm::vec3), m_VertexBufferOffset * sizeof(glm::vec3));
 		m_UVs->SetData(uvs.GetData(), uvs.GetSize() * sizeof(glm::vec2), m_VertexBufferOffset * sizeof(glm::vec2));
 
 		m_IndexBuffer->SetData(indices, m_IndexBufferOffset);
 
 		size_t indicesCount = indices.GetSize() / indexSize;
 
-		subMesh.BaseIndex = m_IndexBufferOffset / indexSize;
-		subMesh.BaseVertex = m_VertexBufferOffset;
-		subMesh.IndicesCount = indicesCount;
+		subMesh.BaseIndex = (uint32_t)(m_IndexBufferOffset / indexSize);
+		subMesh.BaseVertex = (uint32_t)m_VertexBufferOffset;
+		subMesh.IndicesCount = (uint32_t)indicesCount;
 
 		m_VertexBufferOffset += vertices.GetSize();
 		m_IndexBufferOffset += indices.GetSize();

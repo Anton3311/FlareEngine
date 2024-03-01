@@ -88,6 +88,7 @@ namespace Flare
 		Ref<UniformBuffer> LightBuffer = nullptr;
 
 		Ref<Texture> WhiteTexture = nullptr;
+		Ref<Texture> DefaultNormalMap = nullptr;
 		
 		RenderPasses Passes;
 		RendererStatistics Statistics;
@@ -165,6 +166,11 @@ namespace Flare
 		{
 			uint32_t whiteTextureData = 0xffffffff;
 			s_RendererData.WhiteTexture = Texture::Create(1, 1, &whiteTextureData, TextureFormat::RGBA8);
+		}
+
+		{
+			uint32_t pixel = 0xffff8080;
+			s_RendererData.DefaultNormalMap = Texture::Create(1, 1, &pixel, TextureFormat::RGBA8);
 		}
 
 		Project::OnProjectOpen.Bind(ReloadShaders);
@@ -1072,6 +1078,11 @@ namespace Flare
 	Ref<Texture> Renderer::GetWhiteTexture()
 	{
 		return s_RendererData.WhiteTexture;
+	}
+
+	Ref<Texture> Renderer::GetDefaultNormalMap()
+	{
+		return s_RendererData.DefaultNormalMap;
 	}
 
 	Ref<Material> Renderer::GetErrorMaterial()
