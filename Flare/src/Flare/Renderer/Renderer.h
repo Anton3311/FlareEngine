@@ -58,6 +58,7 @@ namespace Flare
 
 		float LightSize;
 		float Bias;
+		float NormalBias;
 		ShadowQuality Quality;
 		int32_t Cascades;
 
@@ -90,6 +91,7 @@ namespace Flare
 			stream.Serialize("Enabled", SerializationValue(settings.Enabled));
 			stream.Serialize("LightSize", SerializationValue(settings.LightSize));
 			stream.Serialize("Bias", SerializationValue(settings.Bias));
+			stream.Serialize("NormalBias", SerializationValue(settings.NormalBias));
 
 			using Underlying = std::underlying_type_t<ShadowQuality>;
 			stream.Serialize("Quality", SerializationValue(reinterpret_cast<Underlying&>(settings.Quality)));

@@ -58,6 +58,8 @@ namespace Flare
 
 		float ShadowFadeStartDistance;
 		float MaxShadowDistance;
+
+		float NormalBias;
 	};
 
 	struct InstancingMesh
@@ -417,6 +419,7 @@ namespace Flare
 
 		ShadowData shadowData;
 		shadowData.Bias = s_RendererData.ShadowMappingSettings.Bias;
+		shadowData.NormalBias = s_RendererData.ShadowMappingSettings.NormalBias;
 		shadowData.LightSize = s_RendererData.ShadowMappingSettings.LightSize;
 		shadowData.Resolution = (float)GetShadowMapResolution(s_RendererData.ShadowMappingSettings.Quality);
 		shadowData.Softness = s_RendererData.ShadowMappingSettings.Softness;

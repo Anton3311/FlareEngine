@@ -24,7 +24,9 @@ layout(std140, binding = 2) uniform ShadowData
 	float u_ShadowResolution;
 	float u_ShadowSoftness;
 	float u_ShadowFadeDistance;
+
 	float u_MaxShadowDistance;
+	float u_NormalBias;
 };
 
 layout(binding = 28) uniform sampler2D u_ShadowMap0;
@@ -145,7 +147,7 @@ float CalculateShadow(vec3 N, vec4 position, vec3 viewSpacePosition)
 
 	float shadow = 0.0f;
 	float NoL = dot(N, -u_LightDirection);
-	float bias = max(u_Bias * (1.0f - NoL), 0.0f);
+	float bias = max(u_NormalBias * (1.0f - NoL), 0.0f) + u_Bias;
 
 	bias /= float(cascadeIndex + 1);
 
