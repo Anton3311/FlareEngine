@@ -15,9 +15,12 @@ layout(location = 1) out vec2 o_UV;
 layout(location = 2) flat out float o_TextureIndex;
 layout(location = 3) flat out int o_EntityIndex;
 
-struct CameraData
+layout(std140, binding = 0) uniform Camera
 {
 	vec3 Position;
+	float Near;
+	vec3 ViewDirection;
+	float Far;
 
 	mat4 Projection;
 	mat4 View;
@@ -27,14 +30,9 @@ struct CameraData
 	mat4 InverseView;
 	mat4 InverseViewProjection;
 
-	float Near;
-	float Far;
-};
-
-layout(std140, binding = 0) uniform Camera
-{
-	CameraData u_Camera;
-};
+	ivec2 ViewportSize;
+	float FOV;
+} u_Camera;
 
 void main()
 {
