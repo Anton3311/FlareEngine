@@ -92,6 +92,7 @@ vec3 ComputeSunTransmittance(vec3 rayOrigin,
 
 		ScatteringCoefficients scatteringCoefficients = ComputeScatteringCoefficients(height, properties);
 		opticalDepth += scatteringCoefficients.Extinction;
+		rayPoint += rayStep;
 	}
 
 	return exp(-opticalDepth / atmosphereThickness * stepLength);
