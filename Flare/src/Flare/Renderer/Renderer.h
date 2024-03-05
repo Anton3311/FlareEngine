@@ -45,6 +45,7 @@ namespace Flare
 			LightSize(0.009f),
 			Cascades(MaxCascades),
 			Bias(0.001f),
+			NormalBias(0.001f),
 			Softness(1.0f),
 			FadeDistance(50.0f)
 		{
