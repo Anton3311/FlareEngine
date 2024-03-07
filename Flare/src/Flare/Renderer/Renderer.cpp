@@ -395,19 +395,35 @@ namespace Flare
 				farPlaneDistance = fixedPlaneDistance;
 #endif
 
-				RenderView& lightView = viewport->FrameData.LightView[cascadeIndex];
-				lightView.SetViewAndProjection(
-					glm::ortho(
-						-params.BoundingSphereRadius,
-						params.BoundingSphereRadius,
-						-params.BoundingSphereRadius,
-						params.BoundingSphereRadius,
-						viewport->FrameData.Light.Near,
-						farPlaneDistance - nearPlaneDistance),
+				// Move shadow map in texel size increaments. in order ot avoid shadow edge swimming
+				// https://alextardif.com/shadowmapping.html
+				float texelsPerUnit = (float)GetShadowMapResolution(s_RendererData.ShadowMappingSettings.Quality) / (params.BoundingSphereRadius * 2.0f);
+
+				glm::mat4 view = glm::scale(
 					glm::lookAt(
 						params.CameraFrustumCenter + lightDirection * nearPlaneDistance,
-						params.CameraFrustumCenter, glm::vec3(0.0f, 1.0f, 0.0f)));
+						params.CameraFrustumCenter, glm::vec3(0.0f, 1.0f, 0.0f)),
+					glm::vec3(texelsPerUnit));
 
+				glm::vec4 projectedCenter = view * glm::vec4(params.CameraFrustumCenter, 1.0f);
+				projectedCenter.x = glm::round(projectedCenter.x);
+				projectedCenter.y = glm::round(projectedCenter.y);
+
+				params.CameraFrustumCenter = glm::inverse(view) * glm::vec4((glm::vec3)projectedCenter, 1.0f);
+
+				view = glm::lookAt(
+					params.CameraFrustumCenter + lightDirection * nearPlaneDistance,
+					params.CameraFrustumCenter, glm::vec3(0.0f, 1.0f, 0.0f));
+
+				glm::mat4 projection = glm::ortho(
+					-params.BoundingSphereRadius,
+					params.BoundingSphereRadius,
+					-params.BoundingSphereRadius,
+					params.BoundingSphereRadius,
+					viewport->FrameData.Light.Near,
+					farPlaneDistance - nearPlaneDistance);
+
+				viewport->FrameData.LightView[cascadeIndex].SetViewAndProjection(projection, view);
 				currentNearPlane = shadowSettings.CascadeSplits[cascadeIndex];
 			}
 		}
