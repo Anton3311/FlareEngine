@@ -6,8 +6,12 @@
 float MiePhaseFunction(float angleCos, float g)
 {
 	float g2 = g * g;
-	float a = (1 + g2 - 2 * g * angleCos);
-	return (3 * (1 - g2)) / (2 * (2 + g2)) * (1 + angleCos * angleCos) / sqrt(pow(a, 3.0f));
+	float scale = 1.0f / (4.0f * PI);
+
+	float num = 1 - g2;
+	float denom = pow(1 + g2 + 2 * g * angleCos, 1.5f);
+
+	return scale * (num / denom);
 }
 
 float RayleighPhaseFunction(float cosTheta)
@@ -50,7 +54,6 @@ float FindSpehereRayIntersection(vec3 rayOrigin, vec3 rayDirection, float radius
 	return max(t1, t2);
 }
 
-
 ScatteringCoefficients ComputeScatteringCoefficients(float height, in AtmosphereProperties properties)
 {
 	float rayleighDensity = exp(-height / properties.RayleighHeight);
@@ -62,8 +65,8 @@ ScatteringCoefficients ComputeScatteringCoefficients(float height, in Atmosphere
 
 	vec3 ozoneAbsorbtion = properties.OzoneAbsorbtion * max(0.0f, 1.0f - abs(height - 25000) / 15000);
 	coefficients.Extinction = coefficients.Rayleigh
-		+ vec3(properties.RayleighAbsobtion)
-		+ properties.MieAbsorbtion
+		+ properties.RayleighAbsobtion * rayleighDensity
+		+ properties.MieAbsorbtion * mieDensity
 		+ coefficients.Mie
 		+ ozoneAbsorbtion;
 
@@ -79,23 +82,23 @@ vec3 ComputeSunTransmittance(vec3 rayOrigin,
 {
 	float atmosphereDistance = FindSpehereRayIntersection(rayOrigin, -lightDirection, planetRadius + atmosphereThickness);
 	if (atmosphereDistance < 0.0f)
-		return vec3(0.0f);
+		return vec3(1.0f);
 
-	vec3 opticalDepth = vec3(0.0f);
 	float stepLength = atmosphereDistance / max(1, raySteps - 1);
 	vec3 rayStep = -lightDirection * stepLength;
 	vec3 rayPoint = rayOrigin;
 
+	vec3 transmittance = vec3(1.0f);
 	for (int i = 0; i < raySteps; i++)
 	{
 		float height = length(rayPoint) - planetRadius;
 
 		ScatteringCoefficients scatteringCoefficients = ComputeScatteringCoefficients(height, properties);
-		opticalDepth += scatteringCoefficients.Extinction;
+		transmittance *= exp(-stepLength / atmosphereThickness * scatteringCoefficients.Extinction);
 		rayPoint += rayStep;
 	}
 
-	return exp(-opticalDepth / atmosphereThickness * stepLength);
+	return transmittance;
 }
 
 #endif

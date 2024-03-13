@@ -97,7 +97,7 @@ void main()
 	float scaledViewRayStepLength = viewRayStepLength / u_Params.AtmosphereThickness;
 
 	float rayleighPhase = RayleighPhaseFunction(-dot(viewDirection, -u_LightDirection));
-	float miePhase = MiePhaseFunction(dot(viewDirection, -u_LightDirection), 0.84f);
+	float miePhase = MiePhaseFunction(-dot(viewDirection, -u_LightDirection), 0.84f);
 
 	vec3 luminance = vec3(0.0f);
 	vec3 transmittance = vec3(1.0f);
