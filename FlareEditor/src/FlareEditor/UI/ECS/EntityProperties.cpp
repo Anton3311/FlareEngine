@@ -76,9 +76,9 @@ namespace Flare
 
 			if (removedComponent.has_value())
 				m_World.Entities.RemoveEntityComponent(entity, removedComponent.value());
-
-			ImGui::EndChild();
 		}
+
+		ImGui::EndChild();
 	}
 
 

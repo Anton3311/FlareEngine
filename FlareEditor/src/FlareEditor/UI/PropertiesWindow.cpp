@@ -44,7 +44,7 @@ namespace Flare
 
 	void PropertiesWindow::OnImGuiRender()
 	{
-		ImGui::Begin("Properties");
+		bool windowVisible = ImGui::Begin("Properties");
 
 		if (Scene::GetActive() == nullptr)
 		{
@@ -52,26 +52,29 @@ namespace Flare
 			return;
 		}
 
-		World& world = Scene::GetActive()->GetECSWorld();
-		const EditorSelection& selection = EditorLayer::GetInstance().Selection;
-
-		ImGuiIO& io = ImGui::GetIO();
-		ImGuiStyle& style = ImGui::GetStyle();
-
-		if (selection.GetType() == EditorSelectionType::Entity)
+		if (windowVisible)
 		{
-			Entity selectedEntity = selection.GetEntity();
-			if (world.IsEntityAlive(selectedEntity))
+			World& world = Scene::GetActive()->GetECSWorld();
+			const EditorSelection& selection = EditorLayer::GetInstance().Selection;
+
+			ImGuiIO& io = ImGui::GetIO();
+			ImGuiStyle& style = ImGui::GetStyle();
+
+			if (selection.GetType() == EditorSelectionType::Entity)
 			{
-				EntityProperties properties(world);
-				properties.OnRenderImGui(selectedEntity);
+				Entity selectedEntity = selection.GetEntity();
+				if (world.IsEntityAlive(selectedEntity))
+				{
+					EntityProperties properties(world);
+					properties.OnRenderImGui(selectedEntity);
+				}
 			}
-		}
-		else if (selection.GetType() == EditorSelectionType::Asset)
-		{
-			AssetHandle handle = selection.GetAssetHandle();
-			if (AssetManager::IsAssetHandleValid(handle))
-				RenderAssetProperties(handle);
+			else if (selection.GetType() == EditorSelectionType::Asset)
+			{
+				AssetHandle handle = selection.GetAssetHandle();
+				if (AssetManager::IsAssetHandleValid(handle))
+					RenderAssetProperties(handle);
+			}
 		}
 
 		ImGui::End();
