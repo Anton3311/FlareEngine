@@ -837,10 +837,10 @@ namespace Flare
 					const auto& a = s_RendererData.OpaqueQueue[aIndex];
 					const auto& b = s_RendererData.OpaqueQueue[bIndex];
 
-					if (a.Mesh->Handle == b.Mesh->Handle)
+					if (a.Mesh.get() == a.Mesh.get())
 						return a.SubMeshIndex < b.SubMeshIndex;
 
-					return (uint64_t)a.Mesh->Handle < (uint64_t)b.Mesh->Handle;
+					return (uint64_t)a.Mesh.get() < (uint64_t)b.Mesh.get();
 				});
 			}
 
