@@ -26,7 +26,7 @@ struct AtmosphereProperties
 
 	float MieCoefficient;
 	float MieAbsorbtion;
-	float RayleighAbsobtion;
+	float RayleighAbsorbtion;
 	vec3 OzoneAbsorbtion;
 	vec3 RayleighCoefficient;
 };
@@ -65,7 +65,7 @@ ScatteringCoefficients ComputeScatteringCoefficients(float height, in Atmosphere
 
 	vec3 ozoneAbsorbtion = properties.OzoneAbsorbtion * max(0.0f, 1.0f - abs(height - 25000) / 15000);
 	coefficients.Extinction = coefficients.Rayleigh
-		+ properties.RayleighAbsobtion * rayleighDensity
+		+ properties.RayleighAbsorbtion * rayleighDensity
 		+ properties.MieAbsorbtion * mieDensity
 		+ coefficients.Mie
 		+ ozoneAbsorbtion;

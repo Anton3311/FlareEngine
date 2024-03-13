@@ -12,7 +12,7 @@ Properties =
 	u_Params.RayleighCoefficient = { DisplayName = "Rayleigh Coefficient" }
 	u_Params.MieCoefficient = { DisplayName = "Mie Coefficient" }
 	u_Params.MieAbsorbtion = { DisplayName = "Mie Absorbtion" }
-	u_Params.RayleighAbsobtion = { DisplayName = "Rayleigh Absobtion" }
+	u_Params.RayleighAbsorbtion = { DisplayName = "Rayleigh Absorbtion" }
 	u_Params.OzoneAbsorbtion = { DisplayName = "Ozone Absorbtion" }
 
 	u_Params.GroundColor =
@@ -56,7 +56,7 @@ layout(std140, push_constant) uniform Sky
 
 	float MieCoefficient;
 	float MieAbsorbtion;
-	float RayleighAbsobtion;
+	float RayleighAbsorbtion;
 	vec3 OzoneAbsorbtion;
 	vec3 RayleighCoefficient;
 
@@ -108,7 +108,7 @@ void main()
 	properties.RayleighHeight = u_Params.RayleighHeight;
 	properties.MieCoefficient = u_Params.MieCoefficient * scale;
 	properties.MieAbsorbtion = u_Params.MieAbsorbtion * scale;
-	properties.RayleighAbsobtion = u_Params.RayleighAbsobtion * scale;
+	properties.RayleighAbsorbtion = u_Params.RayleighAbsorbtion * scale;
 	properties.OzoneAbsorbtion = u_Params.OzoneAbsorbtion * scale;
 	properties.RayleighCoefficient = u_Params.RayleighCoefficient * scale;
 
