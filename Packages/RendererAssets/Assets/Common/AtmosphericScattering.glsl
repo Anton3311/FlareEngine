@@ -94,7 +94,7 @@ vec3 ComputeSunTransmittance(vec3 rayOrigin,
 		float height = length(rayPoint) - planetRadius;
 
 		ScatteringCoefficients scatteringCoefficients = ComputeScatteringCoefficients(height, properties);
-		transmittance *= exp(-stepLength / atmosphereThickness * scatteringCoefficients.Extinction);
+		transmittance *= exp(-stepLength * scatteringCoefficients.Extinction);
 		rayPoint += rayStep;
 	}
 

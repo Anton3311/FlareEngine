@@ -94,7 +94,6 @@ void main()
 
 	vec3 viewRayStep = viewDirection * distanceThroughAtmosphere / max(1, u_Params.ViewRaySteps - 1);
 	float viewRayStepLength = length(viewRayStep);
-	float scaledViewRayStepLength = viewRayStepLength / u_Params.AtmosphereThickness;
 
 	float rayleighPhase = RayleighPhaseFunction(-dot(viewDirection, -u_LightDirection));
 	float miePhase = MiePhaseFunction(-dot(viewDirection, -u_LightDirection), 0.84f);
@@ -102,21 +101,23 @@ void main()
 	vec3 luminance = vec3(0.0f);
 	vec3 transmittance = vec3(1.0f);
 
+	const float scale = pow(10, -3);
+
 	AtmosphereProperties properties;
 	properties.MieHeight = u_Params.MieHeight;
 	properties.RayleighHeight = u_Params.RayleighHeight;
-	properties.MieCoefficient = u_Params.MieCoefficient;
-	properties.MieAbsorbtion = u_Params.MieAbsorbtion;
-	properties.RayleighAbsobtion = u_Params.RayleighAbsobtion;
-	properties.OzoneAbsorbtion = u_Params.OzoneAbsorbtion;
-	properties.RayleighCoefficient = u_Params.RayleighCoefficient;
+	properties.MieCoefficient = u_Params.MieCoefficient * scale;
+	properties.MieAbsorbtion = u_Params.MieAbsorbtion * scale;
+	properties.RayleighAbsobtion = u_Params.RayleighAbsobtion * scale;
+	properties.OzoneAbsorbtion = u_Params.OzoneAbsorbtion * scale;
+	properties.RayleighCoefficient = u_Params.RayleighCoefficient * scale;
 
 	for (int i = 0; i < u_Params.ViewRaySteps; i++)
 	{
 		float height = length(viewRayPoint) - u_Params.PlanetRadius;
 
 		ScatteringCoefficients scatteringCoefficients = ComputeScatteringCoefficients(height, properties);
-		vec3 sampleTransmittance = exp(-scatteringCoefficients.Extinction * scaledViewRayStepLength);
+		vec3 sampleTransmittance = exp(-scatteringCoefficients.Extinction * viewRayStepLength);
 		vec3 sunTransmittance = ComputeSunTransmittance(
 			viewRayPoint,
 			u_Params.RaySteps,

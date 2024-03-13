@@ -5,7 +5,7 @@ Properties:
     Value: 6360
   - Name: u_Params.AtmosphereThickness
     Type: 4
-    Value: 6460
+    Value: 100
   - Name: u_Params.RaySteps
     Type: 0
     Value: 10
@@ -14,13 +14,13 @@ Properties:
     Value: 10
   - Name: u_Params.ObserverHeight
     Type: 4
-    Value: 6300
+    Value: 2
   - Name: u_Params.MieHeight
     Type: 4
-    Value: 1200
+    Value: 1.20000005
   - Name: u_Params.RayleighHeight
     Type: 4
-    Value: 8000
+    Value: 8
   - Name: u_Params.MieCoefficient
     Type: 4
     Value: 0.398999989
