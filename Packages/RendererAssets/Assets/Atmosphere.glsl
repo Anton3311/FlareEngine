@@ -1,14 +1,5 @@
 Properties =
 {
-	u_Params.PlanetRadius = { DisplayName = "Planet Radius" }
-	u_Params.AtmosphereThickness = { DisplayName = "Thickness" }
-	u_Params.RaySteps = { DisplayName = "Ray Steps" }
-	u_Params.ViewRaySteps = { DisplayName = "View Ray Steps" }
-
-	u_Params.ObserverHeight = { DisplayName = "Observer Height" }
-
-	u_Params.MieHeight = { DisplayName = "Mie Height" }
-	u_Params.RayleighHeight = { DisplayName = "Rayleigh Height" }
 	u_Params.RayleighCoefficient = { DisplayName = "Rayleigh Coefficient" }
 	u_Params.MieCoefficient = { DisplayName = "Mie Coefficient" }
 	u_Params.MieAbsorbtion = { DisplayName = "Mie Absorbtion" }
@@ -46,7 +37,7 @@ layout(std140, push_constant) uniform Sky
 {
 	float PlanetRadius;
 	float AtmosphereThickness;
-	int RaySteps;
+	int SunTransmittanceSteps;
 	int ViewRaySteps;
 
 	float ObserverHeight;
@@ -120,7 +111,7 @@ void main()
 		vec3 sampleTransmittance = exp(-scatteringCoefficients.Extinction * viewRayStepLength);
 		vec3 sunTransmittance = ComputeSunTransmittance(
 			viewRayPoint,
-			u_Params.RaySteps,
+			u_Params.SunTransmittanceSteps,
 			u_Params.PlanetRadius,
 			u_Params.AtmosphereThickness,
 			u_LightDirection,
