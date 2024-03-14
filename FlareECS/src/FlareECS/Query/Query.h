@@ -203,4 +203,31 @@ namespace Flare
 		Entities* m_Entities;
 		const QueryCache* m_QueryCache;
 	};
+
+	class FLAREECS_API CreatedEntitiesQuery
+	{
+	public:
+		CreatedEntitiesQuery() = default;
+		CreatedEntitiesQuery(QueryId id, Entities* entities, const QueryCache* queryCache)
+			: m_Id(id), m_Entities(entities), m_QueryCache(queryCache) {}
+
+		template<typename IteratorFunction>
+		void ForEachEntity(const IteratorFunction& iterator) const
+		{
+			const QueryData& queryData = (*m_QueryCache)[m_Id];
+			for (ArchetypeId archetype : queryData.MatchedArchetypes)
+			{
+				Span<Entity> ids = m_Entities->GetCreateEntities(archetype);
+
+				for (Entity id : ids)
+					iterator(id);
+			}
+		}
+
+		size_t GetEntitiesCount() const;
+	private:
+		QueryId m_Id = INVALID_QUERY_ID;
+		Entities* m_Entities = nullptr;
+		const QueryCache* m_QueryCache = nullptr;
+	};
 }

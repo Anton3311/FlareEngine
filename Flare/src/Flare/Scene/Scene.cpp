@@ -283,15 +283,11 @@ namespace Flare
 	{
 		m_World.GetSystemsManager().ExecuteSystem<TransformPropagationSystem>();
 
-		for (const auto& archetype : m_World.GetArchetypes().Records)
+		CreatedEntitiesQuery query(m_TestQuery.GetId(), &m_World.Entities, &m_World.GetQueries());
+		query.ForEachEntity([](Entity id)
 		{
-			Span<Entity> ids = m_World.Entities.GetCreateEntities(archetype.Id);
-
-			for (Entity id : ids)
-			{
-				FLARE_CORE_INFO("Created this frame: Entity({}; {})", id.GetIndex(), id.GetGeneration());
-			}
-		}
+			FLARE_CORE_INFO("Created this frame: Entity({}; {})", id.GetIndex(), id.GetGeneration());
+		});
 
 		m_World.Entities.ClearQueuedForDeletion();
 		m_World.Entities.ClearCreatedEntitiesQueryResult();

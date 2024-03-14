@@ -37,4 +37,19 @@ namespace Flare
 		
 		return count;
 	}
+
+
+
+	size_t CreatedEntitiesQuery::GetEntitiesCount() const
+	{
+		size_t count = 0;
+		const QueryData& queryData = (*m_QueryCache)[m_Id];
+		for (ArchetypeId archetype : queryData.MatchedArchetypes)
+		{
+			Span<Entity> ids = m_Entities->GetCreateEntities(archetype);
+			count += ids.GetSize();
+		}
+
+		return count;
+	}
 }
