@@ -17,13 +17,15 @@ namespace Flare
 	void AABBVisualizer::OnConfig(World& world, SystemConfig& config)
 	{
 		m_Query = world.NewQuery()
+			.All()
 			.With<TransformComponent>()
 			.With<MeshComponent>()
-			.Create();
+			.Build();
 		m_DecalsQuery = world.NewQuery()
+			.All()
 			.With<TransformComponent>()
 			.With<Decal>()
-			.Create();
+			.Build();
 
 		config.Group = world.GetSystemsManager().FindGroup("Debug Rendering");
 	}

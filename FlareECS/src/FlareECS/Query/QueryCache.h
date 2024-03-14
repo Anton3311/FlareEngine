@@ -28,6 +28,9 @@ namespace Flare
 		QueryCache& operator=(const QueryCache&) = delete;
 
 		const QueryData& operator[](QueryId id) const;
+
+		inline const Entities& GetEntitites() const { return m_Entities; }
+		inline Entities& GetEntitites() { return m_Entities; }
 	public:
 		Query CreateQuery(QueryCreationData& creationData);
 

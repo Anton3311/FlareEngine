@@ -55,14 +55,12 @@ namespace Flare
 		m_OnFrameStart = systemsManager.CreateGroup("On Frame End");
 		m_OnFrameEnd = systemsManager.CreateGroup("On Frame End");
 
-		m_CameraDataUpdateQuery = m_World.NewQuery().With<TransformComponent, CameraComponent>().Create();
-		m_DirectionalLightQuery = m_World.NewQuery().With<TransformComponent, DirectionalLight>().Create();
-		m_EnvironmentQuery = m_World.NewQuery().With<Environment>().Create();
-		m_PointLightsQuery = m_World.NewQuery().With<TransformComponent>().With<PointLight>().Create();
-		m_SpotLightsQuery = m_World.NewQuery().With<TransformComponent>().With<SpotLight>().Create();
+		m_CameraDataUpdateQuery = m_World.NewQuery().All().With<TransformComponent, CameraComponent>().Build();
+		m_DirectionalLightQuery = m_World.NewQuery().All().With<TransformComponent, DirectionalLight>().Build();
+		m_EnvironmentQuery = m_World.NewQuery().All().With<Environment>().Build();
+		m_PointLightsQuery = m_World.NewQuery().All().With<TransformComponent, PointLight>().Build();
+		m_SpotLightsQuery = m_World.NewQuery().All().With<TransformComponent, SpotLight>().Build();
 
-		m_TestQuery = m_World.NewQuery().Created().With<TransformComponent>().Create();
-		
 		systemsManager.RegisterSystem("Sprites Renderer", m_2DRenderingGroup, new SpritesRendererSystem());
 		systemsManager.RegisterSystem("Meshes Renderer", m_2DRenderingGroup, new MeshesRendererSystem());
 	}
@@ -282,13 +280,6 @@ namespace Flare
 	void Scene::OnUpdateEditor()
 	{
 		m_World.GetSystemsManager().ExecuteSystem<TransformPropagationSystem>();
-
-		CreatedEntitiesQuery query(m_TestQuery.GetId(), &m_World.Entities, &m_World.GetQueries());
-		query.ForEachEntity([](Entity id)
-		{
-			FLARE_CORE_INFO("Created this frame: Entity({}; {})", id.GetIndex(), id.GetGeneration());
-		});
-
 		m_World.Entities.ClearQueuedForDeletion();
 		m_World.Entities.ClearCreatedEntitiesQueryResult();
 	}

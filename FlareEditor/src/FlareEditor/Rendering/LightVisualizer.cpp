@@ -22,9 +22,9 @@ namespace Flare
 	void LightVisualizer::OnConfig(World& world, SystemConfig& config)
 	{
 		config.Group = world.GetSystemsManager().FindGroup("Debug Rendering");
-		m_DirectionalLightQuery = world.NewQuery().With<TransformComponent, DirectionalLight>().Create();
-		m_PointLightsQuery = world.NewQuery().With<TransformComponent, PointLight>().Create();
-		m_SpotlightsQuery = world.NewQuery().With<TransformComponent, SpotLight>().Create();
+		m_DirectionalLightQuery = world.NewQuery().All().With<TransformComponent, DirectionalLight>().Build();
+		m_PointLightsQuery = world.NewQuery().All().With<TransformComponent, PointLight>().Build();
+		m_SpotlightsQuery = world.NewQuery().All().With<TransformComponent, SpotLight>().Build();
 	}
 
 	void LightVisualizer::OnUpdate(World& world, SystemExecutionContext& context)

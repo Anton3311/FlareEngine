@@ -13,8 +13,8 @@ namespace Flare
 {
 	void SpritesRendererSystem::OnConfig(World& world, SystemConfig& config)
 	{
-		m_SpritesQuery = world.NewQuery().With<TransformComponent, SpriteComponent>().Create();
-		m_TextQuery = world.NewQuery().With<TransformComponent, TextComponent>().Create();
+		m_SpritesQuery = world.NewQuery().All().With<TransformComponent, SpriteComponent>().Build();
+		m_TextQuery = world.NewQuery().All().With<TransformComponent, TextComponent>().Build();
 	}
 
 	void SpritesRendererSystem::OnUpdate(World& world, SystemExecutionContext& context)
@@ -111,8 +111,8 @@ namespace Flare
 
 	void MeshesRendererSystem::OnConfig(World& world, SystemConfig& config)
 	{
-		m_Query = world.NewQuery().With<TransformComponent, MeshComponent>().Create();
-		m_DecalsQuery = world.NewQuery().With<TransformComponent, Decal>().Create();
+		m_Query = world.NewQuery().All().With<TransformComponent, MeshComponent>().Build();
+		m_DecalsQuery = world.NewQuery().All().With<TransformComponent, Decal>().Build();
 	}
 
 	void MeshesRendererSystem::OnUpdate(World& world, SystemExecutionContext& context)

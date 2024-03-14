@@ -17,7 +17,7 @@ namespace Flare
 	void CameraFrustumRenderer::OnConfig(World& world, SystemConfig& config)
 	{
 		config.Group = world.GetSystemsManager().FindGroup("Debug Rendering");
-		m_Query = world.NewQuery().With<CameraComponent, TransformComponent>().Create();
+		m_Query = world.NewQuery().All().With<CameraComponent, TransformComponent>().Build();
 	}
 
 	void CameraFrustumRenderer::OnUpdate(World& world, SystemExecutionContext& context)

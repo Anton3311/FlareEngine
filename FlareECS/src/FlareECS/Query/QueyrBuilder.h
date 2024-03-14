@@ -8,27 +8,14 @@
 
 namespace Flare
 {
-	class FLAREECS_API QueryBuilder
+	template<typename T>
+	class QueryBuilder
 	{
 	public:
-		QueryBuilder(QueryCache& queries);
-
-		constexpr QueryBuilder& All()
+		QueryBuilder(QueryCache& queries, QueryTarget target)
+			: m_Queries(queries)
 		{
-			m_Data.Target = QueryTarget::AllEntities;
-			return *this;
-		}
-
-		constexpr QueryBuilder& Deleted()
-		{
-			m_Data.Target = QueryTarget::DeletedEntities;
-			return *this;
-		}
-
-		constexpr QueryBuilder& Created()
-		{
-			m_Data.Target = QueryTarget::CreatedEntities;
-			return *this;
+			m_Data.Target = target;
 		}
 
 		template<typename... T>
@@ -66,9 +53,30 @@ namespace Flare
 			return *this;
 		}
 
-		Query Create();
+		T Build()
+		{
+			static_assert(false);
+		}
 	private:
 		QueryCache& m_Queries;
 		QueryCreationData m_Data;
+	};
+
+	template<>
+	FLAREECS_API Query QueryBuilder<Query>::Build();
+	template<>
+	FLAREECS_API CreatedEntitiesQuery QueryBuilder<CreatedEntitiesQuery>::Build();
+
+	class QueryTargetSelector
+	{
+	public:
+		QueryTargetSelector(QueryCache& queries)
+			: m_Queries(queries) {}
+	public:
+		inline QueryBuilder<Query> All() const { return QueryBuilder<Query>(m_Queries, QueryTarget::AllEntities); }
+		inline QueryBuilder<Query> Deleted() const { return QueryBuilder<Query>(m_Queries, QueryTarget::DeletedEntities); }
+		inline QueryBuilder<CreatedEntitiesQuery> Created() const { return QueryBuilder<CreatedEntitiesQuery>(m_Queries, QueryTarget::CreatedEntities); }
+	private:
+		QueryCache& m_Queries;
 	};
 }

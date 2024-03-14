@@ -18,9 +18,10 @@ namespace Flare
 	{
 		config.Group = world.GetSystemsManager().FindGroup("Late Update");
 		m_Qeury = world.NewQuery()
+			.All()
 			.With<TransformComponent, Children>()
 			.Without<Parent>()
-			.Create();
+			.Build();
 	}
 
 	void TransformPropagationSystem::OnUpdate(World& world, SystemExecutionContext& context)

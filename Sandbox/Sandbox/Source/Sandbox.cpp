@@ -31,13 +31,13 @@ namespace Sandbox
 
 		virtual void OnConfig(World& world, SystemConfig& config) override
 		{
-			m_Query = world.NewQuery().With<TransformComponent, SpriteComponent>().Create();
-			m_SingletonQuery = world.NewQuery().With<RotatingQuadData>().Create();
+			m_Query = world.NewQuery().All().With<TransformComponent, SpriteComponent>().Build();
+			m_SingletonQuery = world.NewQuery().All().With<RotatingQuadData>().Build();
 
 			m_DeletionQuery = world.NewQuery()
 				.Deleted()
 				.With<SomeComponent>()
-				.Create();
+				.Build();
 		}
 
 		virtual void OnUpdate(World& world, SystemExecutionContext& context) override

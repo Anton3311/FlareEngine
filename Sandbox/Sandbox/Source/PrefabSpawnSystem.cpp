@@ -16,8 +16,9 @@ FLARE_IMPL_COMPONENT(PrefabSpawner);
 void PrefabSpawnSystem::OnConfig(Flare::World& world, SystemConfig& config)
 {
 	m_Query = world.NewQuery()
+		.All()
 		.With<PrefabSpawner>()
-		.Create();
+		.Build();
 }
 
 void PrefabSpawnSystem::OnUpdate(Flare::World& world, SystemExecutionContext& context)
