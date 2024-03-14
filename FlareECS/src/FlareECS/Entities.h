@@ -84,7 +84,10 @@ namespace Flare
 		DeletedEntitiesStorage& GetDeletedEntityStorage(ArchetypeId archetype);
 		const DeletedEntitiesStorage& GetDeletedEntityStorage(ArchetypeId archetype) const;
 
+		Span<Entity> GetCreateEntities(ArchetypeId archetype);
+
 		void ClearQueuedForDeletion();
+		void ClearCreatedEntitiesQueryResult();
 
 		// Component operations
 
@@ -143,6 +146,7 @@ namespace Flare
 
 		std::vector<EntityStorage> m_EntityStorages;
 		std::unordered_map<ArchetypeId, DeletedEntitiesStorage> m_DeletedEntitiesStorages;
+		std::unordered_map<ArchetypeId, std::vector<Entity>> m_CreatedEntitiesPerArchetype;
 
 		std::vector<EntityRecord> m_EntityRecords;
 		std::unordered_map<Entity, size_t> m_EntityToRecord;

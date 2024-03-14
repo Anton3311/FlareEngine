@@ -16,6 +16,7 @@ namespace Flare
 	{
 		AllEntities,
 		DeletedEntities,
+		CreatedEntities,
 	};
 
 	struct QueryCreationData

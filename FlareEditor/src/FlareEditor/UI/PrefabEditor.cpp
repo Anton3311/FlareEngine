@@ -21,7 +21,6 @@ namespace Flare
         settings.Far = 1000.0f;
         settings.RotationSpeed = 1.0f;
 
-        m_PreviewScene->Initialize();
         m_ViewportWindow.GetViewport().PostProcessingEnabled = false;
     }
 

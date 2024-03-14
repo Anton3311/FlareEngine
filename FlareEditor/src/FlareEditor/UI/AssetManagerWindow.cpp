@@ -72,6 +72,11 @@ namespace Flare
         m_FileOpenActions[assetType] = action;
     }
 
+    void AssetManagerWindow::ClearOpenActions()
+    {
+        m_FileOpenActions.clear();
+    }
+
     void AssetManagerWindow::RenderDirectory()
     {
         const AssetTreeNode& node = m_AssetTree[m_NodeRenderIndex];

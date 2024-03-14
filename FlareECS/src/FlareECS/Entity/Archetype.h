@@ -21,7 +21,8 @@ namespace Flare
 	struct FLAREECS_API ArchetypeRecord
 	{
 		size_t Id;
-		int32_t DeletionQueryReferences;
+		int32_t DeletionQueryReferences = 0;
+		int32_t CreatedEntitiesQueryReferences = 0;
 		
 		std::vector<ComponentId> Components; // Sorted
 		std::vector<size_t> ComponentOffsets;
@@ -29,7 +30,7 @@ namespace Flare
 		std::unordered_map<ComponentId, ArchetypeEdge> Edges;
 
 		ArchetypeRecord()
-			: Id(INVALID_ARCHETYPE_ID), DeletionQueryReferences(0) {}
+			: Id(INVALID_ARCHETYPE_ID), DeletionQueryReferences(0), CreatedEntitiesQueryReferences(0) {}
 
 		ArchetypeRecord(const ArchetypeRecord&) = delete;
 
@@ -38,10 +39,12 @@ namespace Flare
 			Components(std::move(other.Components)),
 			ComponentOffsets(std::move(other.ComponentOffsets)),
 			Edges(std::move(other.Edges)),
-			DeletionQueryReferences(other.DeletionQueryReferences)
+			DeletionQueryReferences(other.DeletionQueryReferences),
+			CreatedEntitiesQueryReferences(other.CreatedEntitiesQueryReferences)
 		{
 			other.Id = INVALID_ARCHETYPE_ID;
 			other.DeletionQueryReferences = 0;
+			other.CreatedEntitiesQueryReferences = 0;
 		}
 
 		ArchetypeRecord& operator=(const ArchetypeRecord&) = delete;
@@ -52,12 +55,15 @@ namespace Flare
 			ComponentOffsets = std::move(other.ComponentOffsets);
 			Edges = std::move(other.Edges);
 			DeletionQueryReferences = other.DeletionQueryReferences;
+			CreatedEntitiesQueryReferences = other.CreatedEntitiesQueryReferences;
 
 			other.Id = INVALID_ARCHETYPE_ID;
 			other.DeletionQueryReferences = 0;
+			other.CreatedEntitiesQueryReferences = 0;
 			return *this;
 		}
 
 		constexpr bool IsUsedInDeletionQuery() const { return DeletionQueryReferences > 0; }
+		constexpr bool IsUsedInCreatedEntitiesQuery() const { return CreatedEntitiesQueryReferences > 0; }
 	};
 }

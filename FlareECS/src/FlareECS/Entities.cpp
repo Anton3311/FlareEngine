@@ -23,6 +23,15 @@ namespace Flare
 	{
 		for (const ArchetypeRecord& archetype : m_Archetypes.Records)
 		{
+			// HACK: Used to cause a crash when destroying a world owned by prefab editor scene
+			//
+			//       **The cause of the crash was an empty `m_EntityStorages`**
+			// 
+			//		 It was empty probably becase the prefab window was never used (throughout the lifetime of the application)
+			//       and the World stayed empty and thus `EnsureValidEntityStorages()` was never called
+			if (archetype.Id >= m_EntityStorages.size())
+				continue;
+
 			EntityStorage& storage = m_EntityStorages[archetype.Id];
 			for (size_t entityIndex = 0; entityIndex < storage.GetEntitiesCount(); entityIndex++)
 			{
@@ -123,6 +132,7 @@ namespace Flare
 		return result.Id;
 	}
 
+	// TODO: Should probably also use `CreateEntity(const ComponentSet&, EntityCreationResult&)`
 	Entity Entities::CreateEntityFromArchetype(ArchetypeId archetype, ComponentInitializationStrategy initStrategy)
 	{
 		FLARE_CORE_ASSERT((size_t)archetype < m_Archetypes.Records.size());
@@ -787,6 +797,24 @@ namespace Flare
 		result.Id = record.Id;
 		result.Archetype = record.Archetype;
 		result.Data = storage.GetEntityData(record.BufferIndex);
+
+		if (archetypeRecord.IsUsedInCreatedEntitiesQuery())
+		{
+			auto it = m_CreatedEntitiesPerArchetype.find(archetypeRecord.Id);
+			std::vector<Entity>* entitiesList = nullptr;
+
+			if (it == m_CreatedEntitiesPerArchetype.end())
+			{
+				auto result = m_CreatedEntitiesPerArchetype.emplace(archetypeRecord.Id, std::vector<Entity>{});
+				entitiesList = &result.first->second;
+			}
+			else
+			{
+				entitiesList = &it->second;
+			}
+
+			entitiesList->push_back(result.Id);
+		}
 	}
 
 	void Entities::InitializeEntityComponents(const ArchetypeRecord& archetype, uint8_t* entityData,
@@ -882,6 +910,15 @@ namespace Flare
 		return it->second;
 	}
 
+	Span<Entity> Entities::GetCreateEntities(ArchetypeId archetype)
+	{
+		auto it = m_CreatedEntitiesPerArchetype.find(archetype);
+		if (it == m_CreatedEntitiesPerArchetype.end())
+			return Span<Entity>();
+
+		return Span<Entity>::FromVector(it->second);
+	}
+
 	void Entities::ClearQueuedForDeletion()
 	{
 		for (const ArchetypeRecord& archetype : m_Archetypes.Records)
@@ -904,6 +941,14 @@ namespace Flare
 		}
 
 		m_DeletedEntitiesStorages.clear();
+	}
+
+	void Entities::ClearCreatedEntitiesQueryResult()
+	{
+		for (auto& pair : m_CreatedEntitiesPerArchetype)
+		{
+			pair.second.clear();
+		}
 	}
 
 	void Entities::RemoveEntityData(ArchetypeId archetype, size_t entityBufferIndex)

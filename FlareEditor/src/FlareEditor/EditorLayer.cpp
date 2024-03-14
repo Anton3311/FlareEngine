@@ -147,6 +147,9 @@ namespace Flare
 
     void EditorLayer::OnDetach()
     {
+        m_AssetManagerWindow.ClearOpenActions();
+        m_AssetEditorWindows.clear();
+
         ImGuiLayer::OnDetach();
 
         if (m_Mode == EditorMode::Play)
@@ -156,6 +159,7 @@ namespace Flare
             As<EditorAssetManager>(AssetManager::GetInstance())->UnloadAsset(Scene::GetActive()->Handle);
 
         m_PrefabEditor->OnDetach();
+        m_PrefabEditor = nullptr;
 
         Scene::SetActive(nullptr);
     }

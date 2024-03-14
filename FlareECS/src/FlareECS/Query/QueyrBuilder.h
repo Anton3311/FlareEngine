@@ -25,6 +25,12 @@ namespace Flare
 			return *this;
 		}
 
+		constexpr QueryBuilder& Created()
+		{
+			m_Data.Target = QueryTarget::CreatedEntities;
+			return *this;
+		}
+
 		template<typename... T>
 		QueryBuilder& With()
 		{

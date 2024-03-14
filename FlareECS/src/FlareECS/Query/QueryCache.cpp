@@ -14,15 +14,17 @@ namespace Flare
 	{
 		for (const QueryData& query : m_Queries)
 		{
-			if (query.Target != QueryTarget::DeletedEntities)
-				continue;
-
-			for (ArchetypeId archetype : query.MatchedArchetypes)
-				m_Archetypes.Records[archetype].DeletionQueryReferences--;
+			if (query.Target == QueryTarget::DeletedEntities)
+			{
+				for (ArchetypeId archetype : query.MatchedArchetypes)
+					m_Archetypes.Records[archetype].DeletionQueryReferences--;
+			}
+			else if (query.Target == QueryTarget::CreatedEntities)
+			{
+				for (ArchetypeId archetype : query.MatchedArchetypes)
+					m_Archetypes.Records[archetype].CreatedEntitiesQueryReferences--;
+			}
 		}
-
-		for (const auto& archetype : m_Archetypes.Records)
-			FLARE_CORE_ASSERT(archetype.DeletionQueryReferences == 0);
 	}
 
 	const QueryData& QueryCache::operator[](QueryId id) const
@@ -45,21 +47,23 @@ namespace Flare
 		for (size_t i = 0; i < query.Components.size(); i++)
 		{
 			auto it = m_Archetypes.ComponentToArchetype.find(query.Components[i].Masked());
-			if (it != m_Archetypes.ComponentToArchetype.end())
+			if (it == m_Archetypes.ComponentToArchetype.end())
+				continue;
+
+			for (std::pair<ArchetypeId, size_t> archetype : it->second)
 			{
-				for (std::pair<ArchetypeId, size_t> archetype : it->second)
-				{
-					if (query.MatchedArchetypes.find(archetype.first) != query.MatchedArchetypes.end())
-						continue;
+				if (query.MatchedArchetypes.find(archetype.first) != query.MatchedArchetypes.end())
+					continue;
 
-					if (CompareComponentSets(m_Archetypes[archetype.first].Components, query.Components))
-					{
-						query.MatchedArchetypes.insert(archetype.first);
+				if (!CompareComponentSets(m_Archetypes[archetype.first].Components, query.Components))
+					continue;
 
-						if (query.Target == QueryTarget::DeletedEntities)
-							m_Archetypes.Records[archetype.first].DeletionQueryReferences++;
-					}
-				}
+				query.MatchedArchetypes.insert(archetype.first);
+
+				if (query.Target == QueryTarget::DeletedEntities)
+					m_Archetypes.Records[archetype.first].DeletionQueryReferences++;
+				else if (query.Target == QueryTarget::CreatedEntities)
+					m_Archetypes.Records[archetype.first].CreatedEntitiesQueryReferences += 1;
 			}
 		}
 
@@ -84,14 +88,17 @@ namespace Flare
 			{
 				QueryData& query = m_Queries[queryId];
 
+				if (query.MatchedArchetypes.find(archetype) != query.MatchedArchetypes.end())
+					continue;
+
 				if (CompareComponentSets(archetypeRecord.Components, query.Components))
 				{
-					// TODO: check if the archetype was already inserted (if this ever happens), 
-					// in oreder not to chage ref count and keep it correct
 					query.MatchedArchetypes.insert(archetype);
 
 					if (query.Target == QueryTarget::DeletedEntities)
 						m_Archetypes.Records[archetype].DeletionQueryReferences++;
+					else if (query.Target == QueryTarget::CreatedEntities)
+						m_Archetypes.Records[archetype].CreatedEntitiesQueryReferences += 1;
 				}
 			}
 		}
