@@ -188,6 +188,7 @@ namespace Flare
         std::optional<uint32_t> roughnessProperty;
         std::optional<uint32_t> textureProperty;
         std::optional<uint32_t> normalMapProperty;
+        std::optional<uint32_t> roughnessMapProperty;
 
         Ref<Shader> shader = AssetManager::GetAsset<Shader>(defaultShader.value());
         if (shader != nullptr && shader->IsLoaded())
@@ -196,6 +197,7 @@ namespace Flare
             roughnessProperty = shader->GetPropertyIndex("u_Material.Roughness");
             textureProperty = shader->GetPropertyIndex("u_Texture");
             normalMapProperty = shader->GetPropertyIndex("u_NormalMap");
+            roughnessMapProperty = shader->GetPropertyIndex("u_RoughnessMap");
         }
 
         Ref<MaterialsTable> materialsTable = CreateRef<MaterialsTable>();
@@ -206,6 +208,19 @@ namespace Flare
 
         materialsTable->Materials.reserve(usedMaterials.size());
 
+        auto getMaterialTexture = [&](const aiMaterial& material, aiTextureType type) -> AssetHandle
+		{
+            aiTextureMapping mapping;
+            uint32_t uvIndex;
+			aiString path;
+
+			aiReturn result = material.GetTexture(type, 0, &path, &mapping, &uvIndex);
+            if (result == aiReturn_SUCCESS)
+				return FindTextureByPath(std::string_view(path.C_Str(), path.length), metadata, assetManager);
+
+            return NULL_ASSET_HANDLE;
+		};
+
         for (uint32_t i : usedMaterials)
         {
             auto& material = scene->mMaterials[i];
@@ -214,22 +229,13 @@ namespace Flare
             if (name.empty())
                 name = fmt::format("Material {}", i);
 
-            aiTextureMapping mapping;
-            uint32_t uvIndex;
             AssetHandle baseColorTextureHandle = NULL_ASSET_HANDLE;
             AssetHandle normalMapHandle = NULL_ASSET_HANDLE;
+            AssetHandle roughnessMapHandle = NULL_ASSET_HANDLE;
 
-            {
-                aiString texturePath;
-                material->GetTexture(aiTextureType_BASE_COLOR, 0, &texturePath, &mapping, &uvIndex);
-                baseColorTextureHandle = FindTextureByPath(std::string_view(texturePath.C_Str(), texturePath.length), metadata, assetManager);
-            }
-
-            {
-                aiString normalMapPath;
-                material->GetTexture(aiTextureType_NORMALS, 0, &normalMapPath, &mapping, &uvIndex);
-                normalMapHandle = FindTextureByPath(std::string_view(normalMapPath.C_Str(), normalMapPath.length), metadata, assetManager);
-            }
+            baseColorTextureHandle = getMaterialTexture(*material, aiTextureType_BASE_COLOR);
+            normalMapHandle = getMaterialTexture(*material, aiTextureType_NORMALS);
+            roughnessMapHandle = getMaterialTexture(*material, aiTextureType_DIFFUSE_ROUGHNESS);
 
             aiColor4D color(1.0f, 1.0f, 1.0f, 1.0f);
             material->Get(AI_MATKEY_COLOR_DIFFUSE, color);
@@ -245,6 +251,7 @@ namespace Flare
 
             TrySetMaterialTexture(textureProperty, materialAsset, baseColorTextureHandle, Renderer::GetWhiteTexture());
             TrySetMaterialTexture(normalMapProperty, materialAsset, normalMapHandle, Renderer::GetDefaultNormalMap());
+            TrySetMaterialTexture(roughnessMapProperty, materialAsset, roughnessMapHandle, Renderer::GetWhiteTexture());
 
             auto it = nameToHandle.find(name);
             if (it != nameToHandle.end())

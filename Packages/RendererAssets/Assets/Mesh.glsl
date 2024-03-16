@@ -4,6 +4,7 @@ Properties =
 	u_Material.Roughness = {}
 	u_Texture = {}
 	u_NormalMap = {}
+	u_RoughnessMap = {}
 }
 
 #begin vertex
@@ -73,6 +74,7 @@ struct VertexData
 
 layout(binding = 7) uniform sampler2D u_Texture;
 layout(binding = 8) uniform sampler2D u_NormalMap;
+layout(binding = 9) uniform sampler2D u_RoughnessMap;
 
 layout(location = 0) in VertexData i_Vertex;
 layout(location = 6) in flat int i_EntityIndex;
@@ -83,31 +85,32 @@ layout(location = 2) out int o_EntityIndex;
 
 void main()
 {
-	vec3 N = normalize(i_Vertex.Normal);
-	vec3 tangent = normalize(i_Vertex.Tangent);
-	tangent = normalize(tangent - dot(tangent, N) * N);
-	vec3 bitangent = cross(N, tangent);
-
-	mat3 tbn = mat3(tangent, bitangent, N);
+	vec4 color = u_Material.Color * texture(u_Texture, i_Vertex.UV);
+	if (color.a == 0.0f)
+		discard;
 
 	vec3 V = normalize(u_Camera.Position - i_Vertex.Position.xyz);
 	vec3 H = normalize(V - u_LightDirection);
+	vec3 N = normalize(i_Vertex.Normal);
 
-	vec4 color = u_Material.Color * texture(u_Texture, i_Vertex.UV);
+	vec3 tangent = normalize(i_Vertex.Tangent);
+	tangent = normalize(tangent - dot(tangent, N) * N);
+
+	vec3 bitangent = cross(N, tangent);
+	mat3 tbn = mat3(tangent, bitangent, N);
 	vec3 sampledNormal = texture(u_NormalMap, i_Vertex.UV).xyz * 2.0f - vec3(1.0f);
 
 	N = normalize(tbn * sampledNormal);
 
-	if (color.a == 0.0f)
-		discard;
+	float roughness = u_Material.Roughness * texture(u_RoughnessMap, i_Vertex.UV).r;
 
 	float shadow = CalculateShadow(N, i_Vertex.Position, i_Vertex.ViewSpacePosition);
 	vec3 finalColor = CalculateLight(N, V, H, color.rgb,
 		u_LightColor.rgb * u_LightColor.w, -u_LightDirection,
-		u_Material.Roughness) * shadow;
+		roughness) * shadow;
 
-	finalColor += CalculatePointLightsContribution(N, V, H, color.rgb, i_Vertex.Position.xyz, u_Material.Roughness);
-	finalColor += CalculateSpotLightsContribution(N, V, H, color.rgb, i_Vertex.Position.xyz, u_Material.Roughness);
+	finalColor += CalculatePointLightsContribution(N, V, H, color.rgb, i_Vertex.Position.xyz, roughness);
+	finalColor += CalculateSpotLightsContribution(N, V, H, color.rgb, i_Vertex.Position.xyz, roughness);
 	finalColor += u_EnvironmentLight.rgb * u_EnvironmentLight.w * color.rgb;
 
 	o_Normal = vec4(N * 0.5f + vec3(0.5f), 1.0f);
