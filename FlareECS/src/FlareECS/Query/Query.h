@@ -161,7 +161,7 @@ namespace Flare
 			([&]()
 			{
 				ComponentId componentId = COMPONENT_ID(std::remove_reference_t<typename ComponentViewUnderlyingType<Args>::Type>);
-				std::optional<size_t> componentIndex = archetypes.GetArchetypeComponentIndex(archetype.Id, componentId);
+				std::optional<size_t> componentIndex = archetype.TryGetComponentIndex(componentId);
 				if (componentIndex)
 					offsets[index] = archetype.ComponentOffsets[*componentIndex];
 				index++;

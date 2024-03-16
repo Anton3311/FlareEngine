@@ -63,6 +63,8 @@ namespace Flare
 			return *this;
 		}
 
+		std::optional<size_t> TryGetComponentIndex(ComponentId component) const;
+
 		constexpr bool IsUsedInDeletionQuery() const { return DeletionQueryReferences > 0; }
 		constexpr bool IsUsedInCreatedEntitiesQuery() const { return CreatedEntitiesQueryReferences > 0; }
 	};
