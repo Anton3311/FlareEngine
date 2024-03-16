@@ -12,8 +12,8 @@ namespace Flare
 	class QueryBuilder
 	{
 	public:
-		QueryBuilder(QueryCache& queries, QueryTarget target)
-			: m_Queries(queries)
+		QueryBuilder(QueryCache& queries, Entities& entities, QueryTarget target)
+			: m_Queries(queries), m_Entities(entities)
 		{
 			m_Data.Target = target;
 		}
@@ -58,6 +58,7 @@ namespace Flare
 			static_assert(false);
 		}
 	private:
+		Entities& m_Entities;
 		QueryCache& m_Queries;
 		QueryCreationData m_Data;
 	};
@@ -70,13 +71,14 @@ namespace Flare
 	class QueryTargetSelector
 	{
 	public:
-		QueryTargetSelector(QueryCache& queries)
-			: m_Queries(queries) {}
+		QueryTargetSelector(QueryCache& queries, Entities& entities)
+			: m_Queries(queries), m_Entities(entities) {}
 	public:
-		inline QueryBuilder<Query> All() const { return QueryBuilder<Query>(m_Queries, QueryTarget::AllEntities); }
-		inline QueryBuilder<Query> Deleted() const { return QueryBuilder<Query>(m_Queries, QueryTarget::DeletedEntities); }
-		inline QueryBuilder<CreatedEntitiesQuery> Created() const { return QueryBuilder<CreatedEntitiesQuery>(m_Queries, QueryTarget::CreatedEntities); }
+		inline QueryBuilder<Query> All() const { return QueryBuilder<Query>(m_Queries, m_Entities, QueryTarget::AllEntities); }
+		inline QueryBuilder<Query> Deleted() const { return QueryBuilder<Query>(m_Queries, m_Entities, QueryTarget::DeletedEntities); }
+		inline QueryBuilder<CreatedEntitiesQuery> Created() const { return QueryBuilder<CreatedEntitiesQuery>(m_Queries, m_Entities, QueryTarget::CreatedEntities); }
 	private:
+		Entities& m_Entities;
 		QueryCache& m_Queries;
 	};
 }

@@ -33,7 +33,7 @@ namespace Flare
 		return m_Queries[id];
 	}
 
-	Query QueryCache::CreateQuery(QueryCreationData& creationData)
+	QueryId QueryCache::CreateQuery(QueryCreationData& creationData)
 	{
 		QueryId id = m_Queries.size();
 		QueryData& query = m_Queries.emplace_back();
@@ -70,7 +70,7 @@ namespace Flare
 		for (size_t i = 0; i < query.Components.size(); i++)
 			m_CachedMatches[query.Components[i].Masked()].push_back(id);
 
-		return Query(id, m_Entities, *this);
+		return id;
 	}
 
 	void QueryCache::OnArchetypeCreated(ArchetypeId archetype)

@@ -107,8 +107,7 @@ namespace Flare
 	class FLAREECS_API Query
 	{
 	public:
-		constexpr Query()
-			: m_Id(INVALID_QUERY_ID), m_Entities(nullptr), m_QueryCache(nullptr) {}
+		constexpr Query() = default;
 		constexpr Query(QueryId id, Entities& entities, const QueryCache& queries)
 			: m_Id(id), m_Entities(&entities), m_QueryCache(&queries) {}
 	public:
@@ -199,9 +198,9 @@ namespace Flare
 			}
 		}
 	private:
-		QueryId m_Id;
-		Entities* m_Entities;
-		const QueryCache* m_QueryCache;
+		QueryId m_Id = INVALID_QUERY_ID;
+		Entities* m_Entities = nullptr;
+		const QueryCache* m_QueryCache = nullptr;
 	};
 
 	class FLAREECS_API CreatedEntitiesQuery
@@ -210,6 +209,8 @@ namespace Flare
 		CreatedEntitiesQuery() = default;
 		CreatedEntitiesQuery(QueryId id, Entities* entities, const QueryCache* queryCache)
 			: m_Id(id), m_Entities(entities), m_QueryCache(queryCache) {}
+
+		inline QueryId GetId() const { return m_Id; }
 
 		template<typename IteratorFunction>
 		void ForEachEntity(const IteratorFunction& iterator) const

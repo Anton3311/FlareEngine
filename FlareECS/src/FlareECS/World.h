@@ -124,7 +124,7 @@ namespace Flare
 
 		inline QueryTargetSelector NewQuery()
 		{
-			return QueryTargetSelector(m_Queries);
+			return QueryTargetSelector(m_Queries, Entities);
 		}
 
 		static World& GetCurrent();

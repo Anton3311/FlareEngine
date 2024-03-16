@@ -5,13 +5,12 @@ namespace Flare
 	template<>
 	FLAREECS_API Query QueryBuilder<Query>::Build()
 	{
-		return m_Queries.CreateQuery(m_Data);
+		return Query(m_Queries.CreateQuery(m_Data), m_Entities, m_Queries);
 	}
 
 	template<>
 	FLAREECS_API CreatedEntitiesQuery QueryBuilder<CreatedEntitiesQuery>::Build()
 	{
-		Query query = m_Queries.CreateQuery(m_Data);
-		return CreatedEntitiesQuery(query.GetId(), &m_Queries.GetEntitites(), &m_Queries);
+		return CreatedEntitiesQuery(m_Queries.CreateQuery(m_Data), &m_Entities, &m_Queries);
 	}
 }

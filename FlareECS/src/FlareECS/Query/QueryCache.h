@@ -31,8 +31,8 @@ namespace Flare
 
 		inline const Entities& GetEntitites() const { return m_Entities; }
 		inline Entities& GetEntitites() { return m_Entities; }
-	public:
-		Query CreateQuery(QueryCreationData& creationData);
+
+		QueryId CreateQuery(QueryCreationData& creationData);
 
 		void OnArchetypeCreated(ArchetypeId archetype);
 	private:
