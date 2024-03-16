@@ -104,28 +104,45 @@ namespace Flare
 		size_t m_EntitySize;
 	};
 
-	class FLAREECS_API Query
+	class FLAREECS_API EntitiesQuery
+	{
+	public:
+		constexpr EntitiesQuery() = default;
+		constexpr EntitiesQuery(QueryId id, const QueryCache& queries, Entities& entities)
+			: m_Id(id), m_Queries(&queries), m_Entities(&entities) {}
+
+		virtual ~EntitiesQuery() {}
+
+		virtual std::optional<Entity> TryGetFirstEntityId() const = 0;
+		virtual size_t GetEntitiesCount() const = 0;
+
+		inline QueryId GetId() const { return m_Id; }
+		const std::unordered_set<ArchetypeId> GetMatchingArchetypes() const { return m_Queries->GetQueryData(m_Id).MatchedArchetypes; }
+	protected:
+		QueryId m_Id = INVALID_QUERY_ID;
+		const QueryCache* m_Queries = nullptr;
+		Entities* m_Entities = nullptr;
+	};
+
+	class FLAREECS_API Query : public EntitiesQuery
 	{
 	public:
 		constexpr Query() = default;
 		constexpr Query(QueryId id, Entities& entities, const QueryCache& queries)
-			: m_Id(id), m_Entities(&entities), m_QueryCache(&queries) {}
+			: EntitiesQuery(id, queries, entities) {}
 	public:
-		QueryId GetId() const;
-
 		QueryIterator begin() const;
 		QueryIterator end() const;
-		const std::unordered_set<ArchetypeId>& GetMatchedArchetypes() const;
 
-		size_t GetEntitiesCount() const;
+		virtual std::optional<Entity> TryGetFirstEntityId() const override;
+		virtual size_t GetEntitiesCount() const override;
 
 		template<typename... Args, typename IteratorFunction>
 		inline void ForEachEntity(const IteratorFunction& function)
 		{
 			size_t componentOffsets[sizeof...(Args)];
-			const QueryData& data = (*m_QueryCache)[m_Id];
 			const Archetypes& archetypes = m_Entities->GetArchetypes();
-			for (ArchetypeId matchedArchetype : data.MatchedArchetypes)
+			for (ArchetypeId matchedArchetype : GetMatchingArchetypes())
 			{
 				EntityStorage& storage = m_Entities->GetEntityStorage(matchedArchetype);
 				const ArchetypeRecord& archetype = archetypes[matchedArchetype];
@@ -164,9 +181,8 @@ namespace Flare
 		inline void ForEachChunk(const IteratorFunction& function)
 		{
 			size_t componentOffsets[sizeof...(Args)];
-			const QueryData& data = (*m_QueryCache)[m_Id];
 			const Archetypes& archetypes = m_Entities->GetArchetypes();
-			for (ArchetypeId matchedArchetype : data.MatchedArchetypes)
+			for (ArchetypeId matchedArchetype : GetMatchingArchetypes())
 			{
 				EntityStorage& storage = m_Entities->GetEntityStorage(matchedArchetype);
 				const ArchetypeRecord& archetype = archetypes[matchedArchetype];
@@ -197,38 +213,28 @@ namespace Flare
 				}
 			}
 		}
-	private:
-		QueryId m_Id = INVALID_QUERY_ID;
-		Entities* m_Entities = nullptr;
-		const QueryCache* m_QueryCache = nullptr;
 	};
 
-	class FLAREECS_API CreatedEntitiesQuery
+	class FLAREECS_API CreatedEntitiesQuery : public EntitiesQuery
 	{
 	public:
-		CreatedEntitiesQuery() = default;
-		CreatedEntitiesQuery(QueryId id, Entities* entities, const QueryCache* queryCache)
-			: m_Id(id), m_Entities(entities), m_QueryCache(queryCache) {}
-
-		inline QueryId GetId() const { return m_Id; }
+		constexpr CreatedEntitiesQuery() = default;
+		constexpr CreatedEntitiesQuery(QueryId id, Entities& entities, const QueryCache& queries)
+			: EntitiesQuery(id, queries, entities) {}
 
 		template<typename IteratorFunction>
 		void ForEachEntity(const IteratorFunction& iterator) const
 		{
-			const QueryData& queryData = (*m_QueryCache)[m_Id];
-			for (ArchetypeId archetype : queryData.MatchedArchetypes)
+			for (ArchetypeId archetype : GetMatchingArchetypes())
 			{
-				Span<Entity> ids = m_Entities->GetCreateEntities(archetype);
+				Span<Entity> ids = m_Entities->GetCreatedEntities(archetype);
 
 				for (Entity id : ids)
 					iterator(id);
 			}
 		}
 
-		size_t GetEntitiesCount() const;
-	private:
-		QueryId m_Id = INVALID_QUERY_ID;
-		Entities* m_Entities = nullptr;
-		const QueryCache* m_QueryCache = nullptr;
+		virtual std::optional<Entity> TryGetFirstEntityId() const override;
+		virtual size_t GetEntitiesCount() const override;
 	};
 }

@@ -647,7 +647,7 @@ namespace Flare
 
 	std::optional<Entity> Entities::GetSingletonEntity(const Query& query) const
 	{
-		const auto& archetypes = query.GetMatchedArchetypes();
+		const auto& archetypes = query.GetMatchingArchetypes();
 
 		ArchetypeId archetype = INVALID_ARCHETYPE_ID;
 		size_t componentIndex = SIZE_MAX;
@@ -661,7 +661,7 @@ namespace Flare
 				else
 				{
 					FLARE_CORE_ERROR("Failed to get singleton entity: Multiple entities matched the query");
-					return Entity();
+					return {};
 				}
 			}
 		}
@@ -669,7 +669,7 @@ namespace Flare
 		if (archetype == INVALID_ARCHETYPE_ID)
 		{
 			FLARE_CORE_ERROR("Failed to get singleton entity: Zero entities matched the query");
-			return Entity();
+			return {};
 		}
 
 		const ArchetypeRecord& record = m_Archetypes[archetype];
@@ -677,7 +677,7 @@ namespace Flare
 		if (storage.GetEntitiesCount() != 1)
 		{
 			FLARE_CORE_ERROR("Failed to get singleton entity: Multiple entities matched the query");
-			return Entity();
+			return {};
 		}
 
 		return m_EntityRecords[storage.GetEntityIndices()[0]].Id;
@@ -910,7 +910,7 @@ namespace Flare
 		return it->second;
 	}
 
-	Span<Entity> Entities::GetCreateEntities(ArchetypeId archetype)
+	Span<Entity> Entities::GetCreatedEntities(ArchetypeId archetype)
 	{
 		auto it = m_CreatedEntitiesPerArchetype.find(archetype);
 		if (it == m_CreatedEntitiesPerArchetype.end())
