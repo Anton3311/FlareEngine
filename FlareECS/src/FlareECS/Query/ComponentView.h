@@ -21,6 +21,18 @@ namespace Flare
 	};
 
 	template<typename T>
+	struct ComponentViewUnderlyingType
+	{
+		using Type = void;
+	};
+
+	template<typename T>
+	struct ComponentViewUnderlyingType<ComponentView<T>>
+	{
+		using Type = T;
+	};
+
+	template<typename T>
 	class OptionalComponentView
 	{
 	public:

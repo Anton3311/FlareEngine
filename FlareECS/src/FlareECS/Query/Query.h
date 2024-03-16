@@ -1,5 +1,7 @@
 #pragma once
 
+#include "FlareCore/FunctionTraits.h"
+
 #include "FlareECS/Entity/Component.h"
 #include "FlareECS/Entity/Archetype.h"
 
@@ -124,6 +126,49 @@ namespace Flare
 		Entities* m_Entities = nullptr;
 	};
 
+	template<typename T>
+	struct QueryIterationHelper
+	{
+		static std::tuple<QueryChunk> Get(QueryChunk&& chunk, const size_t* componentOffset)
+		{
+			return std::make_tuple(chunk);
+		}
+
+		static void FillComponentOffsets(size_t* offsets, const ArchetypeRecord& archetype, const Archetypes& archetypes)
+		{
+
+		}
+	};
+
+	template<typename FirstArg, typename... Args>
+	struct QueryIterationHelper<ArgumentsList<FirstArg, Args...>>
+	{
+		static std::tuple<QueryChunk, Args...> Get(QueryChunk&& chunk, const size_t* componentOffsets)
+		{
+			size_t componentIndex = 0;
+			return std::make_tuple(
+				chunk,
+				[&]() -> decltype(auto)
+				{
+					return Args(componentOffsets[componentIndex++]);
+				} () ...
+			);
+		}
+
+		static void FillComponentOffsets(size_t* offsets, const ArchetypeRecord& archetype, const Archetypes& archetypes)
+		{
+			size_t index = 0;
+			([&]()
+			{
+				ComponentId componentId = COMPONENT_ID(std::remove_reference_t<typename ComponentViewUnderlyingType<Args>::Type>);
+				std::optional<size_t> componentIndex = archetypes.GetArchetypeComponentIndex(archetype.Id, componentId);
+				if (componentIndex)
+					offsets[index] = archetype.ComponentOffsets[*componentIndex];
+				index++;
+			} (), ...);
+		}
+	};
+
 	class FLAREECS_API Query : public EntitiesQuery
 	{
 	public:
@@ -177,37 +222,25 @@ namespace Flare
 			}
 		}
 
-		template<typename... Args, typename IteratorFunction>
+		template<typename IteratorFunction>
 		inline void ForEachChunk(const IteratorFunction& function)
 		{
-			size_t componentOffsets[sizeof...(Args)];
+			using IteratorTraits = FunctionTraits<IteratorFunction>;
+
+			size_t componentOffsets[IteratorTraits::ArgumentsCount];
 			const Archetypes& archetypes = m_Entities->GetArchetypes();
 			for (ArchetypeId matchedArchetype : GetMatchingArchetypes())
 			{
 				EntityStorage& storage = m_Entities->GetEntityStorage(matchedArchetype);
 				const ArchetypeRecord& archetype = archetypes[matchedArchetype];
 
-				size_t index = 0;
-				([&]()
-				{
-					std::optional<size_t> componentIndex = archetypes.GetArchetypeComponentIndex(matchedArchetype, COMPONENT_ID(std::remove_reference_t<Args>));
-					if (componentIndex)
-						componentOffsets[index] = archetype.ComponentOffsets[*componentIndex];
-					index++;
-				} (), ...);
-
+				QueryIterationHelper<typename IteratorTraits::Arguments>::FillComponentOffsets(componentOffsets, archetype, archetypes);
 				for (size_t chunkIndex = 0; chunkIndex < storage.GetChunksCount(); chunkIndex++)
 				{
 					uint8_t* entityData = storage.GetChunkBuffer(chunkIndex);
-					size_t componentIndex = 0;
-
-					std::tuple<QueryChunk, ComponentView<Args>...> arguments = std::make_tuple(
+					auto arguments = QueryIterationHelper<typename IteratorTraits::Arguments>::Get(
 						QueryChunk(entityData, storage.GetEntitiesCountInChunk(chunkIndex), storage.GetEntitySize()),
-						[&]() -> decltype(auto)
-						{
-							return ComponentView<Args>(componentOffsets[componentIndex++]);
-						} () ...
-					);
+						componentOffsets);
 
 					std::apply(function, arguments);
 				}
