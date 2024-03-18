@@ -32,6 +32,7 @@ namespace Flare
 
 	void GraphicsContext::Shutdown()
 	{
+		s_Instance->Release();
 		s_Instance = nullptr;
 	}
 }

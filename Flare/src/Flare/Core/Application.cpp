@@ -127,6 +127,8 @@ namespace Flare
 				InputManager::Update();
 				m_Window->OnUpdate();
 
+				GraphicsContext::GetInstance().BeginFrame();
+
 				if (RendererAPI::GetAPI() != RendererAPI::API::Vulkan)
 				{
 					{

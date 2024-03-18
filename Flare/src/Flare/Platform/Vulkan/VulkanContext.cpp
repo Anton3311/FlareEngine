@@ -52,24 +52,6 @@ namespace Flare
 
 	VulkanContext::~VulkanContext()
 	{
-		WaitForDevice();
-
-		if (m_DebugMessenger)
-			m_DestroyDebugMessenger(m_Instance, m_DebugMessenger, nullptr);
-
-		ReleaseSwapChain();
-
-		vkFreeCommandBuffers(m_Device, m_CommandBufferPool, 1, &m_CommandBuffer);
-		vkDestroyCommandPool(m_Device, m_CommandBufferPool, nullptr);
-
-		vkDestroySemaphore(m_Device, m_ImageAvailableSemaphore, nullptr);
-		vkDestroySemaphore(m_Device, m_RenderFinishedSemaphore, nullptr);
-		vkDestroyFence(m_Device, m_FrameFence, nullptr);
-
-		vkDestroySurfaceKHR(m_Instance, m_Surface, nullptr);
-
-		vkDestroyDevice(m_Device, nullptr);
-		vkDestroyInstance(m_Instance, nullptr);
 	}
 
 	void VulkanContext::Initialize()
@@ -119,16 +101,66 @@ namespace Flare
 
 		CreateSyncObjects();
 		CreateCommandBufferPool();
-		m_CommandBuffer = CreateCommandBuffer();
+		m_PrimaryCommandBuffer = CreateRef<VulkanCommandBuffer>(CreateCommandBuffer());
+
+		{
+			VkAttachmentDescription attachment{};
+			attachment.flags = 0;
+			attachment.format = m_SwapChainImageFormat;
+			attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+			attachment.samples = VK_SAMPLE_COUNT_1_BIT;
+			attachment.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+			attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+			attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+			attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+			attachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+
+			m_ColorOnlyPass = CreateRef<VulkanRenderPass>(Span<VkAttachmentDescription>(attachment));
+
+			m_SwapChainFrameBuffers.resize(m_FramesInFlight);
+			for (uint32_t i = 0; i < m_FramesInFlight; i++)
+			{
+				m_SwapChainFrameBuffers[i] = CreateRef<VulkanFrameBuffer>(
+					m_SwapChainExtent.x,
+					m_SwapChainExtent.y,
+					m_ColorOnlyPass,
+					Span<VkImageView>(m_SwapChainImageViews[i]));
+			}
+		}
 	}
 
-	void VulkanContext::Present()
+	void VulkanContext::Release()
+	{
+		WaitForDevice();
+
+		if (m_DebugMessenger)
+			m_DestroyDebugMessenger(m_Instance, m_DebugMessenger, nullptr);
+
+		m_ColorOnlyPass = nullptr;
+		m_SwapChainFrameBuffers.clear();
+
+		ReleaseSwapChain();
+
+		VkCommandBuffer commandBuffer = m_PrimaryCommandBuffer->GetHandle();
+		vkFreeCommandBuffers(m_Device, m_CommandBufferPool, 1, &commandBuffer);
+		vkDestroyCommandPool(m_Device, m_CommandBufferPool, nullptr);
+
+		vkDestroySemaphore(m_Device, m_ImageAvailableSemaphore, nullptr);
+		vkDestroySemaphore(m_Device, m_RenderFinishedSemaphore, nullptr);
+		vkDestroyFence(m_Device, m_FrameFence, nullptr);
+
+		vkDestroySurfaceKHR(m_Instance, m_Surface, nullptr);
+
+		vkDestroyDevice(m_Device, nullptr);
+		vkDestroyInstance(m_Instance, nullptr);
+	}
+
+	void VulkanContext::BeginFrame()
 	{
 		VK_CHECK_RESULT(vkWaitForFences(m_Device, 1, &m_FrameFence, VK_TRUE, UINT64_MAX));
 		VK_CHECK_RESULT(vkResetFences(m_Device, 1, &m_FrameFence));
 
-		uint32_t frameIndex = 0;
-		VkResult acquireResult = vkAcquireNextImageKHR(m_Device, m_SwapChain, UINT64_MAX, m_ImageAvailableSemaphore, VK_NULL_HANDLE, &frameIndex);
+		VkResult acquireResult = vkAcquireNextImageKHR(m_Device, m_SwapChain, UINT64_MAX, m_ImageAvailableSemaphore, VK_NULL_HANDLE, &m_CurrentFrameInFlight);
 
 		if (acquireResult == VK_ERROR_OUT_OF_DATE_KHR)
 		{
@@ -141,15 +173,16 @@ namespace Flare
 			return;
 		}
 
-		vkResetCommandBuffer(m_CommandBuffer, 0);
+		m_PrimaryCommandBuffer->Reset();
+		m_PrimaryCommandBuffer->Begin();
 
-		VkCommandBufferBeginInfo beginInfo{};
-		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-		vkBeginCommandBuffer(m_CommandBuffer, &beginInfo);
+		m_PrimaryCommandBuffer->ClearImage(m_SwapChainImages[m_CurrentFrameInFlight], glm::vec4(1.0f, 0.0f, 0.0f, 1.0f), VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+	}
 
-		ClearImage(m_CommandBuffer, m_SwapChainImages[frameIndex], glm::vec4(1.0f, 0.0f, 0.0f, 1.0f), VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+	void VulkanContext::Present()
+	{
 
-		vkEndCommandBuffer(m_CommandBuffer);
+		m_PrimaryCommandBuffer->End();
 
 		VkSubmitInfo submitInfo{};
 		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -160,11 +193,11 @@ namespace Flare
 		submitInfo.pWaitSemaphores = waitSemaphores;
 		submitInfo.pWaitDstStageMask = waitStages;
 		submitInfo.commandBufferCount = 1;
-		submitInfo.pCommandBuffers = &m_CommandBuffer;
 
+		VkCommandBuffer commandBuffer = m_PrimaryCommandBuffer->GetHandle();
+		submitInfo.pCommandBuffers = &commandBuffer;
 		submitInfo.signalSemaphoreCount = 1;
 		submitInfo.pSignalSemaphores = &m_RenderFinishedSemaphore;
-
 		VK_CHECK_RESULT(vkQueueSubmit(m_GraphicsQueue, 1, &submitInfo, m_FrameFence));
 
 		VkPresentInfoKHR presentInfo{};
@@ -173,7 +206,7 @@ namespace Flare
 		presentInfo.pWaitSemaphores = &m_RenderFinishedSemaphore;
 		presentInfo.swapchainCount = 1;
 		presentInfo.pSwapchains = &m_SwapChain;
-		presentInfo.pImageIndices = &frameIndex;
+		presentInfo.pImageIndices = &m_CurrentFrameInFlight;
 
 		VkResult presentResult = vkQueuePresentKHR(m_PresentQueue, &presentInfo);
 		if (presentResult == VK_ERROR_OUT_OF_DATE_KHR)
@@ -182,58 +215,6 @@ namespace Flare
 			FLARE_CORE_ERROR("Failed to present");
 
 		glfwSwapBuffers(m_Window);
-	}
-
-	void VulkanContext::ClearImage(VkCommandBuffer commandBuffer, VkImage image, const glm::vec4& clearColor, VkImageLayout oldLayout, VkImageLayout newLayout)
-	{
-		VkImageSubresourceRange range{};
-		range.baseArrayLayer = 0;
-		range.layerCount = 1;
-		range.baseMipLevel = 0;
-		range.levelCount = 1;
-		range.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-
-		{
-			VkImageMemoryBarrier barrier{};
-			barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-			barrier.image = image;
-			barrier.oldLayout = oldLayout;
-			barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-			barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-			barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-			barrier.subresourceRange = range;
-
-			vkCmdPipelineBarrier(commandBuffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
-				0,
-				0, nullptr,
-				0, nullptr,
-				1, &barrier);
-		}
-
-		VkClearColorValue value;
-		value.float32[0] = clearColor.r;
-		value.float32[1] = clearColor.g;
-		value.float32[2] = clearColor.b;
-		value.float32[3] = clearColor.a;
-
-		vkCmdClearColorImage(commandBuffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &value, 1, &range);
-
-		{
-			VkImageMemoryBarrier barrier{};
-			barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-			barrier.image = image;
-			barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-			barrier.newLayout = newLayout;
-			barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-			barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-			barrier.subresourceRange = range;
-
-			vkCmdPipelineBarrier(commandBuffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
-				0,
-				0, nullptr,
-				0, nullptr,
-				1, &barrier);
-		}
 	}
 
 	void VulkanContext::WaitForDevice()
@@ -497,6 +478,7 @@ namespace Flare
 		uint32_t swapChainImageCount = 0;
 		VK_CHECK_RESULT(vkGetSwapchainImagesKHR(m_Device, m_SwapChain, &swapChainImageCount, nullptr));
 
+		m_FramesInFlight = swapChainImageCount;
 		m_SwapChainImages.resize(swapChainImageCount);
 		VK_CHECK_RESULT(vkGetSwapchainImagesKHR(m_Device, m_SwapChain, &swapChainImageCount, m_SwapChainImages.data()));
 
