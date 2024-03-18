@@ -29,6 +29,10 @@ namespace Flare
 		ImGui_ImplGlfw_Shutdown();
 	}
 
+	void ImGuiLayerOpenGL::InitializeFonts()
+	{
+	}
+
 	void ImGuiLayerOpenGL::Begin()
 	{
 		ImGui_ImplOpenGL3_NewFrame();
@@ -48,9 +52,21 @@ namespace Flare
 		const WindowProperties& windowProps = application.GetWindow()->GetProperties();
 		io.DisplaySize = ImVec2((float)windowProps.Size.x, (float)windowProps.Size.y);
 
+		ImGui::EndFrame();
 		ImGui::Render();
-		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+	}
 
+	void ImGuiLayerOpenGL::RenderCurrentWindow()
+	{
+		FLARE_PROFILE_FUNCTION();
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+	}
+
+	void ImGuiLayerOpenGL::UpdateWindows()
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		ImGuiIO& io = ImGui::GetIO();
 		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
 		{
 			GLFWwindow* currentContext = glfwGetCurrentContext();

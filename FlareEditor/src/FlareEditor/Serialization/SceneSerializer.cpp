@@ -302,6 +302,7 @@ namespace Flare
 		if (!postProcessing)
 			return;
 
+		PostProcessingManager& postProcessingManager = scene->GetPostProcessingManager();
 		for (YAML::Node effectNode : postProcessing)
 		{
 			if (YAML::Node nameNode = effectNode["Name"])
@@ -310,19 +311,23 @@ namespace Flare
 				YAMLDeserializer deserializer(effectNode);
 				if (name == ToneMapping::_Type.TypeName)
 				{
-					deserializer.Serialize("Data", SerializationValue(*scene->GetPostProcessingManager().ToneMappingPass));
+					if (postProcessingManager.ToneMappingPass)
+						deserializer.Serialize("Data", SerializationValue(postProcessingManager.ToneMappingPass));
 				}
 				else if (name == Vignette::_Type.TypeName)
 				{
-					deserializer.Serialize("Data", SerializationValue(*scene->GetPostProcessingManager().VignettePass));
+					if (postProcessingManager.VignettePass)
+						deserializer.Serialize("Data", SerializationValue(postProcessingManager.VignettePass));
 				}
 				else if (name == SSAO::_Type.TypeName)
 				{
-					deserializer.Serialize("Data", SerializationValue(*scene->GetPostProcessingManager().SSAOPass));
+					if (postProcessingManager.SSAOPass)
+						deserializer.Serialize("Data", SerializationValue(postProcessingManager.SSAOPass));
 				}
 				else if (name == AtmospherePass::_Type.TypeName)
 				{
-					deserializer.Serialize("Data", SerializationValue(*scene->GetPostProcessingManager().Atmosphere));
+					if (postProcessingManager.Atmosphere)
+						deserializer.Serialize("Data", SerializationValue(postProcessingManager.Atmosphere));
 				}
 			}
 		}

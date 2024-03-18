@@ -215,6 +215,7 @@ namespace Flare
                 activeScene->OnUpdateEditor();
         }
 
+        if (RendererAPI::GetAPI() != RendererAPI::API::Vulkan)
         {
             FLARE_PROFILE_SCOPE("Viewport Render");
             for (auto& viewport : m_ViewportWindows)
@@ -443,6 +444,8 @@ namespace Flare
 
         ImGui::End();
         m_ImGuiLayer->End();
+        m_ImGuiLayer->RenderCurrentWindow();
+        m_ImGuiLayer->UpdateWindows();
     }
 
     void EditorLayer::UpdateWindowTitle()

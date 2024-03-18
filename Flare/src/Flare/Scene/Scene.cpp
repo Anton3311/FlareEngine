@@ -26,10 +26,13 @@ namespace Flare
 	Scene::Scene(ECSContext& context)
 		: Asset(AssetType::Scene), m_World(context)
 	{
-		m_PostProcessingManager.ToneMappingPass = CreateRef<ToneMapping>();
-		m_PostProcessingManager.VignettePass = CreateRef<Vignette>();
-		m_PostProcessingManager.SSAOPass = CreateRef<SSAO>();
-		m_PostProcessingManager.Atmosphere = CreateRef<AtmospherePass>();
+		if (RendererAPI::GetAPI() != RendererAPI::API::Vulkan)
+		{
+			m_PostProcessingManager.ToneMappingPass = CreateRef<ToneMapping>();
+			m_PostProcessingManager.VignettePass = CreateRef<Vignette>();
+			m_PostProcessingManager.SSAOPass = CreateRef<SSAO>();
+			m_PostProcessingManager.Atmosphere = CreateRef<AtmospherePass>();
+		}
 
 		m_World.MakeCurrent();
 		Initialize();
@@ -73,18 +76,24 @@ namespace Flare
 
 	void Scene::InitializePostProcessing()
 	{
-		Renderer::AddRenderPass(m_PostProcessingManager.VignettePass);
-		Renderer::AddRenderPass(m_PostProcessingManager.SSAOPass);
-		Renderer::AddRenderPass(m_PostProcessingManager.Atmosphere);
-		Renderer::AddRenderPass(m_PostProcessingManager.ToneMappingPass);
+		if (RendererAPI::GetAPI() != RendererAPI::API::Vulkan)
+		{
+			Renderer::AddRenderPass(m_PostProcessingManager.VignettePass);
+			Renderer::AddRenderPass(m_PostProcessingManager.SSAOPass);
+			Renderer::AddRenderPass(m_PostProcessingManager.Atmosphere);
+			Renderer::AddRenderPass(m_PostProcessingManager.ToneMappingPass);
+		}
 	}
 
 	void Scene::UninitializePostProcessing()
 	{
-		Renderer::RemoveRenderPass(m_PostProcessingManager.ToneMappingPass);
-		Renderer::RemoveRenderPass(m_PostProcessingManager.VignettePass);
-		Renderer::RemoveRenderPass(m_PostProcessingManager.SSAOPass);
-		Renderer::RemoveRenderPass(m_PostProcessingManager.Atmosphere);
+		if (RendererAPI::GetAPI() != RendererAPI::API::Vulkan)
+		{
+			Renderer::RemoveRenderPass(m_PostProcessingManager.ToneMappingPass);
+			Renderer::RemoveRenderPass(m_PostProcessingManager.VignettePass);
+			Renderer::RemoveRenderPass(m_PostProcessingManager.SSAOPass);
+			Renderer::RemoveRenderPass(m_PostProcessingManager.Atmosphere);
+		}
 	}
 
 	void Scene::OnRuntimeStart()

@@ -37,12 +37,16 @@ namespace Flare
 	public:
 		virtual void InitializeRenderer() = 0;
 		virtual void ShutdownRenderer() = 0;
+		virtual void InitializeFonts() = 0;
 
 		virtual void OnAttach();
 		virtual void OnDetach();
 
 		virtual void Begin() = 0;
 		virtual void End() = 0;
+
+		virtual void RenderCurrentWindow() = 0;
+		virtual void UpdateWindows() = 0;
 
 		static void SetThemeColors();
 	public:

@@ -32,9 +32,17 @@ namespace Flare
 
 		Ref<VulkanCommandBuffer> GetPrimaryCommandBuffer() const { return m_PrimaryCommandBuffer; }
 
+		uint32_t GetCurrentFrameInFlight() const { return m_CurrentFrameInFlight; }
+		Ref<VulkanFrameBuffer> GetSwapChainFrameBuffer(uint32_t index) const { return m_SwapChainFrameBuffers[index]; }
+
+		Ref<VulkanCommandBuffer> BeginTemporaryCommandBuffer();
+		void EndTemporaryCommandBuffer(Ref<VulkanCommandBuffer> commandBuffer);
+
 		VkInstance GetVulkanInstance() const { return m_Instance; }
 		VkDevice GetDevice() const { return m_Device; }
 		VkPhysicalDevice GetPhysicalDevice() const { return m_PhysicalDevice; }
+		VkQueue GetGraphicsQueue() const { return m_GraphicsQueue; }
+		Ref<VulkanRenderPass> GetColorOnlyPass() const { return m_ColorOnlyPass; }
 
 		static VulkanContext& GetInstance() { return *(VulkanContext*)&GraphicsContext::GetInstance(); }
 	private:

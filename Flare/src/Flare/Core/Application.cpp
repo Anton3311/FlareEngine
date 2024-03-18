@@ -102,14 +102,10 @@ namespace Flare
 		}
 
 		ScriptingEngine::Initialize();
+		RenderCommand::SetLineWidth(1.2f);
 
-		if (RendererAPI::GetAPI() != RendererAPI::API::Vulkan)
-		{
-			RenderCommand::SetLineWidth(1.2f);
-
-			for (const Ref<Layer>& layer : m_LayersStack.GetLayers())
-				layer->OnAttach();
-		}
+		for (const Ref<Layer>& layer : m_LayersStack.GetLayers())
+			layer->OnAttach();
 
 		while (m_Running)
 		{
@@ -136,12 +132,12 @@ namespace Flare
 						for (const Ref<Layer>& layer : m_LayersStack.GetLayers())
 							layer->OnUpdate(deltaTime);
 					}
+				}
 
-					{
-						FLARE_PROFILE_SCOPE("Layers::OnImGui");
-						for (const Ref<Layer>& layer : m_LayersStack.GetLayers())
-							layer->OnImGUIRender();
-					}
+				{
+					FLARE_PROFILE_SCOPE("Layers::OnImGui");
+					for (const Ref<Layer>& layer : m_LayersStack.GetLayers())
+						layer->OnImGUIRender();
 				}
 
 				{

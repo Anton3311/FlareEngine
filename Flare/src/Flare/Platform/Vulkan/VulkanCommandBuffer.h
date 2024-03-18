@@ -7,7 +7,7 @@
 
 namespace Flare
 {
-	class VulkanCommandBuffer
+	class FLARE_API VulkanCommandBuffer
 	{
 	public:
 		VulkanCommandBuffer(VkCommandBuffer commandBuffer);

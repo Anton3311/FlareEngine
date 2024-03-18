@@ -48,15 +48,18 @@ namespace Flare
 		AssetHandle gridShaderHandle = ShaderLibrary::FindShader("SceneViewGrid").value_or(NULL_ASSET_HANDLE);
 		if (AssetManager::IsAssetHandleValid(gridShaderHandle))
 		{
-			m_GridMaterial = CreateRef<Material>(AssetManager::GetAsset<Shader>(gridShaderHandle));
+			if (RendererAPI::GetAPI() != RendererAPI::API::Vulkan)
+			{
+				m_GridMaterial = CreateRef<Material>(AssetManager::GetAsset<Shader>(gridShaderHandle));
 
-			Ref<Shader> gridShader = m_GridMaterial->GetShader();
-			s_GridPropertyIndices.Color = gridShader->GetPropertyIndex("u_Data.Color").value_or(UINT32_MAX);
-			s_GridPropertyIndices.Offset = gridShader->GetPropertyIndex("u_Data.Offset").value_or(UINT32_MAX);
-			s_GridPropertyIndices.Scale = gridShader->GetPropertyIndex("u_Data.GridScale").value_or(UINT32_MAX);
-			s_GridPropertyIndices.Thickness = gridShader->GetPropertyIndex("u_Data.Thickness").value_or(UINT32_MAX);
-			s_GridPropertyIndices.CellScale = gridShader->GetPropertyIndex("u_Data.CellScale").value_or(UINT32_MAX);
-			s_GridPropertyIndices.FallOffThreshold = gridShader->GetPropertyIndex("u_Data.FallOffThreshold").value_or(UINT32_MAX);
+				Ref<Shader> gridShader = m_GridMaterial->GetShader();
+				s_GridPropertyIndices.Color = gridShader->GetPropertyIndex("u_Data.Color").value_or(UINT32_MAX);
+				s_GridPropertyIndices.Offset = gridShader->GetPropertyIndex("u_Data.Offset").value_or(UINT32_MAX);
+				s_GridPropertyIndices.Scale = gridShader->GetPropertyIndex("u_Data.GridScale").value_or(UINT32_MAX);
+				s_GridPropertyIndices.Thickness = gridShader->GetPropertyIndex("u_Data.Thickness").value_or(UINT32_MAX);
+				s_GridPropertyIndices.CellScale = gridShader->GetPropertyIndex("u_Data.CellScale").value_or(UINT32_MAX);
+				s_GridPropertyIndices.FallOffThreshold = gridShader->GetPropertyIndex("u_Data.FallOffThreshold").value_or(UINT32_MAX);
+			}
 		}
 		else
 			FLARE_CORE_ERROR("Failed to load scene view grid shader");
@@ -64,16 +67,19 @@ namespace Flare
 		AssetHandle selectionOutlineShader = ShaderLibrary::FindShader("SelectionOutline").value_or(NULL_ASSET_HANDLE);
 		if (AssetManager::IsAssetHandleValid(selectionOutlineShader))
 		{
-			Ref<Shader> shader = AssetManager::GetAsset<Shader>(selectionOutlineShader);
-			m_SelectionOutlineMaterial = CreateRef<Material>(shader);
+			if (RendererAPI::GetAPI() != RendererAPI::API::Vulkan)
+			{
+				Ref<Shader> shader = AssetManager::GetAsset<Shader>(selectionOutlineShader);
+				m_SelectionOutlineMaterial = CreateRef<Material>(shader);
 
-			ImVec4 primaryColor = ImGuiTheme::Primary;
-			glm::vec4 selectionColor = glm::vec4(primaryColor.x, primaryColor.y, primaryColor.z, 1.0f);
+				ImVec4 primaryColor = ImGuiTheme::Primary;
+				glm::vec4 selectionColor = glm::vec4(primaryColor.x, primaryColor.y, primaryColor.z, 1.0f);
 
-			std::optional<uint32_t> colorProperty = shader->GetPropertyIndex("u_Outline.Color");
+				std::optional<uint32_t> colorProperty = shader->GetPropertyIndex("u_Outline.Color");
 
-			if (colorProperty)
-				m_SelectionOutlineMaterial->WritePropertyValue(*colorProperty, selectionColor);
+				if (colorProperty)
+					m_SelectionOutlineMaterial->WritePropertyValue(*colorProperty, selectionColor);
+			}
 		}
 		else
 			FLARE_CORE_ERROR("Failed to load selection outline shader");

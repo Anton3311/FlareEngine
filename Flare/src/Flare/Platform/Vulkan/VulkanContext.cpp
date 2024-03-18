@@ -181,7 +181,6 @@ namespace Flare
 
 	void VulkanContext::Present()
 	{
-
 		m_PrimaryCommandBuffer->End();
 
 		VkSubmitInfo submitInfo{};
@@ -220,6 +219,47 @@ namespace Flare
 	void VulkanContext::WaitForDevice()
 	{
 		VK_CHECK_RESULT(vkDeviceWaitIdle(m_Device));
+	}
+
+	Ref<VulkanCommandBuffer> VulkanContext::BeginTemporaryCommandBuffer()
+	{
+		VkCommandBuffer commandBuffer;
+
+		VkCommandBufferAllocateInfo info{};
+		info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+		info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+		info.commandBufferCount = 1;
+		info.commandPool = m_CommandBufferPool;
+		VK_CHECK_RESULT(vkAllocateCommandBuffers(m_Device, &info, &commandBuffer));
+
+		VkCommandBufferBeginInfo beginInfo{};
+		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+		VK_CHECK_RESULT(vkBeginCommandBuffer(commandBuffer, &beginInfo));
+		return CreateRef<VulkanCommandBuffer>(commandBuffer);
+	}
+
+	void VulkanContext::EndTemporaryCommandBuffer(Ref<VulkanCommandBuffer> commandBuffer)
+	{
+		commandBuffer->End();
+
+		VkCommandBuffer buffer = commandBuffer->GetHandle();
+
+		VkSubmitInfo submitInfo{};
+		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+		submitInfo.waitSemaphoreCount = 0;
+		submitInfo.pWaitSemaphores = nullptr;
+		submitInfo.pWaitDstStageMask = nullptr;
+		submitInfo.commandBufferCount = 1;
+		submitInfo.pCommandBuffers = &buffer;
+		submitInfo.signalSemaphoreCount = 0;
+		submitInfo.pSignalSemaphores = nullptr;
+		VK_CHECK_RESULT(vkQueueSubmit(m_GraphicsQueue, 1, &submitInfo, nullptr));
+
+		WaitForDevice();
+
+		vkFreeCommandBuffers(m_Device, m_CommandBufferPool, 1, &buffer);
 	}
 
 	void VulkanContext::CreateInstance(const Span<const char*>& enabledLayers)

@@ -2,6 +2,7 @@
 
 #include "Flare/Renderer/RendererAPI.h"
 #include "Flare/Platform/OpenGL/OpenGLVertexArray.h"
+#include "Flare/Platform/Vulkan/VulkanVertexArray.h"
 
 namespace Flare
 {
@@ -11,6 +12,8 @@ namespace Flare
 		{
 		case RendererAPI::API::OpenGL:
 			return CreateRef<OpenGLVertexArray>();
+		case RendererAPI::API::Vulkan:
+			return CreateRef<VulkanVertexArray>();
 		}
 
 		return nullptr;

@@ -53,6 +53,8 @@ project "FlareEditor"
 		"FlarePlatform",
 		"FlareECS",
 		"yaml-cpp",
+
+		LIBRARIES.vulkan,
 	}
 
 	defines

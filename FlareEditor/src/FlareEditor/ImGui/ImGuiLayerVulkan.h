@@ -2,9 +2,11 @@
 
 #include "FlareEditor/ImGui/ImGuiLayer.h"
 
+#include <vulkan/vulkan.h>
+
 namespace Flare
 {
-	class ImGuiLayerOpenGL : public ImGuiLayer
+	class ImGuiLayerVulkan : public ImGuiLayer
 	{
 	public:
 		void InitializeRenderer() override;
@@ -16,5 +18,7 @@ namespace Flare
 
 		void RenderCurrentWindow() override;
 		void UpdateWindows() override;
+	private:
+		VkDescriptorPool m_DescriptorPool = VK_NULL_HANDLE;
 	};
 }

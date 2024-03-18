@@ -2,6 +2,8 @@
 
 #include "Flare/Renderer/RendererAPI.h"
 #include "Flare/Platform/OpenGL/OpenGLBuffer.h"
+#include "Flare/Platform/Vulkan/VulkanVertexBuffer.h"
+#include "Flare/Platform/Vulkan/VulkanIndexBuffer.h"
 
 namespace Flare
 {
@@ -11,6 +13,8 @@ namespace Flare
 		{
 		case RendererAPI::API::OpenGL:
 			return CreateRef<OpenGLVertexBuffer>(size);
+		case RendererAPI::API::Vulkan:
+			return CreateRef<VulkanVertexBuffer>();
 		}
 
 		return nullptr;
@@ -25,6 +29,8 @@ namespace Flare
 		case RendererAPI::API::OpenGL:
 			vertexBuffer = CreateRef<OpenGLVertexBuffer>(size, data);
 			break;
+		case RendererAPI::API::Vulkan:
+			return CreateRef<VulkanVertexBuffer>();
 		default:
 			return nullptr;
 		}
@@ -39,6 +45,8 @@ namespace Flare
 		{
 		case RendererAPI::API::OpenGL:
 			return CreateRef<OpenGLIndexBuffer>(format, size);
+		case RendererAPI::API::Vulkan:
+			return CreateRef<VulkanIndexBuffer>();
 		}
 
 		return nullptr;
@@ -50,6 +58,8 @@ namespace Flare
 		{
 		case RendererAPI::API::OpenGL:
 			return CreateRef<OpenGLIndexBuffer>(format, indices);
+		case RendererAPI::API::Vulkan:
+			return CreateRef<VulkanIndexBuffer>();
 		}
 
 		return nullptr;
