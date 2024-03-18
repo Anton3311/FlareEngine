@@ -29,10 +29,17 @@ namespace Flare
 		void ChoosePhysicalDevice();
 		void GetQueueFamilyProperties();
 		void CreateLogicalDevice(const Span<const char*>& enabledLayers, const Span<const char*>& enabledExtensions);
+
+		void CreateSwapChain();
+		void ReleaseSwapChain();
+		uint32_t ChooseSwapChainFormat(const std::vector<VkSurfaceFormatKHR>& formats);
+		VkExtent2D GetSwapChainExtent(const VkSurfaceCapabilitiesKHR& capabilities);
+		VkPresentModeKHR ChoosePrensentMode(const std::vector<VkPresentModeKHR>& modes);
 	private:
 		std::vector<VkLayerProperties> EnumerateAvailableLayers();
 	private:
 		bool m_DebugEnabled = true;
+		uint32_t m_FramesInFlight = 0;
 
 		PFN_vkCreateDebugUtilsMessengerEXT m_CreateDebugMessenger = nullptr;
 		PFN_vkDestroyDebugUtilsMessengerEXT m_DestroyDebugMessenger = nullptr;
@@ -49,6 +56,12 @@ namespace Flare
 
 		VkQueue m_GraphicsQueue = VK_NULL_HANDLE;
 		VkQueue m_PresentQueue = VK_NULL_HANDLE;
+
+		// Swap chain
+		VkSwapchainKHR m_SwapChain = VK_NULL_HANDLE;
+		std::vector<VkImage> m_SwapChainImages;
+		glm::uvec2 m_SwapChainExtent = glm::uvec2(0);
+		VkFormat m_SwapChainImageFormat = VK_FORMAT_UNDEFINED;
 
 		std::optional<uint32_t> m_GraphicsQueueFamilyIndex;
 		std::optional<uint32_t> m_PresentQueueFamilyIndex;
