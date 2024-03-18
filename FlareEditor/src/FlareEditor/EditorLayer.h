@@ -26,6 +26,8 @@
 #include "FlareEditor/EditorSelection.h"
 #include "FlareEditor/SceneViewSettings.h"
 
+#include "FlareEditor/ImGui/ImGuiLayer.h"
+
 #include <vector>
 #include <set>
 
@@ -89,6 +91,8 @@ namespace Flare
 		std::set<AssetHandle> m_AssetReloadQueue;
 
 		SceneViewSettings m_SceneViewSettings;
+
+		Ref<ImGuiLayer> m_ImGuiLayer = nullptr;
 
 		EditorTitleBar m_TitleBar;
 		Ref<ViewportWindow> m_GameWindow;

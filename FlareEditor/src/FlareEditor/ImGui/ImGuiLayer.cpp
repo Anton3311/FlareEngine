@@ -1,16 +1,16 @@
 #include "ImGuiLayer.h"
 
-#include "Flare/Core/Application.h"
 #include "FlareCore/Profiler/Profiler.h"
+
+#include "Flare/Core/Application.h"
+#include "Flare/Renderer/RendererAPI.h"
+
 #include "FlarePlatform/Window.h"
+
+#include "FlareEditor/ImGui/ImGuiLayerOpenGL.h"
 
 #include <imgui_internal.h>
 #include <ImGuizmo.h>
-
-#include <GLFW/glfw3.h>
-
-#include <backends/imgui_impl_opengl3.h>
-#include <backends/imgui_impl_glfw.h>
 
 namespace Flare
 {
@@ -55,13 +55,7 @@ namespace Flare
 		io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 		io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 
-		Application& application = Application::GetInstance();
-		Ref<Window> window = application.GetWindow();
-
-#ifdef FLARE_PLATFORM_WINDOWS
-		ImGui_ImplGlfw_InitForOpenGL((GLFWwindow*)window->GetNativeWindow(), true);
-		ImGui_ImplOpenGL3_Init("#version 410");
-#endif
+		InitializeRenderer();
 
 		ImFont* roboto = io.Fonts->AddFontFromFileTTF("assets/Fonts/Roboto/Roboto-Regular.ttf", 14.0f);
 		io.FontDefault = roboto;
@@ -71,40 +65,12 @@ namespace Flare
 
 	void ImGuiLayer::OnDetach()
 	{
-		ImGui_ImplOpenGL3_Shutdown();
-		ImGui_ImplGlfw_Shutdown();
+		ShutdownRenderer();
 		ImGui::DestroyContext();
-	}
-
-	void ImGuiLayer::Begin()
-	{
-		ImGui_ImplOpenGL3_NewFrame();
-		ImGui_ImplGlfw_NewFrame();
-
-		ImGui::NewFrame();
-		ImGuizmo::BeginFrame();
 	}
 
 	void ImGuiLayer::End()
 	{
-		FLARE_PROFILE_FUNCTION();
-
-		ImGuiIO& io = ImGui::GetIO();
-		Application& application = Application::GetInstance();
-
-		const WindowProperties& windowProps = application.GetWindow()->GetProperties();
-		io.DisplaySize = ImVec2((float)windowProps.Size.x, (float)windowProps.Size.y);
-
-		ImGui::Render();
-		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
-		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-		{
-			GLFWwindow* currentContext = glfwGetCurrentContext();
-			ImGui::UpdatePlatformWindows();
-			ImGui::RenderPlatformWindowsDefault();
-			glfwMakeContextCurrent(currentContext);
-		}
 	}
 
 	void ImGuiLayer::SetThemeColors()
@@ -178,5 +144,16 @@ namespace Flare
 		guizmoStyle.RotationLineThickness = 4.0f;
 		guizmoStyle.TranslationLineThickness = 4.0f;
 		ImGuizmo::SetGizmoSizeClipSpace(0.12f);
+	}
+
+	Ref<ImGuiLayer> ImGuiLayer::Create()
+	{
+		switch (RendererAPI::GetAPI())
+		{
+		case RendererAPI::API::OpenGL:
+			return CreateRef<ImGuiLayerOpenGL>();
+		}
+
+		return nullptr;
 	}
 }

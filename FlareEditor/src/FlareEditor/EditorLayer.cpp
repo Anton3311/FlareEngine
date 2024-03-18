@@ -85,8 +85,10 @@ namespace Flare
         ShaderCacheManager::SetInstance(CreateScope<EditorShaderCache>());
         EditorGUI::Initialize();
 
+        m_ImGuiLayer = ImGuiLayer::Create();
         m_PropertiesWindow.OnAttach();
-        ImGuiLayer::OnAttach();
+
+        m_ImGuiLayer->OnAttach();
 
         Ref<Font> defaultFont = CreateRef<Font>("assets/Fonts/Roboto/Roboto-Regular.ttf");
         Font::SetDefault(defaultFont);
@@ -150,7 +152,7 @@ namespace Flare
         m_AssetManagerWindow.ClearOpenActions();
         m_AssetEditorWindows.clear();
 
-        ImGuiLayer::OnDetach();
+        m_ImGuiLayer->OnDetach();
 
         if (m_Mode == EditorMode::Play)
             ExitPlayMode();
@@ -316,7 +318,7 @@ namespace Flare
     void EditorLayer::OnImGUIRender()
     {
         FLARE_PROFILE_FUNCTION();
-        ImGuiLayer::Begin();
+        m_ImGuiLayer->Begin();
 
         static bool fullscreen = true;
         static ImGuiDockNodeFlags dockspaceFlags = ImGuiDockNodeFlags_None;
@@ -440,7 +442,7 @@ namespace Flare
         }
 
         ImGui::End();
-        ImGuiLayer::End();
+        m_ImGuiLayer->End();
     }
 
     void EditorLayer::UpdateWindowTitle()
