@@ -45,8 +45,7 @@ namespace Flare
 
 		m_Window->Initialize();
 
-		m_GraphicsContext = GraphicsContext::Create(m_Window->GetNativeWindow());
-		m_GraphicsContext->Initialize();
+		GraphicsContext::Create(m_Window->GetNativeWindow());
 		
 		m_Window->SetEventCallback([this](Event& event)
 		{
@@ -59,7 +58,7 @@ namespace Flare
 
 			dispatcher.Dispatch<WindowResizeEvent>([this](WindowResizeEvent& event) -> bool
 			{
-				m_GraphicsContext->OnWindowResize();
+				GraphicsContext::GetInstance().OnWindowResize();
 				RenderCommand::SetViewport(0, 0, event.GetWidth(), event.GetHeight());
 				return true;
 			});
@@ -87,6 +86,8 @@ namespace Flare
 			DebugRenderer::Shutdown();
 			Renderer::Shutdown();
 		}
+
+		GraphicsContext::Shutdown();
 	}
 
 	void Application::Run()
@@ -144,7 +145,7 @@ namespace Flare
 
 				{
 					FLARE_PROFILE_SCOPE("SwapBuffers");
-					m_GraphicsContext->SwapBuffers();
+					GraphicsContext::GetInstance().SwapBuffers();
 				}
 
 				m_PreviousFrameTime = currentTime;

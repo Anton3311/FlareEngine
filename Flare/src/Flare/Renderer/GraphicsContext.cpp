@@ -6,15 +6,32 @@
 
 namespace Flare
 {
-	Scope<GraphicsContext> GraphicsContext::Create(void* windowHandle)
+	static Scope<GraphicsContext> s_Instance = nullptr;
+
+	GraphicsContext& GraphicsContext::GetInstance()
+	{
+		return *s_Instance;
+	}
+
+	void GraphicsContext::Create(void* windowHandle)
 	{
 		switch (RendererAPI::GetAPI())
 		{
 		case RendererAPI::API::OpenGL:
-			return CreateScope<OpenGLGraphicsContext>((GLFWwindow*) windowHandle);
+			s_Instance = CreateScope<OpenGLGraphicsContext>((GLFWwindow*) windowHandle);
+			break;
 		case RendererAPI::API::Vulkan:
-			return CreateScope<VulkanContext>((GLFWwindow*) windowHandle);
+			s_Instance = CreateScope<VulkanContext>((GLFWwindow*) windowHandle);
+			break;
+		default:
+			FLARE_CORE_ASSERT(false);
 		}
-		return nullptr;
+
+		s_Instance->Initialize();
+	}
+
+	void GraphicsContext::Shutdown()
+	{
+		s_Instance = nullptr;
 	}
 }
