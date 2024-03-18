@@ -58,7 +58,6 @@ namespace Flare
 
 			dispatcher.Dispatch<WindowResizeEvent>([this](WindowResizeEvent& event) -> bool
 			{
-				GraphicsContext::GetInstance().OnWindowResize();
 				RenderCommand::SetViewport(0, 0, event.GetWidth(), event.GetHeight());
 				return true;
 			});
@@ -145,7 +144,7 @@ namespace Flare
 
 				{
 					FLARE_PROFILE_SCOPE("SwapBuffers");
-					GraphicsContext::GetInstance().SwapBuffers();
+					GraphicsContext::GetInstance().Present();
 				}
 
 				m_PreviousFrameTime = currentTime;

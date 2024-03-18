@@ -21,9 +21,9 @@ namespace Flare
 		~VulkanContext();
 
 		void Initialize() override;
-		void SwapBuffers() override;
+		void Present() override;
 
-		void OnWindowResize() override;
+		void ClearImage(VkCommandBuffer commandBuffer, VkImage image, const glm::vec4& clearColor, VkImageLayout oldLayout, VkImageLayout newLayout);
 	private:
 		void CreateInstance(const Span<const char*>& enabledLayers);
 		void CreateDebugMessenger();
@@ -31,9 +31,16 @@ namespace Flare
 		void ChoosePhysicalDevice();
 		void GetQueueFamilyProperties();
 		void CreateLogicalDevice(const Span<const char*>& enabledLayers, const Span<const char*>& enabledExtensions);
+	
+		void CreateCommandBufferPool();
+		VkCommandBuffer CreateCommandBuffer();
+		void CreateSyncObjects();
 
 		void CreateSwapChain();
+		void RecreateSwapChain();
 		void ReleaseSwapChain();
+		void CreateSwapChainImageViews();
+
 		uint32_t ChooseSwapChainFormat(const std::vector<VkSurfaceFormatKHR>& formats);
 		VkExtent2D GetSwapChainExtent(const VkSurfaceCapabilitiesKHR& capabilities);
 		VkPresentModeKHR ChoosePrensentMode(const std::vector<VkPresentModeKHR>& modes);
@@ -59,13 +66,23 @@ namespace Flare
 		VkQueue m_GraphicsQueue = VK_NULL_HANDLE;
 		VkQueue m_PresentQueue = VK_NULL_HANDLE;
 
+		std::optional<uint32_t> m_GraphicsQueueFamilyIndex;
+		std::optional<uint32_t> m_PresentQueueFamilyIndex;
+
 		// Swap chain
 		VkSwapchainKHR m_SwapChain = VK_NULL_HANDLE;
 		std::vector<VkImage> m_SwapChainImages;
+		std::vector<VkImageView> m_SwapChainImageViews;
+
 		glm::uvec2 m_SwapChainExtent = glm::uvec2(0);
 		VkFormat m_SwapChainImageFormat = VK_FORMAT_UNDEFINED;
 
-		std::optional<uint32_t> m_GraphicsQueueFamilyIndex;
-		std::optional<uint32_t> m_PresentQueueFamilyIndex;
+		VkFence m_FrameFence = VK_NULL_HANDLE;
+		VkSemaphore m_ImageAvailableSemaphore = VK_NULL_HANDLE;
+		VkSemaphore m_RenderFinishedSemaphore = VK_NULL_HANDLE;
+
+		// Command buffers
+		VkCommandPool m_CommandBufferPool = VK_NULL_HANDLE;
+		VkCommandBuffer m_CommandBuffer = VK_NULL_HANDLE;
 	};
 }

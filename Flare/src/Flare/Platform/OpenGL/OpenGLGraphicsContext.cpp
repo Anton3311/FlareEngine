@@ -19,10 +19,8 @@ namespace Flare
 			FLARE_CORE_CRITICAL("Failed to initialize GLAD");
 	}
 
-	void OpenGLGraphicsContext::SwapBuffers()
+	void OpenGLGraphicsContext::Present()
 	{
 		glfwSwapBuffers(m_Window);
 	}
-
-	void OpenGLGraphicsContext::OnWindowResize() {}
 }

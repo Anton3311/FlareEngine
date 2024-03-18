@@ -13,8 +13,7 @@ namespace Flare
 		OpenGLGraphicsContext(GLFWwindow* windowHandle);
 	public:
 		virtual void Initialize() override;
-		virtual void SwapBuffers() override;
-		virtual void OnWindowResize() override;
+		virtual void Present() override;
 	private:
 		GLFWwindow* m_Window;
 	};
