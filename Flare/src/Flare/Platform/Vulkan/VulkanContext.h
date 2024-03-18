@@ -3,6 +3,7 @@
 #include "FlareCore/Assert.h"
 #include "Flare/Renderer/GraphicsContext.h"
 
+#define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 #include <vulkan/vulkan.h>
 
@@ -13,7 +14,7 @@ namespace Flare
 	class FLARE_API VulkanContext : public GraphicsContext
 	{
 	public:
-		VulkanContext(const GLFWwindow* window);
+		VulkanContext(GLFWwindow* window);
 		~VulkanContext();
 
 		void Initialize() override;
@@ -21,6 +22,7 @@ namespace Flare
 	private:
 		void CreateInstance();
 		void CreateDebugMessenger();
+		void CreateSurface();
 	private:
 		std::vector<VkLayerProperties> EnumerateAvailableLayers();
 	private:
@@ -31,7 +33,9 @@ namespace Flare
 
 		VkDebugUtilsMessengerEXT m_DebugMessenger = VK_NULL_HANDLE;
 
-		const GLFWwindow* m_Window = nullptr;
+		VkSurfaceKHR m_Surface = VK_NULL_HANDLE;
+
+		GLFWwindow* m_Window = nullptr;
 		VkInstance m_Instance = VK_NULL_HANDLE;
 	};
 }

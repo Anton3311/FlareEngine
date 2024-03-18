@@ -8,13 +8,12 @@ namespace Flare
 {
 	Scope<GraphicsContext> GraphicsContext::Create(void* windowHandle)
 	{
-		VulkanContext context((GLFWwindow*)windowHandle);
-		context.Initialize();
-
 		switch (RendererAPI::GetAPI())
 		{
 		case RendererAPI::API::OpenGL:
 			return CreateScope<OpenGLGraphicsContext>((GLFWwindow*) windowHandle);
+		case RendererAPI::API::Vulkan:
+			return CreateScope<VulkanContext>((GLFWwindow*) windowHandle);
 		}
 		return nullptr;
 	}

@@ -45,7 +45,7 @@ namespace Flare
 	}
 
 
-	VulkanContext::VulkanContext(const GLFWwindow* window)
+	VulkanContext::VulkanContext(GLFWwindow* window)
 		: m_Window(window)
 	{
 	}
@@ -146,6 +146,11 @@ namespace Flare
 		info.pfnUserCallback = VulkanDebugCallback;
 
 		VK_CHECK_RESULT(m_CreateDebugMessenger(m_Instance, &info, nullptr, &m_DebugMessenger));
+	}
+
+	void VulkanContext::CreateSurface()
+	{
+		VK_CHECK_RESULT(glfwCreateWindowSurface(m_Instance, m_Window, nullptr, &m_Surface));
 	}
 
 	std::vector<VkLayerProperties> VulkanContext::EnumerateAvailableLayers()

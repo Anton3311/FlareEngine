@@ -330,8 +330,6 @@ namespace Flare
 	WindowsWindow::WindowsWindow(WindowProperties& properties)
 	{
 		m_Data.Properties = properties;
-
-		Initialize();
 	}
 
 	WindowsWindow::~WindowsWindow()
@@ -381,6 +379,16 @@ namespace Flare
 		}
 	}
 
+	void WindowsWindow::SetUsesOpenGL()
+	{
+		m_RendererAPI = RendererAPI::OpenGL;
+	}
+
+	void WindowsWindow::SetUsesVulkan()
+	{
+		m_RendererAPI = RendererAPI::Vulkan;
+	}
+
 	void WindowsWindow::Initialize()
 	{
 		{
@@ -392,7 +400,15 @@ namespace Flare
 			}
 		}
 
-		glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
+		if (m_RendererAPI == RendererAPI::OpenGL)
+		{
+			glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
+		}
+		else if (m_RendererAPI == RendererAPI::Vulkan)
+		{
+			FLARE_CORE_ASSERT(glfwVulkanSupported() == GLFW_TRUE);
+			glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+		}
 
 		m_Window = glfwCreateWindow(m_Data.Properties.Size.x, m_Data.Properties.Size.y, m_Data.Properties.Title.c_str(), nullptr, nullptr);
 
