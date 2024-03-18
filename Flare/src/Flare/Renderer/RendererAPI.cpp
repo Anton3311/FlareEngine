@@ -2,10 +2,11 @@
 
 #include "FlareCore/Assert.h"
 #include "Flare/Platform/OpenGL/OpenGLRendererAPI.h"
+#include "Flare/Platform/Vulkan/VulkanRendererAPI.h"
 
 namespace Flare
 {
-	RendererAPI::API s_API = RendererAPI::API::OpenGL;
+	RendererAPI::API s_API = RendererAPI::API::Vulkan;
 
 	Scope<RendererAPI> RendererAPI::Create()
 	{
@@ -13,6 +14,8 @@ namespace Flare
 		{
 		case API::OpenGL:
 			return CreateScope<OpenGLRendererAPI>();
+		case API::Vulkan:
+			return CreateScope<VulkanRendererAPI>();
 		default:
 			FLARE_CORE_ASSERT(false, "Unsupported rendering API");
 		}
