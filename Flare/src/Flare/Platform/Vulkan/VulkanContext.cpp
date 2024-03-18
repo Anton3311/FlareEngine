@@ -52,6 +52,8 @@ namespace Flare
 
 	VulkanContext::~VulkanContext()
 	{
+		WaitForDevice();
+
 		if (m_DebugMessenger)
 			m_DestroyDebugMessenger(m_Instance, m_DebugMessenger, nullptr);
 
@@ -59,6 +61,12 @@ namespace Flare
 
 		vkFreeCommandBuffers(m_Device, m_CommandBufferPool, 1, &m_CommandBuffer);
 		vkDestroyCommandPool(m_Device, m_CommandBufferPool, nullptr);
+
+		vkDestroySemaphore(m_Device, m_ImageAvailableSemaphore, nullptr);
+		vkDestroySemaphore(m_Device, m_RenderFinishedSemaphore, nullptr);
+		vkDestroyFence(m_Device, m_FrameFence, nullptr);
+
+		vkDestroySurfaceKHR(m_Instance, m_Surface, nullptr);
 
 		vkDestroyDevice(m_Device, nullptr);
 		vkDestroyInstance(m_Instance, nullptr);
@@ -70,12 +78,17 @@ namespace Flare
 		std::vector<const char*> enabledLayers;
 		const char* validationLayerName = "VK_LAYER_KHRONOS_validation";
 
+		for (auto l : supportedLayers)
+		{
+			FLARE_CORE_INFO(l.layerName);
+		}
+
 		auto addIfSupported = [&](const char* layerName)
 		{
 			if (std::find_if(
 				supportedLayers.begin(),
 				supportedLayers.end(),
-				[&](const VkLayerProperties& a) -> bool { return std::strcmp(a.layerName, layerName); }) == supportedLayers.end())
+				[&](const VkLayerProperties& a) -> bool { return std::strcmp(a.layerName, layerName) == 0; }) != supportedLayers.end())
 			{
 				enabledLayers.push_back(layerName);
 			}
@@ -223,6 +236,10 @@ namespace Flare
 		}
 	}
 
+	void VulkanContext::WaitForDevice()
+	{
+		VK_CHECK_RESULT(vkDeviceWaitIdle(m_Device));
+	}
 
 	void VulkanContext::CreateInstance(const Span<const char*>& enabledLayers)
 	{
@@ -269,7 +286,6 @@ namespace Flare
 		FLARE_CORE_ASSERT(m_CreateDebugMessenger && m_DestroyDebugMessenger);
 
 		VkDebugUtilsMessengerCreateInfoEXT info{};
-		info.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
 		info.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
 		info.pNext = nullptr;
 		info.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT
@@ -495,6 +511,10 @@ namespace Flare
 
 	void VulkanContext::ReleaseSwapChain()
 	{
+		for (VkImageView view : m_SwapChainImageViews)
+			vkDestroyImageView(m_Device, view, nullptr);
+		m_SwapChainImageViews.clear();
+
 		vkDestroySwapchainKHR(m_Device, m_SwapChain, nullptr);
 		m_SwapChainImages.clear();
 

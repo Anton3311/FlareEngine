@@ -24,6 +24,7 @@ namespace Flare
 		void Present() override;
 
 		void ClearImage(VkCommandBuffer commandBuffer, VkImage image, const glm::vec4& clearColor, VkImageLayout oldLayout, VkImageLayout newLayout);
+		void WaitForDevice();
 	private:
 		void CreateInstance(const Span<const char*>& enabledLayers);
 		void CreateDebugMessenger();
