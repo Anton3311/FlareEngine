@@ -22,6 +22,8 @@ namespace Flare
 
 		void Initialize() override;
 		void SwapBuffers() override;
+
+		void OnWindowResize() override;
 	private:
 		void CreateInstance(const Span<const char*>& enabledLayers);
 		void CreateDebugMessenger();

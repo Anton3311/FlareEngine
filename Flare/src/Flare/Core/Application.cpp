@@ -57,15 +57,15 @@ namespace Flare
 				return true;
 			});
 
-			if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
-				return;
-
-
 			dispatcher.Dispatch<WindowResizeEvent>([this](WindowResizeEvent& event) -> bool
 			{
+				m_GraphicsContext->OnWindowResize();
 				RenderCommand::SetViewport(0, 0, event.GetWidth(), event.GetHeight());
 				return true;
 			});
+
+			if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
+				return;
 
 			auto& layer = m_LayersStack.GetLayers();
 			for (auto it = layer.end(); it != layer.begin();)

@@ -106,6 +106,12 @@ namespace Flare
 		glfwSwapBuffers(m_Window);
 	}
 
+	void VulkanContext::OnWindowResize()
+	{
+		ReleaseSwapChain();
+		CreateSwapChain();
+	}
+
 	void VulkanContext::CreateInstance(const Span<const char*>& enabledLayers)
 	{
 		std::vector<const char*> instanceExtensions;

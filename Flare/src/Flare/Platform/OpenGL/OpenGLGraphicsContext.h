@@ -14,6 +14,7 @@ namespace Flare
 	public:
 		virtual void Initialize() override;
 		virtual void SwapBuffers() override;
+		virtual void OnWindowResize() override;
 	private:
 		GLFWwindow* m_Window;
 	};
