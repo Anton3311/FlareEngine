@@ -21,6 +21,7 @@ namespace Flare
 		{
 			None,
 			OpenGL,
+			Vulkan,
 		};
 	public:
 		virtual void Initialize() = 0;

@@ -55,6 +55,8 @@ project "Flare"
 
 		"msdfgen",
 		"msdf-atlas-gen",
+
+		LIBRARIES.vulkan,
 	}
 
 	defines
