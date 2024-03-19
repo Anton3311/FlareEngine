@@ -41,6 +41,7 @@ namespace Flare
 		VkDevice GetDevice() const { return m_Device; }
 		VkPhysicalDevice GetPhysicalDevice() const { return m_PhysicalDevice; }
 		VkQueue GetGraphicsQueue() const { return m_GraphicsQueue; }
+		uint32_t GetGraphicsQueueFamilyIndex() const { return *m_GraphicsQueueFamilyIndex; }
 		Ref<VulkanRenderPass> GetColorOnlyPass() const { return m_ColorOnlyPass; }
 
 		static VulkanContext& GetInstance() { return *(VulkanContext*)&GraphicsContext::GetInstance(); }
@@ -64,7 +65,7 @@ namespace Flare
 
 		uint32_t ChooseSwapChainFormat(const std::vector<VkSurfaceFormatKHR>& formats);
 		VkExtent2D GetSwapChainExtent(const VkSurfaceCapabilitiesKHR& capabilities);
-		VkPresentModeKHR ChoosePrensentMode(const std::vector<VkPresentModeKHR>& modes);
+		VkPresentModeKHR ChoosePresentMode(const std::vector<VkPresentModeKHR>& modes);
 	private:
 		std::vector<VkLayerProperties> EnumerateAvailableLayers();
 	private:

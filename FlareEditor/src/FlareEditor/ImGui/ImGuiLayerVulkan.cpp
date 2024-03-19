@@ -40,6 +40,7 @@ namespace Flare
 		info.Instance = VulkanContext::GetInstance().GetVulkanInstance();
 		info.PhysicalDevice = VulkanContext::GetInstance().GetPhysicalDevice();
 		info.Queue = VulkanContext::GetInstance().GetGraphicsQueue();
+		info.QueueFamily = VulkanContext::GetInstance().GetGraphicsQueueFamilyIndex();
 		info.Device = VulkanContext::GetInstance().GetDevice();
 		info.ImageCount = 10;
 		info.MinImageCount = 2;

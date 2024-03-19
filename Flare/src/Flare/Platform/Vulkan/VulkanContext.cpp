@@ -464,7 +464,7 @@ namespace Flare
 		VK_CHECK_RESULT(vkGetPhysicalDeviceSurfacePresentModesKHR(m_PhysicalDevice, m_Surface, &presentModeCount, presentModes.data()));
 
 		uint32_t formatIndex = ChooseSwapChainFormat(formats);
-		VkPresentModeKHR presentMode = ChoosePrensentMode(presentModes);
+		VkPresentModeKHR presentMode = ChoosePresentMode(presentModes);
 		VkExtent2D swapChainExtent = GetSwapChainExtent(surfaceCapabilities);
 
 		m_SwapChainExtent.x = swapChainExtent.width;
@@ -519,6 +519,8 @@ namespace Flare
 
 	void VulkanContext::RecreateSwapChain()
 	{
+		WaitForDevice();
+
 		ReleaseSwapChain();
 		CreateSwapChain();
 		CreateSwapChainFrameBuffers();
@@ -607,8 +609,9 @@ namespace Flare
 		return extent;
 	}
 
-	VkPresentModeKHR VulkanContext::ChoosePrensentMode(const std::vector<VkPresentModeKHR>& modes)
+	VkPresentModeKHR VulkanContext::ChoosePresentMode(const std::vector<VkPresentModeKHR>& modes)
 	{
+		return VK_PRESENT_MODE_FIFO_KHR;
 		for (auto mode : modes)
 		{
 			if (mode == VK_PRESENT_MODE_MAILBOX_KHR)
