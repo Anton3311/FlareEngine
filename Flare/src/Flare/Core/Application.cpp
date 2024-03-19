@@ -30,7 +30,7 @@ namespace Flare
 		WindowProperties properties;
 		properties.Title = "Flare Engine";
 		properties.Size = glm::uvec2(1280, 720);
-		properties.CustomTitleBar = RendererAPI::GetAPI() == RendererAPI::API::OpenGL;
+		properties.CustomTitleBar = true;
 
 		m_Window = Window::Create(properties);
 		switch (RendererAPI::GetAPI())

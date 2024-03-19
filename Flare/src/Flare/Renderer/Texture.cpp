@@ -2,6 +2,7 @@
 
 #include "Flare/Renderer/RendererAPI.h"
 #include "Flare/Platform/OpenGL/OpenGLTexture.h"
+#include "Flare/Platform/Vulkan/VulkanTexture.h"
 
 namespace Flare
 {
@@ -14,6 +15,8 @@ namespace Flare
 		{
 		case RendererAPI::API::OpenGL:
 			return CreateRef<OpenGLTexture>(path, specifications);
+		case RendererAPI::API::Vulkan:
+			return CreateRef<VulkanTexture>();
 		}
 
 		return nullptr;
@@ -25,6 +28,8 @@ namespace Flare
 		{
 		case RendererAPI::API::OpenGL:
 			return CreateRef<OpenGLTexture>(width, height, data, format, filtering);
+		case RendererAPI::API::Vulkan:
+			return CreateRef<VulkanTexture>();
 		}
 
 		return nullptr;

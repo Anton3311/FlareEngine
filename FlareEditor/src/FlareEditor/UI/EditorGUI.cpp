@@ -53,7 +53,11 @@ namespace Flare
         }
 
         ImRect uvs = s_EditorIcons.GetIconUVs(iconPosition);
-        ImGui::Image(s_EditorIcons.GetTexture()->GetRendererId(), ImVec2(size, size), uvs.Min, uvs.Max);
+
+        if (RendererAPI::GetAPI() != RendererAPI::API::Vulkan)
+        {
+			ImGui::Image(s_EditorIcons.GetTexture()->GetRendererId(), ImVec2(size, size), uvs.Min, uvs.Max);
+        }
     }
 
     const EditorIcons& EditorGUI::GetIcons()

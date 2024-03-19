@@ -183,11 +183,15 @@ namespace Flare
 		drawList->AddRectFilled(buttonRect.Min, buttonRect.Max, color, style.FrameRounding);
 
 		ImRect iconUVs = icons.GetIconUVs(iconPosition);
-		drawList->AddImage(
-			icons.GetTexture()->GetRendererId(),
-			buttonRect.Min,
-			buttonRect.Max,
-			iconUVs.Min, iconUVs.Max);
+
+		if (RendererAPI::GetAPI() != RendererAPI::API::Vulkan)
+		{
+			drawList->AddImage(
+				icons.GetTexture()->GetRendererId(),
+				buttonRect.Min,
+				buttonRect.Max,
+				iconUVs.Min, iconUVs.Max);
+		}
 
 		return ImGui::IsItemClicked();
 	}
