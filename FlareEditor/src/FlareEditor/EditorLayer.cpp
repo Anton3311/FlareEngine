@@ -5,6 +5,7 @@
 
 #include "Flare.h"
 #include "Flare/Core/Application.h"
+#include "Flare/Core/Time.h"
 #include "Flare/Renderer2D/Renderer2D.h"
 #include "Flare/Renderer/Renderer.h"
 #include "Flare/Renderer/Font.h"
@@ -169,7 +170,6 @@ namespace Flare
     void EditorLayer::OnUpdate(float deltaTime)
     {
         FLARE_PROFILE_FUNCTION();
-        m_PreviousFrameTime = deltaTime;
 
         if (m_Mode == EditorMode::Play)
         {
@@ -370,8 +370,8 @@ namespace Flare
             ImGui::Begin("Renderer");
             const auto& stats = Renderer::GetStatistics();
 
-            ImGui::Text("Frame time %f ms", m_PreviousFrameTime * 1000.0f);
-            ImGui::Text("FPS %f", 1.0f / m_PreviousFrameTime);
+            ImGui::Text("Frame time %f ms", Time::GetDeltaTime() * 1000.0f);
+            ImGui::Text("FPS %f", 1.0f / Time::GetDeltaTime());
             ImGui::Text("Shadow Pass %f ms", stats.ShadowPassTime);
             ImGui::Text("Geometry Pass %f ms", stats.GeometryPassTime);
 

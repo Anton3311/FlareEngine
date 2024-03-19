@@ -16,6 +16,7 @@ namespace Flare
 		virtual void Release() override;
 		virtual void BeginFrame() override;
 		virtual void Present() override;
+		virtual void WaitForDevice() override;
 	private:
 		GLFWwindow* m_Window;
 	};

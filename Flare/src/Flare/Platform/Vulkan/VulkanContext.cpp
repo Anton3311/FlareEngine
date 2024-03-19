@@ -99,10 +99,6 @@ namespace Flare
 
 		CreateSwapChain();
 
-		CreateSyncObjects();
-		CreateCommandBufferPool();
-		m_PrimaryCommandBuffer = CreateRef<VulkanCommandBuffer>(CreateCommandBuffer());
-
 		{
 			VkAttachmentDescription attachment{};
 			attachment.flags = 0;
@@ -116,17 +112,13 @@ namespace Flare
 			attachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
 			m_ColorOnlyPass = CreateRef<VulkanRenderPass>(Span<VkAttachmentDescription>(attachment));
-
-			m_SwapChainFrameBuffers.resize(m_FramesInFlight);
-			for (uint32_t i = 0; i < m_FramesInFlight; i++)
-			{
-				m_SwapChainFrameBuffers[i] = CreateRef<VulkanFrameBuffer>(
-					m_SwapChainExtent.x,
-					m_SwapChainExtent.y,
-					m_ColorOnlyPass,
-					Span<VkImageView>(m_SwapChainImageViews[i]));
-			}
 		}
+
+		CreateSwapChainFrameBuffers();
+
+		CreateSyncObjects();
+		CreateCommandBufferPool();
+		m_PrimaryCommandBuffer = CreateRef<VulkanCommandBuffer>(CreateCommandBuffer());
 	}
 
 	void VulkanContext::Release()
@@ -529,6 +521,7 @@ namespace Flare
 	{
 		ReleaseSwapChain();
 		CreateSwapChain();
+		CreateSwapChainFrameBuffers();
 	}
 
 	void VulkanContext::ReleaseSwapChain()
@@ -539,6 +532,8 @@ namespace Flare
 
 		vkDestroySwapchainKHR(m_Device, m_SwapChain, nullptr);
 		m_SwapChainImages.clear();
+
+		m_SwapChainFrameBuffers.clear();
 
 		m_SwapChain = VK_NULL_HANDLE;
 	}
@@ -568,6 +563,19 @@ namespace Flare
 			imageViewCreateInfo.subresourceRange.levelCount = 1;
 
 			VK_CHECK_RESULT(vkCreateImageView(m_Device, &imageViewCreateInfo, nullptr, &m_SwapChainImageViews[i]));
+		}
+	}
+
+	void VulkanContext::CreateSwapChainFrameBuffers()
+	{
+		m_SwapChainFrameBuffers.resize(m_FramesInFlight);
+		for (uint32_t i = 0; i < m_FramesInFlight; i++)
+		{
+			m_SwapChainFrameBuffers[i] = CreateRef<VulkanFrameBuffer>(
+				m_SwapChainExtent.x,
+				m_SwapChainExtent.y,
+				m_ColorOnlyPass,
+				Span<VkImageView>(m_SwapChainImageViews[i]));
 		}
 	}
 

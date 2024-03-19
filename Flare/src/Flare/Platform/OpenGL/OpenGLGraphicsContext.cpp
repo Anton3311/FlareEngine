@@ -27,4 +27,6 @@ namespace Flare
 	{
 		glfwSwapBuffers(m_Window);
 	}
+
+	void OpenGLGraphicsContext::WaitForDevice() {}
 }

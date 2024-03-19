@@ -13,6 +13,8 @@ namespace Flare
 		virtual void Release() = 0;
 		virtual void BeginFrame() = 0;
 		virtual void Present() = 0;
+
+		virtual void WaitForDevice() = 0;
 	public:
 		static GraphicsContext& GetInstance();
 		static void Create(void* windowHandle);

@@ -152,11 +152,10 @@ namespace Flare
 			Profiler::EndFrame();
 		}
 
-		if (RendererAPI::GetAPI() != RendererAPI::API::Vulkan)
-		{
-			for (const Ref<Layer>& layer : m_LayersStack.GetLayers())
-				layer->OnDetach();
-		}
+		GraphicsContext::GetInstance().WaitForDevice();
+
+		for (const Ref<Layer>& layer : m_LayersStack.GetLayers())
+			layer->OnDetach();
 	}
 
 	void Application::Close()
