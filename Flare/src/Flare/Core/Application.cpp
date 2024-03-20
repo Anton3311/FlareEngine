@@ -4,6 +4,8 @@
 
 #include "FlareCore/Profiler/Profiler.h"
 
+#include "Flare/AssetManager/AssetManager.h"
+
 #include "Flare/Renderer/Renderer.h"
 #include "Flare/Renderer2D/Renderer2D.h"
 #include "Flare/Renderer/DebugRenderer.h"
@@ -157,6 +159,9 @@ namespace Flare
 		for (const Ref<Layer>& layer : m_LayersStack.GetLayers())
 			layer->OnDetach();
 
+		m_LayersStack.Clear();
+
+		AssetManager::Uninitialize();
 		Font::SetDefault(nullptr);
 	}
 

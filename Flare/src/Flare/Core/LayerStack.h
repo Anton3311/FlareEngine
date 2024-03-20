@@ -13,6 +13,8 @@ namespace Flare
 		void PushLayer(const Ref<Layer>& layer);
 		void PushOverlay(const Ref<Layer>& layer);
 
+		void Clear();
+
 		std::vector<Ref<Layer>>& GetLayers() { return m_Layers; }
 		const std::vector<Ref<Layer>>& GetLayers() const { return m_Layers; }
 	private:

@@ -292,7 +292,7 @@ namespace Flare
 			float aspectRatio = width / height;
 
 			ImGui::Image(
-				(ImTextureID)texture->GetRendererId(),
+				ImGuiLayer::GetId(texture),
 				ImVec2(availiableContentSize.x, availiableContentSize.x / aspectRatio),
 				ImVec2(0, 1), ImVec2(1, 0), ImVec4(1.0f, 1.0f, 1.0f, 1.0f), style.Colors[ImGuiCol_Border]);
 

@@ -17,4 +17,9 @@ namespace Flare
 	{
 		m_Layers.push_back(layer);
 	}
+
+	void LayerStack::Clear()
+	{
+		m_Layers.clear();
+	}
 }
