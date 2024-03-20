@@ -15,6 +15,11 @@ namespace Flare
 		m_IconsTexture = Texture::Create("assets/Icons.png", specifications);
 	}
 
+	void EditorIcons::Uninitialize()
+	{
+		m_IconsTexture = nullptr;
+	}
+
 	ImRect EditorIcons::GetIconUVs(glm::ivec2 position) const
 	{
 		glm::vec2 textureSize = glm::vec2((float)m_IconsTexture->GetWidth(), (float)m_IconsTexture->GetHeight());

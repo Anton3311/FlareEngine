@@ -25,6 +25,11 @@ namespace Flare
         s_EditorIcons.Initialize();
     }
 
+    void EditorGUI::Uninitialize()
+    {
+        s_EditorIcons.Uninitialize();
+    }
+
     bool EditorGUI::BeginPropertyGrid(float width)
     {
         float windowWidth = width == 0.0f ? ImGui::GetContentRegionAvail().x : width;

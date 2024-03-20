@@ -42,6 +42,8 @@ namespace Flare
 
 	ImVec4 ImGuiTheme::Surface = ColorFromHex(0x383938ff);
 
+	Ref<ImGuiLayer> s_Instance = nullptr;
+
 	void ImGuiLayer::OnAttach()
 	{
 		IMGUI_CHECKVERSION();
@@ -74,6 +76,11 @@ namespace Flare
 
 	void ImGuiLayer::End()
 	{
+	}
+
+	ImTextureID ImGuiLayer::GetId(const Ref<const Texture>& texture)
+	{
+		return s_Instance->GetTextureId(texture);
 	}
 
 	void ImGuiLayer::SetThemeColors()
@@ -154,11 +161,13 @@ namespace Flare
 		switch (RendererAPI::GetAPI())
 		{
 		case RendererAPI::API::OpenGL:
-			return CreateRef<ImGuiLayerOpenGL>();
+			s_Instance = CreateRef<ImGuiLayerOpenGL>();
+			break;
 		case RendererAPI::API::Vulkan:
-			return CreateRef<ImGuiLayerVulkan>();
+			s_Instance = CreateRef<ImGuiLayerVulkan>();
+			break;
 		}
 
-		return nullptr;
+		return s_Instance;
 	}
 }

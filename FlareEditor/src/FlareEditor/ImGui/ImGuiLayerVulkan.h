@@ -18,7 +18,12 @@ namespace Flare
 
 		void RenderCurrentWindow() override;
 		void UpdateWindows() override;
+
+		ImTextureID GetTextureId(const Ref<const Texture>& texture) override;
+		ImTextureID GetFrameBufferAttachmentId(const Ref<const FrameBuffer>& frameBuffer, uint32_t attachment) override;
+	private:
 	private:
 		VkDescriptorPool m_DescriptorPool = VK_NULL_HANDLE;
+		std::unordered_map<uint64_t, VkDescriptorSet> m_ImageToDescriptor;
 	};
 }

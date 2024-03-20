@@ -184,14 +184,11 @@ namespace Flare
 
 		ImRect iconUVs = icons.GetIconUVs(iconPosition);
 
-		if (RendererAPI::GetAPI() != RendererAPI::API::Vulkan)
-		{
-			drawList->AddImage(
-				icons.GetTexture()->GetRendererId(),
-				buttonRect.Min,
-				buttonRect.Max,
-				iconUVs.Min, iconUVs.Max);
-		}
+		drawList->AddImage(
+			ImGuiLayer::GetId(icons.GetTexture()),
+			buttonRect.Min,
+			buttonRect.Max,
+			iconUVs.Min, iconUVs.Max);
 
 		return ImGui::IsItemClicked();
 	}

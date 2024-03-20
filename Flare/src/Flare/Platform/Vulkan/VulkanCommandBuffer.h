@@ -20,7 +20,10 @@ namespace Flare
 		void BeginRenderPass(const Ref<VulkanRenderPass>& renderPass, const Ref<VulkanFrameBuffer>& frameBuffer);
 		void EndRenderPass();
 
+		void TransitionImageLayout(VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout);
+
 		void ClearImage(VkImage image, const glm::vec4& clearColor, VkImageLayout oldLayout, VkImageLayout newLayout);
+		void CopyBufferToImage(VkBuffer buffer, VkImage image, VkExtent3D size);
 
 		VkCommandBuffer GetHandle() const { return m_CommandBuffer; }
 	private:

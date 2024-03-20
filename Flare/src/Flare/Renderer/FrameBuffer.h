@@ -70,9 +70,9 @@ namespace Flare
 		virtual void Unbind() = 0;
 
 		virtual void Resize(uint32_t width, uint32_t height) = 0;
-		virtual void* GetColorAttachmentRendererId(uint32_t attachmentIndex) = 0;
+		virtual void* GetColorAttachmentRendererId(uint32_t attachmentIndex) const = 0;
 
-		virtual uint32_t GetAttachmentsCount() = 0;
+		virtual uint32_t GetAttachmentsCount() const = 0;
 		virtual void ClearAttachment(uint32_t index, const void* value) = 0;
 		virtual void ReadPixel(uint32_t attachmentIndex, uint32_t x, uint32_t y, void* pixelOutput) = 0;
 		virtual void Blit(const Ref<FrameBuffer>& source, uint32_t destinationAttachment, uint32_t sourceAttachment) = 0;

@@ -156,6 +156,8 @@ namespace Flare
 
 		for (const Ref<Layer>& layer : m_LayersStack.GetLayers())
 			layer->OnDetach();
+
+		Font::SetDefault(nullptr);
 	}
 
 	void Application::Close()

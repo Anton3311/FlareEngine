@@ -24,6 +24,7 @@ namespace Flare
 		EditorIcons(int32_t iconSize);
 
 		void Initialize();
+		void Uninitialize();
 
 		inline const Ref<Texture>& GetTexture() const { return m_IconsTexture; }
 		inline int32_t GetIconSize() const { return m_IconSize; }

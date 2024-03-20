@@ -164,6 +164,8 @@ namespace Flare
         m_PrefabEditor->OnDetach();
         m_PrefabEditor = nullptr;
 
+        EditorGUI::Uninitialize();
+
         Scene::SetActive(nullptr);
     }
 

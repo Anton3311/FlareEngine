@@ -12,6 +12,7 @@
 #include <vulkan/vulkan.h>
 
 #include <optional>
+#include <functional>
 
 #define VK_CHECK_RESULT(expression) FLARE_CORE_ASSERT((expression) == VK_SUCCESS)
 
@@ -29,6 +30,8 @@ namespace Flare
 		void Present() override;
 		void WaitForDevice() override;
 
+		void CreateBuffer(size_t size, VkBufferUsageFlags usage, VkMemoryPropertyFlags memoryProperties, VkBuffer& buffer, VkDeviceMemory& memory);
+
 		Ref<VulkanCommandBuffer> GetPrimaryCommandBuffer() const { return m_PrimaryCommandBuffer; }
 
 		uint32_t GetCurrentFrameInFlight() const { return m_CurrentFrameInFlight; }
@@ -43,6 +46,11 @@ namespace Flare
 		VkQueue GetGraphicsQueue() const { return m_GraphicsQueue; }
 		uint32_t GetGraphicsQueueFamilyIndex() const { return *m_GraphicsQueueFamilyIndex; }
 		Ref<VulkanRenderPass> GetColorOnlyPass() const { return m_ColorOnlyPass; }
+
+		void SetImageViewDeletionHandler(const std::function<void(VkImageView)>& handler) { m_ImageDeletationHandler = handler; }
+		void NotifyImageViewDeletionHandler(VkImageView deletedImageView);
+
+		uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 
 		static VulkanContext& GetInstance() { return *(VulkanContext*)&GraphicsContext::GetInstance(); }
 	private:
@@ -69,6 +77,8 @@ namespace Flare
 	private:
 		std::vector<VkLayerProperties> EnumerateAvailableLayers();
 	private:
+		std::function<void(VkImageView)> m_ImageDeletationHandler = nullptr;
+
 		bool m_DebugEnabled = true;
 		uint32_t m_FramesInFlight = 0;
 		uint32_t m_CurrentFrameInFlight = 0;
