@@ -3,6 +3,9 @@
 #include "FlareCore/Profiler/Profiler.h"
 
 #include "Flare/Core/Application.h"
+#include "Flare/Platform/OpenGL/OpenGLTexture.h"
+#include "Flare/Platform/OpenGL/OpenGLFrameBuffer.h"
+
 #include "FlarePlatform/Window.h"
 
 #include <ImGuizmo.h>
@@ -79,12 +82,12 @@ namespace Flare
 	ImTextureID ImGuiLayerOpenGL::GetTextureId(const Ref<const Texture>& texture)
 	{
 		FLARE_CORE_ASSERT(texture);
-		return (ImTextureID)texture->GetRendererId();
+		return (ImTextureID)(size_t)As<const OpenGLTexture>(texture)->GetId();
 	}
 
 	ImTextureID ImGuiLayerOpenGL::GetFrameBufferAttachmentId(const Ref<const FrameBuffer>& frameBuffer, uint32_t attachment)
 	{
 		FLARE_CORE_ASSERT(frameBuffer && attachment < frameBuffer->GetAttachmentsCount());
-		return (ImTextureID)frameBuffer->GetColorAttachmentRendererId(attachment);
+		return (ImTextureID)(size_t)As<const OpenGLFrameBuffer>(frameBuffer)->GetAttachmentId(attachment);
 	}
 }

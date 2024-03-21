@@ -129,11 +129,6 @@ namespace Flare
 		Create();
 	}
 
-	void* VulkanFrameBuffer::GetColorAttachmentRendererId(uint32_t attachmentIndex) const
-	{
-		return nullptr;
-	}
-
 	uint32_t VulkanFrameBuffer::GetAttachmentsCount() const
 	{
 		return (uint32_t)m_Specifications.Attachments.size();

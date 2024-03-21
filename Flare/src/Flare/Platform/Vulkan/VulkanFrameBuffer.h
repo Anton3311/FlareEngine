@@ -20,7 +20,6 @@ namespace Flare
 		void Bind() override;
 		void Unbind() override;
 		void Resize(uint32_t width, uint32_t height) override;
-		void* GetColorAttachmentRendererId(uint32_t attachmentIndex) const override;
 		uint32_t GetAttachmentsCount() const override;
 		void ClearAttachment(uint32_t index, const void* value) override;
 		void ReadPixel(uint32_t attachmentIndex, uint32_t x, uint32_t y, void* pixelOutput) override;

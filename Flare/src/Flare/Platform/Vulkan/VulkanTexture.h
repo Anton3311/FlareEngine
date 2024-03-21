@@ -16,7 +16,6 @@ namespace Flare
 		void Bind(uint32_t slot) override;
 		void SetData(const void* data, size_t size) override;
 		const TextureSpecifications& GetSpecifications() const override;
-		void* GetRendererId() const override;
 		uint32_t GetWidth() const override;
 		uint32_t GetHeight() const override;
 		TextureFormat GetFormat() const override;

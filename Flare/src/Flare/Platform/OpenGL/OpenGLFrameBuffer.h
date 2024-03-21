@@ -10,11 +10,12 @@ namespace Flare
 		OpenGLFrameBuffer(const FrameBufferSpecifications& specifications);
 		~OpenGLFrameBuffer();
 	public:
+		uint32_t GetAttachmentId(uint32_t attachmentIndex) const { return m_ColorAttachments[attachmentIndex]; }
+
 		virtual void Bind() override;
 		virtual void Unbind() override;
 
 		virtual void Resize(uint32_t width, uint32_t height) override;
-		virtual void* GetColorAttachmentRendererId(uint32_t attachmentIndex) const override;
 
 		virtual uint32_t GetAttachmentsCount() const override;
 		virtual void ClearAttachment(uint32_t index, const void* value) override;

@@ -365,7 +365,7 @@ namespace Flare
 
             auto shadows = Renderer::GetShadowsRenderTarget(s_CascadeIndex);
             if (shadows)
-                ImGui::Image(shadows->GetColorAttachmentRendererId(0), ImVec2(256, 256), ImVec2(0, 1), ImVec2(1, 0));
+                ImGui::Image(ImGuiLayer::GetId(shadows, 0), ImVec2(256, 256), ImVec2(0, 1), ImVec2(1, 0));
 
             ImGui::End();
         }

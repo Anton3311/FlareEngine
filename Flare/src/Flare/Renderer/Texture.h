@@ -90,7 +90,6 @@ namespace Flare
 		virtual void SetData(const void* data, size_t size) = 0;
 
 		virtual const TextureSpecifications& GetSpecifications() const = 0;
-		virtual void* GetRendererId() const = 0;
 
 		virtual uint32_t GetWidth() const = 0;
 		virtual uint32_t GetHeight() const = 0;

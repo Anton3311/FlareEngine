@@ -188,11 +188,6 @@ namespace Flare
 		glTextureSubImage2D(m_Id, 0, 0, 0, m_Specifications.Width, m_Specifications.Height, m_TextureDataType, dataType, data);
 	}
 
-	void* OpenGLTexture::GetRendererId() const
-	{
-		return (void*)(size_t)m_Id;
-	}
-
 	void OpenGLTexture::SetFiltering(TextureFiltering filtering)
 	{
 		switch (m_Specifications.Filtering)

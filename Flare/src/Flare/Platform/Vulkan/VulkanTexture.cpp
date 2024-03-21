@@ -193,11 +193,6 @@ namespace Flare
 		return m_Specifications;
 	}
 
-	void* VulkanTexture::GetRendererId() const
-	{
-		return nullptr;
-	}
-
 	uint32_t VulkanTexture::GetWidth() const
 	{
 		return m_Specifications.Width;
