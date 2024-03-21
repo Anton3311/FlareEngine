@@ -54,6 +54,7 @@ namespace Flare
 		virtual ImTextureID GetFrameBufferAttachmentId(const Ref<const FrameBuffer>& frameBuffer, uint32_t attachment) = 0;
 
 		static ImTextureID GetId(const Ref<const Texture>& texture);
+		static ImTextureID GetId(const Ref<const FrameBuffer>& frameBuffer, uint32_t attachmentIndex);
 		static void SetThemeColors();
 	public:
 		static Ref<ImGuiLayer> Create();

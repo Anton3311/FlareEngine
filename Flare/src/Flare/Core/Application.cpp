@@ -127,13 +127,10 @@ namespace Flare
 
 				GraphicsContext::GetInstance().BeginFrame();
 
-				if (RendererAPI::GetAPI() != RendererAPI::API::Vulkan)
 				{
-					{
-						FLARE_PROFILE_SCOPE("Layers::OnUpdate");
-						for (const Ref<Layer>& layer : m_LayersStack.GetLayers())
-							layer->OnUpdate(deltaTime);
-					}
+					FLARE_PROFILE_SCOPE("Layers::OnUpdate");
+					for (const Ref<Layer>& layer : m_LayersStack.GetLayers())
+						layer->OnUpdate(deltaTime);
 				}
 
 				{

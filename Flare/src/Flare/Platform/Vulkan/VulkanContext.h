@@ -30,6 +30,8 @@ namespace Flare
 		void Present() override;
 		void WaitForDevice() override;
 
+		bool IsValid() const { return m_Device != VK_NULL_HANDLE; }
+
 		void CreateBuffer(size_t size, VkBufferUsageFlags usage, VkMemoryPropertyFlags memoryProperties, VkBuffer& buffer, VkDeviceMemory& memory);
 
 		Ref<VulkanCommandBuffer> GetPrimaryCommandBuffer() const { return m_PrimaryCommandBuffer; }

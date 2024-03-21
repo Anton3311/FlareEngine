@@ -164,6 +164,9 @@ namespace Flare
         m_PrefabEditor->OnDetach();
         m_PrefabEditor = nullptr;
 
+        m_ViewportWindows.clear();
+        m_GameWindow = nullptr;
+
         EditorGUI::Uninitialize();
 
         Scene::SetActive(nullptr);
@@ -217,7 +220,6 @@ namespace Flare
                 activeScene->OnUpdateEditor();
         }
 
-        if (RendererAPI::GetAPI() != RendererAPI::API::Vulkan)
         {
             FLARE_PROFILE_SCOPE("Viewport Render");
             for (auto& viewport : m_ViewportWindows)

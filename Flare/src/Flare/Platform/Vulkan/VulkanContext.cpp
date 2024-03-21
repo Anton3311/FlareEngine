@@ -145,6 +145,8 @@ namespace Flare
 
 		vkDestroyDevice(m_Device, nullptr);
 		vkDestroyInstance(m_Instance, nullptr);
+
+		m_Device = VK_NULL_HANDLE;
 	}
 
 	void VulkanContext::BeginFrame()

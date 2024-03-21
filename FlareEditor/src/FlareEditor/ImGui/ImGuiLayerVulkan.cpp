@@ -46,10 +46,22 @@ namespace Flare
 		info.ImageCount = 10;
 		info.MinImageCount = 2;
 		ImGui_ImplVulkan_Init(&info, VulkanContext::GetInstance().GetColorOnlyPass()->GetHandle());
+
+		VulkanContext::GetInstance().SetImageViewDeletionHandler([this](VkImageView imageView)
+		{
+			auto it = m_ImageToDescriptor.find((uint64_t)imageView);
+			if (it != m_ImageToDescriptor.end())
+			{
+				ImGui_ImplVulkan_RemoveTexture(it->second);
+				m_ImageToDescriptor.erase(it);
+			}
+		});
 	}
 
 	void ImGuiLayerVulkan::ShutdownRenderer()
 	{
+		VulkanContext::GetInstance().SetImageViewDeletionHandler(nullptr);
+
 		ImGui_ImplVulkan_Shutdown();
 		ImGui_ImplGlfw_Shutdown();
 		vkDestroyDescriptorPool(VulkanContext::GetInstance().GetDevice(), m_DescriptorPool, nullptr);
@@ -111,13 +123,25 @@ namespace Flare
 		FLARE_CORE_ASSERT(texture);
 
 		Ref<const VulkanTexture> vulkanTexture = As<const VulkanTexture>(texture);
-		VkImageView image = vulkanTexture->GetImageViewHandle();
-		auto it = m_ImageToDescriptor.find((uint64_t)image);
+		return GetImageId(vulkanTexture->GetImageViewHandle(), vulkanTexture->GetDefaultSampler());
+	}
 
+	ImTextureID ImGuiLayerVulkan::GetFrameBufferAttachmentId(const Ref<const FrameBuffer>& frameBuffer, uint32_t attachment)
+	{
+		FLARE_CORE_ASSERT(frameBuffer);
+		FLARE_CORE_ASSERT(attachment < frameBuffer->GetAttachmentsCount());
+
+		Ref<const VulkanFrameBuffer> vulkanFrameBuffer = As<const VulkanFrameBuffer>(frameBuffer);
+		return GetImageId(vulkanFrameBuffer->GetAttachmentImageView(attachment), vulkanFrameBuffer->GetDefaultAttachmentSampler(attachment));
+	}
+
+	ImTextureID ImGuiLayerVulkan::GetImageId(VkImageView imageView, VkSampler defaultSampler)
+	{
+		auto it = m_ImageToDescriptor.find((uint64_t)imageView);
 		if (it == m_ImageToDescriptor.end())
 		{
-			VkDescriptorSet descriptorSet = ImGui_ImplVulkan_AddTexture(vulkanTexture->GetDefaultSampler(), image, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-			m_ImageToDescriptor.emplace((uint64_t)image, descriptorSet);
+			VkDescriptorSet descriptorSet = ImGui_ImplVulkan_AddTexture(defaultSampler, imageView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			m_ImageToDescriptor.emplace((uint64_t)imageView, descriptorSet);
 
 			FLARE_CORE_ASSERT(descriptorSet);
 
@@ -125,11 +149,5 @@ namespace Flare
 		}
 
 		return (ImTextureID)it->second;
-	}
-
-	ImTextureID ImGuiLayerVulkan::GetFrameBufferAttachmentId(const Ref<const FrameBuffer>& frameBuffer, uint32_t attachment)
-	{
-		FLARE_CORE_ASSERT(false);
-		return (ImTextureID)0;
 	}
 }

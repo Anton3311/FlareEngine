@@ -4,6 +4,9 @@
 #include "Flare/Renderer/RenderCommand.h"
 #include "Flare/Renderer/DebugRenderer.h"
 #include "Flare/Renderer/ShaderLibrary.h"
+
+#include "Flare/Platform/Vulkan/VulkanContext.h"
+
 #include "Flare/Scene/Components.h"
 #include "Flare/Scene/Scene.h"
 #include "Flare/Scene/Prefab.h"
@@ -113,79 +116,94 @@ namespace Flare
 		if (m_Viewport.GetSize() == glm::ivec2(0))
 			return;
 
-		std::optional<SystemGroupId> debugRenderingGroup = scene->GetECSWorld().GetSystemsManager().FindGroup("Debug Rendering");
-
-		scene->OnBeforeRender(m_Viewport);
-
-		Renderer::BeginScene(m_Viewport);
-		OnClear();
-
-		scene->OnRender(m_Viewport);
-
-		RenderGrid();
-
-		std::optional<Entity> selectedEntity = EditorLayer::GetInstance().Selection.TryGetEntity();
-		if (debugRenderingGroup.has_value())
+		if (RendererAPI::GetAPI() != RendererAPI::API::Vulkan)
 		{
-			DebugRenderer::Begin();
-			scene->GetECSWorld().GetSystemsManager().ExecuteGroup(debugRenderingGroup.value());
+			std::optional<SystemGroupId> debugRenderingGroup = scene->GetECSWorld().GetSystemsManager().FindGroup("Debug Rendering");
+			scene->OnBeforeRender(m_Viewport);
 
-			// Draw bouding box for decal projectors
-			if (selectedEntity)
+			Renderer::BeginScene(m_Viewport);
+			OnClear();
+
+			scene->OnRender(m_Viewport);
+
+			RenderGrid();
+
+			std::optional<Entity> selectedEntity = EditorLayer::GetInstance().Selection.TryGetEntity();
+			if (debugRenderingGroup.has_value())
 			{
-				const Decal* decal = scene->GetECSWorld().TryGetEntityComponent<const Decal>(*selectedEntity);
-				const TransformComponent* transform = scene->GetECSWorld().TryGetEntityComponent<const TransformComponent>(*selectedEntity);
-				if (decal && transform)
+				DebugRenderer::Begin();
+				scene->GetECSWorld().GetSystemsManager().ExecuteGroup(debugRenderingGroup.value());
+
+				// Draw bouding box for decal projectors
+				if (selectedEntity)
 				{
-					glm::vec3 cubeCorners[] =
+					const Decal* decal = scene->GetECSWorld().TryGetEntityComponent<const Decal>(*selectedEntity);
+					const TransformComponent* transform = scene->GetECSWorld().TryGetEntityComponent<const TransformComponent>(*selectedEntity);
+					if (decal && transform)
 					{
-						glm::vec3(-0.5f, -0.5f, -0.5f),
-						glm::vec3(+0.5f, -0.5f, -0.5f),
-						glm::vec3(-0.5f, +0.5f, -0.5f),
-						glm::vec3(+0.5f, +0.5f, -0.5f),
+						glm::vec3 cubeCorners[] =
+						{
+							glm::vec3(-0.5f, -0.5f, -0.5f),
+							glm::vec3(+0.5f, -0.5f, -0.5f),
+							glm::vec3(-0.5f, +0.5f, -0.5f),
+							glm::vec3(+0.5f, +0.5f, -0.5f),
 
-						glm::vec3(-0.5f, -0.5f, +0.5f),
-						glm::vec3(+0.5f, -0.5f, +0.5f),
-						glm::vec3(-0.5f, +0.5f, +0.5f),
-						glm::vec3(+0.5f, +0.5f, +0.5f),
-					};
+							glm::vec3(-0.5f, -0.5f, +0.5f),
+							glm::vec3(+0.5f, -0.5f, +0.5f),
+							glm::vec3(-0.5f, +0.5f, +0.5f),
+							glm::vec3(+0.5f, +0.5f, +0.5f),
+						};
 
-					glm::mat4 transformationMatrix = transform->GetTransformationMatrix();
-					for (size_t i = 0; i < 8; i++)
-						cubeCorners[i] = transformationMatrix * glm::vec4(cubeCorners[i], 1.0f);
+						glm::mat4 transformationMatrix = transform->GetTransformationMatrix();
+						for (size_t i = 0; i < 8; i++)
+							cubeCorners[i] = transformationMatrix * glm::vec4(cubeCorners[i], 1.0f);
 
-					DebugRenderer::DrawWireBox(cubeCorners);
+						DebugRenderer::DrawWireBox(cubeCorners);
+					}
+				}
+
+				DebugRenderer::End();
+			}
+
+			if (selectedEntity && m_SelectionOutlineMaterial)
+			{
+				m_Viewport.RenderTarget->BindAttachmentTexture(2);
+
+				Ref<Shader> shader = m_SelectionOutlineMaterial->GetShader();
+				std::optional<uint32_t> idPropertyIndex = shader->GetPropertyIndex("u_Outline.SelectedId");
+				std::optional<uint32_t> thicknessPropertyIndex = shader->GetPropertyIndex("u_Outline.Thickness");
+
+				if (idPropertyIndex && thicknessPropertyIndex)
+				{
+					m_SelectionOutlineMaterial->WritePropertyValue<int32_t>(
+						*idPropertyIndex,
+						(int32_t)selectedEntity->GetIndex());
+
+					m_SelectionOutlineMaterial->WritePropertyValue(
+						*thicknessPropertyIndex,
+						glm::vec2(4.0f) / (glm::vec2)m_Viewport.GetSize() / 2.0f);
+
+					Renderer::DrawFullscreenQuad(m_SelectionOutlineMaterial);
 				}
 			}
 
-			DebugRenderer::End();
+			Renderer::EndScene();
+
+			m_Viewport.RenderTarget->Unbind();
 		}
 
-		if (selectedEntity && m_SelectionOutlineMaterial)
+		if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
 		{
-			m_Viewport.RenderTarget->BindAttachmentTexture(2);
+			OnClear();
 
-			Ref<Shader> shader = m_SelectionOutlineMaterial->GetShader();
-			std::optional<uint32_t> idPropertyIndex = shader->GetPropertyIndex("u_Outline.SelectedId");
-			std::optional<uint32_t> thicknessPropertyIndex = shader->GetPropertyIndex("u_Outline.Thickness");
+			Ref<VulkanCommandBuffer> commandBuffer = VulkanContext::GetInstance().GetPrimaryCommandBuffer();
 
-			if (idPropertyIndex && thicknessPropertyIndex)
-			{
-				m_SelectionOutlineMaterial->WritePropertyValue<int32_t>(
-					*idPropertyIndex,
-					(int32_t)selectedEntity->GetIndex());
+			Ref<VulkanFrameBuffer> target = As<VulkanFrameBuffer>(m_Viewport.RenderTarget);
 
-				m_SelectionOutlineMaterial->WritePropertyValue(
-					*thicknessPropertyIndex,
-					glm::vec2(4.0f) / (glm::vec2)m_Viewport.GetSize() / 2.0f);
-
-				Renderer::DrawFullscreenQuad(m_SelectionOutlineMaterial);
-			}
+			commandBuffer->TransitionImageLayout(target->GetAttachmentImage(0), VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			commandBuffer->TransitionImageLayout(target->GetAttachmentImage(1), VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			commandBuffer->TransitionImageLayout(target->GetAttachmentImage(2), VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 		}
-
-		Renderer::EndScene();
-
-		m_Viewport.RenderTarget->Unbind();
 	}
 
 	void SceneViewportWindow::OnViewportChanged()
@@ -265,15 +283,28 @@ namespace Flare
 
 	void SceneViewportWindow::OnClear()
 	{
-		m_Viewport.RenderTarget->SetWriteMask(0b1); // Clear first attachment
-		RenderCommand::Clear();
+		if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
+		{
+			Ref<VulkanCommandBuffer> commandBuffer = VulkanContext::GetInstance().GetPrimaryCommandBuffer();
 
-		m_Viewport.RenderTarget->SetWriteMask(0b10); // Clear second attachment
-		RenderCommand::SetClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-		RenderCommand::Clear();
+			Ref<VulkanFrameBuffer> target = As<VulkanFrameBuffer>(m_Viewport.RenderTarget);
 
-		int32_t invalidEntityIndex = INT32_MAX;
-		m_Viewport.RenderTarget->ClearAttachment(2, &invalidEntityIndex);
+			commandBuffer->ClearImage(target->GetAttachmentImage(0), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+			commandBuffer->ClearImage(target->GetAttachmentImage(1), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+			commandBuffer->ClearImage(target->GetAttachmentImage(2), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+		}
+		else
+		{
+			m_Viewport.RenderTarget->SetWriteMask(0b1); // Clear first attachment
+			RenderCommand::Clear();
+
+			m_Viewport.RenderTarget->SetWriteMask(0b10); // Clear second attachment
+			RenderCommand::SetClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+			RenderCommand::Clear();
+
+			int32_t invalidEntityIndex = INT32_MAX;
+			m_Viewport.RenderTarget->ClearAttachment(2, &invalidEntityIndex);
+		}
 	}
 
 	void SceneViewportWindow::RenderWindowContents()

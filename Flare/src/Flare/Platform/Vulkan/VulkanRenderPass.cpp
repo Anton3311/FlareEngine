@@ -4,9 +4,9 @@
 
 namespace Flare
 {
-	VulkanRenderPass::VulkanRenderPass(const Span<VkAttachmentDescription>& attachments)
+	VulkanRenderPass::VulkanRenderPass(const Span<VkAttachmentDescription>& attachments, std::optional<uint32_t> depthAttachmentIndex)
 	{
-		Create(attachments);
+		Create(attachments, depthAttachmentIndex);
 	}
 
 	VulkanRenderPass::~VulkanRenderPass()
@@ -14,8 +14,10 @@ namespace Flare
 		vkDestroyRenderPass(VulkanContext::GetInstance().GetDevice(), m_RenderPass, nullptr);
 	}
 
-	void VulkanRenderPass::Create(const Span<VkAttachmentDescription>& attachments)
+	void VulkanRenderPass::Create(const Span<VkAttachmentDescription>& attachments, std::optional<uint32_t> depthAttachmentIndex)
 	{
+		FLARE_CORE_ASSERT(!depthAttachmentIndex || depthAttachmentIndex && *depthAttachmentIndex < (uint32_t)attachments.GetSize());
+
 		VkSubpassDependency dependency{};
 		dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
 		dependency.dstSubpass = 0;
@@ -24,20 +26,35 @@ namespace Flare
 		dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 		dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 
-		std::vector<VkAttachmentReference> attachmentReferences(attachments.GetSize());
+		VkAttachmentReference depthAttachment{};
+		if (depthAttachmentIndex)
+		{
+			depthAttachment.attachment = *depthAttachmentIndex;
+			depthAttachment.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+		}
+
+		std::vector<VkAttachmentReference> colorAttachments;
 		for (size_t i = 0; i < attachments.GetSize(); i++)
 		{
+			if (depthAttachmentIndex && i == *depthAttachmentIndex)
+				continue;
+
 			VkAttachmentReference reference{};
 			reference.attachment = (uint32_t)i;
 			reference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
-			attachmentReferences[i] = reference;
+			colorAttachments.push_back(reference);
 		}
 
 		VkSubpassDescription subpass{};
 		subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-		subpass.colorAttachmentCount = (uint32_t)attachments.GetSize();
-		subpass.pColorAttachments = attachmentReferences.data();
+		subpass.colorAttachmentCount = (uint32_t)colorAttachments.size();
+		subpass.pColorAttachments = colorAttachments.data();
+
+		if (depthAttachmentIndex)
+		{
+			subpass.pDepthStencilAttachment = &depthAttachment;
+		}
 
 		VkRenderPassCreateInfo info{};
 		info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
