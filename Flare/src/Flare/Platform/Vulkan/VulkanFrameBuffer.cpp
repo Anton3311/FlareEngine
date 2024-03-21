@@ -23,6 +23,7 @@ namespace Flare
 		}
 
 		FLARE_CORE_ASSERT(false);
+		return VK_FORMAT_UNDEFINED;
 	}
 	
 	VulkanFrameBuffer::VulkanFrameBuffer(const FrameBufferSpecifications& specifications)

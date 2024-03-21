@@ -35,6 +35,8 @@ namespace Flare
 		inline VkImageView GetAttachmentImageView(uint32_t attachment) const { return m_AttachmentsImageViews[attachment]; }
 		inline VkImage GetAttachmentImage(uint32_t attachment) const { return m_AttachmentsImages[attachment]; }
 		inline VkSampler GetDefaultAttachmentSampler(uint32_t attachment) const { return m_DefaultSamplers[attachment]; }
+
+		inline Ref<VulkanRenderPass> GetCompatibleRenderPass() const { return m_CompatibleRenderPass; }
 	private:
 		void Create();
 		void CreateImages();
