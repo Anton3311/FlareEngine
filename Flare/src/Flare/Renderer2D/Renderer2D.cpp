@@ -523,7 +523,7 @@ namespace Flare
 
 	void Renderer2D::FlushQuads()
 	{
-	FLARE_PROFILE_FUNCTION();
+		FLARE_PROFILE_FUNCTION();
 
 		if (s_Renderer2DData.QuadIndex == 0)
 			return;

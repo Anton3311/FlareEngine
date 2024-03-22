@@ -122,9 +122,9 @@ namespace Flare
 			m_NameToIndex.emplace(properties[i].Name, (uint32_t)i);
 	}
 
-	bool VulkanShader::IsLoaded()
+	bool VulkanShader::IsLoaded() const
 	{
-		return false;
+		return m_Valid;
 	}
 
 	void VulkanShader::Bind()
@@ -152,33 +152,5 @@ namespace Flare
 		if (it == m_NameToIndex.end())
 			return {};
 		return it->second;
-	}
-
-	void VulkanShader::SetInt(const std::string& name, int value)
-	{
-	}
-
-	void VulkanShader::SetFloat(const std::string& name, float value)
-	{
-	}
-
-	void VulkanShader::SetFloat2(const std::string& name, glm::vec2 value)
-	{
-	}
-
-	void VulkanShader::SetFloat3(const std::string& name, const glm::vec3& value)
-	{
-	}
-
-	void VulkanShader::SetFloat4(const std::string& name, const glm::vec4& value)
-	{
-	}
-
-	void VulkanShader::SetIntArray(const std::string& name, const int* values, uint32_t count)
-	{
-	}
-
-	void VulkanShader::SetMatrix4(const std::string& name, const glm::mat4& matrix)
-	{
 	}
 }

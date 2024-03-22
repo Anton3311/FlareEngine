@@ -62,7 +62,7 @@ namespace Flare
 		}
 
 		template<typename T>
-		T ReadPropertyValue(uint32_t index)
+		T ReadPropertyValue(uint32_t index) const
 		{
 			const ShaderProperties& properties = m_Shader->GetProperties();
 			FLARE_CORE_ASSERT((size_t)index < properties.size());
@@ -90,8 +90,7 @@ namespace Flare
 		}
 
 		inline uint8_t* GetPropertiesBuffer() { return m_Buffer; }
-
-		void SetShaderProperties() const;
+		inline const uint8_t* GetPropertiesBuffer() const { return m_Buffer; }
 	private:
 		void Initialize();
 	private:
@@ -107,7 +106,7 @@ namespace Flare
 	FLARE_API TexturePropertyValue& Material::GetPropertyValue(uint32_t index);
 
 	template<>
-	FLARE_API TexturePropertyValue Material::ReadPropertyValue(uint32_t index);
+	FLARE_API TexturePropertyValue Material::ReadPropertyValue(uint32_t index) const;
 
 	template<>
 	FLARE_API void Material::WritePropertyValue(uint32_t index, const TexturePropertyValue& value);

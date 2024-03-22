@@ -41,5 +41,6 @@ namespace Flare
 		static void SetDepthComparisonFunction(DepthComparisonFunction function);
 		static void SetDepthWriteEnabled(bool enabled);
 		static void SetBlendMode(BlendMode mode);
+		static void ApplyMaterial(const Ref<const Material>& materail);
 	};
 }

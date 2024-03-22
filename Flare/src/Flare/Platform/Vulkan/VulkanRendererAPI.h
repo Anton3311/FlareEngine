@@ -24,5 +24,6 @@ namespace Flare
 		void DrawInstancesIndexedIndirect(const Ref<const Mesh>& mesh, const Span<DrawIndirectCommandSubMeshData>& subMeshesData, uint32_t baseInstance) override;
 		void DrawLines(const Ref<const VertexArray>& vertexArray, size_t cverticesCountount) override;
 		void DrawInstanced(const Ref<const VertexArray>& mesh, size_t instancesCount, size_t baseVertexIndex, size_t startIndex, size_t indicesCount) override;
+		void ApplyMaterialProperties(const Ref<const Material>& materail) override;
 	};
 }

@@ -69,4 +69,8 @@ namespace Flare
 	void VulkanRendererAPI::DrawInstanced(const Ref<const VertexArray>& mesh, size_t instancesCount, size_t baseVertexIndex, size_t startIndex, size_t indicesCount)
 	{
 	}
+
+	void VulkanRendererAPI::ApplyMaterialProperties(const Ref<const Material>& materail)
+	{
+	}
 }

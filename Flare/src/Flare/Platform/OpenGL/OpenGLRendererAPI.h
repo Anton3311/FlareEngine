@@ -41,6 +41,7 @@ namespace Flare
 			size_t indicesCount) override;
 
 		virtual void DrawLines(const Ref<const VertexArray>& vertexArray, size_t verticesCount) override;
+		virtual void ApplyMaterialProperties(const Ref<const Material>& materail) override;
 	private:
 		struct DrawIndirectCommandData
 		{

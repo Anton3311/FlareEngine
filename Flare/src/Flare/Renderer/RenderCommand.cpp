@@ -1,5 +1,7 @@
 #include "RenderCommand.h"
 
+#include "Flare/Renderer/Material.h"
+
 #include "FlareCore/Profiler/Profiler.h"
 
 namespace Flare
@@ -96,5 +98,19 @@ namespace Flare
 	void RenderCommand::SetBlendMode(BlendMode mode)
 	{
 		s_API->SetBlendMode(mode);
+	}
+
+	void RenderCommand::ApplyMaterial(const Ref<const Material>& materail)
+	{
+		FLARE_CORE_ASSERT(materail);
+
+		s_API->ApplyMaterialProperties(materail);
+
+		auto shaderFeatures = materail->GetShader()->GetFeatures();
+		SetBlendMode(shaderFeatures.Blending);
+		SetDepthComparisonFunction(shaderFeatures.DepthFunction);
+		SetCullingMode(shaderFeatures.Culling);
+		SetDepthTestEnabled(shaderFeatures.DepthTesting);
+		SetDepthWriteEnabled(shaderFeatures.DepthWrite);
 	}
 }

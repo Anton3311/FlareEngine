@@ -545,21 +545,13 @@ namespace Flare
 		Ref<Shader> shader = materail->GetShader();
 		FLARE_CORE_ASSERT(shader);
 
-		ShaderFeatures features = materail->GetShader()->GetFeatures();
-
-		RenderCommand::SetDepthTestEnabled(features.DepthTesting);
-		RenderCommand::SetCullingMode(features.Culling);
-		RenderCommand::SetDepthComparisonFunction(features.DepthFunction);
-		RenderCommand::SetDepthWriteEnabled(features.DepthWrite);
-		RenderCommand::SetBlendMode(features.Blending);
+		RenderCommand::ApplyMaterial(materail);
 
 		FrameBufferAttachmentsMask shaderOutputsMask = 0;
 		for (uint32_t output : shader->GetOutputs())
 			shaderOutputsMask |= (1 << output);
 
 		s_RendererData.CurrentViewport->RenderTarget->SetWriteMask(shaderOutputsMask);
-
-		materail->SetShaderProperties();
 	}
 
 	static bool CompareRenderableObjects(uint32_t aIndex, uint32_t bIndex)
@@ -816,10 +808,7 @@ namespace Flare
 
 		// Setup the material
 
-		RenderCommand::SetDepthTestEnabled(true);
-		RenderCommand::SetCullingMode(CullingMode::Front);
-
-		s_RendererData.DepthOnlyMeshMaterial->SetShaderProperties();
+		ApplyMaterial(s_RendererData.DepthOnlyMeshMaterial);
 
 		for (size_t cascadeIndex = 0; cascadeIndex < s_RendererData.ShadowMappingSettings.Cascades; cascadeIndex++)
 		{

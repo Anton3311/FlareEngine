@@ -19,19 +19,12 @@ namespace Flare
 		VkShaderModule GetModuleForStage(ShaderStageType stage) const;
 
 		void Load() override;
-		bool IsLoaded() override;
+		bool IsLoaded() const override;
 		void Bind() override;
 		const ShaderProperties& GetProperties() const override;
 		const ShaderOutputs& GetOutputs() const override;
 		ShaderFeatures GetFeatures() const override;
 		std::optional<uint32_t> GetPropertyIndex(std::string_view name) const override;
-		void SetInt(const std::string& name, int value) override;
-		void SetFloat(const std::string& name, float value) override;
-		void SetFloat2(const std::string& name, glm::vec2 value) override;
-		void SetFloat3(const std::string& name, const glm::vec3& value) override;
-		void SetFloat4(const std::string& name, const glm::vec4& value) override;
-		void SetIntArray(const std::string& name, const int* values, uint32_t count) override;
-		void SetMatrix4(const std::string& name, const glm::mat4& matrix) override;
 	private:
 		struct ShaderStageModule
 		{
