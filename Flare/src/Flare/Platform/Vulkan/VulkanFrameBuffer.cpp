@@ -210,6 +210,22 @@ namespace Flare
 		info.flags = 0;
 
 		VK_CHECK_RESULT(vkCreateFramebuffer(VulkanContext::GetInstance().GetDevice(), &info, nullptr, &m_FrameBuffer));
+
+		Ref<VulkanCommandBuffer> commandBuffer = VulkanContext::GetInstance().BeginTemporaryCommandBuffer();
+		for (size_t i = 0; i < m_AttachmentsImages.size(); i++)
+		{
+			if (IsDepthFormat(m_Specifications.Attachments[i].Format))
+			{
+				commandBuffer->TransitionDepthImageLayout(m_AttachmentsImages[i],
+					m_Specifications.Attachments[i].Format == FrameBufferTextureFormat::Depth24Stencil8,
+					VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			}
+			else
+			{
+				commandBuffer->TransitionImageLayout(m_AttachmentsImages[i], VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			}
+		}
+		VulkanContext::GetInstance().EndTemporaryCommandBuffer(commandBuffer);
 	}
 
 	void VulkanFrameBuffer::CreateImages()

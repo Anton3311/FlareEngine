@@ -91,7 +91,7 @@ namespace Flare
 			&barrier);
 	}
 
-	void VulkanCommandBuffer::TransitionDepthImageLayout(VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout)
+	void VulkanCommandBuffer::TransitionDepthImageLayout(VkImage image, bool hasStencilComponent, VkImageLayout oldLayout, VkImageLayout newLayout)
 	{
 		VkImageMemoryBarrier barrier{};
 		barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -106,19 +106,8 @@ namespace Flare
 		barrier.subresourceRange.levelCount = 1;
 		barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
 
-		switch (oldLayout)
-		{
-		case VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL:
+		if (hasStencilComponent)
 			barrier.subresourceRange.aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
-			break;
-		}
-
-		switch (newLayout)
-		{
-		case VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL:
-			barrier.subresourceRange.aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
-			break;
-		}
 
 		VkPipelineStageFlags sourceStage = 0;
 		VkPipelineStageFlags destinationStage = 0;
@@ -207,7 +196,7 @@ namespace Flare
 		}
 	}
 
-	void VulkanCommandBuffer::ClearDepthStencilImage(VkImage image, float depthValue, uint32_t stencilValue, VkImageLayout oldLayout, VkImageLayout newLayout)
+	void VulkanCommandBuffer::ClearDepthStencilImage(VkImage image, bool hasStencilComponent, float depthValue, uint32_t stencilValue, VkImageLayout oldLayout, VkImageLayout newLayout)
 	{
 		VkImageSubresourceRange range{};
 		range.baseArrayLayer = 0;
@@ -216,20 +205,8 @@ namespace Flare
 		range.levelCount = 1;
 		range.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
 
-		switch (oldLayout)
-		{
-		case VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL:
+		if (hasStencilComponent)
 			range.aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
-			break;
-		}
-
-		switch (newLayout)
-		{
-		case VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL:
-			range.aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
-			break;
-		}
-
 
 		{
 			VkImageMemoryBarrier barrier{};
