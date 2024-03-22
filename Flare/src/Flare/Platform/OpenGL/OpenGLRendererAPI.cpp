@@ -258,7 +258,7 @@ namespace Flare
 			ConvertTopologyType(mesh->GetTopologyType()),
 			indexType,
 			m_IndirectCommandDataStorage.data(),
-			subMeshesData.GetSize(), 0);
+			(int32_t)subMeshesData.GetSize(), 0);
 	}
 
 	void OpenGLRendererAPI::DrawInstanced(const Ref<const VertexArray>& mesh, size_t instancesCount, size_t baseVertexIndex, size_t startIndex, size_t indicesCount)

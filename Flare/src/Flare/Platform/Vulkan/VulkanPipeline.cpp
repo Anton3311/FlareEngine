@@ -40,15 +40,46 @@ namespace Flare
 		colorBlendState.logicOpEnable = VK_FALSE;
 		colorBlendState.logicOp = VK_LOGIC_OP_COPY;
 
+		VkCompareOp depthComapreFunction = VK_COMPARE_OP_LESS;
+		switch (m_Specifications.DepthFunction)
+		{
+		case DepthComparisonFunction::Less:
+			depthComapreFunction = VK_COMPARE_OP_LESS;
+			break;
+		case DepthComparisonFunction::LessOrEqual:
+			depthComapreFunction = VK_COMPARE_OP_LESS_OR_EQUAL;
+			break;
+		case DepthComparisonFunction::Always:
+			depthComapreFunction = VK_COMPARE_OP_ALWAYS;
+			break;
+		case DepthComparisonFunction::Never:
+			depthComapreFunction = VK_COMPARE_OP_NEVER;
+			break;
+		case DepthComparisonFunction::Greater:
+			depthComapreFunction = VK_COMPARE_OP_GREATER;
+			break;
+		case DepthComparisonFunction::GreaterOrEqual:
+			depthComapreFunction = VK_COMPARE_OP_GREATER_OR_EQUAL;
+			break;
+		case DepthComparisonFunction::Equal:
+			depthComapreFunction = VK_COMPARE_OP_EQUAL;
+			break;
+		case DepthComparisonFunction::NotEqual:
+			depthComapreFunction = VK_COMPARE_OP_NOT_EQUAL;
+			break;
+		default:
+			FLARE_CORE_ASSERT(false);
+		}
+
 		VkPipelineDepthStencilStateCreateInfo depthStencilState{};
 		depthStencilState.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-		depthStencilState.depthTestEnable = VK_FALSE;
-		depthStencilState.depthWriteEnable = VK_FALSE;
+		depthStencilState.depthTestEnable = m_Specifications.DepthTest;
+		depthStencilState.depthWriteEnable = m_Specifications.DepthWrite;
 		depthStencilState.depthBoundsTestEnable = VK_FALSE;
 		depthStencilState.minDepthBounds = 0.0f;
 		depthStencilState.maxDepthBounds = 1.0f;
 		depthStencilState.stencilTestEnable = VK_FALSE;
-		depthStencilState.depthCompareOp = VK_COMPARE_OP_LESS;
+		depthStencilState.depthCompareOp = depthComapreFunction;
 		depthStencilState.front = {};
 		depthStencilState.back = {};
 
@@ -72,6 +103,20 @@ namespace Flare
 		multisampleState.pSampleMask = nullptr;
 		multisampleState.alphaToCoverageEnable = VK_FALSE;
 		multisampleState.alphaToOneEnable = VK_FALSE;
+
+		VkCullModeFlags cullMode = VK_CULL_MODE_NONE;
+		switch (m_Specifications.Culling)
+		{
+		case CullingMode::None:
+			cullMode = VK_CULL_MODE_NONE;
+			break;
+		case CullingMode::Back:
+			cullMode = VK_CULL_MODE_BACK_BIT;
+			break;
+		case CullingMode::Front:
+			cullMode = VK_CULL_MODE_FRONT_BIT;
+			break;
+		}
 
 		VkPipelineRasterizationStateCreateInfo rasterizationState{};
 		rasterizationState.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
