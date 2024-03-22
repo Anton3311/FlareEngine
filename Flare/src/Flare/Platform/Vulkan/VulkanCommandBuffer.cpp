@@ -106,6 +106,20 @@ namespace Flare
 		barrier.subresourceRange.levelCount = 1;
 		barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
 
+		switch (oldLayout)
+		{
+		case VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL:
+			barrier.subresourceRange.aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
+			break;
+		}
+
+		switch (newLayout)
+		{
+		case VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL:
+			barrier.subresourceRange.aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
+			break;
+		}
+
 		VkPipelineStageFlags sourceStage = 0;
 		VkPipelineStageFlags destinationStage = 0;
 
@@ -119,10 +133,10 @@ namespace Flare
 		}
 		else if (oldLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
 		{
-			barrier.srcAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
+			barrier.srcAccessMask = VK_ACCESS_NONE;
 			barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 
-			sourceStage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+			sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
 			destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
 		}
 		else if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
@@ -174,6 +188,70 @@ namespace Flare
 		value.float32[3] = clearColor.a;
 
 		vkCmdClearColorImage(m_CommandBuffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &value, 1, &range);
+
+		{
+			VkImageMemoryBarrier barrier{};
+			barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+			barrier.image = image;
+			barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+			barrier.newLayout = newLayout;
+			barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+			barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+			barrier.subresourceRange = range;
+
+			vkCmdPipelineBarrier(m_CommandBuffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
+				0,
+				0, nullptr,
+				0, nullptr,
+				1, &barrier);
+		}
+	}
+
+	void VulkanCommandBuffer::ClearDepthStencilImage(VkImage image, float depthValue, uint32_t stencilValue, VkImageLayout oldLayout, VkImageLayout newLayout)
+	{
+		VkImageSubresourceRange range{};
+		range.baseArrayLayer = 0;
+		range.layerCount = 1;
+		range.baseMipLevel = 0;
+		range.levelCount = 1;
+		range.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+
+		switch (oldLayout)
+		{
+		case VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL:
+			range.aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
+			break;
+		}
+
+		switch (newLayout)
+		{
+		case VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL:
+			range.aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
+			break;
+		}
+
+
+		{
+			VkImageMemoryBarrier barrier{};
+			barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+			barrier.image = image;
+			barrier.oldLayout = oldLayout;
+			barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+			barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+			barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+			barrier.subresourceRange = range;
+
+			vkCmdPipelineBarrier(m_CommandBuffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
+				0,
+				0, nullptr,
+				0, nullptr,
+				1, &barrier);
+		}
+
+		VkClearDepthStencilValue clearValue{};
+		clearValue.depth = depthValue;
+		clearValue.stencil = stencilValue;
+		vkCmdClearDepthStencilImage(m_CommandBuffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &clearValue, 1, &range);
 
 		{
 			VkImageMemoryBarrier barrier{};

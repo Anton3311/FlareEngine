@@ -26,6 +26,7 @@ namespace Flare
 		void TransitionDepthImageLayout(VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout);
 
 		void ClearImage(VkImage image, const glm::vec4& clearColor, VkImageLayout oldLayout, VkImageLayout newLayout);
+		void ClearDepthStencilImage(VkImage image, float depthValue, uint32_t stencilValue, VkImageLayout oldLayout, VkImageLayout newLayout);
 		void CopyBufferToImage(VkBuffer buffer, VkImage image, VkExtent3D size);
 		void CopyBuffer(VkBuffer sourceBuffer, VkBuffer destinationBuffer, size_t size, size_t sourceOffset, size_t destinationOffset);
 

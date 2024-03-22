@@ -547,8 +547,8 @@ namespace Flare
 				PipelineSpecifications specificaionts{};
 				specificaionts.Shader = s_Renderer2DData.DefaultMaterial->GetShader();
 				specificaionts.Culling = CullingMode::Back;
-				specificaionts.DepthTest = false;
-				specificaionts.DepthWrite = false;
+				specificaionts.DepthTest = true;
+				specificaionts.DepthWrite = true;
 				specificaionts.InputLayout = BufferLayout({
 					BufferLayoutElement("i_Position", ShaderDataType::Float3),
 					BufferLayoutElement("i_Color", ShaderDataType::Float4),
