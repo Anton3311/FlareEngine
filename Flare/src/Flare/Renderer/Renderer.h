@@ -154,6 +154,7 @@ namespace Flare
 		static void ClearStatistics();
 
 		static void SetMainViewport(Viewport& viewport);
+		static void SetCurrentViewport(Viewport& viewport);
 
 		static void BeginScene(Viewport& viewport);
 		static void Flush();

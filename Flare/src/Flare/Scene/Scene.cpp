@@ -268,8 +268,11 @@ namespace Flare
 
 		Renderer2D::End();
 
-		Renderer::Flush();
-		Renderer::ExecutePostProcessingPasses();
+		if (RendererAPI::GetAPI() != RendererAPI::API::Vulkan)
+		{
+			Renderer::Flush();
+			Renderer::ExecutePostProcessingPasses();
+		}
 	}
 
 	void Scene::OnUpdateRuntime()

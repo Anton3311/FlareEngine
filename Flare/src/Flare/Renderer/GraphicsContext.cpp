@@ -6,11 +6,16 @@
 
 namespace Flare
 {
-	static Scope<GraphicsContext> s_Instance = nullptr;
+	Scope<GraphicsContext> s_Instance = nullptr;
 
 	GraphicsContext& GraphicsContext::GetInstance()
 	{
 		return *s_Instance;
+	}
+
+	bool GraphicsContext::IsInitialized()
+	{
+		return s_Instance != nullptr;
 	}
 
 	void GraphicsContext::Create(void* windowHandle)

@@ -3,14 +3,20 @@
 #include "FlareCore/Core.h"
 #include "FlareCore/Profiler/Profiler.h"
 
+#include "Flare/Math/Math.h"
+
 #include "Flare/AssetManager/AssetManager.h"
 
 #include "Flare/Renderer/RenderCommand.h"
 #include "Flare/Renderer/Viewport.h"
 #include "Flare/Renderer/Renderer.h"
 #include "Flare/Renderer/ShaderLibrary.h"
+#include "Flare/Renderer/Pipeline.h"
 
 #include "Flare/Project/Project.h"
+
+#include "Flare/Platform/Vulkan/VulkanPipeline.h"
+#include "Flare/Platform/Vulkan/VulkanContext.h"
 
 #include <algorithm>
 #include <cctype>
@@ -69,6 +75,8 @@ namespace Flare
 		Ref<Font> CurrentFont = nullptr;
 
 		RenderData* FrameData = nullptr;
+
+		Ref<Pipeline> Pipeline = nullptr;
 	};
 
 	Renderer2DData s_Renderer2DData;
@@ -160,7 +168,7 @@ namespace Flare
 
 		std::optional<AssetHandle> textShaderHandle = ShaderLibrary::FindShader("Text");
 		if (!textShaderHandle || !AssetManager::IsAssetHandleValid(textShaderHandle.value()))
-			FLARE_CORE_ERROR("Renderer 2D: Failed to find text shader");
+			FLARE_CORE_ERROR("Renderer 2D: Failed to find Text shader");
 		else
 		{
 			Ref<Shader> textShader = AssetManager::GetAsset<Shader>(textShaderHandle.value());
@@ -171,6 +179,23 @@ namespace Flare
 
 	void Renderer2D::Shutdown()
 	{
+		s_Renderer2DData.Pipeline = nullptr;
+		s_Renderer2DData.CurrentFont = nullptr;
+		s_Renderer2DData.CurrentMaterial = nullptr;
+		s_Renderer2DData.QuadsMesh = nullptr;
+		s_Renderer2DData.QuadsVertexBuffer = nullptr;
+		s_Renderer2DData.FrameData = nullptr;
+		s_Renderer2DData.IndexBuffer = nullptr;
+		s_Renderer2DData.TextMaterial = nullptr;
+		s_Renderer2DData.TextMesh = nullptr;
+		s_Renderer2DData.TextVertexBuffer = nullptr;
+
+		for (size_t i = 0; i < MaxTexturesCount; i++)
+		{
+			s_Renderer2DData.Textures[i] = nullptr;
+		}
+
+		s_Renderer2DData = {};
 	}
 
 	void Renderer2D::Begin(const Ref<Material>& material)
@@ -498,7 +523,7 @@ namespace Flare
 
 	void Renderer2D::FlushQuads()
 	{
-		FLARE_PROFILE_FUNCTION();
+	FLARE_PROFILE_FUNCTION();
 
 		if (s_Renderer2DData.QuadIndex == 0)
 			return;
@@ -513,6 +538,43 @@ namespace Flare
 		{
 			FLARE_PROFILE_SCOPE("Renderer2D::UpdateQuadsVertexBuffer");
 			s_Renderer2DData.QuadsVertexBuffer->SetData(s_Renderer2DData.Vertices.data(), sizeof(QuadVertex) * s_Renderer2DData.QuadIndex * 4);
+		}
+
+		if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
+		{
+			if (s_Renderer2DData.Pipeline == nullptr)
+			{
+				PipelineSpecifications specificaionts{};
+				specificaionts.Shader = s_Renderer2DData.DefaultMaterial->GetShader();
+				specificaionts.InputLayout = BufferLayout({
+					BufferLayoutElement("i_Position", ShaderDataType::Float3),
+					BufferLayoutElement("i_Color", ShaderDataType::Float4),
+					BufferLayoutElement("i_UV", ShaderDataType::Float2),
+					BufferLayoutElement("i_TextureIndex", ShaderDataType::Float),
+					BufferLayoutElement("i_EntityIndex", ShaderDataType::Int),
+				});
+
+				Ref<VulkanFrameBuffer> renderTarget = As<VulkanFrameBuffer>(Renderer::GetMainViewport().RenderTarget);
+				s_Renderer2DData.Pipeline = CreateRef<VulkanPipeline>(specificaionts, renderTarget->GetCompatibleRenderPass());
+			}
+
+			Ref<VulkanCommandBuffer> commandBuffer = VulkanContext::GetInstance().GetPrimaryCommandBuffer();
+			Ref<VulkanFrameBuffer> renderTarget = As<VulkanFrameBuffer>(Renderer::GetCurrentViewport().RenderTarget);
+
+			commandBuffer->BeginRenderPass(renderTarget->GetCompatibleRenderPass(), renderTarget);
+			commandBuffer->BindPipeline(s_Renderer2DData.Pipeline);
+			commandBuffer->SetViewportAndScisors(Math::Rect(glm::vec2(0.0f), (glm::vec2)renderTarget->GetSize()));
+			commandBuffer->BindVertexBuffers(Span((Ref<const VertexBuffer>)s_Renderer2DData.QuadsVertexBuffer));
+			commandBuffer->BindIndexBuffer(s_Renderer2DData.IndexBuffer);
+			commandBuffer->DrawIndexed(s_Renderer2DData.QuadIndex * 6);
+			commandBuffer->EndRenderPass();
+
+			s_Renderer2DData.QuadIndex = 0;
+			s_Renderer2DData.TextureIndex = 1;
+
+			s_Renderer2DData.Stats.DrawCalls++;
+
+			return;
 		}
 
 		int32_t slots[MaxTexturesCount];

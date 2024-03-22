@@ -14,6 +14,8 @@ namespace Flare
 		~VulkanPipeline();
 
 		const PipelineSpecifications& GetSpecifications() const override;
+
+		inline VkPipeline GetHandle() const { return m_Pipeline; }
 	private:
 		PipelineSpecifications m_Specifications;
 

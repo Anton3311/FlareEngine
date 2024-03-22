@@ -105,6 +105,8 @@ namespace Flare
         m_ViewportWindows.emplace_back(CreateRef<SceneViewportWindow>(m_Camera));
         m_ViewportWindows.emplace_back(m_GameWindow);
 
+        Renderer::SetMainViewport(m_GameWindow->GetViewport());
+
         EditorCameraSettings& settings = m_Camera.GetSettings();
         settings.FOV = 60.0f;
         settings.Near = 0.1f;

@@ -81,9 +81,9 @@ namespace Flare
 	{
 		ScriptingEngine::Shutdown();
 
+		Renderer2D::Shutdown();
 		if (RendererAPI::GetAPI() != RendererAPI::API::Vulkan)
 		{
-			Renderer2D::Shutdown();
 			DebugRenderer::Shutdown();
 			Renderer::Shutdown();
 		}
@@ -99,9 +99,10 @@ namespace Flare
 		{
 			RenderCommand::Initialize();
 			Renderer::Initialize();
-			Renderer2D::Initialize();
 			DebugRenderer::Initialize();
 		}
+
+		Renderer2D::Initialize();
 
 		ScriptingEngine::Initialize();
 		RenderCommand::SetLineWidth(1.2f);

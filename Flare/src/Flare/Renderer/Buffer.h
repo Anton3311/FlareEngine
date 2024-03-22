@@ -11,6 +11,12 @@
 
 namespace Flare
 {
+	enum class GPUBufferUsage
+	{
+		Static = 0,
+		Dynamic = 1,
+	};
+
 	struct BufferLayoutElement
 	{
 		BufferLayoutElement() = default;
@@ -80,6 +86,7 @@ namespace Flare
 		virtual size_t GetCount() const = 0;
 		virtual IndexFormat GetIndexFormat() const = 0;
 	public:
+		static size_t GetIndexFormatSize(IndexFormat format);
 		static Ref<IndexBuffer> Create(IndexFormat format, size_t size);
 		static Ref<IndexBuffer> Create(IndexFormat format, const MemorySpan& indices);
 	};

@@ -202,6 +202,11 @@ namespace Flare
 		s_RendererData.MainViewport = &viewport;
 	}
 
+	void Renderer::SetCurrentViewport(Viewport& viewport)
+	{
+		s_RendererData.CurrentViewport = &viewport;
+	}
+
 	struct ShadowMappingParams
 	{
 		glm::vec3 CameraFrustumCenter;

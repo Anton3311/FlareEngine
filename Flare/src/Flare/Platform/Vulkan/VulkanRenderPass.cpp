@@ -46,6 +46,8 @@ namespace Flare
 			colorAttachments.push_back(reference);
 		}
 
+		m_ColorAttachmentsCount = (uint32_t)colorAttachments.size();
+
 		VkSubpassDescription subpass{};
 		subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
 		subpass.colorAttachmentCount = (uint32_t)colorAttachments.size();

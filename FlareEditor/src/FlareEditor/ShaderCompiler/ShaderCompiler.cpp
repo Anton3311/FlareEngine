@@ -105,8 +105,18 @@ namespace Flare
         options.SetSourceLanguage(shaderc_source_language_glsl);
         options.SetGenerateDebugInfo();
         options.SetIncluder(CreateScope<ShaderIncluder>());
-        options.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_2);
+        options.SetTargetEnvironment(shaderc_target_env_vulkan, 0);
         options.SetOptimizationLevel(shaderc_optimization_level_performance);
+
+        switch (RendererAPI::GetAPI())
+        {
+        case RendererAPI::API::OpenGL:
+            options.AddMacroDefinition("OPENGL");
+            break;
+        case RendererAPI::API::Vulkan:
+            //options.AddMacroDefinition("VULKAN");
+            break;
+        }
 
         shaderc::SpvCompilationResult shaderModule = compiler.CompileGlslToSpv(source.c_str(), source.size(), programKind, path.c_str(), "main", options);
         if (shaderModule.GetCompilationStatus() != shaderc_compilation_status_success)
@@ -625,25 +635,28 @@ namespace Flare
                 FLARE_CORE_ERROR("Shader reflection failed: {}", e.what());
             }
 
-            std::optional<std::vector<uint32_t>> compiledOpenGLShader = {};
-            
-            if (!forceRecompile)
+            if (RendererAPI::GetAPI() == RendererAPI::API::OpenGL)
             {
-                compiledOpenGLShader = ShaderCacheManager::GetInstance()->FindCache(
-                    shaderHandle,
-                    ShaderTargetEnvironment::OpenGL,
-                    program.Stage);
-            }
+				std::optional<std::vector<uint32_t>> compiledOpenGLShader = {};
 
-            if (!compiledOpenGLShader)
-            {
-                compiledOpenGLShader = CompileSpirvToGlsl(pathString, compiledVulkanShader.value(), options);
-                if (!compiledOpenGLShader)
-                    return false;
+				if (!forceRecompile)
+				{
+					compiledOpenGLShader = ShaderCacheManager::GetInstance()->FindCache(
+						shaderHandle,
+						ShaderTargetEnvironment::OpenGL,
+						program.Stage);
+				}
 
-                ShaderCacheManager::GetInstance()->SetCache(shaderHandle, ShaderTargetEnvironment::OpenGL, program.Stage, compiledOpenGLShader.value());
-            }
-        }
+				if (!compiledOpenGLShader)
+				{
+					compiledOpenGLShader = CompileSpirvToGlsl(pathString, compiledVulkanShader.value(), options);
+					if (!compiledOpenGLShader)
+						return false;
+
+					ShaderCacheManager::GetInstance()->SetCache(shaderHandle, ShaderTargetEnvironment::OpenGL, program.Stage, compiledOpenGLShader.value());
+				}
+			}
+		}
 
         ParseShaderMetadata(parser, shaderFeatures, errors, propertyNameToIndex, shaderProperties);
 

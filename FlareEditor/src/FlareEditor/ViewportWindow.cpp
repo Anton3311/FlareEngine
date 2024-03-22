@@ -57,11 +57,15 @@ namespace Flare
 			}
 			else
 			{
+				Renderer::SetCurrentViewport(m_Viewport);
+				scene->OnRender(m_Viewport);
+
 				Ref<VulkanCommandBuffer> commandBuffer = VulkanContext::GetInstance().GetPrimaryCommandBuffer();
 				Ref<VulkanFrameBuffer> target = As<VulkanFrameBuffer>(m_Viewport.RenderTarget);
 
 				commandBuffer->TransitionImageLayout(target->GetAttachmentImage(0), VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 				commandBuffer->TransitionImageLayout(target->GetAttachmentImage(1), VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+				//commandBuffer->TransitionDepthImageLayout(target->GetAttachmentImage(2), VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 			}
 		}
 	}
@@ -192,8 +196,9 @@ namespace Flare
 
 			Ref<VulkanFrameBuffer> target = As<VulkanFrameBuffer>(m_Viewport.RenderTarget);
 
-			commandBuffer->ClearImage(target->GetAttachmentImage(0), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
-			commandBuffer->ClearImage(target->GetAttachmentImage(1), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+			commandBuffer->ClearImage(target->GetAttachmentImage(0), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+			commandBuffer->ClearImage(target->GetAttachmentImage(1), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+			//commandBuffer->TransitionDepthImageLayout(target->GetAttachmentImage(2), VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
 		}
 		else
 		{

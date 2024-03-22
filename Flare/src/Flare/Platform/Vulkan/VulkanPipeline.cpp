@@ -6,6 +6,7 @@
 namespace Flare
 {
 	VulkanPipeline::VulkanPipeline(const PipelineSpecifications& specifications, const Ref<VulkanRenderPass>& renderPass)
+		: m_Specifications(specifications)
 	{
 		VkPipelineLayoutCreateInfo layoutInfo{};
 		layoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -17,27 +18,32 @@ namespace Flare
 
 		VK_CHECK_RESULT(vkCreatePipelineLayout(VulkanContext::GetInstance().GetDevice(), &layoutInfo, nullptr, &m_PipelineLayout));
 
-		VkPipelineColorBlendAttachmentState attachmentBlendState{};
-		attachmentBlendState.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-		attachmentBlendState.blendEnable = VK_FALSE;
-		attachmentBlendState.srcColorBlendFactor = VK_BLEND_FACTOR_ONE;
-		attachmentBlendState.dstColorBlendFactor = VK_BLEND_FACTOR_ZERO;
-		attachmentBlendState.colorBlendOp = VK_BLEND_OP_ADD;
-		attachmentBlendState.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
-		attachmentBlendState.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
-		attachmentBlendState.alphaBlendOp = VK_BLEND_OP_ADD;
+		std::vector<VkPipelineColorBlendAttachmentState> attachmentsBlendStates(renderPass->GetColorAttachmnetsCount());
+		for (size_t i = 0; i < attachmentsBlendStates.size(); i++)
+		{
+			VkPipelineColorBlendAttachmentState& attachmentBlendState = attachmentsBlendStates[i];
+			attachmentBlendState = {};
+			attachmentBlendState.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+			attachmentBlendState.blendEnable = VK_FALSE;
+			attachmentBlendState.srcColorBlendFactor = VK_BLEND_FACTOR_ONE;
+			attachmentBlendState.dstColorBlendFactor = VK_BLEND_FACTOR_ZERO;
+			attachmentBlendState.colorBlendOp = VK_BLEND_OP_ADD;
+			attachmentBlendState.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+			attachmentBlendState.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+			attachmentBlendState.alphaBlendOp = VK_BLEND_OP_ADD;
+		}
 
 		VkPipelineColorBlendStateCreateInfo colorBlendState{};
 		colorBlendState.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
-		colorBlendState.attachmentCount = 1;
-		colorBlendState.pAttachments = &attachmentBlendState;
+		colorBlendState.attachmentCount = (uint32_t)attachmentsBlendStates.size();
+		colorBlendState.pAttachments = attachmentsBlendStates.data();
 		colorBlendState.logicOpEnable = VK_FALSE;
 		colorBlendState.logicOp = VK_LOGIC_OP_COPY;
 
 		VkPipelineDepthStencilStateCreateInfo depthStencilState{};
 		depthStencilState.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-		depthStencilState.depthTestEnable = VK_TRUE;
-		depthStencilState.depthWriteEnable = VK_TRUE;
+		depthStencilState.depthTestEnable = VK_FALSE;
+		depthStencilState.depthWriteEnable = VK_FALSE;
 		depthStencilState.depthBoundsTestEnable = VK_FALSE;
 		depthStencilState.minDepthBounds = 0.0f;
 		depthStencilState.maxDepthBounds = 1.0f;
@@ -73,11 +79,11 @@ namespace Flare
 		rasterizationState.rasterizerDiscardEnable = VK_FALSE;
 		rasterizationState.polygonMode = VK_POLYGON_MODE_FILL;
 		rasterizationState.lineWidth = 1.0f;
-		rasterizationState.cullMode = VK_CULL_MODE_BACK_BIT;
-		rasterizationState.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+		rasterizationState.cullMode = VK_CULL_MODE_NONE;
+		rasterizationState.frontFace = VK_FRONT_FACE_CLOCKWISE;
 		rasterizationState.depthBiasEnable = VK_FALSE;
 
-		VkPipelineShaderStageCreateInfo stages[2];
+		VkPipelineShaderStageCreateInfo stages[2] = {};
 		stages[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 		stages[0].module = As<VulkanShader>(specifications.Shader)->GetModuleForStage(ShaderStageType::Vertex);
 		stages[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
@@ -160,6 +166,10 @@ namespace Flare
 
 	VulkanPipeline::~VulkanPipeline()
 	{
+		FLARE_CORE_ASSERT(VulkanContext::GetInstance().IsValid());
+
+		vkDestroyPipelineLayout(VulkanContext::GetInstance().GetDevice(), m_PipelineLayout, nullptr);
+		vkDestroyPipeline(VulkanContext::GetInstance().GetDevice(), m_Pipeline, nullptr);
 	}
 
 	const PipelineSpecifications& Flare::VulkanPipeline::GetSpecifications() const

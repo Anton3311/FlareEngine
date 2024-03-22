@@ -175,8 +175,6 @@ namespace Flare
 			{
 				VkAttachmentDescription& description = descriptions[i];
 				description.format = FrameBufferAttachmentFormatToVulkanFormat(m_Specifications.Attachments[i].Format);
-				description.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-				description.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 				description.samples = VK_SAMPLE_COUNT_1_BIT;
 				description.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 				description.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -184,7 +182,16 @@ namespace Flare
 				description.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
 
 				if (IsDepthFormat(m_Specifications.Attachments[i].Format))
+				{
 					depthAttachmentIndex = (uint32_t)i;
+					description.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+					description.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+				}
+				else
+				{
+					description.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+					description.initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+				}
 			}
 
 			m_CompatibleRenderPass = CreateRef<VulkanRenderPass>(Span<VkAttachmentDescription>::FromVector(descriptions), depthAttachmentIndex);
