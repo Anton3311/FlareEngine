@@ -26,45 +26,84 @@ namespace Flare
 		m_Specifications = specifications;
 		m_Specifications.Width = width;
 		m_Specifications.Height = height;
-
-		size_t imageSizeInBytes = 0;
-		VkFormat imageFormat = VK_FORMAT_UNDEFINED;
-
+		
 		if (channels == 3)
-		{
 			m_Specifications.Format = TextureFormat::RGB8;
-			imageSizeInBytes = width * height * 3;
-			imageFormat = VK_FORMAT_R8G8B8_UNORM;
-		}
 		else if (channels == 4)
-		{
 			m_Specifications.Format = TextureFormat::RGBA8;
-			imageSizeInBytes = width * height * 4;
-			imageFormat = VK_FORMAT_R8G8B8A8_UNORM;
-		}
 
-		VkBuffer stagingBuffer{};
-		VkDeviceMemory stagingBufferMemory{};
+		CreateResources();
+		UploadPixelData(data);
+	}
 
-		{
-			VulkanContext::GetInstance().CreateBuffer(imageSizeInBytes,
-				VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-				stagingBuffer, stagingBufferMemory);
+	VulkanTexture::VulkanTexture(uint32_t width, uint32_t height, const void* data, TextureFormat format, TextureFiltering filtering)
+	{
+		m_Specifications.Width = width;
+		m_Specifications.Height = height;
+		m_Specifications.Filtering = filtering;
+		m_Specifications.Format = format;
 
-			void* mapped = nullptr;
-			VK_CHECK_RESULT(vkMapMemory(VulkanContext::GetInstance().GetDevice(), stagingBufferMemory, 0, VK_WHOLE_SIZE, 0, &mapped));
+		CreateResources();
+		UploadPixelData(data);
+	}
 
-			std::memcpy(mapped, data, imageSizeInBytes);
+	VulkanTexture::~VulkanTexture()
+	{
+		FLARE_CORE_ASSERT(VulkanContext::GetInstance().IsValid());
+		VulkanContext::GetInstance().NotifyImageViewDeletionHandler(m_ImageView);
 
-			vkUnmapMemory(VulkanContext::GetInstance().GetDevice(), stagingBufferMemory);
-		}
+		VkDevice device = VulkanContext::GetInstance().GetDevice();
+		vkFreeMemory(device, m_ImageMemory, nullptr);
+		vkDestroySampler(device, m_DefaultSampler, nullptr);
+		vkDestroyImageView(device, m_ImageView, nullptr);
+		vkDestroyImage(device, m_Image, nullptr);
+	}
+
+	void VulkanTexture::Bind(uint32_t slot)
+	{
+	}
+
+	void VulkanTexture::SetData(const void* data, size_t size)
+	{
+	}
+
+	const TextureSpecifications& VulkanTexture::GetSpecifications() const
+	{
+		return m_Specifications;
+	}
+
+	uint32_t VulkanTexture::GetWidth() const
+	{
+		return m_Specifications.Width;
+	}
+
+	uint32_t VulkanTexture::GetHeight() const
+	{
+		return m_Specifications.Height;
+	}
+
+	TextureFormat VulkanTexture::GetFormat() const
+	{
+		return m_Specifications.Format;
+	}
+
+	TextureFiltering VulkanTexture::GetFiltering() const
+	{
+		return m_Specifications.Filtering;
+	}
+
+	void VulkanTexture::CreateResources()
+	{
+		VkFormat imageFormat = VK_FORMAT_UNDEFINED;
+		size_t imageSize = 0;
+
+		GetImageSizeAndFormat(imageSize, imageFormat);
 
 		VkImageCreateInfo imageInfo{};
 		imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
 		imageInfo.arrayLayers = 1;
-		imageInfo.extent.width = (uint32_t)width;
-		imageInfo.extent.height = (uint32_t)height;
+		imageInfo.extent.width = (uint32_t)m_Specifications.Width;
+		imageInfo.extent.height = (uint32_t)m_Specifications.Height;
 		imageInfo.extent.depth = 1;
 		imageInfo.format = imageFormat;
 		imageInfo.imageType = VK_IMAGE_TYPE_2D;
@@ -89,22 +128,6 @@ namespace Flare
 
 		VK_CHECK_RESULT(vkAllocateMemory(VulkanContext::GetInstance().GetDevice(), &allocation, nullptr, &m_ImageMemory));
 		VK_CHECK_RESULT(vkBindImageMemory(VulkanContext::GetInstance().GetDevice(), m_Image, m_ImageMemory, 0));
-
-		{
-			Ref<VulkanCommandBuffer> commandBuffer = VulkanContext::GetInstance().BeginTemporaryCommandBuffer();
-
-			commandBuffer->TransitionImageLayout(m_Image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-
-			VkExtent3D size{};
-			size.width = width;
-			size.height = height;
-			size.depth = 1;
-			commandBuffer->CopyBufferToImage(stagingBuffer, m_Image, size);
-
-			commandBuffer->TransitionImageLayout(m_Image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-
-			VulkanContext::GetInstance().EndTemporaryCommandBuffer(commandBuffer);
-		}
 
 		VkImageViewCreateInfo imageViewInfo{};
 		imageViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -163,53 +186,81 @@ namespace Flare
 		samplerInfo.mipLodBias = 0.0f;
 
 		VK_CHECK_RESULT(vkCreateSampler(VulkanContext::GetInstance().GetDevice(), &samplerInfo, nullptr, &m_DefaultSampler));
+	}
+
+	void VulkanTexture::UploadPixelData(const void* data)
+	{
+		VkFormat format = VK_FORMAT_UNDEFINED;
+		size_t size = 0;
+		GetImageSizeAndFormat(size, format);
+
+		VkBuffer stagingBuffer{};
+		VkDeviceMemory stagingBufferMemory{};
+
+		VulkanContext::GetInstance().CreateBuffer(size,
+			VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+			stagingBuffer, stagingBufferMemory);
+
+		void* mapped = nullptr;
+		VK_CHECK_RESULT(vkMapMemory(VulkanContext::GetInstance().GetDevice(), stagingBufferMemory, 0, VK_WHOLE_SIZE, 0, &mapped));
+
+		std::memcpy(mapped, data, size);
+		vkUnmapMemory(VulkanContext::GetInstance().GetDevice(), stagingBufferMemory);
+
+		{
+			Ref<VulkanCommandBuffer> commandBuffer = VulkanContext::GetInstance().BeginTemporaryCommandBuffer();
+
+			commandBuffer->TransitionImageLayout(m_Image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+
+			VkExtent3D size{};
+			size.width = m_Specifications.Width;
+			size.height = m_Specifications.Height;
+			size.depth = 1;
+			commandBuffer->CopyBufferToImage(stagingBuffer, m_Image, size);
+			commandBuffer->TransitionImageLayout(m_Image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+			VulkanContext::GetInstance().EndTemporaryCommandBuffer(commandBuffer);
+		}
 
 		vkFreeMemory(VulkanContext::GetInstance().GetDevice(), stagingBufferMemory, nullptr);
 		vkDestroyBuffer(VulkanContext::GetInstance().GetDevice(), stagingBuffer, nullptr);
 	}
 
-	VulkanTexture::~VulkanTexture()
+	void VulkanTexture::GetImageSizeAndFormat(size_t& size, VkFormat& format)
 	{
-		FLARE_CORE_ASSERT(VulkanContext::GetInstance().IsValid());
-		VulkanContext::GetInstance().NotifyImageViewDeletionHandler(m_ImageView);
+		size_t pixelSize = 0;
 
-		VkDevice device = VulkanContext::GetInstance().GetDevice();
-		vkFreeMemory(device, m_ImageMemory, nullptr);
-		vkDestroySampler(device, m_DefaultSampler, nullptr);
-		vkDestroyImageView(device, m_ImageView, nullptr);
-		vkDestroyImage(device, m_Image, nullptr);
-	}
+		switch (m_Specifications.Format)
+		{
+		case TextureFormat::RGB8:
+			format = VK_FORMAT_R8G8B8A8_UNORM;
+			pixelSize = 4;
+			break;
+		case TextureFormat::RGBA8:
+			format = VK_FORMAT_R8G8B8A8_UNORM;
+			pixelSize = 4;
+			break;
+		case TextureFormat::RG8:
+			format = VK_FORMAT_R8G8_UNORM;
+			pixelSize = 2;
+			break;
+		case TextureFormat::RG16:
+			format = VK_FORMAT_R16G16_UNORM;
+			pixelSize = 4;
+			break;
+		case TextureFormat::RF32:
+			format = VK_FORMAT_R16_SFLOAT;
+			pixelSize = sizeof(float);
+			break;
+		case TextureFormat::R8:
+			format = VK_FORMAT_R8_UNORM;
+			pixelSize = 1;
+			break;
+		default:
+			FLARE_CORE_ASSERT(false);
+		}
 
-	void VulkanTexture::Bind(uint32_t slot)
-	{
-	}
-
-	void VulkanTexture::SetData(const void* data, size_t size)
-	{
-	}
-
-	const TextureSpecifications& VulkanTexture::GetSpecifications() const
-	{
-		return m_Specifications;
-	}
-
-	uint32_t VulkanTexture::GetWidth() const
-	{
-		return m_Specifications.Width;
-	}
-
-	uint32_t VulkanTexture::GetHeight() const
-	{
-		return m_Specifications.Height;
-	}
-
-	TextureFormat VulkanTexture::GetFormat() const
-	{
-		return m_Specifications.Format;
-	}
-
-	TextureFiltering VulkanTexture::GetFiltering() const
-	{
-		return m_Specifications.Filtering;
+		size = m_Specifications.Width * m_Specifications.Height * pixelSize;
 	}
 }

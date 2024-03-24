@@ -29,7 +29,7 @@ namespace Flare
 		case RendererAPI::API::OpenGL:
 			return CreateRef<OpenGLTexture>(width, height, data, format, filtering);
 		case RendererAPI::API::Vulkan:
-			return CreateRef<VulkanTexture>();
+			return CreateRef<VulkanTexture>(width, height, data, format, filtering);
 		}
 
 		return nullptr;

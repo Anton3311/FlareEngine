@@ -180,6 +180,7 @@ namespace Flare
 
 	void Renderer::Shutdown()
 	{
+		s_RendererData = {};
 	}
 
 	const RendererStatistics& Renderer::GetStatistics()

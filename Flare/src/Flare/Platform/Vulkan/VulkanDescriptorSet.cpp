@@ -88,14 +88,17 @@ namespace Flare
 			image.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 			image.imageView = vulkanTexture->GetImageViewHandle();
 			image.sampler = vulkanTexture->GetDefaultSampler();
+
+			FLARE_CORE_ASSERT(image.imageView);
+			FLARE_CORE_ASSERT(image.sampler);
 		}
 
 		auto& write = m_Writes.emplace_back();
 		write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 		write.descriptorCount = (uint32_t)textures.GetSize();
-		write.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 		write.dstBinding = binding;
-		write.dstArrayElement = arrayOffset;
+		write.dstArrayElement = (uint32_t)arrayOffset;
 		write.dstSet = m_Set;
 		write.pBufferInfo = nullptr;
 		write.pImageInfo = &m_Images[firstBindingIndex];
