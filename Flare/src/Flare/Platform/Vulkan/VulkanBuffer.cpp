@@ -37,8 +37,7 @@ namespace Flare
 
 		FLARE_CORE_ASSERT(size <= m_Size);
 
-		if (!m_Buffer)
-			Create();
+		EnsureAllocated();
 
 		if (m_Usage == GPUBufferUsage::Dynamic)
 		{
@@ -70,6 +69,14 @@ namespace Flare
 			vkFreeMemory(device, stagingBufferMemory, nullptr);
 			vkDestroyBuffer(device, stagingBuffer, nullptr);
 		}
+	}
+
+	void VulkanBuffer::EnsureAllocated()
+	{
+		if (m_Buffer)
+			return;
+		
+		Create();
 	}
 
 	void VulkanBuffer::Create()

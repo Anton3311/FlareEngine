@@ -14,7 +14,9 @@ namespace Flare
 		~VulkanBuffer();
 
 		void SetData(const void* data, size_t size, size_t offset);
+		void EnsureAllocated();
 
+		inline size_t GetSize() const { return m_Size; }
 		inline VkBuffer GetBuffer() const { return m_Buffer; }
 	private:
 		void Create();

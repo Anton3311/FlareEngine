@@ -278,9 +278,8 @@ namespace Flare
 
 	void VulkanCommandBuffer::BindPipeline(const Ref<const Pipeline>& pipeline)
 	{
-		VkPipeline pipelineHandle = As<const VulkanPipeline>(pipeline)->GetHandle();
-
-		vkCmdBindPipeline(m_CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineHandle);
+		auto vulkanPipeline = As<const VulkanPipeline>(pipeline);
+		vkCmdBindPipeline(m_CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vulkanPipeline->GetHandle());
 	}
 
 	void VulkanCommandBuffer::BindVertexBuffers(const Span<Ref<const VertexBuffer>>& vertexBuffers)
@@ -303,6 +302,12 @@ namespace Flare
 			indexBuffer->GetIndexFormat() == IndexBuffer::IndexFormat::UInt16
 				? VK_INDEX_TYPE_UINT16
 				: VK_INDEX_TYPE_UINT32);
+	}
+
+	void VulkanCommandBuffer::BindDescriptorSet(const Ref<const VulkanDescriptorSet>& descriptorSet, VkPipelineLayout pipelineLayout, uint32_t index)
+	{
+		VkDescriptorSet setHandle = descriptorSet->GetHandle();
+		vkCmdBindDescriptorSets(m_CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, index, 1, &setHandle, 0, nullptr);
 	}
 
 	void VulkanCommandBuffer::SetViewportAndScisors(Math::Rect viewportRect)

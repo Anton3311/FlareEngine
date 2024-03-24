@@ -11,7 +11,9 @@ namespace Flare
 		virtual ~OpenGLUniformBuffer();
 
 		void SetData(const void* data, size_t size, size_t offset) override;
+		size_t GetSize() const override;
 	private:
-		uint32_t m_Id;
+		uint32_t m_Id = UINT32_MAX;
+		size_t m_Size = 0;
 	};
 }

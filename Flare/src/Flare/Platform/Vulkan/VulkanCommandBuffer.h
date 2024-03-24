@@ -4,6 +4,7 @@
 
 #include "Flare/Platform/Vulkan/VulkanRenderPass.h"
 #include "Flare/Platform/Vulkan/VulkanFrameBuffer.h"
+#include "Flare/Platform/Vulkan/VulkanDescriptorSet.h"
 
 #include <vulkan/vulkan.h>
 
@@ -33,6 +34,8 @@ namespace Flare
 		void BindPipeline(const Ref<const Pipeline>& pipeline);
 		void BindVertexBuffers(const Span<Ref<const VertexBuffer>>& vertexBuffers);
 		void BindIndexBuffer(const Ref<const IndexBuffer>& indexBuffer);
+
+		void BindDescriptorSet(const Ref<const VulkanDescriptorSet>& descriptorSet, VkPipelineLayout pipelineLayout, uint32_t index);
 
 		void SetViewportAndScisors(Math::Rect viewportRect);
 

@@ -25,12 +25,12 @@ void main()
     o_VertexColor = i_Color;
     o_UV = i_UV;
     o_TextureIndex = i_TextureIndex;
+
 #ifdef OPENGL
     o_EntityIndex = i_EntityIndex;
-    gl_Position = u_Camera.ViewProjection * vec4(i_Position, 1.0);
-#else
-    gl_Position = vec4(i_Position, 1.0);
 #endif
+
+    gl_Position = u_Camera.ViewProjection * vec4(i_Position, 1.0);
 }
 
 #end

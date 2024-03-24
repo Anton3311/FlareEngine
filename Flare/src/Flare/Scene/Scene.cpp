@@ -134,17 +134,35 @@ namespace Flare
 
 					viewport.FrameData.Camera.FOV = cameras[entity].FOV;
 
-					if (camera.Projection == CameraComponent::ProjectionType::Orthographic)
+					if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
 					{
-						viewport.FrameData.Camera.SetViewAndProjection(
-							glm::ortho(-halfSize * aspectRation, halfSize * aspectRation, -halfSize, halfSize, camera.Near, camera.Far),
-							glm::inverse(transforms[entity].GetTransformationMatrix()));
+						if (camera.Projection == CameraComponent::ProjectionType::Orthographic)
+						{
+							viewport.FrameData.Camera.SetViewAndProjection(
+								glm::orthoRH_ZO(-halfSize * aspectRation, halfSize * aspectRation, -halfSize, halfSize, camera.Near, camera.Far),
+								glm::inverse(transforms[entity].GetTransformationMatrix()));
+						}
+						else
+						{
+							viewport.FrameData.Camera.SetViewAndProjection(
+								glm::perspectiveRH_ZO<float>(glm::radians(camera.FOV), aspectRation, camera.Near, camera.Far),
+								glm::inverse(transforms[entity].GetTransformationMatrix()));
+						}
 					}
 					else
 					{
-						viewport.FrameData.Camera.SetViewAndProjection(
-							viewport.FrameData.Camera.Projection = glm::perspective<float>(glm::radians(camera.FOV), aspectRation, camera.Near, camera.Far),
-							glm::inverse(transforms[entity].GetTransformationMatrix()));
+						if (camera.Projection == CameraComponent::ProjectionType::Orthographic)
+						{
+							viewport.FrameData.Camera.SetViewAndProjection(
+								glm::ortho(-halfSize * aspectRation, halfSize * aspectRation, -halfSize, halfSize, camera.Near, camera.Far),
+								glm::inverse(transforms[entity].GetTransformationMatrix()));
+						}
+						else
+						{
+							viewport.FrameData.Camera.SetViewAndProjection(
+								glm::perspective<float>(glm::radians(camera.FOV), aspectRation, camera.Near, camera.Far),
+								glm::inverse(transforms[entity].GetTransformationMatrix()));
+						}
 					}
 				}
 			}

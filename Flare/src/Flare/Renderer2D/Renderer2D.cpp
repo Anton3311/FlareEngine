@@ -17,6 +17,7 @@
 
 #include "Flare/Platform/Vulkan/VulkanPipeline.h"
 #include "Flare/Platform/Vulkan/VulkanContext.h"
+#include "Flare/Platform/Vulkan/VulkanDescriptorSet.h"
 
 #include <algorithm>
 #include <cctype>
@@ -77,6 +78,12 @@ namespace Flare
 		RenderData* FrameData = nullptr;
 
 		Ref<Pipeline> Pipeline = nullptr;
+		Ref<VulkanDescriptorSetLayout> DescriptorSetLayout = nullptr;
+		Ref<VulkanDescriptorSet> DescriptorSet = nullptr;
+
+		Ref<UniformBuffer> CameraUniformBuffer = nullptr;
+
+		VkDescriptorPool Pool = VK_NULL_HANDLE;
 	};
 
 	Renderer2DData s_Renderer2DData;
@@ -151,6 +158,35 @@ namespace Flare
 		s_Renderer2DData.Stats.QuadsCount = 0;
 
 		Project::OnProjectOpen.Bind(ReloadShaders);
+
+		if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
+		{
+			VkDescriptorPoolSize sizes[1];
+			sizes[0].descriptorCount = 1;
+			sizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+
+			VkDescriptorPoolCreateInfo info{};
+			info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+			info.maxSets = 1;
+			info.poolSizeCount = 1;
+			info.pPoolSizes = sizes;
+
+			VK_CHECK_RESULT(vkCreateDescriptorPool(VulkanContext::GetInstance().GetDevice(), &info, nullptr, &s_Renderer2DData.Pool));
+
+			VkDescriptorSetLayoutBinding bindings[1];
+			bindings[0].binding = 0;
+			bindings[0].descriptorCount = 1;
+			bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+			bindings[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+			s_Renderer2DData.CameraUniformBuffer = UniformBuffer::Create(sizeof(RenderView), 0);
+
+			s_Renderer2DData.DescriptorSetLayout = CreateRef<VulkanDescriptorSetLayout>(Span(bindings, 1));
+			s_Renderer2DData.DescriptorSet = CreateRef<VulkanDescriptorSet>(s_Renderer2DData.Pool, s_Renderer2DData.DescriptorSetLayout);
+
+			s_Renderer2DData.DescriptorSet->WriteUniformBuffer(s_Renderer2DData.CameraUniformBuffer, 0);
+			s_Renderer2DData.DescriptorSet->FlushWrites();
+		}
 	}
 
 	static void ReloadShaders()
@@ -194,6 +230,8 @@ namespace Flare
 		{
 			s_Renderer2DData.Textures[i] = nullptr;
 		}
+
+		vkDestroyDescriptorPool(VulkanContext::GetInstance().GetDevice(), s_Renderer2DData.Pool, nullptr);
 
 		s_Renderer2DData = {};
 	}
@@ -558,18 +596,23 @@ namespace Flare
 				});
 
 				Ref<VulkanFrameBuffer> renderTarget = As<VulkanFrameBuffer>(Renderer::GetMainViewport().RenderTarget);
-				s_Renderer2DData.Pipeline = CreateRef<VulkanPipeline>(specificaionts, renderTarget->GetCompatibleRenderPass());
+				s_Renderer2DData.Pipeline = CreateRef<VulkanPipeline>(specificaionts,
+					renderTarget->GetCompatibleRenderPass(),
+					Span<Ref<const VulkanDescriptorSetLayout>>((Ref<const VulkanDescriptorSetLayout>)s_Renderer2DData.DescriptorSetLayout));
 			}
 
 			Ref<VulkanCommandBuffer> commandBuffer = VulkanContext::GetInstance().GetPrimaryCommandBuffer();
 			Ref<VulkanFrameBuffer> renderTarget = As<VulkanFrameBuffer>(Renderer::GetCurrentViewport().RenderTarget);
 
+			s_Renderer2DData.CameraUniformBuffer->SetData(&s_Renderer2DData.FrameData->Camera, sizeof(s_Renderer2DData.FrameData->Camera), 0);
+
 			commandBuffer->BeginRenderPass(renderTarget->GetCompatibleRenderPass(), renderTarget);
+			commandBuffer->BindDescriptorSet(s_Renderer2DData.DescriptorSet, As<const VulkanPipeline>(s_Renderer2DData.Pipeline)->GetLayoutHandle(), 0);
 			commandBuffer->BindPipeline(s_Renderer2DData.Pipeline);
 			commandBuffer->SetViewportAndScisors(Math::Rect(glm::vec2(0.0f), (glm::vec2)renderTarget->GetSize()));
 			commandBuffer->BindVertexBuffers(Span((Ref<const VertexBuffer>)s_Renderer2DData.QuadsVertexBuffer));
 			commandBuffer->BindIndexBuffer(s_Renderer2DData.IndexBuffer);
-			commandBuffer->DrawIndexed(s_Renderer2DData.QuadIndex * 6);
+			commandBuffer->DrawIndexed((uint32_t)(s_Renderer2DData.QuadIndex * 6));
 			commandBuffer->EndRenderPass();
 
 			s_Renderer2DData.QuadIndex = 0;

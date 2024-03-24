@@ -5,7 +5,9 @@
 
 namespace Flare
 {
-	VulkanPipeline::VulkanPipeline(const PipelineSpecifications& specifications, const Ref<VulkanRenderPass>& renderPass)
+	VulkanPipeline::VulkanPipeline(const PipelineSpecifications& specifications,
+		const Ref<VulkanRenderPass>& renderPass,
+		const Span<Ref<const VulkanDescriptorSetLayout>>& layouts)
 		: m_Specifications(specifications)
 	{
 		VkPipelineLayoutCreateInfo layoutInfo{};
@@ -13,8 +15,15 @@ namespace Flare
 		layoutInfo.pPushConstantRanges = nullptr;
 		layoutInfo.pushConstantRangeCount = 0;
 		layoutInfo.flags = 0;
-		layoutInfo.pSetLayouts = nullptr;
-		layoutInfo.setLayoutCount = 0;
+
+		std::vector<VkDescriptorSetLayout> descriptorSetLayouts(layouts.GetSize());
+		for (size_t i = 0; i < layouts.GetSize(); i++)
+		{
+			descriptorSetLayouts[i] = layouts[i]->GetHandle();
+		}
+
+		layoutInfo.setLayoutCount = (uint32_t)descriptorSetLayouts.size();
+		layoutInfo.pSetLayouts = descriptorSetLayouts.data();
 
 		VK_CHECK_RESULT(vkCreatePipelineLayout(VulkanContext::GetInstance().GetDevice(), &layoutInfo, nullptr, &m_PipelineLayout));
 
