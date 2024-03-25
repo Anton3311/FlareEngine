@@ -97,6 +97,8 @@ namespace Flare
 		std::vector<const char*> deviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME, VK_KHR_MAINTENANCE1_EXTENSION_NAME };
 		CreateLogicalDevice(Span<const char*>::FromVector(enabledLayers), Span<const char*>::FromVector(deviceExtensions));
 
+		CreateMemoryAllocator();
+
 		CreateSwapChain();
 
 		{
@@ -131,6 +133,8 @@ namespace Flare
 
 		m_ColorOnlyPass = nullptr;
 		m_SwapChainFrameBuffers.clear();
+
+		vmaDestroyAllocator(m_Allocator);
 
 		ReleaseSwapChain();
 
@@ -463,6 +467,17 @@ namespace Flare
 
 		vkGetDeviceQueue(m_Device, *m_GraphicsQueueFamilyIndex, 0, &m_GraphicsQueue);
 		vkGetDeviceQueue(m_Device, *m_PresentQueueFamilyIndex, 0, &m_PresentQueue);
+	}
+
+	void VulkanContext::CreateMemoryAllocator()
+	{
+		VmaAllocatorCreateInfo info{};
+		info.instance = m_Instance;
+		info.device = m_Device;
+		info.physicalDevice = m_PhysicalDevice;
+		info.vulkanApiVersion = VK_API_VERSION_1_3;
+
+		VK_CHECK_RESULT(vmaCreateAllocator(&info, &m_Allocator));
 	}
 
 	void VulkanContext::CreateCommandBufferPool()

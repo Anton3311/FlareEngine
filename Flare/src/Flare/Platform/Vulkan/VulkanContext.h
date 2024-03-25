@@ -10,6 +10,7 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 #include <vulkan/vulkan.h>
+#include <vk_mem_alloc.h>
 
 #include <optional>
 #include <functional>
@@ -62,6 +63,8 @@ namespace Flare
 		void ChoosePhysicalDevice();
 		void GetQueueFamilyProperties();
 		void CreateLogicalDevice(const Span<const char*>& enabledLayers, const Span<const char*>& enabledExtensions);
+
+		void CreateMemoryAllocator();
 	
 		void CreateCommandBufferPool();
 		VkCommandBuffer CreateCommandBuffer();
@@ -123,5 +126,8 @@ namespace Flare
 
 		// Render pass
 		Ref<VulkanRenderPass> m_ColorOnlyPass = nullptr;
+
+		// Allocator
+		VmaAllocator m_Allocator = VK_NULL_HANDLE;
 	};
 }

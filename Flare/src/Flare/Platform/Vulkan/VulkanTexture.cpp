@@ -3,6 +3,7 @@
 #include "Flare/Platform/Vulkan/VulkanContext.h"
 
 #include <stb_image/stb_image.h>
+#include <vk_mem_alloc.h>
 
 namespace Flare
 {

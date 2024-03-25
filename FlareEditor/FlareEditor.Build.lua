@@ -41,6 +41,7 @@ project "FlareEditor"
 		INCLUDE_DIRS.yaml_cpp,
 
 		INCLUDE_DIRS.vulkan_sdk,
+		INCLUDE_DIRS.vma,
 		INCLUDE_DIRS.tracy,
     }
 

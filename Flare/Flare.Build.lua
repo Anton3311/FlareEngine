@@ -17,6 +17,9 @@ project "Flare"
 
 		"vendor/stb_image/stb_image/**.h",
 		"vendor/stb_image/stb_image/**.cpp",
+
+		"vendor/VMA/vk_mem_alloc.h",
+		"vendor/VMA/vk_mem_alloc.cpp",
     }
 
     includedirs
@@ -39,6 +42,7 @@ project "Flare"
 		INCLUDE_DIRS.imgui,
 
 		INCLUDE_DIRS.vulkan_sdk,
+		INCLUDE_DIRS.vma,
 		INCLUDE_DIRS.assimp,
 		INCLUDE_DIRS.tracy,
 	}
