@@ -36,7 +36,7 @@ layout(location = 1) in vec4 Color;
 	layout(location = 2) in flat int EntityIndex;
 #endif
 
-layout(set = 0, binding = 1) uniform sampler2D u_MSDF;
+layout(set = 1, binding = 0) uniform sampler2D u_MSDF;
 
 layout(location = 0) out vec4 o_Color;
 

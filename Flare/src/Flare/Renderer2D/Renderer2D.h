@@ -11,8 +11,8 @@ namespace Flare
 {
 	struct Renderer2DStats
 	{
-		uint32_t QuadsCount;
-		uint32_t DrawCalls;
+		uint32_t QuadsCount = 0;
+		uint32_t DrawCalls = 0;
 
 		uint32_t GetTotalVertexCount() const { return QuadsCount * 4; }
 	};

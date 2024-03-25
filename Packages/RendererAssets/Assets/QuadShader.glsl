@@ -38,7 +38,7 @@ void main()
 #begin pixel
 #version 450
 
-layout(set = 0, binding = 1) uniform sampler2D u_Textures[32];
+layout(set = 1, binding = 0) uniform sampler2D u_Textures[32];
 
 layout(location = 0) in vec4 i_VertexColor;
 layout(location = 1) in vec2 i_UV;
