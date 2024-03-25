@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Flare/Renderer/Texture.h"
+#include "Flare/Platform/Vulkan/VulkanAllocation.h"
 
 #include <vulkan/vulkan.h>
 
@@ -31,8 +32,9 @@ namespace Flare
 		void GetImageSizeAndFormat(size_t& size, VkFormat& format);
 	private:
 		TextureSpecifications m_Specifications;
+		VulkanAllocation m_Allocation;
+		
 		VkImage m_Image = VK_NULL_HANDLE;
-		VkDeviceMemory m_ImageMemory = VK_NULL_HANDLE;
 		VkImageView m_ImageView = VK_NULL_HANDLE;
 		VkSampler m_DefaultSampler = VK_NULL_HANDLE;
 	};

@@ -3,7 +3,6 @@
 #include "Flare/Platform/Vulkan/VulkanContext.h"
 
 #include <stb_image/stb_image.h>
-#include <vk_mem_alloc.h>
 
 namespace Flare
 {
@@ -53,8 +52,9 @@ namespace Flare
 		FLARE_CORE_ASSERT(VulkanContext::GetInstance().IsValid());
 		VulkanContext::GetInstance().NotifyImageViewDeletionHandler(m_ImageView);
 
+		vmaFreeMemory(VulkanContext::GetInstance().GetMemoryAllocator(), m_Allocation.Handle);
+
 		VkDevice device = VulkanContext::GetInstance().GetDevice();
-		vkFreeMemory(device, m_ImageMemory, nullptr);
 		vkDestroySampler(device, m_DefaultSampler, nullptr);
 		vkDestroyImageView(device, m_ImageView, nullptr);
 		vkDestroyImage(device, m_Image, nullptr);
@@ -115,20 +115,10 @@ namespace Flare
 		imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
 		imageInfo.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 
-		VK_CHECK_RESULT(vkCreateImage(VulkanContext::GetInstance().GetDevice(), &imageInfo, nullptr, &m_Image));
+		VmaAllocationCreateInfo allocation{};
+		allocation.usage = VMA_MEMORY_USAGE_GPU_ONLY;
 
-		// Allocate memory
-		VkMemoryRequirements memoryRequirements{};
-		vkGetImageMemoryRequirements(VulkanContext::GetInstance().GetDevice(), m_Image, &memoryRequirements);
-
-		uint32_t memoryType = VulkanContext::GetInstance().FindMemoryType(memoryRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-		VkMemoryAllocateInfo allocation{};
-		allocation.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-		allocation.allocationSize = memoryRequirements.size;
-		allocation.memoryTypeIndex = memoryType;
-
-		VK_CHECK_RESULT(vkAllocateMemory(VulkanContext::GetInstance().GetDevice(), &allocation, nullptr, &m_ImageMemory));
-		VK_CHECK_RESULT(vkBindImageMemory(VulkanContext::GetInstance().GetDevice(), m_Image, m_ImageMemory, 0));
+		VK_CHECK_RESULT(vmaCreateImage(VulkanContext::GetInstance().GetMemoryAllocator(), &imageInfo, &allocation, &m_Image, &m_Allocation.Handle, &m_Allocation.Info));
 
 		VkImageViewCreateInfo imageViewInfo{};
 		imageViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -196,15 +186,10 @@ namespace Flare
 		GetImageSizeAndFormat(size, format);
 
 		VkBuffer stagingBuffer{};
-		VkDeviceMemory stagingBufferMemory{};
-
-		VulkanContext::GetInstance().CreateBuffer(size,
-			VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-			stagingBuffer, stagingBufferMemory);
+		VulkanAllocation stagingBufferAllocation = VulkanContext::GetInstance().CreateStagingBuffer(size, stagingBuffer);
 
 		void* mapped = nullptr;
-		VK_CHECK_RESULT(vkMapMemory(VulkanContext::GetInstance().GetDevice(), stagingBufferMemory, 0, VK_WHOLE_SIZE, 0, &mapped));
+		VK_CHECK_RESULT(vmaMapMemory(VulkanContext::GetInstance().GetMemoryAllocator(), stagingBufferAllocation.Handle, &mapped));
 
 		if (m_Specifications.Format == TextureFormat::RGB8)
 		{
@@ -232,7 +217,8 @@ namespace Flare
 			std::memcpy(mapped, data, size);
 		}
 
-		vkUnmapMemory(VulkanContext::GetInstance().GetDevice(), stagingBufferMemory);
+		VK_CHECK_RESULT(vmaFlushAllocation(VulkanContext::GetInstance().GetMemoryAllocator(), stagingBufferAllocation.Handle, 0, VK_WHOLE_SIZE));
+		vmaUnmapMemory(VulkanContext::GetInstance().GetMemoryAllocator(), stagingBufferAllocation.Handle);
 
 		{
 			Ref<VulkanCommandBuffer> commandBuffer = VulkanContext::GetInstance().BeginTemporaryCommandBuffer();
@@ -249,7 +235,7 @@ namespace Flare
 			VulkanContext::GetInstance().EndTemporaryCommandBuffer(commandBuffer);
 		}
 
-		vkFreeMemory(VulkanContext::GetInstance().GetDevice(), stagingBufferMemory, nullptr);
+		vmaFreeMemory(VulkanContext::GetInstance().GetMemoryAllocator(), stagingBufferAllocation.Handle);
 		vkDestroyBuffer(VulkanContext::GetInstance().GetDevice(), stagingBuffer, nullptr);
 	}
 

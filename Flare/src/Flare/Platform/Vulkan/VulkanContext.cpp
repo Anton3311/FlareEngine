@@ -251,6 +251,23 @@ namespace Flare
 		VK_CHECK_RESULT(vkBindBufferMemory(VulkanContext::GetInstance().GetDevice(), buffer, memory, 0));
 	}
 
+	VulkanAllocation VulkanContext::CreateStagingBuffer(size_t size, VkBuffer& buffer)
+	{
+		VkBufferCreateInfo info{};
+		info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+		info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+		info.size = size;
+		info.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+
+		VmaAllocationCreateInfo allocationInfo{};
+		allocationInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
+
+		VulkanAllocation allocation{};
+		VK_CHECK_RESULT(vmaCreateBuffer(m_Allocator, &info, &allocationInfo, &buffer, &allocation.Handle, &allocation.Info));
+
+		return allocation;
+	}
+
 	Ref<VulkanCommandBuffer> VulkanContext::BeginTemporaryCommandBuffer()
 	{
 		VkCommandBuffer commandBuffer;

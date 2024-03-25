@@ -6,6 +6,7 @@
 #include "Flare/Renderer/GraphicsContext.h"
 #include "Flare/Platform/Vulkan/VulkanCommandBuffer.h"
 #include "Flare/Platform/Vulkan/VulkanFrameBuffer.h"
+#include "Flare/Platform/Vulkan/VulkanAllocation.h"
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
@@ -34,6 +35,7 @@ namespace Flare
 		bool IsValid() const { return m_Device != VK_NULL_HANDLE; }
 
 		void CreateBuffer(size_t size, VkBufferUsageFlags usage, VkMemoryPropertyFlags memoryProperties, VkBuffer& buffer, VkDeviceMemory& memory);
+		VulkanAllocation CreateStagingBuffer(size_t size, VkBuffer& buffer);
 
 		Ref<VulkanCommandBuffer> GetPrimaryCommandBuffer() const { return m_PrimaryCommandBuffer; }
 
@@ -47,6 +49,9 @@ namespace Flare
 		VkDevice GetDevice() const { return m_Device; }
 		VkPhysicalDevice GetPhysicalDevice() const { return m_PhysicalDevice; }
 		VkQueue GetGraphicsQueue() const { return m_GraphicsQueue; }
+
+		VmaAllocator GetMemoryAllocator() const { return m_Allocator; }
+
 		uint32_t GetGraphicsQueueFamilyIndex() const { return *m_GraphicsQueueFamilyIndex; }
 		Ref<VulkanRenderPass> GetColorOnlyPass() const { return m_ColorOnlyPass; }
 
