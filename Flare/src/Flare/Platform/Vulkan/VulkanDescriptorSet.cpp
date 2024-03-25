@@ -2,6 +2,7 @@
 
 #include "Flare/Platform/Vulkan/VulkanContext.h"
 #include "Flare/Platform/Vulkan/VulkanUniformBuffer.h"
+#include "Flare/Platform/Vulkan/VulkanShaderStorageBuffer.h"
 #include "Flare/Platform/Vulkan/VulkanTexture.h"
 
 namespace Flare
@@ -16,6 +17,7 @@ namespace Flare
 				m_ImageBindings++;
 				break;
 			case VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER:
+			case VK_DESCRIPTOR_TYPE_STORAGE_BUFFER:
 				m_BufferBindings++;
 				break;
 			}
@@ -70,6 +72,25 @@ namespace Flare
 		write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 		write.descriptorCount = 1;
 		write.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		write.dstBinding = binding;
+		write.dstArrayElement = 0;
+		write.dstSet = m_Set;
+		write.pBufferInfo = &buffer;
+		write.pImageInfo = nullptr;
+		write.pTexelBufferView = nullptr;
+	}
+
+	void VulkanDescriptorSet::WriteStorageBuffer(const Ref<const ShaderStorageBuffer>& storageBuffer, uint32_t binding)
+	{
+		auto& buffer = m_Buffers.emplace_back();
+		buffer.buffer = As<const VulkanShaderStorageBuffer>(storageBuffer)->GetBufferHandle();
+		buffer.offset = 0;
+		buffer.range = storageBuffer->GetSize();
+
+		auto& write = m_Writes.emplace_back();
+		write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		write.descriptorCount = 1;
+		write.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
 		write.dstBinding = binding;
 		write.dstArrayElement = 0;
 		write.dstSet = m_Set;

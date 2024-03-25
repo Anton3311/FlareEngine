@@ -3,6 +3,7 @@
 #include "FlareCore/Collections/Span.h"
 
 #include "Flare/Renderer/UniformBuffer.h"
+#include "Flare/Renderer/ShaderStorageBuffer.h"
 #include "Flare/Renderer/Texture.h"
 
 #include <vector>
@@ -33,6 +34,7 @@ namespace Flare
 		~VulkanDescriptorSet();
 
 		void WriteUniformBuffer(const Ref<const UniformBuffer>& uniformBuffer, uint32_t binding);
+		void WriteStorageBuffer(const Ref<const ShaderStorageBuffer>& storageBuffer, uint32_t binding);
 		void WriteTexture(const Ref<const Texture>& texture, uint32_t binding);
 		void WriteTextures(const Span<Ref<const Texture>>& textures, size_t arrayOffset, uint32_t binding);
 
