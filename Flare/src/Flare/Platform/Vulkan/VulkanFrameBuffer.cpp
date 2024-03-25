@@ -31,7 +31,7 @@ namespace Flare
 	{
 		m_AttachmentsImages.resize(specifications.Attachments.size());
 		m_AttachmentsImageViews.resize(specifications.Attachments.size());
-		m_AttachmentImagesMemory.resize(specifications.Attachments.size());
+		m_AttachmentAllocations.resize(specifications.Attachments.size());
 		m_DefaultSamplers.resize(specifications.Attachments.size());
 
 		CreateImages();
@@ -260,19 +260,15 @@ namespace Flare
 			imageInfo.format = FrameBufferAttachmentFormatToVulkanFormat(attachment.Format);
 			imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
 
-			VK_CHECK_RESULT(vkCreateImage(device, &imageInfo, nullptr, &m_AttachmentsImages[i]));
+			VmaAllocationCreateInfo allocationInfo{};
+			allocationInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
 
-			VkMemoryRequirements memoryRequirements{};
-			vkGetImageMemoryRequirements(VulkanContext::GetInstance().GetDevice(), m_AttachmentsImages[i], &memoryRequirements);
-
-			uint32_t memoryType = VulkanContext::GetInstance().FindMemoryType(memoryRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-			VkMemoryAllocateInfo allocation{};
-			allocation.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-			allocation.allocationSize = memoryRequirements.size;
-			allocation.memoryTypeIndex = memoryType;
-
-			VK_CHECK_RESULT(vkAllocateMemory(VulkanContext::GetInstance().GetDevice(), &allocation, nullptr, &m_AttachmentImagesMemory[i]));
-			VK_CHECK_RESULT(vkBindImageMemory(VulkanContext::GetInstance().GetDevice(), m_AttachmentsImages[i], m_AttachmentImagesMemory[i], 0));
+			VK_CHECK_RESULT(vmaCreateImage(
+				VulkanContext::GetInstance().GetMemoryAllocator(),
+				&imageInfo, &allocationInfo,
+				&m_AttachmentsImages[i],
+				&m_AttachmentAllocations[i].Handle,
+				&m_AttachmentAllocations[i].Info));
 
 			VkImageViewCreateInfo imageViewInfo{};
 			imageViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -319,11 +315,11 @@ namespace Flare
 
 		for (size_t i = 0; i < m_AttachmentsImages.size(); i++)
 		{
-			vkFreeMemory(device, m_AttachmentImagesMemory[i], nullptr);
+			vmaFreeMemory(VulkanContext::GetInstance().GetMemoryAllocator(), m_AttachmentAllocations[i].Handle);
 			vkDestroyImage(device, m_AttachmentsImages[i], nullptr);
 
 			m_AttachmentsImages[i] = VK_NULL_HANDLE;
-			m_AttachmentImagesMemory[i] = VK_NULL_HANDLE;
+			m_AttachmentAllocations[i] = {};
 		}
 	}
 }

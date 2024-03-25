@@ -4,6 +4,7 @@
 
 #include "Flare/Renderer/FrameBuffer.h"
 #include "Flare/Platform/Vulkan/VulkanRenderPass.h"
+#include "Flare/Platform/Vulkan/VulkanAllocation.h"
 
 #include <vulkan/vulkan.h>
 #include <vector>
@@ -50,7 +51,7 @@ namespace Flare
 
 		std::vector<VkImage> m_AttachmentsImages;
 		std::vector<VkImageView> m_AttachmentsImageViews;
-		std::vector<VkDeviceMemory> m_AttachmentImagesMemory;
+		std::vector<VulkanAllocation> m_AttachmentAllocations;
 		std::vector<VkSampler> m_DefaultSamplers;
 
 		Ref<VulkanRenderPass> m_CompatibleRenderPass = nullptr;
