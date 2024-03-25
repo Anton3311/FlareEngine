@@ -22,11 +22,11 @@ namespace Flare
 
 		if (m_Mapped)
 		{
-			vkUnmapMemory(device, m_BufferMemory);
+			vmaUnmapMemory(VulkanContext::GetInstance().GetMemoryAllocator(), m_Allocation.Handle);
 			m_Mapped = nullptr;
 		}
 
-		vkFreeMemory(device, m_BufferMemory, nullptr);
+		vmaFreeMemory(VulkanContext::GetInstance().GetMemoryAllocator(), m_Allocation.Handle);
 		vkDestroyBuffer(device, m_Buffer, nullptr);
 	}
 
@@ -48,16 +48,10 @@ namespace Flare
 		else
 		{
 			VkBuffer stagingBuffer = VK_NULL_HANDLE;
-			VkDeviceMemory stagingBufferMemory = VK_NULL_HANDLE;
-
-			VkDevice device = VulkanContext::GetInstance().GetDevice();
-			VulkanContext::GetInstance().CreateBuffer(size,
-				VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-				VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
-				stagingBuffer, stagingBufferMemory);
+			VulkanAllocation stagingBufferAllocation = VulkanContext::GetInstance().CreateStagingBuffer(m_Size, stagingBuffer);
 
 			void* mapped = nullptr;
-			VK_CHECK_RESULT(vkMapMemory(device, stagingBufferMemory, 0, VK_WHOLE_SIZE, 0, &mapped));
+			VK_CHECK_RESULT(vmaMapMemory(VulkanContext::GetInstance().GetMemoryAllocator(), stagingBufferAllocation.Handle, &mapped));
 
 			std::memcpy(mapped, data, size);
 
@@ -65,9 +59,9 @@ namespace Flare
 			commandBuffer->CopyBuffer(stagingBuffer, m_Buffer, size, 0, offset);
 			VulkanContext::GetInstance().EndTemporaryCommandBuffer(commandBuffer);
 
-			vkUnmapMemory(device, stagingBufferMemory);
-			vkFreeMemory(device, stagingBufferMemory, nullptr);
-			vkDestroyBuffer(device, stagingBuffer, nullptr);
+			vmaUnmapMemory(VulkanContext::GetInstance().GetMemoryAllocator(), stagingBufferAllocation.Handle);
+			vmaFreeMemory(VulkanContext::GetInstance().GetMemoryAllocator(), stagingBufferAllocation.Handle);
+			vkDestroyBuffer(VulkanContext::GetInstance().GetDevice(), stagingBuffer, nullptr);
 		}
 	}
 
@@ -82,23 +76,34 @@ namespace Flare
 	void VulkanBuffer::Create()
 	{
 		FLARE_CORE_ASSERT(m_Size > 0);
-		VkMemoryPropertyFlags memoryProperties = 0;
+
+		VkBufferCreateInfo info{};
+		info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+		info.flags = 0;
+		info.pNext = nullptr;
+		info.pQueueFamilyIndices = nullptr;
+		info.queueFamilyIndexCount = 0;
+		info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+		info.size = m_Size;
+		info.usage = m_UsageFlags;
+
+		VmaAllocationCreateInfo allocation{};
 
 		switch (m_Usage)
 		{
 		case GPUBufferUsage::Static:
-			memoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+			allocation.usage = VMA_MEMORY_USAGE_GPU_ONLY;
 			break;
 		case GPUBufferUsage::Dynamic:
-			memoryProperties = VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
+			allocation.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
 			break;
 		}
 
-		VulkanContext::GetInstance().CreateBuffer(m_Size, m_UsageFlags, memoryProperties, m_Buffer, m_BufferMemory);
+		VK_CHECK_RESULT(vmaCreateBuffer(VulkanContext::GetInstance().GetMemoryAllocator(), &info, &allocation, &m_Buffer, &m_Allocation.Handle, &m_Allocation.Info));
 
 		if (m_Usage == GPUBufferUsage::Dynamic)
 		{
-			VK_CHECK_RESULT(vkMapMemory(VulkanContext::GetInstance().GetDevice(), m_BufferMemory, 0, VK_WHOLE_SIZE, 0, &m_Mapped));
+			VK_CHECK_RESULT(vmaMapMemory(VulkanContext::GetInstance().GetMemoryAllocator(), m_Allocation.Handle, &m_Mapped));
 		}
 	}
 }
