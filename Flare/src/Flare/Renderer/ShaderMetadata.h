@@ -169,6 +169,13 @@ namespace Flare
 		bool DepthTesting;
 		bool DepthWrite;
 	};
+
+	struct ShaderPushConstantsRange
+	{
+		ShaderStageType Stage = ShaderStageType::Vertex;
+		size_t Offset = 0;
+		size_t Size = 0;
+	};
 	
 	struct ShaderMetadata
 	{
@@ -176,5 +183,6 @@ namespace Flare
 		ShaderOutputs Outputs;
 		std::vector<ShaderProperty> Properties;
 		std::vector<ShaderStageType> Stages;
+		std::vector<ShaderPushConstantsRange> PushConstantsRanges;
 	};
 }

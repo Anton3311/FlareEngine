@@ -583,7 +583,8 @@ namespace Flare
 				Ref<VulkanFrameBuffer> renderTarget = As<VulkanFrameBuffer>(Renderer::GetMainViewport().RenderTarget);
 				s_Renderer2DData.QuadsPipeline = CreateRef<VulkanPipeline>(specificaionts,
 					renderTarget->GetCompatibleRenderPass(),
-					Span<Ref<const VulkanDescriptorSetLayout>>(layouts, 2));
+					Span<Ref<const VulkanDescriptorSetLayout>>(layouts, 2),
+					Span<ShaderPushConstantsRange>());
 			}
 
 			Ref<VulkanCommandBuffer> commandBuffer = VulkanContext::GetInstance().GetPrimaryCommandBuffer();
@@ -683,7 +684,8 @@ namespace Flare
 				Ref<VulkanFrameBuffer> renderTarget = As<VulkanFrameBuffer>(Renderer::GetMainViewport().RenderTarget);
 				s_Renderer2DData.TextPipeline = CreateRef<VulkanPipeline>(specificaionts,
 					renderTarget->GetCompatibleRenderPass(),
-					Span<Ref<const VulkanDescriptorSetLayout>>(layouts, 2));
+					Span<Ref<const VulkanDescriptorSetLayout>>(layouts, 2),
+					Span<ShaderPushConstantsRange>());
 			}
 
 			Ref<VulkanCommandBuffer> commandBuffer = VulkanContext::GetInstance().GetPrimaryCommandBuffer();

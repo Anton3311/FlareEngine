@@ -7,13 +7,12 @@ namespace Flare
 {
 	VulkanPipeline::VulkanPipeline(const PipelineSpecifications& specifications,
 		const Ref<VulkanRenderPass>& renderPass,
-		const Span<Ref<const VulkanDescriptorSetLayout>>& layouts)
+		const Span<Ref<const VulkanDescriptorSetLayout>>& layouts,
+		const Span<ShaderPushConstantsRange>& pushConstantsRanges)
 		: m_Specifications(specifications)
 	{
 		VkPipelineLayoutCreateInfo layoutInfo{};
 		layoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-		layoutInfo.pPushConstantRanges = nullptr;
-		layoutInfo.pushConstantRangeCount = 0;
 		layoutInfo.flags = 0;
 
 		std::vector<VkDescriptorSetLayout> descriptorSetLayouts(layouts.GetSize());
@@ -24,6 +23,26 @@ namespace Flare
 
 		layoutInfo.setLayoutCount = (uint32_t)descriptorSetLayouts.size();
 		layoutInfo.pSetLayouts = descriptorSetLayouts.data();
+
+		std::vector<VkPushConstantRange> ranges(pushConstantsRanges.GetSize());
+		for (size_t i = 0; i < pushConstantsRanges.GetSize(); i++)
+		{
+			switch (pushConstantsRanges[i].Stage)
+			{
+			case ShaderStageType::Vertex:
+				ranges[i].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+				break;
+			case ShaderStageType::Pixel:
+				ranges[i].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+				break;
+			}
+
+			ranges[i].offset = (uint32_t)pushConstantsRanges[i].Offset;
+			ranges[i].size = (uint32_t)pushConstantsRanges[i].Size;
+		}
+
+		layoutInfo.pushConstantRangeCount = (uint32_t)ranges.size();
+		layoutInfo.pPushConstantRanges = ranges.data();
 
 		VK_CHECK_RESULT(vkCreatePipelineLayout(VulkanContext::GetInstance().GetDevice(), &layoutInfo, nullptr, &m_PipelineLayout));
 

@@ -13,7 +13,8 @@ namespace Flare
 	public:
 		VulkanPipeline(const PipelineSpecifications& specifications,
 			const Ref<VulkanRenderPass>& renderPass,
-			const Span<Ref<const VulkanDescriptorSetLayout>>& layouts);
+			const Span<Ref<const VulkanDescriptorSetLayout>>& layouts,
+			const Span<ShaderPushConstantsRange>& pushConstantsRanges);
 		~VulkanPipeline();
 
 		const PipelineSpecifications& GetSpecifications() const override;

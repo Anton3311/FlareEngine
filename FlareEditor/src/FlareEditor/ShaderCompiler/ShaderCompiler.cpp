@@ -369,7 +369,7 @@ namespace Flare
 
     static void Reflect(spirv_cross::Compiler& compiler,
         std::unordered_map<std::string, size_t>& propertyNameToIndex,
-        ShaderProperties& properties)
+        ShaderProperties& properties, ShaderPushConstantsRange& pushConsntantsRange)
     {
         const spirv_cross::ShaderResources& resources = compiler.get_shader_resources();
       
@@ -379,8 +379,9 @@ namespace Flare
             const auto& bufferType = compiler.get_type(resource.base_type_id);
             size_t bufferSize = compiler.get_declared_struct_size(bufferType);
             uint32_t binding = compiler.get_decoration(resource.id, spv::DecorationBinding);
-
             uint32_t membersCount = (uint32_t)bufferType.member_types.size();
+
+            pushConsntantsRange.Size = bufferSize;
 
             for (uint32_t i = 0; i < membersCount; i++)
             {
@@ -574,7 +575,8 @@ namespace Flare
 
             return false;
         }
-        
+
+        Ref<ShaderMetadata> metadata = CreateRef<ShaderMetadata>();
         for (const PreprocessedShaderProgram& program : programs)
         {
             shaderc_shader_kind shaderKind = (shaderc_shader_kind)0;
@@ -624,8 +626,11 @@ namespace Flare
 
             try
             {
+                ShaderPushConstantsRange& range = metadata->PushConstantsRanges.emplace_back();
+                range.Stage = program.Stage;
+
                 spirv_cross::Compiler compiler(compiledVulkanShader.value());
-                Reflect(compiler, propertyNameToIndex, shaderProperties);
+                Reflect(compiler, propertyNameToIndex, shaderProperties, range);
 
                 if (program.Stage == ShaderStageType::Pixel)
                     ExtractShaderOutputs(compiler, shaderOutputs);
@@ -660,7 +665,6 @@ namespace Flare
 
         ParseShaderMetadata(parser, shaderFeatures, errors, propertyNameToIndex, shaderProperties);
 
-        Ref<ShaderMetadata> metadata = CreateRef<ShaderMetadata>();
         metadata->Properties = std::move(shaderProperties);
         metadata->Features = shaderFeatures;
         metadata->Outputs = std::move(shaderOutputs);
