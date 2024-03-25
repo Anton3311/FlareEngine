@@ -10,14 +10,19 @@ layout(location = 3) in int i_EntityIndex;
 
 layout(location = 0) out vec2 UV;
 layout(location = 1) out vec4 Color;
-layout(location = 2) out flat int EntityIndex;
+
+#ifdef OPENGL
+	layout(location = 2) out flat int EntityIndex;
+#endif
 
 void main()
 {
 	gl_Position = u_Camera.ViewProjection * vec4(i_Position, 1.0);
 	UV = i_UV;
 	Color = i_Color;
+#ifdef OPENGL
 	EntityIndex = i_EntityIndex;
+#endif
 }
 
 #end
@@ -27,12 +32,17 @@ void main()
 
 layout(location = 0) in vec2 UV;
 layout(location = 1) in vec4 Color;
-layout(location = 2) in flat int EntityIndex;
+#ifdef OPENGL
+	layout(location = 2) in flat int EntityIndex;
+#endif
 
-layout(binding = 0) uniform sampler2D u_MSDF;
+layout(set = 0, binding = 1) uniform sampler2D u_MSDF;
 
 layout(location = 0) out vec4 o_Color;
-layout(location = 2) out int o_EntityIndex;
+
+#ifdef OPENGL
+	layout(location = 2) out int o_EntityIndex;
+#endif
 
 const float pxRange = 2.0;
 
@@ -58,7 +68,9 @@ void main() {
 		discard;
 
     o_Color = mix(vec4(0.0), Color, opacity);
+#ifdef OPENGL
 	o_EntityIndex = EntityIndex;
+#endif
 }
 
 #end

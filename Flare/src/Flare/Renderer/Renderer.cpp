@@ -127,6 +127,9 @@ namespace Flare
 
 	void Renderer::ReloadShaders()
 	{
+		if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
+			return;
+
 		std::optional<AssetHandle> errorShaderHandle = ShaderLibrary::FindShader("Error");
 		if (errorShaderHandle && AssetManager::IsAssetHandleValid(*errorShaderHandle))
 		{

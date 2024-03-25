@@ -205,7 +205,32 @@ namespace Flare
 		void* mapped = nullptr;
 		VK_CHECK_RESULT(vkMapMemory(VulkanContext::GetInstance().GetDevice(), stagingBufferMemory, 0, VK_WHOLE_SIZE, 0, &mapped));
 
-		std::memcpy(mapped, data, size);
+		if (m_Specifications.Format == TextureFormat::RGB8)
+		{
+			// Add alpha channel
+			uint8_t* rgbaData = new uint8_t[size];
+			const uint8_t* oldData = (const uint8_t*)data;
+
+			size_t j = 0;
+			for (size_t i = 0; i < size; i += 4)
+			{
+				rgbaData[i + 0] = oldData[j + 0];
+				rgbaData[i + 1] = oldData[j + 1];
+				rgbaData[i + 2] = oldData[j + 2];
+				rgbaData[i + 3] = 255;
+
+				j += 3;
+			}
+
+			std::memcpy(mapped, rgbaData, size);
+
+			delete[] rgbaData;
+		}
+		else
+		{
+			std::memcpy(mapped, data, size);
+		}
+
 		vkUnmapMemory(VulkanContext::GetInstance().GetDevice(), stagingBufferMemory);
 
 		{

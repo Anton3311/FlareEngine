@@ -87,9 +87,6 @@ namespace Flare
 
 	void SpritesRendererSystem::RenderText(SystemExecutionContext& context)
 	{
-		if (RendererAPI::GetAPI() != RendererAPI::API::OpenGL)
-			return;
-
 		for (EntityView view : m_TextQuery)
 		{
 			auto transforms = view.View<TransformComponent>();
