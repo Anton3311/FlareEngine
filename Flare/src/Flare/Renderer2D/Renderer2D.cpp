@@ -78,12 +78,10 @@ namespace Flare
 		RenderData* FrameData = nullptr;
 
 		Ref<Pipeline> Pipeline = nullptr;
-		Ref<VulkanDescriptorSetLayout> DescriptorSetLayout = nullptr;
 		Ref<VulkanDescriptorSet> DescriptorSet = nullptr;
+		Ref<VulkanDescriptorSetPool> DescriptorPool = nullptr;
 
 		Ref<UniformBuffer> CameraUniformBuffer = nullptr;
-
-		VkDescriptorPool Pool = VK_NULL_HANDLE;
 	};
 
 	Renderer2DData s_Renderer2DData;
@@ -161,20 +159,6 @@ namespace Flare
 
 		if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
 		{
-			VkDescriptorPoolSize sizes[2];
-			sizes[0].descriptorCount = 1;
-			sizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-			sizes[1].descriptorCount = (uint32_t)MaxTexturesCount;
-			sizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-
-			VkDescriptorPoolCreateInfo info{};
-			info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-			info.maxSets = 1;
-			info.poolSizeCount = 2;
-			info.pPoolSizes = sizes;
-
-			VK_CHECK_RESULT(vkCreateDescriptorPool(VulkanContext::GetInstance().GetDevice(), &info, nullptr, &s_Renderer2DData.Pool));
-
 			VkDescriptorSetLayoutBinding bindings[2] = {};
 			bindings[0].binding = 0;
 			bindings[0].descriptorCount = 1;
@@ -188,10 +172,10 @@ namespace Flare
 			bindings[1].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 			bindings[1].pImmutableSamplers = nullptr;
 
+			s_Renderer2DData.DescriptorPool = CreateRef<VulkanDescriptorSetPool>(1, Span(bindings, 2));
 			s_Renderer2DData.CameraUniformBuffer = UniformBuffer::Create(sizeof(RenderView), 0);
 
-			s_Renderer2DData.DescriptorSetLayout = CreateRef<VulkanDescriptorSetLayout>(Span(bindings, 2));
-			s_Renderer2DData.DescriptorSet = CreateRef<VulkanDescriptorSet>(s_Renderer2DData.Pool, s_Renderer2DData.DescriptorSetLayout);
+			s_Renderer2DData.DescriptorSet = s_Renderer2DData.DescriptorPool->AllocateSet();
 
 			s_Renderer2DData.DescriptorSet->WriteUniformBuffer(s_Renderer2DData.CameraUniformBuffer, 0);
 			s_Renderer2DData.DescriptorSet->FlushWrites();
@@ -224,24 +208,6 @@ namespace Flare
 
 	void Renderer2D::Shutdown()
 	{
-		s_Renderer2DData.Pipeline = nullptr;
-		s_Renderer2DData.CurrentFont = nullptr;
-		s_Renderer2DData.CurrentMaterial = nullptr;
-		s_Renderer2DData.QuadsMesh = nullptr;
-		s_Renderer2DData.QuadsVertexBuffer = nullptr;
-		s_Renderer2DData.FrameData = nullptr;
-		s_Renderer2DData.IndexBuffer = nullptr;
-		s_Renderer2DData.TextMaterial = nullptr;
-		s_Renderer2DData.TextMesh = nullptr;
-		s_Renderer2DData.TextVertexBuffer = nullptr;
-
-		for (size_t i = 0; i < MaxTexturesCount; i++)
-		{
-			s_Renderer2DData.Textures[i] = nullptr;
-		}
-
-		vkDestroyDescriptorPool(VulkanContext::GetInstance().GetDevice(), s_Renderer2DData.Pool, nullptr);
-
 		s_Renderer2DData = {};
 	}
 
@@ -610,7 +576,7 @@ namespace Flare
 				Ref<VulkanFrameBuffer> renderTarget = As<VulkanFrameBuffer>(Renderer::GetMainViewport().RenderTarget);
 				s_Renderer2DData.Pipeline = CreateRef<VulkanPipeline>(specificaionts,
 					renderTarget->GetCompatibleRenderPass(),
-					Span<Ref<const VulkanDescriptorSetLayout>>((Ref<const VulkanDescriptorSetLayout>)s_Renderer2DData.DescriptorSetLayout));
+					Span<Ref<const VulkanDescriptorSetLayout>>((Ref<const VulkanDescriptorSetLayout>)s_Renderer2DData.DescriptorPool->GetLayout()));
 			}
 
 			Ref<VulkanCommandBuffer> commandBuffer = VulkanContext::GetInstance().GetPrimaryCommandBuffer();

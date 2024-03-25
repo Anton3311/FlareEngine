@@ -29,6 +29,7 @@ namespace Flare
 	{
 	public:
 		VulkanDescriptorSet(VkDescriptorPool pool, const Ref<const VulkanDescriptorSetLayout>& layout);
+		VulkanDescriptorSet(VkDescriptorPool pool, VkDescriptorSet set);
 		~VulkanDescriptorSet();
 
 		void WriteUniformBuffer(const Ref<const UniformBuffer>& uniformBuffer, uint32_t binding);
@@ -40,9 +41,24 @@ namespace Flare
 		inline VkDescriptorSet GetHandle() const { return m_Set; }
 	private:
 		VkDescriptorSet m_Set = VK_NULL_HANDLE;
+		VkDescriptorPool m_Pool = VK_NULL_HANDLE;
 
 		std::vector<VkWriteDescriptorSet> m_Writes;
 		std::vector<VkDescriptorImageInfo> m_Images;
 		std::vector<VkDescriptorBufferInfo> m_Buffers;
+	};
+
+	class VulkanDescriptorSetPool
+	{
+	public:
+		VulkanDescriptorSetPool(size_t maxSets, const Span<VkDescriptorSetLayoutBinding>& bindings);
+		~VulkanDescriptorSetPool();
+
+		Ref<VulkanDescriptorSet> AllocateSet();
+
+		inline Ref<VulkanDescriptorSetLayout> GetLayout() const { return m_Layout; }
+	private:
+		Ref<VulkanDescriptorSetLayout> m_Layout = nullptr;
+		VkDescriptorPool m_Pool = VK_NULL_HANDLE;
 	};
 }

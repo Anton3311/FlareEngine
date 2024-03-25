@@ -50,6 +50,11 @@ namespace Flare
 		VK_CHECK_RESULT(vkAllocateDescriptorSets(VulkanContext::GetInstance().GetDevice(), &info, &m_Set));
 	}
 
+	VulkanDescriptorSet::VulkanDescriptorSet(VkDescriptorPool pool, VkDescriptorSet set)
+		: m_Pool(pool), m_Set(set)
+	{
+	}
+
 	VulkanDescriptorSet::~VulkanDescriptorSet()
 	{
 	}
@@ -112,5 +117,50 @@ namespace Flare
 
 		vkUpdateDescriptorSets(VulkanContext::GetInstance().GetDevice(), (uint32_t)m_Writes.size(), m_Writes.data(), 0, nullptr);
 		m_Writes.clear();
+	}
+
+
+
+	VulkanDescriptorSetPool::VulkanDescriptorSetPool(size_t maxSets, const Span<VkDescriptorSetLayoutBinding>& bindings)
+	{
+		std::vector<VkDescriptorPoolSize> sizes(bindings.GetSize());
+		for (size_t i = 0; i < bindings.GetSize(); i++)
+		{
+			sizes[i].descriptorCount = bindings[i].descriptorCount;
+			sizes[i].type = bindings[i].descriptorType;
+		}
+
+		VkDescriptorPoolCreateInfo info{};
+		info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+		info.maxSets = (uint32_t)maxSets;
+		info.poolSizeCount = (uint32_t)sizes.size();
+		info.pPoolSizes = sizes.data();
+		info.pNext = nullptr;
+		info.flags = 0;
+
+		VK_CHECK_RESULT(vkCreateDescriptorPool(VulkanContext::GetInstance().GetDevice(), &info, nullptr, &m_Pool));
+
+		m_Layout = CreateRef<VulkanDescriptorSetLayout>(bindings);
+	}
+
+	VulkanDescriptorSetPool::~VulkanDescriptorSetPool()
+	{
+		vkDestroyDescriptorPool(VulkanContext::GetInstance().GetDevice(), m_Pool, nullptr);
+	}
+
+	Ref<VulkanDescriptorSet> VulkanDescriptorSetPool::AllocateSet()
+	{
+		VkDescriptorSetLayout layout = m_Layout->GetHandle();
+		VkDescriptorSetAllocateInfo info{};
+		info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+		info.descriptorPool = m_Pool;
+		info.descriptorSetCount = 1;
+		info.pNext = nullptr;
+		info.pSetLayouts = &layout;
+
+		VkDescriptorSet set = VK_NULL_HANDLE;
+
+		VK_CHECK_RESULT(vkAllocateDescriptorSets(VulkanContext::GetInstance().GetDevice(), &info, &set));
+		return CreateRef<VulkanDescriptorSet>(m_Pool, set);
 	}
 }
