@@ -24,7 +24,7 @@ namespace Flare
 			}
 			else
 			{
-				m_Material = CreateRef<Material>(AssetManager::GetAsset<Shader>(shaderHandle.value()));
+				m_Material = Material::Create(AssetManager::GetAsset<Shader>(shaderHandle.value()));
 				m_BiasPropertyIndex = m_Material->GetShader()->GetPropertyIndex("u_Params.Bias");
 				m_RadiusPropertyIndex = m_Material->GetShader()->GetPropertyIndex("u_Params.SampleRadius");
 				m_NoiseScalePropertyIndex = m_Material->GetShader()->GetPropertyIndex("u_Params.NoiseScale");
@@ -44,7 +44,7 @@ namespace Flare
 			}
 			else
 			{
-				m_BlurMaterial = CreateRef<Material>(AssetManager::GetAsset<Shader>(shaderHandle.value()));
+				m_BlurMaterial = Material::Create(AssetManager::GetAsset<Shader>(shaderHandle.value()));
 				m_BlurSizePropertyIndex = m_BlurMaterial->GetShader()->GetPropertyIndex("u_Params.BlurSize");
 				m_TexelSizePropertyIndex = m_BlurMaterial->GetShader()->GetPropertyIndex("u_Params.TexelSize");
 

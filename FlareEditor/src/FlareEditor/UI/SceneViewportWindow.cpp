@@ -53,7 +53,7 @@ namespace Flare
 		{
 			if (RendererAPI::GetAPI() != RendererAPI::API::Vulkan)
 			{
-				m_GridMaterial = CreateRef<Material>(AssetManager::GetAsset<Shader>(gridShaderHandle));
+				m_GridMaterial = Material::Create(AssetManager::GetAsset<Shader>(gridShaderHandle));
 
 				Ref<Shader> gridShader = m_GridMaterial->GetShader();
 				s_GridPropertyIndices.Color = gridShader->GetPropertyIndex("u_Data.Color").value_or(UINT32_MAX);
@@ -73,7 +73,7 @@ namespace Flare
 			if (RendererAPI::GetAPI() != RendererAPI::API::Vulkan)
 			{
 				Ref<Shader> shader = AssetManager::GetAsset<Shader>(selectionOutlineShader);
-				m_SelectionOutlineMaterial = CreateRef<Material>(shader);
+				m_SelectionOutlineMaterial = Material::Create(shader);
 
 				ImVec4 primaryColor = ImGuiTheme::Primary;
 				glm::vec4 selectionColor = glm::vec4(primaryColor.x, primaryColor.y, primaryColor.z, 1.0f);

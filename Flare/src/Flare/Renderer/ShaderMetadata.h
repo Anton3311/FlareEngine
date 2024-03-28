@@ -10,6 +10,12 @@
 
 namespace Flare
 {
+	enum class ShaderType
+	{
+		_2D,
+		Surface,
+	};
+
 	enum class BlendMode : uint8_t
 	{
 		Opaque,
@@ -179,6 +185,7 @@ namespace Flare
 	
 	struct ShaderMetadata
 	{
+		ShaderType Type;
 		ShaderFeatures Features;
 		ShaderOutputs Outputs;
 		std::vector<ShaderProperty> Properties;

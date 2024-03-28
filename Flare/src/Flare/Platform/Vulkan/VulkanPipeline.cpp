@@ -9,7 +9,39 @@ namespace Flare
 		const Ref<VulkanRenderPass>& renderPass,
 		const Span<Ref<const VulkanDescriptorSetLayout>>& layouts,
 		const Span<ShaderPushConstantsRange>& pushConstantsRanges)
-		: m_Specifications(specifications)
+		: m_Specifications(specifications), m_CompatbileRenderPass(renderPass)
+	{
+		CreatePipelineLayout(layouts, pushConstantsRanges);
+		Create();
+	}
+
+	VulkanPipeline::VulkanPipeline(const PipelineSpecifications& specifications, const Ref<VulkanRenderPass>& renderPass)
+		: m_Specifications(specifications), m_CompatbileRenderPass(renderPass), m_OwnsPipelineLayout(false)
+	{
+		FLARE_CORE_ASSERT(m_Specifications.Shader);
+		FLARE_CORE_ASSERT(m_Specifications.Shader->IsLoaded());
+
+		m_PipelineLayout = As<const VulkanShader>(m_Specifications.Shader)->GetPipelineLayout();
+
+		Create();
+	}
+
+	VulkanPipeline::~VulkanPipeline()
+	{
+		FLARE_CORE_ASSERT(VulkanContext::GetInstance().IsValid());
+
+		if (m_OwnsPipelineLayout)
+			vkDestroyPipelineLayout(VulkanContext::GetInstance().GetDevice(), m_PipelineLayout, nullptr);
+
+		vkDestroyPipeline(VulkanContext::GetInstance().GetDevice(), m_Pipeline, nullptr);
+	}
+
+	const PipelineSpecifications& Flare::VulkanPipeline::GetSpecifications() const
+	{
+		return m_Specifications;
+	}
+
+	void VulkanPipeline::CreatePipelineLayout(const Span<Ref<const VulkanDescriptorSetLayout>>& layouts, const Span<ShaderPushConstantsRange>& pushConstantsRanges)
 	{
 		VkPipelineLayoutCreateInfo layoutInfo{};
 		layoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -45,8 +77,14 @@ namespace Flare
 		layoutInfo.pPushConstantRanges = ranges.data();
 
 		VK_CHECK_RESULT(vkCreatePipelineLayout(VulkanContext::GetInstance().GetDevice(), &layoutInfo, nullptr, &m_PipelineLayout));
+	}
 
-		std::vector<VkPipelineColorBlendAttachmentState> attachmentsBlendStates(renderPass->GetColorAttachmnetsCount());
+	void VulkanPipeline::Create()
+	{
+		FLARE_CORE_ASSERT(m_CompatbileRenderPass);
+		FLARE_CORE_ASSERT(m_PipelineLayout);
+
+		std::vector<VkPipelineColorBlendAttachmentState> attachmentsBlendStates(m_CompatbileRenderPass->GetColorAttachmnetsCount());
 		for (size_t i = 0; i < attachmentsBlendStates.size(); i++)
 		{
 			VkPipelineColorBlendAttachmentState& attachmentBlendState = attachmentsBlendStates[i];
@@ -158,14 +196,14 @@ namespace Flare
 
 		VkPipelineShaderStageCreateInfo stages[2] = {};
 		stages[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-		stages[0].module = As<VulkanShader>(specifications.Shader)->GetModuleForStage(ShaderStageType::Vertex);
+		stages[0].module = As<VulkanShader>(m_Specifications.Shader)->GetModuleForStage(ShaderStageType::Vertex);
 		stages[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
 		stages[0].pName = "main";
 		stages[0].pSpecializationInfo = nullptr;
 		stages[0].flags = 0;
 
 		stages[1].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-		stages[1].module = As<VulkanShader>(specifications.Shader)->GetModuleForStage(ShaderStageType::Pixel);
+		stages[1].module = As<VulkanShader>(m_Specifications.Shader)->GetModuleForStage(ShaderStageType::Pixel);
 		stages[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
 		stages[1].pName = "main";
 		stages[1].pSpecializationInfo = nullptr;
@@ -231,22 +269,9 @@ namespace Flare
 		info.pTessellationState = nullptr;
 		info.pVertexInputState = &vertexInputState;
 		info.pViewportState = &viewportState;
-		info.renderPass = renderPass->GetHandle();
+		info.renderPass = m_CompatbileRenderPass->GetHandle();
 		info.subpass = 0;
 
 		VK_CHECK_RESULT(vkCreateGraphicsPipelines(VulkanContext::GetInstance().GetDevice(), VK_NULL_HANDLE, 1, &info, nullptr, &m_Pipeline));
-	}
-
-	VulkanPipeline::~VulkanPipeline()
-	{
-		FLARE_CORE_ASSERT(VulkanContext::GetInstance().IsValid());
-
-		vkDestroyPipelineLayout(VulkanContext::GetInstance().GetDevice(), m_PipelineLayout, nullptr);
-		vkDestroyPipeline(VulkanContext::GetInstance().GetDevice(), m_Pipeline, nullptr);
-	}
-
-	const PipelineSpecifications& Flare::VulkanPipeline::GetSpecifications() const
-	{
-		return m_Specifications;
 	}
 }

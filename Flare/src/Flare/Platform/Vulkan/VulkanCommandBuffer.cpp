@@ -1,9 +1,12 @@
 #include "VulkanCommandBuffer.h"
 
+#include "Flare/Renderer/Material.h"
+
 #include "Flare/Platform/Vulkan/VulkanContext.h"
 #include "Flare/Platform/Vulkan/VulkanPipeline.h"
 #include "Flare/Platform/Vulkan/VulkanVertexBuffer.h"
 #include "Flare/Platform/Vulkan/VulkanIndexBuffer.h"
+#include "Flare/Platform/Vulkan/VulkanMaterial.h"
 
 namespace Flare
 {
@@ -42,11 +45,14 @@ namespace Flare
 		const FrameBufferSpecifications& specifications = frameBuffer->GetSpecifications();
 
 		vkCmdBeginRenderPass(m_CommandBuffer, &info, VK_SUBPASS_CONTENTS_INLINE);
+
+		m_CurrentRenderPass = renderPass;
 	}
 
 	void VulkanCommandBuffer::EndRenderPass()
 	{
 		vkCmdEndRenderPass(m_CommandBuffer);
+		m_CurrentRenderPass = nullptr;
 	}
 
 	void VulkanCommandBuffer::TransitionImageLayout(VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout)
@@ -308,6 +314,44 @@ namespace Flare
 	{
 		VkDescriptorSet setHandle = descriptorSet->GetHandle();
 		vkCmdBindDescriptorSets(m_CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, index, 1, &setHandle, 0, nullptr);
+	}
+
+	void VulkanCommandBuffer::ApplyMaterial(const Ref<const Material>& material)
+	{
+		FLARE_CORE_ASSERT(material->GetShader());
+		Ref<VulkanMaterial> vulkanMaterial = As<VulkanMaterial>(std::const_pointer_cast<Material>(material));
+		Ref<Pipeline> pipeline = vulkanMaterial->GetPipeline(m_CurrentRenderPass);
+		VkPipelineLayout pipelineLayout = As<const VulkanPipeline>(vulkanMaterial->GetPipeline(m_CurrentRenderPass))->GetLayoutHandle();
+		Ref<const ShaderMetadata> metadata = material->GetShader()->GetMetadata();
+
+		BindPipeline(pipeline);
+
+		uint32_t setIndex = 0;
+		for (const auto& set : vulkanMaterial->GetSets())
+		{
+			BindDescriptorSet(set, pipelineLayout, setIndex);
+			setIndex++;
+		}
+
+		for (size_t i = 0; i < metadata->PushConstantsRanges.size(); i++)
+		{
+			const ShaderPushConstantsRange& range = metadata->PushConstantsRanges[i];
+			if (range.Size == 0)
+				continue;
+
+			VkShaderStageFlags stage = 0;
+			switch (range.Stage)
+			{
+			case ShaderStageType::Vertex:
+				stage = VK_SHADER_STAGE_VERTEX_BIT;
+				break;
+			case ShaderStageType::Pixel:
+				stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+				break;
+			}
+
+			vkCmdPushConstants(m_CommandBuffer, pipelineLayout, stage, (uint32_t)range.Offset, (uint32_t)range.Size, material->GetPropertiesBuffer() + range.Offset);
+		}
 	}
 
 	void VulkanCommandBuffer::SetViewportAndScisors(Math::Rect viewportRect)

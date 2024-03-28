@@ -21,6 +21,7 @@ namespace Flare
 		virtual bool IsLoaded() const override;
 		virtual void Bind() override;
 
+		virtual Ref<const ShaderMetadata> GetMetadata() const override;
 		virtual const ShaderProperties& GetProperties() const override;
 		virtual const ShaderOutputs& GetOutputs() const override;
 		virtual ShaderFeatures GetFeatures() const override;

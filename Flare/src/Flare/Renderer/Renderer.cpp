@@ -136,7 +136,7 @@ namespace Flare
 		std::optional<AssetHandle> errorShaderHandle = ShaderLibrary::FindShader("Error");
 		if (errorShaderHandle && AssetManager::IsAssetHandleValid(*errorShaderHandle))
 		{
-			s_RendererData.ErrorMaterial = CreateRef<Material>(AssetManager::GetAsset<Shader>(*errorShaderHandle));
+			s_RendererData.ErrorMaterial = Material::Create(AssetManager::GetAsset<Shader>(*errorShaderHandle));
 			s_RendererData.OpaqueQueue.m_ErrorMaterial = s_RendererData.ErrorMaterial;
 		}
 		else
@@ -144,7 +144,7 @@ namespace Flare
 
 		std::optional<AssetHandle> depthOnlyMeshShaderHandle = ShaderLibrary::FindShader("MeshDepthOnly");
 		if (depthOnlyMeshShaderHandle && AssetManager::IsAssetHandleValid(*depthOnlyMeshShaderHandle))
-			s_RendererData.DepthOnlyMeshMaterial= CreateRef<Material>(AssetManager::GetAsset<Shader>(*depthOnlyMeshShaderHandle));
+			s_RendererData.DepthOnlyMeshMaterial= Material::Create(AssetManager::GetAsset<Shader>(*depthOnlyMeshShaderHandle));
 		else
 			FLARE_CORE_ERROR("Renderer: Failed to find MeshDepthOnly shader");
 	}

@@ -428,7 +428,7 @@ namespace Flare
 
                 if (meshShaderHandle)
                 {
-                    Ref<Material> material = CreateRef<Material>(meshShaderHandle.value());
+                    Ref<Material> material = Material::Create(meshShaderHandle.value());
                     MaterialImporter::SerializeMaterial(material, path);
 
                     m_AssetManager->ImportAsset(path, material);

@@ -46,7 +46,7 @@ namespace Flare
 		virtual ~Material();
 
 		inline Ref<Shader> GetShader() const { return m_Shader; }
-		void SetShader(const Ref<Shader>& shader);
+		virtual void SetShader(const Ref<Shader>& shader);
 
 		void SetIntArray(uint32_t index, const int32_t* values, uint32_t count);
 
@@ -91,9 +91,13 @@ namespace Flare
 
 		inline uint8_t* GetPropertiesBuffer() { return m_Buffer; }
 		inline const uint8_t* GetPropertiesBuffer() const { return m_Buffer; }
+	public:
+		static Ref<Material> Create();
+		static Ref<Material> Create(Ref<Shader> shader);
+		static Ref<Material> Create(AssetHandle shaderHandle);
 	private:
 		void Initialize();
-	private:
+	protected:
 		Ref<Shader> m_Shader;
 
 		std::vector<TexturePropertyValue> m_Textures;

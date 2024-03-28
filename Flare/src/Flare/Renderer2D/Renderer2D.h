@@ -9,6 +9,9 @@
 
 namespace Flare
 {
+	class VulkanDescriptorSet;
+	class VulkanDescriptorSetPool;
+
 	struct Renderer2DStats
 	{
 		uint32_t QuadsCount = 0;
@@ -49,6 +52,7 @@ namespace Flare
 		return (int)a != b;
 	}
 
+	class VulkanDescriptorSetLayout;
 	class FLARE_API Renderer2D
 	{
 	public:
@@ -102,6 +106,10 @@ namespace Flare
 			const Ref<Font>& font,
 			const glm::vec4& color = glm::vec4(1.0f),
 			int32_t entityIndex = INT32_MAX);
+
+		static Ref<VulkanDescriptorSet> GetDescriptorSet();
+		static Ref<VulkanDescriptorSetLayout> GetDescriptorSetLayout();
+		static const BufferLayout& GetQuadPipelineInputLayout();
 
 		static void ResetStats();
 		static const Renderer2DStats& GetStats();

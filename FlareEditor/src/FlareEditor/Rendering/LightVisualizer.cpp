@@ -144,7 +144,7 @@ namespace Flare
 		else
 		{
 			Ref<Shader> shader = AssetManager::GetAsset<Shader>(*shaderHandle);
-			m_DebugIconsMaterial = CreateRef<Material>(shader);
+			m_DebugIconsMaterial = Material::Create(shader);
 		}
 	}
 }

@@ -242,7 +242,7 @@ namespace Flare
             float roughness = 1.0f;
             material->Get(AI_MATKEY_ROUGHNESS_FACTOR, roughness);
 
-            Ref<Material> materialAsset = CreateRef<Material>(defaultShader.value());
+            Ref<Material> materialAsset = Material::Create(defaultShader.value());
 
             if (colorProperty)
                 materialAsset->WritePropertyValue(*colorProperty, glm::vec4(color.r, color.g, color.b, color.a));

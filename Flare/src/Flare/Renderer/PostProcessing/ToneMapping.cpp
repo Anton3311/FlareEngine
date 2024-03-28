@@ -23,7 +23,7 @@ namespace Flare
 		}
 
 		Ref<Shader> shader = AssetManager::GetAsset<Shader>(shaderHandle.value());
-		m_Material = CreateRef<Material>(shader);
+		m_Material = Material::Create(shader);
 
 		m_ColorTexture = shader->GetPropertyIndex("u_ScreenBuffer");
 	}

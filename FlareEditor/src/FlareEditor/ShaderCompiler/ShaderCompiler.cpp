@@ -239,11 +239,11 @@ namespace Flare
     }
 
     static void ParseShaderMetadata(const ShaderSourceParser& parser,
-        ShaderFeatures& features,
+        Ref<ShaderMetadata> metadata,
         std::vector<ShaderError>& errors,
-        const std::unordered_map<std::string, size_t>& propertyNameToIndex,
-        ShaderProperties& properties)
+        const std::unordered_map<std::string, size_t>& propertyNameToIndex)
     {
+        ShaderFeatures& features = metadata->Features;
         const Block& rootBlock = parser.GetBlock(0);
         for (const auto& element : rootBlock.Elements)
         {
@@ -287,6 +287,18 @@ namespace Flare
                 else
                     errors.emplace_back(element.Value.Position, fmt::format("Unknown depth function '{}'", element.Value.Value));
             }
+            else if (element.Name.Value == "Type")
+            {
+                if (element.Value.Value == "Surface")
+                    metadata->Type = ShaderType::Surface;
+                else if (element.Value.Value == "2D")
+                    metadata->Type = ShaderType::_2D;
+                else
+                {
+                    errors.emplace_back(element.Value.Position, fmt::format("Invalid shader type '{}'", element.Value.Value));
+                    continue;
+                }
+            }
             else if (element.Name.Value == "Properties")
             {
                 if (element.Type != BlockElementType::Block)
@@ -302,7 +314,7 @@ namespace Flare
                     if (it == propertyNameToIndex.end())
                         continue;
 
-                    ShaderProperty& shaderProperty = properties[it->second];
+                    ShaderProperty& shaderProperty = metadata->Properties[it->second];
                     shaderProperty.Hidden = false;
                     shaderProperty.DisplayName = shaderProperty.Name;
 
@@ -548,11 +560,8 @@ namespace Flare
         std::vector<PreprocessedShaderProgram> programs;
         std::unordered_map<std::string, size_t> propertyNameToIndex;
         ShaderOutputs shaderOutputs;
-        ShaderProperties shaderProperties;
 
         std::vector<ShaderError> errors;
-
-        ShaderFeatures shaderFeatures;
         std::string_view source = sourceString;
 
         ShaderSourceParser parser(shaderPath, source, errors);
@@ -577,6 +586,8 @@ namespace Flare
         }
 
         Ref<ShaderMetadata> metadata = CreateRef<ShaderMetadata>();
+        metadata->Type = ShaderType::Surface;
+
         for (const PreprocessedShaderProgram& program : programs)
         {
             shaderc_shader_kind shaderKind = (shaderc_shader_kind)0;
@@ -630,7 +641,7 @@ namespace Flare
                 range.Stage = program.Stage;
 
                 spirv_cross::Compiler compiler(compiledVulkanShader.value());
-                Reflect(compiler, propertyNameToIndex, shaderProperties, range);
+                Reflect(compiler, propertyNameToIndex, metadata->Properties, range);
 
                 if (program.Stage == ShaderStageType::Pixel)
                     ExtractShaderOutputs(compiler, shaderOutputs);
@@ -663,11 +674,8 @@ namespace Flare
 			}
 		}
 
-        ParseShaderMetadata(parser, shaderFeatures, errors, propertyNameToIndex, shaderProperties);
-
-        metadata->Properties = std::move(shaderProperties);
-        metadata->Features = shaderFeatures;
         metadata->Outputs = std::move(shaderOutputs);
+        ParseShaderMetadata(parser, metadata, errors, propertyNameToIndex);
 
         for (const auto& program : programs)
             metadata->Stages.push_back(program.Stage);

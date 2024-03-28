@@ -196,7 +196,7 @@ namespace Flare
 		else
 		{
 			Ref<Shader> quadShader = AssetManager::GetAsset<Shader>(quadShaderHandle.value());
-			s_Renderer2DData.DefaultMaterial = CreateRef<Material>(quadShader);
+			s_Renderer2DData.DefaultMaterial = Material::Create(quadShader);
 			s_Renderer2DData.CurrentMaterial = s_Renderer2DData.DefaultMaterial;
 		}
 
@@ -206,7 +206,7 @@ namespace Flare
 		else
 		{
 			Ref<Shader> textShader = AssetManager::GetAsset<Shader>(textShaderHandle.value());
-			s_Renderer2DData.TextMaterial = CreateRef<Material>(textShader);
+			s_Renderer2DData.TextMaterial = Material::Create(textShader);
 			s_Renderer2DData.FontAtlasPropertyIndex = textShader->GetPropertyIndex("u_MSDF");
 		}
 	}
@@ -539,6 +539,21 @@ namespace Flare
 		}
 	}
 
+	Ref<VulkanDescriptorSet> Renderer2D::GetDescriptorSet()
+	{
+		return s_Renderer2DData.QuadsDescriptorSet;
+	}
+
+	Ref<VulkanDescriptorSetLayout> Renderer2D::GetDescriptorSetLayout()
+	{
+		return s_Renderer2DData.QuadsDescriptorPool->GetLayout();
+	}
+
+	const BufferLayout& Renderer2D::GetQuadPipelineInputLayout()
+	{
+		return s_Renderer2DData.QuadsPipeline->GetSpecifications().InputLayout;
+	}
+
 	void Renderer2D::FlushQuads()
 	{
 		FLARE_PROFILE_FUNCTION();
@@ -557,6 +572,10 @@ namespace Flare
 			FLARE_PROFILE_SCOPE("Renderer2D::UpdateQuadsVertexBuffer");
 			s_Renderer2DData.QuadsVertexBuffer->SetData(s_Renderer2DData.Vertices.data(), sizeof(QuadVertex) * s_Renderer2DData.QuadIndex * 4);
 		}
+
+		Ref<Material> material = s_Renderer2DData.CurrentMaterial;
+		if (!material)
+			material = s_Renderer2DData.DefaultMaterial;
 
 		for (uint32_t i = s_Renderer2DData.TextureIndex; i < MaxTexturesCount; i++)
 			s_Renderer2DData.Textures[i] = Renderer::GetWhiteTexture();
@@ -595,10 +614,7 @@ namespace Flare
 
 			VkPipelineLayout pipelineLayout = As<const VulkanPipeline>(s_Renderer2DData.QuadsPipeline)->GetLayoutHandle();
 
-			commandBuffer->BindDescriptorSet(Renderer::GetPrimaryDescriptorSet(), pipelineLayout, 0);
-			commandBuffer->BindDescriptorSet(s_Renderer2DData.QuadsDescriptorSet, pipelineLayout, 1);
-
-			commandBuffer->BindPipeline(s_Renderer2DData.QuadsPipeline);
+			commandBuffer->ApplyMaterial(material);
 			commandBuffer->SetViewportAndScisors(Math::Rect(glm::vec2(0.0f), (glm::vec2)renderTarget->GetSize()));
 			commandBuffer->BindVertexBuffers(Span((Ref<const VertexBuffer>)s_Renderer2DData.QuadsVertexBuffer));
 			commandBuffer->BindIndexBuffer(s_Renderer2DData.IndexBuffer);
@@ -618,10 +634,6 @@ namespace Flare
 
 		for (uint32_t i = 0; i < s_Renderer2DData.TextureIndex; i++)
 			s_Renderer2DData.Textures[i]->Bind(i);
-
-		Ref<Material> material = s_Renderer2DData.CurrentMaterial;
-		if (!material)
-			material = s_Renderer2DData.DefaultMaterial;
 
 		Ref<Shader> shader = material->GetShader();
 		FLARE_CORE_ASSERT(shader);

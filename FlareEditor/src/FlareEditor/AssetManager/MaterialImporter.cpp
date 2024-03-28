@@ -114,7 +114,7 @@ namespace Flare
 				}
 				else
 				{
-					material = CreateRef<Material>(handle);
+					material = Material::Create(handle);
 					shaderHandle = handle;
 				}
 			}

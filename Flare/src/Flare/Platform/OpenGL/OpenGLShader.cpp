@@ -188,6 +188,11 @@ namespace Flare
 			glUseProgram(m_Id);
     }
 
+    Ref<const ShaderMetadata> OpenGLShader::GetMetadata() const
+    {
+        return m_Metadata;
+    }
+
     const ShaderProperties& OpenGLShader::GetProperties() const
     {
         return m_Metadata->Properties;

@@ -21,10 +21,14 @@ namespace Flare
 		void Load() override;
 		bool IsLoaded() const override;
 		void Bind() override;
+
+		Ref<const ShaderMetadata> GetMetadata() const override;
 		const ShaderProperties& GetProperties() const override;
 		const ShaderOutputs& GetOutputs() const override;
 		ShaderFeatures GetFeatures() const override;
 		std::optional<uint32_t> GetPropertyIndex(std::string_view name) const override;
+
+		inline VkPipelineLayout GetPipelineLayout() const { return m_PipelineLayout; }
 	private:
 		struct ShaderStageModule
 		{
@@ -36,6 +40,8 @@ namespace Flare
 
 		Ref<const ShaderMetadata> m_Metadata = nullptr;
 		std::vector<ShaderStageModule> m_Modules;
+
+		VkPipelineLayout m_PipelineLayout = VK_NULL_HANDLE;
 
 		std::unordered_map<std::string_view, uint32_t> m_NameToIndex;
 	};

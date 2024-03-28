@@ -2,6 +2,8 @@
 
 #include "Flare/AssetManager/AssetManager.h"
 #include "Flare/Renderer/ShaderCacheManager.h"
+#include "Flare/Renderer/Renderer.h"
+#include "Flare/Renderer2D/Renderer2D.h"
 
 #include "Flare/Platform/Vulkan/VulkanContext.h"
 
@@ -47,6 +49,8 @@ namespace Flare
 		{
 			vkDestroyShaderModule(VulkanContext::GetInstance().GetDevice(), stageModule.Module, nullptr);
 		}
+
+		vkDestroyPipelineLayout(VulkanContext::GetInstance().GetDevice(), m_PipelineLayout, nullptr);
 	}
 
 	VkShaderModule VulkanShader::GetModuleForStage(ShaderStageType stage) const
@@ -114,6 +118,44 @@ namespace Flare
 			VK_CHECK_RESULT(vkCreateShaderModule(VulkanContext::GetInstance().GetDevice(), &info, nullptr, &stageModule.Module));
 		}
 
+		// TODO: Generate descriptor set layout
+
+		Ref<VulkanDescriptorSetLayout> primaryDescriptorSet = Renderer::GetPrimaryDescriptorSetLayout();
+		Ref<VulkanDescriptorSetLayout> secondaryDescriptorSet = Renderer2D::GetDescriptorSetLayout();
+
+		VkDescriptorSetLayout descriptorSetLayouts[] = { primaryDescriptorSet->GetHandle(), secondaryDescriptorSet->GetHandle() };
+		std::vector<VkPushConstantRange> pushConstantsRanges;
+
+		for (size_t i = 0; i < m_Metadata->PushConstantsRanges.size(); i++)
+		{
+			if (m_Metadata->PushConstantsRanges[i].Size == 0)
+				continue;
+
+			VkPushConstantRange& range = pushConstantsRanges.emplace_back();
+			switch (m_Metadata->PushConstantsRanges[i].Stage)
+			{
+			case ShaderStageType::Vertex:
+				range.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+				break;
+			case ShaderStageType::Pixel:
+				range.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+				break;
+			}
+
+			range.offset = (uint32_t)m_Metadata->PushConstantsRanges[i].Offset;
+			range.size = (uint32_t)m_Metadata->PushConstantsRanges[i].Size;
+		}
+
+		// Create pipeline layout
+		VkPipelineLayoutCreateInfo layoutInfo{};
+		layoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+		layoutInfo.setLayoutCount = 2;
+		layoutInfo.pSetLayouts = descriptorSetLayouts;
+		layoutInfo.pushConstantRangeCount = (uint32_t)pushConstantsRanges.size();
+		layoutInfo.pPushConstantRanges = pushConstantsRanges.data();
+
+		VK_CHECK_RESULT(vkCreatePipelineLayout(VulkanContext::GetInstance().GetDevice(), &layoutInfo, nullptr, &m_PipelineLayout));
+
 		if (!m_Valid)
 			return;
 
@@ -129,6 +171,11 @@ namespace Flare
 
 	void VulkanShader::Bind()
 	{
+	}
+
+	Ref<const ShaderMetadata> VulkanShader::GetMetadata() const
+	{
+		return m_Metadata;
 	}
 
 	const ShaderProperties& VulkanShader::GetProperties() const
