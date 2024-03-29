@@ -27,30 +27,7 @@ namespace Flare
 		FlipY = 2,
 	};
 
-	constexpr SpriteRenderFlags operator|(SpriteRenderFlags a, SpriteRenderFlags b)
-	{
-		return (SpriteRenderFlags)((uint8_t)a | (uint8_t)b);
-	}
-
-	constexpr SpriteRenderFlags operator~(SpriteRenderFlags a)
-	{
-		return (SpriteRenderFlags)(~(uint8_t)a);
-	}
-
-	constexpr void operator|=(SpriteRenderFlags& a, SpriteRenderFlags b)
-	{
-		a = (SpriteRenderFlags)((uint8_t)a | (uint8_t)b);
-	}
-
-	constexpr SpriteRenderFlags operator&(SpriteRenderFlags a, SpriteRenderFlags b)
-	{
-		return (SpriteRenderFlags)((uint8_t)a & (uint8_t)b);
-	}
-
-	constexpr bool operator!=(SpriteRenderFlags a, int b)
-	{
-		return (int)a != b;
-	}
+	FLARE_IMPL_ENUM_BITFIELD(SpriteRenderFlags);
 
 	class VulkanDescriptorSetLayout;
 	class FLARE_API Renderer2D

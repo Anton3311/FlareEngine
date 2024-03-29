@@ -27,11 +27,6 @@ namespace Flare
 
 	FLARE_IMPL_ENUM_BITFIELD(MeshRenderFlags);
 
-	enum class MeshTopology
-	{
-		Triangles,
-	};
-
 	class FLARE_API Mesh : public Asset
 	{
 	public:
@@ -43,7 +38,7 @@ namespace Flare
 			IndexBuffer::IndexFormat indexFormat,
 			size_t indexBufferSize);
 
-		void AddSubMesh(const Span<glm::vec3>& vertices,
+		virtual void AddSubMesh(const Span<glm::vec3>& vertices,
 			const MemorySpan& indices,
 			const Span<glm::vec3>& normals,
 			const Span<glm::vec3>& tangents,
@@ -54,9 +49,10 @@ namespace Flare
 
 		inline const std::vector<SubMesh>& GetSubMeshes() const { return m_SubMeshes; }
 		inline MeshTopology GetTopologyType() const { return m_TopologyType; }
-
-		inline const Ref<VertexArray>& GetVertexArray() const { return m_VertexArray; }
-	private:
+		inline IndexBuffer::IndexFormat GetIndexFormat() const { return m_IndexFormat; }
+	public:
+		static Ref<Mesh> Create(MeshTopology topology, size_t vertexBufferSize, IndexBuffer::IndexFormat indexFormat, size_t indexBufferSize);
+	protected:
 		IndexBuffer::IndexFormat m_IndexFormat;
 
 		size_t m_VertexBufferSize = 0;
@@ -65,7 +61,6 @@ namespace Flare
 		size_t m_VertexBufferOffset = 0;
 		size_t m_IndexBufferOffset = 0;
 
-		Ref<VertexArray> m_VertexArray = nullptr;
 		Ref<IndexBuffer> m_IndexBuffer = nullptr;
 		Ref<VertexBuffer> m_Vertices = nullptr;
 		Ref<VertexBuffer> m_Normals = nullptr;

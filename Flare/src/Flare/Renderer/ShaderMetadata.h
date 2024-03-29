@@ -29,6 +29,11 @@ namespace Flare
 		Front,
 	};
 
+	enum class MeshTopology
+	{
+		Triangles,
+	};
+
 	enum class DepthComparisonFunction : uint8_t
 	{
 		Less,

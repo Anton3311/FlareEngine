@@ -38,7 +38,7 @@ namespace Flare
             if (indicesCount < (size_t)std::numeric_limits<uint16_t>::max())
                 indexFormat = IndexBuffer::IndexFormat::UInt16;
 
-            Ref<Mesh> mesh = CreateRef<Mesh>(MeshTopology::Triangles, verticesCount, indexFormat, indicesCount);
+            Ref<Mesh> mesh = Mesh::Create(MeshTopology::Triangles, verticesCount, indexFormat, indicesCount);
 
             for (uint32_t i = 0; i < node->mNumMeshes; i++)
             {

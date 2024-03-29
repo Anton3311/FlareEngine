@@ -81,7 +81,7 @@ namespace Flare
 			6, 7, 2
 		};
 
-		s_Primitives.Cube= CreateRef<Mesh>(MeshTopology::Triangles, 8, IndexBuffer::IndexFormat::UInt16, sizeof(cubeIndices) / sizeof(uint16_t));
+		s_Primitives.Cube= Mesh::Create(MeshTopology::Triangles, 8, IndexBuffer::IndexFormat::UInt16, sizeof(cubeIndices) / sizeof(uint16_t));
 		s_Primitives.Cube->AddSubMesh(
 			Span(cubeVertices, 8),
 			MemorySpan(cubeIndices, sizeof(cubeIndices) / 2),

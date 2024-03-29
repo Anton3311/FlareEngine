@@ -202,7 +202,11 @@ namespace Flare
 
 	void Renderer::Shutdown()
 	{
-		s_RendererData.PrimaryDescriptorPool->ReleaseSet(s_RendererData.PrimaryDescriptorSet);
+		if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
+		{
+			s_RendererData.PrimaryDescriptorPool->ReleaseSet(s_RendererData.PrimaryDescriptorSet);
+		}
+
 		s_RendererData = {};
 	}
 

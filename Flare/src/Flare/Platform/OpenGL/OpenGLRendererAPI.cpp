@@ -5,6 +5,7 @@
 #include "Flare/Renderer/Material.h"
 
 #include "Flare/Platform/OpenGL/OpenGLShader.h"
+#include "Flare/Platform/OpenGL/OpenGLMesh.h"
 
 #include <glad/glad.h>
 
@@ -230,12 +231,13 @@ namespace Flare
 	void OpenGLRendererAPI::DrawInstancesIndexed(const Ref<const Mesh>& mesh, uint32_t subMeshIndex, uint32_t instancesCount, uint32_t baseInstance)
 	{
 		const SubMesh& subMesh = mesh->GetSubMeshes()[subMeshIndex];
-		mesh->GetVertexArray()->Bind();
+		const VertexArray& vertexArray = As<const OpenGLMesh>(mesh)->GetVertexArray();
+		vertexArray.Bind();
 		
-		size_t indexSize = mesh->GetVertexArray()->GetIndexBuffer()->GetIndexFormat() == IndexBuffer::IndexFormat::UInt16 ? sizeof(uint16_t) : sizeof(uint32_t);
+		size_t indexSize = vertexArray.GetIndexBuffer()->GetIndexFormat() == IndexBuffer::IndexFormat::UInt16 ? sizeof(uint16_t) : sizeof(uint32_t);
 		int32_t indicesCount = 0;
 		GLenum indexType = 0;
-		GetIndexCountAndType(mesh->GetVertexArray()->GetIndexBuffer(), &indicesCount, &indexType);
+		GetIndexCountAndType(vertexArray.GetIndexBuffer(), &indicesCount, &indexType);
 
 		glDrawElementsInstancedBaseVertexBaseInstance(
 			ConvertTopologyType(mesh->GetTopologyType()),
@@ -249,11 +251,12 @@ namespace Flare
 
 	void OpenGLRendererAPI::DrawInstancesIndexedIndirect(const Ref<const Mesh>& mesh, const Span<DrawIndirectCommandSubMeshData>& subMeshesData, uint32_t baseInstance)
 	{
-		mesh->GetVertexArray()->Bind();
+		const VertexArray& vertexArray = As<const OpenGLMesh>(mesh)->GetVertexArray();
+		vertexArray.Bind();
 		const auto& subMeshes = mesh->GetSubMeshes();
 		
 		GLenum indexType = 0;
-		GetIndexCountAndType(mesh->GetVertexArray()->GetIndexBuffer(), nullptr, &indexType);
+		GetIndexCountAndType(vertexArray.GetIndexBuffer(), nullptr, &indexType);
 
 		m_IndirectCommandDataStorage.clear();
 
