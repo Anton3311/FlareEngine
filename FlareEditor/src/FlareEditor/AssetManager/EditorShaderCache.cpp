@@ -102,6 +102,17 @@ namespace Flare
         auto it = registry.find(shaderHandle);
         FLARE_CORE_ASSERT(it != registry.end(), "Failed to find shader asset in the registry");
 
+        std::string_view apiName = "";
+        switch (RendererAPI::GetAPI())
+        {
+        case RendererAPI::API::OpenGL:
+            apiName = "OpenGL";
+            break;
+        case RendererAPI::API::Vulkan:
+            apiName = "Vulkan";
+            break;
+        }
+
         const auto& entry = it->second;
         std::filesystem::path cacheDirectory;
         if (entry.OwnerType == AssetOwner::Project)
@@ -110,6 +121,7 @@ namespace Flare
 
             cacheDirectory = Project::GetActive()->Location
                 / "Cache/Shaders/"
+                / apiName
                 / std::filesystem::relative(entry.Metadata.Path.parent_path(), assetsPath);
         }
         else if (entry.OwnerType == AssetOwner::Package)
@@ -123,6 +135,7 @@ namespace Flare
 
             cacheDirectory = Project::GetActive()->Location
                 / "Cache/Shaders/"
+                / apiName
                 / std::filesystem::relative(
                     std::filesystem::absolute(entry.Metadata.Path)
                     .parent_path(),
