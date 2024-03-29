@@ -168,20 +168,21 @@ namespace Flare
                 for (const auto& resource : resources)
                 {
                     glslCompiler->set_decoration(resource.id, spv::DecorationLocation, location);
+					const spirv_cross::SPIRType& baseType = crossCompiler.get_type(resource.base_type_id);
 
-                    uint32_t registers = 1;
-                    if (isStruct)
-                    {
-                        const spirv_cross::SPIRType& structType = crossCompiler.get_type(resource.base_type_id);
-                        registers = CountRegistersUsedByStruct(crossCompiler, structType);
-                    }
+                    uint32_t registers = glm::max((uint32_t)baseType.member_types.size(), 1u);
+
+                    // TODO: Propertly handle arrays, because spirv_cross::CompilerGLSL
+                    //       doesn't provided an array size for a resource type
+					for (auto size : baseType.array)
+						registers *= size;
 
                     location += registers;
                 }
             };
 
-            updateResourcesLocations(resources.sampled_images);
             updateResourcesLocations(resources.push_constant_buffers, true);
+            updateResourcesLocations(resources.sampled_images);
         }
 
         std::string glsl = glslCompiler->compile();
@@ -208,8 +209,8 @@ namespace Flare
             }
 
             FLARE_CORE_ERROR("Failed to compile shader '{}' Stage = {}", path, stageName);
-            FLARE_CORE_ERROR("Shader Error: {0}", shaderModule.GetErrorMessage());
-            FLARE_CORE_TRACE(glsl);
+            FLARE_CORE_ERROR("Shader Error: {}", shaderModule.GetErrorMessage());
+            FLARE_CORE_INFO(glsl);
             return {};
         }
 
@@ -489,7 +490,6 @@ namespace Flare
         for (const auto& resource : resources.sampled_images)
         {
             const auto& samplerType = compiler.get_type(resource.type_id);
-            uint32_t membersCount = (uint32_t)samplerType.member_types.size();
             uint32_t binding = compiler.get_decoration(resource.id, spv::DecorationBinding);
 
             ShaderDataType type = ShaderDataType::Sampler;

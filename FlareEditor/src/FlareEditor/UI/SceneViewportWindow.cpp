@@ -132,7 +132,8 @@ namespace Flare
 			if (debugRenderingGroup.has_value())
 			{
 				DebugRenderer::Begin();
-				scene->GetECSWorld().GetSystemsManager().ExecuteGroup(debugRenderingGroup.value());
+
+				//scene->GetECSWorld().GetSystemsManager().ExecuteGroup(debugRenderingGroup.value());
 
 				// Draw bouding box for decal projectors
 				if (selectedEntity)

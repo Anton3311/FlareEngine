@@ -24,6 +24,8 @@
 
 namespace Flare
 {
+	constexpr uint32_t MaxTexturesCount = 32;
+
 	struct QuadVertex
 	{
 		glm::vec3 Position;
@@ -41,7 +43,44 @@ namespace Flare
 		int32_t EntityIndex;
 	};
 
-	constexpr size_t MaxTexturesCount = 32;
+	struct QuadsBatch
+	{
+		inline uint32_t GetEnd() const { return Start + Count; }
+
+		uint32_t GetTextureIndex(const Ref<Texture>& texture)
+		{
+			FLARE_CORE_ASSERT(TexturesCount < MaxTexturesCount);
+			FLARE_CORE_ASSERT(texture);
+
+			for (uint32_t i = 0; i < TexturesCount; i++)
+			{
+				if (texture.get() == Textures[i].get())
+				{
+					return i;
+				}
+			}
+
+			TexturesCount++;
+
+			Textures[TexturesCount - 1] = texture;
+			return TexturesCount - 1;
+		}
+
+		Ref<Material> Material = nullptr;
+		Ref<Texture> Textures[MaxTexturesCount] = { nullptr };
+		uint32_t TexturesCount = 0;
+		uint32_t Start = 0;
+		uint32_t Count = 0;
+	};
+
+	struct TextBatch
+	{
+		inline size_t GetEnd() const { return Start + Count; }
+
+		Ref<const Font> Font = nullptr;
+		uint32_t Start = 0;
+		uint32_t Count = 0;
+	};
 
 	struct Renderer2DData
 	{
@@ -62,9 +101,6 @@ namespace Flare
 
 		size_t TextQuadIndex = 0;
 
-		Ref<Texture> Textures[MaxTexturesCount] = { nullptr };
-		uint32_t TextureIndex = 0;
-
 		Ref<Material> DefaultMaterial = nullptr;
 		Ref<Material> TextMaterial = nullptr;
 		std::optional<uint32_t> FontAtlasPropertyIndex = {};
@@ -77,8 +113,8 @@ namespace Flare
 
 		RenderData* FrameData = nullptr;
 
-		Ref<Pipeline> QuadsPipeline = nullptr;
-		Ref<VulkanDescriptorSet> QuadsDescriptorSet = nullptr;
+		std::vector<QuadsBatch> QuadBatches;
+		std::vector<Ref<VulkanDescriptorSet>> UsedQuadsDescriptorSets;
 		Ref<VulkanDescriptorSetPool> QuadsDescriptorPool = nullptr;
 
 		Ref<Pipeline> TextPipeline = nullptr;
@@ -151,9 +187,6 @@ namespace Flare
 		s_Renderer2DData.QuadUV[2] = glm::vec2(1.0f, 1.0f);
 		s_Renderer2DData.QuadUV[3] = glm::vec2(1.0f, 0.0f);
 
-		s_Renderer2DData.Textures[0] = Renderer::GetWhiteTexture();
-		s_Renderer2DData.TextureIndex = 1;
-
 		s_Renderer2DData.Stats.DrawCalls = 0;
 		s_Renderer2DData.Stats.QuadsCount = 0;
 
@@ -169,8 +202,7 @@ namespace Flare
 				bindings[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 				bindings[0].pImmutableSamplers = nullptr;
 
-				s_Renderer2DData.QuadsDescriptorPool = CreateRef<VulkanDescriptorSetPool>(1, Span(bindings, 1));
-				s_Renderer2DData.QuadsDescriptorSet = s_Renderer2DData.QuadsDescriptorPool->AllocateSet();
+				s_Renderer2DData.QuadsDescriptorPool = CreateRef<VulkanDescriptorSetPool>(32, Span(bindings, 1));
 			}
 
 			{
@@ -213,6 +245,10 @@ namespace Flare
 
 	void Renderer2D::Shutdown()
 	{
+		for (Ref<VulkanDescriptorSet> set : s_Renderer2DData.UsedQuadsDescriptorSets)
+			s_Renderer2DData.QuadsDescriptorPool->ReleaseSet(set);
+		s_Renderer2DData.UsedQuadsDescriptorSets.clear();
+
 		s_Renderer2DData = {};
 	}
 
@@ -221,8 +257,12 @@ namespace Flare
 		if (s_Renderer2DData.QuadIndex > 0)
 			FlushAll();
 
+		for (Ref<VulkanDescriptorSet> set : s_Renderer2DData.UsedQuadsDescriptorSets)
+			s_Renderer2DData.QuadsDescriptorPool->ReleaseSet(set);
+		s_Renderer2DData.UsedQuadsDescriptorSets.clear();
+
 		s_Renderer2DData.FrameData = &Renderer::GetCurrentViewport().FrameData;
-		s_Renderer2DData.CurrentMaterial = material;
+		s_Renderer2DData.CurrentMaterial = material == nullptr ? s_Renderer2DData.DefaultMaterial : material;
 	}
 
 	void Renderer2D::End()
@@ -231,6 +271,8 @@ namespace Flare
 
 		s_Renderer2DData.CurrentFont = nullptr;
 		s_Renderer2DData.CurrentMaterial = nullptr;
+
+		s_Renderer2DData.QuadBatches.clear();
 	}
 
 	void Renderer2D::ResetStats()
@@ -246,7 +288,17 @@ namespace Flare
 
 	void Renderer2D::SetMaterial(const Ref<Material>& material)
 	{
-		FlushQuads();
+		FLARE_CORE_ASSERT(s_Renderer2DData.QuadBatches.size() > 0);
+		FLARE_CORE_ASSERT(material);
+
+		size_t lastBatchIndex = s_Renderer2DData.QuadBatches.size() - 1;
+		QuadsBatch& batch = s_Renderer2DData.QuadBatches.emplace_back();
+		batch.Material = material;
+		batch.Count = 0;
+
+		if (s_Renderer2DData.QuadBatches.size() > 0)
+			batch.Start = s_Renderer2DData.QuadBatches[lastBatchIndex].GetEnd();
+
 		s_Renderer2DData.CurrentMaterial = material;
 	}
 
@@ -374,23 +426,29 @@ namespace Flare
 
 	void Renderer2D::DrawQuad(const glm::vec3* vertices, const Ref<Texture>& texture, const glm::vec4& tint, const glm::vec2& tiling, const glm::vec2* uv, int32_t entityIndex)
 	{
-		if (s_Renderer2DData.QuadIndex >= s_Renderer2DData.MaxQuadCount || s_Renderer2DData.TextureIndex == MaxTexturesCount)
-			FlushQuads();
-
-		uint32_t textureIndex = 0;
-		size_t vertexIndex = s_Renderer2DData.QuadIndex * 4;
-
-		if (texture != nullptr)
+		if (s_Renderer2DData.QuadBatches.size() == 0)
 		{
-			for (textureIndex = 0; textureIndex < s_Renderer2DData.TextureIndex; textureIndex++)
-			{
-				if (s_Renderer2DData.Textures[textureIndex].get() == texture.get())
-					break;
-			}
+			QuadsBatch& batch = s_Renderer2DData.QuadBatches.emplace_back();
+			batch.Material = s_Renderer2DData.DefaultMaterial;
 		}
 
-		if (textureIndex >= s_Renderer2DData.TextureIndex)
-			s_Renderer2DData.Textures[s_Renderer2DData.TextureIndex++] = texture;
+		if (s_Renderer2DData.QuadIndex >= s_Renderer2DData.MaxQuadCount)
+		{
+			Ref<Material> lastUsedMaterial = s_Renderer2DData.QuadBatches.back().Material;
+			FlushQuadBatches();
+
+			QuadsBatch& batch = s_Renderer2DData.QuadBatches.emplace_back();
+			batch.Material = lastUsedMaterial;
+		}
+
+		if (s_Renderer2DData.QuadBatches.back().TexturesCount == MaxTexturesCount)
+		{
+			s_Renderer2DData.QuadBatches.emplace_back();
+		}
+
+		QuadsBatch& currentBatch = s_Renderer2DData.QuadBatches.back();
+		size_t vertexIndex = s_Renderer2DData.QuadIndex * 4;
+		uint32_t textureIndex = currentBatch.GetTextureIndex(texture == nullptr ? Renderer::GetWhiteTexture() : texture);
 
 		for (uint32_t i = 0; i < 4; i++)
 		{
@@ -402,6 +460,7 @@ namespace Flare
 			vertex.EntityIndex = entityIndex;
 		}
 
+		currentBatch.Count++;
 		s_Renderer2DData.QuadIndex++;
 		s_Renderer2DData.Stats.QuadsCount++;
 	}
@@ -541,7 +600,7 @@ namespace Flare
 
 	Ref<VulkanDescriptorSet> Renderer2D::GetDescriptorSet()
 	{
-		return s_Renderer2DData.QuadsDescriptorSet;
+		return nullptr;
 	}
 
 	Ref<VulkanDescriptorSetLayout> Renderer2D::GetDescriptorSetLayout()
@@ -549,81 +608,31 @@ namespace Flare
 		return s_Renderer2DData.QuadsDescriptorPool->GetLayout();
 	}
 
-	const BufferLayout& Renderer2D::GetQuadPipelineInputLayout()
-	{
-		return s_Renderer2DData.QuadsPipeline->GetSpecifications().InputLayout;
-	}
-
-	void Renderer2D::FlushQuads()
+	static void FlushQuadsBatch(QuadsBatch& batch)
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		if (s_Renderer2DData.QuadIndex == 0)
-			return;
-
-		if (s_Renderer2DData.DefaultMaterial == nullptr)
-		{
-			s_Renderer2DData.QuadIndex = 0;
-			s_Renderer2DData.TextureIndex = 0;
-			return;
-		}
-
-		{
-			FLARE_PROFILE_SCOPE("Renderer2D::UpdateQuadsVertexBuffer");
-			s_Renderer2DData.QuadsVertexBuffer->SetData(s_Renderer2DData.Vertices.data(), sizeof(QuadVertex) * s_Renderer2DData.QuadIndex * 4);
-		}
-
-		Ref<Material> material = s_Renderer2DData.CurrentMaterial;
-		if (!material)
-			material = s_Renderer2DData.DefaultMaterial;
-
-		for (uint32_t i = s_Renderer2DData.TextureIndex; i < MaxTexturesCount; i++)
-			s_Renderer2DData.Textures[i] = Renderer::GetWhiteTexture();
+		for (uint32_t i = batch.TexturesCount; i < MaxTexturesCount; i++)
+			batch.Textures[i] = Renderer::GetWhiteTexture();
 
 		if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
 		{
-			if (s_Renderer2DData.QuadsPipeline == nullptr)
-			{
-				PipelineSpecifications specificaionts{};
-				specificaionts.Shader = s_Renderer2DData.DefaultMaterial->GetShader();
-				specificaionts.Culling = CullingMode::Back;
-				specificaionts.DepthTest = true;
-				specificaionts.DepthWrite = true;
-				specificaionts.InputLayout = BufferLayout({
-					BufferLayoutElement("i_Position", ShaderDataType::Float3),
-					BufferLayoutElement("i_Color", ShaderDataType::Float4),
-					BufferLayoutElement("i_UV", ShaderDataType::Float2),
-					BufferLayoutElement("i_TextureIndex", ShaderDataType::Float),
-					BufferLayoutElement("i_EntityIndex", ShaderDataType::Int),
-				});
-
-				Ref<const VulkanDescriptorSetLayout> layouts[] = { Renderer::GetPrimaryDescriptorSetLayout(), s_Renderer2DData.QuadsDescriptorPool->GetLayout() };
-
-				Ref<VulkanFrameBuffer> renderTarget = As<VulkanFrameBuffer>(Renderer::GetMainViewport().RenderTarget);
-				s_Renderer2DData.QuadsPipeline = CreateRef<VulkanPipeline>(specificaionts,
-					renderTarget->GetCompatibleRenderPass(),
-					Span<Ref<const VulkanDescriptorSetLayout>>(layouts, 2),
-					Span<ShaderPushConstantsRange>());
-			}
-
 			Ref<VulkanCommandBuffer> commandBuffer = VulkanContext::GetInstance().GetPrimaryCommandBuffer();
 			Ref<VulkanFrameBuffer> renderTarget = As<VulkanFrameBuffer>(Renderer::GetCurrentViewport().RenderTarget);
 
-			s_Renderer2DData.QuadsDescriptorSet->WriteTextures(Span((Ref<const Texture>*)s_Renderer2DData.Textures, MaxTexturesCount), 0, 0);
-			s_Renderer2DData.QuadsDescriptorSet->FlushWrites();
+			Ref<VulkanDescriptorSet> descriptorSet = s_Renderer2DData.QuadsDescriptorPool->AllocateSet();
+			s_Renderer2DData.UsedQuadsDescriptorSets.push_back(descriptorSet);
 
-			VkPipelineLayout pipelineLayout = As<const VulkanPipeline>(s_Renderer2DData.QuadsPipeline)->GetLayoutHandle();
+			descriptorSet->WriteTextures(Span((Ref<const Texture>*)batch.Textures, MaxTexturesCount), 0, 0);
+			descriptorSet->FlushWrites();
 
-			commandBuffer->ApplyMaterial(material);
+			commandBuffer->SetSecondaryDescriptorSet(descriptorSet);
+
+			commandBuffer->ApplyMaterial(batch.Material);
 			commandBuffer->SetViewportAndScisors(Math::Rect(glm::vec2(0.0f), (glm::vec2)renderTarget->GetSize()));
 			commandBuffer->BindVertexBuffers(Span((Ref<const VertexBuffer>)s_Renderer2DData.QuadsVertexBuffer));
 			commandBuffer->BindIndexBuffer(s_Renderer2DData.IndexBuffer);
-			commandBuffer->DrawIndexed((uint32_t)(s_Renderer2DData.QuadIndex * 6));
-
-			s_Renderer2DData.QuadIndex = 0;
-			s_Renderer2DData.TextureIndex = 1;
-
-			s_Renderer2DData.Stats.DrawCalls++;
+			commandBuffer->DrawIndexed(batch.Start * 6, batch.Count * 6);
 
 			return;
 		}
@@ -632,26 +641,59 @@ namespace Flare
 		for (uint32_t i = 0; i < MaxTexturesCount; i++)
 			slots[i] = (int32_t)i;
 
-		for (uint32_t i = 0; i < s_Renderer2DData.TextureIndex; i++)
-			s_Renderer2DData.Textures[i]->Bind(i);
+		for (uint32_t i = 0; i < batch.TexturesCount; i++)
+			batch.Textures[i]->Bind(i);
 
-		Ref<Shader> shader = material->GetShader();
+		Ref<Shader> shader = batch.Material->GetShader();
 		FLARE_CORE_ASSERT(shader);
 
 		std::optional<uint32_t> texturesParameterIndex = shader->GetPropertyIndex("u_Textures");
 
 		if (texturesParameterIndex.has_value())
-			material->SetIntArray(texturesParameterIndex.value(), slots, s_Renderer2DData.TextureIndex);
+			batch.Material->SetIntArray(texturesParameterIndex.value(), slots, batch.TexturesCount);
 
 		{
-			FLARE_PROFILE_SCOPE("Renderer2D::DrawQuadsMesh");
-			Renderer::DrawMesh(s_Renderer2DData.QuadsMesh, material, s_Renderer2DData.QuadIndex * 6);
+			FLARE_PROFILE_SCOPE("Draw");
+			RenderCommand::ApplyMaterial(batch.Material);
+
+			FrameBufferAttachmentsMask shaderOutputsMask = 0;
+			for (uint32_t output : shader->GetOutputs())
+				shaderOutputsMask |= (1 << output);
+
+			Renderer::GetCurrentViewport().RenderTarget->SetWriteMask(shaderOutputsMask);
+
+			RenderCommand::DrawIndexed(s_Renderer2DData.QuadsMesh, batch.Start * 6, batch.Count * 6);
+		}
+
+		s_Renderer2DData.Stats.DrawCalls++;
+	}
+
+	void Renderer2D::FlushQuadBatches()
+	{
+		FLARE_PROFILE_FUNCTION();
+		if (s_Renderer2DData.QuadIndex == 0)
+			return;
+
+		if (s_Renderer2DData.DefaultMaterial == nullptr)
+		{
+			s_Renderer2DData.QuadIndex = 0;
+			return;
+		}
+
+		{
+			FLARE_PROFILE_SCOPE("Renderer2D::UpdateQuadsVertexBuffer");
+			s_Renderer2DData.QuadsVertexBuffer->SetData(s_Renderer2DData.Vertices.data(), sizeof(QuadVertex) * s_Renderer2DData.QuadIndex * 4);
+		}
+
+		for (auto& batch : s_Renderer2DData.QuadBatches)
+		{
+			if (batch.Count == 0)
+				continue;
+
+			FlushQuadsBatch(batch);
 		}
 
 		s_Renderer2DData.QuadIndex = 0;
-		s_Renderer2DData.TextureIndex = 1;
-
-		s_Renderer2DData.Stats.DrawCalls++;
 	}
 
 	void Renderer2D::FlushText()
@@ -746,14 +788,16 @@ namespace Flare
 
 			commandBuffer->BeginRenderPass(renderTarget->GetCompatibleRenderPass(), renderTarget);
 
-			FlushQuads();
+			commandBuffer->SetPrimaryDescriptorSet(Renderer::GetPrimaryDescriptorSet());
+
+			FlushQuadBatches();
 			FlushText();
 
 			commandBuffer->EndRenderPass();
 			return;
 		}
 
-		FlushQuads();
+		FlushQuadBatches();
 		FlushText();
 	}
 }

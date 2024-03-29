@@ -141,6 +141,7 @@ namespace Flare
 		VkCommandBuffer commandBuffer = m_PrimaryCommandBuffer->GetHandle();
 		vkFreeCommandBuffers(m_Device, m_CommandBufferPool, 1, &commandBuffer);
 		vkDestroyCommandPool(m_Device, m_CommandBufferPool, nullptr);
+		m_PrimaryCommandBuffer = nullptr;
 
 		vkDestroySemaphore(m_Device, m_ImageAvailableSemaphore, nullptr);
 		vkDestroySemaphore(m_Device, m_RenderFinishedSemaphore, nullptr);

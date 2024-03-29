@@ -35,9 +35,6 @@ namespace Flare
 				BufferLayoutElement("i_TextureIndex", ShaderDataType::Float),
 				BufferLayoutElement("i_EntityIndex", ShaderDataType::Int),
 			});
-
-			m_UsedSets[0] = Renderer::GetPrimaryDescriptorSet();
-			m_UsedSets[1] = Renderer2D::GetDescriptorSet();
 		}
 		else
 		{

@@ -109,12 +109,11 @@ namespace Flare
 
 		static Ref<VulkanDescriptorSet> GetDescriptorSet();
 		static Ref<VulkanDescriptorSetLayout> GetDescriptorSetLayout();
-		static const BufferLayout& GetQuadPipelineInputLayout();
 
 		static void ResetStats();
 		static const Renderer2DStats& GetStats();
 	private:
-		static void FlushQuads();
+		static void FlushQuadBatches();
 		static void FlushText();
 		static void FlushAll();
 	private:

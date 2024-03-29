@@ -186,6 +186,23 @@ namespace Flare
 		glDrawElements(GL_TRIANGLES, (int32_t)indicesCount, indexType, (const void*)0);
 	}
 
+	void OpenGLRendererAPI::DrawIndexed(const Ref<const VertexArray>& vertexArray, size_t firstIndex, size_t indicesCount)
+	{
+		vertexArray->Bind();
+
+		switch (vertexArray->GetIndexBuffer()->GetIndexFormat())
+		{
+		case IndexBuffer::IndexFormat::UInt16:
+			glDrawElements(GL_TRIANGLES, (int32_t)indicesCount, GL_UNSIGNED_SHORT, (const void*)(firstIndex * sizeof(uint16_t)));
+			break;
+		case IndexBuffer::IndexFormat::UInt32:
+			glDrawElements(GL_TRIANGLES, (int32_t)indicesCount, GL_UNSIGNED_INT, (const void*)(firstIndex * sizeof(uint32_t)));
+			break;
+		default:
+			FLARE_CORE_ASSERT(false);
+		}
+	}
+
 	void OpenGLRendererAPI::DrawInstanced(const Ref<const VertexArray>& mesh, size_t instancesCount)
 	{
 		mesh->Bind();

@@ -57,6 +57,7 @@ namespace Flare
 		~VulkanDescriptorSetPool();
 
 		Ref<VulkanDescriptorSet> AllocateSet();
+		void ReleaseSet(const Ref<VulkanDescriptorSet>& set);
 
 		inline Ref<VulkanDescriptorSetLayout> GetLayout() const { return m_Layout; }
 	private:

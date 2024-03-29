@@ -50,6 +50,10 @@ namespace Flare
 	{
 	}
 
+	void VulkanRendererAPI::DrawIndexed(const Ref<const VertexArray>& mesh, size_t firstIndex, size_t indicesCount)
+	{
+	}
+
 	void VulkanRendererAPI::DrawInstanced(const Ref<const VertexArray>& mesh, size_t instancesCount)
 	{
 	}

@@ -286,6 +286,7 @@ namespace Flare
 	{
 		auto vulkanPipeline = As<const VulkanPipeline>(pipeline);
 		vkCmdBindPipeline(m_CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vulkanPipeline->GetHandle());
+		m_CurrentPipeline = vulkanPipeline;
 	}
 
 	void VulkanCommandBuffer::BindVertexBuffers(const Span<Ref<const VertexBuffer>>& vertexBuffers)
@@ -316,6 +317,16 @@ namespace Flare
 		vkCmdBindDescriptorSets(m_CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, index, 1, &setHandle, 0, nullptr);
 	}
 
+	void VulkanCommandBuffer::SetPrimaryDescriptorSet(const Ref<VulkanDescriptorSet>& set)
+	{
+		m_PrimaryDescriptorSet = set;
+	}
+
+	void VulkanCommandBuffer::SetSecondaryDescriptorSet(const Ref<VulkanDescriptorSet>& set)
+	{
+		m_SecondaryDescriptorSet = set;
+	}
+
 	void VulkanCommandBuffer::ApplyMaterial(const Ref<const Material>& material)
 	{
 		FLARE_CORE_ASSERT(material->GetShader());
@@ -326,12 +337,8 @@ namespace Flare
 
 		BindPipeline(pipeline);
 
-		uint32_t setIndex = 0;
-		for (const auto& set : vulkanMaterial->GetSets())
-		{
-			BindDescriptorSet(set, pipelineLayout, setIndex);
-			setIndex++;
-		}
+		BindDescriptorSet(m_PrimaryDescriptorSet, pipelineLayout, 0);
+		BindDescriptorSet(m_SecondaryDescriptorSet, pipelineLayout, 1);
 
 		for (size_t i = 0; i < metadata->PushConstantsRanges.size(); i++)
 		{
@@ -377,5 +384,10 @@ namespace Flare
 	void VulkanCommandBuffer::DrawIndexed(uint32_t indicesCount)
 	{
 		vkCmdDrawIndexed(m_CommandBuffer, indicesCount, 1, 0, 0, 0);
+	}
+
+	void VulkanCommandBuffer::DrawIndexed(uint32_t firstIndex, uint32_t indicesCount)
+	{
+		vkCmdDrawIndexed(m_CommandBuffer, indicesCount, 1, firstIndex, 0, 0);
 	}
 }

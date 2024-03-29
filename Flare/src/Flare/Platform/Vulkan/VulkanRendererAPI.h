@@ -19,6 +19,7 @@ namespace Flare
 		void SetLineWidth(float width) override;
 		void DrawIndexed(const Ref<const VertexArray>& vertexArray) override;
 		void DrawIndexed(const Ref<const VertexArray>& vertexArray, size_t indicesCount) override;
+		void DrawIndexed(const Ref<const VertexArray>& mesh, size_t firstIndex, size_t indicesCount) override;
 		void DrawInstanced(const Ref<const VertexArray>& mesh, size_t instancesCount) override;
 		void DrawInstancesIndexed(const Ref<const Mesh>& mesh, uint32_t subMeshIndex, uint32_t instancesCount, uint32_t baseInstance) override;
 		void DrawInstancesIndexedIndirect(const Ref<const Mesh>& mesh, const Span<DrawIndirectCommandSubMeshData>& subMeshesData, uint32_t baseInstance) override;

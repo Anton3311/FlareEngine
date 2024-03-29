@@ -157,7 +157,7 @@ namespace Flare
 		info.poolSizeCount = (uint32_t)sizes.size();
 		info.pPoolSizes = sizes.data();
 		info.pNext = nullptr;
-		info.flags = 0;
+		info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
 
 		VK_CHECK_RESULT(vkCreateDescriptorPool(VulkanContext::GetInstance().GetDevice(), &info, nullptr, &m_Pool));
 
@@ -183,5 +183,11 @@ namespace Flare
 
 		VK_CHECK_RESULT(vkAllocateDescriptorSets(VulkanContext::GetInstance().GetDevice(), &info, &set));
 		return CreateRef<VulkanDescriptorSet>(m_Pool, set);
+	}
+
+	void VulkanDescriptorSetPool::ReleaseSet(const Ref<VulkanDescriptorSet>& set)
+	{
+		VkDescriptorSet setHandles[] = { set->GetHandle() };
+		VK_CHECK_RESULT(vkFreeDescriptorSets(VulkanContext::GetInstance().GetDevice(), m_Pool, 1, setHandles));
 	}
 }
