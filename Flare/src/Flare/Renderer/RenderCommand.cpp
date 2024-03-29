@@ -111,6 +111,7 @@ namespace Flare
 		SetDepthComparisonFunction(shaderFeatures.DepthFunction);
 		SetCullingMode(shaderFeatures.Culling);
 		SetDepthTestEnabled(shaderFeatures.DepthTesting);
+		SetBlendMode(shaderFeatures.Blending);
 		SetDepthWriteEnabled(shaderFeatures.DepthWrite);
 	}
 }
