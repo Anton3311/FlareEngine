@@ -7,6 +7,10 @@ namespace Flare
 	VulkanBuffer::VulkanBuffer(GPUBufferUsage usage, VkBufferUsageFlags bufferUsage, size_t size)
 		: m_Usage(usage), m_UsageFlags(bufferUsage), m_Size(size)
 	{
+		if (usage == GPUBufferUsage::Static)
+		{
+			m_UsageFlags |= VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+		}
 	}
 
 	VulkanBuffer::VulkanBuffer(GPUBufferUsage usage, VkBufferUsageFlags bufferUsage)
