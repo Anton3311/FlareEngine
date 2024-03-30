@@ -138,6 +138,8 @@ namespace Flare
 
 		vkUpdateDescriptorSets(VulkanContext::GetInstance().GetDevice(), (uint32_t)m_Writes.size(), m_Writes.data(), 0, nullptr);
 		m_Writes.clear();
+		m_Images.clear();
+		m_Buffers.clear();
 	}
 
 

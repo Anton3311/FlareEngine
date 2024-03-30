@@ -726,11 +726,11 @@ namespace Flare
 				specificaionts.Culling = CullingMode::Back;
 				specificaionts.DepthTest = true;
 				specificaionts.DepthWrite = true;
-				specificaionts.InputLayout = BufferLayout({
-					BufferLayoutElement("i_Position", ShaderDataType::Float3),
-					BufferLayoutElement("i_Color", ShaderDataType::Float4),
-					BufferLayoutElement("i_UV", ShaderDataType::Float2),
-					BufferLayoutElement("i_EntityIndex", ShaderDataType::Int),
+				specificaionts.InputLayout = PipelineInputLayout({
+					{ 0, 0, ShaderDataType::Float3 }, // Position
+					{ 0, 1, ShaderDataType::Float4 }, // COlor
+					{ 0, 2, ShaderDataType::Float2 }, // UV
+					{ 0, 3, ShaderDataType::Int }, // Entity index
 				});
 
 				Ref<const VulkanDescriptorSetLayout> layouts[] = { Renderer::GetPrimaryDescriptorSetLayout(), s_Renderer2DData.TextDescriptorPool->GetLayout() };

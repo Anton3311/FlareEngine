@@ -198,7 +198,7 @@ namespace Flare
 		static void ExecuteGeomertyPass();
 		static void ExecuteDecalsPass();
 		static void ExecuteShadowPass();
-		static void FlushInstances(uint32_t count, uint32_t baseInstance);
+		static void FlushInstances(uint32_t instanceCount, uint32_t baseInstance);
 		static void FlushShadowPassInstances(uint32_t baseInstance);
 		static void ReloadShaders();
 		static void ExecuteRenderPasses(std::vector<Ref<RenderPass>>& passes);

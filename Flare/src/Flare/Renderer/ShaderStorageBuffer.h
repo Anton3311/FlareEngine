@@ -14,6 +14,6 @@ namespace Flare
         virtual size_t GetSize() const = 0;
         virtual void SetData(const MemorySpan& data) = 0;
     public:
-        static Ref<ShaderStorageBuffer> Create(uint32_t binding);
+        static Ref<ShaderStorageBuffer> Create(size_t size, uint32_t binding);
     };
 }

@@ -22,18 +22,29 @@ namespace Flare
 		PipelineSpecifications specifications{};
 		specifications.Culling = CullingMode::Back;
 		specifications.DepthFunction = DepthComparisonFunction::Less;
-		specifications.DepthTest = false;
-		specifications.DepthWrite = true;
 		specifications.Shader = m_Shader;
 
 		if (m_Shader->GetMetadata()->Type == ShaderType::_2D)
 		{
-			specifications.InputLayout = BufferLayout({
-				BufferLayoutElement("i_Position", ShaderDataType::Float3),
-				BufferLayoutElement("i_Color", ShaderDataType::Float4),
-				BufferLayoutElement("i_UV", ShaderDataType::Float2),
-				BufferLayoutElement("i_TextureIndex", ShaderDataType::Float),
-				BufferLayoutElement("i_EntityIndex", ShaderDataType::Int),
+			specifications.DepthTest = false;
+			specifications.DepthWrite = false;
+			specifications.InputLayout = PipelineInputLayout({
+				{ 0, 0, ShaderDataType::Float3 }, // Position
+				{ 0, 1, ShaderDataType::Float4 }, // Color
+				{ 0, 2, ShaderDataType::Float2 }, // UV
+				{ 0, 3, ShaderDataType::Float }, // Texture index
+				{ 0, 4, ShaderDataType::Int }, // Entity index
+			});
+		}
+		else if (m_Shader->GetMetadata()->Type == ShaderType::Surface)
+		{
+			specifications.DepthTest = true;
+			specifications.DepthWrite = true;
+			specifications.InputLayout = PipelineInputLayout({
+				{ 0, 0, ShaderDataType::Float3 }, // Position
+				{ 1, 1, ShaderDataType::Float3 }, // Normal
+				{ 2, 2, ShaderDataType::Float3 }, // Tangent
+				{ 3, 3, ShaderDataType::Float2 }, // UV
 			});
 		}
 		else

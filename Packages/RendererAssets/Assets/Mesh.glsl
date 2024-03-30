@@ -1,3 +1,4 @@
+Type = Surface
 Properties = 
 {
 	u_Material.Color = { Type = Color }
@@ -28,7 +29,9 @@ struct VertexData
 };
 
 layout(location = 0) out VertexData o_Vertex;
-layout(location = 6) out flat int o_EntityIndex;
+#if OPENGL
+	layout(location = 6) out flat int o_EntityIndex;
+#endif
 
 void main()
 {
@@ -42,7 +45,9 @@ void main()
 
 	o_Vertex.UV = i_UV;
 	o_Vertex.ViewSpacePosition = (u_Camera.View * transformed).xyz;
+#if OPENGL
 	o_EntityIndex = u_InstancesData.Data[gl_InstanceIndex].EntityIndex;
+#endif
 
     gl_Position = position;
 }
@@ -72,20 +77,31 @@ struct VertexData
 	vec3 ViewSpacePosition;
 };
 
-layout(binding = 7) uniform sampler2D u_Texture;
-layout(binding = 8) uniform sampler2D u_NormalMap;
-layout(binding = 9) uniform sampler2D u_RoughnessMap;
+#if OPENGL
+	layout(binding = 7) uniform sampler2D u_Texture;
+	layout(binding = 8) uniform sampler2D u_NormalMap;
+	layout(binding = 9) uniform sampler2D u_RoughnessMap;
+#endif
 
 layout(location = 0) in VertexData i_Vertex;
-layout(location = 6) in flat int i_EntityIndex;
+#if OPENGL
+	layout(location = 6) in flat int i_EntityIndex;
+#endif
 
 layout(location = 0) out vec4 o_Color;
-layout(location = 1) out vec4 o_Normal;
-layout(location = 2) out int o_EntityIndex;
+
+#if OPENGL
+	layout(location = 1) out vec4 o_Normal;
+	layout(location = 2) out int o_EntityIndex;
+#endif
 
 void main()
 {
+#if OPENGL
 	vec4 color = u_Material.Color * texture(u_Texture, i_Vertex.UV);
+#else
+	vec4 color = u_Material.Color;
+#endif
 	if (color.a == 0.0f)
 		discard;
 
@@ -93,6 +109,7 @@ void main()
 	vec3 H = normalize(V - u_LightDirection);
 	vec3 N = normalize(i_Vertex.Normal);
 
+#if OPENGL
 	vec3 tangent = normalize(i_Vertex.Tangent);
 	tangent = normalize(tangent - dot(tangent, N) * N);
 
@@ -101,21 +118,38 @@ void main()
 	vec3 sampledNormal = texture(u_NormalMap, i_Vertex.UV).xyz * 2.0f - vec3(1.0f);
 
 	N = normalize(tbn * sampledNormal);
+#else
+	N = i_Vertex.Normal;
+#endif
 
+#if OPENGL
 	float roughness = u_Material.Roughness * texture(u_RoughnessMap, i_Vertex.UV).r;
+#else
+	float roughness = u_Material.Roughness;
+#endif
 
+#if OPENGL
 	float shadow = CalculateShadow(N, i_Vertex.Position, i_Vertex.ViewSpacePosition);
+#else
+	float shadow = 1.0f;
+#endif
+
 	vec3 finalColor = CalculateLight(N, V, H, color.rgb,
 		u_LightColor.rgb * u_LightColor.w, -u_LightDirection,
 		roughness) * shadow;
 
+#if OPENGK
 	finalColor += CalculatePointLightsContribution(N, V, H, color.rgb, i_Vertex.Position.xyz, roughness);
 	finalColor += CalculateSpotLightsContribution(N, V, H, color.rgb, i_Vertex.Position.xyz, roughness);
+#endif
+
 	finalColor += u_EnvironmentLight.rgb * u_EnvironmentLight.w * color.rgb;
 
-	o_Normal = vec4(N * 0.5f + vec3(0.5f), 1.0f);
 	o_Color = vec4(finalColor, color.a);
+#if OPENGL
+	o_Normal = vec4(N * 0.5f + vec3(0.5f), 1.0f);
 	o_EntityIndex = i_EntityIndex;
+#endif
 }
 
 #end

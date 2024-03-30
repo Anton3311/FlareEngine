@@ -117,9 +117,6 @@ namespace Flare
 
 	void MeshesRendererSystem::OnUpdate(World& world, SystemExecutionContext& context)
 	{
-		if (RendererAPI::GetAPI() != RendererAPI::API::OpenGL)
-			return;
-
 		FLARE_PROFILE_FUNCTION();
 
 		AssetHandle currentMaterialHandle = NULL_ASSET_HANDLE;

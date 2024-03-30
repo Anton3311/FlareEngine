@@ -327,6 +327,7 @@ namespace Flare
         FLARE_CORE_ASSERT(metadata->Type == asset->GetType());
 
         m_LoadedAssets[handle] = asset;
+        asset->Handle = handle;
     }
 
     void EditorAssetManager::AddAssetsPackage(const std::filesystem::path& path)

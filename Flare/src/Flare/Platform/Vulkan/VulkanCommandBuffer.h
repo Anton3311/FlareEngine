@@ -49,6 +49,8 @@ namespace Flare
 
 		void DrawIndexed(uint32_t indicesCount);
 		void DrawIndexed(uint32_t firstIndex, uint32_t indicesCount);
+		void DrawIndexed(uint32_t firstIndex, uint32_t indicesCount, uint32_t firstInstance, uint32_t instancesCount);
+		void DrawIndexed(const Ref<const Mesh>& mesh, uint32_t subMeshIndex, uint32_t firstInstance, uint32_t instancesCount);
 
 		VkCommandBuffer GetHandle() const { return m_CommandBuffer; }
 	private:

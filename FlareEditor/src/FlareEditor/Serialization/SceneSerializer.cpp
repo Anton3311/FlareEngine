@@ -185,55 +185,57 @@ namespace Flare
 		}
 
 		emitter << YAML::Key << "PostProcessing" << YAML::BeginSeq;
+
+		const auto& postProcessingManager = scene->GetPostProcessingManager();
 		
+		if (postProcessingManager.ToneMappingPass)
 		{
-			Ref<ToneMapping> toneMapping = scene->GetPostProcessingManager().ToneMappingPass;
 			const auto* descriptor = &FLARE_SERIALIZATION_DESCRIPTOR_OF(ToneMapping);
 
 			emitter << YAML::Value << YAML::BeginMap;
 			emitter << YAML::Key << "Name" << YAML::Value << descriptor->Name;
 
 			YAMLSerializer serialzier(emitter, &scene->GetECSWorld());
-			serialzier.Serialize("Data", SerializationValue(*toneMapping));
+			serialzier.Serialize("Data", SerializationValue(*postProcessingManager.ToneMappingPass));
 
 			emitter << YAML::EndMap;
 		}
 
+		if (postProcessingManager.VignettePass)
 		{
-			Ref<Vignette> vignette = scene->GetPostProcessingManager().VignettePass;
 			const auto* descriptor = &FLARE_SERIALIZATION_DESCRIPTOR_OF(Vignette);
 
 			emitter << YAML::Value << YAML::BeginMap;
 			emitter << YAML::Key << "Name" << YAML::Value << descriptor->Name;
 
 			YAMLSerializer serialzier(emitter, &scene->GetECSWorld());
-			serialzier.Serialize("Data", SerializationValue(*vignette));
+			serialzier.Serialize("Data", SerializationValue(*postProcessingManager.VignettePass));
 
 			emitter << YAML::EndMap;
 		}
-		
+
+		if (postProcessingManager.SSAOPass)
 		{
-			Ref<SSAO> ssao = scene->GetPostProcessingManager().SSAOPass;
 			const auto* descriptor = &FLARE_SERIALIZATION_DESCRIPTOR_OF(SSAO);
 
 			emitter << YAML::Value << YAML::BeginMap;
 			emitter << YAML::Key << "Name" << YAML::Value << descriptor->Name;
 
 			YAMLSerializer serialzier(emitter, &scene->GetECSWorld());
-			serialzier.Serialize("Data", SerializationValue(*ssao));
+			serialzier.Serialize("Data", SerializationValue(*postProcessingManager.SSAOPass));
 
 			emitter << YAML::EndMap;
 		}
 
+		if (postProcessingManager.Atmosphere)
 		{
-			Ref<AtmospherePass> atmospherePass = scene->GetPostProcessingManager().Atmosphere;
 			const auto* descriptor = &FLARE_SERIALIZATION_DESCRIPTOR_OF(AtmospherePass);
 
 			emitter << YAML::Value << YAML::BeginMap;
 			emitter << YAML::Key << "Name" << YAML::Value << descriptor->Name;
 
 			YAMLSerializer serialzier(emitter, &scene->GetECSWorld());
-			serialzier.Serialize("Data", SerializationValue(*atmospherePass));
+			serialzier.Serialize("Data", SerializationValue(*postProcessingManager.Atmosphere));
 
 			emitter << YAML::EndMap;
 		}

@@ -402,7 +402,7 @@ namespace Flare
 
     bool EditorGUI::AssetField(AssetHandle& handle, const AssetDescriptor* assetType)
     {
-        AssetFieldRenderer fieldRenderer((uint64_t)&handle, handle);
+        AssetFieldRenderer fieldRenderer((uint64_t)&handle, handle, assetType);
         return fieldRenderer.OnRenderImGui();
     }
 

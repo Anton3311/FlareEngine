@@ -81,6 +81,12 @@ namespace Flare
 		virtual FrameBufferAttachmentsMask GetWriteMask() = 0;
 
 		virtual const FrameBufferSpecifications& GetSpecifications() const = 0;
+
+		inline glm::uvec2 GetSize() const
+		{
+			const auto& specifications = GetSpecifications();
+			return glm::uvec2(specifications.Width, specifications.Height);
+		}
 	public:
 		static Ref<FrameBuffer> Create(const FrameBufferSpecifications& specifications);
 	};

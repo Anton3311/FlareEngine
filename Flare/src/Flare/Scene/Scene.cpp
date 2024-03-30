@@ -285,10 +285,10 @@ namespace Flare
 		m_World.GetSystemsManager().ExecuteGroup(m_2DRenderingGroup);
 
 		Renderer2D::End();
+		Renderer::Flush();
 
 		if (RendererAPI::GetAPI() != RendererAPI::API::Vulkan)
 		{
-			Renderer::Flush();
 			Renderer::ExecutePostProcessingPasses();
 		}
 	}

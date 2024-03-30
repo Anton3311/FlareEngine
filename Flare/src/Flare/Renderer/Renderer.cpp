@@ -18,7 +18,9 @@
 
 #include "FlareCore/Profiler/Profiler.h"
 
+#include "Flare/Platform/Vulkan/VulkanContext.h"
 #include "Flare/Platform/Vulkan/VulkanDescriptorSet.h"
+#include "Flare/Platform/Vulkan/VulkanCommandBuffer.h"
 
 namespace Flare
 {
@@ -130,9 +132,6 @@ namespace Flare
 
 	void Renderer::ReloadShaders()
 	{
-		if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
-			return;
-
 		std::optional<AssetHandle> errorShaderHandle = ShaderLibrary::FindShader("Error");
 		if (errorShaderHandle && AssetManager::IsAssetHandleValid(*errorShaderHandle))
 		{
@@ -151,12 +150,15 @@ namespace Flare
 
 	void Renderer::Initialize()
 	{
+		size_t maxPointLights = 32;
+		size_t maxSpotLights = 32;
+
 		s_RendererData.CameraBuffer = UniformBuffer::Create(sizeof(RenderView), 0);
 		s_RendererData.LightBuffer = UniformBuffer::Create(sizeof(LightData), 1);
 		s_RendererData.ShadowDataBuffer = UniformBuffer::Create(sizeof(ShadowData), 2);
-		s_RendererData.InstancesShaderBuffer = ShaderStorageBuffer::Create(3);
-		s_RendererData.PointLightsShaderBuffer = ShaderStorageBuffer::Create(4);
-		s_RendererData.SpotLightsShaderBuffer = ShaderStorageBuffer::Create(5);
+		s_RendererData.InstancesShaderBuffer = ShaderStorageBuffer::Create(s_RendererData.MaxInstances * sizeof(InstanceData), 3);
+		s_RendererData.PointLightsShaderBuffer = ShaderStorageBuffer::Create(maxPointLights * sizeof(PointLightData), 4);
+		s_RendererData.SpotLightsShaderBuffer = ShaderStorageBuffer::Create(maxSpotLights * sizeof(SpotLightData), 5);
 
 		s_RendererData.ShadowPassTimer = GPUTimer::Create();
 		s_RendererData.GeometryPassTimer = GPUTimer::Create();
@@ -183,17 +185,58 @@ namespace Flare
 
 		if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
 		{
-			VkDescriptorSetLayoutBinding bindings[1] = {};
+			VkDescriptorSetLayoutBinding bindings[6] = {};
+			// Camera
 			bindings[0].binding = 0;
 			bindings[0].descriptorCount = 1;
 			bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 			bindings[0].pImmutableSamplers = nullptr;
-			bindings[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+			bindings[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
 
-			s_RendererData.PrimaryDescriptorPool = CreateRef<VulkanDescriptorSetPool>(1, Span(bindings, 1));
+			// Light
+			bindings[1].binding = 1;
+			bindings[1].descriptorCount = 1;
+			bindings[1].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+			bindings[1].pImmutableSamplers = nullptr;
+			bindings[1].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+			
+			// Shadow data
+			bindings[2].binding = 2;
+			bindings[2].descriptorCount = 1;
+			bindings[2].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+			bindings[2].pImmutableSamplers = nullptr;
+			bindings[2].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+			// Instance data
+			bindings[3].binding = 3;
+			bindings[3].descriptorCount = 1;
+			bindings[3].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+			bindings[3].pImmutableSamplers = nullptr;
+			bindings[3].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+			// Point lights
+			bindings[4].binding = 4;
+			bindings[4].descriptorCount = 1;
+			bindings[4].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+			bindings[4].pImmutableSamplers = nullptr;
+			bindings[4].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+			// Spot lights
+			bindings[5].binding = 5;
+			bindings[5].descriptorCount = 1;
+			bindings[5].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+			bindings[5].pImmutableSamplers = nullptr;
+			bindings[5].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+			s_RendererData.PrimaryDescriptorPool = CreateRef<VulkanDescriptorSetPool>(1, Span(bindings, 6));
 			s_RendererData.PrimaryDescriptorSet = s_RendererData.PrimaryDescriptorPool->AllocateSet();
 
 			s_RendererData.PrimaryDescriptorSet->WriteUniformBuffer(s_RendererData.CameraBuffer, 0);
+			s_RendererData.PrimaryDescriptorSet->WriteUniformBuffer(s_RendererData.LightBuffer, 1);
+			s_RendererData.PrimaryDescriptorSet->WriteUniformBuffer(s_RendererData.ShadowDataBuffer, 2);
+			s_RendererData.PrimaryDescriptorSet->WriteStorageBuffer(s_RendererData.InstancesShaderBuffer, 3);
+			s_RendererData.PrimaryDescriptorSet->WriteStorageBuffer(s_RendererData.PointLightsShaderBuffer, 4);
+			s_RendererData.PrimaryDescriptorSet->WriteStorageBuffer(s_RendererData.SpotLightsShaderBuffer, 5);
 			s_RendererData.PrimaryDescriptorSet->FlushWrites();
 		}
 
@@ -497,7 +540,6 @@ namespace Flare
 		s_RendererData.CurrentViewport = &viewport;
 		s_RendererData.OpaqueQueue.m_CameraPosition = viewport.FrameData.Camera.Position;
 
-		if (RendererAPI::GetAPI() != RendererAPI::API::Vulkan)
 		{
 			FLARE_PROFILE_SCOPE("UpdateLightUniformBuffer");
 			s_RendererData.CurrentViewport->FrameData.Light.PointLightsCount = (uint32_t)s_RendererData.PointLights.size();
@@ -512,13 +554,11 @@ namespace Flare
 			s_RendererData.CameraBuffer->SetData(&viewport.FrameData.Camera, sizeof(RenderView), 0);
 		}
 
-		if (RendererAPI::GetAPI() != RendererAPI::API::Vulkan)
 		{
 			FLARE_PROFILE_SCOPE("UploadPointLightsData");
 			s_RendererData.PointLightsShaderBuffer->SetData(MemorySpan::FromVector(s_RendererData.PointLights));
 		}
 
-		if (RendererAPI::GetAPI() != RendererAPI::API::Vulkan)
 		{
 			FLARE_PROFILE_SCOPE("UploadSpotLightsData");
 			s_RendererData.SpotLightsShaderBuffer->SetData(MemorySpan::FromVector(s_RendererData.SpotLights));
@@ -575,6 +615,14 @@ namespace Flare
 
 	static void ApplyMaterial(const Ref<const Material>& materail)
 	{
+		if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
+		{
+			Ref<VulkanCommandBuffer> commandBuffer = VulkanContext::GetInstance().GetPrimaryCommandBuffer();
+			commandBuffer->ApplyMaterial(materail);
+			commandBuffer->SetViewportAndScisors(Math::Rect(glm::vec2(0.0f), (glm::vec2)s_RendererData.CurrentViewport->RenderTarget->GetSize()));
+			return;
+		}
+
 		Ref<Shader> shader = materail->GetShader();
 		FLARE_CORE_ASSERT(shader);
 
@@ -649,8 +697,11 @@ namespace Flare
 
 		s_RendererData.Statistics.ObjectsSubmitted += (uint32_t)s_RendererData.OpaqueQueue.GetSize();
 
-		if (s_RendererData.ShadowMappingSettings.Enabled && s_RendererData.CurrentViewport->ShadowMappingEnabled)
-			ExecuteShadowPass();
+		if (RendererAPI::GetAPI() != RendererAPI::API::Vulkan)
+		{
+			if (s_RendererData.ShadowMappingSettings.Enabled && s_RendererData.CurrentViewport->ShadowMappingEnabled)
+				ExecuteShadowPass();
+		}
 
 		{
 			FLARE_PROFILE_SCOPE("PrepareViewport");
@@ -663,8 +714,29 @@ namespace Flare
 				sizeof(s_RendererData.CurrentViewport->FrameData.Camera), 0);
 		}
 
-		ExecuteGeomertyPass();
-		ExecuteDecalsPass();
+		if (RendererAPI::GetAPI() != RendererAPI::API::Vulkan)
+		{
+			ExecuteGeomertyPass();
+		}
+		else
+		{
+			Ref<VulkanCommandBuffer> commandBuffer = VulkanContext::GetInstance().GetPrimaryCommandBuffer();
+
+			Ref<VulkanFrameBuffer> renderTarget = As<VulkanFrameBuffer>(s_RendererData.CurrentViewport->RenderTarget);
+			commandBuffer->BeginRenderPass(renderTarget->GetCompatibleRenderPass(), renderTarget);
+
+			commandBuffer->SetPrimaryDescriptorSet(s_RendererData.PrimaryDescriptorSet);
+			commandBuffer->SetSecondaryDescriptorSet(nullptr);
+
+			ExecuteGeomertyPass();
+
+			commandBuffer->EndRenderPass();
+		}
+
+		if (RendererAPI::GetAPI() != RendererAPI::API::Vulkan)
+		{
+			ExecuteDecalsPass();
+		}
 
 		s_RendererData.InstanceDataBuffer.clear();
 		s_RendererData.CulledObjectIndices.clear();
@@ -681,10 +753,17 @@ namespace Flare
 
 		FLARE_PROFILE_FUNCTION();
 
-		s_RendererData.GeometryPassTimer->Start();
+		if (RendererAPI::GetAPI() == RendererAPI::API::OpenGL)
+		{
+			s_RendererData.GeometryPassTimer->Start();
+		}
 
 		s_RendererData.CulledObjectIndices.clear();
-		PerformFrustumCulling();
+		//PerformFrustumCulling();
+		for (size_t i = 0; i < s_RendererData.OpaqueQueue.GetSize(); i++)
+		{
+			s_RendererData.CulledObjectIndices.push_back((uint32_t)i);
+		}
 		s_RendererData.Statistics.ObjectsCulled += (uint32_t)(s_RendererData.OpaqueQueue.GetSize() - s_RendererData.CulledObjectIndices.size());
 
 		{
@@ -692,15 +771,18 @@ namespace Flare
 			std::sort(s_RendererData.CulledObjectIndices.begin(), s_RendererData.CulledObjectIndices.end(), CompareRenderableObjects);
 		}
 
-		if (s_RendererData.ShadowMappingSettings.Enabled)
+		if (RendererAPI::GetAPI() == RendererAPI::API::OpenGL)
 		{
-			for (size_t i = 0; i < 4; i++)
-				s_RendererData.ShadowsRenderTarget[i]->BindAttachmentTexture(0, 28 + (uint32_t)i);
-		}
-		else
-		{
-			for (size_t i = 0; i < 4; i++)
-				s_RendererData.WhiteTexture->Bind(28 + (uint32_t)i);
+			if (s_RendererData.ShadowMappingSettings.Enabled)
+			{
+				for (size_t i = 0; i < 4; i++)
+					s_RendererData.ShadowsRenderTarget[i]->BindAttachmentTexture(0, 28 + (uint32_t)i);
+			}
+			else
+			{
+				for (size_t i = 0; i < 4; i++)
+					s_RendererData.WhiteTexture->Bind(28 + (uint32_t)i);
+			}
 		}
 
 		Ref<const Material> currentMaterial = nullptr;
@@ -751,7 +833,10 @@ namespace Flare
 		FlushInstances((uint32_t)s_RendererData.CulledObjectIndices.size() - baseInstance, baseInstance);
 		s_RendererData.CurrentInstancingMesh.Reset();
 
-		s_RendererData.GeometryPassTimer->Stop();
+		if (RendererAPI::GetAPI() == RendererAPI::API::OpenGL)
+		{
+			s_RendererData.GeometryPassTimer->Stop();
+		}
 		
 		{
 			FLARE_PROFILE_SCOPE("AfterGeometryPasses");
@@ -936,20 +1021,29 @@ namespace Flare
 		s_RendererData.InstanceDataBuffer.clear();
 	}
 
-	void Renderer::FlushInstances(uint32_t count, uint32_t baseInstance)
+	void Renderer::FlushInstances(uint32_t instanceCount, uint32_t baseInstance)
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		if (count == 0 || s_RendererData.CurrentInstancingMesh.Mesh == nullptr)
+		if (instanceCount == 0 || s_RendererData.CurrentInstancingMesh.Mesh == nullptr)
 			return;
 
 		auto mesh = s_RendererData.CurrentInstancingMesh;
-
 		const SubMesh& subMesh = mesh.Mesh->GetSubMeshes()[mesh.SubMeshIndex];
-		RenderCommand::DrawInstancesIndexed(mesh.Mesh, mesh.SubMeshIndex, count, baseInstance);
+
+		if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
+		{
+			Ref<VulkanCommandBuffer> commandBuffer = VulkanContext::GetInstance().GetPrimaryCommandBuffer();
+
+			commandBuffer->DrawIndexed(mesh.Mesh, mesh.SubMeshIndex, baseInstance, instanceCount);
+		}
+		else
+		{
+			RenderCommand::DrawInstancesIndexed(mesh.Mesh, mesh.SubMeshIndex, instanceCount, baseInstance);
+		}
 
 		s_RendererData.Statistics.DrawCallsCount++;
-		s_RendererData.Statistics.DrawCallsSavedByInstancing += count - 1;
+		s_RendererData.Statistics.DrawCallsSavedByInstancing += instanceCount - 1;
 	}
 
 	void Renderer::FlushShadowPassInstances(uint32_t baseInstance)

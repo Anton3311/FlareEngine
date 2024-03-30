@@ -337,8 +337,10 @@ namespace Flare
 
 		BindPipeline(pipeline);
 
-		BindDescriptorSet(m_PrimaryDescriptorSet, pipelineLayout, 0);
-		BindDescriptorSet(m_SecondaryDescriptorSet, pipelineLayout, 1);
+		if (m_PrimaryDescriptorSet)
+			BindDescriptorSet(m_PrimaryDescriptorSet, pipelineLayout, 0);
+		if (m_SecondaryDescriptorSet)
+			BindDescriptorSet(m_SecondaryDescriptorSet, pipelineLayout, 1);
 
 		for (size_t i = 0; i < metadata->PushConstantsRanges.size(); i++)
 		{
@@ -389,5 +391,27 @@ namespace Flare
 	void VulkanCommandBuffer::DrawIndexed(uint32_t firstIndex, uint32_t indicesCount)
 	{
 		vkCmdDrawIndexed(m_CommandBuffer, indicesCount, 1, firstIndex, 0, 0);
+	}
+
+	void VulkanCommandBuffer::DrawIndexed(uint32_t firstIndex, uint32_t indicesCount, uint32_t firstInstance, uint32_t instancesCount)
+	{
+		vkCmdDrawIndexed(m_CommandBuffer, indicesCount, instancesCount, firstIndex, 0, firstInstance);
+	}
+
+	void VulkanCommandBuffer::DrawIndexed(const Ref<const Mesh>& mesh, uint32_t subMeshIndex, uint32_t firstInstance, uint32_t instancesCount)
+	{
+		Ref<const VertexBuffer> vertexBuffers[] =
+		{
+			mesh->GetVertices(),
+			mesh->GetNormals(),
+			mesh->GetTangents(),
+			mesh->GetUVs()
+		};
+
+		BindVertexBuffers(Span(vertexBuffers, 4));
+		BindIndexBuffer(mesh->GetIndexBuffer());
+
+		const auto& subMesh = mesh->GetSubMeshes()[subMeshIndex];
+		vkCmdDrawIndexed(m_CommandBuffer, subMesh.IndicesCount, instancesCount, subMesh.BaseIndex, subMesh.BaseVertex, firstInstance);
 	}
 }

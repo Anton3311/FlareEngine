@@ -6,7 +6,7 @@
 
 const int CASCADES_COUNT = 4;
 
-layout(std140, binding = 2) uniform ShadowData
+layout(std140, set = 0, binding = 2) uniform ShadowData
 {
 	float u_Bias;
 	float u_LightFrustumSize;

@@ -209,26 +209,52 @@ namespace Flare
 		stages[1].pSpecializationInfo = nullptr;
 		stages[1].flags = 0;
 
-		VkVertexInputBindingDescription vertexBindingDescription{};
-		vertexBindingDescription.binding = 0;
-		vertexBindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-		vertexBindingDescription.stride = m_Specifications.InputLayout.GetStride();
+		std::vector<VkVertexInputBindingDescription> vertexBindingDescriptions;
 
-		const auto& vertexInputLayoutElements = m_Specifications.InputLayout.GetElements();
+		for (size_t i = 0; i < m_Specifications.InputLayout.Elements.size(); i++)
+		{
+			auto& element = m_Specifications.InputLayout.Elements[i];
+			auto it = std::find_if(vertexBindingDescriptions.begin(),
+				vertexBindingDescriptions.end(),
+				[&](const VkVertexInputBindingDescription& desc) -> bool
+				{
+					return desc.binding == element.Binding;
+				});
+
+			VkVertexInputBindingDescription* bindingDescription = nullptr;
+			if (it == vertexBindingDescriptions.end())
+			{
+				auto& desc = vertexBindingDescriptions.emplace_back();
+				desc.binding = element.Binding;
+				desc.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+				desc.stride = 0;
+
+				bindingDescription = &desc;
+			}
+			else
+			{
+				bindingDescription = &(*it);
+			}
+
+			element.Offset = bindingDescription->stride;
+			bindingDescription->stride += ShaderDataTypeSize(element.Type);
+		}
+
+		const auto& vertexInputLayoutElements = m_Specifications.InputLayout.Elements;
 		std::vector<VkVertexInputAttributeDescription> vertexAttributes(vertexInputLayoutElements.size());
 		for (size_t i = 0; i < vertexInputLayoutElements.size(); i++)
 		{
 			VkVertexInputAttributeDescription& attribute = vertexAttributes[i];
-			attribute.binding = 0;
-			attribute.format = ShaderDataTypeToVulkanFormat(vertexInputLayoutElements[i].DataType);
-			attribute.location = (uint32_t)i;
-			attribute.offset = vertexInputLayoutElements[i].Offset;
+			attribute.binding = vertexInputLayoutElements[i].Binding;
+			attribute.format = ShaderDataTypeToVulkanFormat(vertexInputLayoutElements[i].Type);
+			attribute.location = vertexInputLayoutElements[i].Location;
+			attribute.offset = (uint32_t)vertexInputLayoutElements[i].Offset;
 		}
 
 		VkPipelineVertexInputStateCreateInfo vertexInputState{};
 		vertexInputState.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-		vertexInputState.vertexBindingDescriptionCount = 1;
-		vertexInputState.pVertexBindingDescriptions = &vertexBindingDescription;
+		vertexInputState.vertexBindingDescriptionCount = (uint32_t)vertexBindingDescriptions.size();
+		vertexInputState.pVertexBindingDescriptions = vertexBindingDescriptions.data();
 		vertexInputState.vertexAttributeDescriptionCount = (uint32_t)vertexAttributes.size();
 		vertexInputState.pVertexAttributeDescriptions = vertexAttributes.data();
 

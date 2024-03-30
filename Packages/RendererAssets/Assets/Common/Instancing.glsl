@@ -4,7 +4,7 @@ struct InstanceData
 	int EntityIndex;
 };
 
-layout(std140, binding = 3) buffer InstacesData
+layout(std140, set = 0, binding = 3) buffer InstacesData
 {
 	InstanceData Data[];
 } u_InstancesData;

@@ -3,7 +3,7 @@
 namespace Flare
 {
 	VulkanIndexBuffer::VulkanIndexBuffer(IndexFormat format, size_t count)
-		: m_Format(format), m_Buffer(GPUBufferUsage::Static, VK_BUFFER_USAGE_INDEX_BUFFER_BIT, GetIndexFormatSize(format) * count)
+		: m_Format(format), m_Buffer(GPUBufferUsage::Static, VK_BUFFER_USAGE_INDEX_BUFFER_BIT, GetIndexFormatSize(format) * count), m_Count(count)
 	{
 	}
 
@@ -11,6 +11,7 @@ namespace Flare
 		: m_Format(format), m_Buffer(GPUBufferUsage::Dynamic, VK_BUFFER_USAGE_INDEX_BUFFER_BIT)
 	{
 		m_Buffer.SetData(indices.GetBuffer(), indices.GetSize(), 0);
+		m_Count = indices.GetSize() / IndexBuffer::GetIndexFormatSize(m_Format);
 	}
 
 	void Flare::VulkanIndexBuffer::Bind()

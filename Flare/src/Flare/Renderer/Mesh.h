@@ -47,6 +47,12 @@ namespace Flare
 		constexpr size_t GetVertexBufferSize() const { return m_VertexBufferSize; }
 		constexpr size_t GetIndexBufferSize() const { return m_IndexBufferSize; }
 
+		inline Ref<IndexBuffer> GetIndexBuffer() const { return m_IndexBuffer; }
+		inline Ref<VertexBuffer> GetVertices() const { return m_Vertices; }
+		inline Ref<VertexBuffer> GetNormals() const { return m_Normals; }
+		inline Ref<VertexBuffer> GetTangents() const { return m_Tangents; }
+		inline Ref<VertexBuffer> GetUVs() const { return m_UVs; }
+
 		inline const std::vector<SubMesh>& GetSubMeshes() const { return m_SubMeshes; }
 		inline MeshTopology GetTopologyType() const { return m_TopologyType; }
 		inline IndexBuffer::IndexFormat GetIndexFormat() const { return m_IndexFormat; }
