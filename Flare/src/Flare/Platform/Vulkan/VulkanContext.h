@@ -15,8 +15,53 @@
 
 #include <optional>
 #include <functional>
+#include <unordered_map>
 
 #define VK_CHECK_RESULT(expression) FLARE_CORE_ASSERT((expression) == VK_SUCCESS)
+
+namespace Flare
+{
+	struct RenderPassKey
+	{
+		bool operator==(const RenderPassKey& other) const
+		{
+			if (other.Formats.size() != Formats.size())
+				return false;
+
+			for (size_t i = 0; i < Formats.size(); i++)
+			{
+				if (other.Formats[i] != Formats[i])
+					return false;
+			}
+
+			return true;
+		}
+
+		bool operator!=(const RenderPassKey& other) const
+		{
+			return !operator==(other);
+		}
+
+		std::vector<FrameBufferTextureFormat> Formats;
+	};
+}
+
+template<>
+struct std::hash<Flare::RenderPassKey>
+{
+	size_t operator()(const Flare::RenderPassKey& key) const
+	{
+		using FormatIntType = std::underlying_type_t<Flare::FrameBufferTextureFormat>;
+		size_t hash = std::hash<FormatIntType>()((FormatIntType)key.Formats[0]);
+
+		for (size_t i = 0; i < key.Formats.size(); i++)
+		{
+			Flare::CombineHashes(hash, (FormatIntType)key.Formats[i]);
+		}
+
+		return hash;
+	}
+};
 
 namespace Flare
 {
@@ -49,6 +94,8 @@ namespace Flare
 		VkDevice GetDevice() const { return m_Device; }
 		VkPhysicalDevice GetPhysicalDevice() const { return m_PhysicalDevice; }
 		VkQueue GetGraphicsQueue() const { return m_GraphicsQueue; }
+
+		Ref<VulkanRenderPass> FindOrCreateRenderPass(Span<FrameBufferTextureFormat> formats);
 
 		VmaAllocator GetMemoryAllocator() const { return m_Allocator; }
 
@@ -131,6 +178,7 @@ namespace Flare
 
 		// Render pass
 		Ref<VulkanRenderPass> m_ColorOnlyPass = nullptr;
+		std::unordered_map<RenderPassKey, Ref<VulkanRenderPass>> m_RenderPasses;
 
 		// Allocator
 		VmaAllocator m_Allocator = VK_NULL_HANDLE;

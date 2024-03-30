@@ -11,6 +11,8 @@
 
 namespace Flare
 {
+	VkFormat FrameBufferAttachmentFormatToVulkanFormat(FrameBufferTextureFormat format);
+	
 	class VulkanFrameBuffer : public FrameBuffer
 	{
 	public:

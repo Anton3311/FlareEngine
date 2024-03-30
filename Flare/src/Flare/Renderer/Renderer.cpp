@@ -721,8 +721,8 @@ namespace Flare
 		else
 		{
 			Ref<VulkanCommandBuffer> commandBuffer = VulkanContext::GetInstance().GetPrimaryCommandBuffer();
-
 			Ref<VulkanFrameBuffer> renderTarget = As<VulkanFrameBuffer>(s_RendererData.CurrentViewport->RenderTarget);
+			
 			commandBuffer->BeginRenderPass(renderTarget->GetCompatibleRenderPass(), renderTarget);
 
 			commandBuffer->SetPrimaryDescriptorSet(s_RendererData.PrimaryDescriptorSet);
@@ -741,7 +741,6 @@ namespace Flare
 		s_RendererData.InstanceDataBuffer.clear();
 		s_RendererData.CulledObjectIndices.clear();
 		s_RendererData.OpaqueQueue.m_Buffer.clear();
-
 	}
 
 	void Renderer::ExecuteGeomertyPass()
@@ -759,11 +758,7 @@ namespace Flare
 		}
 
 		s_RendererData.CulledObjectIndices.clear();
-		//PerformFrustumCulling();
-		for (size_t i = 0; i < s_RendererData.OpaqueQueue.GetSize(); i++)
-		{
-			s_RendererData.CulledObjectIndices.push_back((uint32_t)i);
-		}
+		PerformFrustumCulling();
 		s_RendererData.Statistics.ObjectsCulled += (uint32_t)(s_RendererData.OpaqueQueue.GetSize() - s_RendererData.CulledObjectIndices.size());
 
 		{

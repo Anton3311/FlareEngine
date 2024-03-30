@@ -131,6 +131,7 @@ namespace Flare
 		if (m_DebugMessenger)
 			m_DestroyDebugMessenger(m_Instance, m_DebugMessenger, nullptr);
 
+		m_RenderPasses.clear();
 		m_ColorOnlyPass = nullptr;
 		m_SwapChainFrameBuffers.clear();
 
@@ -307,6 +308,52 @@ namespace Flare
 		VK_CHECK_RESULT(vkQueueWaitIdle(m_GraphicsQueue));
 
 		vkFreeCommandBuffers(m_Device, m_CommandBufferPool, 1, &buffer);
+	}
+
+	Ref<VulkanRenderPass> VulkanContext::FindOrCreateRenderPass(Span<FrameBufferTextureFormat> formats)
+	{
+		RenderPassKey key;
+		key.Formats.assign(formats.begin(), formats.end());
+
+		auto it = m_RenderPasses.find(key);
+		if (it == m_RenderPasses.end())
+		{
+			std::vector<VkAttachmentDescription> descriptions(formats.GetSize());
+			std::optional<uint32_t> depthAttachmentIndex = {};
+			for (size_t i = 0; i < descriptions.size(); i++)
+			{
+				auto& description = descriptions[i];
+
+				description.format = FrameBufferAttachmentFormatToVulkanFormat(formats[i]);
+				description.samples = VK_SAMPLE_COUNT_1_BIT;
+				description.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+				description.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+				description.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+				description.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+				description.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+
+				if (IsDepthFormat(formats[i]))
+				{
+					depthAttachmentIndex = (uint32_t)i;
+					description.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+					description.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+				}
+				else
+				{
+					description.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+					description.initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+				}
+			}
+
+			Ref<VulkanRenderPass> renderPass = CreateRef<VulkanRenderPass>(Span<VkAttachmentDescription>::FromVector(descriptions), depthAttachmentIndex);
+			m_RenderPasses.emplace(key, renderPass);
+
+			return renderPass;
+		}
+		else
+		{
+			return it->second;
+		}
 	}
 
 	void VulkanContext::NotifyImageViewDeletionHandler(VkImageView deletedImageView)

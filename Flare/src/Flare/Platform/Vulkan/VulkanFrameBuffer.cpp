@@ -4,7 +4,7 @@
 
 namespace Flare
 {
-	static VkFormat FrameBufferAttachmentFormatToVulkanFormat(FrameBufferTextureFormat format)
+	VkFormat FrameBufferAttachmentFormatToVulkanFormat(FrameBufferTextureFormat format)
 	{
 		switch (format)
 		{
@@ -25,7 +25,7 @@ namespace Flare
 		FLARE_CORE_ASSERT(false);
 		return VK_FORMAT_UNDEFINED;
 	}
-	
+
 	VulkanFrameBuffer::VulkanFrameBuffer(const FrameBufferSpecifications& specifications)
 		: m_OwnsImageViews(true), m_Specifications(specifications)
 	{
@@ -169,32 +169,15 @@ namespace Flare
 	{
 		if (m_CompatibleRenderPass == nullptr)
 		{
-			std::optional<uint32_t> depthAttachmentIndex = {};
-			std::vector<VkAttachmentDescription> descriptions(m_Specifications.Attachments.size());
-			for (size_t i = 0; i < descriptions.size(); i++)
-			{
-				VkAttachmentDescription& description = descriptions[i];
-				description.format = FrameBufferAttachmentFormatToVulkanFormat(m_Specifications.Attachments[i].Format);
-				description.samples = VK_SAMPLE_COUNT_1_BIT;
-				description.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-				description.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-				description.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-				description.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+			std::vector<FrameBufferTextureFormat> formats;
+			formats.reserve(m_Specifications.Attachments.size());
 
-				if (IsDepthFormat(m_Specifications.Attachments[i].Format))
-				{
-					depthAttachmentIndex = (uint32_t)i;
-					description.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-					description.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-				}
-				else
-				{
-					description.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-					description.initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-				}
+			for (const auto& attachment : m_Specifications.Attachments)
+			{
+				formats.push_back(attachment.Format);
 			}
 
-			m_CompatibleRenderPass = CreateRef<VulkanRenderPass>(Span<VkAttachmentDescription>::FromVector(descriptions), depthAttachmentIndex);
+			m_CompatibleRenderPass = VulkanContext::GetInstance().FindOrCreateRenderPass(Span<FrameBufferTextureFormat>::FromVector(formats));
 		}
 
 		FLARE_CORE_ASSERT(m_Specifications.Width > 0 && m_Specifications.Height > 0);

@@ -116,16 +116,16 @@ namespace Flare
 		if (m_Viewport.GetSize() == glm::ivec2(0))
 			return;
 
+		std::optional<SystemGroupId> debugRenderingGroup = scene->GetECSWorld().GetSystemsManager().FindGroup("Debug Rendering");
+		scene->OnBeforeRender(m_Viewport);
+
+		Renderer::BeginScene(m_Viewport);
+		OnClear();
+
+		scene->OnRender(m_Viewport);
+
 		if (RendererAPI::GetAPI() != RendererAPI::API::Vulkan)
 		{
-			std::optional<SystemGroupId> debugRenderingGroup = scene->GetECSWorld().GetSystemsManager().FindGroup("Debug Rendering");
-			scene->OnBeforeRender(m_Viewport);
-
-			Renderer::BeginScene(m_Viewport);
-			OnClear();
-
-			scene->OnRender(m_Viewport);
-
 			RenderGrid();
 
 			std::optional<Entity> selectedEntity = EditorLayer::GetInstance().Selection.TryGetEntity();
@@ -188,22 +188,20 @@ namespace Flare
 				}
 			}
 
-			Renderer::EndScene();
-
-			m_Viewport.RenderTarget->Unbind();
 		}
+
+		Renderer::EndScene();
+
+		m_Viewport.RenderTarget->Unbind();
 
 		if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
 		{
-			OnClear();
-
 			Ref<VulkanCommandBuffer> commandBuffer = VulkanContext::GetInstance().GetPrimaryCommandBuffer();
-
 			Ref<VulkanFrameBuffer> target = As<VulkanFrameBuffer>(m_Viewport.RenderTarget);
 
 			commandBuffer->TransitionImageLayout(target->GetAttachmentImage(0), VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 			commandBuffer->TransitionImageLayout(target->GetAttachmentImage(1), VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-			commandBuffer->TransitionImageLayout(target->GetAttachmentImage(2), VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			commandBuffer->TransitionDepthImageLayout(target->GetAttachmentImage(m_Viewport.DepthAttachmentIndex), true, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 		}
 	}
 
@@ -271,13 +269,22 @@ namespace Flare
 		FrameBufferSpecifications renderTargetSpec(m_Viewport.GetSize().x, m_Viewport.GetSize().y, {
 			{ FrameBufferTextureFormat::R11G11B10, TextureWrap::Clamp, TextureFiltering::Closest },
 			{ FrameBufferTextureFormat::RGB8, TextureWrap::Clamp, TextureFiltering::Closest },
-			{ FrameBufferTextureFormat::RedInteger, TextureWrap::Clamp, TextureFiltering::Closest },
-			{ FrameBufferTextureFormat::Depth, TextureWrap::Clamp, TextureFiltering::Closest },
 		});
 
 		m_Viewport.ColorAttachmentIndex = 0;
 		m_Viewport.NormalsAttachmentIndex = 1;
-		m_Viewport.DepthAttachmentIndex = 3;
+
+		if (RendererAPI::GetAPI() != RendererAPI::API::Vulkan)
+		{
+			renderTargetSpec.Attachments.push_back({ FrameBufferTextureFormat::RedInteger, TextureWrap::Clamp, TextureFiltering::Closest });
+			renderTargetSpec.Attachments.push_back({ FrameBufferTextureFormat::Depth, TextureWrap::Clamp, TextureFiltering::Closest });
+			m_Viewport.DepthAttachmentIndex = 3;
+		}
+		else
+		{
+			renderTargetSpec.Attachments.push_back({ FrameBufferTextureFormat::Depth, TextureWrap::Clamp, TextureFiltering::Closest });
+			m_Viewport.DepthAttachmentIndex = 2;
+		}
 
 		m_Viewport.RenderTarget = FrameBuffer::Create(renderTargetSpec);
 	}
@@ -287,12 +294,15 @@ namespace Flare
 		if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
 		{
 			Ref<VulkanCommandBuffer> commandBuffer = VulkanContext::GetInstance().GetPrimaryCommandBuffer();
-
 			Ref<VulkanFrameBuffer> target = As<VulkanFrameBuffer>(m_Viewport.RenderTarget);
 
 			commandBuffer->ClearImage(target->GetAttachmentImage(0), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 			commandBuffer->ClearImage(target->GetAttachmentImage(1), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
-			commandBuffer->ClearImage(target->GetAttachmentImage(2), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+
+			commandBuffer->ClearDepthStencilImage(
+				target->GetAttachmentImage(m_Viewport.DepthAttachmentIndex), true, 1.0f, 0,
+				VK_IMAGE_LAYOUT_UNDEFINED,
+				VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
 		}
 		else
 		{

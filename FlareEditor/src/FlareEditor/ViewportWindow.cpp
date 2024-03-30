@@ -55,8 +55,6 @@ namespace Flare
 
 			if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
 			{
-				Renderer::SetCurrentViewport(m_Viewport);
-
 				Ref<VulkanCommandBuffer> commandBuffer = VulkanContext::GetInstance().GetPrimaryCommandBuffer();
 				Ref<VulkanFrameBuffer> target = As<VulkanFrameBuffer>(m_Viewport.RenderTarget);
 
