@@ -58,6 +58,8 @@ namespace Flare
 			FLARE_CORE_ASSERT(sizeof(T) == properties[index].Size);
 			FLARE_CORE_ASSERT(properties[index].Type != ShaderDataType::Sampler);
 			FLARE_CORE_ASSERT(properties[index].Offset + properties[index].Size <= m_BufferSize);
+
+			m_IsDirty = true;
 			return *(T*)(m_Buffer + properties[index].Offset);
 		}
 
@@ -87,6 +89,8 @@ namespace Flare
 
 			FLARE_CORE_ASSERT(properties[index].Type != ShaderDataType::Sampler);
 			memcpy_s(m_Buffer + properties[index].Offset, sizeof(value), &value, properties[index].Size);
+
+			m_IsDirty = true;
 		}
 
 		inline uint8_t* GetPropertiesBuffer() { return m_Buffer; }
@@ -104,6 +108,8 @@ namespace Flare
 
 		size_t m_BufferSize;
 		uint8_t* m_Buffer;
+
+		bool m_IsDirty = false;
 	};
 
 	template<>

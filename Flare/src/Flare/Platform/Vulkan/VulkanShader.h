@@ -9,6 +9,9 @@
 
 namespace Flare
 {
+	class VulkanDescriptorSetLayout;
+	class VulkanDescriptorSetPool;
+
 	FLARE_API VkFormat ShaderDataTypeToVulkanFormat(ShaderDataType type);
 
 	class VulkanShader : public Shader
@@ -29,6 +32,9 @@ namespace Flare
 		std::optional<uint32_t> GetPropertyIndex(std::string_view name) const override;
 
 		inline VkPipelineLayout GetPipelineLayout() const { return m_PipelineLayout; }
+
+		Ref<VulkanDescriptorSetLayout> GetDescriptorSetLayout() const;
+		Ref<VulkanDescriptorSetPool> GetDescriptorSetPool() const { return m_SetPool; }
 	private:
 		struct ShaderStageModule
 		{
@@ -42,6 +48,7 @@ namespace Flare
 		std::vector<ShaderStageModule> m_Modules;
 
 		VkPipelineLayout m_PipelineLayout = VK_NULL_HANDLE;
+		Ref<VulkanDescriptorSetPool> m_SetPool = nullptr;
 
 		std::unordered_map<std::string_view, uint32_t> m_NameToIndex;
 	};

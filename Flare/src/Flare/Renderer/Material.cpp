@@ -187,6 +187,7 @@ namespace Flare
 		FLARE_CORE_ASSERT(properties[index].Type == ShaderDataType::Sampler);
 		FLARE_CORE_ASSERT(properties[index].SamplerIndex < (uint32_t)m_Textures.size());
 
+		m_IsDirty = true;
 		return m_Textures[properties[index].SamplerIndex];
 	}
 
@@ -209,6 +210,7 @@ namespace Flare
 		FLARE_CORE_ASSERT(properties[index].Type == ShaderDataType::Sampler);
 		FLARE_CORE_ASSERT(properties[index].SamplerIndex < (uint32_t)m_Textures.size());
 
+		m_IsDirty = true;
 		m_Textures[properties[index].SamplerIndex] = value;
 	}
 }

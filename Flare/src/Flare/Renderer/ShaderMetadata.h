@@ -16,6 +16,20 @@ namespace Flare
 		Surface,
 	};
 
+	inline uint32_t GetMaterialDescriptorSetIndex(ShaderType type)
+	{
+		switch (type)
+		{
+		case ShaderType::_2D:
+			return 2;
+		case ShaderType::Surface:
+			return 2;
+		}
+
+		FLARE_CORE_ASSERT(false);
+		return 0;
+	}
+
 	enum class BlendMode : uint8_t
 	{
 		Opaque,
@@ -130,7 +144,7 @@ namespace Flare
 			: Name(name),
 			Type(type),
 			Offset(offset),
-			Location(UINT32_MAX),
+			Binding(UINT32_MAX),
 			SamplerIndex(UINT32_MAX),
 			Size(ShaderDataTypeSize(type)) {}
 
@@ -138,14 +152,14 @@ namespace Flare
 			: Name(name),
 			Type(type),
 			Size(size),
-			Location(UINT32_MAX),
+			Binding(UINT32_MAX),
 			SamplerIndex(UINT32_MAX),
 			Offset(offset) {}
 
 		std::string Name;
 		std::string DisplayName;
 		ShaderDataType Type;
-		uint32_t Location;
+		uint32_t Binding;
 		uint32_t SamplerIndex;
 		size_t Offset;
 		size_t Size;

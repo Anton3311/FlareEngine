@@ -77,11 +77,9 @@ struct VertexData
 	vec3 ViewSpacePosition;
 };
 
-#if OPENGL
-	layout(binding = 7) uniform sampler2D u_Texture;
-	layout(binding = 8) uniform sampler2D u_NormalMap;
-	layout(binding = 9) uniform sampler2D u_RoughnessMap;
-#endif
+layout(set = 2, binding = 7) uniform sampler2D u_Texture;
+layout(set = 2, binding = 8) uniform sampler2D u_NormalMap;
+layout(set = 2, binding = 9) uniform sampler2D u_RoughnessMap;
 
 layout(location = 0) in VertexData i_Vertex;
 #if OPENGL
@@ -97,11 +95,7 @@ layout(location = 0) out vec4 o_Color;
 
 void main()
 {
-#if OPENGL
 	vec4 color = u_Material.Color * texture(u_Texture, i_Vertex.UV);
-#else
-	vec4 color = u_Material.Color;
-#endif
 	if (color.a == 0.0f)
 		discard;
 
@@ -109,7 +103,6 @@ void main()
 	vec3 H = normalize(V - u_LightDirection);
 	vec3 N = normalize(i_Vertex.Normal);
 
-#if OPENGL
 	vec3 tangent = normalize(i_Vertex.Tangent);
 	tangent = normalize(tangent - dot(tangent, N) * N);
 
@@ -118,15 +111,8 @@ void main()
 	vec3 sampledNormal = texture(u_NormalMap, i_Vertex.UV).xyz * 2.0f - vec3(1.0f);
 
 	N = normalize(tbn * sampledNormal);
-#else
-	N = i_Vertex.Normal;
-#endif
 
-#if OPENGL
 	float roughness = u_Material.Roughness * texture(u_RoughnessMap, i_Vertex.UV).r;
-#else
-	float roughness = u_Material.Roughness;
-#endif
 
 #if OPENGL
 	float shadow = CalculateShadow(N, i_Vertex.Position, i_Vertex.ViewSpacePosition);
@@ -138,10 +124,8 @@ void main()
 		u_LightColor.rgb * u_LightColor.w, -u_LightDirection,
 		roughness) * shadow;
 
-#if OPENGK
 	finalColor += CalculatePointLightsContribution(N, V, H, color.rgb, i_Vertex.Position.xyz, roughness);
 	finalColor += CalculateSpotLightsContribution(N, V, H, color.rgb, i_Vertex.Position.xyz, roughness);
-#endif
 
 	finalColor += u_EnvironmentLight.rgb * u_EnvironmentLight.w * color.rgb;
 

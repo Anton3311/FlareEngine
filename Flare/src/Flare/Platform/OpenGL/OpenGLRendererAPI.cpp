@@ -366,11 +366,11 @@ namespace Flare
 				{
 				case TexturePropertyValue::Type::FrameBufferAttachment:
 					FLARE_CORE_ASSERT(textureValue.FrameBuffer);
-					textureValue.FrameBuffer->BindAttachmentTexture(textureValue.FrameBufferAttachmentIndex, properties[i].Location);
+					textureValue.FrameBuffer->BindAttachmentTexture(textureValue.FrameBufferAttachmentIndex, properties[i].Binding);
 					break;
 				case TexturePropertyValue::Type::Texture:
 					if (textureValue.Texture)
-						textureValue.Texture->Bind(properties[i].Location);
+						textureValue.Texture->Bind(properties[i].Binding);
 					break;
 				default:
 					FLARE_CORE_ASSERT(false);

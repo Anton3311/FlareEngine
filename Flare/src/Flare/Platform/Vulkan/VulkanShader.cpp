@@ -6,6 +6,7 @@
 #include "Flare/Renderer2D/Renderer2D.h"
 
 #include "Flare/Platform/Vulkan/VulkanContext.h"
+#include "Flare/Platform/Vulkan/VulkanDescriptorSet.h"
 
 namespace Flare
 {
@@ -118,13 +119,41 @@ namespace Flare
 			VK_CHECK_RESULT(vkCreateShaderModule(VulkanContext::GetInstance().GetDevice(), &info, nullptr, &stageModule.Module));
 		}
 
-		// TODO: Generate descriptor set layout
+		// Generate material descriptor set layout
+		{
+			std::vector<VkDescriptorSetLayoutBinding> bindings;
+
+			for (const auto& property : m_Metadata->Properties)
+			{
+				if (property.Type != ShaderDataType::Sampler && property.Type != ShaderDataType::SamplerArray)
+					continue;
+
+				VkDescriptorSetLayoutBinding& binding = bindings.emplace_back();
+				binding.binding = property.Binding;
+				binding.descriptorCount = (uint32_t)(property.Size / ShaderDataTypeSize(ShaderDataType::Sampler));
+				binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+				binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+			}
+
+			if (bindings.size() > 0)
+			{
+				m_SetPool = CreateRef<VulkanDescriptorSetPool>(200, Span<VkDescriptorSetLayoutBinding>::FromVector(bindings));
+			}
+		}
 
 		Ref<VulkanDescriptorSetLayout> primaryDescriptorSet = Renderer::GetPrimaryDescriptorSetLayout();
 		Ref<VulkanDescriptorSetLayout> secondaryDescriptorSet = Renderer2D::GetDescriptorSetLayout();
 
-		VkDescriptorSetLayout descriptorSetLayouts[] = { primaryDescriptorSet->GetHandle(), secondaryDescriptorSet->GetHandle() };
 		std::vector<VkPushConstantRange> pushConstantsRanges;
+		VkDescriptorSetLayout descriptorSetLayouts[3] = { nullptr };
+
+		descriptorSetLayouts[0] = primaryDescriptorSet->GetHandle();
+		descriptorSetLayouts[1] = secondaryDescriptorSet->GetHandle();
+
+		if (m_SetPool)
+		{
+			descriptorSetLayouts[2] = m_SetPool->GetLayout()->GetHandle();
+		}
 
 		for (size_t i = 0; i < m_Metadata->PushConstantsRanges.size(); i++)
 		{
@@ -149,7 +178,7 @@ namespace Flare
 		// Create pipeline layout
 		VkPipelineLayoutCreateInfo layoutInfo{};
 		layoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-		layoutInfo.setLayoutCount = 2;
+		layoutInfo.setLayoutCount = m_SetPool ? 3 : 2;
 		layoutInfo.pSetLayouts = descriptorSetLayouts;
 		layoutInfo.pushConstantRangeCount = (uint32_t)pushConstantsRanges.size();
 		layoutInfo.pPushConstantRanges = pushConstantsRanges.data();
@@ -199,5 +228,10 @@ namespace Flare
 		if (it == m_NameToIndex.end())
 			return {};
 		return it->second;
+	}
+
+	Ref<VulkanDescriptorSetLayout> VulkanShader::GetDescriptorSetLayout() const
+	{
+		return m_SetPool->GetLayout();
 	}
 }

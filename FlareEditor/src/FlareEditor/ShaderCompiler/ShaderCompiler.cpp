@@ -168,14 +168,14 @@ namespace Flare
                 for (const auto& resource : resources)
                 {
                     glslCompiler->set_decoration(resource.id, spv::DecorationLocation, location);
-					const spirv_cross::SPIRType& baseType = crossCompiler.get_type(resource.base_type_id);
+                    const spirv_cross::SPIRType& baseType = crossCompiler.get_type(resource.base_type_id);
 
                     uint32_t registers = glm::max((uint32_t)baseType.member_types.size(), 1u);
 
                     // TODO: Propertly handle arrays, because spirv_cross::CompilerGLSL
                     //       doesn't provided an array size for a resource type
-					for (auto size : baseType.array)
-						registers *= size;
+                    for (auto size : baseType.array)
+                        registers *= size;
 
                     location += registers;
                 }
@@ -381,11 +381,15 @@ namespace Flare
     }
 
     static void Reflect(spirv_cross::Compiler& compiler,
+        ShaderStageType stage,
         std::unordered_map<std::string, size_t>& propertyNameToIndex,
-        ShaderProperties& properties, ShaderPushConstantsRange& pushConsntantsRange)
+        Ref<ShaderMetadata> metadata)
     {
         const spirv_cross::ShaderResources& resources = compiler.get_shader_resources();
-      
+        auto& properties = metadata->Properties;
+        ShaderPushConstantsRange& pushConstantsRange = metadata->PushConstantsRanges.emplace_back();
+        pushConstantsRange.Stage = stage;
+
         size_t lastPropertyOffset = 0;
         for (const auto& resource : resources.push_constant_buffers)
         {
@@ -394,7 +398,7 @@ namespace Flare
             uint32_t binding = compiler.get_decoration(resource.id, spv::DecorationBinding);
             uint32_t membersCount = (uint32_t)bufferType.member_types.size();
 
-            pushConsntantsRange.Size = bufferSize;
+            pushConstantsRange.Size = bufferSize;
 
             for (uint32_t i = 0; i < membersCount; i++)
             {
@@ -467,7 +471,7 @@ namespace Flare
                 if (shaderDataType.has_value())
                 {
                     ShaderProperty& shaderProperty = properties.emplace_back();
-                    shaderProperty.Location = UINT32_MAX;
+                    shaderProperty.Binding = UINT32_MAX;
 
                     if (resource.name.empty())
                         shaderProperty.Name = resource.name;
@@ -486,11 +490,17 @@ namespace Flare
             }
         }
 
+        uint32_t materialDescriptorSetIndex = GetMaterialDescriptorSetIndex(metadata->Type);
+
         uint32_t samplerIndex = 0;
         for (const auto& resource : resources.sampled_images)
         {
             const auto& samplerType = compiler.get_type(resource.type_id);
             uint32_t binding = compiler.get_decoration(resource.id, spv::DecorationBinding);
+            uint32_t descriptorSet = compiler.get_decoration(resource.id, spv::DecorationDescriptorSet);
+
+            if (descriptorSet != materialDescriptorSetIndex)
+                continue;
 
             ShaderDataType type = ShaderDataType::Sampler;
             size_t size = ShaderDataTypeSize(type);
@@ -509,7 +519,7 @@ namespace Flare
             }
 
             ShaderProperty& shaderProperty = properties.emplace_back();
-            shaderProperty.Location = binding;
+            shaderProperty.Binding = binding;
             shaderProperty.Name = resource.name;
             shaderProperty.Offset = lastPropertyOffset;
             shaderProperty.Type = type;
@@ -637,11 +647,8 @@ namespace Flare
 
             try
             {
-                ShaderPushConstantsRange& range = metadata->PushConstantsRanges.emplace_back();
-                range.Stage = program.Stage;
-
                 spirv_cross::Compiler compiler(compiledVulkanShader.value());
-                Reflect(compiler, propertyNameToIndex, metadata->Properties, range);
+                Reflect(compiler, program.Stage, propertyNameToIndex, metadata);
 
                 if (program.Stage == ShaderStageType::Pixel)
                     ExtractShaderOutputs(compiler, shaderOutputs);
@@ -653,26 +660,26 @@ namespace Flare
 
             if (RendererAPI::GetAPI() == RendererAPI::API::OpenGL)
             {
-				std::optional<std::vector<uint32_t>> compiledOpenGLShader = {};
+                std::optional<std::vector<uint32_t>> compiledOpenGLShader = {};
 
-				if (!forceRecompile)
-				{
-					compiledOpenGLShader = ShaderCacheManager::GetInstance()->FindCache(
-						shaderHandle,
-						ShaderTargetEnvironment::OpenGL,
-						program.Stage);
-				}
+                if (!forceRecompile)
+                {
+                    compiledOpenGLShader = ShaderCacheManager::GetInstance()->FindCache(
+                        shaderHandle,
+                        ShaderTargetEnvironment::OpenGL,
+                        program.Stage);
+                }
 
-				if (!compiledOpenGLShader)
-				{
-					compiledOpenGLShader = CompileSpirvToGlsl(pathString, compiledVulkanShader.value(), options);
-					if (!compiledOpenGLShader)
-						return false;
+                if (!compiledOpenGLShader)
+                {
+                    compiledOpenGLShader = CompileSpirvToGlsl(pathString, compiledVulkanShader.value(), options);
+                    if (!compiledOpenGLShader)
+                        return false;
 
-					ShaderCacheManager::GetInstance()->SetCache(shaderHandle, ShaderTargetEnvironment::OpenGL, program.Stage, compiledOpenGLShader.value());
-				}
-			}
-		}
+                    ShaderCacheManager::GetInstance()->SetCache(shaderHandle, ShaderTargetEnvironment::OpenGL, program.Stage, compiledOpenGLShader.value());
+                }
+            }
+        }
 
         metadata->Outputs = std::move(shaderOutputs);
         ParseShaderMetadata(parser, metadata, errors, propertyNameToIndex);

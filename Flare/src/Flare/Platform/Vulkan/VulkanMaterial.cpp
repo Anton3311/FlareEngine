@@ -11,7 +11,29 @@ namespace Flare
 {
 	void VulkanMaterial::SetShader(const Ref<Shader>& shader)
 	{
+		if (m_Shader && m_Set)
+		{
+			Ref<VulkanShader> vulkanShader = As<VulkanShader>(m_Shader);
+			auto pool = vulkanShader->GetDescriptorSetPool();
+
+			if (pool)
+			{
+				pool->ReleaseSet(m_Set);
+			}
+		}
+
 		Material::SetShader(shader);
+
+		m_Pipeline = nullptr;
+		m_Set = nullptr;
+
+		Ref<VulkanShader> vulkanShader = As<VulkanShader>(shader);
+		auto pool = vulkanShader->GetDescriptorSetPool();
+
+		if (pool)
+		{
+			m_Set = pool->AllocateSet();
+		}
 	}
 
 	Ref<VulkanPipeline> VulkanMaterial::GetPipeline(const Ref<VulkanRenderPass>& renderPass)
@@ -40,6 +62,7 @@ namespace Flare
 		{
 			specifications.DepthTest = true;
 			specifications.DepthWrite = true;
+			specifications.Culling = m_Shader->GetMetadata()->Features.Culling;
 			specifications.InputLayout = PipelineInputLayout({
 				{ 0, 0, ShaderDataType::Float3 }, // Position
 				{ 1, 1, ShaderDataType::Float3 }, // Normal
@@ -54,5 +77,34 @@ namespace Flare
 		
 		m_Pipeline = CreateRef<VulkanPipeline>(specifications, renderPass);
 		return m_Pipeline;
+	}
+
+	void VulkanMaterial::UpdateDescriptorSet()
+	{
+		if (!m_IsDirty)
+			return;
+
+		const auto& properties = m_Shader->GetMetadata()->Properties;
+		for (size_t i = 0; i < properties.size(); i++)
+		{
+			const auto& property = properties[i];
+			if (property.Type != ShaderDataType::Sampler)
+				continue;
+
+			Ref<Texture> texture = ReadPropertyValue<TexturePropertyValue>((uint32_t)i).Texture;
+			if (texture)
+			{
+				m_Set->WriteTexture(texture, property.Binding);
+			}
+			else
+			{
+				FLARE_CORE_WARN("Material has an invalid texture property at index {}. A white texture is used instead", i);
+				m_Set->WriteTexture(Renderer::GetWhiteTexture(), property.Binding);
+			}
+		}
+
+		m_Set->FlushWrites();
+
+		m_IsDirty = false;
 	}
 }

@@ -1,3 +1,5 @@
+Type = 2D
+
 #begin vertex
 #version 450
 
