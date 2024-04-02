@@ -423,4 +423,38 @@ namespace Flare
 		const auto& subMesh = mesh->GetSubMeshes()[subMeshIndex];
 		vkCmdDrawIndexed(m_CommandBuffer, subMesh.IndicesCount, instancesCount, subMesh.BaseIndex, subMesh.BaseVertex, firstInstance);
 	}
+
+	void VulkanCommandBuffer::DepthImagesBarrier(Span<VkImage> images, bool hasStencil,
+		VkPipelineStageFlags srcStage, VkAccessFlags srcAccessMask,
+		VkPipelineStageFlags dstStage, VkAccessFlags dstAccessMask,
+		VkImageLayout oldLayout, VkImageLayout newLayout)
+	{
+		m_ImageBarriers.clear();
+		m_ImageBarriers.reserve(images.GetSize());
+
+		for (size_t i = 0; i < images.GetSize(); i++)
+		{
+			VkImageMemoryBarrier& barrier = m_ImageBarriers.emplace_back();
+			barrier = {};
+			barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+			barrier.image = images[i];
+			barrier.oldLayout = oldLayout;
+			barrier.newLayout = newLayout;
+			barrier.srcAccessMask = srcAccessMask;
+			barrier.dstAccessMask = dstAccessMask;
+			barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+			barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+			barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+
+			if (hasStencil)
+				barrier.subresourceRange.aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
+
+			barrier.subresourceRange.baseArrayLayer = 0;
+			barrier.subresourceRange.baseMipLevel = 0;
+			barrier.subresourceRange.layerCount = 1;
+			barrier.subresourceRange.levelCount = 1;
+		}
+
+		vkCmdPipelineBarrier(m_CommandBuffer, srcStage, dstStage, 0, 0, nullptr, 0, nullptr, (uint32_t)images.GetSize(), m_ImageBarriers.data());
+	}
 }

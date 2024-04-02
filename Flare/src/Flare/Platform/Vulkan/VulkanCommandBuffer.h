@@ -54,9 +54,15 @@ namespace Flare
 		void DrawIndexed(uint32_t firstIndex, uint32_t indicesCount, uint32_t firstInstance, uint32_t instancesCount);
 		void DrawIndexed(const Ref<const Mesh>& mesh, uint32_t subMeshIndex, uint32_t firstInstance, uint32_t instancesCount);
 
+		void DepthImagesBarrier(Span<VkImage> images, bool hasStencil,
+			VkPipelineStageFlags srcStage, VkAccessFlags srcAccessMask,
+			VkPipelineStageFlags dstStage, VkAccessFlags dstAccessMask,
+			VkImageLayout oldLayout, VkImageLayout newLayout);
+
 		VkCommandBuffer GetHandle() const { return m_CommandBuffer; }
 	private:
 		std::unordered_set<uint64_t> m_UsedMaterials;
+		std::vector<VkImageMemoryBarrier> m_ImageBarriers;
 
 		Ref<VulkanDescriptorSet> m_PrimaryDescriptorSet = nullptr;
 		Ref<VulkanDescriptorSet> m_SecondaryDescriptorSet = nullptr;

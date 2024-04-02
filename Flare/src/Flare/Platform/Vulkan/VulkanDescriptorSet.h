@@ -2,15 +2,17 @@
 
 #include "FlareCore/Collections/Span.h"
 
-#include "Flare/Renderer/UniformBuffer.h"
-#include "Flare/Renderer/ShaderStorageBuffer.h"
-#include "Flare/Renderer/Texture.h"
-
 #include <vector>
 #include <vulkan/vulkan.h>
 
 namespace Flare
 {
+	class UniformBuffer;
+	class ShaderStorageBuffer;
+	class Texture;
+	class FrameBuffer;
+	class VulkanDescriptorSetPool;
+
 	class VulkanDescriptorSetLayout
 	{
 	public:
@@ -30,12 +32,13 @@ namespace Flare
 	{
 	public:
 		VulkanDescriptorSet(VkDescriptorPool pool, const Ref<const VulkanDescriptorSetLayout>& layout);
-		VulkanDescriptorSet(VkDescriptorPool pool, VkDescriptorSet set);
+		VulkanDescriptorSet(VulkanDescriptorSetPool* pool, VkDescriptorSet set);
 		~VulkanDescriptorSet();
 
 		void WriteUniformBuffer(const Ref<const UniformBuffer>& uniformBuffer, uint32_t binding);
 		void WriteStorageBuffer(const Ref<const ShaderStorageBuffer>& storageBuffer, uint32_t binding);
 		void WriteTexture(const Ref<const Texture>& texture, uint32_t binding);
+		void WriteFrameBufferAttachment(const Ref<const FrameBuffer>& frameBuffer, uint32_t attachmentIndex, uint32_t binding);
 		void WriteTextures(const Span<Ref<const Texture>>& textures, size_t arrayOffset, uint32_t binding);
 
 		void FlushWrites();
@@ -43,7 +46,7 @@ namespace Flare
 		inline VkDescriptorSet GetHandle() const { return m_Set; }
 	private:
 		VkDescriptorSet m_Set = VK_NULL_HANDLE;
-		VkDescriptorPool m_Pool = VK_NULL_HANDLE;
+		VulkanDescriptorSetPool* m_Pool = VK_NULL_HANDLE;
 
 		std::vector<VkWriteDescriptorSet> m_Writes;
 		std::vector<VkDescriptorImageInfo> m_Images;

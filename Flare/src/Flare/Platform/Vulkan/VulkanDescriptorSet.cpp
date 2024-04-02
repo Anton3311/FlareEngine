@@ -3,6 +3,7 @@
 #include "Flare/Platform/Vulkan/VulkanContext.h"
 #include "Flare/Platform/Vulkan/VulkanUniformBuffer.h"
 #include "Flare/Platform/Vulkan/VulkanShaderStorageBuffer.h"
+#include "Flare/Platform/Vulkan/VulkanFrameBuffer.h"
 #include "Flare/Platform/Vulkan/VulkanTexture.h"
 
 namespace Flare
@@ -52,9 +53,11 @@ namespace Flare
 		VK_CHECK_RESULT(vkAllocateDescriptorSets(VulkanContext::GetInstance().GetDevice(), &info, &m_Set));
 	}
 
-	VulkanDescriptorSet::VulkanDescriptorSet(VkDescriptorPool pool, VkDescriptorSet set)
+	VulkanDescriptorSet::VulkanDescriptorSet(VulkanDescriptorSetPool* pool, VkDescriptorSet set)
 		: m_Pool(pool), m_Set(set)
 	{
+		m_Buffers.reserve(pool->GetLayout()->GetBufferBindingsCount());
+		m_Images.reserve(pool->GetLayout()->GetImageBindingsCount());
 	}
 
 	VulkanDescriptorSet::~VulkanDescriptorSet()
@@ -63,6 +66,7 @@ namespace Flare
 
 	void VulkanDescriptorSet::WriteUniformBuffer(const Ref<const UniformBuffer>& uniformBuffer, uint32_t binding)
 	{
+		FLARE_CORE_ASSERT(m_Buffers.size() < m_Buffers.capacity());
 		auto& buffer = m_Buffers.emplace_back();
 		buffer.buffer = As<const VulkanUniformBuffer>(uniformBuffer)->GetBufferHandle();
 		buffer.offset = 0;
@@ -82,6 +86,7 @@ namespace Flare
 
 	void VulkanDescriptorSet::WriteStorageBuffer(const Ref<const ShaderStorageBuffer>& storageBuffer, uint32_t binding)
 	{
+		FLARE_CORE_ASSERT(m_Buffers.size() < m_Buffers.capacity());
 		auto& buffer = m_Buffers.emplace_back();
 		buffer.buffer = As<const VulkanShaderStorageBuffer>(storageBuffer)->GetBufferHandle();
 		buffer.offset = 0;
@@ -104,8 +109,33 @@ namespace Flare
 		WriteTextures(Span<Ref<const Texture>>((Ref<const Texture>)texture), 0, binding);
 	}
 
+	void VulkanDescriptorSet::WriteFrameBufferAttachment(const Ref<const FrameBuffer>& frameBuffer, uint32_t attachmentIndex, uint32_t binding)
+	{
+		FLARE_CORE_ASSERT(m_Images.size() < m_Images.capacity());
+		FLARE_CORE_ASSERT(frameBuffer);
+		FLARE_CORE_ASSERT(attachmentIndex < frameBuffer->GetAttachmentsCount());
+
+		auto vulkanFrameBuffer = As<const VulkanFrameBuffer>(frameBuffer);
+		auto& image = m_Images.emplace_back();
+		image.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+		image.imageView = vulkanFrameBuffer->GetAttachmentImageView(attachmentIndex);
+		image.sampler = vulkanFrameBuffer->GetDefaultAttachmentSampler(attachmentIndex);
+
+		auto& write = m_Writes.emplace_back();
+		write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		write.descriptorCount = 1;
+		write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		write.dstBinding = binding;
+		write.dstArrayElement = 0;
+		write.dstSet = m_Set;
+		write.pBufferInfo = nullptr;
+		write.pImageInfo = &image;
+		write.pTexelBufferView = nullptr;
+	}
+
 	void VulkanDescriptorSet::WriteTextures(const Span<Ref<const Texture>>& textures, size_t arrayOffset, uint32_t binding)
 	{
+		FLARE_CORE_ASSERT(m_Images.size() < m_Images.capacity());
 		size_t firstBindingIndex = m_Images.size();
 		for (size_t i = 0; i < textures.GetSize(); i++)
 		{
@@ -184,7 +214,7 @@ namespace Flare
 		VkDescriptorSet set = VK_NULL_HANDLE;
 
 		VK_CHECK_RESULT(vkAllocateDescriptorSets(VulkanContext::GetInstance().GetDevice(), &info, &set));
-		return CreateRef<VulkanDescriptorSet>(m_Pool, set);
+		return CreateRef<VulkanDescriptorSet>(this, set);
 	}
 
 	void VulkanDescriptorSetPool::ReleaseSet(const Ref<VulkanDescriptorSet>& set)

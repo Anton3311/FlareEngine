@@ -54,7 +54,7 @@ namespace Flare
 				{ 0, 0, ShaderDataType::Float3 }, // Position
 				{ 0, 1, ShaderDataType::Float4 }, // Color
 				{ 0, 2, ShaderDataType::Float2 }, // UV
-				{ 0, 3, ShaderDataType::Float }, // Texture index
+				{ 0, 3, ShaderDataType::Int }, // Texture index
 				{ 0, 4, ShaderDataType::Int }, // Entity index
 			});
 		}

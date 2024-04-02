@@ -113,12 +113,7 @@ void main()
 	N = normalize(tbn * sampledNormal);
 
 	float roughness = u_Material.Roughness * texture(u_RoughnessMap, i_Vertex.UV).r;
-
-#if OPENGL
 	float shadow = CalculateShadow(N, i_Vertex.Position, i_Vertex.ViewSpacePosition);
-#else
-	float shadow = 1.0f;
-#endif
 
 	vec3 finalColor = CalculateLight(N, V, H, color.rgb,
 		u_LightColor.rgb * u_LightColor.w, -u_LightDirection,

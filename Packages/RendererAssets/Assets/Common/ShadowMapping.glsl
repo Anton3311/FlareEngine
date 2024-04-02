@@ -29,10 +29,10 @@ layout(std140, set = 0, binding = 2) uniform ShadowData
 	float u_NormalBias;
 };
 
-layout(binding = 28) uniform sampler2D u_ShadowMap0;
-layout(binding = 29) uniform sampler2D u_ShadowMap1;
-layout(binding = 30) uniform sampler2D u_ShadowMap2;
-layout(binding = 31) uniform sampler2D u_ShadowMap3;
+layout(set = 0, binding = 28) uniform sampler2D u_ShadowMap0;
+layout(set = 0, binding = 29) uniform sampler2D u_ShadowMap1;
+layout(set = 0, binding = 30) uniform sampler2D u_ShadowMap2;
+layout(set = 0, binding = 31) uniform sampler2D u_ShadowMap3;
 
 // Vogel disk points
 const vec2[] SAMPLE_POINTS = {
@@ -105,7 +105,11 @@ float PCF(sampler2D shadowMap, vec2 uv, float receieverDepth, float filterRadius
 float CalculateCascadeShadow(sampler2D shadowMap, vec4 lightSpacePosition, float bias, float poissonPointsRotationAngle, float scale)
 {
 	vec3 projected = lightSpacePosition.xyz / lightSpacePosition.w;
+#if OPENGL
 	projected = projected * 0.5 + vec3(0.5);
+#else
+	projected.xy = projected.xy * 0.5 + vec2(0.5);
+#endif
 
 	vec2 uv = projected.xy;
 	float receieverDepth = projected.z;
