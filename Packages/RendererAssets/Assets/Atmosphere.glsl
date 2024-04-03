@@ -1,3 +1,4 @@
+Type = FullscreenQuad
 Properties =
 {
 	u_Params.RayleighCoefficient = { DisplayName = "Rayleigh Coefficient" }
@@ -16,11 +17,15 @@ Properties =
 #begin vertex
 #version 450
 
+#if OPENGL
 layout(location = 0) in vec2 i_Position;
+#else
+layout(location = 0) in vec3 i_Position;
+#endif
 
 void main()
 {
-	gl_Position = vec4(i_Position, 0.9999999f, 1.0f);
+	gl_Position = vec4(i_Position.xy, 0.9999999f, 1.0f);
 }
 
 #end

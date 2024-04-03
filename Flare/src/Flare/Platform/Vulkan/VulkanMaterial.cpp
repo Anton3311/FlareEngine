@@ -43,13 +43,15 @@ namespace Flare
 
 		PipelineSpecifications specifications{};
 		specifications.Culling = CullingMode::Back;
-		specifications.DepthFunction = DepthComparisonFunction::Less;
 		specifications.Shader = m_Shader;
+
+		specifications.Culling = m_Shader->GetMetadata()->Features.Culling;
+		specifications.DepthTest = m_Shader->GetMetadata()->Features.DepthTesting;
+		specifications.DepthWrite= m_Shader->GetMetadata()->Features.DepthWrite;
+		specifications.DepthFunction = m_Shader->GetMetadata()->Features.DepthFunction;
 
 		if (m_Shader->GetMetadata()->Type == ShaderType::_2D)
 		{
-			specifications.DepthTest = false;
-			specifications.DepthWrite = false;
 			specifications.InputLayout = PipelineInputLayout({
 				{ 0, 0, ShaderDataType::Float3 }, // Position
 				{ 0, 1, ShaderDataType::Float4 }, // Color
@@ -60,9 +62,15 @@ namespace Flare
 		}
 		else if (m_Shader->GetMetadata()->Type == ShaderType::Surface)
 		{
-			specifications.DepthTest = true;
-			specifications.DepthWrite = true;
-			specifications.Culling = m_Shader->GetMetadata()->Features.Culling;
+			specifications.InputLayout = PipelineInputLayout({
+				{ 0, 0, ShaderDataType::Float3 }, // Position
+				{ 1, 1, ShaderDataType::Float3 }, // Normal
+				{ 2, 2, ShaderDataType::Float3 }, // Tangent
+				{ 3, 3, ShaderDataType::Float2 }, // UV
+			});
+		}
+		else if (m_Shader->GetMetadata()->Type == ShaderType::FullscreenQuad)
+		{
 			specifications.InputLayout = PipelineInputLayout({
 				{ 0, 0, ShaderDataType::Float3 }, // Position
 				{ 1, 1, ShaderDataType::Float3 }, // Normal

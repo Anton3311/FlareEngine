@@ -14,6 +14,7 @@ namespace Flare
 	{
 		_2D,
 		Surface,
+		FullscreenQuad,
 	};
 
 	inline uint32_t GetMaterialDescriptorSetIndex(ShaderType type)

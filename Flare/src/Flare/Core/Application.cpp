@@ -7,6 +7,7 @@
 #include "Flare/AssetManager/AssetManager.h"
 
 #include "Flare/Renderer/Renderer.h"
+#include "Flare/Renderer/RendererPrimitives.h"
 #include "Flare/Renderer2D/Renderer2D.h"
 #include "Flare/Renderer/DebugRenderer.h"
 #include "Flare/Renderer/RenderCommand.h"
@@ -88,6 +89,7 @@ namespace Flare
 		}
 
 		Renderer::Shutdown();
+		RendererPrimitives::Clear();
 		GraphicsContext::Shutdown();
 	}
 
