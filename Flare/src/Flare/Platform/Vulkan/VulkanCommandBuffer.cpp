@@ -8,6 +8,7 @@
 #include "Flare/Platform/Vulkan/VulkanVertexBuffer.h"
 #include "Flare/Platform/Vulkan/VulkanIndexBuffer.h"
 #include "Flare/Platform/Vulkan/VulkanMaterial.h"
+#include "Flare/Platform/Vulkan/VulkanGPUTimer.h"
 
 namespace Flare
 {
@@ -456,5 +457,16 @@ namespace Flare
 		}
 
 		vkCmdPipelineBarrier(m_CommandBuffer, srcStage, dstStage, 0, 0, nullptr, 0, nullptr, (uint32_t)images.GetSize(), m_ImageBarriers.data());
+	}
+
+	void VulkanCommandBuffer::BeginTimer(Ref<VulkanGPUTimer> timer, VkPipelineStageFlagBits pipelineStages)
+	{
+		vkCmdResetQueryPool(m_CommandBuffer, timer->GetPoolHandle(), 0, 2);
+		vkCmdWriteTimestamp(m_CommandBuffer, pipelineStages, timer->GetPoolHandle(), 0);
+	}
+
+	void VulkanCommandBuffer::EndTimer(Ref<VulkanGPUTimer> timer, VkPipelineStageFlagBits pipelineStages)
+	{
+		vkCmdWriteTimestamp(m_CommandBuffer, pipelineStages, timer->GetPoolHandle(), 1);
 	}
 }

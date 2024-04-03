@@ -21,6 +21,7 @@
 #include "Flare/Platform/Vulkan/VulkanContext.h"
 #include "Flare/Platform/Vulkan/VulkanDescriptorSet.h"
 #include "Flare/Platform/Vulkan/VulkanCommandBuffer.h"
+#include "Flare/Platform/Vulkan/VulkanGPUTimer.h"
 
 namespace Flare
 {
@@ -134,6 +135,9 @@ namespace Flare
 
 		Ref<VulkanDescriptorSet> PrimaryDescriptorSet = nullptr;
 		Ref<VulkanDescriptorSetPool> PrimaryDescriptorPool = nullptr;
+
+		Ref<VulkanGPUTimer> GeometryPassVulkanTimer = nullptr;
+		Ref<VulkanGPUTimer> ShadowPassVulkanTimer = nullptr;
 	};
 	
 	RendererData s_RendererData;
@@ -214,6 +218,9 @@ namespace Flare
 
 		if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
 		{
+			s_RendererData.GeometryPassVulkanTimer = CreateRef<VulkanGPUTimer>();
+			s_RendererData.ShadowPassVulkanTimer = CreateRef<VulkanGPUTimer>();
+
 			VkDescriptorSetLayoutBinding bindings[6 + 4] = {};
 			// Camera
 			bindings[0].binding = 0;
@@ -804,6 +811,12 @@ namespace Flare
 
 		s_RendererData.Statistics.ObjectsSubmitted += (uint32_t)s_RendererData.OpaqueQueue.GetSize();
 
+		if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
+		{
+			Ref<VulkanCommandBuffer> commandBuffer = VulkanContext::GetInstance().GetPrimaryCommandBuffer();
+			commandBuffer->BeginTimer(s_RendererData.ShadowPassVulkanTimer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
+		}
+
 		{
 			if (s_RendererData.ShadowMappingSettings.Enabled && s_RendererData.CurrentViewport->ShadowMappingEnabled)
 				ExecuteShadowPass();
@@ -812,6 +825,7 @@ namespace Flare
 		if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
 		{
 			Ref<VulkanCommandBuffer> commandBuffer = VulkanContext::GetInstance().GetPrimaryCommandBuffer();
+			commandBuffer->EndTimer(s_RendererData.ShadowPassVulkanTimer, VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT);
 
 			VkImage images[4] = { VK_NULL_HANDLE };
 
@@ -847,6 +861,8 @@ namespace Flare
 			Ref<VulkanCommandBuffer> commandBuffer = VulkanContext::GetInstance().GetPrimaryCommandBuffer();
 			Ref<VulkanFrameBuffer> renderTarget = As<VulkanFrameBuffer>(s_RendererData.CurrentViewport->RenderTarget);
 			
+			commandBuffer->BeginTimer(s_RendererData.GeometryPassVulkanTimer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT);
+
 			commandBuffer->BeginRenderPass(renderTarget->GetCompatibleRenderPass(), renderTarget);
 
 			commandBuffer->SetPrimaryDescriptorSet(s_RendererData.PrimaryDescriptorSet);
@@ -855,6 +871,8 @@ namespace Flare
 			ExecuteGeomertyPass();
 
 			commandBuffer->EndRenderPass();
+
+			commandBuffer->EndTimer(s_RendererData.GeometryPassVulkanTimer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
 		}
 
 		if (RendererAPI::GetAPI() != RendererAPI::API::Vulkan)
@@ -1239,6 +1257,11 @@ namespace Flare
 		{
 			s_RendererData.Statistics.ShadowPassTime += s_RendererData.ShadowPassTimer->GetElapsedTime().value_or(0.0f);
 			s_RendererData.Statistics.GeometryPassTime += s_RendererData.GeometryPassTimer->GetElapsedTime().value_or(0.0f);
+		}
+		else
+		{
+			s_RendererData.Statistics.ShadowPassTime += s_RendererData.ShadowPassVulkanTimer->GetResult().value_or(0.0f);
+			s_RendererData.Statistics.GeometryPassTime += s_RendererData.GeometryPassVulkanTimer->GetResult().value_or(0.0f);
 		}
 
 		s_RendererData.PointLights.clear();

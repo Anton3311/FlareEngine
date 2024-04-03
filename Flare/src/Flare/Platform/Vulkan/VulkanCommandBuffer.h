@@ -15,6 +15,7 @@ namespace Flare
 	class Material;
 	class VulkanPipeline;
 	class VulkanRenderPass;
+	class VulkanGPUTimer;
 
 	class FLARE_API VulkanCommandBuffer
 	{
@@ -58,6 +59,9 @@ namespace Flare
 			VkPipelineStageFlags srcStage, VkAccessFlags srcAccessMask,
 			VkPipelineStageFlags dstStage, VkAccessFlags dstAccessMask,
 			VkImageLayout oldLayout, VkImageLayout newLayout);
+
+		void BeginTimer(Ref<VulkanGPUTimer> timer, VkPipelineStageFlagBits pipelineStages);
+		void EndTimer(Ref<VulkanGPUTimer> timer, VkPipelineStageFlagBits pipelineStages);
 
 		VkCommandBuffer GetHandle() const { return m_CommandBuffer; }
 	private:
