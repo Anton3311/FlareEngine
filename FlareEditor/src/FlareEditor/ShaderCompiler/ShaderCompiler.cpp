@@ -294,6 +294,8 @@ namespace Flare
                     metadata->Type = ShaderType::Surface;
                 else if (element.Value.Value == "2D")
                     metadata->Type = ShaderType::_2D;
+                else if (element.Value.Value == "FullscreenQuad")
+                    metadata->Type = ShaderType::FullscreenQuad;
                 else
                 {
                     errors.emplace_back(element.Value.Position, fmt::format("Invalid shader type '{}'", element.Value.Value));
@@ -399,7 +401,6 @@ namespace Flare
             uint32_t membersCount = (uint32_t)bufferType.member_types.size();
 
             pushConstantsRange.Size = bufferSize;
-
             for (uint32_t i = 0; i < membersCount; i++)
             {
                 const std::string& memberName = compiler.get_member_name(resource.base_type_id, i);
@@ -478,7 +479,7 @@ namespace Flare
                     else
                         shaderProperty.Name = fmt::format("{}.{}", resource.name, memberName);
 
-                    shaderProperty.Offset = lastPropertyOffset;
+                    shaderProperty.Offset = offset;
                     shaderProperty.Type = shaderDataType.value();
                     shaderProperty.Size = compiler.get_declared_struct_member_size(bufferType, i);
                     shaderProperty.Hidden = true;
@@ -486,7 +487,7 @@ namespace Flare
                     propertyNameToIndex[shaderProperty.Name] = properties.size() - 1;
                 }
 
-                lastPropertyOffset += compiler.get_declared_struct_member_size(bufferType, i);
+                lastPropertyOffset = offset;
             }
         }
 

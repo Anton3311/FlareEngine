@@ -134,8 +134,6 @@ namespace Flare
 
 		for (const auto& prop : properties)
 		{
-			m_BufferSize += prop.Size;
-
 			if (prop.Type == ShaderDataType::Sampler)
 				samplers++;
 		}
@@ -143,7 +141,7 @@ namespace Flare
 		m_Textures.resize(samplers, TexturePropertyValue());
 
 		if (properties.size() > 0)
-			m_BufferSize += properties.back().Size;
+			m_BufferSize = properties.back().Offset + properties.back().Size;
 
 		if (m_BufferSize != 0)
 		{
