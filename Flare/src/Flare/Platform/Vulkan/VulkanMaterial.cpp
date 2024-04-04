@@ -24,6 +24,11 @@ namespace Flare
 
 		Material::SetShader(shader);
 
+		if (shader == nullptr)
+		{
+			return;
+		}
+
 		m_Pipeline = nullptr;
 		m_Set = nullptr;
 

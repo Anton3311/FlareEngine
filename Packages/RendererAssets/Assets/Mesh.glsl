@@ -87,9 +87,9 @@ layout(location = 0) in VertexData i_Vertex;
 #endif
 
 layout(location = 0) out vec4 o_Color;
+layout(location = 1) out vec4 o_Normal;
 
 #ifdef OPENGL
-	layout(location = 1) out vec4 o_Normal;
 	layout(location = 2) out int o_EntityIndex;
 #endif
 
@@ -125,8 +125,8 @@ void main()
 	finalColor += u_EnvironmentLight.rgb * u_EnvironmentLight.w * color.rgb;
 
 	o_Color = vec4(finalColor, color.a);
-#ifdef OPENGL
 	o_Normal = vec4(N * 0.5f + vec3(0.5f), 1.0f);
+#ifdef OPENGL
 	o_EntityIndex = i_EntityIndex;
 #endif
 }
