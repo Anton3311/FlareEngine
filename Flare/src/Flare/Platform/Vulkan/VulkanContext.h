@@ -83,6 +83,7 @@ namespace Flare
 		VulkanAllocation CreateStagingBuffer(size_t size, VkBuffer& buffer);
 
 		Ref<VulkanCommandBuffer> GetPrimaryCommandBuffer() const { return m_PrimaryCommandBuffer; }
+		Ref<CommandBuffer> GetCommandBuffer() const override;
 
 		uint32_t GetCurrentFrameInFlight() const { return m_CurrentFrameInFlight; }
 		Ref<VulkanFrameBuffer> GetSwapChainFrameBuffer(uint32_t index) const { return m_SwapChainFrameBuffers[index]; }

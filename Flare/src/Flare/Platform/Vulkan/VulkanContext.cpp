@@ -270,6 +270,11 @@ namespace Flare
 		return allocation;
 	}
 
+	Ref<CommandBuffer> VulkanContext::GetCommandBuffer() const
+	{
+		return m_PrimaryCommandBuffer;
+	}
+
 	Ref<VulkanCommandBuffer> VulkanContext::BeginTemporaryCommandBuffer()
 	{
 		VkCommandBuffer commandBuffer;

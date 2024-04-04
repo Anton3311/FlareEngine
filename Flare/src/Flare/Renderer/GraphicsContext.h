@@ -2,6 +2,8 @@
 
 #include "FlareCore/Core.h"
 
+#include "Flare/Renderer/CommandBuffer.h"
+
 namespace Flare
 {
 	class FLARE_API GraphicsContext
@@ -15,6 +17,7 @@ namespace Flare
 		virtual void Present() = 0;
 
 		virtual void WaitForDevice() = 0;
+		virtual Ref<CommandBuffer> GetCommandBuffer() const = 0;
 	public:
 		static GraphicsContext& GetInstance();
 		static bool IsInitialized();

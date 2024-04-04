@@ -15,6 +15,110 @@ namespace Flare
 	VulkanCommandBuffer::VulkanCommandBuffer(VkCommandBuffer commandBuffer)
 		: m_CommandBuffer(commandBuffer) {}
 
+	void VulkanCommandBuffer::BeginRenderTarget(const Ref<FrameBuffer> frameBuffer)
+	{
+		Ref<VulkanFrameBuffer> vulkanFrameBuffer = As<VulkanFrameBuffer>(frameBuffer);
+		BeginRenderPass(vulkanFrameBuffer->GetCompatibleRenderPass(), vulkanFrameBuffer);
+	}
+
+	void VulkanCommandBuffer::EndRenderTarget()
+	{
+		EndRenderPass();
+	}
+
+	void VulkanCommandBuffer::ApplyMaterial(const Ref<const Material>& material)
+	{
+		FLARE_CORE_ASSERT(material->GetShader());
+		Ref<VulkanMaterial> vulkanMaterial = As<VulkanMaterial>(std::const_pointer_cast<Material>(material));
+		Ref<Pipeline> pipeline = vulkanMaterial->GetPipeline(m_CurrentRenderPass);
+		VkPipelineLayout pipelineLayout = As<const VulkanPipeline>(vulkanMaterial->GetPipeline(m_CurrentRenderPass))->GetLayoutHandle();
+		Ref<const ShaderMetadata> metadata = material->GetShader()->GetMetadata();
+
+		BindPipeline(pipeline);
+
+		if (m_PrimaryDescriptorSet)
+			BindDescriptorSet(m_PrimaryDescriptorSet, pipelineLayout, 0);
+		if (m_SecondaryDescriptorSet)
+			BindDescriptorSet(m_SecondaryDescriptorSet, pipelineLayout, 1);
+
+		Ref<VulkanDescriptorSet> materialDescriptorSet = vulkanMaterial->GetDescriptorSet();
+		if (materialDescriptorSet)
+		{
+			vulkanMaterial->UpdateDescriptorSet();
+			BindDescriptorSet(materialDescriptorSet, pipelineLayout, 2);
+		}
+
+		for (size_t i = 0; i < metadata->PushConstantsRanges.size(); i++)
+		{
+			const ShaderPushConstantsRange& range = metadata->PushConstantsRanges[i];
+			if (range.Size == 0)
+				continue;
+
+			VkShaderStageFlags stage = 0;
+			switch (range.Stage)
+			{
+			case ShaderStageType::Vertex:
+				stage = VK_SHADER_STAGE_VERTEX_BIT;
+				break;
+			case ShaderStageType::Pixel:
+				stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+				break;
+			}
+
+			vkCmdPushConstants(m_CommandBuffer, pipelineLayout, stage, (uint32_t)range.Offset, (uint32_t)range.Size, material->GetPropertiesBuffer() + range.Offset);
+		}
+	}
+
+	void VulkanCommandBuffer::SetViewportAndScisors(Math::Rect viewportRect)
+	{
+		VkRect2D scissors{};
+		scissors.offset.x = (int32_t)viewportRect.Min.x;
+		scissors.offset.y = (int32_t)viewportRect.Min.y;
+		scissors.extent.width = (int32_t)viewportRect.GetWidth();
+		scissors.extent.height = (int32_t)viewportRect.GetHeight();
+
+		VkViewport viewport{};
+		viewport.width = viewportRect.GetWidth();
+		viewport.height = viewportRect.GetHeight();
+		viewport.minDepth = 0.0f;
+		viewport.maxDepth = 1.0f;
+		viewport.x = viewportRect.Min.x;
+		viewport.y = viewportRect.Min.y;
+
+		vkCmdSetViewport(m_CommandBuffer, 0, 1, &viewport);
+		vkCmdSetScissor(m_CommandBuffer, 0, 1, &scissors);
+	}
+
+	void VulkanCommandBuffer::DrawIndexed(const Ref<const Mesh>& mesh, uint32_t subMeshIndex, uint32_t baseInstance, uint32_t instanceCount)
+	{
+		Ref<const VertexBuffer> vertexBuffers[] =
+		{
+			mesh->GetVertices(),
+			mesh->GetNormals(),
+			mesh->GetTangents(),
+			mesh->GetUVs()
+		};
+
+		BindVertexBuffers(Span(vertexBuffers, 4));
+		BindIndexBuffer(mesh->GetIndexBuffer());
+
+		const auto& subMesh = mesh->GetSubMeshes()[subMeshIndex];
+		vkCmdDrawIndexed(m_CommandBuffer, subMesh.IndicesCount, instanceCount, subMesh.BaseIndex, subMesh.BaseVertex, baseInstance);
+	}
+
+	void VulkanCommandBuffer::StartTimer(Ref<GPUTimer> timer)
+	{
+		Ref<VulkanGPUTimer> vulkanTimer = As<VulkanGPUTimer>(timer);
+		vkCmdResetQueryPool(m_CommandBuffer, vulkanTimer->GetPoolHandle(), 0, 2);
+		vkCmdWriteTimestamp(m_CommandBuffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, vulkanTimer->GetPoolHandle(), 0);
+	}
+
+	void VulkanCommandBuffer::StopTimer(Ref<GPUTimer> timer)
+	{
+		Ref<VulkanGPUTimer> vulkanTimer = As<VulkanGPUTimer>(timer);
+		vkCmdWriteTimestamp(m_CommandBuffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, vulkanTimer->GetPoolHandle(), 1);
+	}
+
 	void VulkanCommandBuffer::Reset()
 	{
 		VK_CHECK_RESULT(vkResetCommandBuffer(m_CommandBuffer, 0));
@@ -36,6 +140,8 @@ namespace Flare
 
 	void VulkanCommandBuffer::BeginRenderPass(const Ref<VulkanRenderPass>& renderPass, const Ref<VulkanFrameBuffer>& frameBuffer)
 	{
+		FLARE_CORE_ASSERT(m_CurrentRenderPass == nullptr);
+
 		VkRenderPassBeginInfo info{};
 		info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
 		info.framebuffer = frameBuffer->GetHandle();
@@ -54,6 +160,8 @@ namespace Flare
 
 	void VulkanCommandBuffer::EndRenderPass()
 	{
+		FLARE_CORE_ASSERT(m_CurrentRenderPass);
+
 		vkCmdEndRenderPass(m_CommandBuffer);
 		m_CurrentRenderPass = nullptr;
 	}
@@ -442,69 +550,6 @@ namespace Flare
 		m_SecondaryDescriptorSet = set;
 	}
 
-	void VulkanCommandBuffer::ApplyMaterial(const Ref<const Material>& material)
-	{
-		FLARE_CORE_ASSERT(material->GetShader());
-		Ref<VulkanMaterial> vulkanMaterial = As<VulkanMaterial>(std::const_pointer_cast<Material>(material));
-		Ref<Pipeline> pipeline = vulkanMaterial->GetPipeline(m_CurrentRenderPass);
-		VkPipelineLayout pipelineLayout = As<const VulkanPipeline>(vulkanMaterial->GetPipeline(m_CurrentRenderPass))->GetLayoutHandle();
-		Ref<const ShaderMetadata> metadata = material->GetShader()->GetMetadata();
-
-		BindPipeline(pipeline);
-
-		if (m_PrimaryDescriptorSet)
-			BindDescriptorSet(m_PrimaryDescriptorSet, pipelineLayout, 0);
-		if (m_SecondaryDescriptorSet)
-			BindDescriptorSet(m_SecondaryDescriptorSet, pipelineLayout, 1);
-
-		Ref<VulkanDescriptorSet> materialDescriptorSet = vulkanMaterial->GetDescriptorSet();
-		if (materialDescriptorSet)
-		{
-			vulkanMaterial->UpdateDescriptorSet();
-			BindDescriptorSet(materialDescriptorSet, pipelineLayout, 2);
-		}
-
-		for (size_t i = 0; i < metadata->PushConstantsRanges.size(); i++)
-		{
-			const ShaderPushConstantsRange& range = metadata->PushConstantsRanges[i];
-			if (range.Size == 0)
-				continue;
-
-			VkShaderStageFlags stage = 0;
-			switch (range.Stage)
-			{
-			case ShaderStageType::Vertex:
-				stage = VK_SHADER_STAGE_VERTEX_BIT;
-				break;
-			case ShaderStageType::Pixel:
-				stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-				break;
-			}
-
-			vkCmdPushConstants(m_CommandBuffer, pipelineLayout, stage, (uint32_t)range.Offset, (uint32_t)range.Size, material->GetPropertiesBuffer() + range.Offset);
-		}
-	}
-
-	void VulkanCommandBuffer::SetViewportAndScisors(Math::Rect viewportRect)
-	{
-		VkRect2D scissors{};
-		scissors.offset.x = (int32_t)viewportRect.Min.x;
-		scissors.offset.y = (int32_t)viewportRect.Min.y;
-		scissors.extent.width = (int32_t)viewportRect.GetWidth();
-		scissors.extent.height = (int32_t)viewportRect.GetHeight();
-
-		VkViewport viewport{};
-		viewport.width = viewportRect.GetWidth();
-		viewport.height = viewportRect.GetHeight();
-		viewport.minDepth = 0.0f;
-		viewport.maxDepth = 1.0f;
-		viewport.x = viewportRect.Min.x;
-		viewport.y = viewportRect.Min.y;
-
-		vkCmdSetViewport(m_CommandBuffer, 0, 1, &viewport);
-		vkCmdSetScissor(m_CommandBuffer, 0, 1, &scissors);
-	}
-
 	void VulkanCommandBuffer::DrawIndexed(uint32_t indicesCount)
 	{
 		vkCmdDrawIndexed(m_CommandBuffer, indicesCount, 1, 0, 0, 0);
@@ -518,23 +563,6 @@ namespace Flare
 	void VulkanCommandBuffer::DrawIndexed(uint32_t firstIndex, uint32_t indicesCount, uint32_t firstInstance, uint32_t instancesCount)
 	{
 		vkCmdDrawIndexed(m_CommandBuffer, indicesCount, instancesCount, firstIndex, 0, firstInstance);
-	}
-
-	void VulkanCommandBuffer::DrawIndexed(const Ref<const Mesh>& mesh, uint32_t subMeshIndex, uint32_t firstInstance, uint32_t instancesCount)
-	{
-		Ref<const VertexBuffer> vertexBuffers[] =
-		{
-			mesh->GetVertices(),
-			mesh->GetNormals(),
-			mesh->GetTangents(),
-			mesh->GetUVs()
-		};
-
-		BindVertexBuffers(Span(vertexBuffers, 4));
-		BindIndexBuffer(mesh->GetIndexBuffer());
-
-		const auto& subMesh = mesh->GetSubMeshes()[subMeshIndex];
-		vkCmdDrawIndexed(m_CommandBuffer, subMesh.IndicesCount, instancesCount, subMesh.BaseIndex, subMesh.BaseVertex, firstInstance);
 	}
 
 	void VulkanCommandBuffer::DepthImagesBarrier(Span<VkImage> images, bool hasStencil,

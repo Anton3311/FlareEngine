@@ -20,7 +20,7 @@ namespace Flare
 		vkDestroyQueryPool(VulkanContext::GetInstance().GetDevice(), m_Pool, nullptr);
 	}
 
-	std::optional<float> VulkanGPUTimer::GetResult() const
+	std::optional<float> VulkanGPUTimer::GetElapsedTime()
 	{
 		VkPhysicalDeviceProperties properties{};
 		vkGetPhysicalDeviceProperties(VulkanContext::GetInstance().GetPhysicalDevice(), &properties);
