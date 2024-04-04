@@ -14,7 +14,7 @@ namespace Flare
 
 	struct SystemExecutionContext
 	{
-		CommandBuffer* Commands = nullptr;
+		EntitiesCommandBuffer* Commands = nullptr;
 	};
 
 	using SystemEventFunction = std::function<void(SystemExecutionContext& context)>;

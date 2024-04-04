@@ -10,11 +10,11 @@
 
 namespace Flare
 {
-	class FLAREECS_API CommandBuffer;
+	class FLAREECS_API EntitiesCommandBuffer;
 	class FutureEntityCommands
 	{
 	public:
-		constexpr FutureEntityCommands(FutureEntity entity, CommandBuffer& commandBuffer)
+		constexpr FutureEntityCommands(FutureEntity entity, EntitiesCommandBuffer& commandBuffer)
 			: m_FutureEntity(entity), m_CommandBuffer(commandBuffer) {}
 	public:
 		template<typename T>
@@ -46,14 +46,14 @@ namespace Flare
 		}
 	private:
 		FutureEntity m_FutureEntity;
-		CommandBuffer& m_CommandBuffer;
+		EntitiesCommandBuffer& m_CommandBuffer;
 	};
 
 	class FLAREECS_API World;
-	class FLAREECS_API CommandBuffer
+	class FLAREECS_API EntitiesCommandBuffer
 	{
 	public:
-		CommandBuffer(World& world);
+		EntitiesCommandBuffer(World& world);
 
 		template<typename T>
 		void AddCommand(const T& command)
