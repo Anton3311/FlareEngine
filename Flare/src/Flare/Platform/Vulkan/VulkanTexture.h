@@ -33,6 +33,8 @@ namespace Flare
 	private:
 		TextureSpecifications m_Specifications;
 		VulkanAllocation m_Allocation;
+
+		uint32_t m_MipLevels = 1;
 		
 		VkImage m_Image = VK_NULL_HANDLE;
 		VkImageView m_ImageView = VK_NULL_HANDLE;

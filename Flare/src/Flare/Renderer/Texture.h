@@ -62,6 +62,8 @@ namespace Flare
 
 	struct TextureSpecifications
 	{
+		static constexpr uint32_t DefaultMipLevelsCount = 4;
+
 		uint32_t Width;
 		uint32_t Height;
 		TextureFormat Format;

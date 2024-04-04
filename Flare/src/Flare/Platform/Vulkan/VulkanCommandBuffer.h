@@ -31,12 +31,15 @@ namespace Flare
 		void EndRenderPass();
 
 		void TransitionImageLayout(VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout);
+		void TransitionImageLayout(VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t baseMipLevel, uint32_t mipLevels);
 		void TransitionDepthImageLayout(VkImage image, bool hasStencilComponent, VkImageLayout oldLayout, VkImageLayout newLayout);
 
 		void ClearImage(VkImage image, const glm::vec4& clearColor, VkImageLayout oldLayout, VkImageLayout newLayout);
 		void ClearDepthStencilImage(VkImage image, bool hasStencilComponent, float depthValue, uint32_t stencilValue, VkImageLayout oldLayout, VkImageLayout newLayout);
 		void CopyBufferToImage(VkBuffer buffer, VkImage image, VkExtent3D size);
 		void CopyBuffer(VkBuffer sourceBuffer, VkBuffer destinationBuffer, size_t size, size_t sourceOffset, size_t destinationOffset);
+
+		void GenerateImageMipMaps(VkImage image, uint32_t mipLevels, glm::uvec2 imageSize);
 
 		void BindPipeline(const Ref<const Pipeline>& pipeline);
 		void BindVertexBuffers(const Span<Ref<const VertexBuffer>>& vertexBuffers);

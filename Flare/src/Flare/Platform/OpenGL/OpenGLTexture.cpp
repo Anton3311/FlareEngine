@@ -40,7 +40,13 @@ namespace Flare
 			}
 
 			glCreateTextures(GL_TEXTURE_2D, 1, &m_Id);
-			glTextureStorage2D(m_Id, m_Specifications.GenerateMipMaps ? 4 : 1, m_InternalTextureFormat, m_Specifications.Width, m_Specifications.Height);
+			glTextureStorage2D(m_Id,
+				m_Specifications.GenerateMipMaps
+					? TextureSpecifications::DefaultMipLevelsCount
+					: 1,
+				m_InternalTextureFormat,
+				m_Specifications.Width,
+				m_Specifications.Height);
 
 			if (m_Specifications.GenerateMipMaps)
 			{

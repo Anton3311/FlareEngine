@@ -3,6 +3,7 @@
 #include "Flare/Platform/Vulkan/VulkanContext.h"
 
 #include <stb_image/stb_image.h>
+#include <glm/gtc/integer.hpp>
 
 namespace Flare
 {
@@ -109,11 +110,19 @@ namespace Flare
 		imageInfo.format = imageFormat;
 		imageInfo.imageType = VK_IMAGE_TYPE_2D;
 		imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-		imageInfo.mipLevels = 1;
 		imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
 		imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 		imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
 		imageInfo.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+		imageInfo.mipLevels = 1;
+
+		if (m_Specifications.GenerateMipMaps)
+		{
+			m_MipLevels = (uint32_t)glm::floor(glm::log2((float)glm::max(imageInfo.extent.width, imageInfo.extent.height))) + 1u;
+
+			imageInfo.mipLevels = m_MipLevels;
+			imageInfo.usage |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+		}
 
 		VmaAllocationCreateInfo allocation{};
 		allocation.usage = VMA_MEMORY_USAGE_GPU_ONLY;
@@ -132,7 +141,7 @@ namespace Flare
 		imageViewInfo.subresourceRange.baseArrayLayer = 0;
 		imageViewInfo.subresourceRange.baseMipLevel = 0;
 		imageViewInfo.subresourceRange.layerCount = 1;
-		imageViewInfo.subresourceRange.levelCount = 1;
+		imageViewInfo.subresourceRange.levelCount = imageInfo.mipLevels;
 		imageViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
 		imageViewInfo.image = m_Image;
 
@@ -230,7 +239,17 @@ namespace Flare
 			size.height = m_Specifications.Height;
 			size.depth = 1;
 			commandBuffer->CopyBufferToImage(stagingBuffer, m_Image, size);
-			commandBuffer->TransitionImageLayout(m_Image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+			if (m_Specifications.GenerateMipMaps && m_MipLevels > 1)
+			{
+				commandBuffer->TransitionImageLayout(m_Image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, 0, 1);
+				commandBuffer->GenerateImageMipMaps(m_Image, m_MipLevels, glm::uvec2(m_Specifications.Width, m_Specifications.Height));
+				commandBuffer->TransitionImageLayout(m_Image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, 0, m_MipLevels);
+			}
+			else
+			{
+				commandBuffer->TransitionImageLayout(m_Image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			}
 
 			VulkanContext::GetInstance().EndTemporaryCommandBuffer(commandBuffer);
 		}
