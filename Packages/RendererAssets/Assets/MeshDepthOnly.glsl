@@ -1,3 +1,4 @@
+Type = Surface
 Culling = Front
 DepthTest = true
 

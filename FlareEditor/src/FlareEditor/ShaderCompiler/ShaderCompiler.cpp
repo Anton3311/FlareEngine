@@ -210,7 +210,6 @@ namespace Flare
 
             FLARE_CORE_ERROR("Failed to compile shader '{}' Stage = {}", path, stageName);
             FLARE_CORE_ERROR("Shader Error: {}", shaderModule.GetErrorMessage());
-            FLARE_CORE_INFO(glsl);
             return {};
         }
 
@@ -296,11 +295,6 @@ namespace Flare
                     metadata->Type = ShaderType::_2D;
                 else if (element.Value.Value == "FullscreenQuad")
                     metadata->Type = ShaderType::FullscreenQuad;
-                else
-                {
-                    errors.emplace_back(element.Value.Position, fmt::format("Invalid shader type '{}'", element.Value.Value));
-                    continue;
-                }
             }
             else if (element.Name.Value == "Properties")
             {
@@ -500,7 +494,7 @@ namespace Flare
             uint32_t binding = compiler.get_decoration(resource.id, spv::DecorationBinding);
             uint32_t descriptorSet = compiler.get_decoration(resource.id, spv::DecorationDescriptorSet);
 
-            if (descriptorSet != materialDescriptorSetIndex)
+            if (metadata->Type != ShaderType::Unknown && descriptorSet != materialDescriptorSetIndex)
                 continue;
 
             ShaderDataType type = ShaderDataType::Sampler;

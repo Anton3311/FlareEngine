@@ -17,10 +17,10 @@ Properties =
 #begin vertex
 #version 450
 
-#if OPENGL
-layout(location = 0) in vec2 i_Position;
+#ifdef OPENGL
+	layout(location = 0) in vec2 i_Position;
 #else
-layout(location = 0) in vec3 i_Position;
+	layout(location = 0) in vec3 i_Position;
 #endif
 
 void main()

@@ -105,7 +105,7 @@ float PCF(sampler2D shadowMap, vec2 uv, float receieverDepth, float filterRadius
 float CalculateCascadeShadow(sampler2D shadowMap, vec4 lightSpacePosition, float bias, float poissonPointsRotationAngle, float scale)
 {
 	vec3 projected = lightSpacePosition.xyz / lightSpacePosition.w;
-#if OPENGL
+#ifdef OPENGL
 	projected = projected * 0.5 + vec3(0.5);
 #else
 	projected.xy = projected.xy * 0.5 + vec2(0.5);

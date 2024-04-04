@@ -58,6 +58,8 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
+		return;
+
 		if (!Enabled || !Renderer::GetCurrentViewport().PostProcessingEnabled)
 			return;
 

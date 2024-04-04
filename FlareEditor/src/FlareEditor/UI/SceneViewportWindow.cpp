@@ -70,7 +70,7 @@ namespace Flare
 		AssetHandle selectionOutlineShader = ShaderLibrary::FindShader("SelectionOutline").value_or(NULL_ASSET_HANDLE);
 		if (AssetManager::IsAssetHandleValid(selectionOutlineShader))
 		{
-			if (RendererAPI::GetAPI() != RendererAPI::API::Vulkan)
+			if (false)
 			{
 				Ref<Shader> shader = AssetManager::GetAsset<Shader>(selectionOutlineShader);
 				m_SelectionOutlineMaterial = Material::Create(shader);
@@ -307,6 +307,7 @@ namespace Flare
 		else
 		{
 			m_Viewport.RenderTarget->SetWriteMask(0b1); // Clear first attachment
+			RenderCommand::SetClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 			RenderCommand::Clear();
 
 			m_Viewport.RenderTarget->SetWriteMask(0b10); // Clear second attachment
