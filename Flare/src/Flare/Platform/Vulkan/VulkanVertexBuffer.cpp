@@ -8,7 +8,7 @@ namespace Flare
 	}
 
 	VulkanVertexBuffer::VulkanVertexBuffer(const void* data, size_t size)
-		: m_Buffer(GPUBufferUsage::Static, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT)
+		: m_Buffer(GPUBufferUsage::Static, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, size)
 	{
 		m_Buffer.SetData(data, size, 0);
 	}

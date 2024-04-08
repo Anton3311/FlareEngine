@@ -53,6 +53,9 @@ namespace Flare
 	class MemorySpan
 	{
 	public:
+		MemorySpan()
+			: m_Buffer(nullptr), m_Size(0) {}
+
 		template<typename T>
 		MemorySpan(T* elements, size_t count)
 			: m_Buffer(elements), m_Size(count * sizeof(T)) {}

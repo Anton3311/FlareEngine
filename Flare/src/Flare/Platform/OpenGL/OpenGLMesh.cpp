@@ -7,6 +7,18 @@ namespace Flare
 	{
 	}
 
+	OpenGLMesh::OpenGLMesh(MeshTopology topology,
+		MemorySpan indices,
+		IndexBuffer::IndexFormat indexFormat,
+		Span<glm::vec3> vertices,
+		Span<glm::vec3> normals,
+		Span<glm::vec3> tangents,
+		Span<glm::vec2> uvs)
+		: Mesh(topology, indices, indexFormat, vertices, normals, tangents, uvs)
+	{
+		CreateVertexArray();
+	}
+
 	void OpenGLMesh::AddSubMesh(
 		const Span<glm::vec3>& vertices,
 		const MemorySpan& indices,
@@ -14,20 +26,23 @@ namespace Flare
 		const Span<glm::vec3>& tangents,
 		const Span<glm::vec2>& uvs)
 	{
-		m_VertexArray.Bind();
-
 		bool hasVertexBuffers = m_Vertices != nullptr;
 		Mesh::AddSubMesh(vertices, indices, normals, tangents, uvs);
 
 		if (m_Vertices != nullptr && !hasVertexBuffers)
 		{
-			m_VertexArray.SetIndexBuffer(m_IndexBuffer);
-
-			m_VertexArray.AddVertexBuffer(m_Vertices, 0);
-			m_VertexArray.AddVertexBuffer(m_Normals, 1);
-			m_VertexArray.AddVertexBuffer(m_Tangents, 2);
-			m_VertexArray.AddVertexBuffer(m_UVs, 3);
+			CreateVertexArray();
 		}
+	}
+
+	void OpenGLMesh::CreateVertexArray()
+	{
+		m_VertexArray.SetIndexBuffer(m_IndexBuffer);
+
+		m_VertexArray.AddVertexBuffer(m_Vertices, 0);
+		m_VertexArray.AddVertexBuffer(m_Normals, 1);
+		m_VertexArray.AddVertexBuffer(m_Tangents, 2);
+		m_VertexArray.AddVertexBuffer(m_UVs, 3);
 
 		m_VertexArray.Unbind();
 	}

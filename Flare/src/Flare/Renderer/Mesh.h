@@ -38,11 +38,21 @@ namespace Flare
 			IndexBuffer::IndexFormat indexFormat,
 			size_t indexBufferSize);
 
+		Mesh(MeshTopology topology,
+			MemorySpan indices,
+			IndexBuffer::IndexFormat indexFormat,
+			Span<glm::vec3> vertices,
+			Span<glm::vec3> normals,
+			Span<glm::vec3> tangents,
+			Span<glm::vec2> uvs);
+
 		virtual void AddSubMesh(const Span<glm::vec3>& vertices,
 			const MemorySpan& indices,
 			const Span<glm::vec3>& normals,
 			const Span<glm::vec3>& tangents,
 			const Span<glm::vec2>& uvs);
+
+		void AddSubMesh(const SubMesh& subMesh);
 
 		constexpr size_t GetVertexBufferSize() const { return m_VertexBufferSize; }
 		constexpr size_t GetIndexBufferSize() const { return m_IndexBufferSize; }
@@ -58,6 +68,14 @@ namespace Flare
 		inline IndexBuffer::IndexFormat GetIndexFormat() const { return m_IndexFormat; }
 	public:
 		static Ref<Mesh> Create(MeshTopology topology, size_t vertexBufferSize, IndexBuffer::IndexFormat indexFormat, size_t indexBufferSize);
+
+		static Ref<Mesh> Create(MeshTopology topology,
+			MemorySpan indices,
+			IndexBuffer::IndexFormat indexFormat,
+			Span<glm::vec3> vertices,
+			Span<glm::vec3> normals,
+			Span<glm::vec3> tangents,
+			Span<glm::vec2> uvs);
 	protected:
 		IndexBuffer::IndexFormat m_IndexFormat;
 

@@ -16,6 +16,38 @@ namespace Flare
 		m_IndexFormat(indexFormat),
 		m_IndexBufferSize(indexBufferSize) {}
 
+	Mesh::Mesh(MeshTopology topology,
+		MemorySpan indices,
+		IndexBuffer::IndexFormat indexFormat,
+		Span<glm::vec3> vertices,
+		Span<glm::vec3> normals,
+		Span<glm::vec3> tangents,
+		Span<glm::vec2> uvs)
+		: Asset(AssetType::Mesh),
+		m_TopologyType(topology),
+		m_IndexFormat(indexFormat),
+		m_VertexBufferSize(vertices.GetSize()),
+		m_VertexBufferOffset(0),
+		m_IndexBufferSize(indices.GetSize()),
+		m_IndexBufferOffset(0)
+	{
+		FLARE_CORE_ASSERT(vertices.GetSize() == normals.GetSize());
+		FLARE_CORE_ASSERT(vertices.GetSize() == tangents.GetSize());
+		FLARE_CORE_ASSERT(vertices.GetSize() == uvs.GetSize());
+
+		m_Vertices = VertexBuffer::Create(sizeof(glm::vec3) * vertices.GetSize(), vertices.GetData());
+		m_Normals = VertexBuffer::Create(sizeof(glm::vec3) * normals.GetSize(), normals.GetData());
+		m_Tangents = VertexBuffer::Create(sizeof(glm::vec3) * tangents.GetSize(), tangents.GetData());
+		m_UVs = VertexBuffer::Create(sizeof(glm::vec2) * uvs.GetSize(), uvs.GetData());
+
+		m_IndexBuffer = IndexBuffer::Create(m_IndexFormat, indices);
+
+		m_Vertices->SetLayout({ { "i_Position", ShaderDataType::Float3 } });
+		m_Normals->SetLayout({ { "i_Normal", ShaderDataType::Float3 } });
+		m_Tangents->SetLayout({ { "i_Tangent", ShaderDataType::Float3 } });
+		m_UVs->SetLayout({ { "i_UV", ShaderDataType::Float2 } });
+	}
+
 	void Mesh::AddSubMesh(const Span<glm::vec3>& vertices,
 		const MemorySpan& indices,
 		const Span<glm::vec3>& normals,
@@ -91,6 +123,11 @@ namespace Flare
 		m_IndexBufferOffset += indices.GetSize();
 	}
 
+	void Mesh::AddSubMesh(const SubMesh& subMesh)
+	{
+		m_SubMeshes.push_back(subMesh);
+	}
+
 	Ref<Mesh> Mesh::Create(MeshTopology topology, size_t vertexBufferSize, IndexBuffer::IndexFormat indexFormat, size_t indexBufferSize)
 	{
 		switch (RendererAPI::GetAPI())
@@ -99,6 +136,26 @@ namespace Flare
 			return CreateRef<OpenGLMesh>(topology, vertexBufferSize, indexFormat, indexBufferSize);
 		case RendererAPI::API::Vulkan:
 			return CreateRef<Mesh>(topology, vertexBufferSize, indexFormat, indexBufferSize);
+		}
+
+		FLARE_CORE_ASSERT(false);
+		return nullptr;
+	}
+
+	Ref<Mesh> Mesh::Create(MeshTopology topology,
+		MemorySpan indices,
+		IndexBuffer::IndexFormat indexFormat,
+		Span<glm::vec3> vertices,
+		Span<glm::vec3> normals,
+		Span<glm::vec3> tangents,
+		Span<glm::vec2> uvs)
+	{
+		switch (RendererAPI::GetAPI())
+		{
+		case RendererAPI::API::OpenGL:
+			return CreateRef<OpenGLMesh>(topology, indices, indexFormat, vertices, normals, tangents, uvs);
+		case RendererAPI::API::Vulkan:
+			return CreateRef<Mesh>(topology, indices, indexFormat, vertices, normals, tangents, uvs);
 		}
 
 		FLARE_CORE_ASSERT(false);
