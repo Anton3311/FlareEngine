@@ -160,10 +160,10 @@ namespace Flare
 		for (const Ref<Layer>& layer : m_LayersStack.GetLayers())
 			layer->OnDetach();
 
-		m_LayersStack.Clear();
-
 		AssetManager::Uninitialize();
 		Font::SetDefault(nullptr);
+
+		m_LayersStack.Clear();
 	}
 
 	void Application::Close()

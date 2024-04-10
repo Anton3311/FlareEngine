@@ -152,7 +152,7 @@ namespace Flare
 
     void EditorLayer::OnDetach()
     {
-        m_AssetManagerWindow.ClearOpenActions();
+        m_AssetManagerWindow.Uninitialize();
         m_AssetEditorWindows.clear();
 
         m_ImGuiLayer->OnDetach();
@@ -177,6 +177,27 @@ namespace Flare
     void EditorLayer::OnUpdate(float deltaTime)
     {
         FLARE_PROFILE_FUNCTION();
+
+        if (m_ExitPlayModeRequested)
+        {
+			Ref<EditorAssetManager> assetManager = As<EditorAssetManager>(AssetManager::GetInstance());
+
+			Scene::GetActive()->OnRuntimeEnd();
+			Scene::GetActive()->UninitializePostProcessing();
+
+			Scene::SetActive(nullptr);
+
+			Ref<Scene> editorScene = AssetManager::GetAsset<Scene>(m_EditedSceneHandle);
+			editorScene->InitializeRuntime();
+			editorScene->InitializePostProcessing();
+
+			Scene::SetActive(editorScene);
+			m_Mode = EditorMode::Edit;
+
+			InputManager::SetCursorMode(CursorMode::Normal);
+
+            m_ExitPlayModeRequested = false;
+        }
 
         if (m_Mode == EditorMode::Play)
         {
@@ -593,21 +614,7 @@ namespace Flare
     void EditorLayer::ExitPlayMode()
     {
         FLARE_CORE_ASSERT(m_Mode == EditorMode::Play);
-        Ref<EditorAssetManager> assetManager = As<EditorAssetManager>(AssetManager::GetInstance());
-
-        Scene::GetActive()->OnRuntimeEnd();
-        Scene::GetActive()->UninitializePostProcessing();
-
-        Scene::SetActive(nullptr);
-
-        Ref<Scene> editorScene = AssetManager::GetAsset<Scene>(m_EditedSceneHandle);
-        editorScene->InitializeRuntime();
-        editorScene->InitializePostProcessing();
-
-        Scene::SetActive(editorScene);
-        m_Mode = EditorMode::Edit;
-
-        InputManager::SetCursorMode(CursorMode::Normal);
+        m_ExitPlayModeRequested = true;
     }
 
     void EditorLayer::ReloadScriptingModules()

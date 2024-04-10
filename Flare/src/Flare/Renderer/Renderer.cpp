@@ -108,7 +108,7 @@ namespace Flare
 		// Instancing
 
 		std::vector<InstanceData> InstanceDataBuffer;
-		uint32_t MaxInstances = 1024;
+		uint32_t MaxInstances = 1024 * 24;
 
 		Ref<ShaderStorageBuffer> InstancesShaderBuffer = nullptr;
 		std::vector<DrawIndirectCommandSubMeshData> IndirectDrawData;
@@ -1139,16 +1139,8 @@ namespace Flare
 		auto mesh = s_RendererData.CurrentInstancingMesh;
 		const SubMesh& subMesh = mesh.Mesh->GetSubMeshes()[mesh.SubMeshIndex];
 
-		if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
-		{
-			Ref<VulkanCommandBuffer> commandBuffer = VulkanContext::GetInstance().GetPrimaryCommandBuffer();
-
-			commandBuffer->DrawIndexed(mesh.Mesh, mesh.SubMeshIndex, baseInstance, instanceCount);
-		}
-		else
-		{
-			RenderCommand::DrawInstancesIndexed(mesh.Mesh, mesh.SubMeshIndex, instanceCount, baseInstance);
-		}
+		Ref<CommandBuffer> commandBuffer = GraphicsContext::GetInstance().GetCommandBuffer();
+		commandBuffer->DrawIndexed(mesh.Mesh, mesh.SubMeshIndex, baseInstance, instanceCount);
 
 		s_RendererData.Statistics.DrawCallsCount++;
 		s_RendererData.Statistics.DrawCallsSavedByInstancing += instanceCount - 1;
@@ -1273,6 +1265,9 @@ namespace Flare
 
 	void Renderer::RemoveRenderPass(Ref<RenderPass> pass)
 	{
+		if (pass == nullptr)
+			return;
+
 		switch (pass->GetQueue())
 		{
 		case RenderPassQueue::BeforeShadows:

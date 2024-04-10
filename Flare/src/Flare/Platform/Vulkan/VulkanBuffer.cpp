@@ -80,6 +80,7 @@ namespace Flare
 	void VulkanBuffer::Create()
 	{
 		FLARE_CORE_ASSERT(m_Size > 0);
+		FLARE_CORE_ASSERT(m_Buffer == VK_NULL_HANDLE);
 
 		VkBufferCreateInfo info{};
 		info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;

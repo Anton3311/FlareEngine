@@ -110,7 +110,7 @@ namespace Flare
             using Pair = std::pair<ComponentId, void*>;
             std::sort(components.begin(), components.end(), [](const Pair& a, const Pair& b) -> bool { return a.first < b.first; });
 
-            return CreateRef<Prefab>(prefabData, std::move(components));
+            return CreateRef<Prefab>(prefabData, &world.Components, std::move(components));
         }
         catch (std::exception& e)
         {

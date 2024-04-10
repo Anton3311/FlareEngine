@@ -14,7 +14,9 @@ namespace Flare
 		m_TopologyType(topologyType),
 		m_VertexBufferSize(vertexBufferSize),
 		m_IndexFormat(indexFormat),
-		m_IndexBufferSize(indexBufferSize) {}
+		m_IndexBufferSize(indexBufferSize)
+	{
+	}
 
 	Mesh::Mesh(MeshTopology topology,
 		MemorySpan indices,
@@ -46,6 +48,10 @@ namespace Flare
 		m_Normals->SetLayout({ { "i_Normal", ShaderDataType::Float3 } });
 		m_Tangents->SetLayout({ { "i_Tangent", ShaderDataType::Float3 } });
 		m_UVs->SetLayout({ { "i_UV", ShaderDataType::Float2 } });
+	}
+
+	Mesh::~Mesh()
+	{
 	}
 
 	void Mesh::AddSubMesh(const Span<glm::vec3>& vertices,

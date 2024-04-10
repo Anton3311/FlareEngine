@@ -14,21 +14,13 @@ namespace Flare
 		FLARE_ASSET;
 		FLARE_SERIALIZABLE;
 
-		Prefab(const uint8_t* prefabData, std::vector<std::pair<ComponentId, void*>>&& components)
-			: Asset(AssetType::Prefab), m_Data(prefabData), m_Components(std::move(components)) {}
-		
-		~Prefab()
-		{
-			if (m_Data != nullptr)
-			{
-				delete[] m_Data;
-				m_Data = nullptr;
-			}
-		}
+		Prefab(const uint8_t* prefabData, const Components* compatibleComponentsRegistry, std::vector<std::pair<ComponentId, void*>>&& components);	
+		~Prefab();
 	
 		Entity CreateInstance(World& world);
 	private:
 		std::vector<std::pair<ComponentId, void*>> m_Components;
+		const Components* m_CompatibleComponentsRegistry = nullptr;
 		const uint8_t* m_Data;
 	};
 	

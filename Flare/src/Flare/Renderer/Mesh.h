@@ -46,6 +46,8 @@ namespace Flare
 			Span<glm::vec3> tangents,
 			Span<glm::vec2> uvs);
 
+		~Mesh();
+
 		virtual void AddSubMesh(const Span<glm::vec3>& vertices,
 			const MemorySpan& indices,
 			const Span<glm::vec3>& normals,
