@@ -139,7 +139,7 @@ namespace Flare
 	private:
 		std::function<void(VkImageView)> m_ImageDeletationHandler = nullptr;
 
-		bool m_DebugEnabled = true;
+		bool m_DebugEnabled = false;
 		uint32_t m_FramesInFlight = 0;
 		uint32_t m_CurrentFrameInFlight = 0;
 

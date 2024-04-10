@@ -125,7 +125,7 @@ namespace Flare
 		}
 
 		VmaAllocationCreateInfo allocation{};
-		allocation.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+		allocation.usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
 
 		VK_CHECK_RESULT(vmaCreateImage(VulkanContext::GetInstance().GetMemoryAllocator(), &imageInfo, &allocation, &m_Image, &m_Allocation.Handle, &m_Allocation.Info));
 

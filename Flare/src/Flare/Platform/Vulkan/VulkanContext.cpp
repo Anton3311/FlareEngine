@@ -1,6 +1,7 @@
 #include "VulkanContext.h"
 
 #include "FlareCore/Profiler/Profiler.h"
+#include "Flare/Core/Application.h"
 
 namespace Flare
 {
@@ -60,6 +61,15 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
+		const auto& commandLineArguments = Application::GetInstance().GetCommandLineArguments();
+		for (uint32_t i = 0; i < commandLineArguments.ArgumentsCount; i++)
+		{
+			if (std::strcmp(commandLineArguments.Arguments[i], "--vulkan-debug") == 0)
+			{
+				m_DebugEnabled = true;
+			}
+		}
+
 		std::vector<VkLayerProperties> supportedLayers = EnumerateAvailableLayers();
 		std::vector<const char*> enabledLayers;
 		const char* validationLayerName = "VK_LAYER_KHRONOS_validation";
@@ -103,7 +113,19 @@ namespace Flare
 			FLARE_CORE_INFO("Physical device name: {}", properties.deviceName);
 		}
 
-		std::vector<const char*> deviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME, VK_KHR_MAINTENANCE1_EXTENSION_NAME };
+		std::vector<const char*> deviceExtensions =
+		{
+			VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+			VK_KHR_MAINTENANCE1_EXTENSION_NAME,
+
+			// NOTE: These are used by Vulkan Memory Allocator
+			//
+			// Initially they weren't provided and the allocator was still working,
+			// but was crashing when debugging with RenderDoc
+			VK_KHR_DEDICATED_ALLOCATION_EXTENSION_NAME,
+			VK_KHR_GET_MEMORY_REQUIREMENTS_2_EXTENSION_NAME
+		};
+
 		CreateLogicalDevice(Span<const char*>::FromVector(enabledLayers), Span<const char*>::FromVector(deviceExtensions));
 
 		CreateMemoryAllocator();
@@ -279,7 +301,8 @@ namespace Flare
 		info.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
 
 		VmaAllocationCreateInfo allocationInfo{};
-		allocationInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
+		allocationInfo.usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
+		allocationInfo.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
 
 		VulkanAllocation allocation{};
 		VK_CHECK_RESULT(vmaCreateBuffer(m_Allocator, &info, &allocationInfo, &buffer, &allocation.Handle, &allocation.Info));
@@ -587,6 +610,7 @@ namespace Flare
 		info.device = m_Device;
 		info.physicalDevice = m_PhysicalDevice;
 		info.vulkanApiVersion = VK_API_VERSION_1_3;
+		info.flags = VMA_ALLOCATOR_CREATE_KHR_DEDICATED_ALLOCATION_BIT;
 
 		VK_CHECK_RESULT(vmaCreateAllocator(&info, &m_Allocator));
 	}

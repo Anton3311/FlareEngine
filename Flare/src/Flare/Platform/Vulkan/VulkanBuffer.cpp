@@ -103,10 +103,11 @@ namespace Flare
 		switch (m_Usage)
 		{
 		case GPUBufferUsage::Static:
-			allocation.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+			allocation.usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
 			break;
 		case GPUBufferUsage::Dynamic:
-			allocation.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
+			allocation.usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
+			allocation.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
 			break;
 		}
 

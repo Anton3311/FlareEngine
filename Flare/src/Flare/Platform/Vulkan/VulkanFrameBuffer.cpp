@@ -244,7 +244,7 @@ namespace Flare
 			imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
 
 			VmaAllocationCreateInfo allocationInfo{};
-			allocationInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+			allocationInfo.usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
 
 			VK_CHECK_RESULT(vmaCreateImage(
 				VulkanContext::GetInstance().GetMemoryAllocator(),
