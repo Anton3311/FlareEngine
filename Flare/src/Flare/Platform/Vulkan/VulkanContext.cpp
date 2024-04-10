@@ -1,5 +1,7 @@
 #include "VulkanContext.h"
 
+#include "FlareCore/Profiler/Profiler.h"
+
 namespace Flare
 {
 	static VkBool32 VulkanDebugCallback(
@@ -56,6 +58,8 @@ namespace Flare
 
 	void VulkanContext::Initialize()
 	{
+		FLARE_PROFILE_FUNCTION();
+
 		std::vector<VkLayerProperties> supportedLayers = EnumerateAvailableLayers();
 		std::vector<const char*> enabledLayers;
 		const char* validationLayerName = "VK_LAYER_KHRONOS_validation";
@@ -158,6 +162,8 @@ namespace Flare
 
 	void VulkanContext::BeginFrame()
 	{
+		FLARE_PROFILE_FUNCTION();
+
 		VK_CHECK_RESULT(vkWaitForFences(m_Device, 1, &m_FrameFence, VK_TRUE, UINT64_MAX));
 		VK_CHECK_RESULT(vkResetFences(m_Device, 1, &m_FrameFence));
 
@@ -182,6 +188,7 @@ namespace Flare
 
 	void VulkanContext::Present()
 	{
+		FLARE_PROFILE_FUNCTION();
 		m_PrimaryCommandBuffer->End();
 
 		VkSubmitInfo submitInfo{};
@@ -214,11 +221,14 @@ namespace Flare
 		else if (presentResult != VK_SUCCESS)
 			FLARE_CORE_ERROR("Failed to present");
 
-		VkResult waitResult = vkQueueWaitIdle(m_PresentQueue);
-		if (waitResult != VK_SUCCESS)
 		{
-			FLARE_CORE_ERROR("Failed with result: {}", (std::underlying_type_t<VkResult>)waitResult);
-			FLARE_CORE_ASSERT(false);
+			FLARE_PROFILE_SCOPE("WaitIdle");
+			VkResult waitResult = vkQueueWaitIdle(m_PresentQueue);
+			if (waitResult != VK_SUCCESS)
+			{
+				FLARE_CORE_ERROR("Failed with result: {}", (std::underlying_type_t<VkResult>)waitResult);
+				FLARE_CORE_ASSERT(false);
+			}
 		}
 
 		glfwSwapBuffers(m_Window);
@@ -231,6 +241,7 @@ namespace Flare
 
 	void VulkanContext::CreateBuffer(size_t size, VkBufferUsageFlags usage, VkMemoryPropertyFlags memoryProperties, VkBuffer& buffer, VkDeviceMemory& memory)
 	{
+		FLARE_PROFILE_FUNCTION();
 		VkBufferCreateInfo info{};
 		info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
 		info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
@@ -255,6 +266,7 @@ namespace Flare
 
 	VulkanAllocation VulkanContext::CreateStagingBuffer(size_t size, VkBuffer& buffer)
 	{
+		FLARE_PROFILE_FUNCTION();
 		VkBufferCreateInfo info{};
 		info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
 		info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
@@ -277,6 +289,7 @@ namespace Flare
 
 	Ref<VulkanCommandBuffer> VulkanContext::BeginTemporaryCommandBuffer()
 	{
+		FLARE_PROFILE_FUNCTION();
 		VkCommandBuffer commandBuffer;
 
 		VkCommandBufferAllocateInfo info{};
@@ -296,6 +309,7 @@ namespace Flare
 
 	void VulkanContext::EndTemporaryCommandBuffer(Ref<VulkanCommandBuffer> commandBuffer)
 	{
+		FLARE_PROFILE_FUNCTION();
 		commandBuffer->End();
 
 		VkCommandBuffer buffer = commandBuffer->GetHandle();
@@ -317,6 +331,7 @@ namespace Flare
 
 	Ref<VulkanRenderPass> VulkanContext::FindOrCreateRenderPass(Span<FrameBufferTextureFormat> formats)
 	{
+		FLARE_PROFILE_FUNCTION();
 		RenderPassKey key;
 		key.Formats.assign(formats.begin(), formats.end());
 

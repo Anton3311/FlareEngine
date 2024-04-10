@@ -1,6 +1,7 @@
 #include "VulkanBuffer.h"
 
 #include "Flare/Platform/Vulkan/VulkanContext.h"
+#include "FlareCore/Profiler/Profiler.h"
 
 namespace Flare
 {
@@ -36,6 +37,10 @@ namespace Flare
 
 	void VulkanBuffer::SetData(const void* data, size_t size, size_t offset)
 	{
+		FLARE_PROFILE_FUNCTION();
+		if (size == 0)
+			return;
+
 		if (m_Size == 0)
 			m_Size = size;
 
@@ -79,6 +84,7 @@ namespace Flare
 
 	void VulkanBuffer::Create()
 	{
+		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(m_Size > 0);
 		FLARE_CORE_ASSERT(m_Buffer == VK_NULL_HANDLE);
 

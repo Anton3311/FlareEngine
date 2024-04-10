@@ -3,7 +3,7 @@
 namespace Flare
 {
 	VulkanShaderStorageBuffer::VulkanShaderStorageBuffer(size_t size)
-		: m_Buffer(GPUBufferUsage::Dynamic, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, size)
+		: m_Buffer(GPUBufferUsage::Static, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, size)
 	{
 		m_Buffer.EnsureAllocated();
 	}
