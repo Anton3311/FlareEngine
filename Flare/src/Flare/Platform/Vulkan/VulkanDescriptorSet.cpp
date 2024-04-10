@@ -172,6 +172,12 @@ namespace Flare
 		m_Buffers.clear();
 	}
 
+	void VulkanDescriptorSet::SetDebugName(std::string_view name)
+	{
+		m_DebugName = name;
+		VK_CHECK_RESULT(VulkanContext::GetInstance().SetDebugName(VK_OBJECT_TYPE_DESCRIPTOR_SET, (uint64_t)m_Set, m_DebugName.c_str()));
+	}
+
 
 
 	VulkanDescriptorSetPool::VulkanDescriptorSetPool(size_t maxSets, const Span<VkDescriptorSetLayoutBinding>& bindings)

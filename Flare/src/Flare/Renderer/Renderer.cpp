@@ -278,6 +278,8 @@ namespace Flare
 			s_RendererData.PrimaryDescriptorSet->WriteStorageBuffer(s_RendererData.PointLightsShaderBuffer, 4);
 			s_RendererData.PrimaryDescriptorSet->WriteStorageBuffer(s_RendererData.SpotLightsShaderBuffer, 5);
 
+			s_RendererData.PrimaryDescriptorSet->SetDebugName("PrimaryDescriptorSet");
+
 			for (size_t i = 0; i < ShadowSettings::MaxCascades; i++)
 			{
 				s_RendererData.PrimaryDescriptorSet->WriteTexture(s_RendererData.WhiteTexture, (uint32_t)(28 + i));
@@ -301,6 +303,7 @@ namespace Flare
 				}
 
 				set->FlushWrites();
+				set->SetDebugName(fmt::format("Cascade{}.PrimaryDescriptorSet", i));
 				s_RendererData.PerCascadeDescriptorSets[i] = set;
 			}
 		}

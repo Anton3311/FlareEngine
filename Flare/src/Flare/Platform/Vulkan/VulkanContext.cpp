@@ -85,7 +85,12 @@ namespace Flare
 		CreateInstance(Span<const char*>::FromVector(enabledLayers));
 
 		if (m_DebugEnabled)
+		{
 			CreateDebugMessenger();
+
+			m_SetDebugNameFunction = reinterpret_cast<PFN_vkSetDebugUtilsObjectNameEXT>(vkGetInstanceProcAddr(m_Instance, "vkSetDebugUtilsObjectNameEXT"));
+			FLARE_CORE_ASSERT(m_SetDebugNameFunction);
+		}
 
 		CreateSurface();
 		ChoosePhysicalDevice();
@@ -397,6 +402,27 @@ namespace Flare
 
 		FLARE_CORE_ASSERT(false);
 		return UINT32_MAX;
+	}
+
+	VkResult VulkanContext::SetDebugName(VkObjectType objectType, uint64_t objectHandle, const char* name)
+	{
+		if (m_DebugEnabled)
+		{
+			if (m_SetDebugNameFunction == nullptr)
+			{
+				return VK_ERROR_EXTENSION_NOT_PRESENT;
+			}
+
+			VkDebugUtilsObjectNameInfoEXT info{};
+			info.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT;
+			info.pObjectName = name;
+			info.objectType = objectType;
+			info.objectHandle = objectHandle;
+
+			return m_SetDebugNameFunction(m_Device, &info);
+		}
+
+		return VK_SUCCESS;
 	}
 
 	void VulkanContext::CreateInstance(const Span<const char*>& enabledLayers)

@@ -215,6 +215,8 @@ namespace Flare
 
 				s_Renderer2DData.TextDescriptorPool = CreateRef<VulkanDescriptorSetPool>(1, Span(bindings, 1));
 				s_Renderer2DData.TextDescriptorSet = s_Renderer2DData.TextDescriptorPool->AllocateSet();
+
+				s_Renderer2DData.TextDescriptorSet->SetDebugName("TextDescriptorSet");
 			}
 		}
 	}
@@ -598,11 +600,6 @@ namespace Flare
 		}
 	}
 
-	Ref<VulkanDescriptorSet> Renderer2D::GetDescriptorSet()
-	{
-		return nullptr;
-	}
-
 	Ref<VulkanDescriptorSetLayout> Renderer2D::GetDescriptorSetLayout()
 	{
 		return s_Renderer2DData.QuadsDescriptorPool->GetLayout();
@@ -621,6 +618,8 @@ namespace Flare
 			Ref<VulkanFrameBuffer> renderTarget = As<VulkanFrameBuffer>(Renderer::GetCurrentViewport().RenderTarget);
 
 			Ref<VulkanDescriptorSet> descriptorSet = s_Renderer2DData.QuadsDescriptorPool->AllocateSet();
+			descriptorSet->SetDebugName("QuadsDescriptorSet");
+
 			s_Renderer2DData.UsedQuadsDescriptorSets.push_back(descriptorSet);
 
 			descriptorSet->WriteTextures(Span((Ref<const Texture>*)batch.Textures, MaxTexturesCount), 0, 0);

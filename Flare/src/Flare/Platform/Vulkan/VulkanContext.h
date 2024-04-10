@@ -108,6 +108,8 @@ namespace Flare
 
 		uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 
+		VkResult SetDebugName(VkObjectType objectType, uint64_t objectHandle, const char* name);
+
 		static VulkanContext& GetInstance() { return *(VulkanContext*)&GraphicsContext::GetInstance(); }
 	private:
 		void CreateInstance(const Span<const char*>& enabledLayers);
@@ -143,6 +145,8 @@ namespace Flare
 
 		PFN_vkCreateDebugUtilsMessengerEXT m_CreateDebugMessenger = nullptr;
 		PFN_vkDestroyDebugUtilsMessengerEXT m_DestroyDebugMessenger = nullptr;
+
+		PFN_vkSetDebugUtilsObjectNameEXT m_SetDebugNameFunction = nullptr;
 
 		VkDebugUtilsMessengerEXT m_DebugMessenger = VK_NULL_HANDLE;
 

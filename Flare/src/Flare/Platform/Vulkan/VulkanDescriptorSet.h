@@ -43,8 +43,12 @@ namespace Flare
 
 		void FlushWrites();
 
+		void SetDebugName(std::string_view name);
+		const std::string& GetDebugName() const { return m_DebugName; }
+
 		inline VkDescriptorSet GetHandle() const { return m_Set; }
 	private:
+		std::string m_DebugName;
 		VkDescriptorSet m_Set = VK_NULL_HANDLE;
 		VulkanDescriptorSetPool* m_Pool = VK_NULL_HANDLE;
 

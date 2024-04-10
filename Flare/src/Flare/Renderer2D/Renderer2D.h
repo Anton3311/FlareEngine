@@ -84,7 +84,6 @@ namespace Flare
 			const glm::vec4& color = glm::vec4(1.0f),
 			int32_t entityIndex = INT32_MAX);
 
-		static Ref<VulkanDescriptorSet> GetDescriptorSet();
 		static Ref<VulkanDescriptorSetLayout> GetDescriptorSetLayout();
 
 		static void ResetStats();
