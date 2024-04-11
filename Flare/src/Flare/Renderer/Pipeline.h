@@ -43,6 +43,7 @@ namespace Flare
 		Ref<Shader> Shader;
 
 		CullingMode Culling = CullingMode::Back;
+		BlendMode Blending = BlendMode::Opaque;
 		bool DepthTest = true;
 		bool DepthWrite = true;
 		DepthComparisonFunction DepthFunction = DepthComparisonFunction::Less;

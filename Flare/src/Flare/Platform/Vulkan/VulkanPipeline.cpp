@@ -90,13 +90,28 @@ namespace Flare
 			VkPipelineColorBlendAttachmentState& attachmentBlendState = attachmentsBlendStates[i];
 			attachmentBlendState = {};
 			attachmentBlendState.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-			attachmentBlendState.blendEnable = VK_FALSE;
-			attachmentBlendState.srcColorBlendFactor = VK_BLEND_FACTOR_ONE;
-			attachmentBlendState.dstColorBlendFactor = VK_BLEND_FACTOR_ZERO;
-			attachmentBlendState.colorBlendOp = VK_BLEND_OP_ADD;
-			attachmentBlendState.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
-			attachmentBlendState.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
-			attachmentBlendState.alphaBlendOp = VK_BLEND_OP_ADD;
+
+			switch (m_Specifications.Blending)
+			{
+			case BlendMode::Opaque:
+				attachmentBlendState.blendEnable = VK_FALSE;
+				attachmentBlendState.srcColorBlendFactor = VK_BLEND_FACTOR_ONE;
+				attachmentBlendState.dstColorBlendFactor = VK_BLEND_FACTOR_ZERO;
+				attachmentBlendState.colorBlendOp = VK_BLEND_OP_ADD;
+				attachmentBlendState.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+				attachmentBlendState.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+				attachmentBlendState.alphaBlendOp = VK_BLEND_OP_ADD;
+				break;
+			case BlendMode::Transparent:
+				attachmentBlendState.blendEnable = VK_TRUE;
+				attachmentBlendState.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+				attachmentBlendState.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+				attachmentBlendState.colorBlendOp = VK_BLEND_OP_ADD;
+				attachmentBlendState.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+				attachmentBlendState.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+				attachmentBlendState.alphaBlendOp = VK_BLEND_OP_ADD;
+				break;
+			}
 		}
 
 		VkPipelineColorBlendStateCreateInfo colorBlendState{};

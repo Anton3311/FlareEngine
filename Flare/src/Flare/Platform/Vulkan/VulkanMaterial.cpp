@@ -52,8 +52,9 @@ namespace Flare
 
 		specifications.Culling = m_Shader->GetMetadata()->Features.Culling;
 		specifications.DepthTest = m_Shader->GetMetadata()->Features.DepthTesting;
-		specifications.DepthWrite= m_Shader->GetMetadata()->Features.DepthWrite;
+		specifications.DepthWrite = m_Shader->GetMetadata()->Features.DepthWrite;
 		specifications.DepthFunction = m_Shader->GetMetadata()->Features.DepthFunction;
+		specifications.Blending = m_Shader->GetMetadata()->Features.Blending;
 
 		if (m_Shader->GetMetadata()->Type == ShaderType::_2D)
 		{
