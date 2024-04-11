@@ -9,7 +9,6 @@ namespace Flare
 		: m_VertexBufferIndex(0)
 	{
 		glGenVertexArrays(1, &m_Id);
-		glBindBuffer(GL_ARRAY_BUFFER, m_Id);
 	}
 	
 	OpenGLVertexArray::~OpenGLVertexArray()

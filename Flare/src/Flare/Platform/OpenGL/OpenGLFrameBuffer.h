@@ -12,6 +12,8 @@ namespace Flare
 	public:
 		uint32_t GetAttachmentId(uint32_t attachmentIndex) const { return m_ColorAttachments[attachmentIndex]; }
 
+		inline uint32_t GetId() const { return m_Id; }
+
 		virtual void Bind() override;
 		virtual void Unbind() override;
 

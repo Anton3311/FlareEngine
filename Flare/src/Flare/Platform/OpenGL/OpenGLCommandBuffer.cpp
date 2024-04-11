@@ -18,6 +18,7 @@ namespace Flare
 	{
 		FLARE_CORE_ASSERT(m_CurrentRenderTarget == nullptr);
 		m_CurrentRenderTarget = As<OpenGLFrameBuffer>(frameBuffer);
+		m_CurrentRenderTarget->Bind();
 	}
 
 	void OpenGLCommandBuffer::EndRenderTarget()
@@ -59,7 +60,59 @@ namespace Flare
 
 	void OpenGLCommandBuffer::Blit(Ref<FrameBuffer> source, uint32_t sourceAttachment, Ref<FrameBuffer> destination, uint32_t destinationAttachment, TextureFiltering filter)
 	{
-		FLARE_CORE_ASSERT(false);
+		FLARE_CORE_ASSERT(source && destination);
+		FLARE_CORE_ASSERT(destinationAttachment < destination->GetAttachmentsCount());
+		FLARE_CORE_ASSERT(sourceAttachment < source->GetAttachmentsCount());
+
+		Ref<OpenGLFrameBuffer> sourceFrameBuffer = As<OpenGLFrameBuffer>(source);
+		Ref<OpenGLFrameBuffer> destinationFrameBuffer = As<OpenGLFrameBuffer>(destination);
+
+		const auto& sourceSpec = source->GetSpecifications();
+		const auto& destinationSpec = destination->GetSpecifications();
+
+		bool sourceAttachmentIsDepth = IsDepthFormat(sourceSpec.Attachments[sourceAttachment].Format);
+		bool destinationAttachmentIsDepth = IsDepthFormat(destinationSpec.Attachments[destinationAttachment].Format);
+
+		FLARE_CORE_ASSERT(sourceAttachmentIsDepth == destinationAttachmentIsDepth);
+
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, sourceFrameBuffer->GetId());
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, destinationFrameBuffer->GetId());
+
+		glReadBuffer(GL_COLOR_ATTACHMENT0 + sourceAttachment);
+		glDrawBuffer(GL_COLOR_ATTACHMENT0 + destinationAttachment);
+
+		GLenum blitFilter = GL_NEAREST;
+		switch (filter)
+		{
+		case TextureFiltering::Closest:
+			blitFilter = GL_NEAREST;
+			break;
+		case TextureFiltering::Linear:
+			blitFilter = GL_LINEAR;
+			break;
+		default:
+			FLARE_CORE_ASSERT(false);
+		}
+
+		glBlitFramebuffer(
+			0, 0, 
+			sourceSpec.Width, 
+			sourceSpec.Height, 
+			0, 0, 
+			destinationSpec.Width,
+			destinationSpec.Height,
+			sourceAttachmentIsDepth
+				? GL_DEPTH_BUFFER_BIT
+				: GL_COLOR_BUFFER_BIT,
+			blitFilter);
+
+		destination->SetWriteMask(destination->GetWriteMask());
+
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
 
 	void OpenGLCommandBuffer::StartTimer(Ref<GPUTimer> timer)

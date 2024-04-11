@@ -91,6 +91,8 @@ namespace Flare
 		}
 #endif
 
+		context.RenderTarget->Bind();
+
 		context.RTPool.ReturnFullscreen(Span(formats, 1), output);
 	}
 }
