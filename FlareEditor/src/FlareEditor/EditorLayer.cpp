@@ -115,8 +115,25 @@ namespace Flare
 
         if (Application::GetInstance().GetCommandLineArguments().ArgumentsCount >= 2)
         {
-            std::filesystem::path projectPath = Application::GetInstance().GetCommandLineArguments()[1];
-            Project::OpenProject(projectPath);
+			const std::string_view projectArgument = "--project=";
+            std::optional<std::filesystem::path> projectPath;
+
+            const auto& commandLineArgs = Application::GetInstance().GetCommandLineArguments();
+            for (uint32_t i = 0; i < commandLineArgs.ArgumentsCount; i++)
+            {
+                std::string_view argument = commandLineArgs.Arguments[i];
+
+                if (argument._Starts_with(projectArgument))
+                {
+                    projectPath = argument.substr(projectArgument.size());
+                    break;
+                }
+            }
+
+            if (projectPath)
+            {
+				Project::OpenProject(*projectPath);
+            }
         }
         else
         {
