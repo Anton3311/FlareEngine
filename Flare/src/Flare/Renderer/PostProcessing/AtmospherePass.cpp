@@ -27,7 +27,6 @@ namespace Flare
 		std::optional<uint32_t> viewRaySteps = shader->GetPropertyIndex("u_Params.ViewRaySteps");
 		std::optional<uint32_t> sunTransmittanceSteps = shader->GetPropertyIndex("u_Params.SunTransmittanceSteps");
 
-#if 1
 		AtmosphereMaterial->WritePropertyValue<float>(*planetRadius, PlanetRadius);
 		AtmosphereMaterial->WritePropertyValue<float>(*atmosphereThickness, AtmosphereThickness);
 		AtmosphereMaterial->WritePropertyValue<float>(*mieHeight, MieHeight);
@@ -36,22 +35,21 @@ namespace Flare
 
 		AtmosphereMaterial->WritePropertyValue<int32_t>(*viewRaySteps, (int32_t)ViewRaySteps);
 		AtmosphereMaterial->WritePropertyValue<int32_t>(*sunTransmittanceSteps, (int32_t)SunTransmittanceSteps);
-#endif
+
+		Ref<CommandBuffer> commandBuffer = GraphicsContext::GetInstance().GetCommandBuffer();
+
+		commandBuffer->BeginRenderTarget(context.RenderTarget);
 
 		if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
 		{
 			Ref<VulkanCommandBuffer> commandBuffer = VulkanContext::GetInstance().GetPrimaryCommandBuffer();
-			Ref<VulkanFrameBuffer> renderTarget = As<VulkanFrameBuffer>(context.RenderTarget);
 
-			commandBuffer->BeginRenderPass(renderTarget->GetCompatibleRenderPass(), renderTarget);
 			commandBuffer->SetPrimaryDescriptorSet(Renderer::GetPrimaryDescriptorSet());
 			commandBuffer->SetSecondaryDescriptorSet(nullptr);
-			commandBuffer->ApplyMaterial(AtmosphereMaterial);
-			commandBuffer->DrawIndexed(RendererPrimitives::GetFullscreenQuadMesh(), 0, 0, 1);
-			commandBuffer->EndRenderPass();
-			return;
 		}
 
-		Renderer::DrawFullscreenQuad(AtmosphereMaterial);
+		commandBuffer->ApplyMaterial(AtmosphereMaterial);
+		commandBuffer->DrawIndexed(RendererPrimitives::GetFullscreenQuadMesh(), 0, 0, 1);
+		commandBuffer->EndRenderTarget();
 	}
 }
