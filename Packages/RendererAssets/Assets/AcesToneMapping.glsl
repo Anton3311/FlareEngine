@@ -1,3 +1,4 @@
+Type = FullscreenQuad
 DepthTest = false
 
 #begin vertex
@@ -20,7 +21,7 @@ void main()
 
 layout(location = 0) in vec2 i_UV;
 
-layout(binding = 0) uniform sampler2D u_ScreenBuffer;
+layout(set = 2, binding = 0) uniform sampler2D u_ScreenBuffer;
 
 layout(location = 0) out vec4 o_Color;
 

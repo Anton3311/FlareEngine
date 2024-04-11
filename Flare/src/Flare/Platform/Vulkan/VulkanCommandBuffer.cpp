@@ -106,6 +106,186 @@ namespace Flare
 		vkCmdDrawIndexed(m_CommandBuffer, subMesh.IndicesCount, instanceCount, subMesh.BaseIndex, subMesh.BaseVertex, baseInstance);
 	}
 
+	void VulkanCommandBuffer::Blit(Ref<FrameBuffer> source, uint32_t sourceAttachment, Ref<FrameBuffer> destination, uint32_t destinationAttachment, TextureFiltering filter)
+	{
+		VkImage sourceImage = As<VulkanFrameBuffer>(source)->GetAttachmentImage(sourceAttachment);
+		VkImage destinationImage = As<VulkanFrameBuffer>(destination)->GetAttachmentImage(destinationAttachment);
+
+		FrameBufferTextureFormat sourceAttachmentFormat = source->GetSpecifications().Attachments[sourceAttachment].Format;
+		FrameBufferTextureFormat destinationAttachmentFormat = destination->GetSpecifications().Attachments[destinationAttachment].Format;
+
+		bool sourceIsDepth = IsDepthFormat(sourceAttachmentFormat);
+		bool destinationIsDepth = IsDepthFormat(destinationAttachmentFormat);
+
+		FLARE_CORE_ASSERT(sourceIsDepth == destinationIsDepth);
+
+		VkImageBlit blit{};
+		blit.srcOffsets[1].x = (int32_t)source->GetSpecifications().Width;
+		blit.srcOffsets[1].y = (int32_t)source->GetSpecifications().Height;
+		blit.srcOffsets[1].z = 1;
+		blit.srcSubresource.mipLevel = 0;
+		blit.srcSubresource.baseArrayLayer = 0;
+		blit.srcSubresource.layerCount = 1;
+
+		if (sourceIsDepth)
+		{
+			blit.srcSubresource.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+			if (HasStencilCompomnent(sourceAttachmentFormat))
+			{
+				blit.srcSubresource.aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
+			}
+		}
+		else
+		{
+			blit.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+			if (HasStencilCompomnent(destinationAttachmentFormat))
+			{
+				blit.srcSubresource.aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
+			}
+		}
+
+		blit.dstOffsets[1].x = (int32_t)destination->GetSpecifications().Width;
+		blit.dstOffsets[1].y = (int32_t)destination->GetSpecifications().Height;
+		blit.dstOffsets[1].z = 1;
+		blit.dstSubresource.mipLevel = 0;
+		blit.dstSubresource.baseArrayLayer = 0;
+		blit.dstSubresource.layerCount = 1;
+
+		if (destinationIsDepth)
+		{
+			blit.dstSubresource.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+		}
+		else
+		{
+			blit.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		}
+
+		VkImageMemoryBarrier barriers[2] = {};
+
+		// Transition source image to TRANSFER_SRC layout
+		{
+			VkImageMemoryBarrier& barrier = barriers[0];
+			barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+			barrier.image = sourceImage;
+			barrier.srcAccessMask = sourceIsDepth ? VK_ACCESS_NONE : VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+			barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+
+			if (sourceIsDepth && HasStencilCompomnent(sourceAttachmentFormat))
+			{
+				barrier.oldLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+			}
+			else if (sourceIsDepth && !HasStencilCompomnent(sourceAttachmentFormat))
+			{
+				barrier.oldLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
+			}
+			else
+			{
+				barrier.oldLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+			}
+
+			barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+			barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+
+			barrier.subresourceRange.aspectMask = blit.srcSubresource.aspectMask;
+			barrier.subresourceRange.baseArrayLayer = 0;
+			barrier.subresourceRange.baseMipLevel = 0;
+			barrier.subresourceRange.layerCount = 1;
+			barrier.subresourceRange.levelCount = 1;
+			barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+		}
+
+		// Transition destination image to TRANSFER_DST layout
+		{
+			VkImageMemoryBarrier& barrier = barriers[1];
+			barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+			barrier.image = destinationImage;
+			barrier.srcAccessMask = VK_ACCESS_NONE;
+			barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+			barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+			barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+			barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+			barrier.subresourceRange.aspectMask = blit.dstSubresource.aspectMask;
+			barrier.subresourceRange.baseArrayLayer = 0;
+			barrier.subresourceRange.baseMipLevel = 0;
+			barrier.subresourceRange.layerCount = 1;
+			barrier.subresourceRange.levelCount = 1;
+			barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+		}
+
+		VkPipelineStageFlags sourceStage = 0;
+		if (sourceIsDepth)
+		{
+			sourceStage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+		}
+		else
+		{
+			sourceStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+		}
+
+		vkCmdPipelineBarrier(m_CommandBuffer, sourceStage, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 2, barriers);
+
+		VkFilter blitFilter = VK_FILTER_NEAREST;
+		switch (filter)
+		{
+		case TextureFiltering::Closest:
+			blitFilter = VK_FILTER_NEAREST;
+			break;
+		case TextureFiltering::Linear:
+			blitFilter = VK_FILTER_LINEAR;
+			break;
+		default:
+			FLARE_CORE_ASSERT(false);
+		}
+
+		vkCmdBlitImage(m_CommandBuffer, sourceImage, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, destinationImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &blit, blitFilter);
+
+		// Transition destination back to COLOR_ATTACHMENT_OPTIMAL
+		VkImageMemoryBarrier barrier{};
+		barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+		barrier.image = destinationImage;
+		barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+
+		if (destinationIsDepth)
+		{
+			if (HasStencilCompomnent(destinationAttachmentFormat))
+			{
+				barrier.newLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+			}
+			else
+			{
+				barrier.newLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
+			}
+
+			barrier.srcAccessMask = VK_ACCESS_NONE;
+		}
+		else
+		{
+			barrier.newLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+			barrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+		}
+
+		barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+		barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		barrier.subresourceRange.aspectMask = blit.dstSubresource.aspectMask;
+		barrier.subresourceRange.baseArrayLayer = 0;
+		barrier.subresourceRange.baseMipLevel = 0;
+		barrier.subresourceRange.layerCount = 1;
+		barrier.subresourceRange.levelCount = 1;
+
+		VkPipelineStageFlags destinationStage = 0;
+		if (destinationIsDepth)
+		{
+			destinationStage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+		}
+		else
+		{
+			destinationStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+		}
+
+		vkCmdPipelineBarrier(m_CommandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, destinationStage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+	}
+
 	void VulkanCommandBuffer::StartTimer(Ref<GPUTimer> timer)
 	{
 		Ref<VulkanGPUTimer> vulkanTimer = As<VulkanGPUTimer>(timer);

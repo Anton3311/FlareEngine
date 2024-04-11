@@ -37,6 +37,17 @@ namespace Flare
 		return false;
 	}
 
+	constexpr bool HasStencilCompomnent(FrameBufferTextureFormat format)
+	{
+		switch (format)
+		{
+		case FrameBufferTextureFormat::Depth24Stencil8:
+			return true;
+		}
+
+		return false;
+	}
+
 	using FrameBufferAttachmentsMask = uint32_t;
 
 	struct FrameBufferAttachmentSpecifications

@@ -18,6 +18,72 @@ namespace Flare
         return target;
     }
 
+    Ref<FrameBuffer> RenderTargetsPool::GetFullscreen(const Span<FrameBufferTextureFormat>& formats)
+    {
+        auto it = m_FullscreenTargets.find(formats);
+        if (it == m_FullscreenTargets.end())
+        {
+            FullscreenRenderTargetEntry entry{};
+            entry.Formats = std::vector<FrameBufferTextureFormat>(formats.begin(), formats.end());
+
+            FrameBufferSpecifications& specifications = entry.Specifications;
+            specifications.Width = m_ViewportSize.x;
+            specifications.Height = m_ViewportSize.y;
+            specifications.Attachments.resize(formats.GetSize());
+
+            for (size_t i = 0; i < formats.GetSize(); i++)
+            {
+                specifications.Attachments[i].Filtering = TextureFiltering::Closest;
+                specifications.Attachments[i].Format = formats[i];
+                specifications.Attachments[i].Wrap = TextureWrap::Clamp;
+            }
+
+            Ref<FrameBuffer> renderTarget = FrameBuffer::Create(specifications);
+
+            entry.Pool.push_back(renderTarget);
+
+            m_FullscreenTargets.emplace(Span<FrameBufferTextureFormat>::FromVector(entry.Formats), std::move(entry));
+            return renderTarget;
+        }
+        else
+        {
+            auto& entry = it->second;
+            Ref<FrameBuffer> renderTarget = nullptr;
+
+            if (entry.Specifications.Width != m_ViewportSize.x || entry.Specifications.Height != m_ViewportSize.y)
+            {
+                entry.Specifications.Width = m_ViewportSize.x;
+                entry.Specifications.Height = m_ViewportSize.y;
+            }
+
+            if (entry.Pool.size() > 0)
+            {
+                renderTarget = entry.Pool.back();
+                entry.Pool.pop_back();
+
+				const auto& specs = renderTarget->GetSpecifications();
+				if (specs.Width != m_ViewportSize.x || specs.Height != m_ViewportSize.y)
+				{
+					renderTarget->Resize(m_ViewportSize.x, m_ViewportSize.y);
+				}
+            }
+            else
+            {
+                renderTarget = FrameBuffer::Create(entry.Specifications);
+            }
+
+            return renderTarget;
+        }
+    }
+
+    void RenderTargetsPool::ReturnFullscreen(Span<FrameBufferTextureFormat> formats, Ref<FrameBuffer> renderTarget)
+    {
+        auto it = m_FullscreenTargets.find(formats);
+        FLARE_CORE_ASSERT(it != m_FullscreenTargets.end());
+
+        it->second.Pool.push_back(renderTarget);
+    }
+
     void RenderTargetsPool::Release(const Ref<FrameBuffer>& renderTarget)
     {
         m_Pool.push_back(renderTarget);
@@ -32,5 +98,16 @@ namespace Flare
     void RenderTargetsPool::SetSpecifications(const FrameBufferSpecifications& specs)
     {
         m_Specifications = specs;
+    }
+
+    void RenderTargetsPool::OnViewportResize(glm::uvec2 newSize)
+    {
+        m_ViewportSize = newSize;
+    }
+
+    void RenderTargetsPool::Clear()
+    {
+        m_FullscreenTargets.clear();
+        m_Pool.clear();
     }
 }

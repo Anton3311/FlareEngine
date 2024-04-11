@@ -57,6 +57,11 @@ namespace Flare
 		RenderCommand::DrawInstancesIndexed(mesh, subMeshIndex, instanceCount, baseInstance);
 	}
 
+	void OpenGLCommandBuffer::Blit(Ref<FrameBuffer> source, uint32_t sourceAttachment, Ref<FrameBuffer> destination, uint32_t destinationAttachment, TextureFiltering filter)
+	{
+		FLARE_CORE_ASSERT(false);
+	}
+
 	void OpenGLCommandBuffer::StartTimer(Ref<GPUTimer> timer)
 	{
 		As<OpenGLGPUTImer>(timer)->Start();

@@ -28,11 +28,12 @@ namespace Flare
 	{
 		if (RendererAPI::GetAPI() != RendererAPI::API::Vulkan)
 		{
-			m_PostProcessingManager.ToneMappingPass = CreateRef<ToneMapping>();
 			m_PostProcessingManager.VignettePass = CreateRef<Vignette>();
 			m_PostProcessingManager.SSAOPass = CreateRef<SSAO>();
 		}
+
 		m_PostProcessingManager.Atmosphere = CreateRef<AtmospherePass>();
+		m_PostProcessingManager.ToneMappingPass = CreateRef<ToneMapping>();
 
 		m_World.MakeCurrent();
 		Initialize();
@@ -83,27 +84,15 @@ namespace Flare
 		}
 
 		Renderer::AddRenderPass(m_PostProcessingManager.Atmosphere);
-
-		if (RendererAPI::GetAPI() != RendererAPI::API::Vulkan)
-		{
-			Renderer::AddRenderPass(m_PostProcessingManager.ToneMappingPass);
-		}
+		Renderer::AddRenderPass(m_PostProcessingManager.ToneMappingPass);
 	}
 
 	void Scene::UninitializePostProcessing()
 	{
-		if (RendererAPI::GetAPI() != RendererAPI::API::Vulkan)
-		{
-			Renderer::RemoveRenderPass(m_PostProcessingManager.ToneMappingPass);
-			Renderer::RemoveRenderPass(m_PostProcessingManager.VignettePass);
-		}
-
+		Renderer::RemoveRenderPass(m_PostProcessingManager.VignettePass);
 		Renderer::RemoveRenderPass(m_PostProcessingManager.SSAOPass);
-		
-		if (RendererAPI::GetAPI() != RendererAPI::API::Vulkan)
-		{
-			Renderer::RemoveRenderPass(m_PostProcessingManager.Atmosphere);
-		}
+		Renderer::RemoveRenderPass(m_PostProcessingManager.ToneMappingPass);
+		Renderer::RemoveRenderPass(m_PostProcessingManager.Atmosphere);
 	}
 
 	void Scene::OnRuntimeStart()

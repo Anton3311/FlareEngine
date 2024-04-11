@@ -3,6 +3,8 @@
 #include "FlareCore/Core.h"
 #include "Flare/Math/Math.h"
 
+#include "Flare/Renderer/Texture.h"
+
 namespace Flare
 {
 	class FrameBuffer;
@@ -24,6 +26,8 @@ namespace Flare
 			uint32_t subMeshIndex,
 			uint32_t baseInstance,
 			uint32_t instanceCount) = 0;
+
+		virtual void Blit(Ref<FrameBuffer> source, uint32_t sourceAttachment, Ref<FrameBuffer> destination, uint32_t destinationAttachment, TextureFiltering filter) = 0;
 
 		virtual void StartTimer(Ref<GPUTimer> timer) = 0;
 		virtual void StopTimer(Ref<GPUTimer> timer) = 0;

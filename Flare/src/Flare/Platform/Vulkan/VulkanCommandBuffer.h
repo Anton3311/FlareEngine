@@ -32,6 +32,8 @@ namespace Flare
 
 		void DrawIndexed(const Ref<const Mesh>& mesh, uint32_t subMeshIndex, uint32_t baseInstance, uint32_t instanceCount) override;
 
+		void Blit(Ref<FrameBuffer> source, uint32_t sourceAttachment, Ref<FrameBuffer> destination, uint32_t destinationAttachment, TextureFiltering filter) override;
+
 		void StartTimer(Ref<GPUTimer> timer) override;
 		void StopTimer(Ref<GPUTimer> timer) override;
 	public:

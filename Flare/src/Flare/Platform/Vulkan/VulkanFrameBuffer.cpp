@@ -29,6 +29,8 @@ namespace Flare
 	VulkanFrameBuffer::VulkanFrameBuffer(const FrameBufferSpecifications& specifications)
 		: m_OwnsImageViews(true), m_Specifications(specifications)
 	{
+		FLARE_CORE_ASSERT(m_Specifications.Width > 0 && m_Specifications.Height > 0);
+
 		m_AttachmentsImages.resize(specifications.Attachments.size());
 		m_AttachmentsImageViews.resize(specifications.Attachments.size());
 		m_AttachmentAllocations.resize(specifications.Attachments.size());
@@ -90,6 +92,8 @@ namespace Flare
 
 		m_Specifications.Width = width;
 		m_Specifications.Height = height;
+
+		FLARE_CORE_ASSERT(m_Specifications.Width > 0 && m_Specifications.Height > 0);
 
 		Create();
 	}
@@ -227,7 +231,7 @@ namespace Flare
 			imageInfo.extent.height = m_Specifications.Height;
 			imageInfo.extent.depth = 1;
 			imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-			imageInfo.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+			imageInfo.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
 
 			if (IsDepthFormat(attachment.Format))
 			{

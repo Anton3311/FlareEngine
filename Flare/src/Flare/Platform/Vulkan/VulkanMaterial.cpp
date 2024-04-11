@@ -104,10 +104,15 @@ namespace Flare
 			if (property.Type != ShaderDataType::Sampler)
 				continue;
 
-			Ref<Texture> texture = ReadPropertyValue<TexturePropertyValue>((uint32_t)i).Texture;
-			if (texture)
+			const auto& textureProperty = ReadPropertyValue<TexturePropertyValue>((uint32_t)i);
+			if (textureProperty.Texture)
 			{
-				m_Set->WriteTexture(texture, property.Binding);
+				m_Set->WriteTexture(textureProperty.Texture, property.Binding);
+			}
+			else if (textureProperty.FrameBuffer)
+			{
+				// NOTE: FrameBuffer attachment is expected to have the right layout
+				m_Set->WriteFrameBufferAttachment(textureProperty.FrameBuffer, textureProperty.FrameBufferAttachmentIndex, property.Binding);
 			}
 			else
 			{
