@@ -134,6 +134,7 @@ namespace Flare
 		Ref<GPUTimer> GeometryPassTimer = nullptr;
 
 		Ref<VulkanDescriptorSet> PrimaryDescriptorSet = nullptr;
+		Ref<VulkanDescriptorSet> PrimaryDescriptorSetWithoutShadows = nullptr;
 		Ref<VulkanDescriptorSetPool> PrimaryDescriptorPool = nullptr;
 	};
 	
@@ -268,9 +269,14 @@ namespace Flare
 				bindings[i + 6].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 			}
 
-			s_RendererData.PrimaryDescriptorPool = CreateRef<VulkanDescriptorSetPool>(1 + ShadowSettings::MaxCascades, Span(bindings, 6 + 4));
+			s_RendererData.PrimaryDescriptorPool = CreateRef<VulkanDescriptorSetPool>(2 + ShadowSettings::MaxCascades, Span(bindings, 6 + 4));
 			s_RendererData.PrimaryDescriptorSet = s_RendererData.PrimaryDescriptorPool->AllocateSet();
+			s_RendererData.PrimaryDescriptorSet->SetDebugName("PrimarySet");
 
+			s_RendererData.PrimaryDescriptorSetWithoutShadows = s_RendererData.PrimaryDescriptorPool->AllocateSet();
+			s_RendererData.PrimaryDescriptorSetWithoutShadows->SetDebugName("PrimarySetWithoutShadows");
+
+			// Setup primary descriptor set
 			s_RendererData.PrimaryDescriptorSet->WriteUniformBuffer(s_RendererData.CameraBuffer, 0);
 			s_RendererData.PrimaryDescriptorSet->WriteUniformBuffer(s_RendererData.LightBuffer, 1);
 			s_RendererData.PrimaryDescriptorSet->WriteUniformBuffer(s_RendererData.ShadowDataBuffer, 2);
@@ -278,14 +284,29 @@ namespace Flare
 			s_RendererData.PrimaryDescriptorSet->WriteStorageBuffer(s_RendererData.PointLightsShaderBuffer, 4);
 			s_RendererData.PrimaryDescriptorSet->WriteStorageBuffer(s_RendererData.SpotLightsShaderBuffer, 5);
 
-			s_RendererData.PrimaryDescriptorSet->SetDebugName("PrimaryDescriptorSet");
-
 			for (size_t i = 0; i < ShadowSettings::MaxCascades; i++)
 			{
 				s_RendererData.PrimaryDescriptorSet->WriteTexture(s_RendererData.WhiteTexture, (uint32_t)(28 + i));
 			}
 
 			s_RendererData.PrimaryDescriptorSet->FlushWrites();
+
+			// Setup primary descriptor set (without shadows)
+			s_RendererData.PrimaryDescriptorSetWithoutShadows->WriteUniformBuffer(s_RendererData.CameraBuffer, 0);
+			s_RendererData.PrimaryDescriptorSetWithoutShadows->WriteUniformBuffer(s_RendererData.LightBuffer, 1);
+			s_RendererData.PrimaryDescriptorSetWithoutShadows->WriteUniformBuffer(s_RendererData.ShadowDataBuffer, 2);
+			s_RendererData.PrimaryDescriptorSetWithoutShadows->WriteStorageBuffer(s_RendererData.InstancesShaderBuffer, 3);
+			s_RendererData.PrimaryDescriptorSetWithoutShadows->WriteStorageBuffer(s_RendererData.PointLightsShaderBuffer, 4);
+			s_RendererData.PrimaryDescriptorSetWithoutShadows->WriteStorageBuffer(s_RendererData.SpotLightsShaderBuffer, 5);
+
+			for (size_t i = 0; i < ShadowSettings::MaxCascades; i++)
+			{
+				s_RendererData.PrimaryDescriptorSetWithoutShadows->WriteTexture(s_RendererData.WhiteTexture, (uint32_t)(28 + i));
+			}
+
+			s_RendererData.PrimaryDescriptorSetWithoutShadows->FlushWrites();
+			
+			// Setup per cascade descriptor sets
 
 			for (uint32_t i = 0; i < ShadowSettings::MaxCascades; i++)
 			{
@@ -647,6 +668,7 @@ namespace Flare
 			s_RendererData.SpotLightsShaderBuffer->SetData(MemorySpan::FromVector(s_RendererData.SpotLights));
 		}
 
+		if (s_RendererData.ShadowMappingSettings.Enabled)
 		{
 			FLARE_PROFILE_SCOPE("ResizeShadowBuffers");
 			uint32_t size = (uint32_t)GetShadowMapResolution(s_RendererData.ShadowMappingSettings.Quality);
@@ -676,21 +698,11 @@ namespace Flare
 				}
 			}
 
-			if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan && rewriteDescriptorSet)
+			if (rewriteDescriptorSet)
 			{
-				if (s_RendererData.ShadowMappingSettings.Enabled)
+				for (size_t i = 0; i < ShadowSettings::MaxCascades; i++)
 				{
-					for (size_t i = 0; i < ShadowSettings::MaxCascades; i++)
-					{
-						s_RendererData.PrimaryDescriptorSet->WriteFrameBufferAttachment(s_RendererData.ShadowsRenderTarget[i], 0, (uint32_t)(28 + i));
-					}
-				}
-				else
-				{
-					for (size_t i = 0; i < ShadowSettings::MaxCascades; i++)
-					{
-						s_RendererData.PrimaryDescriptorSet->WriteTexture(s_RendererData.WhiteTexture, (uint32_t)(28 + i));
-					}
+					s_RendererData.PrimaryDescriptorSet->WriteFrameBufferAttachment(s_RendererData.ShadowsRenderTarget[i], 0, (uint32_t)(28 + i));
 				}
 
 				s_RendererData.PrimaryDescriptorSet->FlushWrites();
@@ -866,7 +878,15 @@ namespace Flare
 			Ref<VulkanCommandBuffer> commandBuffer = VulkanContext::GetInstance().GetPrimaryCommandBuffer();
 			Ref<VulkanFrameBuffer> renderTarget = As<VulkanFrameBuffer>(s_RendererData.CurrentViewport->RenderTarget);
 			
-			commandBuffer->SetPrimaryDescriptorSet(s_RendererData.PrimaryDescriptorSet);
+			if (s_RendererData.ShadowMappingSettings.Enabled)
+			{
+				commandBuffer->SetPrimaryDescriptorSet(s_RendererData.PrimaryDescriptorSet);
+			}
+			else
+			{
+				commandBuffer->SetPrimaryDescriptorSet(s_RendererData.PrimaryDescriptorSetWithoutShadows);
+			}
+
 			commandBuffer->SetSecondaryDescriptorSet(nullptr);
 		}
 
