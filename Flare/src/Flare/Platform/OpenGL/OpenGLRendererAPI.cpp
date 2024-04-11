@@ -175,6 +175,8 @@ namespace Flare
 		GetIndexCountAndType(vertexArray->GetIndexBuffer(), &indicesCount, &indexType);
 
 		glDrawElements(GL_TRIANGLES, indicesCount, indexType, (const void*)0);
+
+		vertexArray->Unbind();
 	}
 
 	void OpenGLRendererAPI::DrawIndexed(const Ref<const VertexArray>& vertexArray, size_t indicesCount)
@@ -185,6 +187,8 @@ namespace Flare
 		GetIndexCountAndType(vertexArray->GetIndexBuffer(), nullptr, &indexType);
 
 		glDrawElements(GL_TRIANGLES, (int32_t)indicesCount, indexType, (const void*)0);
+
+		vertexArray->Unbind();
 	}
 
 	void OpenGLRendererAPI::DrawIndexed(const Ref<const VertexArray>& vertexArray, size_t firstIndex, size_t indicesCount)
@@ -202,6 +206,8 @@ namespace Flare
 		default:
 			FLARE_CORE_ASSERT(false);
 		}
+
+		vertexArray->Unbind();
 	}
 
 	void OpenGLRendererAPI::DrawInstanced(const Ref<const VertexArray>& mesh, size_t instancesCount)
@@ -247,6 +253,8 @@ namespace Flare
 			instancesCount,
 			subMesh.BaseVertex,
 			baseInstance);
+
+		vertexArray.Unbind();
 	}
 
 	void OpenGLRendererAPI::DrawInstancesIndexedIndirect(const Ref<const Mesh>& mesh, const Span<DrawIndirectCommandSubMeshData>& subMeshesData, uint32_t baseInstance)
@@ -279,6 +287,8 @@ namespace Flare
 			indexType,
 			m_IndirectCommandDataStorage.data(),
 			(int32_t)subMeshesData.GetSize(), 0);
+
+		vertexArray.Unbind();
 	}
 
 	void OpenGLRendererAPI::DrawInstanced(const Ref<const VertexArray>& mesh, size_t instancesCount, size_t baseVertexIndex, size_t startIndex, size_t indicesCount)
@@ -296,6 +306,7 @@ namespace Flare
 	{
 		vertexArray->Bind();
 		glDrawArrays(GL_LINES, 0, (int32_t)verticesCount);
+		vertexArray->Unbind();
 	}
 
 	void OpenGLRendererAPI::ApplyMaterialProperties(const Ref<const Material>& materail)

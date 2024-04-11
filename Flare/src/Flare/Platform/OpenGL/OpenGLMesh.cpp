@@ -1,5 +1,7 @@
 #include "OpenGLMesh.h"
 
+#include <glad/glad.h>
+
 namespace Flare
 {
 	OpenGLMesh::OpenGLMesh(MeshTopology topologyType, size_t vertexBufferSize, IndexBuffer::IndexFormat indexFormat, size_t indexBufferSize)
