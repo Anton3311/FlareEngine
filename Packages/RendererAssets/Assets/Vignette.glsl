@@ -1,3 +1,4 @@
+Type = FullscreenQuad
 DepthTest = false
 BlendMode = Transparent
 
