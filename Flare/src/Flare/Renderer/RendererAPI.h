@@ -65,7 +65,10 @@ namespace Flare
 
 		virtual void ApplyMaterialProperties(const Ref<const Material>& materail) = 0;
 	public:
-		static Scope<RendererAPI> Create();
+		static void Create(API api);
+		static void Release();
+
+		static const Scope<RendererAPI>& GetInstance();
 		static API GetAPI();
 	};
 }

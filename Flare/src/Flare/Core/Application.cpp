@@ -35,6 +35,29 @@ namespace Flare
 		properties.Size = glm::uvec2(1280, 720);
 		properties.CustomTitleBar = true;
 
+		const std::string_view apiArgument = "--api=";
+		RendererAPI::API rendererApi = RendererAPI::API::OpenGL;
+		for (uint32_t i = 0; i < m_CommandLineArguments.ArgumentsCount; i++)
+		{
+			std::string_view argument = m_CommandLineArguments.Arguments[i];
+
+			if (argument._Starts_with(apiArgument))
+			{
+				std::string_view apiName = argument.substr(apiArgument.size());
+
+				if (apiName == "opengl")
+				{
+					rendererApi = RendererAPI::API::OpenGL;
+				}
+				else if (apiName == "vulkan")
+				{
+					rendererApi = RendererAPI::API::Vulkan;
+				}
+			}
+		}
+
+		RendererAPI::Create(rendererApi);
+
 		m_Window = Window::Create(properties);
 		switch (RendererAPI::GetAPI())
 		{
