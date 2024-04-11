@@ -36,6 +36,9 @@ namespace Flare
 		static void Initialize(size_t maxQuads = 10000);
 		static void Shutdown();
 
+		static void BeginFrame();
+		static void EndFrame();
+
 		static void Begin(const Ref<Material>& material = nullptr);
 		static void End();
 		

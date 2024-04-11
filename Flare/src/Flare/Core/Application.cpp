@@ -130,6 +130,7 @@ namespace Flare
 				m_Window->OnUpdate();
 
 				GraphicsContext::GetInstance().BeginFrame();
+				Renderer2D::BeginFrame();
 
 				{
 					FLARE_PROFILE_SCOPE("Layers::OnUpdate");
@@ -143,8 +144,10 @@ namespace Flare
 						layer->OnImGUIRender();
 				}
 
+				Renderer2D::EndFrame();
+
 				{
-					FLARE_PROFILE_SCOPE("SwapBuffers");
+					FLARE_PROFILE_SCOPE("Present");
 					GraphicsContext::GetInstance().Present();
 				}
 

@@ -254,14 +254,23 @@ namespace Flare
 		s_Renderer2DData = {};
 	}
 
+	void Renderer2D::BeginFrame()
+	{
+		FLARE_PROFILE_FUNCTION();
+		for (Ref<VulkanDescriptorSet> set : s_Renderer2DData.UsedQuadsDescriptorSets)
+			s_Renderer2DData.QuadsDescriptorPool->ReleaseSet(set);
+		s_Renderer2DData.UsedQuadsDescriptorSets.clear();
+	}
+
+	void Renderer2D::EndFrame()
+	{
+
+	}
+
 	void Renderer2D::Begin(const Ref<Material>& material)
 	{
 		if (s_Renderer2DData.QuadIndex > 0)
 			FlushAll();
-
-		for (Ref<VulkanDescriptorSet> set : s_Renderer2DData.UsedQuadsDescriptorSets)
-			s_Renderer2DData.QuadsDescriptorPool->ReleaseSet(set);
-		s_Renderer2DData.UsedQuadsDescriptorSets.clear();
 
 		s_Renderer2DData.FrameData = &Renderer::GetCurrentViewport().FrameData;
 		s_Renderer2DData.CurrentMaterial = material == nullptr ? s_Renderer2DData.DefaultMaterial : material;
