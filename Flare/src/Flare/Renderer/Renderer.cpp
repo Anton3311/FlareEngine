@@ -116,7 +116,7 @@ namespace Flare
 		// Shadows
 		InstancingMesh CurrentInstancingMesh;
 		Ref<FrameBuffer> ShadowsRenderTarget[ShadowSettings::MaxCascades] = { nullptr };
-		Ref<ShaderStorageBuffer> ShadowPassInstanceBuffer[ShadowSettings::MaxCascades] = { nullptr };
+		Ref<ShaderStorageBuffer> ShadowPassInstanceBuffers[ShadowSettings::MaxCascades] = { nullptr };
 		Ref<UniformBuffer> ShadowPassCameraBuffers[ShadowSettings::MaxCascades] = { nullptr };
 		Ref<VulkanDescriptorSet> PerCascadeDescriptorSets[ShadowSettings::MaxCascades] = { nullptr };
 
@@ -177,18 +177,18 @@ namespace Flare
 
 		if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
 		{
-			s_RendererData.ShadowPassInstanceBuffer[0] = s_RendererData.InstancesShaderBuffer;
+			s_RendererData.ShadowPassInstanceBuffers[0] = s_RendererData.InstancesShaderBuffer;
 			for (uint32_t i = 1; i < 4; i++)
 			{
-				s_RendererData.ShadowPassInstanceBuffer[i] = ShaderStorageBuffer::Create(s_RendererData.MaxInstances * sizeof(InstanceData), 3);
+				s_RendererData.ShadowPassInstanceBuffers[i] = ShaderStorageBuffer::Create(s_RendererData.MaxInstances * sizeof(InstanceData), 3);
 			}
 		}
 		else
 		{
-			s_RendererData.ShadowPassInstanceBuffer[0] = s_RendererData.InstancesShaderBuffer;
-			s_RendererData.ShadowPassInstanceBuffer[1] = s_RendererData.InstancesShaderBuffer;
-			s_RendererData.ShadowPassInstanceBuffer[2] = s_RendererData.InstancesShaderBuffer;
-			s_RendererData.ShadowPassInstanceBuffer[3] = s_RendererData.InstancesShaderBuffer;
+			s_RendererData.ShadowPassInstanceBuffers[0] = s_RendererData.InstancesShaderBuffer;
+			s_RendererData.ShadowPassInstanceBuffers[1] = s_RendererData.InstancesShaderBuffer;
+			s_RendererData.ShadowPassInstanceBuffers[2] = s_RendererData.InstancesShaderBuffer;
+			s_RendererData.ShadowPassInstanceBuffers[3] = s_RendererData.InstancesShaderBuffer;
 		}
 
 		s_RendererData.ShadowPassTimer = GPUTimer::Create();
@@ -307,14 +307,13 @@ namespace Flare
 			s_RendererData.PrimaryDescriptorSetWithoutShadows->FlushWrites();
 			
 			// Setup per cascade descriptor sets
-
 			for (uint32_t i = 0; i < ShadowSettings::MaxCascades; i++)
 			{
 				Ref<VulkanDescriptorSet> set = s_RendererData.PrimaryDescriptorPool->AllocateSet();
 				set->WriteUniformBuffer(s_RendererData.ShadowPassCameraBuffers[i], 0);
 				set->WriteUniformBuffer(s_RendererData.LightBuffer, 1);
 				set->WriteUniformBuffer(s_RendererData.ShadowDataBuffer, 2);
-				set->WriteStorageBuffer(s_RendererData.InstancesShaderBuffer, 3);
+				set->WriteStorageBuffer(s_RendererData.ShadowPassInstanceBuffers[i], 3);
 				set->WriteStorageBuffer(s_RendererData.PointLightsShaderBuffer, 4);
 				set->WriteStorageBuffer(s_RendererData.SpotLightsShaderBuffer, 5);
 
@@ -1076,7 +1075,7 @@ namespace Flare
 			s_RendererData.ShadowsRenderTarget[cascadeIndex]->Bind();
 			s_RendererData.CurrentInstancingMesh.Reset();
 
-			Ref<ShaderStorageBuffer> instanceBuffer = s_RendererData.ShadowPassInstanceBuffer[cascadeIndex];
+			Ref<ShaderStorageBuffer> instanceBuffer = s_RendererData.ShadowPassInstanceBuffers[cascadeIndex];
 
 			{
 				FLARE_PROFILE_SCOPE("GroupByMesh");
