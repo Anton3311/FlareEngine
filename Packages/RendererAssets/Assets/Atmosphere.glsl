@@ -1,4 +1,6 @@
 Type = FullscreenQuad
+DepthWrite = false
+
 Properties =
 {
 	u_Params.RayleighCoefficient = { DisplayName = "Rayleigh Coefficient" }
