@@ -34,20 +34,6 @@ namespace Flare
 		VkPipelineLayout pipelineLayout = As<const VulkanPipeline>(vulkanMaterial->GetPipeline(m_CurrentRenderPass))->GetLayoutHandle();
 		Ref<const ShaderMetadata> metadata = material->GetShader()->GetMetadata();
 
-		BindPipeline(pipeline);
-
-		if (m_PrimaryDescriptorSet)
-			BindDescriptorSet(m_PrimaryDescriptorSet, pipelineLayout, 0);
-		if (m_SecondaryDescriptorSet)
-			BindDescriptorSet(m_SecondaryDescriptorSet, pipelineLayout, 1);
-
-		Ref<VulkanDescriptorSet> materialDescriptorSet = vulkanMaterial->GetDescriptorSet();
-		if (materialDescriptorSet)
-		{
-			vulkanMaterial->UpdateDescriptorSet();
-			BindDescriptorSet(materialDescriptorSet, pipelineLayout, 2);
-		}
-
 		for (size_t i = 0; i < metadata->PushConstantsRanges.size(); i++)
 		{
 			const ShaderPushConstantsRange& range = metadata->PushConstantsRanges[i];
@@ -66,6 +52,20 @@ namespace Flare
 			}
 
 			vkCmdPushConstants(m_CommandBuffer, pipelineLayout, stage, (uint32_t)range.Offset, (uint32_t)range.Size, material->GetPropertiesBuffer() + range.Offset);
+		}
+
+		BindPipeline(pipeline);
+
+		if (m_PrimaryDescriptorSet)
+			BindDescriptorSet(m_PrimaryDescriptorSet, pipelineLayout, 0);
+		if (m_SecondaryDescriptorSet)
+			BindDescriptorSet(m_SecondaryDescriptorSet, pipelineLayout, 1);
+
+		Ref<VulkanDescriptorSet> materialDescriptorSet = vulkanMaterial->GetDescriptorSet();
+		if (materialDescriptorSet)
+		{
+			vulkanMaterial->UpdateDescriptorSet();
+			BindDescriptorSet(materialDescriptorSet, pipelineLayout, 2);
 		}
 	}
 

@@ -62,6 +62,10 @@ namespace Flare
 		}
 
 		commandBuffer->ApplyMaterial(m_Material);
+
+		const auto& frameBufferSpec = context.RenderTarget->GetSpecifications();
+		commandBuffer->SetViewportAndScisors(Math::Rect(0.0f, 0.0f, (float)frameBufferSpec.Width, (float)frameBufferSpec.Height));
+
 		commandBuffer->DrawIndexed(RendererPrimitives::GetFullscreenQuadMesh(), 0, 0, 1);
 
 		commandBuffer->EndRenderTarget();

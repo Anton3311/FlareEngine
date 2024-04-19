@@ -374,7 +374,7 @@ namespace Flare
 
 				description.format = FrameBufferAttachmentFormatToVulkanFormat(formats[i]);
 				description.samples = VK_SAMPLE_COUNT_1_BIT;
-				description.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+				description.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
 				description.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
 				description.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 				description.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
