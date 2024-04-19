@@ -27,4 +27,15 @@ namespace Flare
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_Id);
         glBufferData(GL_SHADER_STORAGE_BUFFER, data.GetSize(), data.GetBuffer(), GL_DYNAMIC_DRAW);
     }
+
+    void OpenGLShaderStorageBuffer::SetDebugName(std::string_view name)
+    {
+        // TODO: Set the debug name of an OpenGL object
+        m_DebugName = name;
+    }
+
+    const std::string& OpenGLShaderStorageBuffer::GetDebugName() const
+    {
+        return m_DebugName;
+    }
 }

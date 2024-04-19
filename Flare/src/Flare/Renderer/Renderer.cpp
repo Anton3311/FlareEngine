@@ -181,6 +181,7 @@ namespace Flare
 			for (uint32_t i = 1; i < 4; i++)
 			{
 				s_RendererData.ShadowPassInstanceBuffers[i] = ShaderStorageBuffer::Create(s_RendererData.MaxInstances * sizeof(InstanceData), 3);
+				s_RendererData.ShadowPassInstanceBuffers[i]->SetDebugName(fmt::format("Cascade{}.InstanceDataBuffer", i));
 			}
 		}
 		else
