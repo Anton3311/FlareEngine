@@ -166,9 +166,15 @@ namespace Flare
 		s_RendererData.CameraBuffer = UniformBuffer::Create(sizeof(RenderView), 0);
 		s_RendererData.LightBuffer = UniformBuffer::Create(sizeof(LightData), 1);
 		s_RendererData.ShadowDataBuffer = UniformBuffer::Create(sizeof(ShadowData), 2);
+
 		s_RendererData.InstancesShaderBuffer = ShaderStorageBuffer::Create(s_RendererData.MaxInstances * sizeof(InstanceData), 3);
+		s_RendererData.InstancesShaderBuffer->SetDebugName("InstanceDataBuffer");
+
 		s_RendererData.PointLightsShaderBuffer = ShaderStorageBuffer::Create(maxPointLights * sizeof(PointLightData), 4);
+		s_RendererData.PointLightsShaderBuffer->SetDebugName("PointLightsDataBuffer");
+
 		s_RendererData.SpotLightsShaderBuffer = ShaderStorageBuffer::Create(maxSpotLights * sizeof(SpotLightData), 5);
+		s_RendererData.SpotLightsShaderBuffer->SetDebugName("SpotLightsDataBuffer");
 
 		for (uint32_t i = 0; i < ShadowSettings::MaxCascades; i++)
 		{
@@ -178,7 +184,7 @@ namespace Flare
 		if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
 		{
 			s_RendererData.ShadowPassInstanceBuffers[0] = s_RendererData.InstancesShaderBuffer;
-			for (uint32_t i = 1; i < 4; i++)
+			for (uint32_t i = 0; i < ShadowSettings::MaxCascades; i++)
 			{
 				s_RendererData.ShadowPassInstanceBuffers[i] = ShaderStorageBuffer::Create(s_RendererData.MaxInstances * sizeof(InstanceData), 3);
 				s_RendererData.ShadowPassInstanceBuffers[i]->SetDebugName(fmt::format("Cascade{}.InstanceDataBuffer", i));
