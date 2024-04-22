@@ -158,17 +158,6 @@ namespace Flare
 			break;
 		}
 
-		VkFilter filter = VK_FILTER_NEAREST;
-		switch (m_Specifications.Filtering)
-		{
-		case TextureFiltering::Closest:
-			filter = VK_FILTER_NEAREST;
-			break;
-		case TextureFiltering::Linear:
-			filter = VK_FILTER_LINEAR;
-			break;
-		}
-
 		VkSamplerCreateInfo samplerInfo{};
 		samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
 		samplerInfo.addressModeU = addressMode;
@@ -179,11 +168,41 @@ namespace Flare
 		samplerInfo.compareEnable = VK_FALSE;
 		samplerInfo.compareOp = VK_COMPARE_OP_NEVER;
 		samplerInfo.flags = 0;
-		samplerInfo.magFilter = filter;
-		samplerInfo.minFilter = filter;
 		samplerInfo.minLod = 0.0f;
 		samplerInfo.maxLod = 0.0f;
 		samplerInfo.mipLodBias = 0.0f;
+
+		switch (m_Specifications.Filtering)
+		{
+		case TextureFiltering::Closest:
+			samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;
+			break;
+		case TextureFiltering::Linear:
+			samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;
+			break;
+		default:
+			FLARE_CORE_ASSERT(false);
+		}
+
+		switch (m_Specifications.Filtering)
+		{
+		case TextureFiltering::Closest:
+			samplerInfo.minFilter = VK_FILTER_NEAREST;
+			samplerInfo.magFilter = VK_FILTER_NEAREST;
+			break;
+		case TextureFiltering::Linear:
+			samplerInfo.minFilter = VK_FILTER_LINEAR;
+			samplerInfo.magFilter = VK_FILTER_LINEAR;
+			break;
+		default:
+			FLARE_CORE_ASSERT(false);
+		}
+
+		if (m_Specifications.GenerateMipMaps)
+		{
+			samplerInfo.maxLod = (float)(m_MipLevels - 1);
+			samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+		}
 
 		VK_CHECK_RESULT(vkCreateSampler(VulkanContext::GetInstance().GetDevice(), &samplerInfo, nullptr, &m_DefaultSampler));
 	}
