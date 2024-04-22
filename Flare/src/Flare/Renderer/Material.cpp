@@ -135,13 +135,16 @@ namespace Flare
 		for (const auto& prop : properties)
 		{
 			if (prop.Type == ShaderDataType::Sampler)
+			{
 				samplers++;
+			}
+			else
+			{
+				m_BufferSize = glm::max(prop.Offset + prop.Size, m_BufferSize);
+			}
 		}
 
 		m_Textures.resize(samplers, TexturePropertyValue());
-
-		if (properties.size() > 0)
-			m_BufferSize = properties.back().Offset + properties.back().Size;
 
 		if (m_BufferSize != 0)
 		{
