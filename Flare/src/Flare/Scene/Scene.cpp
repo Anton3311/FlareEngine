@@ -26,11 +26,7 @@ namespace Flare
 	Scene::Scene(ECSContext& context)
 		: Asset(AssetType::Scene), m_World(context)
 	{
-		if (RendererAPI::GetAPI() != RendererAPI::API::Vulkan)
-		{
-			m_PostProcessingManager.SSAOPass = CreateRef<SSAO>();
-		}
-
+		m_PostProcessingManager.SSAOPass = CreateRef<SSAO>();
 		m_PostProcessingManager.VignettePass = CreateRef<Vignette>();
 		m_PostProcessingManager.Atmosphere = CreateRef<AtmospherePass>();
 		m_PostProcessingManager.ToneMappingPass = CreateRef<ToneMapping>();
@@ -77,11 +73,7 @@ namespace Flare
 
 	void Scene::InitializePostProcessing()
 	{
-		if (RendererAPI::GetAPI() != RendererAPI::API::Vulkan)
-		{
-			Renderer::AddRenderPass(m_PostProcessingManager.SSAOPass);
-		}
-
+		Renderer::AddRenderPass(m_PostProcessingManager.SSAOPass);
 		Renderer::AddRenderPass(m_PostProcessingManager.Atmosphere);
 		Renderer::AddRenderPass(m_PostProcessingManager.VignettePass);
 		Renderer::AddRenderPass(m_PostProcessingManager.ToneMappingPass);

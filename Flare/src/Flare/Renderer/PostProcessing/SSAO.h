@@ -23,7 +23,6 @@ namespace Flare
 		float Radius;
 		float BlurSize;
 	private:
-		Ref<FrameBuffer> m_AOTargets[2];
 		Ref<Material> m_Material;
 		Ref<Material> m_BlurMaterial;
 
