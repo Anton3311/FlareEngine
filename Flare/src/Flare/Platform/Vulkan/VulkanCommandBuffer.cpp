@@ -26,6 +26,34 @@ namespace Flare
 		EndRenderPass();
 	}
 
+	void VulkanCommandBuffer::ClearColorAttachment(Ref<FrameBuffer> frameBuffer, uint32_t index, const glm::vec4& clearColor)
+	{
+		FLARE_CORE_ASSERT(index < frameBuffer->GetAttachmentsCount());
+
+		Ref<VulkanFrameBuffer> vulkanFrameBuffer = As<VulkanFrameBuffer>(frameBuffer);
+		ClearImage(vulkanFrameBuffer->GetAttachmentImage(index), clearColor, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+	}
+
+	void VulkanCommandBuffer::ClearDepthAttachment(Ref<FrameBuffer> frameBuffer, float depth)
+	{
+		Ref<VulkanFrameBuffer> vulkanFrameBuffer = As<VulkanFrameBuffer>(frameBuffer);
+		std::optional<uint32_t> attachmentIndex = vulkanFrameBuffer->GetDepthAttachmentIndex();
+		FLARE_CORE_ASSERT(attachmentIndex.has_value());
+
+		bool hasStencil = HasStencilCompomnent(vulkanFrameBuffer->GetSpecifications().Attachments[*attachmentIndex].Format);
+		VkImageLayout layout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
+
+		if (hasStencil)
+		{
+			layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+		}
+
+		ClearDepthStencilImage(
+			vulkanFrameBuffer->GetAttachmentImage(*attachmentIndex),
+			hasStencil, depth, 0,
+			VK_IMAGE_LAYOUT_UNDEFINED, layout);
+	}
+
 	void VulkanCommandBuffer::ApplyMaterial(const Ref<const Material>& material)
 	{
 		FLARE_CORE_ASSERT(material->GetShader());

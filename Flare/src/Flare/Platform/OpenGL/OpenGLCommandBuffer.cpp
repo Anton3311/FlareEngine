@@ -25,10 +25,41 @@ namespace Flare
 	{
 		FLARE_CORE_ASSERT(m_CurrentRenderTarget);
 
-		// TODO: unbinding current render targets causes flickering while nothing is being rendered except window title bar
-		//m_CurrentRenderTarget->Unbind();
-
+		m_CurrentRenderTarget->Unbind();
 		m_CurrentRenderTarget = nullptr;
+	}
+
+	void OpenGLCommandBuffer::ClearColorAttachment(Ref<FrameBuffer> frameBuffer, uint32_t index, const glm::vec4& clearColor)
+	{
+		FLARE_CORE_ASSERT(index < frameBuffer->GetAttachmentsCount());
+		frameBuffer->Bind();
+
+		frameBuffer->SetWriteMask(1 << index);
+		glClearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
+		glClear(GL_COLOR_BUFFER_BIT);
+
+		frameBuffer->Unbind();
+
+		if (m_CurrentRenderTarget)
+		{
+			m_CurrentRenderTarget->Bind();
+		}
+	}
+
+	void OpenGLCommandBuffer::ClearDepthAttachment(Ref<FrameBuffer> frameBuffer, float depth)
+	{
+		frameBuffer->Bind();
+
+		// Transform to [-1, 1]
+		glClearDepth((GLdouble)(depth * 2.0f - 1.0f));
+		glClear(GL_DEPTH_BUFFER_BIT);
+
+		frameBuffer->Unbind();
+
+		if (m_CurrentRenderTarget)
+		{
+			m_CurrentRenderTarget->Bind();
+		}
 	}
 
 	void OpenGLCommandBuffer::ApplyMaterial(const Ref<const Material>& material)

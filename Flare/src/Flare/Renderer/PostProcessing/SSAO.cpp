@@ -32,7 +32,6 @@ namespace Flare
 				m_Material = Material::Create(AssetManager::GetAsset<Shader>(shaderHandle.value()));
 				m_BiasPropertyIndex = m_Material->GetShader()->GetPropertyIndex("u_Params.Bias");
 				m_RadiusPropertyIndex = m_Material->GetShader()->GetPropertyIndex("u_Params.SampleRadius");
-				m_NoiseScalePropertyIndex = m_Material->GetShader()->GetPropertyIndex("u_Params.NoiseScale");
 
 				m_NormalsTextureIndex = m_Material->GetShader()->GetPropertyIndex("u_NormalsTexture");
 				m_DepthTextureIndex= m_Material->GetShader()->GetPropertyIndex("u_DepthTexture");
@@ -91,8 +90,6 @@ namespace Flare
 				m_Material->WritePropertyValue(*m_BiasPropertyIndex, Bias);
 			if (m_RadiusPropertyIndex)
 				m_Material->WritePropertyValue(*m_RadiusPropertyIndex, Radius);
-			if (m_NoiseScalePropertyIndex)
-				m_Material->WritePropertyValue(*m_NoiseScalePropertyIndex, (glm::vec2)currentViewport.GetSize() / 8.0f);
 
 			if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
 			{

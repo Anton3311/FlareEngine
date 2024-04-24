@@ -291,32 +291,10 @@ namespace Flare
 
 	void SceneViewportWindow::OnClear()
 	{
-		if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
-		{
-			Ref<VulkanCommandBuffer> commandBuffer = VulkanContext::GetInstance().GetPrimaryCommandBuffer();
-			Ref<VulkanFrameBuffer> target = As<VulkanFrameBuffer>(m_Viewport.RenderTarget);
-
-			commandBuffer->ClearImage(target->GetAttachmentImage(0), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
-			commandBuffer->ClearImage(target->GetAttachmentImage(1), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
-
-			commandBuffer->ClearDepthStencilImage(
-				target->GetAttachmentImage(m_Viewport.DepthAttachmentIndex), true, 1.0f, 0,
-				VK_IMAGE_LAYOUT_UNDEFINED,
-				VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
-		}
-		else
-		{
-			m_Viewport.RenderTarget->SetWriteMask(0b1); // Clear first attachment
-			RenderCommand::SetClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-			RenderCommand::Clear();
-
-			m_Viewport.RenderTarget->SetWriteMask(0b10); // Clear second attachment
-			RenderCommand::SetClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-			RenderCommand::Clear();
-
-			int32_t invalidEntityIndex = INT32_MAX;
-			m_Viewport.RenderTarget->ClearAttachment(2, &invalidEntityIndex);
-		}
+		Ref<CommandBuffer> commandBuffer = GraphicsContext::GetInstance().GetCommandBuffer();
+		commandBuffer->ClearColorAttachment(m_Viewport.RenderTarget, m_Viewport.ColorAttachmentIndex, glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+		commandBuffer->ClearColorAttachment(m_Viewport.RenderTarget, m_Viewport.NormalsAttachmentIndex, glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+		commandBuffer->ClearDepthAttachment(m_Viewport.RenderTarget, 1.0f);
 	}
 
 	void SceneViewportWindow::RenderWindowContents()

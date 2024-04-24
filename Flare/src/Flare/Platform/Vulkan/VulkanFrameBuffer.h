@@ -39,6 +39,8 @@ namespace Flare
 		inline VkImage GetAttachmentImage(uint32_t attachment) const { return m_AttachmentsImages[attachment]; }
 		inline VkSampler GetDefaultAttachmentSampler(uint32_t attachment) const { return m_DefaultSamplers[attachment]; }
 
+		inline std::optional<uint32_t> GetDepthAttachmentIndex() const { return m_DepthAttachmentIndex; }
+
 		inline Ref<VulkanRenderPass> GetCompatibleRenderPass() const { return m_CompatibleRenderPass; }
 	private:
 		void Create();
@@ -50,6 +52,8 @@ namespace Flare
 		FrameBufferSpecifications m_Specifications;
 
 		VkFramebuffer m_FrameBuffer = VK_NULL_HANDLE;
+
+		std::optional<uint32_t> m_DepthAttachmentIndex;
 
 		std::vector<VkImage> m_AttachmentsImages;
 		std::vector<VkImageView> m_AttachmentsImageViews;

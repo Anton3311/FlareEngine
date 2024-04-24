@@ -235,6 +235,7 @@ namespace Flare
 
 			if (IsDepthFormat(attachment.Format))
 			{
+				m_DepthAttachmentIndex = (uint32_t)i;
 				imageInfo.usage |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
 			}
 			else

@@ -32,7 +32,6 @@ layout(std140, push_constant) uniform Params
 {
 	float Bias;
 	float SampleRadius;
-	vec2 NoiseScale;
 } u_Params;
 
 layout(location = 0) out vec4 o_Color;

@@ -716,26 +716,10 @@ namespace Flare
 
 		}
 
-		if (RendererAPI::GetAPI() != RendererAPI::API::Vulkan)
+		Ref<CommandBuffer> commandBuffer = GraphicsContext::GetInstance().GetCommandBuffer();
+		for (size_t i = 0; i < s_RendererData.ShadowMappingSettings.Cascades; i++)
 		{
-			FLARE_PROFILE_SCOPE("ClearShadowBuffers");
-			for (size_t i = 0; i < s_RendererData.ShadowMappingSettings.Cascades; i++)
-			{
-				s_RendererData.ShadowsRenderTarget[i]->Bind();
-				RenderCommand::Clear();
-			}
-		}
-		else
-		{
-			Ref<VulkanCommandBuffer> commandBuffer = VulkanContext::GetInstance().GetPrimaryCommandBuffer();
-			FLARE_PROFILE_SCOPE("ClearShadowBuffers");
-			for (size_t i = 0; i < s_RendererData.ShadowMappingSettings.Cascades; i++)
-			{
-				auto shadowTarget = As<VulkanFrameBuffer>(s_RendererData.ShadowsRenderTarget[i]);
-				commandBuffer->ClearDepthStencilImage(shadowTarget->GetAttachmentImage(0), true, 1.0f, 0,
-					VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-					VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
-			}
+			commandBuffer->ClearDepthAttachment(s_RendererData.ShadowsRenderTarget[i], 1.0f);
 		}
 
 		viewport.RenderTarget->Bind();
@@ -856,10 +840,12 @@ namespace Flare
 
 		ExecuteGeomertyPass();
 
+#if 0
 		if (RendererAPI::GetAPI() != RendererAPI::API::Vulkan)
 		{
 			ExecuteDecalsPass();
 		}
+#endif
 
 		s_RendererData.InstanceDataBuffer.clear();
 		s_RendererData.CulledObjectIndices.clear();

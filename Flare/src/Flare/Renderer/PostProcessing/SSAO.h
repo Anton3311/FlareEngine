@@ -30,7 +30,6 @@ namespace Flare
 		std::optional<uint32_t> m_DepthTextureIndex;
 		std::optional<uint32_t> m_BiasPropertyIndex;
 		std::optional<uint32_t> m_RadiusPropertyIndex;
-		std::optional<uint32_t> m_NoiseScalePropertyIndex;
 
 		std::optional<uint32_t> m_ColorTexture;
 		std::optional<uint32_t> m_AOTexture;
