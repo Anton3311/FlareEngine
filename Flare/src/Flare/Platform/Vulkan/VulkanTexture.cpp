@@ -33,6 +33,8 @@ namespace Flare
 		else if (channels == 4)
 			m_Specifications.Format = TextureFormat::RGBA8;
 
+		stbi_image_free(data);
+
 		CreateResources();
 		UploadPixelData(data);
 	}
@@ -44,6 +46,13 @@ namespace Flare
 		m_Specifications.Filtering = filtering;
 		m_Specifications.Format = format;
 
+		CreateResources();
+		UploadPixelData(data);
+	}
+
+	VulkanTexture::VulkanTexture(const TextureSpecifications& specifications, const void* data)
+		: m_Specifications(specifications)
+	{
 		CreateResources();
 		UploadPixelData(data);
 	}

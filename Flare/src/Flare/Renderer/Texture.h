@@ -1,6 +1,7 @@
 #pragma once
 
 #include "FlareCore/Core.h"
+#include "FlareCore/Collections/Span.h"
 #include "FlareCore/Serialization/TypeInitializer.h"
 #include "FlareCore/Serialization/Metadata.h"
 
@@ -64,11 +65,11 @@ namespace Flare
 	{
 		static constexpr uint32_t DefaultMipLevelsCount = 4;
 
-		uint32_t Width;
-		uint32_t Height;
-		TextureFormat Format;
-		TextureFiltering Filtering;
-		TextureWrap Wrap;
+		uint32_t Width = 0;
+		uint32_t Height = 0;
+		TextureFormat Format = TextureFormat::RGB8;
+		TextureFiltering Filtering = TextureFiltering::Linear;
+		TextureWrap Wrap = TextureWrap::Clamp;
 
 		bool GenerateMipMaps = false;
 	};
@@ -78,6 +79,18 @@ namespace Flare
 
 	FLARE_API std::optional<TextureWrap> TextureWrapFromString(std::string_view string);
 	FLARE_API std::optional<TextureFiltering> TextureFilteringFromString(std::string_view string);
+
+	struct FLARE_API TextureData
+	{
+		TextureData(TextureSpecifications& specifications)
+			: Specifications(specifications) {}
+
+		~TextureData();
+
+		TextureSpecifications& Specifications;
+		void* Data = nullptr;
+		size_t Size = 0;
+	};
 
 	class FLARE_API Texture : public Asset
 	{
@@ -100,6 +113,9 @@ namespace Flare
 	public:
 		static Ref<Texture> Create(const std::filesystem::path& path, const TextureSpecifications& specifications);
 		static Ref<Texture> Create(uint32_t width, uint32_t height, const void* data, TextureFormat format, TextureFiltering filtering = TextureFiltering::Linear);
+		static Ref<Texture> Create(const TextureSpecifications& specifications, const void* data);
+
+		static bool ReadDataFromFile(const std::filesystem::path& path, TextureData& data);
 	};
 
 

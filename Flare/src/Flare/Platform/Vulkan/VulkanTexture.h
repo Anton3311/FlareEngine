@@ -13,6 +13,7 @@ namespace Flare
 		VulkanTexture();
 		VulkanTexture(const std::filesystem::path& path, const TextureSpecifications& specifications);
 		VulkanTexture(uint32_t width, uint32_t height, const void* data, TextureFormat format, TextureFiltering filtering);
+		VulkanTexture(const TextureSpecifications& specifications, const void* data);
 		~VulkanTexture();
 
 		void Bind(uint32_t slot) override;

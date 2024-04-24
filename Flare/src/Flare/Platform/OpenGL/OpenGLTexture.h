@@ -10,6 +10,7 @@ namespace Flare
 		// Texture size and format are ignored, because they are retrieved from the file
 		OpenGLTexture(const std::filesystem::path& path, const TextureSpecifications& specifications);
 		OpenGLTexture(uint32_t width, uint32_t height, const void* data, TextureFormat format, TextureFiltering filtering);
+		OpenGLTexture(const TextureSpecifications& specifications, const void* data);
 		~OpenGLTexture();
 	public:
 		uint32_t GetId() const { return m_Id; }

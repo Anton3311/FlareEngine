@@ -92,6 +92,13 @@ namespace Flare
 		specifications.Wrap = importSettings.WrapMode;
 		specifications.GenerateMipMaps = importSettings.GenerateMipMaps;
 
-		return Texture::Create(metadata.Path, specifications);
+		TextureData textureData(specifications);
+		if (!Texture::ReadDataFromFile(metadata.Path, textureData))
+		{
+			FLARE_CORE_ASSERT("Failed to load texture: {}", metadata.Path.string());
+			return nullptr;
+		}
+
+		return Texture::Create(specifications, textureData.Data);
 	}
 }
