@@ -42,6 +42,8 @@ namespace Flare
         {
             if (m_Handle != nullptr)
 				EditorLayer::GetInstance().Selection.SetAsset(*m_Handle);
+            else if (m_Asset != nullptr)
+                EditorLayer::GetInstance().Selection.SetAsset(m_Asset->get()->Handle);
         }
         ImGui::PopID();
 
