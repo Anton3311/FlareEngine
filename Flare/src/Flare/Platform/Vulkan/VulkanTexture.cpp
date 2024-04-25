@@ -7,6 +7,34 @@
 
 namespace Flare
 {
+	VkFormat TextureFormatToVulkanFormat(TextureFormat format)
+	{
+		switch (format)
+		{
+		case TextureFormat::RGB8:
+			return VK_FORMAT_R8G8B8A8_UNORM;
+		case TextureFormat::RGBA8:
+			return VK_FORMAT_R8G8B8A8_UNORM;
+		case TextureFormat::RG8:
+			return VK_FORMAT_R8G8_UNORM;
+		case TextureFormat::RG16:
+			return VK_FORMAT_R16G16_UNORM;
+		case TextureFormat::RF32:
+			return VK_FORMAT_R16_SFLOAT;
+		case TextureFormat::R8:
+			return VK_FORMAT_R8_UNORM;
+		case TextureFormat::BC1_RGB:
+			return VK_FORMAT_BC1_RGB_UNORM_BLOCK;
+		case TextureFormat::BC1_RGBA:
+			return VK_FORMAT_BC1_RGBA_UNORM_BLOCK;
+		}
+
+		FLARE_CORE_ASSERT(false);
+		return VK_FORMAT_UNDEFINED;
+	}
+
+
+
 	VulkanTexture::VulkanTexture()
 	{
 	}
@@ -33,10 +61,20 @@ namespace Flare
 		else if (channels == 4)
 			m_Specifications.Format = TextureFormat::RGBA8;
 
-		stbi_image_free(data);
+		TextureData textureData{};
+		auto& mip = textureData.Mips.emplace_back();
+		mip.Data = data;
+		mip.SizeInBytes = m_Specifications.Width * m_Specifications.Height * GetImagePixelSizeInBytes();
+
+		if (m_Specifications.GenerateMipMaps)
+		{
+			m_MipLevels = (uint32_t)glm::floor(glm::log2((float)glm::max(m_Specifications.Width, m_Specifications.Height))) + 1u;
+		}
 
 		CreateResources();
-		UploadPixelData(data);
+		UploadPixelData(textureData);
+
+		stbi_image_free(data);
 	}
 
 	VulkanTexture::VulkanTexture(uint32_t width, uint32_t height, const void* data, TextureFormat format, TextureFiltering filtering)
@@ -46,13 +84,42 @@ namespace Flare
 		m_Specifications.Filtering = filtering;
 		m_Specifications.Format = format;
 
+		TextureData textureData{};
+		auto& mip = textureData.Mips.emplace_back();
+		mip.Data = data;
+		mip.SizeInBytes = m_Specifications.Width * m_Specifications.Height * GetImagePixelSizeInBytes();
+
+		if (m_Specifications.GenerateMipMaps)
+		{
+			m_MipLevels = (uint32_t)glm::floor(glm::log2((float)glm::max(m_Specifications.Width, m_Specifications.Height))) + 1u;
+		}
+
 		CreateResources();
-		UploadPixelData(data);
+		UploadPixelData(textureData);
 	}
 
 	VulkanTexture::VulkanTexture(const TextureSpecifications& specifications, const void* data)
 		: m_Specifications(specifications)
 	{
+		TextureData textureData{};
+		auto& mip = textureData.Mips.emplace_back();
+		mip.Data = data;
+		mip.SizeInBytes = m_Specifications.Width * m_Specifications.Height * GetImagePixelSizeInBytes();
+
+		if (m_Specifications.GenerateMipMaps)
+		{
+			m_MipLevels = (uint32_t)glm::floor(glm::log2((float)glm::max(m_Specifications.Width, m_Specifications.Height))) + 1u;
+		}
+
+		CreateResources();
+		UploadPixelData(textureData);
+	}
+
+	VulkanTexture::VulkanTexture(const TextureSpecifications& specifications, const TextureData& data)
+		: m_Specifications(specifications)
+	{
+		m_MipLevels = (uint32_t)data.Mips.size();
+
 		CreateResources();
 		UploadPixelData(data);
 	}
@@ -105,10 +172,10 @@ namespace Flare
 
 	void VulkanTexture::CreateResources()
 	{
-		VkFormat imageFormat = VK_FORMAT_UNDEFINED;
-		size_t imageSize = 0;
-
-		GetImageSizeAndFormat(imageSize, imageFormat);
+		VkFormat imageFormat = TextureFormatToVulkanFormat(m_Specifications.Format);
+		FLARE_CORE_ASSERT(imageFormat != VK_FORMAT_UNDEFINED);
+		FLARE_CORE_ASSERT(m_MipLevels > 0);
+		FLARE_CORE_ASSERT(m_Specifications.Width > 0 && m_Specifications.Height);
 
 		VkImageCreateInfo imageInfo{};
 		imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -123,13 +190,10 @@ namespace Flare
 		imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 		imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
 		imageInfo.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
-		imageInfo.mipLevels = 1;
+		imageInfo.mipLevels = m_MipLevels;
 
-		if (m_Specifications.GenerateMipMaps)
+		if (m_MipLevels > 1)
 		{
-			m_MipLevels = (uint32_t)glm::floor(glm::log2((float)glm::max(imageInfo.extent.width, imageInfo.extent.height))) + 1u;
-
-			imageInfo.mipLevels = m_MipLevels;
 			imageInfo.usage |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
 		}
 
@@ -216,26 +280,54 @@ namespace Flare
 		VK_CHECK_RESULT(vkCreateSampler(VulkanContext::GetInstance().GetDevice(), &samplerInfo, nullptr, &m_DefaultSampler));
 	}
 
-	void VulkanTexture::UploadPixelData(const void* data)
+	void VulkanTexture::UploadPixelData(const TextureData& data)
 	{
-		VkFormat format = VK_FORMAT_UNDEFINED;
-		size_t size = 0;
-		GetImageSizeAndFormat(size, format);
+		FLARE_CORE_ASSERT(data.Mips.size() > 0);
+		VkFormat format = TextureFormatToVulkanFormat(m_Specifications.Format);
+
+		size_t imageSize = 0;
+		if (m_Specifications.Format == TextureFormat::BC1_RGB || m_Specifications.Format == TextureFormat::BC1_RGBA)
+		{
+			for (const auto& mip : data.Mips)
+			{
+				FLARE_CORE_ASSERT(mip.SizeInBytes > 0);
+				imageSize += mip.SizeInBytes;
+			}
+		}
+		else
+		{
+			uint32_t width = m_Specifications.Width;
+			uint32_t height = m_Specifications.Height;
+			size_t pixelSize = GetImagePixelSizeInBytes();
+
+			for (const auto& mip : data.Mips)
+			{
+				FLARE_CORE_ASSERT(mip.SizeInBytes > 0);
+				imageSize += width * height * pixelSize;
+
+				width /= 2;
+				height /= 2;
+			}
+		}
+
+		FLARE_CORE_ASSERT(imageSize > 0);
 
 		VkBuffer stagingBuffer{};
-		VulkanAllocation stagingBufferAllocation = VulkanContext::GetInstance().CreateStagingBuffer(size, stagingBuffer);
+		VulkanAllocation stagingBufferAllocation = VulkanContext::GetInstance().CreateStagingBuffer(imageSize, stagingBuffer);
 
 		void* mapped = nullptr;
 		VK_CHECK_RESULT(vmaMapMemory(VulkanContext::GetInstance().GetMemoryAllocator(), stagingBufferAllocation.Handle, &mapped));
 
 		if (m_Specifications.Format == TextureFormat::RGB8)
 		{
+			FLARE_CORE_ASSERT(data.Mips.size() == 1);
+
 			// Add alpha channel
-			uint8_t* rgbaData = new uint8_t[size];
-			const uint8_t* oldData = (const uint8_t*)data;
+			uint8_t* rgbaData = new uint8_t[imageSize];
+			const uint8_t* oldData = (const uint8_t*)data.Mips[0].Data;
 
 			size_t j = 0;
-			for (size_t i = 0; i < size; i += 4)
+			for (size_t i = 0; i < imageSize; i += 4)
 			{
 				rgbaData[i + 0] = oldData[j + 0];
 				rgbaData[i + 1] = oldData[j + 1];
@@ -245,13 +337,19 @@ namespace Flare
 				j += 3;
 			}
 
-			std::memcpy(mapped, rgbaData, size);
+			std::memcpy(mapped, rgbaData, imageSize);
 
 			delete[] rgbaData;
 		}
 		else
 		{
-			std::memcpy(mapped, data, size);
+			size_t offset = 0;
+
+			for (const auto& mip : data.Mips)
+			{
+				std::memcpy((uint8_t*)mapped + offset, mip.Data, mip.SizeInBytes);
+				offset += mip.SizeInBytes;
+			}
 		}
 
 		VK_CHECK_RESULT(vmaFlushAllocation(VulkanContext::GetInstance().GetMemoryAllocator(), stagingBufferAllocation.Handle, 0, VK_WHOLE_SIZE));
@@ -260,15 +358,49 @@ namespace Flare
 		{
 			Ref<VulkanCommandBuffer> commandBuffer = VulkanContext::GetInstance().BeginTemporaryCommandBuffer();
 
-			commandBuffer->TransitionImageLayout(m_Image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+			uint32_t providedMipCount = (uint32_t)data.Mips.size();
 
-			VkExtent3D size{};
-			size.width = m_Specifications.Width;
-			size.height = m_Specifications.Height;
-			size.depth = 1;
-			commandBuffer->CopyBufferToImage(stagingBuffer, m_Image, size);
+			commandBuffer->TransitionImageLayout(m_Image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 0, providedMipCount);
 
-			if (m_Specifications.GenerateMipMaps && m_MipLevels > 1)
+			if (m_Specifications.Format == TextureFormat::BC1_RGB || m_Specifications.Format == TextureFormat::BC1_RGBA)
+			{
+				VkExtent3D size{};
+				size.width = m_Specifications.Width;
+				size.height = m_Specifications.Height;
+				size.depth = 1;
+
+				size_t bufferOffset = 0;
+				for (uint32_t i = 0; i < providedMipCount; i++)
+				{
+					commandBuffer->CopyBufferToImage(stagingBuffer, m_Image, size, bufferOffset, i);
+
+					bufferOffset += data.Mips[i].SizeInBytes;
+
+					size.width /= 2;
+					size.height /= 2;
+				}
+			}
+			else
+			{
+				VkExtent3D size{};
+				size.width = m_Specifications.Width;
+				size.height = m_Specifications.Height;
+				size.depth = 1;
+
+				size_t bufferOffset = 0;
+				size_t pixelSize = GetImagePixelSizeInBytes();
+				for (uint32_t i = 0; i < providedMipCount; i++)
+				{
+					commandBuffer->CopyBufferToImage(stagingBuffer, m_Image, size, bufferOffset, i);
+
+					bufferOffset += size.width * size.height * pixelSize;
+
+					size.width /= 2;
+					size.height /= 2;
+				}
+			}
+
+			if (m_Specifications.GenerateMipMaps && m_MipLevels > 1 && providedMipCount == 1)
 			{
 				commandBuffer->TransitionImageLayout(m_Image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, 0, 1);
 				commandBuffer->GenerateImageMipMaps(m_Image, m_MipLevels, glm::uvec2(m_Specifications.Width, m_Specifications.Height));
@@ -276,7 +408,7 @@ namespace Flare
 			}
 			else
 			{
-				commandBuffer->TransitionImageLayout(m_Image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+				commandBuffer->TransitionImageLayout(m_Image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, 0, providedMipCount);
 			}
 
 			VulkanContext::GetInstance().EndTemporaryCommandBuffer(commandBuffer);
@@ -286,40 +418,34 @@ namespace Flare
 		vkDestroyBuffer(VulkanContext::GetInstance().GetDevice(), stagingBuffer, nullptr);
 	}
 
-	void VulkanTexture::GetImageSizeAndFormat(size_t& size, VkFormat& format)
+	size_t VulkanTexture::GetImagePixelSizeInBytes()
 	{
 		size_t pixelSize = 0;
 
 		switch (m_Specifications.Format)
 		{
 		case TextureFormat::RGB8:
-			format = VK_FORMAT_R8G8B8A8_UNORM;
 			pixelSize = 4;
 			break;
 		case TextureFormat::RGBA8:
-			format = VK_FORMAT_R8G8B8A8_UNORM;
 			pixelSize = 4;
 			break;
 		case TextureFormat::RG8:
-			format = VK_FORMAT_R8G8_UNORM;
 			pixelSize = 2;
 			break;
 		case TextureFormat::RG16:
-			format = VK_FORMAT_R16G16_UNORM;
 			pixelSize = 4;
 			break;
 		case TextureFormat::RF32:
-			format = VK_FORMAT_R16_SFLOAT;
 			pixelSize = sizeof(float);
 			break;
 		case TextureFormat::R8:
-			format = VK_FORMAT_R8_UNORM;
 			pixelSize = 1;
 			break;
 		default:
 			FLARE_CORE_ASSERT(false);
 		}
 
-		size = m_Specifications.Width * m_Specifications.Height * pixelSize;
+		return pixelSize;
 	}
 }

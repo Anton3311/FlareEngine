@@ -25,6 +25,9 @@ namespace Flare
 		RGB8,
 		RGBA8,
 
+		BC1_RGB,
+		BC1_RGBA,
+
 		RG8,
 		RG16,
 
@@ -49,6 +52,10 @@ namespace Flare
 			return "RF32";
 		case TextureFormat::R8:
 			return "R8";
+		case TextureFormat::BC1_RGB:
+			return "BC1_RGB";
+		case TextureFormat::BC1_RGBA:
+			return "BC1_RGBA";
 		}
 
 		FLARE_CORE_ASSERT(false);
@@ -82,14 +89,17 @@ namespace Flare
 
 	struct FLARE_API TextureData
 	{
-		TextureData(TextureSpecifications& specifications)
-			: Specifications(specifications) {}
+		struct Mip
+		{
+			const void* Data = nullptr;
+			size_t SizeInBytes = 0;
+		};
 
 		~TextureData();
 
-		TextureSpecifications& Specifications;
-		void* Data = nullptr;
+		std::vector<Mip> Mips;
 		size_t Size = 0;
+		void* Data = nullptr;
 	};
 
 	class FLARE_API Texture : public Asset
@@ -113,9 +123,9 @@ namespace Flare
 	public:
 		static Ref<Texture> Create(const std::filesystem::path& path, const TextureSpecifications& specifications);
 		static Ref<Texture> Create(uint32_t width, uint32_t height, const void* data, TextureFormat format, TextureFiltering filtering = TextureFiltering::Linear);
-		static Ref<Texture> Create(const TextureSpecifications& specifications, const void* data);
+		static Ref<Texture> Create(const TextureSpecifications& specifications, const TextureData& textureData);
 
-		static bool ReadDataFromFile(const std::filesystem::path& path, TextureData& data);
+		static bool ReadDataFromFile(const std::filesystem::path& path, TextureSpecifications& specifications, TextureData& data);
 	};
 
 

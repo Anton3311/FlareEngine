@@ -615,17 +615,17 @@ namespace Flare
 		}
 	}
 
-	void VulkanCommandBuffer::CopyBufferToImage(VkBuffer buffer, VkImage image, VkExtent3D size)
+	void VulkanCommandBuffer::CopyBufferToImage(VkBuffer buffer, VkImage image, VkExtent3D size, size_t bufferOffset, uint32_t mip)
 	{
 		VkBufferImageCopy copyRegion{};
-		copyRegion.bufferOffset = 0;
+		copyRegion.bufferOffset = bufferOffset;
 		copyRegion.bufferRowLength = 0;
 		copyRegion.bufferImageHeight = 0;
 
 		copyRegion.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 		copyRegion.imageSubresource.baseArrayLayer = 0;
 		copyRegion.imageSubresource.layerCount = 1;
-		copyRegion.imageSubresource.mipLevel = 0;
+		copyRegion.imageSubresource.mipLevel = mip;
 
 		copyRegion.imageOffset = { 0, 0, 0 };
 		copyRegion.imageExtent = size;

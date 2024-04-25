@@ -7,6 +7,8 @@
 
 namespace Flare
 {
+	VkFormat TextureFormatToVulkanFormat(TextureFormat format);
+
 	class VulkanTexture : public Texture
 	{
 	public:
@@ -14,6 +16,7 @@ namespace Flare
 		VulkanTexture(const std::filesystem::path& path, const TextureSpecifications& specifications);
 		VulkanTexture(uint32_t width, uint32_t height, const void* data, TextureFormat format, TextureFiltering filtering);
 		VulkanTexture(const TextureSpecifications& specifications, const void* data);
+		VulkanTexture(const TextureSpecifications& specifications, const TextureData& data);
 		~VulkanTexture();
 
 		void Bind(uint32_t slot) override;
@@ -29,8 +32,8 @@ namespace Flare
 		inline VkSampler GetDefaultSampler() const { return m_DefaultSampler; }
 	private:
 		void CreateResources();
-		void UploadPixelData(const void* data);
-		void GetImageSizeAndFormat(size_t& size, VkFormat& format);
+		void UploadPixelData(const TextureData& data);
+		size_t GetImagePixelSizeInBytes();
 	private:
 		TextureSpecifications m_Specifications;
 		VulkanAllocation m_Allocation;

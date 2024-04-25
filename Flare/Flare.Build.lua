@@ -18,6 +18,9 @@ project "Flare"
 		"vendor/stb_image/stb_image/**.h",
 		"vendor/stb_image/stb_image/**.cpp",
 
+		"vendor/dds-ktx/dds-ktx/**.h",
+		"vendor/dds-ktx/dds-ktx/**.cpp",
+
 		"vendor/VMA/vk_mem_alloc.h",
 		"vendor/VMA/vk_mem_alloc.cpp",
     }
@@ -36,6 +39,7 @@ project "Flare"
 		INCLUDE_DIRS.GLFW,
 		INCLUDE_DIRS.glm,
 		INCLUDE_DIRS.stb_image,
+		INCLUDE_DIRS.dds,
 		INCLUDE_DIRS.spdlog,
 		INCLUDE_DIRS.imguizmo,
 		INCLUDE_DIRS.yaml_cpp,
