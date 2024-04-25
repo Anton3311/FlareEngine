@@ -263,6 +263,11 @@ namespace Flare
             normalMapHandle = getMaterialTexture(*material, aiTextureType_NORMALS);
             roughnessMapHandle = getMaterialTexture(*material, aiTextureType_DIFFUSE_ROUGHNESS);
 
+            if (baseColorTextureHandle == NULL_ASSET_HANDLE)
+            {
+                baseColorTextureHandle = getMaterialTexture(*material, aiTextureType_DIFFUSE);
+            }
+
             aiColor4D color(1.0f, 1.0f, 1.0f, 1.0f);
             material->Get(AI_MATKEY_COLOR_DIFFUSE, color);
             float roughness = 1.0f;
