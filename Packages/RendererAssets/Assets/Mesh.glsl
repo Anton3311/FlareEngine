@@ -93,6 +93,29 @@ layout(location = 1) out vec4 o_Normal;
 	layout(location = 2) out int o_EntityIndex;
 #endif
 
+vec3 UnpackNormalXYZ(vec3 packedNormal)
+{
+	return packedNormal * 2.0f - vec3(1.0f);
+}
+
+vec3 UnpackNormalXY(vec3 packedNormal)
+{
+	vec2 normalXY = packedNormal.xy * 2.0f - vec2(1.0f);
+	float z = sqrt(clamp(1.0f - dot(normalXY, normalXY), 0.0f, 1.0f));
+	return vec3(normalXY, z);
+}
+
+#define NORMAL_FORMAT_XYZ
+
+vec3 UnpackNormal(vec3 packedNormal)
+{
+#ifdef NORMAL_FORMAT_XYZ
+	return UnpackNormalXYZ(packedNormal);
+#else
+	return UnpackNormalXY(packedNormal);
+#endif
+}
+
 void main()
 {
 	vec4 color = u_Material.Color * texture(u_Texture, i_Vertex.UV);
@@ -108,7 +131,7 @@ void main()
 
 	vec3 bitangent = cross(N, tangent);
 	mat3 tbn = mat3(tangent, bitangent, N);
-	vec3 sampledNormal = texture(u_NormalMap, i_Vertex.UV).xyz * 2.0f - vec3(1.0f);
+	vec3 sampledNormal = UnpackNormal(texture(u_NormalMap, i_Vertex.UV).xyz);
 
 	N = normalize(tbn * sampledNormal);
 
