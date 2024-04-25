@@ -53,6 +53,53 @@ namespace Flare
 		return nullptr;
 	}
 
+	static TextureFormat ConvertDDSFormatToTextureFormat(ddsktx_format format, uint32_t flags)
+	{
+		switch (format)
+		{
+		case DDSKTX_FORMAT_R32F:
+			return TextureFormat::RF32;
+		case DDSKTX_FORMAT_RGB8:
+			return TextureFormat::RGB8;
+		case DDSKTX_FORMAT_RGBA8:
+			return TextureFormat::RGBA8;
+		}
+
+		FLARE_CORE_ASSERT((flags & DDSKTX_TEXTURE_FLAG_SRGB) == 0);
+
+		if (flags % DDSKTX_TEXTURE_FLAG_ALPHA)
+		{
+			switch (format)
+			{
+			case DDSKTX_FORMAT_BC1:
+				return TextureFormat::BC1_RGBA;
+			default:
+				FLARE_CORE_ASSERT(false);
+			}
+		}
+		else
+		{
+			switch (format)
+			{
+			case DDSKTX_FORMAT_BC1:
+				return TextureFormat::BC1_RGB;
+			case DDSKTX_FORMAT_BC2:
+				return TextureFormat::BC2_RGB;
+			case DDSKTX_FORMAT_BC3:
+				return TextureFormat::BC3_RGB;
+			case DDSKTX_FORMAT_BC4:
+				return TextureFormat::BC4_RGB;
+			case DDSKTX_FORMAT_BC5:
+				return TextureFormat::BC5_RGB;
+			default:
+				FLARE_CORE_ASSERT(false);
+			}
+		}
+
+		FLARE_CORE_ASSERT(false);
+		return TextureFormat::RGB8;
+	}
+
 	static bool ReadDDSFile(const std::filesystem::path& path, TextureSpecifications& specifications, TextureData& data)
 	{
 		std::ifstream inputStream(path, std::ios::in | std::ios::binary);
@@ -75,16 +122,7 @@ namespace Flare
 
 		if (ddsktx_parse(&info, fileData, (int32_t)size, &error))
 		{
-			TextureFormat format = TextureFormat::RGB8;
-			switch (info.format)
-			{
-			case DDSKTX_FORMAT_BC1:
-				if (info.flags & DDSKTX_TEXTURE_FLAG_ALPHA)
-					format = TextureFormat::BC1_RGBA;
-				else
-					format = TextureFormat::BC1_RGB;
-				break;
-			}
+			TextureFormat format = ConvertDDSFormatToTextureFormat(info.format, info.flags);
 
 			specifications.Width = (uint32_t)info.width;
 			specifications.Height = (uint32_t)info.height;
@@ -147,6 +185,47 @@ namespace Flare
 		mip.SizeInBytes = data.Size;
 
 		return true;
+	}
+
+	bool IsCompressedTextureFormat(TextureFormat format)
+	{
+		using Underlying = std::underlying_type_t<TextureFormat>;
+		return (Underlying)format >= (Underlying)TextureFormat::BC1_RGB;
+	}
+
+	const char* TextureFormatToString(TextureFormat format)
+	{
+		switch (format)
+		{
+		case TextureFormat::RGB8:
+			return "RGB8";
+		case TextureFormat::RGBA8:
+			return "RGBA8";
+		case TextureFormat::RG8:
+			return "RG8";
+		case TextureFormat::RG16:
+			return "RG16";
+		case TextureFormat::RF32:
+			return "RF32";
+		case TextureFormat::R8:
+			return "R8";
+		case TextureFormat::BC1_RGB:
+			return "BC1_RGB";
+		case TextureFormat::BC1_RGBA:
+			return "BC1_RGBA";
+
+		case TextureFormat::BC2_RGB:
+			return "BC2";
+		case TextureFormat::BC3_RGB:
+			return "BC3";
+		case TextureFormat::BC4_RGB:
+			return "BC4";
+		case TextureFormat::BC5_RGB:
+			return "BC5";
+		}
+
+		FLARE_CORE_ASSERT(false);
+		return nullptr;
 	}
 
 	const char* TextureWrapToString(TextureWrap wrap)

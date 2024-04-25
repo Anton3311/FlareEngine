@@ -11,6 +11,7 @@
 
 #include <filesystem>
 #include <optional>
+#include <FlareCore/KeyCode.h>
 
 namespace Flare
 {
@@ -25,42 +26,25 @@ namespace Flare
 		RGB8,
 		RGBA8,
 
-		BC1_RGB,
-		BC1_RGBA,
-
 		RG8,
 		RG16,
 
 		RF32,
 
 		R8,
+
+		// Compressed formats at the end
+		BC1_RGB,
+		BC1_RGBA,
+
+		BC2_RGB,
+		BC3_RGB,
+		BC4_RGB,
+		BC5_RGB,
 	};
 
-	inline const char* TextureFormatToString(TextureFormat format)
-	{
-		switch (format)
-		{
-		case TextureFormat::RGB8:
-			return "RGB8";
-		case TextureFormat::RGBA8:
-			return "RGBA8";
-		case TextureFormat::RG8:
-			return "RG8";
-		case TextureFormat::RG16:
-			return "RG16";
-		case TextureFormat::RF32:
-			return "RF32";
-		case TextureFormat::R8:
-			return "R8";
-		case TextureFormat::BC1_RGB:
-			return "BC1_RGB";
-		case TextureFormat::BC1_RGBA:
-			return "BC1_RGBA";
-		}
-
-		FLARE_CORE_ASSERT(false);
-		return nullptr;
-	}
+	FLARE_API bool IsCompressedTextureFormat(TextureFormat format);
+	FLARE_API const char* TextureFormatToString(TextureFormat format);
 
 	enum class TextureFiltering
 	{

@@ -23,10 +23,20 @@ namespace Flare
 			return VK_FORMAT_R16_SFLOAT;
 		case TextureFormat::R8:
 			return VK_FORMAT_R8_UNORM;
+
 		case TextureFormat::BC1_RGB:
 			return VK_FORMAT_BC1_RGB_UNORM_BLOCK;
 		case TextureFormat::BC1_RGBA:
 			return VK_FORMAT_BC1_RGBA_UNORM_BLOCK;
+
+		case TextureFormat::BC2_RGB:
+			return VK_FORMAT_BC2_UNORM_BLOCK;
+		case TextureFormat::BC3_RGB:
+			return VK_FORMAT_BC3_UNORM_BLOCK;
+		case TextureFormat::BC4_RGB:
+			return VK_FORMAT_BC4_UNORM_BLOCK;
+		case TextureFormat::BC5_RGB:
+			return VK_FORMAT_BC5_UNORM_BLOCK;
 		}
 
 		FLARE_CORE_ASSERT(false);
@@ -286,7 +296,7 @@ namespace Flare
 		VkFormat format = TextureFormatToVulkanFormat(m_Specifications.Format);
 
 		size_t imageSize = 0;
-		if (m_Specifications.Format == TextureFormat::BC1_RGB || m_Specifications.Format == TextureFormat::BC1_RGBA)
+		if (IsCompressedTextureFormat(m_Specifications.Format))
 		{
 			for (const auto& mip : data.Mips)
 			{
@@ -362,7 +372,7 @@ namespace Flare
 
 			commandBuffer->TransitionImageLayout(m_Image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 0, providedMipCount);
 
-			if (m_Specifications.Format == TextureFormat::BC1_RGB || m_Specifications.Format == TextureFormat::BC1_RGBA)
+			if (IsCompressedTextureFormat(m_Specifications.Format))
 			{
 				VkExtent3D size{};
 				size.width = m_Specifications.Width;
