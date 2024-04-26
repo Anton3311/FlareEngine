@@ -52,6 +52,8 @@ namespace Flare
 
 		Ref<Asset> LoadAsset(AssetHandle handle);
 
+		void SetAutomaticRegistrySerializationEnable(bool enabled);
+
 		inline static Ref<EditorAssetManager> GetInstance() { return As<EditorAssetManager>(AssetManager::GetInstance()); }
 	private:
 		void RemoveFromRegistryWithoutSerialization(AssetHandle handle);
@@ -61,6 +63,9 @@ namespace Flare
 		void DeserializeRegistry();
 	private:
 		using AssetImporter = std::function<Ref<Asset>(const AssetMetadata&)>;
+
+		bool m_AutomaticRegistrySerializationEnabled = true;
+		bool m_RegistryNeedsSerializing = false;
 
 		std::unordered_map<AssetHandle, Ref<Asset>> m_LoadedAssets;
 		EditorAssetRegistry m_Registry;

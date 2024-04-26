@@ -360,8 +360,20 @@ namespace Flare
         return LoadAsset(*GetAssetMetadata(handle));
     }
 
+    void EditorAssetManager::SetAutomaticRegistrySerializationEnable(bool enabled)
+    {
+        m_AutomaticRegistrySerializationEnabled = enabled;
+
+        if (enabled)
+        {
+            SerializeRegistry();
+        }
+    }
+
     void EditorAssetManager::RemoveFromRegistryWithoutSerialization(AssetHandle handle)
     {
+        FLARE_PROFILE_FUNCTION();
+
         auto it = m_Registry.find(handle);
         if (it != m_Registry.end())
         {
@@ -385,7 +397,18 @@ namespace Flare
             return nullptr;
         }
 
+        // NOTE: Disable automatic registry serialization and delay it util the asset gets loaded
+        //       This prevents multiple serialization calls if case the asset loader also imports other assets or subassets
+        SetAutomaticRegistrySerializationEnable(false);
+
         Ref<Asset> asset = importerIterator->second(metadata);
+
+        if (m_AutomaticRegistrySerializationEnabled)
+        {
+            SetAutomaticRegistrySerializationEnable(true);
+            SerializeRegistry();
+        }
+
         if (!asset)
             return nullptr;
 
@@ -396,11 +419,25 @@ namespace Flare
 
     void EditorAssetManager::SerializeRegistry()
     {
-        AssetRegistrySerializer::Serialize(m_Registry, Project::GetActive()->Location);
+        FLARE_PROFILE_FUNCTION();
+
+        if (!m_AutomaticRegistrySerializationEnabled)
+        {
+            m_RegistryNeedsSerializing = true;
+            return;
+        }
+
+        if (m_RegistryNeedsSerializing)
+        {
+            AssetRegistrySerializer::Serialize(m_Registry, Project::GetActive()->Location);
+            m_RegistryNeedsSerializing = false;
+        }
     }
 
     void EditorAssetManager::DeserializeRegistry()
     {
+        FLARE_PROFILE_FUNCTION();
+
         m_Registry.clear();
         AssetRegistrySerializer::Deserialize(m_Registry, Project::GetActive()->Location);
 
