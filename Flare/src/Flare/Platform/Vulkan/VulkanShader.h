@@ -32,6 +32,7 @@ namespace Flare
 		std::optional<uint32_t> GetPropertyIndex(std::string_view name) const override;
 
 		inline VkPipelineLayout GetPipelineLayout() const { return m_PipelineLayout; }
+		inline const std::string& GetDebugName() const { return m_DebugName; }
 
 		Ref<VulkanDescriptorSetLayout> GetDescriptorSetLayout() const;
 		Ref<VulkanDescriptorSetPool> GetDescriptorSetPool() const { return m_SetPool; }
@@ -43,6 +44,8 @@ namespace Flare
 		};
 
 		bool m_Valid = false;
+
+		std::string m_DebugName;
 
 		Ref<const ShaderMetadata> m_Metadata = nullptr;
 		std::vector<ShaderStageModule> m_Modules;

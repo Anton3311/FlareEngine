@@ -97,6 +97,11 @@ namespace Flare
 		if (!m_Valid)
 			return;
 
+		const AssetMetadata* assetMetadata = AssetManager::GetAssetMetadata(Handle);
+		FLARE_CORE_ASSERT(assetMetadata);
+
+		m_DebugName = assetMetadata->Path.filename().replace_extension().generic_string();
+
 		for (ShaderStageModule& stageModule : m_Modules)
 		{
 			auto cachedShader = ShaderCacheManager::GetInstance()->FindCache(
@@ -111,12 +116,28 @@ namespace Flare
 				break;
 			}
 
+			std::string_view stageName = "";
+			switch (stageModule.Stage)
+			{
+			case ShaderStageType::Vertex:
+				stageName = "Vertex";
+				break;
+			case ShaderStageType::Pixel:
+				stageName = "Pixel";
+				break;
+			}
+
 			VkShaderModuleCreateInfo info{};
 			info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
 			info.codeSize = cachedShader->size() * sizeof(decltype(cachedShader)::value_type::value_type);
 			info.pCode = cachedShader->data();
 
 			VK_CHECK_RESULT(vkCreateShaderModule(VulkanContext::GetInstance().GetDevice(), &info, nullptr, &stageModule.Module));
+
+			VulkanContext::GetInstance().SetDebugName(
+				VK_OBJECT_TYPE_SHADER_MODULE,
+				(uint64_t)stageModule.Module,
+				fmt::format("{}.{}", m_DebugName, stageName).c_str());
 		}
 
 		// Generate material descriptor set layout
