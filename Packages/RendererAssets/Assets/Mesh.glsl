@@ -105,7 +105,7 @@ vec3 UnpackNormalXY(vec3 packedNormal)
 	return vec3(normalXY, z);
 }
 
-#define NORMAL_FORMAT_XYZ
+// #define NORMAL_FORMAT_XYZ
 
 vec3 UnpackNormal(vec3 packedNormal)
 {
