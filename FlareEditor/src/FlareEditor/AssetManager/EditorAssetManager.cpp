@@ -139,6 +139,7 @@ namespace Flare
 
     std::optional<AssetHandle> EditorAssetManager::FindAssetByPath(const std::filesystem::path& path)
     {
+        FLARE_PROFILE_FUNCTION();
         auto it = m_FilepathToAssetHandle.find(path);
         if (it == m_FilepathToAssetHandle.end())
             return {};
@@ -147,6 +148,8 @@ namespace Flare
 
     AssetHandle EditorAssetManager::ImportAsset(const std::filesystem::path& path, AssetHandle parentAsset)
     {
+        FLARE_PROFILE_FUNCTION();
+
         AssetType type = AssetType::None;
         std::filesystem::path extension = path.extension();
 

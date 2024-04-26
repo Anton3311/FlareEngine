@@ -35,6 +35,7 @@ namespace Flare
 
     static bool ProcessMeshNode(aiNode* node, const aiScene* scene, SceneData& data)
     {
+        FLARE_PROFILE_FUNCTION();
         if (node->mNumMeshes > 0)
         {
             size_t verticesCount = 0;
@@ -155,6 +156,7 @@ namespace Flare
 
     static AssetHandle FindTextureByPath(std::string_view path, const AssetMetadata& metadata, const Ref<EditorAssetManager>& assetManager)
     {
+        FLARE_PROFILE_FUNCTION();
         AssetHandle textureHandle = NULL_ASSET_HANDLE;
         if (path.size() > 0)
         {
@@ -174,6 +176,7 @@ namespace Flare
 
     static void TrySetMaterialTexture(std::optional<uint32_t> propertyIndex, const Ref<Material>& material, AssetHandle handle, const Ref<Texture>& defaultValue)
     {
+        FLARE_PROFILE_FUNCTION();
         if (propertyIndex)
         {
             auto& value = material->GetPropertyValue<TexturePropertyValue>(*propertyIndex);
@@ -187,6 +190,8 @@ namespace Flare
 
     static void ImportMaterials(const AssetMetadata& metadata, const aiScene* scene, const std::vector<uint32_t>& usedMaterials)
     {
+        FLARE_PROFILE_FUNCTION();
+
         Ref<EditorAssetManager> assetManager = As<EditorAssetManager>(AssetManager::GetInstance());
         std::optional<AssetHandle> defaultShader = ShaderLibrary::FindShader("Mesh");
 
@@ -236,6 +241,8 @@ namespace Flare
 
         auto getMaterialTexture = [&](const aiMaterial& material, aiTextureType type) -> AssetHandle
 		{
+			FLARE_PROFILE_FUNCTION();
+
             aiTextureMapping mapping;
             uint32_t uvIndex;
 			aiString path;
@@ -249,6 +256,7 @@ namespace Flare
 
         for (uint32_t i : usedMaterials)
         {
+            FLARE_PROFILE_SCOPE("ImportSingleMaterial");
             auto& material = scene->mMaterials[i];
 
             std::string name = material->GetName().C_Str();
@@ -301,6 +309,7 @@ namespace Flare
 
     Ref<Mesh> MeshImporter::ImportMesh(const AssetMetadata& metadata)
     {
+        FLARE_PROFILE_FUNCTION();
         std::underlying_type_t<aiPostProcessSteps> postProcessSteps = aiProcess_Triangulate | aiProcess_CalcTangentSpace | aiProcess_FlipWindingOrder;
         if (metadata.Path.extension() == ".fbx")
             postProcessSteps |= aiProcess_FlipUVs;

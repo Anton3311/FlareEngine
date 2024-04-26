@@ -1,5 +1,7 @@
 #include "Texture.h"
 
+#include "FlareCore/Profiler/Profiler.h"
+
 #include "Flare/Renderer/RendererAPI.h"
 #include "Flare/Platform/OpenGL/OpenGLTexture.h"
 #include "Flare/Platform/Vulkan/VulkanTexture.h"
@@ -102,6 +104,8 @@ namespace Flare
 
 	static bool ReadDDSFile(const std::filesystem::path& path, TextureSpecifications& specifications, TextureData& data)
 	{
+		FLARE_PROFILE_FUNCTION();
+
 		std::ifstream inputStream(path, std::ios::in | std::ios::binary);
 
 		if (!inputStream.is_open())
@@ -144,6 +148,7 @@ namespace Flare
 
 	bool Texture::ReadDataFromFile(const std::filesystem::path& path, TextureSpecifications& specifications, TextureData& data)
 	{
+		FLARE_PROFILE_FUNCTION();
 		if (!std::filesystem::exists(path))
 			return false;
 
