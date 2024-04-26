@@ -1,5 +1,7 @@
 #include "VulkanMaterial.h"
 
+#include "Flare/AssetManager/AssetManager.h"
+
 #include "Flare/Platform/Vulkan/VulkanPipeline.h"
 #include "Flare/Platform/Vulkan/VulkanShader.h"
 #include "Flare/Platform/Vulkan/VulkanDescriptorSet.h"
@@ -38,6 +40,16 @@ namespace Flare
 		if (pool)
 		{
 			m_Set = pool->AllocateSet();
+
+			const AssetMetadata* metadata = AssetManager::GetAssetMetadata(Handle);
+			if (metadata != nullptr)
+			{
+				m_Set->SetDebugName(metadata->Name);
+			}
+			else
+			{
+				m_Set->SetDebugName(As<VulkanShader>(m_Shader)->GetDebugName());
+			}
 		}
 	}
 
