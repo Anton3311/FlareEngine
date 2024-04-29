@@ -111,14 +111,6 @@ namespace Flare
 		vkDestroyFramebuffer(VulkanContext::GetInstance().GetDevice(), m_FrameBuffer, nullptr);
 	}
 
-	void VulkanFrameBuffer::Bind()
-	{
-	}
-
-	void VulkanFrameBuffer::Unbind()
-	{
-	}
-
 	void VulkanFrameBuffer::Resize(uint32_t width, uint32_t height)
 	{
 		FLARE_CORE_ASSERT(m_OwnsImageViews);
@@ -139,6 +131,19 @@ namespace Flare
 		return (uint32_t)m_Specifications.Attachments.size();
 	}
 
+	uint32_t VulkanFrameBuffer::GetColorAttachmentsCount() const
+	{
+		if (m_DepthAttachmentIndex)
+			return (uint32_t)m_Specifications.Attachments.size() - 1;
+
+		return (uint32_t)m_Specifications.Attachments.size();
+	}
+
+	std::optional<uint32_t> VulkanFrameBuffer::GetDepthAttachmentIndex() const
+	{
+		return m_DepthAttachmentIndex;
+	}
+
 	void VulkanFrameBuffer::ClearAttachment(uint32_t index, const void* value)
 	{
 	}
@@ -147,21 +152,8 @@ namespace Flare
 	{
 	}
 
-	void VulkanFrameBuffer::Blit(const Ref<FrameBuffer>& source, uint32_t destinationAttachment, uint32_t sourceAttachment)
-	{
-	}
-
 	void VulkanFrameBuffer::BindAttachmentTexture(uint32_t attachment, uint32_t slot)
 	{
-	}
-
-	void VulkanFrameBuffer::SetWriteMask(FrameBufferAttachmentsMask mask)
-	{
-	}
-
-	FrameBufferAttachmentsMask VulkanFrameBuffer::GetWriteMask()
-	{
-		return ~0;
 	}
 
 	const FrameBufferSpecifications& VulkanFrameBuffer::GetSpecifications() const

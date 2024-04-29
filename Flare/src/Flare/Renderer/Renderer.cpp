@@ -723,8 +723,6 @@ namespace Flare
 			commandBuffer->ClearDepthAttachment(s_RendererData.ShadowsRenderTarget[i], 1.0f);
 		}
 
-		viewport.RenderTarget->Bind();
-
 		{
 			// Generate camera frustum planes
 			FLARE_PROFILE_SCOPE("CalculateFrustumPlanes");
@@ -832,10 +830,6 @@ namespace Flare
 
 		{
 			FLARE_PROFILE_SCOPE("PrepareViewport");
-
-			s_RendererData.CurrentViewport->RenderTarget->Bind();
-			RenderCommand::SetViewport(0, 0, s_RendererData.CurrentViewport->GetSize().x, s_RendererData.CurrentViewport->GetSize().y);
-
 			s_RendererData.CameraBuffer->Bind();
 		}
 
@@ -1110,7 +1104,6 @@ namespace Flare
 				sizeof(s_RendererData.CurrentViewport->FrameData.LightView[cascadeIndex]), 0);
 
 			s_RendererData.ShadowPassCameraBuffers[cascadeIndex]->Bind();
-			s_RendererData.ShadowsRenderTarget[cascadeIndex]->Bind();
 			s_RendererData.CurrentInstancingMesh.Reset();
 
 			s_RendererData.IndirectDrawData.clear();

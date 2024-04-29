@@ -663,13 +663,6 @@ namespace Flare
 		{
 			FLARE_PROFILE_SCOPE("Draw");
 			RenderCommand::ApplyMaterial(batch.Material);
-
-			FrameBufferAttachmentsMask shaderOutputsMask = 0;
-			for (uint32_t output : shader->GetOutputs())
-				shaderOutputsMask |= (1 << output);
-
-			Renderer::GetCurrentViewport().RenderTarget->SetWriteMask(shaderOutputsMask);
-
 			RenderCommand::DrawIndexed(s_Renderer2DData.QuadsMesh, batch.Start * 6, batch.Count * 6);
 		}
 

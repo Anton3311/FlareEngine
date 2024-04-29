@@ -87,6 +87,19 @@ namespace Flare
         return (uint32_t)m_ColorAttachments.size();
     }
 
+    uint32_t OpenGLFrameBuffer::GetColorAttachmentsCount() const
+    {
+        if (m_DepthAttachmentIndex)
+            return (uint32_t)m_Specifications.Attachments.size() - 1;
+        
+        return (uint32_t)m_Specifications.Attachments.size();
+    }
+
+    std::optional<uint32_t> OpenGLFrameBuffer::GetDepthAttachmentIndex() const
+    {
+        return m_DepthAttachmentIndex;
+    }
+
     void OpenGLFrameBuffer::ClearAttachment(uint32_t index, const void* value)
     {
         FLARE_PROFILE_FUNCTION();
@@ -122,60 +135,10 @@ namespace Flare
         glReadPixels(x, y, 1, 1, FrameBufferTextureFormatToOpenGLFormat(m_Specifications.Attachments[attachmentIndex].Format), GL_INT, pixelOutput);
     }
 
-    void OpenGLFrameBuffer::Blit(const Ref<FrameBuffer>& source, uint32_t destinationAttachment, uint32_t sourceAttachment)
-    {
-        FLARE_PROFILE_FUNCTION();
-
-        Ref<OpenGLFrameBuffer> sourceFrameBuffer = As<OpenGLFrameBuffer>(source);
-        FLARE_CORE_ASSERT(destinationAttachment < (uint32_t)m_ColorAttachments.size());
-        FLARE_CORE_ASSERT(sourceAttachment < (uint32_t)sourceFrameBuffer->m_ColorAttachments.size());
-        
-        glBindFramebuffer(GL_READ_FRAMEBUFFER, sourceFrameBuffer->m_Id);
-        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_Id);
-
-        glDrawBuffer(GL_COLOR_ATTACHMENT0 + destinationAttachment);
-        glReadBuffer(GL_COLOR_ATTACHMENT0 + sourceAttachment);
-
-        glBlitFramebuffer(0, 0, 
-            m_Specifications.Width, 
-            m_Specifications.Height, 
-            0, 0, 
-            sourceFrameBuffer->m_Specifications.Width,
-            sourceFrameBuffer->m_Specifications.Height,
-            GL_COLOR_BUFFER_BIT, GL_NEAREST);
-
-        SetWriteMask(m_WriteMask);
-
-        glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
-        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-    }
-
     void OpenGLFrameBuffer::BindAttachmentTexture(uint32_t attachment, uint32_t slot)
     {
         FLARE_CORE_ASSERT(attachment < (uint32_t)m_ColorAttachments.size());
         glBindTextureUnit(slot, m_ColorAttachments[attachment]);
-    }
-
-    void OpenGLFrameBuffer::SetWriteMask(FrameBufferAttachmentsMask mask)
-    {
-        static GLenum s_Attachments[32];
-
-        uint32_t insertionIndex = 0;
-        for (FrameBufferAttachmentsMask i = 0; i < m_ColorAttachments.size(); i++)
-        {
-            if (HAS_BIT(mask, 1 << i))
-            {
-                s_Attachments[insertionIndex] = GL_COLOR_ATTACHMENT0 + i;
-                insertionIndex++;
-            }
-        }
-
-        glDrawBuffers((int32_t)insertionIndex, s_Attachments);
-    }
-
-    FrameBufferAttachmentsMask OpenGLFrameBuffer::GetWriteMask()
-    {
-        return m_WriteMask;
     }
 
     void OpenGLFrameBuffer::Create()
@@ -193,9 +156,6 @@ namespace Flare
             else
                 AttachColorTexture((uint32_t)i);
         }
-
-        m_WriteMask = (1 << ((uint32_t)m_ColorAttachments.size())) - 1;
-        SetWriteMask(m_WriteMask);
 
         FLARE_CORE_ASSERT(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE, "Frame buffer is incomplete");
 
@@ -224,6 +184,8 @@ namespace Flare
 
     void OpenGLFrameBuffer::AttachDepthTexture(uint32_t index)
     {
+        m_DepthAttachmentIndex = index;
+
         glBindTexture(GL_TEXTURE_2D, m_ColorAttachments[index]);
 
         uint32_t format = 0;

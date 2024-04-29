@@ -193,8 +193,6 @@ namespace Flare
 
 		Renderer::EndScene();
 
-		m_Viewport.RenderTarget->Unbind();
-
 		if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
 		{
 			Ref<VulkanCommandBuffer> commandBuffer = VulkanContext::GetInstance().GetPrimaryCommandBuffer();
