@@ -863,8 +863,6 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 
 		Ref<CommandBuffer> commandBuffer = GraphicsContext::GetInstance().GetCommandBuffer();
-		commandBuffer->StartTimer(s_RendererData.GeometryPassTimer);
-		commandBuffer->BeginRenderTarget(s_RendererData.CurrentViewport->RenderTarget);
 
 		if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
 		{
@@ -923,6 +921,9 @@ namespace Flare
 			FLARE_PROFILE_SCOPE("SetIntancesData");
 			s_RendererData.InstancesShaderBuffer->SetData(MemorySpan::FromVector(s_RendererData.InstanceDataBuffer), 0, commandBuffer);
 		}
+
+		commandBuffer->StartTimer(s_RendererData.GeometryPassTimer);
+		commandBuffer->BeginRenderTarget(s_RendererData.CurrentViewport->RenderTarget);
 
 		uint32_t baseInstance = 0;
 		for (uint32_t currentInstance = 0; currentInstance < (uint32_t)s_RendererData.CulledObjectIndices.size(); currentInstance++)
@@ -1048,27 +1049,7 @@ namespace Flare
 		{
 			const FrameBufferSpecifications& shadowMapSpecs = s_RendererData.ShadowsRenderTarget[cascadeIndex]->GetSpecifications();
 
-			commandBuffer->BeginRenderTarget(s_RendererData.ShadowsRenderTarget[cascadeIndex]);
-
-			if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
-			{
-				Ref<VulkanCommandBuffer> commandBuffer = VulkanContext::GetInstance().GetPrimaryCommandBuffer();
-
-				commandBuffer->SetPrimaryDescriptorSet(s_RendererData.PerCascadeDescriptorSets[cascadeIndex]);
-				commandBuffer->SetSecondaryDescriptorSet(nullptr);
-			}
-
-			commandBuffer->ApplyMaterial(s_RendererData.DepthOnlyMeshMaterial);
-			commandBuffer->SetViewportAndScisors(Math::Rect(0.0f, 0.0f, shadowMapSpecs.Width, shadowMapSpecs.Height));
-
-			s_RendererData.ShadowPassCameraBuffers[cascadeIndex]->SetData(
-				&s_RendererData.CurrentViewport->FrameData.LightView[cascadeIndex],
-				sizeof(s_RendererData.CurrentViewport->FrameData.LightView[cascadeIndex]), 0);
-
-			s_RendererData.ShadowPassCameraBuffers[cascadeIndex]->Bind();
-			s_RendererData.ShadowsRenderTarget[cascadeIndex]->Bind();
-			s_RendererData.CurrentInstancingMesh.Reset();
-
+			// Fill instancing buffer
 			Ref<ShaderStorageBuffer> instanceBuffer = s_RendererData.ShadowPassInstanceBuffers[cascadeIndex];
 
 			{
@@ -1103,6 +1084,29 @@ namespace Flare
 				FLARE_PROFILE_SCOPE("SetInstancesData");
 				instanceBuffer->SetData(MemorySpan::FromVector(s_RendererData.InstanceDataBuffer), 0, commandBuffer);
 			}
+
+			// Render
+
+			commandBuffer->BeginRenderTarget(s_RendererData.ShadowsRenderTarget[cascadeIndex]);
+
+			if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
+			{
+				Ref<VulkanCommandBuffer> commandBuffer = VulkanContext::GetInstance().GetPrimaryCommandBuffer();
+
+				commandBuffer->SetPrimaryDescriptorSet(s_RendererData.PerCascadeDescriptorSets[cascadeIndex]);
+				commandBuffer->SetSecondaryDescriptorSet(nullptr);
+			}
+
+			commandBuffer->ApplyMaterial(s_RendererData.DepthOnlyMeshMaterial);
+			commandBuffer->SetViewportAndScisors(Math::Rect(0.0f, 0.0f, shadowMapSpecs.Width, shadowMapSpecs.Height));
+
+			s_RendererData.ShadowPassCameraBuffers[cascadeIndex]->SetData(
+				&s_RendererData.CurrentViewport->FrameData.LightView[cascadeIndex],
+				sizeof(s_RendererData.CurrentViewport->FrameData.LightView[cascadeIndex]), 0);
+
+			s_RendererData.ShadowPassCameraBuffers[cascadeIndex]->Bind();
+			s_RendererData.ShadowsRenderTarget[cascadeIndex]->Bind();
+			s_RendererData.CurrentInstancingMesh.Reset();
 
 			s_RendererData.IndirectDrawData.clear();
 			s_RendererData.CurrentInstancingMesh.Reset();
