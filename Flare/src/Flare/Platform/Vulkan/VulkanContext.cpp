@@ -163,6 +163,8 @@ namespace Flare
 	{
 		WaitForDevice();
 
+		DestroyStagingBuffers();
+
 		if (m_DebugMessenger)
 			m_DestroyDebugMessenger(m_Instance, m_DebugMessenger, nullptr);
 
@@ -210,6 +212,10 @@ namespace Flare
 			FLARE_CORE_ERROR("Failed to acquire swap chain image");
 			return;
 		}
+
+		m_PrimaryCommandBuffer->Reset();
+
+		DestroyStagingBuffers();
 
 		m_PrimaryCommandBuffer->Begin();
 
@@ -271,17 +277,6 @@ namespace Flare
 		{
 			RecreateSwapChain();
 		}
-
-		m_PrimaryCommandBuffer->Reset();
-		
-		// Destroy staging buffers
-		for (const auto& buffer : m_CurrentFrameStagingBuffers)
-		{
-			vmaFreeMemory(m_Allocator, buffer.Allocation.Handle);
-			vkDestroyBuffer(m_Device, buffer.Buffer, nullptr);
-		}
-
-		m_CurrentFrameStagingBuffers.clear();
 
 		m_VSyncEnabled = m_Window->GetProperties().VSyncEnabled;
 	}
@@ -861,6 +856,17 @@ namespace Flare
 		}
 
 		return VK_PRESENT_MODE_FIFO_KHR;
+	}
+
+	void VulkanContext::DestroyStagingBuffers()
+	{
+		for (const auto& buffer : m_CurrentFrameStagingBuffers)
+		{
+			vmaFreeMemory(m_Allocator, buffer.Allocation.Handle);
+			vkDestroyBuffer(m_Device, buffer.Buffer, nullptr);
+		}
+
+		m_CurrentFrameStagingBuffers.clear();
 	}
 
 	std::vector<VkLayerProperties> VulkanContext::EnumerateAvailableLayers()

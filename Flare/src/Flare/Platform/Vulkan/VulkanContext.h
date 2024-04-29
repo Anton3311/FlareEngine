@@ -140,6 +140,8 @@ namespace Flare
 		uint32_t ChooseSwapChainFormat(const std::vector<VkSurfaceFormatKHR>& formats);
 		VkExtent2D GetSwapChainExtent(const VkSurfaceCapabilitiesKHR& capabilities);
 		VkPresentModeKHR ChoosePresentMode(const std::vector<VkPresentModeKHR>& modes);
+
+		void DestroyStagingBuffers();
 	private:
 		std::vector<VkLayerProperties> EnumerateAvailableLayers();
 	private:
