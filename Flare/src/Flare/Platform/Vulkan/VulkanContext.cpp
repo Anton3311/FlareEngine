@@ -53,7 +53,7 @@ namespace Flare
 
 
 	VulkanContext::VulkanContext(Ref<Window> window)
-		: m_Window(window)
+		: m_Window(window), m_VSyncEnabled(window->GetProperties().VSyncEnabled)
 	{
 	}
 
@@ -278,8 +278,6 @@ namespace Flare
 		{
 			RecreateSwapChain();
 		}
-
-		m_VSyncEnabled = m_Window->GetProperties().VSyncEnabled;
 	}
 
 	void VulkanContext::WaitForDevice()
@@ -760,6 +758,7 @@ namespace Flare
 			vkDestroySwapchainKHR(m_Device, oldSwapChain, nullptr);
 		}
 
+		m_VSyncEnabled = m_Window->GetProperties().VSyncEnabled;
 		CreateSwapChainImageViews();
 	}
 
@@ -855,7 +854,7 @@ namespace Flare
 	{
 		for (auto mode : modes)
 		{
-			if (m_VSyncEnabled && mode == VK_PRESENT_MODE_MAILBOX_KHR)
+			if (!m_Window->GetProperties().VSyncEnabled && mode == VK_PRESENT_MODE_MAILBOX_KHR)
 				return mode;
 		}
 
