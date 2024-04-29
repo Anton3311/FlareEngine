@@ -38,7 +38,7 @@ namespace Flare
 	void VulkanBuffer::SetData(const void* data, size_t size, size_t offset)
 	{
 		FLARE_PROFILE_FUNCTION();
-		if (size == 0)
+		if (size  == 0)
 			return;
 
 		if (m_Size == 0)
@@ -56,22 +56,24 @@ namespace Flare
 		}
 		else
 		{
-			VkBuffer stagingBuffer = VK_NULL_HANDLE;
-			VulkanAllocation stagingBufferAllocation = VulkanContext::GetInstance().CreateStagingBuffer(size, stagingBuffer);
-
-			void* mapped = nullptr;
-			VK_CHECK_RESULT(vmaMapMemory(VulkanContext::GetInstance().GetMemoryAllocator(), stagingBufferAllocation.Handle, &mapped));
-
-			std::memcpy(mapped, data, size);
-
 			Ref<VulkanCommandBuffer> commandBuffer = VulkanContext::GetInstance().BeginTemporaryCommandBuffer();
-			commandBuffer->CopyBuffer(stagingBuffer, m_Buffer, size, 0, offset);
+			StagingBuffer stagingBuffer = FillStagingBuffer(MemorySpan::FromRawBytes(const_cast<void*>(data), size));
+
+			commandBuffer->CopyBuffer(stagingBuffer.Buffer, m_Buffer, size, 0, offset);
 			VulkanContext::GetInstance().EndTemporaryCommandBuffer(commandBuffer);
 
-			vmaUnmapMemory(VulkanContext::GetInstance().GetMemoryAllocator(), stagingBufferAllocation.Handle);
-			vmaFreeMemory(VulkanContext::GetInstance().GetMemoryAllocator(), stagingBufferAllocation.Handle);
-			vkDestroyBuffer(VulkanContext::GetInstance().GetDevice(), stagingBuffer, nullptr);
+			vmaFreeMemory(VulkanContext::GetInstance().GetMemoryAllocator(), stagingBuffer.Allocation.Handle);
+			vkDestroyBuffer(VulkanContext::GetInstance().GetDevice(), stagingBuffer.Buffer, nullptr);
 		}
+	}
+
+	void VulkanBuffer::SetData(MemorySpan data, size_t offset, Ref<CommandBuffer> commandBuffer)
+	{
+		StagingBuffer stagingBuffer = FillStagingBuffer(data);
+
+		As<VulkanCommandBuffer>(commandBuffer)->CopyBuffer(stagingBuffer.Buffer, m_Buffer, data.GetSize(), 0, offset);
+
+		VulkanContext::GetInstance().DeferDestroyStagingBuffer(std::move(stagingBuffer));
 	}
 
 	void VulkanBuffer::EnsureAllocated()
@@ -117,5 +119,20 @@ namespace Flare
 		{
 			VK_CHECK_RESULT(vmaMapMemory(VulkanContext::GetInstance().GetMemoryAllocator(), m_Allocation.Handle, &m_Mapped));
 		}
+	}
+
+	StagingBuffer VulkanBuffer::FillStagingBuffer(MemorySpan data)
+	{
+		StagingBuffer stagingBuffer{};
+		stagingBuffer.Allocation = VulkanContext::GetInstance().CreateStagingBuffer(data.GetSize(), stagingBuffer.Buffer);
+
+		void* mapped = nullptr;
+		VK_CHECK_RESULT(vmaMapMemory(VulkanContext::GetInstance().GetMemoryAllocator(), stagingBuffer.Allocation.Handle, &mapped));
+
+		std::memcpy(mapped, data.GetBuffer(), data.GetSize());
+
+		vmaUnmapMemory(VulkanContext::GetInstance().GetMemoryAllocator(), stagingBuffer.Allocation.Handle);
+
+		return stagingBuffer;
 	}
 }

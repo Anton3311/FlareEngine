@@ -28,6 +28,11 @@ namespace Flare
         glBufferData(GL_SHADER_STORAGE_BUFFER, data.GetSize(), data.GetBuffer(), GL_DYNAMIC_DRAW);
     }
 
+    void OpenGLShaderStorageBuffer::SetData(const MemorySpan& data, size_t offset, Ref<CommandBuffer> commandBuffer)
+    {
+        SetData(data);
+    }
+
     void OpenGLShaderStorageBuffer::SetDebugName(std::string_view name)
     {
         // TODO: Set the debug name of an OpenGL object

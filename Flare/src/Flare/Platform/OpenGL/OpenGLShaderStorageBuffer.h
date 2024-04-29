@@ -12,6 +12,7 @@ namespace Flare
 
         size_t GetSize() const override;
         void SetData(const MemorySpan& data) override;
+        void SetData(const MemorySpan& data, size_t offset, Ref<CommandBuffer> commandBuffer) override;
 
         void SetDebugName(std::string_view name) override;
         const std::string& GetDebugName() const override;

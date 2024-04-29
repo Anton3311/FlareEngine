@@ -117,6 +117,15 @@ namespace Flare
 		{
 			return MemorySpan(vector.data(), vector.size());
 		}
+
+		inline static MemorySpan FromRawBytes(void* bytes, size_t size)
+		{
+			MemorySpan span{};
+			span.m_Buffer = bytes;
+			span.m_Size = size;
+
+			return span;
+		}
 	private:
 		void* m_Buffer;
 		size_t m_Size;

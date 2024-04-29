@@ -207,7 +207,6 @@ namespace Flare
 			return;
 		}
 
-		m_PrimaryCommandBuffer->Reset();
 		m_PrimaryCommandBuffer->Begin();
 
 		m_PrimaryCommandBuffer->ClearImage(m_SwapChainImages[m_CurrentFrameInFlight], glm::vec4(1.0f, 0.0f, 0.0f, 1.0f), VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
@@ -259,6 +258,17 @@ namespace Flare
 		}
 
 		glfwSwapBuffers(m_Window);
+
+		m_PrimaryCommandBuffer->Reset();
+		
+		// Destroy staging buffers
+		for (const auto& buffer : m_CurrentFrameStagingBuffers)
+		{
+			vmaFreeMemory(m_Allocator, buffer.Allocation.Handle);
+			vkDestroyBuffer(m_Device, buffer.Buffer, nullptr);
+		}
+
+		m_CurrentFrameStagingBuffers.clear();
 	}
 
 	void VulkanContext::WaitForDevice()
@@ -445,6 +455,11 @@ namespace Flare
 		}
 
 		return VK_SUCCESS;
+	}
+
+	void VulkanContext::DeferDestroyStagingBuffer(StagingBuffer stagingBuffer)
+	{
+		m_CurrentFrameStagingBuffers.push_back(std::move(stagingBuffer));
 	}
 
 	void VulkanContext::CreateInstance(const Span<const char*>& enabledLayers)

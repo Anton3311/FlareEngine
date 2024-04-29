@@ -65,6 +65,12 @@ struct std::hash<Flare::RenderPassKey>
 
 namespace Flare
 {
+	struct StagingBuffer
+	{
+		VkBuffer Buffer = VK_NULL_HANDLE;
+		VulkanAllocation Allocation;
+	};
+
 	class FLARE_API VulkanContext : public GraphicsContext
 	{
 	public:
@@ -109,6 +115,8 @@ namespace Flare
 		uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 
 		VkResult SetDebugName(VkObjectType objectType, uint64_t objectHandle, const char* name);
+
+		void DeferDestroyStagingBuffer(StagingBuffer stagingBuffer);
 
 		static VulkanContext& GetInstance() { return *(VulkanContext*)&GraphicsContext::GetInstance(); }
 	private:
@@ -187,5 +195,8 @@ namespace Flare
 
 		// Allocator
 		VmaAllocator m_Allocator = VK_NULL_HANDLE;
+
+		// Stating buffers
+		std::vector<StagingBuffer> m_CurrentFrameStagingBuffers;
 	};
 }
