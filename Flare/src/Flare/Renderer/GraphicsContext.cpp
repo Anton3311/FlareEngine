@@ -18,15 +18,15 @@ namespace Flare
 		return s_Instance != nullptr;
 	}
 
-	void GraphicsContext::Create(void* windowHandle)
+	void GraphicsContext::Create(Ref<Window> window)
 	{
 		switch (RendererAPI::GetAPI())
 		{
 		case RendererAPI::API::OpenGL:
-			s_Instance = CreateScope<OpenGLGraphicsContext>((GLFWwindow*) windowHandle);
+			s_Instance = CreateScope<OpenGLGraphicsContext>((GLFWwindow*)window->GetNativeWindow());
 			break;
 		case RendererAPI::API::Vulkan:
-			s_Instance = CreateScope<VulkanContext>((GLFWwindow*) windowHandle);
+			s_Instance = CreateScope<VulkanContext>(window);
 			break;
 		default:
 			FLARE_CORE_ASSERT(false);

@@ -3,6 +3,7 @@
 #include "FlareCore/Core.h"
 
 #include "Flare/Renderer/CommandBuffer.h"
+#include "FlarePlatform/Window.h"
 
 namespace Flare
 {
@@ -21,7 +22,7 @@ namespace Flare
 	public:
 		static GraphicsContext& GetInstance();
 		static bool IsInitialized();
-		static void Create(void* windowHandle);
+		static void Create(Ref<Window> window);
 		static void Shutdown();
 	};
 }

@@ -71,7 +71,7 @@ namespace Flare
 
 		m_Window->Initialize();
 
-		GraphicsContext::Create(m_Window->GetNativeWindow());
+		GraphicsContext::Create(m_Window);
 		
 		m_Window->SetEventCallback([this](Event& event)
 		{

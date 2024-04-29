@@ -8,8 +8,6 @@
 #include "Flare/Platform/Vulkan/VulkanFrameBuffer.h"
 #include "Flare/Platform/Vulkan/VulkanAllocation.h"
 
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
 #include <vulkan/vulkan.h>
 #include <vk_mem_alloc.h>
 
@@ -74,7 +72,7 @@ namespace Flare
 	class FLARE_API VulkanContext : public GraphicsContext
 	{
 	public:
-		VulkanContext(GLFWwindow* window);
+		VulkanContext(Ref<Window> window);
 		~VulkanContext();
 
 		void Initialize() override;
@@ -160,7 +158,6 @@ namespace Flare
 
 		VkSurfaceKHR m_Surface = VK_NULL_HANDLE;
 
-		GLFWwindow* m_Window = nullptr;
 		VkInstance m_Instance = VK_NULL_HANDLE;
 
 		VkPhysicalDevice m_PhysicalDevice = VK_NULL_HANDLE;
@@ -171,6 +168,10 @@ namespace Flare
 
 		std::optional<uint32_t> m_GraphicsQueueFamilyIndex;
 		std::optional<uint32_t> m_PresentQueueFamilyIndex;
+
+		// Window
+		bool m_VSyncEnabled = false;
+		Ref<Window> m_Window = nullptr;
 
 		// Swap chain
 		VkSwapchainKHR m_SwapChain = VK_NULL_HANDLE;

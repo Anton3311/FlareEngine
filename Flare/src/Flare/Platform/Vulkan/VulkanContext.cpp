@@ -3,6 +3,9 @@
 #include "FlareCore/Profiler/Profiler.h"
 #include "Flare/Core/Application.h"
 
+#define GLFW_INCLUDE_VULKAN
+#include <GLFW/glfw3.h>
+
 namespace Flare
 {
 	static VkBool32 VulkanDebugCallback(
@@ -48,7 +51,8 @@ namespace Flare
 	}
 
 
-	VulkanContext::VulkanContext(GLFWwindow* window)
+
+	VulkanContext::VulkanContext(Ref<Window> window)
 		: m_Window(window)
 	{
 	}
@@ -243,9 +247,13 @@ namespace Flare
 
 		VkResult presentResult = vkQueuePresentKHR(m_PresentQueue, &presentInfo);
 		if (presentResult == VK_ERROR_OUT_OF_DATE_KHR)
+		{
 			RecreateSwapChain();
+		}
 		else if (presentResult != VK_SUCCESS)
+		{
 			FLARE_CORE_ERROR("Failed to present");
+		}
 
 		{
 			FLARE_PROFILE_SCOPE("WaitIdle");
@@ -257,7 +265,12 @@ namespace Flare
 			}
 		}
 
-		glfwSwapBuffers(m_Window);
+		glfwSwapBuffers((GLFWwindow*)m_Window->GetNativeWindow());
+
+		if (m_VSyncEnabled != m_Window->GetProperties().VSyncEnabled)
+		{
+			RecreateSwapChain();
+		}
 
 		m_PrimaryCommandBuffer->Reset();
 		
@@ -269,6 +282,8 @@ namespace Flare
 		}
 
 		m_CurrentFrameStagingBuffers.clear();
+
+		m_VSyncEnabled = m_Window->GetProperties().VSyncEnabled;
 	}
 
 	void VulkanContext::WaitForDevice()
@@ -304,6 +319,8 @@ namespace Flare
 	VulkanAllocation VulkanContext::CreateStagingBuffer(size_t size, VkBuffer& buffer)
 	{
 		FLARE_PROFILE_FUNCTION();
+		FLARE_CORE_ASSERT(size > 0);
+
 		VkBufferCreateInfo info{};
 		info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
 		info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
@@ -315,7 +332,13 @@ namespace Flare
 		allocationInfo.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
 
 		VulkanAllocation allocation{};
-		VK_CHECK_RESULT(vmaCreateBuffer(m_Allocator, &info, &allocationInfo, &buffer, &allocation.Handle, &allocation.Info));
+		VkResult result = vmaCreateBuffer(m_Allocator, &info, &allocationInfo, &buffer, &allocation.Handle, &allocation.Info);
+
+		if (result != VK_SUCCESS)
+		{
+			FLARE_CORE_ERROR("Failed to create a staging buffer of size: {}. Error: {}", size, (std::underlying_type_t<VkResult>)result);
+			FLARE_CORE_ASSERT(false);
+		}
 
 		return allocation;
 	}
@@ -524,7 +547,7 @@ namespace Flare
 
 	void VulkanContext::CreateSurface()
 	{
-		VK_CHECK_RESULT(glfwCreateWindowSurface(m_Instance, m_Window, nullptr, &m_Surface));
+		VK_CHECK_RESULT(glfwCreateWindowSurface(m_Instance, (GLFWwindow*)m_Window->GetNativeWindow(), nullptr, &m_Surface));
 	}
 
 	void VulkanContext::ChoosePhysicalDevice()
@@ -819,7 +842,7 @@ namespace Flare
 
 		int32_t width;
 		int32_t height;
-		glfwGetFramebufferSize(m_Window, &width, &height);
+		glfwGetFramebufferSize((GLFWwindow*)m_Window->GetNativeWindow(), &width, &height);
 
 		VkExtent2D extent = { (uint32_t)width, (uint32_t)height };
 
@@ -831,10 +854,9 @@ namespace Flare
 
 	VkPresentModeKHR VulkanContext::ChoosePresentMode(const std::vector<VkPresentModeKHR>& modes)
 	{
-		return VK_PRESENT_MODE_FIFO_KHR;
 		for (auto mode : modes)
 		{
-			if (mode == VK_PRESENT_MODE_MAILBOX_KHR)
+			if (m_VSyncEnabled && mode == VK_PRESENT_MODE_MAILBOX_KHR)
 				return mode;
 		}
 
