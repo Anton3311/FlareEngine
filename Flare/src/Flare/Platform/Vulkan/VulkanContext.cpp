@@ -282,6 +282,7 @@ namespace Flare
 
 	void VulkanContext::WaitForDevice()
 	{
+		FLARE_PROFILE_FUNCTION();
 		VK_CHECK_RESULT(vkDeviceWaitIdle(m_Device));
 	}
 
@@ -432,6 +433,7 @@ namespace Flare
 
 	void VulkanContext::NotifyImageViewDeletionHandler(VkImageView deletedImageView)
 	{
+		FLARE_PROFILE_FUNCTION();
 		if (m_ImageDeletationHandler)
 		{
 			m_ImageDeletationHandler(deletedImageView);
@@ -455,6 +457,7 @@ namespace Flare
 
 	VkResult VulkanContext::SetDebugName(VkObjectType objectType, uint64_t objectHandle, const char* name)
 	{
+		FLARE_PROFILE_FUNCTION();
 		if (m_DebugEnabled)
 		{
 			if (m_SetDebugNameFunction == nullptr)
@@ -481,6 +484,7 @@ namespace Flare
 
 	void VulkanContext::CreateInstance(const Span<const char*>& enabledLayers)
 	{
+		FLARE_PROFILE_FUNCTION();
 		std::vector<const char*> instanceExtensions;
 
 		{
@@ -516,6 +520,7 @@ namespace Flare
 
 	void VulkanContext::CreateDebugMessenger()
 	{
+		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(m_DebugEnabled);
 
 		m_CreateDebugMessenger = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(vkGetInstanceProcAddr(m_Instance, "vkCreateDebugUtilsMessengerEXT"));
@@ -541,11 +546,13 @@ namespace Flare
 
 	void VulkanContext::CreateSurface()
 	{
+		FLARE_PROFILE_FUNCTION();
 		VK_CHECK_RESULT(glfwCreateWindowSurface(m_Instance, (GLFWwindow*)m_Window->GetNativeWindow(), nullptr, &m_Surface));
 	}
 
 	void VulkanContext::ChoosePhysicalDevice()
 	{
+		FLARE_PROFILE_FUNCTION();
 		uint32_t physicalDevicesCount;
 		VK_CHECK_RESULT(vkEnumeratePhysicalDevices(m_Instance, &physicalDevicesCount, nullptr));
 
@@ -568,6 +575,8 @@ namespace Flare
 
 	void VulkanContext::GetQueueFamilyProperties()
 	{
+		FLARE_PROFILE_FUNCTION();
+
 		uint32_t count;
 		vkGetPhysicalDeviceQueueFamilyProperties(m_PhysicalDevice, &count, nullptr);
 
@@ -591,6 +600,7 @@ namespace Flare
 
 	void VulkanContext::CreateLogicalDevice(const Span<const char*>& enabledLayers, const Span<const char*>& enabledExtensions)
 	{
+		FLARE_PROFILE_FUNCTION();
 		float priority = 1.0f;
 		std::vector<VkDeviceQueueCreateInfo> createInfos;
 
@@ -636,6 +646,7 @@ namespace Flare
 
 	void VulkanContext::CreateMemoryAllocator()
 	{
+		FLARE_PROFILE_FUNCTION();
 		VmaAllocatorCreateInfo info{};
 		info.instance = m_Instance;
 		info.device = m_Device;
@@ -648,6 +659,7 @@ namespace Flare
 
 	void VulkanContext::CreateCommandBufferPool()
 	{
+		FLARE_PROFILE_FUNCTION();
 		VkCommandPoolCreateInfo createInfo{};
 		createInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
 		createInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
@@ -658,6 +670,7 @@ namespace Flare
 
 	VkCommandBuffer VulkanContext::CreateCommandBuffer()
 	{
+		FLARE_PROFILE_FUNCTION();
 		VkCommandBufferAllocateInfo allocation{};
 		allocation.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 		allocation.commandBufferCount = 1;
@@ -671,6 +684,7 @@ namespace Flare
 
 	void VulkanContext::CreateSyncObjects()
 	{
+		FLARE_PROFILE_FUNCTION();
 		VkSemaphoreCreateInfo semaphoreCreateInfo{};
 		semaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 
@@ -685,6 +699,7 @@ namespace Flare
 
 	void VulkanContext::CreateSwapChain()
 	{
+		FLARE_PROFILE_FUNCTION();
 		VkSurfaceCapabilitiesKHR surfaceCapabilities;
 		VK_CHECK_RESULT(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_PhysicalDevice, m_Surface, &surfaceCapabilities));
 
@@ -764,6 +779,7 @@ namespace Flare
 
 	void VulkanContext::RecreateSwapChain()
 	{
+		FLARE_PROFILE_FUNCTION();
 		WaitForDevice();
 
 		ReleaseSwapChainResources();
@@ -773,6 +789,7 @@ namespace Flare
 
 	void VulkanContext::ReleaseSwapChainResources()
 	{
+		FLARE_PROFILE_FUNCTION();
 		for (VkImageView view : m_SwapChainImageViews)
 			vkDestroyImageView(m_Device, view, nullptr);
 
@@ -783,6 +800,7 @@ namespace Flare
 
 	void VulkanContext::CreateSwapChainImageViews()
 	{
+		FLARE_PROFILE_FUNCTION();
 		m_SwapChainImageViews.resize(m_SwapChainImages.size());
 		for (size_t i = 0; i < m_SwapChainImages.size(); i++)
 		{
@@ -811,6 +829,7 @@ namespace Flare
 
 	void VulkanContext::CreateSwapChainFrameBuffers()
 	{
+		FLARE_PROFILE_FUNCTION();
 		m_SwapChainFrameBuffers.resize(m_FramesInFlight);
 		for (uint32_t i = 0; i < m_FramesInFlight; i++)
 		{
@@ -863,6 +882,7 @@ namespace Flare
 
 	void VulkanContext::DestroyStagingBuffers()
 	{
+		FLARE_PROFILE_FUNCTION();
 		for (const auto& buffer : m_CurrentFrameStagingBuffers)
 		{
 			vmaFreeMemory(m_Allocator, buffer.Allocation.Handle);
@@ -874,6 +894,7 @@ namespace Flare
 
 	std::vector<VkLayerProperties> VulkanContext::EnumerateAvailableLayers()
 	{
+		FLARE_PROFILE_FUNCTION();
 		uint32_t supportedLayersCount = 0;
 		std::vector<VkLayerProperties> supportedLayers;
 

@@ -119,6 +119,7 @@ namespace Flare
 
 	void VulkanCommandBuffer::DrawIndexed(const Ref<const Mesh>& mesh, uint32_t subMeshIndex, uint32_t baseInstance, uint32_t instanceCount)
 	{
+		FLARE_PROFILE_FUNCTION();
 		Ref<const VertexBuffer> vertexBuffers[] =
 		{
 			mesh->GetVertices(),
@@ -136,6 +137,7 @@ namespace Flare
 
 	void VulkanCommandBuffer::Blit(Ref<FrameBuffer> source, uint32_t sourceAttachment, Ref<FrameBuffer> destination, uint32_t destinationAttachment, TextureFiltering filter)
 	{
+		FLARE_PROFILE_FUNCTION();
 		VkImage sourceImage = As<VulkanFrameBuffer>(source)->GetAttachmentImage(sourceAttachment);
 		VkImage destinationImage = As<VulkanFrameBuffer>(destination)->GetAttachmentImage(destinationAttachment);
 
@@ -329,11 +331,13 @@ namespace Flare
 
 	void VulkanCommandBuffer::Reset()
 	{
+		FLARE_PROFILE_FUNCTION();
 		VK_CHECK_RESULT(vkResetCommandBuffer(m_CommandBuffer, 0));
 	}
 
 	void VulkanCommandBuffer::Begin()
 	{
+		FLARE_PROFILE_FUNCTION();
 		VkCommandBufferBeginInfo info{};
 		info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
@@ -342,12 +346,14 @@ namespace Flare
 
 	void VulkanCommandBuffer::End()
 	{
+		FLARE_PROFILE_FUNCTION();
 		VK_CHECK_RESULT(vkEndCommandBuffer(m_CommandBuffer));
 		m_UsedMaterials.clear();
 	}
 
 	void VulkanCommandBuffer::BeginRenderPass(const Ref<VulkanRenderPass>& renderPass, const Ref<VulkanFrameBuffer>& frameBuffer)
 	{
+		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(m_CurrentRenderPass == nullptr);
 
 		VkRenderPassBeginInfo info{};
@@ -368,6 +374,7 @@ namespace Flare
 
 	void VulkanCommandBuffer::EndRenderPass()
 	{
+		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(m_CurrentRenderPass);
 
 		vkCmdEndRenderPass(m_CommandBuffer);
