@@ -1047,6 +1047,11 @@ namespace Flare
 
 		for (size_t cascadeIndex = 0; cascadeIndex < s_RendererData.ShadowMappingSettings.Cascades; cascadeIndex++)
 		{
+			if (perCascadeObjects[cascadeIndex].size() == 0)
+			{
+				continue;
+			}
+
 			const FrameBufferSpecifications& shadowMapSpecs = s_RendererData.ShadowsRenderTarget[cascadeIndex]->GetSpecifications();
 
 			// Fill instancing buffer
