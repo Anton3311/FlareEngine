@@ -174,7 +174,18 @@ namespace Flare
 		VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
 		inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
 		inputAssembly.primitiveRestartEnable = VK_FALSE;
-		inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+
+		switch (m_Specifications.Topology)
+		{
+		case PrimitiveTopology::Triangles:
+			inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+			break;
+		case PrimitiveTopology::Lines:
+			inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_LINE_LIST;
+			break;
+		default:
+			FLARE_CORE_ASSERT(false);
+		}
 
 		VkPipelineMultisampleStateCreateInfo multisampleState{};
 		multisampleState.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
@@ -197,6 +208,8 @@ namespace Flare
 		case CullingMode::Front:
 			cullMode = VK_CULL_MODE_FRONT_BIT;
 			break;
+		default:
+			FLARE_CORE_ASSERT(false);
 		}
 
 		VkPipelineRasterizationStateCreateInfo rasterizationState{};
