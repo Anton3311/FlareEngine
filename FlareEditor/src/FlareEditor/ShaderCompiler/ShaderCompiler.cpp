@@ -296,6 +296,13 @@ namespace Flare
                 else if (element.Value.Value == "FullscreenQuad")
                     metadata->Type = ShaderType::FullscreenQuad;
             }
+            else if (element.Name.Value == "Name")
+            {
+                if (element.Type == BlockElementType::Value)
+                    metadata->Name = element.Value.Value;
+				else
+					errors.emplace_back(element.Value.Position, "Expected a string value");
+            }
             else if (element.Name.Value == "Properties")
             {
                 if (element.Type != BlockElementType::Block)
@@ -592,6 +599,7 @@ namespace Flare
 
         Ref<ShaderMetadata> metadata = CreateRef<ShaderMetadata>();
         metadata->Type = ShaderType::Surface;
+        metadata->Name = shaderPath.filename().replace_extension().generic_string();
 
         for (const PreprocessedShaderProgram& program : programs)
         {

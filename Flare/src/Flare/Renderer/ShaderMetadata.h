@@ -205,9 +205,10 @@ namespace Flare
 		size_t Offset = 0;
 		size_t Size = 0;
 	};
-	
+
 	struct ShaderMetadata
 	{
+		std::string Name;
 		ShaderType Type = ShaderType::Unknown;
 		ShaderFeatures Features;
 		ShaderOutputs Outputs;
