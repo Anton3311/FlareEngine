@@ -133,7 +133,7 @@ namespace Flare
 
 		void CreateSwapChain();
 		void RecreateSwapChain();
-		void ReleaseSwapChain();
+		void ReleaseSwapChainResources();
 		void CreateSwapChainImageViews();
 		void CreateSwapChainFrameBuffers();
 
