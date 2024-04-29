@@ -6,6 +6,7 @@
 #include "Flare/Renderer/ShaderLibrary.h"
 
 #include "Flare/Platform/Vulkan/VulkanContext.h"
+#include "Flare/Platform/OpenGL/OpenGLFrameBuffer.h"
 
 #include "Flare/Scene/Components.h"
 #include "Flare/Scene/Scene.h"
@@ -320,49 +321,9 @@ namespace Flare
 		{
 			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(ASSET_PAYLOAD_NAME))
 			{
-				Entity entity = GetEntityUnderCursor();
-				AssetHandle handle = *(AssetHandle*)payload->Data;
-				const AssetMetadata* metadata = AssetManager::GetAssetMetadata(handle);
-				if (metadata != nullptr)
-				{
-					switch (metadata->Type)
-					{
-					case AssetType::Scene:
-						EditorLayer::GetInstance().OpenScene(handle);
-						break;
-					case AssetType::Sprite:
-					{
-						if (!world.IsEntityAlive(entity))
-							break;
+				std::optional<Entity> entity = GetEntityUnderCursor();
 
-						SpriteComponent* sprite = world.TryGetEntityComponent<SpriteComponent>(entity);
-						if (sprite)
-							sprite->Sprite = AssetManager::GetAsset<Sprite>(handle);
-
-						break;
-					}
-					case AssetType::Material:
-					{
-						MeshComponent* meshComponent = world.TryGetEntityComponent<MeshComponent>(entity);
-						if (meshComponent)
-							meshComponent->Material = handle;
-						else
-						{
-							MaterialComponent* materialComponent = world.TryGetEntityComponent<MaterialComponent>(entity);
-							if (materialComponent)
-								materialComponent->Material = handle;
-						}
-
-						break;
-					}
-					case AssetType::Prefab:
-					{
-						Ref<Prefab> prefab = AssetManager::GetAsset<Prefab>(handle);
-						prefab->CreateInstance(GetScene()->GetECSWorld());
-						break;
-					}
-					}
-				}
+				HandleAssetDragAndDrop(*(AssetHandle*)payload->Data);
 
 				ImGui::EndDragDropTarget();
 			}
@@ -441,7 +402,14 @@ namespace Flare
 		if (!ImGuizmo::IsUsingAny() && !m_IsToolbarHovered)
 		{
 			if (io.MouseClicked[ImGuiMouseButton_Left] && m_Viewport.RenderTarget != nullptr && m_IsHovered && m_RelativeMousePosition.x >= 0 && m_RelativeMousePosition.y >= 0)
-				EditorLayer::GetInstance().Selection.SetEntity(GetEntityUnderCursor());
+			{
+				std::optional<Entity> entity = GetEntityUnderCursor();
+
+				if (entity)
+				{
+					EditorLayer::GetInstance().Selection.SetEntity(*entity);
+				}
+			}
 		}
 	}
 
@@ -607,17 +575,74 @@ namespace Flare
 		Renderer::DrawFullscreenQuad(m_GridMaterial);
 	}
 
-	Entity SceneViewportWindow::GetEntityUnderCursor() const
+	void SceneViewportWindow::HandleAssetDragAndDrop(AssetHandle handle)
 	{
-		m_Viewport.RenderTarget->Bind();
+		std::optional<Entity> entity = GetEntityUnderCursor();
 
-		int32_t entityIndex;
-		m_Viewport.RenderTarget->ReadPixel(2, m_RelativeMousePosition.x, m_RelativeMousePosition.y, &entityIndex);
+		World& world = GetScene()->GetECSWorld();
+		const AssetMetadata* metadata = AssetManager::GetAssetMetadata(handle);
+		if (metadata != nullptr)
+		{
+			switch (metadata->Type)
+			{
+			case AssetType::Scene:
+				EditorLayer::GetInstance().OpenScene(handle);
+				break;
+			case AssetType::Sprite:
+			{
+				if (!entity || !world.IsEntityAlive(*entity))
+					break;
 
-		std::optional<Entity> entity = GetScene()->GetECSWorld().Entities.FindEntityByIndex(entityIndex);
+				SpriteComponent* sprite = world.TryGetEntityComponent<SpriteComponent>(*entity);
+				if (sprite)
+					sprite->Sprite = AssetManager::GetAsset<Sprite>(handle);
 
-		m_Viewport.RenderTarget->Unbind();
+				break;
+			}
+			case AssetType::Material:
+			{
+				if (!entity || !world.IsEntityAlive(*entity))
+					break;
 
-		return entity.value_or(Entity());
+				MeshComponent* meshComponent = world.TryGetEntityComponent<MeshComponent>(*entity);
+				if (meshComponent)
+					meshComponent->Material = handle;
+				else
+				{
+					MaterialComponent* materialComponent = world.TryGetEntityComponent<MaterialComponent>(*entity);
+					if (materialComponent)
+						materialComponent->Material = handle;
+				}
+
+				break;
+			}
+			case AssetType::Prefab:
+			{
+				Ref<Prefab> prefab = AssetManager::GetAsset<Prefab>(handle);
+				prefab->CreateInstance(GetScene()->GetECSWorld());
+				break;
+			}
+			}
+		}
+	}
+
+	std::optional<Entity> SceneViewportWindow::GetEntityUnderCursor() const
+	{
+		if (RendererAPI::GetAPI() == RendererAPI::API::OpenGL)
+		{
+			Ref<OpenGLFrameBuffer> frameBuffer = As<OpenGLFrameBuffer>(m_Viewport.RenderTarget);
+			frameBuffer->Bind();
+
+			int32_t entityIndex;
+			frameBuffer->ReadPixel(2, m_RelativeMousePosition.x, m_RelativeMousePosition.y, &entityIndex);
+
+			std::optional<Entity> entity = GetScene()->GetECSWorld().Entities.FindEntityByIndex(entityIndex);
+
+			frameBuffer->Unbind();
+
+			return entity;
+		}
+
+		return {};
 	}
 }

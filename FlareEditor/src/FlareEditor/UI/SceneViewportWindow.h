@@ -40,7 +40,8 @@ namespace Flare
 		void RenderToolBar();
 		void RenderGrid();
 
-		Entity GetEntityUnderCursor() const;
+		void HandleAssetDragAndDrop(AssetHandle handle);
+		std::optional<Entity> GetEntityUnderCursor() const;
 	private:
 		GuizmoMode m_Guizmo;
 		EditorCamera& m_Camera;

@@ -43,8 +43,6 @@ namespace Flare
 		{
 			scene->OnBeforeRender(m_Viewport);
 
-			m_Viewport.RenderTarget->Bind();
-
 			OnClear();
 
 			Renderer::BeginScene(m_Viewport);
