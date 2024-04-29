@@ -52,6 +52,7 @@ namespace Flare
 
 		// Transform to [-1, 1]
 		glClearDepth((GLdouble)(depth * 2.0f - 1.0f));
+		glDepthMask(GL_TRUE);
 		glClear(GL_DEPTH_BUFFER_BIT);
 
 		frameBuffer->Unbind();
