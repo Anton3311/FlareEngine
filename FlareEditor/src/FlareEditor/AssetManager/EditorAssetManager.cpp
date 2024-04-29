@@ -399,11 +399,12 @@ namespace Flare
 
         // NOTE: Disable automatic registry serialization and delay it util the asset gets loaded
         //       This prevents multiple serialization calls if case the asset loader also imports other assets or subassets
+        bool autoSerializationWasEnabled = m_AutomaticRegistrySerializationEnabled;
         SetAutomaticRegistrySerializationEnable(false);
 
         Ref<Asset> asset = importerIterator->second(metadata);
 
-        if (m_AutomaticRegistrySerializationEnabled)
+        if (autoSerializationWasEnabled)
         {
             SetAutomaticRegistrySerializationEnable(true);
             SerializeRegistry();
