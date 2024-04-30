@@ -260,6 +260,13 @@ namespace Flare
 		}
 	}
 
+	void DebugRenderer::DrawWireSphere(const glm::vec3& origin, float radius, const glm::vec4& color, uint32_t segments)
+	{
+		DrawCircle(origin, glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), radius, color, segments);
+		DrawCircle(origin, glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), radius, color, segments);
+		DrawCircle(origin, glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(1.0f, 0.0f, 0.0f), radius, color, segments);
+	}
+
 	void DebugRenderer::DrawWireQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color)
 	{
 		glm::vec3 halfSize = glm::vec3(size / 2.0f, 0.0f);
