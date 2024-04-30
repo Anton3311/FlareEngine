@@ -32,16 +32,19 @@ namespace Flare
 		if (!EditorLayer::GetInstance().GetSceneViewSettings().ShowLights)
 			return;
 
-		for (EntityView view : m_DirectionalLightQuery)
+		if (RendererAPI::GetAPI() != RendererAPI::API::Vulkan)
 		{
-			auto transforms = view.View<TransformComponent>();
-			auto lights = view.View<DirectionalLight>();
+			for (EntityView view : m_DirectionalLightQuery)
+			{
+				auto transforms = view.View<TransformComponent>();
+				auto lights = view.View<DirectionalLight>();
 
-			for (EntityViewElement entity : view)
-				DebugRenderer::DrawRay(transforms[entity].Position, transforms[entity].TransformDirection(glm::vec3(0.0f, 0.0f, -1.0f)));
+				for (EntityViewElement entity : view)
+					DebugRenderer::DrawRay(transforms[entity].Position, transforms[entity].TransformDirection(glm::vec3(0.0f, 0.0f, -1.0f)));
+			}
 		}
 
-		if (!m_HasProjectOpenHandler)
+		if (!m_HasProjectOpenHandler && RendererAPI::GetAPI() != RendererAPI::API::Vulkan)
 		{
 			Project::OnProjectOpen.Bind(FLARE_BIND_EVENT_CALLBACK(ReloadShaders));
 			ReloadShaders();
@@ -49,10 +52,12 @@ namespace Flare
 			m_HasProjectOpenHandler = true;
 		}
 
-		if (!m_DebugIconsMaterial)
-			return;
-
-		Renderer2D::SetMaterial(m_DebugIconsMaterial);
+		if (RendererAPI::GetAPI() != RendererAPI::API::Vulkan)
+		{
+			if (!m_DebugIconsMaterial)
+				return;
+			Renderer2D::SetMaterial(m_DebugIconsMaterial);
+		}
 
 		ImRect pointLightIconUVs = EditorGUI::GetIcons().GetIconUVs(EditorIcons::PointLightIcon);
 		ImRect spotlightIconUVs = EditorGUI::GetIcons().GetIconUVs(EditorIcons::SpotlightIcon);
@@ -69,13 +74,16 @@ namespace Flare
 				glm::vec3 position = transforms[entity].Position;
 				position = cameraView * glm::vec4(position, 1.0f);
 
-				Renderer2D::DrawQuad(position,
-					glm::vec2(1.0f),
-					glm::vec4(lights[entity].Color, 1.0f),
-					iconsTexture,
-					glm::vec2(pointLightIconUVs.Min.x, pointLightIconUVs.Max.y),
-					glm::vec2(pointLightIconUVs.Max.x, pointLightIconUVs.Min.y)
-				);
+				if (RendererAPI::GetAPI() != RendererAPI::API::Vulkan)
+				{
+					Renderer2D::DrawQuad(position,
+						glm::vec2(1.0f),
+						glm::vec4(lights[entity].Color, 1.0f),
+						iconsTexture,
+						glm::vec2(pointLightIconUVs.Min.x, pointLightIconUVs.Max.y),
+						glm::vec2(pointLightIconUVs.Max.x, pointLightIconUVs.Min.y)
+					);
+				}
 			}
 		}
 
@@ -89,13 +97,16 @@ namespace Flare
 				glm::vec3 iconPosition = transforms[entity].Position;
 				iconPosition = cameraView * glm::vec4(iconPosition, 1.0f);
 
-				Renderer2D::DrawQuad(iconPosition,
-					glm::vec2(1.0f),
-					glm::vec4(lights[entity].Color, 1.0f),
-					iconsTexture,
-					glm::vec2(spotlightIconUVs.Min.x, spotlightIconUVs.Max.y),
-					glm::vec2(spotlightIconUVs.Max.x, spotlightIconUVs.Min.y)
-				);
+				if (RendererAPI::GetAPI() != RendererAPI::API::Vulkan)
+				{
+					Renderer2D::DrawQuad(iconPosition,
+						glm::vec2(1.0f),
+						glm::vec4(lights[entity].Color, 1.0f),
+						iconsTexture,
+						glm::vec2(spotlightIconUVs.Min.x, spotlightIconUVs.Max.y),
+						glm::vec2(spotlightIconUVs.Max.x, spotlightIconUVs.Min.y)
+					);
+				}
 
 				glm::vec3 lightDirection = transforms[entity].TransformDirection(glm::vec3(0.0f, 0.0f, 1.0f));
 				glm::vec3 tangent = transforms[entity].TransformDirection(glm::vec3(1.0f, 0.0f, 0.0f));
@@ -132,7 +143,10 @@ namespace Flare
 			}
 		}
 
-		Renderer2D::SetMaterial(nullptr);
+		if (RendererAPI::GetAPI() != RendererAPI::API::Vulkan)
+		{
+			Renderer2D::SetMaterial(nullptr);
+		}
 	}
 
 	void LightVisualizer::ReloadShaders()

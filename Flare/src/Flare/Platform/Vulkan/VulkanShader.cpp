@@ -171,6 +171,11 @@ namespace Flare
 		descriptorSetLayouts[0] = primaryDescriptorSet->GetHandle();
 		descriptorSetLayouts[1] = secondaryDescriptorSet->GetHandle();
 
+		if (m_Metadata->Type == ShaderType::Debug)
+		{
+			descriptorSetLayouts[1] = nullptr;
+		}
+
 		if (m_SetPool)
 		{
 			descriptorSetLayouts[2] = m_SetPool->GetLayout()->GetHandle();
@@ -196,15 +201,24 @@ namespace Flare
 			range.size = (uint32_t)m_Metadata->PushConstantsRanges[i].Size;
 		}
 
+		uint32_t setLayoutCount = 0;
+		for (uint32_t i = 0; i < 3; i++)
+		{
+			if (descriptorSetLayouts[i] != nullptr)
+				setLayoutCount++;
+		}
+
 		// Create pipeline layout
 		VkPipelineLayoutCreateInfo layoutInfo{};
 		layoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-		layoutInfo.setLayoutCount = m_SetPool ? 3 : 2;
+		layoutInfo.setLayoutCount = setLayoutCount;
 		layoutInfo.pSetLayouts = descriptorSetLayouts;
 		layoutInfo.pushConstantRangeCount = (uint32_t)pushConstantsRanges.size();
 		layoutInfo.pPushConstantRanges = pushConstantsRanges.data();
 
 		VK_CHECK_RESULT(vkCreatePipelineLayout(VulkanContext::GetInstance().GetDevice(), &layoutInfo, nullptr, &m_PipelineLayout));
+
+		VulkanContext::GetInstance().SetDebugName(VK_OBJECT_TYPE_PIPELINE_LAYOUT, (uint64_t)m_PipelineLayout, m_Metadata->Name.c_str());
 
 		if (!m_Valid)
 			return;

@@ -327,5 +327,7 @@ namespace Flare
 		info.subpass = 0;
 
 		VK_CHECK_RESULT(vkCreateGraphicsPipelines(VulkanContext::GetInstance().GetDevice(), VK_NULL_HANDLE, 1, &info, nullptr, &m_Pipeline));
+
+		VulkanContext::GetInstance().SetDebugName(VK_OBJECT_TYPE_PIPELINE, (uint64_t)m_Pipeline, m_Specifications.Shader->GetMetadata()->Name.c_str());
 	}
 }

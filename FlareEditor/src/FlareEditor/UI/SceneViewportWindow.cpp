@@ -125,70 +125,66 @@ namespace Flare
 
 		scene->OnRender(m_Viewport);
 
-		if (RendererAPI::GetAPI() != RendererAPI::API::Vulkan)
+		//RenderGrid();
+
+		std::optional<Entity> selectedEntity = EditorLayer::GetInstance().Selection.TryGetEntity();
+		if (debugRenderingGroup.has_value())
 		{
-			RenderGrid();
+			DebugRenderer::Begin();
 
-			std::optional<Entity> selectedEntity = EditorLayer::GetInstance().Selection.TryGetEntity();
-			if (debugRenderingGroup.has_value())
+			scene->GetECSWorld().GetSystemsManager().ExecuteGroup(debugRenderingGroup.value());
+
+			// Draw bouding box for decal projectors
+			if (selectedEntity)
 			{
-				DebugRenderer::Begin();
-
-				//scene->GetECSWorld().GetSystemsManager().ExecuteGroup(debugRenderingGroup.value());
-
-				// Draw bouding box for decal projectors
-				if (selectedEntity)
+				const Decal* decal = scene->GetECSWorld().TryGetEntityComponent<const Decal>(*selectedEntity);
+				const TransformComponent* transform = scene->GetECSWorld().TryGetEntityComponent<const TransformComponent>(*selectedEntity);
+				if (decal && transform)
 				{
-					const Decal* decal = scene->GetECSWorld().TryGetEntityComponent<const Decal>(*selectedEntity);
-					const TransformComponent* transform = scene->GetECSWorld().TryGetEntityComponent<const TransformComponent>(*selectedEntity);
-					if (decal && transform)
+					glm::vec3 cubeCorners[] =
 					{
-						glm::vec3 cubeCorners[] =
-						{
-							glm::vec3(-0.5f, -0.5f, -0.5f),
-							glm::vec3(+0.5f, -0.5f, -0.5f),
-							glm::vec3(-0.5f, +0.5f, -0.5f),
-							glm::vec3(+0.5f, +0.5f, -0.5f),
+						glm::vec3(-0.5f, -0.5f, -0.5f),
+						glm::vec3(+0.5f, -0.5f, -0.5f),
+						glm::vec3(-0.5f, +0.5f, -0.5f),
+						glm::vec3(+0.5f, +0.5f, -0.5f),
 
-							glm::vec3(-0.5f, -0.5f, +0.5f),
-							glm::vec3(+0.5f, -0.5f, +0.5f),
-							glm::vec3(-0.5f, +0.5f, +0.5f),
-							glm::vec3(+0.5f, +0.5f, +0.5f),
-						};
+						glm::vec3(-0.5f, -0.5f, +0.5f),
+						glm::vec3(+0.5f, -0.5f, +0.5f),
+						glm::vec3(-0.5f, +0.5f, +0.5f),
+						glm::vec3(+0.5f, +0.5f, +0.5f),
+					};
 
-						glm::mat4 transformationMatrix = transform->GetTransformationMatrix();
-						for (size_t i = 0; i < 8; i++)
-							cubeCorners[i] = transformationMatrix * glm::vec4(cubeCorners[i], 1.0f);
+					glm::mat4 transformationMatrix = transform->GetTransformationMatrix();
+					for (size_t i = 0; i < 8; i++)
+						cubeCorners[i] = transformationMatrix * glm::vec4(cubeCorners[i], 1.0f);
 
-						DebugRenderer::DrawWireBox(cubeCorners);
-					}
+					DebugRenderer::DrawWireBox(cubeCorners);
 				}
-
-				DebugRenderer::End();
 			}
 
-			if (selectedEntity && m_SelectionOutlineMaterial)
+			DebugRenderer::End();
+		}
+
+		if (selectedEntity && m_SelectionOutlineMaterial && false)
+		{
+			m_Viewport.RenderTarget->BindAttachmentTexture(2);
+
+			Ref<Shader> shader = m_SelectionOutlineMaterial->GetShader();
+			std::optional<uint32_t> idPropertyIndex = shader->GetPropertyIndex("u_Outline.SelectedId");
+			std::optional<uint32_t> thicknessPropertyIndex = shader->GetPropertyIndex("u_Outline.Thickness");
+
+			if (idPropertyIndex && thicknessPropertyIndex)
 			{
-				m_Viewport.RenderTarget->BindAttachmentTexture(2);
+				m_SelectionOutlineMaterial->WritePropertyValue<int32_t>(
+					*idPropertyIndex,
+					(int32_t)selectedEntity->GetIndex());
 
-				Ref<Shader> shader = m_SelectionOutlineMaterial->GetShader();
-				std::optional<uint32_t> idPropertyIndex = shader->GetPropertyIndex("u_Outline.SelectedId");
-				std::optional<uint32_t> thicknessPropertyIndex = shader->GetPropertyIndex("u_Outline.Thickness");
+				m_SelectionOutlineMaterial->WritePropertyValue(
+					*thicknessPropertyIndex,
+					glm::vec2(4.0f) / (glm::vec2)m_Viewport.GetSize() / 2.0f);
 
-				if (idPropertyIndex && thicknessPropertyIndex)
-				{
-					m_SelectionOutlineMaterial->WritePropertyValue<int32_t>(
-						*idPropertyIndex,
-						(int32_t)selectedEntity->GetIndex());
-
-					m_SelectionOutlineMaterial->WritePropertyValue(
-						*thicknessPropertyIndex,
-						glm::vec2(4.0f) / (glm::vec2)m_Viewport.GetSize() / 2.0f);
-
-					Renderer::DrawFullscreenQuad(m_SelectionOutlineMaterial);
-				}
+				Renderer::DrawFullscreenQuad(m_SelectionOutlineMaterial);
 			}
-
 		}
 
 		Renderer::EndScene();

@@ -1187,22 +1187,15 @@ namespace Flare
 		if (s_RendererData.CurrentInstancingMesh.Mesh == nullptr)
 			return;
 
-		uint32_t instancesCount = 0;
-		for (auto& command : s_RendererData.IndirectDrawData)
-			instancesCount += command.InstancesCount;
-
-		if (instancesCount == 0)
-			return;
-
 		Ref<CommandBuffer> commandBuffer = GraphicsContext::GetInstance().GetCommandBuffer();
 		for (const auto& drawCall : s_RendererData.IndirectDrawData)
 		{
 			commandBuffer->DrawIndexed(s_RendererData.CurrentInstancingMesh.Mesh, drawCall.SubMeshIndex, baseInstance, drawCall.InstancesCount);
 			baseInstance += drawCall.InstancesCount;
-		}
 
-		s_RendererData.Statistics.DrawCallsCount++;
-		s_RendererData.Statistics.DrawCallsSavedByInstancing += (uint32_t)instancesCount - 1;
+			s_RendererData.Statistics.DrawCallsCount++;
+			s_RendererData.Statistics.DrawCallsSavedByInstancing += (uint32_t)drawCall.InstancesCount - 1;
+		}
 
 		s_RendererData.IndirectDrawData.clear();
 	}

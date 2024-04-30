@@ -780,6 +780,11 @@ namespace Flare
 		vkCmdDrawIndexed(m_CommandBuffer, indicesCount, instancesCount, firstIndex, 0, firstInstance);
 	}
 
+	void VulkanCommandBuffer::Draw(uint32_t firstVertex, uint32_t vertexCount, uint32_t firstInstance, uint32_t instanceCount)
+	{
+		vkCmdDraw(m_CommandBuffer, vertexCount, instanceCount, firstVertex, firstInstance);
+	}
+
 	void VulkanCommandBuffer::DepthImagesBarrier(Span<VkImage> images, bool hasStencil,
 		VkPipelineStageFlags srcStage, VkAccessFlags srcAccessMask,
 		VkPipelineStageFlags dstStage, VkAccessFlags dstAccessMask,

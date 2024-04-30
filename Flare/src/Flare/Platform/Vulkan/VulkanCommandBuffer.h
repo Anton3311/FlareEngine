@@ -76,6 +76,8 @@ namespace Flare
 		void DrawIndexed(uint32_t firstIndex, uint32_t indicesCount);
 		void DrawIndexed(uint32_t firstIndex, uint32_t indicesCount, uint32_t firstInstance, uint32_t instancesCount);
 
+		void Draw(uint32_t firstVertex, uint32_t vertexCount, uint32_t firstInstance, uint32_t instanceCount);
+
 		void DepthImagesBarrier(Span<VkImage> images, bool hasStencil,
 			VkPipelineStageFlags srcStage, VkAccessFlags srcAccessMask,
 			VkPipelineStageFlags dstStage, VkAccessFlags dstAccessMask,
