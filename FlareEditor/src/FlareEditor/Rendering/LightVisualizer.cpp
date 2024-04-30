@@ -32,16 +32,13 @@ namespace Flare
 		if (!EditorLayer::GetInstance().GetSceneViewSettings().ShowLights)
 			return;
 
-		if (RendererAPI::GetAPI() != RendererAPI::API::Vulkan)
+		for (EntityView view : m_DirectionalLightQuery)
 		{
-			for (EntityView view : m_DirectionalLightQuery)
-			{
-				auto transforms = view.View<TransformComponent>();
-				auto lights = view.View<DirectionalLight>();
+			auto transforms = view.View<TransformComponent>();
+			auto lights = view.View<DirectionalLight>();
 
-				for (EntityViewElement entity : view)
-					DebugRenderer::DrawRay(transforms[entity].Position, transforms[entity].TransformDirection(glm::vec3(0.0f, 0.0f, -1.0f)));
-			}
+			for (EntityViewElement entity : view)
+				DebugRenderer::DrawRay(transforms[entity].Position, transforms[entity].TransformDirection(glm::vec3(0.0f, 0.0f, -1.0f)));
 		}
 
 		if (!m_HasProjectOpenHandler && RendererAPI::GetAPI() != RendererAPI::API::Vulkan)
