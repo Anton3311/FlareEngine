@@ -29,9 +29,6 @@ struct VertexData
 };
 
 layout(location = 0) out VertexData o_Vertex;
-#ifdef OPENGL
-	layout(location = 6) out flat int o_EntityIndex;
-#endif
 
 void main()
 {
@@ -45,9 +42,6 @@ void main()
 
 	o_Vertex.UV = i_UV;
 	o_Vertex.ViewSpacePosition = (u_Camera.View * transformed).xyz;
-#ifdef OPENGL
-	o_EntityIndex = u_InstancesData.Data[gl_InstanceIndex].EntityIndex;
-#endif
 
     gl_Position = position;
 }
@@ -82,16 +76,9 @@ layout(set = 2, binding = 8) uniform sampler2D u_NormalMap;
 layout(set = 2, binding = 9) uniform sampler2D u_RoughnessMap;
 
 layout(location = 0) in VertexData i_Vertex;
-#ifdef OPENGL
-	layout(location = 6) in flat int i_EntityIndex;
-#endif
 
 layout(location = 0) out vec4 o_Color;
 layout(location = 1) out vec4 o_Normal;
-
-#ifdef OPENGL
-	layout(location = 2) out int o_EntityIndex;
-#endif
 
 vec3 UnpackNormalXYZ(vec3 packedNormal)
 {
@@ -149,9 +136,6 @@ void main()
 
 	o_Color = vec4(finalColor, color.a);
 	o_Normal = vec4(N * 0.5f + vec3(0.5f), 1.0f);
-#ifdef OPENGL
-	o_EntityIndex = i_EntityIndex;
-#endif
 }
 
 #end

@@ -24,7 +24,6 @@ namespace Flare
 			uint32_t SubMeshIndex;
 			Math::Compact3DTransform Transform;
 			MeshRenderFlags Flags;
-			int32_t EntityIndex;
 
 			float SortKey;
 		};
@@ -60,7 +59,6 @@ namespace Flare
 			object.Mesh = mesh;
 			object.SubMeshIndex = subMesh;
 			object.Transform = transform;
-			object.EntityIndex = entityIndex;
 
 			glm::vec3 center = mesh->GetSubMeshes()[subMesh].Bounds.GetCenter();
 			center = object.Transform.RotationScale * center + object.Transform.Translation;

@@ -31,9 +31,7 @@ namespace Flare
 
 	struct InstanceData
 	{
-		glm::mat4 Transform;
-		int32_t EntityIndex;
-		int32_t Padding[3];
+		glm::vec4 PackedTransform[3];
 	};
 
 	struct RenderPasses
@@ -906,8 +904,10 @@ namespace Flare
 			for (uint32_t objectIndex : s_RendererData.CulledObjectIndices)
 			{
 				auto& instanceData = s_RendererData.InstanceDataBuffer.emplace_back();
-				instanceData.Transform = s_RendererData.OpaqueQueue[objectIndex].Transform.ToMatrix4x4();
-				instanceData.EntityIndex = s_RendererData.OpaqueQueue[objectIndex].EntityIndex;
+				const auto& transform = s_RendererData.OpaqueQueue[objectIndex].Transform;
+				instanceData.PackedTransform[0] = glm::vec4(transform.RotationScale[0], transform.Translation.x);
+				instanceData.PackedTransform[1] = glm::vec4(transform.RotationScale[1], transform.Translation.y);
+				instanceData.PackedTransform[2] = glm::vec4(transform.RotationScale[2], transform.Translation.z);
 			}
 		}
 
@@ -979,8 +979,11 @@ namespace Flare
 			for (const DecalData& decal : s_RendererData.Decals)
 			{
 				auto& instance = s_RendererData.InstanceDataBuffer.emplace_back();
-				instance.Transform = decal.Transform;
-				instance.EntityIndex = decal.EntityIndex;
+				const auto& transform = decal.Transform;
+				glm::vec4 translation = transform[3];
+				instance.PackedTransform[0] = glm::vec4((glm::vec3)transform[0], translation.x);
+				instance.PackedTransform[1] = glm::vec4((glm::vec3)transform[1], translation.y);
+				instance.PackedTransform[2] = glm::vec4((glm::vec3)transform[2], translation.z);
 			}
 		}
 
@@ -1075,7 +1078,10 @@ namespace Flare
 				for (uint32_t i : perCascadeObjects[cascadeIndex])
 				{
 					auto& instanceData = s_RendererData.InstanceDataBuffer.emplace_back();
-					instanceData.Transform = s_RendererData.OpaqueQueue[i].Transform.ToMatrix4x4();
+					const auto& transform = s_RendererData.OpaqueQueue[i].Transform;
+					instanceData.PackedTransform[0] = glm::vec4(transform.RotationScale[0], transform.Translation.x);
+					instanceData.PackedTransform[1] = glm::vec4(transform.RotationScale[1], transform.Translation.y);
+					instanceData.PackedTransform[2] = glm::vec4(transform.RotationScale[2], transform.Translation.z);
 				}
 			}
 
