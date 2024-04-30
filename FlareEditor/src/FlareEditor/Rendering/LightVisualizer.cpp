@@ -69,11 +69,16 @@ namespace Flare
 			for (EntityViewElement entity : view)
 			{
 				glm::vec3 position = transforms[entity].Position;
-				position = cameraView * glm::vec4(position, 1.0f);
+				glm::vec3 iconPosition = cameraView * glm::vec4(position, 1.0f);
+
+				const float intensityLimit = 0.1f;
+				float radius = glm::sqrt(lights[entity].Intensity / intensityLimit);
+
+				DebugRenderer::DrawWireSphere(position, radius, glm::vec4(lights[entity].Color, 1.0f));
 
 				if (RendererAPI::GetAPI() != RendererAPI::API::Vulkan)
 				{
-					Renderer2D::DrawQuad(position,
+					Renderer2D::DrawQuad(iconPosition,
 						glm::vec2(1.0f),
 						glm::vec4(lights[entity].Color, 1.0f),
 						iconsTexture,
@@ -118,10 +123,14 @@ namespace Flare
 
 				DebugRenderer::DrawCircle(transforms[entity].Position + lightDirection * radius,
 					lightDirection,
-					tangent, outerCircleRadius);
+					tangent,
+					outerCircleRadius,
+					glm::vec4(lights[entity].Color, 1.0f));
 				DebugRenderer::DrawCircle(transforms[entity].Position + lightDirection * radius,
 					lightDirection,
-					tangent, innerCircleRadius);
+					tangent,
+					innerCircleRadius,
+					glm::vec4(lights[entity].Color, 1.0f));
 
 				glm::vec2 offsetSigns[] =
 				{
@@ -135,7 +144,8 @@ namespace Flare
 				{
 					glm::vec3 offset = offsetSigns[i].x * tangent + offsetSigns[i].y * bitangent;
 					DebugRenderer::DrawLine(transforms[entity].Position,
-						transforms[entity].Position + lightDirection * radius + offset * outerCircleRadius);
+						transforms[entity].Position + lightDirection * radius + offset * outerCircleRadius,
+						glm::vec4(lights[entity].Color, 1.0f));
 				}
 			}
 		}
