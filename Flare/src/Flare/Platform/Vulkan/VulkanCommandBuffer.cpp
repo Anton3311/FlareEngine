@@ -409,6 +409,14 @@ namespace Flare
 			srcStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
 			dstStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
 		}
+		else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
+		{
+			srcAccess = VK_ACCESS_TRANSFER_WRITE_BIT;
+			dstAccess = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+
+			srcStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+			dstStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+		}
 	}
 
 	void VulkanCommandBuffer::TransitionImageLayout(VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout)

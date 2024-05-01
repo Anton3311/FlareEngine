@@ -84,6 +84,16 @@ namespace Flare
 
 		commandBuffer->Blit(output, 0, context.RenderTarget, 0, TextureFiltering::Closest);
 
+		if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
+		{
+			Ref<VulkanCommandBuffer> vulkanCommandBuffer = As<VulkanCommandBuffer>(commandBuffer);
+
+			vulkanCommandBuffer->TransitionImageLayout(
+				As<VulkanFrameBuffer>(output)->GetAttachmentImage(0),
+				VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+				VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+		}
+
 		context.RTPool.ReturnFullscreen(Span(formats, 1), output);
 	}
 }
