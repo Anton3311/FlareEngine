@@ -50,7 +50,8 @@ namespace Flare
 
 		int32_t MaxCascadeIndex;
 
-		float CascadeSplits[4];
+		float CascadeSplits[4] = { 0.0f };
+		float CascadeFilterWeights[4] = { 0.0f };
 
 		glm::mat4 LightProjection[4];
 
@@ -120,6 +121,8 @@ namespace Flare
 
 		ShadowSettings ShadowMappingSettings;
 		Ref<UniformBuffer> ShadowDataBuffer = nullptr;
+
+		float CascadeFilterWeights[4] = { 0.0f };
 
 		// Lighting
 		
@@ -607,6 +610,8 @@ namespace Flare
 						farPlaneDistance - nearPlaneDistance);
 				}
 
+				s_RendererData.CascadeFilterWeights[cascadeIndex] = params.BoundingSphereRadius * 2.0f;
+
 				viewport->FrameData.LightView[cascadeIndex].SetViewAndProjection(projection, view);
 				currentNearPlane = shadowSettings.CascadeSplits[cascadeIndex];
 			}
@@ -634,6 +639,12 @@ namespace Flare
 		shadowData.FrustumSize = 2.0f * s_RendererData.CurrentViewport->FrameData.Camera.Near
 			* glm::tan(glm::radians(s_RendererData.CurrentViewport->FrameData.Camera.FOV / 2.0f))
 			* s_RendererData.CurrentViewport->GetAspectRatio();
+
+		shadowData.CascadeFilterWeights[0] = 1.0f;
+		for (uint32_t i = 1; i < 4; i++)
+		{
+			shadowData.CascadeFilterWeights[i] = 1.0f / (s_RendererData.CascadeFilterWeights[i] / s_RendererData.CascadeFilterWeights[0]);
+		}
 
 		shadowData.MaxShadowDistance = shadowData.CascadeSplits[s_RendererData.ShadowMappingSettings.Cascades - 1];
 		shadowData.ShadowFadeStartDistance = shadowData.MaxShadowDistance - s_RendererData.ShadowMappingSettings.FadeDistance;

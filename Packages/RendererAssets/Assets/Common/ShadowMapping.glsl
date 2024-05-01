@@ -15,6 +15,7 @@ layout(std140, set = 0, binding = 2) uniform ShadowData
 	int u_MaxCascadeIndex;
 
 	vec4 u_CascadeSplits;
+	vec4 u_CascadeFilterWeights;
 
 	mat4 u_CascadeProjection0;
 	mat4 u_CascadeProjection1;
@@ -83,7 +84,7 @@ float CalculateBlockerDistance(sampler2D shadowMap, vec3 projectedLightSpacePosi
 	if (samplesCount == 0.0)
 		return -1.0;
 	
-	return max(0.01, blockerDistance / samplesCount);
+	return max(0.0001, blockerDistance / samplesCount);
 }
 
 float PCF(sampler2D shadowMap, vec2 uv, float receieverDepth, float filterRadius, vec2 rotation, float bias)
@@ -142,11 +143,11 @@ float CalculateShadow(vec4 position, float bias, int cascadeIndex, float rotatio
 	case 0:
 		return CalculateCascadeShadow(u_ShadowMap0, (u_CascadeProjection0 * position), bias, rotationAngle, 1.0f);
 	case 1:
-		return CalculateCascadeShadow(u_ShadowMap1, (u_CascadeProjection1 * position), bias, rotationAngle, 0.5f);
+		return CalculateCascadeShadow(u_ShadowMap1, (u_CascadeProjection1 * position), bias, rotationAngle, u_CascadeFilterWeights.y);
 	case 2:
-		return CalculateCascadeShadow(u_ShadowMap2, (u_CascadeProjection2 * position), bias, rotationAngle, 0.25f);
+		return CalculateCascadeShadow(u_ShadowMap2, (u_CascadeProjection2 * position), bias, rotationAngle, u_CascadeFilterWeights.z);
 	case 3:
-		return CalculateCascadeShadow(u_ShadowMap3, (u_CascadeProjection3 * position), bias, rotationAngle, 0.125f);
+		return CalculateCascadeShadow(u_ShadowMap3, (u_CascadeProjection3 * position), bias, rotationAngle, u_CascadeFilterWeights.w);
 	}
 
 	return 1.0f;
