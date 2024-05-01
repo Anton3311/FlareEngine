@@ -55,6 +55,7 @@ const vec2[] SAMPLE_POINTS = {
 };
 
 const int NUMBER_OF_SAMPLES = 16;
+
 #define LIGHT_SIZE (u_LightSize / u_LightFrustumSize)
 
 float CalculateBlockerDistance(sampler2D shadowMap, vec3 projectedLightSpacePosition, vec2 rotation, float bias, float scale)
@@ -128,13 +129,41 @@ float CalculateCascadeShadow(sampler2D shadowMap, vec4 lightSpacePosition, float
 
 	float penumbraWidth = (receieverDepth - blockerDistance) / blockerDistance;
 	float filterRadius = penumbraWidth * LIGHT_SIZE * u_LightNear / receieverDepth;
-	filterRadius = max(3.0f / u_ShadowResolution, filterRadius * scale * u_ShadowSoftness);
+	filterRadius = filterRadius * scale * u_ShadowSoftness;
+	filterRadius = max(2.0f / u_ShadowResolution, filterRadius);
 
 	return 1.0f - PCF(shadowMap, uv, receieverDepth, filterRadius, rotation, bias);
 }
 
+float CalculateShadow(vec4 position, float bias, int cascadeIndex, float rotationAngle)
+{
+	switch (cascadeIndex)
+	{
+	case 0:
+		return CalculateCascadeShadow(u_ShadowMap0, (u_CascadeProjection0 * position), bias, rotationAngle, 1.0f);
+	case 1:
+		return CalculateCascadeShadow(u_ShadowMap1, (u_CascadeProjection1 * position), bias, rotationAngle, 0.5f);
+	case 2:
+		return CalculateCascadeShadow(u_ShadowMap2, (u_CascadeProjection2 * position), bias, rotationAngle, 0.25f);
+	case 3:
+		return CalculateCascadeShadow(u_ShadowMap3, (u_CascadeProjection3 * position), bias, rotationAngle, 0.125f);
+	}
+
+	return 1.0f;
+}
+
+#ifndef CASCADE_BLENDING_ENABLED
+#define CASCADE_BLENDING_ENABLED 1
+#endif
+
 float CalculateShadow(vec3 N, vec4 position, vec3 viewSpacePosition)
 {
+	float NoL = dot(N, -u_LightDirection);
+	float bias = max(u_NormalBias * (1.0f - NoL), 0.0f) + u_Bias;
+
+	if (NoL <= 0.0f)
+		return 0.0f;
+
 	float viewSpaceDistance = abs(viewSpacePosition.z);
 
 	int cascadeIndex = CASCADES_COUNT;
@@ -149,29 +178,22 @@ float CalculateShadow(vec3 N, vec4 position, vec3 viewSpacePosition)
 
 	float shadowFade = smoothstep(u_ShadowFadeDistance, u_MaxShadowDistance, viewSpaceDistance);
 
-	float shadow = 0.0f;
-	float NoL = dot(N, -u_LightDirection);
-	float bias = max(u_NormalBias * (1.0f - NoL), 0.0f) + u_Bias;
-
-	bias /= float(cascadeIndex + 1);
-
 	float rotationAngle = 2.0f * PI * InterleavedGradientNoise(gl_FragCoord.xy);
+	float shadow = CalculateShadow(position, bias, cascadeIndex, rotationAngle);
 
-	switch (cascadeIndex)
+#if CASCADE_BLENDING_ENABLED
+	const float BLENDING_THRESHOLD = 1.0f;
+
+	float distanceToNextCascade = u_CascadeSplits[cascadeIndex] - viewSpaceDistance;
+	if (distanceToNextCascade <= BLENDING_THRESHOLD && cascadeIndex < CASCADES_COUNT - 1)
 	{
-	case 0:
-		shadow = CalculateCascadeShadow(u_ShadowMap0, (u_CascadeProjection0 * position), bias, rotationAngle, 1.0f);
-		break;
-	case 1:
-		shadow = CalculateCascadeShadow(u_ShadowMap1, (u_CascadeProjection1 * position), bias, rotationAngle, 0.5f);
-		break;
-	case 2:
-		shadow = CalculateCascadeShadow(u_ShadowMap2, (u_CascadeProjection2 * position), bias, rotationAngle, 0.25f);
-		break;
-	case 3:
-		shadow = CalculateCascadeShadow(u_ShadowMap3, (u_CascadeProjection3 * position), bias, rotationAngle, 0.125f);
-		break;
+		int nextCascade = cascadeIndex + 1;
+		float shadow1 = CalculateShadow(position, bias, nextCascade, rotationAngle);
+		float cascadeBlend = min(1.0f, distanceToNextCascade / BLENDING_THRESHOLD);
+
+		shadow = mix(shadow1, shadow, cascadeBlend);
 	}
+#endif
 
 	return mix(shadow, 1.0f, shadowFade);
 }
