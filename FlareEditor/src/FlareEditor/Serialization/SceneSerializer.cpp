@@ -314,22 +314,22 @@ namespace Flare
 				if (name == ToneMapping::_Type.TypeName)
 				{
 					if (postProcessingManager.ToneMappingPass)
-						deserializer.Serialize("Data", SerializationValue(postProcessingManager.ToneMappingPass));
+						deserializer.Serialize("Data", SerializationValue(*postProcessingManager.ToneMappingPass));
 				}
 				else if (name == Vignette::_Type.TypeName)
 				{
 					if (postProcessingManager.VignettePass)
-						deserializer.Serialize("Data", SerializationValue(postProcessingManager.VignettePass));
+						deserializer.Serialize("Data", SerializationValue(*postProcessingManager.VignettePass));
 				}
 				else if (name == SSAO::_Type.TypeName)
 				{
 					if (postProcessingManager.SSAOPass)
-						deserializer.Serialize("Data", SerializationValue(postProcessingManager.SSAOPass));
+						deserializer.Serialize("Data", SerializationValue(*postProcessingManager.SSAOPass));
 				}
 				else if (name == AtmospherePass::_Type.TypeName)
 				{
 					if (postProcessingManager.Atmosphere)
-						deserializer.Serialize("Data", SerializationValue(postProcessingManager.Atmosphere));
+						deserializer.Serialize("Data", SerializationValue(*postProcessingManager.Atmosphere));
 				}
 			}
 		}
