@@ -180,6 +180,11 @@ namespace Flare
 			specifications.Format = TextureFormat::RGBA8;
 			data.Size = specifications.Width * specifications.Height * 4;
 		}
+		else if (channels == 2)
+		{
+			specifications.Format = TextureFormat::RG8;
+			data.Size = specifications.Width * specifications.Height * 2;
+		}
 		else
 		{
 			FLARE_CORE_ASSERT(false);
