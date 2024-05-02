@@ -28,7 +28,7 @@ namespace Flare
 			Ref<const ShaderMetadata> metadata);
 
 		std::filesystem::path GetCacheDirectoryPath(AssetHandle shaderHandle);
-		std::string GetCacheFileName(std::string_view shaderName, ShaderTargetEnvironment targetEnvironemt, ShaderStageType stageType);
+		std::string GetCacheFileName(std::string_view shaderName, ShaderStageType stageType);
 	private:
 		std::unordered_map<AssetHandle, Ref<const ShaderMetadata>> m_Entries;
 	};

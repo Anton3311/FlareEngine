@@ -181,8 +181,11 @@ namespace Flare
 	enum class ShaderStageType
 	{
 		Vertex,
-		Pixel
+		Pixel,
+		Compute,
 	};
+
+	FLARE_API const char* ShaderStageTypeToString(ShaderStageType stage);
 
 	struct ShaderFeatures
 	{

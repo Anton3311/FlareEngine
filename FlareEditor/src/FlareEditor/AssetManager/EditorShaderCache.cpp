@@ -26,7 +26,6 @@ namespace Flare
 
         std::filesystem::path cacheFilePath = cacheDirectory / GetCacheFileName(
             assetMetadata->Path.filename().string(),
-            targetEnvironment,
             stageType);
 
         std::ofstream output(cacheFilePath, std::ios::out | std::ios::binary);
@@ -46,7 +45,6 @@ namespace Flare
         std::filesystem::path cacheDirectory = GetCacheDirectoryPath(shaderHandle);
         std::filesystem::path cacheFilePath = cacheDirectory / GetCacheFileName(
             assetMetadata->Path.filename().string(),
-            targetEnvironment,
             stageType);
 
         std::vector<uint32_t> compiledShader;
@@ -81,7 +79,7 @@ namespace Flare
         FLARE_CORE_ASSERT(assetMetadata);
 
         std::filesystem::path cacheFile = GetCacheDirectoryPath(shaderHandle)
-            / GetCacheFileName(assetMetadata->Path.filename().string(), targetEnvironment, stage);
+            / GetCacheFileName(assetMetadata->Path.filename().string(), stage);
 
         return std::filesystem::exists(cacheFile);
     }
@@ -145,31 +143,9 @@ namespace Flare
         return cacheDirectory;
     }
 
-    std::string EditorShaderCache::GetCacheFileName(std::string_view shaderName, ShaderTargetEnvironment targetEnvironemt, ShaderStageType stageType)
+    std::string EditorShaderCache::GetCacheFileName(std::string_view shaderName, ShaderStageType stageType)
     {
-        std::string_view apiName = "";
-        std::string_view stageName = "";
-
-        switch (targetEnvironemt)
-        {
-        case ShaderTargetEnvironment::OpenGL:
-            apiName = "opengl";
-            break;
-        case ShaderTargetEnvironment::Vulkan:
-            apiName = "vulkan";
-            break;
-        }
-
-        switch (stageType)
-        {
-        case ShaderStageType::Vertex:
-            stageName = "vertex";
-            break;
-        case ShaderStageType::Pixel:
-            stageName = "pixel";
-            break;
-        }
-
-        return fmt::format("{}.{}.cache.{}", shaderName, apiName, stageName);
+        std::string_view stageName = ShaderStageTypeToString(stageType);
+        return fmt::format("{}.cache.{}", shaderName, stageName);
     }
 }

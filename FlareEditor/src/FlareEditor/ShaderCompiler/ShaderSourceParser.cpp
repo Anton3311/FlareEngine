@@ -38,6 +38,8 @@ namespace Flare
 					shaderType = ShaderStageType::Vertex;
 				else if (shaderTypeString.value().Value == "pixel")
 					shaderType = ShaderStageType::Pixel;
+				else if (shaderTypeString.value().Value == "compute")
+					shaderType = ShaderStageType::Compute;
 				else
 				{
 					m_Errors.emplace_back(shaderTypeString->Position,
