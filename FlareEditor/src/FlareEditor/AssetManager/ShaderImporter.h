@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Flare/AssetManager/Asset.h"
-#include "Flare/Renderer/Shader.h"
 
 namespace Flare
 {
@@ -9,5 +8,6 @@ namespace Flare
 	{
 	public:
 		static Ref<Asset> ImportShader(const AssetMetadata& metadata);
+		static Ref<Asset> ImportComputeShader(const AssetMetadata& metadata);
 	};
 }

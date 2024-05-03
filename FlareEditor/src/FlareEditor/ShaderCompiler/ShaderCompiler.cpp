@@ -552,6 +552,22 @@ namespace Flare
 		}
 	}
 
+	static shaderc_shader_kind ShaderStageTypeToShaderCStageType(ShaderStageType stageType)
+	{
+		switch (stageType)
+		{
+		case ShaderStageType::Vertex:
+			return shaderc_vertex_shader;
+		case ShaderStageType::Pixel:
+			return shaderc_fragment_shader;
+		case ShaderStageType::Compute:
+			return shaderc_compute_shader;
+		}
+
+		FLARE_CORE_ASSERT(false);
+		return (shaderc_shader_kind)0;
+	}
+
 	static bool CompileGraphicsShader(AssetHandle shaderHandle, bool forceRecompile, const ShaderSourceParser& parser, std::vector<ShaderError>& errors)
 	{
 		const std::filesystem::path& shaderPath = AssetManager::GetAssetMetadata(shaderHandle)->Path;
@@ -596,20 +612,7 @@ namespace Flare
 
 		for (const PreprocessedShaderProgram& program : programs)
 		{
-			shaderc_shader_kind shaderKind = (shaderc_shader_kind)0;
-
-			switch (program.Stage)
-			{
-			case ShaderStageType::Vertex:
-				shaderKind = shaderc_vertex_shader;
-				break;
-			case ShaderStageType::Pixel:
-				shaderKind = shaderc_fragment_shader;
-				break;
-			default:
-				FLARE_CORE_ASSERT(false);
-				break;
-			}
+			shaderc_shader_kind shaderKind = ShaderStageTypeToShaderCStageType(program.Stage);
 
 			CrossCompilationOptions options;
 			options.LocationBase = 0;
@@ -685,8 +688,88 @@ namespace Flare
 		for (const auto& program : programs)
 			metadata->Stages.push_back(program.Stage);
 
-		((EditorShaderCache*)ShaderCacheManager::GetInstance().get())->SetShaderEntry(shaderHandle, metadata);
+		EditorShaderCache::GetInstance().SetShaderEntry(shaderHandle, metadata);
 
+		return true;
+	}
+
+	static void ReflectComputeShader(spirv_cross::Compiler& compiler, Ref<ComputeShaderMetadata> metadata)
+	{
+		metadata->LocalGroupSize.x = compiler.get_execution_mode_argument(spv::ExecutionModeLocalSize, 0);
+		metadata->LocalGroupSize.y = compiler.get_execution_mode_argument(spv::ExecutionModeLocalSize, 1);
+		metadata->LocalGroupSize.z = compiler.get_execution_mode_argument(spv::ExecutionModeLocalSize, 2);
+
+		const auto& resources = compiler.get_shader_resources();
+		for (const auto& resource : resources.push_constant_buffers)
+		{
+			const auto& bufferType = compiler.get_type(resource.base_type_id);
+			size_t bufferSize = compiler.get_declared_struct_size(bufferType);
+			uint32_t binding = compiler.get_decoration(resource.id, spv::DecorationBinding);
+			uint32_t membersCount = (uint32_t)bufferType.member_types.size();
+
+			metadata->PushConstantsRange.Offset = 0;
+			metadata->PushConstantsRange.Size = bufferSize;
+			metadata->PushConstantsRange.Stage = ShaderStageType::Compute;
+		}
+	}
+
+	static bool CompileComputeShader(AssetHandle shaderHandle, bool forceRecompile, const ShaderSourceParser& parser, std::vector<ShaderError>& errors)
+	{
+		const std::filesystem::path& shaderPath = AssetManager::GetAssetMetadata(shaderHandle)->Path;
+		std::string shaderPathString = shaderPath.generic_string();
+
+		PreprocessedShaderProgram program{};
+
+		for (const auto& sourceBlock : parser.GetSourceBlocks())
+		{
+			bool isStageSupported = sourceBlock.Stage == ShaderStageType::Compute;
+
+			if (!isStageSupported)
+			{
+				errors.emplace_back(sourceBlock.Position, fmt::format(
+					"{} stage is not supported by compute shaders",
+					ShaderStageTypeToString(sourceBlock.Stage)));
+				return false;
+			}
+
+			program.Source = sourceBlock.Source;
+			program.Stage = sourceBlock.Stage;
+		}
+		
+		Ref<ComputeShaderMetadata> metadata = CreateRef<ComputeShaderMetadata>();
+		metadata->Name = shaderPath.filename().replace_extension().generic_string();
+
+		shaderc_shader_kind shaderKind = ShaderStageTypeToShaderCStageType(program.Stage);
+		std::optional<std::vector<uint32_t>> compiledVulkanShader;
+
+		if (!forceRecompile)
+		{
+			compiledVulkanShader = ShaderCacheManager::GetInstance()->FindCache(
+				shaderHandle,
+				ShaderTargetEnvironment::Vulkan,
+				program.Stage);
+		}
+
+		if (!compiledVulkanShader)
+		{
+			compiledVulkanShader = CompileVulkanGlslToSpirv(shaderPathString, program.Source, shaderKind);
+			if (!compiledVulkanShader)
+				return false;
+
+			ShaderCacheManager::GetInstance()->SetCache(shaderHandle, ShaderTargetEnvironment::Vulkan, program.Stage, compiledVulkanShader.value());
+		}
+
+		try
+		{
+			spirv_cross::Compiler compiler(*compiledVulkanShader);
+			ReflectComputeShader(compiler, metadata);
+		}
+		catch (spirv_cross::CompilerError& error)
+		{
+			FLARE_CORE_ERROR("Shader reflection failed: {}", error.what());
+		}
+
+		EditorShaderCache::GetInstance().SetComputeShaderEntry(shaderHandle, metadata);
 		return true;
 	}
 
@@ -701,13 +784,14 @@ namespace Flare
 	{
 		FLARE_CORE_ASSERT(AssetManager::IsAssetHandleValid(shaderHandle));
 
-		const std::filesystem::path& shaderPath = AssetManager::GetAssetMetadata(shaderHandle)->Path;
+		const AssetMetadata* assetMetadata = AssetManager::GetAssetMetadata(shaderHandle);
+		const std::filesystem::path& shaderPath = assetMetadata->Path;
 		std::string source = "";
 		{
 			std::ifstream file(shaderPath);
 			if (!file.is_open())
 			{
-				FLARE_CORE_ERROR("Failed not read shader file {0}", shaderPath.string());
+				FLARE_CORE_ERROR("Failed not read shader file: {}", shaderPath.string());
 				return false;
 			}
 
@@ -726,9 +810,20 @@ namespace Flare
 			PrintShaderErrors(errors, shaderPath);
 			return false;
 		}
-
-		if (CompileGraphicsShader(shaderHandle, forceRecompile, parser, errors))
-			return true;
+		
+		switch (assetMetadata->Type)
+		{
+		case AssetType::Shader:
+			if (CompileGraphicsShader(shaderHandle, forceRecompile, parser, errors))
+				return true;
+			break;
+		case AssetType::ComputeShader:
+			if (CompileComputeShader(shaderHandle, forceRecompile, parser, errors))
+				return true;
+			break;
+		default:
+			FLARE_CORE_ASSERT(false);
+		}
 
 		PrintShaderErrors(errors, shaderPath);
 		return false;

@@ -71,6 +71,14 @@ namespace Flare
         return it->second;
     }
 
+    Ref<const ComputeShaderMetadata> EditorShaderCache::FindComputeShaderMetadata(AssetHandle shaderHandle)
+    {
+        auto it = m_ComputeShaderEntries.find(shaderHandle);
+        if (it == m_ComputeShaderEntries.end())
+            return nullptr;
+        return it->second;
+    }
+
     bool EditorShaderCache::HasCache(AssetHandle shaderHandle, ShaderTargetEnvironment targetEnvironment, ShaderStageType stage)
     {
         FLARE_CORE_ASSERT(AssetManager::IsAssetHandleValid(shaderHandle));
@@ -87,6 +95,11 @@ namespace Flare
     void EditorShaderCache::SetShaderEntry(AssetHandle shaderHandle, Ref<const ShaderMetadata> metadata)
     {
         m_Entries[shaderHandle] = metadata;
+    }
+
+    void EditorShaderCache::SetComputeShaderEntry(AssetHandle shaderHandle, Ref<const ComputeShaderMetadata> metadata)
+    {
+        m_ComputeShaderEntries[shaderHandle] = metadata;
     }
 
     std::filesystem::path EditorShaderCache::GetCacheDirectoryPath(AssetHandle shaderHandle)
@@ -147,5 +160,11 @@ namespace Flare
     {
         std::string_view stageName = ShaderStageTypeToString(stageType);
         return fmt::format("{}.cache.{}", shaderName, stageName);
+    }
+
+    EditorShaderCache& EditorShaderCache::GetInstance()
+    {
+        ShaderCacheManager* instance = ShaderCacheManager::GetInstance().get();
+        return *(EditorShaderCache*)instance;
     }
 }

@@ -48,6 +48,7 @@ namespace Flare
         });
 
         m_AssetImporters.emplace(AssetType::Shader, ShaderImporter::ImportShader);
+        m_AssetImporters.emplace(AssetType::ComputeShader, ShaderImporter::ImportComputeShader);
         m_AssetImporters.emplace(AssetType::Font, [](const AssetMetadata& metadata) -> Ref<Asset>
         {
             return CreateRef<Font>(metadata.Path);
@@ -92,7 +93,8 @@ namespace Flare
 
         for (const auto& entry : m_Registry)
         {
-            if (entry.second.Metadata.Type == AssetType::Shader && entry.second.Metadata.Source == AssetSource::File)
+            bool isShaderAsset = entry.second.Metadata.Type == AssetType::Shader || entry.second.Metadata.Type == AssetType::ComputeShader;
+            if (isShaderAsset && entry.second.Metadata.Source == AssetSource::File)
             {
                 std::string shaderFileName = entry.second.Metadata.Path.filename().string();
                 size_t dotPosition = shaderFileName.find_first_of(".");
@@ -168,7 +170,20 @@ namespace Flare
         else if (extension == ".flrsprite")
             type = AssetType::Sprite;
         else if (extension == ".glsl")
-            type = AssetType::Shader;
+        {
+            std::string_view computeShaderExtension = ".compute.glsl";
+            std::string pathString = path.string();
+            size_t position = pathString.find_last_of(computeShaderExtension);
+
+            if (position == std::string::npos)
+            {
+				type = AssetType::Shader;
+            }
+            else
+            {
+                type = AssetType::ComputeShader;
+            }
+        }
         else if (extension == ".ttf")
             type = AssetType::Font;
         else if (extension == ".fbx" || extension == ".gltf")
