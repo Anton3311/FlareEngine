@@ -13,6 +13,7 @@
 #include "Flare/Renderer/Renderer.h"
 #include "Flare/Renderer/ShaderStorageBuffer.h"
 #include "Flare/Renderer/GPUTimer.h"
+#include "Flare/Renderer/DescriptorSet.h"
 
 #include "Flare/Project/Project.h"
 
@@ -117,7 +118,7 @@ namespace Flare
 		Ref<FrameBuffer> ShadowsRenderTarget[ShadowSettings::MaxCascades] = { nullptr };
 		Ref<ShaderStorageBuffer> ShadowPassInstanceBuffers[ShadowSettings::MaxCascades] = { nullptr };
 		Ref<UniformBuffer> ShadowPassCameraBuffers[ShadowSettings::MaxCascades] = { nullptr };
-		Ref<VulkanDescriptorSet> PerCascadeDescriptorSets[ShadowSettings::MaxCascades] = { nullptr };
+		Ref<DescriptorSet> PerCascadeDescriptorSets[ShadowSettings::MaxCascades] = { nullptr };
 
 		ShadowSettings ShadowMappingSettings;
 		Ref<UniformBuffer> ShadowDataBuffer = nullptr;
@@ -134,9 +135,9 @@ namespace Flare
 		Ref<GPUTimer> ShadowPassTimer = nullptr;
 		Ref<GPUTimer> GeometryPassTimer = nullptr;
 
-		Ref<VulkanDescriptorSet> PrimaryDescriptorSet = nullptr;
-		Ref<VulkanDescriptorSet> PrimaryDescriptorSetWithoutShadows = nullptr;
-		Ref<VulkanDescriptorSetPool> PrimaryDescriptorPool = nullptr;
+		Ref<DescriptorSet> PrimaryDescriptorSet = nullptr;
+		Ref<DescriptorSet> PrimaryDescriptorSetWithoutShadows = nullptr;
+		Ref<DescriptorSetPool> PrimaryDescriptorPool = nullptr;
 	};
 	
 	RendererData s_RendererData;
@@ -294,7 +295,7 @@ namespace Flare
 
 			for (size_t i = 0; i < ShadowSettings::MaxCascades; i++)
 			{
-				s_RendererData.PrimaryDescriptorSet->WriteTexture(s_RendererData.WhiteTexture, (uint32_t)(28 + i));
+				s_RendererData.PrimaryDescriptorSet->WriteImage(s_RendererData.WhiteTexture, (uint32_t)(28 + i));
 			}
 
 			s_RendererData.PrimaryDescriptorSet->FlushWrites();
@@ -309,7 +310,7 @@ namespace Flare
 
 			for (size_t i = 0; i < ShadowSettings::MaxCascades; i++)
 			{
-				s_RendererData.PrimaryDescriptorSetWithoutShadows->WriteTexture(s_RendererData.WhiteTexture, (uint32_t)(28 + i));
+				s_RendererData.PrimaryDescriptorSetWithoutShadows->WriteImage(s_RendererData.WhiteTexture, (uint32_t)(28 + i));
 			}
 
 			s_RendererData.PrimaryDescriptorSetWithoutShadows->FlushWrites();
@@ -317,7 +318,7 @@ namespace Flare
 			// Setup per cascade descriptor sets
 			for (uint32_t i = 0; i < ShadowSettings::MaxCascades; i++)
 			{
-				Ref<VulkanDescriptorSet> set = s_RendererData.PrimaryDescriptorPool->AllocateSet();
+				Ref<DescriptorSet> set = s_RendererData.PrimaryDescriptorPool->AllocateSet();
 				set->WriteUniformBuffer(s_RendererData.ShadowPassCameraBuffers[i], 0);
 				set->WriteUniformBuffer(s_RendererData.LightBuffer, 1);
 				set->WriteUniformBuffer(s_RendererData.ShadowDataBuffer, 2);
@@ -327,7 +328,7 @@ namespace Flare
 
 				for (size_t i = 0; i < ShadowSettings::MaxCascades; i++)
 				{
-					set->WriteTexture(s_RendererData.WhiteTexture, (uint32_t)(28 + i));
+					set->WriteImage(s_RendererData.WhiteTexture, (uint32_t)(28 + i));
 				}
 
 				set->FlushWrites();
@@ -719,7 +720,7 @@ namespace Flare
 			{
 				for (size_t i = 0; i < ShadowSettings::MaxCascades; i++)
 				{
-					s_RendererData.PrimaryDescriptorSet->WriteFrameBufferAttachment(s_RendererData.ShadowsRenderTarget[i], 0, (uint32_t)(28 + i));
+					s_RendererData.PrimaryDescriptorSet->WriteImage(s_RendererData.ShadowsRenderTarget[i], 0, (uint32_t)(28 + i));
 				}
 
 				s_RendererData.PrimaryDescriptorSet->FlushWrites();
@@ -1383,12 +1384,12 @@ namespace Flare
 		return s_RendererData.ShadowMappingSettings;
 	}
 
-	Ref<VulkanDescriptorSet> Renderer::GetPrimaryDescriptorSet()
+	Ref<DescriptorSet> Renderer::GetPrimaryDescriptorSet()
 	{
 		return s_RendererData.PrimaryDescriptorSet;
 	}
 
-	Ref<VulkanDescriptorSetLayout> Renderer::GetPrimaryDescriptorSetLayout()
+	Ref<const DescriptorSetLayout> Renderer::GetPrimaryDescriptorSetLayout()
 	{
 		return s_RendererData.PrimaryDescriptorPool->GetLayout();
 	}

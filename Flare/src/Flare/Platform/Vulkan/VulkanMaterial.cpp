@@ -39,7 +39,7 @@ namespace Flare
 
 		if (pool)
 		{
-			m_Set = pool->AllocateSet();
+			m_Set = As<VulkanDescriptorSet>(pool->AllocateSet());
 
 			const AssetMetadata* metadata = AssetManager::GetAssetMetadata(Handle);
 			if (metadata != nullptr)
@@ -120,17 +120,17 @@ namespace Flare
 			const auto& textureProperty = ReadPropertyValue<TexturePropertyValue>((uint32_t)i);
 			if (textureProperty.Texture)
 			{
-				m_Set->WriteTexture(textureProperty.Texture, property.Binding);
+				m_Set->WriteImage(textureProperty.Texture, property.Binding);
 			}
 			else if (textureProperty.FrameBuffer)
 			{
 				// NOTE: FrameBuffer attachment is expected to have the right layout
-				m_Set->WriteFrameBufferAttachment(textureProperty.FrameBuffer, textureProperty.FrameBufferAttachmentIndex, property.Binding);
+				m_Set->WriteImage(textureProperty.FrameBuffer, textureProperty.FrameBufferAttachmentIndex, property.Binding);
 			}
 			else
 			{
 				FLARE_CORE_WARN("Material has an invalid texture property at index {}. A white texture is used instead", i);
-				m_Set->WriteTexture(Renderer::GetWhiteTexture(), property.Binding);
+				m_Set->WriteImage(Renderer::GetWhiteTexture(), property.Binding);
 			}
 		}
 

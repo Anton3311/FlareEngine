@@ -114,12 +114,12 @@ namespace Flare
 		RenderData* FrameData = nullptr;
 
 		std::vector<QuadsBatch> QuadBatches;
-		std::vector<Ref<VulkanDescriptorSet>> UsedQuadsDescriptorSets;
-		Ref<VulkanDescriptorSetPool> QuadsDescriptorPool = nullptr;
+		std::vector<Ref<DescriptorSet>> UsedQuadsDescriptorSets;
+		Ref<DescriptorSetPool> QuadsDescriptorPool = nullptr;
 
 		Ref<Pipeline> TextPipeline = nullptr;
-		Ref<VulkanDescriptorSet> TextDescriptorSet = nullptr;
-		Ref<VulkanDescriptorSetPool> TextDescriptorPool = nullptr;
+		Ref<DescriptorSet> TextDescriptorSet = nullptr;
+		Ref<DescriptorSetPool> TextDescriptorPool = nullptr;
 	};
 
 	Renderer2DData s_Renderer2DData;
@@ -247,7 +247,7 @@ namespace Flare
 
 	void Renderer2D::Shutdown()
 	{
-		for (Ref<VulkanDescriptorSet> set : s_Renderer2DData.UsedQuadsDescriptorSets)
+		for (Ref<DescriptorSet> set : s_Renderer2DData.UsedQuadsDescriptorSets)
 			s_Renderer2DData.QuadsDescriptorPool->ReleaseSet(set);
 		s_Renderer2DData.UsedQuadsDescriptorSets.clear();
 
@@ -257,7 +257,7 @@ namespace Flare
 	void Renderer2D::BeginFrame()
 	{
 		FLARE_PROFILE_FUNCTION();
-		for (Ref<VulkanDescriptorSet> set : s_Renderer2DData.UsedQuadsDescriptorSets)
+		for (Ref<DescriptorSet> set : s_Renderer2DData.UsedQuadsDescriptorSets)
 			s_Renderer2DData.QuadsDescriptorPool->ReleaseSet(set);
 		s_Renderer2DData.UsedQuadsDescriptorSets.clear();
 	}
@@ -609,7 +609,7 @@ namespace Flare
 		}
 	}
 
-	Ref<VulkanDescriptorSetLayout> Renderer2D::GetDescriptorSetLayout()
+	Ref<const DescriptorSetLayout> Renderer2D::GetDescriptorSetLayout()
 	{
 		return s_Renderer2DData.QuadsDescriptorPool->GetLayout();
 	}
@@ -626,12 +626,12 @@ namespace Flare
 			Ref<VulkanCommandBuffer> commandBuffer = VulkanContext::GetInstance().GetPrimaryCommandBuffer();
 			Ref<VulkanFrameBuffer> renderTarget = As<VulkanFrameBuffer>(Renderer::GetCurrentViewport().RenderTarget);
 
-			Ref<VulkanDescriptorSet> descriptorSet = s_Renderer2DData.QuadsDescriptorPool->AllocateSet();
+			Ref<DescriptorSet> descriptorSet = s_Renderer2DData.QuadsDescriptorPool->AllocateSet();
 			descriptorSet->SetDebugName("QuadsDescriptorSet");
 
 			s_Renderer2DData.UsedQuadsDescriptorSets.push_back(descriptorSet);
 
-			descriptorSet->WriteTextures(Span((Ref<const Texture>*)batch.Textures, MaxTexturesCount), 0, 0);
+			descriptorSet->WriteImages(Span((Ref<const Texture>*)batch.Textures, MaxTexturesCount), 0, 0);
 			descriptorSet->FlushWrites();
 
 			commandBuffer->SetSecondaryDescriptorSet(descriptorSet);
@@ -734,25 +734,25 @@ namespace Flare
 					{ 0, 3, ShaderDataType::Int }, // Entity index
 				});
 
-				Ref<const VulkanDescriptorSetLayout> layouts[] = { Renderer::GetPrimaryDescriptorSetLayout(), s_Renderer2DData.TextDescriptorPool->GetLayout() };
+				Ref<const DescriptorSetLayout> layouts[] = { Renderer::GetPrimaryDescriptorSetLayout(), s_Renderer2DData.TextDescriptorPool->GetLayout() };
 
 				Ref<VulkanFrameBuffer> renderTarget = As<VulkanFrameBuffer>(Renderer::GetMainViewport().RenderTarget);
 				s_Renderer2DData.TextPipeline = CreateRef<VulkanPipeline>(specificaionts,
 					renderTarget->GetCompatibleRenderPass(),
-					Span<Ref<const VulkanDescriptorSetLayout>>(layouts, 2),
+					Span<Ref<const DescriptorSetLayout>>(layouts, 2),
 					Span<ShaderPushConstantsRange>());
 			}
 
 			Ref<VulkanCommandBuffer> commandBuffer = VulkanContext::GetInstance().GetPrimaryCommandBuffer();
 			Ref<VulkanFrameBuffer> renderTarget = As<VulkanFrameBuffer>(Renderer::GetCurrentViewport().RenderTarget);
 
-			s_Renderer2DData.TextDescriptorSet->WriteTexture(s_Renderer2DData.CurrentFont->GetAtlas(), 0);
+			s_Renderer2DData.TextDescriptorSet->WriteImage(s_Renderer2DData.CurrentFont->GetAtlas(), 0);
 			s_Renderer2DData.TextDescriptorSet->FlushWrites();
 
 			VkPipelineLayout pipelineLayout = As<const VulkanPipeline>(s_Renderer2DData.TextPipeline)->GetLayoutHandle();
 
-			commandBuffer->BindDescriptorSet(Renderer::GetPrimaryDescriptorSet(), pipelineLayout, 0);
-			commandBuffer->BindDescriptorSet(s_Renderer2DData.TextDescriptorSet, pipelineLayout, 1);
+			commandBuffer->BindDescriptorSet(As<VulkanDescriptorSet>(Renderer::GetPrimaryDescriptorSet()), pipelineLayout, 0);
+			commandBuffer->BindDescriptorSet(As<VulkanDescriptorSet>(s_Renderer2DData.TextDescriptorSet), pipelineLayout, 1);
 
 			commandBuffer->BindPipeline(s_Renderer2DData.TextPipeline);
 			commandBuffer->SetViewportAndScisors(Math::Rect(glm::vec2(0.0f), (glm::vec2)renderTarget->GetSize()));

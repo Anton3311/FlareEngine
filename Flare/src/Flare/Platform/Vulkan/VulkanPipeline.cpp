@@ -7,7 +7,7 @@ namespace Flare
 {
 	VulkanPipeline::VulkanPipeline(const PipelineSpecifications& specifications,
 		const Ref<VulkanRenderPass>& renderPass,
-		const Span<Ref<const VulkanDescriptorSetLayout>>& layouts,
+		const Span<Ref<const DescriptorSetLayout>>& layouts,
 		const Span<ShaderPushConstantsRange>& pushConstantsRanges)
 		: m_Specifications(specifications), m_CompatbileRenderPass(renderPass)
 	{
@@ -41,7 +41,7 @@ namespace Flare
 		return m_Specifications;
 	}
 
-	void VulkanPipeline::CreatePipelineLayout(const Span<Ref<const VulkanDescriptorSetLayout>>& layouts, const Span<ShaderPushConstantsRange>& pushConstantsRanges)
+	void VulkanPipeline::CreatePipelineLayout(const Span<Ref<const DescriptorSetLayout>>& layouts, const Span<ShaderPushConstantsRange>& pushConstantsRanges)
 	{
 		VkPipelineLayoutCreateInfo layoutInfo{};
 		layoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -50,7 +50,7 @@ namespace Flare
 		std::vector<VkDescriptorSetLayout> descriptorSetLayouts(layouts.GetSize());
 		for (size_t i = 0; i < layouts.GetSize(); i++)
 		{
-			descriptorSetLayouts[i] = layouts[i]->GetHandle();
+			descriptorSetLayouts[i] = As<const VulkanDescriptorSetLayout>(layouts[i])->GetHandle();
 		}
 
 		layoutInfo.setLayoutCount = (uint32_t)descriptorSetLayouts.size();

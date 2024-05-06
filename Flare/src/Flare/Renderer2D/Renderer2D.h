@@ -29,7 +29,7 @@ namespace Flare
 
 	FLARE_IMPL_ENUM_BITFIELD(SpriteRenderFlags);
 
-	class VulkanDescriptorSetLayout;
+	class DescriptorSetLayout;
 	class FLARE_API Renderer2D
 	{
 	public:
@@ -87,7 +87,7 @@ namespace Flare
 			const glm::vec4& color = glm::vec4(1.0f),
 			int32_t entityIndex = INT32_MAX);
 
-		static Ref<VulkanDescriptorSetLayout> GetDescriptorSetLayout();
+		static Ref<const DescriptorSetLayout> GetDescriptorSetLayout();
 
 		static void ResetStats();
 		static const Renderer2DStats& GetStats();

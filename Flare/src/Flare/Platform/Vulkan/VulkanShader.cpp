@@ -162,8 +162,8 @@ namespace Flare
 			}
 		}
 
-		Ref<VulkanDescriptorSetLayout> primaryDescriptorSet = Renderer::GetPrimaryDescriptorSetLayout();
-		Ref<VulkanDescriptorSetLayout> secondaryDescriptorSet = Renderer2D::GetDescriptorSetLayout();
+		Ref<const VulkanDescriptorSetLayout> primaryDescriptorSet = As<const VulkanDescriptorSetLayout>(Renderer::GetPrimaryDescriptorSetLayout());
+		Ref<const VulkanDescriptorSetLayout> secondaryDescriptorSet = As<const VulkanDescriptorSetLayout>(Renderer2D::GetDescriptorSetLayout());
 
 		std::vector<VkPushConstantRange> pushConstantsRanges;
 		VkDescriptorSetLayout descriptorSetLayouts[3] = { nullptr };
@@ -178,7 +178,7 @@ namespace Flare
 
 		if (m_SetPool)
 		{
-			descriptorSetLayouts[2] = m_SetPool->GetLayout()->GetHandle();
+			descriptorSetLayouts[2] = As<const VulkanDescriptorSetLayout>(m_SetPool->GetLayout())->GetHandle();
 		}
 
 		for (size_t i = 0; i < m_Metadata->PushConstantsRanges.size(); i++)
@@ -265,8 +265,8 @@ namespace Flare
 		return it->second;
 	}
 
-	Ref<VulkanDescriptorSetLayout> VulkanShader::GetDescriptorSetLayout() const
+	Ref<const VulkanDescriptorSetLayout> VulkanShader::GetDescriptorSetLayout() const
 	{
-		return m_SetPool->GetLayout();
+		return As<const VulkanDescriptorSetLayout>(m_SetPool->GetLayout());
 	}
 }

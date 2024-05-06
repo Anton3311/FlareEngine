@@ -361,7 +361,7 @@ namespace Flare
 
 				commandBuffer->BindVertexBuffers(Span((Ref<const VertexBuffer>*)&s_DebugRendererData.LinesVertexBuffer, 1));
 				commandBuffer->BindDescriptorSet(
-					Renderer::GetPrimaryDescriptorSet(),
+					As<VulkanDescriptorSet>(Renderer::GetPrimaryDescriptorSet()),
 					As<VulkanPipeline>(s_DebugRendererData.LinePipeline)->GetLayoutHandle(), 0);
 
 				commandBuffer->Draw(0, s_DebugRendererData.LinesCount * VerticesPerLine, 0, 1);
@@ -436,7 +436,10 @@ namespace Flare
 				commandBuffer->BindIndexBuffer(s_DebugRendererData.RaysIndexBuffer);
 
 				commandBuffer->BindPipeline(s_DebugRendererData.RayPipeline);
-				commandBuffer->BindDescriptorSet(Renderer::GetPrimaryDescriptorSet(), As<VulkanPipeline>(s_DebugRendererData.RayPipeline)->GetLayoutHandle(), 0);
+				commandBuffer->BindDescriptorSet(
+					As<VulkanDescriptorSet>(Renderer::GetPrimaryDescriptorSet()),
+					As<VulkanPipeline>(s_DebugRendererData.RayPipeline)->GetLayoutHandle(),
+					0);
 
 				commandBuffer->DrawIndexed(0, s_DebugRendererData.RaysCount * IndicesPerRay, 0, 1);
 

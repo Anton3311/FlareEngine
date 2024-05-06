@@ -72,8 +72,8 @@ namespace Flare
 		void BindDescriptorSet(const Ref<const VulkanDescriptorSet>& descriptorSet, VkPipelineLayout pipelineLayout, uint32_t index);
 		void BindComputeDescriptorSet(const Ref<const VulkanDescriptorSet>& descriptorSet, VkPipelineLayout pipelineLayout, uint32_t index);
 
-		void SetPrimaryDescriptorSet(const Ref<VulkanDescriptorSet>& set);
-		void SetSecondaryDescriptorSet(const Ref<VulkanDescriptorSet>& set);
+		void SetPrimaryDescriptorSet(const Ref<DescriptorSet>& set);
+		void SetSecondaryDescriptorSet(const Ref<DescriptorSet>& set);
 
 		void DrawIndexed(uint32_t indicesCount);
 		void DrawIndexed(uint32_t firstIndex, uint32_t indicesCount);

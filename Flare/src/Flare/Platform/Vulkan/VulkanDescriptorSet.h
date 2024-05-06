@@ -1,19 +1,16 @@
 #pragma once
 
 #include "FlareCore/Collections/Span.h"
+#include "Flare/Renderer/DescriptorSet.h"
 
 #include <vector>
 #include <vulkan/vulkan.h>
 
 namespace Flare
 {
-	class UniformBuffer;
-	class ShaderStorageBuffer;
-	class Texture;
-	class FrameBuffer;
 	class VulkanDescriptorSetPool;
 
-	class VulkanDescriptorSetLayout
+	class VulkanDescriptorSetLayout : public DescriptorSetLayout
 	{
 	public:
 		VulkanDescriptorSetLayout(const Span<VkDescriptorSetLayoutBinding>& bindings);
@@ -28,46 +25,46 @@ namespace Flare
 		uint32_t m_BufferBindings = 0;
 	};
 
-	class VulkanDescriptorSet
+	class VulkanDescriptorSet : public DescriptorSet
 	{
 	public:
-		VulkanDescriptorSet(VkDescriptorPool pool, const Ref<const VulkanDescriptorSetLayout>& layout);
 		VulkanDescriptorSet(VulkanDescriptorSetPool* pool, VkDescriptorSet set);
 		~VulkanDescriptorSet();
 
-		void WriteUniformBuffer(const Ref<const UniformBuffer>& uniformBuffer, uint32_t binding);
-		void WriteStorageBuffer(const Ref<const ShaderStorageBuffer>& storageBuffer, uint32_t binding);
-		void WriteTexture(const Ref<const Texture>& texture, uint32_t binding);
-		void WriteFrameBufferAttachment(const Ref<const FrameBuffer>& frameBuffer, uint32_t attachmentIndex, uint32_t binding);
-		void WriteStorageImage(const Ref<const FrameBuffer>& frameBuffer, uint32_t attachmentIndex, uint32_t binding);
-		void WriteTextures(const Span<Ref<const Texture>>& textures, size_t arrayOffset, uint32_t binding);
+		void WriteImage(Ref<const Texture> texture, uint32_t binding) override;
+		void WriteImage(Ref<const FrameBuffer> frameBuffer, uint32_t attachmentIndex, uint32_t binding) override;
+		void WriteImages(Span<Ref<const Texture>> textures, uint32_t arrayOffset, uint32_t binding) override;
 
-		void FlushWrites();
+		void WriteStorageImage(Ref<const FrameBuffer> frameBuffer, uint32_t attachmentIndex, uint32_t binding) override;
 
-		void SetDebugName(std::string_view name);
-		const std::string& GetDebugName() const { return m_DebugName; }
+		void WriteUniformBuffer(Ref<const UniformBuffer> buffer, uint32_t binding) override;
+		void WriteStorageBuffer(Ref<const ShaderStorageBuffer> buffer, uint32_t binding) override;
 
+		void FlushWrites() override;
+
+		void SetDebugName(std::string_view name) override;
+		const std::string& GetDebugName() const override;
+	public:
 		inline VkDescriptorSet GetHandle() const { return m_Set; }
 	private:
 		std::string m_DebugName;
 		VkDescriptorSet m_Set = VK_NULL_HANDLE;
-		VulkanDescriptorSetPool* m_Pool = VK_NULL_HANDLE;
 
 		std::vector<VkWriteDescriptorSet> m_Writes;
 		std::vector<VkDescriptorImageInfo> m_Images;
 		std::vector<VkDescriptorBufferInfo> m_Buffers;
 	};
 
-	class VulkanDescriptorSetPool
+	class VulkanDescriptorSetPool : public DescriptorSetPool
 	{
 	public:
 		VulkanDescriptorSetPool(size_t maxSets, const Span<VkDescriptorSetLayoutBinding>& bindings);
 		~VulkanDescriptorSetPool();
 
-		Ref<VulkanDescriptorSet> AllocateSet();
-		void ReleaseSet(const Ref<VulkanDescriptorSet>& set);
+		Ref<DescriptorSet> AllocateSet() override;
+		void ReleaseSet(Ref<DescriptorSet> set) override;
 
-		inline Ref<VulkanDescriptorSetLayout> GetLayout() const { return m_Layout; }
+		Ref<const DescriptorSetLayout> GetLayout() const override;
 	private:
 		Ref<VulkanDescriptorSetLayout> m_Layout = nullptr;
 		VkDescriptorPool m_Pool = VK_NULL_HANDLE;

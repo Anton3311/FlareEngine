@@ -13,7 +13,7 @@ namespace Flare
 	public:
 		VulkanPipeline(const PipelineSpecifications& specifications,
 			const Ref<VulkanRenderPass>& renderPass,
-			const Span<Ref<const VulkanDescriptorSetLayout>>& layouts,
+			const Span<Ref<const DescriptorSetLayout>>& layouts,
 			const Span<ShaderPushConstantsRange>& pushConstantsRanges);
 		VulkanPipeline(const PipelineSpecifications& specifications, const Ref<VulkanRenderPass>& renderPass);
 		~VulkanPipeline();
@@ -24,7 +24,7 @@ namespace Flare
 		inline VkPipelineLayout GetLayoutHandle() const { return m_PipelineLayout; }
 		inline Ref<VulkanRenderPass> GetCompatibleRenderPass() const { return m_CompatbileRenderPass; }
 	private:
-		void CreatePipelineLayout(const Span<Ref<const VulkanDescriptorSetLayout>>& layouts, const Span<ShaderPushConstantsRange>& pushConstantsRanges);
+		void CreatePipelineLayout(const Span<Ref<const DescriptorSetLayout>>& layouts, const Span<ShaderPushConstantsRange>& pushConstantsRanges);
 		void Create();
 	private:
 		PipelineSpecifications m_Specifications;

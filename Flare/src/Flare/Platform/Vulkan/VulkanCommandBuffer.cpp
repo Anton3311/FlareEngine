@@ -794,14 +794,14 @@ namespace Flare
 		vkCmdBindDescriptorSets(m_CommandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, index, 1, &setHandle, 0, nullptr);
 	}
 
-	void VulkanCommandBuffer::SetPrimaryDescriptorSet(const Ref<VulkanDescriptorSet>& set)
+	void VulkanCommandBuffer::SetPrimaryDescriptorSet(const Ref<DescriptorSet>& set)
 	{
-		m_PrimaryDescriptorSet = set;
+		m_PrimaryDescriptorSet = As<VulkanDescriptorSet>(set);
 	}
 
-	void VulkanCommandBuffer::SetSecondaryDescriptorSet(const Ref<VulkanDescriptorSet>& set)
+	void VulkanCommandBuffer::SetSecondaryDescriptorSet(const Ref<DescriptorSet>& set)
 	{
-		m_SecondaryDescriptorSet = set;
+		m_SecondaryDescriptorSet = As<VulkanDescriptorSet>(set);
 	}
 
 	void VulkanCommandBuffer::DrawIndexed(uint32_t indicesCount)

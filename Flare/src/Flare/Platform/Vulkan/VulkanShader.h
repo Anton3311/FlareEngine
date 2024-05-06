@@ -34,7 +34,7 @@ namespace Flare
 		inline VkPipelineLayout GetPipelineLayout() const { return m_PipelineLayout; }
 		inline const std::string& GetDebugName() const { return m_DebugName; }
 
-		Ref<VulkanDescriptorSetLayout> GetDescriptorSetLayout() const;
+		Ref<const VulkanDescriptorSetLayout> GetDescriptorSetLayout() const;
 		Ref<VulkanDescriptorSetPool> GetDescriptorSetPool() const { return m_SetPool; }
 	private:
 		struct ShaderStageModule
