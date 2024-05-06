@@ -2,6 +2,22 @@
 
 namespace Flare
 {
+	FLARE_API uint32_t GetMaterialDescriptorSetIndex(ShaderType type)
+	{
+		switch (type)
+		{
+		case ShaderType::_2D:
+			return 2;
+		case ShaderType::Surface:
+			return 2;
+		case ShaderType::FullscreenQuad:
+			return 2;
+		}
+
+		FLARE_CORE_ASSERT(false);
+		return 0;
+	}
+
 	const char* CullingModeToString(CullingMode mode)
 	{
 		switch (mode)
@@ -100,6 +116,49 @@ namespace Flare
 			return BlendMode::Transparent;
 
 		return {};
+	}
+
+	FLARE_API uint32_t ShaderDataTypeSize(ShaderDataType dataType)
+	{
+		switch (dataType)
+		{
+		case ShaderDataType::Int:
+		case ShaderDataType::Float:
+			return 4;
+		case ShaderDataType::Float2:
+			return 4 * 2;
+		case ShaderDataType::Float3:
+			return 4 * 3;
+		case ShaderDataType::Float4:
+			return 4 * 4;
+		case ShaderDataType::Matrix4x4:
+			return 4 * 4 * 4;
+		case ShaderDataType::Sampler:
+		case ShaderDataType::StorageImage:
+			return 4;
+		}
+
+		return 0;
+	}
+
+	FLARE_API uint32_t ShaderDataTypeComponentCount(ShaderDataType dataType)
+	{
+		switch (dataType)
+		{
+		case ShaderDataType::Int:
+		case ShaderDataType::Float:
+			return 1;
+		case ShaderDataType::Float2:
+			return 2;
+		case ShaderDataType::Float3:
+			return 3;
+		case ShaderDataType::Float4:
+			return 4;
+		case ShaderDataType::Matrix4x4:
+			return 16;
+		}
+
+		return 0;
 	}
 
 	const char* ShaderStageTypeToString(ShaderStageType stage)
