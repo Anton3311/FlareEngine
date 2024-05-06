@@ -12,22 +12,24 @@ namespace Flare
 	class VulkanComputeShader : public ComputeShader
 	{
 	public:
-		VulkanComputeShader(Span<Ref<VulkanDescriptorSetLayout>> layouts);
+		VulkanComputeShader();
 		~VulkanComputeShader();
 
 		Ref<const ComputeShaderMetadata> GetMetadata() const override;
 		void Load() override;
 		bool IsLoaded() const override;
 
-		inline VkShaderModule GetModuleHandle() const { return m_Module; }
+		inline VkShaderModule GetModule() const { return m_Module; }
+		inline VkPipelineLayout GetPipelineLayoutHandle() const { return m_PipelineLayout; }
+		inline Ref<VulkanDescriptorSetPool> GetSetPool() const { return m_SetPool; }
 	private:
 		void CreatePipelineLayout();
 	private:
 		Ref<const ComputeShaderMetadata> m_Metadata = nullptr;
-		std::vector<Ref<VulkanDescriptorSetLayout>> m_DescriptorSetLayouts;
 		bool m_IsLoaded = false;
 
 		VkShaderModule m_Module = VK_NULL_HANDLE;
 		VkPipelineLayout m_PipelineLayout = VK_NULL_HANDLE;
+		Ref<VulkanDescriptorSetPool> m_SetPool = nullptr;
 	};
 }

@@ -387,15 +387,12 @@ namespace Flare
 		}
 	}
 
-	static void Reflect(spirv_cross::Compiler& compiler,
-		ShaderStageType stage,
-		std::unordered_map<std::string, size_t>& propertyNameToIndex,
-		Ref<ShaderMetadata> metadata)
+	static void ExtractShaderProperties(spirv_cross::Compiler& compiler,
+										std::vector<ShaderProperty>& properties,
+										ShaderPushConstantsRange& pushConstantsRange,
+										uint32_t descriptorSetMask)
 	{
 		const spirv_cross::ShaderResources& resources = compiler.get_shader_resources();
-		auto& properties = metadata->Properties;
-		ShaderPushConstantsRange& pushConstantsRange = metadata->PushConstantsRanges.emplace_back();
-		pushConstantsRange.Stage = stage;
 
 		size_t lastPropertyOffset = 0;
 		for (const auto& resource : resources.push_constant_buffers)
@@ -488,15 +485,11 @@ namespace Flare
 					shaderProperty.Type = shaderDataType.value();
 					shaderProperty.Size = compiler.get_declared_struct_member_size(bufferType, i);
 					shaderProperty.Hidden = true;
-
-					propertyNameToIndex[shaderProperty.Name] = properties.size() - 1;
 				}
 
 				lastPropertyOffset = offset;
 			}
 		}
-
-		uint32_t materialDescriptorSetIndex = GetMaterialDescriptorSetIndex(metadata->Type);
 
 		uint32_t samplerIndex = 0;
 		for (const auto& resource : resources.sampled_images)
@@ -505,7 +498,7 @@ namespace Flare
 			uint32_t binding = compiler.get_decoration(resource.id, spv::DecorationBinding);
 			uint32_t descriptorSet = compiler.get_decoration(resource.id, spv::DecorationDescriptorSet);
 
-			if (metadata->Type != ShaderType::Unknown && descriptorSet != materialDescriptorSetIndex)
+			if (!HAS_BIT(descriptorSetMask, 1 << descriptorSet))
 				continue;
 
 			ShaderDataType type = ShaderDataType::Sampler;
@@ -533,10 +526,47 @@ namespace Flare
 			shaderProperty.Hidden = true;
 			shaderProperty.SamplerIndex = samplerIndex;
 
-			propertyNameToIndex[shaderProperty.Name] = properties.size() - 1;
-
 			lastPropertyOffset += size;
 			samplerIndex++;
+		}
+		
+		for (const auto& resource : resources.storage_images)
+		{
+			const auto& samplerType = compiler.get_type(resource.type_id);
+			uint32_t binding = compiler.get_decoration(resource.id, spv::DecorationBinding);
+			uint32_t descriptorSet = compiler.get_decoration(resource.id, spv::DecorationDescriptorSet);
+
+			if (!HAS_BIT(descriptorSetMask, 1 << descriptorSet))
+				continue;
+
+			ShaderProperty& shaderProperty = properties.emplace_back();
+			shaderProperty.Binding = binding;
+			shaderProperty.Name = resource.name;
+			shaderProperty.Offset = lastPropertyOffset;
+			shaderProperty.Type = ShaderDataType::StorageImage;
+			shaderProperty.Size = ShaderDataTypeSize(ShaderDataType::StorageImage);
+			shaderProperty.Hidden = true;
+			shaderProperty.SamplerIndex = samplerIndex;
+
+			lastPropertyOffset += shaderProperty.Size;
+			samplerIndex++;
+		}
+	}
+
+	static void Reflect(spirv_cross::Compiler& compiler,
+		ShaderStageType stage,
+		std::unordered_map<std::string, size_t>& propertyNameToIndex,
+		Ref<ShaderMetadata> metadata)
+	{
+		auto& pushConstantsRange = metadata->PushConstantsRanges.emplace_back();
+		pushConstantsRange.Stage = stage;
+
+		uint32_t materialDescriptorSetIndex = GetMaterialDescriptorSetIndex(metadata->Type);
+		ExtractShaderProperties(compiler, metadata->Properties, pushConstantsRange, 1 << materialDescriptorSetIndex);
+
+		for (size_t i = 0; i < metadata->Properties.size(); i++)
+		{
+			propertyNameToIndex[metadata->Properties[i].Name] = i;
 		}
 	}
 
@@ -711,6 +741,8 @@ namespace Flare
 			metadata->PushConstantsRange.Size = bufferSize;
 			metadata->PushConstantsRange.Stage = ShaderStageType::Compute;
 		}
+
+		ExtractShaderProperties(compiler, metadata->Properties, metadata->PushConstantsRange, UINT32_MAX);
 	}
 
 	static bool CompileComputeShader(AssetHandle shaderHandle, bool forceRecompile, const ShaderSourceParser& parser, std::vector<ShaderError>& errors)

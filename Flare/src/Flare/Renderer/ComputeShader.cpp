@@ -19,7 +19,7 @@ namespace Flare
 		switch (RendererAPI::GetAPI())
 		{
 		case RendererAPI::API::Vulkan:
-			return CreateRef<VulkanComputeShader>(Span<Ref<VulkanDescriptorSetLayout>>());
+			return CreateRef<VulkanComputeShader>();
 		}
 
 		return nullptr;

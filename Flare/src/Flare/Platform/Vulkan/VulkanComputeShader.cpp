@@ -6,10 +6,7 @@
 
 namespace Flare
 {
-	VulkanComputeShader::VulkanComputeShader(Span<Ref<VulkanDescriptorSetLayout>> layouts)
-		: m_DescriptorSetLayouts(layouts.begin(), layouts.end())
-	{
-	}
+	VulkanComputeShader::VulkanComputeShader() {}
 
 	VulkanComputeShader::~VulkanComputeShader()
 	{
@@ -64,12 +61,36 @@ namespace Flare
 
 	void VulkanComputeShader::CreatePipelineLayout()
 	{
-		std::vector<VkDescriptorSetLayout> setLayouts;
-		setLayouts.reserve(m_DescriptorSetLayouts.size());
-		
-		for (size_t i = 0; i < m_DescriptorSetLayouts.size(); i++)
+		std::vector<VkDescriptorSetLayoutBinding> bindings;
+		for (size_t i = 0; i < m_Metadata->Properties.size(); i++)
 		{
-			setLayouts[i] = m_DescriptorSetLayouts[i]->GetHandle();
+			const auto& property = m_Metadata->Properties[i];
+
+			if (property.Type == ShaderDataType::Sampler)
+			{
+				auto& binding = bindings.emplace_back();
+				binding = {};
+				binding.binding = property.Binding;
+				binding.descriptorCount = 1;
+				binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+				binding.pImmutableSamplers = nullptr;
+				binding.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+			}
+			else if (property.Type == ShaderDataType::StorageImage)
+			{
+				auto& binding = bindings.emplace_back();
+				binding = {};
+				binding.binding = property.Binding;
+				binding.descriptorCount = 1;
+				binding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+				binding.pImmutableSamplers = nullptr;
+				binding.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+			}
+		}
+
+		if (bindings.size() > 0)
+		{
+			m_SetPool = CreateRef<VulkanDescriptorSetPool>(4, Span(bindings.data(), bindings.size()));
 		}
 
 		VkPushConstantRange pushConstantRange{};
@@ -79,8 +100,19 @@ namespace Flare
 
 		VkPipelineLayoutCreateInfo createInfo{};
 		createInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-		createInfo.pSetLayouts = setLayouts.data();
-		createInfo.setLayoutCount = (uint32_t)setLayouts.size();
+
+		VkDescriptorSetLayout layoutHandle = VK_NULL_HANDLE;
+		if (m_SetPool == nullptr)
+		{
+			createInfo.pSetLayouts = nullptr;
+			createInfo.setLayoutCount = 0;
+		}
+		else
+		{
+			layoutHandle = m_SetPool->GetLayout()->GetHandle();
+			createInfo.pSetLayouts = &layoutHandle;
+			createInfo.setLayoutCount = 1;
+		}
 
 		if (pushConstantRange.size > 0)
 		{

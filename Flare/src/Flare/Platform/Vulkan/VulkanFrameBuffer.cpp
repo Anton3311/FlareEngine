@@ -232,7 +232,7 @@ namespace Flare
 			}
 			else
 			{
-				imageInfo.usage |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+				imageInfo.usage |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_STORAGE_BIT;
 			}
 
 			imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;

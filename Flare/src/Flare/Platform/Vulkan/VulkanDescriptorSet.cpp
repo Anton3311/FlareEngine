@@ -15,6 +15,7 @@ namespace Flare
 			switch (binding.descriptorType)
 			{
 			case VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER:
+			case VK_DESCRIPTOR_TYPE_STORAGE_IMAGE:
 				m_ImageBindings++;
 				break;
 			case VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER:
@@ -125,6 +126,30 @@ namespace Flare
 		write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 		write.descriptorCount = 1;
 		write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		write.dstBinding = binding;
+		write.dstArrayElement = 0;
+		write.dstSet = m_Set;
+		write.pBufferInfo = nullptr;
+		write.pImageInfo = &image;
+		write.pTexelBufferView = nullptr;
+	}
+
+	void VulkanDescriptorSet::WriteStorageImage(const Ref<const FrameBuffer>& frameBuffer, uint32_t attachmentIndex, uint32_t binding)
+	{
+		FLARE_CORE_ASSERT(m_Images.size() < m_Images.capacity());
+		FLARE_CORE_ASSERT(frameBuffer);
+		FLARE_CORE_ASSERT(attachmentIndex < frameBuffer->GetAttachmentsCount());
+
+		auto vulkanFrameBuffer = As<const VulkanFrameBuffer>(frameBuffer);
+		auto& image = m_Images.emplace_back();
+		image.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+		image.imageView = vulkanFrameBuffer->GetAttachmentImageView(attachmentIndex);
+		image.sampler = VK_NULL_HANDLE;
+
+		auto& write = m_Writes.emplace_back();
+		write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		write.descriptorCount = 1;
+		write.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
 		write.dstBinding = binding;
 		write.dstArrayElement = 0;
 		write.dstSet = m_Set;

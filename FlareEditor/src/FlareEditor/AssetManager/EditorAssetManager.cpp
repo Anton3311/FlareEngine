@@ -443,7 +443,7 @@ namespace Flare
             return;
         }
 
-        if (m_RegistryNeedsSerializing)
+        if (m_RegistryNeedsSerializing || m_AutomaticRegistrySerializationEnabled)
         {
             AssetRegistrySerializer::Serialize(m_Registry, Project::GetActive()->Location);
             m_RegistryNeedsSerializing = false;

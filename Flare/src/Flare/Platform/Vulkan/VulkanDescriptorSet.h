@@ -39,6 +39,7 @@ namespace Flare
 		void WriteStorageBuffer(const Ref<const ShaderStorageBuffer>& storageBuffer, uint32_t binding);
 		void WriteTexture(const Ref<const Texture>& texture, uint32_t binding);
 		void WriteFrameBufferAttachment(const Ref<const FrameBuffer>& frameBuffer, uint32_t attachmentIndex, uint32_t binding);
+		void WriteStorageImage(const Ref<const FrameBuffer>& frameBuffer, uint32_t attachmentIndex, uint32_t binding);
 		void WriteTextures(const Span<Ref<const Texture>>& textures, size_t arrayOffset, uint32_t binding);
 
 		void FlushWrites();

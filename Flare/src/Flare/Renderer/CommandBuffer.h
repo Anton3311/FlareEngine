@@ -11,6 +11,7 @@ namespace Flare
 	class Material;
 	class Mesh;
 	class GPUTimer;
+	class ComputePipeline;
 
 	class CommandBuffer
 	{
@@ -35,6 +36,8 @@ namespace Flare
 			uint32_t instanceCount) = 0;
 
 		virtual void Blit(Ref<FrameBuffer> source, uint32_t sourceAttachment, Ref<FrameBuffer> destination, uint32_t destinationAttachment, TextureFiltering filter) = 0;
+
+		virtual void DispatchCompute(Ref<ComputePipeline> pipeline, const glm::uvec3& groupCount) = 0;
 
 		virtual void StartTimer(Ref<GPUTimer> timer) = 0;
 		virtual void StopTimer(Ref<GPUTimer> timer) = 0;

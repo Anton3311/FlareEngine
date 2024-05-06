@@ -41,6 +41,8 @@ namespace Flare
 		// Leaves the source attachment in TRANSFER_SRC layout and destination in COLOR_ATTACHMENT_OUTPUT layout
 		void Blit(Ref<FrameBuffer> source, uint32_t sourceAttachment, Ref<FrameBuffer> destination, uint32_t destinationAttachment, TextureFiltering filter) override;
 
+		void DispatchCompute(Ref<ComputePipeline> pipeline, const glm::uvec3& groupCount) override;
+
 		void StartTimer(Ref<GPUTimer> timer) override;
 		void StopTimer(Ref<GPUTimer> timer) override;
 	public:
@@ -68,6 +70,7 @@ namespace Flare
 		void BindIndexBuffer(const Ref<const IndexBuffer>& indexBuffer);
 
 		void BindDescriptorSet(const Ref<const VulkanDescriptorSet>& descriptorSet, VkPipelineLayout pipelineLayout, uint32_t index);
+		void BindComputeDescriptorSet(const Ref<const VulkanDescriptorSet>& descriptorSet, VkPipelineLayout pipelineLayout, uint32_t index);
 
 		void SetPrimaryDescriptorSet(const Ref<VulkanDescriptorSet>& set);
 		void SetSecondaryDescriptorSet(const Ref<VulkanDescriptorSet>& set);
