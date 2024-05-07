@@ -155,6 +155,8 @@ namespace Flare::Math
 			: Min(0.0f), Max(0.0f) {}
 		Rect(glm::vec2 min, glm::vec2 max)
 			: Min(min), Max(max) {}
+		Rect(float x, float y, float width, float height)
+			: Min(x, y), Max(x + width, y + height) {}
 
 		inline glm::vec2 GetSize() const { return Max - Min; }
 		inline float GetWidth() const { return Max.x - Min.x; }

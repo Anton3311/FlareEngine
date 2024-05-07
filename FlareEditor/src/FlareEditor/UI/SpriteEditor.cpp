@@ -68,7 +68,7 @@ namespace Flare
             ImGui::SetScrollY(window->Scroll.y - viewportDragDelta.y);
         }
 
-        ImGui::Image((ImTextureID)texture->GetRendererId(), textureSize * m_Zoom, ImVec2(0, 1), ImVec2(1, 0));
+        ImGui::Image(ImGuiLayer::GetId(texture), textureSize * m_Zoom, ImVec2(0, 1), ImVec2(1, 0));
         ImRect imageRect = { ImGui::GetItemRectMin(), ImGui::GetItemRectMax() };
         bool imageHovered = ImGui::IsMouseHoveringRect(imageRect.Min, imageRect.Max);
 

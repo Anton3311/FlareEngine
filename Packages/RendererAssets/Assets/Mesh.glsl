@@ -1,9 +1,11 @@
+Type = Surface
 Properties = 
 {
 	u_Material.Color = { Type = Color }
 	u_Material.Roughness = {}
 	u_Texture = {}
 	u_NormalMap = {}
+	u_RoughnessMap = {}
 }
 
 #begin vertex
@@ -27,7 +29,6 @@ struct VertexData
 };
 
 layout(location = 0) out VertexData o_Vertex;
-layout(location = 6) out flat int o_EntityIndex;
 
 void main()
 {
@@ -41,7 +42,6 @@ void main()
 
 	o_Vertex.UV = i_UV;
 	o_Vertex.ViewSpacePosition = (u_Camera.View * transformed).xyz;
-	o_EntityIndex = u_InstancesData.Data[gl_InstanceIndex].EntityIndex;
 
     gl_Position = position;
 }
@@ -71,48 +71,71 @@ struct VertexData
 	vec3 ViewSpacePosition;
 };
 
-layout(binding = 7) uniform sampler2D u_Texture;
-layout(binding = 8) uniform sampler2D u_NormalMap;
+layout(set = 2, binding = 7) uniform sampler2D u_Texture;
+layout(set = 2, binding = 8) uniform sampler2D u_NormalMap;
+layout(set = 2, binding = 9) uniform sampler2D u_RoughnessMap;
 
 layout(location = 0) in VertexData i_Vertex;
-layout(location = 6) in flat int i_EntityIndex;
 
 layout(location = 0) out vec4 o_Color;
 layout(location = 1) out vec4 o_Normal;
-layout(location = 2) out int o_EntityIndex;
+
+vec3 UnpackNormalXYZ(vec3 packedNormal)
+{
+	return packedNormal * 2.0f - vec3(1.0f);
+}
+
+vec3 UnpackNormalXY(vec3 packedNormal)
+{
+	vec2 normalXY = packedNormal.xy * 2.0f - vec2(1.0f);
+	float z = sqrt(clamp(1.0f - dot(normalXY, normalXY), 0.0f, 1.0f));
+	return vec3(normalXY, z);
+}
+
+// #define NORMAL_FORMAT_XYZ
+
+vec3 UnpackNormal(vec3 packedNormal)
+{
+#ifdef NORMAL_FORMAT_XYZ
+	return UnpackNormalXYZ(packedNormal);
+#else
+	return UnpackNormalXY(packedNormal);
+#endif
+}
 
 void main()
 {
-	vec3 N = normalize(i_Vertex.Normal);
-	vec3 tangent = normalize(i_Vertex.Tangent);
-	tangent = normalize(tangent - dot(tangent, N) * N);
-	vec3 bitangent = cross(N, tangent);
-
-	mat3 tbn = mat3(tangent, bitangent, N);
-
-	vec3 V = normalize(u_Camera.Position - i_Vertex.Position.xyz);
-	vec3 H = normalize(V - u_LightDirection);
-
 	vec4 color = u_Material.Color * texture(u_Texture, i_Vertex.UV);
-	vec3 sampledNormal = texture(u_NormalMap, i_Vertex.UV).xyz * 2.0f - vec3(1.0f);
-
-	N = normalize(tbn * sampledNormal);
-
 	if (color.a == 0.0f)
 		discard;
 
+	vec3 V = normalize(u_Camera.Position - i_Vertex.Position.xyz);
+	vec3 H = normalize(V - u_LightDirection);
+	vec3 N = normalize(i_Vertex.Normal);
+
+	vec3 tangent = normalize(i_Vertex.Tangent);
+	tangent = normalize(tangent - dot(tangent, N) * N);
+
+	vec3 bitangent = cross(N, tangent);
+	mat3 tbn = mat3(tangent, bitangent, N);
+	vec3 sampledNormal = UnpackNormal(texture(u_NormalMap, i_Vertex.UV).xyz);
+
+	N = normalize(tbn * sampledNormal);
+
+	float roughness = u_Material.Roughness * texture(u_RoughnessMap, i_Vertex.UV).r;
 	float shadow = CalculateShadow(N, i_Vertex.Position, i_Vertex.ViewSpacePosition);
+
 	vec3 finalColor = CalculateLight(N, V, H, color.rgb,
 		u_LightColor.rgb * u_LightColor.w, -u_LightDirection,
-		u_Material.Roughness) * shadow;
+		roughness) * shadow;
 
-	finalColor += CalculatePointLightsContribution(N, V, H, color.rgb, i_Vertex.Position.xyz, u_Material.Roughness);
-	finalColor += CalculateSpotLightsContribution(N, V, H, color.rgb, i_Vertex.Position.xyz, u_Material.Roughness);
+	finalColor += CalculatePointLightsContribution(N, V, H, color.rgb, i_Vertex.Position.xyz, roughness);
+	finalColor += CalculateSpotLightsContribution(N, V, H, color.rgb, i_Vertex.Position.xyz, roughness);
+
 	finalColor += u_EnvironmentLight.rgb * u_EnvironmentLight.w * color.rgb;
 
-	o_Normal = vec4(N * 0.5f + vec3(0.5f), 1.0f);
 	o_Color = vec4(finalColor, color.a);
-	o_EntityIndex = i_EntityIndex;
+	o_Normal = vec4(N * 0.5f + vec3(0.5f), 1.0f);
 }
 
 #end

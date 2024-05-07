@@ -4,8 +4,6 @@ if vulkan_sdk == nil then
 	print("Couldn't find Vulkan SDK")
 end
 
-print(vulkan_sdk)
-
 local vulkan_include = vulkan_sdk .. "/include/"
 local vulkan_lib = vulkan_sdk .. "/lib/"
 
@@ -21,6 +19,7 @@ INCLUDE_DIRS = {
 	imguizmo = "%{wks.location}/Flare/vendor/ImGuizmo/",
 	yaml_cpp = "%{wks.location}/Flare/vendor/yaml-cpp/include/",
 	vulkan_sdk = vulkan_include,
+	vma = "%{wks.location}/Flare/vendor/VMA/",
 
 	msdf_gen = "%{wks.location}/Flare/vendor/msdf/msdf-atlas-gen/msdfgen",
 	msdf_atlas_gen = "%{wks.location}/Flare/vendor/msdf/msdf-atlas-gen/msdf-atlas-gen",

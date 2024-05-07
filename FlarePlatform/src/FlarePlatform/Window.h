@@ -39,6 +39,8 @@ namespace Flare
 		virtual ~Window() {}
 		virtual const WindowProperties& GetProperties() const = 0;
 
+		virtual void Initialize() = 0;
+
 		virtual void SetTitle(const std::string& title) = 0;
 		virtual void Hide() = 0;
 		virtual void SetMaximized(bool value) = 0;

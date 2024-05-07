@@ -26,10 +26,10 @@ namespace Flare
 	Scene::Scene(ECSContext& context)
 		: Asset(AssetType::Scene), m_World(context)
 	{
-		m_PostProcessingManager.ToneMappingPass = CreateRef<ToneMapping>();
-		m_PostProcessingManager.VignettePass = CreateRef<Vignette>();
 		m_PostProcessingManager.SSAOPass = CreateRef<SSAO>();
+		m_PostProcessingManager.VignettePass = CreateRef<Vignette>();
 		m_PostProcessingManager.Atmosphere = CreateRef<AtmospherePass>();
+		m_PostProcessingManager.ToneMappingPass = CreateRef<ToneMapping>();
 
 		m_World.MakeCurrent();
 		Initialize();
@@ -73,17 +73,17 @@ namespace Flare
 
 	void Scene::InitializePostProcessing()
 	{
-		Renderer::AddRenderPass(m_PostProcessingManager.VignettePass);
 		Renderer::AddRenderPass(m_PostProcessingManager.SSAOPass);
 		Renderer::AddRenderPass(m_PostProcessingManager.Atmosphere);
+		Renderer::AddRenderPass(m_PostProcessingManager.VignettePass);
 		Renderer::AddRenderPass(m_PostProcessingManager.ToneMappingPass);
 	}
 
 	void Scene::UninitializePostProcessing()
 	{
-		Renderer::RemoveRenderPass(m_PostProcessingManager.ToneMappingPass);
 		Renderer::RemoveRenderPass(m_PostProcessingManager.VignettePass);
 		Renderer::RemoveRenderPass(m_PostProcessingManager.SSAOPass);
+		Renderer::RemoveRenderPass(m_PostProcessingManager.ToneMappingPass);
 		Renderer::RemoveRenderPass(m_PostProcessingManager.Atmosphere);
 	}
 
@@ -125,17 +125,35 @@ namespace Flare
 
 					viewport.FrameData.Camera.FOV = cameras[entity].FOV;
 
-					if (camera.Projection == CameraComponent::ProjectionType::Orthographic)
+					if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
 					{
-						viewport.FrameData.Camera.SetViewAndProjection(
-							glm::ortho(-halfSize * aspectRation, halfSize * aspectRation, -halfSize, halfSize, camera.Near, camera.Far),
-							glm::inverse(transforms[entity].GetTransformationMatrix()));
+						if (camera.Projection == CameraComponent::ProjectionType::Orthographic)
+						{
+							viewport.FrameData.Camera.SetViewAndProjection(
+								glm::orthoRH_ZO(-halfSize * aspectRation, halfSize * aspectRation, -halfSize, halfSize, camera.Near, camera.Far),
+								glm::inverse(transforms[entity].GetTransformationMatrix()));
+						}
+						else
+						{
+							viewport.FrameData.Camera.SetViewAndProjection(
+								glm::perspectiveRH_ZO<float>(glm::radians(camera.FOV), aspectRation, camera.Near, camera.Far),
+								glm::inverse(transforms[entity].GetTransformationMatrix()));
+						}
 					}
 					else
 					{
-						viewport.FrameData.Camera.SetViewAndProjection(
-							viewport.FrameData.Camera.Projection = glm::perspective<float>(glm::radians(camera.FOV), aspectRation, camera.Near, camera.Far),
-							glm::inverse(transforms[entity].GetTransformationMatrix()));
+						if (camera.Projection == CameraComponent::ProjectionType::Orthographic)
+						{
+							viewport.FrameData.Camera.SetViewAndProjection(
+								glm::ortho(-halfSize * aspectRation, halfSize * aspectRation, -halfSize, halfSize, camera.Near, camera.Far),
+								glm::inverse(transforms[entity].GetTransformationMatrix()));
+						}
+						else
+						{
+							viewport.FrameData.Camera.SetViewAndProjection(
+								glm::perspective<float>(glm::radians(camera.FOV), aspectRation, camera.Near, camera.Far),
+								glm::inverse(transforms[entity].GetTransformationMatrix()));
+						}
 					}
 				}
 			}
@@ -258,8 +276,8 @@ namespace Flare
 		m_World.GetSystemsManager().ExecuteGroup(m_2DRenderingGroup);
 
 		Renderer2D::End();
-
 		Renderer::Flush();
+
 		Renderer::ExecutePostProcessingPasses();
 	}
 

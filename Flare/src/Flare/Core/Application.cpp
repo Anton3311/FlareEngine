@@ -4,7 +4,10 @@
 
 #include "FlareCore/Profiler/Profiler.h"
 
+#include "Flare/AssetManager/AssetManager.h"
+
 #include "Flare/Renderer/Renderer.h"
+#include "Flare/Renderer/RendererPrimitives.h"
 #include "Flare/Renderer2D/Renderer2D.h"
 #include "Flare/Renderer/DebugRenderer.h"
 #include "Flare/Renderer/RenderCommand.h"
@@ -16,13 +19,14 @@
 #include "FlarePlatform/Events.h"
 
 #include "FlarePlatform/Platform.h"
+#include "FlarePlatform/Windows/WindowsWindow.h"
 
 namespace Flare
 {
 	Application* s_Instance = nullptr;
 
 	Application::Application(CommandLineArguments arguments)
-		: m_Running(true), m_CommandLineArguments(arguments)
+		: m_Running(true), m_CommandLineArguments(arguments), m_PreviousFrameTime(0)
 	{
 		s_Instance = this;
 
@@ -31,9 +35,43 @@ namespace Flare
 		properties.Size = glm::uvec2(1280, 720);
 		properties.CustomTitleBar = true;
 
+		const std::string_view apiArgument = "--api=";
+		RendererAPI::API rendererApi = RendererAPI::API::OpenGL;
+		for (uint32_t i = 0; i < m_CommandLineArguments.ArgumentsCount; i++)
+		{
+			std::string_view argument = m_CommandLineArguments.Arguments[i];
+
+			if (argument._Starts_with(apiArgument))
+			{
+				std::string_view apiName = argument.substr(apiArgument.size());
+
+				if (apiName == "opengl")
+				{
+					rendererApi = RendererAPI::API::OpenGL;
+				}
+				else if (apiName == "vulkan")
+				{
+					rendererApi = RendererAPI::API::Vulkan;
+				}
+			}
+		}
+
+		RendererAPI::Create(rendererApi);
+
 		m_Window = Window::Create(properties);
-		m_GraphicsContext = GraphicsContext::Create(m_Window->GetNativeWindow());
-		m_GraphicsContext->Initialize();
+		switch (RendererAPI::GetAPI())
+		{
+		case RendererAPI::API::OpenGL:
+			As<WindowsWindow>(m_Window)->SetUsesOpenGL();
+			break;
+		case RendererAPI::API::Vulkan:
+			As<WindowsWindow>(m_Window)->SetUsesVulkan();
+			break;
+		}
+
+		m_Window->Initialize();
+
+		GraphicsContext::Create(m_Window);
 		
 		m_Window->SetEventCallback([this](Event& event)
 		{
@@ -50,6 +88,9 @@ namespace Flare
 				return true;
 			});
 
+			if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
+				return;
+
 			auto& layer = m_LayersStack.GetLayers();
 			for (auto it = layer.end(); it != layer.begin();)
 			{
@@ -63,9 +104,12 @@ namespace Flare
 	Application::~Application()
 	{
 		ScriptingEngine::Shutdown();
+
 		Renderer2D::Shutdown();
 		DebugRenderer::Shutdown();
 		Renderer::Shutdown();
+		RendererPrimitives::Clear();
+		GraphicsContext::Shutdown();
 	}
 
 	void Application::Run()
@@ -74,11 +118,10 @@ namespace Flare
 
 		RenderCommand::Initialize();
 		Renderer::Initialize();
-		Renderer2D::Initialize();
 		DebugRenderer::Initialize();
+		Renderer2D::Initialize();
 
 		ScriptingEngine::Initialize();
-
 		RenderCommand::SetLineWidth(1.2f);
 
 		for (const Ref<Layer>& layer : m_LayersStack.GetLayers())
@@ -100,6 +143,9 @@ namespace Flare
 				InputManager::Update();
 				m_Window->OnUpdate();
 
+				GraphicsContext::GetInstance().BeginFrame();
+				Renderer2D::BeginFrame();
+
 				{
 					FLARE_PROFILE_SCOPE("Layers::OnUpdate");
 					for (const Ref<Layer>& layer : m_LayersStack.GetLayers())
@@ -112,9 +158,11 @@ namespace Flare
 						layer->OnImGUIRender();
 				}
 
+				Renderer2D::EndFrame();
+
 				{
-					FLARE_PROFILE_SCOPE("SwapBuffers");
-					m_GraphicsContext->SwapBuffers();
+					FLARE_PROFILE_SCOPE("Present");
+					GraphicsContext::GetInstance().Present();
 				}
 
 				m_PreviousFrameTime = currentTime;
@@ -124,8 +172,15 @@ namespace Flare
 			Profiler::EndFrame();
 		}
 
+		GraphicsContext::GetInstance().WaitForDevice();
+
 		for (const Ref<Layer>& layer : m_LayersStack.GetLayers())
 			layer->OnDetach();
+
+		AssetManager::Uninitialize();
+		Font::SetDefault(nullptr);
+
+		m_LayersStack.Clear();
 	}
 
 	void Application::Close()

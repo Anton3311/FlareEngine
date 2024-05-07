@@ -10,6 +10,17 @@
 
 namespace Flare
 {
+	enum class ShaderType
+	{
+		Unknown,
+		_2D,
+		Surface,
+		FullscreenQuad,
+		Debug,
+	};
+
+	FLARE_API uint32_t GetMaterialDescriptorSetIndex(ShaderType type);
+
 	enum class BlendMode : uint8_t
 	{
 		Opaque,
@@ -21,6 +32,11 @@ namespace Flare
 		None,
 		Back,
 		Front,
+	};
+
+	enum class MeshTopology
+	{
+		Triangles,
 	};
 
 	enum class DepthComparisonFunction : uint8_t
@@ -67,50 +83,13 @@ namespace Flare
 		Sampler,
 		SamplerArray,
 
+		StorageImage,
+
 		Matrix4x4,
 	};
 
-	constexpr uint32_t ShaderDataTypeSize(ShaderDataType dataType)
-	{
-		switch (dataType)
-		{
-		case ShaderDataType::Int:
-		case ShaderDataType::Float:
-			return 4;
-		case ShaderDataType::Float2:
-			return 4 * 2;
-		case ShaderDataType::Float3:
-			return 4 * 3;
-		case ShaderDataType::Float4:
-			return 4 * 4;
-		case ShaderDataType::Matrix4x4:
-			return 4 * 4 * 4;
-		case ShaderDataType::Sampler:
-			return 4;
-		}
-
-		return 0;
-	}
-
-	constexpr uint32_t ShaderDataTypeComponentCount(ShaderDataType dataType)
-	{
-		switch (dataType)
-		{
-		case ShaderDataType::Int:
-		case ShaderDataType::Float:
-			return 1;
-		case ShaderDataType::Float2:
-			return 2;
-		case ShaderDataType::Float3:
-			return 3;
-		case ShaderDataType::Float4:
-			return 4;
-		case ShaderDataType::Matrix4x4:
-			return 16;
-		}
-
-		return 0;
-	}
+	FLARE_API uint32_t ShaderDataTypeSize(ShaderDataType dataType);
+	FLARE_API uint32_t ShaderDataTypeComponentCount(ShaderDataType dataType);
 
 	struct ShaderProperty
 	{
@@ -119,7 +98,7 @@ namespace Flare
 			: Name(name),
 			Type(type),
 			Offset(offset),
-			Location(UINT32_MAX),
+			Binding(UINT32_MAX),
 			SamplerIndex(UINT32_MAX),
 			Size(ShaderDataTypeSize(type)) {}
 
@@ -127,14 +106,14 @@ namespace Flare
 			: Name(name),
 			Type(type),
 			Size(size),
-			Location(UINT32_MAX),
+			Binding(UINT32_MAX),
 			SamplerIndex(UINT32_MAX),
 			Offset(offset) {}
 
 		std::string Name;
 		std::string DisplayName;
 		ShaderDataType Type;
-		uint32_t Location;
+		uint32_t Binding;
 		uint32_t SamplerIndex;
 		size_t Offset;
 		size_t Size;
@@ -151,8 +130,11 @@ namespace Flare
 	enum class ShaderStageType
 	{
 		Vertex,
-		Pixel
+		Pixel,
+		Compute,
 	};
+
+	FLARE_API const char* ShaderStageTypeToString(ShaderStageType stage);
 
 	struct ShaderFeatures
 	{
@@ -169,12 +151,22 @@ namespace Flare
 		bool DepthTesting;
 		bool DepthWrite;
 	};
-	
+
+	struct ShaderPushConstantsRange
+	{
+		ShaderStageType Stage = ShaderStageType::Vertex;
+		size_t Offset = 0;
+		size_t Size = 0;
+	};
+
 	struct ShaderMetadata
 	{
+		std::string Name;
+		ShaderType Type = ShaderType::Unknown;
 		ShaderFeatures Features;
 		ShaderOutputs Outputs;
 		std::vector<ShaderProperty> Properties;
 		std::vector<ShaderStageType> Stages;
+		std::vector<ShaderPushConstantsRange> PushConstantsRanges;
 	};
 }

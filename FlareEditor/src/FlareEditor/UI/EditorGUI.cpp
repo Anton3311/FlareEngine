@@ -25,6 +25,11 @@ namespace Flare
         s_EditorIcons.Initialize();
     }
 
+    void EditorGUI::Uninitialize()
+    {
+        s_EditorIcons.Uninitialize();
+    }
+
     bool EditorGUI::BeginPropertyGrid(float width)
     {
         float windowWidth = width == 0.0f ? ImGui::GetContentRegionAvail().x : width;
@@ -53,7 +58,7 @@ namespace Flare
         }
 
         ImRect uvs = s_EditorIcons.GetIconUVs(iconPosition);
-        ImGui::Image(s_EditorIcons.GetTexture()->GetRendererId(), ImVec2(size, size), uvs.Min, uvs.Max);
+		ImGui::Image(ImGuiLayer::GetId(s_EditorIcons.GetTexture()), ImVec2(size, size), uvs.Min, uvs.Max);
     }
 
     const EditorIcons& EditorGUI::GetIcons()
@@ -397,7 +402,7 @@ namespace Flare
 
     bool EditorGUI::AssetField(AssetHandle& handle, const AssetDescriptor* assetType)
     {
-        AssetFieldRenderer fieldRenderer((uint64_t)&handle, handle);
+        AssetFieldRenderer fieldRenderer((uint64_t)&handle, handle, assetType);
         return fieldRenderer.OnRenderImGui();
     }
 

@@ -9,9 +9,6 @@ namespace Flare
 		: m_VertexBufferIndex(0)
 	{
 		glGenVertexArrays(1, &m_Id);
-
-		GLenum error = glGetError();
-		glBindBuffer(GL_ARRAY_BUFFER, m_Id);
 	}
 	
 	OpenGLVertexArray::~OpenGLVertexArray()
@@ -84,6 +81,8 @@ namespace Flare
 
 			m_VertexBufferIndex++;
 		}
+
+		glBindVertexArray(0);
 	}
 
 	void OpenGLVertexArray::SetIndexBuffer(const Ref<IndexBuffer>& indexbuffer)
@@ -92,6 +91,7 @@ namespace Flare
 
 		glBindVertexArray(m_Id);
 		m_IndexBuffer->Bind();
+		glBindVertexArray(0);
 	}
 	
 	const Ref<IndexBuffer> OpenGLVertexArray::GetIndexBuffer() const

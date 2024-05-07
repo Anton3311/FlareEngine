@@ -1,4 +1,6 @@
+Type = FullscreenQuad
 DepthTest = false
+DepthWrite = false
 BlendMode = Transparent
 
 #begin vertex

@@ -37,7 +37,16 @@ namespace Flare
 		return false;
 	}
 
-	using FrameBufferAttachmentsMask = uint32_t;
+	constexpr bool HasStencilCompomnent(FrameBufferTextureFormat format)
+	{
+		switch (format)
+		{
+		case FrameBufferTextureFormat::Depth24Stencil8:
+			return true;
+		}
+
+		return false;
+	}
 
 	struct FrameBufferAttachmentSpecifications
 	{
@@ -66,22 +75,23 @@ namespace Flare
 	public:
 		virtual ~FrameBuffer() = default;
 
-		virtual void Bind() = 0;
-		virtual void Unbind() = 0;
-
 		virtual void Resize(uint32_t width, uint32_t height) = 0;
-		virtual void* GetColorAttachmentRendererId(uint32_t attachmentIndex) = 0;
 
-		virtual uint32_t GetAttachmentsCount() = 0;
+		virtual uint32_t GetAttachmentsCount() const = 0;
+		virtual uint32_t GetColorAttachmentsCount() const = 0;
+		virtual std::optional<uint32_t> GetDepthAttachmentIndex() const = 0;
+
 		virtual void ClearAttachment(uint32_t index, const void* value) = 0;
 		virtual void ReadPixel(uint32_t attachmentIndex, uint32_t x, uint32_t y, void* pixelOutput) = 0;
-		virtual void Blit(const Ref<FrameBuffer>& source, uint32_t destinationAttachment, uint32_t sourceAttachment) = 0;
 		virtual void BindAttachmentTexture(uint32_t attachment, uint32_t slot = 0) = 0;
 
-		virtual void SetWriteMask(FrameBufferAttachmentsMask mask) = 0;
-		virtual FrameBufferAttachmentsMask GetWriteMask() = 0;
-
 		virtual const FrameBufferSpecifications& GetSpecifications() const = 0;
+
+		inline glm::uvec2 GetSize() const
+		{
+			const auto& specifications = GetSpecifications();
+			return glm::uvec2(specifications.Width, specifications.Height);
+		}
 	public:
 		static Ref<FrameBuffer> Create(const FrameBufferSpecifications& specifications);
 	};

@@ -26,7 +26,6 @@ namespace Flare
 
         std::filesystem::path cacheFilePath = cacheDirectory / GetCacheFileName(
             assetMetadata->Path.filename().string(),
-            targetEnvironment,
             stageType);
 
         std::ofstream output(cacheFilePath, std::ios::out | std::ios::binary);
@@ -46,7 +45,6 @@ namespace Flare
         std::filesystem::path cacheDirectory = GetCacheDirectoryPath(shaderHandle);
         std::filesystem::path cacheFilePath = cacheDirectory / GetCacheFileName(
             assetMetadata->Path.filename().string(),
-            targetEnvironment,
             stageType);
 
         std::vector<uint32_t> compiledShader;
@@ -73,6 +71,14 @@ namespace Flare
         return it->second;
     }
 
+    Ref<const ComputeShaderMetadata> EditorShaderCache::FindComputeShaderMetadata(AssetHandle shaderHandle)
+    {
+        auto it = m_ComputeShaderEntries.find(shaderHandle);
+        if (it == m_ComputeShaderEntries.end())
+            return nullptr;
+        return it->second;
+    }
+
     bool EditorShaderCache::HasCache(AssetHandle shaderHandle, ShaderTargetEnvironment targetEnvironment, ShaderStageType stage)
     {
         FLARE_CORE_ASSERT(AssetManager::IsAssetHandleValid(shaderHandle));
@@ -81,7 +87,7 @@ namespace Flare
         FLARE_CORE_ASSERT(assetMetadata);
 
         std::filesystem::path cacheFile = GetCacheDirectoryPath(shaderHandle)
-            / GetCacheFileName(assetMetadata->Path.filename().string(), targetEnvironment, stage);
+            / GetCacheFileName(assetMetadata->Path.filename().string(), stage);
 
         return std::filesystem::exists(cacheFile);
     }
@@ -89,6 +95,11 @@ namespace Flare
     void EditorShaderCache::SetShaderEntry(AssetHandle shaderHandle, Ref<const ShaderMetadata> metadata)
     {
         m_Entries[shaderHandle] = metadata;
+    }
+
+    void EditorShaderCache::SetComputeShaderEntry(AssetHandle shaderHandle, Ref<const ComputeShaderMetadata> metadata)
+    {
+        m_ComputeShaderEntries[shaderHandle] = metadata;
     }
 
     std::filesystem::path EditorShaderCache::GetCacheDirectoryPath(AssetHandle shaderHandle)
@@ -102,6 +113,17 @@ namespace Flare
         auto it = registry.find(shaderHandle);
         FLARE_CORE_ASSERT(it != registry.end(), "Failed to find shader asset in the registry");
 
+        std::string_view apiName = "";
+        switch (RendererAPI::GetAPI())
+        {
+        case RendererAPI::API::OpenGL:
+            apiName = "OpenGL";
+            break;
+        case RendererAPI::API::Vulkan:
+            apiName = "Vulkan";
+            break;
+        }
+
         const auto& entry = it->second;
         std::filesystem::path cacheDirectory;
         if (entry.OwnerType == AssetOwner::Project)
@@ -110,6 +132,7 @@ namespace Flare
 
             cacheDirectory = Project::GetActive()->Location
                 / "Cache/Shaders/"
+                / apiName
                 / std::filesystem::relative(entry.Metadata.Path.parent_path(), assetsPath);
         }
         else if (entry.OwnerType == AssetOwner::Package)
@@ -123,6 +146,7 @@ namespace Flare
 
             cacheDirectory = Project::GetActive()->Location
                 / "Cache/Shaders/"
+                / apiName
                 / std::filesystem::relative(
                     std::filesystem::absolute(entry.Metadata.Path)
                     .parent_path(),
@@ -132,31 +156,15 @@ namespace Flare
         return cacheDirectory;
     }
 
-    std::string EditorShaderCache::GetCacheFileName(std::string_view shaderName, ShaderTargetEnvironment targetEnvironemt, ShaderStageType stageType)
+    std::string EditorShaderCache::GetCacheFileName(std::string_view shaderName, ShaderStageType stageType)
     {
-        std::string_view apiName = "";
-        std::string_view stageName = "";
+        std::string_view stageName = ShaderStageTypeToString(stageType);
+        return fmt::format("{}.cache.{}", shaderName, stageName);
+    }
 
-        switch (targetEnvironemt)
-        {
-        case ShaderTargetEnvironment::OpenGL:
-            apiName = "opengl";
-            break;
-        case ShaderTargetEnvironment::Vulkan:
-            apiName = "vulkan";
-            break;
-        }
-
-        switch (stageType)
-        {
-        case ShaderStageType::Vertex:
-            stageName = "vertex";
-            break;
-        case ShaderStageType::Pixel:
-            stageName = "pixel";
-            break;
-        }
-
-        return fmt::format("{}.{}.cache.{}", shaderName, apiName, stageName);
+    EditorShaderCache& EditorShaderCache::GetInstance()
+    {
+        ShaderCacheManager* instance = ShaderCacheManager::GetInstance().get();
+        return *(EditorShaderCache*)instance;
     }
 }

@@ -3,13 +3,14 @@
 #include "Flare/Renderer/RenderCommand.h"
 #include "Flare/Renderer/Renderer.h"
 
+#include "Flare/Platform/Vulkan/VulkanContext.h"
+
 #include "Flare/Scene/Scene.h"
 
 #include "Flare/Core/Application.h"
 #include "FlareCore/Profiler/Profiler.h"
 
-#include <imgui.h>
-#include <imgui_internal.h>
+#include "FlareEditor/ImGui/ImGuiLayer.h"
 
 namespace Flare
 {
@@ -42,15 +43,21 @@ namespace Flare
 		{
 			scene->OnBeforeRender(m_Viewport);
 
-			m_Viewport.RenderTarget->Bind();
-
 			OnClear();
 
 			Renderer::BeginScene(m_Viewport);
 			scene->OnRender(m_Viewport);
 			Renderer::EndScene();
 
-			m_Viewport.RenderTarget->Unbind();
+			if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
+			{
+				Ref<VulkanCommandBuffer> commandBuffer = VulkanContext::GetInstance().GetPrimaryCommandBuffer();
+				Ref<VulkanFrameBuffer> target = As<VulkanFrameBuffer>(m_Viewport.RenderTarget);
+
+				commandBuffer->TransitionImageLayout(target->GetAttachmentImage(0), VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+				commandBuffer->TransitionImageLayout(target->GetAttachmentImage(1), VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+				commandBuffer->TransitionDepthImageLayout(target->GetAttachmentImage(2), true, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			}
 		}
 	}
 
@@ -148,7 +155,7 @@ namespace Flare
 		{
 			const FrameBufferSpecifications frameBufferSpecs = m_Viewport.RenderTarget->GetSpecifications();
 			ImVec2 imageSize = ImVec2((float)frameBufferSpecs.Width, (float)frameBufferSpecs.Height);
-			ImGui::Image((ImTextureID)buffer->GetColorAttachmentRendererId(attachmentIndex), windowSize, ImVec2(0, 1), ImVec2(1, 0));
+			ImGui::Image(ImGuiLayer::GetId(buffer, attachmentIndex), windowSize, ImVec2(0, 1), ImVec2(1, 0));
 		}
 	}
 
@@ -174,12 +181,10 @@ namespace Flare
 
 	void ViewportWindow::OnClear()
 	{
-		m_Viewport.RenderTarget->SetWriteMask(0b1); // Clear first attachment
-		RenderCommand::Clear();
-
-		m_Viewport.RenderTarget->SetWriteMask(0b10); // Clear second attachment
-		RenderCommand::SetClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-		RenderCommand::Clear();
+		Ref<CommandBuffer> commandBuffer = GraphicsContext::GetInstance().GetCommandBuffer();
+		commandBuffer->ClearColorAttachment(m_Viewport.RenderTarget, m_Viewport.ColorAttachmentIndex, glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+		commandBuffer->ClearColorAttachment(m_Viewport.RenderTarget, m_Viewport.NormalsAttachmentIndex, glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+		commandBuffer->ClearDepthAttachment(m_Viewport.RenderTarget, 1.0f);
 	}
 
 	void ViewportWindow::OnAttach() {}

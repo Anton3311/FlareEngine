@@ -48,6 +48,7 @@ namespace Flare
         });
 
         m_AssetImporters.emplace(AssetType::Shader, ShaderImporter::ImportShader);
+        m_AssetImporters.emplace(AssetType::ComputeShader, ShaderImporter::ImportComputeShader);
         m_AssetImporters.emplace(AssetType::Font, [](const AssetMetadata& metadata) -> Ref<Asset>
         {
             return CreateRef<Font>(metadata.Path);
@@ -92,7 +93,8 @@ namespace Flare
 
         for (const auto& entry : m_Registry)
         {
-            if (entry.second.Metadata.Type == AssetType::Shader && entry.second.Metadata.Source == AssetSource::File)
+            bool isShaderAsset = entry.second.Metadata.Type == AssetType::Shader || entry.second.Metadata.Type == AssetType::ComputeShader;
+            if (isShaderAsset && entry.second.Metadata.Source == AssetSource::File)
             {
                 std::string shaderFileName = entry.second.Metadata.Path.filename().string();
                 size_t dotPosition = shaderFileName.find_first_of(".");
@@ -139,6 +141,7 @@ namespace Flare
 
     std::optional<AssetHandle> EditorAssetManager::FindAssetByPath(const std::filesystem::path& path)
     {
+        FLARE_PROFILE_FUNCTION();
         auto it = m_FilepathToAssetHandle.find(path);
         if (it == m_FilepathToAssetHandle.end())
             return {};
@@ -147,10 +150,14 @@ namespace Flare
 
     AssetHandle EditorAssetManager::ImportAsset(const std::filesystem::path& path, AssetHandle parentAsset)
     {
+        FLARE_PROFILE_FUNCTION();
+
         AssetType type = AssetType::None;
         std::filesystem::path extension = path.extension();
 
         if (extension == ".png")
+            type = AssetType::Texture;
+        if (extension == ".dds")
             type = AssetType::Texture;
         if (extension == ".jpg")
             type = AssetType::Texture;
@@ -163,7 +170,20 @@ namespace Flare
         else if (extension == ".flrsprite")
             type = AssetType::Sprite;
         else if (extension == ".glsl")
-            type = AssetType::Shader;
+        {
+            std::string_view computeShaderExtension = ".compute.glsl";
+            std::string pathString = path.string();
+            size_t position = pathString.find_last_of(computeShaderExtension);
+
+            if (position == std::string::npos)
+            {
+				type = AssetType::Shader;
+            }
+            else
+            {
+                type = AssetType::ComputeShader;
+            }
+        }
         else if (extension == ".ttf")
             type = AssetType::Font;
         else if (extension == ".fbx" || extension == ".gltf")
@@ -327,6 +347,7 @@ namespace Flare
         FLARE_CORE_ASSERT(metadata->Type == asset->GetType());
 
         m_LoadedAssets[handle] = asset;
+        asset->Handle = handle;
     }
 
     void EditorAssetManager::AddAssetsPackage(const std::filesystem::path& path)
@@ -354,8 +375,20 @@ namespace Flare
         return LoadAsset(*GetAssetMetadata(handle));
     }
 
+    void EditorAssetManager::SetAutomaticRegistrySerializationEnable(bool enabled)
+    {
+        m_AutomaticRegistrySerializationEnabled = enabled;
+
+        if (enabled)
+        {
+            SerializeRegistry();
+        }
+    }
+
     void EditorAssetManager::RemoveFromRegistryWithoutSerialization(AssetHandle handle)
     {
+        FLARE_PROFILE_FUNCTION();
+
         auto it = m_Registry.find(handle);
         if (it != m_Registry.end())
         {
@@ -379,7 +412,19 @@ namespace Flare
             return nullptr;
         }
 
+        // NOTE: Disable automatic registry serialization and delay it util the asset gets loaded
+        //       This prevents multiple serialization calls if case the asset loader also imports other assets or subassets
+        bool autoSerializationWasEnabled = m_AutomaticRegistrySerializationEnabled;
+        SetAutomaticRegistrySerializationEnable(false);
+
         Ref<Asset> asset = importerIterator->second(metadata);
+
+        if (autoSerializationWasEnabled)
+        {
+            SetAutomaticRegistrySerializationEnable(true);
+            SerializeRegistry();
+        }
+
         if (!asset)
             return nullptr;
 
@@ -390,11 +435,25 @@ namespace Flare
 
     void EditorAssetManager::SerializeRegistry()
     {
-        AssetRegistrySerializer::Serialize(m_Registry, Project::GetActive()->Location);
+        FLARE_PROFILE_FUNCTION();
+
+        if (!m_AutomaticRegistrySerializationEnabled)
+        {
+            m_RegistryNeedsSerializing = true;
+            return;
+        }
+
+        if (m_RegistryNeedsSerializing || m_AutomaticRegistrySerializationEnabled)
+        {
+            AssetRegistrySerializer::Serialize(m_Registry, Project::GetActive()->Location);
+            m_RegistryNeedsSerializing = false;
+        }
     }
 
     void EditorAssetManager::DeserializeRegistry()
     {
+        FLARE_PROFILE_FUNCTION();
+
         m_Registry.clear();
         AssetRegistrySerializer::Deserialize(m_Registry, Project::GetActive()->Location);
 

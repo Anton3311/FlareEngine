@@ -1,6 +1,10 @@
 #include "AtmospherePass.h"
 
 #include "Flare/Renderer/Renderer.h"
+#include "Flare/Renderer/RendererPrimitives.h"
+
+#include "Flare/Platform/Vulkan/VulkanCommandBuffer.h"
+#include "Flare/Platform/Vulkan/VulkanContext.h"
 
 namespace Flare
 {
@@ -32,6 +36,24 @@ namespace Flare
 		AtmosphereMaterial->WritePropertyValue<int32_t>(*viewRaySteps, (int32_t)ViewRaySteps);
 		AtmosphereMaterial->WritePropertyValue<int32_t>(*sunTransmittanceSteps, (int32_t)SunTransmittanceSteps);
 
-		Renderer::DrawFullscreenQuad(AtmosphereMaterial);
+		Ref<CommandBuffer> commandBuffer = GraphicsContext::GetInstance().GetCommandBuffer();
+
+		commandBuffer->BeginRenderTarget(context.RenderTarget);
+
+		if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
+		{
+			Ref<VulkanCommandBuffer> commandBuffer = VulkanContext::GetInstance().GetPrimaryCommandBuffer();
+
+			commandBuffer->SetPrimaryDescriptorSet(Renderer::GetPrimaryDescriptorSet());
+			commandBuffer->SetSecondaryDescriptorSet(nullptr);
+		}
+
+		commandBuffer->ApplyMaterial(AtmosphereMaterial);
+
+		const auto& frameBufferSpec = context.RenderTarget->GetSpecifications();
+		commandBuffer->SetViewportAndScisors(Math::Rect(0.0f, 0.0f, (float)frameBufferSpec.Width, (float)frameBufferSpec.Height));
+
+		commandBuffer->DrawIndexed(RendererPrimitives::GetFullscreenQuadMesh(), 0, 0, 1);
+		commandBuffer->EndRenderTarget();
 	}
 }

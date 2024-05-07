@@ -7,7 +7,7 @@ namespace Flare
 	OpenGLGraphicsContext::OpenGLGraphicsContext(GLFWwindow* windowHandle)
 		: m_Window(windowHandle)
 	{
-
+		m_PrimaryCommandBuffer = CreateRef<OpenGLCommandBuffer>();
 	}
 
 	void OpenGLGraphicsContext::Initialize()
@@ -19,8 +19,19 @@ namespace Flare
 			FLARE_CORE_CRITICAL("Failed to initialize GLAD");
 	}
 
-	void OpenGLGraphicsContext::SwapBuffers()
+	void OpenGLGraphicsContext::Release() {}
+
+	void OpenGLGraphicsContext::BeginFrame() {}
+
+	void OpenGLGraphicsContext::Present()
 	{
 		glfwSwapBuffers(m_Window);
+	}
+
+	void OpenGLGraphicsContext::WaitForDevice() {}
+
+	Ref<CommandBuffer> OpenGLGraphicsContext::GetCommandBuffer() const
+	{
+		return m_PrimaryCommandBuffer;
 	}
 }

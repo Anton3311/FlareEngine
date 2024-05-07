@@ -14,6 +14,8 @@ namespace Flare
 		uint32_t InstancesCount;
 	};
 
+	class Material;
+
 	class FLARE_API RendererAPI
 	{
 	public:
@@ -21,6 +23,7 @@ namespace Flare
 		{
 			None,
 			OpenGL,
+			Vulkan,
 		};
 	public:
 		virtual void Initialize() = 0;
@@ -39,6 +42,7 @@ namespace Flare
 
 		virtual void DrawIndexed(const Ref<const VertexArray>& vertexArray) = 0;
 		virtual void DrawIndexed(const Ref<const VertexArray>& vertexArray, size_t indicesCount) = 0;
+		virtual void DrawIndexed(const Ref<const VertexArray>& vertexArray, size_t firstIndex, size_t indicesCount) = 0;
 		virtual void DrawInstanced(const Ref<const VertexArray>& mesh, size_t instancesCount) = 0;
 
 		virtual void DrawInstancesIndexed(const Ref<const Mesh>& mesh,
@@ -58,8 +62,13 @@ namespace Flare
 			size_t baseVertexIndex,
 			size_t startIndex,
 			size_t indicesCount) = 0;
+
+		virtual void ApplyMaterialProperties(const Ref<const Material>& materail) = 0;
 	public:
-		static Scope<RendererAPI> Create();
+		static void Create(API api);
+		static void Release();
+
+		static const Scope<RendererAPI>& GetInstance();
 		static API GetAPI();
 	};
 }

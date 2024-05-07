@@ -5,11 +5,20 @@
 #include "Flare/AssetManager/AssetManager.h"
 
 #include "Flare/Renderer/Renderer.h"
+#include "Flare/Renderer/CommandBuffer.h"
+#include "Flare/Renderer/GraphicsContext.h"
+
 #include "Flare/Renderer/VertexArray.h"
 #include "Flare/Renderer/Buffer.h"
 #include "Flare/Renderer/RenderCommand.h"
 #include "Flare/Renderer/ShaderLibrary.h"
 #include "Flare/Renderer/Shader.h"
+
+#include "Flare/Platform/Vulkan/VulkanCommandBuffer.h"
+#include "Flare/Platform/Vulkan/VulkanPipeline.h"
+#include "Flare/Platform/Vulkan/VulkanRenderPass.h"
+
+#include "Flare/Renderer/Pipeline.h"
 
 #include "Flare/Project/Project.h"
 
@@ -17,33 +26,37 @@ namespace Flare
 {
 	struct Vertex
 	{
-		glm::vec3 Position;
-		glm::vec4 Color;
+		glm::vec3 Position = glm::vec3(0.0f);
+		glm::vec4 Color = glm::vec4(1.0f);
 	};
 
 	struct DebugRendererData
 	{
-		const RenderData* FrameData;
+		const Viewport* CurrentViewport = nullptr;
 
-		Vertex* LinesBufferBase;
-		Vertex* LinesBuffer;
+		Vertex* LinesBufferBase = nullptr;
+		Vertex* LinesBuffer = nullptr;
 
-		Vertex* RaysBufferBase;
-		Vertex* RaysBuffer;
+		Vertex* RaysBufferBase = nullptr;
+		Vertex* RaysBuffer = nullptr;
 
-		uint32_t LinesCount;
-		uint32_t MaxLinesCount;
+		uint32_t LinesCount = 0;
+		uint32_t MaxLinesCount = 0;
 
-		uint32_t RaysCount;
-		uint32_t MaxRaysCount;
+		uint32_t RaysCount = 0;
+		uint32_t MaxRaysCount = 0;
 
-		float RayThickness;
+		float RayThickness = 0.0f;
 
-		Ref<Shader> DebugShader;
-		Ref<VertexBuffer> LinesVertexBuffer;
+		Ref<Shader> DebugShader = nullptr;
+
+		Ref<VertexBuffer> LinesVertexBuffer = nullptr;
+		Ref<VertexBuffer> RaysVertexBuffer = nullptr;
+		Ref<IndexBuffer> RaysIndexBuffer = nullptr;
 		Ref<VertexArray> LinesMesh;
 
-		Ref<VertexBuffer> RayVertexBuffer;
+		Ref<Pipeline> LinePipeline = nullptr;
+		Ref<Pipeline> RayPipeline = nullptr;
 		Ref<VertexArray> RaysMesh;
 	};
 
@@ -59,7 +72,13 @@ namespace Flare
 
 		AssetHandle debugShaderHandle = ShaderLibrary::FindShader("Debug").value_or(NULL_ASSET_HANDLE);
 		if (AssetManager::IsAssetHandleValid(debugShaderHandle))
+		{
 			s_DebugRendererData.DebugShader = AssetManager::GetAsset<Shader>(debugShaderHandle);
+
+			if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
+			{
+			}
+		}
 	}
 
 	void DebugRenderer::Initialize(uint32_t maxLinesCount)
@@ -107,15 +126,16 @@ namespace Flare
 			vertexIndex += VerticesPerRay;
 		}
 
-		raysMesh->SetIndexBuffer(IndexBuffer::Create(IndexBuffer::IndexFormat::UInt32, MemorySpan(indices, s_DebugRendererData.MaxRaysCount * IndicesPerRay)));
+		s_DebugRendererData.RaysIndexBuffer = IndexBuffer::Create(IndexBuffer::IndexFormat::UInt32, MemorySpan(indices, s_DebugRendererData.MaxRaysCount * IndicesPerRay));
+		raysMesh->SetIndexBuffer(s_DebugRendererData.RaysIndexBuffer);
 		raysMesh->Unbind();
 
-		s_DebugRendererData.RayVertexBuffer = rayVertexBuffer;
+		s_DebugRendererData.RaysVertexBuffer = rayVertexBuffer;
 		s_DebugRendererData.RaysMesh = raysMesh;
 
 		delete[] indices;
 
-		s_DebugRendererData.FrameData = nullptr;
+		s_DebugRendererData.CurrentViewport = nullptr;
 
 		s_DebugRendererData.RaysCount = 0;
 		s_DebugRendererData.LinesCount = 0;
@@ -135,22 +155,26 @@ namespace Flare
 		FLARE_CORE_ASSERT(s_DebugRendererData.LinesBufferBase);
 
 		delete[] s_DebugRendererData.LinesBufferBase;
+		delete[] s_DebugRendererData.RaysBufferBase;
 
 		s_DebugRendererData.LinesBufferBase = nullptr;
 		s_DebugRendererData.LinesBuffer = nullptr;
+
+		s_DebugRendererData = {};
 	}
 
 	void DebugRenderer::Begin()
 	{
-		FLARE_CORE_ASSERT(!s_DebugRendererData.FrameData);
-		s_DebugRendererData.FrameData = &Renderer::GetCurrentViewport().FrameData;
+		FLARE_CORE_ASSERT(s_DebugRendererData.CurrentViewport == nullptr);
+		s_DebugRendererData.CurrentViewport = &Renderer::GetCurrentViewport();
 	}
 
 	void DebugRenderer::End()
 	{
 		FlushLines();
 		FlushRays();
-		s_DebugRendererData.FrameData = nullptr;
+
+		s_DebugRendererData.CurrentViewport = nullptr;
 	}
 
 	void DebugRenderer::DrawLine(const glm::vec3& start, const glm::vec3& end)
@@ -181,9 +205,9 @@ namespace Flare
 
 	void DebugRenderer::DrawRay(const glm::vec3& origin, const glm::vec3& direction, const glm::vec4& color)
 	{
-		FLARE_CORE_ASSERT(s_DebugRendererData.FrameData);
+		FLARE_CORE_ASSERT(s_DebugRendererData.CurrentViewport != nullptr);
 
-		glm::vec3 fromCameraDirection = s_DebugRendererData.FrameData->Camera.Position - origin;
+		glm::vec3 fromCameraDirection = s_DebugRendererData.CurrentViewport->FrameData.Camera.Position - origin;
 		glm::vec3 up = glm::normalize(glm::cross(fromCameraDirection, direction)) * s_DebugRendererData.RayThickness / 2.0f;
 
 		for (uint32_t i = 0; i < VerticesPerRay; i++)
@@ -234,6 +258,13 @@ namespace Flare
 			previousPoint = worldSpacePoint;
 			currentAngle += segmentAngle;
 		}
+	}
+
+	void DebugRenderer::DrawWireSphere(const glm::vec3& origin, float radius, const glm::vec4& color, uint32_t segments)
+	{
+		DrawCircle(origin, glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), radius, color, segments);
+		DrawCircle(origin, glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), radius, color, segments);
+		DrawCircle(origin, glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(1.0f, 0.0f, 0.0f), radius, color, segments);
 	}
 
 	void DebugRenderer::DrawWireQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color)
@@ -287,15 +318,56 @@ namespace Flare
 
 	void DebugRenderer::FlushLines()
 	{
-		FLARE_CORE_ASSERT(s_DebugRendererData.FrameData);
+		FLARE_CORE_ASSERT(s_DebugRendererData.CurrentViewport != nullptr);
 
 		if (s_DebugRendererData.DebugShader)
 		{
 			s_DebugRendererData.LinesVertexBuffer->SetData(s_DebugRendererData.LinesBufferBase, sizeof(Vertex) * VerticesPerLine * s_DebugRendererData.LinesCount);
-			s_DebugRendererData.DebugShader->Bind();
-			
-			RenderCommand::SetDepthTestEnabled(true);
-			RenderCommand::DrawLines(s_DebugRendererData.LinesMesh, s_DebugRendererData.LinesCount * VerticesPerLine);
+
+			if (RendererAPI::GetAPI() == RendererAPI::API::OpenGL)
+			{
+				s_DebugRendererData.DebugShader->Bind();
+
+				RenderCommand::SetDepthTestEnabled(true);
+				RenderCommand::DrawLines(s_DebugRendererData.LinesMesh, s_DebugRendererData.LinesCount * VerticesPerLine);
+			}
+			else
+			{
+				if (s_DebugRendererData.LinePipeline == nullptr)
+				{
+					PipelineSpecifications linePipelineSpecifications{};
+					linePipelineSpecifications.Blending = BlendMode::Opaque;
+					linePipelineSpecifications.Culling = CullingMode::None;
+					linePipelineSpecifications.DepthFunction = DepthComparisonFunction::Less;
+					linePipelineSpecifications.DepthTest = true;
+					linePipelineSpecifications.DepthWrite = false;
+					linePipelineSpecifications.Shader = s_DebugRendererData.DebugShader;
+					linePipelineSpecifications.Topology = PrimitiveTopology::Lines;
+					linePipelineSpecifications.InputLayout = PipelineInputLayout({
+						{ 0, 0, ShaderDataType::Float3 },
+						{ 0, 1, ShaderDataType::Float4 }
+					});
+
+					s_DebugRendererData.LinePipeline = CreateRef<VulkanPipeline>(
+						linePipelineSpecifications,
+						As<VulkanFrameBuffer>(s_DebugRendererData.CurrentViewport->RenderTarget)->GetCompatibleRenderPass());
+				}
+
+				Ref<VulkanCommandBuffer> commandBuffer = As<VulkanCommandBuffer>(GraphicsContext::GetInstance().GetCommandBuffer());
+				
+				commandBuffer->BeginRenderTarget(s_DebugRendererData.CurrentViewport->RenderTarget);
+
+				commandBuffer->BindPipeline(s_DebugRendererData.LinePipeline);
+
+				commandBuffer->BindVertexBuffers(Span((Ref<const VertexBuffer>*)&s_DebugRendererData.LinesVertexBuffer, 1));
+				commandBuffer->BindDescriptorSet(
+					As<VulkanDescriptorSet>(Renderer::GetPrimaryDescriptorSet()),
+					As<VulkanPipeline>(s_DebugRendererData.LinePipeline)->GetLayoutHandle(), 0);
+
+				commandBuffer->Draw(0, s_DebugRendererData.LinesCount * VerticesPerLine, 0, 1);
+
+				commandBuffer->EndRenderTarget();
+			}
 		}
 
 		s_DebugRendererData.LinesCount = 0;
@@ -328,15 +400,58 @@ namespace Flare
 
 	void DebugRenderer::FlushRays()
 	{
-		FLARE_CORE_ASSERT(s_DebugRendererData.FrameData);
+		FLARE_CORE_ASSERT(s_DebugRendererData.CurrentViewport != nullptr);
 
 		if (s_DebugRendererData.DebugShader)
 		{
-			s_DebugRendererData.RayVertexBuffer->SetData(s_DebugRendererData.RaysBufferBase, sizeof(Vertex) * VerticesPerRay * s_DebugRendererData.RaysCount);
-			s_DebugRendererData.DebugShader->Bind();
+			s_DebugRendererData.RaysVertexBuffer->SetData(s_DebugRendererData.RaysBufferBase, sizeof(Vertex) * VerticesPerRay * s_DebugRendererData.RaysCount);
 
-			RenderCommand::SetDepthTestEnabled(true);
-			RenderCommand::DrawIndexed(s_DebugRendererData.RaysMesh, s_DebugRendererData.RaysCount * IndicesPerRay);
+			if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
+			{
+				if (s_DebugRendererData.RayPipeline == nullptr)
+				{
+					PipelineSpecifications rayPipelineSpecifications{};
+					rayPipelineSpecifications.Blending = BlendMode::Opaque;
+					rayPipelineSpecifications.Culling = CullingMode::None;
+					rayPipelineSpecifications.DepthFunction = DepthComparisonFunction::Less;
+					rayPipelineSpecifications.DepthTest = true;
+					rayPipelineSpecifications.DepthWrite = false;
+					rayPipelineSpecifications.Shader = s_DebugRendererData.DebugShader;
+					rayPipelineSpecifications.Topology = PrimitiveTopology::Triangles;
+					rayPipelineSpecifications.InputLayout = PipelineInputLayout({
+						{ 0, 0, ShaderDataType::Float3 },
+						{ 0, 1, ShaderDataType::Float4 }
+					});
+
+					s_DebugRendererData.RayPipeline = CreateRef<VulkanPipeline>(
+						rayPipelineSpecifications,
+						As<VulkanFrameBuffer>(s_DebugRendererData.CurrentViewport->RenderTarget)->GetCompatibleRenderPass());
+				}
+
+				Ref<VulkanCommandBuffer> commandBuffer = As<VulkanCommandBuffer>(GraphicsContext::GetInstance().GetCommandBuffer());
+
+				commandBuffer->BeginRenderTarget(s_DebugRendererData.CurrentViewport->RenderTarget);
+
+				commandBuffer->BindVertexBuffers(Span((Ref<const VertexBuffer>*)&s_DebugRendererData.RaysVertexBuffer, 1));
+				commandBuffer->BindIndexBuffer(s_DebugRendererData.RaysIndexBuffer);
+
+				commandBuffer->BindPipeline(s_DebugRendererData.RayPipeline);
+				commandBuffer->BindDescriptorSet(
+					As<VulkanDescriptorSet>(Renderer::GetPrimaryDescriptorSet()),
+					As<VulkanPipeline>(s_DebugRendererData.RayPipeline)->GetLayoutHandle(),
+					0);
+
+				commandBuffer->DrawIndexed(0, s_DebugRendererData.RaysCount * IndicesPerRay, 0, 1);
+
+				commandBuffer->EndRenderTarget();
+			}
+			else
+			{
+				s_DebugRendererData.DebugShader->Bind();
+
+				RenderCommand::SetDepthTestEnabled(true);
+				RenderCommand::DrawIndexed(s_DebugRendererData.RaysMesh, s_DebugRendererData.RaysCount * IndicesPerRay);
+			}
 		}
 
 		s_DebugRendererData.RaysCount = 0;

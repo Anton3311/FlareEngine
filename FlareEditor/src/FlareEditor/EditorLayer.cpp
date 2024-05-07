@@ -5,6 +5,7 @@
 
 #include "Flare.h"
 #include "Flare/Core/Application.h"
+#include "Flare/Core/Time.h"
 #include "Flare/Renderer2D/Renderer2D.h"
 #include "Flare/Renderer/Renderer.h"
 #include "Flare/Renderer/Font.h"
@@ -85,8 +86,10 @@ namespace Flare
         ShaderCacheManager::SetInstance(CreateScope<EditorShaderCache>());
         EditorGUI::Initialize();
 
+        m_ImGuiLayer = ImGuiLayer::Create();
         m_PropertiesWindow.OnAttach();
-        ImGuiLayer::OnAttach();
+
+        m_ImGuiLayer->OnAttach();
 
         Ref<Font> defaultFont = CreateRef<Font>("assets/Fonts/Roboto/Roboto-Regular.ttf");
         Font::SetDefault(defaultFont);
@@ -102,6 +105,8 @@ namespace Flare
         m_ViewportWindows.emplace_back(CreateRef<SceneViewportWindow>(m_Camera));
         m_ViewportWindows.emplace_back(m_GameWindow);
 
+        Renderer::SetMainViewport(m_GameWindow->GetViewport());
+
         EditorCameraSettings& settings = m_Camera.GetSettings();
         settings.FOV = 60.0f;
         settings.Near = 0.1f;
@@ -110,8 +115,25 @@ namespace Flare
 
         if (Application::GetInstance().GetCommandLineArguments().ArgumentsCount >= 2)
         {
-            std::filesystem::path projectPath = Application::GetInstance().GetCommandLineArguments()[1];
-            Project::OpenProject(projectPath);
+			const std::string_view projectArgument = "--project=";
+            std::optional<std::filesystem::path> projectPath;
+
+            const auto& commandLineArgs = Application::GetInstance().GetCommandLineArguments();
+            for (uint32_t i = 0; i < commandLineArgs.ArgumentsCount; i++)
+            {
+                std::string_view argument = commandLineArgs.Arguments[i];
+
+                if (argument._Starts_with(projectArgument))
+                {
+                    projectPath = argument.substr(projectArgument.size());
+                    break;
+                }
+            }
+
+            if (projectPath)
+            {
+				Project::OpenProject(*projectPath);
+            }
         }
         else
         {
@@ -147,10 +169,10 @@ namespace Flare
 
     void EditorLayer::OnDetach()
     {
-        m_AssetManagerWindow.ClearOpenActions();
+        m_AssetManagerWindow.Uninitialize();
         m_AssetEditorWindows.clear();
 
-        ImGuiLayer::OnDetach();
+        m_ImGuiLayer->OnDetach();
 
         if (m_Mode == EditorMode::Play)
             ExitPlayMode();
@@ -161,13 +183,38 @@ namespace Flare
         m_PrefabEditor->OnDetach();
         m_PrefabEditor = nullptr;
 
+        m_ViewportWindows.clear();
+        m_GameWindow = nullptr;
+
+        EditorGUI::Uninitialize();
+
         Scene::SetActive(nullptr);
     }
 
     void EditorLayer::OnUpdate(float deltaTime)
     {
         FLARE_PROFILE_FUNCTION();
-        m_PreviousFrameTime = deltaTime;
+
+        if (m_ExitPlayModeRequested)
+        {
+			Ref<EditorAssetManager> assetManager = As<EditorAssetManager>(AssetManager::GetInstance());
+
+			Scene::GetActive()->OnRuntimeEnd();
+			Scene::GetActive()->UninitializePostProcessing();
+
+			Scene::SetActive(nullptr);
+
+			Ref<Scene> editorScene = AssetManager::GetAsset<Scene>(m_EditedSceneHandle);
+			editorScene->InitializeRuntime();
+			editorScene->InitializePostProcessing();
+
+			Scene::SetActive(editorScene);
+			m_Mode = EditorMode::Edit;
+
+			InputManager::SetCursorMode(CursorMode::Normal);
+
+            m_ExitPlayModeRequested = false;
+        }
 
         if (m_Mode == EditorMode::Play)
         {
@@ -316,7 +363,7 @@ namespace Flare
     void EditorLayer::OnImGUIRender()
     {
         FLARE_PROFILE_FUNCTION();
-        ImGuiLayer::Begin();
+        m_ImGuiLayer->Begin();
 
         static bool fullscreen = true;
         static ImGuiDockNodeFlags dockspaceFlags = ImGuiDockNodeFlags_None;
@@ -358,7 +405,7 @@ namespace Flare
 
             auto shadows = Renderer::GetShadowsRenderTarget(s_CascadeIndex);
             if (shadows)
-                ImGui::Image(shadows->GetColorAttachmentRendererId(0), ImVec2(256, 256), ImVec2(0, 1), ImVec2(1, 0));
+                ImGui::Image(ImGuiLayer::GetId(shadows, 0), ImVec2(256, 256), ImVec2(0, 1), ImVec2(1, 0));
 
             ImGui::End();
         }
@@ -367,8 +414,8 @@ namespace Flare
             ImGui::Begin("Renderer");
             const auto& stats = Renderer::GetStatistics();
 
-            ImGui::Text("Frame time %f ms", m_PreviousFrameTime * 1000.0f);
-            ImGui::Text("FPS %f", 1.0f / m_PreviousFrameTime);
+            ImGui::Text("Frame time %f ms", Time::GetDeltaTime() * 1000.0f);
+            ImGui::Text("FPS %f", 1.0f / Time::GetDeltaTime());
             ImGui::Text("Shadow Pass %f ms", stats.ShadowPassTime);
             ImGui::Text("Geometry Pass %f ms", stats.GeometryPassTime);
 
@@ -440,7 +487,9 @@ namespace Flare
         }
 
         ImGui::End();
-        ImGuiLayer::End();
+        m_ImGuiLayer->End();
+        m_ImGuiLayer->RenderCurrentWindow();
+        m_ImGuiLayer->UpdateWindows();
     }
 
     void EditorLayer::UpdateWindowTitle()
@@ -582,21 +631,7 @@ namespace Flare
     void EditorLayer::ExitPlayMode()
     {
         FLARE_CORE_ASSERT(m_Mode == EditorMode::Play);
-        Ref<EditorAssetManager> assetManager = As<EditorAssetManager>(AssetManager::GetInstance());
-
-        Scene::GetActive()->OnRuntimeEnd();
-        Scene::GetActive()->UninitializePostProcessing();
-
-        Scene::SetActive(nullptr);
-
-        Ref<Scene> editorScene = AssetManager::GetAsset<Scene>(m_EditedSceneHandle);
-        editorScene->InitializeRuntime();
-        editorScene->InitializePostProcessing();
-
-        Scene::SetActive(editorScene);
-        m_Mode = EditorMode::Edit;
-
-        InputManager::SetCursorMode(CursorMode::Normal);
+        m_ExitPlayModeRequested = true;
     }
 
     void EditorLayer::ReloadScriptingModules()

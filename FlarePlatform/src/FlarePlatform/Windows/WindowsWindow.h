@@ -17,6 +17,11 @@ namespace Flare
 	public:
 		virtual const WindowProperties& GetProperties() const override { return m_Data.Properties; }
 
+		void SetUsesOpenGL();
+		void SetUsesVulkan();
+		
+		virtual void Initialize() override;
+
 		virtual void SetTitle(const std::string& title) override;
 		virtual void Hide() override;
 		virtual void SetMaximized(bool value) override;
@@ -36,21 +41,27 @@ namespace Flare
 
 		virtual void SetCursorMode(CursorMode mode) override;
 	private:
-		void Initialize();
-		
 		static LRESULT CALLBACK CustomWindowDecorationProc(HWND windowHandle, UINT message, WPARAM wParam, LPARAM lParam);
 		static const wchar_t* s_WindowPropertyName;
 	private:
+		enum class RendererAPI
+		{
+			OpenGL,
+			Vulkan,
+		};
+
 		struct WindowData
 		{
 			WindowProperties Properties;
-			EventCallback Callback;
-			Ref<WindowControls> Controls;
+			EventCallback Callback = nullptr;
+			Ref<WindowControls> Controls = nullptr;
 		};
 
-		GLFWwindow* m_Window;
+		RendererAPI m_RendererAPI = RendererAPI::OpenGL;
+
+		GLFWwindow* m_Window = nullptr;
 		WindowData m_Data;
 
-		void* m_OriginalProc;
+		void* m_OriginalProc = nullptr;
 	};
 }

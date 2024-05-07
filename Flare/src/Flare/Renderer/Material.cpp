@@ -7,7 +7,7 @@
 #include "Flare/Renderer/RendererAPI.h"
 #include "Flare/Renderer/Renderer.h"
 
-#include "Flare/Platform/OpenGL/OpenGLShader.h"
+#include "Flare/Platform/Vulkan/VulkanMaterial.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -69,6 +69,61 @@ namespace Flare
 		Initialize();
 	}
 
+	Ref<Material> Material::Create()
+	{
+		switch (RendererAPI::GetAPI())
+		{
+		case RendererAPI::API::Vulkan:
+			return CreateRef<VulkanMaterial>();
+		case RendererAPI::API::OpenGL:
+			return CreateRef<Material>();
+		}
+
+		FLARE_CORE_ASSERT(false);
+		return nullptr;
+	}
+
+	Ref<Material> Material::Create(Ref<Shader> shader)
+	{
+		Ref<Material> material = nullptr;
+		switch (RendererAPI::GetAPI())
+		{
+		case RendererAPI::API::Vulkan:
+			material = CreateRef<VulkanMaterial>();
+			break;
+		case RendererAPI::API::OpenGL:
+			material = CreateRef<Material>();
+			break;
+		}
+
+		FLARE_CORE_ASSERT(material);
+		
+		material->SetShader(shader);
+
+		return material;
+	}
+
+	Ref<Material> Material::Create(AssetHandle shaderHandle)
+	{
+		Ref<Material> material = nullptr;
+		switch (RendererAPI::GetAPI())
+		{
+		case RendererAPI::API::Vulkan:
+			material = CreateRef<VulkanMaterial>();
+			break;
+		case RendererAPI::API::OpenGL:
+			material = CreateRef<Material>();
+			break;
+		}
+
+		FLARE_CORE_ASSERT(material);
+		
+		FLARE_CORE_ASSERT(AssetManager::IsAssetHandleValid(shaderHandle));
+		material->SetShader(AssetManager::GetAsset<Shader>(shaderHandle));
+
+		return material;
+	}
+
 	void Material::Initialize()
 	{
 		if (m_Shader == nullptr)
@@ -79,16 +134,17 @@ namespace Flare
 
 		for (const auto& prop : properties)
 		{
-			m_BufferSize += prop.Size;
-
 			if (prop.Type == ShaderDataType::Sampler)
+			{
 				samplers++;
+			}
+			else
+			{
+				m_BufferSize = glm::max(prop.Offset + prop.Size, m_BufferSize);
+			}
 		}
 
 		m_Textures.resize(samplers, TexturePropertyValue());
-
-		if (properties.size() > 0)
-			m_BufferSize += properties.back().Size;
 
 		if (m_BufferSize != 0)
 		{
@@ -124,92 +180,6 @@ namespace Flare
 		memcpy_s(m_Buffer + properties[index].Offset, properties[index].Size, values, sizeof(*values) * count);
 	}
 
-	void Material::SetShaderProperties() const
-	{
-		if (!m_Shader)
-			return;
-
-		const ShaderProperties& properties = m_Shader->GetProperties();
-
-		if (!m_Shader->IsLoaded())
-			return;
-
-		if (RendererAPI::GetAPI() == RendererAPI::API::OpenGL)
-		{
-			Ref<OpenGLShader> glShader = As<OpenGLShader>(m_Shader);
-			glShader->Bind();
-
-			if (properties.size() == 0)
-				return;
-			
-			FLARE_CORE_ASSERT(m_Buffer);
-			for (uint32_t i = 0; i < (uint32_t)properties.size(); i++)
-			{
-				uint8_t* paramData = m_Buffer + properties[i].Offset;
-				
-				switch (properties[i].Type)
-				{
-				case ShaderDataType::Int:
-					glShader->SetInt(i, *(int32_t*)paramData);
-					break;
-				case ShaderDataType::Sampler:
-				{
-					const auto& textureValue = m_Textures[properties[i].SamplerIndex];
-
-					switch (textureValue.ValueType)
-					{
-					case TexturePropertyValue::Type::FrameBufferAttachment:
-						FLARE_CORE_ASSERT(textureValue.FrameBuffer);
-						textureValue.FrameBuffer->BindAttachmentTexture(textureValue.FrameBufferAttachmentIndex, properties[i].Location);
-						break;
-					case TexturePropertyValue::Type::Texture:
-						if (textureValue.Texture)
-							textureValue.Texture->Bind(properties[i].Location);
-						break;
-					default:
-						FLARE_CORE_ASSERT(false);
-					}
-
-					break;
-				}
-
-				case ShaderDataType::Int2:
-					glShader->SetInt2(i, *(glm::ivec2*)paramData);
-					break;
-				case ShaderDataType::Int3:
-					glShader->SetInt3(i, *(glm::ivec3*)paramData);
-					break;
-				case ShaderDataType::Int4:
-					glShader->SetInt4(i, *(glm::ivec4*)paramData);
-					break;
-
-				case ShaderDataType::Float:
-					glShader->SetFloat(i, *(float*)paramData);
-					break;
-				case ShaderDataType::Float2:
-					glShader->SetFloat2(i, *(glm::vec2*)paramData);
-					break;
-				case ShaderDataType::Float3:
-					glShader->SetFloat3(i, *(glm::vec3*)paramData);
-					break;
-				case ShaderDataType::Float4:
-					glShader->SetFloat4(i, *(glm::vec4*)paramData);
-					break;
-
-				case ShaderDataType::Matrix4x4:
-					glShader->SetMatrix4(i, *(glm::mat4*)paramData);
-					break;
-				case ShaderDataType::SamplerArray:
-				{
-					uint32_t arraySize = (uint32_t)properties[i].Size / ShaderDataTypeSize(ShaderDataType::Sampler);
-					glShader->SetIntArray(i, (int32_t*)paramData, arraySize);
-					break;
-				}
-				}
-			}
-		}
-	}
-
 	template<>
 	FLARE_API TexturePropertyValue& Material::GetPropertyValue(uint32_t index)
 	{
@@ -218,11 +188,12 @@ namespace Flare
 		FLARE_CORE_ASSERT(properties[index].Type == ShaderDataType::Sampler);
 		FLARE_CORE_ASSERT(properties[index].SamplerIndex < (uint32_t)m_Textures.size());
 
+		m_IsDirty = true;
 		return m_Textures[properties[index].SamplerIndex];
 	}
 
 	template<>
-	FLARE_API TexturePropertyValue Material::ReadPropertyValue(uint32_t index)
+	FLARE_API TexturePropertyValue Material::ReadPropertyValue(uint32_t index) const
 	{
 		const ShaderProperties& properties = m_Shader->GetProperties();
 		FLARE_CORE_ASSERT((size_t)index < properties.size());
@@ -240,6 +211,7 @@ namespace Flare
 		FLARE_CORE_ASSERT(properties[index].Type == ShaderDataType::Sampler);
 		FLARE_CORE_ASSERT(properties[index].SamplerIndex < (uint32_t)m_Textures.size());
 
+		m_IsDirty = true;
 		m_Textures[properties[index].SamplerIndex] = value;
 	}
 }

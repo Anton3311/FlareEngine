@@ -60,7 +60,7 @@ namespace Flare
 		const std::vector<SystemData>& GetSystems() const;
 	private:
 		World& m_World;
-		CommandBuffer m_CommandBuffer;
+		EntitiesCommandBuffer m_CommandBuffer;
 
 		std::vector<SystemData> m_Systems;
 		std::unordered_map<std::string, SystemGroupId> m_GroupNameToId;

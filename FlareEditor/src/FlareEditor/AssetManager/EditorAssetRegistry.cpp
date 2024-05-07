@@ -1,5 +1,7 @@
 #include "EditorAssetRegistry.h"
 
+#include "FlareCore/Profiler/Profiler.h"
+
 #include "Flare/Project/Project.h"
 #include "Flare/Serialization/Serialization.h"
 
@@ -23,6 +25,8 @@ namespace Flare
 
 	void Flare::AssetRegistrySerializer::Serialize(const EditorAssetRegistry& registry, const std::filesystem::path& path)
 	{
+        FLARE_PROFILE_FUNCTION();
+
         std::filesystem::path registryPath = path / RegistryFileName;
         std::filesystem::path root = path / AssetsDirectoryName;
 
@@ -67,6 +71,8 @@ namespace Flare
 
     bool AssetRegistrySerializer::Deserialize(EditorAssetRegistry& registry, const std::filesystem::path& path, std::optional<UUID> packageId)
     {
+        FLARE_PROFILE_FUNCTION();
+
         std::filesystem::path registryPath = path / RegistryFileName;
         std::filesystem::path root = path / AssetsDirectoryName;
 

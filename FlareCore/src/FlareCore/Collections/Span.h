@@ -29,6 +29,50 @@ namespace Flare
 		constexpr T* GetData() { return m_Values; }
 		constexpr const T* GetData() const { return m_Values; }
 
+		bool operator==(const Span<T>& other) const
+		{
+			if (this == &other)
+				return true;
+
+			if (m_Size != other.m_Size)
+				return false;
+
+			if (m_Values == other.m_Values)
+				return true;
+
+			for (size_t i = 0; i < m_Size; i++)
+			{
+				if (m_Values[i] != other[i])
+				{
+					return false;
+				}
+			}
+
+			return true;
+		}
+
+		bool operator!=(const Span<T>& other) const
+		{
+			if (this == &other)
+				return false;
+
+			if (m_Size != other.m_Size)
+				return true;
+
+			if (m_Values != other.m_Values)
+				return true;
+
+			for (size_t i = 0; i < m_Size; i++)
+			{
+				if (m_Values[i] != other[i])
+				{
+					return true;
+				}
+			}
+
+			return false;
+		}
+
 		inline T& operator[](size_t index)
 		{
 			FLARE_CORE_ASSERT(index < m_Size);
@@ -53,6 +97,9 @@ namespace Flare
 	class MemorySpan
 	{
 	public:
+		MemorySpan()
+			: m_Buffer(nullptr), m_Size(0) {}
+
 		template<typename T>
 		MemorySpan(T* elements, size_t count)
 			: m_Buffer(elements), m_Size(count * sizeof(T)) {}
@@ -69,6 +116,15 @@ namespace Flare
 		inline static MemorySpan FromVector(std::vector<T>& vector)
 		{
 			return MemorySpan(vector.data(), vector.size());
+		}
+
+		inline static MemorySpan FromRawBytes(void* bytes, size_t size)
+		{
+			MemorySpan span{};
+			span.m_Buffer = bytes;
+			span.m_Size = size;
+
+			return span;
 		}
 	private:
 		void* m_Buffer;

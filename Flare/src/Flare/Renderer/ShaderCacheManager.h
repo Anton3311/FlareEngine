@@ -5,13 +5,14 @@
 #include "Flare/AssetManager/Asset.h"
 #include "Flare/Renderer/RendererAPI.h"
 
-#include "Flare/Renderer/Shader.h"
-
 #include <vector>
 #include <optional>
 
 namespace Flare
 {
+	struct ShaderMetadata;
+	struct ComputeShaderMetadata;
+
 	class FLARE_API ShaderCacheManager
 	{
 	public:
@@ -25,6 +26,7 @@ namespace Flare
 			ShaderStageType stageType) = 0;
 
 		virtual Ref<const ShaderMetadata> FindShaderMetadata(AssetHandle shaderHandle) = 0;
+		virtual Ref<const ComputeShaderMetadata> FindComputeShaderMetadata(AssetHandle shaderHandle) = 0;
 
 		virtual bool HasCache(AssetHandle shaderHandle,
 			ShaderTargetEnvironment targetEnvironment,

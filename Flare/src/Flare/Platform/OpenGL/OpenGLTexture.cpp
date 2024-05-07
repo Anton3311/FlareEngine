@@ -40,7 +40,13 @@ namespace Flare
 			}
 
 			glCreateTextures(GL_TEXTURE_2D, 1, &m_Id);
-			glTextureStorage2D(m_Id, m_Specifications.GenerateMipMaps ? 4 : 1, m_InternalTextureFormat, m_Specifications.Width, m_Specifications.Height);
+			glTextureStorage2D(m_Id,
+				m_Specifications.GenerateMipMaps
+					? TextureSpecifications::DefaultMipLevelsCount
+					: 1,
+				m_InternalTextureFormat,
+				m_Specifications.Width,
+				m_Specifications.Height);
 
 			if (m_Specifications.GenerateMipMaps)
 			{
@@ -154,6 +160,62 @@ namespace Flare
 
 		glTextureSubImage2D(m_Id, 0, 0, 0, m_Specifications.Width, m_Specifications.Height, m_TextureDataType, dataType, data);
 	}
+
+	OpenGLTexture::OpenGLTexture(const TextureSpecifications& specifications, const void* data)
+		: m_Specifications(specifications)
+	{
+		GLenum dataType = GL_UNSIGNED_BYTE;
+		switch (m_Specifications.Format)
+		{
+		case TextureFormat::RGB8:
+		case TextureFormat::RGBA8:
+		case TextureFormat::RG8:
+		case TextureFormat::R8:
+			dataType = GL_UNSIGNED_BYTE;
+			break;
+		case TextureFormat::RF32:
+			dataType = GL_FLOAT;
+			break;
+		case TextureFormat::RG16:
+			dataType = GL_UNSIGNED_SHORT;
+			break;
+		}
+
+		switch (m_Specifications.Format)
+		{
+		case TextureFormat::RGB8:
+			m_InternalTextureFormat = GL_RGB8;
+			m_TextureDataType = GL_RGB;
+			break;
+		case TextureFormat::RGBA8:
+			m_InternalTextureFormat = GL_RGBA8;
+			m_TextureDataType = GL_RGBA;
+			break;
+		case TextureFormat::RF32:
+			m_InternalTextureFormat = GL_R32F;
+			m_TextureDataType = GL_RED;
+			break;
+		case TextureFormat::RG8:
+			m_InternalTextureFormat = GL_RG8;
+			m_TextureDataType = GL_RG;
+			break;
+		case TextureFormat::R8:
+			m_InternalTextureFormat = GL_R8;
+			m_TextureDataType = GL_RED;
+			break;
+		case TextureFormat::RG16:
+			m_InternalTextureFormat = GL_RG16;
+			m_TextureDataType = GL_RG;
+			break;
+		}
+
+		glCreateTextures(GL_TEXTURE_2D, 1, &m_Id);
+		glTextureStorage2D(m_Id, 1, m_InternalTextureFormat, m_Specifications.Width, m_Specifications.Height);
+
+		SetFiltering(m_Specifications.Filtering);
+
+		glTextureSubImage2D(m_Id, 0, 0, 0, m_Specifications.Width, m_Specifications.Height, m_TextureDataType, dataType, data);
+	}
 	
 	OpenGLTexture::~OpenGLTexture()
 	{
@@ -186,11 +248,6 @@ namespace Flare
 		}
 
 		glTextureSubImage2D(m_Id, 0, 0, 0, m_Specifications.Width, m_Specifications.Height, m_TextureDataType, dataType, data);
-	}
-
-	void* OpenGLTexture::GetRendererId() const
-	{
-		return (void*)(size_t)m_Id;
 	}
 
 	void OpenGLTexture::SetFiltering(TextureFiltering filtering)

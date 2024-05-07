@@ -4,23 +4,23 @@
 
 namespace Flare
 {
-	CommandBuffer::CommandBuffer(World& world)
+	EntitiesCommandBuffer::EntitiesCommandBuffer(World& world)
 		: m_Storage(2048), m_World(world)
 	{
 
 	}
 
-	FutureEntityCommands CommandBuffer::GetEntity(Entity entity)
+	FutureEntityCommands EntitiesCommandBuffer::GetEntity(Entity entity)
 	{
 		return AddEntityCommand<GetEntityCommand>(GetEntityCommand(entity));
 	}
 
-	void CommandBuffer::DeleteEntity(Entity entity)
+	void EntitiesCommandBuffer::DeleteEntity(Entity entity)
 	{
 		AddCommand<DeleteEntityCommand>(DeleteEntityCommand(entity));
 	}
 
-	void CommandBuffer::Execute()
+	void EntitiesCommandBuffer::Execute()
 	{
 		if (!m_Storage.CanRead())
 			return;

@@ -2,6 +2,11 @@
 
 #include "FlareCore/Log.h"
 
+#include "Flare/Renderer/Material.h"
+
+#include "Flare/Platform/OpenGL/OpenGLShader.h"
+#include "Flare/Platform/OpenGL/OpenGLMesh.h"
+
 #include <glad/glad.h>
 
 namespace Flare
@@ -170,6 +175,8 @@ namespace Flare
 		GetIndexCountAndType(vertexArray->GetIndexBuffer(), &indicesCount, &indexType);
 
 		glDrawElements(GL_TRIANGLES, indicesCount, indexType, (const void*)0);
+
+		vertexArray->Unbind();
 	}
 
 	void OpenGLRendererAPI::DrawIndexed(const Ref<const VertexArray>& vertexArray, size_t indicesCount)
@@ -180,6 +187,27 @@ namespace Flare
 		GetIndexCountAndType(vertexArray->GetIndexBuffer(), nullptr, &indexType);
 
 		glDrawElements(GL_TRIANGLES, (int32_t)indicesCount, indexType, (const void*)0);
+
+		vertexArray->Unbind();
+	}
+
+	void OpenGLRendererAPI::DrawIndexed(const Ref<const VertexArray>& vertexArray, size_t firstIndex, size_t indicesCount)
+	{
+		vertexArray->Bind();
+
+		switch (vertexArray->GetIndexBuffer()->GetIndexFormat())
+		{
+		case IndexBuffer::IndexFormat::UInt16:
+			glDrawElements(GL_TRIANGLES, (int32_t)indicesCount, GL_UNSIGNED_SHORT, (const void*)(firstIndex * sizeof(uint16_t)));
+			break;
+		case IndexBuffer::IndexFormat::UInt32:
+			glDrawElements(GL_TRIANGLES, (int32_t)indicesCount, GL_UNSIGNED_INT, (const void*)(firstIndex * sizeof(uint32_t)));
+			break;
+		default:
+			FLARE_CORE_ASSERT(false);
+		}
+
+		vertexArray->Unbind();
 	}
 
 	void OpenGLRendererAPI::DrawInstanced(const Ref<const VertexArray>& mesh, size_t instancesCount)
@@ -209,12 +237,13 @@ namespace Flare
 	void OpenGLRendererAPI::DrawInstancesIndexed(const Ref<const Mesh>& mesh, uint32_t subMeshIndex, uint32_t instancesCount, uint32_t baseInstance)
 	{
 		const SubMesh& subMesh = mesh->GetSubMeshes()[subMeshIndex];
-		mesh->GetVertexArray()->Bind();
+		const VertexArray& vertexArray = As<const OpenGLMesh>(mesh)->GetVertexArray();
+		vertexArray.Bind();
 		
-		size_t indexSize = mesh->GetVertexArray()->GetIndexBuffer()->GetIndexFormat() == IndexBuffer::IndexFormat::UInt16 ? sizeof(uint16_t) : sizeof(uint32_t);
+		size_t indexSize = vertexArray.GetIndexBuffer()->GetIndexFormat() == IndexBuffer::IndexFormat::UInt16 ? sizeof(uint16_t) : sizeof(uint32_t);
 		int32_t indicesCount = 0;
 		GLenum indexType = 0;
-		GetIndexCountAndType(mesh->GetVertexArray()->GetIndexBuffer(), &indicesCount, &indexType);
+		GetIndexCountAndType(vertexArray.GetIndexBuffer(), &indicesCount, &indexType);
 
 		glDrawElementsInstancedBaseVertexBaseInstance(
 			ConvertTopologyType(mesh->GetTopologyType()),
@@ -224,15 +253,18 @@ namespace Flare
 			instancesCount,
 			subMesh.BaseVertex,
 			baseInstance);
+
+		vertexArray.Unbind();
 	}
 
 	void OpenGLRendererAPI::DrawInstancesIndexedIndirect(const Ref<const Mesh>& mesh, const Span<DrawIndirectCommandSubMeshData>& subMeshesData, uint32_t baseInstance)
 	{
-		mesh->GetVertexArray()->Bind();
+		const VertexArray& vertexArray = As<const OpenGLMesh>(mesh)->GetVertexArray();
+		vertexArray.Bind();
 		const auto& subMeshes = mesh->GetSubMeshes();
 		
 		GLenum indexType = 0;
-		GetIndexCountAndType(mesh->GetVertexArray()->GetIndexBuffer(), nullptr, &indexType);
+		GetIndexCountAndType(vertexArray.GetIndexBuffer(), nullptr, &indexType);
 
 		m_IndirectCommandDataStorage.clear();
 
@@ -254,7 +286,9 @@ namespace Flare
 			ConvertTopologyType(mesh->GetTopologyType()),
 			indexType,
 			m_IndirectCommandDataStorage.data(),
-			subMeshesData.GetSize(), 0);
+			(int32_t)subMeshesData.GetSize(), 0);
+
+		vertexArray.Unbind();
 	}
 
 	void OpenGLRendererAPI::DrawInstanced(const Ref<const VertexArray>& mesh, size_t instancesCount, size_t baseVertexIndex, size_t startIndex, size_t indicesCount)
@@ -272,5 +306,96 @@ namespace Flare
 	{
 		vertexArray->Bind();
 		glDrawArrays(GL_LINES, 0, (int32_t)verticesCount);
+		vertexArray->Unbind();
+	}
+
+	void OpenGLRendererAPI::ApplyMaterialProperties(const Ref<const Material>& materail)
+	{
+		FLARE_CORE_ASSERT(materail);
+		if (!materail->GetShader())
+			return;
+
+		Ref<const OpenGLShader> shader = As<const OpenGLShader>(materail->GetShader());
+		const ShaderProperties& properties = shader->GetProperties();
+
+		if (!shader->IsLoaded())
+			return;
+
+		uint32_t shaderId = shader->GetId();
+		glUseProgram(shaderId);
+
+		if (properties.size() == 0)
+			return;
+			
+		const uint8_t* propertiesBuffer = materail->GetPropertiesBuffer();
+		for (uint32_t i = 0; i < (uint32_t)properties.size(); i++)
+		{
+			const uint8_t* value = propertiesBuffer + properties[i].Offset;
+			int32_t location = shader->GetUniformLocations()[i];
+
+			const int32_t* ints = (const int32_t*)value;
+			const float* floats = (const float*)value;
+
+			switch (properties[i].Type)
+			{
+			case ShaderDataType::Int:
+				glUniform1i(location, ints[0]);
+				break;
+
+			case ShaderDataType::Int2:
+				glUniform2i(location, ints[0], ints[1]);
+				break;
+			case ShaderDataType::Int3:
+				glUniform3i(location, ints[0], ints[1], ints[2]);
+				break;
+			case ShaderDataType::Int4:
+				glUniform4i(location, ints[0], ints[1], ints[2], ints[3]);
+				break;
+
+			case ShaderDataType::Float:
+				glUniform1f(location, floats[0]);
+				break;
+			case ShaderDataType::Float2:
+				glUniform2f(location, floats[0], floats[1]);
+				break;
+			case ShaderDataType::Float3:
+				glUniform3f(location, floats[0], floats[1], floats[2]);
+				break;
+			case ShaderDataType::Float4:
+				glUniform4f(location, floats[0], floats[1], floats[2], floats[3]);
+				break;
+
+			case ShaderDataType::Matrix4x4:
+				glUniformMatrix4fv(location, 1, GL_FALSE, floats);
+				break;
+
+			case ShaderDataType::Sampler:
+			{
+				const auto& textureValue = materail->ReadPropertyValue<TexturePropertyValue>(i);
+
+				switch (textureValue.ValueType)
+				{
+				case TexturePropertyValue::Type::FrameBufferAttachment:
+					FLARE_CORE_ASSERT(textureValue.FrameBuffer);
+					textureValue.FrameBuffer->BindAttachmentTexture(textureValue.FrameBufferAttachmentIndex, properties[i].Binding);
+					break;
+				case TexturePropertyValue::Type::Texture:
+					if (textureValue.Texture)
+						textureValue.Texture->Bind(properties[i].Binding);
+					break;
+				default:
+					FLARE_CORE_ASSERT(false);
+				}
+
+				break;
+			}
+			case ShaderDataType::SamplerArray:
+			{
+				uint32_t arraySize = (uint32_t)properties[i].Size / ShaderDataTypeSize(ShaderDataType::Sampler);
+				glUniform1iv(location, (int32_t)arraySize, (const int32_t*)value);
+				break;
+			}
+			}
+		}
 	}
 }

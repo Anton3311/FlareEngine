@@ -22,6 +22,7 @@ namespace Flare
 
 		virtual void DrawIndexed(const Ref<const VertexArray>& vertexArray) override;
 		virtual void DrawIndexed(const Ref<const VertexArray>& vertexArray, size_t indicesCount) override;
+		virtual void DrawIndexed(const Ref<const VertexArray>& vertexArray, size_t firstIndex, size_t indicesCount) override;
 		virtual void DrawInstanced(const Ref<const VertexArray>& mesh, size_t instancesCount) override;
 
 		virtual void DrawInstancesIndexed(const Ref<const Mesh>& mesh,
@@ -41,6 +42,7 @@ namespace Flare
 			size_t indicesCount) override;
 
 		virtual void DrawLines(const Ref<const VertexArray>& vertexArray, size_t verticesCount) override;
+		virtual void ApplyMaterialProperties(const Ref<const Material>& materail) override;
 	private:
 		struct DrawIndirectCommandData
 		{

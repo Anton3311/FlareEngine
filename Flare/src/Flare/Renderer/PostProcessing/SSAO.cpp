@@ -1,7 +1,12 @@
 #include "SSAO.h"
 
 #include "Flare/Renderer/Renderer.h"
+#include "Flare/Renderer/RendererPrimitives.h"
+#include "Flare/Renderer/CommandBuffer.h"
 #include "Flare/Renderer/ShaderLibrary.h"
+#include "Flare/Renderer/GraphicsContext.h"
+
+#include "Flare/Platform/Vulkan/VulkanCommandBuffer.h"
 
 #include "Flare/AssetManager/AssetManager.h"
 
@@ -24,15 +29,13 @@ namespace Flare
 			}
 			else
 			{
-				m_Material = CreateRef<Material>(AssetManager::GetAsset<Shader>(shaderHandle.value()));
+				m_Material = Material::Create(AssetManager::GetAsset<Shader>(shaderHandle.value()));
 				m_BiasPropertyIndex = m_Material->GetShader()->GetPropertyIndex("u_Params.Bias");
 				m_RadiusPropertyIndex = m_Material->GetShader()->GetPropertyIndex("u_Params.SampleRadius");
-				m_NoiseScalePropertyIndex = m_Material->GetShader()->GetPropertyIndex("u_Params.NoiseScale");
 
 				m_NormalsTextureIndex = m_Material->GetShader()->GetPropertyIndex("u_NormalsTexture");
 				m_DepthTextureIndex= m_Material->GetShader()->GetPropertyIndex("u_DepthTexture");
 			}
-
 		}
 
 		{
@@ -44,7 +47,7 @@ namespace Flare
 			}
 			else
 			{
-				m_BlurMaterial = CreateRef<Material>(AssetManager::GetAsset<Shader>(shaderHandle.value()));
+				m_BlurMaterial = Material::Create(AssetManager::GetAsset<Shader>(shaderHandle.value()));
 				m_BlurSizePropertyIndex = m_BlurMaterial->GetShader()->GetPropertyIndex("u_Params.BlurSize");
 				m_TexelSizePropertyIndex = m_BlurMaterial->GetShader()->GetPropertyIndex("u_Params.TexelSize");
 
@@ -64,37 +67,15 @@ namespace Flare
 		if (m_Material == nullptr || m_BlurMaterial == nullptr)
 			return;
 
-		Ref<FrameBuffer> aoTarget = nullptr;
-		size_t targetIndex = 0;
+		FrameBufferTextureFormat formats[] = { FrameBufferTextureFormat::RF32 };
+		FrameBufferTextureFormat colorFormats[] = { FrameBufferTextureFormat::RGB8 };
+		Ref<FrameBuffer> intermediateAOTarget = context.RTPool.GetFullscreen(Span(formats, 1));
+		Ref<FrameBuffer> intermediateColorTarget = context.RTPool.GetFullscreen(Span(colorFormats, 1));
 
 		const Viewport& currentViewport = Renderer::GetCurrentViewport();
-		if (&currentViewport == &Renderer::GetMainViewport())
-			targetIndex = 0;
-		else
-			targetIndex = 1;
-
-		aoTarget = m_AOTargets[targetIndex];
-
-		if (!aoTarget)
-		{
-			FrameBufferSpecifications specifications = FrameBufferSpecifications(
-				currentViewport.GetSize().x, currentViewport.GetSize().y,
-				{ {FrameBufferTextureFormat::RF32, TextureWrap::Clamp, TextureFiltering::Closest } }
-			);
-
-			aoTarget = FrameBuffer::Create(specifications);
-			m_AOTargets[targetIndex] = aoTarget;
-		}
-		else
-		{
-			const auto& specifications = aoTarget->GetSpecifications();
-			if (specifications.Width != currentViewport.GetSize().x || specifications.Height != currentViewport.GetSize().y)
-				aoTarget->Resize(currentViewport.GetSize().x, currentViewport.GetSize().y);
-		}
+		Ref<CommandBuffer> commandBuffer = GraphicsContext::GetInstance().GetCommandBuffer();
 
 		glm::vec2 texelSize = glm::vec2(1.0f / currentViewport.GetSize().x, 1.0f / currentViewport.GetSize().y);
-
-		aoTarget->Bind();
 
 		{
 			FLARE_PROFILE_SCOPE("SSAO::MainPass");
@@ -109,28 +90,108 @@ namespace Flare
 				m_Material->WritePropertyValue(*m_BiasPropertyIndex, Bias);
 			if (m_RadiusPropertyIndex)
 				m_Material->WritePropertyValue(*m_RadiusPropertyIndex, Radius);
-			if (m_NoiseScalePropertyIndex)
-				m_Material->WritePropertyValue(*m_NoiseScalePropertyIndex, (glm::vec2)currentViewport.GetSize() / 8.0f);
 
-			Renderer::DrawFullscreenQuad(m_Material);
+			if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
+			{
+				Ref<VulkanCommandBuffer> vulkanCommandBuffer = As<VulkanCommandBuffer>(commandBuffer);
+				Ref<VulkanFrameBuffer> frameBuffer = As<VulkanFrameBuffer>(context.RenderTarget);
+				vulkanCommandBuffer->TransitionDepthImageLayout(
+					frameBuffer->GetAttachmentImage(currentViewport.DepthAttachmentIndex), true,
+					VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+					VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+				vulkanCommandBuffer->TransitionImageLayout(
+					frameBuffer->GetAttachmentImage(currentViewport.NormalsAttachmentIndex),
+					VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+					VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			}
+
+			commandBuffer->BeginRenderTarget(intermediateAOTarget);
+
+			commandBuffer->ApplyMaterial(m_Material);
+			commandBuffer->SetViewportAndScisors(Math::Rect(0.0f, 0.0f, (float)currentViewport.GetSize().x, (float)currentViewport.GetSize().y));
+			commandBuffer->DrawIndexed(RendererPrimitives::GetFullscreenQuadMesh(), 0, 0, 1);
+
+			commandBuffer->EndRenderTarget();
+
+			if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
+			{
+				Ref<VulkanCommandBuffer> vulkanCommandBuffer = As<VulkanCommandBuffer>(commandBuffer);
+				Ref<VulkanFrameBuffer> frameBuffer = As<VulkanFrameBuffer>(context.RenderTarget);
+				vulkanCommandBuffer->TransitionDepthImageLayout(
+					frameBuffer->GetAttachmentImage(currentViewport.DepthAttachmentIndex), true,
+					VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+					VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
+
+				vulkanCommandBuffer->TransitionImageLayout(
+					frameBuffer->GetAttachmentImage(currentViewport.NormalsAttachmentIndex),
+					VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+					VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+
+				vulkanCommandBuffer->TransitionImageLayout(
+					As<VulkanFrameBuffer>(intermediateAOTarget)->GetAttachmentImage(0),
+					VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+					VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+				vulkanCommandBuffer->TransitionImageLayout(
+					As<VulkanFrameBuffer>(context.RenderTarget)->GetAttachmentImage(currentViewport.ColorAttachmentIndex),
+					VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+					VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			}
 		}
-
-		context.RenderTarget->Bind();
 
 		{
 			FLARE_PROFILE_SCOPE("SSAO::BlurAndCombinePass");
 
+			commandBuffer->BeginRenderTarget(intermediateColorTarget);
+
 			if (m_AOTexture)
-				m_BlurMaterial->GetPropertyValue<TexturePropertyValue>(*m_AOTexture).SetFrameBuffer(aoTarget, 0);
+				m_BlurMaterial->GetPropertyValue<TexturePropertyValue>(*m_AOTexture).SetFrameBuffer(intermediateAOTarget, 0);
 			if (m_ColorTexture)
-				m_BlurMaterial->GetPropertyValue<TexturePropertyValue>(*m_ColorTexture).SetFrameBuffer(currentViewport.RenderTarget, 0);
+				m_BlurMaterial->GetPropertyValue<TexturePropertyValue>(*m_ColorTexture).SetFrameBuffer(currentViewport.RenderTarget, currentViewport.ColorAttachmentIndex);
 
 			if (m_BlurSizePropertyIndex)
 				m_BlurMaterial->WritePropertyValue(*m_BlurSizePropertyIndex, BlurSize);
 			if (m_TexelSizePropertyIndex)
 				m_BlurMaterial->WritePropertyValue(*m_TexelSizePropertyIndex, texelSize);
 
-			Renderer::DrawFullscreenQuad(m_BlurMaterial);
+			commandBuffer->ApplyMaterial(m_BlurMaterial);
+			commandBuffer->SetViewportAndScisors(Math::Rect(0.0f, 0.0f, (float)currentViewport.GetSize().x, (float)currentViewport.GetSize().y));
+			commandBuffer->DrawIndexed(RendererPrimitives::GetFullscreenQuadMesh(), 0, 0, 1);
+
+			commandBuffer->EndRenderTarget();
+
+			if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
+			{
+				Ref<VulkanCommandBuffer> vulkanCommandBuffer = As<VulkanCommandBuffer>(commandBuffer);
+				Ref<VulkanFrameBuffer> frameBuffer = As<VulkanFrameBuffer>(context.RenderTarget);
+
+				vulkanCommandBuffer->TransitionImageLayout(
+					As<VulkanFrameBuffer>(intermediateAOTarget)->GetAttachmentImage(0),
+					VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+					VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+
+				vulkanCommandBuffer->TransitionImageLayout(
+					As<VulkanFrameBuffer>(context.RenderTarget)->GetAttachmentImage(currentViewport.ColorAttachmentIndex),
+					VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+					VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+			}
 		}
+
+		commandBuffer->Blit(intermediateColorTarget, 0, context.RenderTarget, 0, TextureFiltering::Closest);
+
+		if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
+		{
+			Ref<VulkanCommandBuffer> vulkanCommandBuffer = As<VulkanCommandBuffer>(commandBuffer);
+			Ref<VulkanFrameBuffer> frameBuffer = As<VulkanFrameBuffer>(context.RenderTarget);
+
+			vulkanCommandBuffer->TransitionImageLayout(
+				As<VulkanFrameBuffer>(intermediateColorTarget)->GetAttachmentImage(0),
+				VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+				VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+		}
+
+		context.RTPool.ReturnFullscreen(Span(formats, 1), intermediateAOTarget);
+		context.RTPool.ReturnFullscreen(Span(colorFormats, 1), intermediateColorTarget);
 	}
 }

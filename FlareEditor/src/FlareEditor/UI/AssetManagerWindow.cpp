@@ -67,6 +67,14 @@ namespace Flare
         BuildDirectory(rootIndex, root);
     }
 
+    void AssetManagerWindow::Uninitialize()
+    {
+        m_AssetManager = nullptr;
+        m_AssetTree.clear();
+        m_FileOpenActions.clear();
+        m_OnNewFileNameCallback = nullptr;
+    }
+
     void AssetManagerWindow::SetOpenAction(AssetType assetType, const std::function<void(AssetHandle)>& action)
     {
         m_FileOpenActions[assetType] = action;
@@ -428,7 +436,7 @@ namespace Flare
 
                 if (meshShaderHandle)
                 {
-                    Ref<Material> material = CreateRef<Material>(meshShaderHandle.value());
+                    Ref<Material> material = Material::Create(meshShaderHandle.value());
                     MaterialImporter::SerializeMaterial(material, path);
 
                     m_AssetManager->ImportAsset(path, material);

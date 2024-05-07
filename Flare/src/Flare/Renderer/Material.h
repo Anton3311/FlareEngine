@@ -46,7 +46,7 @@ namespace Flare
 		virtual ~Material();
 
 		inline Ref<Shader> GetShader() const { return m_Shader; }
-		void SetShader(const Ref<Shader>& shader);
+		virtual void SetShader(const Ref<Shader>& shader);
 
 		void SetIntArray(uint32_t index, const int32_t* values, uint32_t count);
 
@@ -58,11 +58,13 @@ namespace Flare
 			FLARE_CORE_ASSERT(sizeof(T) == properties[index].Size);
 			FLARE_CORE_ASSERT(properties[index].Type != ShaderDataType::Sampler);
 			FLARE_CORE_ASSERT(properties[index].Offset + properties[index].Size <= m_BufferSize);
+
+			m_IsDirty = true;
 			return *(T*)(m_Buffer + properties[index].Offset);
 		}
 
 		template<typename T>
-		T ReadPropertyValue(uint32_t index)
+		T ReadPropertyValue(uint32_t index) const
 		{
 			const ShaderProperties& properties = m_Shader->GetProperties();
 			FLARE_CORE_ASSERT((size_t)index < properties.size());
@@ -87,27 +89,34 @@ namespace Flare
 
 			FLARE_CORE_ASSERT(properties[index].Type != ShaderDataType::Sampler);
 			memcpy_s(m_Buffer + properties[index].Offset, sizeof(value), &value, properties[index].Size);
+
+			m_IsDirty = true;
 		}
 
 		inline uint8_t* GetPropertiesBuffer() { return m_Buffer; }
-
-		void SetShaderProperties() const;
+		inline const uint8_t* GetPropertiesBuffer() const { return m_Buffer; }
+	public:
+		static Ref<Material> Create();
+		static Ref<Material> Create(Ref<Shader> shader);
+		static Ref<Material> Create(AssetHandle shaderHandle);
 	private:
 		void Initialize();
-	private:
+	protected:
 		Ref<Shader> m_Shader;
 
 		std::vector<TexturePropertyValue> m_Textures;
 
 		size_t m_BufferSize;
 		uint8_t* m_Buffer;
+
+		bool m_IsDirty = false;
 	};
 
 	template<>
 	FLARE_API TexturePropertyValue& Material::GetPropertyValue(uint32_t index);
 
 	template<>
-	FLARE_API TexturePropertyValue Material::ReadPropertyValue(uint32_t index);
+	FLARE_API TexturePropertyValue Material::ReadPropertyValue(uint32_t index) const;
 
 	template<>
 	FLARE_API void Material::WritePropertyValue(uint32_t index, const TexturePropertyValue& value);

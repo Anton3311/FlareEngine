@@ -5,6 +5,11 @@
 #include "Flare/Renderer/Renderer.h"
 #include "Flare/Renderer/RenderCommand.h"
 #include "Flare/Renderer/ShaderLibrary.h"
+#include "Flare/Renderer/GraphicsContext.h"
+#include "Flare/Renderer/CommandBuffer.h"
+#include "Flare/Renderer/RendererPrimitives.h"
+
+#include "Flare/Platform/Vulkan/VulkanCommandBuffer.h"
 
 #include "FlareCore/Profiler/Profiler.h"
 
@@ -27,7 +32,7 @@ namespace Flare
 		}
 
 		Ref<Shader> shader = AssetManager::GetAsset<Shader>(shaderHandle.value());
-		m_Material = CreateRef<Material>(shader);
+		m_Material = Material::Create(shader);
 
 		s_ColorPropertyIndex = shader->GetPropertyIndex("u_Params.Color").value_or(UINT32_MAX);
 		s_RadiusPropertyIndex = shader->GetPropertyIndex("u_Params.Radius").value_or(UINT32_MAX);
@@ -41,15 +46,29 @@ namespace Flare
 		if (!Enabled || !Renderer::GetCurrentViewport().PostProcessingEnabled)
 			return;
 
-		FrameBufferAttachmentsMask writeMask = context.RenderTarget->GetWriteMask();
-
 		m_Material->WritePropertyValue(s_ColorPropertyIndex, Color);
 		m_Material->WritePropertyValue(s_RadiusPropertyIndex, Radius);
 		m_Material->WritePropertyValue(s_SmoothnessPropertyIndex, Smoothness);
 
-		context.RenderTarget->SetWriteMask(0x1);
-		Renderer::DrawFullscreenQuad(m_Material);
-		context.RenderTarget->SetWriteMask(writeMask);
+		Ref<CommandBuffer> commandBuffer = GraphicsContext::GetInstance().GetCommandBuffer();
+		commandBuffer->BeginRenderTarget(context.RenderTarget);
+
+		if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
+		{
+			Ref<VulkanCommandBuffer> vulkanCommandBuffer = As<VulkanCommandBuffer>(commandBuffer);
+
+			vulkanCommandBuffer->SetPrimaryDescriptorSet(nullptr);
+			vulkanCommandBuffer->SetSecondaryDescriptorSet(nullptr);
+		}
+
+		commandBuffer->ApplyMaterial(m_Material);
+
+		const auto& frameBufferSpec = context.RenderTarget->GetSpecifications();
+		commandBuffer->SetViewportAndScisors(Math::Rect(0.0f, 0.0f, (float)frameBufferSpec.Width, (float)frameBufferSpec.Height));
+
+		commandBuffer->DrawIndexed(RendererPrimitives::GetFullscreenQuadMesh(), 0, 0, 1);
+
+		commandBuffer->EndRenderTarget();
 	}
 
 	void TypeSerializer<Vignette>::OnSerialize(Vignette& vignette, SerializationStream& stream)

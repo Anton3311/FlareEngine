@@ -30,7 +30,6 @@ namespace Flare
 		Ref<Window> m_Window;
 		CommandLineArguments m_CommandLineArguments;
 	private:
-		Scope<GraphicsContext> m_GraphicsContext;
 		LayerStack m_LayersStack;
 
 		bool m_Running;

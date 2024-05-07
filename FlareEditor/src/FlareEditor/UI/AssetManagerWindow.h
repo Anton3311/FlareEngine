@@ -38,6 +38,7 @@ namespace Flare
 		void OnImGuiRender();
 
 		void RebuildAssetTree();
+		void Uninitialize();
 
 		void SetOpenAction(AssetType assetType, const std::function<void(AssetHandle)>& action);
 		void ClearOpenActions();

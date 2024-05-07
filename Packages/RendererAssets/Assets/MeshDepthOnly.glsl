@@ -1,3 +1,7 @@
+Type = Surface
+Culling = Front
+DepthTest = true
+
 #begin vertex
 #version 450
 

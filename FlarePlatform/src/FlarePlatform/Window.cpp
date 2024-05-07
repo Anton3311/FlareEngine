@@ -10,5 +10,6 @@ namespace Flare
 #ifdef FLARE_PLATFORM_WINDOWS
 		return CreateScope<WindowsWindow>(properties);
 #endif
+		return nullptr;
 	}
 }

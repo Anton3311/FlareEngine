@@ -183,8 +183,9 @@ namespace Flare
 		drawList->AddRectFilled(buttonRect.Min, buttonRect.Max, color, style.FrameRounding);
 
 		ImRect iconUVs = icons.GetIconUVs(iconPosition);
+
 		drawList->AddImage(
-			icons.GetTexture()->GetRendererId(),
+			ImGuiLayer::GetId(icons.GetTexture()),
 			buttonRect.Min,
 			buttonRect.Max,
 			iconUVs.Min, iconUVs.Max);

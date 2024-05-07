@@ -177,7 +177,7 @@ namespace Flare
         }
     }
 
-    bool OpenGLShader::IsLoaded()
+    bool OpenGLShader::IsLoaded() const
     {
         return m_IsValid;
     }
@@ -186,6 +186,11 @@ namespace Flare
     {
         if (m_IsValid)
 			glUseProgram(m_Id);
+    }
+
+    Ref<const ShaderMetadata> OpenGLShader::GetMetadata() const
+    {
+        return m_Metadata;
     }
 
     const ShaderProperties& OpenGLShader::GetProperties() const
@@ -209,107 +214,5 @@ namespace Flare
         if (it == m_NameToIndex.end())
             return {};
         return it->second;
-    }
-
-    void OpenGLShader::SetInt(const std::string& name, int value)
-    {
-        int32_t location = glGetUniformLocation(m_Id, name.c_str());
-        glUniform1i(location, value);
-    }
-
-    void OpenGLShader::SetFloat(const std::string& name, float value)
-    {
-        int32_t location = glGetUniformLocation(m_Id, name.c_str());
-        glUniform1f(location, value);
-    }
-
-    void OpenGLShader::SetFloat2(const std::string& name, glm::vec2 value)
-    {
-        int32_t location = glGetUniformLocation(m_Id, name.c_str());
-        glUniform2f(location, value.x, value.y);
-    }
-
-    void OpenGLShader::SetFloat3(const std::string& name, const glm::vec3& value)
-    {
-        int32_t location = glGetUniformLocation(m_Id, name.c_str());
-        glUniform3f(location, value.x, value.y, value.z);
-    }
-
-    void OpenGLShader::SetFloat4(const std::string& name, const glm::vec4& value)
-    {
-        int32_t location = glGetUniformLocation(m_Id, name.c_str());
-        glUniform4f(location, value.x, value.y, value.z, value.w);
-    }
-
-    void OpenGLShader::SetIntArray(const std::string& name, const int* values, uint32_t count)
-    {
-        int32_t location = glGetUniformLocation(m_Id, name.c_str());
-        glUniform1iv(location, count, values);
-    }
-
-    void OpenGLShader::SetMatrix4(const std::string& name, const glm::mat4& matrix)
-    {
-        int32_t location = glGetUniformLocation(m_Id, name.c_str());
-        glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
-    }
-
-    void OpenGLShader::SetInt(uint32_t index, int32_t value)
-    {
-        FLARE_CORE_ASSERT((size_t)index < m_Metadata->Properties.size());
-        glUniform1i(m_UniformLocations[index], value);
-    }
-
-    void OpenGLShader::SetInt2(uint32_t index, glm::ivec2 value)
-    {
-        FLARE_CORE_ASSERT((size_t)index < m_Metadata->Properties.size());
-        glUniform2i(m_UniformLocations[index], value.x, value.y);
-    }
-
-    void OpenGLShader::SetInt3(uint32_t index, const glm::ivec3& value)
-    {
-        FLARE_CORE_ASSERT((size_t)index < m_Metadata->Properties.size());
-        glUniform3i(m_UniformLocations[index], value.x, value.y, value.z);
-    }
-
-    void OpenGLShader::SetInt4(uint32_t index, const glm::ivec4& value)
-    {
-        FLARE_CORE_ASSERT((size_t)index < m_Metadata->Properties.size());
-        glUniform4i(m_UniformLocations[index], value.x, value.y, value.z, value.w);
-    }
-
-    void OpenGLShader::SetFloat(uint32_t index, float value)
-    {
-        FLARE_CORE_ASSERT((size_t)index < m_Metadata->Properties.size());
-        glUniform1f(m_UniformLocations[index], value);
-    }
-
-    void OpenGLShader::SetFloat2(uint32_t index, glm::vec2 value)
-    {
-        FLARE_CORE_ASSERT((size_t)index < m_Metadata->Properties.size());
-        glUniform2f(m_UniformLocations[index], value.x, value.y);
-    }
-
-    void OpenGLShader::SetFloat3(uint32_t index, const glm::vec3& value)
-    {
-        FLARE_CORE_ASSERT((size_t)index < m_Metadata->Properties.size());
-        glUniform3f(m_UniformLocations[index], value.x, value.y, value.z);
-    }
-
-    void OpenGLShader::SetFloat4(uint32_t index, const glm::vec4& value)
-    {
-        FLARE_CORE_ASSERT((size_t)index < m_Metadata->Properties.size());
-        glUniform4f(m_UniformLocations[index], value.x, value.y, value.z, value.w);
-    }
-
-    void OpenGLShader::SetIntArray(uint32_t index, const int* values, uint32_t count)
-    {
-        FLARE_CORE_ASSERT((size_t)index < m_Metadata->Properties.size());
-        glUniform1iv(m_UniformLocations[index], count, values);
-    }
-
-    void OpenGLShader::SetMatrix4(uint32_t index, const glm::mat4& matrix)
-    {
-        FLARE_CORE_ASSERT((size_t)index < m_Metadata->Properties.size());
-        glUniformMatrix4fv(m_UniformLocations[index], 1, GL_FALSE, glm::value_ptr(matrix));
     }
 }

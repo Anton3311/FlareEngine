@@ -9,6 +9,7 @@ namespace Flare
 	{
 	public:
 		static void Intialize(const Ref<AssetManagerBase>& assetManager);
+		static void Uninitialize();
 
 		static Ref<AssetManagerBase> GetInstance();
 	public:

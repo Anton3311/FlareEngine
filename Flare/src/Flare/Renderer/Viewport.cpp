@@ -16,5 +16,7 @@ namespace Flare
 	{
 		m_Position = position;
 		m_Size = size;
+		
+		RTPool.OnViewportResize((glm::uvec2)m_Size);
 	}
 }

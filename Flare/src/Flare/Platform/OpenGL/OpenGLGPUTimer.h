@@ -12,9 +12,11 @@ namespace Flare
 		OpenGLGPUTImer();
 		~OpenGLGPUTImer();
 
-		void Start() override;
-		void Stop() override;
+		void Start();
+		void Stop();
+
 		std::optional<float> GetElapsedTime() override;
+		uint32_t GetId() const { return m_Id; }
 	private:
 		uint32_t m_Id;
 	};

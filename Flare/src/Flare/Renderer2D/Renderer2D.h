@@ -9,10 +9,13 @@
 
 namespace Flare
 {
+	class VulkanDescriptorSet;
+	class VulkanDescriptorSetPool;
+
 	struct Renderer2DStats
 	{
-		uint32_t QuadsCount;
-		uint32_t DrawCalls;
+		uint32_t QuadsCount = 0;
+		uint32_t DrawCalls = 0;
 
 		uint32_t GetTotalVertexCount() const { return QuadsCount * 4; }
 	};
@@ -24,36 +27,17 @@ namespace Flare
 		FlipY = 2,
 	};
 
-	constexpr SpriteRenderFlags operator|(SpriteRenderFlags a, SpriteRenderFlags b)
-	{
-		return (SpriteRenderFlags)((uint8_t)a | (uint8_t)b);
-	}
+	FLARE_IMPL_ENUM_BITFIELD(SpriteRenderFlags);
 
-	constexpr SpriteRenderFlags operator~(SpriteRenderFlags a)
-	{
-		return (SpriteRenderFlags)(~(uint8_t)a);
-	}
-
-	constexpr void operator|=(SpriteRenderFlags& a, SpriteRenderFlags b)
-	{
-		a = (SpriteRenderFlags)((uint8_t)a | (uint8_t)b);
-	}
-
-	constexpr SpriteRenderFlags operator&(SpriteRenderFlags a, SpriteRenderFlags b)
-	{
-		return (SpriteRenderFlags)((uint8_t)a & (uint8_t)b);
-	}
-
-	constexpr bool operator!=(SpriteRenderFlags a, int b)
-	{
-		return (int)a != b;
-	}
-
+	class DescriptorSetLayout;
 	class FLARE_API Renderer2D
 	{
 	public:
 		static void Initialize(size_t maxQuads = 10000);
 		static void Shutdown();
+
+		static void BeginFrame();
+		static void EndFrame();
 
 		static void Begin(const Ref<Material>& material = nullptr);
 		static void End();
@@ -103,10 +87,12 @@ namespace Flare
 			const glm::vec4& color = glm::vec4(1.0f),
 			int32_t entityIndex = INT32_MAX);
 
+		static Ref<const DescriptorSetLayout> GetDescriptorSetLayout();
+
 		static void ResetStats();
 		static const Renderer2DStats& GetStats();
 	private:
-		static void FlushQuads();
+		static void FlushQuadBatches();
 		static void FlushText();
 		static void FlushAll();
 	private:

@@ -41,6 +41,7 @@ namespace Flare
 		Sprite,
 		Prefab,
 		Shader,
+		ComputeShader,
 		Material,
 		Font,
 		Mesh,

@@ -144,6 +144,8 @@ namespace Flare
 		glm::vec4 Color;
 	};
 
+	class DescriptorSet;
+	class DescriptorSetLayout;
 	class FLARE_API Renderer
 	{
 	public:
@@ -154,6 +156,7 @@ namespace Flare
 		static void ClearStatistics();
 
 		static void SetMainViewport(Viewport& viewport);
+		static void SetCurrentViewport(Viewport& viewport);
 
 		static void BeginScene(Viewport& viewport);
 		static void Flush();
@@ -188,11 +191,14 @@ namespace Flare
 
 		static Ref<FrameBuffer> GetShadowsRenderTarget(size_t index);
 		static ShadowSettings& GetShadowSettings();
+
+		static Ref<DescriptorSet> GetPrimaryDescriptorSet();
+		static Ref<const DescriptorSetLayout> GetPrimaryDescriptorSetLayout();
 	private:
 		static void ExecuteGeomertyPass();
 		static void ExecuteDecalsPass();
 		static void ExecuteShadowPass();
-		static void FlushInstances(uint32_t count, uint32_t baseInstance);
+		static void FlushInstances(uint32_t instanceCount, uint32_t baseInstance);
 		static void FlushShadowPassInstances(uint32_t baseInstance);
 		static void ReloadShaders();
 		static void ExecuteRenderPasses(std::vector<Ref<RenderPass>>& passes);

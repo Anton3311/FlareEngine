@@ -42,6 +42,8 @@ namespace Flare
         {
             if (m_Handle != nullptr)
 				EditorLayer::GetInstance().Selection.SetAsset(*m_Handle);
+            else if (m_Asset != nullptr)
+                EditorLayer::GetInstance().Selection.SetAsset(m_Asset->get()->Handle);
         }
         ImGui::PopID();
 
@@ -124,7 +126,7 @@ namespace Flare
 
         ImU32 hoverColor = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_TextDisabled]);
 
-        drawList->AddImage((ImTextureID)EditorGUI::GetIcons().GetTexture()->GetRendererId(),
+        drawList->AddImage(ImGuiLayer::GetId(EditorGUI::GetIcons().GetTexture()),
             resetButtonRect.Min,
             resetButtonRect.Max,
             iconUVs.Min,
@@ -208,7 +210,7 @@ namespace Flare
         {
             if (previewTexture)
             {
-                drawList->AddImageRounded((ImTextureID)previewTexture->GetRendererId(),
+                drawList->AddImageRounded(ImGuiLayer::GetId(previewTexture),
                     previewPosition, previewPosition + previewSize,
                     uvMin, uvMax,
                     hovered ? previewHoverColor : 0xffffffff,

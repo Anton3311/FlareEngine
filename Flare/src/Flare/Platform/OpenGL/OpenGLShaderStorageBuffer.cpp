@@ -5,7 +5,7 @@
 namespace Flare
 {
     OpenGLShaderStorageBuffer::OpenGLShaderStorageBuffer(uint32_t binding)
-        : m_Id(0), m_Binding(binding)
+        : m_Id(0), m_Binding(binding), m_Size(0)
     {
         glCreateBuffers(1, &m_Id);
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_Id);
@@ -17,9 +17,30 @@ namespace Flare
         glDeleteBuffers(1, &m_Id);
     }
 
+    size_t OpenGLShaderStorageBuffer::GetSize() const
+    {
+        return m_Size;
+    }
+
     void OpenGLShaderStorageBuffer::SetData(const MemorySpan& data)
     {
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_Id);
         glBufferData(GL_SHADER_STORAGE_BUFFER, data.GetSize(), data.GetBuffer(), GL_DYNAMIC_DRAW);
+    }
+
+    void OpenGLShaderStorageBuffer::SetData(const MemorySpan& data, size_t offset, Ref<CommandBuffer> commandBuffer)
+    {
+        SetData(data);
+    }
+
+    void OpenGLShaderStorageBuffer::SetDebugName(std::string_view name)
+    {
+        // TODO: Set the debug name of an OpenGL object
+        m_DebugName = name;
+    }
+
+    const std::string& OpenGLShaderStorageBuffer::GetDebugName() const
+    {
+        return m_DebugName;
     }
 }

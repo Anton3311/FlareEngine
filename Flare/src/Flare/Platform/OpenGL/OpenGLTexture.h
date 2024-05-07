@@ -2,8 +2,6 @@
 
 #include "Flare/Renderer/Texture.h"
 
-#include <glad/glad.h>
-
 namespace Flare
 {
 	class OpenGLTexture : public Texture
@@ -12,13 +10,15 @@ namespace Flare
 		// Texture size and format are ignored, because they are retrieved from the file
 		OpenGLTexture(const std::filesystem::path& path, const TextureSpecifications& specifications);
 		OpenGLTexture(uint32_t width, uint32_t height, const void* data, TextureFormat format, TextureFiltering filtering);
+		OpenGLTexture(const TextureSpecifications& specifications, const void* data);
 		~OpenGLTexture();
 	public:
+		uint32_t GetId() const { return m_Id; }
+
 		virtual void Bind(uint32_t slot = 0) override;
 		virtual void SetData(const void* data, size_t size) override;
 
 		virtual const TextureSpecifications& GetSpecifications() const override { return m_Specifications; }
-		virtual void* GetRendererId() const override;
 
 		virtual uint32_t GetWidth() const override { return m_Specifications.Width; }
 		virtual uint32_t GetHeight() const override { return m_Specifications.Height; }
@@ -30,8 +30,8 @@ namespace Flare
 		uint32_t m_Id;
 		TextureSpecifications m_Specifications;
 
-		GLenum m_InternalTextureFormat;
-		GLenum m_TextureDataType;
+		uint32_t m_InternalTextureFormat;
+		uint32_t m_TextureDataType;
 	};
 
 
@@ -53,7 +53,7 @@ namespace Flare
 
 		Texture3DSpecifications m_Specifications;
 
-		GLenum m_InternalTextureFormat;
-		GLenum m_TextureDataType;
+		uint32_t m_InternalTextureFormat;
+		uint32_t m_TextureDataType;
 	};
 }

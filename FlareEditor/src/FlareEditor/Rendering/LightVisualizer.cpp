@@ -41,7 +41,7 @@ namespace Flare
 				DebugRenderer::DrawRay(transforms[entity].Position, transforms[entity].TransformDirection(glm::vec3(0.0f, 0.0f, -1.0f)));
 		}
 
-		if (!m_HasProjectOpenHandler)
+		if (!m_HasProjectOpenHandler && RendererAPI::GetAPI() != RendererAPI::API::Vulkan)
 		{
 			Project::OnProjectOpen.Bind(FLARE_BIND_EVENT_CALLBACK(ReloadShaders));
 			ReloadShaders();
@@ -49,10 +49,12 @@ namespace Flare
 			m_HasProjectOpenHandler = true;
 		}
 
-		if (!m_DebugIconsMaterial)
-			return;
-
-		Renderer2D::SetMaterial(m_DebugIconsMaterial);
+		if (RendererAPI::GetAPI() != RendererAPI::API::Vulkan)
+		{
+			if (!m_DebugIconsMaterial)
+				return;
+			Renderer2D::SetMaterial(m_DebugIconsMaterial);
+		}
 
 		ImRect pointLightIconUVs = EditorGUI::GetIcons().GetIconUVs(EditorIcons::PointLightIcon);
 		ImRect spotlightIconUVs = EditorGUI::GetIcons().GetIconUVs(EditorIcons::SpotlightIcon);
@@ -67,15 +69,23 @@ namespace Flare
 			for (EntityViewElement entity : view)
 			{
 				glm::vec3 position = transforms[entity].Position;
-				position = cameraView * glm::vec4(position, 1.0f);
+				glm::vec3 iconPosition = cameraView * glm::vec4(position, 1.0f);
 
-				Renderer2D::DrawQuad(position,
-					glm::vec2(1.0f),
-					glm::vec4(lights[entity].Color, 1.0f),
-					iconsTexture,
-					glm::vec2(pointLightIconUVs.Min.x, pointLightIconUVs.Max.y),
-					glm::vec2(pointLightIconUVs.Max.x, pointLightIconUVs.Min.y)
-				);
+				const float intensityLimit = 0.1f;
+				float radius = glm::sqrt(lights[entity].Intensity / intensityLimit);
+
+				DebugRenderer::DrawWireSphere(position, radius, glm::vec4(lights[entity].Color, 1.0f));
+
+				if (RendererAPI::GetAPI() != RendererAPI::API::Vulkan)
+				{
+					Renderer2D::DrawQuad(iconPosition,
+						glm::vec2(1.0f),
+						glm::vec4(lights[entity].Color, 1.0f),
+						iconsTexture,
+						glm::vec2(pointLightIconUVs.Min.x, pointLightIconUVs.Max.y),
+						glm::vec2(pointLightIconUVs.Max.x, pointLightIconUVs.Min.y)
+					);
+				}
 			}
 		}
 
@@ -89,13 +99,16 @@ namespace Flare
 				glm::vec3 iconPosition = transforms[entity].Position;
 				iconPosition = cameraView * glm::vec4(iconPosition, 1.0f);
 
-				Renderer2D::DrawQuad(iconPosition,
-					glm::vec2(1.0f),
-					glm::vec4(lights[entity].Color, 1.0f),
-					iconsTexture,
-					glm::vec2(spotlightIconUVs.Min.x, spotlightIconUVs.Max.y),
-					glm::vec2(spotlightIconUVs.Max.x, spotlightIconUVs.Min.y)
-				);
+				if (RendererAPI::GetAPI() != RendererAPI::API::Vulkan)
+				{
+					Renderer2D::DrawQuad(iconPosition,
+						glm::vec2(1.0f),
+						glm::vec4(lights[entity].Color, 1.0f),
+						iconsTexture,
+						glm::vec2(spotlightIconUVs.Min.x, spotlightIconUVs.Max.y),
+						glm::vec2(spotlightIconUVs.Max.x, spotlightIconUVs.Min.y)
+					);
+				}
 
 				glm::vec3 lightDirection = transforms[entity].TransformDirection(glm::vec3(0.0f, 0.0f, 1.0f));
 				glm::vec3 tangent = transforms[entity].TransformDirection(glm::vec3(1.0f, 0.0f, 0.0f));
@@ -110,10 +123,14 @@ namespace Flare
 
 				DebugRenderer::DrawCircle(transforms[entity].Position + lightDirection * radius,
 					lightDirection,
-					tangent, outerCircleRadius);
+					tangent,
+					outerCircleRadius,
+					glm::vec4(lights[entity].Color, 1.0f));
 				DebugRenderer::DrawCircle(transforms[entity].Position + lightDirection * radius,
 					lightDirection,
-					tangent, innerCircleRadius);
+					tangent,
+					innerCircleRadius,
+					glm::vec4(lights[entity].Color, 1.0f));
 
 				glm::vec2 offsetSigns[] =
 				{
@@ -127,12 +144,16 @@ namespace Flare
 				{
 					glm::vec3 offset = offsetSigns[i].x * tangent + offsetSigns[i].y * bitangent;
 					DebugRenderer::DrawLine(transforms[entity].Position,
-						transforms[entity].Position + lightDirection * radius + offset * outerCircleRadius);
+						transforms[entity].Position + lightDirection * radius + offset * outerCircleRadius,
+						glm::vec4(lights[entity].Color, 1.0f));
 				}
 			}
 		}
 
-		Renderer2D::SetMaterial(nullptr);
+		if (RendererAPI::GetAPI() != RendererAPI::API::Vulkan)
+		{
+			Renderer2D::SetMaterial(nullptr);
+		}
 	}
 
 	void LightVisualizer::ReloadShaders()
@@ -144,7 +165,7 @@ namespace Flare
 		else
 		{
 			Ref<Shader> shader = AssetManager::GetAsset<Shader>(*shaderHandle);
-			m_DebugIconsMaterial = CreateRef<Material>(shader);
+			m_DebugIconsMaterial = Material::Create(shader);
 		}
 	}
 }

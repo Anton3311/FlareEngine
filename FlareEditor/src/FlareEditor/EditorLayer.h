@@ -26,6 +26,8 @@
 #include "FlareEditor/EditorSelection.h"
 #include "FlareEditor/SceneViewSettings.h"
 
+#include "FlareEditor/ImGui/ImGuiLayer.h"
+
 #include <vector>
 #include <set>
 
@@ -82,13 +84,14 @@ namespace Flare
 		void UpdateWindowTitle();
 		void OnOpenProject();
 	private:
-		float m_PreviousFrameTime = 0.0f;
-
 		bool m_UpdateCursorModeNextFrame = false;
+		bool m_ExitPlayModeRequested = false;
 
 		std::set<AssetHandle> m_AssetReloadQueue;
 
 		SceneViewSettings m_SceneViewSettings;
+
+		Ref<ImGuiLayer> m_ImGuiLayer = nullptr;
 
 		EditorTitleBar m_TitleBar;
 		Ref<ViewportWindow> m_GameWindow;

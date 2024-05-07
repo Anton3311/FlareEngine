@@ -1,5 +1,9 @@
 #pragma once
 
+#include "FlareCore/Core.h"
+#include "Flare/Renderer/Texture.h"
+#include "Flare/Renderer/FrameBuffer.h"
+
 #include <stdint.h>
 
 #define IMGUI_DEFINE_MATH_OPERATORS
@@ -33,12 +37,26 @@ namespace Flare
 	class ImGuiLayer
 	{
 	public:
-		static void OnAttach();
-		static void OnDetach();
+		virtual void InitializeRenderer() = 0;
+		virtual void ShutdownRenderer() = 0;
+		virtual void InitializeFonts() = 0;
 
-		static void Begin();
-		static void End();
+		virtual void OnAttach();
+		virtual void OnDetach();
 
+		virtual void Begin() = 0;
+		virtual void End() = 0;
+
+		virtual void RenderCurrentWindow() = 0;
+		virtual void UpdateWindows() = 0;
+
+		virtual ImTextureID GetTextureId(const Ref<const Texture>& texture) = 0;
+		virtual ImTextureID GetFrameBufferAttachmentId(const Ref<const FrameBuffer>& frameBuffer, uint32_t attachment) = 0;
+
+		static ImTextureID GetId(const Ref<const Texture>& texture);
+		static ImTextureID GetId(const Ref<const FrameBuffer>& frameBuffer, uint32_t attachmentIndex);
 		static void SetThemeColors();
+	public:
+		static Ref<ImGuiLayer> Create();
 	};
 }

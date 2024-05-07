@@ -21,6 +21,7 @@ namespace Flare
 	{
 	public:
 		static void Initialize();
+		static void Uninitialize();
 
 		static bool BeginPropertyGrid(float width = 0.0f);
 		static void EndPropertyGrid();

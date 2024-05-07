@@ -1,5 +1,8 @@
 #include "ShaderImporter.h"
 
+#include "Flare/Renderer/Shader.h"
+#include "Flare/Renderer/ComputeShader.h"
+
 #include "FlareEditor/ShaderCompiler/ShaderCompiler.h"
 
 namespace Flare
@@ -10,6 +13,18 @@ namespace Flare
 			return false;
 
 		Ref<Shader> shader = Shader::Create();
+		shader->Handle = metadata.Handle;
+		shader->Load();
+
+		return shader;
+	}
+
+	Ref<Asset> ShaderImporter::ImportComputeShader(const AssetMetadata& metadata)
+	{
+		if (!ShaderCompiler::Compile(metadata.Handle))
+			return false;
+
+		Ref<ComputeShader> shader = ComputeShader::Create();
 		shader->Handle = metadata.Handle;
 		shader->Load();
 

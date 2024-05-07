@@ -28,6 +28,11 @@ namespace Flare
 			const glm::vec4& color = glm::vec4(1.0f),
 			uint32_t segments = 16);
 
+		static void DrawWireSphere(const glm::vec3& origin,
+			float radius,
+			const glm::vec4& color = glm::vec4(1.0f),
+			uint32_t segments = 16);
+
 		static void DrawWireQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color = glm::vec4(1.0f));
 		static void DrawWireQuad(const glm::vec3* corners, const glm::vec4& color = glm::vec4(1.0f));
 		static void DrawFrustum(const glm::mat4& inverseViewProjection, const glm::vec4& color = glm::vec4(1.0f));
