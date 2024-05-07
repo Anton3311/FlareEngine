@@ -73,6 +73,24 @@ ScatteringCoefficients ComputeScatteringCoefficients(float height, in Atmosphere
 	return coefficients;
 }
 
+vec3 SampleSunTransmittanceLUT(sampler2D lut, vec3 lightDirection, vec3 rayOrigin, float planetRadius, float atmosphereThickness)
+{
+	float height = rayOrigin.y;
+	vec3 up = rayOrigin / height;
+
+	float sunZenithAngle = dot(up, -lightDirection);
+
+	float height01 = (height - planetRadius) / atmosphereThickness;
+
+	// uv.x - height
+	// uv.y - sun zenith angle
+	vec2 uv = vec2(
+		height01,
+		sunZenithAngle * 0.5f + 0.5f);
+
+	return texture(lut, uv).rgb;
+}
+
 vec3 ComputeSunTransmittance(vec3 rayOrigin,
 	int raySteps,
 	float planetRadius,

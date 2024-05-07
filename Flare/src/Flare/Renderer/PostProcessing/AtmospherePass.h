@@ -8,15 +8,20 @@
 
 namespace Flare
 {
+	class CommandBuffer;
 	class FLARE_API AtmospherePass : public RenderPass
 	{
 	public:
 		FLARE_TYPE;
 
-		AtmospherePass()
-			: RenderPass(RenderPassQueue::PostProcessing) {}
+		AtmospherePass();
 
 		void OnRender(RenderingContext& context) override;
+		void RegenerateSunTransmittanceLUT();
+
+		inline Ref<FrameBuffer> GetSunTransmittanceLUT() const { return m_SunTransmittanceLUT; }
+	private:
+		void GenerateSunTransmittanceLUT(Ref<CommandBuffer> commandBuffer);
 	public:
 		bool Enabled = true;
 		Ref<Material> AtmosphereMaterial = nullptr;
@@ -31,6 +36,13 @@ namespace Flare
 
 		uint32_t ViewRaySteps = 10;
 		uint32_t SunTransmittanceSteps = 10;
+
+		uint32_t SunTransmittanceLUTSteps = 100;
+		uint32_t SunTransmittanceLUTSize = 512;
+	private:
+		bool m_SunTransmittanceLUTIsDirty = true;
+		Ref<FrameBuffer> m_SunTransmittanceLUT = nullptr;
+		Ref<Material> m_SunTransmittanceMaterial = nullptr;
 	};
 
 	template<>
@@ -47,6 +59,7 @@ namespace Flare
 			stream.Serialize("ObserverHeight", SerializationValue(atmosphere.ObserverHeight));
 			stream.Serialize("ViewRaySteps", SerializationValue(atmosphere.ViewRaySteps));
 			stream.Serialize("SunTransmittanceSteps", SerializationValue(atmosphere.SunTransmittanceSteps));
+			stream.Serialize("SunTransmittanceLUTSteps", SerializationValue(atmosphere.SunTransmittanceLUTSteps));
 		}
 	};
 }

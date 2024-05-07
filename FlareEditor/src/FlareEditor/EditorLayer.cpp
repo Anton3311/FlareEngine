@@ -458,6 +458,15 @@ namespace Flare
                     FLARE_SERIALIZATION_DESCRIPTOR_OF(AtmospherePass),
                     postProcessing.Atmosphere.get());
 
+                auto lut = postProcessing.Atmosphere->GetSunTransmittanceLUT();
+				if (lut)
+					ImGui::Image(ImGuiLayer::GetId(lut, 0), ImVec2(256, 256), ImVec2(0, 1), ImVec2(1, 0));
+
+                if (ImGui::Button("Regenerate Sun Transmittance LUT"))
+                {
+                    postProcessing.Atmosphere->RegenerateSunTransmittanceLUT();
+                }
+
                 ImGui::TreePop();
             }
 

@@ -64,6 +64,11 @@ layout(std140, push_constant) uniform Sky
 
 layout(location = 0) out vec4 o_Color;
 
+#define USE_SUN_TRANSMITTANCE_LUT 1
+#if USE_SUN_TRANSMITTANCE_LUT
+layout(set = 2, binding = 0) uniform sampler2D u_SunTransmittanceLUT;
+#endif
+
 vec3 CalculateViewDirection()
 {
 	vec2 uv = vec2(gl_FragCoord.xy) / vec2(u_Camera.ViewportSize);
@@ -116,13 +121,22 @@ void main()
 
 		ScatteringCoefficients scatteringCoefficients = ComputeScatteringCoefficients(height, properties);
 		vec3 sampleTransmittance = exp(-scatteringCoefficients.Extinction * viewRayStepLength);
-		vec3 sunTransmittance = ComputeSunTransmittance(
+		vec3 sunTransmittance;
+#if USE_SUN_TRANSMITTANCE_LUT
+		sunTransmittance = SampleSunTransmittanceLUT(u_SunTransmittanceLUT,
+			u_LightDirection,
+			viewRayPoint,
+			u_Params.PlanetRadius,
+			u_Params.AtmosphereThickness);
+#else
+		sunTransmittance = ComputeSunTransmittance(
 			viewRayPoint,
 			u_Params.SunTransmittanceSteps,
 			u_Params.PlanetRadius,
 			u_Params.AtmosphereThickness,
 			u_LightDirection,
 			properties);
+#endif
 
 		vec3 rayleighInScatter = scatteringCoefficients.Rayleigh * rayleighPhase * sunTransmittance;
 		vec3 mieInScatter = scatteringCoefficients.Mie * miePhase * sunTransmittance;

@@ -76,6 +76,13 @@ AssetRegistry:
     Parent: 0
     SubAssets:
       []
+  - Handle: 14357063870858553547
+    Type: Shader
+    Path: AtmosphereSunTransmittanceLUT.glsl
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
   - Handle: 17504616539540010642
     Type: Shader
     Path: Mesh.glsl
