@@ -15,6 +15,8 @@ namespace Flare
 		static void AddShader(const std::string_view& name, AssetHandle handle);
 		static void Clear();
 
+		static const std::unordered_map<std::string, AssetHandle>& GetNameToHandleMap();
+
 		static std::optional<AssetHandle> FindShader(std::string_view name);
 	};
 }

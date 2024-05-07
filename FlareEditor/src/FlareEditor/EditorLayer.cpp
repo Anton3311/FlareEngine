@@ -35,6 +35,7 @@
 #include "FlareEditor/UI/PrefabEditor.h"
 #include "FlareEditor/UI/SceneViewportWindow.h"
 #include "FlareEditor/UI/SerializablePropertyRenderer.h"
+#include "FlareEditor/UI/ShaderLibraryWindow.h"
 
 #include "FlareEditor/Scripting/BuildSystem/BuildSystem.h"
 
@@ -483,6 +484,7 @@ namespace Flare
             FLARE_PROFILE_SCOPE("EditorWindowsUpdate");
             
             ProjectSettingsWindow::OnRenderImGui();
+            ShaderLibraryWindow::GetInstance().OnRenderImGui();
             m_SceneWindow.OnImGuiRender();
             m_PropertiesWindow.OnImGuiRender();
             m_AssetManagerWindow.OnImGuiRender();

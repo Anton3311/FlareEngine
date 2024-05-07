@@ -14,6 +14,11 @@ namespace Flare
 		s_ShaderNameToHandle.clear();
 	}
 
+	const std::unordered_map<std::string, AssetHandle>& ShaderLibrary::GetNameToHandleMap()
+	{
+		return s_ShaderNameToHandle;
+	}
+
 	std::optional<AssetHandle> ShaderLibrary::FindShader(std::string_view name)
 	{
 		auto it = s_ShaderNameToHandle.find(std::string(name));
