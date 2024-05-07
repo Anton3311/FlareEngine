@@ -22,6 +22,8 @@ namespace Flare
 		void PushLayer(const Ref<Layer>& layer);
 		void PushOverlay(const Ref<Layer>& layer);
 
+		void ExecuteAfterEndOfFrame(std::function<void()>&& function);
+
 		Ref<Window> GetWindow() const { return m_Window; }
 		CommandLineArguments GetCommandLineArguments() const { return m_CommandLineArguments; }
 
@@ -31,6 +33,8 @@ namespace Flare
 		CommandLineArguments m_CommandLineArguments;
 	private:
 		LayerStack m_LayersStack;
+
+		std::vector<std::function<void()>> m_AfterEndOfFrameFunctions;
 
 		bool m_Running;
 		float m_PreviousFrameTime;

@@ -166,6 +166,16 @@ namespace Flare
 				}
 
 				m_PreviousFrameTime = currentTime;
+
+				{
+					FLARE_PROFILE_SCOPE("ExecuteAfterEndFrameFunctions");
+					for (const auto& function : m_AfterEndOfFrameFunctions)
+					{
+						function();
+					}
+
+					m_AfterEndOfFrameFunctions.clear();
+				}
 			}
 
 			FLARE_PROFILE_END_FRAME("Main");
@@ -196,6 +206,11 @@ namespace Flare
 	void Application::PushOverlay(const Ref<Layer>& layer)
 	{
 		m_LayersStack.PushOverlay(layer);
+	}
+
+	void Application::ExecuteAfterEndOfFrame(std::function<void()>&& function)
+	{
+		m_AfterEndOfFrameFunctions.push_back(function);
 	}
 
 	Application& Application::GetInstance()
