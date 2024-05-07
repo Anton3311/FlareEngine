@@ -12,6 +12,7 @@ namespace Flare
 		RGB8,
 		RGBA8,
 		R11G11B10,
+		R32G32B32A32,
 
 		RedInteger,
 		RF32,
@@ -29,6 +30,7 @@ namespace Flare
 		case FrameBufferTextureFormat::RGBA8:
 		case FrameBufferTextureFormat::R11G11B10:
 		case FrameBufferTextureFormat::RedInteger:
+		case FrameBufferTextureFormat::R32G32B32A32:
 			return false;
 		case FrameBufferTextureFormat::Depth24Stencil8:
 			return true;

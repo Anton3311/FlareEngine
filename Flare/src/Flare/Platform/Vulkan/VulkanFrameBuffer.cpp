@@ -12,6 +12,8 @@ namespace Flare
 			return VK_FORMAT_R8G8B8A8_UNORM;
 		case FrameBufferTextureFormat::RGBA8:
 			return VK_FORMAT_R8G8B8A8_UNORM;
+		case FrameBufferTextureFormat::R32G32B32A32:
+			return VK_FORMAT_R32G32B32A32_SFLOAT;
 		case FrameBufferTextureFormat::Depth24Stencil8:
 			return VK_FORMAT_D24_UNORM_S8_UINT;
 		case FrameBufferTextureFormat::RedInteger:
