@@ -220,7 +220,9 @@ namespace Flare
 		rasterizationState.lineWidth = 1.0f;
 		rasterizationState.cullMode = cullMode;
 		rasterizationState.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
-		rasterizationState.depthBiasEnable = VK_FALSE;
+		rasterizationState.depthBiasEnable = m_Specifications.DepthBiasEnabled;
+		rasterizationState.depthBiasSlopeFactor = m_Specifications.DepthBiasSlopeFactor;
+		rasterizationState.depthBiasConstantFactor = m_Specifications.DepthBiasConstantFactor;
 
 		VkPipelineShaderStageCreateInfo stages[2] = {};
 		stages[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;

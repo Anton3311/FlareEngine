@@ -1,6 +1,7 @@
 Type = Surface
 Culling = Front
 DepthTest = true
+DepthBias = true
 
 #begin vertex
 #version 450

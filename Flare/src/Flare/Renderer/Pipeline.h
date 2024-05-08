@@ -53,6 +53,9 @@ namespace Flare
 		PrimitiveTopology Topology = PrimitiveTopology::Triangles;
 		bool DepthTest = true;
 		bool DepthWrite = true;
+		bool DepthBiasEnabled = false;
+		float DepthBiasSlopeFactor = 0.0f;
+		float DepthBiasConstantFactor = 0.0f;
 		DepthComparisonFunction DepthFunction = DepthComparisonFunction::Less;
 	};
 

@@ -62,11 +62,16 @@ namespace Flare
 		specifications.Culling = CullingMode::Back;
 		specifications.Shader = m_Shader;
 
+		specifications.DepthBiasEnabled = m_Shader->GetMetadata()->Features.DepthBiasEnabled;
 		specifications.Culling = m_Shader->GetMetadata()->Features.Culling;
 		specifications.DepthTest = m_Shader->GetMetadata()->Features.DepthTesting;
 		specifications.DepthWrite = m_Shader->GetMetadata()->Features.DepthWrite;
 		specifications.DepthFunction = m_Shader->GetMetadata()->Features.DepthFunction;
 		specifications.Blending = m_Shader->GetMetadata()->Features.Blending;
+
+		// TODO: Sould be extracted by the ShaderCompiler from shader metadata
+		specifications.DepthBiasSlopeFactor = 0.1f;
+		specifications.DepthBiasConstantFactor = 0.0f;
 
 		if (m_Shader->GetMetadata()->Type == ShaderType::_2D)
 		{
