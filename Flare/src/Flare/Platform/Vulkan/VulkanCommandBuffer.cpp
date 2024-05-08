@@ -30,6 +30,7 @@ namespace Flare
 
 	void VulkanCommandBuffer::ClearColorAttachment(Ref<FrameBuffer> frameBuffer, uint32_t index, const glm::vec4& clearColor)
 	{
+		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(index < frameBuffer->GetAttachmentsCount());
 
 		Ref<VulkanFrameBuffer> vulkanFrameBuffer = As<VulkanFrameBuffer>(frameBuffer);
@@ -38,6 +39,7 @@ namespace Flare
 
 	void VulkanCommandBuffer::ClearDepthAttachment(Ref<FrameBuffer> frameBuffer, float depth)
 	{
+		FLARE_PROFILE_FUNCTION();
 		Ref<VulkanFrameBuffer> vulkanFrameBuffer = As<VulkanFrameBuffer>(frameBuffer);
 		std::optional<uint32_t> attachmentIndex = vulkanFrameBuffer->GetDepthAttachmentIndex();
 		FLARE_CORE_ASSERT(attachmentIndex.has_value());
@@ -58,6 +60,7 @@ namespace Flare
 
 	void VulkanCommandBuffer::ApplyMaterial(const Ref<const Material>& material)
 	{
+		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(material->GetShader());
 		Ref<VulkanMaterial> vulkanMaterial = As<VulkanMaterial>(std::const_pointer_cast<Material>(material));
 		Ref<Pipeline> pipeline = vulkanMaterial->GetPipeline(m_CurrentRenderPass);
@@ -101,6 +104,7 @@ namespace Flare
 
 	void VulkanCommandBuffer::SetViewportAndScisors(Math::Rect viewportRect)
 	{
+		FLARE_PROFILE_FUNCTION();
 		VkRect2D scissors{};
 		scissors.offset.x = (int32_t)viewportRect.Min.x;
 		scissors.offset.y = (int32_t)viewportRect.Min.y;
@@ -122,16 +126,22 @@ namespace Flare
 	void VulkanCommandBuffer::DrawIndexed(const Ref<const Mesh>& mesh, uint32_t subMeshIndex, uint32_t baseInstance, uint32_t instanceCount)
 	{
 		FLARE_PROFILE_FUNCTION();
-		Ref<const VertexBuffer> vertexBuffers[] =
-		{
-			mesh->GetVertices(),
-			mesh->GetNormals(),
-			mesh->GetTangents(),
-			mesh->GetUVs()
-		};
 
-		BindVertexBuffers(Span(vertexBuffers, 4));
-		BindIndexBuffer(mesh->GetIndexBuffer());
+		if (m_CurrentMesh.get() != mesh.get())
+		{
+			Ref<const VertexBuffer> vertexBuffers[] =
+			{
+				mesh->GetVertices(),
+				mesh->GetNormals(),
+				mesh->GetTangents(),
+				mesh->GetUVs()
+			};
+
+			BindVertexBuffers(Span(vertexBuffers, 4));
+			BindIndexBuffer(mesh->GetIndexBuffer());
+
+			m_CurrentMesh = mesh;
+		}
 
 		const auto& subMesh = mesh->GetSubMeshes()[subMeshIndex];
 		vkCmdDrawIndexed(m_CommandBuffer, subMesh.IndicesCount, instanceCount, subMesh.BaseIndex, subMesh.BaseVertex, baseInstance);
@@ -320,6 +330,7 @@ namespace Flare
 
 	void VulkanCommandBuffer::DispatchCompute(Ref<ComputePipeline> pipeline, const glm::uvec3& groupCount)
 	{
+		FLARE_PROFILE_FUNCTION();
 		Ref<VulkanComputePipeline> vulkanPipeline = As<VulkanComputePipeline>(pipeline);
 		vkCmdBindPipeline(m_CommandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, vulkanPipeline->GetHandle());
 		vkCmdDispatch(m_CommandBuffer, groupCount.x, groupCount.y, groupCount.z);
@@ -446,6 +457,7 @@ namespace Flare
 
 	void VulkanCommandBuffer::TransitionImageLayout(VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout)
 	{
+		FLARE_PROFILE_FUNCTION();
 		VkImageMemoryBarrier barrier{};
 		barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
 		barrier.image = image;
@@ -473,6 +485,7 @@ namespace Flare
 
 	void VulkanCommandBuffer::TransitionImageLayout(VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t baseMipLevel, uint32_t mipLevels)
 	{
+		FLARE_PROFILE_FUNCTION();
 		VkImageMemoryBarrier barrier{};
 		barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
 		barrier.image = image;
@@ -500,6 +513,7 @@ namespace Flare
 
 	void VulkanCommandBuffer::TransitionDepthImageLayout(VkImage image, bool hasStencilComponent, VkImageLayout oldLayout, VkImageLayout newLayout)
 	{
+		FLARE_PROFILE_FUNCTION();
 		VkImageMemoryBarrier barrier{};
 		barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
 		barrier.image = image;
@@ -553,6 +567,7 @@ namespace Flare
 
 	void VulkanCommandBuffer::ClearImage(VkImage image, const glm::vec4& clearColor, VkImageLayout oldLayout, VkImageLayout newLayout)
 	{
+		FLARE_PROFILE_FUNCTION();
 		VkImageSubresourceRange range{};
 		range.baseArrayLayer = 0;
 		range.layerCount = 1;
@@ -605,6 +620,7 @@ namespace Flare
 
 	void VulkanCommandBuffer::ClearDepthStencilImage(VkImage image, bool hasStencilComponent, float depthValue, uint32_t stencilValue, VkImageLayout oldLayout, VkImageLayout newLayout)
 	{
+		FLARE_PROFILE_FUNCTION();
 		VkImageSubresourceRange range{};
 		range.baseArrayLayer = 0;
 		range.layerCount = 1;
@@ -657,6 +673,7 @@ namespace Flare
 
 	void VulkanCommandBuffer::CopyBufferToImage(VkBuffer buffer, VkImage image, VkExtent3D size, size_t bufferOffset, uint32_t mip)
 	{
+		FLARE_PROFILE_FUNCTION();
 		VkBufferImageCopy copyRegion{};
 		copyRegion.bufferOffset = bufferOffset;
 		copyRegion.bufferRowLength = 0;
@@ -675,6 +692,7 @@ namespace Flare
 
 	void VulkanCommandBuffer::CopyBuffer(VkBuffer sourceBuffer, VkBuffer destinationBuffer, size_t size, size_t sourceOffset, size_t destinationOffset)
 	{
+		FLARE_PROFILE_FUNCTION();
 		VkBufferCopy copyRegion{};
 		copyRegion.srcOffset = sourceOffset;
 		copyRegion.dstOffset = destinationOffset;
@@ -685,6 +703,7 @@ namespace Flare
 
 	void VulkanCommandBuffer::GenerateImageMipMaps(VkImage image, uint32_t mipLevels, glm::uvec2 imageSize)
 	{
+		FLARE_PROFILE_FUNCTION();
 		for (uint32_t i = 1; i < mipLevels; i++)
 		{
 			VkImageBlit blit{};
@@ -755,6 +774,7 @@ namespace Flare
 
 	void VulkanCommandBuffer::BindPipeline(const Ref<const Pipeline>& pipeline)
 	{
+		FLARE_PROFILE_FUNCTION();
 		auto vulkanPipeline = As<const VulkanPipeline>(pipeline);
 		vkCmdBindPipeline(m_CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vulkanPipeline->GetHandle());
 		m_CurrentPipeline = vulkanPipeline;
@@ -762,6 +782,7 @@ namespace Flare
 
 	void VulkanCommandBuffer::BindVertexBuffers(const Span<Ref<const VertexBuffer>>& vertexBuffers)
 	{
+		FLARE_PROFILE_FUNCTION();
 		std::vector<VkDeviceSize> offsets(vertexBuffers.GetSize());
 		std::vector<VkBuffer> buffers(vertexBuffers.GetSize());
 		for (size_t i = 0; i < vertexBuffers.GetSize(); i++)
@@ -775,6 +796,7 @@ namespace Flare
 
 	void VulkanCommandBuffer::BindIndexBuffer(const Ref<const IndexBuffer>& indexBuffer)
 	{
+		FLARE_PROFILE_FUNCTION();
 		vkCmdBindIndexBuffer(m_CommandBuffer,
 			As<const VulkanIndexBuffer>(indexBuffer)->GetHandle(), 0,
 			indexBuffer->GetIndexFormat() == IndexBuffer::IndexFormat::UInt16
@@ -784,12 +806,14 @@ namespace Flare
 
 	void VulkanCommandBuffer::BindDescriptorSet(const Ref<const VulkanDescriptorSet>& descriptorSet, VkPipelineLayout pipelineLayout, uint32_t index)
 	{
+		FLARE_PROFILE_FUNCTION();
 		VkDescriptorSet setHandle = descriptorSet->GetHandle();
 		vkCmdBindDescriptorSets(m_CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, index, 1, &setHandle, 0, nullptr);
 	}
 
 	void VulkanCommandBuffer::BindComputeDescriptorSet(const Ref<const VulkanDescriptorSet>& descriptorSet, VkPipelineLayout pipelineLayout, uint32_t index)
 	{
+		FLARE_PROFILE_FUNCTION();
 		VkDescriptorSet setHandle = descriptorSet->GetHandle();
 		vkCmdBindDescriptorSets(m_CommandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, index, 1, &setHandle, 0, nullptr);
 	}

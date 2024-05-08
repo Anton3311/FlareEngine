@@ -94,6 +94,8 @@ namespace Flare
 		std::unordered_set<uint64_t> m_UsedMaterials;
 		std::vector<VkImageMemoryBarrier> m_ImageBarriers;
 
+		Ref<const Mesh> m_CurrentMesh = nullptr;
+
 		Ref<VulkanDescriptorSet> m_PrimaryDescriptorSet = nullptr;
 		Ref<VulkanDescriptorSet> m_SecondaryDescriptorSet = nullptr;
 
