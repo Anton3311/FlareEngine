@@ -807,8 +807,16 @@ namespace Flare
 	void VulkanCommandBuffer::BindDescriptorSet(const Ref<const VulkanDescriptorSet>& descriptorSet, VkPipelineLayout pipelineLayout, uint32_t index)
 	{
 		FLARE_PROFILE_FUNCTION();
+		FLARE_CORE_ASSERT(index < 4);
+
+		if (m_CurrentDescriptorSets[index].PipelineLayout == pipelineLayout && m_CurrentDescriptorSets[index].Set.get() == descriptorSet.get())
+			return;
+
 		VkDescriptorSet setHandle = descriptorSet->GetHandle();
 		vkCmdBindDescriptorSets(m_CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, index, 1, &setHandle, 0, nullptr);
+
+		m_CurrentDescriptorSets[index].Set = descriptorSet;
+		m_CurrentDescriptorSets[index].PipelineLayout = pipelineLayout;
 	}
 
 	void VulkanCommandBuffer::BindComputeDescriptorSet(const Ref<const VulkanDescriptorSet>& descriptorSet, VkPipelineLayout pipelineLayout, uint32_t index)

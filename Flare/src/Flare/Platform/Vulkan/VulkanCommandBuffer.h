@@ -99,6 +99,14 @@ namespace Flare
 		Ref<VulkanDescriptorSet> m_PrimaryDescriptorSet = nullptr;
 		Ref<VulkanDescriptorSet> m_SecondaryDescriptorSet = nullptr;
 
+		struct BoundDescriptorSet
+		{
+			Ref<const VulkanDescriptorSet> Set = nullptr;
+			VkPipelineLayout PipelineLayout = VK_NULL_HANDLE;
+		};
+
+		BoundDescriptorSet m_CurrentDescriptorSets[4] = { nullptr };
+
 		VkCommandBuffer m_CommandBuffer = VK_NULL_HANDLE;
 		Ref<VulkanRenderPass> m_CurrentRenderPass = nullptr;
 		Ref<const VulkanPipeline> m_CurrentPipeline = nullptr;
