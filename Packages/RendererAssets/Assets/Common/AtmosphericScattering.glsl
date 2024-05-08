@@ -54,6 +54,7 @@ float FindSpehereRayIntersection(vec3 rayOrigin, vec3 rayDirection, float radius
 	return max(t1, t2);
 }
 
+// Height is in kilometers
 ScatteringCoefficients ComputeScatteringCoefficients(float height, in AtmosphereProperties properties)
 {
 	float rayleighDensity = exp(-height / properties.RayleighHeight);
@@ -63,7 +64,7 @@ ScatteringCoefficients ComputeScatteringCoefficients(float height, in Atmosphere
 	coefficients.Mie = properties.MieCoefficient * mieDensity;
 	coefficients.Rayleigh = properties.RayleighCoefficient * rayleighDensity;
 
-	vec3 ozoneAbsorbtion = properties.OzoneAbsorbtion * max(0.0f, 1.0f - abs(height - 25000) / 15000);
+	vec3 ozoneAbsorbtion = properties.OzoneAbsorbtion * max(0.0f, 1.0f - abs(height - 25.0f) / 15.0f);
 	coefficients.Extinction = coefficients.Rayleigh
 		+ properties.RayleighAbsorbtion * rayleighDensity
 		+ properties.MieAbsorbtion * mieDensity
