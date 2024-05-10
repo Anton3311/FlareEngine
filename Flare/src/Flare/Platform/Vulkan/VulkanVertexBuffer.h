@@ -18,6 +18,7 @@ namespace Flare
 		void SetLayout(const BufferLayout& layout) override;
 		void Bind() override;
 		void SetData(const void* data, size_t size, size_t offset) override;
+		void SetData(MemorySpan data, size_t offset, Ref<CommandBuffer> commandBuffer) override;
 
 		inline VkBuffer GetHandle() const { return m_Buffer.GetBuffer(); }
 	private:

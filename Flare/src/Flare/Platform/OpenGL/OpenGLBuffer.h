@@ -15,6 +15,7 @@ namespace Flare
 	public:
 		virtual void Bind() override;
 		virtual void SetData(const void* data, size_t size, size_t offset = 0) override;
+		void SetData(MemorySpan data, size_t offset, Ref<CommandBuffer> commandBuffer) override;
 
 		virtual const BufferLayout& GetLayout() const override { return m_Layout; }
 		virtual void SetLayout(const BufferLayout& layout) override { m_Layout = layout; }
@@ -33,6 +34,8 @@ namespace Flare
 	public:
 		virtual void Bind() override;
 		virtual void SetData(const MemorySpan& indices, size_t offset = 0) override;
+		void SetData(MemorySpan data, size_t offset, Ref<CommandBuffer> commandBuffer) override;
+
 		virtual size_t GetCount() const override;
 		virtual IndexFormat GetIndexFormat() const override;
 	private:

@@ -71,6 +71,16 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
+		if (data.GetSize() == 0)
+			return;
+
+		if (m_Size == 0)
+			m_Size = data.GetSize();
+
+		FLARE_CORE_ASSERT(data.GetSize() <= m_Size);
+
+		EnsureAllocated();
+
 		StagingBuffer stagingBuffer = FillStagingBuffer(data);
 
 		As<VulkanCommandBuffer>(commandBuffer)->CopyBuffer(stagingBuffer.Buffer, m_Buffer, data.GetSize(), 0, offset);

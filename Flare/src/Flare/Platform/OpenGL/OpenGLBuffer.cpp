@@ -36,6 +36,11 @@ namespace Flare
 		glBufferSubData(GL_ARRAY_BUFFER, offset, size, data);
 	}
 
+	void OpenGLVertexBuffer::SetData(MemorySpan data, size_t offset, Ref<CommandBuffer> commandBuffer)
+	{
+		SetData(data.GetBuffer(), data.GetSize(), offset);
+	}
+
 
 
 	OpenGLIndexBuffer::OpenGLIndexBuffer(IndexFormat format, size_t size)
@@ -83,6 +88,11 @@ namespace Flare
 	{
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_Id);
 		glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, offset, indices.GetSize(), indices.GetBuffer());
+	}
+
+	void OpenGLIndexBuffer::SetData(MemorySpan data, size_t offset, Ref<CommandBuffer> commandBuffer)
+	{
+		SetData(data, offset);
 	}
 
 	size_t OpenGLIndexBuffer::GetCount() const

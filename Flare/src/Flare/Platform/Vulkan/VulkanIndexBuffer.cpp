@@ -23,6 +23,11 @@ namespace Flare
 		m_Buffer.SetData(indices.GetBuffer(), indices.GetSize(), offset);
 	}
 
+	void VulkanIndexBuffer::SetData(MemorySpan data, size_t offset, Ref<CommandBuffer> commandBuffer)
+	{
+		m_Buffer.SetData(data, offset, commandBuffer);
+	}
+
 	size_t Flare::VulkanIndexBuffer::GetCount() const
 	{
 		return m_Count;

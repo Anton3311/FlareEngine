@@ -11,6 +11,8 @@
 
 namespace Flare
 {
+	class CommandBuffer;
+
 	enum class GPUBufferUsage
 	{
 		Static = 0,
@@ -66,6 +68,7 @@ namespace Flare
 
 		virtual void Bind() = 0;
 		virtual void SetData(const void* data, size_t size, size_t offset = 0) = 0;
+		virtual void SetData(MemorySpan data, size_t offset, Ref<CommandBuffer> commandBuffer) = 0;
 	public:
 		static Ref<VertexBuffer> Create(size_t size);
 		static Ref<VertexBuffer> Create(size_t size, const void* data);
@@ -82,6 +85,7 @@ namespace Flare
 
 		virtual void Bind() = 0;
 		virtual void SetData(const MemorySpan& indices, size_t offset = 0) = 0;
+		virtual void SetData(MemorySpan data, size_t offset, Ref<CommandBuffer> commandBuffer) = 0;
 		
 		virtual size_t GetCount() const = 0;
 		virtual IndexFormat GetIndexFormat() const = 0;

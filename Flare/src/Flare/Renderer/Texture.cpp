@@ -106,18 +106,26 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		std::ifstream inputStream(path, std::ios::in | std::ios::binary);
+		uint8_t* fileData = nullptr;
+		size_t size = 0;
 
-		if (!inputStream.is_open())
-			return {};
+		{
+			FLARE_PROFILE_SCOPE("ReadBinaryFile");
+			std::ifstream inputStream(path, std::ios::in | std::ios::binary);
 
-		inputStream.seekg(0, std::ios::end);
-		size_t size = inputStream.tellg();
-		inputStream.seekg(0, std::ios::beg);
+			if (!inputStream.is_open())
+				return {};
 
-		uint8_t* fileData = (uint8_t*)malloc(size);
+			inputStream.seekg(0, std::ios::end);
+			size = inputStream.tellg();
+			inputStream.seekg(0, std::ios::beg);
 
-		inputStream.read((char*)fileData, size);
+			fileData = (uint8_t*)malloc(size);
+
+			inputStream.read((char*)fileData, size);
+		}
+
+		FLARE_CORE_ASSERT(fileData != nullptr && size > 0);
 
 		ddsktx_texture_info info{ 0 };
 		ddsktx_error error{};

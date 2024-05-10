@@ -13,6 +13,7 @@ namespace Flare
 
 		void Bind() override;
 		void SetData(const MemorySpan& indices, size_t offset) override;
+		void SetData(MemorySpan data, size_t offset, Ref<CommandBuffer> commandBuffer) override;
 		size_t GetCount() const override;
 		IndexFormat GetIndexFormat() const override;
 

@@ -1,8 +1,12 @@
 #include "Mesh.h"
 
+#include "FlareCore/Profiler/Profiler.h"
+
 #include "Flare/Renderer/RendererAPI.h"
+#include "Flare/Renderer/GraphicsContext.h"
 
 #include "Flare/Platform/OpenGL/OpenGLMesh.h"
+#include "Flare/Platform/Vulkan/VulkanContext.h"
 
 namespace Flare
 {
@@ -33,6 +37,7 @@ namespace Flare
 		m_IndexBufferSize(indices.GetSize()),
 		m_IndexBufferOffset(0)
 	{
+		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(vertices.GetSize() == normals.GetSize());
 		FLARE_CORE_ASSERT(vertices.GetSize() == tangents.GetSize());
 		FLARE_CORE_ASSERT(vertices.GetSize() == uvs.GetSize());
@@ -60,6 +65,7 @@ namespace Flare
 		const Span<glm::vec3>& tangents,
 		const Span<glm::vec2>& uvs)
 	{
+		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(vertices.GetSize() > 0);
 		FLARE_CORE_ASSERT(vertices.GetSize() == normals.GetSize());
 		FLARE_CORE_ASSERT(vertices.GetSize() == uvs.GetSize());
@@ -112,12 +118,28 @@ namespace Flare
 			m_UVs->SetLayout({ { "i_UV", ShaderDataType::Float2 } });
 		}
 
-		m_Vertices->SetData(vertices.GetData(), vertices.GetSize() * sizeof(glm::vec3), m_VertexBufferOffset * sizeof(glm::vec3));
-		m_Normals->SetData(normals.GetData(), normals.GetSize() * sizeof(glm::vec3), m_VertexBufferOffset * sizeof(glm::vec3));
-		m_Tangents->SetData(tangents.GetData(), tangents.GetSize() * sizeof(glm::vec3), m_VertexBufferOffset * sizeof(glm::vec3));
-		m_UVs->SetData(uvs.GetData(), uvs.GetSize() * sizeof(glm::vec2), m_VertexBufferOffset * sizeof(glm::vec2));
+		if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
+		{
+			Ref<CommandBuffer> commandBuffer = VulkanContext::GetInstance().BeginTemporaryCommandBuffer();
 
-		m_IndexBuffer->SetData(indices, m_IndexBufferOffset);
+			m_Vertices->SetData(MemorySpan(const_cast<glm::vec3*>(vertices.GetData()), vertices.GetSize()), m_VertexBufferOffset * sizeof(glm::vec3), commandBuffer);
+			m_Normals->SetData(MemorySpan(const_cast<glm::vec3*>(normals.GetData()), normals.GetSize()), m_VertexBufferOffset * sizeof(glm::vec3), commandBuffer);
+			m_Tangents->SetData(MemorySpan(const_cast<glm::vec3*>(tangents.GetData()), tangents.GetSize()), m_VertexBufferOffset * sizeof(glm::vec3), commandBuffer);
+			m_UVs->SetData(MemorySpan(const_cast<glm::vec2*>(uvs.GetData()), uvs.GetSize()), m_VertexBufferOffset * sizeof(glm::vec2), commandBuffer);
+
+			m_IndexBuffer->SetData(indices, m_IndexBufferOffset, commandBuffer);
+
+			VulkanContext::GetInstance().EndTemporaryCommandBuffer(As<VulkanCommandBuffer>(commandBuffer));
+		}
+		else
+		{
+			m_Vertices->SetData(vertices.GetData(), vertices.GetSize() * sizeof(glm::vec3), m_VertexBufferOffset * sizeof(glm::vec3));
+			m_Normals->SetData(normals.GetData(), normals.GetSize() * sizeof(glm::vec3), m_VertexBufferOffset * sizeof(glm::vec3));
+			m_Tangents->SetData(tangents.GetData(), tangents.GetSize() * sizeof(glm::vec3), m_VertexBufferOffset * sizeof(glm::vec3));
+			m_UVs->SetData(uvs.GetData(), uvs.GetSize() * sizeof(glm::vec2), m_VertexBufferOffset * sizeof(glm::vec2));
+
+			m_IndexBuffer->SetData(indices, m_IndexBufferOffset);
+		}
 
 		size_t indicesCount = indices.GetSize() / indexSize;
 
@@ -136,6 +158,8 @@ namespace Flare
 
 	Ref<Mesh> Mesh::Create(MeshTopology topology, size_t vertexBufferSize, IndexBuffer::IndexFormat indexFormat, size_t indexBufferSize)
 	{
+		FLARE_PROFILE_FUNCTION();
+
 		switch (RendererAPI::GetAPI())
 		{
 		case RendererAPI::API::OpenGL:
@@ -156,6 +180,8 @@ namespace Flare
 		Span<glm::vec3> tangents,
 		Span<glm::vec2> uvs)
 	{
+		FLARE_PROFILE_FUNCTION();
+
 		switch (RendererAPI::GetAPI())
 		{
 		case RendererAPI::API::OpenGL:
