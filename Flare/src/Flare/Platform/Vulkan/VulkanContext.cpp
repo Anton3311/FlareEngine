@@ -94,7 +94,10 @@ namespace Flare
 			}
 		};
 
-		addIfSupported(validationLayerName);
+		if (m_DebugEnabled)
+		{
+			addIfSupported(validationLayerName);
+		}
 
 		CreateInstance(Span<const char*>::FromVector(enabledLayers));
 
