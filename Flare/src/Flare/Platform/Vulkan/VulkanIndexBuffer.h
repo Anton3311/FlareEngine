@@ -10,6 +10,7 @@ namespace Flare
 	public:
 		VulkanIndexBuffer(IndexFormat format, size_t count);
 		VulkanIndexBuffer(IndexFormat format, const MemorySpan& indices);
+		VulkanIndexBuffer(IndexFormat format, const MemorySpan& indices, Ref<CommandBuffer> commandBuffer);
 
 		void Bind() override;
 		void SetData(const MemorySpan& indices, size_t offset) override;

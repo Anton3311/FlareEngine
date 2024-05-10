@@ -42,12 +42,28 @@ namespace Flare
 		FLARE_CORE_ASSERT(vertices.GetSize() == tangents.GetSize());
 		FLARE_CORE_ASSERT(vertices.GetSize() == uvs.GetSize());
 
-		m_Vertices = VertexBuffer::Create(sizeof(glm::vec3) * vertices.GetSize(), vertices.GetData());
-		m_Normals = VertexBuffer::Create(sizeof(glm::vec3) * normals.GetSize(), normals.GetData());
-		m_Tangents = VertexBuffer::Create(sizeof(glm::vec3) * tangents.GetSize(), tangents.GetData());
-		m_UVs = VertexBuffer::Create(sizeof(glm::vec2) * uvs.GetSize(), uvs.GetData());
+		if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
+		{
+			Ref<CommandBuffer> commandBuffer = VulkanContext::GetInstance().BeginTemporaryCommandBuffer();
 
-		m_IndexBuffer = IndexBuffer::Create(m_IndexFormat, indices);
+			m_Vertices = VertexBuffer::Create(sizeof(glm::vec3) * vertices.GetSize(), vertices.GetData(), commandBuffer);
+			m_Normals = VertexBuffer::Create(sizeof(glm::vec3) * normals.GetSize(), normals.GetData(), commandBuffer);
+			m_Tangents = VertexBuffer::Create(sizeof(glm::vec3) * tangents.GetSize(), tangents.GetData(), commandBuffer);
+			m_UVs = VertexBuffer::Create(sizeof(glm::vec2) * uvs.GetSize(), uvs.GetData(), commandBuffer);
+
+			m_IndexBuffer = IndexBuffer::Create(m_IndexFormat, indices, commandBuffer);
+
+			VulkanContext::GetInstance().EndTemporaryCommandBuffer(As<VulkanCommandBuffer>(commandBuffer));
+		}
+		else
+		{
+			m_Vertices = VertexBuffer::Create(sizeof(glm::vec3) * vertices.GetSize(), vertices.GetData());
+			m_Normals = VertexBuffer::Create(sizeof(glm::vec3) * normals.GetSize(), normals.GetData());
+			m_Tangents = VertexBuffer::Create(sizeof(glm::vec3) * tangents.GetSize(), tangents.GetData());
+			m_UVs = VertexBuffer::Create(sizeof(glm::vec2) * uvs.GetSize(), uvs.GetData());
+
+			m_IndexBuffer = IndexBuffer::Create(m_IndexFormat, indices);
+		}
 
 		m_Vertices->SetLayout({ { "i_Position", ShaderDataType::Float3 } });
 		m_Normals->SetLayout({ { "i_Normal", ShaderDataType::Float3 } });

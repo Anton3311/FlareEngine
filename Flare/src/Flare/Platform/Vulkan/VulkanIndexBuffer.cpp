@@ -14,6 +14,13 @@ namespace Flare
 		m_Count = indices.GetSize() / IndexBuffer::GetIndexFormatSize(m_Format);
 	}
 
+	VulkanIndexBuffer::VulkanIndexBuffer(IndexFormat format, const MemorySpan& indices, Ref<CommandBuffer> commandBuffer)
+		: m_Format(format), m_Buffer(GPUBufferUsage::Static, VK_BUFFER_USAGE_INDEX_BUFFER_BIT, indices.GetSize())
+	{
+		m_Buffer.SetData(indices, 0, commandBuffer);
+		m_Count = indices.GetSize() / IndexBuffer::GetIndexFormatSize(m_Format);
+	}
+
 	void Flare::VulkanIndexBuffer::Bind()
 	{
 	}

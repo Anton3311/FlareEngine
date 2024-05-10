@@ -13,6 +13,12 @@ namespace Flare
 		m_Buffer.SetData(data, size, 0);
 	}
 
+	VulkanVertexBuffer::VulkanVertexBuffer(const void* data, size_t size, Ref<CommandBuffer> commandBuffer)
+		: m_Buffer(GPUBufferUsage::Static, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, size)
+	{
+		m_Buffer.SetData(MemorySpan::FromRawBytes(const_cast<void*>(data), size), 0, commandBuffer);
+	}
+
 	VulkanVertexBuffer::~VulkanVertexBuffer()
 	{
 	}

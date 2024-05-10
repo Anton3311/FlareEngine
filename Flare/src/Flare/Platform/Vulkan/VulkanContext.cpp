@@ -382,8 +382,16 @@ namespace Flare
 		submitInfo.pCommandBuffers = &buffer;
 		submitInfo.signalSemaphoreCount = 0;
 		submitInfo.pSignalSemaphores = nullptr;
-		VK_CHECK_RESULT(vkQueueSubmit(m_GraphicsQueue, 1, &submitInfo, nullptr));
-		VK_CHECK_RESULT(vkQueueWaitIdle(m_GraphicsQueue));
+
+		{
+			FLARE_PROFILE_SCOPE("QueueSubmit");
+			VK_CHECK_RESULT(vkQueueSubmit(m_GraphicsQueue, 1, &submitInfo, nullptr));
+		}
+
+		{
+			FLARE_PROFILE_SCOPE("QueueWaitIdle");
+			VK_CHECK_RESULT(vkQueueWaitIdle(m_GraphicsQueue));
+		}
 
 		vkFreeCommandBuffers(m_Device, m_CommandBufferPool, 1, &buffer);
 	}
