@@ -1,5 +1,7 @@
 #include "YAMLSerialization.h"
 
+#include "FlareCore/Profiler/Profiler.h"
+
 #include "Flare/AssetManager/AssetManager.h"
 #include "Flare/Serialization/Serialization.h"
 
@@ -463,6 +465,8 @@ namespace Flare
 
     void YAMLDeserializer::SerializeObject(const SerializableObjectDescriptor& descriptor, void* objectData, bool isArray, size_t arraySize)
     {
+        FLARE_PROFILE_FUNCTION();
+
         try
         {
             if (&descriptor == &FLARE_SERIALIZATION_DESCRIPTOR_OF(AssetHandle))
@@ -556,6 +560,8 @@ namespace Flare
 
     void YAMLDeserializer::SerializeReference(const SerializableObjectDescriptor& valueDescriptor, void* referenceData, void* valueData)
     {
+        FLARE_PROFILE_FUNCTION();
+
         const AssetDescriptor* assetDescriptor = AssetDescriptor::FindBySerializationDescriptor(valueDescriptor);
         if (assetDescriptor)
         {

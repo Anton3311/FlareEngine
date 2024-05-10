@@ -1,5 +1,6 @@
 #include "SpriteImporter.h"
 
+#include "FlareCore/Profiler/Profiler.h"
 #include "FlareEditor/Serialization/YAMLSerialization.h"
 
 #include <fstream>
@@ -8,6 +9,7 @@ namespace Flare
 {
 	bool SpriteImporter::SerializeSprite(const Ref<Sprite>& sprite, const std::filesystem::path& path)
 	{
+		FLARE_PROFILE_FUNCTION();
 		YAML::Emitter emitter;
 		YAMLSerializer serializer(emitter, nullptr);
 
@@ -28,6 +30,7 @@ namespace Flare
 
 	bool SpriteImporter::DeserializeSprite(const Ref<Sprite>& sprite, const std::filesystem::path& path)
 	{
+		FLARE_PROFILE_FUNCTION();
 		if (!std::filesystem::exists(path))
 			return false;
 
@@ -41,6 +44,7 @@ namespace Flare
 	
 	Ref<Asset> SpriteImporter::ImportSprite(const AssetMetadata& metadata)
 	{
+		FLARE_PROFILE_FUNCTION();
 		Ref<Sprite> sprite = CreateRef<Sprite>();
 		if (!DeserializeSprite(sprite, metadata.Path))
 			return nullptr;

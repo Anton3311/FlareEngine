@@ -1,5 +1,7 @@
 #include "MaterialImporter.h"
 
+#include "FlareCore/Profiler/Profiler.h"
+
 #include "Flare/AssetManager/AssetManager.h"
 #include "Flare/Renderer/Shader.h"
 
@@ -14,6 +16,7 @@ namespace Flare
 {
 	void MaterialImporter::SerializeMaterial(Ref<Material> material, const std::filesystem::path& path)
 	{
+		FLARE_PROFILE_FUNCTION();
 		Ref<Shader> shader = material->GetShader();
 
 		YAML::Emitter emitter;
@@ -92,6 +95,7 @@ namespace Flare
 
 	Ref<Material> MaterialImporter::ImportMaterial(const AssetMetadata& metadata)
 	{
+		FLARE_PROFILE_FUNCTION();
 		if (metadata.Source == AssetSource::Memory)
 		{
 			As<EditorAssetManager>(AssetManager::GetInstance())->LoadAsset(metadata.Parent);

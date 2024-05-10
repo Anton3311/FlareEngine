@@ -1,5 +1,7 @@
 #include "TextureImporter.h"
 
+#include "FlareCore/Profiler/Profiler.h"
+
 #include "FlareEditor/AssetManager/EditorAssetManager.h"
 
 #include <fstream>
@@ -19,6 +21,7 @@ namespace Flare
 
 	bool TextureImporter::SerialiazeImportSettings(AssetHandle assetHandle, const TextureImportSettings& settings)
 	{
+		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(AssetManager::IsAssetHandleValid(assetHandle));
 		std::filesystem::path importSettingsPath = GetImportSettingsPath(assetHandle);
 		
@@ -44,6 +47,7 @@ namespace Flare
 
 	bool TextureImporter::DeserializeImportSettings(AssetHandle assetHandle, TextureImportSettings& settings)
 	{
+		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(AssetManager::IsAssetHandleValid(assetHandle));
 		std::filesystem::path importSettingsPath = GetImportSettingsPath(assetHandle);
 
@@ -79,6 +83,7 @@ namespace Flare
 
 	Ref<Asset> TextureImporter::ImportTexture(const AssetMetadata& metadata)
 	{
+		FLARE_PROFILE_FUNCTION();
 		std::filesystem::path importSettingsPath = GetImportSettingsPath(metadata.Handle);
 
 		TextureImportSettings importSettings;

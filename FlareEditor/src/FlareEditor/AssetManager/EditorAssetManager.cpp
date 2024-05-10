@@ -39,6 +39,7 @@ namespace Flare
         m_AssetImporters.emplace(AssetType::Sprite, SpriteImporter::ImportSprite);
         m_AssetImporters.emplace(AssetType::Scene, [](const AssetMetadata& metadata) -> Ref<Asset>
         {
+			FLARE_PROFILE_FUNCTION();
             Ref<Scene> scene = CreateRef<Scene>(EditorLayer::GetInstance().GetECSContext());
             SceneSerializer::Deserialize(scene, metadata.Path,
                 EditorLayer::GetInstance().GetCamera(),
@@ -51,6 +52,7 @@ namespace Flare
         m_AssetImporters.emplace(AssetType::ComputeShader, ShaderImporter::ImportComputeShader);
         m_AssetImporters.emplace(AssetType::Font, [](const AssetMetadata& metadata) -> Ref<Asset>
         {
+			FLARE_PROFILE_FUNCTION();
             return CreateRef<Font>(metadata.Path);
         });
     }

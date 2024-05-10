@@ -1,5 +1,7 @@
 #include "ShaderImporter.h"
 
+#include "FlareCore/Profiler/Profiler.h"
+
 #include "Flare/Renderer/Shader.h"
 #include "Flare/Renderer/ComputeShader.h"
 
@@ -9,6 +11,7 @@ namespace Flare
 {
 	Ref<Asset> ShaderImporter::ImportShader(const AssetMetadata& metadata)
 	{
+		FLARE_PROFILE_FUNCTION();
 		if (!ShaderCompiler::Compile(metadata.Handle))
 			return false;
 
@@ -21,6 +24,7 @@ namespace Flare
 
 	Ref<Asset> ShaderImporter::ImportComputeShader(const AssetMetadata& metadata)
 	{
+		FLARE_PROFILE_FUNCTION();
 		if (!ShaderCompiler::Compile(metadata.Handle))
 			return false;
 

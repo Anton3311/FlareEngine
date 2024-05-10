@@ -17,6 +17,7 @@ namespace Flare
 {
     void PrefabImporter::SerializePrefab(AssetHandle prefab, World& world, Entity entity)
     {
+		FLARE_PROFILE_FUNCTION();
         FLARE_CORE_ASSERT(AssetManager::IsAssetHandleValid(prefab));
 
         if (!world.IsEntityAlive(entity))
@@ -37,6 +38,8 @@ namespace Flare
 
     Ref<Asset> PrefabImporter::ImportPrefab(const AssetMetadata& metadata)
     {
+		FLARE_PROFILE_FUNCTION();
+
         try
         {
             YAML::Node node = YAML::LoadFile(metadata.Path.generic_string());

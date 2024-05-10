@@ -240,19 +240,19 @@ namespace Flare
         materialsTable->Materials.reserve(usedMaterials.size());
 
         auto getMaterialTexture = [&](const aiMaterial& material, aiTextureType type) -> AssetHandle
-		{
-			FLARE_PROFILE_FUNCTION();
+        {
+            FLARE_PROFILE_FUNCTION();
 
             aiTextureMapping mapping;
             uint32_t uvIndex;
-			aiString path;
+            aiString path;
 
-			aiReturn result = material.GetTexture(type, 0, &path, &mapping, &uvIndex);
+            aiReturn result = material.GetTexture(type, 0, &path, &mapping, &uvIndex);
             if (result == aiReturn_SUCCESS)
-				return FindTextureByPath(std::string_view(path.C_Str(), path.length), metadata, assetManager);
+                return FindTextureByPath(std::string_view(path.C_Str(), path.length), metadata, assetManager);
 
             return NULL_ASSET_HANDLE;
-		};
+        };
 
         for (uint32_t i : usedMaterials)
         {
@@ -315,7 +315,12 @@ namespace Flare
             postProcessSteps |= aiProcess_FlipUVs;
 
         Assimp::Importer importer;
-        const aiScene* scene = importer.ReadFile(metadata.Path.string(), postProcessSteps);
+        const aiScene* scene = nullptr;
+
+		{
+            FLARE_PROFILE_SCOPE("ReadFile");
+			scene = importer.ReadFile(metadata.Path.string(), postProcessSteps);
+        }
 
         if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
         {
