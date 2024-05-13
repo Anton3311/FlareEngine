@@ -134,6 +134,13 @@ void main()
 
 	finalColor += u_EnvironmentLight.rgb * u_EnvironmentLight.w * color.rgb;
 
+#if DEBUG_CASCADES
+	int cascadeIndex = CalculateCascadeIndex(i_Vertex.ViewSpacePosition);
+	vec3 cascadeColors[] = { vec3(1.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f), vec3(0.0f, 0.0f, 1.0f), vec3(1.0f, 0.0f, 0.0f), vec3(1.0f) };
+
+	finalColor *= cascadeColors[min(cascadeIndex, CASCADES_COUNT)];
+#endif
+
 	o_Color = vec4(finalColor, color.a);
 	o_Normal = vec4(N * 0.5f + vec3(0.5f), 1.0f);
 }

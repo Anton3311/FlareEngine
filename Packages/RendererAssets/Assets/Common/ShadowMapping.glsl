@@ -153,9 +153,31 @@ float CalculateShadow(vec4 position, float bias, int cascadeIndex, float rotatio
 	return 1.0f;
 }
 
+int CalculateCascadeIndex(vec3 viewSpacePosition)
+{
+	float viewSpaceDistance = abs(viewSpacePosition.z);
+
+	int cascadeIndex = CASCADES_COUNT;
+	for (int i = 0; i < CASCADES_COUNT; i++)
+	{
+		if (viewSpaceDistance <= u_CascadeSplits[i])
+		{
+			cascadeIndex = i;
+			break;
+		}
+	}
+
+	return cascadeIndex;
+}
+
 #ifndef CASCADE_BLENDING_ENABLED
 #define CASCADE_BLENDING_ENABLED 1
 #endif
+
+#ifndef DEBUG_CASCADES
+#define DEBUG_CASCADES 0
+#endif
+
 
 float CalculateShadow(vec3 N, vec4 position, vec3 viewSpacePosition)
 {
