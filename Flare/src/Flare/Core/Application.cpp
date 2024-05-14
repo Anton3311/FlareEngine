@@ -36,7 +36,7 @@ namespace Flare
 		properties.CustomTitleBar = true;
 
 		const std::string_view apiArgument = "--api=";
-		RendererAPI::API rendererApi = RendererAPI::API::OpenGL;
+		RendererAPI::API rendererApi = RendererAPI::API::Vulkan;
 		for (uint32_t i = 0; i < m_CommandLineArguments.ArgumentsCount; i++)
 		{
 			std::string_view argument = m_CommandLineArguments.Arguments[i];
@@ -45,11 +45,7 @@ namespace Flare
 			{
 				std::string_view apiName = argument.substr(apiArgument.size());
 
-				if (apiName == "opengl")
-				{
-					rendererApi = RendererAPI::API::OpenGL;
-				}
-				else if (apiName == "vulkan")
+				if (apiName == "vulkan")
 				{
 					rendererApi = RendererAPI::API::Vulkan;
 				}
@@ -61,9 +57,6 @@ namespace Flare
 		m_Window = Window::Create(properties);
 		switch (RendererAPI::GetAPI())
 		{
-		case RendererAPI::API::OpenGL:
-			As<WindowsWindow>(m_Window)->SetUsesOpenGL();
-			break;
 		case RendererAPI::API::Vulkan:
 			As<WindowsWindow>(m_Window)->SetUsesVulkan();
 			break;

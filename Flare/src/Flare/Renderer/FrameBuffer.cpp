@@ -1,7 +1,6 @@
 #include "FrameBuffer.h"
 
 #include "Flare/Renderer/RendererAPI.h"
-#include "Flare/Platform/OpenGL/OpenGLFrameBuffer.h"
 #include "Flare/Platform/Vulkan/VulkanFrameBuffer.h"
 
 namespace Flare
@@ -10,8 +9,6 @@ namespace Flare
 	{
 		switch (RendererAPI::GetAPI())
 		{
-		case RendererAPI::API::OpenGL:
-			return CreateRef<OpenGLFrameBuffer>(specifications);
 		case RendererAPI::API::Vulkan:
 			return CreateRef<VulkanFrameBuffer>(specifications);
 		}

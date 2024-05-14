@@ -75,8 +75,6 @@ namespace Flare
 		{
 		case RendererAPI::API::Vulkan:
 			return CreateRef<VulkanMaterial>();
-		case RendererAPI::API::OpenGL:
-			return CreateRef<Material>();
 		}
 
 		FLARE_CORE_ASSERT(false);
@@ -90,9 +88,6 @@ namespace Flare
 		{
 		case RendererAPI::API::Vulkan:
 			material = CreateRef<VulkanMaterial>();
-			break;
-		case RendererAPI::API::OpenGL:
-			material = CreateRef<Material>();
 			break;
 		}
 
@@ -110,9 +105,6 @@ namespace Flare
 		{
 		case RendererAPI::API::Vulkan:
 			material = CreateRef<VulkanMaterial>();
-			break;
-		case RendererAPI::API::OpenGL:
-			material = CreateRef<Material>();
 			break;
 		}
 

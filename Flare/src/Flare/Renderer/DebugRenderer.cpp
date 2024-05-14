@@ -324,14 +324,7 @@ namespace Flare
 		{
 			s_DebugRendererData.LinesVertexBuffer->SetData(s_DebugRendererData.LinesBufferBase, sizeof(Vertex) * VerticesPerLine * s_DebugRendererData.LinesCount);
 
-			if (RendererAPI::GetAPI() == RendererAPI::API::OpenGL)
-			{
-				s_DebugRendererData.DebugShader->Bind();
-
-				RenderCommand::SetDepthTestEnabled(true);
-				RenderCommand::DrawLines(s_DebugRendererData.LinesMesh, s_DebugRendererData.LinesCount * VerticesPerLine);
-			}
-			else
+			if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
 			{
 				if (s_DebugRendererData.LinePipeline == nullptr)
 				{

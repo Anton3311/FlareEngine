@@ -5,7 +5,6 @@
 #include "Flare/Renderer/RendererAPI.h"
 #include "Flare/Renderer/GraphicsContext.h"
 
-#include "Flare/Platform/OpenGL/OpenGLMesh.h"
 #include "Flare/Platform/Vulkan/VulkanContext.h"
 
 namespace Flare
@@ -178,8 +177,6 @@ namespace Flare
 
 		switch (RendererAPI::GetAPI())
 		{
-		case RendererAPI::API::OpenGL:
-			return CreateRef<OpenGLMesh>(topology, vertexBufferSize, indexFormat, indexBufferSize);
 		case RendererAPI::API::Vulkan:
 			return CreateRef<Mesh>(topology, vertexBufferSize, indexFormat, indexBufferSize);
 		}
@@ -200,8 +197,6 @@ namespace Flare
 
 		switch (RendererAPI::GetAPI())
 		{
-		case RendererAPI::API::OpenGL:
-			return CreateRef<OpenGLMesh>(topology, indices, indexFormat, vertices, normals, tangents, uvs);
 		case RendererAPI::API::Vulkan:
 			return CreateRef<Mesh>(topology, indices, indexFormat, vertices, normals, tangents, uvs);
 		}

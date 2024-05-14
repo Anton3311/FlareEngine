@@ -22,7 +22,6 @@ namespace Flare
 		enum class API
 		{
 			None,
-			OpenGL,
 			Vulkan,
 		};
 	public:

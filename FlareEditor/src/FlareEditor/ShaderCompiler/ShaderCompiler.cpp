@@ -112,9 +112,6 @@ namespace Flare
 
 		switch (RendererAPI::GetAPI())
 		{
-		case RendererAPI::API::OpenGL:
-			options.AddMacroDefinition("OPENGL");
-			break;
 		case RendererAPI::API::Vulkan:
 			//options.AddMacroDefinition("VULKAN");
 			break;
@@ -695,28 +692,6 @@ namespace Flare
 			catch (spirv_cross::CompilerError& e)
 			{
 				FLARE_CORE_ERROR("Shader reflection failed: {}", e.what());
-			}
-
-			if (RendererAPI::GetAPI() == RendererAPI::API::OpenGL)
-			{
-				std::optional<std::vector<uint32_t>> compiledOpenGLShader = {};
-
-				if (!forceRecompile)
-				{
-					compiledOpenGLShader = ShaderCacheManager::GetInstance()->FindCache(
-						shaderHandle,
-						ShaderTargetEnvironment::OpenGL,
-						program.Stage);
-				}
-
-				if (!compiledOpenGLShader)
-				{
-					compiledOpenGLShader = CompileSpirvToGlsl(pathString, compiledVulkanShader.value(), options);
-					if (!compiledOpenGLShader)
-						return false;
-
-					ShaderCacheManager::GetInstance()->SetCache(shaderHandle, ShaderTargetEnvironment::OpenGL, program.Stage, compiledOpenGLShader.value());
-				}
 			}
 		}
 

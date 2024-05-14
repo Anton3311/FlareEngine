@@ -17,7 +17,6 @@ namespace Flare
 	public:
 		virtual const WindowProperties& GetProperties() const override { return m_Data.Properties; }
 
-		void SetUsesOpenGL();
 		void SetUsesVulkan();
 		
 		virtual void Initialize() override;
@@ -46,7 +45,6 @@ namespace Flare
 	private:
 		enum class RendererAPI
 		{
-			OpenGL,
 			Vulkan,
 		};
 
@@ -57,7 +55,7 @@ namespace Flare
 			Ref<WindowControls> Controls = nullptr;
 		};
 
-		RendererAPI m_RendererAPI = RendererAPI::OpenGL;
+		RendererAPI m_RendererAPI = RendererAPI::Vulkan;
 
 		GLFWwindow* m_Window = nullptr;
 		WindowData m_Data;

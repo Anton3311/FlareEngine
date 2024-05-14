@@ -6,7 +6,6 @@
 #include "Flare/Renderer/ShaderLibrary.h"
 
 #include "Flare/Platform/Vulkan/VulkanContext.h"
-#include "Flare/Platform/OpenGL/OpenGLFrameBuffer.h"
 
 #include "Flare/Scene/Components.h"
 #include "Flare/Scene/Scene.h"
@@ -622,21 +621,6 @@ namespace Flare
 
 	std::optional<Entity> SceneViewportWindow::GetEntityUnderCursor() const
 	{
-		if (RendererAPI::GetAPI() == RendererAPI::API::OpenGL)
-		{
-			Ref<OpenGLFrameBuffer> frameBuffer = As<OpenGLFrameBuffer>(m_Viewport.RenderTarget);
-			frameBuffer->Bind();
-
-			int32_t entityIndex;
-			frameBuffer->ReadPixel(2, m_RelativeMousePosition.x, m_RelativeMousePosition.y, &entityIndex);
-
-			std::optional<Entity> entity = GetScene()->GetECSWorld().Entities.FindEntityByIndex(entityIndex);
-
-			frameBuffer->Unbind();
-
-			return entity;
-		}
-
 		return {};
 	}
 }

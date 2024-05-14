@@ -7,7 +7,6 @@
 
 #include "FlarePlatform/Window.h"
 
-#include "FlareEditor/ImGui/ImGuiLayerOpenGL.h"
 #include "FlareEditor/ImGui/ImGuiLayerVulkan.h"
 
 #include <imgui_internal.h>
@@ -165,9 +164,6 @@ namespace Flare
 	{
 		switch (RendererAPI::GetAPI())
 		{
-		case RendererAPI::API::OpenGL:
-			s_Instance = CreateRef<ImGuiLayerOpenGL>();
-			break;
 		case RendererAPI::API::Vulkan:
 			s_Instance = CreateRef<ImGuiLayerVulkan>();
 			break;

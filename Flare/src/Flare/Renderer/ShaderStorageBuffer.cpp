@@ -1,7 +1,6 @@
 #include "ShaderStorageBuffer.h"
 
 #include "Flare/Renderer/RendererAPI.h"
-#include "Flare/Platform/OpenGL/OpenGLShaderStorageBuffer.h"
 #include "Flare/Platform/Vulkan/VulkanShaderStorageBuffer.h"
 
 namespace Flare
@@ -10,8 +9,6 @@ namespace Flare
 	{
         switch (RendererAPI::GetAPI())
         {
-        case RendererAPI::API::OpenGL:
-            return CreateRef<OpenGLShaderStorageBuffer>(binding);
         case RendererAPI::API::Vulkan:
             return CreateRef<VulkanShaderStorageBuffer>(size);
         }

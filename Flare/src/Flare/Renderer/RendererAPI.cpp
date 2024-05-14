@@ -1,7 +1,6 @@
 #include "RendererAPI.h"
 
 #include "FlareCore/Assert.h"
-#include "Flare/Platform/OpenGL/OpenGLRendererAPI.h"
 #include "Flare/Platform/Vulkan/VulkanRendererAPI.h"
 
 namespace Flare
@@ -15,9 +14,6 @@ namespace Flare
 
 		switch (s_API)
 		{
-		case API::OpenGL:
-			s_Instance.reset(new OpenGLRendererAPI());
-			break;
 		case API::Vulkan:
 			s_Instance.reset(new VulkanRendererAPI());
 			break;

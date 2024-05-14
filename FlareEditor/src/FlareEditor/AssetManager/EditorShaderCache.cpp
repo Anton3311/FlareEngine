@@ -116,9 +116,6 @@ namespace Flare
         std::string_view apiName = "";
         switch (RendererAPI::GetAPI())
         {
-        case RendererAPI::API::OpenGL:
-            apiName = "OpenGL";
-            break;
         case RendererAPI::API::Vulkan:
             apiName = "Vulkan";
             break;

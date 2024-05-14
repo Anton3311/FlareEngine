@@ -590,17 +590,7 @@ namespace Flare
 
 				glm::mat4 projection;
 				
-				if (RendererAPI::GetAPI() == RendererAPI::API::OpenGL)
-				{
-					projection = glm::ortho(
-						-params.BoundingSphereRadius,
-						params.BoundingSphereRadius,
-						-params.BoundingSphereRadius,
-						params.BoundingSphereRadius,
-						viewport->FrameData.Light.Near,
-						farPlaneDistance - nearPlaneDistance);
-				}
-				else
+				if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
 				{
 					projection = glm::orthoRH_ZO(
 						-params.BoundingSphereRadius,
@@ -892,20 +882,6 @@ namespace Flare
 		{
 			FLARE_PROFILE_SCOPE("Sort");
 			std::sort(s_RendererData.CulledObjectIndices.begin(), s_RendererData.CulledObjectIndices.end(), CompareRenderableObjects);
-		}
-
-		if (RendererAPI::GetAPI() == RendererAPI::API::OpenGL)
-		{
-			if (s_RendererData.ShadowMappingSettings.Enabled)
-			{
-				for (size_t i = 0; i < 4; i++)
-					s_RendererData.ShadowsRenderTarget[i]->BindAttachmentTexture(0, 28 + (uint32_t)i);
-			}
-			else
-			{
-				for (size_t i = 0; i < 4; i++)
-					s_RendererData.WhiteTexture->Bind(28 + (uint32_t)i);
-			}
 		}
 
 		Ref<const Material> currentMaterial = nullptr;

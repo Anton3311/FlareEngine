@@ -379,11 +379,6 @@ namespace Flare
 		}
 	}
 
-	void WindowsWindow::SetUsesOpenGL()
-	{
-		m_RendererAPI = RendererAPI::OpenGL;
-	}
-
 	void WindowsWindow::SetUsesVulkan()
 	{
 		m_RendererAPI = RendererAPI::Vulkan;
@@ -400,11 +395,7 @@ namespace Flare
 			}
 		}
 
-		if (m_RendererAPI == RendererAPI::OpenGL)
-		{
-			glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
-		}
-		else if (m_RendererAPI == RendererAPI::Vulkan)
+		if (m_RendererAPI == RendererAPI::Vulkan)
 		{
 			FLARE_CORE_ASSERT(glfwVulkanSupported() == GLFW_TRUE);
 			glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);

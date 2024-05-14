@@ -1,6 +1,5 @@
 #include "GraphicsContext.h"
 
-#include "Flare/Platform/OpenGL/OpenGLGraphicsContext.h"
 #include "Flare/Platform/Vulkan/VulkanContext.h"
 #include "Flare/Renderer/RendererAPI.h"
 
@@ -22,9 +21,6 @@ namespace Flare
 	{
 		switch (RendererAPI::GetAPI())
 		{
-		case RendererAPI::API::OpenGL:
-			s_Instance = CreateScope<OpenGLGraphicsContext>((GLFWwindow*)window->GetNativeWindow());
-			break;
 		case RendererAPI::API::Vulkan:
 			s_Instance = CreateScope<VulkanContext>(window);
 			break;
