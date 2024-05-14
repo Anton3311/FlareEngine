@@ -11,6 +11,7 @@ local assimp_path = "%{wks.location}/Flare/vendor/assimp/assimp/"
 
 INCLUDE_DIRS = {
 	GLAD = "%{wks.location}/Flare/vendor/GLAD/include",
+	dds = "%{wks.location}/Flare/vendor/dds-ktx/",
 	GLFW = "%{wks.location}/Flare/vendor/GLFW/include",
 	glm = "%{wks.location}/Flare/vendor/glm/",
 	stb_image = "%{wks.location}/Flare/vendor/stb_image",
