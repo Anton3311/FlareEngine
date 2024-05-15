@@ -145,23 +145,8 @@ namespace Flare
 		s_Renderer2DData.QuadsVertexBuffer = VertexBuffer::Create(maxQuads * 4 * sizeof(QuadVertex));
 		s_Renderer2DData.IndexBuffer = IndexBuffer::Create(IndexBuffer::IndexFormat::UInt32, MemorySpan::FromVector(indices));
 
-		s_Renderer2DData.QuadsVertexBuffer->SetLayout({
-			BufferLayoutElement("i_Position", ShaderDataType::Float3),
-			BufferLayoutElement("i_Color", ShaderDataType::Float4),
-			BufferLayoutElement("i_UV", ShaderDataType::Float2),
-			BufferLayoutElement("i_TextureIndex", ShaderDataType::Float),
-			BufferLayoutElement("i_EntityIndex", ShaderDataType::Int),
-		});
-
-
 		// Text
 		s_Renderer2DData.TextVertexBuffer = VertexBuffer::Create(maxQuads * 4 * sizeof(TextVertex));
-		s_Renderer2DData.TextVertexBuffer->SetLayout({
-			BufferLayoutElement("i_Position", ShaderDataType::Float3),
-			BufferLayoutElement("i_Color", ShaderDataType::Float4),
-			BufferLayoutElement("i_UV", ShaderDataType::Float2),
-			BufferLayoutElement("i_EntityIndex", ShaderDataType::Int),
-		});
 
 		s_Renderer2DData.QuadVertices[0] = glm::vec3(-0.5f, -0.5f, 0.0f);
 		s_Renderer2DData.QuadVertices[1] = glm::vec3(-0.5f, 0.5f, 0.0f);

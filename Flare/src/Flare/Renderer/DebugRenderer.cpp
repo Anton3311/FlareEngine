@@ -82,19 +82,7 @@ namespace Flare
 		s_DebugRendererData.MaxRaysCount = 10000;
 		s_DebugRendererData.RayThickness = 0.07f;
 
-		Ref<VertexBuffer> vertexBuffer = VertexBuffer::Create(sizeof(Vertex) * VerticesPerLine * maxLinesCount);
-		vertexBuffer->SetLayout({
-			{ "i_Position", ShaderDataType::Float3, false },
-			{ "i_Color", ShaderDataType::Float4, false },
-		});
-
-		s_DebugRendererData.LinesVertexBuffer = vertexBuffer;
-
-		Ref<VertexBuffer> rayVertexBuffer = VertexBuffer::Create(sizeof(Vertex) * VerticesPerRay * s_DebugRendererData.MaxRaysCount);
-		rayVertexBuffer->SetLayout({
-			{ "i_Position", ShaderDataType::Float3, false },
-			{ "i_Color", ShaderDataType::Float4, false },
-		});
+		s_DebugRendererData.LinesVertexBuffer = VertexBuffer::Create(sizeof(Vertex) * VerticesPerLine * maxLinesCount);
 
 		uint32_t* indices = new uint32_t[s_DebugRendererData.MaxRaysCount * IndicesPerRay];
 		uint32_t vertexIndex = 0;
@@ -116,7 +104,7 @@ namespace Flare
 		}
 
 		s_DebugRendererData.RaysIndexBuffer = IndexBuffer::Create(IndexBuffer::IndexFormat::UInt32, MemorySpan(indices, s_DebugRendererData.MaxRaysCount * IndicesPerRay));
-		s_DebugRendererData.RaysVertexBuffer = rayVertexBuffer;
+		s_DebugRendererData.RaysVertexBuffer = VertexBuffer::Create(sizeof(Vertex) * VerticesPerRay * s_DebugRendererData.MaxRaysCount);
 
 		delete[] indices;
 

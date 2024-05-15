@@ -63,11 +63,6 @@ namespace Flare
 
 			m_IndexBuffer = IndexBuffer::Create(m_IndexFormat, indices);
 		}
-
-		m_Vertices->SetLayout({ { "i_Position", ShaderDataType::Float3 } });
-		m_Normals->SetLayout({ { "i_Normal", ShaderDataType::Float3 } });
-		m_Tangents->SetLayout({ { "i_Tangent", ShaderDataType::Float3 } });
-		m_UVs->SetLayout({ { "i_UV", ShaderDataType::Float2 } });
 	}
 
 	Mesh::~Mesh()
@@ -105,33 +100,19 @@ namespace Flare
 		}
 
 		if (!m_IndexBuffer)
-		{
 			m_IndexBuffer = IndexBuffer::Create(m_IndexFormat, m_IndexBufferSize);
-		}
 
 		if (!m_Vertices)
-		{
 			m_Vertices = VertexBuffer::Create(m_VertexBufferSize * sizeof(glm::vec3));
-			m_Vertices->SetLayout({ { "i_Position", ShaderDataType::Float3 } });
-		}
 
 		if (!m_Normals)
-		{
 			m_Normals = VertexBuffer::Create(m_VertexBufferSize * sizeof(glm::vec3));
-			m_Normals->SetLayout({ { "i_Normal", ShaderDataType::Float3 } });
-		}
 
 		if (!m_Tangents)
-		{
 			m_Tangents = VertexBuffer::Create(m_VertexBufferSize * sizeof(glm::vec3));
-			m_Tangents->SetLayout({ { "i_Tangent", ShaderDataType::Float3 } });
-		}
 
 		if (!m_UVs)
-		{
 			m_UVs = VertexBuffer::Create(m_VertexBufferSize * sizeof(glm::vec2));
-			m_UVs->SetLayout({ { "i_UV", ShaderDataType::Float2 } });
-		}
 
 		if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
 		{
@@ -145,15 +126,6 @@ namespace Flare
 			m_IndexBuffer->SetData(indices, m_IndexBufferOffset, commandBuffer);
 
 			VulkanContext::GetInstance().EndTemporaryCommandBuffer(As<VulkanCommandBuffer>(commandBuffer));
-		}
-		else
-		{
-			m_Vertices->SetData(vertices.GetData(), vertices.GetSize() * sizeof(glm::vec3), m_VertexBufferOffset * sizeof(glm::vec3));
-			m_Normals->SetData(normals.GetData(), normals.GetSize() * sizeof(glm::vec3), m_VertexBufferOffset * sizeof(glm::vec3));
-			m_Tangents->SetData(tangents.GetData(), tangents.GetSize() * sizeof(glm::vec3), m_VertexBufferOffset * sizeof(glm::vec3));
-			m_UVs->SetData(uvs.GetData(), uvs.GetSize() * sizeof(glm::vec2), m_VertexBufferOffset * sizeof(glm::vec2));
-
-			m_IndexBuffer->SetData(indices, m_IndexBufferOffset);
 		}
 
 		size_t indicesCount = indices.GetSize() / indexSize;

@@ -15,8 +15,6 @@ namespace Flare
 		VulkanVertexBuffer(const void* data, size_t size, Ref<CommandBuffer> commandBuffer);
 		~VulkanVertexBuffer();
 
-		const BufferLayout& GetLayout() const override;
-		void SetLayout(const BufferLayout& layout) override;
 		void Bind() override;
 		void SetData(const void* data, size_t size, size_t offset) override;
 		void SetData(MemorySpan data, size_t offset, Ref<CommandBuffer> commandBuffer) override;
@@ -24,6 +22,5 @@ namespace Flare
 		inline VkBuffer GetHandle() const { return m_Buffer.GetBuffer(); }
 	private:
 		VulkanBuffer m_Buffer;
-		BufferLayout m_Layout;
 	};
 }

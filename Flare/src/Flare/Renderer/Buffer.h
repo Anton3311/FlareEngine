@@ -19,53 +19,9 @@ namespace Flare
 		Dynamic = 1,
 	};
 
-	struct BufferLayoutElement
-	{
-		BufferLayoutElement() = default;
-		BufferLayoutElement(std::string_view name, ShaderDataType type, bool normalized = false)
-			: Name(name), DataType(type), Size(ShaderDataTypeSize(type)), 
-			ComponentsCount(ShaderDataTypeComponentCount(type)), IsNormalized(normalized), Offset(0) {}
-
-		std::string Name;
-		ShaderDataType DataType;
-		uint32_t Size;
-		uint32_t Offset;
-		uint32_t ComponentsCount;
-		bool IsNormalized;
-	};
-
-	class BufferLayout
-	{
-	public:
-		BufferLayout() = default;
-		BufferLayout(const std::initializer_list<BufferLayoutElement>& elements)
-			: m_Elements(elements), m_Stride(0)
-		{
-			CalculateOffsetsAndStrides();
-		}
-
-		inline const std::vector<BufferLayoutElement> GetElements() const { return m_Elements; }
-		inline uint32_t GetStride() const { return m_Stride; }
-	private:
-		void CalculateOffsetsAndStrides()
-		{
-			for (auto& elem : m_Elements)
-			{
-				elem.Offset = m_Stride;
-				m_Stride += elem.Size;
-			}
-		}
-	private:
-		uint32_t m_Stride;
-		std::vector<BufferLayoutElement> m_Elements;
-	};
-
 	class FLARE_API VertexBuffer
 	{
 	public:
-		virtual const BufferLayout& GetLayout() const = 0;
-		virtual void SetLayout(const BufferLayout& layout) = 0;
-
 		virtual void Bind() = 0;
 		virtual void SetData(const void* data, size_t size, size_t offset = 0) = 0;
 		virtual void SetData(MemorySpan data, size_t offset, Ref<CommandBuffer> commandBuffer) = 0;

@@ -22,15 +22,6 @@ namespace Flare
 	VulkanVertexBuffer::~VulkanVertexBuffer()
 	{
 	}
-	const BufferLayout& VulkanVertexBuffer::GetLayout() const
-	{
-		return m_Layout;
-	}
-
-	void VulkanVertexBuffer::SetLayout(const BufferLayout& layout)
-	{
-		m_Layout = layout;
-	}
 
 	void VulkanVertexBuffer::Bind()
 	{
