@@ -165,8 +165,6 @@ namespace Flare
 		static void SubmitPointLight(const PointLightData& light);
 		static void SubmitSpotLight(const SpotLightData& light);
 
-		static void DrawFullscreenQuad(const Ref<Material>& material);
-		static void DrawMesh(const Ref<VertexArray>& mesh, const Ref<Material>& material, size_t indicesCount = SIZE_MAX);
 		static void DrawMesh(const Ref<Mesh>& mesh,
 			uint32_t subMesh,
 			const Ref<Material>& material,

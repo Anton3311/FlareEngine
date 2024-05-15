@@ -1,7 +1,6 @@
 #include "SceneViewportWindow.h"
 
 #include "Flare/Renderer/Renderer.h"
-#include "Flare/Renderer/RenderCommand.h"
 #include "Flare/Renderer/DebugRenderer.h"
 #include "Flare/Renderer/ShaderLibrary.h"
 
@@ -182,7 +181,7 @@ namespace Flare
 					*thicknessPropertyIndex,
 					glm::vec2(4.0f) / (glm::vec2)m_Viewport.GetSize() / 2.0f);
 
-				Renderer::DrawFullscreenQuad(m_SelectionOutlineMaterial);
+				// TODO: also implement
 			}
 		}
 
@@ -565,7 +564,8 @@ namespace Flare
 		m_GridMaterial->WritePropertyValue(s_GridPropertyIndices.CellScale, 1.0f / cellScale);
 		m_GridMaterial->WritePropertyValue(s_GridPropertyIndices.Color, gridColor);
 		m_GridMaterial->WritePropertyValue(s_GridPropertyIndices.FallOffThreshold, 0.8f);
-		Renderer::DrawFullscreenQuad(m_GridMaterial);
+
+		// TOOD: implement
 	}
 
 	void SceneViewportWindow::HandleAssetDragAndDrop(AssetHandle handle)

@@ -8,8 +8,6 @@
 
 #include "Flare/Renderer/Buffer.h"
 #include "Flare/Renderer/GraphicsContext.h"
-#include "Flare/Renderer/RenderCommand.h"
-#include "Flare/Renderer/RendererAPI.h"
 #include "Flare/Renderer/Shader.h"
 #include "Flare/Renderer/Texture.h"
 #include "Flare/Renderer/VertexArray.h"

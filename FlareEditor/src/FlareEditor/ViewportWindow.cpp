@@ -1,6 +1,5 @@
 #include "ViewportWindow.h"
 
-#include "Flare/Renderer/RenderCommand.h"
 #include "Flare/Renderer/Renderer.h"
 
 #include "Flare/Platform/Vulkan/VulkanContext.h"
@@ -74,7 +73,6 @@ namespace Flare
 			}
 
 			m_Viewport.RTPool.SetRenderTargetsSize(m_Viewport.GetSize());
-			RenderCommand::SetViewport(0, 0, m_Viewport.GetSize().x, m_Viewport.GetSize().y);
 		}
 	}
 

@@ -84,6 +84,12 @@ namespace Flare
 		Ref<const Material> Material;
 	};
 
+	struct SubMeshDrawData
+	{
+		uint32_t SubMeshIndex = 0;
+		uint32_t InstanceCount = 0;
+	};
+
 	struct RendererData
 	{
 		Viewport* MainViewport = nullptr;
@@ -111,7 +117,7 @@ namespace Flare
 		uint32_t MaxInstances = 1024 * 24;
 
 		Ref<ShaderStorageBuffer> InstancesShaderBuffer = nullptr;
-		std::vector<DrawIndirectCommandSubMeshData> IndirectDrawData;
+		std::vector<SubMeshDrawData> IndirectDrawData;
 
 		// Shadows
 		InstancingMesh CurrentInstancingMesh;
@@ -948,6 +954,7 @@ namespace Flare
 
 	void Renderer::ExecuteDecalsPass()
 	{
+#if 0
 		FLARE_PROFILE_FUNCTION();
 		if (s_RendererData.Decals.size() == 0)
 			return;
@@ -1011,6 +1018,7 @@ namespace Flare
 
 		s_RendererData.Decals.clear();
 		s_RendererData.InstanceDataBuffer.clear();
+#endif
 	}
 
 	void Renderer::ExecuteShadowPass()
@@ -1119,19 +1127,19 @@ namespace Flare
 
 						s_RendererData.CurrentInstancingMesh.Mesh = queued.Mesh;
 						auto& command = s_RendererData.IndirectDrawData.emplace_back();
-						command.InstancesCount = 1;
+						command.InstanceCount = 1;
 						command.SubMeshIndex = queued.SubMeshIndex;
 					}
 					else
 					{
 						if (s_RendererData.IndirectDrawData.size() > 0 && s_RendererData.IndirectDrawData.back().SubMeshIndex == queued.SubMeshIndex)
 						{
-							s_RendererData.IndirectDrawData.back().InstancesCount++;
+							s_RendererData.IndirectDrawData.back().InstanceCount++;
 						}
 						else
 						{
 							auto& command = s_RendererData.IndirectDrawData.emplace_back();
-							command.InstancesCount = 1;
+							command.InstanceCount = 1;
 							command.SubMeshIndex = queued.SubMeshIndex;
 						}
 					}
@@ -1178,11 +1186,11 @@ namespace Flare
 		Ref<CommandBuffer> commandBuffer = GraphicsContext::GetInstance().GetCommandBuffer();
 		for (const auto& drawCall : s_RendererData.IndirectDrawData)
 		{
-			commandBuffer->DrawIndexed(s_RendererData.CurrentInstancingMesh.Mesh, drawCall.SubMeshIndex, baseInstance, drawCall.InstancesCount);
-			baseInstance += drawCall.InstancesCount;
+			commandBuffer->DrawIndexed(s_RendererData.CurrentInstancingMesh.Mesh, drawCall.SubMeshIndex, baseInstance, drawCall.InstanceCount);
+			baseInstance += drawCall.InstanceCount;
 
 			s_RendererData.Statistics.DrawCallsCount++;
-			s_RendererData.Statistics.DrawCallsSavedByInstancing += (uint32_t)drawCall.InstancesCount - 1;
+			s_RendererData.Statistics.DrawCallsSavedByInstancing += (uint32_t)drawCall.InstanceCount - 1;
 		}
 
 		s_RendererData.IndirectDrawData.clear();
@@ -1205,30 +1213,6 @@ namespace Flare
 	void Renderer::SubmitSpotLight(const SpotLightData& light)
 	{
 		s_RendererData.SpotLights.push_back(light);
-	}
-
-	void Renderer::DrawFullscreenQuad(const Ref<Material>& material)
-	{
-		FLARE_PROFILE_FUNCTION();
-
-		if (!material || !material->GetShader())
-			return;
-
-		ApplyMaterial(material);
-
-		RenderCommand::DrawIndexed(RendererPrimitives::GetFullscreenQuad());
-		s_RendererData.Statistics.DrawCallsCount++;
-	}
-
-	void Renderer::DrawMesh(const Ref<VertexArray>& mesh, const Ref<Material>& material, size_t indicesCount)
-	{
-		FLARE_PROFILE_FUNCTION();
-
-		ApplyMaterial(material);
-
-		RenderCommand::DrawIndexed(mesh, indicesCount == SIZE_MAX ? mesh->GetIndexBuffer()->GetCount() : indicesCount);
-
-		s_RendererData.Statistics.DrawCallsCount++;
 	}
 
 	void Renderer::DrawMesh(const Ref<Mesh>& mesh, uint32_t subMesh, const Ref<Material>& material, const glm::mat4& transform, MeshRenderFlags flags, int32_t entityIndex)

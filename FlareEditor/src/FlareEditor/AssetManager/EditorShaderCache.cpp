@@ -3,6 +3,7 @@
 #include "FlareCore/Core.h"
 
 #include "Flare/AssetManager/AssetManager.h"
+#include "Flare/Renderer/RendererAPI.h"
 #include "FlareEditor/AssetManager/EditorAssetManager.h"
 
 #include <fstream>

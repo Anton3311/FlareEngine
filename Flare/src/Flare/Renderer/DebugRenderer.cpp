@@ -10,7 +10,6 @@
 
 #include "Flare/Renderer/VertexArray.h"
 #include "Flare/Renderer/Buffer.h"
-#include "Flare/Renderer/RenderCommand.h"
 #include "Flare/Renderer/ShaderLibrary.h"
 #include "Flare/Renderer/Shader.h"
 
@@ -437,13 +436,6 @@ namespace Flare
 				commandBuffer->DrawIndexed(0, s_DebugRendererData.RaysCount * IndicesPerRay, 0, 1);
 
 				commandBuffer->EndRenderTarget();
-			}
-			else
-			{
-				s_DebugRendererData.DebugShader->Bind();
-
-				RenderCommand::SetDepthTestEnabled(true);
-				RenderCommand::DrawIndexed(s_DebugRendererData.RaysMesh, s_DebugRendererData.RaysCount * IndicesPerRay);
 			}
 		}
 

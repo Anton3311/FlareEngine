@@ -3,7 +3,7 @@
 #include "FlareCore/Core.h"
 
 #include "Flare/AssetManager/Asset.h"
-#include "Flare/Renderer/RendererAPI.h"
+#include "Flare/Renderer/ShaderMetadata.h"
 
 #include <vector>
 #include <optional>

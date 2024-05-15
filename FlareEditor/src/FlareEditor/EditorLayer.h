@@ -107,7 +107,6 @@ namespace Flare
 		ProfilerWindow m_ProfilerWindow;
 
 		std::vector<Ref<ViewportWindow>> m_ViewportWindows;
-		glm::vec4 m_ClearColor = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
 
 		EditorCamera m_Camera;
 		AssetHandle m_EditedSceneHandle;

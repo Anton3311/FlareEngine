@@ -10,7 +10,6 @@
 #include "Flare/Renderer/RendererPrimitives.h"
 #include "Flare/Renderer2D/Renderer2D.h"
 #include "Flare/Renderer/DebugRenderer.h"
-#include "Flare/Renderer/RenderCommand.h"
 
 #include "Flare/Scripting/ScriptingEngine.h"
 #include "Flare/Input/InputManager.h"
@@ -75,12 +74,6 @@ namespace Flare
 				return true;
 			});
 
-			dispatcher.Dispatch<WindowResizeEvent>([this](WindowResizeEvent& event) -> bool
-			{
-				RenderCommand::SetViewport(0, 0, event.GetWidth(), event.GetHeight());
-				return true;
-			});
-
 			if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
 				return;
 
@@ -109,13 +102,11 @@ namespace Flare
 	{
 		InputManager::Initialize();
 
-		RenderCommand::Initialize();
 		Renderer::Initialize();
 		DebugRenderer::Initialize();
 		Renderer2D::Initialize();
 
 		ScriptingEngine::Initialize();
-		RenderCommand::SetLineWidth(1.2f);
 
 		for (const Ref<Layer>& layer : m_LayersStack.GetLayers())
 			layer->OnAttach();
