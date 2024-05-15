@@ -81,7 +81,7 @@ namespace Flare
 			6, 7, 2
 		};
 
-		s_Primitives.Cube = Mesh::Create(MeshTopology::Triangles, 8, IndexBuffer::IndexFormat::UInt16, sizeof(cubeIndices) / sizeof(uint16_t));
+		s_Primitives.Cube = Mesh::Create(8, IndexBuffer::IndexFormat::UInt16, sizeof(cubeIndices) / sizeof(uint16_t));
 		s_Primitives.Cube->AddSubMesh(
 			Span(cubeVertices, 8),
 			MemorySpan(cubeIndices, sizeof(cubeIndices) / 2),
@@ -127,7 +127,7 @@ namespace Flare
 			0, 2, 3,
 		};
 
-		s_Primitives.FullscreenQuadMesh = Mesh::Create(MeshTopology::Triangles, sizeof(vertices), IndexBuffer::IndexFormat::UInt16, 6);
+		s_Primitives.FullscreenQuadMesh = Mesh::Create(sizeof(vertices), IndexBuffer::IndexFormat::UInt16, 6);
 		s_Primitives.FullscreenQuadMesh->AddSubMesh(Span(vertices, 4), MemorySpan(indices, 6), Span(normals, 4), Span(normals, 4), Span(uvs, 4));
 		return s_Primitives.FullscreenQuadMesh;
 	}

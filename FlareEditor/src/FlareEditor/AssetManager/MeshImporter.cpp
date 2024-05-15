@@ -343,7 +343,7 @@ namespace Flare
             indices = MemorySpan::FromVector(data.Indices32);
         }
 
-        Ref<Mesh> mesh = Mesh::Create(MeshTopology::Triangles, indices, data.IndexFormat,
+        Ref<Mesh> mesh = Mesh::Create(indices, data.IndexFormat,
             Span<glm::vec3>::FromVector(data.Vertices),
             Span<glm::vec3>::FromVector(data.Normals),
             Span<glm::vec3>::FromVector(data.Tangents),

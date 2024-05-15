@@ -12,24 +12,21 @@ namespace Flare
 	FLARE_SERIALIZABLE_IMPL(Mesh);
 	FLARE_IMPL_ASSET(Mesh);
 
-	Mesh::Mesh(MeshTopology topologyType, size_t vertexBufferSize, IndexBuffer::IndexFormat indexFormat, size_t indexBufferSize)
+	Mesh::Mesh(size_t vertexBufferSize, IndexBuffer::IndexFormat indexFormat, size_t indexBufferSize)
 		: Asset(AssetType::Mesh),
-		m_TopologyType(topologyType),
 		m_VertexBufferSize(vertexBufferSize),
 		m_IndexFormat(indexFormat),
 		m_IndexBufferSize(indexBufferSize)
 	{
 	}
 
-	Mesh::Mesh(MeshTopology topology,
-		MemorySpan indices,
+	Mesh::Mesh(MemorySpan indices,
 		IndexBuffer::IndexFormat indexFormat,
 		Span<glm::vec3> vertices,
 		Span<glm::vec3> normals,
 		Span<glm::vec3> tangents,
 		Span<glm::vec2> uvs)
 		: Asset(AssetType::Mesh),
-		m_TopologyType(topology),
 		m_IndexFormat(indexFormat),
 		m_VertexBufferSize(vertices.GetSize()),
 		m_VertexBufferOffset(0),
@@ -143,22 +140,21 @@ namespace Flare
 		m_SubMeshes.push_back(subMesh);
 	}
 
-	Ref<Mesh> Mesh::Create(MeshTopology topology, size_t vertexBufferSize, IndexBuffer::IndexFormat indexFormat, size_t indexBufferSize)
+	Ref<Mesh> Mesh::Create(size_t vertexBufferSize, IndexBuffer::IndexFormat indexFormat, size_t indexBufferSize)
 	{
 		FLARE_PROFILE_FUNCTION();
 
 		switch (RendererAPI::GetAPI())
 		{
 		case RendererAPI::API::Vulkan:
-			return CreateRef<Mesh>(topology, vertexBufferSize, indexFormat, indexBufferSize);
+			return CreateRef<Mesh>(vertexBufferSize, indexFormat, indexBufferSize);
 		}
 
 		FLARE_CORE_ASSERT(false);
 		return nullptr;
 	}
 
-	Ref<Mesh> Mesh::Create(MeshTopology topology,
-		MemorySpan indices,
+	Ref<Mesh> Mesh::Create(MemorySpan indices,
 		IndexBuffer::IndexFormat indexFormat,
 		Span<glm::vec3> vertices,
 		Span<glm::vec3> normals,
@@ -170,7 +166,7 @@ namespace Flare
 		switch (RendererAPI::GetAPI())
 		{
 		case RendererAPI::API::Vulkan:
-			return CreateRef<Mesh>(topology, indices, indexFormat, vertices, normals, tangents, uvs);
+			return CreateRef<Mesh>(indices, indexFormat, vertices, normals, tangents, uvs);
 		}
 
 		FLARE_CORE_ASSERT(false);

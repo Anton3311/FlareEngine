@@ -32,13 +32,11 @@ namespace Flare
 		FLARE_SERIALIZABLE;
 		FLARE_ASSET;
 
-		Mesh(MeshTopology topologyType,
-			size_t vertexBufferSize,
+		Mesh(size_t vertexBufferSize,
 			IndexBuffer::IndexFormat indexFormat,
 			size_t indexBufferSize);
 
-		Mesh(MeshTopology topology,
-			MemorySpan indices,
+		Mesh(MemorySpan indices,
 			IndexBuffer::IndexFormat indexFormat,
 			Span<glm::vec3> vertices,
 			Span<glm::vec3> normals,
@@ -65,13 +63,11 @@ namespace Flare
 		inline Ref<VertexBuffer> GetUVs() const { return m_UVs; }
 
 		inline const std::vector<SubMesh>& GetSubMeshes() const { return m_SubMeshes; }
-		inline MeshTopology GetTopologyType() const { return m_TopologyType; }
 		inline IndexBuffer::IndexFormat GetIndexFormat() const { return m_IndexFormat; }
 	public:
-		static Ref<Mesh> Create(MeshTopology topology, size_t vertexBufferSize, IndexBuffer::IndexFormat indexFormat, size_t indexBufferSize);
+		static Ref<Mesh> Create( size_t vertexBufferSize, IndexBuffer::IndexFormat indexFormat, size_t indexBufferSize);
 
-		static Ref<Mesh> Create(MeshTopology topology,
-			MemorySpan indices,
+		static Ref<Mesh> Create(MemorySpan indices,
 			IndexBuffer::IndexFormat indexFormat,
 			Span<glm::vec3> vertices,
 			Span<glm::vec3> normals,
@@ -92,7 +88,6 @@ namespace Flare
 		Ref<VertexBuffer> m_Tangents = nullptr;
 		Ref<VertexBuffer> m_UVs = nullptr;
 
-		MeshTopology m_TopologyType;
 		std::vector<SubMesh> m_SubMeshes;
 	};
 }
