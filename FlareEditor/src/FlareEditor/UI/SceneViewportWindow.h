@@ -3,7 +3,6 @@
 #include "Flare/Scene/Scene.h"
 #include "Flare/Renderer/Shader.h"
 #include "Flare/Renderer/Material.h"
-#include "Flare/Renderer/VertexArray.h"
 
 #include "FlareECS/Entity/Entity.h"
 

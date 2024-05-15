@@ -6,7 +6,6 @@
 #include "Flare/Renderer/RenderPass.h"
 #include "Flare/Renderer/RendererSubmitionQueue.h"
 
-#include "Flare/Renderer/VertexArray.h"
 #include "Flare/Renderer/Material.h"
 #include "Flare/Renderer/Mesh.h"
 

@@ -5,7 +5,6 @@ namespace Flare
 	struct RendererPrimitivesData
 	{
 		Ref<Mesh> Cube = nullptr;
-		Ref<VertexArray> FullscreenQuad = nullptr;
 		Ref<Mesh> FullscreenQuadMesh = nullptr;
 	};
 
@@ -91,36 +90,6 @@ namespace Flare
 			Span(cubeUVs, 8));
 
 		return s_Primitives.Cube;
-	}
-
-	Ref<const VertexArray> RendererPrimitives::GetFullscreenQuad()
-	{
-		if (s_Primitives.FullscreenQuad)
-			return s_Primitives.FullscreenQuad;
-
-		float vertices[] =
-		{
-			-1, -1,
-			-1,  1,
-			 1,  1,
-			 1, -1,
-		};
-
-		uint16_t indices[] =
-		{
-			0, 1, 2,
-			0, 2, 3,
-		};
-
-		Ref<VertexBuffer> vertexBuffer = VertexBuffer::Create(sizeof(vertices), (const void*)vertices);
-		vertexBuffer->SetLayout({ BufferLayoutElement("i_Position", ShaderDataType::Float2) });
-
-		s_Primitives.FullscreenQuad = VertexArray::Create();
-		s_Primitives.FullscreenQuad->SetIndexBuffer(IndexBuffer::Create(IndexBuffer::IndexFormat::UInt16, MemorySpan(indices, 6)));
-		s_Primitives.FullscreenQuad->AddVertexBuffer(vertexBuffer);
-		s_Primitives.FullscreenQuad->Unbind();
-
-		return s_Primitives.FullscreenQuad;
 	}
 
 	Ref<const Mesh> RendererPrimitives::GetFullscreenQuadMesh()

@@ -10,7 +10,6 @@
 #include "Flare/Renderer/GraphicsContext.h"
 #include "Flare/Renderer/Shader.h"
 #include "Flare/Renderer/Texture.h"
-#include "Flare/Renderer/VertexArray.h"
 #include "Flare/Renderer/FrameBuffer.h"
 
 #include "Flare/Renderer/Sprite.h"

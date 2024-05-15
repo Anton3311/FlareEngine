@@ -90,12 +90,10 @@ namespace Flare
 
 		std::vector<QuadVertex> Vertices;
 
-		Ref<VertexArray> QuadsMesh = nullptr;
 		Ref<VertexBuffer> QuadsVertexBuffer = nullptr;
 		Ref<IndexBuffer> IndexBuffer = nullptr;
 
 		std::vector<TextVertex> TextVertices;
-		Ref<VertexArray> TextMesh = nullptr;
 		Ref<VertexBuffer> TextVertexBuffer = nullptr;
 
 		size_t TextQuadIndex = 0;
@@ -144,7 +142,6 @@ namespace Flare
 			indices[quadIndex * 6 + 5] = (uint32_t)(quadIndex * 4 + 3);
 		}
 
-		s_Renderer2DData.QuadsMesh = VertexArray::Create();
 		s_Renderer2DData.QuadsVertexBuffer = VertexBuffer::Create(maxQuads * 4 * sizeof(QuadVertex));
 		s_Renderer2DData.IndexBuffer = IndexBuffer::Create(IndexBuffer::IndexFormat::UInt32, MemorySpan::FromVector(indices));
 
@@ -156,13 +153,8 @@ namespace Flare
 			BufferLayoutElement("i_EntityIndex", ShaderDataType::Int),
 		});
 
-		s_Renderer2DData.QuadsMesh->SetIndexBuffer(s_Renderer2DData.IndexBuffer);
-		s_Renderer2DData.QuadsMesh->AddVertexBuffer(s_Renderer2DData.QuadsVertexBuffer);
-
-		s_Renderer2DData.QuadsMesh->Unbind();
 
 		// Text
-		s_Renderer2DData.TextMesh = VertexArray::Create();
 		s_Renderer2DData.TextVertexBuffer = VertexBuffer::Create(maxQuads * 4 * sizeof(TextVertex));
 		s_Renderer2DData.TextVertexBuffer->SetLayout({
 			BufferLayoutElement("i_Position", ShaderDataType::Float3),
@@ -170,11 +162,6 @@ namespace Flare
 			BufferLayoutElement("i_UV", ShaderDataType::Float2),
 			BufferLayoutElement("i_EntityIndex", ShaderDataType::Int),
 		});
-
-		s_Renderer2DData.TextMesh->SetIndexBuffer(s_Renderer2DData.IndexBuffer);
-		s_Renderer2DData.TextMesh->AddVertexBuffer(s_Renderer2DData.TextVertexBuffer);
-
-		s_Renderer2DData.TextMesh->Unbind();
 
 		s_Renderer2DData.QuadVertices[0] = glm::vec3(-0.5f, -0.5f, 0.0f);
 		s_Renderer2DData.QuadVertices[1] = glm::vec3(-0.5f, 0.5f, 0.0f);

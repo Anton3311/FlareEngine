@@ -8,7 +8,6 @@
 #include "Flare/Renderer/CommandBuffer.h"
 #include "Flare/Renderer/GraphicsContext.h"
 
-#include "Flare/Renderer/VertexArray.h"
 #include "Flare/Renderer/Buffer.h"
 #include "Flare/Renderer/ShaderLibrary.h"
 #include "Flare/Renderer/Shader.h"
@@ -52,11 +51,9 @@ namespace Flare
 		Ref<VertexBuffer> LinesVertexBuffer = nullptr;
 		Ref<VertexBuffer> RaysVertexBuffer = nullptr;
 		Ref<IndexBuffer> RaysIndexBuffer = nullptr;
-		Ref<VertexArray> LinesMesh;
 
 		Ref<Pipeline> LinePipeline = nullptr;
 		Ref<Pipeline> RayPipeline = nullptr;
-		Ref<VertexArray> RaysMesh;
 	};
 
 	DebugRendererData s_DebugRendererData;
@@ -91,20 +88,13 @@ namespace Flare
 			{ "i_Color", ShaderDataType::Float4, false },
 		});
 
-		Ref<VertexArray> mesh = VertexArray::Create();
-		mesh->AddVertexBuffer(vertexBuffer);
-		mesh->Unbind();
-
 		s_DebugRendererData.LinesVertexBuffer = vertexBuffer;
-		s_DebugRendererData.LinesMesh = mesh;
 
 		Ref<VertexBuffer> rayVertexBuffer = VertexBuffer::Create(sizeof(Vertex) * VerticesPerRay * s_DebugRendererData.MaxRaysCount);
 		rayVertexBuffer->SetLayout({
 			{ "i_Position", ShaderDataType::Float3, false },
 			{ "i_Color", ShaderDataType::Float4, false },
 		});
-		Ref<VertexArray> raysMesh = VertexArray::Create();
-		raysMesh->AddVertexBuffer(rayVertexBuffer);
 
 		uint32_t* indices = new uint32_t[s_DebugRendererData.MaxRaysCount * IndicesPerRay];
 		uint32_t vertexIndex = 0;
@@ -126,11 +116,7 @@ namespace Flare
 		}
 
 		s_DebugRendererData.RaysIndexBuffer = IndexBuffer::Create(IndexBuffer::IndexFormat::UInt32, MemorySpan(indices, s_DebugRendererData.MaxRaysCount * IndicesPerRay));
-		raysMesh->SetIndexBuffer(s_DebugRendererData.RaysIndexBuffer);
-		raysMesh->Unbind();
-
 		s_DebugRendererData.RaysVertexBuffer = rayVertexBuffer;
-		s_DebugRendererData.RaysMesh = raysMesh;
 
 		delete[] indices;
 

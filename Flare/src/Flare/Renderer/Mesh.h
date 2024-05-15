@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Flare/AssetManager/Asset.h"
-#include "Flare/Renderer/VertexArray.h"
 #include "Flare/Renderer/Buffer.h"
 #include "Flare/Math/Math.h"
 
