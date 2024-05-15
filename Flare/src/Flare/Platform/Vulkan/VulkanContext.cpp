@@ -3,6 +3,8 @@
 #include "FlareCore/Profiler/Profiler.h"
 #include "Flare/Core/Application.h"
 
+#include "Flare/Platform/Vulkan/VulkanPipeline.h"
+
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
@@ -167,6 +169,8 @@ namespace Flare
 		WaitForDevice();
 
 		DestroyStagingBuffers();
+
+		m_DefaultPipelines.clear();
 
 		if (m_DebugMessenger)
 			m_DestroyDebugMessenger(m_Instance, m_DebugMessenger, nullptr);
@@ -491,6 +495,77 @@ namespace Flare
 	void VulkanContext::DeferDestroyStagingBuffer(StagingBuffer stagingBuffer)
 	{
 		m_CurrentFrameStagingBuffers.push_back(std::move(stagingBuffer));
+	}
+
+	Ref<Pipeline> VulkanContext::GetDefaultPipelineForShader(Ref<Shader> shader, Ref<VulkanRenderPass> renderPass)
+	{
+		uint64_t key = (uint64_t)shader.get();
+		auto it = m_DefaultPipelines.find(key);
+
+		if (it != m_DefaultPipelines.end())
+		{
+			Ref<VulkanPipeline> pipeline = As<VulkanPipeline>(it->second);
+			if (pipeline->GetCompatibleRenderPass().get() == renderPass.get())
+			{
+				return it->second;
+			}
+		}
+
+		Ref<const ShaderMetadata> metadata = shader->GetMetadata();
+
+		PipelineSpecifications specifications{};
+		specifications.Shader = shader;
+		specifications.DepthBiasEnabled = metadata->Features.DepthBiasEnabled;
+		specifications.Culling = metadata->Features.Culling;
+		specifications.DepthTest = metadata->Features.DepthTesting;
+		specifications.DepthWrite = metadata->Features.DepthWrite;
+		specifications.DepthFunction = metadata->Features.DepthFunction;
+		specifications.Blending = metadata->Features.Blending;
+
+		// TODO: Sould be extracted by the ShaderCompiler from shader metadata
+		specifications.DepthBiasSlopeFactor = 0.1f;
+		specifications.DepthBiasConstantFactor = 0.0f;
+
+		switch (metadata->Type)
+		{
+		case ShaderType::_2D:
+		{
+			specifications.InputLayout = PipelineInputLayout({
+				{ 0, 0, ShaderDataType::Float3 }, // Position
+				{ 0, 1, ShaderDataType::Float4 }, // Color
+				{ 0, 2, ShaderDataType::Float2 }, // UV
+				{ 0, 3, ShaderDataType::Int }, // Texture index
+				{ 0, 4, ShaderDataType::Int }, // Entity index
+			});
+			break;
+		}
+		case ShaderType::Surface:
+		{
+			specifications.InputLayout = PipelineInputLayout({
+				{ 0, 0, ShaderDataType::Float3 }, // Position
+				{ 1, 1, ShaderDataType::Float3 }, // Normal
+				{ 2, 2, ShaderDataType::Float3 }, // Tangent
+				{ 3, 3, ShaderDataType::Float2 }, // UV
+			});
+			break;
+		}
+		case ShaderType::FullscreenQuad:
+		{
+			specifications.InputLayout = PipelineInputLayout({
+				{ 0, 0, ShaderDataType::Float3 }, // Position
+				{ 1, 1, ShaderDataType::Float3 }, // Normal
+				{ 2, 2, ShaderDataType::Float3 }, // Tangent
+				{ 3, 3, ShaderDataType::Float2 }, // UV
+			});
+			break;
+		}
+		default:
+			FLARE_CORE_ASSERT(false);
+		}
+
+		Ref<Pipeline> pipeline = As<Pipeline>(CreateRef<VulkanPipeline>(specifications, renderPass));
+		m_DefaultPipelines.emplace(key, pipeline);
+		return pipeline;
 	}
 
 	void VulkanContext::CreateInstance(const Span<const char*>& enabledLayers)

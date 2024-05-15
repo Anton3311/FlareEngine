@@ -353,6 +353,13 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 		VK_CHECK_RESULT(vkResetCommandBuffer(m_CommandBuffer, 0));
+
+		for (size_t i = 0; i < 4; i++)
+		{
+			m_CurrentDescriptorSets[i] = {};
+		}
+
+		m_CurrentGraphicsPipeline = nullptr;
 	}
 
 	void VulkanCommandBuffer::Begin()
@@ -775,9 +782,14 @@ namespace Flare
 	void VulkanCommandBuffer::BindPipeline(const Ref<const Pipeline>& pipeline)
 	{
 		FLARE_PROFILE_FUNCTION();
+
+		if (m_CurrentGraphicsPipeline.get() == pipeline.get())
+			return;
+
 		auto vulkanPipeline = As<const VulkanPipeline>(pipeline);
 		vkCmdBindPipeline(m_CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vulkanPipeline->GetHandle());
-		m_CurrentPipeline = vulkanPipeline;
+
+		m_CurrentGraphicsPipeline = pipeline;
 	}
 
 	void VulkanCommandBuffer::BindVertexBuffers(const Span<Ref<const VertexBuffer>>& vertexBuffers)

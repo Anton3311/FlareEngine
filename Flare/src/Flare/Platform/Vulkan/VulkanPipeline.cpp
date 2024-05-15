@@ -1,5 +1,7 @@
 #include "VulkanPipeline.h"
 
+#include "FlareCore/Profiler/Profiler.h"
+
 #include "Flare/Platform/Vulkan/VulkanContext.h"
 #include "Flare/Platform/Vulkan/VulkanShader.h"
 
@@ -43,6 +45,8 @@ namespace Flare
 
 	void VulkanPipeline::CreatePipelineLayout(const Span<Ref<const DescriptorSetLayout>>& layouts, const Span<ShaderPushConstantsRange>& pushConstantsRanges)
 	{
+		FLARE_PROFILE_FUNCTION();
+
 		VkPipelineLayoutCreateInfo layoutInfo{};
 		layoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 		layoutInfo.flags = 0;
@@ -81,6 +85,7 @@ namespace Flare
 
 	void VulkanPipeline::Create()
 	{
+		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(m_CompatbileRenderPass);
 		FLARE_CORE_ASSERT(m_PipelineLayout);
 

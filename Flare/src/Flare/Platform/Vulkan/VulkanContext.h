@@ -116,6 +116,8 @@ namespace Flare
 
 		void DeferDestroyStagingBuffer(StagingBuffer stagingBuffer);
 
+		Ref<Pipeline> GetDefaultPipelineForShader(Ref<Shader> shader, Ref<VulkanRenderPass> renderPass);
+
 		static VulkanContext& GetInstance() { return *(VulkanContext*)&GraphicsContext::GetInstance(); }
 	private:
 		void CreateInstance(const Span<const char*>& enabledLayers);
@@ -195,6 +197,8 @@ namespace Flare
 		// Render pass
 		Ref<VulkanRenderPass> m_ColorOnlyPass = nullptr;
 		std::unordered_map<RenderPassKey, Ref<VulkanRenderPass>> m_RenderPasses;
+
+		std::unordered_map<uint64_t, Ref<Pipeline>> m_DefaultPipelines;
 
 		// Allocator
 		VmaAllocator m_Allocator = VK_NULL_HANDLE;

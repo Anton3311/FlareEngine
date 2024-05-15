@@ -7,6 +7,7 @@
 
 #include "Flare/Platform/Vulkan/VulkanContext.h"
 #include "Flare/Platform/Vulkan/VulkanDescriptorSet.h"
+#include "Flare/Platform/Vulkan/VulkanPipeline.h"
 
 namespace Flare
 {

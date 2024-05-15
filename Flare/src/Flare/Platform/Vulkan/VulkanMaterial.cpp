@@ -2,6 +2,7 @@
 
 #include "Flare/AssetManager/AssetManager.h"
 
+#include "Flare/Platform/Vulkan/VulkanContext.h"
 #include "Flare/Platform/Vulkan/VulkanPipeline.h"
 #include "Flare/Platform/Vulkan/VulkanShader.h"
 #include "Flare/Platform/Vulkan/VulkanDescriptorSet.h"
@@ -58,55 +59,7 @@ namespace Flare
 		if (m_Pipeline != nullptr && m_Pipeline->GetCompatibleRenderPass().get() == renderPass.get())
 			return m_Pipeline;
 
-		PipelineSpecifications specifications{};
-		specifications.Culling = CullingMode::Back;
-		specifications.Shader = m_Shader;
-
-		specifications.DepthBiasEnabled = m_Shader->GetMetadata()->Features.DepthBiasEnabled;
-		specifications.Culling = m_Shader->GetMetadata()->Features.Culling;
-		specifications.DepthTest = m_Shader->GetMetadata()->Features.DepthTesting;
-		specifications.DepthWrite = m_Shader->GetMetadata()->Features.DepthWrite;
-		specifications.DepthFunction = m_Shader->GetMetadata()->Features.DepthFunction;
-		specifications.Blending = m_Shader->GetMetadata()->Features.Blending;
-
-		// TODO: Sould be extracted by the ShaderCompiler from shader metadata
-		specifications.DepthBiasSlopeFactor = 0.1f;
-		specifications.DepthBiasConstantFactor = 0.0f;
-
-		if (m_Shader->GetMetadata()->Type == ShaderType::_2D)
-		{
-			specifications.InputLayout = PipelineInputLayout({
-				{ 0, 0, ShaderDataType::Float3 }, // Position
-				{ 0, 1, ShaderDataType::Float4 }, // Color
-				{ 0, 2, ShaderDataType::Float2 }, // UV
-				{ 0, 3, ShaderDataType::Int }, // Texture index
-				{ 0, 4, ShaderDataType::Int }, // Entity index
-			});
-		}
-		else if (m_Shader->GetMetadata()->Type == ShaderType::Surface)
-		{
-			specifications.InputLayout = PipelineInputLayout({
-				{ 0, 0, ShaderDataType::Float3 }, // Position
-				{ 1, 1, ShaderDataType::Float3 }, // Normal
-				{ 2, 2, ShaderDataType::Float3 }, // Tangent
-				{ 3, 3, ShaderDataType::Float2 }, // UV
-			});
-		}
-		else if (m_Shader->GetMetadata()->Type == ShaderType::FullscreenQuad)
-		{
-			specifications.InputLayout = PipelineInputLayout({
-				{ 0, 0, ShaderDataType::Float3 }, // Position
-				{ 1, 1, ShaderDataType::Float3 }, // Normal
-				{ 2, 2, ShaderDataType::Float3 }, // Tangent
-				{ 3, 3, ShaderDataType::Float2 }, // UV
-			});
-		}
-		else
-		{
-			FLARE_CORE_ASSERT(false);
-		}
-		
-		m_Pipeline = CreateRef<VulkanPipeline>(specifications, renderPass);
+		m_Pipeline = As<VulkanPipeline>(VulkanContext::GetInstance().GetDefaultPipelineForShader(m_Shader, renderPass));
 		return m_Pipeline;
 	}
 
