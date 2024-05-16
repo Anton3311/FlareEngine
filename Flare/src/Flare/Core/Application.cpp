@@ -113,7 +113,6 @@ namespace Flare
 
 		while (m_Running)
 		{
-			Profiler::BeginFrame();
 			FLARE_PROFILE_BEGIN_FRAME("Main");
 
 			{
@@ -163,7 +162,6 @@ namespace Flare
 			}
 
 			FLARE_PROFILE_END_FRAME("Main");
-			Profiler::EndFrame();
 		}
 
 		GraphicsContext::GetInstance().WaitForDevice();

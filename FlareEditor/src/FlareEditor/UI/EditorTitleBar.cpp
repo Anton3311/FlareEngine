@@ -13,8 +13,6 @@
 #include "FlareEditor/UI/ECS/ECSInspector.h"
 #include "FlareEditor/UI/ShaderLibraryWindow.h"
 
-#include "FlareEditor/UI/Profiler/ProfilerWindow.h"
-
 #include <imgui_internal.h>
 
 namespace Flare
@@ -114,8 +112,6 @@ namespace Flare
 		{
 			if (ImGui::MenuItem("ECS Inspector"))
 				ECSInspector::Show();
-			if (ImGui::MenuItem("Profiler"))
-				ProfilerWindow::GetInstance().ShowWindow();
 			if (ImGui::MenuItem("Shader Library"))
 				ShaderLibraryWindow::Show();
 
