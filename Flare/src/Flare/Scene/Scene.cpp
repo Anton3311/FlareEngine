@@ -101,59 +101,56 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		if (!viewport.FrameData.IsEditorCamera)
+		float aspectRation = viewport.GetAspectRatio();
+
+		for (EntityView entityView : m_CameraDataUpdateQuery)
 		{
-			float aspectRation = viewport.GetAspectRatio();
+			auto cameras = entityView.View<const CameraComponent>();
+			auto transforms = entityView.View<const TransformComponent>();
 
-			for (EntityView entityView : m_CameraDataUpdateQuery)
+			for (EntityViewElement entity : entityView)
 			{
-				auto cameras = entityView.View<const CameraComponent>();
-				auto transforms = entityView.View<const TransformComponent>();
+				const CameraComponent& camera = cameras[entity];
+				const TransformComponent& transform = transforms[entity];
 
-				for (EntityViewElement entity : entityView)
+				float halfSize = camera.Size / 2;
+
+				viewport.FrameData.Camera.ViewDirection = transform.TransformDirection(glm::vec3(0.0f, 0.0f, -1.0f));
+				viewport.FrameData.Camera.Position = transforms[entity].Position;
+
+				viewport.FrameData.Camera.Near = camera.Near;
+				viewport.FrameData.Camera.Far = camera.Far;
+
+				viewport.FrameData.Camera.FOV = cameras[entity].FOV;
+
+				if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
 				{
-					const CameraComponent& camera = cameras[entity];
-					const TransformComponent& transform = transforms[entity];
-
-					float halfSize = camera.Size / 2;
-
-					viewport.FrameData.Camera.ViewDirection = transform.TransformDirection(glm::vec3(0.0f, 0.0f, -1.0f));
-					viewport.FrameData.Camera.Position = transforms[entity].Position;
-
-					viewport.FrameData.Camera.Near = camera.Near;
-					viewport.FrameData.Camera.Far = camera.Far;
-
-					viewport.FrameData.Camera.FOV = cameras[entity].FOV;
-
-					if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
+					if (camera.Projection == CameraComponent::ProjectionType::Orthographic)
 					{
-						if (camera.Projection == CameraComponent::ProjectionType::Orthographic)
-						{
-							viewport.FrameData.Camera.SetViewAndProjection(
-								glm::orthoRH_ZO(-halfSize * aspectRation, halfSize * aspectRation, -halfSize, halfSize, camera.Near, camera.Far),
-								glm::inverse(transforms[entity].GetTransformationMatrix()));
-						}
-						else
-						{
-							viewport.FrameData.Camera.SetViewAndProjection(
-								glm::perspectiveRH_ZO<float>(glm::radians(camera.FOV), aspectRation, camera.Near, camera.Far),
-								glm::inverse(transforms[entity].GetTransformationMatrix()));
-						}
+						viewport.FrameData.Camera.SetViewAndProjection(
+							glm::orthoRH_ZO(-halfSize * aspectRation, halfSize * aspectRation, -halfSize, halfSize, camera.Near, camera.Far),
+							glm::inverse(transforms[entity].GetTransformationMatrix()));
 					}
 					else
 					{
-						if (camera.Projection == CameraComponent::ProjectionType::Orthographic)
-						{
-							viewport.FrameData.Camera.SetViewAndProjection(
-								glm::ortho(-halfSize * aspectRation, halfSize * aspectRation, -halfSize, halfSize, camera.Near, camera.Far),
-								glm::inverse(transforms[entity].GetTransformationMatrix()));
-						}
-						else
-						{
-							viewport.FrameData.Camera.SetViewAndProjection(
-								glm::perspective<float>(glm::radians(camera.FOV), aspectRation, camera.Near, camera.Far),
-								glm::inverse(transforms[entity].GetTransformationMatrix()));
-						}
+						viewport.FrameData.Camera.SetViewAndProjection(
+							glm::perspectiveRH_ZO<float>(glm::radians(camera.FOV), aspectRation, camera.Near, camera.Far),
+							glm::inverse(transforms[entity].GetTransformationMatrix()));
+					}
+				}
+				else
+				{
+					if (camera.Projection == CameraComponent::ProjectionType::Orthographic)
+					{
+						viewport.FrameData.Camera.SetViewAndProjection(
+							glm::ortho(-halfSize * aspectRation, halfSize * aspectRation, -halfSize, halfSize, camera.Near, camera.Far),
+							glm::inverse(transforms[entity].GetTransformationMatrix()));
+					}
+					else
+					{
+						viewport.FrameData.Camera.SetViewAndProjection(
+							glm::perspective<float>(glm::radians(camera.FOV), aspectRation, camera.Near, camera.Far),
+							glm::inverse(transforms[entity].GetTransformationMatrix()));
 					}
 				}
 			}

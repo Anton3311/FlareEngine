@@ -38,7 +38,7 @@ namespace Flare
 	static GridPropertyIndices s_GridPropertyIndices;
 
 	SceneViewportWindow::SceneViewportWindow(EditorCamera& camera, std::string_view name)
-		: ViewportWindow(name, true),
+		: ViewportWindow(name),
 		m_Camera(camera),
 		m_Overlay(ViewportOverlay::Default),
 		m_IsToolbarHovered(false),
@@ -95,21 +95,6 @@ namespace Flare
 		if (scene == nullptr || !ShowWindow || !m_IsVisible)
 			return;
 
-		if (m_Viewport.FrameData.IsEditorCamera)
-		{
-			m_Viewport.FrameData.Camera.SetViewAndProjection(
-				m_Camera.GetProjectionMatrix(),
-				m_Camera.GetViewMatrix());
-
-			m_Viewport.FrameData.Camera.Position = m_Camera.GetPosition();
-			m_Viewport.FrameData.Camera.ViewDirection = m_Camera.GetViewDirection();
-
-			m_Viewport.FrameData.Camera.Near = m_Camera.GetSettings().Near;
-			m_Viewport.FrameData.Camera.Far = m_Camera.GetSettings().Far;
-
-			m_Viewport.FrameData.Camera.FOV = m_Camera.GetSettings().FOV;
-		}
-
 		PrepareViewport();
 
 		if (m_Viewport.GetSize() == glm::ivec2(0))
@@ -117,6 +102,19 @@ namespace Flare
 
 		std::optional<SystemGroupId> debugRenderingGroup = scene->GetECSWorld().GetSystemsManager().FindGroup("Debug Rendering");
 		scene->OnBeforeRender(m_Viewport);
+
+		// Override with EditorCamera's data
+		m_Viewport.FrameData.Camera.SetViewAndProjection(
+			m_Camera.GetProjectionMatrix(),
+			m_Camera.GetViewMatrix());
+
+		m_Viewport.FrameData.Camera.Position = m_Camera.GetPosition();
+		m_Viewport.FrameData.Camera.ViewDirection = m_Camera.GetViewDirection();
+
+		m_Viewport.FrameData.Camera.Near = m_Camera.GetSettings().Near;
+		m_Viewport.FrameData.Camera.Far = m_Camera.GetSettings().Far;
+
+		m_Viewport.FrameData.Camera.FOV = m_Camera.GetSettings().FOV;
 
 		Renderer::BeginScene(m_Viewport);
 		OnClear();

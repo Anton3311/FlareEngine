@@ -17,7 +17,7 @@ namespace Flare
 	class ViewportWindow
 	{
 	public:
-		ViewportWindow(std::string_view name, bool useEditorCamera = false);
+		ViewportWindow(std::string_view name);
 		virtual ~ViewportWindow() = default;
 	public:
 		virtual void OnAttach();

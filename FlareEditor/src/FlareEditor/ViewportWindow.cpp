@@ -13,7 +13,7 @@
 
 namespace Flare
 {
-	ViewportWindow::ViewportWindow(std::string_view name, bool useEditorCamera)
+	ViewportWindow::ViewportWindow(std::string_view name)
 		: m_Name(name),
 		m_IsFocused(false),
 		m_PreviousFocusState(false),
@@ -22,7 +22,6 @@ namespace Flare
 		m_RelativeMousePosition(glm::ivec2(0)),
 		m_ViewportOffset(glm::uvec2(0))
 	{
-		m_Viewport.FrameData.IsEditorCamera = useEditorCamera;
 	}
 
 	void ViewportWindow::OnRenderViewport()
