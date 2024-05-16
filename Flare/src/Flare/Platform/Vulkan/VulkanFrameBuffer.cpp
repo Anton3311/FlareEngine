@@ -9,30 +9,6 @@
 
 namespace Flare
 {
-	VkFormat FrameBufferAttachmentFormatToVulkanFormat(FrameBufferTextureFormat format)
-	{
-		switch (format)
-		{
-		case FrameBufferTextureFormat::RGB8:
-			return VK_FORMAT_R8G8B8A8_UNORM;
-		case FrameBufferTextureFormat::RGBA8:
-			return VK_FORMAT_R8G8B8A8_UNORM;
-		case FrameBufferTextureFormat::R32G32B32A32:
-			return VK_FORMAT_R32G32B32A32_SFLOAT;
-		case FrameBufferTextureFormat::Depth24Stencil8:
-			return VK_FORMAT_D24_UNORM_S8_UINT;
-		case FrameBufferTextureFormat::RedInteger:
-			return VK_FORMAT_R32_SINT;
-		case FrameBufferTextureFormat::RF32:
-			return VK_FORMAT_R32_SFLOAT;
-		case FrameBufferTextureFormat::R11G11B10:
-			return VK_FORMAT_B10G11R11_UFLOAT_PACK32;
-		}
-
-		FLARE_CORE_ASSERT(false);
-		return VK_FORMAT_UNDEFINED;
-	}
-
 	VulkanFrameBuffer::VulkanFrameBuffer(const FrameBufferSpecifications& specifications)
 		: m_Specifications(specifications), m_OwnsAttachmentTextures(true)
 	{
@@ -114,14 +90,6 @@ namespace Flare
 	{
 		FLARE_CORE_ASSERT((size_t)index < m_Attachments.size());
 		return As<Texture>(m_Attachments[index]);
-	}
-
-	void VulkanFrameBuffer::ReadPixel(uint32_t attachmentIndex, uint32_t x, uint32_t y, void* pixelOutput)
-	{
-	}
-
-	void VulkanFrameBuffer::BindAttachmentTexture(uint32_t attachment, uint32_t slot)
-	{
 	}
 
 	const FrameBufferSpecifications& VulkanFrameBuffer::GetSpecifications() const

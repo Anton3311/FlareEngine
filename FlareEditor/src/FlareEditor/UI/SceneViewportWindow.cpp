@@ -163,8 +163,6 @@ namespace Flare
 
 		if (selectedEntity && m_SelectionOutlineMaterial && false)
 		{
-			m_Viewport.RenderTarget->BindAttachmentTexture(2);
-
 			Ref<Shader> shader = m_SelectionOutlineMaterial->GetShader();
 			std::optional<uint32_t> idPropertyIndex = shader->GetPropertyIndex("u_Outline.SelectedId");
 			std::optional<uint32_t> thicknessPropertyIndex = shader->GetPropertyIndex("u_Outline.Thickness");

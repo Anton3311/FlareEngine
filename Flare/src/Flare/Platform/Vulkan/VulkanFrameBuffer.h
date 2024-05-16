@@ -12,8 +12,6 @@
 
 namespace Flare
 {
-	VkFormat FrameBufferAttachmentFormatToVulkanFormat(FrameBufferTextureFormat format);
-	
 	class VulkanFrameBuffer : public FrameBuffer
 	{
 	public:
@@ -29,8 +27,6 @@ namespace Flare
 
 		Ref<Texture> GetAttachment(uint32_t index) const override;
 
-		void ReadPixel(uint32_t attachmentIndex, uint32_t x, uint32_t y, void* pixelOutput) override;
-		void BindAttachmentTexture(uint32_t attachment, uint32_t slot) override;
 		const FrameBufferSpecifications& GetSpecifications() const override;
 
 		glm::uvec2 GetSize() const { return glm::uvec2(m_Specifications.Width, m_Specifications.Height); }
