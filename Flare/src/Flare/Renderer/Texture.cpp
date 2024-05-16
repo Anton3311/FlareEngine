@@ -247,6 +247,29 @@ namespace Flare
 		return nullptr;
 	}
 
+	bool IsDepthTextureFormat(TextureFormat format)
+	{
+		switch (format)
+		{
+		case TextureFormat::Depth24Stencil8:
+		case TextureFormat::Depth32:
+			return true;
+		}
+
+		return false;
+	}
+
+	bool HasStencilComponent(TextureFormat format)
+	{
+		switch (format)
+		{
+		case TextureFormat::Depth24Stencil8:
+			return true;
+		}
+
+		return false;
+	}
+
 	const char* TextureWrapToString(TextureWrap wrap)
 	{
 		switch (wrap)

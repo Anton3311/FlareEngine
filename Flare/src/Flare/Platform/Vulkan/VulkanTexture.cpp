@@ -15,6 +15,8 @@ namespace Flare
 			return VK_FORMAT_R8G8B8A8_UNORM;
 		case TextureFormat::RGBA8:
 			return VK_FORMAT_R8G8B8A8_UNORM;
+		case TextureFormat::R11G11B10:
+			return VK_FORMAT_B10G11R11_UFLOAT_PACK32;
 		case TextureFormat::R32G32B32:
 			return VK_FORMAT_R32G32B32_SFLOAT;
 		case TextureFormat::RG8:
@@ -25,6 +27,11 @@ namespace Flare
 			return VK_FORMAT_R16_SFLOAT;
 		case TextureFormat::R8:
 			return VK_FORMAT_R8_UNORM;
+
+		case TextureFormat::Depth24Stencil8:
+			return VK_FORMAT_D24_UNORM_S8_UINT;
+		case TextureFormat::Depth32:
+			return VK_FORMAT_D32_SFLOAT;
 
 		case TextureFormat::BC1_RGB:
 			return VK_FORMAT_BC1_RGB_UNORM_BLOCK;
@@ -46,10 +53,6 @@ namespace Flare
 	}
 
 
-
-	VulkanTexture::VulkanTexture()
-	{
-	}
 
 	VulkanTexture::VulkanTexture(uint32_t width, uint32_t height, const void* data, TextureFormat format, TextureFiltering filtering)
 	{
@@ -185,13 +188,25 @@ namespace Flare
 		imageViewInfo.components.a = VK_COMPONENT_SWIZZLE_A;
 		imageViewInfo.flags = 0;
 		imageViewInfo.format = imageFormat;
-		imageViewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 		imageViewInfo.subresourceRange.baseArrayLayer = 0;
 		imageViewInfo.subresourceRange.baseMipLevel = 0;
 		imageViewInfo.subresourceRange.layerCount = 1;
 		imageViewInfo.subresourceRange.levelCount = imageInfo.mipLevels;
 		imageViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
 		imageViewInfo.image = m_Image;
+
+		{
+			bool isDepth = IsDepthTextureFormat(m_Specifications.Format);
+			bool hasStencil = HasStencilComponent(m_Specifications.Format);
+
+			if (isDepth)
+				imageViewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+			if (hasStencil)
+				imageViewInfo.subresourceRange.aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
+
+			if (!isDepth && !hasStencil)
+				imageViewInfo.subresourceRange.aspectMask |= VK_IMAGE_ASPECT_COLOR_BIT;
+		}
 
 		VK_CHECK_RESULT(vkCreateImageView(VulkanContext::GetInstance().GetDevice(), &imageViewInfo, nullptr, &m_ImageView));
 
