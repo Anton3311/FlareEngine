@@ -29,6 +29,7 @@ namespace Flare
 		R11G11B10,
 
 		R32G32B32,
+		R32G32B32A32,
 
 		RG8,
 		RG16,
@@ -122,7 +123,10 @@ namespace Flare
 		virtual uint32_t GetHeight() const = 0;
 		virtual TextureFormat GetFormat() const = 0;
 		virtual TextureFiltering GetFiltering() const = 0;
+
+		virtual void Resize(uint32_t width, uint32_t height) = 0;
 	public:
+		static Ref<Texture> Create(const TextureSpecifications& specifications);
 		static Ref<Texture> Create(const std::filesystem::path& path, const TextureSpecifications& specifications);
 		static Ref<Texture> Create(uint32_t width, uint32_t height, const void* data, TextureFormat format, TextureFiltering filtering = TextureFiltering::Linear);
 		static Ref<Texture> Create(const TextureSpecifications& specifications, const TextureData& textureData);

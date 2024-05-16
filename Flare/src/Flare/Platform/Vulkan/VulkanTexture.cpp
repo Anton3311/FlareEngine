@@ -19,6 +19,8 @@ namespace Flare
 			return VK_FORMAT_B10G11R11_UFLOAT_PACK32;
 		case TextureFormat::R32G32B32:
 			return VK_FORMAT_R32G32B32_SFLOAT;
+		case TextureFormat::R32G32B32A32:
+			return VK_FORMAT_R32G32B32A32_SFLOAT;
 		case TextureFormat::RG8:
 			return VK_FORMAT_R8G8_UNORM;
 		case TextureFormat::RG16:
@@ -53,6 +55,18 @@ namespace Flare
 	}
 
 
+
+	VulkanTexture::VulkanTexture(const TextureSpecifications& specifications, VkImage image, VkImageView imageView)
+		: m_Specifications(specifications), m_Image(image), m_ImageView(imageView), m_OwnsImages(false)
+	{
+		CreateSampler();
+	}
+
+	VulkanTexture::VulkanTexture(const TextureSpecifications& specifications)
+		: m_Specifications(specifications)
+	{
+		CreateResources();
+	}
 
 	VulkanTexture::VulkanTexture(uint32_t width, uint32_t height, const void* data, TextureFormat format, TextureFiltering filtering)
 	{
@@ -104,14 +118,11 @@ namespace Flare
 	VulkanTexture::~VulkanTexture()
 	{
 		FLARE_CORE_ASSERT(VulkanContext::GetInstance().IsValid());
-		VulkanContext::GetInstance().NotifyImageViewDeletionHandler(m_ImageView);
 
-		vmaFreeMemory(VulkanContext::GetInstance().GetMemoryAllocator(), m_Allocation.Handle);
+		ReleaseImage();
+		vkDestroySampler(VulkanContext::GetInstance().GetDevice(), m_DefaultSampler, nullptr);
 
-		VkDevice device = VulkanContext::GetInstance().GetDevice();
-		vkDestroySampler(device, m_DefaultSampler, nullptr);
-		vkDestroyImageView(device, m_ImageView, nullptr);
-		vkDestroyImage(device, m_Image, nullptr);
+		m_DefaultSampler = VK_NULL_HANDLE;
 	}
 
 	void VulkanTexture::SetData(const void* data, size_t size)
@@ -143,7 +154,26 @@ namespace Flare
 		return m_Specifications.Filtering;
 	}
 
+	void VulkanTexture::Resize(uint32_t width, uint32_t height)
+	{
+		FLARE_CORE_ASSERT(m_OwnsImages);
+		FLARE_CORE_ASSERT(width > 0 && height > 0);
+
+		ReleaseImage();
+
+		m_Specifications.Width = width;
+		m_Specifications.Height = height;
+
+		CreateImage();
+	}
+
 	void VulkanTexture::CreateResources()
+	{
+		CreateImage();
+		CreateSampler();
+	}
+
+	void VulkanTexture::CreateImage()
 	{
 		VkFormat imageFormat = TextureFormatToVulkanFormat(m_Specifications.Format);
 		FLARE_CORE_ASSERT(imageFormat != VK_FORMAT_UNDEFINED);
@@ -165,6 +195,9 @@ namespace Flare
 		imageInfo.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 		imageInfo.mipLevels = m_MipLevels;
 
+		// TODO: Add TextureUsage::Blit?
+		imageInfo.usage |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+
 		if (m_MipLevels > 1)
 		{
 			imageInfo.usage |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
@@ -173,7 +206,12 @@ namespace Flare
 		if (HAS_BIT(m_Specifications.Usage, TextureUsage::Sampling))
 			imageInfo.usage |= VK_IMAGE_USAGE_SAMPLED_BIT;
 		if (HAS_BIT(m_Specifications.Usage, TextureUsage::RenderTarget))
-			imageInfo.usage |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+		{
+			if (IsDepthTextureFormat(m_Specifications.Format))
+				imageInfo.usage |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+			else
+				imageInfo.usage |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+		}
 
 		VmaAllocationCreateInfo allocation{};
 		allocation.usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
@@ -201,15 +239,22 @@ namespace Flare
 
 			if (isDepth)
 				imageViewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+
+			// TODO: Do something with stencil aspect
+#if 0
 			if (hasStencil)
 				imageViewInfo.subresourceRange.aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
+#endif
 
 			if (!isDepth && !hasStencil)
 				imageViewInfo.subresourceRange.aspectMask |= VK_IMAGE_ASPECT_COLOR_BIT;
 		}
 
 		VK_CHECK_RESULT(vkCreateImageView(VulkanContext::GetInstance().GetDevice(), &imageViewInfo, nullptr, &m_ImageView));
+	}
 
+	void VulkanTexture::CreateSampler()
+	{
 		VkSamplerAddressMode addressMode = VK_SAMPLER_ADDRESS_MODE_REPEAT;
 		switch (m_Specifications.Wrap)
 		{
@@ -437,5 +482,18 @@ namespace Flare
 		}
 
 		return pixelSize;
+	}
+
+	void VulkanTexture::ReleaseImage()
+	{
+		VkDevice device = VulkanContext::GetInstance().GetDevice();
+		if (m_OwnsImages)
+		{
+			VulkanContext::GetInstance().NotifyImageViewDeletionHandler(m_ImageView);
+			vmaFreeMemory(VulkanContext::GetInstance().GetMemoryAllocator(), m_Allocation.Handle);
+
+			vkDestroyImageView(device, m_ImageView, nullptr);
+			vkDestroyImage(device, m_Image, nullptr);
+		}
 	}
 }

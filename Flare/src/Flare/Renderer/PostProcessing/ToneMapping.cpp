@@ -40,7 +40,7 @@ namespace Flare
 		if (!Enabled || !Renderer::GetCurrentViewport().PostProcessingEnabled)
 			return;
 
-		FrameBufferTextureFormat formats[] = { FrameBufferTextureFormat::RGB8 };
+		TextureFormat formats[] = { TextureFormat::RGB8 };
 
 		Ref<FrameBuffer> output = context.RTPool.GetFullscreen(Span(formats, 1));
 

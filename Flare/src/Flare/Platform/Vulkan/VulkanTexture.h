@@ -12,6 +12,8 @@ namespace Flare
 	class VulkanTexture : public Texture
 	{
 	public:
+		VulkanTexture(const TextureSpecifications& specifications, VkImage image, VkImageView imageView);
+		VulkanTexture(const TextureSpecifications& specifications);
 		VulkanTexture(uint32_t width, uint32_t height, const void* data, TextureFormat format, TextureFiltering filtering);
 		VulkanTexture(const TextureSpecifications& specifications, const void* data);
 		VulkanTexture(const TextureSpecifications& specifications, const TextureData& data);
@@ -24,18 +26,26 @@ namespace Flare
 		TextureFormat GetFormat() const override;
 		TextureFiltering GetFiltering() const override;
 
+		void Resize(uint32_t width, uint32_t height) override;
+
 		inline VkImage GetImageHandle() const { return m_Image; }
 		inline VkImageView GetImageViewHandle() const { return m_ImageView; }
 		inline VkSampler GetDefaultSampler() const { return m_DefaultSampler; }
 	private:
 		void CreateResources();
+		void CreateImage();
+		void CreateSampler();
 		void UploadPixelData(const TextureData& data);
 		size_t GetImagePixelSizeInBytes();
+
+		void ReleaseImage();
 	private:
 		TextureSpecifications m_Specifications;
 		VulkanAllocation m_Allocation;
 
 		uint32_t m_MipLevels = 1;
+
+		bool m_OwnsImages = true;
 		
 		VkImage m_Image = VK_NULL_HANDLE;
 		VkImageView m_ImageView = VK_NULL_HANDLE;

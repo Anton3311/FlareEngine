@@ -166,9 +166,9 @@ namespace Flare
 	void ViewportWindow::CreateFrameBuffer()
 	{
 		FrameBufferSpecifications specifications(m_Viewport.GetSize().x, m_Viewport.GetSize().y, {
-			{ FrameBufferTextureFormat::R11G11B10, TextureWrap::Clamp, TextureFiltering::Closest },
-			{ FrameBufferTextureFormat::RGB8, TextureWrap::Clamp, TextureFiltering::Closest },
-			{ FrameBufferTextureFormat::Depth, TextureWrap::Clamp, TextureFiltering::Closest },
+			{ TextureFormat::R11G11B10, TextureWrap::Clamp, TextureFiltering::Closest },
+			{ TextureFormat::RGB8, TextureWrap::Clamp, TextureFiltering::Closest },
+			{ TextureFormat::Depth24Stencil8, TextureWrap::Clamp, TextureFiltering::Closest },
 		});
 
 		m_Viewport.ColorAttachmentIndex = 0;

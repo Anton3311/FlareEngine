@@ -18,13 +18,13 @@ namespace Flare
         return target;
     }
 
-    Ref<FrameBuffer> RenderTargetsPool::GetFullscreen(const Span<FrameBufferTextureFormat>& formats)
+    Ref<FrameBuffer> RenderTargetsPool::GetFullscreen(const Span<TextureFormat>& formats)
     {
         auto it = m_FullscreenTargets.find(formats);
         if (it == m_FullscreenTargets.end())
         {
             FullscreenRenderTargetEntry entry{};
-            entry.Formats = std::vector<FrameBufferTextureFormat>(formats.begin(), formats.end());
+            entry.Formats = std::vector<TextureFormat>(formats.begin(), formats.end());
 
             FrameBufferSpecifications& specifications = entry.Specifications;
             specifications.Width = m_ViewportSize.x;
@@ -42,7 +42,7 @@ namespace Flare
 
             entry.Pool.push_back(renderTarget);
 
-            m_FullscreenTargets.emplace(Span<FrameBufferTextureFormat>::FromVector(entry.Formats), std::move(entry));
+            m_FullscreenTargets.emplace(Span<TextureFormat>::FromVector(entry.Formats), std::move(entry));
             return renderTarget;
         }
         else
@@ -76,7 +76,7 @@ namespace Flare
         }
     }
 
-    void RenderTargetsPool::ReturnFullscreen(Span<FrameBufferTextureFormat> formats, Ref<FrameBuffer> renderTarget)
+    void RenderTargetsPool::ReturnFullscreen(Span<TextureFormat> formats, Ref<FrameBuffer> renderTarget)
     {
         auto it = m_FullscreenTargets.find(formats);
         FLARE_CORE_ASSERT(it != m_FullscreenTargets.end());

@@ -100,7 +100,7 @@ namespace Flare
 			lutSpecifications.Width = SunTransmittanceLUTSize;
 			lutSpecifications.Height = SunTransmittanceLUTSize;
 			lutSpecifications.Attachments.emplace_back(FrameBufferAttachmentSpecifications{
-				FrameBufferTextureFormat::R32G32B32A32,
+				TextureFormat::R32G32B32A32,
 				TextureWrap::Clamp,
 				TextureFiltering::Linear
 			});

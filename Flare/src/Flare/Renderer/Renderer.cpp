@@ -693,7 +693,7 @@ namespace Flare
 				FrameBufferSpecifications shadowMapSpecs;
 				shadowMapSpecs.Width = size;
 				shadowMapSpecs.Height = size;
-				shadowMapSpecs.Attachments = { { FrameBufferTextureFormat::Depth, TextureWrap::Clamp, TextureFiltering::Closest } };
+				shadowMapSpecs.Attachments = { { TextureFormat::Depth24Stencil8, TextureWrap::Clamp, TextureFiltering::Closest } };
 
 				for (size_t i = 0; i < 4; i++)
 					s_RendererData.ShadowsRenderTarget[i] = FrameBuffer::Create(shadowMapSpecs);

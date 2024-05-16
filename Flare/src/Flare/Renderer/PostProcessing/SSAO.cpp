@@ -67,8 +67,8 @@ namespace Flare
 		if (m_Material == nullptr || m_BlurMaterial == nullptr)
 			return;
 
-		FrameBufferTextureFormat formats[] = { FrameBufferTextureFormat::RF32 };
-		FrameBufferTextureFormat colorFormats[] = { FrameBufferTextureFormat::RGB8 };
+		TextureFormat formats[] = { TextureFormat::RF32 };
+		TextureFormat colorFormats[] = { TextureFormat::RGB8 };
 		Ref<FrameBuffer> intermediateAOTarget = context.RTPool.GetFullscreen(Span(formats, 1));
 		Ref<FrameBuffer> intermediateColorTarget = context.RTPool.GetFullscreen(Span(colorFormats, 1));
 

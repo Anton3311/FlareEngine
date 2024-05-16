@@ -52,7 +52,7 @@ namespace Flare
 
 	struct FrameBufferAttachmentSpecifications
 	{
-		FrameBufferTextureFormat Format;
+		TextureFormat Format;
 		TextureWrap Wrap;
 		TextureFiltering Filtering;
 	};
@@ -83,7 +83,8 @@ namespace Flare
 		virtual uint32_t GetColorAttachmentsCount() const = 0;
 		virtual std::optional<uint32_t> GetDepthAttachmentIndex() const = 0;
 
-		virtual void ClearAttachment(uint32_t index, const void* value) = 0;
+		virtual Ref<Texture> GetAttachment(uint32_t index) const = 0;
+
 		virtual void ReadPixel(uint32_t attachmentIndex, uint32_t x, uint32_t y, void* pixelOutput) = 0;
 		virtual void BindAttachmentTexture(uint32_t attachment, uint32_t slot = 0) = 0;
 

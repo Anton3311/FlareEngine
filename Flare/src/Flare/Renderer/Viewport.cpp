@@ -6,7 +6,7 @@ namespace Flare
 		: m_Position(0), m_Size(0)
 	{
 		FrameBufferSpecifications specs = FrameBufferSpecifications(0, 0, {
-			{ FrameBufferTextureFormat::RGB8, TextureWrap::Clamp, TextureFiltering::Linear }
+			{ TextureFormat::RGB8, TextureWrap::Clamp, TextureFiltering::Linear }
 		});
 
 		RTPool.SetSpecifications(specs);

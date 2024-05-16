@@ -14,6 +14,18 @@ namespace Flare
 	FLARE_IMPL_ASSET(Texture);
 	FLARE_SERIALIZABLE_IMPL(Texture);
 
+	Ref<Texture> Texture::Create(const TextureSpecifications& specifications)
+	{
+		switch (RendererAPI::GetAPI())
+		{
+		case RendererAPI::API::Vulkan:
+			return CreateRef<VulkanTexture>(specifications);
+		}
+
+		FLARE_CORE_ASSERT(false);
+		return nullptr;
+	}
+
 	Ref<Texture> Texture::Create(const std::filesystem::path& path, const TextureSpecifications& specifications)
 	{
 		TextureData data;

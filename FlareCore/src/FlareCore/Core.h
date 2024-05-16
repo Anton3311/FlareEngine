@@ -43,7 +43,7 @@
 	constexpr bool operator==(enumName a, int32_t b) { return (int32_t)a == b; } \
 	constexpr bool operator!=(enumName a, int32_t b) { return (int32_t)a != b; }
 
-#define HAS_BIT(value, bit) ((value & bit) != 0)
+#define HAS_BIT(value, bit) (((value) & (bit)) == (bit))
 
 namespace Flare
 {

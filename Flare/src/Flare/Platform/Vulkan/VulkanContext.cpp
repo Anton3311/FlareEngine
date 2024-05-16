@@ -400,7 +400,7 @@ namespace Flare
 		vkFreeCommandBuffers(m_Device, m_CommandBufferPool, 1, &buffer);
 	}
 
-	Ref<VulkanRenderPass> VulkanContext::FindOrCreateRenderPass(Span<FrameBufferTextureFormat> formats)
+	Ref<VulkanRenderPass> VulkanContext::FindOrCreateRenderPass(Span<TextureFormat> formats)
 	{
 		FLARE_PROFILE_FUNCTION();
 		RenderPassKey key;
@@ -415,14 +415,14 @@ namespace Flare
 			{
 				auto& description = descriptions[i];
 
-				description.format = FrameBufferAttachmentFormatToVulkanFormat(formats[i]);
+				description.format = TextureFormatToVulkanFormat(formats[i]);
 				description.samples = VK_SAMPLE_COUNT_1_BIT;
 				description.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
 				description.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
 				description.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 				description.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
 
-				if (IsDepthFormat(formats[i]))
+				if (IsDepthTextureFormat(formats[i]))
 				{
 					depthAttachmentIndex = (uint32_t)i;
 					description.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
@@ -919,11 +919,21 @@ namespace Flare
 		m_SwapChainFrameBuffers.resize(m_FramesInFlight);
 		for (uint32_t i = 0; i < m_FramesInFlight; i++)
 		{
+			TextureSpecifications specifications{};
+			specifications.Width = m_SwapChainExtent.x;
+			specifications.Height = m_SwapChainExtent.y;
+			specifications.Filtering = TextureFiltering::Closest;
+			specifications.Wrap = TextureWrap::Clamp;
+			specifications.Usage = TextureUsage::RenderTarget;
+			specifications.GenerateMipMaps = false;
+			specifications.Format = TextureFormat::RGBA8;
+
+			Ref<Texture> attachmentTexture = CreateRef<VulkanTexture>(specifications, m_SwapChainImages[i], m_SwapChainImageViews[i]);
 			m_SwapChainFrameBuffers[i] = CreateRef<VulkanFrameBuffer>(
 				m_SwapChainExtent.x,
 				m_SwapChainExtent.y,
 				m_ColorOnlyPass,
-				Span<VkImageView>(m_SwapChainImageViews[i]));
+				Span<Ref<Texture>>(&attachmentTexture, 1));
 		}
 	}
 
