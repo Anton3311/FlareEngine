@@ -16,10 +16,18 @@ namespace Flare
 
 	Ref<Texture> Texture::Create(const std::filesystem::path& path, const TextureSpecifications& specifications)
 	{
+		TextureData data;
+		TextureSpecifications newSpecifications = specifications;
+		if (!Texture::ReadDataFromFile(path, newSpecifications, data))
+		{
+			FLARE_CORE_ERROR("Failed to load texture: {}", path.generic_string());
+			return nullptr;
+		}
+
 		switch (RendererAPI::GetAPI())
 		{
 		case RendererAPI::API::Vulkan:
-			return CreateRef<VulkanTexture>(path, specifications);
+			return CreateRef<VulkanTexture>(newSpecifications, data);
 		}
 
 		return nullptr;

@@ -33,8 +33,6 @@ namespace Flare
 		uint32_t NormalsAttachmentIndex = UINT32_MAX;
 		uint32_t DepthAttachmentIndex = UINT32_MAX;
 	private:
-		bool m_IsDirty;
-
 		glm::ivec2 m_Position;
 		glm::ivec2 m_Size;
 	};

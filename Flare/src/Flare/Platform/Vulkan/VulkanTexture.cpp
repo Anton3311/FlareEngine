@@ -51,44 +51,6 @@ namespace Flare
 	{
 	}
 
-	VulkanTexture::VulkanTexture(const std::filesystem::path& path, const TextureSpecifications& specifications)
-		: m_Specifications(specifications)
-	{
-		int width, height, channels;
-		stbi_set_flip_vertically_on_load(true);
-		stbi_uc* data = stbi_load(path.string().c_str(), &width, &height, &channels, 0);
-
-		if (!data)
-		{
-			FLARE_CORE_ERROR("Failed to load texture: {}", path.string());
-			return;
-		}
-
-		m_Specifications = specifications;
-		m_Specifications.Width = width;
-		m_Specifications.Height = height;
-		
-		if (channels == 3)
-			m_Specifications.Format = TextureFormat::RGB8;
-		else if (channels == 4)
-			m_Specifications.Format = TextureFormat::RGBA8;
-
-		TextureData textureData{};
-		auto& mip = textureData.Mips.emplace_back();
-		mip.Data = data;
-		mip.SizeInBytes = m_Specifications.Width * m_Specifications.Height * GetImagePixelSizeInBytes();
-
-		if (m_Specifications.GenerateMipMaps)
-		{
-			m_MipLevels = (uint32_t)glm::floor(glm::log2((float)glm::max(m_Specifications.Width, m_Specifications.Height))) + 1u;
-		}
-
-		CreateResources();
-		UploadPixelData(textureData);
-
-		stbi_image_free(data);
-	}
-
 	VulkanTexture::VulkanTexture(uint32_t width, uint32_t height, const void* data, TextureFormat format, TextureFiltering filtering)
 	{
 		m_Specifications.Width = width;
@@ -149,10 +111,6 @@ namespace Flare
 		vkDestroyImage(device, m_Image, nullptr);
 	}
 
-	void VulkanTexture::Bind(uint32_t slot)
-	{
-	}
-
 	void VulkanTexture::SetData(const void* data, size_t size)
 	{
 	}
@@ -201,13 +159,18 @@ namespace Flare
 		imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
 		imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 		imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
-		imageInfo.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+		imageInfo.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 		imageInfo.mipLevels = m_MipLevels;
 
 		if (m_MipLevels > 1)
 		{
 			imageInfo.usage |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
 		}
+
+		if (HAS_BIT(m_Specifications.Usage, TextureUsage::Sampling))
+			imageInfo.usage |= VK_IMAGE_USAGE_SAMPLED_BIT;
+		if (HAS_BIT(m_Specifications.Usage, TextureUsage::RenderTarget))
+			imageInfo.usage |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
 		VmaAllocationCreateInfo allocation{};
 		allocation.usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;

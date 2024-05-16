@@ -16,6 +16,7 @@ namespace Flare
 	ViewportWindow::ViewportWindow(std::string_view name)
 		: m_Name(name),
 		m_IsFocused(false),
+		m_IsVisible(true),
 		m_PreviousFocusState(false),
 		m_IsHovered(false),
 		ShowWindow(true),

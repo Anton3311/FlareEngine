@@ -55,12 +55,11 @@ namespace Flare
 		std::string m_Name;
 		Ref<Scene> m_Scene;
 		Viewport m_Viewport;
+
 		bool m_PreviousFocusState;
 		bool m_IsFocused;
 		bool m_IsHovered;
-
 		bool m_WindowFocusRequested;
-
 		bool m_IsVisible;
 
 		glm::ivec2 m_RelativeMousePosition;

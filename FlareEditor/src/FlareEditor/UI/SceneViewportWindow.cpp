@@ -260,22 +260,12 @@ namespace Flare
 		FrameBufferSpecifications renderTargetSpec(m_Viewport.GetSize().x, m_Viewport.GetSize().y, {
 			{ FrameBufferTextureFormat::R11G11B10, TextureWrap::Clamp, TextureFiltering::Closest },
 			{ FrameBufferTextureFormat::RGB8, TextureWrap::Clamp, TextureFiltering::Closest },
+			{ FrameBufferTextureFormat::Depth, TextureWrap::Clamp, TextureFiltering::Closest }
 		});
 
 		m_Viewport.ColorAttachmentIndex = 0;
 		m_Viewport.NormalsAttachmentIndex = 1;
-
-		if (RendererAPI::GetAPI() != RendererAPI::API::Vulkan)
-		{
-			renderTargetSpec.Attachments.push_back({ FrameBufferTextureFormat::RedInteger, TextureWrap::Clamp, TextureFiltering::Closest });
-			renderTargetSpec.Attachments.push_back({ FrameBufferTextureFormat::Depth, TextureWrap::Clamp, TextureFiltering::Closest });
-			m_Viewport.DepthAttachmentIndex = 3;
-		}
-		else
-		{
-			renderTargetSpec.Attachments.push_back({ FrameBufferTextureFormat::Depth, TextureWrap::Clamp, TextureFiltering::Closest });
-			m_Viewport.DepthAttachmentIndex = 2;
-		}
+		m_Viewport.DepthAttachmentIndex = 2;
 
 		m_Viewport.RenderTarget = FrameBuffer::Create(renderTargetSpec);
 	}

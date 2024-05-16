@@ -3,7 +3,7 @@
 namespace Flare
 {
 	Viewport::Viewport()
-		: m_Position(0), m_Size(0), m_IsDirty(false)
+		: m_Position(0), m_Size(0)
 	{
 		FrameBufferSpecifications specs = FrameBufferSpecifications(0, 0, {
 			{ FrameBufferTextureFormat::RGB8, TextureWrap::Clamp, TextureFiltering::Linear }
@@ -16,7 +16,7 @@ namespace Flare
 	{
 		m_Position = position;
 		m_Size = size;
-		
+
 		RTPool.OnViewportResize((glm::uvec2)m_Size);
 	}
 }

@@ -54,6 +54,15 @@ namespace Flare
 		Linear,
 	};
 
+	enum class TextureUsage : uint8_t
+	{
+		None = 0,
+		Sampling = 1,
+		RenderTarget = 2,
+	};
+
+	FLARE_IMPL_ENUM_BITFIELD(TextureUsage);
+
 	struct TextureSpecifications
 	{
 		static constexpr uint32_t DefaultMipLevelsCount = 4;
@@ -63,6 +72,7 @@ namespace Flare
 		TextureFormat Format = TextureFormat::RGB8;
 		TextureFiltering Filtering = TextureFiltering::Linear;
 		TextureWrap Wrap = TextureWrap::Clamp;
+		TextureUsage Usage = TextureUsage::Sampling;
 
 		bool GenerateMipMaps = false;
 	};
@@ -97,7 +107,6 @@ namespace Flare
 		Texture()
 			: Asset(AssetType::Texture) {}
 
-		virtual void Bind(uint32_t slot = 0) = 0;
 		virtual void SetData(const void* data, size_t size) = 0;
 
 		virtual const TextureSpecifications& GetSpecifications() const = 0;
