@@ -10,7 +10,7 @@
 namespace Flare
 {
 	VulkanFrameBuffer::VulkanFrameBuffer(const FrameBufferSpecifications& specifications)
-		: m_Specifications(specifications), m_OwnsAttachmentTextures(true)
+		: m_Specifications(specifications), m_ShouldTransitionToDefaultLayout(true)
 	{
 		FLARE_CORE_ASSERT(m_Specifications.Width > 0 && m_Specifications.Height > 0);
 
@@ -18,8 +18,44 @@ namespace Flare
 		Create();
 	}
 
-	VulkanFrameBuffer::VulkanFrameBuffer(uint32_t width, uint32_t height, const Ref<VulkanRenderPass>& compatibleRenderPass, const Span<Ref<Texture>>& attachmentTextures)
-		: m_CompatibleRenderPass(compatibleRenderPass), m_OwnsAttachmentTextures(false)
+	VulkanFrameBuffer::VulkanFrameBuffer(Span<Ref<Texture>> attachmentTextures)
+		: m_ShouldTransitionToDefaultLayout(true)
+	{
+		FLARE_CORE_ASSERT(attachmentTextures.GetSize() > 0);
+
+		for (size_t i = 0; i < attachmentTextures.GetSize(); i++)
+		{
+			Ref<Texture> attachment = attachmentTextures[i];
+			FLARE_CORE_ASSERT(attachment != nullptr);
+
+			if (i == 0)
+			{
+				m_Specifications.Width = attachment->GetWidth();
+				m_Specifications.Height = attachment->GetHeight();
+
+				FLARE_CORE_ASSERT(m_Specifications.Width > 0 && m_Specifications.Height > 0);
+			}
+
+			FLARE_CORE_ASSERT(attachment->GetWidth() == m_Specifications.Width);
+			FLARE_CORE_ASSERT(attachment->GetHeight() == m_Specifications.Height);
+			FLARE_CORE_ASSERT(HAS_BIT(attachment->GetSpecifications().Usage, TextureUsage::Sampling | TextureUsage::RenderTarget));
+
+			auto& attachmentSpecifications = m_Specifications.Attachments.emplace_back();
+			attachmentSpecifications.Filtering = attachment->GetFiltering();
+			attachmentSpecifications.Format = attachment->GetFormat();
+			attachmentSpecifications.Wrap = attachment->GetSpecifications().Wrap;
+
+			m_Attachments.push_back(As<VulkanTexture>(attachment));
+		}
+
+		Create();
+	}
+
+	VulkanFrameBuffer::VulkanFrameBuffer(uint32_t width, uint32_t height,
+		const Ref<VulkanRenderPass>& compatibleRenderPass,
+		const Span<Ref<Texture>>& attachmentTextures,
+		bool transitionToDefaultLayout)
+		: m_CompatibleRenderPass(compatibleRenderPass), m_ShouldTransitionToDefaultLayout(transitionToDefaultLayout)
 	{
 		FLARE_CORE_ASSERT(attachmentTextures.GetSize() > 0);
 		FLARE_CORE_ASSERT(width > 0 && height > 0);
@@ -144,25 +180,7 @@ namespace Flare
 
 		VK_CHECK_RESULT(vkCreateFramebuffer(VulkanContext::GetInstance().GetDevice(), &info, nullptr, &m_FrameBuffer));
 
-		if (m_OwnsAttachmentTextures)
-		{
-			FLARE_PROFILE_SCOPE("TransitionLayouts");
-			Ref<VulkanCommandBuffer> commandBuffer = VulkanContext::GetInstance().BeginTemporaryCommandBuffer();
-			for (size_t i = 0; i < m_Attachments.size(); i++)
-			{
-				if (IsDepthTextureFormat(m_Specifications.Attachments[i].Format))
-				{
-					commandBuffer->TransitionDepthImageLayout(m_Attachments[i]->GetImageHandle(),
-						HasStencilComponent(m_Specifications.Attachments[i].Format),
-						VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-				}
-				else
-				{
-					commandBuffer->TransitionImageLayout(m_Attachments[i]->GetImageHandle(), VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-				}
-			}
-			VulkanContext::GetInstance().EndTemporaryCommandBuffer(commandBuffer);
-		}
+		TransitionToDefaultImageLayout();
 	}
 
 	void VulkanFrameBuffer::CreateImages()
@@ -186,5 +204,31 @@ namespace Flare
 	void VulkanFrameBuffer::ReleaseImages()
 	{
 		m_Attachments.clear();
+	}
+
+	void VulkanFrameBuffer::TransitionToDefaultImageLayout()
+	{
+		FLARE_PROFILE_SCOPE("TransitionLayouts");
+
+		if (!m_ShouldTransitionToDefaultLayout)
+			return;
+
+		Ref<VulkanCommandBuffer> commandBuffer = VulkanContext::GetInstance().BeginTemporaryCommandBuffer();
+
+		for (size_t i = 0; i < m_Attachments.size(); i++)
+		{
+			if (IsDepthTextureFormat(m_Specifications.Attachments[i].Format))
+			{
+				commandBuffer->TransitionDepthImageLayout(m_Attachments[i]->GetImageHandle(),
+					HasStencilComponent(m_Specifications.Attachments[i].Format),
+					VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			}
+			else
+			{
+				commandBuffer->TransitionImageLayout(m_Attachments[i]->GetImageHandle(), VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			}
+		}
+
+		VulkanContext::GetInstance().EndTemporaryCommandBuffer(commandBuffer);
 	}
 }

@@ -16,7 +16,12 @@ namespace Flare
 	{
 	public:
 		VulkanFrameBuffer(const FrameBufferSpecifications& specifications);
-		VulkanFrameBuffer(uint32_t width, uint32_t height, const Ref<VulkanRenderPass>& compatibleRenderPass, const Span<Ref<Texture>>& attachmentTextures);
+		VulkanFrameBuffer(Span<Ref<Texture>> attachmentTextures);
+		VulkanFrameBuffer(uint32_t width, uint32_t height,
+			const Ref<VulkanRenderPass>& compatibleRenderPass,
+			const Span<Ref<Texture>>& attachmentTextures,
+			bool transitionToDefaultLayout);
+		
 		~VulkanFrameBuffer();
 
 		void Resize(uint32_t width, uint32_t height) override;
@@ -41,8 +46,9 @@ namespace Flare
 		void Create();
 		void CreateImages();
 		void ReleaseImages();
+		void TransitionToDefaultImageLayout();
 	private:
-		bool m_OwnsAttachmentTextures = true;
+		bool m_ShouldTransitionToDefaultLayout = true;
 		FrameBufferSpecifications m_Specifications;
 
 		VkFramebuffer m_FrameBuffer = VK_NULL_HANDLE;

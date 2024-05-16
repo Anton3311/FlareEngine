@@ -933,7 +933,8 @@ namespace Flare
 				m_SwapChainExtent.x,
 				m_SwapChainExtent.y,
 				m_ColorOnlyPass,
-				Span<Ref<Texture>>(&attachmentTexture, 1));
+				Span<Ref<Texture>>(&attachmentTexture, 1),
+				false);
 		}
 	}
 

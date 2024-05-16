@@ -49,6 +49,7 @@ namespace Flare
 			return glm::uvec2(specifications.Width, specifications.Height);
 		}
 	public:
+		static Ref<FrameBuffer> Create(Span<Ref<Texture>> attachmentTextures);
 		static Ref<FrameBuffer> Create(const FrameBufferSpecifications& specifications);
 	};
 }

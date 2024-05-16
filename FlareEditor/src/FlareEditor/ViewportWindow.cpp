@@ -165,16 +165,33 @@ namespace Flare
 
 	void ViewportWindow::CreateFrameBuffer()
 	{
-		FrameBufferSpecifications specifications(m_Viewport.GetSize().x, m_Viewport.GetSize().y, {
-			{ TextureFormat::R11G11B10, TextureWrap::Clamp, TextureFiltering::Closest },
-			{ TextureFormat::RGB8, TextureWrap::Clamp, TextureFiltering::Closest },
-			{ TextureFormat::Depth24Stencil8, TextureWrap::Clamp, TextureFiltering::Closest },
-		});
+		TextureSpecifications specifications{};
+		specifications.Width = m_Viewport.GetSize().x;
+		specifications.Height = m_Viewport.GetSize().y;
+		specifications.Wrap = TextureWrap::Clamp;
+		specifications.Filtering = TextureFiltering::Closest;
+		specifications.GenerateMipMaps = false;
+		specifications.Usage = TextureUsage::Sampling | TextureUsage::RenderTarget;
+
+		TextureSpecifications colorSpecifications = specifications;
+		colorSpecifications.Format = TextureFormat::R11G11B10;
+
+		TextureSpecifications normalsSpecifications = specifications;
+		normalsSpecifications.Format = TextureFormat::RGB8;
+
+		TextureSpecifications depthSpecifications = specifications;
+		depthSpecifications.Format = TextureFormat::Depth24Stencil8;
+
+		m_Viewport.ColorTexture = Texture::Create(colorSpecifications);
+		m_Viewport.NormalsTexture = Texture::Create(normalsSpecifications);
+		m_Viewport.DepthTexture = Texture::Create(depthSpecifications);
+
+		Ref<Texture> attachmentTextures[] = { m_Viewport.ColorTexture, m_Viewport.NormalsTexture, m_Viewport.DepthTexture };
 
 		m_Viewport.ColorAttachmentIndex = 0;
 		m_Viewport.NormalsAttachmentIndex = 1;
 		m_Viewport.DepthAttachmentIndex = 2;
-		m_Viewport.RenderTarget = FrameBuffer::Create(specifications);
+		m_Viewport.RenderTarget = FrameBuffer::Create(Span(attachmentTextures, 3));
 	}
 
 	void ViewportWindow::OnClear()
