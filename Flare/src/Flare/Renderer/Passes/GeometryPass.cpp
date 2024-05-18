@@ -134,6 +134,11 @@ namespace Flare
 		commandBuffer->StopTimer(m_Timer);
 	}
 
+	std::optional<float> GeometryPass::GetElapsedTime() const
+	{
+		return m_Timer->GetElapsedTime();
+	}
+
 	void GeometryPass::CullObjects()
 	{
 		FLARE_PROFILE_FUNCTION();

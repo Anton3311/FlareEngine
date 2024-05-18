@@ -32,6 +32,7 @@ namespace Flare
 		void OnRender(RenderingContext& context) override;
 
 		Ref<FrameBuffer> GetShadowRenderTarget(uint32_t index);
+		std::optional<float> GetElapsedTime() const;
 	private:
 		struct InstanceData
 		{

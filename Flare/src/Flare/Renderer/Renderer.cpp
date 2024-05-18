@@ -465,6 +465,9 @@ namespace Flare
 
 	void Renderer::EndScene()
 	{
+		s_RendererData.Statistics.GeometryPassTime += s_RendererData.Passes.Geometry->GetElapsedTime().value_or(0.0f);
+		s_RendererData.Statistics.ShadowPassTime += s_RendererData.Passes.Shadow->GetElapsedTime().value_or(0.0f);
+
 		s_RendererData.PointLights.clear();
 		s_RendererData.SpotLights.clear();
 	}

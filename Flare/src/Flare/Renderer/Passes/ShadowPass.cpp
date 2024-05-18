@@ -131,6 +131,11 @@ namespace Flare
 		return m_Cascades[index];
 	}
 
+	std::optional<float> ShadowPass::GetElapsedTime() const
+	{
+		return m_Timer->GetElapsedTime();
+	}
+
 	struct CascadeFrustum
 	{
 		static constexpr size_t LeftIndex = 0;
