@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Flare/Math/Math.h"
-#include "Flare/Renderer/UniformBuffer.h"
 
 #include "FlareCore/Core.h"
 #include "FlareCore/Log.h"

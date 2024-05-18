@@ -185,6 +185,7 @@ namespace Flare
 		static Ref<Texture> GetWhiteTexture();
 		static Ref<Texture> GetDefaultNormalMap();
 		static Ref<Material> GetErrorMaterial();
+		static Ref<Material> GetDepthOnlyMaterial();
 
 		static Ref<FrameBuffer> GetShadowsRenderTarget(size_t index);
 		static ShadowSettings& GetShadowSettings();
