@@ -30,6 +30,8 @@ namespace Flare
 			Ref<DescriptorSet> descriptorSets[MaxCascades]);
 
 		void OnRender(RenderingContext& context) override;
+
+		Ref<FrameBuffer> GetShadowRenderTarget(uint32_t index);
 	private:
 		struct InstanceData
 		{
