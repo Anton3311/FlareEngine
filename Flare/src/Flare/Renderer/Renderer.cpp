@@ -562,11 +562,16 @@ namespace Flare
 
 	void Renderer::ExecutePostProcessingPasses()
 	{
+		FLARE_PROFILE_FUNCTION();
+
+		s_RendererData.CurrentViewport->Graph.Execute(GraphicsContext::GetInstance().GetCommandBuffer());
+
+#if 0
 		if (!s_RendererData.CurrentViewport->PostProcessingEnabled)
 			return;
 
-		FLARE_PROFILE_FUNCTION();
 		ExecuteRenderPasses(s_RendererData.Passes.PostProcessingPasses);
+#endif
 	}
 
 	RendererSubmitionQueue& Renderer::GetOpaqueSubmitionQueue()

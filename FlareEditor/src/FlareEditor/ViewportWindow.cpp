@@ -202,7 +202,26 @@ namespace Flare
 		commandBuffer->ClearDepthAttachment(m_Viewport.RenderTarget, 1.0f);
 	}
 
-	void ViewportWindow::OnAttach() {}
+	void ViewportWindow::OnViewportChanged()
+	{
+		BuildRenderGraph();
+	}
+
+	void ViewportWindow::BuildRenderGraph()
+	{
+		m_Viewport.Graph.Clear();
+
+		RenderGraphPassSpecifications specifications{};
+		specifications.AddInput(m_Viewport.ColorTexture);
+		specifications.AddOutput(m_Viewport.ColorTexture, 0);
+
+		m_Viewport.Graph.AddPass(specifications, CreateRef<VignettePass>());
+		m_Viewport.Graph.Build();
+	}
+
+	void ViewportWindow::OnAttach()
+	{
+	}
 
 	void ViewportWindow::OnRenderImGui()
 	{

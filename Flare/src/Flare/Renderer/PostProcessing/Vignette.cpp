@@ -77,4 +77,38 @@ namespace Flare
 		stream.Serialize("Radius", SerializationValue(vignette.Radius));
 		stream.Serialize("Smoothness", SerializationValue(vignette.Smoothness));
 	}
+
+
+
+	VignettePass::VignettePass()
+	{
+		std::optional<AssetHandle> shaderHandle = ShaderLibrary::FindShader("Vignette");
+		if (!shaderHandle || !AssetManager::IsAssetHandleValid(shaderHandle.value()))
+		{
+			FLARE_CORE_ERROR("Vignette: Failed to find Vignette shader");
+			return;
+		}
+
+		Ref<Shader> shader = AssetManager::GetAsset<Shader>(shaderHandle.value());
+		m_Material = Material::Create(shader);
+	}
+
+	void VignettePass::OnRender(Ref<CommandBuffer> commandBuffer)
+	{
+		Ref<Shader> shader = m_Material->GetShader();
+
+		auto colorPropertyIndex = shader->GetPropertyIndex("u_Params.Color");
+		auto radiusPropertyIndex = shader->GetPropertyIndex("u_Params.Radius");
+		auto smoothnessPropertyIndex = shader->GetPropertyIndex("u_Params.Smoothness");
+
+		if (colorPropertyIndex)
+			m_Material->WritePropertyValue(*colorPropertyIndex, m_Color);
+		if (radiusPropertyIndex)
+			m_Material->WritePropertyValue(*radiusPropertyIndex, m_Radius);
+		if (smoothnessPropertyIndex)
+			m_Material->WritePropertyValue(*smoothnessPropertyIndex, m_Smoothness);
+
+		commandBuffer->ApplyMaterial(m_Material);
+		commandBuffer->DrawIndexed(RendererPrimitives::GetFullscreenQuadMesh(), 0, 0, 1);
+	}
 }

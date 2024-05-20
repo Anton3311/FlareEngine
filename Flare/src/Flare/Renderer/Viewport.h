@@ -5,6 +5,8 @@
 #include "Flare/Renderer/RenderData.h"
 #include "Flare/Renderer/RenderTargetsPool.h"
 
+#include "Flare/Renderer/RenderGraph/RenderGraph.h"
+
 #include <vector>
 #include <glm/glm.hpp>
 
@@ -29,6 +31,8 @@ namespace Flare
 		RenderData FrameData;
 		Ref<FrameBuffer> RenderTarget;
 		RenderTargetsPool RTPool;
+
+		RenderGraph Graph;
 
 		uint32_t ColorAttachmentIndex = UINT32_MAX;
 		uint32_t NormalsAttachmentIndex = UINT32_MAX;
