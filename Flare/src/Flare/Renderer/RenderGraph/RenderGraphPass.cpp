@@ -4,6 +4,11 @@
 
 namespace Flare
 {
+	void RenderGraphPassSpecifications::SetDebugName(std::string_view debugName)
+	{
+		m_DebugName = debugName;
+	}
+
 	void RenderGraphPassSpecifications::AddInput(const Ref<Texture>& texture)
 	{
 		FLARE_CORE_ASSERT(texture != nullptr);

@@ -38,7 +38,7 @@ namespace Flare
 	{
 	public:
 		VignettePass();
-		void OnRender(Ref<CommandBuffer> commandBuffer) override;
+		void OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer) override;
 	private:
 		Ref<Material> m_Material;
 		glm::vec4 m_Color = glm::vec4(1.0f);

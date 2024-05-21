@@ -10,6 +10,8 @@ namespace Flare
 	class FLARE_API RenderGraph
 	{
 	public:
+		using ResourceId = uint64_t;
+
 		void AddPass(const RenderGraphPassSpecifications& specifications, Ref<RenderGraphPass> pass);
 
 		void Execute(Ref<CommandBuffer> commandBuffer);

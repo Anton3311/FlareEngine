@@ -93,8 +93,10 @@ namespace Flare
 		m_Material = Material::Create(shader);
 	}
 
-	void VignettePass::OnRender(Ref<CommandBuffer> commandBuffer)
+	void VignettePass::OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
 	{
+		commandBuffer->BeginRenderTarget(context.GetRenderTarget());
+
 		Ref<Shader> shader = m_Material->GetShader();
 
 		auto colorPropertyIndex = shader->GetPropertyIndex("u_Params.Color");
@@ -110,5 +112,7 @@ namespace Flare
 
 		commandBuffer->ApplyMaterial(m_Material);
 		commandBuffer->DrawIndexed(RendererPrimitives::GetFullscreenQuadMesh(), 0, 0, 1);
+
+		commandBuffer->EndRenderTarget();
 	}
 }

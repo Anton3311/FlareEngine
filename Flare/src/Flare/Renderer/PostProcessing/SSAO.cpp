@@ -194,4 +194,139 @@ namespace Flare
 		context.RTPool.ReturnFullscreen(Span(formats, 1), intermediateAOTarget);
 		context.RTPool.ReturnFullscreen(Span(colorFormats, 1), intermediateColorTarget);
 	}
+
+
+
+	SSAOMainPass::SSAOMainPass(Ref<Texture> normalsTexture, Ref<Texture> depthTexture)
+		: m_NormalsTexture(normalsTexture), m_DepthTexture(depthTexture)
+	{
+		std::optional<AssetHandle> shaderHandle = ShaderLibrary::FindShader("SSAO");
+		if (shaderHandle && AssetManager::IsAssetHandleValid(shaderHandle.value()))
+		{
+			m_Material = Material::Create(AssetManager::GetAsset<Shader>(shaderHandle.value()));
+		}
+		else
+		{
+			FLARE_CORE_ERROR("SSAO: Failed to find SSAO shader");
+		}
+	}
+
+	void SSAOMainPass::OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
+	{
+		Ref<VulkanCommandBuffer> vulkanCommandBuffer = As<VulkanCommandBuffer>(commandBuffer);
+		vulkanCommandBuffer->TransitionImageLayout(
+			As<VulkanTexture>(m_NormalsTexture)->GetImageHandle(),
+			VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		vulkanCommandBuffer->TransitionDepthImageLayout(
+			As<VulkanTexture>(m_DepthTexture)->GetImageHandle(), true,
+			VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+		commandBuffer->BeginRenderTarget(context.GetRenderTarget());
+
+		auto biasIndex = m_Material->GetShader()->GetPropertyIndex("u_Params.Bias");
+		auto radiusIndex = m_Material->GetShader()->GetPropertyIndex("u_Params.SampleRadius");
+
+		auto normalsTextureIndex = m_Material->GetShader()->GetPropertyIndex("u_NormalsTexture");
+		auto depthTextureIndex = m_Material->GetShader()->GetPropertyIndex("u_DepthTexture");
+
+		m_Material->WritePropertyValue(*biasIndex, 0.0001f);
+		m_Material->WritePropertyValue(*radiusIndex, 0.5f);
+		m_Material->GetPropertyValue<TexturePropertyValue>(*normalsTextureIndex).SetTexture(m_NormalsTexture);
+		m_Material->GetPropertyValue<TexturePropertyValue>(*depthTextureIndex).SetTexture(m_DepthTexture);
+
+		commandBuffer->SetViewportAndScisors(Math::Rect(glm::vec2(0.0f, 0.0f), (glm::vec2)context.GetViewport().GetSize()));
+
+		commandBuffer->ApplyMaterial(m_Material);
+		commandBuffer->DrawIndexed(RendererPrimitives::GetFullscreenQuadMesh(), 0, 0, 1);
+
+		commandBuffer->EndRenderTarget();
+
+		vulkanCommandBuffer->TransitionImageLayout(
+			As<VulkanTexture>(m_NormalsTexture)->GetImageHandle(),
+			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+			VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+		vulkanCommandBuffer->TransitionDepthImageLayout(
+			As<VulkanTexture>(m_DepthTexture)->GetImageHandle(), true,
+			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+			VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
+	}
+
+
+
+	SSAOComposingPass::SSAOComposingPass(Ref<Texture> colorTexture, Ref<Texture> aoTexture)
+		: m_ColorTexture(colorTexture), m_AOTexture(aoTexture)
+	{
+		std::optional<AssetHandle> shaderHandle = ShaderLibrary::FindShader("SSAOBlur");
+		if (shaderHandle && AssetManager::IsAssetHandleValid(shaderHandle.value()))
+		{
+			m_Material = Material::Create(AssetManager::GetAsset<Shader>(shaderHandle.value()));
+		}
+		else
+		{
+			FLARE_CORE_ERROR("SSAO: Failed to find SSAO Blur shader");
+		}
+	}
+
+	void SSAOComposingPass::OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
+	{
+		Ref<VulkanCommandBuffer> vulkanCommandBuffer = As<VulkanCommandBuffer>(commandBuffer);
+		vulkanCommandBuffer->TransitionImageLayout(
+			As<VulkanTexture>(m_AOTexture)->GetImageHandle(),
+			VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		vulkanCommandBuffer->TransitionImageLayout(
+			As<VulkanTexture>(m_ColorTexture)->GetImageHandle(),
+			VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+		commandBuffer->BeginRenderTarget(context.GetRenderTarget());
+
+		commandBuffer->SetViewportAndScisors(Math::Rect(glm::vec2(0.0f, 0.0f), (glm::vec2)context.GetViewport().GetSize()));
+		glm::vec2 texelSize = glm::vec2(1.0f) / (glm::vec2)context.GetViewport().GetSize();
+
+		auto colorTextureIndex = m_Material->GetShader()->GetPropertyIndex("u_ColorTexture");
+		auto aoTextureIndex = m_Material->GetShader()->GetPropertyIndex("u_AOTexture");
+		auto blurSizePropertyIndex = m_Material->GetShader()->GetPropertyIndex("u_Params.BlurSize");
+		auto texelSizePropertyIndex = m_Material->GetShader()->GetPropertyIndex("u_Params.TexelSize");
+
+		m_Material->WritePropertyValue(*blurSizePropertyIndex, 2.0f);
+		m_Material->WritePropertyValue(*texelSizePropertyIndex, texelSize);
+		m_Material->GetPropertyValue<TexturePropertyValue>(*aoTextureIndex).SetTexture(m_AOTexture);
+		m_Material->GetPropertyValue<TexturePropertyValue>(*colorTextureIndex).SetTexture(m_ColorTexture);
+
+		commandBuffer->ApplyMaterial(m_Material);
+		commandBuffer->DrawIndexed(RendererPrimitives::GetFullscreenQuadMesh(), 0, 0, 1);
+
+		commandBuffer->EndRenderTarget();
+
+		vulkanCommandBuffer->TransitionImageLayout(
+			As<VulkanTexture>(m_AOTexture)->GetImageHandle(),
+			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+			VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+		vulkanCommandBuffer->TransitionImageLayout(
+			As<VulkanTexture>(m_ColorTexture)->GetImageHandle(),
+			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+			VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+	}
+
+
+
+	SSAOBlitPass::SSAOBlitPass(Ref<Texture> colorTexture)
+		: m_ColorTexture(colorTexture)
+	{
+	}
+
+	void SSAOBlitPass::OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
+	{
+		Ref<VulkanCommandBuffer> vulkanCommandBuffer = As<VulkanCommandBuffer>(commandBuffer);
+
+		commandBuffer->Blit(m_ColorTexture, context.GetRenderTarget()->GetAttachment(0), TextureFiltering::Closest);
+
+		vulkanCommandBuffer->TransitionImageLayout(
+			As<VulkanTexture>(m_ColorTexture)->GetImageHandle(),
+			VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+			VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+	}
 }

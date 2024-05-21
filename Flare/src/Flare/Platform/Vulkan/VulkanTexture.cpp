@@ -239,15 +239,14 @@ namespace Flare
 
 			if (isDepth)
 				imageViewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+			else
+				imageViewInfo.subresourceRange.aspectMask |= VK_IMAGE_ASPECT_COLOR_BIT;
 
 			// TODO: Do something with stencil aspect
 #if 0
 			if (hasStencil)
 				imageViewInfo.subresourceRange.aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
 #endif
-
-			if (!isDepth && !hasStencil)
-				imageViewInfo.subresourceRange.aspectMask |= VK_IMAGE_ASPECT_COLOR_BIT;
 		}
 
 		VK_CHECK_RESULT(vkCreateImageView(VulkanContext::GetInstance().GetDevice(), &imageViewInfo, nullptr, &m_ImageView));

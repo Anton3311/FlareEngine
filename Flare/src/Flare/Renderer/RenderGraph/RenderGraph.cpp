@@ -1,5 +1,6 @@
 #include "RenderGraph.h"
 
+#include "Flare/Renderer/Renderer.h"
 #include "Flare/Platform/Vulkan/VulkanCommandBuffer.h"
 
 namespace Flare
@@ -17,18 +18,17 @@ namespace Flare
 	{
 		for (const auto& node : m_Nodes)
 		{
-			commandBuffer->BeginRenderTarget(node.RenderTarget);
-
-			node.Pass->OnRender(commandBuffer);
-
-			commandBuffer->EndRenderTarget();
+			RenderGraphContext context(Renderer::GetCurrentViewport(), node.RenderTarget);
+			node.Pass->OnRender(context, commandBuffer);
 		}
 	}
 
 	void RenderGraph::Build()
 	{
-		for (auto& node : m_Nodes)
+		for (size_t i = 0; i < m_Nodes.size(); i++)
 		{
+			auto& node = m_Nodes[i];
+
 			std::vector<Ref<Texture>> attachmentTextures;
 			attachmentTextures.reserve(node.Specifications.GetOutputs().size());
 
@@ -38,6 +38,7 @@ namespace Flare
 			}
 
 			node.RenderTarget = FrameBuffer::Create(Span<Ref<Texture>>::FromVector(attachmentTextures));
+			node.RenderTarget->SetDebugName(node.Specifications.GetDebugName());
 		}
 	}
 
