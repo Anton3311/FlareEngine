@@ -257,7 +257,10 @@ namespace Flare
 				shouldUpdateDescriptor = true;
 			}
 
-			m_PrimarySet->WriteImage(m_Cascades[i], 0, 28 + i);
+			if (shouldUpdateDescriptor)
+			{
+				m_PrimarySet->WriteImage(m_Cascades[i], 0, 28 + i);
+			}
 		}
 
 		m_PrimarySet->FlushWrites();
