@@ -149,15 +149,20 @@ namespace Flare
 
 	void VulkanCommandBuffer::Blit(Ref<FrameBuffer> source, uint32_t sourceAttachment, Ref<FrameBuffer> destination, uint32_t destinationAttachment, TextureFiltering filter)
 	{
+		Blit(source->GetAttachment(sourceAttachment), destination->GetAttachment(destinationAttachment), filter);
+	}
+
+	void VulkanCommandBuffer::Blit(Ref<Texture> source, Ref<Texture> destination, TextureFiltering filter)
+	{
 		FLARE_PROFILE_FUNCTION();
-		VkImage sourceImage = As<VulkanFrameBuffer>(source)->GetAttachmentImage(sourceAttachment);
-		VkImage destinationImage = As<VulkanFrameBuffer>(destination)->GetAttachmentImage(destinationAttachment);
+		VkImage sourceImage = As<VulkanTexture>(source)->GetImageHandle();
+		VkImage destinationImage = As<VulkanTexture>(destination)->GetImageHandle();
 
-		TextureFormat sourceAttachmentFormat = source->GetSpecifications().Attachments[sourceAttachment].Format;
-		TextureFormat destinationAttachmentFormat = destination->GetSpecifications().Attachments[destinationAttachment].Format;
+		TextureFormat sourceFormat = source->GetSpecifications().Format;
+		TextureFormat destinationFormat = destination->GetSpecifications().Format;
 
-		bool sourceIsDepth = IsDepthTextureFormat(sourceAttachmentFormat);
-		bool destinationIsDepth = IsDepthTextureFormat(destinationAttachmentFormat);
+		bool sourceIsDepth = IsDepthTextureFormat(sourceFormat);
+		bool destinationIsDepth = IsDepthTextureFormat(destinationFormat);
 
 		FLARE_CORE_ASSERT(sourceIsDepth == destinationIsDepth);
 
@@ -172,7 +177,7 @@ namespace Flare
 		if (sourceIsDepth)
 		{
 			blit.srcSubresource.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
-			if (HasStencilComponent(sourceAttachmentFormat))
+			if (HasStencilComponent(sourceFormat))
 			{
 				blit.srcSubresource.aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
 			}
@@ -180,7 +185,7 @@ namespace Flare
 		else
 		{
 			blit.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-			if (HasStencilComponent(destinationAttachmentFormat))
+			if (HasStencilComponent(destinationFormat))
 			{
 				blit.srcSubresource.aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
 			}
@@ -212,11 +217,11 @@ namespace Flare
 			barrier.srcAccessMask = sourceIsDepth ? VK_ACCESS_NONE : VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 			barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
 
-			if (sourceIsDepth && HasStencilComponent(sourceAttachmentFormat))
+			if (sourceIsDepth && HasStencilComponent(sourceFormat))
 			{
 				barrier.oldLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 			}
-			else if (sourceIsDepth && !HasStencilComponent(sourceAttachmentFormat))
+			else if (sourceIsDepth && !HasStencilComponent(sourceFormat))
 			{
 				barrier.oldLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
 			}
@@ -289,7 +294,7 @@ namespace Flare
 
 		if (destinationIsDepth)
 		{
-			if (HasStencilComponent(destinationAttachmentFormat))
+			if (HasStencilComponent(destinationFormat))
 			{
 				barrier.newLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 			}

@@ -40,6 +40,7 @@ namespace Flare
 		//
 		// Leaves the source attachment in TRANSFER_SRC layout and destination in COLOR_ATTACHMENT_OUTPUT layout
 		void Blit(Ref<FrameBuffer> source, uint32_t sourceAttachment, Ref<FrameBuffer> destination, uint32_t destinationAttachment, TextureFiltering filter) override;
+		void Blit(Ref<Texture> source, Ref<Texture> destination, TextureFiltering filter) override;
 
 		void DispatchCompute(Ref<ComputePipeline> pipeline, const glm::uvec3& groupCount) override;
 

@@ -36,6 +36,7 @@ namespace Flare
 			uint32_t instanceCount) = 0;
 
 		virtual void Blit(Ref<FrameBuffer> source, uint32_t sourceAttachment, Ref<FrameBuffer> destination, uint32_t destinationAttachment, TextureFiltering filter) = 0;
+		virtual void Blit(Ref<Texture> source, Ref<Texture> destination, TextureFiltering filter) = 0;
 
 		virtual void DispatchCompute(Ref<ComputePipeline> pipeline, const glm::uvec3& groupCount) = 0;
 
