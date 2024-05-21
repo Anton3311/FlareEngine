@@ -133,6 +133,13 @@ namespace Flare
 		return m_Specifications;
 	}
 
+	void VulkanFrameBuffer::SetDebugName(std::string_view debugName)
+	{
+		m_DebugName = debugName;
+
+		VulkanContext::GetInstance().SetDebugName(VK_OBJECT_TYPE_FRAMEBUFFER, (uint64_t)m_FrameBuffer, m_DebugName.c_str());
+	}
+
 	void VulkanFrameBuffer::Create()
 	{
 		FLARE_PROFILE_FUNCTION();
@@ -179,6 +186,11 @@ namespace Flare
 		info.flags = 0;
 
 		VK_CHECK_RESULT(vkCreateFramebuffer(VulkanContext::GetInstance().GetDevice(), &info, nullptr, &m_FrameBuffer));
+
+		if (m_DebugName.size() > 0)
+		{
+			VulkanContext::GetInstance().SetDebugName(VK_OBJECT_TYPE_FRAMEBUFFER, (uint64_t)m_FrameBuffer, m_DebugName.c_str());
+		}
 
 		TransitionToDefaultImageLayout();
 	}

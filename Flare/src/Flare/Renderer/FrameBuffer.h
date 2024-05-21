@@ -43,6 +43,8 @@ namespace Flare
 		virtual Ref<Texture> GetAttachment(uint32_t index) const = 0;
 		virtual const FrameBufferSpecifications& GetSpecifications() const = 0;
 
+		virtual void SetDebugName(std::string_view debugName) = 0;
+
 		inline glm::uvec2 GetSize() const
 		{
 			const auto& specifications = GetSpecifications();

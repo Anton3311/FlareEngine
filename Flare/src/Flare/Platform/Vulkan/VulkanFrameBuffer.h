@@ -33,6 +33,7 @@ namespace Flare
 		Ref<Texture> GetAttachment(uint32_t index) const override;
 
 		const FrameBufferSpecifications& GetSpecifications() const override;
+		void SetDebugName(std::string_view debugName) override;
 
 		glm::uvec2 GetSize() const { return glm::uvec2(m_Specifications.Width, m_Specifications.Height); }
 
@@ -48,6 +49,7 @@ namespace Flare
 		void ReleaseImages();
 		void TransitionToDefaultImageLayout();
 	private:
+		std::string m_DebugName;
 		bool m_ShouldTransitionToDefaultLayout = true;
 		FrameBufferSpecifications m_Specifications;
 
