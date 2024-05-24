@@ -95,4 +95,51 @@ namespace Flare
 
 		context.RTPool.ReturnFullscreen(Span(formats, 1), output);
 	}
+
+
+
+	ToneMappingPass::ToneMappingPass(Ref<Texture> colorTexture)
+		: m_ColorTexture(colorTexture)
+	{
+		std::optional<AssetHandle> shaderHandle = ShaderLibrary::FindShader("AcesToneMapping");
+		if (!shaderHandle || !AssetManager::IsAssetHandleValid(shaderHandle.value()))
+		{
+			FLARE_CORE_ERROR("ToneMapping: Failed to find ToneMapping shader");
+			return;
+		}
+
+		Ref<Shader> shader = AssetManager::GetAsset<Shader>(shaderHandle.value());
+		m_Material = Material::Create(shader);
+
+		
+	}
+
+	void ToneMappingPass::OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		Ref<VulkanCommandBuffer> vulkanCommandBuffer = As<VulkanCommandBuffer>(commandBuffer);
+		vulkanCommandBuffer->TransitionImageLayout(
+			As<VulkanTexture>(m_ColorTexture)->GetImageHandle(),
+			VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+		auto colorTextureIndex = m_Material->GetShader()->GetPropertyIndex("u_ScreenBuffer");
+
+		if (colorTextureIndex)
+			m_Material->GetPropertyValue<TexturePropertyValue>(*colorTextureIndex).SetTexture(m_ColorTexture);
+
+		commandBuffer->BeginRenderTarget(context.GetRenderTarget());
+		commandBuffer->SetViewportAndScisors(Math::Rect(glm::vec2(0.0f, 0.0f), (glm::vec2)context.GetViewport().GetSize()));
+
+		commandBuffer->ApplyMaterial(m_Material);
+		commandBuffer->DrawIndexed(RendererPrimitives::GetFullscreenQuadMesh(), 0, 0, 1);
+
+		commandBuffer->EndRenderTarget();
+
+		vulkanCommandBuffer->TransitionImageLayout(
+			As<VulkanTexture>(m_ColorTexture)->GetImageHandle(),
+			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+			VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+	}
 }

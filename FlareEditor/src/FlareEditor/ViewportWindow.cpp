@@ -1,6 +1,7 @@
 #include "ViewportWindow.h"
 
 #include "Flare/Renderer/Renderer.h"
+#include "Flare/Renderer/Passes/BlitPass.h"
 
 #include "Flare/Platform/Vulkan/VulkanContext.h"
 
@@ -259,6 +260,32 @@ namespace Flare
 			m_Viewport.Graph.AddPass(ssaoMainPass, CreateRef<SSAOMainPass>(m_Viewport.NormalsTexture, m_Viewport.DepthTexture));
 			m_Viewport.Graph.AddPass(ssaoComposingPass, CreateRef<SSAOComposingPass>(m_Viewport.ColorTexture, aoTexture));
 			m_Viewport.Graph.AddPass(ssaoBlitPass, CreateRef<SSAOBlitPass>(intermediateColorTexture));
+		}
+
+		{
+			TextureSpecifications colorTextureSpecifications{};
+			colorTextureSpecifications.Filtering = TextureFiltering::Closest;
+			colorTextureSpecifications.Format = TextureFormat::R11G11B10;
+			colorTextureSpecifications.Wrap = TextureWrap::Clamp;
+			colorTextureSpecifications.GenerateMipMaps = false;
+			colorTextureSpecifications.Width = m_Viewport.GetSize().x;
+			colorTextureSpecifications.Height = m_Viewport.GetSize().y;
+			colorTextureSpecifications.Usage = TextureUsage::RenderTarget | TextureUsage::Sampling;
+
+			Ref<Texture> intermediateTexture = Texture::Create(colorTextureSpecifications);
+
+			RenderGraphPassSpecifications toneMappingPass{};
+			toneMappingPass.SetDebugName("ToneMapping");
+			toneMappingPass.AddInput(m_Viewport.ColorTexture);
+			toneMappingPass.AddOutput(intermediateTexture, 0);
+
+			RenderGraphPassSpecifications blitPass{};
+			blitPass.SetDebugName("ToneMappingBlit");
+			blitPass.AddInput(intermediateTexture);
+			blitPass.AddOutput(m_Viewport.ColorTexture, 0);
+
+			m_Viewport.Graph.AddPass(toneMappingPass, CreateRef<ToneMappingPass>(m_Viewport.ColorTexture));
+			m_Viewport.Graph.AddPass(blitPass, CreateRef<BlitPass>(intermediateTexture, TextureFiltering::Closest));
 		}
 
 		{
