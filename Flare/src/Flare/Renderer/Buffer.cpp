@@ -14,6 +14,19 @@ namespace Flare
 			return CreateRef<VulkanVertexBuffer>(size);
 		}
 
+		FLARE_CORE_ASSERT(false);
+		return nullptr;
+	}
+
+	Ref<VertexBuffer> VertexBuffer::Create(size_t size, GPUBufferUsage usage)
+	{
+		switch (RendererAPI::GetAPI())
+		{
+		case RendererAPI::API::Vulkan:
+			return CreateRef<VulkanVertexBuffer>(size, usage);
+		}
+
+		FLARE_CORE_ASSERT(false);
 		return nullptr;
 	}
 
@@ -63,6 +76,19 @@ namespace Flare
 			return CreateRef<VulkanIndexBuffer>(format, size);
 		}
 
+		FLARE_CORE_ASSERT(false);
+		return nullptr;
+	}
+
+	Ref<IndexBuffer> IndexBuffer::Create(IndexFormat format, size_t size, GPUBufferUsage usage)
+	{
+		switch (RendererAPI::GetAPI())
+		{
+		case RendererAPI::API::Vulkan:
+			return CreateRef<VulkanIndexBuffer>(format, size, usage);
+		}
+
+		FLARE_CORE_ASSERT(false);
 		return nullptr;
 	}
 	

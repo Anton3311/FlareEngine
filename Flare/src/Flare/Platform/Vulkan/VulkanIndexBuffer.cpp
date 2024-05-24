@@ -7,6 +7,11 @@ namespace Flare
 	{
 	}
 
+	VulkanIndexBuffer::VulkanIndexBuffer(IndexFormat format, size_t count, GPUBufferUsage usage)
+		: m_Format(format), m_Buffer(usage, VK_BUFFER_USAGE_INDEX_BUFFER_BIT, GetIndexFormatSize(format) * count), m_Count(count)
+	{
+	}
+
 	VulkanIndexBuffer::VulkanIndexBuffer(IndexFormat format, const MemorySpan& indices)
 		: m_Format(format), m_Buffer(GPUBufferUsage::Static, VK_BUFFER_USAGE_INDEX_BUFFER_BIT, indices.GetSize())
 	{

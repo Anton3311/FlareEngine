@@ -97,19 +97,19 @@ namespace Flare
 		}
 
 		if (!m_IndexBuffer)
-			m_IndexBuffer = IndexBuffer::Create(m_IndexFormat, m_IndexBufferSize);
+			m_IndexBuffer = IndexBuffer::Create(m_IndexFormat, m_IndexBufferSize, GPUBufferUsage::Static);
 
 		if (!m_Vertices)
-			m_Vertices = VertexBuffer::Create(m_VertexBufferSize * sizeof(glm::vec3));
+			m_Vertices = VertexBuffer::Create(m_VertexBufferSize * sizeof(glm::vec3), GPUBufferUsage::Static);
 
 		if (!m_Normals)
-			m_Normals = VertexBuffer::Create(m_VertexBufferSize * sizeof(glm::vec3));
+			m_Normals = VertexBuffer::Create(m_VertexBufferSize * sizeof(glm::vec3), GPUBufferUsage::Static);
 
 		if (!m_Tangents)
-			m_Tangents = VertexBuffer::Create(m_VertexBufferSize * sizeof(glm::vec3));
+			m_Tangents = VertexBuffer::Create(m_VertexBufferSize * sizeof(glm::vec3), GPUBufferUsage::Static);
 
 		if (!m_UVs)
-			m_UVs = VertexBuffer::Create(m_VertexBufferSize * sizeof(glm::vec2));
+			m_UVs = VertexBuffer::Create(m_VertexBufferSize * sizeof(glm::vec2), GPUBufferUsage::Static);
 
 		if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
 		{

@@ -7,6 +7,9 @@ namespace Flare
 	{
 	}
 
+	VulkanVertexBuffer::VulkanVertexBuffer(size_t size, GPUBufferUsage usage)
+		: m_Buffer(usage, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, size) {}
+
 	VulkanVertexBuffer::VulkanVertexBuffer(const void* data, size_t size)
 		: m_Buffer(GPUBufferUsage::Static, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, size)
 	{

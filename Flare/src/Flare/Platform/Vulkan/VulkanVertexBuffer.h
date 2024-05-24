@@ -11,6 +11,7 @@ namespace Flare
 	{
 	public:
 		VulkanVertexBuffer(size_t size);
+		VulkanVertexBuffer(size_t size, GPUBufferUsage usage);
 		VulkanVertexBuffer(const void* data, size_t size);
 		VulkanVertexBuffer(const void* data, size_t size, Ref<CommandBuffer> commandBuffer);
 		~VulkanVertexBuffer();

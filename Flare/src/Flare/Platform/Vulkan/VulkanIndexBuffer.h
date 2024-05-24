@@ -9,6 +9,7 @@ namespace Flare
 	{
 	public:
 		VulkanIndexBuffer(IndexFormat format, size_t count);
+		VulkanIndexBuffer(IndexFormat format, size_t count, GPUBufferUsage usage);
 		VulkanIndexBuffer(IndexFormat format, const MemorySpan& indices);
 		VulkanIndexBuffer(IndexFormat format, const MemorySpan& indices, Ref<CommandBuffer> commandBuffer);
 

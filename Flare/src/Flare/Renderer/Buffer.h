@@ -27,6 +27,7 @@ namespace Flare
 		virtual void SetData(MemorySpan data, size_t offset, Ref<CommandBuffer> commandBuffer) = 0;
 	public:
 		static Ref<VertexBuffer> Create(size_t size);
+		static Ref<VertexBuffer> Create(size_t size, GPUBufferUsage usage);
 		static Ref<VertexBuffer> Create(size_t size, const void* data);
 
 		// commandBuffer - a CommandBuffer used for submitting copy commands
@@ -51,6 +52,7 @@ namespace Flare
 	public:
 		static size_t GetIndexFormatSize(IndexFormat format);
 		static Ref<IndexBuffer> Create(IndexFormat format, size_t size);
+		static Ref<IndexBuffer> Create(IndexFormat format, size_t size, GPUBufferUsage usage);
 		static Ref<IndexBuffer> Create(IndexFormat format, const MemorySpan& indices);
 
 		// commandBuffer - a CommandBuffer used for submitting copy commands
