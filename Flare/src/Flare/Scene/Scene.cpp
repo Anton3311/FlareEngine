@@ -8,6 +8,7 @@
 
 #include "Flare/Renderer/PostProcessing/ToneMapping.h"
 #include "Flare/Renderer/PostProcessing/Vignette.h"
+#include "Flare/Renderer/PostProcessing/SSAO.h"
 
 #include "Flare/AssetManager/AssetManager.h"
 
@@ -62,8 +63,9 @@ namespace Flare
 		systemsManager.RegisterSystem("Sprites Renderer", m_2DRenderingGroup, new SpritesRendererSystem());
 		systemsManager.RegisterSystem("Meshes Renderer", m_2DRenderingGroup, new MeshesRendererSystem());
 
-		m_PostProcessingManager.AddEffect(CreateRef<ToneMapping>());
+		m_PostProcessingManager.AddEffect(CreateRef<SSAO>());
 		m_PostProcessingManager.AddEffect(CreateRef<Vignette>());
+		m_PostProcessingManager.AddEffect(CreateRef<ToneMapping>());
 	}
 
 	void Scene::InitializeRuntime()

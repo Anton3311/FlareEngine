@@ -238,49 +238,6 @@ namespace Flare
 	{
 		m_Viewport.Graph.Clear();
 
-		{
-			TextureSpecifications aoTextureSpecifications{};
-			aoTextureSpecifications.Filtering = TextureFiltering::Closest;
-			aoTextureSpecifications.Format = TextureFormat::RF32;
-			aoTextureSpecifications.Wrap = TextureWrap::Clamp;
-			aoTextureSpecifications.GenerateMipMaps = false;
-			aoTextureSpecifications.Width = m_Viewport.GetSize().x;
-			aoTextureSpecifications.Height = m_Viewport.GetSize().y;
-			aoTextureSpecifications.Usage = TextureUsage::RenderTarget | TextureUsage::Sampling;
-
-			TextureSpecifications colorTextureSpecifications{};
-			colorTextureSpecifications.Filtering = TextureFiltering::Closest;
-			colorTextureSpecifications.Format = TextureFormat::R11G11B10;
-			colorTextureSpecifications.Wrap = TextureWrap::Clamp;
-			colorTextureSpecifications.GenerateMipMaps = false;
-			colorTextureSpecifications.Width = m_Viewport.GetSize().x;
-			colorTextureSpecifications.Height = m_Viewport.GetSize().y;
-			colorTextureSpecifications.Usage = TextureUsage::RenderTarget | TextureUsage::Sampling;
-
-			Ref<Texture> aoTexture = Texture::Create(aoTextureSpecifications);
-			Ref<Texture> intermediateColorTexture = Texture::Create(colorTextureSpecifications);
-
-			RenderGraphPassSpecifications ssaoMainPass{};
-			ssaoMainPass.SetDebugName("SSAOMainPass");
-			ssaoMainPass.AddInput(m_Viewport.NormalsTexture);
-			ssaoMainPass.AddInput(m_Viewport.DepthTexture);
-			ssaoMainPass.AddOutput(aoTexture, 0);
-
-			RenderGraphPassSpecifications ssaoComposingPass{};
-			ssaoComposingPass.SetDebugName("SSAOComposingPass");
-			ssaoComposingPass.AddInput(aoTexture);
-			ssaoComposingPass.AddInput(m_Viewport.ColorTexture);
-			ssaoComposingPass.AddOutput(intermediateColorTexture, 0);
-
-			RenderGraphPassSpecifications ssaoBlitPass{};
-			ssaoBlitPass.SetDebugName("SSAOBlitPass");
-			ssaoBlitPass.AddInput(intermediateColorTexture);
-			ssaoBlitPass.AddOutput(m_Viewport.ColorTexture, 0);
-
-			m_Viewport.Graph.AddPass(ssaoMainPass, CreateRef<SSAOMainPass>(m_Viewport.NormalsTexture, m_Viewport.DepthTexture));
-			m_Viewport.Graph.AddPass(ssaoComposingPass, CreateRef<SSAOComposingPass>(m_Viewport.ColorTexture, aoTexture));
-			m_Viewport.Graph.AddPass(ssaoBlitPass, CreateRef<SSAOBlitPass>(intermediateColorTexture));
-		}
 
 		Ref<Scene> scene = GetScene();
 
