@@ -9,6 +9,8 @@
 #include "Flare/Renderer/GraphicsContext.h"
 #include "Flare/Renderer/RendererPrimitives.h"
 
+#include "Flare/Renderer/Passes/BlitPass.h"
+
 #include "Flare/Platform/Vulkan/VulkanCommandBuffer.h"
 
 #include "FlareCore/Profiler/Profiler.h"
@@ -18,84 +20,46 @@ namespace Flare
 	FLARE_IMPL_TYPE(ToneMapping);
 
 	ToneMapping::ToneMapping()
-		: RenderPass(RenderPassQueue::PostProcessing), Enabled(false)
+		: Enabled(false)
 	{
-		std::optional<AssetHandle> shaderHandle = ShaderLibrary::FindShader("AcesToneMapping");
-		if (!shaderHandle || !AssetManager::IsAssetHandleValid(shaderHandle.value()))
-		{
-			FLARE_CORE_ERROR("ToneMapping: Failed to find ToneMapping shader");
-			return;
-		}
-
-		Ref<Shader> shader = AssetManager::GetAsset<Shader>(shaderHandle.value());
-		m_Material = Material::Create(shader);
-
-		m_ColorTexture = shader->GetPropertyIndex("u_ScreenBuffer");
 	}
 
-	void ToneMapping::OnRender(RenderingContext& context)
+	void ToneMapping::RegisterRenderPasses(RenderGraph& renderGraph, const Viewport& viewport)
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		if (!Enabled || !Renderer::GetCurrentViewport().PostProcessingEnabled)
+		if (!Enabled)
 			return;
 
-		TextureFormat formats[] = { TextureFormat::RGB8 };
+		TextureSpecifications colorTextureSpecifications{};
+		colorTextureSpecifications.Filtering = TextureFiltering::Closest;
+		colorTextureSpecifications.Format = TextureFormat::R11G11B10;
+		colorTextureSpecifications.Wrap = TextureWrap::Clamp;
+		colorTextureSpecifications.GenerateMipMaps = false;
+		colorTextureSpecifications.Width = viewport.GetSize().x;
+		colorTextureSpecifications.Height = viewport.GetSize().y;
+		colorTextureSpecifications.Usage = TextureUsage::RenderTarget | TextureUsage::Sampling;
 
-		Ref<FrameBuffer> output = context.RTPool.GetFullscreen(Span(formats, 1));
+		Ref<Texture> intermediateTexture = Texture::Create(colorTextureSpecifications);
 
-		if (m_ColorTexture)
-		{
-			m_Material->GetPropertyValue<TexturePropertyValue>(*m_ColorTexture).SetFrameBuffer(context.RenderTarget, 0);
-		}
+		RenderGraphPassSpecifications toneMappingPass{};
+		toneMappingPass.SetDebugName("ToneMapping");
+		toneMappingPass.AddInput(viewport.ColorTexture);
+		toneMappingPass.AddOutput(intermediateTexture, 0);
 
-		Ref<CommandBuffer> commandBuffer = GraphicsContext::GetInstance().GetCommandBuffer();
-		if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
-		{
-			Ref<VulkanCommandBuffer> vulkanCommandBuffer = As<VulkanCommandBuffer>(commandBuffer);
-			vulkanCommandBuffer->TransitionImageLayout(
-				As<VulkanFrameBuffer>(output)->GetAttachmentImage(0),
-				VK_IMAGE_LAYOUT_UNDEFINED,
-				VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+		RenderGraphPassSpecifications blitPass{};
+		blitPass.SetDebugName("ToneMappingBlit");
+		blitPass.AddInput(intermediateTexture);
+		blitPass.AddOutput(viewport.ColorTexture, 0);
 
-			vulkanCommandBuffer->TransitionImageLayout(
-				As<VulkanFrameBuffer>(context.RenderTarget)->GetAttachmentImage(0),
-				VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-				VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-		}
-
-		commandBuffer->BeginRenderTarget(output);
-
-		if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
-		{
-			Ref<VulkanCommandBuffer> vulkanCommandBuffer = As<VulkanCommandBuffer>(commandBuffer);
-			vulkanCommandBuffer->SetPrimaryDescriptorSet(nullptr);
-			vulkanCommandBuffer->SetSecondaryDescriptorSet(nullptr);
-		}
-
-		commandBuffer->ApplyMaterial(m_Material);
-
-		const auto& frameBufferSpec = context.RenderTarget->GetSpecifications();
-		commandBuffer->SetViewportAndScisors(Math::Rect(0.0f, 0.0f, (float)frameBufferSpec.Width, (float)frameBufferSpec.Height));
-
-		commandBuffer->DrawIndexed(RendererPrimitives::GetFullscreenQuadMesh(), 0, 0, 1);
-		commandBuffer->EndRenderTarget();
-
-		commandBuffer->Blit(output, 0, context.RenderTarget, 0, TextureFiltering::Closest);
-
-		if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
-		{
-			Ref<VulkanCommandBuffer> vulkanCommandBuffer = As<VulkanCommandBuffer>(commandBuffer);
-
-			vulkanCommandBuffer->TransitionImageLayout(
-				As<VulkanFrameBuffer>(output)->GetAttachmentImage(0),
-				VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-				VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
-		}
-
-		context.RTPool.ReturnFullscreen(Span(formats, 1), output);
+		renderGraph.AddPass(toneMappingPass, CreateRef<ToneMappingPass>(viewport.ColorTexture));
+		renderGraph.AddPass(blitPass, CreateRef<BlitPass>(intermediateTexture, TextureFiltering::Closest));
 	}
 
+	const SerializableObjectDescriptor& ToneMapping::GetSerializationDescriptor() const
+	{
+		return FLARE_SERIALIZATION_DESCRIPTOR_OF(ToneMapping);
+	}
 
 
 	ToneMappingPass::ToneMappingPass(Ref<Texture> colorTexture)

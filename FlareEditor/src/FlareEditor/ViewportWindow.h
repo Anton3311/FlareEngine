@@ -39,6 +39,8 @@ namespace Flare
 		void SetScene(const Ref<Scene>& scene) { m_Scene = scene; }
 
 		void PrepareViewport();
+
+		void RequestRenderGraphRebuild();
 	protected:
 		inline Ref<Scene> GetScene() const { return m_Scene == nullptr ? Scene::GetActive() : m_Scene; }
 

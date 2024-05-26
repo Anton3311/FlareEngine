@@ -6,23 +6,22 @@
 #include "Flare/Renderer/RenderPass.h"
 #include "Flare/Renderer/Material.h"
 
+#include "Flare/Renderer/PostProcessing/PostProcessingEffect.h"
 #include "Flare/Renderer/RenderGraph/RenderGraphPass.h"
 
 namespace Flare
 {
-	class FLARE_API ToneMapping : public RenderPass
+	class FLARE_API ToneMapping : public PostProcessingEffect
 	{
 	public:
 		FLARE_TYPE;
 
 		ToneMapping();
 
-		void OnRender(RenderingContext& context) override;
+		void RegisterRenderPasses(RenderGraph& renderGraph, const Viewport& viewport) override;
+		const SerializableObjectDescriptor& GetSerializationDescriptor() const override;
 	public:
 		bool Enabled;
-	private:
-		std::optional<uint32_t> m_ColorTexture;
-		Ref<Material> m_Material;
 	};
 
 	template<>

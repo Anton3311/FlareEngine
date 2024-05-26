@@ -66,7 +66,7 @@ namespace Flare
 
             Ref<EditorAssetManager> assetManager = As<EditorAssetManager>(AssetManager::GetInstance());
 
-            Scene::GetActive()->UninitializePostProcessing();
+            ResetViewportRenderGraphs();
 
             assetManager->UnloadAsset(Scene::GetActive()->Handle);
 
@@ -201,13 +201,13 @@ namespace Flare
 			Ref<EditorAssetManager> assetManager = As<EditorAssetManager>(AssetManager::GetInstance());
 
 			Scene::GetActive()->OnRuntimeEnd();
-			Scene::GetActive()->UninitializePostProcessing();
+
+            ResetViewportRenderGraphs();
 
 			Scene::SetActive(nullptr);
 
 			Ref<Scene> editorScene = AssetManager::GetAsset<Scene>(m_EditedSceneHandle);
 			editorScene->InitializeRuntime();
-			editorScene->InitializePostProcessing();
 
 			Scene::SetActive(editorScene);
 			m_Mode = EditorMode::Edit;
@@ -442,19 +442,12 @@ namespace Flare
             {
                 auto& postProcessing = Scene::GetActive()->GetPostProcessingManager();
 
-                EditorGUI::ObjectField(
-                    FLARE_SERIALIZATION_DESCRIPTOR_OF(ToneMapping),
-                    postProcessing.ToneMappingPass.get());
-                EditorGUI::ObjectField(
-                    FLARE_SERIALIZATION_DESCRIPTOR_OF(Vignette),
-                    postProcessing.VignettePass.get());
-                EditorGUI::ObjectField(
-                    FLARE_SERIALIZATION_DESCRIPTOR_OF(SSAO),
-                    postProcessing.SSAOPass.get());
-                EditorGUI::ObjectField(
-                    FLARE_SERIALIZATION_DESCRIPTOR_OF(AtmospherePass),
-                    postProcessing.Atmosphere.get());
+                for (const auto& entry : postProcessing.GetEntries())
+                {
+                    EditorGUI::ObjectField(*entry.Descriptor, entry.Effect.get(), &Scene::GetActive()->GetECSWorld());
+                }
 
+#if 0
                 auto lut = postProcessing.Atmosphere->GetSunTransmittanceLUT();
 				if (lut)
 					ImGui::Image(ImGuiLayer::GetId(lut, 0), ImVec2(256, 256), ImVec2(0, 1), ImVec2(1, 0));
@@ -463,6 +456,7 @@ namespace Flare
                 {
                     postProcessing.Atmosphere->RegenerateSunTransmittanceLUT();
                 }
+#endif
 
                 ImGui::TreePop();
             }
@@ -527,6 +521,15 @@ namespace Flare
         m_ProjectFilesWacher.reset(FileWatcher::Create(Project::GetActive()->Location, EventsMask::FileName | EventsMask::DirectoryName | EventsMask::LastWrite));
     }
 
+    void EditorLayer::ResetViewportRenderGraphs()
+    {
+        for (auto& viewportWindow : m_ViewportWindows)
+        {
+            viewportWindow->GetViewport().Graph.Clear();
+            viewportWindow->RequestRenderGraphRebuild();
+        }
+    }
+
     void EditorLayer::SaveActiveScene()
     {
         FLARE_CORE_ASSERT(Scene::GetActive());
@@ -556,6 +559,8 @@ namespace Flare
 
     void EditorLayer::OpenScene(AssetHandle handle)
     {
+        ResetViewportRenderGraphs();
+
         if (AssetManager::IsAssetHandleValid(handle))
         {
             Ref<Scene> active = Scene::GetActive();
@@ -572,7 +577,6 @@ namespace Flare
             Scene::SetActive(active);
 
             active->InitializeRuntime();
-            active->InitializePostProcessing();
 
             m_EditedSceneHandle = handle;
         }
@@ -582,9 +586,10 @@ namespace Flare
     {
         Ref<Scene> active = Scene::GetActive();
 
+        ResetViewportRenderGraphs();
+
         if (active != nullptr)
         {
-            active->UninitializePostProcessing();
             Ref<EditorAssetManager> editorAssetManager = As<EditorAssetManager>(AssetManager::GetInstance());
 
             if (active != nullptr && AssetManager::IsAssetHandleValid(active->Handle))
@@ -596,7 +601,6 @@ namespace Flare
         active = CreateRef<Scene>(m_ECSContext);
         active->Initialize();
         active->InitializeRuntime();
-        active->InitializePostProcessing();
         Scene::SetActive(active);
 
         m_EditedSceneHandle = NULL_ASSET_HANDLE;
@@ -604,6 +608,8 @@ namespace Flare
 
     void EditorLayer::EnterPlayMode()
     {
+        ResetViewportRenderGraphs();
+
         FLARE_CORE_ASSERT(m_Mode == EditorMode::Edit);
 
         m_GameWindow->RequestFocus();
@@ -614,7 +620,6 @@ namespace Flare
         Ref<EditorAssetManager> assetManager = As<EditorAssetManager>(AssetManager::GetInstance());
         std::filesystem::path activeScenePath = assetManager->GetAssetMetadata(active->Handle)->Path;
 
-        Scene::GetActive()->UninitializePostProcessing();
         SaveActiveScene();
 
         m_PlaymodePaused = false;
@@ -630,7 +635,6 @@ namespace Flare
         m_Mode = EditorMode::Play;
 
         playModeScene->InitializeRuntime();
-        playModeScene->InitializePostProcessing();
         Scene::GetActive()->OnRuntimeStart();
     }
 
@@ -652,7 +656,7 @@ namespace Flare
         std::filesystem::path activeScenePath = assetManager->GetAssetMetadata(active->Handle)->Path;
         SaveActiveScene();
 
-        active->UninitializePostProcessing();
+        ResetViewportRenderGraphs();
 
         Scene::SetActive(nullptr);
         assetManager->UnloadAsset(active->Handle);
@@ -675,7 +679,6 @@ namespace Flare
         ScriptingEngine::SetCurrentECSWorld(active->GetECSWorld());
         ScriptingEngine::RegisterSystems();
         active->InitializeRuntime();
-        active->InitializePostProcessing();
         Scene::SetActive(active);
 
         assetManager->ReloadPrefabs();

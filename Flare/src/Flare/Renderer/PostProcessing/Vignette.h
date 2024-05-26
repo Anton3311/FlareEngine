@@ -7,25 +7,25 @@
 #include "Flare/Renderer/Shader.h"
 #include "Flare/Renderer/Material.h"
 
+#include "Flare/Renderer/PostProcessing/PostProcessingEffect.h"
 #include "Flare/Renderer/RenderGraph/RenderGraphPass.h"
 
 namespace Flare
 {
-	class FLARE_API Vignette : public RenderPass
+	class FLARE_API Vignette : public PostProcessingEffect
 	{
 	public:
 		FLARE_TYPE;
 
 		Vignette();
 
-		void OnRender(RenderingContext& context) override;
+		void RegisterRenderPasses(RenderGraph& renderGraph, const Viewport& viewport) override;
+		const SerializableObjectDescriptor& GetSerializationDescriptor() const override;
 	public:
 		bool Enabled;
 		glm::vec4 Color;
 		float Radius;
 		float Smoothness;
-	private:
-		Ref<Material> m_Material;
 	};
 
 	template<>
@@ -40,9 +40,7 @@ namespace Flare
 		VignettePass();
 		void OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer) override;
 	private:
-		Ref<Material> m_Material;
-		glm::vec4 m_Color = glm::vec4(1.0f);
-		float m_Radius = 1.0f;
-		float m_Smoothness = 1.0f;
+		Ref<Vignette> m_Parameters = nullptr;
+		Ref<Material> m_Material = nullptr;
 	};
 }

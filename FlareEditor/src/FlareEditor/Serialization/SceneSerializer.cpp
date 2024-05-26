@@ -153,6 +153,29 @@ namespace Flare
 		Serialize(scene, AssetManager::GetAssetMetadata(scene->Handle)->Path, editorCamera, sceneViewSettings);
 	}
 
+	void SerializePostProcessing(YAML::Emitter& emitter, Ref<Scene> scene)
+	{
+		const auto& postProcessingManager = scene->GetPostProcessingManager();
+
+		emitter << YAML::Key << "PostProcessing" << YAML::BeginSeq;
+
+		for (const auto& entry : postProcessingManager.GetEntries())
+		{
+			const SerializableObjectDescriptor& descriptor = *entry.Descriptor;
+
+			emitter << YAML::Value << YAML::BeginMap;
+			emitter << YAML::Key << "Name" << YAML::Value << descriptor.Name;
+
+			YAMLSerializer serializer(emitter, &scene->GetECSWorld());
+			serializer.PropertyKey("Data");
+			serializer.SerializeObject(descriptor, entry.Effect.get(), false, 0);
+
+			emitter << YAML::EndMap;
+		}
+
+		emitter << YAML::EndMap; // PostProcessing
+	}
+
 	void SceneSerializer::Serialize(const Ref<Scene>& scene, const std::filesystem::path& path, const EditorCamera& editorCamera, const SceneViewSettings& sceneViewSettings)
 	{
 		YAML::Emitter emitter;
@@ -184,63 +207,7 @@ namespace Flare
 			emitter << YAML::EndMap; // Editor
 		}
 
-		emitter << YAML::Key << "PostProcessing" << YAML::BeginSeq;
-
-		const auto& postProcessingManager = scene->GetPostProcessingManager();
-		
-		if (postProcessingManager.ToneMappingPass)
-		{
-			const auto* descriptor = &FLARE_SERIALIZATION_DESCRIPTOR_OF(ToneMapping);
-
-			emitter << YAML::Value << YAML::BeginMap;
-			emitter << YAML::Key << "Name" << YAML::Value << descriptor->Name;
-
-			YAMLSerializer serialzier(emitter, &scene->GetECSWorld());
-			serialzier.Serialize("Data", SerializationValue(*postProcessingManager.ToneMappingPass));
-
-			emitter << YAML::EndMap;
-		}
-
-		if (postProcessingManager.VignettePass)
-		{
-			const auto* descriptor = &FLARE_SERIALIZATION_DESCRIPTOR_OF(Vignette);
-
-			emitter << YAML::Value << YAML::BeginMap;
-			emitter << YAML::Key << "Name" << YAML::Value << descriptor->Name;
-
-			YAMLSerializer serialzier(emitter, &scene->GetECSWorld());
-			serialzier.Serialize("Data", SerializationValue(*postProcessingManager.VignettePass));
-
-			emitter << YAML::EndMap;
-		}
-
-		if (postProcessingManager.SSAOPass)
-		{
-			const auto* descriptor = &FLARE_SERIALIZATION_DESCRIPTOR_OF(SSAO);
-
-			emitter << YAML::Value << YAML::BeginMap;
-			emitter << YAML::Key << "Name" << YAML::Value << descriptor->Name;
-
-			YAMLSerializer serialzier(emitter, &scene->GetECSWorld());
-			serialzier.Serialize("Data", SerializationValue(*postProcessingManager.SSAOPass));
-
-			emitter << YAML::EndMap;
-		}
-
-		if (postProcessingManager.Atmosphere)
-		{
-			const auto* descriptor = &FLARE_SERIALIZATION_DESCRIPTOR_OF(AtmospherePass);
-
-			emitter << YAML::Value << YAML::BeginMap;
-			emitter << YAML::Key << "Name" << YAML::Value << descriptor->Name;
-
-			YAMLSerializer serialzier(emitter, &scene->GetECSWorld());
-			serialzier.Serialize("Data", SerializationValue(*postProcessingManager.Atmosphere));
-
-			emitter << YAML::EndMap;
-		}
-
-		emitter << YAML::EndMap; // PostProcessing
+		SerializePostProcessing(emitter, scene);
 
 		emitter << YAML::EndMap;
 
@@ -253,6 +220,43 @@ namespace Flare
 
 		output << emitter.c_str();
 		output.close();
+	}
+
+	bool DeserializePostProcessing(Ref<Scene> scene, const YAML::Node& node)
+	{
+		YAML::Node postProcessingList = node["PostProcessing"];
+
+		if (!postProcessingList)
+			return false;
+
+		if (!postProcessingList.IsSequence())
+			return false;
+
+		const PostProcessingManager& postProcessingManager = scene->GetPostProcessingManager();
+		const auto& entries = postProcessingManager.GetEntries();
+		for (const auto& postProcessingNode : postProcessingList)
+		{
+			YAML::Node nameNode = postProcessingNode["Name"];
+			if (!nameNode)
+				continue;
+
+			std::string effectName = nameNode.as<std::string>();
+
+			const auto& entryIterator = std::find_if(
+				entries.begin(),
+				entries.end(),
+				[&effectName](const PostProcessingManager::PostProcessingEntry& entry) -> bool
+				{
+					return entry.Descriptor->Name == effectName;
+				});
+
+			if (entryIterator == entries.end())
+				continue;
+			
+			YAMLDeserializer deserializer(postProcessingNode);
+			deserializer.PropertyKey("Data");
+			deserializer.SerializeObject(*entryIterator->Descriptor, entryIterator->Effect.get(), false, 0);
+		}
 	}
 
 	void SceneSerializer::Deserialize(const Ref<Scene>& scene, const std::filesystem::path& path, EditorCamera& editorCamera, SceneViewSettings& sceneViewSettings)
@@ -300,39 +304,7 @@ namespace Flare
 			index++;
 		}
 
-		YAML::Node postProcessing = node["PostProcessing"];
-		if (!postProcessing)
-			return;
-
-		PostProcessingManager& postProcessingManager = scene->GetPostProcessingManager();
-		for (YAML::Node effectNode : postProcessing)
-		{
-			if (YAML::Node nameNode = effectNode["Name"])
-			{
-				std::string name = nameNode.as<std::string>();
-				YAMLDeserializer deserializer(effectNode);
-				if (name == ToneMapping::_Type.TypeName)
-				{
-					if (postProcessingManager.ToneMappingPass)
-						deserializer.Serialize("Data", SerializationValue(*postProcessingManager.ToneMappingPass));
-				}
-				else if (name == Vignette::_Type.TypeName)
-				{
-					if (postProcessingManager.VignettePass)
-						deserializer.Serialize("Data", SerializationValue(*postProcessingManager.VignettePass));
-				}
-				else if (name == SSAO::_Type.TypeName)
-				{
-					if (postProcessingManager.SSAOPass)
-						deserializer.Serialize("Data", SerializationValue(*postProcessingManager.SSAOPass));
-				}
-				else if (name == AtmospherePass::_Type.TypeName)
-				{
-					if (postProcessingManager.Atmosphere)
-						deserializer.Serialize("Data", SerializationValue(*postProcessingManager.Atmosphere));
-				}
-			}
-		}
+		DeserializePostProcessing(scene, node);
 
 		YAML::Node editorSettings = node["Editor"];
 		if (editorSettings)
