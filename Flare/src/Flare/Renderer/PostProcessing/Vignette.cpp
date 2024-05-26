@@ -23,13 +23,16 @@ namespace Flare
 	static uint32_t s_SmoothnessPropertyIndex = UINT32_MAX;
 
 	Vignette::Vignette()
-		: Enabled(false), Color(0.0f, 0.0f, 0.0f, 0.5f), Radius(1.0f), Smoothness(1.0f)
+		: Color(0.0f, 0.0f, 0.0f, 0.5f), Radius(1.0f), Smoothness(1.0f)
 	{
 	}
 
 	void Vignette::RegisterRenderPasses(RenderGraph& renderGraph, const Viewport& viewport)
 	{
 		FLARE_PROFILE_FUNCTION();
+
+		if (!IsEnabled())
+			return;
 		
 		RenderGraphPassSpecifications specifications{};
 		specifications.AddInput(viewport.ColorTexture);
@@ -45,7 +48,6 @@ namespace Flare
 
 	void TypeSerializer<Vignette>::OnSerialize(Vignette& vignette, SerializationStream& stream)
 	{
-		stream.Serialize("Enabled", SerializationValue(vignette.Enabled));
 		stream.Serialize("Color", SerializationValue(vignette.Color, SerializationValueFlags::Color));
 		stream.Serialize("Radius", SerializationValue(vignette.Radius));
 		stream.Serialize("Smoothness", SerializationValue(vignette.Smoothness));

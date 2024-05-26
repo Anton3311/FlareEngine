@@ -165,6 +165,7 @@ namespace Flare
 
 			emitter << YAML::Value << YAML::BeginMap;
 			emitter << YAML::Key << "Name" << YAML::Value << descriptor.Name;
+			emitter << YAML::Key << "Enabled" << YAML::Value << entry.Effect->IsEnabled();
 
 			YAMLSerializer serializer(emitter, &scene->GetECSWorld());
 			serializer.PropertyKey("Data");
@@ -240,6 +241,12 @@ namespace Flare
 			if (!nameNode)
 				continue;
 
+			YAML::Node enabledNode = postProcessingNode["Enabled"];
+			bool enabled = false;
+
+			if (enabledNode)
+				enabled = enabledNode.as<bool>();
+
 			std::string effectName = nameNode.as<std::string>();
 
 			const auto& entryIterator = std::find_if(
@@ -256,7 +263,11 @@ namespace Flare
 			YAMLDeserializer deserializer(postProcessingNode);
 			deserializer.PropertyKey("Data");
 			deserializer.SerializeObject(*entryIterator->Descriptor, entryIterator->Effect.get(), false, 0);
+
+			entryIterator->Effect->SetEnabled(enabled);
 		}
+
+		return true;
 	}
 
 	void SceneSerializer::Deserialize(const Ref<Scene>& scene, const std::filesystem::path& path, EditorCamera& editorCamera, SceneViewSettings& sceneViewSettings)

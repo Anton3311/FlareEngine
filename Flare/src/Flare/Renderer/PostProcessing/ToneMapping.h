@@ -20,8 +20,6 @@ namespace Flare
 
 		void RegisterRenderPasses(RenderGraph& renderGraph, const Viewport& viewport) override;
 		const SerializableObjectDescriptor& GetSerializationDescriptor() const override;
-	public:
-		bool Enabled;
 	};
 
 	template<>
@@ -29,7 +27,6 @@ namespace Flare
 	{
 		void OnSerialize(ToneMapping& toneMapping, SerializationStream& stream)
 		{
-			stream.Serialize("Enabled", SerializationValue(toneMapping.Enabled));
 		}
 	};
 

@@ -444,6 +444,14 @@ namespace Flare
 
                 for (const auto& entry : postProcessing.GetEntries())
                 {
+                    bool enabled = entry.Effect->IsEnabled();
+                    ImGui::PushID(entry.Effect.get());
+                    if (ImGui::Checkbox("Enabled", &enabled))
+                    {
+                        entry.Effect->SetEnabled(enabled);
+                    }
+                    ImGui::PopID();
+
                     EditorGUI::ObjectField(*entry.Descriptor, entry.Effect.get(), &Scene::GetActive()->GetECSWorld());
                 }
 

@@ -31,8 +31,13 @@ namespace Flare
 			return {};
 		}
 
+		void MarkAsDirty();
+
 		inline const std::vector<PostProcessingEntry>& GetEntries() const { return m_Entries; }
+		inline bool IsDirty() const { return m_IsDirty; }
 	private:
 		std::vector<PostProcessingEntry> m_Entries;
+		bool m_Initialized = false;
+		bool m_IsDirty = false;
 	};
 }

@@ -42,6 +42,9 @@ namespace Flare
 		if (scene == nullptr)
 			return;
 
+		if (scene->GetPostProcessingManager().IsDirty())
+			m_ShouldRebuildRenderGraph = true;
+
 		PrepareViewport();
 
 		if (m_Viewport.GetSize() != glm::ivec2(0))
@@ -91,6 +94,13 @@ namespace Flare
 	void ViewportWindow::RequestRenderGraphRebuild()
 	{
 		m_ShouldRebuildRenderGraph = true;
+
+		Ref<Scene> scene = GetScene();
+
+		if (scene != nullptr)
+		{
+			scene->GetPostProcessingManager().MarkAsDirty();
+		}
 	}
 
 	void ViewportWindow::BeginImGui()
@@ -272,7 +282,14 @@ namespace Flare
 			m_Viewport.Graph.AddPass(ssaoBlitPass, CreateRef<SSAOBlitPass>(intermediateColorTexture));
 		}
 
-		GetScene()->GetPostProcessingManager().RegisterRenderPasses(m_Viewport.Graph, m_Viewport);
+		Ref<Scene> scene = GetScene();
+
+		if (scene)
+		{
+			PostProcessingManager& postProcessing = scene->GetPostProcessingManager();
+			postProcessing.MarkAsDirty(); // HACK
+			postProcessing.RegisterRenderPasses(m_Viewport.Graph, m_Viewport);
+		}
 
 		m_Viewport.Graph.Build();
 	}

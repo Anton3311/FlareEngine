@@ -22,7 +22,6 @@ namespace Flare
 		void RegisterRenderPasses(RenderGraph& renderGraph, const Viewport& viewport) override;
 		const SerializableObjectDescriptor& GetSerializationDescriptor() const override;
 	public:
-		bool Enabled;
 		glm::vec4 Color;
 		float Radius;
 		float Smoothness;
