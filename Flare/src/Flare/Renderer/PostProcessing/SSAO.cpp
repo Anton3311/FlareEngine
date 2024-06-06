@@ -103,6 +103,7 @@ namespace Flare
 	void SSAOMainPass::OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
 	{
 		Ref<VulkanCommandBuffer> vulkanCommandBuffer = As<VulkanCommandBuffer>(commandBuffer);
+#if 0
 		vulkanCommandBuffer->TransitionImageLayout(
 			As<VulkanTexture>(m_NormalsTexture)->GetImageHandle(),
 			VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
@@ -111,6 +112,7 @@ namespace Flare
 			As<VulkanTexture>(m_DepthTexture)->GetImageHandle(), true,
 			VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
 			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+#endif
 
 		commandBuffer->BeginRenderTarget(context.GetRenderTarget());
 
@@ -132,6 +134,7 @@ namespace Flare
 
 		commandBuffer->EndRenderTarget();
 
+#if 0
 		vulkanCommandBuffer->TransitionImageLayout(
 			As<VulkanTexture>(m_NormalsTexture)->GetImageHandle(),
 			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
@@ -140,6 +143,7 @@ namespace Flare
 			As<VulkanTexture>(m_DepthTexture)->GetImageHandle(), true,
 			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
 			VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
+#endif
 	}
 
 
@@ -164,6 +168,7 @@ namespace Flare
 
 	void SSAOComposingPass::OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
 	{
+#if 0
 		Ref<VulkanCommandBuffer> vulkanCommandBuffer = As<VulkanCommandBuffer>(commandBuffer);
 		vulkanCommandBuffer->TransitionImageLayout(
 			As<VulkanTexture>(m_AOTexture)->GetImageHandle(),
@@ -173,6 +178,7 @@ namespace Flare
 			As<VulkanTexture>(m_ColorTexture)->GetImageHandle(),
 			VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
 			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+#endif
 
 		commandBuffer->BeginRenderTarget(context.GetRenderTarget());
 
@@ -194,6 +200,7 @@ namespace Flare
 
 		commandBuffer->EndRenderTarget();
 
+#if 0
 		vulkanCommandBuffer->TransitionImageLayout(
 			As<VulkanTexture>(m_AOTexture)->GetImageHandle(),
 			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
@@ -202,5 +209,6 @@ namespace Flare
 			As<VulkanTexture>(m_ColorTexture)->GetImageHandle(),
 			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
 			VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+#endif
 	}
 }

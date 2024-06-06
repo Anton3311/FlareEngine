@@ -83,10 +83,13 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 
 		Ref<VulkanCommandBuffer> vulkanCommandBuffer = As<VulkanCommandBuffer>(commandBuffer);
+
+#if 0
 		vulkanCommandBuffer->TransitionImageLayout(
 			As<VulkanTexture>(m_ColorTexture)->GetImageHandle(),
 			VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
 			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+#endif
 
 		auto colorTextureIndex = m_Material->GetShader()->GetPropertyIndex("u_ScreenBuffer");
 
@@ -101,9 +104,11 @@ namespace Flare
 
 		commandBuffer->EndRenderTarget();
 
+#if 0
 		vulkanCommandBuffer->TransitionImageLayout(
 			As<VulkanTexture>(m_ColorTexture)->GetImageHandle(),
 			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
 			VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+#endif
 	}
 }

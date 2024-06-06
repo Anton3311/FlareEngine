@@ -283,6 +283,10 @@ namespace Flare
 		m_Viewport.NormalsAttachmentIndex = 1;
 		m_Viewport.DepthAttachmentIndex = 2;
 		m_Viewport.RenderTarget = FrameBuffer::Create(Span(attachmentTextures, 3));
+
+		m_Viewport.Graph.AddFinalTransition(m_Viewport.ColorTexture, ImageLayout::AttachmentOutput);
+		m_Viewport.Graph.AddFinalTransition(m_Viewport.NormalsTexture, ImageLayout::AttachmentOutput);
+		m_Viewport.Graph.AddFinalTransition(m_Viewport.DepthTexture, ImageLayout::AttachmentOutput);
 	}
 
 	void SceneViewportWindow::OnClear()

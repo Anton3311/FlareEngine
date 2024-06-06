@@ -16,6 +16,16 @@ namespace Flare
 		node.Specifications = specifications;
 	}
 
+	void RenderGraph::AddFinalTransition(Ref<Texture> texture, ImageLayout finalLayout)
+	{
+		FLARE_CORE_ASSERT(texture != nullptr);
+
+		LayoutTransition& transition = m_FinalTransitions.emplace_back();
+		transition.TextureHandle = texture;
+		transition.InitialLayout = ImageLayout::Undefined;
+		transition.FinalLayout = finalLayout;
+	}
+
 	void RenderGraph::Execute(Ref<CommandBuffer> commandBuffer)
 	{
 		Ref<VulkanCommandBuffer> vulkanCommandBuffer = As<VulkanCommandBuffer>(commandBuffer);
@@ -24,26 +34,12 @@ namespace Flare
 		{
 			RenderGraphContext context(Renderer::GetCurrentViewport(), node.RenderTarget);
 
-			for (const auto& transition : node.InputTransitions)
-			{
-				VkImage image = As<VulkanTexture>(transition.TextureHandle)->GetImageHandle();
-
-				TextureFormat format = transition.TextureHandle->GetFormat();
-				VkImageLayout initialLayout = ImageLayoutToVulkanImageLayout(transition.InitialLayout, format);
-				VkImageLayout finalLayout = ImageLayoutToVulkanImageLayout(transition.FinalLayout, format);
-
-				if (IsDepthTextureFormat(format))
-				{
-					vulkanCommandBuffer->TransitionDepthImageLayout(image, HasStencilComponent(format), initialLayout, finalLayout);
-				}
-				else
-				{
-					vulkanCommandBuffer->TransitionImageLayout(image, initialLayout, finalLayout);
-				}
-			}
+			TransitionLayouts(commandBuffer, node.InputTransitions);
 
 			node.Pass->OnRender(context, commandBuffer);
 		}
+
+		TransitionLayouts(commandBuffer, m_FinalTransitions);
 	}
 
 	void RenderGraph::Build()
@@ -64,7 +60,7 @@ namespace Flare
 			node.RenderTarget->SetDebugName(node.Specifications.GetDebugName());
 		}
 
-		Build2();
+		GenerateLayoutTransitions();
 	}
 
 	void RenderGraph::Clear()
@@ -84,7 +80,7 @@ namespace Flare
 		std::optional<WritingRenderPass> LastWritingPass;
 	};
 
-	void RenderGraph::Build2()
+	void RenderGraph::GenerateLayoutTransitions()
 	{
 		std::vector<std::vector<LayoutTransition>> renderPassTransitions;
 		renderPassTransitions.reserve(m_Nodes.size());
@@ -156,6 +152,34 @@ namespace Flare
 			for (const auto& output : node.Specifications.GetOutputs())
 			{
 				transitionLayout(output.AttachmentTexture, ImageLayout::AttachmentOutput, node.InputTransitions);
+			}
+		}
+
+		for (LayoutTransition& transition : m_FinalTransitions)
+		{
+			transition.InitialLayout = getPreviousImageLayout(transition.TextureHandle);
+		}
+	}
+
+	void RenderGraph::TransitionLayouts(Ref<CommandBuffer> commandBuffer, const std::vector<LayoutTransition>& transitions)
+	{
+		Ref<VulkanCommandBuffer> vulkanCommandBuffer = As<VulkanCommandBuffer>(commandBuffer);
+
+		for (const LayoutTransition& transition : transitions)
+		{
+			VkImage image = As<VulkanTexture>(transition.TextureHandle)->GetImageHandle();
+
+			TextureFormat format = transition.TextureHandle->GetFormat();
+			VkImageLayout initialLayout = ImageLayoutToVulkanImageLayout(transition.InitialLayout, format);
+			VkImageLayout finalLayout = ImageLayoutToVulkanImageLayout(transition.FinalLayout, format);
+
+			if (IsDepthTextureFormat(format))
+			{
+				vulkanCommandBuffer->TransitionDepthImageLayout(image, HasStencilComponent(format), initialLayout, finalLayout);
+			}
+			else
+			{
+				vulkanCommandBuffer->TransitionImageLayout(image, initialLayout, finalLayout);
 			}
 		}
 	}
