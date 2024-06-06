@@ -48,8 +48,7 @@ namespace Flare
 
 		RenderGraphPassSpecifications blitPass{};
 		blitPass.SetDebugName("ToneMappingBlit");
-		blitPass.AddInput(intermediateTexture, ImageLayout::TransferSource);
-		blitPass.AddOutput(viewport.ColorTexture, 0, ImageLayout::TransferDestination);
+		BlitPass::ConfigureSpecifications(blitPass, intermediateTexture, viewport.ColorTexture);
 
 		renderGraph.AddPass(toneMappingPass, CreateRef<ToneMappingPass>(viewport.ColorTexture));
 		renderGraph.AddPass(blitPass, CreateRef<BlitPass>(intermediateTexture, TextureFiltering::Closest));
@@ -74,13 +73,14 @@ namespace Flare
 
 		Ref<Shader> shader = AssetManager::GetAsset<Shader>(shaderHandle.value());
 		m_Material = Material::Create(shader);
-
-		
 	}
 
 	void ToneMappingPass::OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
 	{
 		FLARE_PROFILE_FUNCTION();
+
+		if (m_Material == nullptr)
+			return;
 
 		Ref<VulkanCommandBuffer> vulkanCommandBuffer = As<VulkanCommandBuffer>(commandBuffer);
 

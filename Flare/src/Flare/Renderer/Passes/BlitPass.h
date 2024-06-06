@@ -10,6 +10,8 @@ namespace Flare
 	public:
 		BlitPass(Ref<Texture> sourceTexture, TextureFiltering filter);
 		void OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer) override;
+
+		static void ConfigureSpecifications(RenderGraphPassSpecifications& specifications, Ref<Texture> source, Ref<Texture> destination);
 	private:
 		TextureFiltering m_Filter = TextureFiltering::Closest;
 		Ref<Texture> m_SourceTexture = nullptr;

@@ -67,8 +67,7 @@ namespace Flare
 
 		RenderGraphPassSpecifications ssaoBlitPass{};
 		ssaoBlitPass.SetDebugName("SSAOBlitPass");
-		ssaoBlitPass.AddInput(intermediateColorTexture, ImageLayout::TransferSource);
-		ssaoBlitPass.AddOutput(viewport.ColorTexture, 0, ImageLayout::TransferDestination);
+		BlitPass::ConfigureSpecifications(ssaoBlitPass, intermediateColorTexture, viewport.ColorTexture);
 
 		renderGraph.AddPass(ssaoMainPass, CreateRef<SSAOMainPass>(viewport.NormalsTexture, viewport.DepthTexture));
 		renderGraph.AddPass(ssaoComposingPass, CreateRef<SSAOComposingPass>(viewport.ColorTexture, aoTexture));

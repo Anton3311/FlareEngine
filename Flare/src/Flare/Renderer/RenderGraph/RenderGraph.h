@@ -5,6 +5,7 @@
 
 namespace Flare
 {
+	class Viewport;
 	class FrameBuffer;
 	class VulkanRenderPass;
 	class FLARE_API RenderGraph

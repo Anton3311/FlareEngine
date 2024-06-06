@@ -33,4 +33,10 @@ namespace Flare
 			VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 #endif
 	}
+
+	void BlitPass::ConfigureSpecifications(RenderGraphPassSpecifications& specifications, Ref<Texture> source, Ref<Texture> destination)
+	{
+		specifications.AddInput(source, ImageLayout::TransferSource);
+		specifications.AddOutput(destination, 0, ImageLayout::TransferDestination);
+	}
 }

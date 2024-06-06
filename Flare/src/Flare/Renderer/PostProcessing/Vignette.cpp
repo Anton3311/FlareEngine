@@ -36,7 +36,6 @@ namespace Flare
 		
 		RenderGraphPassSpecifications specifications{};
 		specifications.SetDebugName("VignettePass");
-		specifications.AddInput(viewport.ColorTexture);
 		specifications.AddOutput(viewport.ColorTexture, 0);
 
 		renderGraph.AddPass(specifications, CreateRef<VignettePass>());
