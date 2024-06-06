@@ -35,10 +35,9 @@ namespace Flare
 
 		void DrawIndexed(const Ref<const Mesh>& mesh, uint32_t subMeshIndex, uint32_t baseInstance, uint32_t instanceCount) override;
 
-		// Expects source attachment to be in COLOR_ATTACHMENT_OUTPUT layout
-		// Destination attachment can have any layout
-		//
-		// Leaves the source attachment in TRANSFER_SRC layout and destination in COLOR_ATTACHMENT_OUTPUT layout
+		// Expects source attachment to be in TRANSFER_SRC
+		// Destination attachment - TRANSFER_DST
+		// Leaves layouts unchanged
 		void Blit(Ref<FrameBuffer> source, uint32_t sourceAttachment, Ref<FrameBuffer> destination, uint32_t destinationAttachment, TextureFiltering filter) override;
 		void Blit(Ref<Texture> source, Ref<Texture> destination, TextureFiltering filter) override;
 

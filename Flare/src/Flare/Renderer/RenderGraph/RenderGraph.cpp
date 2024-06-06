@@ -133,7 +133,7 @@ namespace Flare
 			FLARE_CORE_INFO("Input:");
 			for (const auto& input : node.Specifications.GetInputs())
 			{
-				FLARE_CORE_INFO("\t{}", (uint64_t)input.get());
+				FLARE_CORE_INFO("\t{}", (uint64_t)input.InputTexture.get());
 			}
 
 			FLARE_CORE_INFO("Outputs:");
@@ -146,12 +146,12 @@ namespace Flare
 
 			for (const auto& input : node.Specifications.GetInputs())
 			{
-				transitionLayout(input, ImageLayout::ReadOnly, node.InputTransitions);
+				transitionLayout(input.InputTexture, input.Layout, node.InputTransitions);
 			}
 
 			for (const auto& output : node.Specifications.GetOutputs())
 			{
-				transitionLayout(output.AttachmentTexture, ImageLayout::AttachmentOutput, node.InputTransitions);
+				transitionLayout(output.AttachmentTexture, output.Layout, node.InputTransitions);
 			}
 		}
 

@@ -9,17 +9,20 @@ namespace Flare
 		m_DebugName = debugName;
 	}
 
-	void RenderGraphPassSpecifications::AddInput(const Ref<Texture>& texture)
+	void RenderGraphPassSpecifications::AddInput(const Ref<Texture>& texture, ImageLayout layout)
 	{
 		FLARE_CORE_ASSERT(texture != nullptr);
-		m_Inputs.push_back(texture);
+		Input& input = m_Inputs.emplace_back();
+		input.InputTexture = texture;
+		input.Layout = layout;
 	}
 
-	void RenderGraphPassSpecifications::AddOutput(const Ref<Texture>& texture, uint32_t attachmentIndex)
+	void RenderGraphPassSpecifications::AddOutput(const Ref<Texture>& texture, uint32_t attachmentIndex, ImageLayout layout)
 	{
 		FLARE_CORE_ASSERT(texture != nullptr);
 		auto& output = m_Outputs.emplace_back();
 		output.AttachmentTexture = texture;
 		output.AttachmentIndex = attachmentIndex;
+		output.Layout = layout;
 	}
 }

@@ -16,17 +16,21 @@ namespace Flare
 	{
 		Ref<VulkanCommandBuffer> vulkanCommandBuffer = As<VulkanCommandBuffer>(commandBuffer);
 
+#if 0
 		// NOTE: Blit transitions the source texture from COLOR_ATTACHMENT_OUTPUT_OPTIMAL to TRANSFER_SRC
 		vulkanCommandBuffer->TransitionImageLayout(
 			As<VulkanTexture>(m_SourceTexture)->GetImageHandle(),
 			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
 			VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+#endif
 
 		commandBuffer->Blit(m_SourceTexture, context.GetRenderTarget()->GetAttachment(0), m_Filter);
 
+#if 0
 		vulkanCommandBuffer->TransitionImageLayout(
 			As<VulkanTexture>(m_SourceTexture)->GetImageHandle(),
 			VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
 			VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+#endif
 	}
 }

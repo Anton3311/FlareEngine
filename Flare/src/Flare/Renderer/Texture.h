@@ -77,6 +77,8 @@ namespace Flare
 		General,
 		ReadOnly,
 		AttachmentOutput,
+		TransferSource,
+		TransferDestination,
 	};
 
 	struct TextureSpecifications

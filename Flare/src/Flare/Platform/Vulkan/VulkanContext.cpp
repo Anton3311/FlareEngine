@@ -1014,6 +1014,10 @@ namespace Flare
 			return VK_IMAGE_LAYOUT_GENERAL;
 		case ImageLayout::ReadOnly:
 			return VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+		case ImageLayout::TransferSource:
+			return VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+		case ImageLayout::TransferDestination:
+			return VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
 		case ImageLayout::AttachmentOutput:
 		{
 			if (IsDepthTextureFormat(format))
