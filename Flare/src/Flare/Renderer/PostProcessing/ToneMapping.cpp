@@ -4,14 +4,10 @@
 
 #include "Flare/Renderer/Renderer.h"
 #include "Flare/Renderer/ShaderLibrary.h"
-
 #include "Flare/Renderer/CommandBuffer.h"
 #include "Flare/Renderer/GraphicsContext.h"
 #include "Flare/Renderer/RendererPrimitives.h"
-
 #include "Flare/Renderer/Passes/BlitPass.h"
-
-#include "Flare/Platform/Vulkan/VulkanCommandBuffer.h"
 
 #include "FlareCore/Profiler/Profiler.h"
 
@@ -82,17 +78,7 @@ namespace Flare
 		if (m_Material == nullptr)
 			return;
 
-		Ref<VulkanCommandBuffer> vulkanCommandBuffer = As<VulkanCommandBuffer>(commandBuffer);
-
-#if 0
-		vulkanCommandBuffer->TransitionImageLayout(
-			As<VulkanTexture>(m_ColorTexture)->GetImageHandle(),
-			VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-#endif
-
 		auto colorTextureIndex = m_Material->GetShader()->GetPropertyIndex("u_ScreenBuffer");
-
 		if (colorTextureIndex)
 			m_Material->GetPropertyValue<TexturePropertyValue>(*colorTextureIndex).SetTexture(m_ColorTexture);
 
@@ -103,12 +89,5 @@ namespace Flare
 		commandBuffer->DrawIndexed(RendererPrimitives::GetFullscreenQuadMesh(), 0, 0, 1);
 
 		commandBuffer->EndRenderTarget();
-
-#if 0
-		vulkanCommandBuffer->TransitionImageLayout(
-			As<VulkanTexture>(m_ColorTexture)->GetImageHandle(),
-			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-			VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
-#endif
 	}
 }

@@ -10,8 +10,6 @@
 #include "Flare/Renderer/CommandBuffer.h"
 #include "Flare/Renderer/RendererPrimitives.h"
 
-#include "Flare/Platform/Vulkan/VulkanCommandBuffer.h"
-
 #include "FlareCore/Profiler/Profiler.h"
 
 namespace Flare

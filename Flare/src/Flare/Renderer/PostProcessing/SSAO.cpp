@@ -7,10 +7,7 @@
 #include "Flare/Renderer/CommandBuffer.h"
 #include "Flare/Renderer/ShaderLibrary.h"
 #include "Flare/Renderer/GraphicsContext.h"
-
 #include "Flare/Renderer/Passes/BlitPass.h"
-
-#include "Flare/Platform/Vulkan/VulkanCommandBuffer.h"
 
 #include "Flare/AssetManager/AssetManager.h"
 
@@ -101,18 +98,6 @@ namespace Flare
 
 	void SSAOMainPass::OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
 	{
-		Ref<VulkanCommandBuffer> vulkanCommandBuffer = As<VulkanCommandBuffer>(commandBuffer);
-#if 0
-		vulkanCommandBuffer->TransitionImageLayout(
-			As<VulkanTexture>(m_NormalsTexture)->GetImageHandle(),
-			VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-		vulkanCommandBuffer->TransitionDepthImageLayout(
-			As<VulkanTexture>(m_DepthTexture)->GetImageHandle(), true,
-			VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
-			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-#endif
-
 		commandBuffer->BeginRenderTarget(context.GetRenderTarget());
 
 		auto biasIndex = m_Material->GetShader()->GetPropertyIndex("u_Params.Bias");
@@ -132,17 +117,6 @@ namespace Flare
 		commandBuffer->DrawIndexed(RendererPrimitives::GetFullscreenQuadMesh(), 0, 0, 1);
 
 		commandBuffer->EndRenderTarget();
-
-#if 0
-		vulkanCommandBuffer->TransitionImageLayout(
-			As<VulkanTexture>(m_NormalsTexture)->GetImageHandle(),
-			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-			VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
-		vulkanCommandBuffer->TransitionDepthImageLayout(
-			As<VulkanTexture>(m_DepthTexture)->GetImageHandle(), true,
-			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-			VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
-#endif
 	}
 
 
@@ -167,18 +141,6 @@ namespace Flare
 
 	void SSAOComposingPass::OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
 	{
-#if 0
-		Ref<VulkanCommandBuffer> vulkanCommandBuffer = As<VulkanCommandBuffer>(commandBuffer);
-		vulkanCommandBuffer->TransitionImageLayout(
-			As<VulkanTexture>(m_AOTexture)->GetImageHandle(),
-			VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-		vulkanCommandBuffer->TransitionImageLayout(
-			As<VulkanTexture>(m_ColorTexture)->GetImageHandle(),
-			VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-#endif
-
 		commandBuffer->BeginRenderTarget(context.GetRenderTarget());
 
 		commandBuffer->SetViewportAndScisors(Math::Rect(glm::vec2(0.0f, 0.0f), (glm::vec2)context.GetViewport().GetSize()));
@@ -198,16 +160,5 @@ namespace Flare
 		commandBuffer->DrawIndexed(RendererPrimitives::GetFullscreenQuadMesh(), 0, 0, 1);
 
 		commandBuffer->EndRenderTarget();
-
-#if 0
-		vulkanCommandBuffer->TransitionImageLayout(
-			As<VulkanTexture>(m_AOTexture)->GetImageHandle(),
-			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-			VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
-		vulkanCommandBuffer->TransitionImageLayout(
-			As<VulkanTexture>(m_ColorTexture)->GetImageHandle(),
-			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-			VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
-#endif
 	}
 }
