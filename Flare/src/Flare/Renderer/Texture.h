@@ -71,6 +71,14 @@ namespace Flare
 
 	FLARE_IMPL_ENUM_BITFIELD(TextureUsage);
 
+	enum class ImageLayout
+	{
+		Undefined,
+		General,
+		ReadOnly,
+		AttachmentOutput,
+	};
+
 	struct TextureSpecifications
 	{
 		static constexpr uint32_t DefaultMipLevelsCount = 4;

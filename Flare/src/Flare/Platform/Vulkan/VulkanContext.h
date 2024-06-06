@@ -70,6 +70,8 @@ namespace Flare
 		VulkanAllocation Allocation;
 	};
 
+	FLARE_API VkImageLayout ImageLayoutToVulkanImageLayout(ImageLayout layout, TextureFormat format);
+
 	class FLARE_API VulkanContext : public GraphicsContext
 	{
 	public:

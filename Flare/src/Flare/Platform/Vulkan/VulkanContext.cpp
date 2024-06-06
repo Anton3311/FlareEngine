@@ -1003,4 +1003,34 @@ namespace Flare
 
 		return supportedLayers;
 	}
+
+	VkImageLayout ImageLayoutToVulkanImageLayout(ImageLayout layout, TextureFormat format)
+	{
+		switch (layout)
+		{
+		case ImageLayout::Undefined:
+			return VK_IMAGE_LAYOUT_UNDEFINED;
+		case ImageLayout::General:
+			return VK_IMAGE_LAYOUT_GENERAL;
+		case ImageLayout::ReadOnly:
+			return VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+		case ImageLayout::AttachmentOutput:
+		{
+			if (IsDepthTextureFormat(format))
+			{
+				if (HasStencilComponent(format))
+				{
+					return VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+				}
+
+				return VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
+			}
+
+			return VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+		}
+		}
+
+		FLARE_CORE_ASSERT(false);
+		return VK_IMAGE_LAYOUT_UNDEFINED;
+	}
 }
