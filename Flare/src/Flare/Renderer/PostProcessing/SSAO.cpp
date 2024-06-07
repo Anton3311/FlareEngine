@@ -68,7 +68,7 @@ namespace Flare
 
 		renderGraph.AddPass(ssaoMainPass, CreateRef<SSAOMainPass>(viewport.NormalsTexture, viewport.DepthTexture));
 		renderGraph.AddPass(ssaoComposingPass, CreateRef<SSAOComposingPass>(viewport.ColorTexture, aoTexture));
-		renderGraph.AddPass(ssaoBlitPass, CreateRef<BlitPass>(intermediateColorTexture, TextureFiltering::Closest));
+		renderGraph.AddPass(ssaoBlitPass, CreateRef<BlitPass>(intermediateColorTexture, viewport.ColorTexture, TextureFiltering::Closest));
 	}
 
 	const SerializableObjectDescriptor& SSAO::GetSerializationDescriptor() const

@@ -12,6 +12,12 @@ namespace Flare
 	class Texture;
 	class CommandBuffer;
 
+	enum class RenderGraphPassType
+	{
+		Graphics,
+		Other,
+	};
+
 	class FLARE_API RenderGraphPassSpecifications
 	{
 	public:
@@ -28,6 +34,8 @@ namespace Flare
 			ImageLayout Layout = ImageLayout::Undefined;
 		};
 
+		void SetType(RenderGraphPassType type) { m_Type = type; }
+
 		void SetDebugName(std::string_view debugName);
 		void AddInput(const Ref<Texture>& texture, ImageLayout layout = ImageLayout::ReadOnly);
 		void AddOutput(const Ref<Texture>& texture, uint32_t attachmentIndex, ImageLayout layout = ImageLayout::AttachmentOutput);
@@ -35,7 +43,9 @@ namespace Flare
 		inline const std::vector<Input>& GetInputs() const { return m_Inputs; };
 		inline const std::vector<OutputAttachment>& GetOutputs() const { return m_Outputs; }
 		inline const std::string& GetDebugName() const { return m_DebugName; }
+		inline RenderGraphPassType GetType() const { return m_Type; }
 	private:
+		RenderGraphPassType m_Type = RenderGraphPassType::Graphics;
 		std::string m_DebugName;
 		std::vector<Input> m_Inputs;
 		std::vector<OutputAttachment> m_Outputs;

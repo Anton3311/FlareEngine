@@ -47,7 +47,7 @@ namespace Flare
 		BlitPass::ConfigureSpecifications(blitPass, intermediateTexture, viewport.ColorTexture);
 
 		renderGraph.AddPass(toneMappingPass, CreateRef<ToneMappingPass>(viewport.ColorTexture));
-		renderGraph.AddPass(blitPass, CreateRef<BlitPass>(intermediateTexture, TextureFiltering::Closest));
+		renderGraph.AddPass(blitPass, CreateRef<BlitPass>(intermediateTexture, viewport.ColorTexture, TextureFiltering::Closest));
 	}
 
 	const SerializableObjectDescriptor& ToneMapping::GetSerializationDescriptor() const

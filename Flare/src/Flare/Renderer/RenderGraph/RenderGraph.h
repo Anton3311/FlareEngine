@@ -40,7 +40,7 @@ namespace Flare
 			RenderGraphPassSpecifications Specifications;
 			Ref<RenderGraphPass> Pass = nullptr;
 			Ref<FrameBuffer> RenderTarget = nullptr;
-			std::vector<LayoutTransition> InputTransitions;
+			std::vector<LayoutTransition> Transitions;
 		};
 
 		std::vector<RenderPassNode> m_Nodes;

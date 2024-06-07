@@ -7,8 +7,8 @@
 
 namespace Flare
 {
-	BlitPass::BlitPass(Ref<Texture> sourceTexture, TextureFiltering filter)
-		: m_SourceTexture(sourceTexture), m_Filter(filter)
+	BlitPass::BlitPass(Ref<Texture> sourceTexture, Ref<Texture> destination, TextureFiltering filter)
+		: m_SourceTexture(sourceTexture), m_Destination(destination), m_Filter(filter)
 	{
 	}
 
@@ -24,7 +24,7 @@ namespace Flare
 			VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 #endif
 
-		commandBuffer->Blit(m_SourceTexture, context.GetRenderTarget()->GetAttachment(0), m_Filter);
+		commandBuffer->Blit(m_SourceTexture, m_Destination, m_Filter);
 
 #if 0
 		vulkanCommandBuffer->TransitionImageLayout(
@@ -36,6 +36,7 @@ namespace Flare
 
 	void BlitPass::ConfigureSpecifications(RenderGraphPassSpecifications& specifications, Ref<Texture> source, Ref<Texture> destination)
 	{
+		specifications.SetType(RenderGraphPassType::Other);
 		specifications.AddInput(source, ImageLayout::TransferSource);
 		specifications.AddOutput(destination, 0, ImageLayout::TransferDestination);
 	}
