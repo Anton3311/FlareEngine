@@ -232,6 +232,11 @@ namespace Flare
 				description.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 				description.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
 
+				if (description.initialLayout == VK_IMAGE_LAYOUT_UNDEFINED)
+				{
+					description.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+				}
+
 				FLARE_CORE_ASSERT(description.finalLayout != VK_IMAGE_LAYOUT_UNDEFINED);
 
 				attachmentTextures.push_back(outputs[outputIndex].AttachmentTexture);
