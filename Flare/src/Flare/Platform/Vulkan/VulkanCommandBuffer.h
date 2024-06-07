@@ -91,7 +91,6 @@ namespace Flare
 
 		VkCommandBuffer GetHandle() const { return m_CommandBuffer; }
 	private:
-		std::unordered_set<uint64_t> m_UsedMaterials;
 		std::vector<VkImageMemoryBarrier> m_ImageBarriers;
 
 		Ref<const Mesh> m_CurrentMesh = nullptr;

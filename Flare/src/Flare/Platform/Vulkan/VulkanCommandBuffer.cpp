@@ -270,7 +270,6 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 		VK_CHECK_RESULT(vkEndCommandBuffer(m_CommandBuffer));
-		m_UsedMaterials.clear();
 	}
 
 	void VulkanCommandBuffer::BeginRenderPass(const Ref<VulkanRenderPass>& renderPass, const Ref<VulkanFrameBuffer>& frameBuffer)

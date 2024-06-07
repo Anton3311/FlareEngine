@@ -3,7 +3,6 @@
 #include "FlareCore/Core.h"
 #include "Flare/Renderer/FrameBuffer.h"
 #include "Flare/Renderer/RenderData.h"
-#include "Flare/Renderer/RenderTargetsPool.h"
 
 #include "Flare/Renderer/RenderGraph/RenderGraph.h"
 
@@ -16,8 +15,6 @@ namespace Flare
 	class FLARE_API Viewport
 	{
 	public:
-		Viewport();
-
 		inline glm::ivec2 GetPosition() const { return m_Position; }
 		inline glm::ivec2 GetSize() const { return m_Size; }
 
@@ -30,7 +27,6 @@ namespace Flare
 
 		RenderData FrameData;
 		Ref<FrameBuffer> RenderTarget = nullptr;
-		RenderTargetsPool RTPool;
 
 		RenderGraph Graph;
 

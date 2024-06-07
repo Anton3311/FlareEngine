@@ -373,7 +373,7 @@ namespace Flare
 			ExecuteRenderPasses(s_RendererData.Passes.BeforeOpaqueGeometryPasses);
 		}
 
-		RenderingContext context(s_RendererData.CurrentViewport->RenderTarget, s_RendererData.CurrentViewport->RTPool);
+		RenderingContext context(s_RendererData.CurrentViewport->RenderTarget);
 		s_RendererData.Passes.Geometry->OnRender(context);
 		
 		{
@@ -459,7 +459,7 @@ namespace Flare
 			ExecuteRenderPasses(s_RendererData.Passes.BeforeShadowsPasses);
 		}
 
-		RenderingContext context(s_RendererData.CurrentViewport->RenderTarget, s_RendererData.CurrentViewport->RTPool);
+		RenderingContext context(s_RendererData.CurrentViewport->RenderTarget);
 		s_RendererData.Passes.Shadow->OnRender(context);
 	}
 
@@ -555,7 +555,7 @@ namespace Flare
 	{
 		FLARE_CORE_ASSERT(s_RendererData.CurrentViewport);
 
-		RenderingContext context(s_RendererData.CurrentViewport->RenderTarget, s_RendererData.CurrentViewport->RTPool);
+		RenderingContext context(s_RendererData.CurrentViewport->RenderTarget);
 		for (Ref<RenderPass>& pass : passes)
 			pass->OnRender(context);
 	}

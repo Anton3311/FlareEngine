@@ -81,8 +81,6 @@ namespace Flare
 				OnViewportChanged();
 			}
 
-			m_Viewport.RTPool.SetRenderTargetsSize(m_Viewport.GetSize());
-
 			if (m_ShouldRebuildRenderGraph)
 			{
 				BuildRenderGraph();
