@@ -42,9 +42,6 @@ namespace Flare
 		if (scene == nullptr)
 			return;
 
-		if (scene->GetPostProcessingManager().IsDirty())
-			m_ShouldRebuildRenderGraph = true;
-
 		PrepareViewport();
 
 		if (m_Viewport.GetSize() != glm::ivec2(0))
@@ -71,6 +68,9 @@ namespace Flare
 
 	void ViewportWindow::PrepareViewport()
 	{
+		if (GetScene()->GetPostProcessingManager().IsDirty())
+			m_ShouldRebuildRenderGraph = true;
+
 		if (m_Viewport.GetSize() != glm::ivec2(0))
 		{
 			const FrameBufferSpecifications frameBufferSpecs = m_Viewport.RenderTarget->GetSpecifications();
