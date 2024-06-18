@@ -147,7 +147,7 @@ namespace Flare
 				attachmentTextures[0]->GetHeight(),
 				compatibleRenderPass,
 				Span<Ref<Texture>>::FromVector(attachmentTextures),
-				true);
+				false);
 
 			node.RenderTarget->SetDebugName(node.Specifications.GetDebugName());
 		}
