@@ -64,6 +64,29 @@ namespace Flare
 		std::optional<WritingRenderPass> LastWritingPass;
 	};
 
+	static const char* ImageLayoutToString(ImageLayout layout)
+	{
+		switch (layout)
+		{
+		case ImageLayout::Undefined:
+			return "Undefined";
+		case ImageLayout::General:
+			return "General";
+		case ImageLayout::ReadOnly:
+			return "ReadOnly";
+		case ImageLayout::AttachmentOutput:
+			return "AttachmentOutput";
+		case ImageLayout::TransferDestination:
+			return "TransferDestination";
+		case ImageLayout::TransferSource:
+			return "TransferSource";
+		}
+
+		FLARE_CORE_ERROR("Invalid ImageLayout: {}", (uint32_t)layout);
+		FLARE_CORE_ASSERT(false);
+		return "";
+	}
+
 	void RenderGraph::GenerateLayoutTransitions()
 	{
 		std::vector<std::vector<LayoutTransition>> renderPassTransitions;
@@ -72,8 +95,9 @@ namespace Flare
 		std::unordered_map<uint64_t, ResourceState> resourceStates;
 		using ResourceIterator = std::unordered_map<uint64_t, ResourceState>::iterator;
 
-		auto transitionLayout = [&resourceStates, &renderPassTransitions](Ref<Texture> texture, ImageLayout finalLayout, std::vector<LayoutTransition>& transitions)
+		auto transitionLayout = [&resourceStates](Ref<Texture> texture, ImageLayout finalLayout, std::vector<LayoutTransition>& transitions)
 			{
+				FLARE_CORE_ASSERT(texture);
 				uint64_t key = (uint64_t)texture.get();
 				ResourceIterator it = resourceStates.find(key);
 
@@ -112,22 +136,6 @@ namespace Flare
 
 			renderPassTransitions.emplace_back().resize(node.Specifications.GetOutputs().size());
 
-			FLARE_CORE_INFO("Name: {}", node.Specifications.GetDebugName());
-
-			FLARE_CORE_INFO("Input:");
-			for (const auto& input : node.Specifications.GetInputs())
-			{
-				FLARE_CORE_INFO("\t{}", (uint64_t)input.InputTexture.get());
-			}
-
-			FLARE_CORE_INFO("Outputs:");
-			for (const auto& output : node.Specifications.GetOutputs())
-			{
-				FLARE_CORE_INFO("\t{}", (uint64_t)output.AttachmentTexture.get());
-			}
-
-
-
 			for (const auto& input : node.Specifications.GetInputs())
 			{
 				uint64_t key = (uint64_t)input.InputTexture.get();
@@ -144,7 +152,8 @@ namespace Flare
 
 					if (state.LastWritingPass)
 					{
-						renderPassTransitions[state.LastWritingPass->RenderPassIndex][state.LastWritingPass->AttachmentIndex].FinalLayout = input.Layout;
+						auto lastRenderPass = state.LastWritingPass;
+						renderPassTransitions[lastRenderPass->RenderPassIndex][lastRenderPass->AttachmentIndex].FinalLayout = input.Layout;
 						state.Layout = input.Layout;
 						state.LastWritingPass = {};
 					}
@@ -163,6 +172,7 @@ namespace Flare
 			size_t outputIndex = 0;
 			for (const auto& output : node.Specifications.GetOutputs())
 			{
+				FLARE_CORE_ASSERT(output.AttachmentTexture != nullptr);
 				uint64_t key = (uint64_t)output.AttachmentTexture.get();
 				auto it = resourceStates.find(key);
 
@@ -172,10 +182,12 @@ namespace Flare
 					uint64_t key = (uint64_t)output.AttachmentTexture.get();
 
 					LayoutTransition& transition = renderPassTransitions[i][outputIndex];
+					transition.TextureHandle = output.AttachmentTexture;
 					transition.InitialLayout = getPreviousImageLayout(output.AttachmentTexture);
 					transition.FinalLayout = output.Layout;
 
 					ResourceState& state = resourceStates[key];
+					state.Layout = output.Layout;
 					state.LastWritingPass = WritingRenderPass{};
 					state.LastWritingPass->RenderPassIndex = (uint32_t)i;
 					state.LastWritingPass->AttachmentIndex = (uint32_t)outputIndex;
@@ -196,9 +208,11 @@ namespace Flare
 
 		std::vector<VkAttachmentDescription> attachmentDescriptions;
 		std::vector<Ref<Texture>> attachmentTextures;
+
 		for (size_t nodeIndex = 0; nodeIndex < m_Nodes.size(); nodeIndex++)
 		{
 			RenderPassNode& node = m_Nodes[nodeIndex];
+			FLARE_CORE_INFO(node.Specifications.GetDebugName());
 
 			// RenderTargets are only created for Graphics render passes
 			if (node.Specifications.GetType() != RenderGraphPassType::Graphics)
@@ -209,12 +223,28 @@ namespace Flare
 
 			std::optional<uint32_t> depthAttachmentIndex = {};
 
+			for (const auto& transition : node.Transitions)
+			{
+				FLARE_CORE_INFO("  {:x}: {} -> {}",
+					(size_t)transition.TextureHandle.get(),
+					ImageLayoutToString(transition.InitialLayout),
+					ImageLayoutToString(transition.FinalLayout));
+			}
+
 			const auto& outputs = m_Nodes[nodeIndex].Specifications.GetOutputs();
 			for (size_t outputIndex = 0; outputIndex < outputs.size(); outputIndex++)
 			{
 				VkAttachmentDescription& description = attachmentDescriptions.emplace_back();
 				const LayoutTransition& transition = renderPassTransitions[nodeIndex][outputIndex];
 				TextureFormat format = outputs[outputIndex].AttachmentTexture->GetFormat();
+
+				FLARE_CORE_ASSERT(transition.TextureHandle != nullptr);
+
+				FLARE_CORE_INFO("  {} {:x}: {} -> {}",
+					outputIndex,
+					(size_t)transition.TextureHandle.get(),
+					ImageLayoutToString(transition.InitialLayout),
+					ImageLayoutToString(transition.FinalLayout));
 
 				if (IsDepthTextureFormat(format))
 				{
