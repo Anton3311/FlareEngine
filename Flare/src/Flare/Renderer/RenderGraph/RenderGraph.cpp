@@ -1,6 +1,7 @@
 #include "RenderGraph.h"
 
 #include "Flare/Renderer/Renderer.h"
+#include "Flare/Renderer/RenderGraph/RenderGraphBuilder.h"
 
 #include "Flare/Platform/Vulkan/VulkanContext.h"
 #include "Flare/Platform/Vulkan/VulkanCommandBuffer.h"
@@ -34,17 +35,18 @@ namespace Flare
 		{
 			RenderGraphContext context(Renderer::GetCurrentViewport(), node.RenderTarget);
 
-			TransitionLayouts(commandBuffer, node.Transitions);
+			ExecuteLayoutTransitions(commandBuffer, node.Transitions);
 
 			node.Pass->OnRender(context, commandBuffer);
 		}
 
-		TransitionLayouts(commandBuffer, m_FinalTransitions);
+		ExecuteLayoutTransitions(commandBuffer, m_FinalTransitions);
 	}
 
 	void RenderGraph::Build()
 	{
-		GenerateLayoutTransitions();
+		RenderGraphBuilder builder(Span<RenderPassNode>::FromVector(m_Nodes), Span<LayoutTransition>::FromVector(m_FinalTransitions));
+		builder.Build();
 	}
 
 	void RenderGraph::Clear()
@@ -52,242 +54,7 @@ namespace Flare
 		m_Nodes.clear();
 	}
 
-	struct WritingRenderPass
-	{
-		uint32_t RenderPassIndex = UINT32_MAX;
-		uint32_t AttachmentIndex = UINT32_MAX;
-	};
-
-	struct ResourceState
-	{
-		ImageLayout Layout = ImageLayout::Undefined;
-		std::optional<WritingRenderPass> LastWritingPass;
-	};
-
-	static const char* ImageLayoutToString(ImageLayout layout)
-	{
-		switch (layout)
-		{
-		case ImageLayout::Undefined:
-			return "Undefined";
-		case ImageLayout::General:
-			return "General";
-		case ImageLayout::ReadOnly:
-			return "ReadOnly";
-		case ImageLayout::AttachmentOutput:
-			return "AttachmentOutput";
-		case ImageLayout::TransferDestination:
-			return "TransferDestination";
-		case ImageLayout::TransferSource:
-			return "TransferSource";
-		}
-
-		FLARE_CORE_ERROR("Invalid ImageLayout: {}", (uint32_t)layout);
-		FLARE_CORE_ASSERT(false);
-		return "";
-	}
-
-	void RenderGraph::GenerateLayoutTransitions()
-	{
-		std::vector<std::vector<LayoutTransition>> renderPassTransitions;
-		renderPassTransitions.reserve(m_Nodes.size());
-
-		std::unordered_map<uint64_t, ResourceState> resourceStates;
-		using ResourceIterator = std::unordered_map<uint64_t, ResourceState>::iterator;
-
-		auto transitionLayout = [&resourceStates](Ref<Texture> texture, ImageLayout finalLayout, std::vector<LayoutTransition>& transitions)
-			{
-				FLARE_CORE_ASSERT(texture);
-				uint64_t key = (uint64_t)texture.get();
-				ResourceIterator it = resourceStates.find(key);
-
-				ImageLayout initialLayout = ImageLayout::Undefined;
-
-				if (it != resourceStates.end())
-				{
-					initialLayout = it->second.Layout;
-				}
-
-				if (initialLayout == finalLayout)
-					return;
-
-				auto& transition = transitions.emplace_back();
-				transition.TextureHandle = texture;
-				transition.InitialLayout = initialLayout;
-				transition.FinalLayout = finalLayout;
-
-				resourceStates[key] = { finalLayout, WritingRenderPass{} };
-			};
-
-		auto getPreviousImageLayout = [&resourceStates](Ref<Texture> texture) -> ImageLayout
-			{
-				uint64_t key = (uint64_t)texture.get();
-				ResourceIterator it = resourceStates.find(key);
-
-				if (it == resourceStates.end())
-					return ImageLayout::Undefined;
-
-				return it->second.Layout;
-			};
-
-		for (size_t i = 0; i < m_Nodes.size(); i++)
-		{
-			auto& node = m_Nodes[i];
-
-			renderPassTransitions.emplace_back().resize(node.Specifications.GetOutputs().size());
-
-			for (const auto& input : node.Specifications.GetInputs())
-			{
-				uint64_t key = (uint64_t)input.InputTexture.get();
-				auto it = resourceStates.find(key);
-
-				bool explicitTransition = false;
-				if (it == resourceStates.end())
-				{
-					explicitTransition = true;
-				}
-				else
-				{
-					ResourceState& state = it->second;
-
-					if (state.LastWritingPass)
-					{
-						auto lastRenderPass = state.LastWritingPass;
-						renderPassTransitions[lastRenderPass->RenderPassIndex][lastRenderPass->AttachmentIndex].FinalLayout = input.Layout;
-						state.Layout = input.Layout;
-						state.LastWritingPass = {};
-					}
-					else
-					{
-						explicitTransition = true;
-					}
-				}
-
-				if (explicitTransition)
-				{
-					transitionLayout(input.InputTexture, input.Layout, node.Transitions);
-				}
-			}
-
-			size_t outputIndex = 0;
-			for (const auto& output : node.Specifications.GetOutputs())
-			{
-				FLARE_CORE_ASSERT(output.AttachmentTexture != nullptr);
-				uint64_t key = (uint64_t)output.AttachmentTexture.get();
-				auto it = resourceStates.find(key);
-
-				// Only outputs with AttachmentOutput image layout can be used in a RenderPass
-				if (output.Layout == ImageLayout::AttachmentOutput)
-				{
-					uint64_t key = (uint64_t)output.AttachmentTexture.get();
-
-					LayoutTransition& transition = renderPassTransitions[i][outputIndex];
-					transition.TextureHandle = output.AttachmentTexture;
-					transition.InitialLayout = getPreviousImageLayout(output.AttachmentTexture);
-					transition.FinalLayout = output.Layout;
-
-					ResourceState& state = resourceStates[key];
-					state.Layout = output.Layout;
-					state.LastWritingPass = WritingRenderPass{};
-					state.LastWritingPass->RenderPassIndex = (uint32_t)i;
-					state.LastWritingPass->AttachmentIndex = (uint32_t)outputIndex;
-				}
-				else
-				{
-					transitionLayout(output.AttachmentTexture, output.Layout, node.Transitions);
-				}
-
-				outputIndex++;
-			}
-		}
-
-		for (LayoutTransition& transition : m_FinalTransitions)
-		{
-			transition.InitialLayout = getPreviousImageLayout(transition.TextureHandle);
-		}
-
-		std::vector<VkAttachmentDescription> attachmentDescriptions;
-		std::vector<Ref<Texture>> attachmentTextures;
-
-		for (size_t nodeIndex = 0; nodeIndex < m_Nodes.size(); nodeIndex++)
-		{
-			RenderPassNode& node = m_Nodes[nodeIndex];
-			FLARE_CORE_INFO(node.Specifications.GetDebugName());
-
-			// RenderTargets are only created for Graphics render passes
-			if (node.Specifications.GetType() != RenderGraphPassType::Graphics)
-				continue;
-
-			attachmentDescriptions.clear();
-			attachmentTextures.clear();
-
-			std::optional<uint32_t> depthAttachmentIndex = {};
-
-			for (const auto& transition : node.Transitions)
-			{
-				FLARE_CORE_INFO("  {:x}: {} -> {}",
-					(size_t)transition.TextureHandle.get(),
-					ImageLayoutToString(transition.InitialLayout),
-					ImageLayoutToString(transition.FinalLayout));
-			}
-
-			const auto& outputs = m_Nodes[nodeIndex].Specifications.GetOutputs();
-			for (size_t outputIndex = 0; outputIndex < outputs.size(); outputIndex++)
-			{
-				VkAttachmentDescription& description = attachmentDescriptions.emplace_back();
-				const LayoutTransition& transition = renderPassTransitions[nodeIndex][outputIndex];
-				TextureFormat format = outputs[outputIndex].AttachmentTexture->GetFormat();
-
-				FLARE_CORE_ASSERT(transition.TextureHandle != nullptr);
-
-				FLARE_CORE_INFO("  {} {:x}: {} -> {}",
-					outputIndex,
-					(size_t)transition.TextureHandle.get(),
-					ImageLayoutToString(transition.InitialLayout),
-					ImageLayoutToString(transition.FinalLayout));
-
-				if (IsDepthTextureFormat(format))
-				{
-					FLARE_CORE_ASSERT(!depthAttachmentIndex);
-					depthAttachmentIndex = (uint32_t)outputIndex;
-				}
-
-				description.format = TextureFormatToVulkanFormat(format);
-				description.flags = 0;
-				description.initialLayout = ImageLayoutToVulkanImageLayout(transition.InitialLayout, format);
-				description.finalLayout = ImageLayoutToVulkanImageLayout(transition.FinalLayout, format);
-				description.samples = VK_SAMPLE_COUNT_1_BIT;
-				description.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
-				description.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-				description.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-				description.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-
-				if (description.initialLayout == VK_IMAGE_LAYOUT_UNDEFINED)
-				{
-					description.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-				}
-
-				FLARE_CORE_ASSERT(description.finalLayout != VK_IMAGE_LAYOUT_UNDEFINED);
-
-				attachmentTextures.push_back(outputs[outputIndex].AttachmentTexture);
-			}
-
-			Ref<VulkanRenderPass> compatibleRenderPass = CreateRef<VulkanRenderPass>(
-				Span<VkAttachmentDescription>::FromVector(attachmentDescriptions),
-				depthAttachmentIndex);
-
-			node.RenderTarget = CreateRef<VulkanFrameBuffer>(
-				attachmentTextures[0]->GetWidth(),
-				attachmentTextures[0]->GetHeight(),
-				compatibleRenderPass,
-				Span<Ref<Texture>>::FromVector(attachmentTextures),
-				true);
-
-			node.RenderTarget->SetDebugName(node.Specifications.GetDebugName());
-		}
-	}
-
-	void RenderGraph::TransitionLayouts(Ref<CommandBuffer> commandBuffer, const std::vector<LayoutTransition>& transitions)
+	void RenderGraph::ExecuteLayoutTransitions(Ref<CommandBuffer> commandBuffer, const std::vector<LayoutTransition>& transitions)
 	{
 		Ref<VulkanCommandBuffer> vulkanCommandBuffer = As<VulkanCommandBuffer>(commandBuffer);
 
