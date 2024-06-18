@@ -218,9 +218,24 @@ namespace Flare
 		m_Viewport.DepthAttachmentIndex = 2;
 		m_Viewport.RenderTarget = FrameBuffer::Create(Span(attachmentTextures, 3));
 
-		m_Viewport.Graph.AddFinalTransition(m_Viewport.ColorTexture, ImageLayout::AttachmentOutput);
-		m_Viewport.Graph.AddFinalTransition(m_Viewport.NormalsTexture, ImageLayout::AttachmentOutput);
-		m_Viewport.Graph.AddFinalTransition(m_Viewport.DepthTexture, ImageLayout::AttachmentOutput);
+		ExternalRenderGraphResource colorTextureResource{};
+		colorTextureResource.InitialLayout = ImageLayout::AttachmentOutput;
+		colorTextureResource.FinalLayout = ImageLayout::AttachmentOutput;
+		colorTextureResource.TextureHandle = m_Viewport.ColorTexture;
+
+		ExternalRenderGraphResource normalsTextureResource{};
+		normalsTextureResource.InitialLayout = ImageLayout::AttachmentOutput;
+		normalsTextureResource.FinalLayout = ImageLayout::AttachmentOutput;
+		normalsTextureResource.TextureHandle = m_Viewport.NormalsTexture;
+
+		ExternalRenderGraphResource depthTextureResource{};
+		depthTextureResource.InitialLayout = ImageLayout::AttachmentOutput;
+		depthTextureResource.FinalLayout = ImageLayout::AttachmentOutput;
+		depthTextureResource.TextureHandle = m_Viewport.DepthTexture;
+
+		m_Viewport.Graph.AddExternalResource(colorTextureResource);
+		m_Viewport.Graph.AddExternalResource(normalsTextureResource);
+		m_Viewport.Graph.AddExternalResource(depthTextureResource);
 	}
 
 	void ViewportWindow::OnClear()
