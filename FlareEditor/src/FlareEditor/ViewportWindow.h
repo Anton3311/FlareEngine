@@ -45,7 +45,7 @@ namespace Flare
 		inline Ref<Scene> GetScene() const { return m_Scene == nullptr ? Scene::GetActive() : m_Scene; }
 
 		void BeginImGui();
-		void RenderViewportBuffer(const Ref<FrameBuffer>& buffer, uint32_t attachmentIndex);
+		void RenderViewportBuffer(const Ref<Texture>& texture);
 		void EndImGui();
 
 		virtual void CreateFrameBuffer();

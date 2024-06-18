@@ -188,9 +188,9 @@ namespace Flare
 			Ref<VulkanCommandBuffer> commandBuffer = VulkanContext::GetInstance().GetPrimaryCommandBuffer();
 			Ref<VulkanFrameBuffer> target = As<VulkanFrameBuffer>(m_Viewport.RenderTarget);
 
-			commandBuffer->TransitionImageLayout(target->GetAttachmentImage(0), VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-			commandBuffer->TransitionImageLayout(target->GetAttachmentImage(1), VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-			commandBuffer->TransitionDepthImageLayout(target->GetAttachmentImage(m_Viewport.DepthAttachmentIndex), true, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			commandBuffer->TransitionImageLayout(As<VulkanTexture>(m_Viewport.ColorTexture)->GetImageHandle(), VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			commandBuffer->TransitionImageLayout(As<VulkanTexture>(m_Viewport.NormalsTexture)->GetImageHandle(), VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			commandBuffer->TransitionDepthImageLayout(As<VulkanTexture>(m_Viewport.DepthTexture)->GetImageHandle(), true, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 		}
 	}
 
@@ -279,9 +279,6 @@ namespace Flare
 
 		Ref<Texture> attachmentTextures[] = { m_Viewport.ColorTexture, m_Viewport.NormalsTexture, m_Viewport.DepthTexture };
 
-		m_Viewport.ColorAttachmentIndex = 0;
-		m_Viewport.NormalsAttachmentIndex = 1;
-		m_Viewport.DepthAttachmentIndex = 2;
 		m_Viewport.RenderTarget = FrameBuffer::Create(Span(attachmentTextures, 3));
 
 		ExternalRenderGraphResource colorTextureResource{};
@@ -307,9 +304,9 @@ namespace Flare
 	void SceneViewportWindow::OnClear()
 	{
 		Ref<CommandBuffer> commandBuffer = GraphicsContext::GetInstance().GetCommandBuffer();
-		commandBuffer->ClearColorAttachment(m_Viewport.RenderTarget, m_Viewport.ColorAttachmentIndex, glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
-		commandBuffer->ClearColorAttachment(m_Viewport.RenderTarget, m_Viewport.NormalsAttachmentIndex, glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
-		commandBuffer->ClearDepthAttachment(m_Viewport.RenderTarget, 1.0f);
+		commandBuffer->ClearColor(m_Viewport.ColorTexture, glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+		commandBuffer->ClearColor(m_Viewport.NormalsTexture, glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+		commandBuffer->ClearDepth(m_Viewport.DepthTexture, 1.0f);
 	}
 
 	void SceneViewportWindow::RenderWindowContents()
@@ -320,13 +317,13 @@ namespace Flare
 		switch (m_Overlay)
 		{
 		case ViewportOverlay::Default:
-			RenderViewportBuffer(m_Viewport.RenderTarget, m_Viewport.ColorAttachmentIndex);
+			RenderViewportBuffer(m_Viewport.ColorTexture);
 			break;
 		case ViewportOverlay::Normal:
-			RenderViewportBuffer(m_Viewport.RenderTarget, m_Viewport.NormalsAttachmentIndex);
+			RenderViewportBuffer(m_Viewport.NormalsTexture);
 			break;
 		case ViewportOverlay::Depth:
-			RenderViewportBuffer(m_Viewport.RenderTarget, m_Viewport.DepthAttachmentIndex);
+			RenderViewportBuffer(m_Viewport.DepthTexture);
 			break;
 		}
 

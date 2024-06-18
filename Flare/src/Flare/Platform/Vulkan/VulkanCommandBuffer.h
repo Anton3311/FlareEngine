@@ -29,6 +29,9 @@ namespace Flare
 		void ClearColorAttachment(Ref<FrameBuffer> frameBuffer, uint32_t index, const glm::vec4& clearColor) override;
 		void ClearDepthAttachment(Ref<FrameBuffer> frameBuffer, float depth) override;
 
+		void ClearColor(const Ref<Texture>& texture, const glm::vec4& clearColor) override;
+		void ClearDepth(const Ref<Texture>& texture, float depth) override;
+
 		void ApplyMaterial(const Ref<const Material>& material) override;
 
 		void SetViewportAndScisors(Math::Rect viewportRect) override;

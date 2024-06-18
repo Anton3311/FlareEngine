@@ -30,21 +30,34 @@ namespace Flare
 
 	void VulkanCommandBuffer::ClearColorAttachment(Ref<FrameBuffer> frameBuffer, uint32_t index, const glm::vec4& clearColor)
 	{
-		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(index < frameBuffer->GetAttachmentsCount());
-
-		Ref<VulkanFrameBuffer> vulkanFrameBuffer = As<VulkanFrameBuffer>(frameBuffer);
-		ClearImage(vulkanFrameBuffer->GetAttachmentImage(index), clearColor, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+		ClearColor(frameBuffer->GetAttachment(index), clearColor);
 	}
 
 	void VulkanCommandBuffer::ClearDepthAttachment(Ref<FrameBuffer> frameBuffer, float depth)
 	{
-		FLARE_PROFILE_FUNCTION();
-		Ref<VulkanFrameBuffer> vulkanFrameBuffer = As<VulkanFrameBuffer>(frameBuffer);
-		std::optional<uint32_t> attachmentIndex = vulkanFrameBuffer->GetDepthAttachmentIndex();
-		FLARE_CORE_ASSERT(attachmentIndex.has_value());
+		auto index = frameBuffer->GetDepthAttachmentIndex();
+		FLARE_CORE_ASSERT(index.has_value());
 
-		bool hasStencil = HasStencilComponent(vulkanFrameBuffer->GetSpecifications().Attachments[*attachmentIndex].Format);
+		ClearDepth(frameBuffer->GetAttachment(*index), depth);
+	}
+
+	void VulkanCommandBuffer::ClearColor(const Ref<Texture>& texture, const glm::vec4& clearColor)
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		Ref<VulkanTexture> vulkanTexture = As<VulkanTexture>(texture);
+		ClearImage(vulkanTexture->GetImageHandle(), clearColor, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+	}
+
+	void VulkanCommandBuffer::ClearDepth(const Ref<Texture>& texture, float depth)
+	{
+		FLARE_PROFILE_FUNCTION();
+		FLARE_CORE_ASSERT(IsDepthTextureFormat(texture->GetFormat()));
+
+		Ref<VulkanTexture> vulkanTexture = As<VulkanTexture>(texture);
+
+		bool hasStencil = HasStencilComponent(vulkanTexture->GetSpecifications().Format);
 		VkImageLayout layout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
 
 		if (hasStencil)
@@ -53,7 +66,7 @@ namespace Flare
 		}
 
 		ClearDepthStencilImage(
-			vulkanFrameBuffer->GetAttachmentImage(*attachmentIndex),
+			vulkanTexture->GetImageHandle(),
 			hasStencil, depth, 0,
 			VK_IMAGE_LAYOUT_UNDEFINED, layout);
 	}

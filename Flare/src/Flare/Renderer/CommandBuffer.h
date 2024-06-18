@@ -26,6 +26,12 @@ namespace Flare
 		// 1.0 - is far plane
 		virtual void ClearDepthAttachment(Ref<FrameBuffer> frameBuffer, float depth) = 0;
 
+		// Depth is in range [0.0, 1.0]
+		// 0.0 - is near plane
+		// 1.0 - is far plane
+		virtual void ClearColor(const Ref<Texture>& texture, const glm::vec4& clearColor) = 0;
+		virtual void ClearDepth(const Ref<Texture>& texture, float depth) = 0;
+
 		virtual void ApplyMaterial(const Ref<const Material>& material) = 0;
 
 		virtual void SetViewportAndScisors(Math::Rect viewportRect) = 0;
