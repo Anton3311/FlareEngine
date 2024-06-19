@@ -268,6 +268,8 @@ namespace Flare
 		}
 
 		m_CurrentGraphicsPipeline = nullptr;
+
+		m_UsedPipelines.clear();
 	}
 
 	void VulkanCommandBuffer::Begin()
@@ -696,6 +698,7 @@ namespace Flare
 		auto vulkanPipeline = As<const VulkanPipeline>(pipeline);
 		vkCmdBindPipeline(m_CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vulkanPipeline->GetHandle());
 
+		m_UsedPipelines.push_back(pipeline);
 		m_CurrentGraphicsPipeline = pipeline;
 	}
 

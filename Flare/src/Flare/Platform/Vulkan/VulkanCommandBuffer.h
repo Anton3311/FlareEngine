@@ -112,5 +112,7 @@ namespace Flare
 
 		VkCommandBuffer m_CommandBuffer = VK_NULL_HANDLE;
 		Ref<VulkanRenderPass> m_CurrentRenderPass = nullptr;
+
+		std::vector<Ref<const Pipeline>> m_UsedPipelines;
 	};
 }
