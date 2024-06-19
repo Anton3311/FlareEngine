@@ -8,6 +8,7 @@
 #include "Flare/Renderer/Texture.h"
 #include "Flare/Renderer/Buffer.h"
 #include "Flare/Renderer/CommandBuffer.h"
+#include "Flare/Platform/Vulkan/VulkanVertexBuffer.h"
 
 #include "Flare/Platform/Vulkan/VulkanCommandBuffer.h"
 
@@ -17,6 +18,7 @@ namespace Flare
 		: m_FrameData(frameData), m_RendererLimits(limits), m_IndexBuffer(indexBuffer), m_DefaultMaterial(defaultMaterial)
 	{
 		m_VertexBuffer = VertexBuffer::Create(sizeof(QuadVertex) * 4 * m_RendererLimits.MaxQuadCount, GPUBufferUsage::Static);
+		As<VulkanVertexBuffer>(m_VertexBuffer)->GetBuffer().EnsureAllocated(); // HACk: To avoid binding NULL buffer
 	}
 
 	Geometry2DPass::~Geometry2DPass()
@@ -27,9 +29,16 @@ namespace Flare
 	void Geometry2DPass::OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
 	{
 		FLARE_PROFILE_FUNCTION();
-		m_VertexBuffer->SetData(MemorySpan::FromVector(const_cast<std::vector<QuadVertex>&>(m_FrameData.QuadVertices)), 0, commandBuffer);
+
+		if (m_FrameData.QuadCount > 0)
+		{
+			m_VertexBuffer->SetData(MemorySpan(const_cast<QuadVertex*>(m_FrameData.QuadVertices.data()), m_FrameData.QuadCount), 0, commandBuffer);
+		}
 
 		ReleaseDescriptorSets();
+
+		// NOTE: This pass should be removed from the RenderGraph
+		//       if there are weren't anything submitted for rendering
 
 		commandBuffer->BeginRenderTarget(context.GetRenderTarget());
 

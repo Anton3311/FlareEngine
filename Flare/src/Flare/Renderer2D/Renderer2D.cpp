@@ -47,8 +47,6 @@ namespace Flare
 	{
 		Renderer2DStats Stats;
 
-		size_t QuadIndex = 0;
-
 		Renderer2DFrameData FrameData;
 		Renderer2DLimits Limits;
 
@@ -81,7 +79,6 @@ namespace Flare
 
 	void Renderer2D::Initialize(size_t maxQuads)
 	{
-		s_Renderer2DData.QuadIndex = 0;
 		s_Renderer2DData.Limits.MaxQuadCount = (uint32_t)maxQuads;
 
 		s_Renderer2DData.FrameData.QuadVertices.resize(maxQuads * 4);
@@ -211,9 +208,10 @@ namespace Flare
 
 	void Renderer2D::Begin(const Ref<Material>& material)
 	{
+		s_Renderer2DData.FrameData.QuadCount = 0;
 		s_Renderer2DData.FrameData.QuadBatches.clear();
 
-		if (s_Renderer2DData.QuadIndex > 0)
+		if (s_Renderer2DData.FrameData.QuadCount > 0)
 			FlushAll();
 
 		s_Renderer2DData.CurrentMaterial = material == nullptr ? s_Renderer2DData.DefaultMaterial : material;
@@ -228,8 +226,6 @@ namespace Flare
 		}
 
 		FlushAll();
-
-		s_Renderer2DData.QuadIndex = 0;
 
 		s_Renderer2DData.CurrentFont = nullptr;
 		s_Renderer2DData.CurrentMaterial = nullptr;
@@ -406,7 +402,7 @@ namespace Flare
 			batch.Material = s_Renderer2DData.DefaultMaterial;
 		}
 
-		if (s_Renderer2DData.QuadIndex >= s_Renderer2DData.Limits.MaxQuadCount)
+		if (s_Renderer2DData.FrameData.QuadCount >= s_Renderer2DData.Limits.MaxQuadCount)
 		{
 			FLARE_CORE_ASSERT(false);
 		}
@@ -417,7 +413,7 @@ namespace Flare
 		}
 
 		QuadsBatch& currentBatch = s_Renderer2DData.FrameData.QuadBatches.back();
-		size_t vertexIndex = s_Renderer2DData.QuadIndex * 4;
+		size_t vertexIndex = s_Renderer2DData.FrameData.QuadCount * 4;
 		uint32_t textureIndex = currentBatch.GetTextureIndex(texture == nullptr ? Renderer::GetWhiteTexture() : texture);
 
 		for (uint32_t i = 0; i < 4; i++)
@@ -431,7 +427,7 @@ namespace Flare
 		}
 
 		currentBatch.Count++;
-		s_Renderer2DData.QuadIndex++;
+		s_Renderer2DData.FrameData.QuadCount++;
 		s_Renderer2DData.Stats.QuadsCount++;
 	}
 

@@ -20,6 +20,8 @@ namespace Flare
 		void SetData(const void* data, size_t size, size_t offset) override;
 		void SetData(MemorySpan data, size_t offset, Ref<CommandBuffer> commandBuffer) override;
 
+		inline VulkanBuffer& GetBuffer() { return m_Buffer; }
+		inline const VulkanBuffer& GetBuffer() const { return m_Buffer; }
 		inline VkBuffer GetHandle() const { return m_Buffer.GetBuffer(); }
 	private:
 		VulkanBuffer m_Buffer;

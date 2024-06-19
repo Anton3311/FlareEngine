@@ -61,6 +61,7 @@ namespace Flare
 
 	struct Renderer2DFrameData
 	{
+		size_t QuadCount = 0;
 		std::vector<QuadVertex> QuadVertices;
 		std::vector<QuadsBatch> QuadBatches;
 
