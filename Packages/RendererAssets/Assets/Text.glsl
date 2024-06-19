@@ -1,4 +1,5 @@
 Type = 2D
+DepthTest = false
 
 #begin vertex
 #version 450

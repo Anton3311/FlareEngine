@@ -99,9 +99,6 @@ namespace Flare
 		static void ResetStats();
 		static const Renderer2DStats& GetStats();
 	private:
-		static void FlushText();
-		static void FlushAll();
-	private:
 		static void DrawQuad(const glm::vec3* vertices, 
 			const Ref<Texture>& texture, 
 			const glm::vec4& tint,

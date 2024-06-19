@@ -8,6 +8,7 @@
 
 namespace Flare
 {
+	class Font;
 	class Texture;
 	class Material;
 	class DescriptorSet;
@@ -59,13 +60,41 @@ namespace Flare
 		uint32_t Count = 0;
 	};
 
-	struct Renderer2DFrameData
+	struct TextVertex
 	{
+		glm::vec3 Position;
+		glm::vec4 Color;
+		glm::vec2 UV;
+		int32_t EntityIndex;
+	};
+
+	struct TextBatch
+	{
+		inline size_t GetEnd() const { return Start + Count; }
+
+		Ref<const Font> Font = nullptr;
+		uint32_t Start = 0;
+		uint32_t Count = 0;
+	};
+
+	struct FLARE_API Renderer2DFrameData
+	{
+		void Reset();
+
+		// Quads
 		size_t QuadCount = 0;
 		std::vector<QuadVertex> QuadVertices;
 		std::vector<QuadsBatch> QuadBatches;
 
+		Ref<DescriptorSetPool> QuadDescriptorSetsPool = nullptr;
 		std::vector<Ref<DescriptorSet>> UsedQuadDescriptorSets;
-		Ref<DescriptorSetPool> QuadDescriptorSetsPool;
+
+		// Text
+		size_t TextQuadCount = 0;
+		std::vector<TextVertex> TextVertices;
+		std::vector<TextBatch> TextBatches;
+
+		Ref<DescriptorSetPool> TextDescriptorSetsPool = nullptr;
+		std::vector<Ref<DescriptorSet>> UsedTextDescriptorSets;
 	};
 }

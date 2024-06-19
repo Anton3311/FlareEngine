@@ -32,7 +32,7 @@ namespace Flare
 
 		if (m_FrameData.QuadCount > 0)
 		{
-			m_VertexBuffer->SetData(MemorySpan(const_cast<QuadVertex*>(m_FrameData.QuadVertices.data()), m_FrameData.QuadCount), 0, commandBuffer);
+			m_VertexBuffer->SetData(MemorySpan(const_cast<QuadVertex*>(m_FrameData.QuadVertices.data()), m_FrameData.QuadCount * 4), 0, commandBuffer);
 		}
 
 		ReleaseDescriptorSets();
