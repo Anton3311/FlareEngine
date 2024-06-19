@@ -29,6 +29,9 @@ namespace Flare
 
 	FLARE_IMPL_ENUM_BITFIELD(SpriteRenderFlags);
 
+	struct Renderer2DLimits;
+
+	class Viewport;
 	class DescriptorSetLayout;
 	class FLARE_API Renderer2D
 	{
@@ -41,6 +44,8 @@ namespace Flare
 
 		static void Begin(const Ref<Material>& material = nullptr);
 		static void End();
+
+		static void ConfigurePasses(Viewport& viewport);
 		
 		static void SetMaterial(const Ref<Material>& material);
 		static Ref<Material> GetMaterial();
@@ -89,10 +94,11 @@ namespace Flare
 
 		static Ref<const DescriptorSetLayout> GetDescriptorSetLayout();
 
+		static const Renderer2DLimits& GetLimits();
+
 		static void ResetStats();
 		static const Renderer2DStats& GetStats();
 	private:
-		static void FlushQuadBatches();
 		static void FlushText();
 		static void FlushAll();
 	private:
