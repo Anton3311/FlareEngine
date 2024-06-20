@@ -6,6 +6,8 @@
 #include "Flare/Renderer/ShaderStorageBuffer.h"
 #include "Flare/Renderer/GPUTimer.h"
 
+#include "Flare/Renderer2D/Renderer2D.h"
+
 #include "Flare/Math/SIMD.h"
 
 #include "Flare/Platform/Vulkan/VulkanCommandBuffer.h"

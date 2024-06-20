@@ -260,6 +260,8 @@ namespace Flare
 	void VulkanCommandBuffer::Reset()
 	{
 		FLARE_PROFILE_FUNCTION();
+
+		FLARE_CORE_ASSERT(m_CurrentRenderPass == nullptr);
 		VK_CHECK_RESULT(vkResetCommandBuffer(m_CommandBuffer, 0));
 
 		for (size_t i = 0; i < 4; i++)
@@ -268,6 +270,10 @@ namespace Flare
 		}
 
 		m_CurrentGraphicsPipeline = nullptr;
+		m_CurrentMesh = nullptr;
+
+		m_PrimaryDescriptorSet = nullptr;
+		m_SecondaryDescriptorSet = nullptr;
 
 		m_UsedPipelines.clear();
 	}
@@ -694,6 +700,11 @@ namespace Flare
 
 		if (m_CurrentGraphicsPipeline.get() == pipeline.get())
 			return;
+
+		for (uint32_t i = 0; i < 4; i++)
+		{
+			m_CurrentDescriptorSets[i] = {};
+		}
 
 		auto vulkanPipeline = As<const VulkanPipeline>(pipeline);
 		vkCmdBindPipeline(m_CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vulkanPipeline->GetHandle());
