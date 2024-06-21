@@ -8,12 +8,11 @@ const int CASCADES_COUNT = 4;
 
 layout(std140, set = 0, binding = 2) uniform ShadowData
 {
-	float u_Bias;
 	float u_LightFrustumSize;
 	float u_LightSize;
+	float u_LightFar;
 
-	int u_MaxCascadeIndex;
-
+	vec4 u_SceneScale;
 	vec4 u_CascadeSplits;
 	vec4 u_CascadeFilterWeights;
 
@@ -27,7 +26,12 @@ layout(std140, set = 0, binding = 2) uniform ShadowData
 	float u_ShadowFadeDistance;
 
 	float u_MaxShadowDistance;
+
+	float u_Bias;
 	float u_NormalBias;
+
+	int u_MaxCascadeIndex;
+
 };
 
 layout(set = 0, binding = 28) uniform sampler2D u_ShadowMap0;
@@ -59,7 +63,77 @@ const int NUMBER_OF_SAMPLES = 16;
 
 #define LIGHT_SIZE (u_LightSize / u_LightFrustumSize)
 
-float CalculateBlockerDistance(sampler2D shadowMap, vec3 projectedLightSpacePosition, vec2 rotation, float bias, float scale)
+float CalculateAdaptiveEpsilon(float depth, vec3 surfaceNormal, float sceneScale)
+{
+	float lightFar = 1000.0f;
+	float a = (lightFar - depth * (lightFar - u_LightNear));
+	float b = lightFar * u_LightNear * (lightFar - u_LightNear);
+
+	float NdotL = dot(-u_LightDirection, surfaceNormal);
+	float scaleFactor = min(100.0f, 1 / max(0.0001f, NdotL * NdotL));
+
+	float K = 0.0001f;
+
+	return a * a / b * sceneScale * K * scaleFactor;
+}
+
+vec2 GetTexelCenter(vec2 uv)
+{
+	vec2 pixelCoordinate = uv * u_ShadowResolution;
+	return floor(pixelCoordinate) + vec2(0.5f) / u_ShadowResolution;
+}
+
+float RayPlaneIntersection(vec4 planeParams, vec3 rayOrigin, vec3 rayDirection)
+{
+	return -(planeParams.w + dot(planeParams.xyz, rayOrigin)) / dot(rayDirection, planeParams.xyz);
+}
+
+// uv in range [0; 1]
+void UVToRay(vec2 uv, mat4 inverseProjection, out vec3 origin, out vec3 direction)
+{
+	uv = uv * 2.0f - vec2(1.0f);
+
+	vec4 rayOrigin = inverseProjection * vec4(uv, 0.0f, 1.0f);
+	vec4 rayDirection = inverseProjection * vec4(uv, 0.0f, 0.0f);
+
+	origin = rayOrigin.xyz / rayOrigin.w;
+	direction = rayDirection.xyz;
+}
+
+float FindPotentialOccluder(vec2 uv, mat4 projection, vec3 surfacePosition, vec3 surfaceNormal)
+{
+	// 1. Create a ray going from the light source through the center of the current shadow map texel
+	vec2 texelCenter = GetTexelCenter(uv);
+	
+	vec3 rayOrigin;
+	vec3 rayDirection;
+	mat4 inverseProjection = inverse(projection);
+	UVToRay(uv, projection, rayOrigin, rayDirection);
+
+	// 2. Create plane tagent to the surface (in view space)
+	vec4 planeParams = vec4(surfaceNormal, -dot(surfaceNormal, surfacePosition));
+
+	// 3. Find ray & plane intersection
+	float intersectionDistance = RayPlaneIntersection(planeParams, rayOrigin, rayDirection);
+	vec3 intersectionPoint = rayOrigin + rayDirection * intersectionDistance;
+
+	// 4. Projecte intersection plane
+	vec4 projectedIntersection = projection * vec4(intersectionPoint, 1.0f);
+	projectedIntersection /= projectedIntersection.w;
+
+	return projectedIntersection.z;
+}
+
+vec3 CalculateBiasParams(vec2 uv, mat4 projection, vec3 surfacePosition, vec3 surfaceNormal)
+{
+	float depth = FindPotentialOccluder(uv, projection, surfacePosition, surfaceNormal);
+	float depthX = FindPotentialOccluder(uv + vec2(1.0f / u_ShadowResolution, 0.0f), projection, surfacePosition, surfaceNormal);
+	float depthY = FindPotentialOccluder(uv + vec2(0.0f, 1.0f / u_ShadowResolution), projection, surfacePosition, surfaceNormal);
+
+	return vec3(depthX - depth, depthY - depth, depth);
+}
+
+float CalculateBlockerDistance(sampler2D shadowMap, vec3 projectedLightSpacePosition, vec2 rotation, float bias, float scale, vec3 biasParams, vec3 surfaceNormal, float sceneScale)
 {
 	float receieverDepth = projectedLightSpacePosition.z;
 	float blockerDistance = 0.0;
@@ -73,11 +147,14 @@ float CalculateBlockerDistance(sampler2D shadowMap, vec3 projectedLightSpacePosi
 			rotation.y * SAMPLE_POINTS[i].x + rotation.x * SAMPLE_POINTS[i].y
 		);
 
-		float depth = texture(shadowMap, projectedLightSpacePosition.xy + offset * searchSize).r;
-		if (depth < receieverDepth - bias)
+		float newRecieverDepth = biasParams.z + dot(offset, biasParams.xy);
+		float sampledDepth = texture(shadowMap, projectedLightSpacePosition.xy + offset * searchSize).r;
+		float epsilon = CalculateAdaptiveEpsilon(newRecieverDepth, surfaceNormal, sceneScale);
+
+		if (newRecieverDepth - bias + epsilon >= sampledDepth)
 		{
 			samplesCount += 1.0;
-			blockerDistance += depth;
+			blockerDistance += sampledDepth;
 		}
 	}
 
@@ -104,14 +181,12 @@ float PCF(sampler2D shadowMap, vec2 uv, float receieverDepth, float filterRadius
 	return shadow / NUMBER_OF_SAMPLES;
 }
 
-float CalculateCascadeShadow(sampler2D shadowMap, vec4 lightSpacePosition, float bias, float poissonPointsRotationAngle, float scale)
+float CalculateCascadeShadow(sampler2D shadowMap, mat4 projection, vec4 surfacePosition, vec3 surfaceNormal, float bias, vec2 samplesRotation, float scale, float sceneScale)
 {
+	vec4 lightSpacePosition = projection * surfacePosition;
+
 	vec3 projected = lightSpacePosition.xyz / lightSpacePosition.w;
-#ifdef OPENGL
-	projected = projected * 0.5 + vec3(0.5);
-#else
 	projected.xy = projected.xy * 0.5 + vec2(0.5);
-#endif
 
 	vec2 uv = projected.xy;
 	float receieverDepth = projected.z;
@@ -122,32 +197,32 @@ float CalculateCascadeShadow(sampler2D shadowMap, vec4 lightSpacePosition, float
 	if (projected.x > 1.0 || projected.y > 1.0 || projected.x < 0 || projected.y < 0)
 		return 1.0;
 
-	vec2 rotation = vec2(cos(poissonPointsRotationAngle), sin(poissonPointsRotationAngle));
+	vec3 biasParams = CalculateBiasParams(uv, projection, surfacePosition.xyz, surfaceNormal);
 
-	float blockerDistance = CalculateBlockerDistance(shadowMap, projected, rotation, bias, scale);
+	float blockerDistance = CalculateBlockerDistance(shadowMap, projected, samplesRotation, bias, scale, biasParams, surfaceNormal, sceneScale);
 	if (blockerDistance == -1.0f)
-		return 1.0f;
+		return 3.0f;
 
 	float penumbraWidth = (receieverDepth - blockerDistance) / blockerDistance;
 	float filterRadius = penumbraWidth * LIGHT_SIZE * u_LightNear / receieverDepth;
 	filterRadius = filterRadius * scale * u_ShadowSoftness;
 	filterRadius = max(2.0f / u_ShadowResolution, filterRadius);
 
-	return 1.0f - PCF(shadowMap, uv, receieverDepth, filterRadius, rotation, bias);
+	return 1.0f - PCF(shadowMap, uv, receieverDepth, filterRadius, samplesRotation, bias);
 }
 
-float CalculateShadow(vec4 position, float bias, int cascadeIndex, float rotationAngle)
+float CalculateShadow(vec4 position, float bias, int cascadeIndex, vec2 samplesRotation, vec3 surfaceNormal)
 {
 	switch (cascadeIndex)
 	{
 	case 0:
-		return CalculateCascadeShadow(u_ShadowMap0, (u_CascadeProjection0 * position), bias, rotationAngle, 1.0f);
+		return CalculateCascadeShadow(u_ShadowMap0, u_CascadeProjection0, position, surfaceNormal, bias, samplesRotation, 1.0f, u_SceneScale.x);
 	case 1:
-		return CalculateCascadeShadow(u_ShadowMap1, (u_CascadeProjection1 * position), bias, rotationAngle, u_CascadeFilterWeights.y);
+		return CalculateCascadeShadow(u_ShadowMap1, u_CascadeProjection1, position, surfaceNormal, bias, samplesRotation, u_CascadeFilterWeights.y, u_SceneScale.y);
 	case 2:
-		return CalculateCascadeShadow(u_ShadowMap2, (u_CascadeProjection2 * position), bias, rotationAngle, u_CascadeFilterWeights.z);
+		return CalculateCascadeShadow(u_ShadowMap2, u_CascadeProjection2, position, surfaceNormal, bias, samplesRotation, u_CascadeFilterWeights.z, u_SceneScale.z);
 	case 3:
-		return CalculateCascadeShadow(u_ShadowMap3, (u_CascadeProjection3 * position), bias, rotationAngle, u_CascadeFilterWeights.w);
+		return CalculateCascadeShadow(u_ShadowMap3, u_CascadeProjection3, position, surfaceNormal, bias, samplesRotation, u_CascadeFilterWeights.w, u_SceneScale.w);
 	}
 
 	return 1.0f;
@@ -178,7 +253,6 @@ int CalculateCascadeIndex(vec3 viewSpacePosition)
 #define DEBUG_CASCADES 0
 #endif
 
-
 float CalculateShadow(vec3 N, vec4 position, vec3 viewSpacePosition)
 {
 	float NoL = dot(N, -u_LightDirection);
@@ -202,7 +276,9 @@ float CalculateShadow(vec3 N, vec4 position, vec3 viewSpacePosition)
 	float shadowFade = smoothstep(u_ShadowFadeDistance, u_MaxShadowDistance, viewSpaceDistance);
 
 	float rotationAngle = 2.0f * PI * InterleavedGradientNoise(gl_FragCoord.xy);
-	float shadow = CalculateShadow(position, bias, cascadeIndex, rotationAngle);
+	vec2 samplesRotation = vec2(cos(rotationAngle), sin(rotationAngle));
+
+	float shadow = CalculateShadow(position, bias, cascadeIndex, samplesRotation, N);
 
 #if CASCADE_BLENDING_ENABLED
 	const float BLENDING_THRESHOLD = 1.0f;
@@ -211,7 +287,7 @@ float CalculateShadow(vec3 N, vec4 position, vec3 viewSpacePosition)
 	if (distanceToNextCascade <= BLENDING_THRESHOLD && cascadeIndex < CASCADES_COUNT - 1)
 	{
 		int nextCascade = cascadeIndex + 1;
-		float shadow1 = CalculateShadow(position, bias, nextCascade, rotationAngle);
+		float shadow1 = CalculateShadow(position, bias, nextCascade, samplesRotation, N);
 		float cascadeBlend = min(1.0f, distanceToNextCascade / BLENDING_THRESHOLD);
 
 		shadow = mix(shadow1, shadow, cascadeBlend);

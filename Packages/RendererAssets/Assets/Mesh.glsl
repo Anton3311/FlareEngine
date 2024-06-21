@@ -109,9 +109,10 @@ void main()
 	if (color.a == 0.0f)
 		discard;
 
+	vec3 vertexNormal = normalize(i_Vertex.Normal);
 	vec3 V = normalize(u_Camera.Position - i_Vertex.Position.xyz);
 	vec3 H = normalize(V - u_LightDirection);
-	vec3 N = normalize(i_Vertex.Normal);
+	vec3 N = vertexNormal;
 
 	vec3 tangent = normalize(i_Vertex.Tangent);
 	tangent = normalize(tangent - dot(tangent, N) * N);
@@ -123,7 +124,7 @@ void main()
 	N = normalize(tbn * sampledNormal);
 
 	float roughness = u_Material.Roughness * texture(u_RoughnessMap, i_Vertex.UV).r;
-	float shadow = CalculateShadow(N, i_Vertex.Position, i_Vertex.ViewSpacePosition);
+	float shadow = CalculateShadow(vertexNormal, i_Vertex.Position, i_Vertex.ViewSpacePosition);
 
 	vec3 finalColor = CalculateLight(N, V, H, color.rgb,
 		u_LightColor.rgb * u_LightColor.w, -u_LightDirection,
@@ -139,6 +140,16 @@ void main()
 	vec3 cascadeColors[] = { vec3(1.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f), vec3(0.0f, 0.0f, 1.0f), vec3(1.0f, 0.0f, 0.0f), vec3(1.0f) };
 
 	finalColor *= cascadeColors[min(cascadeIndex, CASCADES_COUNT)];
+#endif
+
+#if 1
+	finalColor = vec3(abs(shadow));
+	if (shadow == 3.0f)
+	{
+		finalColor *= vec3(1.0f, 0.0f, 0.0f);
+	}
+
+	shadow = min(1.0f, shadow);
 #endif
 
 	o_Color = vec4(finalColor, color.a);

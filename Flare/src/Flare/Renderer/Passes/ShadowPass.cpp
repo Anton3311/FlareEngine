@@ -438,6 +438,8 @@ namespace Flare
 
 				viewport.FrameData.LightView[cascadeIndex].SetViewAndProjection(projection, view);
 
+				m_ShadowData.SceneScale[cascadeIndex] = params.BoundingSphereRadius * glm::sqrt(2.0f);
+				m_ShadowData.LightFar = farPlaneDistance - nearPlaneDistance;
 				m_ShadowData.CascadeFilterWeights[cascadeIndex] = params.BoundingSphereRadius * 2.0f;
 				m_ShadowData.LightProjections[cascadeIndex] = viewport.FrameData.LightView[cascadeIndex].ViewProjection;
 
