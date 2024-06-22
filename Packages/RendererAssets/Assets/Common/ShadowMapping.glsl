@@ -94,10 +94,9 @@ void UVToRay(vec2 uv, mat4 inverseProjection, out vec3 origin, out vec3 directio
 	uv = uv * 2.0f - vec2(1.0f);
 
 	vec4 rayOrigin = inverseProjection * vec4(uv, 0.0f, 1.0f);
-	vec4 rayDirection = inverseProjection * vec4(uv, 0.0f, 0.0f);
 
 	origin = rayOrigin.xyz / rayOrigin.w;
-	direction = rayDirection.xyz;
+	direction = u_LightDirection;
 }
 
 float FindPotentialOccluder(vec2 uv, mat4 projection, vec3 surfacePosition, vec3 surfaceNormal)
@@ -108,7 +107,7 @@ float FindPotentialOccluder(vec2 uv, mat4 projection, vec3 surfacePosition, vec3
 	vec3 rayOrigin;
 	vec3 rayDirection;
 	mat4 inverseProjection = inverse(projection);
-	UVToRay(uv, projection, rayOrigin, rayDirection);
+	UVToRay(uv, inverseProjection, rayOrigin, rayDirection);
 
 	// 2. Create plane tagent to the surface (in view space)
 	vec4 planeParams = vec4(surfaceNormal, -dot(surfaceNormal, surfacePosition));
@@ -151,7 +150,7 @@ float CalculateBlockerDistance(sampler2D shadowMap, vec3 projectedLightSpacePosi
 		float sampledDepth = texture(shadowMap, projectedLightSpacePosition.xy + offset * searchSize).r;
 		float epsilon = CalculateAdaptiveEpsilon(newRecieverDepth, surfaceNormal, sceneScale);
 
-		if (newRecieverDepth - bias + epsilon >= sampledDepth)
+		if (newRecieverDepth - bias >= sampledDepth)
 		{
 			samplesCount += 1.0;
 			blockerDistance += sampledDepth;
@@ -206,7 +205,6 @@ float CalculateCascadeShadow(sampler2D shadowMap, mat4 projection, vec4 surfaceP
 	float penumbraWidth = (receieverDepth - blockerDistance) / blockerDistance;
 	float filterRadius = penumbraWidth * LIGHT_SIZE * u_LightNear / receieverDepth;
 	filterRadius = filterRadius * scale * u_ShadowSoftness;
-	filterRadius = max(2.0f / u_ShadowResolution, filterRadius);
 
 	return 1.0f - PCF(shadowMap, uv, receieverDepth, filterRadius, samplesRotation, bias);
 }

@@ -50,6 +50,8 @@ void main()
 #begin pixel
 #version 450
 
+// #define DEBUG_CASCADES 1
+
 #include "Common/Camera.glsl"
 #include "Common/BRDF.glsl"
 #include "Common/ShadowMapping.glsl"
@@ -135,21 +137,21 @@ void main()
 
 	finalColor += u_EnvironmentLight.rgb * u_EnvironmentLight.w * color.rgb;
 
+#if 1
+	finalColor = vec3(abs(shadow));
+	if (shadow == 3.0f)
+	{
+		finalColor *= vec3(0.5f);
+	}
+
+	shadow = min(1.0f, shadow);
+#endif
+
 #if DEBUG_CASCADES
 	int cascadeIndex = CalculateCascadeIndex(i_Vertex.ViewSpacePosition);
 	vec3 cascadeColors[] = { vec3(1.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f), vec3(0.0f, 0.0f, 1.0f), vec3(1.0f, 0.0f, 0.0f), vec3(1.0f) };
 
 	finalColor *= cascadeColors[min(cascadeIndex, CASCADES_COUNT)];
-#endif
-
-#if 1
-	finalColor = vec3(abs(shadow));
-	if (shadow == 3.0f)
-	{
-		finalColor *= vec3(1.0f, 0.0f, 0.0f);
-	}
-
-	shadow = min(1.0f, shadow);
 #endif
 
 	o_Color = vec4(finalColor, color.a);
