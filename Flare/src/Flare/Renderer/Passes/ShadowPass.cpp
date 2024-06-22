@@ -246,7 +246,7 @@ namespace Flare
 				FrameBufferSpecifications specifications{};
 				specifications.Width = resolution;
 				specifications.Height = resolution;
-				specifications.Attachments.push_back({ TextureFormat::Depth24Stencil8, TextureWrap::Clamp, TextureFiltering::Closest });
+				specifications.Attachments.push_back({ TextureFormat::Depth32, TextureWrap::Clamp, TextureFiltering::Closest });
 
 				m_Cascades[i] = FrameBuffer::Create(specifications);
 				shouldUpdateDescriptor = true;
@@ -513,7 +513,9 @@ namespace Flare
 			images[i] = As<VulkanFrameBuffer>(m_Cascades[i])->GetAttachmentImage(0);
 		}
 
-		vulkanCommandBuffer->DepthImagesBarrier(Span(images, Renderer::GetShadowSettings().Cascades), true,
+		TextureFormat format = m_Cascades[0]->GetAttachment(0)->GetFormat();
+		vulkanCommandBuffer->DepthImagesBarrier(Span(images, Renderer::GetShadowSettings().Cascades),
+			HasStencilComponent(format),
 			VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
 			VK_ACCESS_NONE,
 			VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
