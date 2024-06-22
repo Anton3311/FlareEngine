@@ -144,13 +144,13 @@ float CalculateBlockerDistance(sampler2D shadowMap, vec3 projectedLightSpacePosi
 		vec2 offset = vec2(
 			rotation.x * SAMPLE_POINTS[i].x - rotation.y * SAMPLE_POINTS[i].y,
 			rotation.y * SAMPLE_POINTS[i].x + rotation.x * SAMPLE_POINTS[i].y
-		);
+		) * searchSize;
 
-		float newRecieverDepth = biasParams.z + dot(offset * searchSize, biasParams.xy);
-		float sampledDepth = texture(shadowMap, projectedLightSpacePosition.xy + offset * searchSize).r;
+		float newRecieverDepth = biasParams.z + dot(offset, biasParams.xy);
+		float sampledDepth = texture(shadowMap, projectedLightSpacePosition.xy + offset).r;
 		float epsilon = CalculateAdaptiveEpsilon(newRecieverDepth, surfaceNormal, sceneScale);
 
-		if (newRecieverDepth - bias + epsilon >= sampledDepth)
+		if (newRecieverDepth - bias > sampledDepth)
 		{
 			samplesCount += 1.0;
 			blockerDistance += sampledDepth;
@@ -171,11 +171,12 @@ float PCF(sampler2D shadowMap, vec2 uv, float receieverDepth, float filterRadius
 		vec2 offset = vec2(
 			rotation.x * SAMPLE_POINTS[i].x - rotation.y * SAMPLE_POINTS[i].y,
 			rotation.y * SAMPLE_POINTS[i].x + rotation.x * SAMPLE_POINTS[i].y
-		);
+		) * filterRadius;
 
-		float newRecieverDepth = biasParams.z + dot(offset + filterRadius, biasParams.xy);
+		float newRecieverDepth = biasParams.z + dot(offset, biasParams.xy);
+		float epsilon = CalculateAdaptiveEpsilon(newRecieverDepth, surfaceNormal, sceneScale);
 
-		float sampledDepth = texture(shadowMap, uv + offset * filterRadius).r;
+		float sampledDepth = texture(shadowMap, uv + offset).r;
 		shadow += (newRecieverDepth - bias > sampledDepth ? 1.0 : 0.0);
 	}
 	
@@ -202,7 +203,7 @@ float CalculateCascadeShadow(sampler2D shadowMap, mat4 projection, vec4 surfaceP
 
 	float blockerDistance = CalculateBlockerDistance(shadowMap, projected, samplesRotation, bias, scale, biasParams, surfaceNormal, sceneScale);
 	if (blockerDistance == -1.0f)
-		return 3.0f;
+		return 1.0f;
 
 	float penumbraWidth = (receieverDepth - blockerDistance) / blockerDistance;
 	float filterRadius = penumbraWidth * LIGHT_SIZE * u_LightNear / receieverDepth;
