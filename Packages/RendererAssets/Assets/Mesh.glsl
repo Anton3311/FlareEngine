@@ -141,10 +141,8 @@ void main()
 	finalColor = vec3(abs(shadow));
 	if (shadow == 3.0f)
 	{
-		finalColor *= vec3(0.5f);
+		finalColor = vec3(1.0f, 0.0f, 0.0f);
 	}
-
-	shadow = min(1.0f, shadow);
 #endif
 
 #if DEBUG_CASCADES
