@@ -9,6 +9,7 @@
 namespace Flare
 {
 	class Texture;
+	class Sampler;
 	class FrameBuffer;
 	class UniformBuffer;
 	class ShaderStorageBuffer;
@@ -19,6 +20,7 @@ namespace Flare
 		virtual ~DescriptorSet();
 
 		virtual void WriteImage(Ref<const Texture> texture, uint32_t binding) = 0;
+		virtual void WriteImage(Ref<const Texture> texture, Ref<const Sampler> sampler, uint32_t binding) = 0;
 		virtual void WriteImage(Ref<const FrameBuffer> frameBuffer, uint32_t attachmentIndex, uint32_t binding) = 0;
 		virtual void WriteImages(Span<Ref<const Texture>> textures, uint32_t arrayOffset, uint32_t binding) = 0;
 

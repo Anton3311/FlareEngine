@@ -1037,4 +1037,40 @@ namespace Flare
 		FLARE_CORE_ASSERT(false);
 		return VK_IMAGE_LAYOUT_UNDEFINED;
 	}
+
+	FLARE_API VkCompareOp DepthComparisonFunctionToVulkanCompareOp(DepthComparisonFunction function)
+	{
+		VkCompareOp depthComapreFunction = VK_COMPARE_OP_NEVER;
+		switch (function)
+		{
+		case DepthComparisonFunction::Less:
+			depthComapreFunction = VK_COMPARE_OP_LESS;
+			break;
+		case DepthComparisonFunction::LessOrEqual:
+			depthComapreFunction = VK_COMPARE_OP_LESS_OR_EQUAL;
+			break;
+		case DepthComparisonFunction::Always:
+			depthComapreFunction = VK_COMPARE_OP_ALWAYS;
+			break;
+		case DepthComparisonFunction::Never:
+			depthComapreFunction = VK_COMPARE_OP_NEVER;
+			break;
+		case DepthComparisonFunction::Greater:
+			depthComapreFunction = VK_COMPARE_OP_GREATER;
+			break;
+		case DepthComparisonFunction::GreaterOrEqual:
+			depthComapreFunction = VK_COMPARE_OP_GREATER_OR_EQUAL;
+			break;
+		case DepthComparisonFunction::Equal:
+			depthComapreFunction = VK_COMPARE_OP_EQUAL;
+			break;
+		case DepthComparisonFunction::NotEqual:
+			depthComapreFunction = VK_COMPARE_OP_NOT_EQUAL;
+			break;
+		default:
+			FLARE_CORE_ASSERT(false);
+		}
+
+		return depthComapreFunction;
+	}
 }

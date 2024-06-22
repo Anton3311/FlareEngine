@@ -80,6 +80,7 @@ namespace Flare
 	};
 
 	FLARE_API VkImageLayout ImageLayoutToVulkanImageLayout(ImageLayout layout, TextureFormat format);
+	FLARE_API VkCompareOp DepthComparisonFunctionToVulkanCompareOp(DepthComparisonFunction function);
 
 	class FLARE_API VulkanContext : public GraphicsContext
 	{

@@ -7,6 +7,7 @@
 #include "Flare/Platform/Vulkan/VulkanShaderStorageBuffer.h"
 #include "Flare/Platform/Vulkan/VulkanFrameBuffer.h"
 #include "Flare/Platform/Vulkan/VulkanTexture.h"
+#include "Flare/Platform/Vulkan/VulkanSampler.h"
 
 namespace Flare
 {
@@ -58,6 +59,28 @@ namespace Flare
 	void VulkanDescriptorSet::WriteImage(Ref<const Texture> texture, uint32_t binding)
 	{
 		WriteImages(Span(&texture, 1), 0, binding);
+	}
+
+	void VulkanDescriptorSet::WriteImage(Ref<const Texture> texture, Ref<const Sampler> sampler, uint32_t binding)
+	{
+		FLARE_CORE_ASSERT(texture && sampler);
+
+		auto vulkanTexture = As<const VulkanTexture>(texture);
+		auto& image = m_Images.emplace_back();
+		image.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+		image.imageView = vulkanTexture->GetImageViewHandle();
+		image.sampler = As<const VulkanSampler>(sampler)->GetHandle();
+
+		auto& write = m_Writes.emplace_back();
+		write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		write.descriptorCount = 1;
+		write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		write.dstBinding = binding;
+		write.dstArrayElement = 0;
+		write.dstSet = m_Set;
+		write.pBufferInfo = nullptr;
+		write.pImageInfo = &image;
+		write.pTexelBufferView = nullptr;
 	}
 
 	void VulkanDescriptorSet::WriteImage(Ref<const FrameBuffer> frameBuffer, uint32_t attachmentIndex, uint32_t binding)
