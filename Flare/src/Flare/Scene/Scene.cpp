@@ -261,8 +261,6 @@ namespace Flare
 
 		Renderer2D::End();
 		Renderer::Flush();
-
-		Renderer::ExecutePostProcessingPasses();
 	}
 
 	void Scene::OnUpdateRuntime()

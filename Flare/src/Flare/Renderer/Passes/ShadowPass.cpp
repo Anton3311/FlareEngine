@@ -127,7 +127,7 @@ namespace Flare
 
 	Ref<FrameBuffer> ShadowPass::GetShadowRenderTarget(uint32_t index)
 	{
-		FLARE_CORE_ASSERT(index < Renderer::GetShadowSettings().Cascades);
+		FLARE_CORE_ASSERT(index < (uint32_t)Renderer::GetShadowSettings().Cascades);
 		return m_Cascades[index];
 	}
 

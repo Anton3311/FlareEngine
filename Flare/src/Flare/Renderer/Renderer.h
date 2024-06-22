@@ -175,7 +175,6 @@ namespace Flare
 
 		static void AddRenderPass(Ref<RenderPass> pass);
 		static void RemoveRenderPass(Ref<RenderPass> pass);
-		static void ExecutePostProcessingPasses();
 
 		static RendererSubmitionQueue& GetOpaqueSubmitionQueue();
 
@@ -192,8 +191,9 @@ namespace Flare
 
 		static Ref<DescriptorSet> GetPrimaryDescriptorSet();
 		static Ref<const DescriptorSetLayout> GetPrimaryDescriptorSetLayout();
+
+		static void ConfigurePasses(Viewport& viewport);
 	private:
-		static void ExecuteGeomertyPass();
 		static void ExecuteDecalsPass();
 		static void ExecuteShadowPass();
 		static void ReloadShaders();

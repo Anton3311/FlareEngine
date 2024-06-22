@@ -17,11 +17,12 @@ namespace Flare
 {
 	GeometryPass::GeometryPass(const RendererSubmitionQueue& opaqueObjects,
 		Ref<DescriptorSet> primarySet,
-		Ref<DescriptorSet> primarySetWithoutShadows)
-		: RenderPass(RenderPassQueue::BeforeOpaqueGeometry),
-		m_OpaqueObjects(opaqueObjects),
+		Ref<DescriptorSet> primarySetWithoutShadows,
+		Ref<DescriptorSetPool> pool)
+		: m_OpaqueObjects(opaqueObjects),
 		m_PrimaryDescriptorSet(primarySet),
-		m_PrimaryDescriptorSetWithoutShadows(primarySetWithoutShadows)
+		m_PrimaryDescriptorSetWithoutShadows(primarySetWithoutShadows),
+		m_Pool(pool)
 	{
 		constexpr size_t maxInstances = 1000;
 		m_InstanceStorageBuffer = ShaderStorageBuffer::Create(maxInstances * sizeof(InstanceData), 0);
@@ -36,17 +37,20 @@ namespace Flare
 		m_Timer = GPUTimer::Create();
 	}
 
-	void GeometryPass::OnRender(RenderingContext& context)
+	GeometryPass::~GeometryPass()
+	{
+		m_Pool->ReleaseSet(m_PrimaryDescriptorSet);
+		m_Pool->ReleaseSet(m_PrimaryDescriptorSetWithoutShadows);
+	}
+
+	void GeometryPass::OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
 	{
 		FLARE_PROFILE_FUNCTION();
 		const Viewport& currentViewport = Renderer::GetCurrentViewport();
 
-		Ref<CommandBuffer> commandBuffer = GraphicsContext::GetInstance().GetCommandBuffer();
-
 		if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
 		{
 			Ref<VulkanCommandBuffer> commandBuffer = VulkanContext::GetInstance().GetPrimaryCommandBuffer();
-			Ref<VulkanFrameBuffer> renderTarget = As<VulkanFrameBuffer>(context.RenderTarget);
 			
 			if (Renderer::GetShadowSettings().Enabled)
 			{
@@ -94,9 +98,11 @@ namespace Flare
 			m_InstanceStorageBuffer->SetData(MemorySpan::FromVector(m_InstanceBuffer), 0, commandBuffer);
 		}
 
+		Ref<FrameBuffer> renderTarget = context.GetRenderTarget();
+
 		commandBuffer->StartTimer(m_Timer);
-		commandBuffer->BeginRenderTarget(context.RenderTarget);
-		commandBuffer->SetViewportAndScisors(Math::Rect(glm::vec2(0.0f, 0.0f), (glm::vec2)context.RenderTarget->GetSize()));
+		commandBuffer->BeginRenderTarget(renderTarget);
+		commandBuffer->SetViewportAndScisors(Math::Rect(glm::vec2(0.0f, 0.0f), (glm::vec2)renderTarget->GetSize()));
 
 		Batch batch{};
 

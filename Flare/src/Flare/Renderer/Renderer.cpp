@@ -33,7 +33,6 @@ namespace Flare
 
 	struct RenderPasses
 	{
-		Ref<GeometryPass> Geometry = nullptr;
 		Ref<ShadowPass> Shadow = nullptr;
 
 		std::vector<Ref<RenderPass>> BeforeShadowsPasses;
@@ -193,7 +192,7 @@ namespace Flare
 				bindings[i + 6].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 			}
 
-			s_RendererData.PrimaryDescriptorPool = CreateRef<VulkanDescriptorSetPool>(2 + ShadowSettings::MaxCascades, Span(bindings, 6 + 4));
+			s_RendererData.PrimaryDescriptorPool = CreateRef<VulkanDescriptorSetPool>(10 + ShadowSettings::MaxCascades, Span(bindings, 6 + 4));
 			s_RendererData.PrimaryDescriptorSet = s_RendererData.PrimaryDescriptorPool->AllocateSet();
 			s_RendererData.PrimaryDescriptorSet->SetDebugName("PrimarySet");
 
@@ -244,10 +243,6 @@ namespace Flare
 				s_RendererData.PerCascadeDescriptorSets[i] = set;
 			}
 		}
-
-		s_RendererData.Passes.Geometry = CreateRef<GeometryPass>(s_RendererData.OpaqueQueue,
-			s_RendererData.PrimaryDescriptorSet,
-			s_RendererData.PrimaryDescriptorSetWithoutShadows);
 
 		s_RendererData.Passes.Shadow = CreateRef<ShadowPass>(s_RendererData.OpaqueQueue,
 			s_RendererData.PrimaryDescriptorSet,
@@ -354,8 +349,6 @@ namespace Flare
 			ExecuteShadowPass();
 		}
 
-		ExecuteGeomertyPass();
-
 #if 0
 		if (RendererAPI::GetAPI() != RendererAPI::API::Vulkan)
 		{
@@ -363,23 +356,7 @@ namespace Flare
 		}
 #endif
 
-		s_RendererData.OpaqueQueue.m_Buffer.clear();
-	}
-
-	void Renderer::ExecuteGeomertyPass()
-	{
-		{
-			FLARE_PROFILE_SCOPE("BeforeGeometryPasses");
-			ExecuteRenderPasses(s_RendererData.Passes.BeforeOpaqueGeometryPasses);
-		}
-
-		RenderingContext context(s_RendererData.CurrentViewport->RenderTarget);
-		s_RendererData.Passes.Geometry->OnRender(context);
-		
-		{
-			FLARE_PROFILE_SCOPE("AfterGeometryPasses");
-			ExecuteRenderPasses(s_RendererData.Passes.AfterOpaqueGeometryPasses);
-		}
+		s_RendererData.CurrentViewport->Graph.Execute(GraphicsContext::GetInstance().GetCommandBuffer());
 	}
 
 	void Renderer::ExecuteDecalsPass()
@@ -465,11 +442,12 @@ namespace Flare
 
 	void Renderer::EndScene()
 	{
-		s_RendererData.Statistics.GeometryPassTime += s_RendererData.Passes.Geometry->GetElapsedTime().value_or(0.0f);
 		s_RendererData.Statistics.ShadowPassTime += s_RendererData.Passes.Shadow->GetElapsedTime().value_or(0.0f);
 
 		s_RendererData.PointLights.clear();
 		s_RendererData.SpotLights.clear();
+
+		s_RendererData.OpaqueQueue.m_Buffer.clear();
 	}
 
 	void Renderer::SubmitPointLight(const PointLightData& light)
@@ -560,20 +538,6 @@ namespace Flare
 			pass->OnRender(context);
 	}
 
-	void Renderer::ExecutePostProcessingPasses()
-	{
-		FLARE_PROFILE_FUNCTION();
-
-		s_RendererData.CurrentViewport->Graph.Execute(GraphicsContext::GetInstance().GetCommandBuffer());
-
-#if 0
-		if (!s_RendererData.CurrentViewport->PostProcessingEnabled)
-			return;
-
-		ExecuteRenderPasses(s_RendererData.Passes.PostProcessingPasses);
-#endif
-	}
-
 	RendererSubmitionQueue& Renderer::GetOpaqueSubmitionQueue()
 	{
 		return s_RendererData.OpaqueQueue;
@@ -629,5 +593,42 @@ namespace Flare
 	Ref<const DescriptorSetLayout> Renderer::GetPrimaryDescriptorSetLayout()
 	{
 		return s_RendererData.PrimaryDescriptorPool->GetLayout();
+	}
+
+	static void SetupPrimaryDescriptorSet(Ref<DescriptorSet> set)
+	{
+		set->WriteUniformBuffer(s_RendererData.CameraBuffer, 0);
+		set->WriteUniformBuffer(s_RendererData.LightBuffer, 1);
+		set->WriteStorageBuffer(s_RendererData.PointLightsShaderBuffer, 4);
+		set->WriteStorageBuffer(s_RendererData.SpotLightsShaderBuffer, 5);
+
+		for (size_t i = 0; i < ShadowSettings::MaxCascades; i++)
+		{
+			set->WriteImage(s_RendererData.WhiteTexture, (uint32_t)(28 + i));
+		}
+
+		set->FlushWrites();
+	}
+
+	void Renderer::ConfigurePasses(Viewport& viewport)
+	{
+		Ref<DescriptorSet> primarySet = s_RendererData.PrimaryDescriptorPool->AllocateSet();
+		primarySet->SetDebugName("PrimarySet");
+		SetupPrimaryDescriptorSet(primarySet);
+
+		Ref<DescriptorSet> primarySetWithoutShadows = s_RendererData.PrimaryDescriptorPool->AllocateSet();
+		primarySetWithoutShadows->SetDebugName("PrimarySetWithoutShadows");
+		SetupPrimaryDescriptorSet(primarySetWithoutShadows);
+
+		RenderGraphPassSpecifications specifications{};
+		specifications.AddOutput(viewport.ColorTexture, 0);
+		specifications.AddOutput(viewport.NormalsTexture, 1);
+		specifications.AddOutput(viewport.DepthTexture, 2);
+
+		viewport.Graph.AddPass(specifications, CreateRef<GeometryPass>(
+			s_RendererData.OpaqueQueue,
+			primarySet,
+			primarySetWithoutShadows,
+			s_RendererData.PrimaryDescriptorPool));
 	}
 }

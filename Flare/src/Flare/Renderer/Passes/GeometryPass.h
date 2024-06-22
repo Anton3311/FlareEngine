@@ -3,22 +3,28 @@
 #include "Flare/Renderer/RenderPass.h"
 #include "Flare/Renderer/RendererSubmitionQueue.h"
 
+#include "Flare/Renderer/RenderGraph/RenderGraphPass.h"
+
 #include <vector>
 
 namespace Flare
 {
 	class DescriptorSet;
+	class DescriptorSetPool;
 	class ShaderStorageBuffer;
 	class GPUTimer;
 
-	class GeometryPass : public RenderPass
+	class GeometryPass : public RenderGraphPass 
 	{
 	public:
 		GeometryPass(const RendererSubmitionQueue& opaqueObjects,
 			Ref<DescriptorSet> primarySet,
-			Ref<DescriptorSet> primarySetWithoutShadows);
+			Ref<DescriptorSet> primarySetWithoutShadows,
+			Ref<DescriptorSetPool> pool);
 
-		void OnRender(RenderingContext& context) override;
+		~GeometryPass();
+
+		void OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer) override;
 		std::optional<float> GetElapsedTime() const;
 	private:
 		struct Batch
@@ -40,6 +46,8 @@ namespace Flare
 		void FlushBatch(const Ref<CommandBuffer>& commandBuffer, const Batch& batch);
 	private:
 		Ref<GPUTimer> m_Timer = nullptr;
+
+		Ref<DescriptorSetPool> m_Pool = nullptr;
 
 		const RendererSubmitionQueue& m_OpaqueObjects;
 		std::vector<uint32_t> m_VisibleObjects;

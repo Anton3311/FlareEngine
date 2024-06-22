@@ -254,6 +254,7 @@ namespace Flare
 
 		Ref<Scene> scene = GetScene();
 
+		Renderer::ConfigurePasses(m_Viewport);
 		Renderer2D::ConfigurePasses(m_Viewport);
 
 		if (scene)
