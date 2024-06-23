@@ -14,6 +14,11 @@ namespace Flare
 		vkDestroyRenderPass(VulkanContext::GetInstance().GetDevice(), m_RenderPass, nullptr);
 	}
 
+	void VulkanRenderPass::SetDefaultClearValues(Span<VkClearValue> clearValues)
+	{
+		m_DefaultClearValues.assign(clearValues.begin(), clearValues.end());
+	}
+
 	void VulkanRenderPass::Create(const Span<VkAttachmentDescription>& attachments, std::optional<uint32_t> depthAttachmentIndex)
 	{
 		FLARE_CORE_ASSERT(!depthAttachmentIndex || depthAttachmentIndex && *depthAttachmentIndex < (uint32_t)attachments.GetSize());

@@ -99,6 +99,7 @@ namespace Flare
 
 		std::vector<VkAttachmentDescription> attachmentDescriptions;
 		std::vector<Ref<Texture>> attachmentTextures;
+		std::vector<VkClearValue> clearValues;
 
 		for (size_t nodeIndex = 0; nodeIndex < m_Nodes.GetSize(); nodeIndex++)
 		{
@@ -112,8 +113,17 @@ namespace Flare
 			attachmentTextures.clear();
 
 			std::optional<uint32_t> depthAttachmentIndex = {};
-
 			const auto& outputs = m_Nodes[nodeIndex].Specifications.GetOutputs();
+
+			if (node.Specifications.HasOutputClearValues())
+			{
+				clearValues.clear();
+				clearValues.resize(outputs.size());
+			}
+
+			if (outputs.size() == 0)
+				continue;
+
 			for (size_t outputIndex = 0; outputIndex < outputs.size(); outputIndex++)
 			{
 				VkAttachmentDescription& description = attachmentDescriptions.emplace_back();
@@ -122,7 +132,8 @@ namespace Flare
 
 				FLARE_CORE_ASSERT(transition.TextureHandle != nullptr);
 
-				if (IsDepthTextureFormat(format))
+				bool isDepthAttachment = IsDepthTextureFormat(format);
+				if (isDepthAttachment)
 				{
 					FLARE_CORE_ASSERT(!depthAttachmentIndex);
 					depthAttachmentIndex = (uint32_t)outputIndex;
@@ -138,7 +149,27 @@ namespace Flare
 				description.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 				description.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
 
-				if (description.initialLayout == VK_IMAGE_LAYOUT_UNDEFINED)
+				if (outputs[outputIndex].ClearValue.has_value())
+				{
+					description.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+
+					auto clearValue = outputs[outputIndex].ClearValue.value();
+
+					if (clearValue.Type == AttachmentClearValueType::Color)
+					{
+						clearValues[outputIndex].color.float32[0] = clearValue.Color.x;
+						clearValues[outputIndex].color.float32[1] = clearValue.Color.y;
+						clearValues[outputIndex].color.float32[2] = clearValue.Color.z;
+						clearValues[outputIndex].color.float32[3] = clearValue.Color.w;
+					}
+					else
+					{
+						clearValues[outputIndex].depthStencil.depth = clearValue.Depth;
+						clearValues[outputIndex].depthStencil.stencil = 0;
+					}
+				}
+
+				if (description.initialLayout == VK_IMAGE_LAYOUT_UNDEFINED && !isDepthAttachment)
 				{
 					description.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 				}
@@ -151,6 +182,11 @@ namespace Flare
 			Ref<VulkanRenderPass> compatibleRenderPass = CreateRef<VulkanRenderPass>(
 				Span<VkAttachmentDescription>::FromVector(attachmentDescriptions),
 				depthAttachmentIndex);
+
+			if (node.Specifications.HasOutputClearValues())
+			{
+				compatibleRenderPass->SetDefaultClearValues(Span<VkClearValue>::FromVector(clearValues));
+			}
 
 			node.RenderTarget = CreateRef<VulkanFrameBuffer>(
 				attachmentTextures[0]->GetWidth(),
