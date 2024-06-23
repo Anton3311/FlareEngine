@@ -9,6 +9,74 @@
 
 namespace Flare
 {
+	struct RenderPassAttachmentKey
+	{
+		bool operator==(const RenderPassAttachmentKey& other) const
+		{
+			return Format == other.Format
+				&& InitialLayout == other.InitialLayout
+				&& FinalLayout == other.FinalLayout
+				&& HasClearValue == other.HasClearValue;
+		}
+
+		bool operator!=(const RenderPassAttachmentKey& key) const { return !operator==(key); }
+
+		TextureFormat Format = TextureFormat::RGBA8;
+		ImageLayout InitialLayout = ImageLayout::Undefined;
+		ImageLayout FinalLayout = ImageLayout::Undefined;
+		bool HasClearValue = false;
+	};
+
+	struct VulkanRenderPassKey
+	{
+		bool operator==(const VulkanRenderPassKey& other) const
+		{
+			if (Attachments.size() != other.Attachments.size())
+				return false;
+
+			for (size_t i = 0; i < Attachments.size(); i++)
+			{
+				if (Attachments[i] != other.Attachments[i])
+					return false;
+			}
+
+			return true;
+		}
+
+		inline bool operator!=(const VulkanRenderPassKey& other) const { return !operator==(other); }
+
+		std::vector<RenderPassAttachmentKey> Attachments;
+	};
+
+	template<typename T>
+	constexpr std::underlying_type_t<T> ToUnderlying(T value)
+	{
+		return (std::underlying_type_t<T>)value;
+	}
+}
+
+template<>
+struct std::hash<Flare::VulkanRenderPassKey>
+{
+	size_t operator()(const Flare::VulkanRenderPassKey& key) const
+	{
+		using namespace Flare;
+		size_t hash = 0;
+
+		for (const RenderPassAttachmentKey& attachment : key.Attachments)
+		{
+			CombineHashes(hash, ToUnderlying(attachment.Format));
+			CombineHashes(hash, ToUnderlying(attachment.InitialLayout));
+			CombineHashes(hash, ToUnderlying(attachment.FinalLayout));
+			CombineHashes(hash, attachment.HasClearValue);
+		}
+
+		return hash;
+	}
+};
+
+namespace Flare
+{
 	RenderGraphBuilder::RenderGraphBuilder(CompiledRenderGraph& result, Span<RenderPassNode> nodes, Span<ExternalRenderGraphResource> externalResources)
 		: m_Result(result), m_Nodes(nodes), m_ExternalResources(externalResources)
 	{
@@ -101,6 +169,8 @@ namespace Flare
 		std::vector<Ref<Texture>> attachmentTextures;
 		std::vector<VkClearValue> clearValues;
 
+		std::unordered_map<VulkanRenderPassKey, Ref<VulkanRenderPass>> renderPassesCache;
+
 		for (size_t nodeIndex = 0; nodeIndex < m_Nodes.GetSize(); nodeIndex++)
 		{
 			RenderPassNode& node = m_Nodes[nodeIndex];
@@ -112,7 +182,6 @@ namespace Flare
 			attachmentDescriptions.clear();
 			attachmentTextures.clear();
 
-			std::optional<uint32_t> depthAttachmentIndex = {};
 			const auto& outputs = m_Nodes[nodeIndex].Specifications.GetOutputs();
 
 			if (node.Specifications.HasOutputClearValues())
@@ -124,68 +193,103 @@ namespace Flare
 			if (outputs.size() == 0)
 				continue;
 
+			VulkanRenderPassKey renderPassKey;
+
+			{
+				FLARE_PROFILE_SCOPE("GenerateRenderPassKey");
+
+				renderPassKey.Attachments.reserve(outputs.size());
+				for (size_t outputIndex = 0; outputIndex < outputs.size(); outputIndex++)
+				{
+					const LayoutTransition& transition = m_RenderPassTransitions[nodeIndex][outputIndex];
+					TextureFormat format = outputs[outputIndex].AttachmentTexture->GetFormat();
+
+					RenderPassAttachmentKey& attachmentKey = renderPassKey.Attachments.emplace_back();
+					attachmentKey.Format = format;
+					attachmentKey.InitialLayout = transition.InitialLayout;
+					attachmentKey.FinalLayout = transition.FinalLayout;
+					attachmentKey.HasClearValue = outputs[outputIndex].ClearValue.has_value();
+				}
+			}
+
 			for (size_t outputIndex = 0; outputIndex < outputs.size(); outputIndex++)
 			{
-				VkAttachmentDescription& description = attachmentDescriptions.emplace_back();
-				const LayoutTransition& transition = m_RenderPassTransitions[nodeIndex][outputIndex];
-				TextureFormat format = outputs[outputIndex].AttachmentTexture->GetFormat();
-
-				FLARE_CORE_ASSERT(transition.TextureHandle != nullptr);
-
-				bool isDepthAttachment = IsDepthTextureFormat(format);
-				if (isDepthAttachment)
-				{
-					FLARE_CORE_ASSERT(!depthAttachmentIndex);
-					depthAttachmentIndex = (uint32_t)outputIndex;
-				}
-
-				description.format = TextureFormatToVulkanFormat(format);
-				description.flags = 0;
-				description.initialLayout = ImageLayoutToVulkanImageLayout(transition.InitialLayout, format);
-				description.finalLayout = ImageLayoutToVulkanImageLayout(transition.FinalLayout, format);
-				description.samples = VK_SAMPLE_COUNT_1_BIT;
-				description.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
-				description.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-				description.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-				description.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-
-				if (outputs[outputIndex].ClearValue.has_value())
-				{
-					description.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-
-					auto clearValue = outputs[outputIndex].ClearValue.value();
-
-					if (clearValue.Type == AttachmentClearValueType::Color)
-					{
-						clearValues[outputIndex].color.float32[0] = clearValue.Color.x;
-						clearValues[outputIndex].color.float32[1] = clearValue.Color.y;
-						clearValues[outputIndex].color.float32[2] = clearValue.Color.z;
-						clearValues[outputIndex].color.float32[3] = clearValue.Color.w;
-					}
-					else
-					{
-						clearValues[outputIndex].depthStencil.depth = clearValue.Depth;
-						clearValues[outputIndex].depthStencil.stencil = 0;
-					}
-				}
-
-				if (description.initialLayout == VK_IMAGE_LAYOUT_UNDEFINED && !isDepthAttachment)
-				{
-					description.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-				}
-
-				FLARE_CORE_ASSERT(description.finalLayout != VK_IMAGE_LAYOUT_UNDEFINED);
-
 				attachmentTextures.push_back(outputs[outputIndex].AttachmentTexture);
 			}
 
-			Ref<VulkanRenderPass> compatibleRenderPass = CreateRef<VulkanRenderPass>(
-				Span<VkAttachmentDescription>::FromVector(attachmentDescriptions),
-				depthAttachmentIndex);
+			Ref<VulkanRenderPass> compatibleRenderPass = nullptr;
 
-			if (node.Specifications.HasOutputClearValues())
+			auto it = renderPassesCache.find(renderPassKey);
+			if (it != renderPassesCache.end())
 			{
-				compatibleRenderPass->SetDefaultClearValues(Span<VkClearValue>::FromVector(clearValues));
+				compatibleRenderPass = it->second;
+			}
+			else
+			{
+				std::optional<uint32_t> depthAttachmentIndex = {};
+				for (size_t outputIndex = 0; outputIndex < outputs.size(); outputIndex++)
+				{
+					VkAttachmentDescription& description = attachmentDescriptions.emplace_back();
+					const LayoutTransition& transition = m_RenderPassTransitions[nodeIndex][outputIndex];
+					TextureFormat format = outputs[outputIndex].AttachmentTexture->GetFormat();
+
+					FLARE_CORE_ASSERT(transition.TextureHandle != nullptr);
+
+					bool isDepthAttachment = IsDepthTextureFormat(format);
+					if (isDepthAttachment)
+					{
+						FLARE_CORE_ASSERT(!depthAttachmentIndex);
+						depthAttachmentIndex = (uint32_t)outputIndex;
+					}
+
+					description.format = TextureFormatToVulkanFormat(format);
+					description.flags = 0;
+					description.initialLayout = ImageLayoutToVulkanImageLayout(transition.InitialLayout, format);
+					description.finalLayout = ImageLayoutToVulkanImageLayout(transition.FinalLayout, format);
+					description.samples = VK_SAMPLE_COUNT_1_BIT;
+					description.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+					description.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+					description.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+					description.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+
+					if (outputs[outputIndex].ClearValue.has_value())
+					{
+						description.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+
+						auto clearValue = outputs[outputIndex].ClearValue.value();
+
+						if (clearValue.Type == AttachmentClearValueType::Color)
+						{
+							clearValues[outputIndex].color.float32[0] = clearValue.Color.x;
+							clearValues[outputIndex].color.float32[1] = clearValue.Color.y;
+							clearValues[outputIndex].color.float32[2] = clearValue.Color.z;
+							clearValues[outputIndex].color.float32[3] = clearValue.Color.w;
+						}
+						else
+						{
+							clearValues[outputIndex].depthStencil.depth = clearValue.Depth;
+							clearValues[outputIndex].depthStencil.stencil = 0;
+						}
+					}
+
+					if (description.initialLayout == VK_IMAGE_LAYOUT_UNDEFINED && !isDepthAttachment)
+					{
+						description.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+					}
+
+					FLARE_CORE_ASSERT(description.finalLayout != VK_IMAGE_LAYOUT_UNDEFINED);
+				}
+
+				compatibleRenderPass = CreateRef<VulkanRenderPass>(
+					Span<VkAttachmentDescription>::FromVector(attachmentDescriptions),
+					depthAttachmentIndex);
+
+				if (node.Specifications.HasOutputClearValues())
+				{
+					compatibleRenderPass->SetDefaultClearValues(Span<VkClearValue>::FromVector(clearValues));
+				}
+
+				renderPassesCache.emplace(std::move(renderPassKey), compatibleRenderPass);
 			}
 
 			node.RenderTarget = CreateRef<VulkanFrameBuffer>(
