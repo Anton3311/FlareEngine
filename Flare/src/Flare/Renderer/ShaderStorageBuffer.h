@@ -19,6 +19,6 @@ namespace Flare
         virtual void SetDebugName(std::string_view name) = 0;
         virtual const std::string& GetDebugName() const = 0;
     public:
-        static Ref<ShaderStorageBuffer> Create(size_t size, uint32_t binding);
+        static Ref<ShaderStorageBuffer> Create(size_t size);
     };
 }

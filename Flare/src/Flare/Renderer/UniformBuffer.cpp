@@ -6,7 +6,7 @@
 
 namespace Flare
 {
-    Ref<UniformBuffer> Flare::UniformBuffer::Create(size_t size, uint32_t binding)
+    Ref<UniformBuffer> Flare::UniformBuffer::Create(size_t size)
     {
         switch (RendererAPI::GetAPI())
         {

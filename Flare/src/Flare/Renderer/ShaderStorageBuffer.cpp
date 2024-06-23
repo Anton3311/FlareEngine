@@ -5,7 +5,7 @@
 
 namespace Flare
 {
-	Ref<ShaderStorageBuffer> ShaderStorageBuffer::Create(size_t size, uint32_t binding)
+	Ref<ShaderStorageBuffer> ShaderStorageBuffer::Create(size_t size)
 	{
         switch (RendererAPI::GetAPI())
         {

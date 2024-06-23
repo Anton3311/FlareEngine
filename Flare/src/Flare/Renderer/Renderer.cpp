@@ -17,6 +17,7 @@
 
 #include "Flare/Renderer/Passes/GeometryPass.h"
 #include "Flare/Renderer/Passes/ShadowPass.h"
+#include "Flare/Renderer/Passes/ShadowCascadePass.h"
 
 #include "Flare/Project/Project.h"
 
@@ -33,8 +34,6 @@ namespace Flare
 
 	struct RenderPasses
 	{
-		Ref<ShadowPass> Shadow = nullptr;
-
 		std::vector<Ref<RenderPass>> BeforeShadowsPasses;
 		std::vector<Ref<RenderPass>> BeforeOpaqueGeometryPasses;
 		std::vector<Ref<RenderPass>> AfterOpaqueGeometryPasses;
@@ -69,7 +68,6 @@ namespace Flare
 		std::vector<DecalData> Decals;
 
 		// Shadows
-		Ref<DescriptorSet> PerCascadeDescriptorSets[ShadowSettings::MaxCascades] = { nullptr };
 		ShadowSettings ShadowMappingSettings;
 
 		// Lighting
@@ -108,13 +106,13 @@ namespace Flare
 		size_t maxPointLights = 32;
 		size_t maxSpotLights = 32;
 
-		s_RendererData.CameraBuffer = UniformBuffer::Create(sizeof(RenderView), 0);
-		s_RendererData.LightBuffer = UniformBuffer::Create(sizeof(LightData), 1);
+		s_RendererData.CameraBuffer = UniformBuffer::Create(sizeof(RenderView));
+		s_RendererData.LightBuffer = UniformBuffer::Create(sizeof(LightData));
 
-		s_RendererData.PointLightsShaderBuffer = ShaderStorageBuffer::Create(maxPointLights * sizeof(PointLightData), 4);
+		s_RendererData.PointLightsShaderBuffer = ShaderStorageBuffer::Create(maxPointLights * sizeof(PointLightData));
 		s_RendererData.PointLightsShaderBuffer->SetDebugName("PointLightsDataBuffer");
 
-		s_RendererData.SpotLightsShaderBuffer = ShaderStorageBuffer::Create(maxSpotLights * sizeof(SpotLightData), 5);
+		s_RendererData.SpotLightsShaderBuffer = ShaderStorageBuffer::Create(maxSpotLights * sizeof(SpotLightData));
 		s_RendererData.SpotLightsShaderBuffer->SetDebugName("SpotLightsDataBuffer");
 
 		s_RendererData.ShadowMappingSettings.Quality = ShadowQuality::Medium;
@@ -224,29 +222,7 @@ namespace Flare
 			}
 
 			s_RendererData.PrimaryDescriptorSetWithoutShadows->FlushWrites();
-			
-			// Setup per cascade descriptor sets
-			for (uint32_t i = 0; i < ShadowSettings::MaxCascades; i++)
-			{
-				Ref<DescriptorSet> set = s_RendererData.PrimaryDescriptorPool->AllocateSet();
-				set->WriteUniformBuffer(s_RendererData.LightBuffer, 1);
-				set->WriteStorageBuffer(s_RendererData.PointLightsShaderBuffer, 4);
-				set->WriteStorageBuffer(s_RendererData.SpotLightsShaderBuffer, 5);
-
-				for (size_t i = 0; i < ShadowSettings::MaxCascades; i++)
-				{
-					set->WriteImage(s_RendererData.WhiteTexture, (uint32_t)(28 + i));
-				}
-
-				set->FlushWrites();
-				set->SetDebugName(fmt::format("Cascade{}.PrimaryDescriptorSet", i));
-				s_RendererData.PerCascadeDescriptorSets[i] = set;
-			}
 		}
-
-		s_RendererData.Passes.Shadow = CreateRef<ShadowPass>(s_RendererData.OpaqueQueue,
-			s_RendererData.PrimaryDescriptorSet,
-			s_RendererData.PerCascadeDescriptorSets);
 
 		Project::OnProjectOpen.Bind(ReloadShaders);
 	}
@@ -344,11 +320,6 @@ namespace Flare
 
 		s_RendererData.Statistics.ObjectsSubmitted += (uint32_t)s_RendererData.OpaqueQueue.GetSize();
 
-		if (s_RendererData.ShadowMappingSettings.Enabled && s_RendererData.CurrentViewport->ShadowMappingEnabled)
-		{
-			ExecuteShadowPass();
-		}
-
 #if 0
 		if (RendererAPI::GetAPI() != RendererAPI::API::Vulkan)
 		{
@@ -428,22 +399,8 @@ namespace Flare
 #endif
 	}
 
-	void Renderer::ExecuteShadowPass()
-	{
-		FLARE_PROFILE_FUNCTION();
-		{
-			FLARE_PROFILE_SCOPE("BeforeShadowsPasses");
-			ExecuteRenderPasses(s_RendererData.Passes.BeforeShadowsPasses);
-		}
-
-		RenderingContext context(s_RendererData.CurrentViewport->RenderTarget);
-		s_RendererData.Passes.Shadow->OnRender(context);
-	}
-
 	void Renderer::EndScene()
 	{
-		s_RendererData.Statistics.ShadowPassTime += s_RendererData.Passes.Shadow->GetElapsedTime().value_or(0.0f);
-
 		s_RendererData.PointLights.clear();
 		s_RendererData.SpotLights.clear();
 
@@ -575,11 +532,6 @@ namespace Flare
 		return s_RendererData.DepthOnlyMeshMaterial;
 	}
 
-	Ref<FrameBuffer> Renderer::GetShadowsRenderTarget(size_t index)
-	{
-		return s_RendererData.Passes.Shadow->GetShadowRenderTarget((uint32_t)index);
-	}
-
 	ShadowSettings& Renderer::GetShadowSettings()
 	{
 		return s_RendererData.ShadowMappingSettings;
@@ -595,10 +547,11 @@ namespace Flare
 		return s_RendererData.PrimaryDescriptorPool->GetLayout();
 	}
 
-	static void SetupPrimaryDescriptorSet(Ref<DescriptorSet> set)
+	static void SetupPrimaryDescriptorSet(Ref<DescriptorSet> set, Ref<UniformBuffer> shadowData)
 	{
 		set->WriteUniformBuffer(s_RendererData.CameraBuffer, 0);
 		set->WriteUniformBuffer(s_RendererData.LightBuffer, 1);
+		set->WriteUniformBuffer(shadowData, 2);
 		set->WriteStorageBuffer(s_RendererData.PointLightsShaderBuffer, 4);
 		set->WriteStorageBuffer(s_RendererData.SpotLightsShaderBuffer, 5);
 
@@ -610,22 +563,100 @@ namespace Flare
 		set->FlushWrites();
 	}
 
+	static Ref<ShadowPass> ConfigureShadowPass(Viewport& viewport, std::array<Ref<Texture>, ShadowSettings::MaxCascades>& cascadeTextures)
+	{
+		RenderGraphPassSpecifications shadowPassSpec{};
+		shadowPassSpec.SetDebugName("ShadowPass");
+
+		Ref<ShadowPass> shadowPass = CreateRef<ShadowPass>(s_RendererData.OpaqueQueue);
+
+		viewport.Graph.AddPass(shadowPassSpec, shadowPass);
+
+		Ref<UniformBuffer> shadowDataBuffer = shadowPass->GetShadowDataBuffer();
+
+		uint32_t textureResolution = GetShadowMapResolution(s_RendererData.ShadowMappingSettings.Quality);
+
+		TextureSpecifications cascadeSpec{};
+		cascadeSpec.Filtering = TextureFiltering::Closest;
+		cascadeSpec.Wrap = TextureWrap::Clamp;
+		cascadeSpec.Format = TextureFormat::Depth32;
+		cascadeSpec.Usage = TextureUsage::RenderTarget | TextureUsage::Sampling;
+		cascadeSpec.Width = textureResolution;
+		cascadeSpec.Height = textureResolution;
+
+		for (int32_t cascadeIndex = 0; cascadeIndex < s_RendererData.ShadowMappingSettings.Cascades; cascadeIndex++)
+		{
+			cascadeTextures[cascadeIndex] = Texture::Create(cascadeSpec);
+
+			Ref<DescriptorSet> set = s_RendererData.PrimaryDescriptorPool->AllocateSet();
+			set->WriteUniformBuffer(s_RendererData.LightBuffer, 1);
+			set->WriteStorageBuffer(s_RendererData.PointLightsShaderBuffer, 4);
+			set->WriteStorageBuffer(s_RendererData.SpotLightsShaderBuffer, 5);
+
+			for (size_t i = 0; i < ShadowSettings::MaxCascades; i++)
+			{
+				set->WriteImage(s_RendererData.WhiteTexture, (uint32_t)(28 + i));
+			}
+
+			set->FlushWrites();
+			set->SetDebugName(fmt::format("Cascade{}.PrimaryDescriptorSet", cascadeIndex));
+
+			RenderGraphPassSpecifications cascadePassSpec{};
+			cascadePassSpec.SetDebugName(fmt::format("ShadowCascadePass{}", cascadeIndex));
+			cascadePassSpec.AddOutput(cascadeTextures[cascadeIndex], 0, 1.0f);
+
+			Ref<ShadowCascadePass> cascadePass = CreateRef<ShadowCascadePass>(
+				s_RendererData.OpaqueQueue,
+				shadowPass->GetLightView(cascadeIndex),
+				shadowPass->GetVisibleObjects(cascadeIndex),
+				cascadeTextures[cascadeIndex],
+				shadowDataBuffer,
+				set, s_RendererData.PrimaryDescriptorPool);
+
+			viewport.Graph.AddPass(cascadePassSpec, cascadePass);
+		}
+
+		return shadowPass;
+	}
+
 	void Renderer::ConfigurePasses(Viewport& viewport)
 	{
+		std::array<Ref<Texture>, ShadowSettings::MaxCascades> cascadeTextures = { nullptr };
+		Ref<ShadowPass> shadowPass = ConfigureShadowPass(viewport, cascadeTextures);
+		Ref<UniformBuffer> shadowDataBuffer = shadowPass->GetShadowDataBuffer();
+
 		Ref<DescriptorSet> primarySet = s_RendererData.PrimaryDescriptorPool->AllocateSet();
 		primarySet->SetDebugName("PrimarySet");
-		SetupPrimaryDescriptorSet(primarySet);
+		SetupPrimaryDescriptorSet(primarySet, shadowDataBuffer);
 
 		Ref<DescriptorSet> primarySetWithoutShadows = s_RendererData.PrimaryDescriptorPool->AllocateSet();
 		primarySetWithoutShadows->SetDebugName("PrimarySetWithoutShadows");
-		SetupPrimaryDescriptorSet(primarySetWithoutShadows);
+		SetupPrimaryDescriptorSet(primarySetWithoutShadows, shadowDataBuffer);
 
-		RenderGraphPassSpecifications specifications{};
-		specifications.AddOutput(viewport.ColorTexture, 0);
-		specifications.AddOutput(viewport.NormalsTexture, 1);
-		specifications.AddOutput(viewport.DepthTexture, 2);
+		RenderGraphPassSpecifications geometryPass{};
+		geometryPass.SetDebugName("GeometryPass");
+		geometryPass.AddOutput(viewport.ColorTexture, 0);
+		geometryPass.AddOutput(viewport.NormalsTexture, 1);
+		geometryPass.AddOutput(viewport.DepthTexture, 2);
 
-		viewport.Graph.AddPass(specifications, CreateRef<GeometryPass>(
+		for (size_t i = 0; i < cascadeTextures.size(); i++)
+		{
+			geometryPass.AddInput(cascadeTextures[i]);
+
+			if (cascadeTextures[i] == nullptr)
+				break;
+		}
+
+		// Fill first cascades with textures from shadow casacde passes,
+		// the rest of cascades were filled with white textures when setting up the descriptor set
+		for (uint32_t i = 0; i < (uint32_t)s_RendererData.ShadowMappingSettings.Cascades; i++)
+		{
+			primarySet->WriteImage(cascadeTextures[i], (uint32_t)(28 + i));
+		}
+
+		primarySet->FlushWrites();
+
+		viewport.Graph.AddPass(geometryPass, CreateRef<GeometryPass>(
 			s_RendererData.OpaqueQueue,
 			primarySet,
 			primarySetWithoutShadows,

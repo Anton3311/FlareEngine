@@ -186,7 +186,6 @@ namespace Flare
 		static Ref<Material> GetErrorMaterial();
 		static Ref<Material> GetDepthOnlyMaterial();
 
-		static Ref<FrameBuffer> GetShadowsRenderTarget(size_t index);
 		static ShadowSettings& GetShadowSettings();
 
 		static Ref<DescriptorSet> GetPrimaryDescriptorSet();
@@ -195,7 +194,6 @@ namespace Flare
 		static void ConfigurePasses(Viewport& viewport);
 	private:
 		static void ExecuteDecalsPass();
-		static void ExecuteShadowPass();
 		static void ReloadShaders();
 		static void ExecuteRenderPasses(std::vector<Ref<RenderPass>>& passes);
 	};

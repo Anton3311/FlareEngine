@@ -25,7 +25,7 @@ namespace Flare
 		m_Pool(pool)
 	{
 		constexpr size_t maxInstances = 1000;
-		m_InstanceStorageBuffer = ShaderStorageBuffer::Create(maxInstances * sizeof(InstanceData), 0);
+		m_InstanceStorageBuffer = ShaderStorageBuffer::Create(maxInstances * sizeof(InstanceData));
 
 		// HACK
 		primarySet->WriteStorageBuffer(m_InstanceStorageBuffer, 3);

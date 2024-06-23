@@ -394,22 +394,6 @@ namespace Flare
         m_TitleBar.OnRenderImGui();
 
         {
-            ImGui::Begin("Shadows");
-
-            static int32_t s_CascadeIndex = 0;
-
-            ShadowSettings& settings = Renderer::GetShadowSettings();
-
-            ImGui::SliderInt("Cascade Index", &s_CascadeIndex, 0, settings.Cascades - 1, "%d", ImGuiSliderFlags_AlwaysClamp);
-
-            auto shadows = Renderer::GetShadowsRenderTarget(s_CascadeIndex);
-            if (shadows)
-                ImGui::Image(ImGuiLayer::GetId(shadows, 0), ImVec2(256, 256), ImVec2(0, 1), ImVec2(1, 0));
-
-            ImGui::End();
-        }
-
-        {
             ImGui::Begin("Renderer");
             const auto& stats = Renderer::GetStatistics();
 
