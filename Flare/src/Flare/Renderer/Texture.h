@@ -135,6 +135,9 @@ namespace Flare
 		virtual TextureFiltering GetFiltering() const = 0;
 
 		virtual void Resize(uint32_t width, uint32_t height) = 0;
+
+		virtual void SetDebugName(std::string_view debugName) = 0;
+		virtual const std::string& GetDebugName() const = 0;
 	public:
 		static Ref<Texture> Create(const TextureSpecifications& specifications);
 		static Ref<Texture> Create(const std::filesystem::path& path, const TextureSpecifications& specifications);

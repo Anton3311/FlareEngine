@@ -277,6 +277,10 @@ namespace Flare
 		m_Viewport.NormalsTexture = Texture::Create(normalsSpecifications);
 		m_Viewport.DepthTexture = Texture::Create(depthSpecifications);
 
+		m_Viewport.ColorTexture->SetDebugName("Color");
+		m_Viewport.NormalsTexture->SetDebugName("Normals");
+		m_Viewport.DepthTexture->SetDebugName("Depth");
+
 		Ref<Texture> attachmentTextures[] = { m_Viewport.ColorTexture, m_Viewport.NormalsTexture, m_Viewport.DepthTexture };
 
 		m_Viewport.RenderTarget = FrameBuffer::Create(Span(attachmentTextures, 3));

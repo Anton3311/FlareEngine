@@ -165,6 +165,19 @@ namespace Flare
 		m_Specifications.Height = height;
 
 		CreateImage();
+		UpdateDebugName();
+	}
+
+	void VulkanTexture::SetDebugName(std::string_view debugName)
+	{
+		m_DebugName = debugName;
+
+		UpdateDebugName();
+	}
+
+	const std::string& VulkanTexture::GetDebugName() const
+	{
+		return m_DebugName;
 	}
 
 	void VulkanTexture::CreateResources()
@@ -494,5 +507,11 @@ namespace Flare
 			vkDestroyImageView(device, m_ImageView, nullptr);
 			vkDestroyImage(device, m_Image, nullptr);
 		}
+	}
+
+	void VulkanTexture::UpdateDebugName()
+	{
+		VulkanContext::GetInstance().SetDebugName(VK_OBJECT_TYPE_IMAGE, (uint64_t)m_Image, m_DebugName.c_str());
+		VulkanContext::GetInstance().SetDebugName(VK_OBJECT_TYPE_IMAGE_VIEW, (uint64_t)m_ImageView, m_DebugName.c_str());
 	}
 }

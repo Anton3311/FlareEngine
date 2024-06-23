@@ -28,6 +28,9 @@ namespace Flare
 
 		void Resize(uint32_t width, uint32_t height) override;
 
+		void SetDebugName(std::string_view debugName) override;
+		const std::string& GetDebugName() const override;
+
 		inline VkImage GetImageHandle() const { return m_Image; }
 		inline VkImageView GetImageViewHandle() const { return m_ImageView; }
 		inline VkSampler GetDefaultSampler() const { return m_DefaultSampler; }
@@ -39,7 +42,10 @@ namespace Flare
 		size_t GetImagePixelSizeInBytes();
 
 		void ReleaseImage();
+		void UpdateDebugName();
 	private:
+		std::string m_DebugName;
+
 		TextureSpecifications m_Specifications;
 		VulkanAllocation m_Allocation;
 
