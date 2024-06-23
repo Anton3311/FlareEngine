@@ -9,6 +9,8 @@
 #include "Flare/Renderer/GraphicsContext.h"
 #include "Flare/Renderer/Passes/BlitPass.h"
 
+#include "Flare/Platform/Vulkan/VulkanCommandBuffer.h"
+
 #include "Flare/AssetManager/AssetManager.h"
 
 #include "FlareCore/Profiler/Profiler.h"
@@ -98,6 +100,12 @@ namespace Flare
 
 	void SSAOMainPass::OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
 	{
+		if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
+		{
+			Ref<VulkanCommandBuffer> vulkanCommandBuffer = As<VulkanCommandBuffer>(commandBuffer);
+			vulkanCommandBuffer->SetPrimaryDescriptorSet(Renderer::GetPrimaryDescriptorSet());
+		}
+
 		commandBuffer->BeginRenderTarget(context.GetRenderTarget());
 
 		auto biasIndex = m_Material->GetShader()->GetPropertyIndex("u_Params.Bias");
