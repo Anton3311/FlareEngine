@@ -1,5 +1,7 @@
 #pragma once
 
+#include "FlareCore/Core.h"
+
 #include "Flare/Renderer/Texture.h"
 
 #include <stdint.h>
@@ -34,8 +36,10 @@ namespace Flare
 		uint32_t End = UINT32_MAX;
 	};
 
-	struct CompiledRenderGraph
+	struct FLARE_API CompiledRenderGraph
 	{
+		void Reset();
+
 		std::vector<LayoutTransition> LayoutTransitions;
 		LayoutTransitionsRange ExternalResourceFinalTransitions;
 	};

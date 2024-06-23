@@ -52,6 +52,7 @@ namespace Flare
 	void RenderGraph::Clear()
 	{
 		m_Nodes.clear();
+		m_CompiledRenderGraph.Reset();
 	}
 
 	void RenderGraph::ExecuteLayoutTransitions(Ref<CommandBuffer> commandBuffer, LayoutTransitionsRange range)
