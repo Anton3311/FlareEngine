@@ -854,6 +854,11 @@ namespace Flare
 		m_SwapChainImages.resize(swapChainImageCount);
 		VK_CHECK_RESULT(vkGetSwapchainImagesKHR(m_Device, m_SwapChain, &swapChainImageCount, m_SwapChainImages.data()));
 
+		for (size_t i = 0; i < m_SwapChainImages.size(); i++)
+		{
+			SetDebugName(VK_OBJECT_TYPE_IMAGE, (uint64_t)m_SwapChainImages[i], fmt::format("SwapChainImage.{}", i).c_str());
+		}
+
 		if (oldSwapChain != VK_NULL_HANDLE)
 		{
 			vkDestroySwapchainKHR(m_Device, oldSwapChain, nullptr);
@@ -910,6 +915,8 @@ namespace Flare
 			imageViewCreateInfo.subresourceRange.levelCount = 1;
 
 			VK_CHECK_RESULT(vkCreateImageView(m_Device, &imageViewCreateInfo, nullptr, &m_SwapChainImageViews[i]));
+
+			SetDebugName(VK_OBJECT_TYPE_IMAGE_VIEW, (uint64_t)m_SwapChainImageViews[i], fmt::format("SwapChainImageView.{}", i).c_str());
 		}
 	}
 
@@ -935,6 +942,8 @@ namespace Flare
 				m_ColorOnlyPass,
 				Span<Ref<Texture>>(&attachmentTexture, 1),
 				false);
+
+			m_SwapChainFrameBuffers[i]->SetDebugName(fmt::format("SwapChainFrameBuffer.{}", i));
 		}
 	}
 
