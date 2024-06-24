@@ -289,6 +289,8 @@ namespace Flare
 					compatibleRenderPass->SetDefaultClearValues(Span<VkClearValue>::FromVector(clearValues));
 				}
 
+				compatibleRenderPass->SetDebugName(node.Specifications.GetDebugName());
+
 				renderPassesCache.emplace(std::move(renderPassKey), compatibleRenderPass);
 			}
 

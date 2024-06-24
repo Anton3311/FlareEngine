@@ -161,6 +161,7 @@ namespace Flare
 			clearValue.color.float32[2] = 0.0f;
 			clearValue.color.float32[3] = 0.0f;
 
+			m_ColorOnlyPass->SetDebugName("ColorOnlyPass");
 			m_ColorOnlyPass->SetDefaultClearValues(Span(&clearValue, 1));
 		}
 
