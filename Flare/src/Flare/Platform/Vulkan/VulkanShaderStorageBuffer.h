@@ -19,7 +19,6 @@ namespace Flare
 
 		inline VkBuffer GetBufferHandle() const { return m_Buffer.GetBuffer(); }
 	private:
-		std::string m_DebugName;
 		VulkanBuffer m_Buffer;
 	};
 }

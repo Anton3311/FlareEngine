@@ -26,10 +26,6 @@ namespace Flare
 	{
 	}
 
-	void VulkanVertexBuffer::Bind()
-	{
-	}
-
 	void VulkanVertexBuffer::SetData(const void* data, size_t size, size_t offset)
 	{
 		m_Buffer.SetData(data, size, offset);
@@ -38,5 +34,15 @@ namespace Flare
 	void VulkanVertexBuffer::SetData(MemorySpan data, size_t offset, Ref<CommandBuffer> commandBuffer)
 	{
 		m_Buffer.SetData(data, offset, commandBuffer);
+	}
+
+	void VulkanVertexBuffer::SetDebugName(std::string_view debugName)
+	{
+		m_Buffer.SetDebugName(debugName);
+	}
+
+	const std::string& VulkanVertexBuffer::GetDebugName() const
+	{
+		return m_Buffer.GetDebugName();
 	}
 }

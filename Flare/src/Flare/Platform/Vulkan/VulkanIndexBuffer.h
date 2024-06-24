@@ -13,11 +13,13 @@ namespace Flare
 		VulkanIndexBuffer(IndexFormat format, const MemorySpan& indices);
 		VulkanIndexBuffer(IndexFormat format, const MemorySpan& indices, Ref<CommandBuffer> commandBuffer);
 
-		void Bind() override;
 		void SetData(const MemorySpan& indices, size_t offset) override;
 		void SetData(MemorySpan data, size_t offset, Ref<CommandBuffer> commandBuffer) override;
 		size_t GetCount() const override;
 		IndexFormat GetIndexFormat() const override;
+
+		void SetDebugName(std::string_view debugName) override;
+		const std::string& GetDebugName() const override;
 
 		inline VkBuffer GetHandle() const { return m_Buffer.GetBuffer(); }
 	private:

@@ -24,10 +24,15 @@ namespace Flare
 
 		inline size_t GetSize() const { return m_Size; }
 		inline VkBuffer GetBuffer() const { return m_Buffer; }
+
+		void SetDebugName(std::string_view name);
+		inline const std::string& GetDebugName() const { return m_DebugName; }
 	private:
 		void Create();
 		StagingBuffer FillStagingBuffer(MemorySpan data);
 	protected:
+		std::string m_DebugName;
+
 		GPUBufferUsage m_Usage = GPUBufferUsage::Static;
 		void* m_Mapped = nullptr;
 

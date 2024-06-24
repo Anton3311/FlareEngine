@@ -26,10 +26,6 @@ namespace Flare
 		m_Count = indices.GetSize() / IndexBuffer::GetIndexFormatSize(m_Format);
 	}
 
-	void Flare::VulkanIndexBuffer::Bind()
-	{
-	}
-
 	void Flare::VulkanIndexBuffer::SetData(const MemorySpan& indices, size_t offset)
 	{
 		m_Buffer.SetData(indices.GetBuffer(), indices.GetSize(), offset);
@@ -48,5 +44,15 @@ namespace Flare
 	IndexBuffer::IndexFormat Flare::VulkanIndexBuffer::GetIndexFormat() const
 	{
 		return m_Format;
+	}
+
+	void VulkanIndexBuffer::SetDebugName(std::string_view debugName)
+	{
+		m_Buffer.SetDebugName(debugName);
+	}
+
+	const std::string& VulkanIndexBuffer::GetDebugName() const
+	{
+		return m_Buffer.GetDebugName();
 	}
 }

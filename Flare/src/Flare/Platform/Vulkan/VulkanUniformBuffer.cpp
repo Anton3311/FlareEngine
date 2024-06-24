@@ -17,4 +17,14 @@ namespace Flare
 	{
 		return m_Buffer.GetSize();
 	}
+
+	void VulkanUniformBuffer::SetDebugName(std::string_view name)
+	{
+		m_Buffer.SetDebugName(name);
+	}
+
+	const std::string& VulkanUniformBuffer::GetDebugName() const
+	{
+		return m_Buffer.GetDebugName();
+	}
 }
