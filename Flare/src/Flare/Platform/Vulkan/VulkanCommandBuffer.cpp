@@ -326,60 +326,6 @@ namespace Flare
 		m_CurrentRenderPass = nullptr;
 	}
 
-	static void GetPipelineStagesAndAccessFlags(VkImageLayout oldLayout, VkImageLayout newLayout,
-		VkAccessFlags& srcAccess, VkAccessFlags& dstAccess,
-		VkPipelineStageFlags& srcStage, VkPipelineStageFlags& dstStage)
-	{
-		if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
-		{
-			srcAccess = VK_ACCESS_NONE;
-			dstAccess= VK_ACCESS_TRANSFER_WRITE_BIT;
-
-			srcStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
-			dstStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
-		}
-		else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
-		{
-			srcAccess = VK_ACCESS_TRANSFER_WRITE_BIT;
-			dstAccess = VK_ACCESS_SHADER_READ_BIT;
-
-			srcStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
-			dstStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT; // NOTE: Add vertex stage if image is sampled in vertex shader?
-		}
-		else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
-		{
-			srcAccess = VK_ACCESS_TRANSFER_READ_BIT;
-			dstAccess = VK_ACCESS_SHADER_READ_BIT;
-
-			srcStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
-			dstStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-		}
-		else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
-		{
-			srcAccess = VK_ACCESS_TRANSFER_WRITE_BIT;
-			dstAccess = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-
-			srcStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
-			dstStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-		}
-		else if (oldLayout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_GENERAL)
-		{
-			srcAccess = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-			dstAccess = VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT;
-
-			srcStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-			dstStage = VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
-		}
-		else if (oldLayout == VK_IMAGE_LAYOUT_GENERAL && newLayout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
-		{
-			srcAccess = VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT;
-			dstAccess = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-
-			srcStage = VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
-			dstStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-		}
-	}
-
 	void VulkanCommandBuffer::TransitionImageLayout(VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout)
 	{
 		FLARE_PROFILE_FUNCTION();
@@ -396,10 +342,15 @@ namespace Flare
 		barrier.subresourceRange.levelCount = 1;
 		barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 
-		VkPipelineStageFlags sourceStage = 0;
-		VkPipelineStageFlags destinationStage = 0;
+		VkPipelineStageFlags sourceStage = VK_PIPELINE_STAGE_NONE;
+		VkPipelineStageFlags destinationStage = VK_PIPELINE_STAGE_NONE;
 
-		GetPipelineStagesAndAccessFlags(oldLayout, newLayout, barrier.srcAccessMask, barrier.dstAccessMask, sourceStage, destinationStage);
+		VulkanContext::FillPipelineStagesAndAccessMasks(oldLayout,
+			newLayout,
+			sourceStage,
+			destinationStage,
+			barrier.srcAccessMask,
+			barrier.dstAccessMask);
 
 		vkCmdPipelineBarrier(m_CommandBuffer,
 			sourceStage, destinationStage, 0, 0,
@@ -424,10 +375,15 @@ namespace Flare
 		barrier.subresourceRange.levelCount = mipLevels;
 		barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 
-		VkPipelineStageFlags sourceStage = 0;
-		VkPipelineStageFlags destinationStage = 0;
+		VkPipelineStageFlags sourceStage = VK_PIPELINE_STAGE_NONE;
+		VkPipelineStageFlags destinationStage = VK_PIPELINE_STAGE_NONE;
 
-		GetPipelineStagesAndAccessFlags(oldLayout, newLayout, barrier.srcAccessMask, barrier.dstAccessMask, sourceStage, destinationStage);
+		VulkanContext::FillPipelineStagesAndAccessMasks(oldLayout,
+			newLayout,
+			sourceStage,
+			destinationStage,
+			barrier.srcAccessMask,
+			barrier.dstAccessMask);
 
 		vkCmdPipelineBarrier(m_CommandBuffer,
 			sourceStage, destinationStage, 0, 0,
@@ -455,33 +411,15 @@ namespace Flare
 		if (hasStencilComponent)
 			barrier.subresourceRange.aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
 
-		VkPipelineStageFlags sourceStage = 0;
-		VkPipelineStageFlags destinationStage = 0;
+		VkPipelineStageFlags sourceStage = VK_PIPELINE_STAGE_NONE;
+		VkPipelineStageFlags destinationStage = VK_PIPELINE_STAGE_NONE;
 
-		if (oldLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
-		{
-			barrier.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
-			barrier.dstAccessMask = VK_ACCESS_NONE;
-
-			sourceStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-			destinationStage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
-		}
-		else if (oldLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
-		{
-			barrier.srcAccessMask = VK_ACCESS_NONE;
-			barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-
-			sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
-			destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-		}
-		else if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
-		{
-			barrier.srcAccessMask = VK_ACCESS_NONE;
-			barrier.dstAccessMask = VK_ACCESS_NONE;
-
-			sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
-			destinationStage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
-		}
+		VulkanContext::FillPipelineStagesAndAccessMasks(oldLayout,
+			newLayout,
+			sourceStage,
+			destinationStage,
+			barrier.srcAccessMask,
+			barrier.dstAccessMask);
 
 		vkCmdPipelineBarrier(m_CommandBuffer,
 			sourceStage, destinationStage, 0, 0,
@@ -500,47 +438,15 @@ namespace Flare
 		range.levelCount = 1;
 		range.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 
-		{
-			VkImageMemoryBarrier barrier{};
-			barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-			barrier.image = image;
-			barrier.oldLayout = oldLayout;
-			barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-			barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-			barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-			barrier.subresourceRange = range;
-
-			vkCmdPipelineBarrier(m_CommandBuffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
-				0,
-				0, nullptr,
-				0, nullptr,
-				1, &barrier);
-		}
-
 		VkClearColorValue value;
 		value.float32[0] = clearColor.r;
 		value.float32[1] = clearColor.g;
 		value.float32[2] = clearColor.b;
 		value.float32[3] = clearColor.a;
 
+		TransitionImageLayout(image, oldLayout, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 		vkCmdClearColorImage(m_CommandBuffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &value, 1, &range);
-
-		{
-			VkImageMemoryBarrier barrier{};
-			barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-			barrier.image = image;
-			barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-			barrier.newLayout = newLayout;
-			barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-			barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-			barrier.subresourceRange = range;
-
-			vkCmdPipelineBarrier(m_CommandBuffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
-				0,
-				0, nullptr,
-				0, nullptr,
-				1, &barrier);
-		}
+		TransitionImageLayout(image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, newLayout);
 	}
 
 	void VulkanCommandBuffer::ClearDepthStencilImage(VkImage image, bool hasStencilComponent, float depthValue, uint32_t stencilValue, VkImageLayout oldLayout, VkImageLayout newLayout)
@@ -556,44 +462,13 @@ namespace Flare
 		if (hasStencilComponent)
 			range.aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
 
-		{
-			VkImageMemoryBarrier barrier{};
-			barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-			barrier.image = image;
-			barrier.oldLayout = oldLayout;
-			barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-			barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-			barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-			barrier.subresourceRange = range;
-
-			vkCmdPipelineBarrier(m_CommandBuffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
-				0,
-				0, nullptr,
-				0, nullptr,
-				1, &barrier);
-		}
-
 		VkClearDepthStencilValue clearValue{};
 		clearValue.depth = depthValue;
 		clearValue.stencil = stencilValue;
+
+		TransitionDepthImageLayout(image, hasStencilComponent, oldLayout, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 		vkCmdClearDepthStencilImage(m_CommandBuffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &clearValue, 1, &range);
-
-		{
-			VkImageMemoryBarrier barrier{};
-			barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-			barrier.image = image;
-			barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-			barrier.newLayout = newLayout;
-			barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-			barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-			barrier.subresourceRange = range;
-
-			vkCmdPipelineBarrier(m_CommandBuffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
-				0,
-				0, nullptr,
-				0, nullptr,
-				1, &barrier);
-		}
+		TransitionDepthImageLayout(image, hasStencilComponent, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, newLayout);
 	}
 
 	void VulkanCommandBuffer::CopyBufferToImage(VkBuffer buffer, VkImage image, VkExtent3D size, size_t bufferOffset, uint32_t mip)

@@ -131,6 +131,19 @@ namespace Flare
 
 		Ref<Pipeline> GetDefaultPipelineForShader(Ref<Shader> shader, Ref<VulkanRenderPass> renderPass);
 
+		// Gets the pipeline stages and corrisponding access flags when transitioning from a given image layout
+		static void GetSourcePipelineStagesAndAccessFlags(VkImageLayout imageLayout, VkPipelineStageFlags& stages, VkAccessFlags& access);
+
+		// Gets the pipeline stages and corrisponding access flags when transitioning to a given image layout
+		static void GetDestinationPipelineStagesAndAccessFlags(VkImageLayout imageLayout, VkPipelineStageFlags& stages, VkAccessFlags& access);
+
+		static void FillPipelineStagesAndAccessMasks(VkImageLayout oldLayout,
+			VkImageLayout newLayout,
+			VkPipelineStageFlags& sourceStages,
+			VkPipelineStageFlags& destinationStages,
+			VkAccessFlags& sourceAccess,
+			VkAccessFlags& destinationAccess);
+
 		static VulkanContext& GetInstance() { return *(VulkanContext*)&GraphicsContext::GetInstance(); }
 	private:
 		void CreateInstance(const Span<const char*>& enabledLayers);
