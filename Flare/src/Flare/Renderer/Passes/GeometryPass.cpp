@@ -46,22 +46,21 @@ namespace Flare
 	void GeometryPass::OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
 	{
 		FLARE_PROFILE_FUNCTION();
-		const Viewport& currentViewport = Renderer::GetCurrentViewport();
 
 		if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
 		{
-			Ref<VulkanCommandBuffer> commandBuffer = VulkanContext::GetInstance().GetPrimaryCommandBuffer();
+			Ref<VulkanCommandBuffer> vulkanCommandBuffer = As<VulkanCommandBuffer>(commandBuffer);
 			
 			if (Renderer::GetShadowSettings().Enabled)
 			{
-				commandBuffer->SetPrimaryDescriptorSet(m_PrimaryDescriptorSet);
+				vulkanCommandBuffer->SetPrimaryDescriptorSet(m_PrimaryDescriptorSet);
 			}
 			else
 			{
-				commandBuffer->SetPrimaryDescriptorSet(m_PrimaryDescriptorSetWithoutShadows);
+				vulkanCommandBuffer->SetPrimaryDescriptorSet(m_PrimaryDescriptorSetWithoutShadows);
 			}
 
-			commandBuffer->SetSecondaryDescriptorSet(nullptr);
+			vulkanCommandBuffer->SetSecondaryDescriptorSet(nullptr);
 		}
 
 		m_VisibleObjects.clear();
@@ -93,10 +92,7 @@ namespace Flare
 			}
 		}
 
-		{
-			FLARE_PROFILE_SCOPE("SetIntancesData");
-			m_InstanceStorageBuffer->SetData(MemorySpan::FromVector(m_InstanceBuffer), 0, commandBuffer);
-		}
+		m_InstanceStorageBuffer->SetData(MemorySpan::FromVector(m_InstanceBuffer), 0, commandBuffer);
 
 		Ref<FrameBuffer> renderTarget = context.GetRenderTarget();
 
