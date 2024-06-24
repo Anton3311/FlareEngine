@@ -5,7 +5,13 @@
 namespace Flare
 {
 	VulkanShaderStorageBuffer::VulkanShaderStorageBuffer(size_t size)
-		: m_Buffer(GPUBufferUsage::Static, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, size)
+		: m_Buffer(
+			GPUBufferUsage::Static,
+			VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+			VulkanBuffer::PipelineDependecy(
+				VK_PIPELINE_STAGE_VERTEX_SHADER_BIT | VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+				VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT),
+			size)
 	{
 		m_Buffer.EnsureAllocated();
 	}

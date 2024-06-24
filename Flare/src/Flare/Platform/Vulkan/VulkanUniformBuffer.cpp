@@ -3,7 +3,11 @@
 namespace Flare
 {
 	VulkanUniformBuffer::VulkanUniformBuffer(size_t size)
-		: m_Buffer(GPUBufferUsage::Dynamic, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, size)
+		: m_Buffer(
+			GPUBufferUsage::Dynamic,
+			VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+			VulkanBuffer::PipelineDependecy(VK_PIPELINE_STAGE_VERTEX_SHADER_BIT | VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, VK_ACCESS_UNIFORM_READ_BIT),
+			size)
 	{
 		m_Buffer.EnsureAllocated();
 	}

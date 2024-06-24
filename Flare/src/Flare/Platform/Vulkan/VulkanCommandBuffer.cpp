@@ -626,6 +626,18 @@ namespace Flare
 		vkCmdCopyBuffer(m_CommandBuffer, sourceBuffer, destinationBuffer, 1, &copyRegion);
 	}
 
+	void VulkanCommandBuffer::AddBufferBarrier(Span<VkBufferMemoryBarrier> memoryBarriers,
+		VkPipelineStageFlags sourceStages,
+		VkPipelineStageFlags destinationStages)
+	{
+		vkCmdPipelineBarrier(m_CommandBuffer,
+			sourceStages,
+			destinationStages,
+			0, 0, nullptr,
+			(uint32_t)memoryBarriers.GetSize(), memoryBarriers.GetData(),
+			0, nullptr);
+	}
+
 	void VulkanCommandBuffer::GenerateImageMipMaps(VkImage image, uint32_t mipLevels, glm::uvec2 imageSize)
 	{
 		FLARE_PROFILE_FUNCTION();

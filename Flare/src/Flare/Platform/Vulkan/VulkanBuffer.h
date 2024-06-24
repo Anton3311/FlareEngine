@@ -14,8 +14,17 @@ namespace Flare
 	class VulkanBuffer
 	{
 	public:
-		VulkanBuffer(GPUBufferUsage usage, VkBufferUsageFlags bufferUsage, size_t size);
-		VulkanBuffer(GPUBufferUsage usage, VkBufferUsageFlags bufferUsage);
+		struct PipelineDependecy
+		{
+			PipelineDependecy(VkPipelineStageFlags stages, VkAccessFlags accessFlags)
+				: DependentStages(stages), AccessFlags(accessFlags) {}
+
+			VkPipelineStageFlags DependentStages = VK_PIPELINE_STAGE_NONE;
+			VkAccessFlags AccessFlags = VK_ACCESS_NONE;
+		};
+
+		VulkanBuffer(GPUBufferUsage usage, VkBufferUsageFlags bufferUsage, PipelineDependecy dependecy, size_t size);
+		VulkanBuffer(GPUBufferUsage usage, VkBufferUsageFlags bufferUsage, PipelineDependecy dependeny);
 		~VulkanBuffer();
 
 		void SetData(const void* data, size_t size, size_t offset);
@@ -32,6 +41,8 @@ namespace Flare
 		StagingBuffer FillStagingBuffer(MemorySpan data);
 	protected:
 		std::string m_DebugName;
+
+		PipelineDependecy m_PipelineDepency;
 
 		GPUBufferUsage m_Usage = GPUBufferUsage::Static;
 		void* m_Mapped = nullptr;

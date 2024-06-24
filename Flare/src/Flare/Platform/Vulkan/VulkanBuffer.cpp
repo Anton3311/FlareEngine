@@ -5,8 +5,8 @@
 
 namespace Flare
 {
-	VulkanBuffer::VulkanBuffer(GPUBufferUsage usage, VkBufferUsageFlags bufferUsage, size_t size)
-		: m_Usage(usage), m_UsageFlags(bufferUsage), m_Size(size)
+	VulkanBuffer::VulkanBuffer(GPUBufferUsage usage, VkBufferUsageFlags bufferUsage, PipelineDependecy dependecy, size_t size)
+		: m_Usage(usage), m_UsageFlags(bufferUsage), m_PipelineDepency(dependecy), m_Size(size)
 	{
 		if (usage == GPUBufferUsage::Static)
 		{
@@ -14,8 +14,8 @@ namespace Flare
 		}
 	}
 
-	VulkanBuffer::VulkanBuffer(GPUBufferUsage usage, VkBufferUsageFlags bufferUsage)
-		: m_Usage(usage), m_UsageFlags(bufferUsage), m_Size(0)
+	VulkanBuffer::VulkanBuffer(GPUBufferUsage usage, VkBufferUsageFlags bufferUsage, PipelineDependecy dependency)
+		: m_Usage(usage), m_UsageFlags(bufferUsage), m_PipelineDepency(dependency), m_Size(0)
 	{
 	}
 
@@ -84,7 +84,32 @@ namespace Flare
 
 		StagingBuffer stagingBuffer = FillStagingBuffer(data);
 
-		As<VulkanCommandBuffer>(commandBuffer)->CopyBuffer(stagingBuffer.Buffer, m_Buffer, data.GetSize(), 0, offset);
+		Ref<VulkanCommandBuffer> vulkanCommandBuffer = As<VulkanCommandBuffer>(commandBuffer);
+
+		VkBufferMemoryBarrier barriers[2] = {};
+		barriers[0].sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
+		barriers[0].buffer = m_Buffer;
+		barriers[0].offset = (VkDeviceSize)offset;
+		barriers[0].size = m_Size - offset;
+		barriers[0].pNext = nullptr;
+		barriers[0].srcAccessMask = m_PipelineDepency.AccessFlags;
+		barriers[0].dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+		barriers[0].srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		barriers[0].dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+
+		barriers[1].sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
+		barriers[1].buffer = m_Buffer;
+		barriers[1].offset = (VkDeviceSize)offset;
+		barriers[1].size = m_Size - offset;
+		barriers[1].pNext = nullptr;
+		barriers[1].srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+		barriers[1].dstAccessMask = m_PipelineDepency.AccessFlags;
+		barriers[1].srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		barriers[1].dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+
+		vulkanCommandBuffer->AddBufferBarrier(Span(&barriers[0], 1), m_PipelineDepency.DependentStages, VK_PIPELINE_STAGE_TRANSFER_BIT);
+		vulkanCommandBuffer->CopyBuffer(stagingBuffer.Buffer, m_Buffer, data.GetSize(), 0, offset);
+		vulkanCommandBuffer->AddBufferBarrier(Span(&barriers[1], 1), VK_PIPELINE_STAGE_TRANSFER_BIT, m_PipelineDepency.DependentStages);
 
 		VulkanContext::GetInstance().DeferDestroyStagingBuffer(std::move(stagingBuffer));
 	}
