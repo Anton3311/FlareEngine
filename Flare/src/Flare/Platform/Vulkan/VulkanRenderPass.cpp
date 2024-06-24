@@ -19,6 +19,25 @@ namespace Flare
 		m_DefaultClearValues.assign(clearValues.begin(), clearValues.end());
 	}
 
+	static void GetStageAndAccessFlags(VkImageLayout layout, VkPipelineStageFlags& pipelineStages, VkAccessFlags& access)
+	{
+		switch (layout)
+		{
+		case VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL:
+			access |= VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+			pipelineStages |= VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+			break;
+		case VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL:
+			access |= VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+			pipelineStages |= VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+			break;
+		case VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL:
+			access |= VK_ACCESS_SHADER_READ_BIT;
+			pipelineStages |= VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+			break;
+		}
+	}
+
 	void VulkanRenderPass::Create(const Span<VkAttachmentDescription>& attachments, std::optional<uint32_t> depthAttachmentIndex)
 	{
 		FLARE_CORE_ASSERT(!depthAttachmentIndex || depthAttachmentIndex && *depthAttachmentIndex < (uint32_t)attachments.GetSize());
@@ -26,10 +45,12 @@ namespace Flare
 		VkSubpassDependency dependency{};
 		dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
 		dependency.dstSubpass = 0;
-		dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-		dependency.srcAccessMask = 0;
-		dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-		dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+
+		for (const auto& attachment : attachments)
+		{
+			GetStageAndAccessFlags(attachment.initialLayout, dependency.srcStageMask, dependency.srcAccessMask);
+			GetStageAndAccessFlags(attachment.finalLayout, dependency.dstStageMask, dependency.dstAccessMask);
+		}
 
 		VkAttachmentReference depthAttachment{};
 		if (depthAttachmentIndex)
