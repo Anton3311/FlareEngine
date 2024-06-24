@@ -145,15 +145,23 @@ namespace Flare
 			VkAttachmentDescription attachment{};
 			attachment.flags = 0;
 			attachment.format = m_SwapChainImageFormat;
-			attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 			attachment.samples = VK_SAMPLE_COUNT_1_BIT;
-			attachment.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+			attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 			attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
 			attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 			attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+			attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 			attachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
 			m_ColorOnlyPass = CreateRef<VulkanRenderPass>(Span<VkAttachmentDescription>(attachment));
+			
+			VkClearValue clearValue{};
+			clearValue.color.float32[0] = 0.0f;
+			clearValue.color.float32[1] = 0.0f;
+			clearValue.color.float32[2] = 0.0f;
+			clearValue.color.float32[3] = 0.0f;
+
+			m_ColorOnlyPass->SetDefaultClearValues(Span(&clearValue, 1));
 		}
 
 		CreateSyncObjects();
