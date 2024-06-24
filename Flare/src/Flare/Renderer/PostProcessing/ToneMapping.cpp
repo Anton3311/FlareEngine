@@ -36,6 +36,7 @@ namespace Flare
 		colorTextureSpecifications.Usage = TextureUsage::RenderTarget | TextureUsage::Sampling;
 
 		Ref<Texture> intermediateTexture = Texture::Create(colorTextureSpecifications);
+		intermediateTexture->SetDebugName("ToneMapping.IntermediateColorTexture");
 
 		RenderGraphPassSpecifications toneMappingPass{};
 		toneMappingPass.SetDebugName("ToneMapping");

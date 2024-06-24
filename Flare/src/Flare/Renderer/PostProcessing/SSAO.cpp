@@ -52,6 +52,9 @@ namespace Flare
 		Ref<Texture> aoTexture = Texture::Create(aoTextureSpecifications);
 		Ref<Texture> intermediateColorTexture = Texture::Create(colorTextureSpecifications);
 
+		aoTexture->SetDebugName("SSAO.AOTexture");
+		intermediateColorTexture->SetDebugName("SSAO.IntermediateColorTexture");
+
 		RenderGraphPassSpecifications ssaoMainPass{};
 		ssaoMainPass.SetDebugName("SSAOMainPass");
 		ssaoMainPass.AddInput(viewport.NormalsTexture);
