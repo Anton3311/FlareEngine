@@ -582,7 +582,7 @@ namespace Flare
 		switch (imageLayout)
 		{
 		case VK_IMAGE_LAYOUT_UNDEFINED:
-			stages |= VK_PIPELINE_STAGE_NONE;
+			stages |= VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
 			access |= VK_ACCESS_NONE;
 			break;
 		case VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL:

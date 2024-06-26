@@ -19,25 +19,6 @@ namespace Flare
 		m_DefaultClearValues.assign(clearValues.begin(), clearValues.end());
 	}
 
-	static void GetStageAndAccessFlags(VkImageLayout layout, VkPipelineStageFlags& pipelineStages, VkAccessFlags& access)
-	{
-		switch (layout)
-		{
-		case VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL:
-			access |= VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-			pipelineStages |= VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-			break;
-		case VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL:
-			access |= VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-			pipelineStages |= VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-			break;
-		case VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL:
-			access |= VK_ACCESS_SHADER_READ_BIT;
-			pipelineStages |= VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-			break;
-		}
-	}
-
 	void VulkanRenderPass::SetDebugName(std::string_view debugName)
 	{
 		m_DebugName = debugName;
@@ -58,10 +39,25 @@ namespace Flare
 		dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
 		dependency.dstSubpass = 0;
 
-		for (const auto& attachment : attachments)
+		for (size_t i = 0; i < attachments.GetSize(); i++)
 		{
-			GetStageAndAccessFlags(attachment.initialLayout, dependency.srcStageMask, dependency.srcAccessMask);
-			GetStageAndAccessFlags(attachment.finalLayout, dependency.dstStageMask, dependency.dstAccessMask);
+			const auto& attachment = attachments[i];
+
+			// Ensure that the follwing commands wait for the color/depth-stencil output
+			bool isDepthAttachment = depthAttachmentIndex.has_value() && *depthAttachmentIndex == (uint32_t)i;
+			if (isDepthAttachment)
+			{
+				dependency.dstStageMask |= VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+				dependency.dstAccessMask |= VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT;
+			}
+			else
+			{
+				dependency.dstStageMask |= VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+				dependency.dstAccessMask |= VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_COLOR_ATTACHMENT_READ_BIT;
+			}
+
+			VulkanContext::GetSourcePipelineStagesAndAccessFlags(attachment.initialLayout, dependency.srcStageMask, dependency.srcStageMask);
+			VulkanContext::GetDestinationPipelineStagesAndAccessFlags(attachment.finalLayout, dependency.dstStageMask, dependency.dstAccessMask);
 		}
 
 		VkAttachmentReference depthAttachment{};
