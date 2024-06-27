@@ -190,6 +190,8 @@ namespace Flare
 
 	void ViewportWindow::CreateFrameBuffer()
 	{
+		FLARE_PROFILE_FUNCTION();
+
 		TextureSpecifications specifications{};
 		specifications.Width = m_Viewport.GetSize().x;
 		specifications.Height = m_Viewport.GetSize().y;
@@ -241,6 +243,7 @@ namespace Flare
 
 	void ViewportWindow::OnClear()
 	{
+		FLARE_PROFILE_FUNCTION();
 		Ref<CommandBuffer> commandBuffer = GraphicsContext::GetInstance().GetCommandBuffer();
 		commandBuffer->ClearColor(m_Viewport.ColorTexture, glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
 		commandBuffer->ClearColor(m_Viewport.NormalsTexture, glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
@@ -254,6 +257,7 @@ namespace Flare
 
 	void ViewportWindow::BuildRenderGraph()
 	{
+		FLARE_PROFILE_FUNCTION();
 		m_Viewport.Graph.Clear();
 
 		Ref<Scene> scene = GetScene();

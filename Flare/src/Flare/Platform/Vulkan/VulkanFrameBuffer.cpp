@@ -91,6 +91,7 @@ namespace Flare
 
 	void VulkanFrameBuffer::Resize(uint32_t width, uint32_t height)
 	{
+		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(width > 0 && height > 0);
 
 		for (const auto& attachment : m_Attachments)

@@ -51,6 +51,7 @@ namespace Flare
 
 	void RenderGraph::Clear()
 	{
+		FLARE_PROFILE_FUNCTION();
 		m_Nodes.clear();
 		m_CompiledRenderGraph.Reset();
 	}

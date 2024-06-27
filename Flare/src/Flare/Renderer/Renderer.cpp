@@ -567,6 +567,8 @@ namespace Flare
 
 	static Ref<ShadowPass> ConfigureShadowPass(Viewport& viewport, std::array<Ref<Texture>, ShadowSettings::MaxCascades>& cascadeTextures)
 	{
+		FLARE_PROFILE_FUNCTION();
+
 		RenderGraphPassSpecifications shadowPassSpec{};
 		shadowPassSpec.SetDebugName("ShadowPass");
 
@@ -624,6 +626,7 @@ namespace Flare
 
 	void Renderer::ConfigurePasses(Viewport& viewport)
 	{
+		FLARE_PROFILE_FUNCTION();
 		std::array<Ref<Texture>, ShadowSettings::MaxCascades> cascadeTextures = { nullptr };
 		Ref<ShadowPass> shadowPass = ConfigureShadowPass(viewport, cascadeTextures);
 		Ref<UniformBuffer> shadowDataBuffer = shadowPass->GetShadowDataBuffer();

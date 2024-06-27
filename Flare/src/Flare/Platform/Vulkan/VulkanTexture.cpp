@@ -1,5 +1,7 @@
 #include "VulkanTexture.h"
 
+#include "FlareCore/Profiler/Profiler.h"
+
 #include "Flare/Platform/Vulkan/VulkanContext.h"
 
 #include <stb_image/stb_image.h>
@@ -59,17 +61,20 @@ namespace Flare
 	VulkanTexture::VulkanTexture(const TextureSpecifications& specifications, VkImage image, VkImageView imageView)
 		: m_Specifications(specifications), m_Image(image), m_ImageView(imageView), m_OwnsImages(false)
 	{
+		FLARE_PROFILE_FUNCTION();
 		CreateSampler();
 	}
 
 	VulkanTexture::VulkanTexture(const TextureSpecifications& specifications)
 		: m_Specifications(specifications)
 	{
+		FLARE_PROFILE_FUNCTION();
 		CreateResources();
 	}
 
 	VulkanTexture::VulkanTexture(uint32_t width, uint32_t height, const void* data, TextureFormat format, TextureFiltering filtering)
 	{
+		FLARE_PROFILE_FUNCTION();
 		m_Specifications.Width = width;
 		m_Specifications.Height = height;
 		m_Specifications.Filtering = filtering;
@@ -92,6 +97,7 @@ namespace Flare
 	VulkanTexture::VulkanTexture(const TextureSpecifications& specifications, const void* data)
 		: m_Specifications(specifications)
 	{
+		FLARE_PROFILE_FUNCTION();
 		TextureData textureData{};
 		auto& mip = textureData.Mips.emplace_back();
 		mip.Data = data;
@@ -109,6 +115,7 @@ namespace Flare
 	VulkanTexture::VulkanTexture(const TextureSpecifications& specifications, const TextureData& data)
 		: m_Specifications(specifications)
 	{
+		FLARE_PROFILE_FUNCTION();
 		m_MipLevels = (uint32_t)data.Mips.size();
 
 		CreateResources();
@@ -156,6 +163,8 @@ namespace Flare
 
 	void VulkanTexture::Resize(uint32_t width, uint32_t height)
 	{
+		FLARE_PROFILE_FUNCTION();
+
 		FLARE_CORE_ASSERT(m_OwnsImages);
 		FLARE_CORE_ASSERT(width > 0 && height > 0);
 

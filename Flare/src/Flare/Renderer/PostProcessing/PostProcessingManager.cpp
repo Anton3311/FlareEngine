@@ -1,6 +1,7 @@
 #include "PostProcessingManager.h"
 
 #include "FlareCore/Assert.h"
+#include "FlareCore/Profiler/Profiler.h"
 
 namespace Flare
 {
@@ -18,6 +19,7 @@ namespace Flare
 
 	void PostProcessingManager::RegisterRenderPasses(RenderGraph& renderGraph, const Viewport& viewport)
 	{
+		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(!m_Initialized || m_IsDirty);
 
 		for (const auto& entry : m_Entries)

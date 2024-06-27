@@ -187,6 +187,7 @@ namespace Flare
 
 	void Renderer2D::ConfigurePasses(Viewport& viewport)
 	{
+		FLARE_PROFILE_FUNCTION();
 		RenderGraphPassSpecifications geometryPass{};
 		geometryPass.SetDebugName("2DGeometryPass");
 		geometryPass.SetType(RenderGraphPassType::Graphics);

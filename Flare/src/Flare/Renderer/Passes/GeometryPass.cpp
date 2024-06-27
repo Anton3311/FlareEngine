@@ -24,6 +24,7 @@ namespace Flare
 		m_PrimaryDescriptorSetWithoutShadows(primarySetWithoutShadows),
 		m_Pool(pool)
 	{
+		FLARE_PROFILE_FUNCTION();
 		constexpr size_t maxInstances = 1000;
 		m_InstanceStorageBuffer = ShaderStorageBuffer::Create(maxInstances * sizeof(InstanceData));
 

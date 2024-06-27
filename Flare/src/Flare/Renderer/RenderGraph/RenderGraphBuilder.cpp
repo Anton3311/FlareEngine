@@ -226,6 +226,7 @@ namespace Flare
 			}
 			else
 			{
+				FLARE_PROFILE_SCOPE("CreateUniqueCompatibleRenderPass");
 				std::optional<uint32_t> depthAttachmentIndex = {};
 				for (size_t outputIndex = 0; outputIndex < outputs.size(); outputIndex++)
 				{
