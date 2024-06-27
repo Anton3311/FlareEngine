@@ -214,6 +214,8 @@ namespace Flare
 		stages[1].flags = 0;
 
 		std::vector<VkVertexInputBindingDescription> vertexBindingDescriptions;
+		Ref<const ShaderMetadata> metadata = m_Specifications.Shader->GetMetadata();
+		const auto& vertexShaderInputs = metadata->VertexShaderInputs;
 
 		for (size_t i = 0; i < m_Specifications.InputLayout.Elements.size(); i++)
 		{
@@ -245,10 +247,21 @@ namespace Flare
 		}
 
 		const auto& vertexInputLayoutElements = m_Specifications.InputLayout.Elements;
-		std::vector<VkVertexInputAttributeDescription> vertexAttributes(vertexInputLayoutElements.size());
+		std::vector<VkVertexInputAttributeDescription> vertexAttributes;
 		for (size_t i = 0; i < vertexInputLayoutElements.size(); i++)
 		{
-			VkVertexInputAttributeDescription& attribute = vertexAttributes[i];
+			if (std::find_if(
+				vertexShaderInputs.begin(),
+				vertexShaderInputs.end(),
+				[=](const VertexShaderInput& input) -> bool
+				{
+					return input.Location == vertexInputLayoutElements[i].Location;
+				}) == vertexShaderInputs.end())
+			{
+				continue;
+			}
+
+			VkVertexInputAttributeDescription& attribute = vertexAttributes.emplace_back();
 			attribute.binding = vertexInputLayoutElements[i].Binding;
 			attribute.format = ShaderDataTypeToVulkanFormat(vertexInputLayoutElements[i].Type);
 			attribute.location = vertexInputLayoutElements[i].Location;

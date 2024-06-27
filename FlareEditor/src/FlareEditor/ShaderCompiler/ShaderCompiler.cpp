@@ -392,6 +392,85 @@ namespace Flare
 		}
 	}
 
+	static std::optional<ShaderDataType> SPIRVTypeToShaderDataType(const spirv_cross::SPIRType& type)
+	{
+		std::optional<ShaderDataType> shaderDataType;
+		uint32_t componentsCount = type.vecsize;
+
+		switch (type.basetype)
+		{
+		case spirv_cross::SPIRType::BaseType::Int:
+			switch (componentsCount)
+			{
+			case 1:
+				shaderDataType = ShaderDataType::Int;
+				break;
+			case 2:
+				shaderDataType = ShaderDataType::Int2;
+				break;
+			case 3:
+				shaderDataType = ShaderDataType::Int2;
+				break;
+			case 4:
+				shaderDataType = ShaderDataType::Int2;
+				break;
+			default:
+				FLARE_CORE_ERROR("Unsupported components count");
+				return {};
+			}
+
+			break;
+		case spirv_cross::SPIRType::BaseType::Float:
+			switch (componentsCount)
+			{
+			case 1:
+				shaderDataType = ShaderDataType::Float;
+				break;
+			case 2:
+				shaderDataType = ShaderDataType::Float2;
+				break;
+			case 3:
+				shaderDataType = ShaderDataType::Float3;
+				break;
+			case 4:
+				if (type.columns == 4)
+					shaderDataType = ShaderDataType::Matrix4x4;
+				else
+					shaderDataType = ShaderDataType::Float4;
+				break;
+			default:
+				FLARE_CORE_ERROR("Unsupported components count");
+				return {};
+			}
+
+			break;
+		default:
+			FLARE_CORE_ERROR("Unsupported shader data type");
+			return {};
+		}
+
+		return shaderDataType;
+	}
+
+	static void ExtractVertexShaderInputs(spirv_cross::Compiler& compiler, std::vector<VertexShaderInput>& inputs)
+	{
+		const spirv_cross::ShaderResources& resources = compiler.get_shader_resources();
+		for (const auto& vertexInput : resources.stage_inputs)
+		{
+			const auto& bufferType = compiler.get_type(vertexInput.base_type_id);
+			uint32_t location = compiler.get_decoration(vertexInput.id, spv::DecorationLocation);
+
+			std::optional<ShaderDataType> dataType = SPIRVTypeToShaderDataType(bufferType);
+
+			if (!dataType)
+				continue;
+
+			auto& input = inputs.emplace_back();
+			input.Location = location;
+			input.Type = *dataType;
+		}
+	}
+
 	static void ExtractShaderProperties(spirv_cross::Compiler& compiler,
 										std::vector<ShaderProperty>& properties,
 										ShaderPushConstantsRange& pushConstantsRange,
@@ -414,83 +493,23 @@ namespace Flare
 				spirv_cross::TypeID memberTypeId = bufferType.member_types[i];
 				size_t offset = compiler.type_struct_member_offset(bufferType, i);
 
-				const auto& memberType = compiler.get_type(memberTypeId);
+				std::optional<ShaderDataType> shaderDataType = SPIRVTypeToShaderDataType(compiler.get_type(memberTypeId));
 
-				std::optional<ShaderDataType> shaderDataType = {};
-				uint32_t componentsCount = memberType.vecsize;
-
-				bool error = false;
-
-				switch (memberType.basetype)
-				{
-				case spirv_cross::SPIRType::BaseType::Int:
-					switch (componentsCount)
-					{
-					case 1:
-						shaderDataType = ShaderDataType::Int;
-						break;
-					case 2:
-						shaderDataType = ShaderDataType::Int2;
-						break;
-					case 3:
-						shaderDataType = ShaderDataType::Int2;
-						break;
-					case 4:
-						shaderDataType = ShaderDataType::Int2;
-						break;
-					default:
-						error = true;
-						FLARE_CORE_ERROR("Unsupported components count");
-					}
-
-					break;
-				case spirv_cross::SPIRType::BaseType::Float:
-					switch (componentsCount)
-					{
-					case 1:
-						shaderDataType = ShaderDataType::Float;
-						break;
-					case 2:
-						shaderDataType = ShaderDataType::Float2;
-						break;
-					case 3:
-						shaderDataType = ShaderDataType::Float3;
-						break;
-					case 4:
-						if (memberType.columns == 4)
-							shaderDataType = ShaderDataType::Matrix4x4;
-						else
-							shaderDataType = ShaderDataType::Float4;
-						break;
-					default:
-						error = true;
-						FLARE_CORE_ERROR("Unsupported components count");
-					}
-
-					break;
-				default:
-					error = true;
-					FLARE_CORE_ERROR("Unsupported shader data type");
-				}
-
-				if (error)
+				if (!shaderDataType.has_value())
 					continue;
 
-				if (shaderDataType.has_value())
-				{
-					ShaderProperty& shaderProperty = properties.emplace_back();
-					shaderProperty.Binding = UINT32_MAX;
+				ShaderProperty& shaderProperty = properties.emplace_back();
+				shaderProperty.Binding = UINT32_MAX;
 
-					if (resource.name.empty())
-						shaderProperty.Name = resource.name;
-					else
-						shaderProperty.Name = fmt::format("{}.{}", resource.name, memberName);
+				if (resource.name.empty())
+					shaderProperty.Name = resource.name;
+				else
+					shaderProperty.Name = fmt::format("{}.{}", resource.name, memberName);
 
-					shaderProperty.Offset = offset;
-					shaderProperty.Type = shaderDataType.value();
-					shaderProperty.Size = compiler.get_declared_struct_member_size(bufferType, i);
-					shaderProperty.Hidden = true;
-				}
+				shaderProperty.Offset = offset;
+				shaderProperty.Type = shaderDataType.value();
+				shaderProperty.Size = compiler.get_declared_struct_member_size(bufferType, i);
+				shaderProperty.Hidden = true;
 
 				lastPropertyOffset = offset;
 			}
@@ -686,8 +705,15 @@ namespace Flare
 				spirv_cross::Compiler compiler(compiledVulkanShader.value());
 				Reflect(compiler, program.Stage, propertyNameToIndex, metadata);
 
-				if (program.Stage == ShaderStageType::Pixel)
+				switch (program.Stage)
+				{
+				case ShaderStageType::Vertex:
+					ExtractVertexShaderInputs(compiler, metadata->VertexShaderInputs);
+					break;
+				case ShaderStageType::Pixel:
 					ExtractShaderOutputs(compiler, shaderOutputs);
+					break;
+				}
 			}
 			catch (spirv_cross::CompilerError& e)
 			{

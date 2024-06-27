@@ -156,6 +156,12 @@ namespace Flare
 		size_t Size = 0;
 	};
 
+	struct VertexShaderInput
+	{
+		uint32_t Location = 0;
+		ShaderDataType Type = ShaderDataType::Float;
+	};
+
 	struct ShaderMetadata
 	{
 		std::string Name;
@@ -165,5 +171,7 @@ namespace Flare
 		std::vector<ShaderProperty> Properties;
 		std::vector<ShaderStageType> Stages;
 		std::vector<ShaderPushConstantsRange> PushConstantsRanges;
+
+		std::vector<VertexShaderInput> VertexShaderInputs;
 	};
 }
