@@ -158,14 +158,18 @@ namespace Flare
 			changed = true;
 		}
 
-		if (changed)
+		bool shouldResizeViewport = viewportSize != m_Viewport.GetSize();
+		if (shouldResizeViewport)
 		{
 			bool shouldCreateFrameBuffers = m_Viewport.GetSize() == glm::ivec2(0);
 			m_Viewport.Resize(viewportPosition, viewportSize);
 
 			if (shouldCreateFrameBuffers)
 				CreateFrameBuffer();
+		}
 
+		if (changed)
+		{
 			OnViewportChanged();
 		}
 	}
