@@ -196,12 +196,14 @@ namespace Flare
 
 	void SceneViewportWindow::OnViewportChanged()
 	{
+		FLARE_PROFILE_FUNCTION();
 		ViewportWindow::OnViewportChanged();
 		m_Camera.OnViewportChanged(m_Viewport.GetSize(), m_Viewport.GetPosition());
 	}
 
 	void SceneViewportWindow::OnRenderImGui()
 	{
+		FLARE_PROFILE_FUNCTION();
 		if (!ShowWindow)
 			return;
 
@@ -256,6 +258,7 @@ namespace Flare
 
 	void SceneViewportWindow::CreateFrameBuffer()
 	{
+		FLARE_PROFILE_FUNCTION();
 		TextureSpecifications specifications{};
 		specifications.Width = m_Viewport.GetSize().x;
 		specifications.Height = m_Viewport.GetSize().y;
@@ -307,6 +310,7 @@ namespace Flare
 
 	void SceneViewportWindow::OnClear()
 	{
+		FLARE_PROFILE_FUNCTION();
 		Ref<CommandBuffer> commandBuffer = GraphicsContext::GetInstance().GetCommandBuffer();
 		commandBuffer->ClearColor(m_Viewport.ColorTexture, glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
 		commandBuffer->ClearColor(m_Viewport.NormalsTexture, glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
@@ -315,6 +319,7 @@ namespace Flare
 
 	void SceneViewportWindow::RenderWindowContents()
 	{
+		FLARE_PROFILE_FUNCTION();
 		if (GetScene() == nullptr)
 			return;
 
@@ -343,7 +348,6 @@ namespace Flare
 				ImGui::EndDragDropTarget();
 			}
 		}
-
 
 		// Render scene toolbar
 		RenderToolBar();
@@ -458,6 +462,7 @@ namespace Flare
 
 	void SceneViewportWindow::RenderToolBar()
 	{
+		FLARE_PROFILE_FUNCTION();
 		ImDrawList* drawList = ImGui::GetCurrentWindow()->DrawList;
 		ImVec2 initialCursorPosition = ImGui::GetCursorPos();
 

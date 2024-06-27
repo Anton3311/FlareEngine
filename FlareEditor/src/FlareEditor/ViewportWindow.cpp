@@ -103,6 +103,7 @@ namespace Flare
 
 	void ViewportWindow::BeginImGui()
 	{
+		FLARE_PROFILE_FUNCTION();
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 		m_IsVisible = ImGui::Begin(m_Name.c_str(), &ShowWindow, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
 
@@ -176,6 +177,7 @@ namespace Flare
 
 	void ViewportWindow::RenderViewportBuffer(const Ref<Texture>& texture)
 	{
+		FLARE_PROFILE_FUNCTION();
 		ImVec2 windowSize = ImGui::GetContentRegionAvail();
 
 		if (m_Viewport.RenderTarget != nullptr)
@@ -188,6 +190,7 @@ namespace Flare
 
 	void ViewportWindow::EndImGui()
 	{
+		FLARE_PROFILE_FUNCTION();
 		ImGui::End();
 		ImGui::PopStyleVar(); // Pop window padding
 	}
@@ -285,6 +288,7 @@ namespace Flare
 
 	void ViewportWindow::OnRenderImGui()
 	{
+		FLARE_PROFILE_FUNCTION();
 		if (!ShowWindow)
 			return;
 
