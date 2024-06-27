@@ -35,29 +35,45 @@ namespace Flare
 	{
 		FLARE_CORE_ASSERT(!depthAttachmentIndex || depthAttachmentIndex && *depthAttachmentIndex < (uint32_t)attachments.GetSize());
 
-		VkSubpassDependency dependency{};
-		dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
-		dependency.dstSubpass = 0;
+		VkSubpassDependency dependencies[2] = {};
+
+		dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
+		dependencies[0].dstSubpass = 0;
+
+		dependencies[1].srcSubpass = 0;
+		dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
 
 		for (size_t i = 0; i < attachments.GetSize(); i++)
 		{
 			const auto& attachment = attachments[i];
 
-			// Ensure that the follwing commands wait for the color/depth-stencil output
 			bool isDepthAttachment = depthAttachmentIndex.has_value() && *depthAttachmentIndex == (uint32_t)i;
+			VkImageLayout attachmentLayout = isDepthAttachment
+				? VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
+				: VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
 			if (isDepthAttachment)
 			{
-				dependency.dstStageMask |= VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
-				dependency.dstAccessMask |= VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT;
+				dependencies[0].dstStageMask |= VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+				dependencies[0].dstAccessMask |= VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT;
+
+				dependencies[1].dstStageMask |= VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+				dependencies[1].dstAccessMask |= VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT;
 			}
 			else
 			{
-				dependency.dstStageMask |= VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-				dependency.dstAccessMask |= VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_COLOR_ATTACHMENT_READ_BIT;
+				dependencies[0].dstStageMask |= VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+				dependencies[0].dstAccessMask |= VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_COLOR_ATTACHMENT_READ_BIT;
+
+				dependencies[1].dstStageMask |= VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+				dependencies[1].dstAccessMask |= VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_COLOR_ATTACHMENT_READ_BIT;
 			}
 
-			VulkanContext::GetSourcePipelineStagesAndAccessFlags(attachment.initialLayout, dependency.srcStageMask, dependency.srcStageMask);
-			VulkanContext::GetDestinationPipelineStagesAndAccessFlags(attachment.finalLayout, dependency.dstStageMask, dependency.dstAccessMask);
+			VulkanContext::GetSourcePipelineStagesAndAccessFlags(attachment.initialLayout, dependencies[0].srcStageMask, dependencies[0].srcAccessMask);
+			VulkanContext::GetDestinationPipelineStagesAndAccessFlags(attachmentLayout, dependencies[0].dstStageMask, dependencies[0].dstAccessMask);
+
+			VulkanContext::GetSourcePipelineStagesAndAccessFlags(attachmentLayout, dependencies[1].srcStageMask, dependencies[1].srcAccessMask);
+			VulkanContext::GetDestinationPipelineStagesAndAccessFlags(attachment.finalLayout, dependencies[1].dstStageMask, dependencies[1].dstAccessMask);
 		}
 
 		VkAttachmentReference depthAttachment{};
@@ -98,8 +114,8 @@ namespace Flare
 		info.flags = 0;
 		info.attachmentCount = (uint32_t)attachments.GetSize();
 		info.pAttachments = attachments.GetData();
-		info.dependencyCount = 1;
-		info.pDependencies = &dependency;
+		info.dependencyCount = 2;
+		info.pDependencies = dependencies;
 		info.subpassCount = 1;
 		info.pSubpasses = &subpass;
 

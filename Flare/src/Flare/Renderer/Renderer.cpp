@@ -128,11 +128,13 @@ namespace Flare
 		{
 			uint32_t whiteTextureData = 0xffffffff;
 			s_RendererData.WhiteTexture = Texture::Create(1, 1, &whiteTextureData, TextureFormat::RGBA8);
+			s_RendererData.WhiteTexture->SetDebugName("White");
 		}
 
 		{
 			uint32_t pixel = 0xffff8080;
 			s_RendererData.DefaultNormalMap = Texture::Create(1, 1, &pixel, TextureFormat::RGBA8);
+			s_RendererData.DefaultNormalMap->SetDebugName("DefaultNormalMap");
 		}
 
 		if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
@@ -587,6 +589,7 @@ namespace Flare
 		for (int32_t cascadeIndex = 0; cascadeIndex < s_RendererData.ShadowMappingSettings.Cascades; cascadeIndex++)
 		{
 			cascadeTextures[cascadeIndex] = Texture::Create(cascadeSpec);
+			cascadeTextures[cascadeIndex]->SetDebugName(fmt::format("CascadeTexture.{}", cascadeIndex));
 
 			Ref<DescriptorSet> set = s_RendererData.PrimaryDescriptorPool->AllocateSet();
 			set->WriteUniformBuffer(s_RendererData.LightBuffer, 1);
