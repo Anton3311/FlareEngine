@@ -8,6 +8,7 @@
 #include "Flare/Platform/Vulkan/VulkanFrameBuffer.h"
 #include "Flare/Platform/Vulkan/VulkanTexture.h"
 #include "Flare/Platform/Vulkan/VulkanAllocation.h"
+#include "Flare/Platform/Vulkan/VulkanRenderPassCache.h"
 
 #include <vulkan/vulkan.h>
 #include <vk_mem_alloc.h>
@@ -131,6 +132,8 @@ namespace Flare
 
 		Ref<Pipeline> GetDefaultPipelineForShader(Ref<Shader> shader, Ref<VulkanRenderPass> renderPass);
 
+		VulkanRenderPassCache& GetRenderPassCache();
+
 		// Gets the pipeline stages and corrisponding access flags when transitioning from a given image layout
 		static void GetSourcePipelineStagesAndAccessFlags(VkImageLayout imageLayout, VkPipelineStageFlags& stages, VkAccessFlags& access);
 
@@ -223,6 +226,7 @@ namespace Flare
 
 		// Render pass
 		Ref<VulkanRenderPass> m_ColorOnlyPass = nullptr;
+		VulkanRenderPassCache m_RenderPassCache;
 		std::unordered_map<RenderPassKey, Ref<VulkanRenderPass>> m_RenderPasses;
 
 		std::unordered_map<uint64_t, Ref<Pipeline>> m_DefaultPipelines;

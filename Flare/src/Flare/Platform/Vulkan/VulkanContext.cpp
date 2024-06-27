@@ -177,6 +177,8 @@ namespace Flare
 	{
 		WaitForDevice();
 
+		m_RenderPassCache.Clear();
+
 		DestroyStagingBuffers();
 
 		m_DefaultPipelines.clear();
@@ -575,6 +577,11 @@ namespace Flare
 		Ref<Pipeline> pipeline = As<Pipeline>(CreateRef<VulkanPipeline>(specifications, renderPass));
 		m_DefaultPipelines.emplace(key, pipeline);
 		return pipeline;
+	}
+
+	VulkanRenderPassCache& VulkanContext::GetRenderPassCache()
+	{
+		return m_RenderPassCache;
 	}
 
 	void VulkanContext::GetSourcePipelineStagesAndAccessFlags(VkImageLayout imageLayout, VkPipelineStageFlags& stages, VkAccessFlags& access)
