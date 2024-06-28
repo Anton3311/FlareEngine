@@ -21,7 +21,7 @@ namespace Flare
         settings.Far = 1000.0f;
         settings.RotationSpeed = 1.0f;
 
-        m_ViewportWindow.GetViewport().PostProcessingEnabled = false;
+        m_ViewportWindow.GetViewport().SetPostProcessingEnabled(false);
     }
 
     void PrefabEditor::OnOpen(AssetHandle asset)

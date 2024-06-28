@@ -46,7 +46,7 @@ namespace Flare
 		m_CameraController(m_Camera),
 		m_Guizmo(GuizmoMode::None)
 	{
-		m_Viewport.DebugRendering = true;
+		m_Viewport.SetDebugRenderingEnabled(true);
 	}
 
 	void SceneViewportWindow::OnAttach()
@@ -557,8 +557,23 @@ namespace Flare
 			SceneViewSettings& settings = EditorLayer::GetInstance().GetSceneViewSettings();
 			if (ImGui::BeginCombo("", "Settings"))
 			{
-				ImGui::MenuItem("Shadows", nullptr, &m_Viewport.ShadowMappingEnabled);
-				ImGui::MenuItem("Post Processing", nullptr, &m_Viewport.PostProcessingEnabled);
+				{
+					bool value = m_Viewport.IsShadowMappingEnabled();
+					if (ImGui::MenuItem("Shadows", nullptr, &value))
+						m_Viewport.SetShadowMappingEnabled(value);
+				}
+
+				{
+					bool value = m_Viewport.IsPostProcessingEnabled();
+					if (ImGui::MenuItem("Post Processing", nullptr, &value))
+						m_Viewport.SetPostProcessingEnabled(value);
+				}
+
+				{
+					bool value = m_Viewport.IsDebugRenderingEnabled();
+					if (ImGui::MenuItem("Debug Rendering", nullptr, &value))
+						m_Viewport.SetDebugRenderingEnabled(value);
+				}
 
 				ImGui::Separator();
 

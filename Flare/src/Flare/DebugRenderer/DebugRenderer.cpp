@@ -254,7 +254,7 @@ namespace Flare
 
 	void DebugRenderer::ConfigurePasses(Viewport& viewport)
 	{
-		if (!viewport.DebugRendering)
+		if (!viewport.IsDebugRenderingEnabled())
 			return;
 
 		RenderGraphPassSpecifications linesPass{};

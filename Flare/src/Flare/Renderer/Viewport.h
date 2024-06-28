@@ -22,10 +22,15 @@ namespace Flare
 
 		void Resize(glm::ivec2 position, glm::ivec2 size);
 	public:
-		bool PostProcessingEnabled = true;
-		bool ShadowMappingEnabled = true;
-		bool DebugRendering = false;
+		inline bool IsPostProcessingEnabled() const { return m_PostProcessingEnabled; }
+		void SetPostProcessingEnabled(bool enabled);
 
+		inline bool IsShadowMappingEnabled() const { return m_ShadowMappingEnabled; }
+		void SetShadowMappingEnabled(bool enabled);
+
+		inline bool IsDebugRenderingEnabled() const { return m_DebugRenderingEnabled; }
+		void SetDebugRenderingEnabled(bool enabled);
+	public:
 		RenderData FrameData;
 		Ref<FrameBuffer> RenderTarget = nullptr;
 
@@ -34,6 +39,10 @@ namespace Flare
 		Ref<Texture> ColorTexture = nullptr;
 		Ref<Texture> NormalsTexture = nullptr;
 		Ref<Texture> DepthTexture = nullptr;
+	private:
+		bool m_PostProcessingEnabled = true;
+		bool m_ShadowMappingEnabled = true;
+		bool m_DebugRenderingEnabled = false;
 	private:
 		glm::ivec2 m_Position = glm::ivec2(0, 0);
 		glm::ivec2 m_Size = glm::ivec2(0, 0);

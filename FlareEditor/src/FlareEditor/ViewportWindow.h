@@ -39,8 +39,6 @@ namespace Flare
 		void SetScene(const Ref<Scene>& scene) { m_Scene = scene; }
 
 		void PrepareViewport();
-
-		void RequestRenderGraphRebuild();
 	protected:
 		inline Ref<Scene> GetScene() const { return m_Scene == nullptr ? Scene::GetActive() : m_Scene; }
 
@@ -59,8 +57,6 @@ namespace Flare
 		std::string m_Name;
 		Ref<Scene> m_Scene;
 		Viewport m_Viewport;
-
-		bool m_ShouldRebuildRenderGraph = false;
 
 		bool m_PreviousFocusState;
 		bool m_IsFocused;

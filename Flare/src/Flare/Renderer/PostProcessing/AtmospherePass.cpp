@@ -25,7 +25,7 @@ namespace Flare
 
 	void AtmospherePass::OnRender(RenderingContext& context)
 	{
-		if (!AtmosphereMaterial || !Enabled || !Renderer::GetCurrentViewport().PostProcessingEnabled)
+		if (!AtmosphereMaterial || !Enabled || !Renderer::GetCurrentViewport().IsPostProcessingEnabled())
 			return;
 
 		Ref<Shader> shader = AtmosphereMaterial->GetShader();

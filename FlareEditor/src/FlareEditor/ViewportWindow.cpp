@@ -71,7 +71,7 @@ namespace Flare
 	void ViewportWindow::PrepareViewport()
 	{
 		if (GetScene()->GetPostProcessingManager().IsDirty())
-			m_ShouldRebuildRenderGraph = true;
+			m_Viewport.Graph.SetNeedsRebuilding();
 
 		if (m_Viewport.GetSize() != glm::ivec2(0))
 		{
@@ -83,23 +83,10 @@ namespace Flare
 				OnViewportChanged();
 			}
 
-			if (m_ShouldRebuildRenderGraph)
+			if (m_Viewport.Graph.NeedsRebuilding())
 			{
 				BuildRenderGraph();
-				m_ShouldRebuildRenderGraph = false;
 			}
-		}
-	}
-
-	void ViewportWindow::RequestRenderGraphRebuild()
-	{
-		m_ShouldRebuildRenderGraph = true;
-
-		Ref<Scene> scene = GetScene();
-
-		if (scene != nullptr)
-		{
-			scene->GetPostProcessingManager().MarkAsDirty();
 		}
 	}
 
@@ -261,21 +248,24 @@ namespace Flare
 
 	void ViewportWindow::OnViewportChanged()
 	{
-		m_ShouldRebuildRenderGraph = true;
+		m_Viewport.Graph.SetNeedsRebuilding();
 	}
 
 	void ViewportWindow::BuildRenderGraph()
 	{
 		FLARE_PROFILE_FUNCTION();
-		m_Viewport.Graph.Clear();
-
 		Ref<Scene> scene = GetScene();
+
+		if (scene != nullptr)
+			scene->GetPostProcessingManager().MarkAsDirty();
+
+		m_Viewport.Graph.Clear();
 
 		Renderer::ConfigurePasses(m_Viewport);
 		Renderer2D::ConfigurePasses(m_Viewport);
 		DebugRenderer::ConfigurePasses(m_Viewport);
 
-		if (scene)
+		if (scene && m_Viewport.IsPostProcessingEnabled())
 		{
 			PostProcessingManager& postProcessing = scene->GetPostProcessingManager();
 			postProcessing.MarkAsDirty(); // HACK

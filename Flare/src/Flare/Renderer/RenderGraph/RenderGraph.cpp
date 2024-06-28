@@ -26,6 +26,7 @@ namespace Flare
 
 	void RenderGraph::Execute(Ref<CommandBuffer> commandBuffer)
 	{
+		FLARE_PROFILE_FUNCTION();
 		Ref<VulkanCommandBuffer> vulkanCommandBuffer = As<VulkanCommandBuffer>(commandBuffer);
 
 		for (const auto& node : m_Nodes)
@@ -42,11 +43,14 @@ namespace Flare
 
 	void RenderGraph::Build()
 	{
+		FLARE_PROFILE_FUNCTION();
 		RenderGraphBuilder builder(m_CompiledRenderGraph,
 			Span<RenderPassNode>::FromVector(m_Nodes),
 			Span<ExternalRenderGraphResource>::FromVector(m_ExternalResources));
 
 		builder.Build();
+
+		m_NeedsRebuilding = false;
 	}
 
 	void RenderGraph::Clear()
@@ -58,6 +62,7 @@ namespace Flare
 
 	void RenderGraph::ExecuteLayoutTransitions(Ref<CommandBuffer> commandBuffer, LayoutTransitionsRange range)
 	{
+		FLARE_PROFILE_FUNCTION();
 		Ref<VulkanCommandBuffer> vulkanCommandBuffer = As<VulkanCommandBuffer>(commandBuffer);
 
 		for (uint32_t i = range.Start; i < range.End; i++)

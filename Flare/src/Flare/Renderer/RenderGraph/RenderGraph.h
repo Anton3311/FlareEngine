@@ -15,8 +15,6 @@ namespace Flare
 	class FLARE_API RenderGraph
 	{
 	public:
-		using ResourceId = uint64_t;
-
 		void AddPass(const RenderGraphPassSpecifications& specifications, Ref<RenderGraphPass> pass);
 
 		void AddExternalResource(const ExternalRenderGraphResource& resource);
@@ -24,6 +22,9 @@ namespace Flare
 		void Execute(Ref<CommandBuffer> commandBuffer);
 		void Build();
 		void Clear();
+
+		inline bool NeedsRebuilding() const { return m_NeedsRebuilding; }
+		inline void SetNeedsRebuilding() { m_NeedsRebuilding = true; }
 	private:
 		void ExecuteLayoutTransitions(Ref<CommandBuffer> commandBuffer, LayoutTransitionsRange range);
 	private:
@@ -31,5 +32,7 @@ namespace Flare
 		std::vector<ExternalRenderGraphResource> m_ExternalResources;
 
 		CompiledRenderGraph m_CompiledRenderGraph;
+
+		bool m_NeedsRebuilding = false;
 	};
 }

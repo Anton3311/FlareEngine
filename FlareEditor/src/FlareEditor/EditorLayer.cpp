@@ -518,7 +518,7 @@ namespace Flare
         for (auto& viewportWindow : m_ViewportWindows)
         {
             viewportWindow->GetViewport().Graph.Clear();
-            viewportWindow->RequestRenderGraphRebuild();
+            viewportWindow->GetViewport().Graph.SetNeedsRebuilding();
         }
     }
 
