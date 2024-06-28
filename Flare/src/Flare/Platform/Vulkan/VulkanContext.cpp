@@ -216,8 +216,11 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		VK_CHECK_RESULT(vkWaitForFences(m_Device, 1, &m_FrameFence, VK_TRUE, UINT64_MAX));
-		VK_CHECK_RESULT(vkResetFences(m_Device, 1, &m_FrameFence));
+		{
+			FLARE_PROFILE_SCOPE("WaitForFence");
+			VK_CHECK_RESULT(vkWaitForFences(m_Device, 1, &m_FrameFence, VK_TRUE, UINT64_MAX));
+			VK_CHECK_RESULT(vkResetFences(m_Device, 1, &m_FrameFence));
+		}
 
 		VkResult acquireResult = vkAcquireNextImageKHR(m_Device, m_SwapChain, UINT64_MAX, m_ImageAvailableSemaphore, VK_NULL_HANDLE, &m_CurrentFrameInFlight);
 
@@ -237,8 +240,6 @@ namespace Flare
 		DestroyStagingBuffers();
 
 		m_PrimaryCommandBuffer->Begin();
-
-		m_PrimaryCommandBuffer->ClearImage(m_SwapChainImages[m_CurrentFrameInFlight], glm::vec4(1.0f, 0.0f, 0.0f, 1.0f), VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
 	}
 
 	void VulkanContext::Present()
@@ -246,38 +247,44 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 		m_PrimaryCommandBuffer->End();
 
-		VkSubmitInfo submitInfo{};
-		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-
-		VkSemaphore waitSemaphores[] = { m_ImageAvailableSemaphore };
-		VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-		submitInfo.waitSemaphoreCount = 1;
-		submitInfo.pWaitSemaphores = waitSemaphores;
-		submitInfo.pWaitDstStageMask = waitStages;
-		submitInfo.commandBufferCount = 1;
-
-		VkCommandBuffer commandBuffer = m_PrimaryCommandBuffer->GetHandle();
-		submitInfo.pCommandBuffers = &commandBuffer;
-		submitInfo.signalSemaphoreCount = 1;
-		submitInfo.pSignalSemaphores = &m_RenderFinishedSemaphore;
-		VK_CHECK_RESULT(vkQueueSubmit(m_GraphicsQueue, 1, &submitInfo, m_FrameFence));
-
-		VkPresentInfoKHR presentInfo{};
-		presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-		presentInfo.waitSemaphoreCount = 1;
-		presentInfo.pWaitSemaphores = &m_RenderFinishedSemaphore;
-		presentInfo.swapchainCount = 1;
-		presentInfo.pSwapchains = &m_SwapChain;
-		presentInfo.pImageIndices = &m_CurrentFrameInFlight;
-
-		VkResult presentResult = vkQueuePresentKHR(m_PresentQueue, &presentInfo);
-		if (presentResult == VK_ERROR_OUT_OF_DATE_KHR)
 		{
-			RecreateSwapChain();
+			FLARE_PROFILE_SCOPE("Submit");
+
+			VkSemaphore waitSemaphores[] = { m_ImageAvailableSemaphore };
+			VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+			VkCommandBuffer commandBuffer = m_PrimaryCommandBuffer->GetHandle();
+
+			VkSubmitInfo submitInfo{};
+			submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+			submitInfo.waitSemaphoreCount = 1;
+			submitInfo.pWaitSemaphores = waitSemaphores;
+			submitInfo.pWaitDstStageMask = waitStages;
+			submitInfo.commandBufferCount = 1;
+			submitInfo.pCommandBuffers = &commandBuffer;
+			submitInfo.signalSemaphoreCount = 1;
+			submitInfo.pSignalSemaphores = &m_RenderFinishedSemaphore;
+			VK_CHECK_RESULT(vkQueueSubmit(m_GraphicsQueue, 1, &submitInfo, m_FrameFence));
 		}
-		else if (presentResult != VK_SUCCESS)
+
 		{
-			FLARE_CORE_ERROR("Failed to present");
+			FLARE_PROFILE_SCOPE("Present");
+			VkPresentInfoKHR presentInfo{};
+			presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+			presentInfo.waitSemaphoreCount = 1;
+			presentInfo.pWaitSemaphores = &m_RenderFinishedSemaphore;
+			presentInfo.swapchainCount = 1;
+			presentInfo.pSwapchains = &m_SwapChain;
+			presentInfo.pImageIndices = &m_CurrentFrameInFlight;
+
+			VkResult presentResult = vkQueuePresentKHR(m_PresentQueue, &presentInfo);
+			if (presentResult == VK_ERROR_OUT_OF_DATE_KHR)
+			{
+				RecreateSwapChain();
+			}
+			else if (presentResult != VK_SUCCESS)
+			{
+				FLARE_CORE_ERROR("Failed to present");
+			}
 		}
 
 		{
