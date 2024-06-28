@@ -6,10 +6,11 @@
 
 namespace Flare
 {
+	class Viewport;
 	class FLARE_API DebugRenderer
 	{
 	public:
-		static void Initialize(uint32_t maxLinesCount = 40000);
+		static void Initialize();
 		static void Shutdown();
 
 		static void Begin();
@@ -38,6 +39,8 @@ namespace Flare
 		static void DrawFrustum(const glm::mat4& inverseViewProjection, const glm::vec4& color = glm::vec4(1.0f));
 		static void DrawWireBox(const glm::vec3 corners[8], const glm::vec4& color = glm::vec4(1.0f));
 		static void DrawAABB(const Math::AABB& aabb, const glm::vec4& color = glm::vec4(1.0f));
+
+		static void ConfigurePasses(Viewport& viewport);
 	private:
 		static void FlushLines();
 		static void FlushRays();

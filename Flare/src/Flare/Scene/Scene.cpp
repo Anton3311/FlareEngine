@@ -4,7 +4,7 @@
 
 #include "Flare/Renderer/Renderer.h"
 #include "Flare/Renderer2D/Renderer2D.h"
-#include "Flare/Renderer/DebugRenderer.h"
+#include "Flare/DebugRenderer/DebugRenderer.h"
 
 #include "Flare/Renderer/PostProcessing/ToneMapping.h"
 #include "Flare/Renderer/PostProcessing/Vignette.h"

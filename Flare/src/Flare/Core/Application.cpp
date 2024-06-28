@@ -9,7 +9,7 @@
 #include "Flare/Renderer/Renderer.h"
 #include "Flare/Renderer/RendererPrimitives.h"
 #include "Flare/Renderer2D/Renderer2D.h"
-#include "Flare/Renderer/DebugRenderer.h"
+#include "Flare/DebugRenderer/DebugRenderer.h"
 
 #include "Flare/Scripting/ScriptingEngine.h"
 #include "Flare/Input/InputManager.h"

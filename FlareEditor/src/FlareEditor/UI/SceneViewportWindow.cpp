@@ -1,8 +1,9 @@
 #include "SceneViewportWindow.h"
 
 #include "Flare/Renderer/Renderer.h"
-#include "Flare/Renderer/DebugRenderer.h"
 #include "Flare/Renderer/ShaderLibrary.h"
+
+#include "Flare/DebugRenderer/DebugRenderer.h"
 
 #include "Flare/Platform/Vulkan/VulkanContext.h"
 

@@ -4,7 +4,8 @@
 #include "Flare/AssetManager/AssetManager.h"
 
 #include "Flare/Renderer/RendererPrimitives.h"
-#include "Flare/Renderer/DebugRenderer.h"
+
+#include "Flare/DebugRenderer/DebugRenderer.h"
 
 #include "FlareECS/World.h"
 

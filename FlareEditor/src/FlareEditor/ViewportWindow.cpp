@@ -8,6 +8,8 @@
 #include "Flare/Renderer/PostProcessing/Vignette.h"
 #include "Flare/Renderer/PostProcessing/AtmospherePass.h"
 
+#include "Flare/DebugRenderer/DebugRenderer.h"
+
 #include "Flare/Platform/Vulkan/VulkanContext.h"
 
 #include "Flare/Scene/Scene.h"
@@ -271,6 +273,7 @@ namespace Flare
 
 		Renderer::ConfigurePasses(m_Viewport);
 		Renderer2D::ConfigurePasses(m_Viewport);
+		DebugRenderer::ConfigurePasses(m_Viewport);
 
 		if (scene)
 		{

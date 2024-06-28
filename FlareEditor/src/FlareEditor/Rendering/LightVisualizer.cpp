@@ -4,8 +4,10 @@
 
 #include "Flare/Scene/Components.h"
 #include "Flare/Scene/Transform.h"
-#include "Flare/Renderer/DebugRenderer.h"
+
 #include "Flare/Renderer/ShaderLibrary.h"
+
+#include "Flare/DebugRenderer/DebugRenderer.h"
 
 #include "Flare/Project/Project.h"
 

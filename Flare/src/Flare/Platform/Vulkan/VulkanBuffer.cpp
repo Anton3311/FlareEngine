@@ -78,6 +78,7 @@ namespace Flare
 		if (m_Size == 0)
 			m_Size = data.GetSize();
 
+		FLARE_CORE_ASSERT(data.GetSize() + offset <= m_Size);
 		FLARE_CORE_ASSERT(data.GetSize() <= m_Size);
 
 		EnsureAllocated();
