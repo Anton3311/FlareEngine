@@ -399,8 +399,6 @@ namespace Flare
 
             ImGui::Text("Frame time %f ms", Time::GetDeltaTime() * 1000.0f);
             ImGui::Text("FPS %f", 1.0f / Time::GetDeltaTime());
-            ImGui::Text("Shadow Pass %f ms", stats.ShadowPassTime);
-            ImGui::Text("Geometry Pass %f ms", stats.GeometryPassTime);
 
             Ref<Window> window = Application::GetInstance().GetWindow();
 
@@ -408,18 +406,18 @@ namespace Flare
             if (ImGui::Checkbox("VSync", &vsync))
                 window->SetVSync(vsync);
 
-            if (ImGui::CollapsingHeader("Renderer 2D"))
+            ImGui::SeparatorText("Renderer");
+            ImGui::Text("Geometry Pass %f ms", stats.GeometryPassTime);
+            ImGui::Text("Shadow Pass %f ms", stats.ShadowPassTime);
+			ImGui::Text("Objects Submitted: %d Objects Visible: %d", stats.ObjectsSubmitted, stats.ObjectsVisible);
+			ImGui::Text("Draw calls (Saved by instancing: %d): %d", stats.DrawCallsSavedByInstancing, stats.DrawCallCount);
+
+            ImGui::SeparatorText("Renderer 2D");
             {
                 const auto& stats = Renderer2D::GetStats();
                 ImGui::Text("Quads %d", stats.QuadsCount);
                 ImGui::Text("Draw Calls %d", stats.DrawCalls);
                 ImGui::Text("Vertices %d", stats.GetTotalVertexCount());
-            }
-
-            if (ImGui::CollapsingHeader("Renderer"))
-            {
-                ImGui::Text("Objects Submitted: %d Objects Visible: %d", stats.ObjectsSubmitted, stats.ObjectsVisible);
-                ImGui::Text("Draw calls (Saved by instancing: %d): %d", stats.DrawCallsSavedByInstancing, stats.DrawCallCount);
             }
 
             if (ImGui::TreeNodeEx("Post Processing", ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_SpanAvailWidth))
