@@ -2,6 +2,7 @@
 
 #include "Flare/Renderer/RenderPass.h"
 #include "Flare/Renderer/RendererSubmitionQueue.h"
+#include "Flare/Renderer/RendererStatistics.h"
 
 #include "Flare/Renderer/RenderGraph/RenderGraphPass.h"
 
@@ -18,6 +19,7 @@ namespace Flare
 	{
 	public:
 		GeometryPass(const RendererSubmitionQueue& opaqueObjects,
+			RendererStatistics& statistics,
 			Ref<DescriptorSet> primarySet,
 			Ref<DescriptorSet> primarySetWithoutShadows,
 			Ref<DescriptorSetPool> pool);
@@ -49,6 +51,7 @@ namespace Flare
 
 		Ref<DescriptorSetPool> m_Pool = nullptr;
 
+		RendererStatistics& m_Statistics;
 		const RendererSubmitionQueue& m_OpaqueObjects;
 		std::vector<uint32_t> m_VisibleObjects;
 		std::vector<InstanceData> m_InstanceBuffer;

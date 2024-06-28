@@ -418,8 +418,8 @@ namespace Flare
 
             if (ImGui::CollapsingHeader("Renderer"))
             {
-                ImGui::Text("Submitted: %d Culled: %d", stats.ObjectsSubmitted, stats.ObjectsCulled);
-                ImGui::Text("Draw calls (Saved by instancing: %d): %d", stats.DrawCallsSavedByInstancing, stats.DrawCallsCount);
+                ImGui::Text("Objects Submitted: %d Objects Visible: %d", stats.ObjectsSubmitted, stats.ObjectsVisible);
+                ImGui::Text("Draw calls (Saved by instancing: %d): %d", stats.DrawCallsSavedByInstancing, stats.DrawCallCount);
             }
 
             if (ImGui::TreeNodeEx("Post Processing", ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_SpanAvailWidth))

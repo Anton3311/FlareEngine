@@ -16,10 +16,12 @@
 namespace Flare
 {
 	GeometryPass::GeometryPass(const RendererSubmitionQueue& opaqueObjects,
+		RendererStatistics& statistics,
 		Ref<DescriptorSet> primarySet,
 		Ref<DescriptorSet> primarySetWithoutShadows,
 		Ref<DescriptorSetPool> pool)
 		: m_OpaqueObjects(opaqueObjects),
+		m_Statistics(statistics),
 		m_PrimaryDescriptorSet(primarySet),
 		m_PrimaryDescriptorSetWithoutShadows(primarySetWithoutShadows),
 		m_Pool(pool)
@@ -68,8 +70,8 @@ namespace Flare
 
 		CullObjects();
 
-		// TODO: stats
-		// s_RendererData.Statistics.ObjectsCulled += (uint32_t)(s_RendererData.OpaqueQueue.GetSize() - s_RendererData.CulledObjectIndices.size());
+		m_Statistics.GeometryPassTime += m_Timer->GetElapsedTime().value_or(0.0f); // Read the time from the previous frame
+		m_Statistics.ObjectsVisible += (uint32_t)m_VisibleObjects.size();
 
 		{
 			FLARE_PROFILE_SCOPE("Sort");
@@ -179,6 +181,9 @@ namespace Flare
 
 		if (batch.InstanceCount == 0)
 			return;
+
+		m_Statistics.DrawCallCount++;
+		m_Statistics.DrawCallsSavedByInstancing += batch.InstanceCount - 1;
 
 		commandBuffer->ApplyMaterial(batch.Material);
 		commandBuffer->DrawIndexed(batch.Mesh, batch.SubMesh, batch.BaseInstance, batch.InstanceCount);

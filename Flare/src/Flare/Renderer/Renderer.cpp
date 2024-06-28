@@ -246,12 +246,7 @@ namespace Flare
 
 	void Renderer::ClearStatistics()
 	{
-		s_RendererData.Statistics.DrawCallsCount = 0;
-		s_RendererData.Statistics.DrawCallsSavedByInstancing = 0;
-		s_RendererData.Statistics.ObjectsCulled = 0;
-		s_RendererData.Statistics.ObjectsSubmitted = 0;
-		s_RendererData.Statistics.GeometryPassTime = 0.0f;
-		s_RendererData.Statistics.ShadowPassTime = 0.0f;
+		s_RendererData.Statistics = {};
 	}
 
 	void Renderer::SetMainViewport(Viewport& viewport)
@@ -672,6 +667,7 @@ namespace Flare
 
 		viewport.Graph.AddPass(geometryPass, CreateRef<GeometryPass>(
 			s_RendererData.OpaqueQueue,
+			s_RendererData.Statistics,
 			primarySet,
 			primarySetWithoutShadows,
 			s_RendererData.PrimaryDescriptorPool));

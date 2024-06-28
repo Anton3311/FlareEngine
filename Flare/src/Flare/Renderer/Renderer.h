@@ -5,6 +5,7 @@
 #include "Flare/Renderer/Viewport.h"
 #include "Flare/Renderer/RenderPass.h"
 #include "Flare/Renderer/RendererSubmitionQueue.h"
+#include "Flare/Renderer/RendererStatistics.h"
 
 #include "Flare/Renderer/Material.h"
 #include "Flare/Renderer/Mesh.h"
@@ -13,18 +14,6 @@
 
 namespace Flare
 {
-	struct RendererStatistics
-	{
-		uint32_t DrawCallsCount = 0;
-		uint32_t DrawCallsSavedByInstancing = 0;
-
-		uint32_t ObjectsSubmitted = 0;
-		uint32_t ObjectsCulled = 0;
-
-		float ShadowPassTime = 0.0f;
-		float GeometryPassTime = 0.0f;
-	};
-
 	enum class ShadowQuality
 	{
 		Low = 0,
