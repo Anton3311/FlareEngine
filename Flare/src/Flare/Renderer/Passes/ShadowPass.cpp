@@ -27,10 +27,14 @@ namespace Flare
 
 	void ShadowPass::OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
 	{
-		for (auto& visibleObjects : m_VisibleObjects)
-			visibleObjects.clear();
+		if (context.GetViewport().IsShadowMappingEnabled())
+		{
+			for (auto& visibleObjects : m_VisibleObjects)
+				visibleObjects.clear();
 
-		ComputeShaderProjectionsAndCullObjects(context);
+			ComputeShaderProjectionsAndCullObjects(context);
+		}
+
 		CalculateShadowMappingParameters(context);
 	}
 

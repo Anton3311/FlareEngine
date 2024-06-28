@@ -576,6 +576,11 @@ namespace Flare
 
 		viewport.Graph.AddPass(shadowPassSpec, shadowPass);
 
+		if (!viewport.IsShadowMappingEnabled())
+		{
+			return shadowPass;
+		}
+
 		Ref<UniformBuffer> shadowDataBuffer = shadowPass->GetShadowDataBuffer();
 
 		uint32_t textureResolution = GetShadowMapResolution(s_RendererData.ShadowMappingSettings.Quality);
@@ -645,19 +650,22 @@ namespace Flare
 		geometryPass.AddOutput(viewport.NormalsTexture, 1);
 		geometryPass.AddOutput(viewport.DepthTexture, 2);
 
-		for (size_t i = 0; i < cascadeTextures.size(); i++)
+		if (viewport.IsShadowMappingEnabled())
 		{
-			geometryPass.AddInput(cascadeTextures[i]);
+			for (size_t i = 0; i < cascadeTextures.size(); i++)
+			{
+				if (cascadeTextures[i] == nullptr)
+					break;
 
-			if (cascadeTextures[i] == nullptr)
-				break;
-		}
+				geometryPass.AddInput(cascadeTextures[i]);
+			}
 
-		// Fill first cascades with textures from shadow casacde passes,
-		// the rest of cascades were filled with white textures when setting up the descriptor set
-		for (uint32_t i = 0; i < (uint32_t)s_RendererData.ShadowMappingSettings.Cascades; i++)
-		{
-			primarySet->WriteImage(cascadeTextures[i], (uint32_t)(28 + i));
+			// Fill first cascades with textures from shadow casacde passes,
+			// the rest of cascades were filled with white textures when setting up the descriptor set
+			for (uint32_t i = 0; i < (uint32_t)s_RendererData.ShadowMappingSettings.Cascades; i++)
+			{
+				primarySet->WriteImage(cascadeTextures[i], (uint32_t)(28 + i));
+			}
 		}
 
 		primarySet->FlushWrites();
