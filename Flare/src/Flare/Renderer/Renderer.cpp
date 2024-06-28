@@ -612,6 +612,7 @@ namespace Flare
 
 			Ref<ShadowCascadePass> cascadePass = CreateRef<ShadowCascadePass>(
 				s_RendererData.OpaqueQueue,
+				s_RendererData.Statistics,
 				shadowPass->GetLightView(cascadeIndex),
 				shadowPass->GetVisibleObjects(cascadeIndex),
 				cascadeTextures[cascadeIndex],
