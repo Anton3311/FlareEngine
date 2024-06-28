@@ -187,6 +187,8 @@ namespace Flare
         m_ViewportWindows.clear();
         m_GameWindow = nullptr;
 
+        m_PostProcessingWindow = PostProcessingWindow();
+
         EditorGUI::Uninitialize();
 
         Scene::SetActive(nullptr);
@@ -397,8 +399,8 @@ namespace Flare
             ImGui::Begin("Renderer");
             const auto& stats = Renderer::GetStatistics();
 
-            ImGui::Text("Frame time %f ms", Time::GetDeltaTime() * 1000.0f);
-            ImGui::Text("FPS %f", 1.0f / Time::GetDeltaTime());
+            ImGui::Text("Frame time: %f ms", Time::GetDeltaTime() * 1000.0f);
+            ImGui::Text("FPS: %f", 1.0f / Time::GetDeltaTime());
 
             Ref<Window> window = Application::GetInstance().GetWindow();
 
@@ -407,48 +409,19 @@ namespace Flare
                 window->SetVSync(vsync);
 
             ImGui::SeparatorText("Renderer");
-            ImGui::Text("Geometry Pass %f ms", stats.GeometryPassTime);
-            ImGui::Text("Shadow Pass %f ms", stats.ShadowPassTime);
-			ImGui::Text("Objects Submitted: %d Objects Visible: %d", stats.ObjectsSubmitted, stats.ObjectsVisible);
-			ImGui::Text("Draw calls (Saved by instancing: %d): %d", stats.DrawCallsSavedByInstancing, stats.DrawCallCount);
+            {
+                ImGui::Text("Geometry Pass: %f ms", stats.GeometryPassTime);
+                ImGui::Text("Shadow Pass: %f ms", stats.ShadowPassTime);
+                ImGui::Text("Objects Submitted: %d Objects Visible: %d", stats.ObjectsSubmitted, stats.ObjectsVisible);
+                ImGui::Text("Draw calls (Saved by instancing: %d): %d", stats.DrawCallsSavedByInstancing, stats.DrawCallCount);
+            }
 
             ImGui::SeparatorText("Renderer 2D");
             {
                 const auto& stats = Renderer2D::GetStats();
-                ImGui::Text("Quads %d", stats.QuadsCount);
-                ImGui::Text("Draw Calls %d", stats.DrawCalls);
-                ImGui::Text("Vertices %d", stats.GetTotalVertexCount());
-            }
-
-            if (ImGui::TreeNodeEx("Post Processing", ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_SpanAvailWidth))
-            {
-                auto& postProcessing = Scene::GetActive()->GetPostProcessingManager();
-
-                for (const auto& entry : postProcessing.GetEntries())
-                {
-                    bool enabled = entry.Effect->IsEnabled();
-                    ImGui::PushID(entry.Effect.get());
-                    if (ImGui::Checkbox("Enabled", &enabled))
-                    {
-                        entry.Effect->SetEnabled(enabled);
-                    }
-                    ImGui::PopID();
-
-                    EditorGUI::ObjectField(*entry.Descriptor, entry.Effect.get(), &Scene::GetActive()->GetECSWorld());
-                }
-
-#if 0
-                auto lut = postProcessing.Atmosphere->GetSunTransmittanceLUT();
-				if (lut)
-					ImGui::Image(ImGuiLayer::GetId(lut, 0), ImVec2(256, 256), ImVec2(0, 1), ImVec2(1, 0));
-
-                if (ImGui::Button("Regenerate Sun Transmittance LUT"))
-                {
-                    postProcessing.Atmosphere->RegenerateSunTransmittanceLUT();
-                }
-#endif
-
-                ImGui::TreePop();
+                ImGui::Text("Quads: %d", stats.QuadsCount);
+                ImGui::Text("Draw Calls: %d", stats.DrawCalls);
+                ImGui::Text("Vertices: %d", stats.GetTotalVertexCount());
             }
 
             ImGui::End();
@@ -469,6 +442,7 @@ namespace Flare
             m_PropertiesWindow.OnImGuiRender();
             m_AssetManagerWindow.OnImGuiRender();
             m_QuickSearch.OnImGuiRender();
+            m_PostProcessingWindow.OnImGuiRender();
 
             ECSInspector::GetInstance().OnImGuiRender();
 
@@ -569,6 +543,8 @@ namespace Flare
             active->InitializeRuntime();
 
             m_EditedSceneHandle = handle;
+
+            m_PostProcessingWindow = PostProcessingWindow(active);
         }
     }
 

@@ -18,6 +18,7 @@
 #include "FlareEditor/UI/PrefabEditor.h"
 #include "FlareEditor/UI/SpriteEditor.h"
 #include "FlareEditor/UI/QuickSearch/QuickSearch.h"
+#include "FlareEditor/UI/PostProcessingWindow.h"
 
 #include "FlareEditor/ViewportWindow.h"
 #include "FlareEditor/EditorCamera.h"
@@ -104,6 +105,7 @@ namespace Flare
 		SceneWindow m_SceneWindow;
 		PropertiesWindow m_PropertiesWindow;
 		AssetManagerWindow m_AssetManagerWindow;
+		PostProcessingWindow m_PostProcessingWindow;
 		QuickSearch m_QuickSearch;
 
 		std::vector<Ref<ViewportWindow>> m_ViewportWindows;
