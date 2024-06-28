@@ -41,8 +41,5 @@ namespace Flare
 		static void DrawAABB(const Math::AABB& aabb, const glm::vec4& color = glm::vec4(1.0f));
 
 		static void ConfigurePasses(Viewport& viewport);
-	private:
-		static void FlushLines();
-		static void FlushRays();
 	};
 }

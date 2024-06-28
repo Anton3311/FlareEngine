@@ -15,7 +15,7 @@ namespace Flare
 	public:
 		DebugLinesPass(Ref<Shader> debugShader,
 			const DebugRendererSettings& settings,
-			const DebugRenderFrameData& frameData);
+			const DebugRendererFrameData& frameData);
 		~DebugLinesPass();
 
 		void OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer) override;
@@ -23,7 +23,7 @@ namespace Flare
 		void CreatePipeline(const RenderGraphContext& context);
 	private:
 		const DebugRendererSettings& m_Settings;
-		const DebugRenderFrameData& m_FrameData;
+		const DebugRendererFrameData& m_FrameData;
 
 		Ref<VertexBuffer> m_VertexBuffer = nullptr;
 

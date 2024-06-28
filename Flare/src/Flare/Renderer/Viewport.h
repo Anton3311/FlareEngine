@@ -24,6 +24,7 @@ namespace Flare
 	public:
 		bool PostProcessingEnabled = true;
 		bool ShadowMappingEnabled = true;
+		bool DebugRendering = false;
 
 		RenderData FrameData;
 		Ref<FrameBuffer> RenderTarget = nullptr;

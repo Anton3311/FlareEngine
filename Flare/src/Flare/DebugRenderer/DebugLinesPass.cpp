@@ -9,10 +9,10 @@
 
 namespace Flare
 {
-	DebugLinesPass::DebugLinesPass(Ref<Shader> debugShader, const DebugRendererSettings& settings, const DebugRenderFrameData& frameData)
+	DebugLinesPass::DebugLinesPass(Ref<Shader> debugShader, const DebugRendererSettings& settings, const DebugRendererFrameData& frameData)
 		: m_Shader(debugShader), m_Settings(settings), m_FrameData(frameData)
 	{
-		m_VertexBuffer = VertexBuffer::Create(sizeof(DebugRenderFrameData::Vertex) * 2 * m_Settings.MaxLines, GPUBufferUsage::Static);
+		m_VertexBuffer = VertexBuffer::Create(sizeof(DebugRendererFrameData::Vertex) * 2 * m_Settings.MaxLines, GPUBufferUsage::Static);
 		As<VulkanVertexBuffer>(m_VertexBuffer)->GetBuffer().EnsureAllocated(); // HACk: To avoid binding NULL buffer
 	}
 
@@ -22,7 +22,7 @@ namespace Flare
 
 	void DebugLinesPass::OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
 	{
-		using Vertex = DebugRenderFrameData::Vertex;
+		using Vertex = DebugRendererFrameData::Vertex;
 
 		m_VertexBuffer->SetData(
 			MemorySpan(const_cast<Vertex*>(m_FrameData.LineVertices.GetData()), m_FrameData.LineVertices.GetSize()),

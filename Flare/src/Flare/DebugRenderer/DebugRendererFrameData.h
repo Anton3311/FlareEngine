@@ -2,6 +2,8 @@
 
 #include "FlareCore/Collections/Span.h"
 
+#include "Flare/Math/Math.h"
+
 #include <vector>
 #include <glm/glm.hpp>
 
@@ -19,7 +21,14 @@ namespace Flare
 		float RayThickness = 0.0f;
 	};
 
-	struct DebugRenderFrameData
+	struct DebugRayData
+	{
+		glm::vec3 Origin = glm::vec3(0.0f);
+		glm::vec3 Direction = glm::vec3(0.0f);
+		glm::vec4 Color = glm::vec4(1.0f);
+	};
+
+	struct DebugRendererFrameData
 	{
 		struct Vertex
 		{
@@ -28,5 +37,6 @@ namespace Flare
 		};
 
 		Span<Vertex> LineVertices;
+		std::vector<DebugRayData> Rays;
 	};
 }

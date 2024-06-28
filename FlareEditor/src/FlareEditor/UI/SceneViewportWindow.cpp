@@ -44,7 +44,10 @@ namespace Flare
 		m_Overlay(ViewportOverlay::Default),
 		m_IsToolbarHovered(false),
 		m_CameraController(m_Camera),
-		m_Guizmo(GuizmoMode::None) {}
+		m_Guizmo(GuizmoMode::None)
+	{
+		m_Viewport.DebugRendering = true;
+	}
 
 	void SceneViewportWindow::OnAttach()
 	{
