@@ -132,25 +132,34 @@ vec3 CalculateBiasParams(vec2 uv, mat4 projection, vec3 surfacePosition, vec3 su
 	return vec3(depthX - depth, depthY - depth, depth);
 }
 
-float CalculateBlockerDistance(sampler2D shadowMap, vec3 projectedLightSpacePosition, vec2 rotation, float bias, float scale, vec3 biasParams, vec3 surfaceNormal, float sceneScale)
+struct ShadowMappingSurfaceParams
 {
-	float receieverDepth = projectedLightSpacePosition.z;
+	vec3 Position;
+	vec3 Normal;
+	vec3 BiasParams;
+	float ConstantBias;
+	vec2 SamplesRotation;
+};
+
+float CalculateBlockerDistance(sampler2D shadowMap, vec2 uv, in ShadowMappingSurfaceParams params, float scale)
+{
+	float recieverDepth = params.BiasParams.z;
 	float blockerDistance = 0.0;
 	float samplesCount = 0;
-	float searchSize = LIGHT_SIZE * (receieverDepth - u_LightNear) / receieverDepth * scale;
+	float searchSize = LIGHT_SIZE * (recieverDepth - u_LightNear) / recieverDepth * scale;
 
 	for (int i = 0; i < NUMBER_OF_SAMPLES; i++)
 	{
 		vec2 offset = vec2(
-			rotation.x * SAMPLE_POINTS[i].x - rotation.y * SAMPLE_POINTS[i].y,
-			rotation.y * SAMPLE_POINTS[i].x + rotation.x * SAMPLE_POINTS[i].y
+			params.SamplesRotation.x * SAMPLE_POINTS[i].x - params.SamplesRotation.y * SAMPLE_POINTS[i].y,
+			params.SamplesRotation.y * SAMPLE_POINTS[i].x + params.SamplesRotation.x * SAMPLE_POINTS[i].y
 		) * searchSize;
 
-		float newRecieverDepth = biasParams.z + dot(offset, biasParams.xy);
-		float sampledDepth = texture(shadowMap, projectedLightSpacePosition.xy + offset).r;
-		float epsilon = CalculateAdaptiveEpsilon(newRecieverDepth, surfaceNormal, sceneScale);
+		float newRecieverDepth = params.BiasParams.z + dot(offset, params.BiasParams.xy);
+		float sampledDepth = texture(shadowMap, uv + offset).r;
+		// float epsilon = CalculateAdaptiveEpsilon(newRecieverDepth, params.Normal, params.SceneScale);
 
-		if (newRecieverDepth - bias > sampledDepth)
+		if (newRecieverDepth > sampledDepth)
 		{
 			samplesCount += 1.0;
 			blockerDistance += sampledDepth;
@@ -163,29 +172,29 @@ float CalculateBlockerDistance(sampler2D shadowMap, vec3 projectedLightSpacePosi
 	return max(0.0001, blockerDistance / samplesCount);
 }
 
-float PCF(sampler2D shadowMap, vec2 uv, float receieverDepth, float filterRadius, vec2 rotation, float bias, vec3 biasParams, vec3 surfaceNormal, float sceneScale)
+float PCF(sampler2D shadowMap, vec2 uv, float filterRadius, in ShadowMappingSurfaceParams params)
 {
 	float shadow = 0.0f;
 	for (int i = 0; i < NUMBER_OF_SAMPLES; i++)
 	{
-		vec2 offset = vec2(
-			rotation.x * SAMPLE_POINTS[i].x - rotation.y * SAMPLE_POINTS[i].y,
-			rotation.y * SAMPLE_POINTS[i].x + rotation.x * SAMPLE_POINTS[i].y
-		) * filterRadius;
+		vec2 offset = filterRadius * vec2(
+			params.SamplesRotation.x * SAMPLE_POINTS[i].x - params.SamplesRotation.y * SAMPLE_POINTS[i].y,
+			params.SamplesRotation.y * SAMPLE_POINTS[i].x + params.SamplesRotation.x * SAMPLE_POINTS[i].y
+		);
 
-		float newRecieverDepth = biasParams.z + dot(offset, biasParams.xy);
-		float epsilon = CalculateAdaptiveEpsilon(newRecieverDepth, surfaceNormal, sceneScale);
+		float recieverDepth = params.BiasParams.z + dot(offset, params.BiasParams.xy);
+		// float epsilon = CalculateAdaptiveEpsilon(newRecieverDepth, params.Normal, params.SceneScale);
 
 		float sampledDepth = texture(shadowMap, uv + offset).r;
-		shadow += (newRecieverDepth - bias > sampledDepth ? 1.0 : 0.0);
+		shadow += (recieverDepth > sampledDepth ? 1.0 : 0.0);
 	}
 	
 	return shadow / NUMBER_OF_SAMPLES;
 }
 
-float CalculateCascadeShadow(sampler2D shadowMap, mat4 projection, vec4 surfacePosition, vec3 surfaceNormal, float bias, vec2 samplesRotation, float scale, float sceneScale)
+float CalculateCascadeShadow(sampler2D shadowMap, mat4 projection, inout ShadowMappingSurfaceParams params, float scale)
 {
-	vec4 lightSpacePosition = projection * surfacePosition;
+	vec4 lightSpacePosition = projection * vec4(params.Position, 1.0f);
 
 	vec3 projected = lightSpacePosition.xyz / lightSpacePosition.w;
 	projected.xy = projected.xy * 0.5 + vec2(0.5);
@@ -199,9 +208,10 @@ float CalculateCascadeShadow(sampler2D shadowMap, mat4 projection, vec4 surfaceP
 	if (projected.x > 1.0 || projected.y > 1.0 || projected.x < 0 || projected.y < 0)
 		return 1.0;
 
-	vec3 biasParams = CalculateBiasParams(uv, projection, surfacePosition.xyz, surfaceNormal);
+	params.BiasParams = CalculateBiasParams(uv, projection, params.Position.xyz, params.Normal);
+	params.BiasParams.z -= params.ConstantBias;
 
-	float blockerDistance = CalculateBlockerDistance(shadowMap, projected, samplesRotation, bias, scale, biasParams, surfaceNormal, sceneScale);
+	float blockerDistance = CalculateBlockerDistance(shadowMap, uv, params, scale);
 	if (blockerDistance == -1.0f)
 		return 1.0f;
 
@@ -209,21 +219,21 @@ float CalculateCascadeShadow(sampler2D shadowMap, mat4 projection, vec4 surfaceP
 	float filterRadius = penumbraWidth * LIGHT_SIZE * u_LightNear / receieverDepth;
 	filterRadius = filterRadius * scale * u_ShadowSoftness;
 
-	return 1.0f - PCF(shadowMap, uv, receieverDepth, filterRadius, samplesRotation, bias, biasParams, surfaceNormal, sceneScale);
+	return 1.0f - PCF(shadowMap, uv, filterRadius, params);
 }
 
-float CalculateShadow(vec4 position, float bias, int cascadeIndex, vec2 samplesRotation, vec3 surfaceNormal)
+float CalculateShadow(int cascadeIndex, inout ShadowMappingSurfaceParams params)
 {
 	switch (cascadeIndex)
 	{
 	case 0:
-		return CalculateCascadeShadow(u_ShadowMap0, u_CascadeProjection0, position, surfaceNormal, bias, samplesRotation, 1.0f, u_SceneScale.x);
+		return CalculateCascadeShadow(u_ShadowMap0, u_CascadeProjection0, params, 1.0f);
 	case 1:
-		return CalculateCascadeShadow(u_ShadowMap1, u_CascadeProjection1, position, surfaceNormal, bias, samplesRotation, u_CascadeFilterWeights.y, u_SceneScale.y);
+		return CalculateCascadeShadow(u_ShadowMap1, u_CascadeProjection1, params, u_CascadeFilterWeights.y);
 	case 2:
-		return CalculateCascadeShadow(u_ShadowMap2, u_CascadeProjection2, position, surfaceNormal, bias, samplesRotation, u_CascadeFilterWeights.z, u_SceneScale.z);
+		return CalculateCascadeShadow(u_ShadowMap2, u_CascadeProjection2, params, u_CascadeFilterWeights.z);
 	case 3:
-		return CalculateCascadeShadow(u_ShadowMap3, u_CascadeProjection3, position, surfaceNormal, bias, samplesRotation, u_CascadeFilterWeights.w, u_SceneScale.w);
+		return CalculateCascadeShadow(u_ShadowMap3, u_CascadeProjection3, params, u_CascadeFilterWeights.w);
 	}
 
 	return 1.0f;
@@ -275,12 +285,15 @@ float CalculateShadow(vec3 N, vec4 position, vec3 viewSpacePosition)
 	}
 
 	float shadowFade = smoothstep(u_ShadowFadeDistance, u_MaxShadowDistance, viewSpaceDistance);
-
 	float rotationAngle = 2.0f * PI * InterleavedGradientNoise(gl_FragCoord.xy);
-	// rotationAngle = 0.0f;
-	vec2 samplesRotation = vec2(cos(rotationAngle), sin(rotationAngle));
 
-	float shadow = CalculateShadow(position, bias, cascadeIndex, samplesRotation, N);
+	ShadowMappingSurfaceParams params;
+	params.Position = position.xyz;
+	params.Normal = N;
+	params.ConstantBias = bias;
+	params.SamplesRotation = vec2(cos(rotationAngle), sin(rotationAngle));
+
+	float shadow = CalculateShadow(cascadeIndex, params);
 
 #if CASCADE_BLENDING_ENABLED
 	const float BLENDING_THRESHOLD = 1.0f;
@@ -289,7 +302,7 @@ float CalculateShadow(vec3 N, vec4 position, vec3 viewSpacePosition)
 	if (distanceToNextCascade <= BLENDING_THRESHOLD && cascadeIndex < CASCADES_COUNT - 1)
 	{
 		int nextCascade = cascadeIndex + 1;
-		float shadow1 = CalculateShadow(position, bias, nextCascade, samplesRotation, N);
+		float shadow1 = CalculateShadow(nextCascade, params);
 		float cascadeBlend = min(1.0f, distanceToNextCascade / BLENDING_THRESHOLD);
 
 		shadow = mix(shadow1, shadow, cascadeBlend);
