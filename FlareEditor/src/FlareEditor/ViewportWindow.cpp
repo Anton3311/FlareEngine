@@ -3,11 +3,6 @@
 #include "Flare/Renderer/Renderer.h"
 #include "Flare/Renderer/Passes/BlitPass.h"
 
-#include "Flare/Renderer/PostProcessing/SSAO.h"
-#include "Flare/Renderer/PostProcessing/ToneMapping.h"
-#include "Flare/Renderer/PostProcessing/Vignette.h"
-#include "Flare/Renderer/PostProcessing/AtmospherePass.h"
-
 #include "Flare/DebugRenderer/DebugRenderer.h"
 
 #include "Flare/Platform/Vulkan/VulkanContext.h"

@@ -3,27 +3,23 @@
 #include "FlareCore/Serialization/TypeSerializer.h"
 #include "FlareCore//Serialization/SerializationStream.h"
 
-#include "Flare/Renderer/RenderPass.h"
 #include "Flare/Renderer/Material.h"
+#include "Flare/Renderer/RenderGraph/RenderGraphPass.h"
+#include "Flare/Renderer/PostProcessing/PostProcessingEffect.h"
+
 
 namespace Flare
 {
+	class AtmospherePass;
 	class CommandBuffer;
-	class FLARE_API AtmospherePass : public RenderPass
+	class FLARE_API Atmosphere : public PostProcessingEffect
 	{
 	public:
 		FLARE_TYPE;
 
-		AtmospherePass();
-
-		void OnRender(RenderingContext& context) override;
-		void RegenerateSunTransmittanceLUT();
-
-		inline Ref<FrameBuffer> GetSunTransmittanceLUT() const { return m_SunTransmittanceLUT; }
-	private:
-		void GenerateSunTransmittanceLUT(Ref<CommandBuffer> commandBuffer);
+		void RegisterRenderPasses(RenderGraph& renderGraph, const Viewport& viewport) override;
+		const SerializableObjectDescriptor& GetSerializationDescriptor() const override;
 	public:
-		bool Enabled = true;
 		Ref<Material> AtmosphereMaterial = nullptr;
 
 		// All units are Km
@@ -39,18 +35,13 @@ namespace Flare
 
 		uint32_t SunTransmittanceLUTSteps = 100;
 		uint32_t SunTransmittanceLUTSize = 512;
-	private:
-		bool m_SunTransmittanceLUTIsDirty = true;
-		Ref<FrameBuffer> m_SunTransmittanceLUT = nullptr;
-		Ref<Material> m_SunTransmittanceMaterial = nullptr;
 	};
 
 	template<>
-	struct TypeSerializer<AtmospherePass>
+	struct TypeSerializer<Atmosphere>
 	{
-		void OnSerialize(AtmospherePass& atmosphere, SerializationStream& stream)
+		void OnSerialize(Atmosphere& atmosphere, SerializationStream& stream)
 		{
-			stream.Serialize("Enabled", SerializationValue(atmosphere.Enabled));
 			stream.Serialize("AtmosphereMaterial", SerializationValue(atmosphere.AtmosphereMaterial));
 			stream.Serialize("PlaneRadius", SerializationValue(atmosphere.PlanetRadius));
 			stream.Serialize("AtmosphereThickness", SerializationValue(atmosphere.AtmosphereThickness));
@@ -61,5 +52,24 @@ namespace Flare
 			stream.Serialize("SunTransmittanceSteps", SerializationValue(atmosphere.SunTransmittanceSteps));
 			stream.Serialize("SunTransmittanceLUTSteps", SerializationValue(atmosphere.SunTransmittanceLUTSteps));
 		}
+	};
+
+	class FLARE_API AtmospherePass : public RenderGraphPass
+	{
+	public:
+		AtmospherePass();
+
+		void OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer) override;
+		void RegenerateSunTransmittanceLUT();
+
+		inline Ref<FrameBuffer> GetSunTransmittanceLUT() const { return m_SunTransmittanceLUT; }
+	private:
+		void GenerateSunTransmittanceLUT(Ref<CommandBuffer> commandBuffer);
+	private:
+		bool m_SunTransmittanceLUTIsDirty = true;
+		Ref<FrameBuffer> m_SunTransmittanceLUT = nullptr;
+		Ref<Material> m_SunTransmittanceMaterial = nullptr;
+
+		Ref<Atmosphere> m_Parameters;
 	};
 }

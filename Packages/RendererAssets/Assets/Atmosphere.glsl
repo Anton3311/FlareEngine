@@ -64,7 +64,7 @@ layout(std140, push_constant) uniform Sky
 
 layout(location = 0) out vec4 o_Color;
 
-#define USE_SUN_TRANSMITTANCE_LUT 1
+#define USE_SUN_TRANSMITTANCE_LUT 0
 #if USE_SUN_TRANSMITTANCE_LUT
 layout(set = 2, binding = 0) uniform sampler2D u_SunTransmittanceLUT;
 #endif

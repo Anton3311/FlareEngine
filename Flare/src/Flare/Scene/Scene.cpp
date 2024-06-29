@@ -9,6 +9,7 @@
 #include "Flare/Renderer/PostProcessing/ToneMapping.h"
 #include "Flare/Renderer/PostProcessing/Vignette.h"
 #include "Flare/Renderer/PostProcessing/SSAO.h"
+#include "Flare/Renderer/PostProcessing/Atmosphere.h"
 
 #include "Flare/AssetManager/AssetManager.h"
 
@@ -64,6 +65,7 @@ namespace Flare
 		systemsManager.RegisterSystem("Meshes Renderer", m_2DRenderingGroup, new MeshesRendererSystem());
 
 		m_PostProcessingManager.AddEffect(CreateRef<SSAO>());
+		m_PostProcessingManager.AddEffect(CreateRef<Atmosphere>());
 		m_PostProcessingManager.AddEffect(CreateRef<Vignette>());
 		m_PostProcessingManager.AddEffect(CreateRef<ToneMapping>());
 	}

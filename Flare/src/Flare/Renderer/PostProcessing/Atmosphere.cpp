@@ -1,6 +1,8 @@
-#include "AtmospherePass.h"
+#include "Atmosphere.h"
 
 #include "Flare/AssetManager/AssetManager.h"
+
+#include "Flare/Scene/Scene.h"
 
 #include "Flare/Renderer/Renderer.h"
 #include "Flare/Renderer/ShaderLibrary.h"
@@ -11,24 +13,42 @@
 
 namespace Flare
 {
-	FLARE_IMPL_TYPE(AtmospherePass);
+	FLARE_IMPL_TYPE(Atmosphere);
+	void Atmosphere::RegisterRenderPasses(RenderGraph& renderGraph, const Viewport& viewport)
+	{
+		if (!AtmosphereMaterial || !IsEnabled())
+			return;
+
+		RenderGraphPassSpecifications specifications{};
+		specifications.AddOutput(viewport.ColorTexture, 0);
+		specifications.AddOutput(viewport.DepthTexture, 1);
+		specifications.SetType(RenderGraphPassType::Graphics);
+		specifications.SetDebugName("AtmospherePass");
+
+		renderGraph.AddPass(specifications, CreateRef<AtmospherePass>());
+	}
+
+	const SerializableObjectDescriptor& Atmosphere::GetSerializationDescriptor() const
+	{
+		return FLARE_SERIALIZATION_DESCRIPTOR_OF(Atmosphere);
+	}
 
 	AtmospherePass::AtmospherePass()
-		: RenderPass(RenderPassQueue::PostProcessing)
 	{
 		std::optional<AssetHandle> shaderHandle = ShaderLibrary::FindShader("AtmosphereSunTransmittanceLUT");
 		if (shaderHandle.has_value())
 		{
 			m_SunTransmittanceMaterial = Material::Create(*shaderHandle);
 		}
+
+		auto result = Scene::GetActive()->GetPostProcessingManager().GetEffect<Atmosphere>();
+		FLARE_CORE_ASSERT(result.has_value());
+		m_Parameters = *result;
 	}
 
-	void AtmospherePass::OnRender(RenderingContext& context)
+	void AtmospherePass::OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
 	{
-		if (!AtmosphereMaterial || !Enabled || !Renderer::GetCurrentViewport().IsPostProcessingEnabled())
-			return;
-
-		Ref<Shader> shader = AtmosphereMaterial->GetShader();
+		Ref<Shader> shader = m_Parameters->AtmosphereMaterial->GetShader();
 		if (shader == nullptr)
 			return;
 
@@ -42,28 +62,30 @@ namespace Flare
 
 		std::optional<uint32_t> sunTransmittanceLUT = shader->GetPropertyIndex("u_SunTransmittanceLUT");
 
-		AtmosphereMaterial->WritePropertyValue<float>(*planetRadius, PlanetRadius);
-		AtmosphereMaterial->WritePropertyValue<float>(*atmosphereThickness, AtmosphereThickness);
-		AtmosphereMaterial->WritePropertyValue<float>(*mieHeight, MieHeight);
-		AtmosphereMaterial->WritePropertyValue<float>(*rayleighHeight, RayleighHeight);
-		AtmosphereMaterial->WritePropertyValue<float>(*observerHeight, ObserverHeight);
+		Ref<Material> material = m_Parameters->AtmosphereMaterial;
 
-		AtmosphereMaterial->WritePropertyValue<int32_t>(*viewRaySteps, (int32_t)ViewRaySteps);
-		AtmosphereMaterial->WritePropertyValue<int32_t>(*sunTransmittanceSteps, (int32_t)SunTransmittanceSteps);
+		material->WritePropertyValue<float>(*planetRadius, m_Parameters->PlanetRadius);
+		material->WritePropertyValue<float>(*atmosphereThickness, m_Parameters->AtmosphereThickness);
+		material->WritePropertyValue<float>(*mieHeight, m_Parameters->MieHeight);
+		material->WritePropertyValue<float>(*rayleighHeight, m_Parameters->RayleighHeight);
+		material->WritePropertyValue<float>(*observerHeight, m_Parameters->ObserverHeight);
+
+		material->WritePropertyValue<int32_t>(*viewRaySteps, (int32_t)m_Parameters->ViewRaySteps);
+		material->WritePropertyValue<int32_t>(*sunTransmittanceSteps, (int32_t)m_Parameters->SunTransmittanceSteps);
 
 		if (sunTransmittanceLUT.has_value() && m_SunTransmittanceLUT != nullptr)
 		{
-			AtmosphereMaterial->SetTextureProperty(*sunTransmittanceLUT, m_SunTransmittanceLUT->GetAttachment(0));
+			material->SetTextureProperty(*sunTransmittanceLUT, m_SunTransmittanceLUT->GetAttachment(0));
 		}
 
-		Ref<CommandBuffer> commandBuffer = GraphicsContext::GetInstance().GetCommandBuffer();
-
+#if 0
 		if (m_SunTransmittanceMaterial != nullptr)
 		{
 			GenerateSunTransmittanceLUT(commandBuffer);
 		}
+#endif
 
-		commandBuffer->BeginRenderTarget(context.RenderTarget);
+		commandBuffer->BeginRenderTarget(context.GetRenderTarget());
 
 		if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
 		{
@@ -73,10 +95,10 @@ namespace Flare
 			commandBuffer->SetSecondaryDescriptorSet(nullptr);
 		}
 
-		commandBuffer->ApplyMaterial(AtmosphereMaterial);
+		commandBuffer->ApplyMaterial(material);
 
-		const auto& frameBufferSpec = context.RenderTarget->GetSpecifications();
-		commandBuffer->SetViewportAndScisors(Math::Rect(0.0f, 0.0f, (float)frameBufferSpec.Width, (float)frameBufferSpec.Height));
+		const auto& renderTargetSpecifications = context.GetRenderTarget()->GetSpecifications();
+		commandBuffer->SetViewportAndScisors(Math::Rect(0.0f, 0.0f, (float)renderTargetSpecifications.Width, (float)renderTargetSpecifications.Height));
 
 		commandBuffer->DrawIndexed(RendererPrimitives::GetFullscreenQuadMesh(), 0, 0, 1);
 		commandBuffer->EndRenderTarget();
@@ -89,6 +111,7 @@ namespace Flare
 
 	void AtmospherePass::GenerateSunTransmittanceLUT(Ref<CommandBuffer> commandBuffer)
 	{
+#if 0
 		if (!m_SunTransmittanceLUTIsDirty)
 			return;
 
@@ -160,5 +183,6 @@ namespace Flare
 		vulkanCommandBuffer->EndRenderTarget();
 
 		vulkanCommandBuffer->TransitionImageLayout(lutImage, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+#endif
 	}
 }
