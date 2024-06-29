@@ -16,7 +16,7 @@ namespace Flare
 	FLARE_IMPL_TYPE(Atmosphere);
 	void Atmosphere::RegisterRenderPasses(RenderGraph& renderGraph, const Viewport& viewport)
 	{
-		if (!AtmosphereMaterial || !IsEnabled())
+		if (!IsEnabled())
 			return;
 
 		RenderGraphPassSpecifications specifications{};
@@ -41,6 +41,12 @@ namespace Flare
 			m_SunTransmittanceMaterial = Material::Create(*shaderHandle);
 		}
 
+		std::optional<AssetHandle> atmosphereShaderHandle = ShaderLibrary::FindShader("Atmosphere");
+		if (atmosphereShaderHandle.has_value())
+		{
+			m_AtmosphereMaterial = Material::Create(*atmosphereShaderHandle);
+		}
+
 		auto result = Scene::GetActive()->GetPostProcessingManager().GetEffect<Atmosphere>();
 		FLARE_CORE_ASSERT(result.has_value());
 		m_Parameters = *result;
@@ -48,9 +54,7 @@ namespace Flare
 
 	void AtmospherePass::OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
 	{
-		Ref<Shader> shader = m_Parameters->AtmosphereMaterial->GetShader();
-		if (shader == nullptr)
-			return;
+		Ref<Shader> shader = m_AtmosphereMaterial->GetShader();
 
 		std::optional<uint32_t> planetRadius = shader->GetPropertyIndex("u_Params.PlanetRadius");
 		std::optional<uint32_t>	atmosphereThickness = shader->GetPropertyIndex("u_Params.AtmosphereThickness");
@@ -60,22 +64,34 @@ namespace Flare
 		std::optional<uint32_t> viewRaySteps = shader->GetPropertyIndex("u_Params.ViewRaySteps");
 		std::optional<uint32_t> sunTransmittanceSteps = shader->GetPropertyIndex("u_Params.SunTransmittanceSteps");
 
+		std::optional<uint32_t> rayleighCoefficients = shader->GetPropertyIndex("u_Params.RayleighCoefficient");
+		std::optional<uint32_t> rayleighAbsorbtion = shader->GetPropertyIndex("u_Params.RayleighAbsorbtion");
+		std::optional<uint32_t> mieCoefficient = shader->GetPropertyIndex("u_Params.MieCoefficient");
+		std::optional<uint32_t> mieAbsorbtion = shader->GetPropertyIndex("u_Params.MieAbsorbtion");
+		std::optional<uint32_t> ozoneAbsorbtion = shader->GetPropertyIndex("u_Params.OzoneAbsorbtion");
+		std::optional<uint32_t> groundColor = shader->GetPropertyIndex("u_Params.GroundColor");
+
 		std::optional<uint32_t> sunTransmittanceLUT = shader->GetPropertyIndex("u_SunTransmittanceLUT");
 
-		Ref<Material> material = m_Parameters->AtmosphereMaterial;
+		m_AtmosphereMaterial->WritePropertyValue<float>(*planetRadius, m_Parameters->PlanetRadius);
+		m_AtmosphereMaterial->WritePropertyValue<float>(*atmosphereThickness, m_Parameters->AtmosphereThickness);
+		m_AtmosphereMaterial->WritePropertyValue<float>(*mieHeight, m_Parameters->MieHeight);
+		m_AtmosphereMaterial->WritePropertyValue<float>(*rayleighHeight, m_Parameters->RayleighHeight);
+		m_AtmosphereMaterial->WritePropertyValue<float>(*observerHeight, m_Parameters->ObserverHeight);
 
-		material->WritePropertyValue<float>(*planetRadius, m_Parameters->PlanetRadius);
-		material->WritePropertyValue<float>(*atmosphereThickness, m_Parameters->AtmosphereThickness);
-		material->WritePropertyValue<float>(*mieHeight, m_Parameters->MieHeight);
-		material->WritePropertyValue<float>(*rayleighHeight, m_Parameters->RayleighHeight);
-		material->WritePropertyValue<float>(*observerHeight, m_Parameters->ObserverHeight);
+		m_AtmosphereMaterial->WritePropertyValue(*rayleighCoefficients, m_Parameters->RayleighCoefficients);
+		m_AtmosphereMaterial->WritePropertyValue(*rayleighAbsorbtion, m_Parameters->RayleighAbsorbtion);
+		m_AtmosphereMaterial->WritePropertyValue(*mieCoefficient, m_Parameters->MieCoefficient);
+		m_AtmosphereMaterial->WritePropertyValue(*mieAbsorbtion, m_Parameters->MieAbsorbtion);
+		m_AtmosphereMaterial->WritePropertyValue(*ozoneAbsorbtion, m_Parameters->OzoneAbsorbtion);
+		m_AtmosphereMaterial->WritePropertyValue(*groundColor, m_Parameters->GroundColor);
 
-		material->WritePropertyValue<int32_t>(*viewRaySteps, (int32_t)m_Parameters->ViewRaySteps);
-		material->WritePropertyValue<int32_t>(*sunTransmittanceSteps, (int32_t)m_Parameters->SunTransmittanceSteps);
+		m_AtmosphereMaterial->WritePropertyValue<int32_t>(*viewRaySteps, (int32_t)m_Parameters->ViewRaySteps);
+		m_AtmosphereMaterial->WritePropertyValue<int32_t>(*sunTransmittanceSteps, (int32_t)m_Parameters->SunTransmittanceSteps);
 
 		if (sunTransmittanceLUT.has_value() && m_SunTransmittanceLUT != nullptr)
 		{
-			material->SetTextureProperty(*sunTransmittanceLUT, m_SunTransmittanceLUT->GetAttachment(0));
+			m_AtmosphereMaterial->SetTextureProperty(*sunTransmittanceLUT, m_SunTransmittanceLUT->GetAttachment(0));
 		}
 
 #if 0
@@ -95,7 +111,7 @@ namespace Flare
 			commandBuffer->SetSecondaryDescriptorSet(nullptr);
 		}
 
-		commandBuffer->ApplyMaterial(material);
+		commandBuffer->ApplyMaterial(m_AtmosphereMaterial);
 
 		const auto& renderTargetSpecifications = context.GetRenderTarget()->GetSpecifications();
 		commandBuffer->SetViewportAndScisors(Math::Rect(0.0f, 0.0f, (float)renderTargetSpecifications.Width, (float)renderTargetSpecifications.Height));

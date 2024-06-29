@@ -3,17 +3,12 @@ DepthWrite = false
 
 Properties =
 {
-	u_Params.RayleighCoefficient = { DisplayName = "Rayleigh Coefficient" }
-	u_Params.MieCoefficient = { DisplayName = "Mie Coefficient" }
-	u_Params.MieAbsorbtion = { DisplayName = "Mie Absorbtion" }
-	u_Params.RayleighAbsorbtion = { DisplayName = "Rayleigh Absorbtion" }
-	u_Params.OzoneAbsorbtion = { DisplayName = "Ozone Absorbtion" }
-
-	u_Params.GroundColor =
-	{
-		Type = Color
-		DisplayName = "Ground Color"
-	}
+	u_Params.RayleighCoefficient = {}
+	u_Params.MieCoefficient = {}
+	u_Params.MieAbsorbtion = {}
+	u_Params.RayleighAbsorbtion = {}
+	u_Params.OzoneAbsorbtion = {}
+	u_Params.GroundColor = {}
 }
 
 #begin vertex
