@@ -6,6 +6,7 @@
 #include "Flare/Renderer/FrameBuffer.h"
 #include "Flare/Renderer/UniformBuffer.h"
 #include "Flare/Renderer/ShaderStorageBuffer.h"
+#include "Flare/Renderer/Sampler.h"
 #include "Flare/Renderer/GPUTimer.h"
 
 #include "Flare/Math/SIMD.h"
@@ -23,6 +24,14 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 
 		m_ShadowDataBuffer = UniformBuffer::Create(sizeof(ShadowData));
+
+		SamplerSpecifications samplerSpecifications{};
+		samplerSpecifications.ComparisonEnabled = true;
+		samplerSpecifications.ComparisonFunction = DepthComparisonFunction::Less;
+		samplerSpecifications.Filter = TextureFiltering::Linear;
+		samplerSpecifications.WrapMode = TextureWrap::Clamp;
+
+		m_CompareSampler = Sampler::Create(samplerSpecifications);
 	}
 
 	void ShadowPass::OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)

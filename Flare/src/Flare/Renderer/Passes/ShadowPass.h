@@ -17,6 +17,7 @@ namespace Flare
 	class DescriptorSet;
 	class FrameBuffer;
 	class ShaderStorageBuffer;
+	class Sampler;
 	class GPUTimer;
 	class UniformBuffer;
 	class Material;
@@ -44,6 +45,7 @@ namespace Flare
 		}
 
 		inline Ref<UniformBuffer> GetShadowDataBuffer() const { return m_ShadowDataBuffer; }
+		inline Ref<Sampler> GetCompareSampler() const { return m_CompareSampler; }
 	private:
 		struct ShadowData
 		{
@@ -78,6 +80,7 @@ namespace Flare
 		const RendererSubmitionQueue& m_OpaqueObjects;
 
 		ShadowData m_ShadowData;
+		Ref<Sampler> m_CompareSampler = nullptr;
 		Ref<UniformBuffer> m_ShadowDataBuffer = nullptr;
 
 		RenderView m_LightViews[MaxCascades];

@@ -139,7 +139,7 @@ namespace Flare
 
 		if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
 		{
-			VkDescriptorSetLayoutBinding bindings[6 + 4] = {};
+			VkDescriptorSetLayoutBinding bindings[6 + 4 + 4] = {};
 			// Camera
 			bindings[0].binding = 0;
 			bindings[0].descriptorCount = 1;
@@ -192,7 +192,17 @@ namespace Flare
 				bindings[i + 6].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 			}
 
-			s_RendererData.PrimaryDescriptorPool = CreateRef<VulkanDescriptorSetPool>(10 + ShadowSettings::MaxCascades, Span(bindings, 6 + 4));
+			// Shadow cascades (with comapare samplers)
+			for (uint32_t i = 0; i < 4; i++)
+			{
+				bindings[i + 10].binding = i + 32;
+				bindings[i + 10].descriptorCount = 1;
+				bindings[i + 10].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+				bindings[i + 10].pImmutableSamplers = nullptr;
+				bindings[i + 10].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+			}
+
+			s_RendererData.PrimaryDescriptorPool = CreateRef<VulkanDescriptorSetPool>(10 + ShadowSettings::MaxCascades, Span(bindings, 6 + 4 + 4));
 			s_RendererData.PrimaryDescriptorSet = s_RendererData.PrimaryDescriptorPool->AllocateSet();
 			s_RendererData.PrimaryDescriptorSet->SetDebugName("PrimarySet");
 
@@ -598,9 +608,14 @@ namespace Flare
 			set->WriteStorageBuffer(s_RendererData.PointLightsShaderBuffer, 4);
 			set->WriteStorageBuffer(s_RendererData.SpotLightsShaderBuffer, 5);
 
-			for (size_t i = 0; i < ShadowSettings::MaxCascades; i++)
+			for (uint32_t i = 0; i < ShadowSettings::MaxCascades; i++)
 			{
-				set->WriteImage(s_RendererData.WhiteTexture, (uint32_t)(28 + i));
+				set->WriteImage(s_RendererData.WhiteTexture, 28 + i);
+			}
+
+			for (uint32_t i = 0; i < ShadowSettings::MaxCascades; i++)
+			{
+				set->WriteImage(s_RendererData.WhiteTexture, shadowPass->GetCompareSampler(), 32 + i);
 			}
 
 			set->FlushWrites();
@@ -660,7 +675,8 @@ namespace Flare
 			// the rest of cascades were filled with white textures when setting up the descriptor set
 			for (uint32_t i = 0; i < (uint32_t)s_RendererData.ShadowMappingSettings.Cascades; i++)
 			{
-				primarySet->WriteImage(cascadeTextures[i], (uint32_t)(28 + i));
+				primarySet->WriteImage(cascadeTextures[i], 28 + i);
+				primarySet->WriteImage(cascadeTextures[i], shadowPass->GetCompareSampler(), 32 + i);
 			}
 		}
 
