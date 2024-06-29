@@ -6,6 +6,7 @@
 #include "Flare/Renderer/Texture.h"
 #include "Flare/Renderer/RendererAPI.h"
 #include "Flare/Renderer/Renderer.h"
+#include "Flare/Renderer/Texture.h"
 
 #include "Flare/Platform/Vulkan/VulkanMaterial.h"
 
@@ -14,33 +15,6 @@
 
 namespace Flare
 {
-	void TexturePropertyValue::SetTexture(const Ref<Flare::Texture>& texture)
-	{
-		ValueType = Type::Texture;
-		Texture = texture;
-		FrameBuffer = nullptr;
-		FrameBufferAttachmentIndex = UINT32_MAX;
-	}
-
-	void TexturePropertyValue::SetFrameBuffer(const Ref<Flare::FrameBuffer>& frameBuffer, uint32_t attachment)
-	{
-		FLARE_CORE_ASSERT(frameBuffer);
-		FLARE_CORE_ASSERT(attachment < frameBuffer->GetAttachmentsCount());
-
-		ValueType = Type::FrameBufferAttachment;
-		Texture = nullptr;
-		FrameBuffer = frameBuffer;
-		FrameBufferAttachmentIndex = attachment;
-	}
-
-	void TexturePropertyValue::Clear()
-	{
-		ValueType = Type::Texture;
-		Texture = nullptr;
-		FrameBuffer = nullptr;
-		FrameBufferAttachmentIndex = UINT32_MAX;
-	}
-
 	FLARE_IMPL_ASSET(Material);
 	FLARE_IMPL_TYPE(Material);
 
@@ -136,7 +110,7 @@ namespace Flare
 			}
 		}
 
-		m_Textures.resize(samplers, TexturePropertyValue());
+		m_Textures.resize(samplers, nullptr);
 
 		if (m_BufferSize != 0)
 		{
@@ -171,39 +145,27 @@ namespace Flare
 		FLARE_CORE_ASSERT((size_t)index < properties.size());
 		memcpy_s(m_Buffer + properties[index].Offset, properties[index].Size, values, sizeof(*values) * count);
 	}
-
-	template<>
-	FLARE_API TexturePropertyValue& Material::GetPropertyValue(uint32_t index)
+	
+	const Ref<Texture>& Material::GetTextureProperty(uint32_t propertyIndex) const
 	{
 		const ShaderProperties& properties = m_Shader->GetProperties();
-		FLARE_CORE_ASSERT((size_t)index < properties.size());
-		FLARE_CORE_ASSERT(properties[index].Type == ShaderDataType::Sampler);
-		FLARE_CORE_ASSERT(properties[index].SamplerIndex < (uint32_t)m_Textures.size());
-
-		m_IsDirty = true;
-		return m_Textures[properties[index].SamplerIndex];
+		FLARE_CORE_ASSERT((size_t)propertyIndex < properties.size());
+		FLARE_CORE_ASSERT(properties[propertyIndex].Type == ShaderDataType::Sampler);
+		
+		return m_Textures[properties[propertyIndex].SamplerIndex];
 	}
 
-	template<>
-	FLARE_API TexturePropertyValue Material::ReadPropertyValue(uint32_t index) const
+	void Material::SetTextureProperty(uint32_t propertyIndex, Ref<Texture> texture)
 	{
 		const ShaderProperties& properties = m_Shader->GetProperties();
-		FLARE_CORE_ASSERT((size_t)index < properties.size());
-		FLARE_CORE_ASSERT(properties[index].Type == ShaderDataType::Sampler);
-		FLARE_CORE_ASSERT(properties[index].SamplerIndex < (uint32_t)m_Textures.size());
+		FLARE_CORE_ASSERT((size_t)propertyIndex < properties.size());
+		FLARE_CORE_ASSERT(properties[propertyIndex].Type == ShaderDataType::Sampler);
+		
+		const Ref<Texture>& oldTexture = m_Textures[properties[propertyIndex].SamplerIndex];
+		if (oldTexture.get() == texture.get())
+			return;
 
-		return m_Textures[properties[index].SamplerIndex];
-	}
-
-	template<>
-	FLARE_API void Material::WritePropertyValue(uint32_t index, const TexturePropertyValue& value)
-	{
-		const ShaderProperties& properties = m_Shader->GetProperties();
-		FLARE_CORE_ASSERT((size_t)index < properties.size());
-		FLARE_CORE_ASSERT(properties[index].Type == ShaderDataType::Sampler);
-		FLARE_CORE_ASSERT(properties[index].SamplerIndex < (uint32_t)m_Textures.size());
-
+		m_Textures[properties[propertyIndex].SamplerIndex] = texture;
 		m_IsDirty = true;
-		m_Textures[properties[index].SamplerIndex] = value;
 	}
 }

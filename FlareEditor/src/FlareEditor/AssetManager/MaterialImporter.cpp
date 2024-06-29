@@ -3,7 +3,9 @@
 #include "FlareCore/Profiler/Profiler.h"
 
 #include "Flare/AssetManager/AssetManager.h"
+
 #include "Flare/Renderer/Shader.h"
+#include "Flare/Renderer/Texture.h"
 
 #include "Flare/Serialization/Serialization.h"
 
@@ -60,14 +62,25 @@ namespace Flare
 
 			case ShaderDataType::Sampler:
 			{
-				const auto& value = material->GetPropertyValue<TexturePropertyValue>(index);
-				if (value.ValueType == TexturePropertyValue::Type::Texture)
-					emitter << (value.Texture ? value.Texture->Handle : NULL_ASSET_HANDLE);
-				else
+				const Ref<Texture>& texture = material->GetTextureProperty(index);
+
+				if (texture == nullptr)
+				{
 					emitter << NULL_ASSET_HANDLE;
+					break;
+				}
+
+				if (AssetManager::IsAssetHandleValid(texture->Handle))
+				{
+					emitter << texture->Handle;
+				}
+				else
+				{
+					emitter << NULL_ASSET_HANDLE;
+				}
+
 				break;
 			}
-
 			case ShaderDataType::Float:
 				emitter << material->ReadPropertyValue<float>(index);
 				break;
@@ -170,13 +183,11 @@ namespace Flare
 
 							case ShaderDataType::Sampler:
 							{
-								auto& value = material->GetPropertyValue<TexturePropertyValue>(index.value());
-								
 								AssetHandle handle = valueNode.as<AssetHandle>();
 								if (AssetManager::IsAssetHandleValid(handle))
-									value.SetTexture(AssetManager::GetAsset<Texture>(handle));
+									material->SetTextureProperty(*index, AssetManager::GetAsset<Texture>(handle));
 								else
-									value.Clear();
+									material->SetTextureProperty(*index, nullptr);
 
 								break;
 							}

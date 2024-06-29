@@ -179,12 +179,10 @@ namespace Flare
         FLARE_PROFILE_FUNCTION();
         if (propertyIndex)
         {
-            auto& value = material->GetPropertyValue<TexturePropertyValue>(*propertyIndex);
-
             if (handle == NULL_ASSET_HANDLE)
-                value.SetTexture(defaultValue);
+                material->SetTextureProperty(*propertyIndex, defaultValue);
             else
-                value.SetTexture(AssetManager::GetAsset<Texture>(handle));
+                material->SetTextureProperty(*propertyIndex, AssetManager::GetAsset<Texture>(handle));
         }
     }
 

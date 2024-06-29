@@ -119,8 +119,8 @@ namespace Flare
 
 		m_Material->WritePropertyValue(*biasIndex, m_Parameters->Bias);
 		m_Material->WritePropertyValue(*radiusIndex, m_Parameters->Radius);
-		m_Material->GetPropertyValue<TexturePropertyValue>(*normalsTextureIndex).SetTexture(m_NormalsTexture);
-		m_Material->GetPropertyValue<TexturePropertyValue>(*depthTextureIndex).SetTexture(m_DepthTexture);
+		m_Material->SetTextureProperty(*normalsTextureIndex, m_NormalsTexture);
+		m_Material->SetTextureProperty(*depthTextureIndex, m_DepthTexture);
 
 		commandBuffer->SetViewportAndScisors(Math::Rect(glm::vec2(0.0f, 0.0f), (glm::vec2)context.GetViewport().GetSize()));
 
@@ -164,8 +164,8 @@ namespace Flare
 
 		m_Material->WritePropertyValue(*blurSizePropertyIndex, m_Parameters->BlurSize);
 		m_Material->WritePropertyValue(*texelSizePropertyIndex, texelSize);
-		m_Material->GetPropertyValue<TexturePropertyValue>(*aoTextureIndex).SetTexture(m_AOTexture);
-		m_Material->GetPropertyValue<TexturePropertyValue>(*colorTextureIndex).SetTexture(m_ColorTexture);
+		m_Material->SetTextureProperty(*aoTextureIndex, m_AOTexture);
+		m_Material->SetTextureProperty(*colorTextureIndex, m_ColorTexture);
 
 		commandBuffer->ApplyMaterial(m_Material);
 		commandBuffer->DrawIndexed(RendererPrimitives::GetFullscreenQuadMesh(), 0, 0, 1);

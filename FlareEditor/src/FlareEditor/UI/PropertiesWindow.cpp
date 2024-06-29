@@ -488,10 +488,11 @@ namespace Flare
 
 				case ShaderDataType::Sampler:
 				{
-					auto& value = material->GetPropertyValue<TexturePropertyValue>((uint32_t)propertyIndex);
-					FLARE_CORE_ASSERT(value.ValueType == TexturePropertyValue::Type::Texture);
+					Ref<Texture> texture = material->GetTextureProperty((uint32_t)propertyIndex);
+					propertyRenderer.Serialize(SerializationValue(texture, property.Flags));
 
-					propertyRenderer.Serialize(SerializationValue(value.Texture, property.Flags));
+					// TODO: Serialization should return something to identify that the value has changed
+					material->SetTextureProperty((uint32_t)propertyIndex, texture);
 					break;
 				}
 				}

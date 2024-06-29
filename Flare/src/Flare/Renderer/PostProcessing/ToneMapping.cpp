@@ -81,7 +81,7 @@ namespace Flare
 
 		auto colorTextureIndex = m_Material->GetShader()->GetPropertyIndex("u_ScreenBuffer");
 		if (colorTextureIndex)
-			m_Material->GetPropertyValue<TexturePropertyValue>(*colorTextureIndex).SetTexture(m_ColorTexture);
+			m_Material->SetTextureProperty(*colorTextureIndex, m_ColorTexture);
 
 		commandBuffer->BeginRenderTarget(context.GetRenderTarget());
 		commandBuffer->SetViewportAndScisors(Math::Rect(glm::vec2(0.0f, 0.0f), (glm::vec2)context.GetViewport().GetSize()));

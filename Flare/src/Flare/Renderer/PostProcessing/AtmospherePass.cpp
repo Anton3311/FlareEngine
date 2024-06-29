@@ -53,7 +53,7 @@ namespace Flare
 
 		if (sunTransmittanceLUT.has_value() && m_SunTransmittanceLUT != nullptr)
 		{
-			AtmosphereMaterial->GetPropertyValue<TexturePropertyValue>(*sunTransmittanceLUT).SetFrameBuffer(m_SunTransmittanceLUT, 0);
+			AtmosphereMaterial->SetTextureProperty(*sunTransmittanceLUT, m_SunTransmittanceLUT->GetAttachment(0));
 		}
 
 		Ref<CommandBuffer> commandBuffer = GraphicsContext::GetInstance().GetCommandBuffer();
