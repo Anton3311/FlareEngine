@@ -72,6 +72,8 @@ namespace Flare
 			ResourceId id = GetResoureId(output.AttachmentTexture);
 			auto it = m_States.find(id);
 
+			bool isDepthTexture = IsDepthTextureFormat(output.AttachmentTexture->GetFormat());
+
 			// Only outputs with AttachmentOutput image layout can be used in a RenderPass
 			if (output.Layout == ImageLayout::AttachmentOutput)
 			{
@@ -82,9 +84,13 @@ namespace Flare
 
 				ResourceState& state = m_States[id];
 				state.Layout = output.Layout;
-				state.LastWritingPass = WritingRenderPass{};
-				state.LastWritingPass->RenderPassIndex = (uint32_t)nodeIndex;
-				state.LastWritingPass->AttachmentIndex = (uint32_t)outputIndex;
+
+				if (!isDepthTexture)
+				{
+					state.LastWritingPass = WritingRenderPass{};
+					state.LastWritingPass->RenderPassIndex = (uint32_t)nodeIndex;
+					state.LastWritingPass->AttachmentIndex = (uint32_t)outputIndex;
+				}
 			}
 			else
 			{
@@ -101,9 +107,7 @@ namespace Flare
 		std::vector<Ref<Texture>> attachmentTextures;
 		std::vector<VkClearValue> clearValues;
 
-		VulkanRenderPassCache& cache = VulkanContext::GetInstance().GetRenderPassCache();
-
-		std::unordered_map<VulkanRenderPassKey, Ref<VulkanRenderPass>> renderPassesCache;
+		VulkanRenderPassCache& renderPassCache = VulkanContext::GetInstance().GetRenderPassCache();
 
 		for (size_t nodeIndex = 0; nodeIndex < m_Nodes.GetSize(); nodeIndex++)
 		{
@@ -172,7 +176,7 @@ namespace Flare
 				attachmentTextures.push_back(outputs[outputIndex].AttachmentTexture);
 			}
 
-			Ref<VulkanRenderPass> compatibleRenderPass = cache.GetOrCreate(renderPassKey);
+			Ref<VulkanRenderPass> compatibleRenderPass = renderPassCache.GetOrCreate(renderPassKey);
 
 			if (node.Specifications.HasOutputClearValues())
 			{

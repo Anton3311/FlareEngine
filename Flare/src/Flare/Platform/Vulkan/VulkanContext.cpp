@@ -676,6 +676,7 @@ namespace Flare
 			access |= VK_ACCESS_NONE;
 			break;
 		default:
+			FLARE_CORE_ERROR("{}", (int64_t)imageLayout);
 			FLARE_CORE_ASSERT(false);
 			break;
 		}
@@ -1155,7 +1156,7 @@ namespace Flare
 		{
 			if (IsDepthTextureFormat(format))
 			{
-				if (HasStencilComponent(format))
+				//if (HasStencilComponent(format))
 				{
 					return VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 				}
