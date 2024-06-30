@@ -12,6 +12,7 @@ namespace Flare
 	class Mesh;
 	class GPUTimer;
 	class ComputePipeline;
+	class ShaderConstantBuffer;
 
 	class CommandBuffer
 	{
@@ -33,6 +34,7 @@ namespace Flare
 		virtual void ClearDepth(const Ref<Texture>& texture, float depth) = 0;
 
 		virtual void ApplyMaterial(const Ref<const Material>& material) = 0;
+		virtual void PushConstants(const ShaderConstantBuffer& constantBuffer) = 0;
 
 		virtual void SetViewportAndScisors(Math::Rect viewportRect) = 0;
 

@@ -33,6 +33,7 @@ namespace Flare
 		void ClearDepth(const Ref<Texture>& texture, float depth) override;
 
 		void ApplyMaterial(const Ref<const Material>& material) override;
+		void PushConstants(const ShaderConstantBuffer& constantBuffer) override;
 
 		void SetViewportAndScisors(Math::Rect viewportRect) override;
 

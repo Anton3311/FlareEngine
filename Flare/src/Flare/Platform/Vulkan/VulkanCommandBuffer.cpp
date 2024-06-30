@@ -115,6 +115,39 @@ namespace Flare
 		}
 	}
 
+	void VulkanCommandBuffer::PushConstants(const ShaderConstantBuffer& constantBuffer)
+	{
+		FLARE_CORE_ASSERT(constantBuffer.GetShader());
+		Ref<const ShaderMetadata> metadata = constantBuffer.GetShader()->GetMetadata();
+
+		VkPipelineLayout pipelineLayout = As<const VulkanPipeline>(m_CurrentGraphicsPipeline)->GetLayoutHandle();
+
+		for (size_t i = 0; i < metadata->PushConstantsRanges.size(); i++)
+		{
+			const ShaderPushConstantsRange& range = metadata->PushConstantsRanges[i];
+			if (range.Size == 0)
+				continue;
+
+			VkShaderStageFlags stage = 0;
+			switch (range.Stage)
+			{
+			case ShaderStageType::Vertex:
+				stage = VK_SHADER_STAGE_VERTEX_BIT;
+				break;
+			case ShaderStageType::Pixel:
+				stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+				break;
+			}
+
+			vkCmdPushConstants(m_CommandBuffer,
+				pipelineLayout,
+				stage,
+				(uint32_t)range.Offset,
+				(uint32_t)range.Size,
+				constantBuffer.GetBuffer() + range.Offset);
+		}
+	}
+
 	void VulkanCommandBuffer::SetViewportAndScisors(Math::Rect viewportRect)
 	{
 		FLARE_PROFILE_FUNCTION();
