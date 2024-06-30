@@ -6,6 +6,7 @@
 #include "Flare/Renderer/Shader.h"
 #include "Flare/Renderer/RendererAPI.h"
 #include "Flare/Renderer/ShaderMetadata.h"
+#include "Flare/Renderer/ShaderConstantBuffer.h"
 
 namespace Flare
 {
@@ -25,56 +26,32 @@ namespace Flare
 		inline Ref<Shader> GetShader() const { return m_Shader; }
 		virtual void SetShader(const Ref<Shader>& shader);
 
-		void SetIntArray(uint32_t index, const int32_t* values, uint32_t count);
-
 		template<typename T>
 		T& GetPropertyValue(uint32_t index)
 		{
-			const ShaderProperties& properties = m_Shader->GetProperties();
-			FLARE_CORE_ASSERT((size_t)index < properties.size());
-			FLARE_CORE_ASSERT(sizeof(T) == properties[index].Size);
-			FLARE_CORE_ASSERT(properties[index].Type != ShaderDataType::Sampler);
-			FLARE_CORE_ASSERT(properties[index].Offset + properties[index].Size <= m_BufferSize);
-
-			m_IsDirty = true;
-			return *(T*)(m_Buffer + properties[index].Offset);
+			return m_ConstantBuffer.GetProperty<T>(index);
 		}
 
 		template<typename T>
 		T ReadPropertyValue(uint32_t index) const
 		{
-			const ShaderProperties& properties = m_Shader->GetProperties();
-			FLARE_CORE_ASSERT((size_t)index < properties.size());
-			FLARE_CORE_ASSERT(sizeof(T) == properties[index].Size);
-
-			FLARE_CORE_ASSERT(properties[index].Type != ShaderDataType::Sampler);
-			FLARE_CORE_ASSERT(properties[index].Offset + properties[index].Size <= m_BufferSize);
-
-			T value;
-
-			memcpy_s(&value, sizeof(value), m_Buffer + properties[index].Offset, properties[index].Size);
-			return value;
+			return m_ConstantBuffer.GetProperty<T>(index);
 		}
 
 		template<typename T>
 		void WritePropertyValue(uint32_t index, const T& value)
 		{
-			const ShaderProperties& properties = m_Shader->GetProperties();
-			FLARE_CORE_ASSERT((size_t)index < properties.size());
-			FLARE_CORE_ASSERT(sizeof(T) == properties[index].Size);
-			FLARE_CORE_ASSERT(properties[index].Offset + properties[index].Size <= m_BufferSize);
-
-			FLARE_CORE_ASSERT(properties[index].Type != ShaderDataType::Sampler);
-			memcpy_s(m_Buffer + properties[index].Offset, sizeof(value), &value, properties[index].Size);
-
-			m_IsDirty = true;
+			m_ConstantBuffer.SetProperty<T>(index, value);
 		}
 
 		const Ref<Texture>& GetTextureProperty(uint32_t propertyIndex) const;
 		void SetTextureProperty(uint32_t propertyIndex, Ref<Texture> texture);
 
-		inline uint8_t* GetPropertiesBuffer() { return m_Buffer; }
-		inline const uint8_t* GetPropertiesBuffer() const { return m_Buffer; }
+		inline uint8_t* GetPropertiesBuffer() { return m_ConstantBuffer.GetBuffer(); }
+		inline const uint8_t* GetPropertiesBuffer() const { return m_ConstantBuffer.GetBuffer(); }
+
+		inline ShaderConstantBuffer& GetConstantBuffer() { return m_ConstantBuffer; }
+		inline const ShaderConstantBuffer& GetConstantBuffer() const { return m_ConstantBuffer; }
 	public:
 		static Ref<Material> Create();
 		static Ref<Material> Create(Ref<Shader> shader);
@@ -84,10 +61,8 @@ namespace Flare
 	protected:
 		Ref<Shader> m_Shader;
 
+		ShaderConstantBuffer m_ConstantBuffer;
 		std::vector<Ref<Texture>> m_Textures;
-
-		size_t m_BufferSize;
-		uint8_t* m_Buffer;
 
 		bool m_IsDirty = false;
 	};

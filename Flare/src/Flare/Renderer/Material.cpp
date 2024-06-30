@@ -19,23 +19,17 @@ namespace Flare
 	FLARE_IMPL_TYPE(Material);
 
 	Material::Material()
-		: Asset(AssetType::Material), m_Shader(nullptr), m_Buffer(nullptr), m_BufferSize(0) {}
+		: Asset(AssetType::Material), m_Shader(nullptr) {}
 
 	Material::Material(Ref<Shader> shader)
-		: Asset(AssetType::Material),
-		m_Shader(shader),
-		m_Buffer(nullptr),
-		m_BufferSize(0)
+		: Asset(AssetType::Material), m_Shader(shader)
 	{
 		FLARE_CORE_ASSERT(shader);
 		Initialize();
 	}
 
 	Material::Material(AssetHandle shaderHandle)
-		: Asset(AssetType::Material),
-		m_Shader(nullptr),
-		m_Buffer(nullptr),
-		m_BufferSize(0)
+		: Asset(AssetType::Material), m_Shader(nullptr)
 	{
 		FLARE_CORE_ASSERT(AssetManager::IsAssetHandleValid(shaderHandle));
 		m_Shader = AssetManager::GetAsset<Shader>(shaderHandle);
@@ -98,54 +92,27 @@ namespace Flare
 		const ShaderProperties& properties = m_Shader->GetProperties();
 		size_t samplers = 0;
 
-		for (const auto& prop : properties)
+		for (const auto& property : properties)
 		{
-			if (prop.Type == ShaderDataType::Sampler)
-			{
+			if (property.Type == ShaderDataType::Sampler)
 				samplers++;
-			}
-			else
-			{
-				m_BufferSize = glm::max(prop.Offset + prop.Size, m_BufferSize);
-			}
 		}
 
 		m_Textures.resize(samplers, nullptr);
-
-		if (m_BufferSize != 0)
-		{
-			m_Buffer = new uint8_t[m_BufferSize];
-			std::memset(m_Buffer, 0, m_BufferSize);
-		}
+		m_ConstantBuffer.SetShader(m_Shader);
 	}
 
 	Material::~Material()
 	{
-		if (m_Buffer != nullptr)
-			delete[] m_Buffer;
 	}
 
 	void Material::SetShader(const Ref<Shader>& shader)
 	{
-		if (m_Buffer != nullptr)
-		{
-			delete[] m_Buffer;
-			m_Buffer = nullptr;
-			m_BufferSize = 0;
-		}
-
 		m_Textures.clear();
 		m_Shader = shader;
 		Initialize();
 	}
 
-	void Material::SetIntArray(uint32_t index, const int32_t* values, uint32_t count)
-	{
-		const ShaderProperties& properties = m_Shader->GetProperties();
-		FLARE_CORE_ASSERT((size_t)index < properties.size());
-		memcpy_s(m_Buffer + properties[index].Offset, properties[index].Size, values, sizeof(*values) * count);
-	}
-	
 	const Ref<Texture>& Material::GetTextureProperty(uint32_t propertyIndex) const
 	{
 		const ShaderProperties& properties = m_Shader->GetProperties();
