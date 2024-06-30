@@ -15,12 +15,14 @@
 
 #include "Flare/Input/InputManager.h"
 
+#include "FlareEditor/Rendering/SceneViewGridPass.h"
+
 #include "FlareEditor/AssetManager/EditorAssetManager.h"
 #include "FlareEditor/ImGui/ImGuiLayer.h"
 #include "FlareEditor/EditorLayer.h"
 #include "FlareEditor/UI/EditorGUI.h"
 
-#include "FlarePlatform//Events.h"
+#include "FlarePlatform/Events.h"
 
 #include <ImGuizmo.h>
 
@@ -258,6 +260,20 @@ namespace Flare
 
 	void SceneViewportWindow::OnEvent(Event& event)
 	{
+	}
+
+	void SceneViewportWindow::OnAddRenderPasses()
+	{
+		if (EditorLayer::GetInstance().GetSceneViewSettings().ShowGrid)
+		{
+			RenderGraphPassSpecifications gridPass{};
+			gridPass.AddOutput(m_Viewport.ColorTexture, 0);
+			gridPass.AddOutput(m_Viewport.DepthTexture, 1);
+			gridPass.SetDebugName("SceneViewGridPass");
+			gridPass.SetType(RenderGraphPassType::Graphics);
+
+			m_Viewport.Graph.AddPass(gridPass, CreateRef<SceneViewGridPass>());
+		}
 	}
 
 	void SceneViewportWindow::CreateFrameBuffer()

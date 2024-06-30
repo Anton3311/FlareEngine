@@ -13,7 +13,7 @@ namespace Flare
 		case ShaderType::FullscreenQuad:
 			return 2;
 		case ShaderType::Unknown:
-			return 0;
+			return 2;
 		}
 
 		FLARE_CORE_ASSERT(false);

@@ -63,6 +63,10 @@ namespace Flare
 		}
 	}
 
+	void ViewportWindow::OnAddRenderPasses()
+	{
+	}
+
 	void ViewportWindow::PrepareViewport()
 	{
 		if (GetScene()->GetPostProcessingManager().IsDirty())
@@ -258,7 +262,6 @@ namespace Flare
 
 		Renderer::ConfigurePasses(m_Viewport);
 		Renderer2D::ConfigurePasses(m_Viewport);
-		DebugRenderer::ConfigurePasses(m_Viewport);
 
 		if (scene && m_Viewport.IsPostProcessingEnabled())
 		{
@@ -266,6 +269,9 @@ namespace Flare
 			postProcessing.MarkAsDirty(); // HACK
 			postProcessing.RegisterRenderPasses(m_Viewport.Graph, m_Viewport);
 		}
+
+		OnAddRenderPasses();
+		DebugRenderer::ConfigurePasses(m_Viewport);
 
 		m_Viewport.Graph.Build();
 	}

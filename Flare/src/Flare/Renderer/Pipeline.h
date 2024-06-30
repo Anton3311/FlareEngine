@@ -59,7 +59,7 @@ namespace Flare
 		DepthComparisonFunction DepthFunction = DepthComparisonFunction::Less;
 	};
 
-	class Pipeline
+	class FLARE_API Pipeline
 	{
 	public:
 		virtual const PipelineSpecifications& GetSpecifications() const = 0;

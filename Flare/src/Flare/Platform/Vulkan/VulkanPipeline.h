@@ -8,7 +8,7 @@
 
 namespace Flare
 {
-	class VulkanPipeline : public Pipeline
+	class FLARE_API VulkanPipeline : public Pipeline
 	{
 	public:
 		VulkanPipeline(const PipelineSpecifications& specifications,

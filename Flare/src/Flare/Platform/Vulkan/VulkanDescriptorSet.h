@@ -10,7 +10,7 @@ namespace Flare
 {
 	class VulkanDescriptorSetPool;
 
-	class VulkanDescriptorSetLayout : public DescriptorSetLayout
+	class FLARE_API VulkanDescriptorSetLayout : public DescriptorSetLayout
 	{
 	public:
 		VulkanDescriptorSetLayout(const Span<VkDescriptorSetLayoutBinding>& bindings);
@@ -25,7 +25,7 @@ namespace Flare
 		uint32_t m_BufferBindings = 0;
 	};
 
-	class VulkanDescriptorSet : public DescriptorSet
+	class FLARE_API VulkanDescriptorSet : public DescriptorSet
 	{
 	public:
 		VulkanDescriptorSet(VulkanDescriptorSetPool* pool, VkDescriptorSet set);
@@ -56,7 +56,7 @@ namespace Flare
 		std::vector<VkDescriptorBufferInfo> m_Buffers;
 	};
 
-	class VulkanDescriptorSetPool : public DescriptorSetPool
+	class FLARE_API VulkanDescriptorSetPool : public DescriptorSetPool
 	{
 	public:
 		VulkanDescriptorSetPool(size_t maxSets, const Span<VkDescriptorSetLayoutBinding>& bindings);
