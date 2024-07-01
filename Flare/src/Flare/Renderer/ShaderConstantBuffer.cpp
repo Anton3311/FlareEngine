@@ -75,14 +75,13 @@ namespace Flare
 		Release();
 
 		m_Shader = shader;
+		m_BufferSize = 0;
 
 		const ShaderProperties& properties = m_Shader->GetProperties();
-		for (const auto& property : properties)
+		const Ref<const ShaderMetadata> metadata = m_Shader->GetMetadata();
+		for (const auto& range : metadata->PushConstantsRanges)
 		{
-			if (property.Type == ShaderDataType::Sampler)
-				continue;
-
-			m_BufferSize = glm::max(property.Offset + property.Size, m_BufferSize);
+			m_BufferSize = glm::max(range.Offset + range.Size, m_BufferSize);
 		}
 
 		if (m_BufferSize > 0)

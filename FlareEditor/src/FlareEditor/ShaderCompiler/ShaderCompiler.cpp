@@ -482,36 +482,42 @@ namespace Flare
 		for (const auto& resource : resources.push_constant_buffers)
 		{
 			const auto& bufferType = compiler.get_type(resource.base_type_id);
-			size_t bufferSize = compiler.get_declared_struct_size(bufferType);
-			uint32_t binding = compiler.get_decoration(resource.id, spv::DecorationBinding);
-			uint32_t membersCount = (uint32_t)bufferType.member_types.size();
+			size_t memberCount = bufferType.member_types.size();
 
-			pushConstantsRange.Size = bufferSize;
-			for (uint32_t i = 0; i < membersCount; i++)
+			pushConstantsRange.Size = compiler.get_declared_struct_size(bufferType);
+			for (size_t i = 0; i < memberCount; i++)
 			{
-				const std::string& memberName = compiler.get_member_name(resource.base_type_id, i);
-				spirv_cross::TypeID memberTypeId = bufferType.member_types[i];
-				size_t offset = compiler.type_struct_member_offset(bufferType, i);
-
-				std::optional<ShaderDataType> shaderDataType = SPIRVTypeToShaderDataType(compiler.get_type(memberTypeId));
+				std::optional<ShaderDataType> shaderDataType = SPIRVTypeToShaderDataType(compiler.get_type(bufferType.member_types[i]));
 
 				if (!shaderDataType.has_value())
 					continue;
 
+				size_t explicitOffset = compiler.get_member_decoration(resource.base_type_id, (uint32_t)i, spv::DecorationOffset);
+				size_t memberOffset = compiler.type_struct_member_offset(bufferType, (uint32_t)i);
+
+				if (i == 0)
+				{
+					pushConstantsRange.Offset = memberOffset;
+				}
+
 				ShaderProperty& shaderProperty = properties.emplace_back();
 				shaderProperty.Binding = UINT32_MAX;
-
-				if (resource.name.empty())
-					shaderProperty.Name = resource.name;
-				else
-					shaderProperty.Name = fmt::format("{}.{}", resource.name, memberName);
-
-				shaderProperty.Offset = offset;
+				shaderProperty.Offset = memberOffset;
 				shaderProperty.Type = shaderDataType.value();
-				shaderProperty.Size = compiler.get_declared_struct_member_size(bufferType, i);
+				shaderProperty.Size = compiler.get_declared_struct_member_size(bufferType, (uint32_t)i);
 				shaderProperty.Hidden = true;
 
-				lastPropertyOffset = offset;
+				if (resource.name.empty())
+				{
+					shaderProperty.Name = resource.name;
+				}
+				else
+				{
+					const std::string& memberName = compiler.get_member_name(resource.base_type_id, (uint32_t)i);
+					shaderProperty.Name = fmt::format("{}.{}", resource.name, memberName);
+				}
+
+				lastPropertyOffset = shaderProperty.Offset;
 			}
 		}
 
@@ -583,6 +589,7 @@ namespace Flare
 		Ref<ShaderMetadata> metadata)
 	{
 		auto& pushConstantsRange = metadata->PushConstantsRanges.emplace_back();
+		pushConstantsRange.Offset = 0;
 		pushConstantsRange.Stage = stage;
 
 		uint32_t materialDescriptorSetIndex = GetMaterialDescriptorSetIndex(metadata->Type);
