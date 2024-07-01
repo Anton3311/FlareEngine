@@ -20,8 +20,9 @@ namespace Flare
 		FLARE_CORE_ASSERT(AssetManager::IsAssetHandleValid(*shaderHandle));
 
 		m_Shader = AssetManager::GetAsset<Shader>(*shaderHandle);
+		m_ConstantBuffer.SetShader(m_Shader);
 
-		m_CellCount = 20;
+		m_CellCount = ((uint32_t)glm::ceil(m_Settings.MaxVisibleDistance)) * 2;
 
 		GenerateGridMesh();
 	}
@@ -36,10 +37,21 @@ namespace Flare
 		Ref<VulkanCommandBuffer> vulkanCommandBuffer = As<VulkanCommandBuffer>(commandBuffer);
 		Ref<VulkanPipeline> pipeline = As<VulkanPipeline>(m_Pipeline);
 
+		// Scale the grid based on camera's Y position
+		float y = glm::abs(context.GetViewport().FrameData.Camera.Position.y);
+		const float step = 20.0f;
+
+		int32_t scaleLevel = (int32_t)glm::floor(y / step);
+
 		vulkanCommandBuffer->BindPipeline(m_Pipeline);
 		vulkanCommandBuffer->BindDescriptorSet(As<VulkanDescriptorSet>(Renderer::GetPrimaryDescriptorSet()), pipeline->GetLayoutHandle(), 0);
 		vulkanCommandBuffer->BindVertexBuffers(Span((Ref<const VertexBuffer>*) & m_VertexBuffer, 1));
-		vulkanCommandBuffer->Draw(0, m_VertexCount, 0, 1);
+
+		// First draw the secondary grid and only than the primary one.
+		// This ovoids secondary grid completely converting a primary one,
+		// becuase is has smaller cells and the grid lines overlap.
+		DrawGridLevel(commandBuffer, scaleLevel, m_Settings.SecondaryColor);
+		DrawGridLevel(commandBuffer, scaleLevel + 1, m_Settings.PrimaryColor);
 
 		commandBuffer->EndRenderTarget();
 	}
@@ -101,5 +113,27 @@ namespace Flare
 
 		Ref<VulkanFrameBuffer> renderTarget = As<VulkanFrameBuffer>(context.GetRenderTarget());
 		m_Pipeline = CreateRef<VulkanPipeline>(specifications, renderTarget->GetCompatibleRenderPass());
+	}
+
+	void SceneViewGridPass::DrawGridLevel(Ref<CommandBuffer> commandBuffer, int32_t level, glm::vec3 color)
+	{
+		std::optional<uint32_t> cellSizeProperty = m_Shader->GetPropertyIndex("u_Grid.CellSize");
+		std::optional<uint32_t> scaleProperty = m_Shader->GetPropertyIndex("u_Grid.Scale");
+		std::optional<uint32_t> fadeDistanceProperty = m_Shader->GetPropertyIndex("u_Grid.FadeDistance");
+		std::optional<uint32_t> colorProperty = m_Shader->GetPropertyIndex("u_Grid.Color");
+
+		const float scaleStep = 5.0f;
+		float fadeDistance = (float)m_CellCount / 2.0f;
+		float scale = glm::pow(scaleStep, (float)level);
+
+		m_ConstantBuffer.SetProperty<float>(*cellSizeProperty, 1.0f * scale);
+		m_ConstantBuffer.SetProperty<float>(*scaleProperty, (float)m_CellCount * scale);
+		m_ConstantBuffer.SetProperty<float>(*fadeDistanceProperty, glm::min(m_Settings.MaxVisibleDistance, fadeDistance * scale));
+		m_ConstantBuffer.SetProperty<glm::vec3>(*colorProperty, color);
+
+		Ref<VulkanCommandBuffer> vulkanCommandBuffer = As<VulkanCommandBuffer>(commandBuffer);
+
+		vulkanCommandBuffer->PushConstants(m_ConstantBuffer);
+		vulkanCommandBuffer->Draw(0, m_VertexCount, 0, 1);
 	}
 }

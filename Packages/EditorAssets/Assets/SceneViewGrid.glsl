@@ -32,14 +32,18 @@ layout(location = 0) in vec2 i_Position;
 layout(location = 0) out vec3 o_Position;
 layout(location = 1) out vec3 o_CameraPosition;
 
+layout(std140, push_constant) uniform Grid
+{
+	float CellSize;
+	float Scale;
+} u_Grid;
+
 void main()
 {
-	float scale = 100.0f;
-	vec3 worldSpacePosition = vec3(i_Position.x, 0.0, i_Position.y) * scale;
+	vec3 worldSpacePosition = vec3(i_Position.x, 0.0, i_Position.y) * u_Grid.Scale;
+	worldSpacePosition.xz += floor(u_Camera.Position.xz / u_Grid.CellSize) * u_Grid.CellSize;
 
-	vec3 offset = vec3(u_Camera.Position.x, 0.0f, u_Camera.Position.z);
-	offset = vec3(0.0f);
-	gl_Position = u_Camera.ViewProjection * vec4(worldSpacePosition + offset, 1.0);
+	gl_Position = u_Camera.ViewProjection * vec4(worldSpacePosition, 1.0);
 
 	o_Position = worldSpacePosition;
 	o_CameraPosition = u_Camera.Position;
@@ -54,15 +58,20 @@ layout(location = 1) in vec3 i_CameraPosition;
 
 layout(location = 0) out vec4 o_Color;
 
+layout(std140, push_constant) uniform Grid
+{
+	layout(offset = 16) float FadeDistance;
+	layout(offset = 32) vec3 Color;
+} u_Grid;
+
 void main()
 {
 	vec2 projectedPosition = i_Position.xz;
 	vec2 projectedCameraPosition = i_CameraPosition.xz;
 
-	float fade = 1.0f - min(1.0f, distance(projectedPosition, projectedCameraPosition) / 100.0f);
+	float fade = min(1.0f, distance(projectedPosition, projectedCameraPosition) / u_Grid.FadeDistance);
 
-	vec3 color = vec3(0.7f);
-	o_Color = vec4(color, fade);
+	o_Color = vec4(u_Grid.Color, 1.0f - fade);
 }
 
 #end
