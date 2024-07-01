@@ -15,6 +15,7 @@ namespace Flare
 {
 	SceneViewGridPass::SceneViewGridPass()
 	{
+		FLARE_PROFILE_FUNCTION();
 		std::optional<AssetHandle> shaderHandle = ShaderLibrary::FindShader("SceneViewGrid");
 		FLARE_CORE_ASSERT(shaderHandle.has_value());
 		FLARE_CORE_ASSERT(AssetManager::IsAssetHandleValid(*shaderHandle));
@@ -24,11 +25,24 @@ namespace Flare
 
 		m_CellCount = ((uint32_t)glm::ceil(m_Settings.MaxVisibleDistance)) * 2;
 
+		std::optional<uint32_t> cellSizeProperty = m_Shader->GetPropertyIndex("u_Grid.CellSize");
+		std::optional<uint32_t> scaleProperty = m_Shader->GetPropertyIndex("u_Grid.Scale");
+		std::optional<uint32_t> fadeDistanceProperty = m_Shader->GetPropertyIndex("u_Grid.FadeDistance");
+		std::optional<uint32_t> colorProperty = m_Shader->GetPropertyIndex("u_Grid.Color");
+
+		FLARE_CORE_ASSERT(cellSizeProperty && scaleProperty && fadeDistanceProperty && colorProperty);
+
+		m_CellSizePropertyIndex = *cellSizeProperty;
+		m_ScalePropertyIndex = *scaleProperty;
+		m_FadeDistancePropertyIndex = *fadeDistanceProperty;
+		m_ColorPropertyIndex = *colorProperty;
+
 		GenerateGridMesh();
 	}
 
 	void SceneViewGridPass::OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
 	{
+		FLARE_PROFILE_FUNCTION();
 		if (m_Pipeline == nullptr)
 			CreatePipeline(context);
 
@@ -58,6 +72,7 @@ namespace Flare
 
 	void SceneViewGridPass::GenerateGridMesh()
 	{
+		FLARE_PROFILE_FUNCTION();
 		uint32_t lineCount = (m_CellCount + 1) * 2; // Vertical + horizontal
 		std::vector<glm::vec2> vertices;
 		vertices.reserve(lineCount * 2);
@@ -96,6 +111,7 @@ namespace Flare
 
 	void SceneViewGridPass::CreatePipeline(const RenderGraphContext& context)
 	{
+		FLARE_PROFILE_FUNCTION();
 		PipelineSpecifications specifications{};
 		specifications.Shader = m_Shader;
 		specifications.DepthTest = true;
@@ -117,19 +133,16 @@ namespace Flare
 
 	void SceneViewGridPass::DrawGridLevel(Ref<CommandBuffer> commandBuffer, int32_t level, glm::vec3 color)
 	{
-		std::optional<uint32_t> cellSizeProperty = m_Shader->GetPropertyIndex("u_Grid.CellSize");
-		std::optional<uint32_t> scaleProperty = m_Shader->GetPropertyIndex("u_Grid.Scale");
-		std::optional<uint32_t> fadeDistanceProperty = m_Shader->GetPropertyIndex("u_Grid.FadeDistance");
-		std::optional<uint32_t> colorProperty = m_Shader->GetPropertyIndex("u_Grid.Color");
+		FLARE_PROFILE_FUNCTION();
 
 		const float scaleStep = 5.0f;
 		float fadeDistance = (float)m_CellCount / 2.0f;
 		float scale = glm::pow(scaleStep, (float)level);
 
-		m_ConstantBuffer.SetProperty<float>(*cellSizeProperty, 1.0f * scale);
-		m_ConstantBuffer.SetProperty<float>(*scaleProperty, (float)m_CellCount * scale);
-		m_ConstantBuffer.SetProperty<float>(*fadeDistanceProperty, glm::min(m_Settings.MaxVisibleDistance, fadeDistance * scale));
-		m_ConstantBuffer.SetProperty<glm::vec3>(*colorProperty, color);
+		m_ConstantBuffer.SetProperty<float>(m_CellSizePropertyIndex, 1.0f * scale);
+		m_ConstantBuffer.SetProperty<float>(m_ScalePropertyIndex, (float)m_CellCount * scale);
+		m_ConstantBuffer.SetProperty<float>(m_FadeDistancePropertyIndex, glm::min(m_Settings.MaxVisibleDistance, fadeDistance * scale));
+		m_ConstantBuffer.SetProperty<glm::vec3>(m_ColorPropertyIndex, color);
 
 		Ref<VulkanCommandBuffer> vulkanCommandBuffer = As<VulkanCommandBuffer>(commandBuffer);
 

@@ -36,5 +36,10 @@ namespace Flare
 
 		uint32_t m_CellCount = 0;
 		uint32_t m_VertexCount = 0;
+
+		uint32_t m_CellSizePropertyIndex = UINT32_MAX;
+		uint32_t m_ScalePropertyIndex = UINT32_MAX;
+		uint32_t m_FadeDistancePropertyIndex = UINT32_MAX;
+		uint32_t m_ColorPropertyIndex = UINT32_MAX;
 	};
 }
