@@ -38,7 +38,7 @@ namespace Flare
 		Ref<VulkanCommandBuffer> vulkanCommandBuffer = As<VulkanCommandBuffer>(commandBuffer);
 
 		vulkanCommandBuffer->BindPipeline(m_Pipeline);
-		vulkanCommandBuffer->BindVertexBuffers(Span((Ref<const VertexBuffer>*)&m_VertexBuffer, 1));
+		vulkanCommandBuffer->BindVertexBuffers(Span((Ref<const VertexBuffer>*)&m_VertexBuffer, 1), 0);
 		vulkanCommandBuffer->BindDescriptorSet(
 			As<VulkanDescriptorSet>(Renderer::GetPrimaryDescriptorSet()),
 			As<VulkanPipeline>(m_Pipeline)->GetLayoutHandle(), 0);

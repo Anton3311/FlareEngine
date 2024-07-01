@@ -116,7 +116,7 @@ namespace Flare
 		const auto& renderTargetSpecifications = context.GetRenderTarget()->GetSpecifications();
 		commandBuffer->SetViewportAndScisors(Math::Rect(0.0f, 0.0f, (float)renderTargetSpecifications.Width, (float)renderTargetSpecifications.Height));
 
-		commandBuffer->DrawIndexed(RendererPrimitives::GetFullscreenQuadMesh(), 0, 0, 1);
+		commandBuffer->DrawMeshIndexed(RendererPrimitives::GetFullscreenQuadMesh(), 0, 0, 1);
 		commandBuffer->EndRenderTarget();
 	}
 

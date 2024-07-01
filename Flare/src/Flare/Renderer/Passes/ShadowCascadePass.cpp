@@ -166,6 +166,6 @@ namespace Flare
 		m_Statistics.DrawCallCount++;
 		m_Statistics.DrawCallsSavedByInstancing += batch.InstanceCount - 1;
 
-		commandBuffer->DrawIndexed(batch.Mesh, batch.SubMesh, batch.BaseInstance, batch.InstanceCount);
+		commandBuffer->DrawMeshIndexed(batch.Mesh, batch.SubMesh, batch.BaseInstance, batch.InstanceCount);
 	}
 }

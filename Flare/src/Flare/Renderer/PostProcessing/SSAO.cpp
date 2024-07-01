@@ -125,7 +125,7 @@ namespace Flare
 		commandBuffer->SetViewportAndScisors(Math::Rect(glm::vec2(0.0f, 0.0f), (glm::vec2)context.GetViewport().GetSize()));
 
 		commandBuffer->ApplyMaterial(m_Material);
-		commandBuffer->DrawIndexed(RendererPrimitives::GetFullscreenQuadMesh(), 0, 0, 1);
+		commandBuffer->DrawMeshIndexed(RendererPrimitives::GetFullscreenQuadMesh(), 0, 0, 1);
 
 		commandBuffer->EndRenderTarget();
 	}
@@ -168,7 +168,7 @@ namespace Flare
 		m_Material->SetTextureProperty(*colorTextureIndex, m_ColorTexture);
 
 		commandBuffer->ApplyMaterial(m_Material);
-		commandBuffer->DrawIndexed(RendererPrimitives::GetFullscreenQuadMesh(), 0, 0, 1);
+		commandBuffer->DrawMeshIndexed(RendererPrimitives::GetFullscreenQuadMesh(), 0, 0, 1);
 
 		commandBuffer->EndRenderTarget();
 	}

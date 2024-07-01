@@ -186,6 +186,6 @@ namespace Flare
 		m_Statistics.DrawCallsSavedByInstancing += batch.InstanceCount - 1;
 
 		commandBuffer->ApplyMaterial(batch.Material);
-		commandBuffer->DrawIndexed(batch.Mesh, batch.SubMesh, batch.BaseInstance, batch.InstanceCount);
+		commandBuffer->DrawMeshIndexed(batch.Mesh, batch.SubMesh, batch.BaseInstance, batch.InstanceCount);
 	}
 }

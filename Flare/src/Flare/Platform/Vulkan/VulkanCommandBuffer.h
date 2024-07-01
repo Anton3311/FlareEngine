@@ -37,7 +37,23 @@ namespace Flare
 
 		void SetViewportAndScisors(Math::Rect viewportRect) override;
 
-		void DrawIndexed(const Ref<const Mesh>& mesh, uint32_t subMeshIndex, uint32_t baseInstance, uint32_t instanceCount) override;
+		void BindPipeline(Ref<Pipeline> pipeline) override;
+		void BindVertexBuffer(Ref<const VertexBuffer> buffer, uint32_t index) override;
+		void BindVertexBuffers(Span<Ref<const VertexBuffer>> vertexBuffers, uint32_t baseBindingIndex) override;
+		void BindIndexBuffer(Ref<const IndexBuffer> buffer) override;
+
+		void DrawMeshIndexed(const Ref<const Mesh>& mesh, uint32_t subMeshIndex, uint32_t baseInstance, uint32_t instanceCount) override;
+
+		void DrawIndexed(uint32_t baseIndex,
+			uint32_t indexCount,
+			uint32_t vertexOffset,
+			uint32_t baseInstance,
+			uint32_t instanceCount) override;
+
+		void Draw(uint32_t baseVertex,
+			uint32_t vertexCount,
+			uint32_t baseInstance,
+			uint32_t instanceCount) override;
 
 		// Expects source attachment to be in TRANSFER_SRC
 		// Destination attachment - TRANSFER_DST
@@ -71,21 +87,11 @@ namespace Flare
 
 		void GenerateImageMipMaps(VkImage image, uint32_t mipLevels, glm::uvec2 imageSize);
 
-		void BindPipeline(const Ref<const Pipeline>& pipeline);
-		void BindVertexBuffers(const Span<Ref<const VertexBuffer>>& vertexBuffers);
-		void BindIndexBuffer(const Ref<const IndexBuffer>& indexBuffer);
-
 		void BindDescriptorSet(const Ref<const VulkanDescriptorSet>& descriptorSet, VkPipelineLayout pipelineLayout, uint32_t index);
 		void BindComputeDescriptorSet(const Ref<const VulkanDescriptorSet>& descriptorSet, VkPipelineLayout pipelineLayout, uint32_t index);
 
 		void SetPrimaryDescriptorSet(const Ref<DescriptorSet>& set);
 		void SetSecondaryDescriptorSet(const Ref<DescriptorSet>& set);
-
-		void DrawIndexed(uint32_t indicesCount);
-		void DrawIndexed(uint32_t firstIndex, uint32_t indicesCount);
-		void DrawIndexed(uint32_t firstIndex, uint32_t indicesCount, uint32_t firstInstance, uint32_t instancesCount);
-
-		void Draw(uint32_t firstVertex, uint32_t vertexCount, uint32_t firstInstance, uint32_t instanceCount);
 
 		void DepthImagesBarrier(Span<VkImage> images, bool hasStencil,
 			VkPipelineStageFlags srcStage, VkAccessFlags srcAccessMask,

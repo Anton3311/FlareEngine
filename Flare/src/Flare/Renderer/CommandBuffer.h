@@ -1,6 +1,8 @@
 #pragma once
 
 #include "FlareCore/Core.h"
+#include "FlareCore/Collections/Span.h"
+
 #include "Flare/Math/Math.h"
 
 #include "Flare/Renderer/Texture.h"
@@ -12,6 +14,10 @@ namespace Flare
 	class Mesh;
 	class GPUTimer;
 	class ComputePipeline;
+	class Pipeline;
+	class DescriptorSet;
+	class VertexBuffer;
+	class IndexBuffer;
 	class ShaderConstantBuffer;
 
 	class CommandBuffer
@@ -38,8 +44,24 @@ namespace Flare
 
 		virtual void SetViewportAndScisors(Math::Rect viewportRect) = 0;
 
-		virtual void DrawIndexed(const Ref<const Mesh>& mesh,
+		virtual void BindPipeline(Ref<Pipeline> pipeline) = 0;
+		virtual void BindVertexBuffer(Ref<const VertexBuffer> buffer, uint32_t index) = 0;
+		virtual void BindVertexBuffers(Span<Ref<const VertexBuffer>> buffers, uint32_t baseBindingIndex) = 0;
+		virtual void BindIndexBuffer(Ref<const IndexBuffer> buffer) = 0;
+
+		virtual void DrawMeshIndexed(const Ref<const Mesh>& mesh,
 			uint32_t subMeshIndex,
+			uint32_t baseInstance,
+			uint32_t instanceCount) = 0;
+
+		virtual void DrawIndexed(uint32_t baseIndex,
+			uint32_t indexCount,
+			uint32_t vertexOffset,
+			uint32_t baseInstance,
+			uint32_t instanceCount) = 0;
+
+		virtual void Draw(uint32_t baseVertex,
+			uint32_t vertexCount,
 			uint32_t baseInstance,
 			uint32_t instanceCount) = 0;
 

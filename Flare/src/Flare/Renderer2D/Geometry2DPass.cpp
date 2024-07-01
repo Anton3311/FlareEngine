@@ -41,11 +41,8 @@ namespace Flare
 		//       if there are weren't anything submitted for rendering
 
 		commandBuffer->BeginRenderTarget(context.GetRenderTarget());
-
-		Ref<VulkanCommandBuffer> vulkanCommandBuffer = As<VulkanCommandBuffer>(commandBuffer);
-
-		vulkanCommandBuffer->BindVertexBuffers(Span((Ref<const VertexBuffer>*)&m_VertexBuffer, 1));
-		vulkanCommandBuffer->BindIndexBuffer(m_IndexBuffer);
+		commandBuffer->BindVertexBuffers(Span((Ref<const VertexBuffer>*)&m_VertexBuffer, 1), 0);
+		commandBuffer->BindIndexBuffer(m_IndexBuffer);
 
 		for (const auto& batch : m_FrameData.QuadBatches)
 		{
@@ -89,9 +86,9 @@ namespace Flare
 			vulkanCommandBuffer->SetPrimaryDescriptorSet(Renderer::GetPrimaryDescriptorSet());
 			vulkanCommandBuffer->SetSecondaryDescriptorSet(descriptorSet);
 
-			vulkanCommandBuffer->ApplyMaterial(batch.Material);
-			vulkanCommandBuffer->SetViewportAndScisors(Math::Rect(glm::vec2(0.0f), (glm::vec2)renderTarget->GetSize()));
-			vulkanCommandBuffer->DrawIndexed(batch.Start * 6, batch.Count * 6);
+			commandBuffer->ApplyMaterial(batch.Material);
+			commandBuffer->SetViewportAndScisors(Math::Rect(glm::vec2(0.0f), (glm::vec2)renderTarget->GetSize()));
+			commandBuffer->DrawIndexed(batch.Start * 6, batch.Count * 6, 0, 0, 1);
 		}
 	}
 }

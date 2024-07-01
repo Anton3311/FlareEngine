@@ -41,7 +41,7 @@ namespace Flare
 
 		Ref<VulkanCommandBuffer> vulkanCommandBuffer = As<VulkanCommandBuffer>(commandBuffer);
 		vulkanCommandBuffer->BindPipeline(m_Pipeline);
-		vulkanCommandBuffer->BindVertexBuffers(Span((Ref<const VertexBuffer>*)&m_VertexBuffer, 1));
+		vulkanCommandBuffer->BindVertexBuffers(Span((Ref<const VertexBuffer>*)&m_VertexBuffer, 1), 0);
 		vulkanCommandBuffer->BindIndexBuffer(m_IndexBuffer);
 
 		vulkanCommandBuffer->BindDescriptorSet(
@@ -49,7 +49,7 @@ namespace Flare
 			As<VulkanPipeline>(m_Pipeline)->GetLayoutHandle(),
 			0);
 
-		vulkanCommandBuffer->DrawIndexed(0, (uint32_t)m_FrameData.Rays.size() * DebugRendererSettings::IndicesPerRay, 0, 1);
+		vulkanCommandBuffer->DrawIndexed(0, (uint32_t)m_FrameData.Rays.size() * DebugRendererSettings::IndicesPerRay, 0, 0, 1);
 
 		commandBuffer->EndRenderTarget();
 	}

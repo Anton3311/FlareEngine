@@ -92,9 +92,9 @@ namespace Flare
 		vulkanCommandBuffer->BindDescriptorSet(As<VulkanDescriptorSet>(Renderer::GetPrimaryDescriptorSet()), pipelineLayout, 0);
 		vulkanCommandBuffer->BindDescriptorSet(As<VulkanDescriptorSet>(set), pipelineLayout, 1);
 
-		vulkanCommandBuffer->BindVertexBuffers(Span((Ref<const VertexBuffer>)m_VertexBuffer));
-		vulkanCommandBuffer->BindIndexBuffer(m_IndexBuffer);
-		vulkanCommandBuffer->DrawIndexed(batch.Start * 6, batch.Count * 6);
+		commandBuffer->BindVertexBuffers(Span((Ref<const VertexBuffer>)m_VertexBuffer), 0);
+		commandBuffer->BindIndexBuffer(m_IndexBuffer);
+		commandBuffer->DrawIndexed(batch.Start * 6, batch.Count * 6, 0, 0, 1);
 	}
 
 	void TextPass::ReleaseDescriptorSets()

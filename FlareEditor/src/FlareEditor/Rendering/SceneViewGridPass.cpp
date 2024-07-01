@@ -45,7 +45,7 @@ namespace Flare
 
 		vulkanCommandBuffer->BindPipeline(m_Pipeline);
 		vulkanCommandBuffer->BindDescriptorSet(As<VulkanDescriptorSet>(Renderer::GetPrimaryDescriptorSet()), pipeline->GetLayoutHandle(), 0);
-		vulkanCommandBuffer->BindVertexBuffers(Span((Ref<const VertexBuffer>*) & m_VertexBuffer, 1));
+		vulkanCommandBuffer->BindVertexBuffers(Span((Ref<const VertexBuffer>*) & m_VertexBuffer, 1), 0);
 
 		// First draw the secondary grid and only than the primary one.
 		// This ovoids secondary grid completely converting a primary one,

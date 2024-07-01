@@ -89,7 +89,7 @@ namespace Flare
 			m_Material->WritePropertyValue(*smoothnessPropertyIndex, m_Parameters->Smoothness);
 
 		commandBuffer->ApplyMaterial(m_Material);
-		commandBuffer->DrawIndexed(RendererPrimitives::GetFullscreenQuadMesh(), 0, 0, 1);
+		commandBuffer->DrawMeshIndexed(RendererPrimitives::GetFullscreenQuadMesh(), 0, 0, 1);
 
 		commandBuffer->EndRenderTarget();
 	}
