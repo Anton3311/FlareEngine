@@ -615,17 +615,18 @@ namespace Flare
 		m_LastWindowedPosition = m_Data.Properties.Position;
 		m_LastWindowedSize = m_Data.Properties.Size;
 
-		DisableWindowDecoration();
+		FLARE_CORE_ASSERT(mode == FullscreenMode::ExclusiveFullscreen);
 
-		if (mode == FullscreenMode::ExclusiveFullscreen)
-		{
-			glfwWindowHint(GLFW_AUTO_ICONIFY, GLFW_TRUE);
-		}
+		DisableWindowDecoration();
 
 		GLFWmonitor* monitor = glfwGetPrimaryMonitor();
 		const GLFWvidmode* videoMode = glfwGetVideoMode(monitor);
+		if (mode == FullscreenMode::ExclusiveFullscreen)
+		{
+			glfwWindowHint(GLFW_AUTO_ICONIFY, GLFW_TRUE);
 
-		glfwSetWindowMonitor(m_Window, monitor, 0, 0, videoMode->width, videoMode->height, videoMode->refreshRate);
+			glfwSetWindowMonitor(m_Window, monitor, 0, 0, videoMode->width, videoMode->height, videoMode->refreshRate);
+		}
 	}
 
 	void WindowsWindow::ExitFullscreen()
@@ -647,6 +648,8 @@ namespace Flare
 		{
 			EnableWindowDecoration();
 		}
+
+		m_Data.Properties.FullscreenMode = FullscreenMode::None;
 	}
 
 	void WindowsWindow::SetVSync(bool vsync)
