@@ -221,7 +221,18 @@ namespace Flare
 		{
 			{
 				FLARE_PROFILE_SCOPE("WaitForFence");
-				VK_CHECK_RESULT(vkWaitForFences(m_Device, 1, &m_FrameFence, VK_TRUE, UINT64_MAX));
+
+				if (!m_SkipWaitForFrameFence)
+				{
+					// NOTE: Skip waiting for the fence in order to avoid a dead lock.
+					//       This can happen, if in the previous frame the window was
+					//       minimized and nothing was submitted for rendering, which
+					//       means that the frame fence wasn't signalled, thus it leads
+					//       to waiting for an unsugnalled fence in the current frame.
+					VK_CHECK_RESULT(vkWaitForFences(m_Device, 1, &m_FrameFence, VK_TRUE, UINT64_MAX));
+				}
+
+				m_SkipWaitForFrameFence = false;
 				VK_CHECK_RESULT(vkResetFences(m_Device, 1, &m_FrameFence));
 			}
 
@@ -256,6 +267,7 @@ namespace Flare
 
 		if (m_Window->GetProperties().IsMinimized)
 		{
+			m_SkipWaitForFrameFence = true;
 			return;
 		}
 

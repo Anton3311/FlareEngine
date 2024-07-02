@@ -208,6 +208,7 @@ namespace Flare
 		glm::uvec2 m_SwapChainExtent = glm::uvec2(0);
 		VkFormat m_SwapChainImageFormat = VK_FORMAT_UNDEFINED;
 
+		bool m_SkipWaitForFrameFence = false;
 		VkFence m_FrameFence = VK_NULL_HANDLE;
 		VkSemaphore m_ImageAvailableSemaphore = VK_NULL_HANDLE;
 		VkSemaphore m_RenderFinishedSemaphore = VK_NULL_HANDLE;
