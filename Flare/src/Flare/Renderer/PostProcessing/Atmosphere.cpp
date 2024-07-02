@@ -7,6 +7,7 @@
 #include "Flare/Renderer/Renderer.h"
 #include "Flare/Renderer/ShaderLibrary.h"
 #include "Flare/Renderer/RendererPrimitives.h"
+#include "Flare/Renderer/Material.h"
 
 #include "Flare/Platform/Vulkan/VulkanCommandBuffer.h"
 #include "Flare/Platform/Vulkan/VulkanContext.h"

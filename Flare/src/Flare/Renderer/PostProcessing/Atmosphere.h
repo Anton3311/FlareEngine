@@ -3,7 +3,6 @@
 #include "FlareCore/Serialization/TypeSerializer.h"
 #include "FlareCore//Serialization/SerializationStream.h"
 
-#include "Flare/Renderer/Material.h"
 #include "Flare/Renderer/RenderGraph/RenderGraphPass.h"
 #include "Flare/Renderer/PostProcessing/PostProcessingEffect.h"
 
@@ -12,6 +11,8 @@ namespace Flare
 {
 	class AtmospherePass;
 	class CommandBuffer;
+	class Material;
+
 	class FLARE_API Atmosphere : public PostProcessingEffect
 	{
 	public:

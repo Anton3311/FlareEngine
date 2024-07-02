@@ -9,6 +9,7 @@
 #include "Flare/Renderer/GraphicsContext.h"
 #include "Flare/Renderer/CommandBuffer.h"
 #include "Flare/Renderer/RendererPrimitives.h"
+#include "Flare/Renderer/Material.h"
 
 #include "FlareCore/Profiler/Profiler.h"
 

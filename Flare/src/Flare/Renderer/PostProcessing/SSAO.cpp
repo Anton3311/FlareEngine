@@ -7,6 +7,8 @@
 #include "Flare/Renderer/CommandBuffer.h"
 #include "Flare/Renderer/ShaderLibrary.h"
 #include "Flare/Renderer/GraphicsContext.h"
+#include "Flare/Renderer/Material.h"
+
 #include "Flare/Renderer/Passes/BlitPass.h"
 
 #include "Flare/Platform/Vulkan/VulkanCommandBuffer.h"

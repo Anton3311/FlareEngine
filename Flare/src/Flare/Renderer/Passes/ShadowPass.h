@@ -1,7 +1,6 @@
 #pragma once
 
 #include "FlareCore/Core.h"
-#include "Flare/Renderer/RenderPass.h"
 #include "Flare/Renderer/RendererSubmitionQueue.h"
 #include "Flare/Renderer/RenderData.h"
 

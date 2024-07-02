@@ -3,13 +3,13 @@
 #include "FlareCore/Serialization/TypeSerializer.h"
 #include "FlareCore//Serialization/SerializationStream.h"
 
-#include "Flare/Renderer/RenderPass.h"
-#include "Flare/Renderer/Material.h"
 #include "Flare/Renderer/RenderGraph/RenderGraphPass.h"
 #include "Flare/Renderer/PostProcessing/PostProcessingEffect.h"
 
 namespace Flare
 {
+	class Material;
+
 	class FLARE_API SSAO : public PostProcessingEffect
 	{
 	public:

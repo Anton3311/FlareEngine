@@ -3,14 +3,13 @@
 #include "FlareCore/Serialization/TypeSerializer.h"
 #include "FlareCore//Serialization/SerializationStream.h"
 
-#include "Flare/Renderer/RenderPass.h"
-#include "Flare/Renderer/Material.h"
-
 #include "Flare/Renderer/PostProcessing/PostProcessingEffect.h"
 #include "Flare/Renderer/RenderGraph/RenderGraphPass.h"
 
 namespace Flare
 {
+	class Material;
+
 	class FLARE_API ToneMapping : public PostProcessingEffect
 	{
 	public:

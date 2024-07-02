@@ -3,7 +3,6 @@
 #include "FlareCore/Core.h"
 #include "Flare/Renderer/RenderData.h"
 #include "Flare/Renderer/Viewport.h"
-#include "Flare/Renderer/RenderPass.h"
 #include "Flare/Renderer/RendererSubmitionQueue.h"
 #include "Flare/Renderer/RendererStatistics.h"
 
@@ -162,9 +161,6 @@ namespace Flare
 
 		static void SubmitDecal(const Ref<const Material>& material, const glm::mat4& transform, int32_t entityIndex);
 
-		static void AddRenderPass(Ref<RenderPass> pass);
-		static void RemoveRenderPass(Ref<RenderPass> pass);
-
 		static RendererSubmitionQueue& GetOpaqueSubmitionQueue();
 
 		static Viewport& GetMainViewport();
@@ -184,6 +180,5 @@ namespace Flare
 	private:
 		static void ExecuteDecalsPass();
 		static void ReloadShaders();
-		static void ExecuteRenderPasses(std::vector<Ref<RenderPass>>& passes);
 	};
 }
