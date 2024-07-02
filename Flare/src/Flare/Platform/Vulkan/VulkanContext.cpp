@@ -223,17 +223,20 @@ namespace Flare
 			VK_CHECK_RESULT(vkResetFences(m_Device, 1, &m_FrameFence));
 		}
 
-		VkResult acquireResult = vkAcquireNextImageKHR(m_Device, m_SwapChain, UINT64_MAX, m_ImageAvailableSemaphore, VK_NULL_HANDLE, &m_CurrentFrameInFlight);
+		{
+			FLARE_PROFILE_SCOPE("AcquireNextImage");
+			VkResult acquireResult = vkAcquireNextImageKHR(m_Device, m_SwapChain, UINT64_MAX, m_ImageAvailableSemaphore, VK_NULL_HANDLE, &m_CurrentFrameInFlight);
 
-		if (acquireResult == VK_ERROR_OUT_OF_DATE_KHR)
-		{
-			RecreateSwapChain();
-			return;
-		}
-		else if (acquireResult != VK_SUCCESS && acquireResult != VK_SUBOPTIMAL_KHR)
-		{
-			FLARE_CORE_ERROR("Failed to acquire swap chain image");
-			return;
+			if (acquireResult == VK_ERROR_OUT_OF_DATE_KHR)
+			{
+				RecreateSwapChain();
+				return;
+			}
+			else if (acquireResult != VK_SUCCESS && acquireResult != VK_SUBOPTIMAL_KHR)
+			{
+				FLARE_CORE_ERROR("Failed to acquire swap chain image");
+				return;
+			}
 		}
 
 		m_PrimaryCommandBuffer->Reset();
