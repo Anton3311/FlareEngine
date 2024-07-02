@@ -126,26 +126,29 @@ namespace Flare
 				InputManager::Update();
 				m_Window->OnUpdate();
 
-				GraphicsContext::GetInstance().BeginFrame();
-				Renderer2D::BeginFrame();
-
+				if (!m_Window->GetProperties().IsMinimized)
 				{
-					FLARE_PROFILE_SCOPE("Layers::OnUpdate");
-					for (const Ref<Layer>& layer : m_LayersStack.GetLayers())
-						layer->OnUpdate(deltaTime);
-				}
+					GraphicsContext::GetInstance().BeginFrame();
+					Renderer2D::BeginFrame();
 
-				{
-					FLARE_PROFILE_SCOPE("Layers::OnImGui");
-					for (const Ref<Layer>& layer : m_LayersStack.GetLayers())
-						layer->OnImGUIRender();
-				}
+					{
+						FLARE_PROFILE_SCOPE("Layers::OnUpdate");
+						for (const Ref<Layer>& layer : m_LayersStack.GetLayers())
+							layer->OnUpdate(deltaTime);
+					}
 
-				Renderer2D::EndFrame();
+					{
+						FLARE_PROFILE_SCOPE("Layers::OnImGui");
+						for (const Ref<Layer>& layer : m_LayersStack.GetLayers())
+							layer->OnImGUIRender();
+					}
 
-				{
-					FLARE_PROFILE_SCOPE("Present");
-					GraphicsContext::GetInstance().Present();
+					Renderer2D::EndFrame();
+
+					{
+						FLARE_PROFILE_SCOPE("Present");
+						GraphicsContext::GetInstance().Present();
+					}
 				}
 
 				m_PreviousFrameTime = currentTime;

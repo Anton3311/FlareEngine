@@ -13,6 +13,13 @@
 
 namespace Flare
 {
+	enum class FullscreenMode
+	{
+		None,
+		Fullscreen,
+		ExclusiveFullscreen,
+	};
+
 	struct WindowProperties
 	{
 		std::string Title;
@@ -23,6 +30,7 @@ namespace Flare
 		bool IsMaximized = false;
 		bool CustomTitleBar = false;
 		bool VSyncEnabled = true;
+		FullscreenMode FullscreenMode = FullscreenMode::None;
 	};
 
 	enum class CursorMode
@@ -44,6 +52,8 @@ namespace Flare
 		virtual void SetTitle(const std::string& title) = 0;
 		virtual void Hide() = 0;
 		virtual void SetMaximized(bool value) = 0;
+
+		virtual void SetFullscreenMode(FullscreenMode mode) = 0;
 
 		virtual void SetEventCallback(const EventCallback& callback) = 0;
 		virtual void SetVSync(bool vsync) = 0;

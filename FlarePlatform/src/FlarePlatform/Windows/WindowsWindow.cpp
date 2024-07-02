@@ -327,6 +327,36 @@ namespace Flare
 		return CallWindowProc((WNDPROC)window->m_OriginalProc, windowHandle, message, wParam, lParam);
 	}
 
+	void WindowsWindow::EnableWindowDecoration()
+	{
+		HWND windowHandle = glfwGetWin32Window(m_Window);
+
+		LONG_PTR style = GetWindowLongPtr(windowHandle, GWL_STYLE);
+		style |= WS_THICKFRAME;
+		style &= ~WS_CAPTION;
+		SetWindowLongPtr(windowHandle, GWL_STYLE, style);
+
+		RECT windowRect;
+		GetWindowRect(windowHandle, &windowRect);
+		int width = windowRect.right - windowRect.left;
+		int height = windowRect.bottom - windowRect.top;
+
+		MARGINS margins0 = { 0 };
+		DwmExtendFrameIntoClientArea(windowHandle, &margins0);
+
+		bool result = SetPropW(windowHandle, s_WindowPropertyName, this);
+		FLARE_CORE_ASSERT(result, "Failed to set window property");
+
+		SetWindowLongPtr(windowHandle, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(CustomWindowDecorationProc));
+		SetWindowPos(windowHandle, NULL, 0, 0, width, height, SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE | SWP_NOREDRAW | SWP_NOCOPYBITS);
+	}
+
+	void WindowsWindow::DisableWindowDecoration()
+	{
+		HWND windowHandle = glfwGetWin32Window(m_Window);
+		SetWindowLongPtr(windowHandle, GWLP_WNDPROC, (LONG_PTR)m_OriginalProc);
+	}
+
 	WindowsWindow::WindowsWindow(WindowProperties& properties)
 	{
 		m_Data.Properties = properties;
@@ -437,11 +467,16 @@ namespace Flare
 			data->Properties.IsMaximized = maximized;
 		});
 
+		glfwSetWindowIconifyCallback(m_Window, [](GLFWwindow* window, int iconified)
+		{
+			WindowData* data = (WindowData*)glfwGetWindowUserPointer(window);
+			data->Properties.IsMinimized = iconified;
+		});
+
 		glfwSetWindowSizeCallback(m_Window, [](GLFWwindow* window, int width, int height)
 		{
 			WindowData* data = (WindowData*)glfwGetWindowUserPointer(window);
 			data->Properties.Size = glm::uvec2(width, height);
-			data->Properties.IsMinimized = width == 0 && height == 0;
 
 			if (data->Callback)
 			{
@@ -528,29 +563,15 @@ namespace Flare
 
 		SetVSync(true);
 
+		{
+			// Save the original procedure
+			HWND windowHandle = glfwGetWin32Window(m_Window);
+			m_OriginalProc = (void*)(WNDPROC)GetWindowLongPtr(windowHandle, GWLP_WNDPROC);
+		}
+
 		if (m_Data.Properties.CustomTitleBar)
 		{
-			HWND windowHandle = glfwGetWin32Window(m_Window);
-
-			LONG_PTR style = GetWindowLongPtr(windowHandle, GWL_STYLE);
-			style |= WS_THICKFRAME;
-			style &= ~WS_CAPTION;
-			SetWindowLongPtr(windowHandle, GWL_STYLE, style);
-
-			RECT windowRect;
-			GetWindowRect(windowHandle, &windowRect);
-			int width = windowRect.right - windowRect.left;
-			int height = windowRect.bottom - windowRect.top;
-
-			MARGINS margins0 = { 0 };
-			DwmExtendFrameIntoClientArea(windowHandle, &margins0);
-
-			bool result = SetPropW(windowHandle, s_WindowPropertyName, this);
-			FLARE_CORE_ASSERT(result, "Failed to set window property");
-
-			m_OriginalProc = (void*)(WNDPROC)GetWindowLongPtr(windowHandle, GWLP_WNDPROC);
-			SetWindowLongPtr(windowHandle, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(CustomWindowDecorationProc));
-			SetWindowPos(windowHandle, NULL, 0, 0, width, height, SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE | SWP_NOREDRAW | SWP_NOCOPYBITS);
+			EnableWindowDecoration();
 		}
 	}
 
@@ -577,6 +598,55 @@ namespace Flare
 			glfwMaximizeWindow(m_Window);
 		else
 			glfwRestoreWindow(m_Window);
+	}
+
+	void WindowsWindow::SetFullscreenMode(FullscreenMode mode)
+	{
+		if (mode == FullscreenMode::None)
+			ExitFullscreen();
+		else
+			EnterFullscreen(mode);
+	}
+
+	void WindowsWindow::EnterFullscreen(FullscreenMode mode)
+	{
+		m_Data.Properties.FullscreenMode = mode;
+
+		m_LastWindowedPosition = m_Data.Properties.Position;
+		m_LastWindowedSize = m_Data.Properties.Size;
+
+		DisableWindowDecoration();
+
+		if (mode == FullscreenMode::ExclusiveFullscreen)
+		{
+			glfwWindowHint(GLFW_AUTO_ICONIFY, GLFW_TRUE);
+		}
+
+		GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+		const GLFWvidmode* videoMode = glfwGetVideoMode(monitor);
+
+		glfwSetWindowMonitor(m_Window, monitor, 0, 0, videoMode->width, videoMode->height, videoMode->refreshRate);
+	}
+
+	void WindowsWindow::ExitFullscreen()
+	{
+		m_Data.Properties.Position = m_LastWindowedPosition;
+		m_Data.Properties.Size = m_LastWindowedSize;
+
+		glfwWindowHint(GLFW_AUTO_ICONIFY, GLFW_FALSE);
+		glfwSetWindowMonitor(
+			m_Window,
+			nullptr,
+			m_LastWindowedPosition.x,
+			m_LastWindowedPosition.y,
+			(int32_t)m_Data.Properties.Size.x,
+			(int32_t)m_Data.Properties.Size.y,
+			GLFW_DONT_CARE);
+
+		if (m_Data.Properties.CustomTitleBar)
+		{
+			EnableWindowDecoration();
+		}
 	}
 
 	void WindowsWindow::SetVSync(bool vsync)

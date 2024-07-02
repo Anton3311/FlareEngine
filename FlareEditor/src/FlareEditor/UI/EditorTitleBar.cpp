@@ -110,6 +110,18 @@ namespace Flare
 
 		if (EditorGUI::BeginMenu("Window"))
 		{
+			Ref<Window> applicationWindow = Application::GetInstance().GetWindow();
+			bool isFullscreen = applicationWindow->GetProperties().FullscreenMode != FullscreenMode::None;
+			if (ImGui::MenuItem("Fullscreen", nullptr, isFullscreen))
+			{
+				if (isFullscreen)
+					applicationWindow->SetFullscreenMode(FullscreenMode::None);
+				else
+					applicationWindow->SetFullscreenMode(FullscreenMode::ExclusiveFullscreen);
+			}
+
+			ImGui::Separator();
+
 			if (ImGui::MenuItem("ECS Inspector"))
 				ECSInspector::Show();
 			if (ImGui::MenuItem("Shader Library"))

@@ -25,6 +25,8 @@ namespace Flare
 		virtual void Hide() override;
 		virtual void SetMaximized(bool value) override;
 
+		virtual void SetFullscreenMode(FullscreenMode mode) override;
+
 		virtual void SetEventCallback(const EventCallback& callback) override { m_Data.Callback = callback; }
 		virtual void SetVSync(bool vsync) override;
 
@@ -42,6 +44,12 @@ namespace Flare
 	private:
 		static LRESULT CALLBACK CustomWindowDecorationProc(HWND windowHandle, UINT message, WPARAM wParam, LPARAM lParam);
 		static const wchar_t* s_WindowPropertyName;
+
+		void EnableWindowDecoration();
+		void DisableWindowDecoration();
+
+		void EnterFullscreen(FullscreenMode mode);
+		void ExitFullscreen();
 	private:
 		enum class RendererAPI
 		{
@@ -56,6 +64,9 @@ namespace Flare
 		};
 
 		RendererAPI m_RendererAPI = RendererAPI::Vulkan;
+
+		glm::ivec2 m_LastWindowedPosition = glm::ivec2(0, 0);
+		glm::uvec2 m_LastWindowedSize = glm::uvec2(0, 0);
 
 		GLFWwindow* m_Window = nullptr;
 		WindowData m_Data;
