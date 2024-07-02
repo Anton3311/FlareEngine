@@ -368,11 +368,8 @@ namespace Flare
 
 		FLARE_CORE_ASSERT(imageSize > 0);
 
-		VkBuffer stagingBuffer{};
-		VulkanAllocation stagingBufferAllocation = VulkanContext::GetInstance().CreateStagingBuffer(imageSize, stagingBuffer);
-
-		void* mapped = nullptr;
-		VK_CHECK_RESULT(vmaMapMemory(VulkanContext::GetInstance().GetMemoryAllocator(), stagingBufferAllocation.Handle, &mapped));
+		VulkanStagingBufferPool& stagingBufferPool = VulkanContext::GetInstance().GetStagingBufferPool();
+		VulkanStagingBuffer stagingBuffer = stagingBufferPool.AllocateStagingBuffer(imageSize);
 
 		if (m_Specifications.Format == TextureFormat::RGB8)
 		{
@@ -393,7 +390,7 @@ namespace Flare
 				j += 3;
 			}
 
-			std::memcpy(mapped, rgbaData, imageSize);
+			std::memcpy(stagingBuffer.Mapped, rgbaData, imageSize);
 
 			delete[] rgbaData;
 		}
@@ -403,13 +400,10 @@ namespace Flare
 
 			for (const auto& mip : data.Mips)
 			{
-				std::memcpy((uint8_t*)mapped + offset, mip.Data, mip.SizeInBytes);
+				std::memcpy((uint8_t*)stagingBuffer.Mapped + offset, mip.Data, mip.SizeInBytes);
 				offset += mip.SizeInBytes;
 			}
 		}
-
-		VK_CHECK_RESULT(vmaFlushAllocation(VulkanContext::GetInstance().GetMemoryAllocator(), stagingBufferAllocation.Handle, 0, VK_WHOLE_SIZE));
-		vmaUnmapMemory(VulkanContext::GetInstance().GetMemoryAllocator(), stagingBufferAllocation.Handle);
 
 		{
 			Ref<VulkanCommandBuffer> commandBuffer = VulkanContext::GetInstance().BeginTemporaryCommandBuffer();
@@ -425,10 +419,10 @@ namespace Flare
 				size.height = m_Specifications.Height;
 				size.depth = 1;
 
-				size_t bufferOffset = 0;
+				size_t bufferOffset = stagingBuffer.Offset;
 				for (uint32_t i = 0; i < providedMipCount; i++)
 				{
-					commandBuffer->CopyBufferToImage(stagingBuffer, m_Image, size, bufferOffset, i);
+					commandBuffer->CopyBufferToImage(stagingBuffer.Buffer, m_Image, size, bufferOffset, i);
 
 					bufferOffset += data.Mips[i].SizeInBytes;
 
@@ -443,11 +437,11 @@ namespace Flare
 				size.height = m_Specifications.Height;
 				size.depth = 1;
 
-				size_t bufferOffset = 0;
+				size_t bufferOffset = stagingBuffer.Offset;
 				size_t pixelSize = GetImagePixelSizeInBytes();
 				for (uint32_t i = 0; i < providedMipCount; i++)
 				{
-					commandBuffer->CopyBufferToImage(stagingBuffer, m_Image, size, bufferOffset, i);
+					commandBuffer->CopyBufferToImage(stagingBuffer.Buffer, m_Image, size, bufferOffset, i);
 
 					bufferOffset += size.width * size.height * pixelSize;
 
@@ -470,8 +464,7 @@ namespace Flare
 			VulkanContext::GetInstance().EndTemporaryCommandBuffer(commandBuffer);
 		}
 
-		vmaFreeMemory(VulkanContext::GetInstance().GetMemoryAllocator(), stagingBufferAllocation.Handle);
-		vkDestroyBuffer(VulkanContext::GetInstance().GetDevice(), stagingBuffer, nullptr);
+		stagingBufferPool.ReleaseStagingBuffer(stagingBuffer);
 	}
 
 	size_t VulkanTexture::GetImagePixelSizeInBytes()

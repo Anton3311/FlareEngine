@@ -38,7 +38,7 @@ namespace Flare
 		inline const std::string& GetDebugName() const { return m_DebugName; }
 	private:
 		void Create();
-		StagingBuffer FillStagingBuffer(MemorySpan data);
+		VulkanStagingBuffer FillStagingBuffer(MemorySpan data);
 	protected:
 		std::string m_DebugName;
 

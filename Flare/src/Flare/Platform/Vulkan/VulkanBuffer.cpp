@@ -56,14 +56,15 @@ namespace Flare
 		}
 		else
 		{
-			Ref<VulkanCommandBuffer> commandBuffer = VulkanContext::GetInstance().BeginTemporaryCommandBuffer();
-			StagingBuffer stagingBuffer = FillStagingBuffer(MemorySpan::FromRawBytes(const_cast<void*>(data), size));
+			VulkanStagingBufferPool& stagingBufferPool = VulkanContext::GetInstance().GetStagingBufferPool();
 
-			commandBuffer->CopyBuffer(stagingBuffer.Buffer, m_Buffer, size, 0, offset);
+			Ref<VulkanCommandBuffer> commandBuffer = VulkanContext::GetInstance().BeginTemporaryCommandBuffer();
+			VulkanStagingBuffer stagingBuffer = FillStagingBuffer(MemorySpan::FromRawBytes(const_cast<void*>(data), size));
+
+			commandBuffer->CopyBuffer(stagingBuffer.Buffer, m_Buffer, size, stagingBuffer.Offset, offset);
 			VulkanContext::GetInstance().EndTemporaryCommandBuffer(commandBuffer);
 
-			vmaFreeMemory(VulkanContext::GetInstance().GetMemoryAllocator(), stagingBuffer.Allocation.Handle);
-			vkDestroyBuffer(VulkanContext::GetInstance().GetDevice(), stagingBuffer.Buffer, nullptr);
+			stagingBufferPool.ReleaseStagingBuffer(stagingBuffer);
 		}
 	}
 
@@ -83,7 +84,7 @@ namespace Flare
 
 		EnsureAllocated();
 
-		StagingBuffer stagingBuffer = FillStagingBuffer(data);
+		VulkanStagingBuffer stagingBuffer = FillStagingBuffer(data);
 
 		Ref<VulkanCommandBuffer> vulkanCommandBuffer = As<VulkanCommandBuffer>(commandBuffer);
 
@@ -109,10 +110,8 @@ namespace Flare
 		barriers[1].dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 
 		vulkanCommandBuffer->AddBufferBarrier(Span(&barriers[0], 1), m_PipelineDepency.DependentStages, VK_PIPELINE_STAGE_TRANSFER_BIT);
-		vulkanCommandBuffer->CopyBuffer(stagingBuffer.Buffer, m_Buffer, data.GetSize(), 0, offset);
+		vulkanCommandBuffer->CopyBuffer(stagingBuffer.Buffer, m_Buffer, data.GetSize(), stagingBuffer.Offset, offset);
 		vulkanCommandBuffer->AddBufferBarrier(Span(&barriers[1], 1), VK_PIPELINE_STAGE_TRANSFER_BIT, m_PipelineDepency.DependentStages);
-
-		VulkanContext::GetInstance().DeferDestroyStagingBuffer(std::move(stagingBuffer));
 	}
 
 	void VulkanBuffer::EnsureAllocated()
@@ -166,21 +165,12 @@ namespace Flare
 		}
 	}
 
-	StagingBuffer VulkanBuffer::FillStagingBuffer(MemorySpan data)
+	VulkanStagingBuffer VulkanBuffer::FillStagingBuffer(MemorySpan data)
 	{
 		FLARE_PROFILE_FUNCTION();
-		StagingBuffer stagingBuffer{};
-		stagingBuffer.Allocation = VulkanContext::GetInstance().CreateStagingBuffer(data.GetSize(), stagingBuffer.Buffer);
+		VulkanStagingBuffer stagingBuffer = VulkanContext::GetInstance().GetStagingBufferPool().AllocateStagingBuffer(data.GetSize());
 
-		void* mapped = nullptr;
-		VK_CHECK_RESULT(vmaMapMemory(VulkanContext::GetInstance().GetMemoryAllocator(), stagingBuffer.Allocation.Handle, &mapped));
-
-		{
-			FLARE_PROFILE_SCOPE("Copy");
-			std::memcpy(mapped, data.GetBuffer(), data.GetSize());
-		}
-
-		vmaUnmapMemory(VulkanContext::GetInstance().GetMemoryAllocator(), stagingBuffer.Allocation.Handle);
+		std::memcpy(stagingBuffer.Mapped, data.GetBuffer(), data.GetSize());
 
 		return stagingBuffer;
 	}
