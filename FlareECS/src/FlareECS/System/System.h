@@ -4,10 +4,10 @@
 
 namespace Flare
 {
-	class FLAREECS_API World;
+	class World;
 	struct SystemConfig
 	{
-		std::optional<SystemGroupId> Group;
+		SystemGroupId Group;
 
 		template<typename T>
 		void ExecuteAfter()

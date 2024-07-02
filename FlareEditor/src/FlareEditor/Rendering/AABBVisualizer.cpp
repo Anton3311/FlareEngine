@@ -28,7 +28,9 @@ namespace Flare
 			.With<Decal>()
 			.Build();
 
-		config.Group = world.GetSystemsManager().FindGroup("Debug Rendering");
+		std::optional<uint32_t> groupId = world.GetSystemsManager().FindGroup("Debug Rendering");
+		FLARE_CORE_ASSERT(groupId.has_value());
+		config.Group = *groupId;
 	}
 
 	void AABBVisualizer::OnUpdate(World& world, SystemExecutionContext& context)

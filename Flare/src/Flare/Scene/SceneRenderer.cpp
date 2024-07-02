@@ -13,6 +13,10 @@ namespace Flare
 {
 	void SpritesRendererSystem::OnConfig(World& world, SystemConfig& config)
 	{
+		std::optional<uint32_t> groupId = world.GetSystemsManager().FindGroup("Rendering");
+		FLARE_CORE_ASSERT(groupId);
+		config.Group = *groupId;
+
 		m_SpritesQuery = world.NewQuery().All().With<TransformComponent, SpriteComponent>().Build();
 		m_TextQuery = world.NewQuery().All().With<TransformComponent, TextComponent>().Build();
 	}
@@ -111,6 +115,10 @@ namespace Flare
 
 	void MeshesRendererSystem::OnConfig(World& world, SystemConfig& config)
 	{
+		std::optional<uint32_t> groupId = world.GetSystemsManager().FindGroup("Rendering");
+		FLARE_CORE_ASSERT(groupId);
+		config.Group = *groupId;
+
 		m_Query = world.NewQuery().All().With<TransformComponent, MeshComponent>().Build();
 		m_DecalsQuery = world.NewQuery().All().With<TransformComponent, Decal>().Build();
 	}

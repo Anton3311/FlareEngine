@@ -46,11 +46,13 @@ namespace Flare
 		SystemsManager& systemsManager = m_World.GetSystemsManager();
 		systemsManager.CreateGroup("Debug Rendering");
 
-		m_2DRenderingGroup = systemsManager.CreateGroup("2D Rendering");
+		m_RenderingGroup = systemsManager.CreateGroup("Rendering");
 		m_ScriptingUpdateGroup = systemsManager.CreateGroup("Scripting Update");
 		m_LateUpdateGroup = systemsManager.CreateGroup("Late Update");
 		m_OnRuntimeStartGroup = systemsManager.CreateGroup("On Runtime Start");
 		m_OnRuntimeEndGroup = systemsManager.CreateGroup("On Runtime End");
+
+		m_World.GetSystemsManager().SetDefaultSystemsGroup(m_ScriptingUpdateGroup);
 
 		m_OnFrameStart = systemsManager.CreateGroup("On Frame End");
 		m_OnFrameEnd = systemsManager.CreateGroup("On Frame End");
@@ -61,8 +63,8 @@ namespace Flare
 		m_PointLightsQuery = m_World.NewQuery().All().With<TransformComponent, PointLight>().Build();
 		m_SpotLightsQuery = m_World.NewQuery().All().With<TransformComponent, SpotLight>().Build();
 
-		systemsManager.RegisterSystem("Sprites Renderer", m_2DRenderingGroup, new SpritesRendererSystem());
-		systemsManager.RegisterSystem("Meshes Renderer", m_2DRenderingGroup, new MeshesRendererSystem());
+		systemsManager.RegisterSystem("Sprites Renderer", new SpritesRendererSystem());
+		systemsManager.RegisterSystem("Meshes Renderer", new MeshesRendererSystem());
 
 		m_PostProcessingManager.AddEffect(CreateRef<SSAO>());
 		m_PostProcessingManager.AddEffect(CreateRef<Atmosphere>());
@@ -259,7 +261,7 @@ namespace Flare
 
 		Renderer2D::Begin();
 
-		m_World.GetSystemsManager().ExecuteGroup(m_2DRenderingGroup);
+		m_World.GetSystemsManager().ExecuteGroup(m_RenderingGroup);
 
 		Renderer2D::End();
 		Renderer::Flush();

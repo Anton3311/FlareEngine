@@ -1,14 +1,14 @@
 #pragma once
 
-#include "FlareECS/Query/Query.h"
 #include "FlareECS/System/ExecutionGraph/ExecutionGraph.h"
 
-#include "FlareECS/Commands/CommandBuffer.h"
-
-#include <functional>
+#include <string>
+#include <optional>
 
 namespace Flare
 {
+	class EntitiesCommandBuffer;
+
 	using SystemGroupId = uint32_t;
 	using SystemId = uint32_t;
 
@@ -17,30 +17,25 @@ namespace Flare
 		EntitiesCommandBuffer* Commands = nullptr;
 	};
 
-	using SystemEventFunction = std::function<void(SystemExecutionContext& context)>;
-
+	class System;
 	struct SystemData
 	{
+	public:
 		SystemData() = default;
-		SystemData(const Query& query)
-			: Id(UINT32_MAX),
-			GroupId(UINT32_MAX),
-			IndexInGroup(UINT32_MAX) {}
-
+	public:
 		std::string Name;
 
 		SystemExecutionContext ExecutionContext;
-		SystemEventFunction OnUpdate;
+		System* SystemInstance = nullptr;
 
-		SystemId Id;
-		uint32_t IndexInGroup;
-		SystemGroupId GroupId;
+		SystemId Id = INT32_MAX;
+		uint32_t IndexInGroup = UINT32_MAX;
+		SystemGroupId GroupId = UINT32_MAX;
 	};
 
-	class SystemsManager;
 	struct SystemGroup
 	{
-		SystemGroupId Id;
+		SystemGroupId Id = UINT32_MAX;
 		std::string Name;
  
 		std::vector<uint32_t> SystemIndices;

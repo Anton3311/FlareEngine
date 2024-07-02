@@ -1,10 +1,12 @@
 #pragma once
 
+#include "FlareCore/Core.h"
+
 #include "FlareECS/System/System.h"
 
 namespace Flare
 {
-	class FLAREECS_API SystemsManager;
+	class SystemsManager;
 	struct FLAREECS_API SystemInitializer
 	{
 		using CreateSystemFunction = System*(*)();

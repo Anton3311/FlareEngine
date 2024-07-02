@@ -16,7 +16,7 @@
 namespace Flare
 {
 	class System;
-	class FLAREECS_API World;
+	class World;
 	class FLAREECS_API SystemsManager
 	{
 	public:
@@ -26,11 +26,11 @@ namespace Flare
 		SystemGroupId CreateGroup(std::string_view name);
 		std::optional<SystemGroupId> FindGroup(std::string_view name) const;
 
-		SystemId RegisterSystem(std::string_view name, SystemGroupId group, System* system);
-		SystemId RegisterSystem(std::string_view name, SystemGroupId group, const SystemEventFunction& onUpdate = nullptr, const SystemConfig* config = nullptr);
-		SystemId RegisterSystem(std::string_view name, const SystemEventFunction& onUpdate = nullptr);
+		SystemId RegisterSystem(std::string_view name, System* systemInstance);
 
-		void RegisterSystems(SystemGroupId defaultGroup);
+		void RegisterSystems();
+
+		void SetDefaultSystemsGroup(SystemGroupId groupId);
 
 		void AddSystemToGroup(SystemId system, SystemGroupId group);
 		void AddSystemExecutionSettings(SystemId system, const std::vector<ExecutionOrder>* executionOrder);
@@ -47,7 +47,7 @@ namespace Flare
 			{
 				SystemExecutionContext context;
 				context.Commands = &m_CommandBuffer;
-				m_Systems[id].OnUpdate(context);
+				m_Systems[id].SystemInstance->OnUpdate(m_World, context);
 			}
 		}
 
@@ -62,10 +62,10 @@ namespace Flare
 		World& m_World;
 		EntitiesCommandBuffer m_CommandBuffer;
 
+		SystemGroupId m_DefaultSystemGroupId = 0;
+
 		std::vector<SystemData> m_Systems;
 		std::unordered_map<std::string, SystemGroupId> m_GroupNameToId;
 		std::vector<SystemGroup> m_Groups;
-
-		std::vector<System*> m_ManagedSystems;
 	};
 }

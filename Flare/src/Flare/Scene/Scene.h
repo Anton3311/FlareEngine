@@ -46,7 +46,7 @@ namespace Flare
 	private:
 		World m_World;
 
-		SystemGroupId m_2DRenderingGroup;
+		SystemGroupId m_RenderingGroup;
 		SystemGroupId m_ScriptingUpdateGroup;
 		SystemGroupId m_LateUpdateGroup;
 		SystemGroupId m_OnRuntimeStartGroup;

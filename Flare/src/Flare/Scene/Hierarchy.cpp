@@ -16,7 +16,10 @@ namespace Flare
 	FLARE_IMPL_SYSTEM(TransformPropagationSystem);
 	void TransformPropagationSystem::OnConfig(World& world, SystemConfig& config)
 	{
-		config.Group = world.GetSystemsManager().FindGroup("Late Update");
+		std::optional<uint32_t> groupId = world.GetSystemsManager().FindGroup("Late Update");
+		FLARE_CORE_ASSERT(groupId.has_value());
+		config.Group = *groupId;
+
 		m_Qeury = world.NewQuery()
 			.All()
 			.With<TransformComponent, Children>()
