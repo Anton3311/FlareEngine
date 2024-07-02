@@ -182,8 +182,6 @@ namespace Flare
 		m_RenderPassCache.Clear();
 		m_StagingBufferPool.Release();
 
-		DestroyStagingBuffers();
-
 		m_DefaultPipelines.clear();
 
 		if (m_DebugMessenger)
@@ -240,7 +238,6 @@ namespace Flare
 
 		m_PrimaryCommandBuffer->Reset();
 
-		DestroyStagingBuffers();
 		m_StagingBufferPool.Reset();
 
 		m_PrimaryCommandBuffer->Begin();
@@ -340,33 +337,6 @@ namespace Flare
 
 		VK_CHECK_RESULT(vkAllocateMemory(VulkanContext::GetInstance().GetDevice(), &allocation, nullptr, &memory));
 		VK_CHECK_RESULT(vkBindBufferMemory(VulkanContext::GetInstance().GetDevice(), buffer, memory, 0));
-	}
-
-	VulkanAllocation VulkanContext::CreateStagingBuffer(size_t size, VkBuffer& buffer)
-	{
-		FLARE_PROFILE_FUNCTION();
-		FLARE_CORE_ASSERT(size > 0);
-
-		VkBufferCreateInfo info{};
-		info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-		info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-		info.size = size;
-		info.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-
-		VmaAllocationCreateInfo allocationInfo{};
-		allocationInfo.usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
-		allocationInfo.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
-
-		VulkanAllocation allocation{};
-		VkResult result = vmaCreateBuffer(m_Allocator, &info, &allocationInfo, &buffer, &allocation.Handle, &allocation.Info);
-
-		if (result != VK_SUCCESS)
-		{
-			FLARE_CORE_ERROR("Failed to create a staging buffer of size: {}. Error: {}", size, (std::underlying_type_t<VkResult>)result);
-			FLARE_CORE_ASSERT(false);
-		}
-
-		return allocation;
 	}
 
 	Ref<CommandBuffer> VulkanContext::GetCommandBuffer() const
@@ -514,11 +484,6 @@ namespace Flare
 		}
 
 		return VK_SUCCESS;
-	}
-
-	void VulkanContext::DeferDestroyStagingBuffer(StagingBuffer stagingBuffer)
-	{
-		m_CurrentFrameStagingBuffers.push_back(std::move(stagingBuffer));
 	}
 
 	Ref<Pipeline> VulkanContext::GetDefaultPipelineForShader(Ref<Shader> shader, Ref<VulkanRenderPass> renderPass)
@@ -1115,18 +1080,6 @@ namespace Flare
 		}
 
 		return VK_PRESENT_MODE_FIFO_KHR;
-	}
-
-	void VulkanContext::DestroyStagingBuffers()
-	{
-		FLARE_PROFILE_FUNCTION();
-		for (const auto& buffer : m_CurrentFrameStagingBuffers)
-		{
-			vmaFreeMemory(m_Allocator, buffer.Allocation.Handle);
-			vkDestroyBuffer(m_Device, buffer.Buffer, nullptr);
-		}
-
-		m_CurrentFrameStagingBuffers.clear();
 	}
 
 	std::vector<VkLayerProperties> VulkanContext::EnumerateAvailableLayers()

@@ -75,12 +75,6 @@ struct std::hash<Flare::RenderPassKey>
 
 namespace Flare
 {
-	struct StagingBuffer
-	{
-		VkBuffer Buffer = VK_NULL_HANDLE;
-		VulkanAllocation Allocation;
-	};
-
 	FLARE_API VkImageLayout ImageLayoutToVulkanImageLayout(ImageLayout layout, TextureFormat format);
 	FLARE_API VkCompareOp DepthComparisonFunctionToVulkanCompareOp(DepthComparisonFunction function);
 
@@ -99,7 +93,6 @@ namespace Flare
 		bool IsValid() const { return m_Device != VK_NULL_HANDLE; }
 
 		void CreateBuffer(size_t size, VkBufferUsageFlags usage, VkMemoryPropertyFlags memoryProperties, VkBuffer& buffer, VkDeviceMemory& memory);
-		VulkanAllocation CreateStagingBuffer(size_t size, VkBuffer& buffer);
 
 		Ref<VulkanCommandBuffer> GetPrimaryCommandBuffer() const { return m_PrimaryCommandBuffer; }
 		Ref<CommandBuffer> GetCommandBuffer() const override;
@@ -128,8 +121,6 @@ namespace Flare
 		uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 
 		VkResult SetDebugName(VkObjectType objectType, uint64_t objectHandle, const char* name);
-
-		void DeferDestroyStagingBuffer(StagingBuffer stagingBuffer);
 
 		Ref<Pipeline> GetDefaultPipelineForShader(Ref<Shader> shader, Ref<VulkanRenderPass> renderPass);
 
@@ -174,8 +165,6 @@ namespace Flare
 		uint32_t ChooseSwapChainFormat(const std::vector<VkSurfaceFormatKHR>& formats);
 		VkExtent2D GetSwapChainExtent(const VkSurfaceCapabilitiesKHR& capabilities);
 		VkPresentModeKHR ChoosePresentMode(const std::vector<VkPresentModeKHR>& modes);
-
-		void DestroyStagingBuffers();
 	private:
 		std::vector<VkLayerProperties> EnumerateAvailableLayers();
 	private:
@@ -237,8 +226,7 @@ namespace Flare
 		// Allocator
 		VmaAllocator m_Allocator = VK_NULL_HANDLE;
 
-		// Stating buffers
-		std::vector<StagingBuffer> m_CurrentFrameStagingBuffers;
+		// Staging buffers
 		VulkanStagingBufferPool m_StagingBufferPool;
 	};
 }
