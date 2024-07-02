@@ -198,27 +198,6 @@ namespace Flare
     {
         FLARE_PROFILE_FUNCTION();
 
-        if (m_ExitPlayModeRequested)
-        {
-			Ref<EditorAssetManager> assetManager = As<EditorAssetManager>(AssetManager::GetInstance());
-
-			Scene::GetActive()->OnRuntimeEnd();
-
-            ResetViewportRenderGraphs();
-
-			Scene::SetActive(nullptr);
-
-			Ref<Scene> editorScene = AssetManager::GetAsset<Scene>(m_EditedSceneHandle);
-			editorScene->InitializeRuntime();
-
-			Scene::SetActive(editorScene);
-			m_Mode = EditorMode::Edit;
-
-			InputManager::SetCursorMode(CursorMode::Normal);
-
-            m_ExitPlayModeRequested = false;
-        }
-
         if (m_Mode == EditorMode::Play)
         {
             if (m_GameWindow->HasFocusChanged())
@@ -574,40 +553,76 @@ namespace Flare
 
     void EditorLayer::EnterPlayMode()
     {
-        ResetViewportRenderGraphs();
-
         FLARE_CORE_ASSERT(m_Mode == EditorMode::Edit);
 
-        m_GameWindow->RequestFocus();
-        m_UpdateCursorModeNextFrame = true;
+        if (m_EnterPlayModeScheduled)
+            return;
 
-        Ref<Scene> active = Scene::GetActive();
+        m_EnterPlayModeScheduled = true;
 
-        Ref<EditorAssetManager> assetManager = As<EditorAssetManager>(AssetManager::GetInstance());
-        std::filesystem::path activeScenePath = assetManager->GetAssetMetadata(active->Handle)->Path;
+		Application::GetInstance().ExecuteAfterEndOfFrame([this]()
+		{
+			GraphicsContext::GetInstance().WaitForDevice();
+			ResetViewportRenderGraphs();
 
-        SaveActiveScene();
+			m_GameWindow->RequestFocus();
+			m_UpdateCursorModeNextFrame = true;
 
-        m_PlaymodePaused = false;
+			Ref<Scene> active = Scene::GetActive();
 
-        Scene::SetActive(nullptr);
-        assetManager->UnloadAsset(active->Handle);
-        active = nullptr;
+			Ref<EditorAssetManager> assetManager = As<EditorAssetManager>(AssetManager::GetInstance());
+			std::filesystem::path activeScenePath = assetManager->GetAssetMetadata(active->Handle)->Path;
 
-        Ref<Scene> playModeScene = CreateRef<Scene>(m_ECSContext);
-        SceneSerializer::Deserialize(playModeScene, activeScenePath, m_Camera, m_SceneViewSettings);
+			SaveActiveScene();
 
-        Scene::SetActive(playModeScene);
-        m_Mode = EditorMode::Play;
+			m_PlaymodePaused = false;
 
-        playModeScene->InitializeRuntime();
-        Scene::GetActive()->OnRuntimeStart();
+			Scene::SetActive(nullptr);
+			assetManager->UnloadAsset(active->Handle);
+			active = nullptr;
+
+			Ref<Scene> playModeScene = CreateRef<Scene>(m_ECSContext);
+			SceneSerializer::Deserialize(playModeScene, activeScenePath, m_Camera, m_SceneViewSettings);
+
+			Scene::SetActive(playModeScene);
+			m_Mode = EditorMode::Play;
+
+			playModeScene->InitializeRuntime();
+			Scene::GetActive()->OnRuntimeStart();
+
+            m_EnterPlayModeScheduled = false;
+		});
     }
 
     void EditorLayer::ExitPlayMode()
     {
         FLARE_CORE_ASSERT(m_Mode == EditorMode::Play);
-        m_ExitPlayModeRequested = true;
+
+        if (m_ExitPlayModeScheduled)
+            return;
+
+        m_ExitPlayModeScheduled = true;
+
+        Application::GetInstance().ExecuteAfterEndOfFrame([this]()
+		{
+			GraphicsContext::GetInstance().WaitForDevice();
+			Ref<EditorAssetManager> assetManager = As<EditorAssetManager>(AssetManager::GetInstance());
+
+			Scene::GetActive()->OnRuntimeEnd();
+
+			ResetViewportRenderGraphs();
+
+			Scene::SetActive(nullptr);
+
+			Ref<Scene> editorScene = AssetManager::GetAsset<Scene>(m_EditedSceneHandle);
+			editorScene->InitializeRuntime();
+
+			Scene::SetActive(editorScene);
+			m_Mode = EditorMode::Edit;
+
+			InputManager::SetCursorMode(CursorMode::Normal);
+            m_ExitPlayModeScheduled = false;
+		});
     }
 
     void EditorLayer::ReloadScriptingModules()

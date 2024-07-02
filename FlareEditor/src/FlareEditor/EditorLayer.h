@@ -87,7 +87,8 @@ namespace Flare
 		void ResetViewportRenderGraphs();
 	private:
 		bool m_UpdateCursorModeNextFrame = false;
-		bool m_ExitPlayModeRequested = false;
+		bool m_EnterPlayModeScheduled = false;
+		bool m_ExitPlayModeScheduled = false;
 
 		std::set<AssetHandle> m_AssetReloadQueue;
 
