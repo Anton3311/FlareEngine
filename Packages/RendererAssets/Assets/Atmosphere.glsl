@@ -1,5 +1,6 @@
 Type = FullscreenQuad
 DepthWrite = false
+DepthFunction = Equal
 
 Properties =
 {
@@ -22,7 +23,7 @@ Properties =
 
 void main()
 {
-	gl_Position = vec4(i_Position.xy, 0.9999999f, 1.0f);
+	gl_Position = vec4(i_Position.xy, 1.0f, 1.0f);
 }
 
 #end
