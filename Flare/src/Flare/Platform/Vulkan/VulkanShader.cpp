@@ -68,6 +68,7 @@ namespace Flare
 
 	void VulkanShader::Load()
 	{
+		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(AssetManager::IsAssetHandleValid(Handle));
 
 		m_Valid = false;
@@ -141,41 +142,74 @@ namespace Flare
 				fmt::format("{}.{}", m_DebugName, stageName).c_str());
 		}
 
-		// Generate material descriptor set layout
 		{
 			std::vector<VkDescriptorSetLayoutBinding> bindings;
 
-			for (const auto& property : m_Metadata->Properties)
+			for (const auto& descriptorProperty : m_Metadata->DescriptorProperties)
 			{
-				if (property.Type != ShaderDataType::Sampler && property.Type != ShaderDataType::SamplerArray)
+				FLARE_CORE_ASSERT(descriptorProperty.Set < 3);
+
+				m_DescriptorSetsUsageMask |= (1 << descriptorProperty.Set);
+
+				if (descriptorProperty.Set != GetMaterialDescriptorSetIndex(m_Metadata->Type))
 					continue;
 
 				VkDescriptorSetLayoutBinding& binding = bindings.emplace_back();
-				binding.binding = property.Binding;
-				binding.descriptorCount = (uint32_t)(property.Size / ShaderDataTypeSize(ShaderDataType::Sampler));
-				binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+				binding = {};
+				binding.binding = descriptorProperty.Binding;
+				binding.descriptorCount = descriptorProperty.DescriptorCount;
 				binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+
+				switch (descriptorProperty.Type)
+				{
+				case ShaderDescriptorType::UniformBuffer:
+					binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+					break;
+				case ShaderDescriptorType::Sampler:
+					binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+					break;
+				case ShaderDescriptorType::StorageBuffer:
+					binding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+					break;
+				case ShaderDescriptorType::StorageImage:
+					binding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+					break;
+				default:
+					FLARE_CORE_ASSERT(false, "Unhandled descriptor type");
+				}
 			}
 
 			if (bindings.size() > 0)
 			{
-				m_SetPool = CreateRef<VulkanDescriptorSetPool>(200, Span<VkDescriptorSetLayoutBinding>::FromVector(bindings));
+				constexpr size_t maxShaderDescriptorSets = 128;
+				m_SetPool = CreateRef<VulkanDescriptorSetPool>(
+					maxShaderDescriptorSets,
+					Span<VkDescriptorSetLayoutBinding>::FromVector(bindings));
 			}
 		}
 
 		Ref<const VulkanDescriptorSetLayout> primaryDescriptorSet = As<const VulkanDescriptorSetLayout>(Renderer::GetPrimaryDescriptorSetLayout());
+		Ref<DescriptorSetLayout> emptyDescriptorSetLayout = VulkanContext::GetInstance().GetEmptyDescriptorSetLayout();
 
 		std::vector<VkPushConstantRange> pushConstantsRanges;
 		VkDescriptorSetLayout descriptorSetLayouts[3] = { nullptr };
 
-		descriptorSetLayouts[0] = primaryDescriptorSet->GetHandle();
-		descriptorSetLayouts[1] = As<const VulkanDescriptorSetLayout>(Renderer2D::GetDescriptorSetLayout())->GetHandle();
+		if (HAS_BIT(m_DescriptorSetsUsageMask, 1 << 0))
+			descriptorSetLayouts[0] = primaryDescriptorSet->GetHandle();
 
-		switch (m_Metadata->Type)
+		if (HAS_BIT(m_DescriptorSetsUsageMask, 1 << 1))
 		{
-		case ShaderType::Decal:
-			descriptorSetLayouts[1] = As<const VulkanDescriptorSetLayout>(Renderer::GetDecalsDescriptorSetLayout())->GetHandle();
-			break;
+			switch (m_Metadata->Type)
+			{
+			case ShaderType::Decal:
+				descriptorSetLayouts[1] = As<const VulkanDescriptorSetLayout>(Renderer::GetDecalsDescriptorSetLayout())->GetHandle();
+				break;
+			case ShaderType::_2D:
+				descriptorSetLayouts[1] = As<const VulkanDescriptorSetLayout>(Renderer2D::GetDescriptorSetLayout())->GetHandle();
+				break;
+			default:
+				FLARE_CORE_ASSERT(false);
+			}
 		}
 
 		if (m_SetPool)
@@ -207,7 +241,13 @@ namespace Flare
 		for (uint32_t i = 0; i < 3; i++)
 		{
 			if (descriptorSetLayouts[i] != nullptr)
-				setLayoutCount++;
+				setLayoutCount = glm::max(setLayoutCount, i + 1);
+		}
+
+		for (uint32_t i = 0; i < setLayoutCount; i++)
+		{
+			if (descriptorSetLayouts[i] == nullptr)
+				descriptorSetLayouts[i] = As<VulkanDescriptorSetLayout>(emptyDescriptorSetLayout)->GetHandle();
 		}
 
 		// Create pipeline layout

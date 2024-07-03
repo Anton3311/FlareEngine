@@ -185,17 +185,31 @@ namespace Flare
 		ShaderDataType Type = ShaderDataType::Float;
 	};
 
+	enum class ShaderDescriptorSetUsage
+	{
+		Used,
+		NotUsed,
+
+		// Empty descriptor sets are used to fill gaps.
+		// 
+		// For example, if the shader uses descriptor sets 0 and 2
+		// an empty descriptor set is used to fill slot at index 1
+		Empty,
+	};
+
 	struct ShaderMetadata
 	{
 		std::string Name;
 		ShaderType Type = ShaderType::Unknown;
 		ShaderFeatures Features;
 		ShaderOutputs Outputs;
+
+		ShaderDescriptorSetUsage DescriptorSetUsage[4] = { ShaderDescriptorSetUsage::NotUsed };
+
 		std::vector<ShaderProperty> Properties;
 		std::vector<ShaderDescriptorProperty> DescriptorProperties;
 		std::vector<ShaderStageType> Stages;
 		std::vector<ShaderPushConstantsRange> PushConstantsRanges;
-
 		std::vector<VertexShaderInput> VertexShaderInputs;
 	};
 }

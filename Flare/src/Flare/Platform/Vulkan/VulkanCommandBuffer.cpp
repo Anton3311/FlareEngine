@@ -102,10 +102,29 @@ namespace Flare
 
 		BindPipeline(pipeline);
 
-		if (m_PrimaryDescriptorSet)
+		Ref<VulkanDescriptorSet> emptyDescriptorSet = As<VulkanDescriptorSet>(VulkanContext::GetInstance().GetEmptyDescriptorSet());
+
+		ShaderDescriptorSetUsage primaryDescriptorSetUsage = metadata->DescriptorSetUsage[0];
+		if (primaryDescriptorSetUsage == ShaderDescriptorSetUsage::Used)
+		{
+			FLARE_CORE_ASSERT(m_PrimaryDescriptorSet);
 			BindDescriptorSet(m_PrimaryDescriptorSet, pipelineLayout, 0);
-		if (m_SecondaryDescriptorSet)
+		}
+		else if (primaryDescriptorSetUsage == ShaderDescriptorSetUsage::Empty)
+		{
+			BindDescriptorSet(emptyDescriptorSet, pipelineLayout, 0);
+		}
+
+		ShaderDescriptorSetUsage secondaryDescriptorSetUsage = metadata->DescriptorSetUsage[1];
+		if (secondaryDescriptorSetUsage == ShaderDescriptorSetUsage::Used)
+		{
+			FLARE_CORE_ASSERT(m_SecondaryDescriptorSet);
 			BindDescriptorSet(m_SecondaryDescriptorSet, pipelineLayout, 1);
+		}
+		else if (secondaryDescriptorSetUsage == ShaderDescriptorSetUsage::Empty)
+		{
+			BindDescriptorSet(emptyDescriptorSet, pipelineLayout, 1);
+		}
 
 		Ref<VulkanDescriptorSet> materialDescriptorSet = vulkanMaterial->GetDescriptorSet();
 		if (materialDescriptorSet)

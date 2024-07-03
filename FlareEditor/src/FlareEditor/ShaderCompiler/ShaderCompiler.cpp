@@ -657,6 +657,34 @@ namespace Flare
 		{
 			propertyNameToIndex[metadata->Properties[i].Name] = i;
 		}
+
+
+
+		// Fill DescriptorSetUsage
+		for (size_t i = 0; i < sizeof(metadata->DescriptorSetUsage) / sizeof(metadata->DescriptorSetUsage[0]); i++)
+		{
+			metadata->DescriptorSetUsage[i] = ShaderDescriptorSetUsage::NotUsed;
+		}
+
+		int32_t maxUsedSet = -1;
+		const auto& descriptorProperties = metadata->DescriptorProperties;
+		for (size_t i = 0; i < descriptorProperties.size(); i++)
+		{
+			maxUsedSet = glm::max(maxUsedSet, (int32_t)descriptorProperties[i].Set);
+		}
+
+		// Fill every slot with empty descriptor set, so that when marking
+		// used descriptor set slots, the ones that are unsued remain
+		// as ShaderDescriptorSetUsage::Empty, thus filling empty gaps
+		for (int32_t i = 0; i <= maxUsedSet; i++)
+		{
+			metadata->DescriptorSetUsage[i] = ShaderDescriptorSetUsage::Empty;
+		}
+
+		for (const ShaderDescriptorProperty& descriptor : metadata->DescriptorProperties)
+		{
+			metadata->DescriptorSetUsage[descriptor.Set] = ShaderDescriptorSetUsage::Used;
+		}
 	}
 
 	static void ExtractShaderOutputs(spirv_cross::Compiler& compiler, ShaderOutputs& outputs)
@@ -729,6 +757,9 @@ namespace Flare
 		metadata->Type = ShaderType::Surface;
 		metadata->Name = shaderPath.filename().replace_extension().generic_string();
 
+		for (const auto& program : programs)
+			metadata->Stages.push_back(program.Stage);
+
 		for (const PreprocessedShaderProgram& program : programs)
 		{
 			shaderc_shader_kind shaderKind = ShaderStageTypeToShaderCStageType(program.Stage);
@@ -788,9 +819,6 @@ namespace Flare
 
 		metadata->Outputs = std::move(shaderOutputs);
 		ParseShaderMetadata(parser, metadata, errors, propertyNameToIndex);
-
-		for (const auto& program : programs)
-			metadata->Stages.push_back(program.Stage);
 
 		EditorShaderCache::GetInstance().SetShaderEntry(shaderHandle, metadata);
 

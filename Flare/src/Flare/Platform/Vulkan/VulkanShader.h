@@ -36,6 +36,8 @@ namespace Flare
 
 		Ref<const VulkanDescriptorSetLayout> GetDescriptorSetLayout() const;
 		Ref<VulkanDescriptorSetPool> GetDescriptorSetPool() const { return m_SetPool; }
+
+		inline uint32_t GetDescriptorSetsUsageMask() const { return m_DescriptorSetsUsageMask; }
 	private:
 		struct ShaderStageModule
 		{
@@ -44,6 +46,7 @@ namespace Flare
 		};
 
 		bool m_Valid = false;
+		uint32_t m_DescriptorSetsUsageMask = 0;
 
 		std::string m_DebugName;
 
