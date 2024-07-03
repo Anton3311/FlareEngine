@@ -237,10 +237,7 @@ namespace Flare
 
 	void Renderer::Shutdown()
 	{
-		if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
-		{
-			s_RendererData.PrimaryDescriptorPool->ReleaseSet(s_RendererData.PrimaryDescriptorSet);
-		}
+		s_RendererData.PrimaryDescriptorPool->ReleaseSet(s_RendererData.PrimaryDescriptorSet);
 
 		s_RendererData = {};
 	}
@@ -310,96 +307,12 @@ namespace Flare
 		}
 	}
 
-	static void ApplyMaterial(const Ref<const Material>& materail)
-	{
-		Ref<CommandBuffer> commandBuffer = GraphicsContext::GetInstance().GetCommandBuffer();
-		commandBuffer->ApplyMaterial(materail);
-		commandBuffer->SetViewportAndScisors(Math::Rect(glm::vec2(0.0f), (glm::vec2)s_RendererData.CurrentViewport->RenderTarget->GetSize()));
-	}
-
 	void Renderer::Flush()
 	{
 		FLARE_PROFILE_FUNCTION();
 
 		s_RendererData.Statistics.ObjectsSubmitted += (uint32_t)s_RendererData.OpaqueQueue.GetSize();
-
-#if 0
-		if (RendererAPI::GetAPI() != RendererAPI::API::Vulkan)
-		{
-			ExecuteDecalsPass();
-		}
-#endif
-
 		s_RendererData.CurrentViewport->Graph.Execute(GraphicsContext::GetInstance().GetCommandBuffer());
-	}
-
-	void Renderer::ExecuteDecalsPass()
-	{
-#if 0
-		FLARE_PROFILE_FUNCTION();
-		if (s_RendererData.Decals.size() == 0)
-			return;
-
-		s_RendererData.InstanceDataBuffer.clear();
-
-		{
-			FLARE_PROFILE_SCOPE("SortByMaterial");
-			std::sort(s_RendererData.Decals.begin(), s_RendererData.Decals.end(), [](const DecalData& a, const DecalData& b) -> bool
-			{
-				return (uint64_t)a.Material->Handle < (uint64_t)b.Material->Handle;
-			});
-		}
-
-		{
-			FLARE_PROFILE_SCOPE("FillInstancesData");
-			for (const DecalData& decal : s_RendererData.Decals)
-			{
-				auto& instance = s_RendererData.InstanceDataBuffer.emplace_back();
-				const auto& transform = decal.Transform;
-				glm::vec4 translation = transform[3];
-				instance.PackedTransform[0] = glm::vec4((glm::vec3)transform[0], translation.x);
-				instance.PackedTransform[1] = glm::vec4((glm::vec3)transform[1], translation.y);
-				instance.PackedTransform[2] = glm::vec4((glm::vec3)transform[2], translation.z);
-			}
-		}
-
-		{
-			FLARE_PROFILE_SCOPE("SetInstancesData");
-			s_RendererData.InstancesShaderBuffer->SetData(MemorySpan::FromVector(s_RendererData.InstanceDataBuffer));
-		}
-
-		s_RendererData.CurrentViewport->RenderTarget->BindAttachmentTexture(s_RendererData.CurrentViewport->DepthAttachmentIndex, 1);
-
-		uint32_t baseInstance = 0;
-		uint32_t instanceIndex = 0;
-
-		Ref<const Material> currentMaterial = s_RendererData.Decals[0].Material;
-		Ref<const Mesh> cubeMesh = RendererPrimitives::GetCube();
-
-		for (; instanceIndex < (uint32_t)s_RendererData.Decals.size(); instanceIndex++)
-		{
-			if (s_RendererData.Decals[instanceIndex].Material.get() != currentMaterial.get())
-			{
-				ApplyMaterial(currentMaterial);
-
-				RenderCommand::DrawInstancesIndexed(cubeMesh, 0, instanceIndex - baseInstance, baseInstance);
-				baseInstance = instanceIndex;
-
-				currentMaterial = s_RendererData.Decals[instanceIndex].Material;
-			}
-		}
-
-		if (instanceIndex != baseInstance)
-		{
-			FLARE_CORE_ASSERT(currentMaterial->GetShader());
-			ApplyMaterial(currentMaterial);
-
-			RenderCommand::DrawInstancesIndexed(cubeMesh, 0, instanceIndex - baseInstance, baseInstance);
-		}
-
-		s_RendererData.Decals.clear();
-		s_RendererData.InstanceDataBuffer.clear();
-#endif
 	}
 
 	void Renderer::EndScene()
