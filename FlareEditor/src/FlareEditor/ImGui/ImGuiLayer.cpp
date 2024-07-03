@@ -77,6 +77,41 @@ namespace Flare
 	{
 	}
 
+	void ImGuiLayer::BeginDockSpace()
+	{
+        static bool fullscreen = true;
+        static ImGuiDockNodeFlags dockspaceFlags = ImGuiDockNodeFlags_None;
+
+        ImGuiViewport* viewport = ImGui::GetMainViewport();
+        ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoDocking;
+        if (fullscreen)
+        {
+            ImGui::SetNextWindowPos(viewport->WorkPos);
+            ImGui::SetNextWindowSize(viewport->WorkSize);
+            ImGui::SetNextWindowViewport(viewport->ID);
+            windowFlags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
+            windowFlags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
+        }
+        else
+        {
+            dockspaceFlags &= ~ImGuiDockNodeFlags_PassthruCentralNode;
+        }
+
+        if (dockspaceFlags & ImGuiDockNodeFlags_PassthruCentralNode)
+            windowFlags |= ImGuiWindowFlags_NoBackground;
+
+        static bool open = true;
+        ImGui::Begin("DockSpace", &open, windowFlags);
+
+        ImGuiID dockspaceId = ImGui::GetID("DockSpace");
+        ImGui::DockSpace(dockspaceId, ImVec2(0.0f, 0.0f), dockspaceFlags);
+	}
+
+	void ImGuiLayer::EndDockSpace()
+	{
+        ImGui::End();
+	}
+
 	ImTextureID ImGuiLayer::GetId(const Ref<const Texture>& texture)
 	{
 		return s_Instance->GetTextureId(texture);

@@ -344,33 +344,7 @@ namespace Flare
     {
         FLARE_PROFILE_FUNCTION();
         m_ImGuiLayer->Begin();
-
-        static bool fullscreen = true;
-        static ImGuiDockNodeFlags dockspaceFlags = ImGuiDockNodeFlags_None;
-
-        ImGuiViewport* viewport = ImGui::GetMainViewport();
-        ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoDocking;
-        if (fullscreen)
-        {
-            ImGui::SetNextWindowPos(viewport->WorkPos);
-            ImGui::SetNextWindowSize(viewport->WorkSize);
-            ImGui::SetNextWindowViewport(viewport->ID);
-            windowFlags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
-            windowFlags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
-        }
-        else
-        {
-            dockspaceFlags &= ~ImGuiDockNodeFlags_PassthruCentralNode;
-        }
-
-        if (dockspaceFlags & ImGuiDockNodeFlags_PassthruCentralNode)
-            windowFlags |= ImGuiWindowFlags_NoBackground;
-
-        static bool open = true;
-        ImGui::Begin("DockSpace", &open, windowFlags);
-
-        ImGuiID dockspaceId = ImGui::GetID("DockSpace");
-        ImGui::DockSpace(dockspaceId, ImVec2(0.0f, 0.0f), dockspaceFlags);
+        m_ImGuiLayer->BeginDockSpace();
 
         m_TitleBar.OnRenderImGui();
 
@@ -429,7 +403,8 @@ namespace Flare
                 window->OnUpdate();
         }
 
-        ImGui::End();
+        m_ImGuiLayer->EndDockSpace();
+
         m_ImGuiLayer->End();
         m_ImGuiLayer->RenderCurrentWindow();
         m_ImGuiLayer->UpdateWindows();
