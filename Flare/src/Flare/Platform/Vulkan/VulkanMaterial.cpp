@@ -12,18 +12,14 @@
 
 namespace Flare
 {
+	VulkanMaterial::~VulkanMaterial()
+	{
+		ReleaseDescriptorSet();
+	}
+
 	void VulkanMaterial::SetShader(const Ref<Shader>& shader)
 	{
-		if (m_Shader && m_Set)
-		{
-			Ref<VulkanShader> vulkanShader = As<VulkanShader>(m_Shader);
-			auto pool = vulkanShader->GetDescriptorSetPool();
-
-			if (pool)
-			{
-				pool->ReleaseSet(m_Set);
-			}
-		}
+		ReleaseDescriptorSet();
 
 		Material::SetShader(shader);
 
@@ -90,5 +86,17 @@ namespace Flare
 		m_Set->FlushWrites();
 
 		m_IsDirty = false;
+	}
+
+	void VulkanMaterial::ReleaseDescriptorSet()
+	{
+		if (!m_Shader || !m_Set)
+			return;
+
+		const auto& pool = As<VulkanShader>(m_Shader)->GetDescriptorSetPool();
+		if (pool)
+		{
+			pool->ReleaseSet(m_Set);
+		}
 	}
 }
