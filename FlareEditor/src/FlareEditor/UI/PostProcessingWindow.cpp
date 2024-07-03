@@ -19,9 +19,9 @@ namespace Flare
 		if (ImGui::Begin("Post Processing"))
 		{
 			RenderWindowContents();
-
-			ImGui::End();
 		}
+
+		ImGui::End();
 	}
 
 	void PostProcessingWindow::RenderWindowContents()
