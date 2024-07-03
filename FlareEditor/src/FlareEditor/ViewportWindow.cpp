@@ -50,20 +50,6 @@ namespace Flare
 			Renderer::BeginScene(m_Viewport);
 			scene->OnRender(m_Viewport);
 			Renderer::EndScene();
-
-			if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
-			{
-				Ref<VulkanCommandBuffer> commandBuffer = VulkanContext::GetInstance().GetPrimaryCommandBuffer();
-				Ref<VulkanFrameBuffer> target = As<VulkanFrameBuffer>(m_Viewport.RenderTarget);
-
-				commandBuffer->TransitionImageLayout(As<VulkanTexture>(m_Viewport.ColorTexture)->GetImageHandle(), VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-				commandBuffer->TransitionImageLayout(As<VulkanTexture>(m_Viewport.NormalsTexture)->GetImageHandle(), VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-				commandBuffer->TransitionDepthImageLayout(
-					As<VulkanTexture>(m_Viewport.DepthTexture)->GetImageHandle(),
-					HasStencilComponent(m_Viewport.DepthTexture->GetFormat()),
-					VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
-					VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-			}
 		}
 	}
 
@@ -222,17 +208,17 @@ namespace Flare
 
 		ExternalRenderGraphResource colorTextureResource{};
 		colorTextureResource.InitialLayout = ImageLayout::AttachmentOutput;
-		colorTextureResource.FinalLayout = ImageLayout::AttachmentOutput;
+		colorTextureResource.FinalLayout = ImageLayout::ReadOnly;
 		colorTextureResource.TextureHandle = m_Viewport.ColorTexture;
 
 		ExternalRenderGraphResource normalsTextureResource{};
 		normalsTextureResource.InitialLayout = ImageLayout::AttachmentOutput;
-		normalsTextureResource.FinalLayout = ImageLayout::AttachmentOutput;
+		normalsTextureResource.FinalLayout = ImageLayout::ReadOnly;
 		normalsTextureResource.TextureHandle = m_Viewport.NormalsTexture;
 
 		ExternalRenderGraphResource depthTextureResource{};
 		depthTextureResource.InitialLayout = ImageLayout::AttachmentOutput;
-		depthTextureResource.FinalLayout = ImageLayout::AttachmentOutput;
+		depthTextureResource.FinalLayout = ImageLayout::ReadOnly;
 		depthTextureResource.TextureHandle = m_Viewport.DepthTexture;
 
 		m_Viewport.Graph.AddExternalResource(colorTextureResource);
