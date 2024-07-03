@@ -106,7 +106,7 @@ namespace Flare
 	void DebugRenderer::End()
 	{
 		FLARE_PROFILE_FUNCTION();
-		s_DebugRendererData.FrameData.LineVertices = Span(s_DebugRendererData.LinesBufferBase, s_DebugRendererData.LineCount);
+		s_DebugRendererData.FrameData.LineVertices = Span(s_DebugRendererData.LinesBufferBase, s_DebugRendererData.LineCount * 2);
 	}
 
 	void DebugRenderer::DrawLine(const glm::vec3& start, const glm::vec3& end)
