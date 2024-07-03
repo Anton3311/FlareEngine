@@ -196,7 +196,11 @@ namespace Flare
 
 			commandBuffer->TransitionImageLayout(As<VulkanTexture>(m_Viewport.ColorTexture)->GetImageHandle(), VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 			commandBuffer->TransitionImageLayout(As<VulkanTexture>(m_Viewport.NormalsTexture)->GetImageHandle(), VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-			commandBuffer->TransitionDepthImageLayout(As<VulkanTexture>(m_Viewport.DepthTexture)->GetImageHandle(), true, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			commandBuffer->TransitionDepthImageLayout(
+				As<VulkanTexture>(m_Viewport.DepthTexture)->GetImageHandle(),
+				HasStencilComponent(m_Viewport.DepthTexture->GetFormat()),
+				VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+				VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 		}
 	}
 
@@ -294,7 +298,7 @@ namespace Flare
 		normalsSpecifications.Format = TextureFormat::RGB8;
 
 		TextureSpecifications depthSpecifications = specifications;
-		depthSpecifications.Format = TextureFormat::Depth24Stencil8;
+		depthSpecifications.Format = TextureFormat::Depth32;
 
 		m_Viewport.ColorTexture = Texture::Create(colorSpecifications);
 		m_Viewport.NormalsTexture = Texture::Create(normalsSpecifications);

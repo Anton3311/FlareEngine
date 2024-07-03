@@ -72,8 +72,6 @@ namespace Flare
 			ResourceId id = GetResoureId(output.AttachmentTexture);
 			auto it = m_States.find(id);
 
-			bool isDepthTexture = IsDepthTextureFormat(output.AttachmentTexture->GetFormat());
-
 			// Only outputs with AttachmentOutput image layout can be used in a RenderPass
 			if (output.Layout == ImageLayout::AttachmentOutput)
 			{
@@ -84,13 +82,9 @@ namespace Flare
 
 				ResourceState& state = m_States[id];
 				state.Layout = output.Layout;
-
-				if (!isDepthTexture)
-				{
-					state.LastWritingPass = WritingRenderPass{};
-					state.LastWritingPass->RenderPassIndex = (uint32_t)nodeIndex;
-					state.LastWritingPass->AttachmentIndex = (uint32_t)outputIndex;
-				}
+				state.LastWritingPass = WritingRenderPass{};
+				state.LastWritingPass->RenderPassIndex = (uint32_t)nodeIndex;
+				state.LastWritingPass->AttachmentIndex = (uint32_t)outputIndex;
 			}
 			else
 			{
