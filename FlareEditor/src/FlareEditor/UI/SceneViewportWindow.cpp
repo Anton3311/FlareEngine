@@ -28,18 +28,6 @@
 
 namespace Flare
 {
-	struct GridPropertyIndices
-	{
-		uint32_t Offset = UINT32_MAX;
-		uint32_t Scale = UINT32_MAX;
-		uint32_t Thickness = UINT32_MAX;
-		uint32_t CellScale = UINT32_MAX;
-		uint32_t Color = UINT32_MAX;
-		uint32_t FallOffThreshold = UINT32_MAX;
-	};
-
-	static GridPropertyIndices s_GridPropertyIndices;
-
 	SceneViewportWindow::SceneViewportWindow(EditorCamera& camera, std::string_view name)
 		: ViewportWindow(name),
 		m_Camera(camera),
@@ -53,44 +41,6 @@ namespace Flare
 
 	void SceneViewportWindow::OnAttach()
 	{
-		AssetHandle gridShaderHandle = ShaderLibrary::FindShader("SceneViewGrid").value_or(NULL_ASSET_HANDLE);
-		if (AssetManager::IsAssetHandleValid(gridShaderHandle))
-		{
-			if (RendererAPI::GetAPI() != RendererAPI::API::Vulkan)
-			{
-				m_GridMaterial = Material::Create(AssetManager::GetAsset<Shader>(gridShaderHandle));
-
-				Ref<Shader> gridShader = m_GridMaterial->GetShader();
-				s_GridPropertyIndices.Color = gridShader->GetPropertyIndex("u_Data.Color").value_or(UINT32_MAX);
-				s_GridPropertyIndices.Offset = gridShader->GetPropertyIndex("u_Data.Offset").value_or(UINT32_MAX);
-				s_GridPropertyIndices.Scale = gridShader->GetPropertyIndex("u_Data.GridScale").value_or(UINT32_MAX);
-				s_GridPropertyIndices.Thickness = gridShader->GetPropertyIndex("u_Data.Thickness").value_or(UINT32_MAX);
-				s_GridPropertyIndices.CellScale = gridShader->GetPropertyIndex("u_Data.CellScale").value_or(UINT32_MAX);
-				s_GridPropertyIndices.FallOffThreshold = gridShader->GetPropertyIndex("u_Data.FallOffThreshold").value_or(UINT32_MAX);
-			}
-		}
-		else
-			FLARE_CORE_ERROR("Failed to load scene view grid shader");
-
-		AssetHandle selectionOutlineShader = ShaderLibrary::FindShader("SelectionOutline").value_or(NULL_ASSET_HANDLE);
-		if (AssetManager::IsAssetHandleValid(selectionOutlineShader))
-		{
-			if (false)
-			{
-				Ref<Shader> shader = AssetManager::GetAsset<Shader>(selectionOutlineShader);
-				m_SelectionOutlineMaterial = Material::Create(shader);
-
-				ImVec4 primaryColor = ImGuiTheme::Primary;
-				glm::vec4 selectionColor = glm::vec4(primaryColor.x, primaryColor.y, primaryColor.z, 1.0f);
-
-				std::optional<uint32_t> colorProperty = shader->GetPropertyIndex("u_Outline.Color");
-
-				if (colorProperty)
-					m_SelectionOutlineMaterial->WritePropertyValue(*colorProperty, selectionColor);
-			}
-		}
-		else
-			FLARE_CORE_ERROR("Failed to load selection outline shader");
 	}
 
 	void SceneViewportWindow::OnRenderViewport()
@@ -126,8 +76,6 @@ namespace Flare
 		OnClear();
 
 		scene->OnRender(m_Viewport);
-
-		//RenderGrid();
 
 		std::optional<Entity> selectedEntity = EditorLayer::GetInstance().Selection.TryGetEntity();
 		if (debugRenderingGroup.has_value())
@@ -165,26 +113,6 @@ namespace Flare
 			}
 
 			DebugRenderer::End();
-		}
-
-		if (selectedEntity && m_SelectionOutlineMaterial && false)
-		{
-			Ref<Shader> shader = m_SelectionOutlineMaterial->GetShader();
-			std::optional<uint32_t> idPropertyIndex = shader->GetPropertyIndex("u_Outline.SelectedId");
-			std::optional<uint32_t> thicknessPropertyIndex = shader->GetPropertyIndex("u_Outline.Thickness");
-
-			if (idPropertyIndex && thicknessPropertyIndex)
-			{
-				m_SelectionOutlineMaterial->WritePropertyValue<int32_t>(
-					*idPropertyIndex,
-					(int32_t)selectedEntity->GetIndex());
-
-				m_SelectionOutlineMaterial->WritePropertyValue(
-					*thicknessPropertyIndex,
-					glm::vec2(4.0f) / (glm::vec2)m_Viewport.GetSize() / 2.0f);
-
-				// TODO: also implement
-			}
 		}
 
 		Renderer::EndScene();
@@ -351,10 +279,7 @@ namespace Flare
 		{
 			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(ASSET_PAYLOAD_NAME))
 			{
-				std::optional<Entity> entity = GetEntityUnderCursor();
-
 				HandleAssetDragAndDrop(*(AssetHandle*)payload->Data);
-
 				ImGui::EndDragDropTarget();
 			}
 		}
@@ -424,19 +349,6 @@ namespace Flare
 						transform->Scale);
 
 					transform->Rotation = glm::degrees(transform->Rotation);
-				}
-			}
-		}
-
-		if (!ImGuizmo::IsUsingAny() && !m_IsToolbarHovered)
-		{
-			if (io.MouseClicked[ImGuiMouseButton_Left] && m_Viewport.RenderTarget != nullptr && m_IsHovered && m_RelativeMousePosition.x >= 0 && m_RelativeMousePosition.y >= 0)
-			{
-				std::optional<Entity> entity = GetEntityUnderCursor();
-
-				if (entity)
-				{
-					EditorLayer::GetInstance().Selection.SetEntity(*entity);
 				}
 			}
 		}
@@ -600,31 +512,8 @@ namespace Flare
 		ImGui::SetCursorPos(initialCursorPosition);
 	}
 
-	void SceneViewportWindow::RenderGrid()
-	{
-		if (!m_GridMaterial || !EditorLayer::GetInstance().GetSceneViewSettings().ShowGrid)
-			return;
-
-		float scale = m_Camera.GetZoom() * 3.0f;
-		float cellScale = 5.0f + glm::floor(m_Camera.GetZoom() / 20.0f) * 5.0f;
-		glm::vec3 gridColor = glm::vec3(0.5f);
-
-		glm::vec3 cameraPosition = m_Camera.GetRotationOrigin();
-
-		m_GridMaterial->WritePropertyValue(s_GridPropertyIndices.Offset, glm::vec3(cameraPosition.x, 0.0f, cameraPosition.z));
-		m_GridMaterial->WritePropertyValue(s_GridPropertyIndices.Scale, scale);
-		m_GridMaterial->WritePropertyValue(s_GridPropertyIndices.Thickness, 0.01f);
-		m_GridMaterial->WritePropertyValue(s_GridPropertyIndices.CellScale, 1.0f / cellScale);
-		m_GridMaterial->WritePropertyValue(s_GridPropertyIndices.Color, gridColor);
-		m_GridMaterial->WritePropertyValue(s_GridPropertyIndices.FallOffThreshold, 0.8f);
-
-		// TOOD: implement
-	}
-
 	void SceneViewportWindow::HandleAssetDragAndDrop(AssetHandle handle)
 	{
-		std::optional<Entity> entity = GetEntityUnderCursor();
-
 		World& world = GetScene()->GetECSWorld();
 		const AssetMetadata* metadata = AssetManager::GetAssetMetadata(handle);
 		if (metadata != nullptr)
@@ -634,34 +523,6 @@ namespace Flare
 			case AssetType::Scene:
 				EditorLayer::GetInstance().OpenScene(handle);
 				break;
-			case AssetType::Sprite:
-			{
-				if (!entity || !world.IsEntityAlive(*entity))
-					break;
-
-				SpriteComponent* sprite = world.TryGetEntityComponent<SpriteComponent>(*entity);
-				if (sprite)
-					sprite->Sprite = AssetManager::GetAsset<Sprite>(handle);
-
-				break;
-			}
-			case AssetType::Material:
-			{
-				if (!entity || !world.IsEntityAlive(*entity))
-					break;
-
-				MeshComponent* meshComponent = world.TryGetEntityComponent<MeshComponent>(*entity);
-				if (meshComponent)
-					meshComponent->Material = handle;
-				else
-				{
-					MaterialComponent* materialComponent = world.TryGetEntityComponent<MaterialComponent>(*entity);
-					if (materialComponent)
-						materialComponent->Material = handle;
-				}
-
-				break;
-			}
 			case AssetType::Prefab:
 			{
 				Ref<Prefab> prefab = AssetManager::GetAsset<Prefab>(handle);
@@ -670,10 +531,5 @@ namespace Flare
 			}
 			}
 		}
-	}
-
-	std::optional<Entity> SceneViewportWindow::GetEntityUnderCursor() const
-	{
-		return {};
 	}
 }

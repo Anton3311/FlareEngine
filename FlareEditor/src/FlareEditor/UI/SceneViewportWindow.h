@@ -38,10 +38,8 @@ namespace Flare
 	private:
 		void RenderWindowContents();
 		void RenderToolBar();
-		void RenderGrid();
 
 		void HandleAssetDragAndDrop(AssetHandle handle);
-		std::optional<Entity> GetEntityUnderCursor() const;
 	private:
 		GuizmoMode m_Guizmo;
 		EditorCamera& m_Camera;
@@ -49,7 +47,5 @@ namespace Flare
 		bool m_IsToolbarHovered;
 
 		ViewportOverlay m_Overlay;
-		Ref<Material> m_SelectionOutlineMaterial;
-		Ref<Material> m_GridMaterial;
 	};
 }
