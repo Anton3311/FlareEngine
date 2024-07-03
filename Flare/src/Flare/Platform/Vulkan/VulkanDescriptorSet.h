@@ -69,5 +69,8 @@ namespace Flare
 	private:
 		Ref<VulkanDescriptorSetLayout> m_Layout = nullptr;
 		VkDescriptorPool m_Pool = VK_NULL_HANDLE;
+
+		size_t m_MaxSets = 0;
+		size_t m_AllocatedSets = 0;
 	};
 }
