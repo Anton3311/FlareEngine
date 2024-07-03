@@ -63,7 +63,6 @@ namespace Flare
 		Ref<ShaderStorageBuffer> SpotLightsShaderBuffer = nullptr;
 
 		Ref<DescriptorSet> PrimaryDescriptorSet = nullptr;
-		Ref<DescriptorSet> PrimaryDescriptorSetWithoutShadows = nullptr;
 		Ref<DescriptorSetPool> PrimaryDescriptorPool = nullptr;
 
 		// Decals
@@ -198,9 +197,6 @@ namespace Flare
 			s_RendererData.PrimaryDescriptorSet = s_RendererData.PrimaryDescriptorPool->AllocateSet();
 			s_RendererData.PrimaryDescriptorSet->SetDebugName("PrimarySet");
 
-			s_RendererData.PrimaryDescriptorSetWithoutShadows = s_RendererData.PrimaryDescriptorPool->AllocateSet();
-			s_RendererData.PrimaryDescriptorSetWithoutShadows->SetDebugName("PrimarySetWithoutShadows");
-
 			// Setup primary descriptor set
 			s_RendererData.PrimaryDescriptorSet->WriteUniformBuffer(s_RendererData.CameraBuffer, 0);
 			s_RendererData.PrimaryDescriptorSet->WriteUniformBuffer(s_RendererData.LightBuffer, 1);
@@ -213,19 +209,6 @@ namespace Flare
 			}
 
 			s_RendererData.PrimaryDescriptorSet->FlushWrites();
-
-			// Setup primary descriptor set (without shadows)
-			s_RendererData.PrimaryDescriptorSetWithoutShadows->WriteUniformBuffer(s_RendererData.CameraBuffer, 0);
-			s_RendererData.PrimaryDescriptorSetWithoutShadows->WriteUniformBuffer(s_RendererData.LightBuffer, 1);
-			s_RendererData.PrimaryDescriptorSetWithoutShadows->WriteStorageBuffer(s_RendererData.PointLightsShaderBuffer, 4);
-			s_RendererData.PrimaryDescriptorSetWithoutShadows->WriteStorageBuffer(s_RendererData.SpotLightsShaderBuffer, 5);
-
-			for (size_t i = 0; i < ShadowSettings::MaxCascades; i++)
-			{
-				s_RendererData.PrimaryDescriptorSetWithoutShadows->WriteImage(s_RendererData.WhiteTexture, (uint32_t)(28 + i));
-			}
-
-			s_RendererData.PrimaryDescriptorSetWithoutShadows->FlushWrites();
 			
 			// Decals descriptor set
 			VkDescriptorSetLayoutBinding decalDepthBinding{};
