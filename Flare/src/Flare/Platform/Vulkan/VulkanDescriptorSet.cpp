@@ -256,22 +256,7 @@ namespace Flare
 
 	Ref<DescriptorSet> VulkanDescriptorSetPool::AllocateSet()
 	{
-		FLARE_CORE_ASSERT(m_AllocatedSets < m_MaxSets, "Out of descriptor pool memory");
-
-		VkDescriptorSetLayout layout = m_Layout->GetHandle();
-		VkDescriptorSetAllocateInfo info{};
-		info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-		info.descriptorPool = m_Pool;
-		info.descriptorSetCount = 1;
-		info.pNext = nullptr;
-		info.pSetLayouts = &layout;
-
-		m_AllocatedSets++;
-
-		VkDescriptorSet set = VK_NULL_HANDLE;
-
-		VK_CHECK_RESULT(vkAllocateDescriptorSets(VulkanContext::GetInstance().GetDevice(), &info, &set));
-		return CreateRef<VulkanDescriptorSet>(this, set);
+		return AllocateSet(m_Layout);
 	}
 
 	void VulkanDescriptorSetPool::ReleaseSet(Ref<DescriptorSet> set)
@@ -282,6 +267,26 @@ namespace Flare
 		VK_CHECK_RESULT(vkFreeDescriptorSets(VulkanContext::GetInstance().GetDevice(), m_Pool, 1, setHandles));
 
 		m_AllocatedSets--;
+	}
+
+	Ref<DescriptorSet> VulkanDescriptorSetPool::AllocateSet(Ref<const DescriptorSetLayout> layout)
+	{
+		FLARE_CORE_ASSERT(m_AllocatedSets < m_MaxSets, "Out of descriptor pool memory");
+
+		VkDescriptorSetLayout layoutHandle = As<const VulkanDescriptorSetLayout>(layout)->GetHandle();
+		VkDescriptorSetAllocateInfo info{};
+		info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+		info.descriptorPool = m_Pool;
+		info.descriptorSetCount = 1;
+		info.pNext = nullptr;
+		info.pSetLayouts = &layoutHandle;
+
+		m_AllocatedSets++;
+
+		VkDescriptorSet set = VK_NULL_HANDLE;
+
+		VK_CHECK_RESULT(vkAllocateDescriptorSets(VulkanContext::GetInstance().GetDevice(), &info, &set));
+		return CreateRef<VulkanDescriptorSet>(this, set);
 	}
 
 	Ref<const DescriptorSetLayout> VulkanDescriptorSetPool::GetLayout() const

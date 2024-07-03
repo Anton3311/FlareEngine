@@ -128,6 +128,9 @@ namespace Flare
 		VulkanStagingBufferPool& GetStagingBufferPool() { return m_StagingBufferPool; }
 		const VulkanStagingBufferPool& GetStagingBufferPool() const { return m_StagingBufferPool; }
 
+		Ref<DescriptorSet> GetEmptyDescriptorSet() const { return m_EmptyDescriptorSet; }
+		Ref<DescriptorSetLayout> GetEmptyDescriptorSetLayout() const { return m_EmptyDescriptorSetLayout; }
+
 		// Gets the pipeline stages and corrisponding access flags when transitioning from a given image layout
 		static void GetSourcePipelineStagesAndAccessFlags(VkImageLayout imageLayout, VkPipelineStageFlags& stages, VkAccessFlags& access);
 
@@ -193,6 +196,11 @@ namespace Flare
 
 		std::optional<uint32_t> m_GraphicsQueueFamilyIndex;
 		std::optional<uint32_t> m_PresentQueueFamilyIndex;
+
+		// Empty descriptor
+		Ref<DescriptorSetPool> m_EmptyDescriptorSetPool = nullptr;
+		Ref<DescriptorSetLayout> m_EmptyDescriptorSetLayout = nullptr;
+		Ref<DescriptorSet> m_EmptyDescriptorSet = nullptr;
 
 		// Window
 		bool m_VSyncEnabled = false;
