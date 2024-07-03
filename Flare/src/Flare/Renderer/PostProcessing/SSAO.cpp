@@ -109,6 +109,7 @@ namespace Flare
 		{
 			Ref<VulkanCommandBuffer> vulkanCommandBuffer = As<VulkanCommandBuffer>(commandBuffer);
 			vulkanCommandBuffer->SetPrimaryDescriptorSet(Renderer::GetPrimaryDescriptorSet());
+			vulkanCommandBuffer->SetSecondaryDescriptorSet(nullptr);
 		}
 
 		commandBuffer->BeginRenderTarget(context.GetRenderTarget());

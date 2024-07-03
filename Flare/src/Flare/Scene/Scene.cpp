@@ -195,8 +195,6 @@ namespace Flare
 					environments[entity].EnvironmentColorIntensity
 				);
 
-				Renderer::GetShadowSettings() = environments[entity].ShadowSettings;
-
 				hasEnviroment = true;
 				break;
 			}
@@ -279,6 +277,8 @@ namespace Flare
 		//       be done regardless of the pause state
 		m_World.Entities.ClearQueuedForDeletion();
 		m_World.Entities.ClearCreatedEntitiesQueryResult();
+
+		UpdateEnvironmentSettings();
 	}
 
 	void Scene::OnUpdateEditor()
@@ -286,6 +286,8 @@ namespace Flare
 		m_World.GetSystemsManager().ExecuteSystem<TransformPropagationSystem>();
 		m_World.Entities.ClearQueuedForDeletion();
 		m_World.Entities.ClearCreatedEntitiesQueryResult();
+
+		UpdateEnvironmentSettings();
 	}
 
 	void Scene::OnViewportResize(uint32_t width, uint32_t height)
@@ -305,5 +307,19 @@ namespace Flare
 	void Scene::SetActive(const Ref<Scene>& scene)
 	{
 		s_Active = scene;
+	}
+
+	void Scene::UpdateEnvironmentSettings()
+	{
+		for (EntityView view : m_EnvironmentQuery)
+		{
+			auto environments = view.View<const Environment>();
+
+			for (EntityViewElement entity : view)
+			{
+				Renderer::SetShadowSettings(environments[entity].ShadowSettings);
+				return;
+			}
+		}
 	}
 }

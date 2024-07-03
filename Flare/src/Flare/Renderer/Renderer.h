@@ -145,6 +145,9 @@ namespace Flare
 		static void SetMainViewport(Viewport& viewport);
 		static void SetCurrentViewport(Viewport& viewport);
 
+		static void BeginFrame();
+		static void EndFrame();
+
 		static void BeginScene(Viewport& viewport);
 		static void Flush();
 		static void EndScene();
@@ -171,7 +174,10 @@ namespace Flare
 		static Ref<Material> GetErrorMaterial();
 		static Ref<Material> GetDepthOnlyMaterial();
 
-		static ShadowSettings& GetShadowSettings();
+		static const ShadowSettings& GetShadowSettings();
+		static void SetShadowSettings(const ShadowSettings& settings);
+
+		static bool RequiresRenderGraphRebuild();
 
 		static Ref<DescriptorSet> GetPrimaryDescriptorSet();
 		static Ref<const DescriptorSetLayout> GetPrimaryDescriptorSetLayout();

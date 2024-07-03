@@ -37,6 +37,8 @@ namespace Flare
 		Viewport* MainViewport = nullptr;
 		Viewport* CurrentViewport = nullptr;
 
+		bool RenderGraphRebuildIsRequired = false;
+
 		Ref<UniformBuffer> CameraBuffer = nullptr;
 		Ref<UniformBuffer> LightBuffer = nullptr;
 
@@ -102,9 +104,12 @@ namespace Flare
 		s_RendererData.SpotLightsShaderBuffer = ShaderStorageBuffer::Create(maxSpotLights * sizeof(SpotLightData));
 		s_RendererData.SpotLightsShaderBuffer->SetDebugName("SpotLightsDataBuffer");
 
-		s_RendererData.ShadowMappingSettings.Quality = ShadowQuality::Medium;
-		s_RendererData.ShadowMappingSettings.Bias = 0.015f;
-		s_RendererData.ShadowMappingSettings.LightSize = 0.009f;
+		s_RendererData.ShadowMappingSettings.Quality = ShadowQuality::High;
+		s_RendererData.ShadowMappingSettings.Bias = 0.0f;
+		s_RendererData.ShadowMappingSettings.NormalBias = 0.0f;
+		s_RendererData.ShadowMappingSettings.LightSize = 0.02f;
+		
+		s_RendererData.ShadowMappingSettings.FadeDistance = 80.0f;
 
 		s_RendererData.ShadowMappingSettings.Cascades = s_RendererData.ShadowMappingSettings.MaxCascades;
 		s_RendererData.ShadowMappingSettings.CascadeSplits[0] = 15.0f;
@@ -262,6 +267,15 @@ namespace Flare
 		s_RendererData.CurrentViewport = &viewport;
 	}
 
+	void Renderer::BeginFrame()
+	{
+		s_RendererData.RenderGraphRebuildIsRequired = false;
+	}
+
+	void Renderer::EndFrame()
+	{
+	}
+
 	void Renderer::BeginScene(Viewport& viewport)
 	{
 		FLARE_PROFILE_FUNCTION();
@@ -390,9 +404,22 @@ namespace Flare
 		return s_RendererData.DepthOnlyMeshMaterial;
 	}
 
-	ShadowSettings& Renderer::GetShadowSettings()
+	const ShadowSettings& Renderer::GetShadowSettings()
 	{
 		return s_RendererData.ShadowMappingSettings;
+	}
+
+	void Renderer::SetShadowSettings(const ShadowSettings& settings)
+	{
+		s_RendererData.RenderGraphRebuildIsRequired |= settings.Quality != s_RendererData.ShadowMappingSettings.Quality;
+		s_RendererData.RenderGraphRebuildIsRequired |= settings.Enabled != s_RendererData.ShadowMappingSettings.Enabled;
+
+		s_RendererData.ShadowMappingSettings = settings;
+	}
+
+	bool Renderer::RequiresRenderGraphRebuild()
+	{
+		return s_RendererData.RenderGraphRebuildIsRequired;
 	}
 
 	Ref<DescriptorSet> Renderer::GetPrimaryDescriptorSet()

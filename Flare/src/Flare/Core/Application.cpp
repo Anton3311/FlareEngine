@@ -129,6 +129,7 @@ namespace Flare
 				if (!m_Window->GetProperties().IsMinimized)
 				{
 					GraphicsContext::GetInstance().BeginFrame();
+					Renderer::BeginFrame();
 					Renderer2D::BeginFrame();
 
 					{
@@ -144,6 +145,7 @@ namespace Flare
 					}
 
 					Renderer2D::EndFrame();
+					Renderer::EndFrame();
 
 					{
 						FLARE_PROFILE_SCOPE("Present");

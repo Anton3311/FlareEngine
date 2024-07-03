@@ -62,6 +62,9 @@ namespace Flare
 		if (GetScene()->GetPostProcessingManager().IsDirty())
 			m_Viewport.Graph.SetNeedsRebuilding();
 
+		if (Renderer::RequiresRenderGraphRebuild())
+			m_Viewport.Graph.SetNeedsRebuilding();
+
 		if (m_Viewport.GetSize() != glm::ivec2(0))
 		{
 			const FrameBufferSpecifications frameBufferSpecs = m_Viewport.RenderTarget->GetSpecifications();

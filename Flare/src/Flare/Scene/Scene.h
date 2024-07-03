@@ -44,6 +44,8 @@ namespace Flare
 		static Ref<Scene> GetActive();
 		static void SetActive(const Ref<Scene>& scene);
 	private:
+		void UpdateEnvironmentSettings();
+	private:
 		World m_World;
 
 		SystemGroupId m_RenderingGroup;
