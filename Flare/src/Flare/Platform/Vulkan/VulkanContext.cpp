@@ -830,6 +830,15 @@ namespace Flare
 		float priority = 1.0f;
 		std::vector<VkDeviceQueueCreateInfo> createInfos;
 
+		if (*m_GraphicsQueueFamilyIndex == *m_PresentQueueFamilyIndex)
+		{
+			VkDeviceQueueCreateInfo& queueCreateInfo = createInfos.emplace_back();
+			queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+			queueCreateInfo.queueFamilyIndex = *m_GraphicsQueueFamilyIndex;
+			queueCreateInfo.queueCount = 1;
+			queueCreateInfo.pQueuePriorities = &priority;
+		}
+		else
 		{
 			VkDeviceQueueCreateInfo& queueCreateInfo = createInfos.emplace_back();
 			queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
