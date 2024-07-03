@@ -69,12 +69,25 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
+		VkPhysicalDeviceType deviceType = VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU;
+
 		const auto& commandLineArguments = Application::GetInstance().GetCommandLineArguments();
 		for (uint32_t i = 0; i < commandLineArguments.ArgumentsCount; i++)
 		{
-			if (std::strcmp(commandLineArguments.Arguments[i], "--vulkan-debug") == 0)
+			const char* argument = commandLineArguments.Arguments[i];
+			if (std::strcmp(argument, "--vulkan-debug") == 0)
 			{
 				m_DebugEnabled = true;
+			}
+
+			if (std::strcmp(commandLineArguments.Arguments[i], "--device=discrete") == 0)
+			{
+				deviceType = VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU;
+			}
+
+			if (std::strcmp(commandLineArguments.Arguments[i], "--device=integrated") == 0)
+			{
+				deviceType = VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU;
 			}
 		}
 
@@ -114,7 +127,7 @@ namespace Flare
 		}
 
 		CreateSurface();
-		ChoosePhysicalDevice();
+		ChoosePhysicalDevice(deviceType);
 		GetQueueFamilyProperties();
 
 		{
@@ -763,7 +776,7 @@ namespace Flare
 		VK_CHECK_RESULT(glfwCreateWindowSurface(m_Instance, (GLFWwindow*)m_Window->GetNativeWindow(), nullptr, &m_Surface));
 	}
 
-	void VulkanContext::ChoosePhysicalDevice()
+	void VulkanContext::ChoosePhysicalDevice(VkPhysicalDeviceType deviceType)
 	{
 		FLARE_PROFILE_FUNCTION();
 		uint32_t physicalDevicesCount;
@@ -777,7 +790,7 @@ namespace Flare
 			VkPhysicalDeviceProperties properties;
 			vkGetPhysicalDeviceProperties(device, &properties);
 
-			if (properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
+			if (properties.deviceType == deviceType)
 			{
 				m_PhysicalDevice = device;
 			}

@@ -146,7 +146,7 @@ namespace Flare
 		void CreateInstance(const Span<const char*>& enabledLayers);
 		void CreateDebugMessenger();
 		void CreateSurface();
-		void ChoosePhysicalDevice();
+		void ChoosePhysicalDevice(VkPhysicalDeviceType deviceType);
 		void GetQueueFamilyProperties();
 		void CreateLogicalDevice(const Span<const char*>& enabledLayers, const Span<const char*>& enabledExtensions);
 
