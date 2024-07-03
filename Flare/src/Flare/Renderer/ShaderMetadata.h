@@ -87,6 +87,28 @@ namespace Flare
 	FLARE_API uint32_t ShaderDataTypeSize(ShaderDataType dataType);
 	FLARE_API uint32_t ShaderDataTypeComponentCount(ShaderDataType dataType);
 
+	enum class ShaderDescriptorType
+	{
+		UniformBuffer,
+		StorageBuffer,
+		Sampler,
+		StorageImage,
+	};
+
+	struct ShaderDescriptorProperty
+	{
+		ShaderDescriptorProperty(ShaderDescriptorType type)
+			: Type(type) {}
+		ShaderDescriptorProperty(std::string_view name, ShaderDescriptorType type, uint32_t set, uint32_t binding, uint32_t count)
+			: Name(name), Type(type), Set(set), Binding(binding), DescriptorCount(count) {}
+
+		std::string Name;
+		ShaderDescriptorType Type;
+		uint32_t DescriptorCount = 0;
+		uint32_t Set = UINT32_MAX;
+		uint32_t Binding = UINT32_MAX;
+	};
+
 	struct ShaderProperty
 	{
 		ShaderProperty() = default;
@@ -170,6 +192,7 @@ namespace Flare
 		ShaderFeatures Features;
 		ShaderOutputs Outputs;
 		std::vector<ShaderProperty> Properties;
+		std::vector<ShaderDescriptorProperty> DescriptorProperties;
 		std::vector<ShaderStageType> Stages;
 		std::vector<ShaderPushConstantsRange> PushConstantsRanges;
 

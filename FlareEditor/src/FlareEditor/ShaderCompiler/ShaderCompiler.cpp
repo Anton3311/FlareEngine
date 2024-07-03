@@ -1,5 +1,7 @@
 #include "ShaderCompiler.h"
 
+#include "FlareCore/Profiler/Profiler.h"
+
 #include "Flare/Renderer/ComputeShader.h"
 
 #include "Flare/AssetManager/AssetManager.h"
@@ -585,6 +587,54 @@ namespace Flare
 		}
 	}
 
+	static void ReflectDescriptorProperties(spirv_cross::Compiler& compiler,
+		const spirv_cross::SmallVector<spirv_cross::Resource>& resources,
+		std::vector<ShaderDescriptorProperty>& descriptorProperties,
+		ShaderDescriptorType descriptorType)
+	{
+		FLARE_PROFILE_FUNCTION();
+		for (const spirv_cross::Resource& resource : resources)
+		{
+			uint32_t binding = compiler.get_decoration(resource.id, spv::DecorationBinding);
+			uint32_t set = compiler.get_decoration(resource.id, spv::DecorationDescriptorSet);
+
+			// Skip duplicate properties (usually from separate shader stages)
+			auto it = std::find_if(
+				descriptorProperties.begin(),
+				descriptorProperties.end(),
+				[binding, set](const ShaderDescriptorProperty& property) -> bool
+				{
+					return property.Binding == binding && property.Set == set;
+				});
+
+			if (it != descriptorProperties.end())
+			{
+				FLARE_CORE_ASSERT(resource.name == it->Name);
+				continue;
+			}
+
+			ShaderDescriptorProperty& property = descriptorProperties.emplace_back(descriptorType);
+			const spirv_cross::SPIRType& type = compiler.get_type(resource.type_id);
+
+			property.Name = resource.name;
+			property.Set = set;
+			property.Binding = binding;
+			property.DescriptorCount = 1;
+
+			if (type.array.size() > 0)
+			{
+				if (type.array.size() == 1)
+				{
+					property.DescriptorCount = type.array[0];
+				}
+				else
+				{
+					FLARE_CORE_ERROR("Unsupported array dimensions: {}", type.array.size());
+				}
+			}
+		}
+	}
+
 	static void Reflect(spirv_cross::Compiler& compiler,
 		ShaderStageType stage,
 		std::unordered_map<std::string, size_t>& propertyNameToIndex,
@@ -596,6 +646,12 @@ namespace Flare
 
 		uint32_t materialDescriptorSetIndex = GetMaterialDescriptorSetIndex(metadata->Type);
 		ExtractShaderProperties(compiler, metadata->Properties, pushConstantsRange, 1 << materialDescriptorSetIndex);
+
+		const auto& shaderResource = compiler.get_shader_resources();
+		ReflectDescriptorProperties(compiler, shaderResource.uniform_buffers, metadata->DescriptorProperties, ShaderDescriptorType::UniformBuffer);
+		ReflectDescriptorProperties(compiler, shaderResource.storage_buffers, metadata->DescriptorProperties, ShaderDescriptorType::StorageBuffer);
+		ReflectDescriptorProperties(compiler, shaderResource.sampled_images, metadata->DescriptorProperties, ShaderDescriptorType::Sampler);
+		ReflectDescriptorProperties(compiler, shaderResource.storage_images, metadata->DescriptorProperties, ShaderDescriptorType::StorageImage);
 
 		for (size_t i = 0; i < metadata->Properties.size(); i++)
 		{
