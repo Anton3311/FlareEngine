@@ -1,3 +1,4 @@
+Type = Decal
 DepthTest = false
 
 Properties = 
@@ -14,8 +15,7 @@ Properties =
 
 layout(location = 0) in vec3 i_Position;
 
-layout(location = 0) out flat int o_EntityIndex;
-layout(location = 1) out flat mat4 o_ViewToObjectSpace;
+layout(location = 0) out flat mat4 o_ViewToObjectSpace;
 
 void main()
 {
@@ -23,7 +23,6 @@ void main()
 
 	gl_Position = u_Camera.ViewProjection * transform * vec4(i_Position, 1.0f);
 
-	o_EntityIndex = u_InstancesData.Data[gl_InstanceIndex].EntityIndex;
 	o_ViewToObjectSpace = inverse(transform) * u_Camera.InverseViewProjection;
 }
 
@@ -34,14 +33,12 @@ void main()
 
 #include "Common/Camera.glsl"
 
-layout(binding = 0) uniform sampler2D u_ColorTexture;
-layout(binding = 1) uniform sampler2D u_DepthTexture;
+layout(set = 1, binding = 0) uniform sampler2D u_DepthTexture;
+layout(set = 2, binding = 0) uniform sampler2D u_ColorTexture;
 
-layout(location = 0) in flat int i_EntityIndex;
-layout(location = 1) in flat mat4 i_ViewToObjectSpace;
+layout(location = 0) in flat mat4 i_ViewToObjectSpace;
 
 layout(location = 0) out vec4 o_Color;
-layout(location = 2) out int o_EntityIndex;
 
 layout(std140, push_constant) uniform MaterialData
 {
@@ -53,7 +50,7 @@ void main()
 	vec2 depthUV = vec2(gl_FragCoord.xy) / vec2(u_Camera.ViewportSize);
 	float depth = texture(u_DepthTexture, depthUV).r;
 	
-	vec4 clipSpacePosition = vec4(depthUV * 2.0f - vec2(1.0f), depth * 2.0f - 1.0f, 1.0f);
+	vec4 clipSpacePosition = vec4(depthUV * 2.0f - vec2(1.0f), depth, 1.0f);
 	vec4 objectSpacePosition= i_ViewToObjectSpace * clipSpacePosition;
 	objectSpacePosition.xyz /= objectSpacePosition.w;
 
@@ -65,7 +62,6 @@ void main()
 		discard;
 
 	o_Color = color;
-	o_EntityIndex = i_EntityIndex;
 }
 
 #end

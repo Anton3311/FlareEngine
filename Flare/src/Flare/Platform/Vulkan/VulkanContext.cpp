@@ -571,6 +571,13 @@ namespace Flare
 			});
 			break;
 		}
+		case ShaderType::Decal:
+		{
+			specifications.InputLayout = PipelineInputLayout({
+				{ 0, 0, ShaderDataType::Float3 }, // Position
+			});
+			break;
+		}
 		default:
 			FLARE_CORE_ASSERT(false);
 		}

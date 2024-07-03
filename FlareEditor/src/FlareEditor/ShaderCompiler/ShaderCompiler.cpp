@@ -304,6 +304,8 @@ namespace Flare
 					metadata->Type = ShaderType::FullscreenQuad;
 				else if (element.Value.Value == "Debug")
 					metadata->Type = ShaderType::Debug;
+				else if (element.Value.Value == "Decal")
+					metadata->Type = ShaderType::Decal;
 			}
 			else if (element.Name.Value == "Name")
 			{

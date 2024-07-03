@@ -17,6 +17,7 @@ namespace Flare
 		Surface,
 		FullscreenQuad,
 		Debug,
+		Decal,
 	};
 
 	FLARE_API uint32_t GetMaterialDescriptorSetIndex(ShaderType type);

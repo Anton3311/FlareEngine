@@ -164,17 +164,18 @@ namespace Flare
 		}
 
 		Ref<const VulkanDescriptorSetLayout> primaryDescriptorSet = As<const VulkanDescriptorSetLayout>(Renderer::GetPrimaryDescriptorSetLayout());
-		Ref<const VulkanDescriptorSetLayout> secondaryDescriptorSet = As<const VulkanDescriptorSetLayout>(Renderer2D::GetDescriptorSetLayout());
 
 		std::vector<VkPushConstantRange> pushConstantsRanges;
 		VkDescriptorSetLayout descriptorSetLayouts[3] = { nullptr };
 
 		descriptorSetLayouts[0] = primaryDescriptorSet->GetHandle();
-		descriptorSetLayouts[1] = secondaryDescriptorSet->GetHandle();
+		descriptorSetLayouts[1] = As<const VulkanDescriptorSetLayout>(Renderer2D::GetDescriptorSetLayout())->GetHandle();
 
-		if (m_Metadata->Type == ShaderType::Debug)
+		switch (m_Metadata->Type)
 		{
-			descriptorSetLayouts[1] = nullptr;
+		case ShaderType::Decal:
+			descriptorSetLayouts[1] = As<const VulkanDescriptorSetLayout>(Renderer::GetDecalsDescriptorSetLayout())->GetHandle();
+			break;
 		}
 
 		if (m_SetPool)

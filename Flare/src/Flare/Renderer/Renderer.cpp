@@ -10,7 +10,6 @@
 #include "Flare/Renderer/UniformBuffer.h"
 #include "Flare/Renderer/ShaderLibrary.h"
 #include "Flare/Renderer2D/Renderer2D.h"
-#include "Flare/Renderer/Renderer.h"
 #include "Flare/Renderer/ShaderStorageBuffer.h"
 #include "Flare/Renderer/GPUTimer.h"
 #include "Flare/Renderer/DescriptorSet.h"
@@ -18,6 +17,7 @@
 #include "Flare/Renderer/Passes/GeometryPass.h"
 #include "Flare/Renderer/Passes/ShadowPass.h"
 #include "Flare/Renderer/Passes/ShadowCascadePass.h"
+#include "Flare/Renderer/Passes/DecalsPass.h"
 
 #include "Flare/Project/Project.h"
 
@@ -31,13 +31,6 @@
 namespace Flare
 {
 	FLARE_IMPL_TYPE(ShadowSettings);
-
-	struct DecalData
-	{
-		glm::mat4 Transform = glm::mat4(1.0f);
-		int32_t EntityIndex = INT32_MAX;
-		Ref<const Material> Material = nullptr;
-	};
 
 	struct RendererData
 	{
@@ -56,7 +49,7 @@ namespace Flare
 		RendererStatistics Statistics;
 
 		RendererSubmitionQueue OpaqueQueue;
-		std::vector<DecalData> Decals;
+		std::vector<DecalSubmitionData> Decals;
 
 		// Shadows
 		ShadowSettings ShadowMappingSettings;
@@ -70,6 +63,9 @@ namespace Flare
 		Ref<DescriptorSet> PrimaryDescriptorSet = nullptr;
 		Ref<DescriptorSet> PrimaryDescriptorSetWithoutShadows = nullptr;
 		Ref<DescriptorSetPool> PrimaryDescriptorPool = nullptr;
+
+		// Decals
+		Ref<DescriptorSetPool> DecalsDescriptorSetPool = nullptr;
 	};
 	
 	RendererData s_RendererData;
@@ -193,7 +189,7 @@ namespace Flare
 				bindings[i + 10].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 			}
 
-			s_RendererData.PrimaryDescriptorPool = CreateRef<VulkanDescriptorSetPool>(10 + ShadowSettings::MaxCascades, Span(bindings, 6 + 4 + 4));
+			s_RendererData.PrimaryDescriptorPool = CreateRef<VulkanDescriptorSetPool>(64, Span(bindings, 6 + 4 + 4));
 			s_RendererData.PrimaryDescriptorSet = s_RendererData.PrimaryDescriptorPool->AllocateSet();
 			s_RendererData.PrimaryDescriptorSet->SetDebugName("PrimarySet");
 
@@ -225,6 +221,15 @@ namespace Flare
 			}
 
 			s_RendererData.PrimaryDescriptorSetWithoutShadows->FlushWrites();
+			
+			// Decals descriptor set
+			VkDescriptorSetLayoutBinding decalDepthBinding{};
+			decalDepthBinding.binding = 0;
+			decalDepthBinding.descriptorCount = 1;
+			decalDepthBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+			decalDepthBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+			s_RendererData.DecalsDescriptorSetPool = CreateRef<VulkanDescriptorSetPool>(2, Span(&decalDepthBinding, 1));
 		}
 
 		Project::OnProjectOpen.Bind(ReloadShaders);
@@ -401,6 +406,7 @@ namespace Flare
 	{
 		s_RendererData.PointLights.clear();
 		s_RendererData.SpotLights.clear();
+		s_RendererData.Decals.clear();
 
 		s_RendererData.OpaqueQueue.m_Buffer.clear();
 	}
@@ -425,10 +431,13 @@ namespace Flare
 		if (material == nullptr || material->GetShader() == nullptr)
 			return;
 
+		Math::Compact3DTransform compactTransform(transform);
+
 		auto& decal = s_RendererData.Decals.emplace_back();
-		decal.EntityIndex = entityIndex;
 		decal.Material = material;
-		decal.Transform = transform;
+		decal.PackedTransform[0] = glm::vec4(compactTransform.RotationScale[0], compactTransform.Translation.x);
+		decal.PackedTransform[1] = glm::vec4(compactTransform.RotationScale[1], compactTransform.Translation.y);
+		decal.PackedTransform[2] = glm::vec4(compactTransform.RotationScale[2], compactTransform.Translation.z);
 	}
 
 	RendererSubmitionQueue& Renderer::GetOpaqueSubmitionQueue()
@@ -481,6 +490,11 @@ namespace Flare
 	Ref<const DescriptorSetLayout> Renderer::GetPrimaryDescriptorSetLayout()
 	{
 		return s_RendererData.PrimaryDescriptorPool->GetLayout();
+	}
+
+	Ref<const DescriptorSetLayout> Renderer::GetDecalsDescriptorSetLayout()
+	{
+		return s_RendererData.DecalsDescriptorSetPool->GetLayout();
 	}
 
 	static void SetupPrimaryDescriptorSet(Ref<DescriptorSet> set, Ref<UniformBuffer> shadowData)
@@ -617,5 +631,21 @@ namespace Flare
 			primarySet,
 			primarySetWithoutShadows,
 			s_RendererData.PrimaryDescriptorPool));
+
+		// Decal pass
+		RenderGraphPassSpecifications decalPass{};
+		decalPass.AddInput(viewport.DepthTexture);
+		decalPass.AddOutput(viewport.ColorTexture, 0);
+
+		Ref<DescriptorSet> decalPrimarySet = s_RendererData.PrimaryDescriptorPool->AllocateSet();
+		decalPrimarySet->SetDebugName("DecalPrimarySet");
+		SetupPrimaryDescriptorSet(decalPrimarySet, shadowDataBuffer);
+
+		viewport.Graph.AddPass(decalPass, CreateRef<DecalsPass>(
+			s_RendererData.Decals,
+			decalPrimarySet,
+			s_RendererData.PrimaryDescriptorPool,
+			s_RendererData.DecalsDescriptorSetPool,
+			viewport.DepthTexture));
 	}
 }
