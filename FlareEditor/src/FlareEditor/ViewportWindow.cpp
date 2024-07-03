@@ -57,6 +57,11 @@ namespace Flare
 	{
 	}
 
+	void ViewportWindow::SetMaximized(bool maximized)
+	{
+		m_Maximized = maximized;
+	}
+
 	void ViewportWindow::PrepareViewport()
 	{
 		if (GetScene()->GetPostProcessingManager().IsDirty())
@@ -86,7 +91,20 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-		m_IsVisible = ImGui::Begin(m_Name.c_str(), &ShowWindow, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+
+		ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
+
+		if (m_Maximized)
+		{
+			ImGuiViewport* viewport = ImGui::GetMainViewport();
+			ImGui::SetNextWindowPos(viewport->WorkPos);
+			ImGui::SetNextWindowSize(viewport->WorkSize);
+			ImGui::SetNextWindowViewport(viewport->ID);
+			windowFlags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
+			windowFlags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
+		}
+
+		m_IsVisible = ImGui::Begin(m_Name.c_str(), &ShowWindow, windowFlags);
 
 		if (m_WindowFocusRequested)
 		{

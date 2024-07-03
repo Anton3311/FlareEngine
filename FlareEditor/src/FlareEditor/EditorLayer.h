@@ -75,6 +75,7 @@ namespace Flare
 		inline const ECSContext& GetECSContext() const { return m_ECSContext; }
 
 		inline const std::vector<Ref<ViewportWindow>>& GetViewportWindows() const { return m_ViewportWindows; }
+		void SetFullscreenViewportWindow(Ref<ViewportWindow> viewportWindow);
 
 		inline SceneViewSettings& GetSceneViewSettings() { return m_SceneViewSettings; }
 		inline const SceneViewSettings& GetSceneViewSettings() const { return m_SceneViewSettings; }
@@ -98,6 +99,8 @@ namespace Flare
 
 		EditorTitleBar m_TitleBar;
 		Ref<ViewportWindow> m_GameWindow;
+
+		Ref<ViewportWindow> m_FullscreenViewport = nullptr;
 
 		std::vector<Ref<AssetEditor>> m_AssetEditorWindows;
 		Ref<PrefabEditor> m_PrefabEditor;

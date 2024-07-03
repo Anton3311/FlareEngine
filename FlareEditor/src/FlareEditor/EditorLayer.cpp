@@ -103,6 +103,7 @@ namespace Flare
         });
 
         m_GameWindow = CreateRef<ViewportWindow>("Game");
+
         m_ViewportWindows.emplace_back(CreateRef<SceneViewportWindow>(m_Camera));
         m_ViewportWindows.emplace_back(m_GameWindow);
 
@@ -343,6 +344,25 @@ namespace Flare
     void EditorLayer::OnImGUIRender()
     {
         FLARE_PROFILE_FUNCTION();
+
+        if (ImGui::IsKeyPressed(ImGuiKey_F10))
+        {
+            SetFullscreenViewportWindow(nullptr);
+        }
+
+        if (m_FullscreenViewport)
+        {
+            m_ImGuiLayer->Begin();
+
+            m_FullscreenViewport->OnRenderImGui();
+
+            m_ImGuiLayer->End();
+			m_ImGuiLayer->RenderCurrentWindow();
+			m_ImGuiLayer->UpdateWindows();
+
+            return;
+        }
+
         m_ImGuiLayer->Begin();
         m_ImGuiLayer->BeginDockSpace();
 
@@ -638,6 +658,21 @@ namespace Flare
         Scene::SetActive(active);
 
         assetManager->ReloadPrefabs();
+    }
+
+    void EditorLayer::SetFullscreenViewportWindow(Ref<ViewportWindow> viewportWindow)
+    {
+        if (m_FullscreenViewport)
+        {
+            m_FullscreenViewport->SetMaximized(false);
+        }
+
+        m_FullscreenViewport = viewportWindow;
+
+        if (m_FullscreenViewport)
+        {
+			m_FullscreenViewport->SetMaximized(true);
+        }
     }
 
     EditorLayer& EditorLayer::GetInstance()

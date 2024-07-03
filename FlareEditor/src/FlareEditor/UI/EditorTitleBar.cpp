@@ -120,6 +120,20 @@ namespace Flare
 					applicationWindow->SetFullscreenMode(FullscreenMode::ExclusiveFullscreen);
 			}
 
+			if (ImGui::BeginMenu("Maximize Viewport"))
+			{
+				if (ImGui::MenuItem("None"))
+					EditorLayer::GetInstance().SetFullscreenViewportWindow(nullptr);
+
+				for (const Ref<ViewportWindow>& viewportWindow : EditorLayer::GetInstance().GetViewportWindows())
+				{
+					if (ImGui::MenuItem(viewportWindow->GetName().c_str()))
+						EditorLayer::GetInstance().SetFullscreenViewportWindow(viewportWindow);
+				}
+
+				ImGui::EndMenu();
+			}
+
 			ImGui::Separator();
 
 			if (ImGui::MenuItem("ECS Inspector"))

@@ -39,6 +39,7 @@ namespace Flare
 		inline void RequestFocus() { m_WindowFocusRequested = true; }
 
 		void SetScene(const Ref<Scene>& scene) { m_Scene = scene; }
+		void SetMaximized(bool maximized);
 
 		void PrepareViewport();
 	protected:
@@ -60,6 +61,7 @@ namespace Flare
 		Ref<Scene> m_Scene;
 		Viewport m_Viewport;
 
+		bool m_Maximized = false;
 		bool m_PreviousFocusState;
 		bool m_IsFocused;
 		bool m_IsHovered;
