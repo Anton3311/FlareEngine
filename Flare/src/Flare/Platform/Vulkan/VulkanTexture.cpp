@@ -80,46 +80,41 @@ namespace Flare
 		m_Specifications.Filtering = filtering;
 		m_Specifications.Format = format;
 
-		TextureData textureData{};
-		auto& mip = textureData.Mips.emplace_back();
-		mip.Data = data;
-		mip.SizeInBytes = m_Specifications.Width * m_Specifications.Height * GetImagePixelSizeInBytes();
-
 		if (m_Specifications.GenerateMipMaps)
 		{
 			m_MipLevels = (uint32_t)glm::floor(glm::log2((float)glm::max(m_Specifications.Width, m_Specifications.Height))) + 1u;
 		}
 
+		MemorySpan mipData = MemorySpan::FromRawBytes(data, m_Specifications.Width * m_Specifications.Height * GetImagePixelSizeInBytes());
+
 		CreateResources();
-		UploadPixelData(textureData);
+		UploadPixelData(Span<const MemorySpan>(&mipData, 1));
 	}
 
 	VulkanTexture::VulkanTexture(const TextureSpecifications& specifications, const void* data)
 		: m_Specifications(specifications)
 	{
 		FLARE_PROFILE_FUNCTION();
-		TextureData textureData{};
-		auto& mip = textureData.Mips.emplace_back();
-		mip.Data = data;
-		mip.SizeInBytes = m_Specifications.Width * m_Specifications.Height * GetImagePixelSizeInBytes();
 
 		if (m_Specifications.GenerateMipMaps)
 		{
 			m_MipLevels = (uint32_t)glm::floor(glm::log2((float)glm::max(m_Specifications.Width, m_Specifications.Height))) + 1u;
 		}
 
+		MemorySpan mipData = MemorySpan::FromRawBytes(data, m_Specifications.Width * m_Specifications.Height * GetImagePixelSizeInBytes());
+
 		CreateResources();
-		UploadPixelData(textureData);
+		UploadPixelData(Span<const MemorySpan>(&mipData, 1));
 	}
 
-	VulkanTexture::VulkanTexture(const TextureSpecifications& specifications, const TextureData& data)
+	VulkanTexture::VulkanTexture(const TextureSpecifications& specifications, const TexturePixelData& data)
 		: m_Specifications(specifications)
 	{
 		FLARE_PROFILE_FUNCTION();
 		m_MipLevels = (uint32_t)data.Mips.size();
 
 		CreateResources();
-		UploadPixelData(data);
+		UploadPixelData(Span(data.Mips.data(), data.Mips.size()));
 	}
 
 	VulkanTexture::~VulkanTexture()
@@ -336,18 +331,18 @@ namespace Flare
 		VK_CHECK_RESULT(vkCreateSampler(VulkanContext::GetInstance().GetDevice(), &samplerInfo, nullptr, &m_DefaultSampler));
 	}
 
-	void VulkanTexture::UploadPixelData(const TextureData& data)
+	void VulkanTexture::UploadPixelData(Span<const MemorySpan> mips)
 	{
-		FLARE_CORE_ASSERT(data.Mips.size() > 0);
+		FLARE_CORE_ASSERT(mips.GetSize() > 0);
 		VkFormat format = TextureFormatToVulkanFormat(m_Specifications.Format);
 
 		size_t imageSize = 0;
 		if (IsCompressedTextureFormat(m_Specifications.Format))
 		{
-			for (const auto& mip : data.Mips)
+			for (const auto& mip : mips)
 			{
-				FLARE_CORE_ASSERT(mip.SizeInBytes > 0);
-				imageSize += mip.SizeInBytes;
+				FLARE_CORE_ASSERT(mip.GetSize() > 0);
+				imageSize += mip.GetSize();
 			}
 		}
 		else
@@ -356,9 +351,9 @@ namespace Flare
 			uint32_t height = m_Specifications.Height;
 			size_t pixelSize = GetImagePixelSizeInBytes();
 
-			for (const auto& mip : data.Mips)
+			for (const auto& mip : mips)
 			{
-				FLARE_CORE_ASSERT(mip.SizeInBytes > 0);
+				FLARE_CORE_ASSERT(mip.GetSize() > 0);
 				imageSize += width * height * pixelSize;
 
 				width /= 2;
@@ -373,11 +368,11 @@ namespace Flare
 
 		if (m_Specifications.Format == TextureFormat::RGB8)
 		{
-			FLARE_CORE_ASSERT(data.Mips.size() == 1);
+			FLARE_CORE_ASSERT(mips.GetSize() == 1);
 
 			// Add alpha channel
 			uint8_t* rgbaData = new uint8_t[imageSize];
-			const uint8_t* oldData = (const uint8_t*)data.Mips[0].Data;
+			const uint8_t* oldData = (const uint8_t*)mips[0].GetBuffer();
 
 			size_t j = 0;
 			for (size_t i = 0; i < imageSize; i += 4)
@@ -398,17 +393,17 @@ namespace Flare
 		{
 			size_t offset = 0;
 
-			for (const auto& mip : data.Mips)
+			for (const auto& mip : mips)
 			{
-				std::memcpy((uint8_t*)stagingBuffer.Mapped + offset, mip.Data, mip.SizeInBytes);
-				offset += mip.SizeInBytes;
+				std::memcpy((uint8_t*)stagingBuffer.Mapped + offset, mip.GetBuffer(), mip.GetSize());
+				offset += mip.GetSize();
 			}
 		}
 
 		{
 			Ref<VulkanCommandBuffer> commandBuffer = VulkanContext::GetInstance().BeginTemporaryCommandBuffer();
 
-			uint32_t providedMipCount = (uint32_t)data.Mips.size();
+			uint32_t providedMipCount = (uint32_t)mips.GetSize();
 
 			commandBuffer->TransitionImageLayout(m_Image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 0, providedMipCount);
 
@@ -424,7 +419,7 @@ namespace Flare
 				{
 					commandBuffer->CopyBufferToImage(stagingBuffer.Buffer, m_Image, size, bufferOffset, i);
 
-					bufferOffset += data.Mips[i].SizeInBytes;
+					bufferOffset += mips[i].GetSize();
 
 					size.width /= 2;
 					size.height /= 2;

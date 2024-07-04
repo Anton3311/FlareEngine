@@ -16,7 +16,7 @@ namespace Flare
 		VulkanTexture(const TextureSpecifications& specifications);
 		VulkanTexture(uint32_t width, uint32_t height, const void* data, TextureFormat format, TextureFiltering filtering);
 		VulkanTexture(const TextureSpecifications& specifications, const void* data);
-		VulkanTexture(const TextureSpecifications& specifications, const TextureData& data);
+		VulkanTexture(const TextureSpecifications& specifications, const TexturePixelData& data);
 		~VulkanTexture();
 
 		void SetData(const void* data, size_t size) override;
@@ -38,7 +38,7 @@ namespace Flare
 		void CreateResources();
 		void CreateImage();
 		void CreateSampler();
-		void UploadPixelData(const TextureData& data);
+		void UploadPixelData(Span<const MemorySpan> mips);
 		size_t GetImagePixelSizeInBytes();
 
 		void ReleaseImage();

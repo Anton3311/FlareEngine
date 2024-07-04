@@ -101,17 +101,11 @@ namespace Flare
 	FLARE_API std::optional<TextureWrap> TextureWrapFromString(std::string_view string);
 	FLARE_API std::optional<TextureFiltering> TextureFilteringFromString(std::string_view string);
 
-	struct FLARE_API TextureData
+	struct FLARE_API TexturePixelData
 	{
-		struct Mip
-		{
-			const void* Data = nullptr;
-			size_t SizeInBytes = 0;
-		};
+		~TexturePixelData();
 
-		~TextureData();
-
-		std::vector<Mip> Mips;
+		std::vector<MemorySpan> Mips;
 		size_t Size = 0;
 		void* Data = nullptr;
 	};
@@ -142,9 +136,9 @@ namespace Flare
 		static Ref<Texture> Create(const TextureSpecifications& specifications);
 		static Ref<Texture> Create(const std::filesystem::path& path, const TextureSpecifications& specifications);
 		static Ref<Texture> Create(uint32_t width, uint32_t height, const void* data, TextureFormat format, TextureFiltering filtering = TextureFiltering::Linear);
-		static Ref<Texture> Create(const TextureSpecifications& specifications, const TextureData& textureData);
+		static Ref<Texture> Create(const TextureSpecifications& specifications, const TexturePixelData& textureData);
 
-		static bool ReadDataFromFile(const std::filesystem::path& path, TextureSpecifications& specifications, TextureData& data);
+		static bool ReadDataFromFile(const std::filesystem::path& path, TextureSpecifications& specifications, TexturePixelData& data);
 	};
 
 

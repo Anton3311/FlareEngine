@@ -28,7 +28,7 @@ namespace Flare
 
 	Ref<Texture> Texture::Create(const std::filesystem::path& path, const TextureSpecifications& specifications)
 	{
-		TextureData data;
+		TexturePixelData data;
 		TextureSpecifications newSpecifications = specifications;
 		if (!Texture::ReadDataFromFile(path, newSpecifications, data))
 		{
@@ -56,7 +56,7 @@ namespace Flare
 		return nullptr;
 	}
 
-	Ref<Texture> Texture::Create(const TextureSpecifications& specifications, const TextureData& data)
+	Ref<Texture> Texture::Create(const TextureSpecifications& specifications, const TexturePixelData& data)
 	{
 		switch (RendererAPI::GetAPI())
 		{
@@ -115,7 +115,7 @@ namespace Flare
 		return TextureFormat::RGB8;
 	}
 
-	static bool ReadDDSFile(const std::filesystem::path& path, TextureSpecifications& specifications, TextureData& data)
+	static bool ReadDDSFile(const std::filesystem::path& path, TextureSpecifications& specifications, TexturePixelData& data)
 	{
 		FLARE_PROFILE_FUNCTION();
 
@@ -158,16 +158,14 @@ namespace Flare
 				ddsktx_sub_data subData;
 				ddsktx_get_sub(&info, &subData, fileData, (int32_t)size, 0, 0, mip);
 
-				TextureData::Mip& mipData = data.Mips.emplace_back();
-				mipData.Data = subData.buff;
-				mipData.SizeInBytes = (size_t)subData.size_bytes;
+				data.Mips.push_back(MemorySpan::FromRawBytes(subData.buff, (size_t)subData.size_bytes));
 			}
 		}
 
 		return true;
 	}
 
-	bool Texture::ReadDataFromFile(const std::filesystem::path& path, TextureSpecifications& specifications, TextureData& data)
+	bool Texture::ReadDataFromFile(const std::filesystem::path& path, TextureSpecifications& specifications, TexturePixelData& data)
 	{
 		FLARE_PROFILE_FUNCTION();
 		if (!std::filesystem::exists(path))
@@ -211,10 +209,7 @@ namespace Flare
 			FLARE_CORE_ASSERT(false);
 		}
 
-		auto& mip = data.Mips.emplace_back();
-		mip.Data = data.Data;
-		mip.SizeInBytes = data.Size;
-
+		data.Mips.push_back(MemorySpan::FromRawBytes(data.Data, data.Size));
 		return true;
 	}
 
@@ -343,7 +338,7 @@ namespace Flare
 
 
 
-	TextureData::~TextureData()
+	TexturePixelData::~TexturePixelData()
 	{
 		if (Data)
 		{
