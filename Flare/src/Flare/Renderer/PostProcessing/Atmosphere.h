@@ -42,7 +42,7 @@ namespace Flare
 		uint32_t SunTransmittanceSteps = 10;
 
 		uint32_t SunTransmittanceLUTSteps = 100;
-		uint32_t SunTransmittanceLUTSize = 512;
+		uint32_t SunTransmittanceLUTSize = 256;
 	};
 
 	template<>
@@ -75,13 +75,11 @@ namespace Flare
 		AtmospherePass();
 
 		void OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer) override;
-		void RegenerateSunTransmittanceLUT();
 
 		inline Ref<FrameBuffer> GetSunTransmittanceLUT() const { return m_SunTransmittanceLUT; }
 	private:
 		void GenerateSunTransmittanceLUT(Ref<CommandBuffer> commandBuffer);
 	private:
-		bool m_SunTransmittanceLUTIsDirty = true;
 		Ref<FrameBuffer> m_SunTransmittanceLUT = nullptr;
 		Ref<Material> m_SunTransmittanceMaterial = nullptr;
 		Ref<Material> m_AtmosphereMaterial = nullptr;
