@@ -23,7 +23,6 @@ namespace Flare
 
 		void Load() override;
 		bool IsLoaded() const override;
-		void Bind() override;
 
 		Ref<const ShaderMetadata> GetMetadata() const override;
 		const ShaderProperties& GetProperties() const override;

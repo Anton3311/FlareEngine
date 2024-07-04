@@ -181,7 +181,7 @@ namespace Flare
 
 			if (bindings.size() > 0)
 			{
-				constexpr size_t maxShaderDescriptorSets = 128;
+				constexpr size_t maxShaderDescriptorSets = 256;
 				m_SetPool = CreateRef<VulkanDescriptorSetPool>(
 					maxShaderDescriptorSets,
 					Span<VkDescriptorSetLayoutBinding>::FromVector(bindings));
@@ -273,10 +273,6 @@ namespace Flare
 	bool VulkanShader::IsLoaded() const
 	{
 		return m_Valid;
-	}
-
-	void VulkanShader::Bind()
-	{
 	}
 
 	Ref<const ShaderMetadata> VulkanShader::GetMetadata() const

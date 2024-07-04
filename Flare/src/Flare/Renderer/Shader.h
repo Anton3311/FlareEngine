@@ -27,8 +27,6 @@ namespace Flare
 		virtual void Load() = 0;
 		virtual bool IsLoaded() const = 0;
 
-		virtual void Bind() = 0;
-
 		virtual Ref<const ShaderMetadata> GetMetadata() const = 0;
 		virtual const ShaderProperties& GetProperties() const = 0;
 		virtual const ShaderOutputs& GetOutputs() const = 0;
