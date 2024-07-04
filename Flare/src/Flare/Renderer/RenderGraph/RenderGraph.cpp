@@ -17,6 +17,27 @@ namespace Flare
 		node.Specifications = specifications;
 	}
 
+	void RenderGraph::InsertPass(const RenderGraphPassSpecifications& specifications, Ref<RenderGraphPass> pass, size_t index)
+	{
+		FLARE_CORE_ASSERT(pass != nullptr);
+		FLARE_CORE_ASSERT(index <= m_Nodes.size());
+
+		m_Nodes.insert(m_Nodes.begin() + index, RenderPassNode{ specifications, pass, nullptr, {} });
+	}
+
+	std::optional<size_t> RenderGraph::FindPassByName(std::string_view name)
+	{
+		for (size_t i = 0; i < m_Nodes.size(); i++)
+		{
+			if (m_Nodes[i].Specifications.GetDebugName() == name)
+			{
+				return i;
+			}
+		}
+
+		return {};
+	}
+
 	void RenderGraph::AddExternalResource(const ExternalRenderGraphResource& resource)
 	{
 		FLARE_CORE_ASSERT(resource.TextureHandle);
