@@ -51,13 +51,17 @@ namespace Flare
 			}
 		}
 
-		bool IsGroupIdValid(SystemGroupId id);
+		bool IsGroupIdValid(SystemGroupId id) const;
+		bool IsSystemIdValid(SystemId id) const;
 		void RebuildExecutionGraphs();
 		
 		const std::vector<SystemGroup>& GetGroups() const;
 		std::vector<SystemGroup>& GetGroups();
 
 		const std::vector<SystemData>& GetSystems() const;
+	private:
+		SystemId AddSystem(std::string_view name, System* systemInstance);
+		void ConfigureSystem(SystemId id);
 	private:
 		World& m_World;
 		EntitiesCommandBuffer m_CommandBuffer;

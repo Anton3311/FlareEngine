@@ -38,25 +38,8 @@ namespace Flare
 
 	SystemId SystemsManager::RegisterSystem(std::string_view name, System* systemInstance)
 	{
-		FLARE_CORE_ASSERT(m_Groups.size() > 0);
-
-		SystemConfig config;
-		config.Group = m_DefaultSystemGroupId;
-
-		systemInstance->OnConfig(m_World, config);
-
-		FLARE_CORE_ASSERT(IsGroupIdValid(config.Group));
-
-		SystemId id = (SystemId)m_Systems.size();
-
-		SystemData& data = m_Systems.emplace_back();
-		data.Name = name;
-		data.Id = id;
-		data.GroupId = UINT32_MAX;
-		data.SystemInstance = systemInstance;
-
-		AddSystemToGroup(id, config.Group);
-		AddSystemExecutionSettings(id, &config.GetExecutionOrder());
+		SystemId id = AddSystem(name, systemInstance);
+		ConfigureSystem(id);
 
 		return id;
 	}
@@ -66,10 +49,46 @@ namespace Flare
 		FLARE_CORE_ASSERT(m_Groups.size() > 0);
 		auto& initializers = SystemInitializer::GetInitializers();
 
+		struct SystemEntry
+		{
+			SystemId Id = UINT32_MAX;
+			SystemConfig Config;
+		};
+
+		std::vector<SystemEntry> addedSystems;
+		addedSystems.reserve(initializers.size());
+
+		// NOTE: Add systems to the registry, to ensure that they have a valid id,
+		//       before generating depedencies, which require valid system ids
 		for (SystemInitializer* initializer : initializers)
 		{
 			System* instance = initializer->CreateSystem();
-			initializer->m_Id = RegisterSystem(initializer->TypeName, instance);
+			SystemId id = AddSystem(initializer->TypeName, instance);
+			initializer->m_Id = id;
+
+			SystemEntry& entry = addedSystems.emplace_back();
+			entry.Id = id;
+			entry.Config.Group = m_DefaultSystemGroupId;
+		}
+
+		for (SystemEntry& entry : addedSystems)
+		{
+			m_Systems[entry.Id].SystemInstance->OnConfig(m_World, entry.Config);
+
+			FLARE_CORE_ASSERT(IsGroupIdValid(entry.Config.Group));
+
+			AddSystemToGroup(entry.Id, entry.Config.Group);
+		}
+
+		for (const SystemEntry& entry : addedSystems)
+		{
+			const auto& executionOrder = entry.Config.GetExecutionOrder();
+			for (auto& order : executionOrder)
+			{
+				FLARE_CORE_ASSERT(IsSystemIdValid(order.ItemIndex));
+			}
+
+			AddSystemExecutionSettings(entry.Id, &entry.Config.GetExecutionOrder());
 		}
 	}
 
@@ -101,7 +120,10 @@ namespace Flare
 		{
 			std::vector<ExecutionOrder> order = *executionOrder;
 			for (auto& i : order)
+			{
+				FLARE_CORE_ASSERT(i.ItemIndex < (SystemId)m_Systems.size());
 				i.ItemIndex = m_Systems[i.ItemIndex].IndexInGroup;
+			}
 
 			m_Groups[data.GroupId].Graph.AddExecutionSettings(std::move(order));
 		}
@@ -124,9 +146,14 @@ namespace Flare
 		}
 	}
 
-	bool SystemsManager::IsGroupIdValid(SystemGroupId id)
+	bool SystemsManager::IsGroupIdValid(SystemGroupId id) const
 	{
 		return id < (SystemGroupId)m_Groups.size();
+	}
+
+	bool SystemsManager::IsSystemIdValid(SystemId id) const
+	{
+		return id < (SystemId)m_Systems.size();
 	}
 
 	void SystemsManager::RebuildExecutionGraphs()
@@ -154,5 +181,44 @@ namespace Flare
 	const std::vector<SystemData>& SystemsManager::GetSystems() const
 	{
 		return m_Systems;
+	}
+
+	SystemId SystemsManager::AddSystem(std::string_view name, System* systemInstance)
+	{
+		FLARE_CORE_ASSERT(m_Groups.size() > 0);
+
+		SystemId id = (SystemId)m_Systems.size();
+
+		SystemData& data = m_Systems.emplace_back();
+		data.Name = name;
+		data.Id = id;
+		data.GroupId = UINT32_MAX;
+		data.SystemInstance = systemInstance;
+
+		return id;
+	}
+
+	void SystemsManager::ConfigureSystem(SystemId id)
+	{
+		FLARE_CORE_ASSERT(IsSystemIdValid(id));
+
+		SystemData& data = m_Systems[id];
+
+		SystemConfig config;
+		config.Group = m_DefaultSystemGroupId;
+
+		data.SystemInstance->OnConfig(m_World, config);
+
+		FLARE_CORE_ASSERT(IsGroupIdValid(config.Group));
+
+		const auto& executionOrder = config.GetExecutionOrder();
+		for (auto& order : executionOrder)
+		{
+			FLARE_CORE_ASSERT(order.ItemIndex < 100);
+			FLARE_CORE_ASSERT(IsSystemIdValid(order.ItemIndex));
+		}
+
+		AddSystemToGroup(id, config.Group);
+		AddSystemExecutionSettings(id, &config.GetExecutionOrder());
 	}
 }

@@ -13,14 +13,18 @@ namespace Flare
 		void ExecuteAfter()
 		{
 			static_assert(std::is_base_of_v<System, T>, "T must be System type");
-			m_ExecutionOrder.push_back(ExecutionOrder::After(T::_SystemInitializer.GetId()));
+			SystemId id = T::_SystemInitializer.GetId();
+			FLARE_CORE_ASSERT(id != UINT32_MAX);
+			m_ExecutionOrder.push_back(ExecutionOrder::After(id));
 		}
 
 		template<typename T>
 		void ExecuteBefore()
 		{
 			static_assert(std::is_base_of_v<System, T>, "T must be System type");
-			m_ExecutionOrder.push_back(ExecutionOrder::Before(T::_SystemInitializer.GetId()));
+			SystemId id = T::_SystemInitializer.GetId();
+			FLARE_CORE_ASSERT(id != UINT32_MAX);
+			m_ExecutionOrder.push_back(ExecutionOrder::Before(id));
 		}
 
 		constexpr const std::vector<ExecutionOrder>& GetExecutionOrder() const { return m_ExecutionOrder; }
