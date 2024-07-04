@@ -16,6 +16,9 @@ namespace Flare
 
 	void PostProcessingWindow::OnImGuiRender()
 	{
+		if (m_Scene == nullptr)
+			return;
+
 		if (ImGui::Begin("Post Processing"))
 		{
 			RenderWindowContents();
@@ -26,10 +29,10 @@ namespace Flare
 
 	void PostProcessingWindow::RenderWindowContents()
 	{
+		FLARE_CORE_ASSERT(m_Scene);
 		PostProcessingManager& postProcessingManager = m_Scene->GetPostProcessingManager();
 
-		auto& postProcessing = Scene::GetActive()->GetPostProcessingManager();
-
+		auto& postProcessing = m_Scene->GetPostProcessingManager();
 		float windowWidth = ImGui::GetContentRegionAvail().x;
 
 		ImGuiTreeNodeFlags treeNodeFlags = ImGuiTreeNodeFlags_FramePadding
