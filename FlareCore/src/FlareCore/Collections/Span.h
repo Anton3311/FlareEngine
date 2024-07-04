@@ -101,13 +101,12 @@ namespace Flare
 			: m_Buffer(nullptr), m_Size(0) {}
 
 		template<typename T>
-		MemorySpan(T* elements, size_t count)
+		MemorySpan(const T* elements, size_t count)
 			: m_Buffer(elements), m_Size(count * sizeof(T)) {}
 
 		constexpr bool IsValid() const { return m_Buffer != nullptr; }
 		constexpr bool IsEmpty() const { return m_Size == 0 || m_Buffer == nullptr; }
 
-		constexpr void* GetBuffer() { return m_Buffer; }
 		constexpr const void* GetBuffer() const { return m_Buffer; }
 
 		constexpr size_t GetSize() const { return m_Size; }
@@ -118,7 +117,7 @@ namespace Flare
 			return MemorySpan(vector.data(), vector.size());
 		}
 
-		inline static MemorySpan FromRawBytes(void* bytes, size_t size)
+		inline static MemorySpan FromRawBytes(const void* bytes, size_t size)
 		{
 			MemorySpan span{};
 			span.m_Buffer = bytes;
@@ -127,7 +126,7 @@ namespace Flare
 			return span;
 		}
 	private:
-		void* m_Buffer;
+		const void* m_Buffer;
 		size_t m_Size;
 	};
 }
