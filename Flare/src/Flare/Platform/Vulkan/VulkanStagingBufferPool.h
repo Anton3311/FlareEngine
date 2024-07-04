@@ -10,6 +10,7 @@ namespace Flare
 	struct VulkanStagingBuffer
 	{
 		VkBuffer Buffer = VK_NULL_HANDLE;
+		size_t AllocationOffset = 0;
 		size_t Offset = 0;
 		size_t Size = 0;
 
@@ -21,6 +22,7 @@ namespace Flare
 	public:
 		VulkanStagingBufferPool(size_t maxEntrySize, size_t maxReservedPoolEntries);
 		VulkanStagingBuffer AllocateStagingBuffer(size_t size);
+		VulkanStagingBuffer AllocateAlignedStagingBuffer(size_t size, size_t alignment);
 		
 		// Becuase the VulkanStagingBufferPool is implemented as a stack allocator,
 		// staging buffers must be released in reverse order they were allocated

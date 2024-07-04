@@ -364,7 +364,17 @@ namespace Flare
 		FLARE_CORE_ASSERT(imageSize > 0);
 
 		VulkanStagingBufferPool& stagingBufferPool = VulkanContext::GetInstance().GetStagingBufferPool();
-		VulkanStagingBuffer stagingBuffer = stagingBufferPool.AllocateStagingBuffer(imageSize);
+		VulkanStagingBuffer stagingBuffer;
+
+		if (IsCompressedTextureFormat(m_Specifications.Format))
+		{
+			stagingBuffer = stagingBufferPool.AllocateStagingBuffer(imageSize);
+		}
+		else
+		{
+			size_t pixelSize = GetImagePixelSizeInBytes();
+			stagingBuffer = stagingBufferPool.AllocateAlignedStagingBuffer(imageSize, pixelSize);
+		}
 
 		if (m_Specifications.Format == TextureFormat::RGB8)
 		{

@@ -6,6 +6,11 @@
 
 namespace Flare
 {
+	inline size_t Align(size_t value, size_t alignment)
+	{
+		return (value + alignment - 1) / alignment * alignment;
+	}
+
 	VulkanStagingBufferPool::VulkanStagingBufferPool(size_t maxEntrySize, size_t maxReservedPoolEntries)
 		: m_MaxPoolEntrySize(maxEntrySize), m_MaxReservedPoolEntries(maxReservedPoolEntries)
 	{
@@ -13,7 +18,14 @@ namespace Flare
 
 	VulkanStagingBuffer VulkanStagingBufferPool::AllocateStagingBuffer(size_t size)
 	{
+		return AllocateAlignedStagingBuffer(size, 1);
+	}
+
+	VulkanStagingBuffer VulkanStagingBufferPool::AllocateAlignedStagingBuffer(size_t size, size_t alignment)
+	{
 		FLARE_PROFILE_FUNCTION();
+		FLARE_CORE_ASSERT(alignment > 0);
+
 		if (size > m_MaxPoolEntrySize)
 		{
 			SeparateBufferAllocation& separateAllocation = m_SeparateAllocations.emplace_back();
@@ -28,6 +40,7 @@ namespace Flare
 
 			VulkanStagingBuffer stagingBuffer{};
 			stagingBuffer.Offset = 0;
+			stagingBuffer.AllocationOffset = 0;
 			stagingBuffer.Size = separateAllocation.Size;
 			stagingBuffer.Buffer = separateAllocation.Buffer;
 			stagingBuffer.Mapped = separateAllocation.Mapped;
@@ -50,13 +63,12 @@ namespace Flare
 
 		VulkanStagingBuffer stagingBuffer{};
 		stagingBuffer.Buffer = it->Buffer;
-		stagingBuffer.Offset = it->BytesAllocated;
+		stagingBuffer.Offset = Align(it->BytesAllocated, alignment);
+		stagingBuffer.AllocationOffset = it->BytesAllocated;
 		stagingBuffer.Size = size;
 		stagingBuffer.Mapped = (uint8_t*)it->Mapped + stagingBuffer.Offset;
 
-		it->BytesAllocated += size;
-
-		// TODO: alignment?
+		it->BytesAllocated = stagingBuffer.Offset + size;
 
 		return stagingBuffer;
 	}
@@ -91,7 +103,7 @@ namespace Flare
 		FLARE_CORE_ASSERT(it != m_PoolEntries.end());
 		FLARE_CORE_ASSERT(it->BytesAllocated == stagingBuffer.Offset + stagingBuffer.Size);
 
-		it->BytesAllocated -= stagingBuffer.Size;
+		it->BytesAllocated = stagingBuffer.AllocationOffset;
 		
 		stagingBuffer = {};
 	}
