@@ -9,7 +9,7 @@ namespace Flare
 	class VulkanDescriptorSet;
 	class VulkanRenderPass;
 
-	class VulkanMaterial : public Material
+	class FLARE_API VulkanMaterial : public Material
 	{
 	public:
 		virtual ~VulkanMaterial();
