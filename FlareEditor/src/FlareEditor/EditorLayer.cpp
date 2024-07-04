@@ -70,10 +70,11 @@ namespace Flare
 
             assetManager->UnloadAsset(Scene::GetActive()->Handle);
 
+			Scene::SetActive(nullptr);
+            m_PostProcessingWindow = PostProcessingWindow();
+
             ScriptingEngine::UnloadAllModules();
             m_ECSContext.Clear();
-
-            Scene::SetActive(nullptr);
         });
     }
 
