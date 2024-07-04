@@ -12,8 +12,32 @@
 #include "Flare/Platform/Vulkan/VulkanCommandBuffer.h"
 #include "Flare/Platform/Vulkan/VulkanContext.h"
 
+#include <glm/gtc/epsilon.hpp>
+
 namespace Flare
 {
+	bool AtmosphericScatteringParameters::operator==(const AtmosphericScatteringParameters& other) const
+	{
+		constexpr float epsilon = glm::epsilon<float>();
+		glm::bvec3 rayleighCoefficientsEqual = glm::epsilonEqual(RayleighCoefficients, other.RayleighCoefficients, glm::vec3(epsilon));
+		glm::bvec3 ozoneAbsorbtionEquals = glm::epsilonEqual(OzoneAbsorbtion, other.OzoneAbsorbtion, glm::vec3(epsilon));
+
+		return glm::epsilonEqual(PlanetRadius, other.PlanetRadius, epsilon)
+			&& glm::epsilonEqual(AtmosphereThickness, other.AtmosphereThickness, epsilon)
+			&& glm::epsilonEqual(MieHeight, other.MieHeight, epsilon)
+			&& glm::epsilonEqual(RayleighHeight, other.RayleighHeight, epsilon)
+			&& glm::all(rayleighCoefficientsEqual)
+			&& glm::epsilonEqual(RayleighAbsorbtion, other.RayleighAbsorbtion, epsilon)
+			&& glm::epsilonEqual(MieCoefficient, other.MieCoefficient, epsilon)
+			&& glm::epsilonEqual(MieAbsorbtion, other.MieAbsorbtion, epsilon)
+			&& glm::all(ozoneAbsorbtionEquals);
+	}
+
+	bool AtmosphericScatteringParameters::operator!=(const AtmosphericScatteringParameters& other) const
+	{
+		return !operator==(other);
+	}
+
 	FLARE_IMPL_TYPE(Atmosphere);
 	void Atmosphere::RegisterRenderPasses(RenderGraph& renderGraph, const Viewport& viewport)
 	{
@@ -36,6 +60,7 @@ namespace Flare
 
 	AtmospherePass::AtmospherePass()
 	{
+		FLARE_PROFILE_FUNCTION();
 		std::optional<AssetHandle> shaderHandle = ShaderLibrary::FindShader("AtmosphereSunTransmittanceLUT");
 		if (shaderHandle.has_value())
 		{
@@ -55,6 +80,7 @@ namespace Flare
 
 	void AtmospherePass::OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
 	{
+		FLARE_PROFILE_FUNCTION();
 		Ref<Shader> shader = m_AtmosphereMaterial->GetShader();
 
 		std::optional<uint32_t> planetRadius = shader->GetPropertyIndex("u_Params.PlanetRadius");
@@ -74,31 +100,30 @@ namespace Flare
 
 		std::optional<uint32_t> sunTransmittanceLUT = shader->GetPropertyIndex("u_SunTransmittanceLUT");
 
-		m_AtmosphereMaterial->WritePropertyValue<float>(*planetRadius, m_Parameters->PlanetRadius);
-		m_AtmosphereMaterial->WritePropertyValue<float>(*atmosphereThickness, m_Parameters->AtmosphereThickness);
-		m_AtmosphereMaterial->WritePropertyValue<float>(*mieHeight, m_Parameters->MieHeight);
-		m_AtmosphereMaterial->WritePropertyValue<float>(*rayleighHeight, m_Parameters->RayleighHeight);
+		m_AtmosphereMaterial->WritePropertyValue<float>(*planetRadius, m_Parameters->ScatteringParameters.PlanetRadius);
+		m_AtmosphereMaterial->WritePropertyValue<float>(*atmosphereThickness, m_Parameters->ScatteringParameters.AtmosphereThickness);
+		m_AtmosphereMaterial->WritePropertyValue<float>(*mieHeight, m_Parameters->ScatteringParameters.MieHeight);
+		m_AtmosphereMaterial->WritePropertyValue<float>(*rayleighHeight, m_Parameters->ScatteringParameters.RayleighHeight);
 		m_AtmosphereMaterial->WritePropertyValue<float>(*observerHeight, m_Parameters->ObserverHeight);
 
-		m_AtmosphereMaterial->WritePropertyValue(*rayleighCoefficients, m_Parameters->RayleighCoefficients);
-		m_AtmosphereMaterial->WritePropertyValue(*rayleighAbsorbtion, m_Parameters->RayleighAbsorbtion);
-		m_AtmosphereMaterial->WritePropertyValue(*mieCoefficient, m_Parameters->MieCoefficient);
-		m_AtmosphereMaterial->WritePropertyValue(*mieAbsorbtion, m_Parameters->MieAbsorbtion);
-		m_AtmosphereMaterial->WritePropertyValue(*ozoneAbsorbtion, m_Parameters->OzoneAbsorbtion);
+		m_AtmosphereMaterial->WritePropertyValue(*rayleighCoefficients, m_Parameters->ScatteringParameters.RayleighCoefficients);
+		m_AtmosphereMaterial->WritePropertyValue(*rayleighAbsorbtion, m_Parameters->ScatteringParameters.RayleighAbsorbtion);
+		m_AtmosphereMaterial->WritePropertyValue(*mieCoefficient, m_Parameters->ScatteringParameters.MieCoefficient);
+		m_AtmosphereMaterial->WritePropertyValue(*mieAbsorbtion, m_Parameters->ScatteringParameters.MieAbsorbtion);
+		m_AtmosphereMaterial->WritePropertyValue(*ozoneAbsorbtion, m_Parameters->ScatteringParameters.OzoneAbsorbtion);
 		m_AtmosphereMaterial->WritePropertyValue(*groundColor, m_Parameters->GroundColor);
 
 		m_AtmosphereMaterial->WritePropertyValue<int32_t>(*viewRaySteps, (int32_t)m_Parameters->ViewRaySteps);
 		m_AtmosphereMaterial->WritePropertyValue<int32_t>(*sunTransmittanceSteps, (int32_t)m_Parameters->SunTransmittanceSteps);
 
-		if (m_SunTransmittanceMaterial != nullptr)
+		if (sunTransmittanceLUT.has_value() && m_SunTransmittanceMaterial != nullptr)
 		{
 			GenerateSunTransmittanceLUT(commandBuffer);
-		}
-
-		if (sunTransmittanceLUT.has_value() && m_SunTransmittanceLUT != nullptr)
-		{
 			m_AtmosphereMaterial->SetTextureProperty(*sunTransmittanceLUT, m_SunTransmittanceLUT->GetAttachment(0));
 		}
+
+		m_PreviousScatteringParameters = m_Parameters->ScatteringParameters;
+		m_PreviousLUTSteps = m_Parameters->SunTransmittanceLUTSteps;
 
 		commandBuffer->BeginRenderTarget(context.GetRenderTarget());
 
@@ -121,6 +146,13 @@ namespace Flare
 
 	void AtmospherePass::GenerateSunTransmittanceLUT(Ref<CommandBuffer> commandBuffer)
 	{
+		FLARE_PROFILE_FUNCTION();
+
+		if (m_Parameters->ScatteringParameters == m_PreviousScatteringParameters
+			&& m_PreviousLUTSteps == m_Parameters->SunTransmittanceLUTSteps
+			&& m_SunTransmittanceLUT->GetSpecifications().Width == m_Parameters->SunTransmittanceLUTSize)
+			return;
+
 		if (m_SunTransmittanceLUT == nullptr)
 		{
 			FrameBufferSpecifications lutSpecifications{};
@@ -133,11 +165,6 @@ namespace Flare
 			});
 
 			m_SunTransmittanceLUT = FrameBuffer::Create(lutSpecifications);
-		}
-
-		if (m_SunTransmittanceLUT->GetSpecifications().Width == m_Parameters->SunTransmittanceLUTSize)
-		{
-			return;
 		}
 
 		Ref<Shader> shader = m_SunTransmittanceMaterial->GetShader();
@@ -154,15 +181,15 @@ namespace Flare
 		std::optional<uint32_t> mieHeight = shader->GetPropertyIndex("u_Params.MieHeight");
 		std::optional<uint32_t> rayleighHeight = shader->GetPropertyIndex("u_Params.RayleighHeight");
 
-		m_SunTransmittanceMaterial->WritePropertyValue<float>(*mieCoefficientIndex, m_Parameters->MieCoefficient);
-		m_SunTransmittanceMaterial->WritePropertyValue<float>(*mieAbsorbtionIndex, m_Parameters->MieAbsorbtion);
-		m_SunTransmittanceMaterial->WritePropertyValue<float>(*rayleighAbsorbtionIndex, m_Parameters->RayleighAbsorbtion);
-		m_SunTransmittanceMaterial->WritePropertyValue<glm::vec3>(*rayleighCoefficientIndex, m_Parameters->RayleighCoefficients);
-		m_SunTransmittanceMaterial->WritePropertyValue<glm::vec3>(*ozoneAbsorbtionIndex, m_Parameters->OzoneAbsorbtion);
-		m_SunTransmittanceMaterial->WritePropertyValue<float>(*planetRadius, m_Parameters->PlanetRadius);
-		m_SunTransmittanceMaterial->WritePropertyValue<float>(*atmosphereThickness, m_Parameters->AtmosphereThickness);
-		m_SunTransmittanceMaterial->WritePropertyValue<float>(*mieHeight, m_Parameters->MieHeight);
-		m_SunTransmittanceMaterial->WritePropertyValue<float>(*rayleighHeight, m_Parameters->RayleighHeight);
+		m_SunTransmittanceMaterial->WritePropertyValue<float>(*mieCoefficientIndex, m_Parameters->ScatteringParameters.MieCoefficient);
+		m_SunTransmittanceMaterial->WritePropertyValue<float>(*mieAbsorbtionIndex, m_Parameters->ScatteringParameters.MieAbsorbtion);
+		m_SunTransmittanceMaterial->WritePropertyValue<float>(*rayleighAbsorbtionIndex, m_Parameters->ScatteringParameters.RayleighAbsorbtion);
+		m_SunTransmittanceMaterial->WritePropertyValue<glm::vec3>(*rayleighCoefficientIndex, m_Parameters->ScatteringParameters.RayleighCoefficients);
+		m_SunTransmittanceMaterial->WritePropertyValue<glm::vec3>(*ozoneAbsorbtionIndex, m_Parameters->ScatteringParameters.OzoneAbsorbtion);
+		m_SunTransmittanceMaterial->WritePropertyValue<float>(*planetRadius, m_Parameters->ScatteringParameters.PlanetRadius);
+		m_SunTransmittanceMaterial->WritePropertyValue<float>(*atmosphereThickness, m_Parameters->ScatteringParameters.AtmosphereThickness);
+		m_SunTransmittanceMaterial->WritePropertyValue<float>(*mieHeight, m_Parameters->ScatteringParameters.MieHeight);
+		m_SunTransmittanceMaterial->WritePropertyValue<float>(*rayleighHeight, m_Parameters->ScatteringParameters.RayleighHeight);
 		m_SunTransmittanceMaterial->WritePropertyValue<int32_t>(*sunTransmittanceSteps, (int32_t)m_Parameters->SunTransmittanceLUTSteps);
 
 		Ref<VulkanCommandBuffer> vulkanCommandBuffer = As<VulkanCommandBuffer>(commandBuffer);
