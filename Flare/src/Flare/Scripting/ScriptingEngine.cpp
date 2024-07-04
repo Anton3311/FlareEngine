@@ -2,21 +2,20 @@
 
 #include "FlareCore/Log.h"
 
-#include "Flare/Scene/Components.h"
 #include "Flare/Project/Project.h"
 
 #include "FlarePlatform/Platform.h"
 
-#include "FlareECS/System/SystemInitializer.h"
-
-#include "FlareECS.h"
+#include <vector>
 
 namespace Flare
 {
-	const std::string s_ModuleLoaderFunctionName = "OnModuleLoaded";
-	const std::string s_ModuleUnloaderFunctionName = "OnModuleUnloaded";
+	struct ScriptingEngineData
+	{
+		std::vector<void*> LoadedSharedLibraries;
+	};
 
-	ScriptingEngine::Data s_ScriptingData;
+	ScriptingEngineData s_ScriptingData;
 
 	void ScriptingEngine::Initialize()
 	{
@@ -25,11 +24,6 @@ namespace Flare
 	void ScriptingEngine::Shutdown()
 	{
 		UnloadAllModules();
-	}
-
-	void ScriptingEngine::SetCurrentECSWorld(World& world)
-	{
-		s_ScriptingData.CurrentWorld = &world;
 	}
 
 	void ScriptingEngine::LoadModules()
@@ -74,15 +68,5 @@ namespace Flare
 		for (void* lib : s_ScriptingData.LoadedSharedLibraries)
 			Platform::FreeSharedLibrary(lib);
 		s_ScriptingData.LoadedSharedLibraries.clear();
-	}
-
-	void ScriptingEngine::RegisterSystems()
-	{
-		s_ScriptingData.CurrentWorld->GetSystemsManager().RegisterSystems();
-	}
-
-	ScriptingEngine::Data& ScriptingEngine::GetData()
-	{
-		return s_ScriptingData;
 	}
 }

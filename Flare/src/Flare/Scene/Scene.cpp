@@ -41,8 +41,6 @@ namespace Flare
 
 	void Scene::Initialize()
 	{
-		ScriptingEngine::SetCurrentECSWorld(m_World);
-
 		SystemsManager& systemsManager = m_World.GetSystemsManager();
 		systemsManager.CreateGroup("Debug Rendering");
 
@@ -74,7 +72,7 @@ namespace Flare
 
 	void Scene::InitializeRuntime()
 	{
-		ScriptingEngine::RegisterSystems();
+		m_World.GetSystemsManager().RegisterSystems();
 		m_World.GetSystemsManager().RebuildExecutionGraphs();
 	}
 
