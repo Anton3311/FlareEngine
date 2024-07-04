@@ -35,5 +35,7 @@ namespace Flare
 		static Signal<> OnProjectOpen;
 		static Signal<> OnUnloadActiveProject;
 		static std::filesystem::path s_ProjectFileExtension;
+	private:
+		static bool s_ProjectReloadScheduled;
 	};
 }

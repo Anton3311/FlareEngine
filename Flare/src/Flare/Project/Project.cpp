@@ -1,6 +1,11 @@
 #include "Project.h"
 
 #include "FlareCore/Assert.h"
+
+#include "Flare/Core/Application.h"
+
+#include "Flare/Renderer/GraphicsContext.h"
+
 #include "Flare/Project/ProjectSerializer.h"
 #include "Flare/Scripting/ScriptingEngine.h"
 
@@ -9,6 +14,7 @@ namespace Flare
 	Ref<Project> s_Active;
 	Signal<> Project::OnProjectOpen;
 	Signal<> Project::OnUnloadActiveProject;
+	bool Project::s_ProjectReloadScheduled = false;
 
 	std::filesystem::path Project::s_ProjectFileExtension = ".flareproj";
 
@@ -36,17 +42,27 @@ namespace Flare
 		FLARE_CORE_ASSERT(!std::filesystem::is_directory(path));
 		FLARE_CORE_ASSERT(path.extension() == s_ProjectFileExtension);
 
-		if (s_Active != nullptr)
-			Project::OnUnloadActiveProject.Invoke();
+		FLARE_CORE_ASSERT(!s_ProjectReloadScheduled);
 
-		ScriptingEngine::UnloadAllModules();
+		s_ProjectReloadScheduled = true;
+		Application::GetInstance().ExecuteAfterEndOfFrame([path]()
+		{
+			GraphicsContext::GetInstance().WaitForDevice();
 
-		Ref<Project> project = CreateRef<Project>(path.parent_path());
-		ProjectSerializer::Deserialize(project, path);
+			if (s_Active != nullptr)
+				Project::OnUnloadActiveProject.Invoke();
 
-		s_Active = project;
+			ScriptingEngine::UnloadAllModules();
 
-		Project::OnProjectOpen.Invoke();
+			Ref<Project> project = CreateRef<Project>(path.parent_path());
+			ProjectSerializer::Deserialize(project, path);
+
+			s_Active = project;
+
+			Project::OnProjectOpen.Invoke();
+
+			s_ProjectReloadScheduled = false;
+		});
 	}
 
 	const std::filesystem::path& Project::GetProjectFileExtension()
