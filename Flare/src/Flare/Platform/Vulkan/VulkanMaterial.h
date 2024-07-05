@@ -5,6 +5,8 @@
 
 namespace Flare
 {
+	class DescriptorSet;
+
 	class VulkanPipeline;
 	class VulkanDescriptorSet;
 	class VulkanRenderPass;
@@ -17,13 +19,13 @@ namespace Flare
 		virtual void SetShader(const Ref<Shader>& shader) override;
 
 		Ref<VulkanPipeline> GetPipeline(const Ref<VulkanRenderPass>& renderPass);
-		Ref<VulkanDescriptorSet> GetDescriptorSet() const { return m_Set; }
+		Ref<DescriptorSet> GetDescriptorSet() const { return m_Set; }
 
 		void UpdateDescriptorSet();
 	private:
 		void ReleaseDescriptorSet();
 	private:
 		Ref<VulkanPipeline> m_Pipeline = nullptr;
-		Ref<VulkanDescriptorSet> m_Set = nullptr;
+		Ref<DescriptorSet> m_Set = nullptr;
 	};
 }

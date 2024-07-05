@@ -126,11 +126,11 @@ namespace Flare
 			BindDescriptorSet(emptyDescriptorSet, pipelineLayout, 1);
 		}
 
-		Ref<VulkanDescriptorSet> materialDescriptorSet = vulkanMaterial->GetDescriptorSet();
+		Ref<DescriptorSet> materialDescriptorSet = vulkanMaterial->GetDescriptorSet();
 		if (materialDescriptorSet)
 		{
 			vulkanMaterial->UpdateDescriptorSet();
-			BindDescriptorSet(materialDescriptorSet, pipelineLayout, 2);
+			BindDescriptorSet(As<VulkanDescriptorSet>(materialDescriptorSet), pipelineLayout, 2);
 		}
 	}
 
