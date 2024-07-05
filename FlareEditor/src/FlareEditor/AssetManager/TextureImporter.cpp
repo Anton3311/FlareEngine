@@ -88,7 +88,7 @@ namespace Flare
 
 		TextureImportSettings importSettings;
 		importSettings.GenerateMipMaps = true; // Generate mip maps by default
-		
+
 		if (std::filesystem::exists(importSettingsPath))
 			DeserializeImportSettings(metadata.Handle, importSettings);
 

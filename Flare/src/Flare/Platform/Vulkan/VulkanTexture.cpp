@@ -9,6 +9,11 @@
 
 namespace Flare
 {
+	uint32_t CalculateMipCount(uint32_t width, uint32_t height)
+	{
+		return (uint32_t)glm::floor(glm::log2((float)glm::max(width, height))) + 1u;
+	}
+
 	VkFormat TextureFormatToVulkanFormat(TextureFormat format)
 	{
 		switch (format)
@@ -82,7 +87,7 @@ namespace Flare
 
 		if (m_Specifications.GenerateMipMaps)
 		{
-			m_MipLevels = (uint32_t)glm::floor(glm::log2((float)glm::max(m_Specifications.Width, m_Specifications.Height))) + 1u;
+			m_MipLevels = CalculateMipCount(m_Specifications.Width, m_Specifications.Height);
 		}
 
 		MemorySpan mipData = MemorySpan::FromRawBytes(data, m_Specifications.Width * m_Specifications.Height * GetImagePixelSizeInBytes());
@@ -98,7 +103,7 @@ namespace Flare
 
 		if (m_Specifications.GenerateMipMaps)
 		{
-			m_MipLevels = (uint32_t)glm::floor(glm::log2((float)glm::max(m_Specifications.Width, m_Specifications.Height))) + 1u;
+			m_MipLevels = CalculateMipCount(m_Specifications.Width, m_Specifications.Height);
 		}
 
 		MemorySpan mipData = MemorySpan::FromRawBytes(data, m_Specifications.Width * m_Specifications.Height * GetImagePixelSizeInBytes());
@@ -111,7 +116,13 @@ namespace Flare
 		: m_Specifications(specifications)
 	{
 		FLARE_PROFILE_FUNCTION();
-		m_MipLevels = (uint32_t)data.Mips.size();
+
+		FLARE_CORE_ASSERT(m_Specifications.GenerateMipMaps && data.Mips.size() == 1 || !m_Specifications.GenerateMipMaps);
+
+		if (m_Specifications.GenerateMipMaps)
+			m_MipLevels = CalculateMipCount(m_Specifications.Width, m_Specifications.Height);
+		else
+			m_MipLevels = (uint32_t)data.Mips.size();
 
 		CreateResources();
 		UploadPixelData(Span(data.Mips.data(), data.Mips.size()));
