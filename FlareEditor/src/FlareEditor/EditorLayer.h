@@ -91,6 +91,8 @@ namespace Flare
 
 		void OpenSceneImmediately(AssetHandle handle);
 
+		void HandleKeyboardShortcuts();
+
 		void ResetViewportRenderGraphs();
 	private:
 		bool m_UpdateCursorModeNextFrame = false;

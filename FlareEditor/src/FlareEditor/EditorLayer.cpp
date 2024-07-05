@@ -351,6 +351,8 @@ namespace Flare
             SetFullscreenViewportWindow(nullptr);
         }
 
+        HandleKeyboardShortcuts();
+
         if (m_FullscreenViewport)
         {
             m_ImGuiLayer->Begin();
@@ -485,6 +487,41 @@ namespace Flare
 		m_EditedSceneHandle = handle;
 
 		m_PostProcessingWindow = PostProcessingWindow(active);
+    }
+
+    void EditorLayer::HandleKeyboardShortcuts()
+    {
+        ImGuiIO& io = ImGui::GetIO();
+
+        if (io.KeyCtrl)
+        {
+			if (ImGui::IsKeyPressed(ImGuiKey_P))
+			{
+				if (m_Mode == EditorMode::Edit)
+				{
+					EnterPlayMode();
+				}
+				else
+				{
+					ExitPlayMode();
+				}
+			}
+			else if (ImGui::IsKeyPressed(ImGuiKey_S))
+			{
+				if (io.KeyShift)
+				{
+					SaveActiveSceneAs();
+				}
+				else
+				{
+					SaveActiveScene();
+				}
+			}
+			else if (ImGui::IsKeyPressed(ImGuiKey_N))
+			{
+                CreateNewScene();
+			}
+        }
     }
 
     void EditorLayer::ResetViewportRenderGraphs()
