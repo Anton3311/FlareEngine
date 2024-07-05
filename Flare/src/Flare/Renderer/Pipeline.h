@@ -54,6 +54,7 @@ namespace Flare
 		bool DepthTest = true;
 		bool DepthWrite = true;
 		bool DepthBiasEnabled = false;
+		bool DepthClampEnabled = false;
 		float DepthBiasSlopeFactor = 0.0f;
 		float DepthBiasConstantFactor = 0.0f;
 		DepthComparisonFunction DepthFunction = DepthComparisonFunction::Less;

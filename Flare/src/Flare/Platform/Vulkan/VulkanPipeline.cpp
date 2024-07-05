@@ -188,7 +188,7 @@ namespace Flare
 
 		VkPipelineRasterizationStateCreateInfo rasterizationState{};
 		rasterizationState.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
-		rasterizationState.depthClampEnable = VK_FALSE;
+		rasterizationState.depthClampEnable = m_Specifications.DepthClampEnabled;
 		rasterizationState.rasterizerDiscardEnable = VK_FALSE;
 		rasterizationState.polygonMode = VK_POLYGON_MODE_FILL;
 		rasterizationState.lineWidth = 1.0f;

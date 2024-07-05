@@ -560,6 +560,7 @@ namespace Flare
 		specifications.Culling = metadata->Features.Culling;
 		specifications.DepthTest = metadata->Features.DepthTesting;
 		specifications.DepthWrite = metadata->Features.DepthWrite;
+		specifications.DepthClampEnabled = metadata->Features.DepthClampEnabled;
 		specifications.DepthFunction = metadata->Features.DepthFunction;
 		specifications.Blending = metadata->Features.Blending;
 
@@ -870,6 +871,7 @@ namespace Flare
 		}
 
 		VkPhysicalDeviceFeatures deviceFeatures = {};
+		deviceFeatures.depthClamp = VK_TRUE;
 
 		VkPhysicalDeviceSynchronization2Features synchronization2{};
 		synchronization2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SYNCHRONIZATION_2_FEATURES;

@@ -170,6 +170,7 @@ namespace Flare
 		bool DepthTesting;
 		bool DepthWrite;
 		bool DepthBiasEnabled;
+		bool DepthClampEnabled;
 	};
 
 	struct ShaderPushConstantsRange
