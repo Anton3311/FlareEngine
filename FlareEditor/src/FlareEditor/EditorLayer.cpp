@@ -454,10 +454,37 @@ namespace Flare
         ScriptingEngine::LoadModules();
         m_ECSContext.Components.RegisterComponents();
 
-        OpenScene(startScene);
+        OpenSceneImmediately(startScene);
         assetManager->ReloadPrefabs(); // HACK: component ids have changed after reregistering components, so reload prefabs
 
         m_ProjectFilesWacher.reset(FileWatcher::Create(Project::GetActive()->Location, EventsMask::FileName | EventsMask::DirectoryName | EventsMask::LastWrite));
+    }
+
+    void EditorLayer::OpenSceneImmediately(AssetHandle handle)
+    {
+        if (!AssetManager::IsAssetHandleValid(handle))
+            return;
+
+		ResetViewportRenderGraphs();
+
+		Ref<Scene> active = Scene::GetActive();
+
+		Ref<EditorAssetManager> editorAssetManager = As<EditorAssetManager>(AssetManager::GetInstance());
+
+		if (active != nullptr && AssetManager::IsAssetHandleValid(active->Handle))
+			editorAssetManager->UnloadAsset(active->Handle);
+
+		active = nullptr;
+		Scene::SetActive(nullptr);
+
+		active = AssetManager::GetAsset<Scene>(handle);
+		Scene::SetActive(active);
+
+		active->InitializeRuntime();
+
+		m_EditedSceneHandle = handle;
+
+		m_PostProcessingWindow = PostProcessingWindow(active);
     }
 
     void EditorLayer::ResetViewportRenderGraphs()
@@ -480,71 +507,66 @@ namespace Flare
 
     void EditorLayer::SaveActiveSceneAs()
     {
-        std::optional<std::filesystem::path> scenePath = Platform::ShowSaveFileDialog(
-            L"Flare Scene (*.flare)\0*.flare\0",
-            Application::GetInstance().GetWindow());
+        Application::GetInstance().ExecuteAfterEndOfFrame([this]()
+		{
+			GraphicsContext::GetInstance().WaitForDevice();
 
-        if (scenePath.has_value())
-        {
-            std::filesystem::path& path = scenePath.value();
-            if (!path.has_extension())
-                path.replace_extension(".flare");
+			std::optional<std::filesystem::path> scenePath = Platform::ShowSaveFileDialog(
+				L"Flare Scene (*.flare)\0*.flare\0",
+				Application::GetInstance().GetWindow());
 
-            SceneSerializer::Serialize(Scene::GetActive(), path, m_Camera, m_SceneViewSettings);
-            AssetHandle handle = As<EditorAssetManager>(AssetManager::GetInstance())->ImportAsset(path);
-            OpenScene(handle);
-        }
+			if (scenePath.has_value())
+			{
+				std::filesystem::path& path = scenePath.value();
+				if (!path.has_extension())
+					path.replace_extension(".flare");
+
+				SceneSerializer::Serialize(Scene::GetActive(), path, m_Camera, m_SceneViewSettings);
+				AssetHandle handle = As<EditorAssetManager>(AssetManager::GetInstance())->ImportAsset(path);
+				OpenSceneImmediately(handle);
+			}
+		});
     }
 
     void EditorLayer::OpenScene(AssetHandle handle)
     {
-        ResetViewportRenderGraphs();
+        if (!AssetManager::IsAssetHandleValid(handle))
+            return;
 
-        if (AssetManager::IsAssetHandleValid(handle))
-        {
-            Ref<Scene> active = Scene::GetActive();
-
-            Ref<EditorAssetManager> editorAssetManager = As<EditorAssetManager>(AssetManager::GetInstance());
-
-            if (active != nullptr && AssetManager::IsAssetHandleValid(active->Handle))
-                editorAssetManager->UnloadAsset(active->Handle);
-
-            active = nullptr;
-            Scene::SetActive(nullptr);
-
-            active = AssetManager::GetAsset<Scene>(handle);
-            Scene::SetActive(active);
-
-            active->InitializeRuntime();
-
-            m_EditedSceneHandle = handle;
-
-            m_PostProcessingWindow = PostProcessingWindow(active);
-        }
+        Application::GetInstance().ExecuteAfterEndOfFrame([this, handle]()
+		{
+			GraphicsContext::GetInstance().WaitForDevice();
+			OpenSceneImmediately(handle);
+		});
     }
 
     void EditorLayer::CreateNewScene()
     {
-        Ref<Scene> active = Scene::GetActive();
+        Application::GetInstance().ExecuteAfterEndOfFrame([this]()
+		{
+			GraphicsContext::GetInstance().WaitForDevice();
 
-        ResetViewportRenderGraphs();
+			Ref<Scene> active = Scene::GetActive();
 
-        if (active != nullptr)
-        {
-            Ref<EditorAssetManager> editorAssetManager = As<EditorAssetManager>(AssetManager::GetInstance());
+			ResetViewportRenderGraphs();
 
-            if (active != nullptr && AssetManager::IsAssetHandleValid(active->Handle))
-                editorAssetManager->UnloadAsset(active->Handle);
-        }
+			if (active != nullptr)
+			{
+				Ref<EditorAssetManager> editorAssetManager = As<EditorAssetManager>(AssetManager::GetInstance());
 
-        active = nullptr;
+				if (active != nullptr && AssetManager::IsAssetHandleValid(active->Handle))
+					editorAssetManager->UnloadAsset(active->Handle);
+			}
 
-        active = CreateRef<Scene>(m_ECSContext);
-        active->Initialize();
-        active->InitializeRuntime();
-        Scene::SetActive(active);
+			active = nullptr;
 
-        m_EditedSceneHandle = NULL_ASSET_HANDLE;
+			active = CreateRef<Scene>(m_ECSContext);
+			active->Initialize();
+			active->InitializeRuntime();
+			Scene::SetActive(active);
+
+			m_EditedSceneHandle = NULL_ASSET_HANDLE;
+		});
     }
 
     void EditorLayer::EnterPlayMode()

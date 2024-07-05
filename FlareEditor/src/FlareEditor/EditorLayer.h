@@ -55,6 +55,10 @@ namespace Flare
 		void SaveActiveScene();
 		void SaveActiveSceneAs();
 
+		// Opens the scene with a given asset handle.
+		// Does nothing in case the handle is invalid.
+		// 
+		// The operation is delayed until the end of the frame.
 		void OpenScene(AssetHandle handle);
 		void CreateNewScene();
 
@@ -84,6 +88,8 @@ namespace Flare
 	private:
 		void UpdateWindowTitle();
 		void OnOpenProject();
+
+		void OpenSceneImmediately(AssetHandle handle);
 
 		void ResetViewportRenderGraphs();
 	private:
