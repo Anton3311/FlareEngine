@@ -115,7 +115,7 @@ namespace Flare
 			return AssetManager::GetAsset<Material>(metadata.Handle);
 		}
 
-		Ref<Material> material = nullptr;
+		Ref<Material> material = Material::Create();
 
 		try
 		{
@@ -131,7 +131,10 @@ namespace Flare
 				}
 				else
 				{
-					material = Material::Create(handle);
+					Ref<Shader> shader = AssetManager::GetAsset<Shader>(handle);
+					FLARE_CORE_ASSERT(shader);
+
+					material->SetShader(shader);
 					shaderHandle = handle;
 				}
 			}
