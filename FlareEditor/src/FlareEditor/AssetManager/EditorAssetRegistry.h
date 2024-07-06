@@ -9,16 +9,9 @@
 
 namespace Flare
 {
-	enum class AssetOwner : uint8_t
-	{
-		Project,
-		Package,
-	};
-
 	struct AssetRegistryEntry
 	{
-		AssetOwner OwnerType;
-		std::optional<UUID> PackageId;
+		bool IsBuiltIn = false;
 		AssetMetadata Metadata;
 	};
 
@@ -28,7 +21,7 @@ namespace Flare
 	{
 	public:
 		static void Serialize(const EditorAssetRegistry& registry, const std::filesystem::path& path);
-		static bool Deserialize(EditorAssetRegistry& registry, const std::filesystem::path& path, std::optional<UUID> packageId = {});
+		static bool Deserialize(EditorAssetRegistry& registry, const std::filesystem::path& path);
 
 		inline static std::filesystem::path GetAssetsRoot()
 		{

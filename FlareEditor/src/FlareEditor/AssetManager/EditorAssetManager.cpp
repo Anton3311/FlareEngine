@@ -59,9 +59,9 @@ namespace Flare
 
     void EditorAssetManager::Reinitialize()
     {
+        FLARE_PROFILE_FUNCTION();
         m_LoadedAssets.clear();
         m_Registry.clear();
-        m_AssetPackages.clear();
         m_FilepathToAssetHandle.clear();
 
         ShaderLibrary::Clear();
@@ -73,25 +73,7 @@ namespace Flare
             std::filesystem::create_directories(root);
 
         DeserializeRegistry();
-
-        static std::filesystem::path internalPackagesLocation = "../Packages";
-
-        std::filesystem::path packagesFile = Project::GetActive()->Location / PackageDependenciesSerializer::PackagesFileName;
-        if (std::filesystem::exists(packagesFile))
-        {
-            PackageDependenciesSerializer::Deserialize(m_AssetPackages, Project::GetActive()->Location);
-
-            for (const auto& [id, package] : m_AssetPackages)
-            {
-                if (package.PackageType == AssetsPackage::Type::Internal)
-                {
-                    AssetRegistrySerializer::Deserialize(m_Registry, internalPackagesLocation / package.Name, id);
-
-                    for (const auto& [handle, entry] : m_Registry)
-                        m_FilepathToAssetHandle.emplace(std::filesystem::absolute(entry.Metadata.Path), handle);
-                }
-            }
-        }
+        ImportBuiltinAssets();
 
         for (const auto& entry : m_Registry)
         {
@@ -141,6 +123,11 @@ namespace Flare
         return m_LoadedAssets.find(handle) != m_LoadedAssets.end();
     }
 
+    std::filesystem::path EditorAssetManager::GetBuiltInContentPath() const
+    {
+        return std::filesystem::absolute("../Content/");
+    }
+
     std::optional<AssetHandle> EditorAssetManager::FindAssetByPath(const std::filesystem::path& path)
     {
         FLARE_PROFILE_FUNCTION();
@@ -177,7 +164,7 @@ namespace Flare
         {
             std::string_view computeShaderExtension = ".compute.glsl";
             std::string pathString = path.string();
-            size_t position = pathString.find_last_of(computeShaderExtension);
+            size_t position = pathString.find(computeShaderExtension);
 
             if (position == std::string::npos)
             {
@@ -198,9 +185,6 @@ namespace Flare
         AssetHandle handle;
 
         AssetRegistryEntry entry;
-        entry.OwnerType = AssetOwner::Project;
-        entry.PackageId = {};
-
         AssetMetadata& metadata = entry.Metadata;
         metadata.Path = path;
         metadata.Type = type;
@@ -230,12 +214,10 @@ namespace Flare
 
     AssetHandle EditorAssetManager::ImportAsset(const std::filesystem::path& path, const Ref<Asset> asset, AssetHandle parentAsset)
     {
+        FLARE_PROFILE_FUNCTION();
         AssetHandle handle;
 
         AssetRegistryEntry entry;
-        entry.OwnerType = AssetOwner::Project;
-        entry.PackageId = {};
-
         AssetMetadata& metadata = entry.Metadata;
         metadata.Handle = handle;
         metadata.Path = path;
@@ -268,12 +250,10 @@ namespace Flare
 
     AssetHandle EditorAssetManager::ImportMemoryOnlyAsset(std::string_view name, const Ref<Asset> asset, AssetHandle parentAsset)
     {
+        FLARE_PROFILE_FUNCTION();
         AssetHandle handle;
 
         AssetRegistryEntry entry;
-        entry.OwnerType = AssetOwner::Project;
-        entry.PackageId = {};
-
         AssetMetadata& metadata = entry.Metadata;
         metadata.Handle = handle;
         metadata.Name = name;
@@ -302,6 +282,7 @@ namespace Flare
 
     void EditorAssetManager::ReloadAsset(AssetHandle handle)
     {
+        FLARE_PROFILE_FUNCTION();
         FLARE_CORE_ASSERT(IsAssetHandleValid(handle));
 
         auto registryIterator = m_Registry.find(handle);
@@ -322,6 +303,7 @@ namespace Flare
 
     void EditorAssetManager::UnloadAsset(AssetHandle handle)
     {
+        FLARE_PROFILE_FUNCTION();
         auto it = m_LoadedAssets.find(handle);
         if (it == m_LoadedAssets.end())
             return;
@@ -331,6 +313,7 @@ namespace Flare
 
     void EditorAssetManager::ReloadPrefabs()
     {
+        FLARE_PROFILE_FUNCTION();
         for (const auto& [handle, asset] : m_Registry)
         {
             if (asset.Metadata.Type == AssetType::Prefab && IsAssetLoaded(handle))
@@ -340,6 +323,7 @@ namespace Flare
 
     void EditorAssetManager::RemoveFromRegistry(AssetHandle handle)
     {
+        FLARE_PROFILE_FUNCTION();
         RemoveFromRegistryWithoutSerialization(handle);
         SerializeRegistry();
     }
@@ -354,25 +338,6 @@ namespace Flare
 
         m_LoadedAssets[handle] = asset;
         asset->Handle = handle;
-    }
-
-    void EditorAssetManager::AddAssetsPackage(const std::filesystem::path& path)
-    {
-        if (!std::filesystem::exists(path))
-            return;
-
-        {
-            AssetsPackage package;
-            package.Id = UUID();
-            package.PackageType = AssetsPackage::Type::Internal;
-
-            PackageDependenciesSerializer::DeserializePackage(package, path);
-
-            m_AssetPackages.emplace(package.Id, std::move(package));
-        }
-
-        PackageDependenciesSerializer::Serialize(m_AssetPackages, Project::GetActive()->Location);
-        AssetRegistrySerializer::Deserialize(m_Registry, path.parent_path());
     }
 
     Ref<Asset> EditorAssetManager::LoadAsset(AssetHandle handle)
@@ -405,6 +370,44 @@ namespace Flare
             UnloadAsset(handle);
             m_Registry.erase(handle);
         }
+    }
+
+    void EditorAssetManager::ImportBuiltinAssets()
+    {
+        FLARE_PROFILE_FUNCTION();
+
+        std::filesystem::path builtingContentPath = GetBuiltInContentPath();
+
+        FLARE_CORE_ASSERT(std::filesystem::exists(builtingContentPath));
+
+        m_AutomaticRegistrySerializationEnabled = false;
+        ImportBuiltinAssets(builtingContentPath);
+        m_AutomaticRegistrySerializationEnabled = true;
+        SerializeRegistry();
+    }
+
+    void EditorAssetManager::ImportBuiltinAssets(const std::filesystem::path& directoryPath)
+    {
+        FLARE_PROFILE_FUNCTION();
+		for (std::filesystem::path child : std::filesystem::directory_iterator(directoryPath))
+		{
+            if (std::filesystem::is_directory(child))
+            {
+                ImportBuiltinAssets(child);
+            }
+            else
+            {
+				auto it = m_FilepathToAssetHandle.find(child);
+				if (it == m_FilepathToAssetHandle.end())
+				{
+					AssetHandle handle = ImportAsset(child);
+                    if (handle == NULL_ASSET_HANDLE)
+                        continue;
+
+                    m_Registry[handle].IsBuiltIn = true;
+				}
+			}
+		}
     }
 
     Ref<Asset> EditorAssetManager::LoadAsset(const AssetMetadata& metadata)

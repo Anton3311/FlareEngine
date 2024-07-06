@@ -36,14 +36,12 @@ namespace Flare
 
         for (const auto& [handle, entry] : registry)
         {
-            if (entry.OwnerType != AssetOwner::Project)
-                continue;
-
             std::filesystem::path assetPath = std::filesystem::relative(entry.Metadata.Path, root);
 
             emitter << YAML::BeginMap;
             emitter << YAML::Key << "Handle" << YAML::Value << handle;
             emitter << YAML::Key << "Type" << YAML::Value << AssetTypeToString(entry.Metadata.Type);
+            emitter << YAML::Key << "BuiltIn" << YAML::Value << entry.IsBuiltIn;
 
             if (entry.Metadata.Source == AssetSource::Memory)
                 emitter << YAML::Key << "Name" << YAML::Value << entry.Metadata.Name;
@@ -69,7 +67,7 @@ namespace Flare
         outputFile << emitter.c_str();
 	}
 
-    bool AssetRegistrySerializer::Deserialize(EditorAssetRegistry& registry, const std::filesystem::path& path, std::optional<UUID> packageId)
+    bool AssetRegistrySerializer::Deserialize(EditorAssetRegistry& registry, const std::filesystem::path& path)
     {
         FLARE_PROFILE_FUNCTION();
 
@@ -93,10 +91,7 @@ namespace Flare
         {
             AssetHandle handle = assetNode["Handle"].as<AssetHandle>();
             
-            AssetRegistryEntry entry;
-            entry.OwnerType = packageId.has_value() ? AssetOwner::Package : AssetOwner::Project;
-            entry.PackageId = packageId;
-
+            AssetRegistryEntry entry{};
             AssetMetadata& metadata = entry.Metadata;
             metadata.Handle = handle;
             metadata.Source = AssetSource::File;
@@ -104,6 +99,9 @@ namespace Flare
 
             if (YAML::Node source = assetNode["Source"])
                 metadata.Source = AssetSourceFromString(source.as<std::string>());
+
+            if (YAML::Node builtIn = assetNode["BuiltIn"])
+                entry.IsBuiltIn = builtIn.as<bool>();
 
             if (metadata.Source == AssetSource::Memory)
             {

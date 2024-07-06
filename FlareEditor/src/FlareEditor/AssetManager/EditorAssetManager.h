@@ -5,7 +5,6 @@
 #include "Flare/AssetManager/AssetManagerBase.h"
 
 #include "FlareEditor/AssetManager/EditorAssetRegistry.h"
-#include "FlareEditor/AssetManager/AssetsPackage.h"
 
 #include <filesystem>
 #include <map>
@@ -31,6 +30,8 @@ namespace Flare
 		virtual bool IsAssetHandleValid(AssetHandle handle) override;
 		virtual bool IsAssetLoaded(AssetHandle handle) override;
 
+		std::filesystem::path GetBuiltInContentPath() const;
+
 		std::optional<AssetHandle> FindAssetByPath(const std::filesystem::path& path);
 
 		AssetHandle ImportAsset(const std::filesystem::path& path, AssetHandle parentAsset = NULL_ASSET_HANDLE);
@@ -46,9 +47,6 @@ namespace Flare
 		void SetLoadedAsset(AssetHandle handle, const Ref<Asset>& asset);
 
 		inline const EditorAssetRegistry& GetRegistry() const { return m_Registry; }
-		inline const std::map<UUID, AssetsPackage>& GetAssetPackages() const { return m_AssetPackages; }
-
-		void AddAssetsPackage(const std::filesystem::path& path);
 
 		Ref<Asset> LoadAsset(AssetHandle handle);
 
@@ -57,6 +55,9 @@ namespace Flare
 		inline static Ref<EditorAssetManager> GetInstance() { return As<EditorAssetManager>(AssetManager::GetInstance()); }
 	private:
 		void RemoveFromRegistryWithoutSerialization(AssetHandle handle);
+
+		void ImportBuiltinAssets();
+		void ImportBuiltinAssets(const std::filesystem::path& directoryPath);
 
 		Ref<Asset> LoadAsset(const AssetMetadata& metadata);
 		void SerializeRegistry();
@@ -72,7 +73,5 @@ namespace Flare
 
 		std::unordered_map<std::filesystem::path, AssetHandle> m_FilepathToAssetHandle;
 		std::unordered_map<AssetType, AssetImporter> m_AssetImporters;
-
-		std::map<UUID, AssetsPackage> m_AssetPackages;
 	};
 }
