@@ -44,6 +44,7 @@ namespace Flare
 
 		Ref<Texture> WhiteTexture = nullptr;
 		Ref<Texture> DefaultNormalMap = nullptr;
+		Ref<Texture> DummyDepthTexture = nullptr;
 
 		Ref<Material> ErrorMaterial = nullptr;
 		Ref<Material> DepthOnlyMeshMaterial = nullptr;
@@ -126,6 +127,31 @@ namespace Flare
 			uint32_t pixel = 0xffff8080;
 			s_RendererData.DefaultNormalMap = Texture::Create(1, 1, &pixel, TextureFormat::RGBA8);
 			s_RendererData.DefaultNormalMap->SetDebugName("DefaultNormalMap");
+		}
+
+		{
+			TextureSpecifications specifications{};
+			specifications.Width = 1;
+			specifications.Height = 1;
+			specifications.Format = TextureFormat::Depth32;
+			specifications.Filtering = TextureFiltering::Closest;
+			specifications.Wrap = TextureWrap::Clamp;
+			specifications.GenerateMipMaps = false;
+			specifications.Usage = TextureUsage::Sampling | TextureUsage::RenderTarget;
+			s_RendererData.DummyDepthTexture = Texture::Create(specifications);
+			s_RendererData.DummyDepthTexture->SetDebugName("DummyDepthTexture");
+
+			Ref<VulkanTexture> dummyDepthTexture = As<VulkanTexture>(s_RendererData.DummyDepthTexture);
+
+			Ref<VulkanCommandBuffer> commandBuffer = VulkanContext::GetInstance().BeginTemporaryCommandBuffer();
+			commandBuffer->ClearDepth(s_RendererData.DummyDepthTexture, 1.0f);
+			commandBuffer->TransitionDepthImageLayout(
+				dummyDepthTexture->GetImageHandle(),
+				HasStencilComponent(specifications.Format),
+				VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+				VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+			VulkanContext::GetInstance().EndTemporaryCommandBuffer(commandBuffer);
 		}
 
 		if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
@@ -430,7 +456,12 @@ namespace Flare
 
 		for (size_t i = 0; i < ShadowSettings::MaxCascades; i++)
 		{
-			set->WriteImage(s_RendererData.WhiteTexture, (uint32_t)(28 + i));
+			set->WriteImage(s_RendererData.DummyDepthTexture, (uint32_t)(28 + i));
+		}
+
+		for (size_t i = 0; i < ShadowSettings::MaxCascades; i++)
+		{
+			set->WriteImage(s_RendererData.DummyDepthTexture, (uint32_t)(32 + i));
 		}
 
 		set->FlushWrites();
@@ -476,12 +507,12 @@ namespace Flare
 
 			for (uint32_t i = 0; i < ShadowSettings::MaxCascades; i++)
 			{
-				set->WriteImage(s_RendererData.WhiteTexture, 28 + i);
+				set->WriteImage(s_RendererData.DummyDepthTexture, 28 + i);
 			}
 
 			for (uint32_t i = 0; i < ShadowSettings::MaxCascades; i++)
 			{
-				set->WriteImage(s_RendererData.WhiteTexture, shadowPass->GetCompareSampler(), 32 + i);
+				set->WriteImage(s_RendererData.DummyDepthTexture, shadowPass->GetCompareSampler(), 32 + i);
 			}
 
 			set->FlushWrites();
