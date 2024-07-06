@@ -14,6 +14,7 @@ namespace Flare
 	public:
 		VulkanTexture(const TextureSpecifications& specifications, VkImage image, VkImageView imageView);
 		VulkanTexture(const TextureSpecifications& specifications);
+		VulkanTexture(const TextureSpecifications& specifications, MemorySpan pixelData);
 		VulkanTexture(uint32_t width, uint32_t height, const void* data, TextureFormat format, TextureFiltering filtering);
 		VulkanTexture(const TextureSpecifications& specifications, const void* data);
 		VulkanTexture(const TextureSpecifications& specifications, const TexturePixelData& data);

@@ -77,6 +77,14 @@ namespace Flare
 		CreateResources();
 	}
 
+	VulkanTexture::VulkanTexture(const TextureSpecifications& specifications, MemorySpan pixelData)
+		: m_Specifications(specifications)
+	{
+		FLARE_PROFILE_FUNCTION();
+		CreateResources();
+		UploadPixelData(Span<const MemorySpan>(&pixelData, 1));
+	}
+
 	VulkanTexture::VulkanTexture(uint32_t width, uint32_t height, const void* data, TextureFormat format, TextureFiltering filtering)
 	{
 		FLARE_PROFILE_FUNCTION();
