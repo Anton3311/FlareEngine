@@ -80,7 +80,7 @@ namespace Flare
 		bool hasValidCache = true;
 		for (const ShaderStageModule& stageModule : m_Modules)
 		{
-			if (!ShaderCacheManager::GetInstance()->HasCache(Handle, ShaderTargetEnvironment::Vulkan, stageModule.Stage))
+			if (!ShaderCacheManager::GetInstance()->HasCache(Handle, stageModule.Stage))
 			{
 				hasValidCache = false;
 				break;
@@ -106,9 +106,7 @@ namespace Flare
 
 		for (ShaderStageModule& stageModule : m_Modules)
 		{
-			auto cachedShader = ShaderCacheManager::GetInstance()->FindCache(
-				Handle, ShaderTargetEnvironment::Vulkan,
-				stageModule.Stage);
+			auto cachedShader = ShaderCacheManager::GetInstance()->FindCache(Handle, stageModule.Stage);
 
 			if (!cachedShader.has_value())
 			{

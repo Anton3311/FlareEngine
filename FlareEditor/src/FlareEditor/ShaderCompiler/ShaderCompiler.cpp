@@ -789,10 +789,7 @@ namespace Flare
 
 			if (!forceRecompile)
 			{
-				compiledVulkanShader = ShaderCacheManager::GetInstance()->FindCache(
-					shaderHandle,
-					ShaderTargetEnvironment::Vulkan,
-					program.Stage);
+				compiledVulkanShader = ShaderCacheManager::GetInstance()->FindCache(shaderHandle, program.Stage);
 			}
 
 			if (!compiledVulkanShader)
@@ -801,7 +798,7 @@ namespace Flare
 				if (!compiledVulkanShader)
 					return false;
 
-				ShaderCacheManager::GetInstance()->SetCache(shaderHandle, ShaderTargetEnvironment::Vulkan, program.Stage, compiledVulkanShader.value());
+				ShaderCacheManager::GetInstance()->SetCache(shaderHandle, program.Stage, compiledVulkanShader.value());
 			}
 
 			try
@@ -886,10 +883,7 @@ namespace Flare
 
 		if (!forceRecompile)
 		{
-			compiledVulkanShader = ShaderCacheManager::GetInstance()->FindCache(
-				shaderHandle,
-				ShaderTargetEnvironment::Vulkan,
-				program.Stage);
+			compiledVulkanShader = ShaderCacheManager::GetInstance()->FindCache(shaderHandle, program.Stage);
 		}
 
 		if (!compiledVulkanShader)
@@ -898,7 +892,7 @@ namespace Flare
 			if (!compiledVulkanShader)
 				return false;
 
-			ShaderCacheManager::GetInstance()->SetCache(shaderHandle, ShaderTargetEnvironment::Vulkan, program.Stage, compiledVulkanShader.value());
+			ShaderCacheManager::GetInstance()->SetCache(shaderHandle, program.Stage, compiledVulkanShader.value());
 		}
 
 		try

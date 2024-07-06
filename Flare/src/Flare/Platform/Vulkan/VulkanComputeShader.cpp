@@ -26,15 +26,12 @@ namespace Flare
 	{
 		m_IsLoaded = false;
 
-		bool hasValidCache = ShaderCacheManager::GetInstance()->HasCache(Handle, ShaderTargetEnvironment::Vulkan, ShaderStageType::Compute);
+		bool hasValidCache = ShaderCacheManager::GetInstance()->HasCache(Handle, ShaderStageType::Compute);
 		if (!hasValidCache)
 			return;
 
 		m_Metadata = ShaderCacheManager::GetInstance()->FindComputeShaderMetadata(Handle);
-
-		auto cachedShader = ShaderCacheManager::GetInstance()->FindCache(
-			Handle, ShaderTargetEnvironment::Vulkan,
-			ShaderStageType::Compute);
+		auto cachedShader = ShaderCacheManager::GetInstance()->FindCache(Handle, ShaderStageType::Compute);
 
 		if (!cachedShader.has_value())
 		{

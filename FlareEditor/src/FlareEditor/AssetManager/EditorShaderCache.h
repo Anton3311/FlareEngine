@@ -9,27 +9,20 @@ namespace Flare
 	class EditorShaderCache : public ShaderCacheManager
 	{
 	public:
-		void SetCache(AssetHandle shaderHandle,
-			ShaderTargetEnvironment targetEnvironment,
-			ShaderStageType stageType,
-			const std::vector<uint32_t>& compiledShader) override;
+		void SetCache(AssetHandle shaderHandle, ShaderStageType stageType, const std::vector<uint32_t>& compiledShader) override;
 
-		std::optional<std::vector<uint32_t>> FindCache(AssetHandle shaderHandle,
-			ShaderTargetEnvironment targetEnvironment,
-			ShaderStageType stageType) override;
+		std::optional<std::vector<uint32_t>> FindCache(AssetHandle shaderHandle, ShaderStageType stageType) override;
 
 		Ref<const ShaderMetadata> FindShaderMetadata(AssetHandle shaderHandle) override;
 		Ref<const ComputeShaderMetadata> FindComputeShaderMetadata(AssetHandle shaderHandle) override;
 
-		bool HasCache(AssetHandle shaderHandle,
-			ShaderTargetEnvironment targetEnvironment,
-			ShaderStageType stage) override;
+		bool HasCache(AssetHandle shaderHandle, ShaderStageType stage) override;
 
 		void SetShaderEntry(AssetHandle shaderHandle, Ref<const ShaderMetadata> metadata);
 		void SetComputeShaderEntry(AssetHandle shaderHandle, Ref<const ComputeShaderMetadata> metadata);
 
-		std::filesystem::path GetCacheDirectoryPath(AssetHandle shaderHandle);
-		std::string GetCacheFileName(std::string_view shaderName, ShaderStageType stageType);
+		std::filesystem::path GetCacheDirectoryPath();
+		std::string GetCacheFileName(AssetHandle shaderHandle, ShaderStageType stageType);
 	public:
 		static EditorShaderCache& GetInstance();
 	private:
