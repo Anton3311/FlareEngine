@@ -565,8 +565,8 @@ namespace Flare
 		specifications.Blending = metadata->Features.Blending;
 
 		// TODO: Sould be extracted by the ShaderCompiler from shader metadata
-		specifications.DepthBiasSlopeFactor = 0.0f;
-		specifications.DepthBiasConstantFactor = 0.0f;
+		specifications.DepthBiasSlopeFactor = 0.5f;
+		specifications.DepthBiasConstantFactor = 0.5f;
 
 		switch (metadata->Type)
 		{

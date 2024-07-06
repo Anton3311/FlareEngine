@@ -134,6 +134,7 @@ namespace Flare
 		virtual const std::string& GetDebugName() const = 0;
 	public:
 		static Ref<Texture> Create(const TextureSpecifications& specifications);
+		static Ref<Texture> Create(const TextureSpecifications& specifications, MemorySpan pixelData);
 		static Ref<Texture> Create(const std::filesystem::path& path, const TextureSpecifications& specifications);
 		static Ref<Texture> Create(uint32_t width, uint32_t height, const void* data, TextureFormat format, TextureFiltering filtering = TextureFiltering::Linear);
 		static Ref<Texture> Create(const TextureSpecifications& specifications, const TexturePixelData& textureData);

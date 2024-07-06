@@ -1,5 +1,5 @@
 Type = Surface
-Culling = Front
+Culling = Back
 DepthTest = true
 DepthBias = true
 DepthClamp = true

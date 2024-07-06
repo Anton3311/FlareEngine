@@ -79,13 +79,13 @@ float CalculateAdaptiveEpsilon(float depth, vec3 surfaceNormal, float sceneScale
 
 	float K = 0.0001f;
 
-	return a * a / b * sceneScale * K * scaleFactor;
+	return a * a / b * sceneScale * K;
 }
 
 vec2 GetTexelCenter(vec2 uv)
 {
 	vec2 pixelCoordinate = uv * u_ShadowResolution;
-	return floor(pixelCoordinate) + vec2(0.5f) / u_ShadowResolution;
+	return (floor(pixelCoordinate) + vec2(0.5f)) / u_ShadowResolution;
 }
 
 float RayPlaneIntersection(vec4 planeParams, vec3 rayOrigin, vec3 rayDirection)
@@ -112,7 +112,7 @@ float FindPotentialOccluder(vec2 uv, mat4 projection, vec3 surfacePosition, vec3
 	vec3 rayOrigin;
 	vec3 rayDirection;
 	mat4 inverseProjection = inverse(projection);
-	UVToRay(uv, inverseProjection, rayOrigin, rayDirection);
+	UVToRay(texelCenter, inverseProjection, rayOrigin, rayDirection);
 
 	// 2. Create plane tagent to the surface (in view space)
 	vec4 planeParams = vec4(surfaceNormal, -dot(surfaceNormal, surfacePosition));
@@ -121,7 +121,7 @@ float FindPotentialOccluder(vec2 uv, mat4 projection, vec3 surfacePosition, vec3
 	float intersectionDistance = RayPlaneIntersection(planeParams, rayOrigin, rayDirection);
 	vec3 intersectionPoint = rayOrigin + rayDirection * intersectionDistance;
 
-	// 4. Projecte intersection plane
+	// 4. Project intersection point
 	vec4 projectedIntersection = projection * vec4(intersectionPoint, 1.0f);
 	projectedIntersection /= projectedIntersection.w;
 
@@ -162,7 +162,6 @@ float CalculateBlockerDistance(sampler2D shadowMap, vec2 uv, in ShadowMappingSur
 
 		float newRecieverDepth = params.BiasParams.z + dot(offset, params.BiasParams.xy);
 		float sampledDepth = texture(shadowMap, uv + offset).r;
-		// float epsilon = CalculateAdaptiveEpsilon(newRecieverDepth, params.Normal, params.SceneScale);
 
 		if (newRecieverDepth > sampledDepth)
 		{
@@ -188,7 +187,6 @@ float PCF(sampler2DShadow compareSampler, vec2 uv, float filterRadius, in Shadow
 		);
 
 		float recieverDepth = params.BiasParams.z + dot(offset, params.BiasParams.xy);
-		// float epsilon = CalculateAdaptiveEpsilon(newRecieverDepth, params.Normal, params.SceneScale);
 
 #if 0
 		float sampledDepth = texture(shadowMap, uv + offset).r;
@@ -301,7 +299,7 @@ float CalculateShadow(vec3 N, vec4 position, vec3 viewSpacePosition)
 	ShadowMappingSurfaceParams params;
 	params.Position = position.xyz;
 	params.Normal = N;
-	params.ConstantBias = bias;
+	params.ConstantBias = bias * (cascadeIndex + 1);
 	params.SamplesRotation = vec2(cos(rotationAngle), sin(rotationAngle));
 
 	float shadow = CalculateShadow(cascadeIndex, params);
