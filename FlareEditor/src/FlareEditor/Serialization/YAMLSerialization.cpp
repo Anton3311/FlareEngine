@@ -577,7 +577,7 @@ namespace Flare
                 else
                 {
                     Ref<Asset> deserializedAsset = AssetManager::GetRawAsset(handle);
-                    if (&deserializedAsset->GetDescriptor() == assetDescriptor)
+                    if (deserializedAsset != nullptr && &deserializedAsset->GetDescriptor() == assetDescriptor)
                         asset = deserializedAsset;
                     else
                         asset = nullptr;
