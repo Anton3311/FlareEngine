@@ -104,6 +104,9 @@ namespace Flare
 			return nullptr;
 		}
 
+		if (textureData.Mips.size() > 1)
+			specifications.GenerateMipMaps = false;
+
 		return Texture::Create(specifications, textureData);
 	}
 }

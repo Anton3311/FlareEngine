@@ -341,7 +341,7 @@ namespace Flare
 			FLARE_CORE_ASSERT(false);
 		}
 
-		if (m_Specifications.GenerateMipMaps)
+		if (m_MipLevels > 1)
 		{
 			samplerInfo.maxLod = (float)(m_MipLevels - 1);
 			samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
