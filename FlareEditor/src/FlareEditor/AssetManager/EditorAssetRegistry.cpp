@@ -20,12 +20,45 @@ namespace YAML
 
 namespace Flare
 {
-    const std::filesystem::path AssetRegistrySerializer::RegistryFileName = "AssetRegistry.yaml";
-    const std::filesystem::path AssetRegistrySerializer::AssetsDirectoryName = "Assets";
+    const std::filesystem::path EditorAssetRegistry::RegistryFileName = "AssetRegistry.yaml";
+    const std::filesystem::path EditorAssetRegistry::AssetsDirectoryName = "Assets";
 
-	void Flare::AssetRegistrySerializer::Serialize(const EditorAssetRegistry& registry, const std::filesystem::path& path)
-	{
+    void EditorAssetRegistry::Clear()
+    {
+        m_Entries.clear();
+    }
+
+    bool EditorAssetRegistry::Remove(AssetHandle handle)
+    {
         FLARE_PROFILE_FUNCTION();
+
+        auto it = m_Entries.find(handle);
+        if (it != m_Entries.end())
+        {
+            const AssetMetadata& metadata = it->second.Metadata;
+            for (AssetHandle subAssetHandle : metadata.SubAssets)
+            {
+                Remove(subAssetHandle);
+            }
+
+            m_Entries.erase(handle);
+
+            m_IsDirty = true;
+
+            return true;
+        }
+
+        return false;
+    }
+
+    void EditorAssetRegistry::Serialize(const std::filesystem::path& path)
+    {
+        FLARE_PROFILE_FUNCTION();
+
+        if (!m_IsDirty)
+            return;
+
+		m_IsDirty = false;
 
         std::filesystem::path registryPath = path / RegistryFileName;
         std::filesystem::path root = path / AssetsDirectoryName;
@@ -34,7 +67,7 @@ namespace Flare
         emitter << YAML::BeginMap;
         emitter << YAML::Key << "AssetRegistry" << YAML::Value << YAML::BeginSeq; // Asset Registry
 
-        for (const auto& [handle, entry] : registry)
+        for (const auto& [handle, entry] : m_Entries)
         {
             std::filesystem::path assetPath = std::filesystem::relative(entry.Metadata.Path, root);
 
@@ -63,11 +96,15 @@ namespace Flare
         emitter << YAML::EndSeq; // Asset Registry
         emitter << YAML::EndMap;
 
-        std::ofstream outputFile(registryPath);
-        outputFile << emitter.c_str();
-	}
+        {
+            FLARE_PROFILE_SCOPE("WriteTextFile");
 
-    bool AssetRegistrySerializer::Deserialize(EditorAssetRegistry& registry, const std::filesystem::path& path)
+			std::ofstream outputFile(registryPath);
+			outputFile << emitter.c_str();
+        }
+    }
+
+    bool EditorAssetRegistry::Deserialize(const std::filesystem::path& path)
     {
         FLARE_PROFILE_FUNCTION();
 
@@ -127,7 +164,7 @@ namespace Flare
                     metadata.SubAssets.push_back(subAsset.as<AssetHandle>());
             }
 
-            registry.emplace(handle, entry);
+			m_Entries.emplace(handle, entry);
         }
 
         return true;

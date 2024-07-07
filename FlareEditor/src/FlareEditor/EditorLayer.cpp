@@ -303,6 +303,14 @@ namespace Flare
                 m_AssetManagerWindow.RebuildAssetTree();
             }
         }
+
+        {
+            EditorAssetManager& assetManager = *EditorAssetManager::GetInstance();
+            if (assetManager.GetRegistry().IsDirty())
+            {
+                assetManager.SerializeRegistry();
+            }
+        }
     }
 
     void EditorLayer::OnEvent(Event& event)

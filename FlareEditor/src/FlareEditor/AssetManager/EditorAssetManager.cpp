@@ -61,21 +61,21 @@ namespace Flare
     {
         FLARE_PROFILE_FUNCTION();
         m_LoadedAssets.clear();
-        m_Registry.clear();
+        m_Registry.Clear();
         m_FilepathToAssetHandle.clear();
 
         ShaderLibrary::Clear();
 
         FLARE_CORE_ASSERT(Project::GetActive());
 
-        std::filesystem::path root = AssetRegistrySerializer::GetAssetsRoot();
+        std::filesystem::path root = GetAssetsRoot();
         if (!std::filesystem::exists(root))
             std::filesystem::create_directories(root);
 
         DeserializeRegistry();
         ImportBuiltinAssets();
 
-        for (const auto& entry : m_Registry)
+        for (const auto& entry : m_Registry.GetEntries())
         {
             bool isShaderAsset = entry.second.Metadata.Type == AssetType::Shader || entry.second.Metadata.Type == AssetType::ComputeShader;
             if (isShaderAsset && entry.second.Metadata.Source == AssetSource::File)
@@ -98,24 +98,23 @@ namespace Flare
         if (assetIterator != m_LoadedAssets.end())
             return assetIterator->second;
 
-        auto registryIterator = m_Registry.find(handle);
-        if (registryIterator == m_Registry.end())
-            return nullptr;
+        if (const AssetRegistryEntry* entry = m_Registry.FindEntry(handle))
+			return LoadAsset(entry->Metadata);
 
-        return LoadAsset(registryIterator->second.Metadata);
+        return nullptr;
     }
 
     const AssetMetadata* EditorAssetManager::GetAssetMetadata(AssetHandle handle)
     {
-        auto it = m_Registry.find(handle);
-        if (it == m_Registry.end())
-            return nullptr;
-        return &it->second.Metadata;
+        if (const AssetRegistryEntry* entry = m_Registry.FindEntry(handle))
+            return &entry->Metadata;
+
+        return nullptr;
     }
 
     bool EditorAssetManager::IsAssetHandleValid(AssetHandle handle)
     {
-        return m_Registry.find(handle) != m_Registry.end();
+        return m_Registry.Contains(handle);
     }
 
     bool EditorAssetManager::IsAssetLoaded(AssetHandle handle)
@@ -184,7 +183,7 @@ namespace Flare
 
         AssetHandle handle;
 
-        AssetRegistryEntry entry;
+        AssetRegistryEntry& entry = m_Registry.Insert(handle);
         AssetMetadata& metadata = entry.Metadata;
         metadata.Path = path;
         metadata.Type = type;
@@ -193,21 +192,17 @@ namespace Flare
         metadata.Name = metadata.Path.filename().generic_string();
         metadata.Source = AssetSource::File;
 
-        m_Registry.emplace(handle, entry);
-
         if (parentAsset != NULL_ASSET_HANDLE)
+        {
             m_FilepathToAssetHandle.emplace(std::filesystem::absolute(path), handle);
+        }
         else
         {
-            auto it = m_Registry.find(parentAsset);
-            if (it != m_Registry.end())
+            if (auto* parentEntry = m_Registry.FindEntry(parentAsset))
             {
-                AssetRegistryEntry& parentAsset = it->second;
-                parentAsset.Metadata.SubAssets.push_back(handle);
+                parentEntry->Metadata.SubAssets.push_back(handle);
             }
         }
-
-        SerializeRegistry();
 
         return handle;
     }
@@ -217,7 +212,7 @@ namespace Flare
         FLARE_PROFILE_FUNCTION();
         AssetHandle handle;
 
-        AssetRegistryEntry entry;
+        AssetRegistryEntry& entry = m_Registry.Insert(handle);
         AssetMetadata& metadata = entry.Metadata;
         metadata.Handle = handle;
         metadata.Path = path;
@@ -232,19 +227,13 @@ namespace Flare
             m_FilepathToAssetHandle.emplace(std::filesystem::absolute(path), handle);
         else
         {
-            auto it = m_Registry.find(parentAsset);
-            if (it != m_Registry.end())
+            if (auto* parentEntry = m_Registry.FindEntry(parentAsset))
             {
-                AssetRegistryEntry& parent = it->second;
-                parent.Metadata.SubAssets.push_back(handle);
+                parentEntry->Metadata.SubAssets.push_back(handle);
             }
         }
 
-        m_Registry.emplace(handle, entry);
         m_LoadedAssets.emplace(asset->Handle, asset);
-
-        SerializeRegistry();
-
         return handle;
     }
 
@@ -253,7 +242,7 @@ namespace Flare
         FLARE_PROFILE_FUNCTION();
         AssetHandle handle;
 
-        AssetRegistryEntry entry;
+        AssetRegistryEntry& entry = m_Registry.Insert(handle);
         AssetMetadata& metadata = entry.Metadata;
         metadata.Handle = handle;
         metadata.Name = name;
@@ -263,20 +252,12 @@ namespace Flare
 
         asset->Handle = handle;
 
-        {
-            auto it = m_Registry.find(parentAsset);
-            if (it != m_Registry.end())
-            {
-                AssetRegistryEntry& parent = it->second;
-                parent.Metadata.SubAssets.push_back(handle);
-            }
-        }
+		if (auto* parentEntry = m_Registry.FindEntry(parentAsset))
+		{
+			parentEntry->Metadata.SubAssets.push_back(handle);
+		}
 
-        m_Registry.emplace(handle, entry);
         m_LoadedAssets.emplace(asset->Handle, asset);
-
-        SerializeRegistry();
-
         return handle;
     }
 
@@ -285,11 +266,11 @@ namespace Flare
         FLARE_PROFILE_FUNCTION();
         FLARE_CORE_ASSERT(IsAssetHandleValid(handle));
 
-        auto registryIterator = m_Registry.find(handle);
-        if (registryIterator == m_Registry.end())
+        auto* entry = m_Registry.FindEntry(handle);
+        if (entry == nullptr)
             return;
 
-        if (registryIterator->second.Metadata.Type == AssetType::Shader)
+        if (entry->Metadata.Type == AssetType::Shader)
         {
             ShaderCompiler::Compile(handle, true);
 
@@ -298,7 +279,7 @@ namespace Flare
             return;
         }
 
-        LoadAsset(registryIterator->second.Metadata);
+        LoadAsset(entry->Metadata);
     }
 
     void EditorAssetManager::UnloadAsset(AssetHandle handle)
@@ -314,7 +295,7 @@ namespace Flare
     void EditorAssetManager::ReloadPrefabs()
     {
         FLARE_PROFILE_FUNCTION();
-        for (const auto& [handle, asset] : m_Registry)
+        for (const auto& [handle, asset] : m_Registry.GetEntries())
         {
             if (asset.Metadata.Type == AssetType::Prefab && IsAssetLoaded(handle))
                 ReloadAsset(handle);
@@ -346,30 +327,15 @@ namespace Flare
         return LoadAsset(*GetAssetMetadata(handle));
     }
 
-    void EditorAssetManager::SetAutomaticRegistrySerializationEnable(bool enabled)
+    std::filesystem::path EditorAssetManager::GetAssetsRoot()
     {
-        m_AutomaticRegistrySerializationEnabled = enabled;
-
-        if (enabled)
-        {
-            SerializeRegistry();
-        }
+        FLARE_CORE_ASSERT(Project::GetActive());
+        return Project::GetActive()->Location / "Assets";
     }
 
     void EditorAssetManager::RemoveFromRegistryWithoutSerialization(AssetHandle handle)
     {
         FLARE_PROFILE_FUNCTION();
-
-        auto it = m_Registry.find(handle);
-        if (it != m_Registry.end())
-        {
-            const AssetMetadata* metadata = GetAssetMetadata(handle);
-            for (AssetHandle subAssetHandle : metadata->SubAssets)
-                RemoveFromRegistryWithoutSerialization(subAssetHandle);
-
-            UnloadAsset(handle);
-            m_Registry.erase(handle);
-        }
     }
 
     void EditorAssetManager::ImportBuiltinAssets()
@@ -380,10 +346,7 @@ namespace Flare
 
         FLARE_CORE_ASSERT(std::filesystem::exists(builtingContentPath));
 
-        m_AutomaticRegistrySerializationEnabled = false;
         ImportBuiltinAssets(builtingContentPath);
-        m_AutomaticRegistrySerializationEnabled = true;
-        SerializeRegistry();
     }
 
     void EditorAssetManager::ImportBuiltinAssets(const std::filesystem::path& directoryPath)
@@ -404,7 +367,9 @@ namespace Flare
                     if (handle == NULL_ASSET_HANDLE)
                         continue;
 
-                    m_Registry[handle].IsBuiltIn = true;
+					auto* entry = m_Registry.FindEntry(handle);
+                    FLARE_CORE_ASSERT(entry);
+                    entry->IsBuiltIn = true;
 				}
 			}
 		}
@@ -421,18 +386,7 @@ namespace Flare
             return nullptr;
         }
 
-        // NOTE: Disable automatic registry serialization and delay it util the asset gets loaded
-        //       This prevents multiple serialization calls if case the asset loader also imports other assets or subassets
-        bool autoSerializationWasEnabled = m_AutomaticRegistrySerializationEnabled;
-        SetAutomaticRegistrySerializationEnable(false);
-
         Ref<Asset> asset = importerIterator->second(metadata);
-
-        if (autoSerializationWasEnabled)
-        {
-            SetAutomaticRegistrySerializationEnable(true);
-            SerializeRegistry();
-        }
 
         if (!asset)
             return nullptr;
@@ -445,28 +399,27 @@ namespace Flare
     void EditorAssetManager::SerializeRegistry()
     {
         FLARE_PROFILE_FUNCTION();
-
-        if (!m_AutomaticRegistrySerializationEnabled)
-        {
-            m_RegistryNeedsSerializing = true;
-            return;
-        }
-
-        if (m_RegistryNeedsSerializing || m_AutomaticRegistrySerializationEnabled)
-        {
-            AssetRegistrySerializer::Serialize(m_Registry, Project::GetActive()->Location);
-            m_RegistryNeedsSerializing = false;
-        }
+        m_Registry.Serialize(Project::GetActive()->Location);
     }
 
     void EditorAssetManager::DeserializeRegistry()
     {
         FLARE_PROFILE_FUNCTION();
 
-        m_Registry.clear();
-        AssetRegistrySerializer::Deserialize(m_Registry, Project::GetActive()->Location);
+        {
+            FLARE_PROFILE_SCOPE("Clear");
+			m_Registry.Clear();
+			m_FilepathToAssetHandle.clear();
+        }
 
-        for (const auto& [handle, entry] : m_Registry)
-            m_FilepathToAssetHandle.emplace(std::filesystem::absolute(entry.Metadata.Path), handle);
+        m_Registry.Deserialize(Project::GetActive()->Location);
+
+        {
+            FLARE_PROFILE_SCOPE("GenerateFilepathToAssetHandleMapping");
+            for (const auto& [handle, entry] : m_Registry.GetEntries())
+            {
+				m_FilepathToAssetHandle.emplace(std::filesystem::absolute(entry.Metadata.Path), handle);
+            }
+        }
     }
 }
