@@ -299,19 +299,25 @@ float CalculateShadow(vec3 N, vec4 position, vec3 viewSpacePosition)
 	ShadowMappingSurfaceParams params;
 	params.Position = position.xyz;
 	params.Normal = N;
-	params.ConstantBias = bias * (cascadeIndex + 1);
+	params.ConstantBias = bias;
 	params.SamplesRotation = vec2(cos(rotationAngle), sin(rotationAngle));
 
 	float shadow = CalculateShadow(cascadeIndex, params);
 
 #if CASCADE_BLENDING_ENABLED
-	const float BLENDING_THRESHOLD = 1.0f;
+	const float BLENDING_THRESHOLD = 3.0f;
 
 	float distanceToNextCascade = u_CascadeSplits[cascadeIndex] - viewSpaceDistance;
 	if (distanceToNextCascade <= BLENDING_THRESHOLD && cascadeIndex < CASCADES_COUNT - 1)
 	{
+		ShadowMappingSurfaceParams nextCascadeParams;
+		nextCascadeParams.Position = position.xyz;
+		nextCascadeParams.Normal = N;
+		nextCascadeParams.ConstantBias = bias;
+		nextCascadeParams.SamplesRotation = vec2(cos(rotationAngle), sin(rotationAngle));
+
 		int nextCascade = cascadeIndex + 1;
-		float shadow1 = CalculateShadow(nextCascade, params);
+		float shadow1 = CalculateShadow(nextCascade, nextCascadeParams);
 		float cascadeBlend = min(1.0f, distanceToNextCascade / BLENDING_THRESHOLD);
 
 		shadow = mix(shadow1, shadow, cascadeBlend);
