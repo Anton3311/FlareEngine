@@ -61,6 +61,8 @@ namespace Flare
         Project::OnProjectOpen.Bind(FLARE_BIND_EVENT_CALLBACK(OnOpenProject));
         Project::OnUnloadActiveProject.Bind([this]()
         {
+			EditorAssetManager::GetInstance()->SerializeRegistry();
+
             m_ProjectFilesWacher.reset();
             if (Scene::GetActive() == nullptr)
                 return;
@@ -175,6 +177,8 @@ namespace Flare
     void EditorLayer::OnDetach()
     {
         FLARE_PROFILE_FUNCTION();
+        EditorAssetManager::GetInstance()->SerializeRegistry();
+
         m_AssetManagerWindow.Uninitialize();
         m_AssetEditorWindows.clear();
 
