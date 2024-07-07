@@ -155,7 +155,7 @@ namespace Flare
         FLARE_PROFILE_FUNCTION();
         AssetTreeNode& node = m_AssetTree[m_NodeRenderIndex];
 
-        if (node.IsImported)
+        if (node.Handle != NULL_ASSET_HANDLE)
         {
             RenderAssetItem(&node, node.Handle);
             return;
@@ -173,26 +173,22 @@ namespace Flare
 
             const ImGuiStyle& style = ImGui::GetStyle();
             ImGui::PushStyleColor(ImGuiCol_Text, style.Colors[ImGuiCol_TextDisabled]);
-            bool opened = ImGui::TreeNodeEx(node.Name.c_str(), flags, node.Name.c_str());
+			ImGui::TreeNodeEx(node.Name.c_str(), flags, node.Name.c_str());
             ImGui::PopStyleColor();
 
-            if (opened)
-            {
-                if (ImGui::BeginPopupContextItem(node.Name.c_str()))
-                {
-                    if (ImGui::MenuItem("Import"))
-                    {
-                        node.Handle = m_AssetManager->ImportAsset(node.Path);
-                        node.IsImported = node.Handle != NULL_ASSET_HANDLE;
-                    }
+			if (ImGui::BeginPopupContextItem(node.Name.c_str()))
+			{
+				if (ImGui::MenuItem("Import"))
+				{
+					node.Handle = m_AssetManager->ImportAsset(node.Path, NULL_ASSET_HANDLE);
+				}
 
-                    RenderFileOrDirectoryMenuItems(node);
+				RenderFileOrDirectoryMenuItems(node);
 
-                    ImGui::EndMenu();
-                }
+				ImGui::EndMenu();
+			}
 
-                ImGui::TreePop();
-            }
+			ImGui::TreePop();
         }
     }
 
@@ -253,7 +249,6 @@ namespace Flare
             {
                 if (node)
                 {
-                    node->IsImported = false;
                     node->Handle = NULL_ASSET_HANDLE;
                 }
 
@@ -298,7 +293,7 @@ namespace Flare
                 std::optional<AssetHandle> handle = m_AssetManager->FindAssetByPath(child);
 
                 AssetTreeNode& node = m_AssetTree.emplace_back(child.filename().generic_string(), child, handle.value_or(AssetHandle()));
-                node.IsImported = handle.has_value();
+                node.Handle = handle.value_or(NULL_ASSET_HANDLE);
             }
 
             m_AssetTree[parentIndex].LastChildIndex = (uint32_t)(m_AssetTree.size() - 1);
