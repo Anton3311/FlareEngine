@@ -56,8 +56,6 @@ namespace Flare
 
 		static std::filesystem::path GetAssetsRoot();
 	private:
-		void RemoveFromRegistryWithoutSerialization(AssetHandle handle);
-
 		void ImportBuiltinAssets();
 		void ImportBuiltinAssets(const std::filesystem::path& directoryPath);
 
