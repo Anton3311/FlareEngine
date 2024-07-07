@@ -8,13 +8,13 @@ const int CASCADES_COUNT = 4;
 
 layout(std140, set = 0, binding = 2) uniform ShadowData
 {
-	float u_LightFrustumSize;
 	float u_LightSize;
 	float u_LightFar;
+	float u_Bias;
+	float u_NormalBias;
 
-	vec4 u_SceneScale;
+	vec4 u_LightFrustumWidth;
 	vec4 u_CascadeSplits;
-	vec4 u_CascadeFilterWeights;
 
 	mat4 u_CascadeProjection0;
 	mat4 u_CascadeProjection1;
@@ -23,12 +23,9 @@ layout(std140, set = 0, binding = 2) uniform ShadowData
 
 	float u_ShadowResolution;
 	float u_ShadowSoftness;
+
 	float u_ShadowFadeDistance;
-
 	float u_MaxShadowDistance;
-
-	float u_Bias;
-	float u_NormalBias;
 
 	int u_MaxCascadeIndex;
 
@@ -65,8 +62,6 @@ const vec2[] SAMPLE_POINTS = {
 };
 
 const int NUMBER_OF_SAMPLES = 16;
-
-#define LIGHT_SIZE (u_LightSize / u_LightFrustumSize)
 
 float CalculateAdaptiveEpsilon(float depth, vec3 surfaceNormal, float sceneScale)
 {
@@ -146,12 +141,12 @@ struct ShadowMappingSurfaceParams
 	vec2 SamplesRotation;
 };
 
-float CalculateBlockerDistance(sampler2D shadowMap, vec2 uv, in ShadowMappingSurfaceParams params, float scale)
+float CalculateBlockerDistance(sampler2D shadowMap, vec2 uv, in ShadowMappingSurfaceParams params, float lightSize)
 {
 	float recieverDepth = params.BiasParams.z;
 	float blockerDistance = 0.0;
 	float samplesCount = 0;
-	float searchSize = LIGHT_SIZE * (recieverDepth - u_LightNear) / recieverDepth * scale;
+	float searchSize = lightSize * (recieverDepth - u_LightNear) / recieverDepth;
 
 	for (int i = 0; i < NUMBER_OF_SAMPLES; i++)
 	{
@@ -199,7 +194,7 @@ float PCF(sampler2DShadow compareSampler, vec2 uv, float filterRadius, in Shadow
 	return shadow / NUMBER_OF_SAMPLES;
 }
 
-float CalculateCascadeShadow(sampler2D shadowMap, sampler2DShadow compareSampler, mat4 projection, inout ShadowMappingSurfaceParams params, float scale)
+float CalculateCascadeShadow(sampler2D shadowMap, sampler2DShadow compareSampler, mat4 projection, inout ShadowMappingSurfaceParams params, float lightSize)
 {
 	vec4 lightSpacePosition = projection * vec4(params.Position, 1.0f);
 
@@ -218,15 +213,17 @@ float CalculateCascadeShadow(sampler2D shadowMap, sampler2DShadow compareSampler
 	params.BiasParams = CalculateBiasParams(uv, projection, params.Position.xyz, params.Normal);
 	params.BiasParams.z -= params.ConstantBias;
 
-	float blockerDistance = CalculateBlockerDistance(shadowMap, uv, params, scale);
+	float blockerDistance = CalculateBlockerDistance(shadowMap, uv, params, lightSize);
 	if (blockerDistance == -1.0f)
 	{
 		return texture(compareSampler, vec3(uv, params.BiasParams.z));
 	}
 
 	float penumbraWidth = (recieverDepth - blockerDistance) / blockerDistance;
-	float filterRadius = penumbraWidth * LIGHT_SIZE * u_LightNear / recieverDepth;
-	filterRadius = filterRadius * scale * u_ShadowSoftness;
+	float filterRadius = penumbraWidth * lightSize * u_LightNear / recieverDepth;
+
+	filterRadius *= u_ShadowSoftness;
+	filterRadius = max(3.0f / u_ShadowResolution, filterRadius);
 
 	return 1.0f - PCF(compareSampler, uv, filterRadius, params);
 }
@@ -236,13 +233,13 @@ float CalculateShadow(int cascadeIndex, inout ShadowMappingSurfaceParams params)
 	switch (cascadeIndex)
 	{
 	case 0:
-		return CalculateCascadeShadow(u_ShadowMap0, u_ShadowMapCompareSampler0, u_CascadeProjection0, params, 1.0f);
+		return CalculateCascadeShadow(u_ShadowMap0, u_ShadowMapCompareSampler0, u_CascadeProjection0, params, u_LightSize / u_LightFrustumWidth.x);
 	case 1:
-		return CalculateCascadeShadow(u_ShadowMap1, u_ShadowMapCompareSampler1, u_CascadeProjection1, params, u_CascadeFilterWeights.y);
+		return CalculateCascadeShadow(u_ShadowMap1, u_ShadowMapCompareSampler1, u_CascadeProjection1, params, u_LightSize / u_LightFrustumWidth.y);
 	case 2:
-		return CalculateCascadeShadow(u_ShadowMap2, u_ShadowMapCompareSampler2, u_CascadeProjection2, params, u_CascadeFilterWeights.z);
+		return CalculateCascadeShadow(u_ShadowMap2, u_ShadowMapCompareSampler2, u_CascadeProjection2, params, u_LightSize / u_LightFrustumWidth.z);
 	case 3:
-		return CalculateCascadeShadow(u_ShadowMap3, u_ShadowMapCompareSampler3, u_CascadeProjection3, params, u_CascadeFilterWeights.w);
+		return CalculateCascadeShadow(u_ShadowMap3, u_ShadowMapCompareSampler3, u_CascadeProjection3, params, u_LightSize / u_LightFrustumWidth.w);
 	}
 
 	return 1.0f;

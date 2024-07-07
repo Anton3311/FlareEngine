@@ -48,15 +48,13 @@ namespace Flare
 	private:
 		struct ShadowData
 		{
-			float FrustumSize = 0.0f;
 			float LightSize = 0.0f;
 			float LightFar = 0.0f;
-			float Padding = 0.0f;
+			float Bias = 0.0f;
+			float NormalBias = 0.0f;
 
-			float SceneScale[4] = { 0.0f };
-
+			float FrustumWidth[4] = { 0.0f };
 			float CascadeSplits[4] = { 0.0f };
-			float CascadeFilterWeights[4] = { 0.0f };
 
 			glm::mat4 LightProjections[4] = { glm::mat4(0.0f) };
 
@@ -65,9 +63,6 @@ namespace Flare
 
 			float ShadowFadeStartDistance = 0.0f;
 			float MaxShadowDistance = 0.0f;
-
-			float Bias = 0.0f;
-			float NormalBias = 0.0f;
 
 			int32_t MaxCascadeIndex = 0;
 

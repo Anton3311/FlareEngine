@@ -160,13 +160,6 @@ namespace Flare
 			m_ShadowData.CascadeSplits[i] = settings.CascadeSplits[i];
 
 		m_ShadowData.MaxCascadeIndex = settings.Cascades - 1;
-		m_ShadowData.FrustumSize = 2.0f * viewport.FrameData.Camera.Near
-			* glm::tan(glm::radians(viewport.FrameData.Camera.FOV / 2.0f))
-			* viewport.GetAspectRatio();
-
-		for (uint32_t i = 1; i < 4; i++)
-			m_ShadowData.CascadeFilterWeights[i] = 1.0f / (m_ShadowData.CascadeFilterWeights[i] / m_ShadowData.CascadeFilterWeights[0]);
-		m_ShadowData.CascadeFilterWeights[0] = 1.0f;
 
 		m_ShadowData.MaxShadowDistance = settings.CascadeSplits[settings.Cascades - 1];
 		m_ShadowData.ShadowFadeStartDistance = m_ShadowData.MaxShadowDistance - settings.FadeDistance;
@@ -205,6 +198,8 @@ namespace Flare
 					lightBasis);
 
 				currentNearPlane = shadowSettings.CascadeSplits[i];
+
+				m_ShadowData.FrustumWidth[i] = perCascadeParams[i].BoundingSphereRadius * 2.0f;
 			}
 		}
 
@@ -310,9 +305,7 @@ namespace Flare
 
 				m_LightViews[cascadeIndex].SetViewAndProjection(projection, view);
 
-				m_ShadowData.SceneScale[cascadeIndex] = params.BoundingSphereRadius * glm::sqrt(2.0f);
 				m_ShadowData.LightFar = farPlaneDistance - nearPlaneDistance;
-				m_ShadowData.CascadeFilterWeights[cascadeIndex] = params.BoundingSphereRadius * 2.0f;
 				m_ShadowData.LightProjections[cascadeIndex] = m_LightViews[cascadeIndex].ViewProjection;
 
 				currentNearPlane = shadowSettings.CascadeSplits[cascadeIndex];
