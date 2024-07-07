@@ -140,6 +140,15 @@ namespace Flare
     {
         FLARE_PROFILE_FUNCTION();
 
+        auto pathIterator = m_FilepathToAssetHandle.find(path);
+        if (pathIterator != m_FilepathToAssetHandle.end())
+        {
+            if (auto* entry = m_Registry.FindEntry(pathIterator->second))
+            {
+                return entry->Metadata.Handle;
+            }
+        }
+
         AssetType type = AssetType::None;
         std::filesystem::path extension = path.extension();
 
@@ -192,7 +201,7 @@ namespace Flare
         metadata.Name = metadata.Path.filename().generic_string();
         metadata.Source = AssetSource::File;
 
-        if (parentAsset != NULL_ASSET_HANDLE)
+        if (parentAsset == NULL_ASSET_HANDLE)
         {
             m_FilepathToAssetHandle.emplace(std::filesystem::absolute(path), handle);
         }
@@ -223,8 +232,10 @@ namespace Flare
 
         asset->Handle = handle;
 
-        if (parentAsset != NULL_ASSET_HANDLE)
+        if (parentAsset == NULL_ASSET_HANDLE)
+        {
             m_FilepathToAssetHandle.emplace(std::filesystem::absolute(path), handle);
+        }
         else
         {
             if (auto* parentEntry = m_Registry.FindEntry(parentAsset))
