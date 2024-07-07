@@ -1,5 +1,7 @@
 #include "EntitiesHierarchy.h"
 
+#include "FlareCore/Profiler/Profiler.h"
+
 #include "Flare/Scene/Components.h"
 #include "Flare/Scene/Hierarchy.h"
 
@@ -21,6 +23,7 @@ namespace Flare
 
 	bool EntitiesHierarchy::OnRenderImGui(Entity& selectedEntity)
 	{
+		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(m_World);
 
 		bool result = false;
@@ -119,6 +122,7 @@ namespace Flare
 
 	bool EntitiesHierarchy::RenderEntityItem(Entity entity, Entity& selectedEntity)
 	{
+		FLARE_PROFILE_FUNCTION();
 		bool result = false;
 		ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow
 			| ImGuiTreeNodeFlags_FramePadding
@@ -176,6 +180,7 @@ namespace Flare
 
 	bool EntitiesHierarchy::RenderEntityContextMenu(Entity entity, Entity& selectedEntity)
 	{
+		FLARE_PROFILE_FUNCTION();
 		bool result = false;
 		if (ImGui::BeginPopupContextItem())
 		{

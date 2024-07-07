@@ -55,6 +55,7 @@ namespace Flare
         m_Mode(EditorMode::Edit),
         m_ProjectFilesWacher(nullptr)
     {
+        FLARE_PROFILE_FUNCTION();
         s_Instance = this;
 
         Project::OnProjectOpen.Bind(FLARE_BIND_EVENT_CALLBACK(OnOpenProject));
@@ -85,6 +86,7 @@ namespace Flare
 
     void EditorLayer::OnAttach()
     {
+        FLARE_PROFILE_FUNCTION();
         ShaderCacheManager::SetInstance(CreateScope<EditorShaderCache>());
         EditorGUI::Initialize();
 
@@ -172,6 +174,7 @@ namespace Flare
 
     void EditorLayer::OnDetach()
     {
+        FLARE_PROFILE_FUNCTION();
         m_AssetManagerWindow.Uninitialize();
         m_AssetEditorWindows.clear();
 
@@ -252,6 +255,7 @@ namespace Flare
 
         if (m_ProjectFilesWacher)
         {
+            FLARE_PROFILE_SCOPE("WatchForFileChanges");
             m_ProjectFilesWacher->Update();
             FileChangeEvent changes;
 
@@ -443,6 +447,7 @@ namespace Flare
 
     void EditorLayer::UpdateWindowTitle()
     {
+		FLARE_PROFILE_FUNCTION();
         if (Project::GetActive() != nullptr)
         {
             std::string name = fmt::format("Flare Editor - {0} - {1}", Project::GetActive()->Name, Project::GetActive()->Location.generic_string());
@@ -452,6 +457,7 @@ namespace Flare
 
     void EditorLayer::OnOpenProject()
     {
+		FLARE_PROFILE_FUNCTION();
         Ref<EditorAssetManager> assetManager = As<EditorAssetManager>(AssetManager::GetInstance());
 
         assetManager->Reinitialize();
@@ -472,6 +478,7 @@ namespace Flare
 
     void EditorLayer::OpenSceneImmediately(AssetHandle handle)
     {
+		FLARE_PROFILE_FUNCTION();
         if (!AssetManager::IsAssetHandleValid(handle))
             return;
 
@@ -499,6 +506,7 @@ namespace Flare
 
     void EditorLayer::HandleKeyboardShortcuts()
     {
+        FLARE_PROFILE_FUNCTION();
         ImGuiIO& io = ImGui::GetIO();
 
         if (io.KeyCtrl)
@@ -534,6 +542,7 @@ namespace Flare
 
     void EditorLayer::ResetViewportRenderGraphs()
     {
+		FLARE_PROFILE_FUNCTION();
         for (auto& viewportWindow : m_ViewportWindows)
         {
             viewportWindow->GetViewport().Graph.Clear();
@@ -543,6 +552,7 @@ namespace Flare
 
     void EditorLayer::SaveActiveScene()
     {
+		FLARE_PROFILE_FUNCTION();
         FLARE_CORE_ASSERT(Scene::GetActive());
         if (AssetManager::IsAssetHandleValid(Scene::GetActive()->Handle))
             SceneSerializer::Serialize(Scene::GetActive(), m_Camera, m_SceneViewSettings);
@@ -552,6 +562,7 @@ namespace Flare
 
     void EditorLayer::SaveActiveSceneAs()
     {
+		FLARE_PROFILE_FUNCTION();
         Application::GetInstance().ExecuteAfterEndOfFrame([this]()
 		{
 			GraphicsContext::GetInstance().WaitForDevice();
@@ -575,6 +586,7 @@ namespace Flare
 
     void EditorLayer::OpenScene(AssetHandle handle)
     {
+		FLARE_PROFILE_FUNCTION();
         if (!AssetManager::IsAssetHandleValid(handle))
             return;
 
@@ -587,6 +599,7 @@ namespace Flare
 
     void EditorLayer::CreateNewScene()
     {
+		FLARE_PROFILE_FUNCTION();
         Application::GetInstance().ExecuteAfterEndOfFrame([this]()
 		{
 			GraphicsContext::GetInstance().WaitForDevice();
@@ -616,6 +629,7 @@ namespace Flare
 
     void EditorLayer::EnterPlayMode()
     {
+		FLARE_PROFILE_FUNCTION();
         FLARE_CORE_ASSERT(m_Mode == EditorMode::Edit);
 
         if (m_EnterPlayModeScheduled)
@@ -659,6 +673,7 @@ namespace Flare
 
     void EditorLayer::ExitPlayMode()
     {
+		FLARE_PROFILE_FUNCTION();
         FLARE_CORE_ASSERT(m_Mode == EditorMode::Play);
 
         if (m_ExitPlayModeScheduled)
@@ -690,6 +705,7 @@ namespace Flare
 
     void EditorLayer::ReloadScriptingModules()
     {
+		FLARE_PROFILE_FUNCTION();
         FLARE_CORE_ASSERT(!Platform::IsDebuggerAttached());
         FLARE_CORE_ASSERT(m_Mode == EditorMode::Edit);
 

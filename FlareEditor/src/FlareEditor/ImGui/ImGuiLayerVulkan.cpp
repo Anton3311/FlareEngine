@@ -15,6 +15,8 @@ namespace Flare
 {
 	void ImGuiLayerVulkan::InitializeRenderer()
 	{
+        FLARE_PROFILE_FUNCTION();
+
 		{
 			VkDescriptorPoolSize sizes[1];
 			sizes[0].descriptorCount = 1;
@@ -60,6 +62,7 @@ namespace Flare
 
 	void ImGuiLayerVulkan::ShutdownRenderer()
 	{
+        FLARE_PROFILE_FUNCTION();
 		VulkanContext::GetInstance().SetImageViewDeletionHandler(nullptr);
 
 		ImGui_ImplVulkan_Shutdown();
@@ -69,6 +72,7 @@ namespace Flare
 
 	void ImGuiLayerVulkan::InitializeFonts()
 	{
+        FLARE_PROFILE_FUNCTION();
 		Ref<VulkanCommandBuffer> commandBuffer = VulkanContext::GetInstance().BeginTemporaryCommandBuffer();
 		ImGui_ImplVulkan_CreateFontsTexture(commandBuffer->GetHandle());
 		VulkanContext::GetInstance().EndTemporaryCommandBuffer(commandBuffer);
@@ -76,6 +80,7 @@ namespace Flare
 
 	void ImGuiLayerVulkan::Begin()
 	{
+        FLARE_PROFILE_FUNCTION();
 		ImGui_ImplVulkan_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 
@@ -85,6 +90,7 @@ namespace Flare
 
 	void ImGuiLayerVulkan::End()
 	{
+        FLARE_PROFILE_FUNCTION();
 		ImGui::EndFrame();
 		ImGui::Render();
 	}

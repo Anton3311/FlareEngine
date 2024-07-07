@@ -45,6 +45,7 @@ namespace Flare
 
 	void ImGuiLayer::OnAttach()
 	{
+		FLARE_PROFILE_FUNCTION();
 		IMGUI_CHECKVERSION();
 		ImGui::CreateContext();
 		ImGui::StyleColorsDark();
@@ -69,6 +70,7 @@ namespace Flare
 
 	void ImGuiLayer::OnDetach()
 	{
+		FLARE_PROFILE_FUNCTION();
 		ShutdownRenderer();
 		ImGui::DestroyContext();
 	}
@@ -79,6 +81,7 @@ namespace Flare
 
 	void ImGuiLayer::BeginDockSpace()
 	{
+		FLARE_PROFILE_FUNCTION();
         static bool fullscreen = true;
         static ImGuiDockNodeFlags dockspaceFlags = ImGuiDockNodeFlags_None;
 
@@ -109,6 +112,7 @@ namespace Flare
 
 	void ImGuiLayer::EndDockSpace()
 	{
+		FLARE_PROFILE_FUNCTION();
         ImGui::End();
 	}
 
@@ -124,6 +128,7 @@ namespace Flare
 
 	void ImGuiLayer::SetThemeColors()
 	{
+		FLARE_PROFILE_FUNCTION();
 		ImGuiStyle& style = ImGui::GetStyle();
 		style.WindowRounding = 0.0f;
 		style.WindowBorderSize = 1.0f;
