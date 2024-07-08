@@ -99,7 +99,7 @@ void UVToRay(vec2 uv, mat4 inverseProjection, out vec3 origin, out vec3 directio
 	direction = u_LightDirection;
 }
 
-float FindPotentialOccluder(vec2 uv, mat4 projection, vec3 surfacePosition, vec3 surfaceNormal)
+float FindPotentialOccluder(vec2 uv, mat4 projection, vec3 surfacePosition, vec3 surfaceNormal, float bias)
 {
 	// 1. Create a ray going from the light source through the center of the current shadow map texel
 	vec2 texelCenter = GetTexelCenter(uv);
@@ -116,18 +116,21 @@ float FindPotentialOccluder(vec2 uv, mat4 projection, vec3 surfacePosition, vec3
 	float intersectionDistance = RayPlaneIntersection(planeParams, rayOrigin, rayDirection);
 	vec3 intersectionPoint = rayOrigin + rayDirection * intersectionDistance;
 
-	// 4. Project intersection point
+	// 4. Move the depth closer to the light source by [bias] units in world space
+	intersectionPoint -= u_LightDirection * bias;
+
+	// 5. Project intersection point
 	vec4 projectedIntersection = projection * vec4(intersectionPoint, 1.0f);
 	projectedIntersection /= projectedIntersection.w;
 
 	return projectedIntersection.z;
 }
 
-vec3 CalculateBiasParams(vec2 uv, mat4 projection, vec3 surfacePosition, vec3 surfaceNormal)
+vec3 CalculateBiasParams(vec2 uv, mat4 projection, vec3 surfacePosition, vec3 surfaceNormal, float bias)
 {
-	float depth = FindPotentialOccluder(uv, projection, surfacePosition, surfaceNormal);
-	float depthX = FindPotentialOccluder(uv + vec2(1.0f / u_ShadowResolution, 0.0f), projection, surfacePosition, surfaceNormal);
-	float depthY = FindPotentialOccluder(uv + vec2(0.0f, 1.0f / u_ShadowResolution), projection, surfacePosition, surfaceNormal);
+	float depth = FindPotentialOccluder(uv, projection, surfacePosition, surfaceNormal, bias);
+	float depthX = FindPotentialOccluder(uv + vec2(1.0f / u_ShadowResolution, 0.0f), projection, surfacePosition, surfaceNormal, bias);
+	float depthY = FindPotentialOccluder(uv + vec2(0.0f, 1.0f / u_ShadowResolution), projection, surfacePosition, surfaceNormal, bias);
 
 	return vec3(depthX - depth, depthY - depth, depth);
 }
@@ -210,8 +213,7 @@ float CalculateCascadeShadow(sampler2D shadowMap, sampler2DShadow compareSampler
 	if (projected.x > 1.0 || projected.y > 1.0 || projected.x < 0 || projected.y < 0)
 		return 1.0;
 
-	params.BiasParams = CalculateBiasParams(uv, projection, params.Position.xyz, params.Normal);
-	params.BiasParams.z -= params.ConstantBias;
+	params.BiasParams = CalculateBiasParams(uv, projection, params.Position.xyz, params.Normal, params.ConstantBias);
 
 	float blockerDistance = CalculateBlockerDistance(shadowMap, uv, params, lightSize);
 	if (blockerDistance == -1.0f)
@@ -308,6 +310,7 @@ float CalculateShadow(vec3 N, vec4 position, vec3 viewSpacePosition)
 	if (distanceToNextCascade <= BLENDING_THRESHOLD && cascadeIndex < CASCADES_COUNT - 1)
 	{
 		int nextCascade = cascadeIndex + 1;
+
 		ShadowMappingSurfaceParams nextCascadeParams;
 		nextCascadeParams.Position = position.xyz;
 		nextCascadeParams.Normal = N;

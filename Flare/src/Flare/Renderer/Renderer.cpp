@@ -104,19 +104,6 @@ namespace Flare
 		s_RendererData.SpotLightsShaderBuffer = ShaderStorageBuffer::Create(maxSpotLights * sizeof(SpotLightData));
 		s_RendererData.SpotLightsShaderBuffer->SetDebugName("SpotLightsDataBuffer");
 
-		s_RendererData.ShadowMappingSettings.Quality = ShadowQuality::High;
-		s_RendererData.ShadowMappingSettings.Bias = 0.0f;
-		s_RendererData.ShadowMappingSettings.NormalBias = 0.0f;
-		s_RendererData.ShadowMappingSettings.LightSize = 0.02f;
-		
-		s_RendererData.ShadowMappingSettings.FadeDistance = 80.0f;
-
-		s_RendererData.ShadowMappingSettings.Cascades = s_RendererData.ShadowMappingSettings.MaxCascades;
-		s_RendererData.ShadowMappingSettings.CascadeSplits[0] = 15.0f;
-		s_RendererData.ShadowMappingSettings.CascadeSplits[1] = 25.0f;
-		s_RendererData.ShadowMappingSettings.CascadeSplits[2] = 50.0f;
-		s_RendererData.ShadowMappingSettings.CascadeSplits[3] = 100.0f;
-
 		{
 			uint32_t whiteTextureData = 0xffffffff;
 			s_RendererData.WhiteTexture = Texture::Create(1, 1, &whiteTextureData, TextureFormat::RGBA8);

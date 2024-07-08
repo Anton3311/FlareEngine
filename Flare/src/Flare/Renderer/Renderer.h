@@ -27,19 +27,19 @@ namespace Flare
 		static constexpr uint32_t MaxCascades = 4;
 
 		ShadowSettings()
-			: Quality(ShadowQuality::Medium),
+			: Quality(ShadowQuality::High),
 			Enabled(true),
-			LightSize(0.009f),
+			LightSize(2.0f),
 			Cascades(MaxCascades),
-			Bias(0.001f),
-			NormalBias(0.001f),
+			Bias(0.1f),
+			NormalBias(0.2f),
 			Softness(1.0f),
-			FadeDistance(50.0f)
+			FadeDistance(10.0f)
 		{
-			CascadeSplits[0] = 25.0f;
-			CascadeSplits[1] = 50.0f;
-			CascadeSplits[2] = 150.0f;
-			CascadeSplits[3] = 300.0f;
+			CascadeSplits[0] = 15.0f;
+			CascadeSplits[1] = 30.0f;
+			CascadeSplits[2] = 70.0f;
+			CascadeSplits[3] = 100.0f;
 		}
 
 		bool Enabled;
