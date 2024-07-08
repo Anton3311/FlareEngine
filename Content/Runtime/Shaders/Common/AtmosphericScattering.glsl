@@ -48,20 +48,38 @@ struct ScatteringCoefficients
 	vec3 Extinction;
 };
 
-float FindSphereRayIntersection(vec3 rayOrigin, vec3 rayDirection, float radius)
+bool FindRaySphereIntersection(vec3 rayOrigin, vec3 rayDirection, float sphereRadius, out float minDistance, out float maxDistance)
 {
-	vec3 d = rayOrigin;
-	float p1 = -dot(rayDirection, d);
-	float p2sqr = p1 * p1 - dot(d, d) + radius * radius;
+	float a = dot(rayDirection, rayDirection);
+	float b = 2.0f * dot(rayOrigin, rayDirection);
+	float c = dot(rayOrigin, rayOrigin) - sphereRadius * sphereRadius;
 
-	if (p2sqr < 0)
-		return -1.0f;
+	float descriminant = b * b - 4.0f * a * c;
 
-	float p2 = sqrt(p2sqr);
-	float t1 = p1 - p2;
-	float t2 = p1 + p2;
+	if (descriminant < 0.0f)
+		return false;
 
-	return max(t1, t2);
+	float root = sqrt(descriminant);
+
+	minDistance = (-b - root) / (2.0f * a);
+	maxDistance = (-b + root) / (2.0f * a);
+
+	return true;
+}
+
+bool FindNearestRaySphereIntersection(vec3 rayOrigin, vec3 rayDirection, float sphereRadius, out float distance)
+{
+	float minDistance = 0.0f;
+	float maxDistance = 0.0f;
+
+	if (!FindRaySphereIntersection(rayOrigin, rayDirection, sphereRadius, minDistance, maxDistance))
+		return false;
+
+	if (minDistance < 0.0f)
+		return false;
+
+	distance = minDistance;
+	return true;
 }
 
 // Height is in kilometers
@@ -111,9 +129,18 @@ vec3 ComputeSunTransmittance(vec3 rayOrigin,
 	vec3 lightDirection,
 	in AtmosphereProperties properties)
 {
-	float atmosphereDistance = FindSphereRayIntersection(rayOrigin, -lightDirection, planetRadius + atmosphereThickness);
-	if (atmosphereDistance < 0.0f)
+	float minDistance = 0.0f;
+	float maxDistance = 0.0f;
+
+	float atmosphereDistance = 0.0f;
+
+	if (!FindRaySphereIntersection(rayOrigin, -lightDirection, planetRadius + atmosphereThickness, minDistance, maxDistance))
 		return vec3(1.0f);
+
+	if (minDistance < 0.0f)
+		atmosphereDistance = maxDistance;
+
+	// TODO: Handle the case when the point is outside the atmosphere
 
 	float t = 0.0f;
 	vec3 transmittance = vec3(1.0f);

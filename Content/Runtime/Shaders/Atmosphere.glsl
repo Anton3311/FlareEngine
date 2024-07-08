@@ -74,26 +74,74 @@ vec3 CalculateViewDirection()
 	return normalize(projected.xyz - u_Camera.Position);
 }
 
+struct AtmosphereTracingParams
+{
+	vec3 Origin;
+	vec3 ViewDirection;
+	float DistanceThroughAtmosphere;
+	bool GroundIntersection;
+	bool AtmosphereIntersection;
+};
+
+bool CreateTracingParams(out AtmosphereTracingParams params)
+{
+	params.GroundIntersection = true;
+	params.Origin = vec3(0.0f, u_Params.PlanetRadius + u_Params.ObserverHeight, 0.0f);
+	params.ViewDirection = CalculateViewDirection();
+	params.AtmosphereIntersection = true;
+
+	float atmosphereMinDistance = 0.0f;
+	float atmosphereMaxDistance = 0.0f;
+	float atmosphereRadius = u_Params.PlanetRadius + u_Params.AtmosphereThickness;
+
+	if (!FindRaySphereIntersection(
+		params.Origin,
+		params.ViewDirection,
+		atmosphereRadius,
+		atmosphereMinDistance,
+		atmosphereMaxDistance))
+	{
+		return false;
+	}
+
+	if (atmosphereMaxDistance < 0.0f)
+	{
+		return false;
+	}
+
+	float distanceToGround = 0.0f;
+	if (FindNearestRaySphereIntersection(params.Origin, params.ViewDirection, u_Params.PlanetRadius, distanceToGround))
+	{
+		atmosphereMaxDistance = min(distanceToGround, atmosphereMaxDistance);
+		params.GroundIntersection = true;
+	}
+
+	if (atmosphereMinDistance >= 0.0f)
+	{
+		params.DistanceThroughAtmosphere = atmosphereMaxDistance - atmosphereMinDistance;
+		params.Origin += params.ViewDirection * atmosphereMinDistance;
+	}
+	else
+	{
+		params.DistanceThroughAtmosphere = atmosphereMaxDistance;
+	}
+
+	return true;
+}
+
 void main()
 {
-	vec3 viewDirection = CalculateViewDirection();
-	vec3 cameraPosition = vec3(0.0f, u_Params.PlanetRadius + u_Params.ObserverHeight, 0.0f);
-
-	float groudDistance = FindSphereRayIntersection(cameraPosition, viewDirection, u_Params.PlanetRadius);
-	if (groudDistance > 0.0f)
+	AtmosphereTracingParams params;
+	if (!CreateTracingParams(params))
 	{
-		o_Color = vec4(u_Params.GroundColor, 1.0f);
+		discard;
 		return;
 	}
 
-	float distanceThroughAtmosphere = FindSphereRayIntersection(cameraPosition, viewDirection, u_Params.PlanetRadius + u_Params.AtmosphereThickness);
-	if (distanceThroughAtmosphere < 0.0f)
-		discard;
-
-	vec3 viewRayStep = viewDirection * distanceThroughAtmosphere / max(1, u_Params.ViewRaySteps - 1);
+	vec3 viewRayStep = params.ViewDirection * params.DistanceThroughAtmosphere / max(1, u_Params.ViewRaySteps - 1);
 	float viewRayStepLength = length(viewRayStep);
 
-	float cosTheta = dot(viewDirection, u_LightDirection);
+	float cosTheta = dot(params.ViewDirection, u_LightDirection);
 	float rayleighPhase = RayleighPhaseFunction(-cosTheta);
 	float miePhase = MiePhaseFunction(0.80f, cosTheta);
 
@@ -114,11 +162,11 @@ void main()
 	float t = 0.0f;
 	for (int i = 0; i < u_Params.ViewRaySteps; i++)
 	{
-		float newT = (float(i) + 0.3f) / float(u_Params.ViewRaySteps) * distanceThroughAtmosphere;
+		float newT = (float(i) + 0.3f) / float(u_Params.ViewRaySteps) * params.DistanceThroughAtmosphere;
 		float dt = newT - t;
 		t = newT;
 
-		vec3 viewRayPoint = cameraPosition + viewDirection * t;
+		vec3 viewRayPoint = params.Origin + params.ViewDirection * t;
 
 		float height = length(viewRayPoint) - u_Params.PlanetRadius;
 
@@ -144,14 +192,14 @@ void main()
 
 		vec3 rayleighInScatter = scatteringCoefficients.Rayleigh * rayleighPhase;
 		vec3 mieInScatter = vec3(scatteringCoefficients.Mie * miePhase);
-		vec3 inScatter = u_LightColor.w * sunTransmittance * (rayleighInScatter + mieInScatter);
+		vec3 inScatter = sunTransmittance * (rayleighInScatter + mieInScatter);
 
 		vec3 scatteringIntegral = (inScatter - inScatter * sampleTransmittance) / scatteringCoefficients.Extinction;
 		luminance += scatteringIntegral * transmittance;
 		transmittance *= sampleTransmittance;
 	}
 
-	o_Color = vec4(luminance * 10, 1.0f);
+	o_Color = vec4(luminance * 10 * u_LightColor.w, 1.0f);
 }
 
 #end
