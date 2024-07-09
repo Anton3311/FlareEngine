@@ -21,6 +21,7 @@ project "FlareECS"
 		"%{wks.location}/FlareCore/src/",
 		INCLUDE_DIRS.spdlog,
 		INCLUDE_DIRS.glm,
+		INCLUDE_DIRS.tracy
 	}
 
 	links
@@ -37,7 +38,7 @@ project "FlareECS"
 		symbols "on"
 
 	filter "configurations:Release"
-		defines "FLARE_RELEASE"
+		defines { "FLARE_RELEASE", "TRACY_ENABLE", "TRACY_IMPORTS" }
 		runtime "Release"
 		optimize "on"
 

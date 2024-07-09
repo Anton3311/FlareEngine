@@ -1,5 +1,7 @@
 #include "Entities.h"
 
+#include "FlareCore/Profiler/Profiler.h"
+
 #include "FlareECS/Query/EntityView.h"
 #include "FlareECS/Query/EntitiesIterator.h"
 
@@ -16,11 +18,13 @@ namespace Flare
 	Entities::Entities(Components& components, QueryCache& queries, Archetypes& archetypes)
 		: m_Components(components), m_Queries(queries), m_Archetypes(archetypes)
 	{
+		FLARE_PROFILE_FUNCTION();
 		EntityChunksPool::Initialize(16);
 	}
 
 	Entities::~Entities()
 	{
+		FLARE_PROFILE_FUNCTION();
 		for (const ArchetypeRecord& archetype : m_Archetypes.Records)
 		{
 			// HACK: Used to cause a crash when destroying a world owned by prefab editor scene
@@ -46,6 +50,7 @@ namespace Flare
 
 	void Entities::Clear()
 	{
+		FLARE_PROFILE_FUNCTION();
 		for (const ArchetypeRecord& archetype : m_Archetypes.Records)
 		{
 			if (archetype.Id >= m_EntityStorages.size())
@@ -73,6 +78,7 @@ namespace Flare
 
 	Entity Entities::CreateEntity(const ComponentSet& componentSet, ComponentInitializationStrategy initStrategy)
 	{
+		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(componentSet.GetCount() > 0);
 
 		if (m_TemporaryComponentSet.size() < componentSet.GetCount())
@@ -95,6 +101,7 @@ namespace Flare
 
 	Entity Entities::CreateEntity(const std::pair<ComponentId, void*>* components, size_t count, bool copyComponents)
 	{
+		FLARE_PROFILE_FUNCTION();
 		if (m_TemporaryComponentSet.size() < count)
 			m_TemporaryComponentSet.resize(count);
 
@@ -135,6 +142,7 @@ namespace Flare
 	// TODO: Should probably also use `CreateEntity(const ComponentSet&, EntityCreationResult&)`
 	Entity Entities::CreateEntityFromArchetype(ArchetypeId archetype, ComponentInitializationStrategy initStrategy)
 	{
+		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT((size_t)archetype < m_Archetypes.Records.size());
 
 		size_t registryIndex = m_EntityRecords.size();
@@ -181,6 +189,7 @@ namespace Flare
 
 	void Entities::DeleteEntity(Entity entity)
 	{
+		FLARE_PROFILE_FUNCTION();
 		auto recordIterator = FindEntity(entity);
 		if (recordIterator == m_EntityToRecord.end())
 			return;
@@ -233,6 +242,7 @@ namespace Flare
 
 	bool Entities::AddEntityComponent(Entity entity, ComponentId componentId, void* componentData, ComponentInitializationStrategy initStrategy)
 	{
+		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(m_Components.IsComponentIdValid(componentId), "Invalid component id");
 
 		const ComponentInfo& componentInfo = m_Components.GetComponentInfo(componentId);
@@ -269,6 +279,7 @@ namespace Flare
 		}
 		else
 		{
+			FLARE_PROFILE_SCOPE("CreateArchetypeConnection");
 			std::vector<ComponentId> newComponents(oldComponentCount + 1);
 
 			std::memcpy(newComponents.data(), archetype.Components.data(), oldComponentCount * sizeof(componentId));
@@ -380,6 +391,7 @@ namespace Flare
 
 	bool Entities::RemoveEntityComponent(Entity entity, ComponentId componentId)
 	{
+		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(m_Components.IsComponentIdValid(componentId), "Invalid component id");
 
 		const ComponentInfo& componentInfo = m_Components.GetComponentInfo(componentId);
@@ -409,6 +421,7 @@ namespace Flare
 		}
 		else
 		{
+			FLARE_PROFILE_SCOPE("CreateArchetypeConnection");
 			size_t oldComponentCount = archetype.Components.size();
 			std::vector<ComponentId> newComponents(oldComponentCount - 1);
 
@@ -559,6 +572,7 @@ namespace Flare
 
 	void* Entities::GetEntityComponent(Entity entity, ComponentId component)
 	{
+		FLARE_PROFILE_FUNCTION();
 		auto it = FindEntity(entity);
 		if (it == m_EntityToRecord.end())
 			return {};
@@ -577,6 +591,7 @@ namespace Flare
 
 	const void* Entities::GetEntityComponent(Entity entity, ComponentId component) const
 	{
+		FLARE_PROFILE_FUNCTION();
 		auto it = FindEntity(entity);
 		if (it == m_EntityToRecord.end())
 			return nullptr;
@@ -595,6 +610,7 @@ namespace Flare
 
 	void* Entities::GetSingletonComponent(ComponentId id) const
 	{
+		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(m_Components.IsComponentIdValid(id));
 
 		auto it = m_Archetypes.ComponentToArchetype.find(id);
@@ -647,6 +663,7 @@ namespace Flare
 
 	std::optional<Entity> Entities::GetSingletonEntity(const Query& query) const
 	{
+		FLARE_PROFILE_FUNCTION();
 		const auto& archetypes = query.GetMatchingArchetypes();
 
 		ArchetypeId archetype = INVALID_ARCHETYPE_ID;
@@ -721,7 +738,8 @@ namespace Flare
 
 	void Entities::EnsureValidEntityStorages()
 	{
-		if (m_Archetypes.Records.size()  >= m_EntityStorages.size())
+		FLARE_PROFILE_FUNCTION();
+		if (m_Archetypes.Records.size() >= m_EntityStorages.size())
 		{
 			size_t oldSize = m_EntityStorages.size();
 			m_EntityStorages.resize(m_Archetypes.Records.size());
@@ -740,6 +758,7 @@ namespace Flare
 
 	void Entities::MoveEntityComponents(uint8_t* source, uint8_t* destination, const ArchetypeRecord& entityArchetype, size_t firstComponentIndex, size_t componentsCount)
 	{
+		FLARE_PROFILE_FUNCTION();
 		size_t destinationOffset = 0;
 		for (size_t i = firstComponentIndex; i < firstComponentIndex + componentsCount; i++)
 		{
@@ -751,6 +770,7 @@ namespace Flare
 
 	void Entities::CreateEntity(const ComponentSet& components, EntityCreationResult& result)
 	{
+		FLARE_PROFILE_FUNCTION();
 		size_t registryIndex = m_EntityRecords.size();
 		EntityRecord& record = m_EntityRecords.emplace_back();
 
@@ -921,6 +941,7 @@ namespace Flare
 
 	void Entities::ClearQueuedForDeletion()
 	{
+		FLARE_PROFILE_FUNCTION();
 		for (const ArchetypeRecord& archetype : m_Archetypes.Records)
 		{
 			auto it = m_DeletedEntitiesStorages.find(archetype.Id);
@@ -945,6 +966,7 @@ namespace Flare
 
 	void Entities::ClearCreatedEntitiesQueryResult()
 	{
+		FLARE_PROFILE_FUNCTION();
 		for (auto& pair : m_CreatedEntitiesPerArchetype)
 		{
 			pair.second.clear();

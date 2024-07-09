@@ -1,5 +1,7 @@
 #include "SystemsManager.h"
 
+#include "FlareCore/Profiler/Profiler.h"
+
 #include "FlareECS/World.h"
 #include "FlareECS/System/SystemInitializer.h"
 
@@ -46,6 +48,7 @@ namespace Flare
 
 	void SystemsManager::RegisterSystems()
 	{
+		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(m_Groups.size() > 0);
 		auto& initializers = SystemInitializer::GetInitializers();
 
@@ -112,6 +115,7 @@ namespace Flare
 
 	void SystemsManager::AddSystemExecutionSettings(SystemId system, const std::vector<ExecutionOrder>* executionOrder)
 	{
+		FLARE_PROFILE_FUNCTION();
 		SystemData& data = m_Systems[system];
 
 		if (executionOrder == nullptr || executionOrder != nullptr && executionOrder->size() == 0)
@@ -131,6 +135,7 @@ namespace Flare
 
 	void SystemsManager::ExecuteGroup(SystemGroupId id)
 	{
+		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(id < (SystemGroupId)m_Groups.size());
 
 		SystemGroup& group = m_Groups[id];
@@ -158,6 +163,7 @@ namespace Flare
 
 	void SystemsManager::RebuildExecutionGraphs()
 	{
+		FLARE_PROFILE_FUNCTION();
 		for (SystemGroup& group : m_Groups)
 		{
 			if (group.Graph.RebuildGraph() == ExecutionGraph::BuildResult::CircularDependecy)
@@ -200,6 +206,7 @@ namespace Flare
 
 	void SystemsManager::ConfigureSystem(SystemId id)
 	{
+		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(IsSystemIdValid(id));
 
 		SystemData& data = m_Systems[id];
@@ -210,13 +217,6 @@ namespace Flare
 		data.SystemInstance->OnConfig(m_World, config);
 
 		FLARE_CORE_ASSERT(IsGroupIdValid(config.Group));
-
-		const auto& executionOrder = config.GetExecutionOrder();
-		for (auto& order : executionOrder)
-		{
-			FLARE_CORE_ASSERT(order.ItemIndex < 100);
-			FLARE_CORE_ASSERT(IsSystemIdValid(order.ItemIndex));
-		}
 
 		AddSystemToGroup(id, config.Group);
 		AddSystemExecutionSettings(id, &config.GetExecutionOrder());

@@ -1,6 +1,7 @@
 #include "QueryCache.h"
 
 #include "FlareCore/Core.h"
+#include "FlareCore/Profiler/Profiler.h"
 
 #include "FlareECS/Entities.h"
 #include "FlareECS/Query/Query.h"
@@ -12,6 +13,7 @@ namespace Flare
 {
 	QueryCache::~QueryCache()
 	{
+		FLARE_PROFILE_FUNCTION();
 		for (const QueryData& query : m_Queries)
 		{
 			if (query.Target == QueryTarget::DeletedEntities)
@@ -35,6 +37,8 @@ namespace Flare
 
 	QueryId QueryCache::CreateQuery(QueryCreationData& creationData)
 	{
+		FLARE_PROFILE_FUNCTION();
+
 		QueryId id = m_Queries.size();
 		QueryData& query = m_Queries.emplace_back();
 		query.Id = id;
@@ -75,6 +79,7 @@ namespace Flare
 
 	void QueryCache::OnArchetypeCreated(ArchetypeId archetype)
 	{
+		FLARE_PROFILE_FUNCTION();
 		const ArchetypeRecord& archetypeRecord = m_Archetypes[archetype];
 
 		for (ComponentId component : archetypeRecord.Components)
@@ -106,6 +111,7 @@ namespace Flare
 
 	bool QueryCache::CompareComponentSets(const std::vector<ComponentId>& archetypeComponents, const std::vector<ComponentId>& queryComponents)
 	{
+		FLARE_PROFILE_FUNCTION();
 		size_t queryComponentIndex = 0;
 		size_t i = 0;
 		while (i < archetypeComponents.size() && queryComponentIndex < queryComponents.size())

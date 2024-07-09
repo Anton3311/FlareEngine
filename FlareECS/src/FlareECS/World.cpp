@@ -1,5 +1,7 @@
 #include "World.h"
 
+#include "FlareCore/Profiler/Profiler.h"
+
 namespace Flare
 {
 	World* s_CurrentWorld = nullptr;
@@ -11,6 +13,7 @@ namespace Flare
 		Entities(context.Components, m_Queries, context.Archetypes),
 		m_Queries(Entities, context.Archetypes)
 	{
+		FLARE_PROFILE_FUNCTION();
 	}
 
 	World::~World()

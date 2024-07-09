@@ -1,5 +1,7 @@
 #include "CommandBuffer.h"
 
+#include "FlareCore/Profiler/Profiler.h"
+
 #include "FlareECS/World.h"
 
 namespace Flare
@@ -22,6 +24,7 @@ namespace Flare
 
 	void EntitiesCommandBuffer::Execute()
 	{
+		FLARE_PROFILE_FUNCTION();
 		if (!m_Storage.CanRead())
 			return;
 
