@@ -56,6 +56,7 @@ namespace Flare
 
 	VignettePass::VignettePass()
 	{
+		FLARE_PROFILE_FUNCTION();
 		auto vignette = Scene::GetActive()->GetPostProcessingManager().GetEffect<Vignette>();
 		FLARE_CORE_ASSERT(vignette);
 
@@ -74,6 +75,7 @@ namespace Flare
 
 	void VignettePass::OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
 	{
+		FLARE_PROFILE_FUNCTION();
 		commandBuffer->BeginRenderTarget(context.GetRenderTarget());
 
 		Ref<Shader> shader = m_Material->GetShader();

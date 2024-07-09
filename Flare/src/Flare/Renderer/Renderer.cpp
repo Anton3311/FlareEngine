@@ -327,6 +327,7 @@ namespace Flare
 
 	void Renderer::EndScene()
 	{
+		FLARE_PROFILE_FUNCTION();
 		s_RendererData.PointLights.clear();
 		s_RendererData.SpotLights.clear();
 		s_RendererData.Decals.clear();

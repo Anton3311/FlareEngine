@@ -1,15 +1,15 @@
 #include "LightVisualizer.h"
 
+#include "FlareCore/Profiler/Profiler.h"
+
 #include "FlareECS/World.h"
 
 #include "Flare/Scene/Components.h"
 #include "Flare/Scene/Transform.h"
+#include "Flare/Project/Project.h"
 
 #include "Flare/Renderer/ShaderLibrary.h"
-
 #include "Flare/DebugRenderer/DebugRenderer.h"
-
-#include "Flare/Project/Project.h"
 
 #include "FlarePlatform/Event.h"
 
@@ -23,6 +23,7 @@ namespace Flare
 
 	void LightVisualizer::OnConfig(World& world, SystemConfig& config)
 	{
+		FLARE_PROFILE_FUNCTION();
 		std::optional<uint32_t> groupId = world.GetSystemsManager().FindGroup("Debug Rendering");
 		FLARE_CORE_ASSERT(groupId.has_value());
 		config.Group = *groupId;
@@ -34,6 +35,7 @@ namespace Flare
 
 	void LightVisualizer::OnUpdate(World& world, SystemExecutionContext& context)
 	{
+		FLARE_PROFILE_FUNCTION();
 		if (!EditorLayer::GetInstance().GetSceneViewSettings().ShowLights)
 			return;
 
@@ -163,6 +165,7 @@ namespace Flare
 
 	void LightVisualizer::ReloadShaders()
 	{
+		FLARE_PROFILE_FUNCTION();
 		std::optional<AssetHandle> shaderHandle = ShaderLibrary::FindShader("DebugIcon");
 
 		if (!shaderHandle || !AssetManager::IsAssetHandleValid(shaderHandle.value()))

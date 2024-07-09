@@ -1,5 +1,7 @@
 #include "CameraFrustumRenderer.h"
 
+#include "FlareCore/Profiler/Profiler.h"
+
 #include "Flare/Scene/Components.h"
 #include "Flare/Scene/Transform.h"
 
@@ -15,6 +17,7 @@ namespace Flare
 
 	void CameraFrustumRenderer::OnConfig(World& world, SystemConfig& config)
 	{
+		FLARE_PROFILE_FUNCTION();
 		std::optional<uint32_t> groupId = world.GetSystemsManager().FindGroup("Debug Rendering");
 		FLARE_CORE_ASSERT(groupId.has_value());
 		config.Group = *groupId;
@@ -24,6 +27,7 @@ namespace Flare
 
 	void CameraFrustumRenderer::OnUpdate(World& world, SystemExecutionContext& context)
 	{
+		FLARE_PROFILE_FUNCTION();
 		if (!EditorLayer::GetInstance().GetSceneViewSettings().ShowCameraFrustum)
 			return;
 
