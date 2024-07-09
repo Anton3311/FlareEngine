@@ -91,6 +91,7 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
 
 		ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
 
@@ -191,7 +192,7 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 		ImGui::End();
-		ImGui::PopStyleVar(); // Pop window padding
+		ImGui::PopStyleVar(2); // Pop window padding & border size
 	}
 
 	void ViewportWindow::CreateFrameBuffer()
