@@ -125,8 +125,8 @@ namespace Flare
 				float radius = lights[entity].Intensity / intensityLimit;
 				radius = glm::sqrt(radius);
 
-				float outerCircleRadius = radius * glm::tan(glm::radians(lights[entity].OuterAngle / 2.0f));
-				float innerCircleRadius = radius * glm::tan(glm::radians(lights[entity].InnerAngle / 2.0f));
+				float outerCircleRadius = radius * glm::tan(glm::radians(lights[entity].OuterAngle));
+				float innerCircleRadius = radius * glm::tan(glm::radians(lights[entity].InnerAngle));
 
 				DebugRenderer::DrawCircle(transforms[entity].Position + lightDirection * radius,
 					lightDirection,

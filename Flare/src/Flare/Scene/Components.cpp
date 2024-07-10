@@ -39,9 +39,9 @@ namespace Flare
 		float aspectRation = (float)viewportSize.x / (float)viewportSize.y;
 
 		if (Projection == CameraComponent::ProjectionType::Orthographic)
-			return glm::ortho(-halfSize * aspectRation, halfSize * aspectRation, -halfSize, halfSize, Near, Far);
+			return glm::orthoRH_ZO(-halfSize * aspectRation, halfSize * aspectRation, -halfSize, halfSize, Near, Far);
 		else
-			return glm::perspective<float>(glm::radians(FOV), aspectRation, Near, Far);
+			return glm::perspectiveRH_ZO<float>(glm::radians(FOV), aspectRation, Near, Far);
 	}
 
 	glm::vec3 CameraComponent::ScreenToWorld(glm::vec2 point) const
