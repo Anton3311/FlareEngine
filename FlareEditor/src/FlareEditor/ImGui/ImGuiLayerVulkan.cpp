@@ -45,7 +45,7 @@ namespace Flare
 		info.Queue = VulkanContext::GetInstance().GetGraphicsQueue();
 		info.QueueFamily = VulkanContext::GetInstance().GetGraphicsQueueFamilyIndex();
 		info.Device = VulkanContext::GetInstance().GetDevice();
-		info.ImageCount = 10;
+		info.ImageCount = 2;
 		info.MinImageCount = 2;
 		ImGui_ImplVulkan_Init(&info, VulkanContext::GetInstance().GetColorOnlyPass()->GetHandle());
 

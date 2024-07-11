@@ -107,6 +107,21 @@ namespace Flare
 
 		m_IsVisible = ImGui::Begin(m_Name.c_str(), &ShowWindow, windowFlags);
 
+		// HACK: If window's title bar isn't hovered, disable window moving by draging anywhere inside the window.
+		//       When the window wasn't docket it used to interfere with the camera controller and guizmos,
+		//       as moving a cemera or using a guizmo was also moving a window.
+		if (!ImGui::IsWindowDocked())
+		{
+			ImGuiWindow* window = ImGui::GetCurrentWindow();
+			ImRect titleBarRect = window->TitleBarRect();
+			bool titleBarIsHovered = ImGui::IsMouseHoveringRect(titleBarRect.Min, titleBarRect.Max, false);
+
+			if (!titleBarIsHovered)
+			{
+				window->Flags |= ImGuiWindowFlags_NoMove;
+			}
+		}
+
 		if (m_WindowFocusRequested)
 		{
 			ImGui::FocusWindow(ImGui::GetCurrentWindow());
