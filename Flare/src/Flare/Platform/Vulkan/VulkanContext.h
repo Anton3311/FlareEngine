@@ -171,6 +171,13 @@ namespace Flare
 	private:
 		std::vector<VkLayerProperties> EnumerateAvailableLayers();
 	private:
+		struct FrameSyncObjects
+		{
+			VkFence FrameFence = VK_NULL_HANDLE;
+			VkSemaphore ImageAvailableSemaphore = VK_NULL_HANDLE;
+			VkSemaphore RenderingCompleteSemaphore = VK_NULL_HANDLE;
+		};
+
 		std::function<void(VkImageView)> m_ImageDeletationHandler = nullptr;
 
 		bool m_DebugEnabled = false;
@@ -217,9 +224,10 @@ namespace Flare
 		VkFormat m_SwapChainImageFormat = VK_FORMAT_UNDEFINED;
 
 		bool m_SkipWaitForFrameFence = false;
-		VkFence m_FrameFence = VK_NULL_HANDLE;
-		VkSemaphore m_ImageAvailableSemaphore = VK_NULL_HANDLE;
-		VkSemaphore m_RenderFinishedSemaphore = VK_NULL_HANDLE;
+
+		uint32_t m_CurrentFrameSyncObjectsIndex = 0;
+		FrameSyncObjects m_CurrentSyncObjects;
+		std::vector<FrameSyncObjects> m_SyncObjects;
 
 		// Command buffers
 		VkCommandPool m_CommandBufferPool = VK_NULL_HANDLE;

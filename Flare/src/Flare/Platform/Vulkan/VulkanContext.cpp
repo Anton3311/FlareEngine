@@ -182,8 +182,10 @@ namespace Flare
 		}
 
 		CreateSyncObjects();
-		CreateCommandBufferPool();
 
+		m_CurrentSyncObjects = m_SyncObjects[m_CurrentFrameSyncObjectsIndex];
+
+		CreateCommandBufferPool();
 		CreateSwapChainFrameBuffers();
 
 		m_PrimaryCommandBuffer = CreateRef<VulkanCommandBuffer>(CreateCommandBuffer());
@@ -230,9 +232,15 @@ namespace Flare
 		ReleaseSwapChainResources();
 		vkDestroySwapchainKHR(m_Device, m_SwapChain, nullptr);
 
-		vkDestroySemaphore(m_Device, m_ImageAvailableSemaphore, nullptr);
-		vkDestroySemaphore(m_Device, m_RenderFinishedSemaphore, nullptr);
-		vkDestroyFence(m_Device, m_FrameFence, nullptr);
+		for (const FrameSyncObjects& objects : m_SyncObjects)
+		{
+			vkDestroySemaphore(m_Device, objects.RenderingCompleteSemaphore, nullptr);
+			vkDestroySemaphore(m_Device, objects.ImageAvailableSemaphore, nullptr);
+			vkDestroyFence(m_Device, objects.FrameFence, nullptr);
+		}
+
+		m_SyncObjects.clear();
+		m_CurrentSyncObjects = {};
 
 		vkDestroySurfaceKHR(m_Instance, m_Surface, nullptr);
 
@@ -258,16 +266,26 @@ namespace Flare
 					//       minimized and nothing was submitted for rendering, which
 					//       means that the frame fence wasn't signalled, thus it leads
 					//       to waiting for an unsugnalled fence in the current frame.
-					VK_CHECK_RESULT(vkWaitForFences(m_Device, 1, &m_FrameFence, VK_TRUE, UINT64_MAX));
+					VK_CHECK_RESULT(vkWaitForFences(m_Device, 1, &m_CurrentSyncObjects.FrameFence, VK_TRUE, UINT64_MAX));
 				}
 
 				m_SkipWaitForFrameFence = false;
-				VK_CHECK_RESULT(vkResetFences(m_Device, 1, &m_FrameFence));
 			}
+
+			m_CurrentFrameSyncObjectsIndex = (m_CurrentFrameSyncObjectsIndex + 1) % m_FramesInFlight;
+			m_CurrentSyncObjects = m_SyncObjects[m_CurrentFrameSyncObjectsIndex];
+
+			VK_CHECK_RESULT(vkResetFences(m_Device, 1, &m_CurrentSyncObjects.FrameFence));
 
 			{
 				FLARE_PROFILE_SCOPE("AcquireNextImage");
-				VkResult acquireResult = vkAcquireNextImageKHR(m_Device, m_SwapChain, UINT64_MAX, m_ImageAvailableSemaphore, VK_NULL_HANDLE, &m_CurrentFrameInFlight);
+				VkResult acquireResult = vkAcquireNextImageKHR(
+					m_Device,
+					m_SwapChain,
+					UINT64_MAX,
+					m_CurrentSyncObjects.ImageAvailableSemaphore,
+					VK_NULL_HANDLE,
+					&m_CurrentFrameInFlight);
 
 				if (acquireResult == VK_ERROR_OUT_OF_DATE_KHR)
 				{
@@ -305,7 +323,7 @@ namespace Flare
 		{
 			FLARE_PROFILE_SCOPE("Submit");
 
-			VkSemaphore waitSemaphores[] = { m_ImageAvailableSemaphore };
+			VkSemaphore waitSemaphores[] = { m_CurrentSyncObjects.ImageAvailableSemaphore };
 			VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
 			VkCommandBuffer commandBuffer = m_PrimaryCommandBuffer->GetHandle();
 
@@ -317,8 +335,8 @@ namespace Flare
 			submitInfo.commandBufferCount = 1;
 			submitInfo.pCommandBuffers = &commandBuffer;
 			submitInfo.signalSemaphoreCount = 1;
-			submitInfo.pSignalSemaphores = &m_RenderFinishedSemaphore;
-			VK_CHECK_RESULT(vkQueueSubmit(m_GraphicsQueue, 1, &submitInfo, m_FrameFence));
+			submitInfo.pSignalSemaphores = &m_CurrentSyncObjects.RenderingCompleteSemaphore;
+			VK_CHECK_RESULT(vkQueueSubmit(m_GraphicsQueue, 1, &submitInfo, m_CurrentSyncObjects.FrameFence));
 		}
 
 		{
@@ -326,7 +344,7 @@ namespace Flare
 			VkPresentInfoKHR presentInfo{};
 			presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 			presentInfo.waitSemaphoreCount = 1;
-			presentInfo.pWaitSemaphores = &m_RenderFinishedSemaphore;
+			presentInfo.pWaitSemaphores = &m_CurrentSyncObjects.RenderingCompleteSemaphore;
 			presentInfo.swapchainCount = 1;
 			presentInfo.pSwapchains = &m_SwapChain;
 			presentInfo.pImageIndices = &m_CurrentFrameInFlight;
@@ -945,9 +963,14 @@ namespace Flare
 		fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
 		fenceCreateInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
-		VK_CHECK_RESULT(vkCreateSemaphore(m_Device, &semaphoreCreateInfo, nullptr, &m_ImageAvailableSemaphore));
-		VK_CHECK_RESULT(vkCreateSemaphore(m_Device, &semaphoreCreateInfo, nullptr, &m_RenderFinishedSemaphore));
-		VK_CHECK_RESULT(vkCreateFence(m_Device, &fenceCreateInfo, nullptr, &m_FrameFence));
+		m_SyncObjects.resize(m_FramesInFlight);
+
+		for (uint32_t i = 0; i < m_FramesInFlight; i++)
+		{
+			VK_CHECK_RESULT(vkCreateSemaphore(m_Device, &semaphoreCreateInfo, nullptr, &m_SyncObjects[i].ImageAvailableSemaphore));
+			VK_CHECK_RESULT(vkCreateSemaphore(m_Device, &semaphoreCreateInfo, nullptr, &m_SyncObjects[i].RenderingCompleteSemaphore));
+			VK_CHECK_RESULT(vkCreateFence(m_Device, &fenceCreateInfo, nullptr, &m_SyncObjects[i].FrameFence));
+		}
 	}
 
 	void VulkanContext::CreateSwapChain()
