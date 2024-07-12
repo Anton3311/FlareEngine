@@ -10,6 +10,7 @@
 #include "Flare/Platform/Vulkan/VulkanAllocation.h"
 #include "Flare/Platform/Vulkan/VulkanRenderPassCache.h"
 #include "Flare/Platform/Vulkan/VulkanStagingBufferPool.h"
+#include "Flare/Platform/Vulkan/VulkanSwapchain.h"
 
 #include <vulkan/vulkan.h>
 #include <vk_mem_alloc.h>
@@ -90,15 +91,14 @@ namespace Flare
 		void Present() override;
 		void WaitForDevice() override;
 
-		bool IsValid() const { return m_Device != VK_NULL_HANDLE; }
-
-		void CreateBuffer(size_t size, VkBufferUsageFlags usage, VkMemoryPropertyFlags memoryProperties, VkBuffer& buffer, VkDeviceMemory& memory);
-
-		Ref<VulkanCommandBuffer> GetPrimaryCommandBuffer() const { return m_PrimaryCommandBuffer; }
 		Ref<CommandBuffer> GetCommandBuffer() const override;
 
-		uint32_t GetCurrentFrameInFlight() const { return m_CurrentFrameInFlight; }
-		Ref<VulkanFrameBuffer> GetSwapChainFrameBuffer(uint32_t index) const { return m_SwapChainFrameBuffers[index]; }
+		bool IsValid() const { return m_Device != VK_NULL_HANDLE; }
+
+		Ref<VulkanCommandBuffer> GetPrimaryCommandBuffer() const { return m_PrimaryCommandBuffer; }
+
+		uint32_t GetCurrentFrameInFlight() const { return m_Swapchain->GetFrameInFlight(); }
+		Ref<VulkanFrameBuffer> GetSwapChainFrameBuffer(uint32_t index) const { return m_Swapchain->GetFrameBuffer(index); }
 
 		Ref<VulkanCommandBuffer> BeginTemporaryCommandBuffer();
 		void EndTemporaryCommandBuffer(Ref<VulkanCommandBuffer> commandBuffer);
@@ -107,18 +107,18 @@ namespace Flare
 		VkDevice GetDevice() const { return m_Device; }
 		VkPhysicalDevice GetPhysicalDevice() const { return m_PhysicalDevice; }
 		VkQueue GetGraphicsQueue() const { return m_GraphicsQueue; }
+		VkQueue GetPresentQueue() const { return m_PresentQueue; }
 
 		Ref<VulkanRenderPass> FindOrCreateRenderPass(Span<TextureFormat> formats);
 
 		VmaAllocator GetMemoryAllocator() const { return m_Allocator; }
 
 		uint32_t GetGraphicsQueueFamilyIndex() const { return *m_GraphicsQueueFamilyIndex; }
+		uint32_t GetPresentQueueFamilyIndex() const { return *m_PresentQueueFamilyIndex; }
 		Ref<VulkanRenderPass> GetColorOnlyPass() const { return m_ColorOnlyPass; }
 
 		void SetImageViewDeletionHandler(const std::function<void(VkImageView)>& handler) { m_ImageDeletationHandler = handler; }
 		void NotifyImageViewDeletionHandler(VkImageView deletedImageView);
-
-		uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 
 		VkResult SetDebugName(VkObjectType objectType, uint64_t objectHandle, const char* name);
 
@@ -158,31 +158,18 @@ namespace Flare
 		void CreateCommandBufferPool();
 		VkCommandBuffer CreateCommandBuffer();
 		void CreateSyncObjects();
-
-		void CreateSwapChain();
-		void RecreateSwapChain();
-		void ReleaseSwapChainResources();
-		void CreateSwapChainImageViews();
-		void CreateSwapChainFrameBuffers();
-
-		uint32_t ChooseSwapChainFormat(const std::vector<VkSurfaceFormatKHR>& formats);
-		VkExtent2D GetSwapChainExtent(const VkSurfaceCapabilitiesKHR& capabilities);
-		VkPresentModeKHR ChoosePresentMode(const std::vector<VkPresentModeKHR>& modes);
 	private:
 		std::vector<VkLayerProperties> EnumerateAvailableLayers();
 	private:
 		struct FrameSyncObjects
 		{
 			VkFence FrameFence = VK_NULL_HANDLE;
-			VkSemaphore ImageAvailableSemaphore = VK_NULL_HANDLE;
 			VkSemaphore RenderingCompleteSemaphore = VK_NULL_HANDLE;
 		};
 
 		std::function<void(VkImageView)> m_ImageDeletationHandler = nullptr;
 
 		bool m_DebugEnabled = false;
-		uint32_t m_FramesInFlight = 0;
-		uint32_t m_CurrentFrameInFlight = 0;
 
 		PFN_vkCreateDebugUtilsMessengerEXT m_CreateDebugMessenger = nullptr;
 		PFN_vkDestroyDebugUtilsMessengerEXT m_DestroyDebugMessenger = nullptr;
@@ -214,14 +201,7 @@ namespace Flare
 		Ref<Window> m_Window = nullptr;
 
 		// Swap chain
-		VkSwapchainKHR m_SwapChain = VK_NULL_HANDLE;
-
-		std::vector<VkImage> m_SwapChainImages;
-		std::vector<VkImageView> m_SwapChainImageViews;
-		std::vector<Ref<VulkanFrameBuffer>> m_SwapChainFrameBuffers;
-
-		glm::uvec2 m_SwapChainExtent = glm::uvec2(0);
-		VkFormat m_SwapChainImageFormat = VK_FORMAT_UNDEFINED;
+		Scope<VulkanSwapchain> m_Swapchain;
 
 		bool m_SkipWaitForFrameFence = false;
 

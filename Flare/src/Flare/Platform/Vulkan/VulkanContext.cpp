@@ -155,12 +155,13 @@ namespace Flare
 
 		CreateMemoryAllocator();
 
-		CreateSwapChain();
+		m_Swapchain = CreateScope<VulkanSwapchain>(m_Surface);
+		m_Swapchain->Initialize();
 
 		{
 			VkAttachmentDescription attachment{};
 			attachment.flags = 0;
-			attachment.format = m_SwapChainImageFormat;
+			attachment.format = m_Swapchain->GetImageFormat();
 			attachment.samples = VK_SAMPLE_COUNT_1_BIT;
 			attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 			attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -181,12 +182,13 @@ namespace Flare
 			m_ColorOnlyPass->SetDefaultClearValues(Span(&clearValue, 1));
 		}
 
+		m_Swapchain->Recreate();
+
 		CreateSyncObjects();
 
 		m_CurrentSyncObjects = m_SyncObjects[m_CurrentFrameSyncObjectsIndex];
 
 		CreateCommandBufferPool();
-		CreateSwapChainFrameBuffers();
 
 		m_PrimaryCommandBuffer = CreateRef<VulkanCommandBuffer>(CreateCommandBuffer());
 
@@ -220,7 +222,6 @@ namespace Flare
 
 		m_RenderPasses.clear();
 		m_ColorOnlyPass = nullptr;
-		m_SwapChainFrameBuffers.clear();
 
 		VkCommandBuffer commandBuffer = m_PrimaryCommandBuffer->GetHandle();
 		vkFreeCommandBuffers(m_Device, m_CommandBufferPool, 1, &commandBuffer);
@@ -229,13 +230,11 @@ namespace Flare
 
 		vmaDestroyAllocator(m_Allocator);
 
-		ReleaseSwapChainResources();
-		vkDestroySwapchainKHR(m_Device, m_SwapChain, nullptr);
+		m_Swapchain.reset();
 
 		for (const FrameSyncObjects& objects : m_SyncObjects)
 		{
 			vkDestroySemaphore(m_Device, objects.RenderingCompleteSemaphore, nullptr);
-			vkDestroySemaphore(m_Device, objects.ImageAvailableSemaphore, nullptr);
 			vkDestroyFence(m_Device, objects.FrameFence, nullptr);
 		}
 
@@ -272,32 +271,12 @@ namespace Flare
 				m_SkipWaitForFrameFence = false;
 			}
 
-			m_CurrentFrameSyncObjectsIndex = (m_CurrentFrameSyncObjectsIndex + 1) % m_FramesInFlight;
+			m_CurrentFrameSyncObjectsIndex = (m_CurrentFrameSyncObjectsIndex + 1) % m_Swapchain->GetFrameCount();
 			m_CurrentSyncObjects = m_SyncObjects[m_CurrentFrameSyncObjectsIndex];
 
 			VK_CHECK_RESULT(vkResetFences(m_Device, 1, &m_CurrentSyncObjects.FrameFence));
 
-			{
-				FLARE_PROFILE_SCOPE("AcquireNextImage");
-				VkResult acquireResult = vkAcquireNextImageKHR(
-					m_Device,
-					m_SwapChain,
-					UINT64_MAX,
-					m_CurrentSyncObjects.ImageAvailableSemaphore,
-					VK_NULL_HANDLE,
-					&m_CurrentFrameInFlight);
-
-				if (acquireResult == VK_ERROR_OUT_OF_DATE_KHR)
-				{
-					RecreateSwapChain();
-					return;
-				}
-				else if (acquireResult != VK_SUCCESS && acquireResult != VK_SUBOPTIMAL_KHR)
-				{
-					FLARE_CORE_ERROR("Failed to acquire swap chain image");
-					return;
-				}
-			}
+			m_Swapchain->AcquireNextImage();
 		}
 
 		m_PrimaryCommandBuffer->Reset();
@@ -323,7 +302,7 @@ namespace Flare
 		{
 			FLARE_PROFILE_SCOPE("Submit");
 
-			VkSemaphore waitSemaphores[] = { m_CurrentSyncObjects.ImageAvailableSemaphore };
+			VkSemaphore waitSemaphores[] = { m_Swapchain->GetImageAvailableSemaphore() };
 			VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
 			VkCommandBuffer commandBuffer = m_PrimaryCommandBuffer->GetHandle();
 
@@ -339,26 +318,10 @@ namespace Flare
 			VK_CHECK_RESULT(vkQueueSubmit(m_GraphicsQueue, 1, &submitInfo, m_CurrentSyncObjects.FrameFence));
 		}
 
-		{
-			FLARE_PROFILE_SCOPE("Present");
-			VkPresentInfoKHR presentInfo{};
-			presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-			presentInfo.waitSemaphoreCount = 1;
-			presentInfo.pWaitSemaphores = &m_CurrentSyncObjects.RenderingCompleteSemaphore;
-			presentInfo.swapchainCount = 1;
-			presentInfo.pSwapchains = &m_SwapChain;
-			presentInfo.pImageIndices = &m_CurrentFrameInFlight;
+		int32_t width, height;
+		glfwGetFramebufferSize((GLFWwindow*)m_Window->GetNativeWindow(), &width, &height);
 
-			VkResult presentResult = vkQueuePresentKHR(m_PresentQueue, &presentInfo);
-			if (presentResult == VK_ERROR_OUT_OF_DATE_KHR)
-			{
-				RecreateSwapChain();
-			}
-			else if (presentResult != VK_SUCCESS)
-			{
-				FLARE_CORE_ERROR("Failed to present");
-			}
-		}
+		m_Swapchain->Present(Span<VkSemaphore>(&m_CurrentSyncObjects.RenderingCompleteSemaphore, 1), glm::uvec2((uint32_t)width, (uint32_t)height));
 
 		{
 			FLARE_PROFILE_SCOPE("WaitIdle");
@@ -374,7 +337,14 @@ namespace Flare
 
 		if (m_VSyncEnabled != m_Window->GetProperties().VSyncEnabled)
 		{
-			RecreateSwapChain();
+			VkPresentModeKHR presentMode = m_Window->GetProperties().VSyncEnabled
+				? VK_PRESENT_MODE_FIFO_KHR
+				: VK_PRESENT_MODE_MAILBOX_KHR;
+
+			m_Swapchain->SetPresentMode(presentMode);
+			m_Swapchain->Recreate();
+
+			m_VSyncEnabled = m_Window->GetProperties().VSyncEnabled;
 		}
 	}
 
@@ -382,31 +352,6 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 		VK_CHECK_RESULT(vkDeviceWaitIdle(m_Device));
-	}
-
-	void VulkanContext::CreateBuffer(size_t size, VkBufferUsageFlags usage, VkMemoryPropertyFlags memoryProperties, VkBuffer& buffer, VkDeviceMemory& memory)
-	{
-		FLARE_PROFILE_FUNCTION();
-		VkBufferCreateInfo info{};
-		info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-		info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-		info.size = size;
-		info.usage = usage;
-
-		VK_CHECK_RESULT(vkCreateBuffer(VulkanContext::GetInstance().GetDevice(), &info, nullptr, &buffer));
-
-		VkMemoryRequirements memoryRequirements{};
-		vkGetBufferMemoryRequirements(VulkanContext::GetInstance().GetDevice(), buffer, &memoryRequirements);
-
-		VkMemoryAllocateInfo allocation{};
-		allocation.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-		allocation.allocationSize = memoryRequirements.size;
-		allocation.memoryTypeIndex = VulkanContext::GetInstance().FindMemoryType(
-			memoryRequirements.memoryTypeBits,
-			memoryProperties);
-
-		VK_CHECK_RESULT(vkAllocateMemory(VulkanContext::GetInstance().GetDevice(), &allocation, nullptr, &memory));
-		VK_CHECK_RESULT(vkBindBufferMemory(VulkanContext::GetInstance().GetDevice(), buffer, memory, 0));
 	}
 
 	Ref<CommandBuffer> VulkanContext::GetCommandBuffer() const
@@ -517,21 +462,6 @@ namespace Flare
 		{
 			m_ImageDeletationHandler(deletedImageView);
 		}
-	}
-
-	uint32_t VulkanContext::FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties)
-	{
-		VkPhysicalDeviceMemoryProperties deviceMemoryProperties{};
-		vkGetPhysicalDeviceMemoryProperties(m_PhysicalDevice, &deviceMemoryProperties);
-
-		for (uint32_t i = 0; i < deviceMemoryProperties.memoryTypeCount; i++)
-		{
-			if ((typeFilter & (1 << i)) && (deviceMemoryProperties.memoryTypes[i].propertyFlags & properties) == properties)
-				return i;
-		}
-
-		FLARE_CORE_ASSERT(false);
-		return UINT32_MAX;
 	}
 
 	VkResult VulkanContext::SetDebugName(VkObjectType objectType, uint64_t objectHandle, const char* name)
@@ -963,217 +893,13 @@ namespace Flare
 		fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
 		fenceCreateInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
-		m_SyncObjects.resize(m_FramesInFlight);
+		m_SyncObjects.resize(m_Swapchain->GetFrameCount());
 
-		for (uint32_t i = 0; i < m_FramesInFlight; i++)
+		for (uint32_t i = 0; i < m_Swapchain->GetFrameCount(); i++)
 		{
-			VK_CHECK_RESULT(vkCreateSemaphore(m_Device, &semaphoreCreateInfo, nullptr, &m_SyncObjects[i].ImageAvailableSemaphore));
 			VK_CHECK_RESULT(vkCreateSemaphore(m_Device, &semaphoreCreateInfo, nullptr, &m_SyncObjects[i].RenderingCompleteSemaphore));
 			VK_CHECK_RESULT(vkCreateFence(m_Device, &fenceCreateInfo, nullptr, &m_SyncObjects[i].FrameFence));
 		}
-	}
-
-	void VulkanContext::CreateSwapChain()
-	{
-		FLARE_PROFILE_FUNCTION();
-		VkSurfaceCapabilitiesKHR surfaceCapabilities;
-		VK_CHECK_RESULT(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_PhysicalDevice, m_Surface, &surfaceCapabilities));
-
-		uint32_t formatsCount;
-		VK_CHECK_RESULT(vkGetPhysicalDeviceSurfaceFormatsKHR(m_PhysicalDevice, m_Surface, &formatsCount, nullptr));
-
-		std::vector<VkSurfaceFormatKHR> formats(formatsCount);
-		VK_CHECK_RESULT(vkGetPhysicalDeviceSurfaceFormatsKHR(m_PhysicalDevice, m_Surface, &formatsCount, formats.data()));
-
-		uint32_t presentModeCount;
-		VK_CHECK_RESULT(vkGetPhysicalDeviceSurfacePresentModesKHR(m_PhysicalDevice, m_Surface, &presentModeCount, nullptr));
-
-		std::vector<VkPresentModeKHR> presentModes(presentModeCount);
-		VK_CHECK_RESULT(vkGetPhysicalDeviceSurfacePresentModesKHR(m_PhysicalDevice, m_Surface, &presentModeCount, presentModes.data()));
-
-		uint32_t formatIndex = ChooseSwapChainFormat(formats);
-		VkPresentModeKHR presentMode = ChoosePresentMode(presentModes);
-		VkExtent2D swapChainExtent = GetSwapChainExtent(surfaceCapabilities);
-
-		m_SwapChainExtent.x = swapChainExtent.width;
-		m_SwapChainExtent.y = swapChainExtent.height;
-
-		uint32_t imageCount = glm::min(surfaceCapabilities.maxImageCount, surfaceCapabilities.minImageCount + 1);
-
-		m_SwapChainImageFormat = formats[formatIndex].format;
-
-		VkSwapchainCreateInfoKHR createInfo{};
-		createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-		createInfo.surface = m_Surface;
-		createInfo.minImageCount = imageCount;
-		createInfo.imageFormat = formats[formatIndex].format;
-		createInfo.imageColorSpace = formats[formatIndex].colorSpace;
-		createInfo.imageExtent = swapChainExtent;
-		createInfo.imageArrayLayers = 1;
-		createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
-
-		uint32_t queueFamilies[] = { *m_GraphicsQueueFamilyIndex, *m_PresentQueueFamilyIndex };
-
-		if (*m_GraphicsQueueFamilyIndex != *m_PresentQueueFamilyIndex)
-		{
-			createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
-			createInfo.pQueueFamilyIndices = queueFamilies;
-			createInfo.queueFamilyIndexCount = 2;
-		}
-		else
-		{
-			createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
-			createInfo.pQueueFamilyIndices = nullptr;
-			createInfo.queueFamilyIndexCount = 0;
-		}
-
-		createInfo.preTransform = surfaceCapabilities.currentTransform;
-		createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-		createInfo.presentMode = presentMode;
-		createInfo.clipped = true;
-		createInfo.oldSwapchain = m_SwapChain;
-
-		VkSwapchainKHR oldSwapChain = m_SwapChain;
-
-		VK_CHECK_RESULT(vkCreateSwapchainKHR(m_Device, &createInfo, nullptr, &m_SwapChain));
-
-		uint32_t swapChainImageCount = 0;
-		VK_CHECK_RESULT(vkGetSwapchainImagesKHR(m_Device, m_SwapChain, &swapChainImageCount, nullptr));
-
-		m_FramesInFlight = swapChainImageCount;
-		m_SwapChainImages.resize(swapChainImageCount);
-		VK_CHECK_RESULT(vkGetSwapchainImagesKHR(m_Device, m_SwapChain, &swapChainImageCount, m_SwapChainImages.data()));
-
-		for (size_t i = 0; i < m_SwapChainImages.size(); i++)
-		{
-			SetDebugName(VK_OBJECT_TYPE_IMAGE, (uint64_t)m_SwapChainImages[i], fmt::format("SwapChainImage.{}", i).c_str());
-		}
-
-		if (oldSwapChain != VK_NULL_HANDLE)
-		{
-			vkDestroySwapchainKHR(m_Device, oldSwapChain, nullptr);
-		}
-
-		m_VSyncEnabled = m_Window->GetProperties().VSyncEnabled;
-		CreateSwapChainImageViews();
-	}
-
-	void VulkanContext::RecreateSwapChain()
-	{
-		FLARE_PROFILE_FUNCTION();
-		WaitForDevice();
-
-		ReleaseSwapChainResources();
-		CreateSwapChain();
-		CreateSwapChainFrameBuffers();
-	}
-
-	void VulkanContext::ReleaseSwapChainResources()
-	{
-		FLARE_PROFILE_FUNCTION();
-		for (VkImageView view : m_SwapChainImageViews)
-			vkDestroyImageView(m_Device, view, nullptr);
-
-		m_SwapChainImageViews.clear();
-		m_SwapChainImages.clear();
-		m_SwapChainFrameBuffers.clear();
-	}
-
-	void VulkanContext::CreateSwapChainImageViews()
-	{
-		FLARE_PROFILE_FUNCTION();
-		m_SwapChainImageViews.resize(m_SwapChainImages.size());
-		for (size_t i = 0; i < m_SwapChainImages.size(); i++)
-		{
-			VkImageViewCreateInfo imageViewCreateInfo{};
-			imageViewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-			imageViewCreateInfo.format = m_SwapChainImageFormat;
-			imageViewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-			imageViewCreateInfo.image = m_SwapChainImages[i];
-
-			imageViewCreateInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
-			imageViewCreateInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
-			imageViewCreateInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
-			imageViewCreateInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
-
-			imageViewCreateInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-
-			imageViewCreateInfo.subresourceRange.baseArrayLayer = 0;
-			imageViewCreateInfo.subresourceRange.layerCount = 1;
-
-			imageViewCreateInfo.subresourceRange.baseMipLevel = 0;
-			imageViewCreateInfo.subresourceRange.levelCount = 1;
-
-			VK_CHECK_RESULT(vkCreateImageView(m_Device, &imageViewCreateInfo, nullptr, &m_SwapChainImageViews[i]));
-
-			SetDebugName(VK_OBJECT_TYPE_IMAGE_VIEW, (uint64_t)m_SwapChainImageViews[i], fmt::format("SwapChainImageView.{}", i).c_str());
-		}
-	}
-
-	void VulkanContext::CreateSwapChainFrameBuffers()
-	{
-		FLARE_PROFILE_FUNCTION();
-		m_SwapChainFrameBuffers.resize(m_FramesInFlight);
-		for (uint32_t i = 0; i < m_FramesInFlight; i++)
-		{
-			TextureSpecifications specifications{};
-			specifications.Width = m_SwapChainExtent.x;
-			specifications.Height = m_SwapChainExtent.y;
-			specifications.Filtering = TextureFiltering::Closest;
-			specifications.Wrap = TextureWrap::Clamp;
-			specifications.Usage = TextureUsage::RenderTarget;
-			specifications.GenerateMipMaps = false;
-			specifications.Format = TextureFormat::RGBA8;
-
-			Ref<Texture> attachmentTexture = CreateRef<VulkanTexture>(specifications, m_SwapChainImages[i], m_SwapChainImageViews[i]);
-			m_SwapChainFrameBuffers[i] = CreateRef<VulkanFrameBuffer>(
-				m_SwapChainExtent.x,
-				m_SwapChainExtent.y,
-				m_ColorOnlyPass,
-				Span<Ref<Texture>>(&attachmentTexture, 1),
-				false);
-
-			m_SwapChainFrameBuffers[i]->SetDebugName(fmt::format("SwapChainFrameBuffer.{}", i));
-		}
-	}
-
-	uint32_t VulkanContext::ChooseSwapChainFormat(const std::vector<VkSurfaceFormatKHR>& formats)
-	{
-		for (uint32_t i = 0; i < (uint32_t)formats.size(); i++)
-		{
-			if (formats[i].format == VK_FORMAT_R8G8B8A8_SRGB && formats[i].colorSpace == VK_COLORSPACE_SRGB_NONLINEAR_KHR)
-				return i;
-		}
-
-		return 0;
-	}
-
-	VkExtent2D VulkanContext::GetSwapChainExtent(const VkSurfaceCapabilitiesKHR& capabilities)
-	{
-		if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max())
-			return capabilities.currentExtent;
-
-		int32_t width;
-		int32_t height;
-		glfwGetFramebufferSize((GLFWwindow*)m_Window->GetNativeWindow(), &width, &height);
-
-		VkExtent2D extent = { (uint32_t)width, (uint32_t)height };
-
-		extent.width = glm::clamp(extent.width, capabilities.minImageExtent.width, capabilities.maxImageExtent.width);
-		extent.height = glm::clamp(extent.height, capabilities.minImageExtent.height, capabilities.maxImageExtent.height);
-
-		return extent;
-	}
-
-	VkPresentModeKHR VulkanContext::ChoosePresentMode(const std::vector<VkPresentModeKHR>& modes)
-	{
-		for (auto mode : modes)
-		{
-			if (!m_Window->GetProperties().VSyncEnabled && mode == VK_PRESENT_MODE_MAILBOX_KHR)
-				return mode;
-		}
-
-		return VK_PRESENT_MODE_FIFO_KHR;
 	}
 
 	std::vector<VkLayerProperties> VulkanContext::EnumerateAvailableLayers()
