@@ -41,8 +41,6 @@ namespace Flare
 			glm::vec3( 1.0f, -1.0f,  1.0f),
 		};
 
-		glm::vec3 farPoints[4];
-		glm::vec3 nearPoints[4];
 		for (EntityView chunk : m_Query)
 		{
 			auto transforms = chunk.View<TransformComponent>();
