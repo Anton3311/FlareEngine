@@ -201,54 +201,39 @@ namespace Flare
 				break;
 		}
 
-		for (EntityView view : m_PointLightsQuery)
-		{
-			auto transforms = view.View<const TransformComponent>();
-			auto lights = view.View<const PointLight>();
-
-			for (EntityViewElement entity : view)
+		m_PointLightsQuery.ForEachChunk([](QueryChunk chunk,
+			ComponentView<const TransformComponent> transforms,
+			ComponentView<const PointLight> lights)
 			{
-				Renderer::SubmitPointLight(PointLightData{
-					transforms[entity].Position,
-					glm::vec4(lights[entity].Color, lights[entity].Intensity)
-				});
-			}
-		}
+				for (auto entity : chunk)
+				{
+					Renderer::SubmitPointLight(PointLightData{
+						transforms[entity].Position,
+						glm::vec4(lights[entity].Color, lights[entity].Intensity) });
+				}
+			});
 
-		for (EntityView view : m_SpotLightsQuery)
-		{
-			auto transforms = view.View<const TransformComponent>();
-			auto lights = view.View<const SpotLight>();
-			auto globalTransform = view.ViewOptional<const GlobalTransform>();
-
-			for (EntityViewElement entity : view)
+		m_SpotLightsQuery.ForEachChunk([](QueryChunk chunk,
+			ComponentView<const TransformComponent> transforms,
+			ComponentView<const SpotLight> lights)
 			{
-				if (lights[entity].OuterAngle - lights[entity].InnerAngle <= 0.0f)
-					continue;
-
-				glm::vec3 position = transforms[entity].Position;
-				glm::vec3 direction = glm::vec3(0.0f);
-
-				if (globalTransform.HasComponent())
+				for (auto entity : chunk)
 				{
-					position = globalTransform[entity].value()->Position;
-					direction = globalTransform[entity].value()->TransformDirection(glm::vec3(0.0f, 0.0f, -1.0f));
-				}
-				else
-				{
-					position = transforms[entity].Position;
-					direction = transforms[entity].TransformDirection(glm::vec3(0.0f, 0.0f, -1.0f));
-				}
+					if (lights[entity].OuterAngle - lights[entity].InnerAngle <= 0.0f)
+						continue;
 
-				Renderer::SubmitSpotLight(SpotLightData(
-					position,
-					direction,					
-					lights[entity].InnerAngle,
-					lights[entity].OuterAngle,
-					glm::vec4(lights[entity].Color, lights[entity].Intensity)
-				));
-			}
-		}
+					glm::vec3 position = transforms[entity].Position;
+					glm::vec3 direction = transforms[entity].TransformDirection(glm::vec3(0.0f, 0.0f, -1.0f));
+
+					Renderer::SubmitSpotLight(SpotLightData(
+						position,
+						direction,
+						lights[entity].InnerAngle,
+						lights[entity].OuterAngle,
+						glm::vec4(lights[entity].Color, lights[entity].Intensity)
+					));
+				}
+			});
 	}
 
 	void Scene::OnRender(const Viewport& viewport)
