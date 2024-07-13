@@ -94,7 +94,7 @@ namespace Flare
 	class FLAREECS_API EntitiesQuery
 	{
 	public:
-		constexpr EntitiesQuery() = default;
+		EntitiesQuery() = default;
 		constexpr EntitiesQuery(QueryId id, const QueryCache& queries, Entities& entities)
 			: m_Id(id), m_Queries(&queries), m_Entities(&entities) {}
 
@@ -165,7 +165,7 @@ namespace Flare
 	class FLAREECS_API Query : public EntitiesQuery
 	{
 	public:
-		constexpr Query() = default;
+		Query() = default;
 		constexpr Query(QueryId id, Entities& entities, const QueryCache& queries)
 			: EntitiesQuery(id, queries, entities) {}
 	public:
@@ -179,8 +179,14 @@ namespace Flare
 		inline void ForEachChunk(const IteratorFunction& function)
 		{
 			using IteratorTraits = FunctionTraits<IteratorFunction>;
-			using IteratorArgumnets = typename IteratorTraits::Arguments;
-			using IterationHelper = QueryIterationHelper<IteratorArgumnets>;
+			static_assert(IteratorTraits::ArgumentsCount >= 2, "A query iterator function must accept a QueryChunk as the first agument and at least 1 component view");
+
+			using IteratorArguments = typename IteratorTraits::Arguments;
+			using IterationHelper = QueryIterationHelper<IteratorArguments>;
+			using FirstArg = std::remove_cv_t<typename FirstArgument<IteratorArguments>::Type>;
+
+			// QueryChynk + at least 1 component view
+			static_assert(std::is_same_v<FirstArg, QueryChunk>);
 
 			size_t componentOffsets[IteratorTraits::ArgumentsCount];
 			const Archetypes& archetypes = m_Entities->GetArchetypes();
@@ -206,7 +212,7 @@ namespace Flare
 	class FLAREECS_API CreatedEntitiesQuery : public EntitiesQuery
 	{
 	public:
-		constexpr CreatedEntitiesQuery() = default;
+		CreatedEntitiesQuery() = default;
 		constexpr CreatedEntitiesQuery(QueryId id, Entities& entities, const QueryCache& queries)
 			: EntitiesQuery(id, queries, entities) {}
 

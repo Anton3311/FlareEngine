@@ -5,6 +5,18 @@ namespace Flare
 	template<typename... Args>
 	struct ArgumentsList {};
 
+	template<typename T>
+	struct FirstArgument
+	{
+		using Type = void;
+	};
+
+	template<typename FirstArg, typename... Args>
+	struct FirstArgument<ArgumentsList<FirstArg, Args...>>
+	{
+		using Type = FirstArg;
+	};
+
 	template<typename F>
 	struct FunctionTraitsImpl
 	{
