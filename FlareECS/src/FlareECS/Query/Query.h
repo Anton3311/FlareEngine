@@ -119,7 +119,7 @@ namespace Flare
 		virtual size_t GetEntitiesCount() const = 0;
 
 		inline QueryId GetId() const { return m_Id; }
-		const std::unordered_set<ArchetypeId> GetMatchingArchetypes() const { return m_Queries->GetQueryData(m_Id).MatchedArchetypes; }
+		const std::unordered_set<ArchetypeId>& GetMatchingArchetypes() const { return m_Queries->GetQueryData(m_Id).MatchedArchetypes; }
 	protected:
 		QueryId m_Id = INVALID_QUERY_ID;
 		const QueryCache* m_Queries = nullptr;
