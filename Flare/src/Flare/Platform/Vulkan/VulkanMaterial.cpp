@@ -1,5 +1,7 @@
 #include "VulkanMaterial.h"
 
+#include "FlareCore/Profiler/Profiler.h"
+
 #include "Flare/AssetManager/AssetManager.h"
 
 #include "Flare/Platform/Vulkan/VulkanContext.h"
@@ -19,6 +21,7 @@ namespace Flare
 
 	void VulkanMaterial::SetShader(const Ref<Shader>& shader)
 	{
+		FLARE_PROFILE_FUNCTION();
 		ReleaseDescriptorSet();
 
 		Material::SetShader(shader);
@@ -54,6 +57,7 @@ namespace Flare
 
 	Ref<VulkanPipeline> VulkanMaterial::GetPipeline(const Ref<VulkanRenderPass>& renderPass)
 	{
+		FLARE_PROFILE_FUNCTION();
 		if (m_Pipeline != nullptr && m_Pipeline->GetCompatibleRenderPass().get() == renderPass.get())
 			return m_Pipeline;
 
@@ -63,6 +67,7 @@ namespace Flare
 
 	void VulkanMaterial::UpdateDescriptorSet()
 	{
+		FLARE_PROFILE_FUNCTION();
 		if (!m_IsDirty)
 			return;
 
@@ -92,6 +97,7 @@ namespace Flare
 
 	void VulkanMaterial::ReleaseDescriptorSet()
 	{
+		FLARE_PROFILE_FUNCTION();
 		if (!m_Shader || !m_Set)
 			return;
 
