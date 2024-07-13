@@ -48,22 +48,6 @@ namespace Flare
 		std::unordered_set<ArchetypeId>::const_iterator m_Archetype;
 	};
 
-	template<typename T>
-	using QueryIteratorParamterType = typename T;
-
-	template<typename T>
-	inline T GetQueryIteratorParameterValue(size_t entityIndex, size_t componentOffset, uint8_t* entityData, const EntityStorage& storage)
-	{
-		return *(std::remove_reference_t<T>*)(entityData + componentOffset);
-	}
-
-	template<>
-	inline Entity GetQueryIteratorParameterValue<Entity>(size_t entityIndex, size_t componentOffset, uint8_t* entityData, const EntityStorage& storage)
-	{
-		// TODO: implement
-		return Entity();
-	}
-
 	class QueryChunkIterator
 	{
 	public:
@@ -137,7 +121,7 @@ namespace Flare
 
 		static void FillComponentOffsets(size_t* offsets, const ArchetypeRecord& archetype, const Archetypes& archetypes)
 		{
-
+		
 		}
 	};
 
@@ -191,50 +175,12 @@ namespace Flare
 		virtual std::optional<Entity> TryGetFirstEntityId() const override;
 		virtual size_t GetEntitiesCount() const override;
 
-		template<typename... Args, typename IteratorFunction>
-		inline void ForEachEntity(const IteratorFunction& function)
-		{
-			size_t componentOffsets[sizeof...(Args)];
-			const Archetypes& archetypes = m_Entities->GetArchetypes();
-			for (ArchetypeId matchedArchetype : GetMatchingArchetypes())
-			{
-				EntityStorage& storage = m_Entities->GetEntityStorage(matchedArchetype);
-				const ArchetypeRecord& archetype = archetypes[matchedArchetype];
-
-				size_t index = 0;
-				([&]()
-				{
-					std::optional<size_t> componentIndex = archetype.TryGetComponentIndex(COMPONENT_ID(std::remove_reference_t<Args>));
-					if (componentIndex)
-						componentOffsets[index] = archetype.ComponentOffsets[*componentIndex];
-					index++;
-				} (), ...);
-
-				for (size_t chunkIndex = 0; chunkIndex < storage.GetChunksCount(); chunkIndex++)
-				{
-					uint8_t* entityData = storage.GetChunkBuffer(chunkIndex);
-					for (size_t entityIndex = 0; entityIndex < storage.GetEntitiesCountInChunk(chunkIndex); entityIndex++)
-					{
-						size_t componentIndex = 0;
-
-						std::tuple<QueryIteratorParamterType<Args>...> arguments = std::make_tuple(
-							[&]() -> decltype(auto)
-							{
-								return GetQueryIteratorParameterValue<Args>(entityIndex, componentOffsets[componentIndex++], entityData, storage);
-							} () ...
-						);
-
-						std::apply(function, arguments);
-						entityData += storage.GetEntitySize();
-					}
-				}
-			}
-		}
-
 		template<typename IteratorFunction>
 		inline void ForEachChunk(const IteratorFunction& function)
 		{
 			using IteratorTraits = FunctionTraits<IteratorFunction>;
+			using IteratorArgumnets = typename IteratorTraits::Arguments;
+			using IterationHelper = QueryIterationHelper<IteratorArgumnets>;
 
 			size_t componentOffsets[IteratorTraits::ArgumentsCount];
 			const Archetypes& archetypes = m_Entities->GetArchetypes();
@@ -243,11 +189,11 @@ namespace Flare
 				EntityStorage& storage = m_Entities->GetEntityStorage(matchedArchetype);
 				const ArchetypeRecord& archetype = archetypes[matchedArchetype];
 
-				QueryIterationHelper<typename IteratorTraits::Arguments>::FillComponentOffsets(componentOffsets, archetype, archetypes);
+				IterationHelper::FillComponentOffsets(componentOffsets, archetype, archetypes);
 				for (size_t chunkIndex = 0; chunkIndex < storage.GetChunksCount(); chunkIndex++)
 				{
 					uint8_t* entityData = storage.GetChunkBuffer(chunkIndex);
-					auto arguments = QueryIterationHelper<typename IteratorTraits::Arguments>::Get(
+					auto arguments = IterationHelper::Get(
 						QueryChunk(entityData, storage.GetEntitiesCountInChunk(chunkIndex), storage.GetEntitySize()),
 						componentOffsets);
 
