@@ -32,8 +32,7 @@ namespace Flare
 		if (!m_Show)
 			return;
 
-		ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoDecoration
-			| ImGuiWindowFlags_NoDocking;
+		ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoDocking;
 
 		ImGui::Begin("Quick Search", &m_Show, windowFlags);
 
