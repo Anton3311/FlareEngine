@@ -131,8 +131,6 @@ namespace Flare
 		void CreateEntity(const ComponentSet& components, EntityCreationResult& result);
 		void InitializeEntityComponents(const ArchetypeRecord& archetype, uint8_t* entityData, size_t firstComponent, size_t count, ComponentInitializationStrategy initStrategy);
 
-		ArchetypeId CreateArchetype();
-
 		void RemoveEntityData(ArchetypeId archetype, size_t entityBufferIndex);
 
 		std::unordered_map<Entity, size_t>::iterator FindEntity(Entity entity);

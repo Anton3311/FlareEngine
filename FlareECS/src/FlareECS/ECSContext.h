@@ -5,8 +5,10 @@
 
 namespace Flare
 {
-	struct ECSContext
+	struct FLAREECS_API ECSContext
 	{
+		ECSContext();
+
 		inline void Clear()
 		{
 			Archetypes.Clear();

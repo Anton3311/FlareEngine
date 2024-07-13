@@ -20,15 +20,6 @@ namespace Flare
 
 	struct FLAREECS_API ArchetypeRecord
 	{
-		size_t Id;
-		int32_t DeletionQueryReferences = 0;
-		int32_t CreatedEntitiesQueryReferences = 0;
-		
-		std::vector<ComponentId> Components; // Sorted
-		std::vector<size_t> ComponentOffsets;
-
-		std::unordered_map<ComponentId, ArchetypeEdge> Edges;
-
 		ArchetypeRecord()
 			: Id(INVALID_ARCHETYPE_ID), DeletionQueryReferences(0), CreatedEntitiesQueryReferences(0) {}
 
@@ -67,5 +58,15 @@ namespace Flare
 
 		constexpr bool IsUsedInDeletionQuery() const { return DeletionQueryReferences > 0; }
 		constexpr bool IsUsedInCreatedEntitiesQuery() const { return CreatedEntitiesQueryReferences > 0; }
+
+		ArchetypeId Id;
+		size_t EntitySize = 0;
+		int32_t DeletionQueryReferences = 0;
+		int32_t CreatedEntitiesQueryReferences = 0;
+		
+		std::vector<ComponentId> Components; // Sorted
+		std::vector<size_t> ComponentOffsets;
+
+		std::unordered_map<ComponentId, ArchetypeEdge> Edges;
 	};
 }
