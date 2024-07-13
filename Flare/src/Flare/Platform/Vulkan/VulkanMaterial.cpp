@@ -48,6 +48,8 @@ namespace Flare
 				m_Set->SetDebugName(As<VulkanShader>(m_Shader)->GetDebugName());
 			}
 		}
+
+		m_IsDirty = true;
 	}
 
 	Ref<VulkanPipeline> VulkanMaterial::GetPipeline(const Ref<VulkanRenderPass>& renderPass)
