@@ -549,7 +549,7 @@ namespace Flare
 		const ArchetypeRecord& archetype = m_Archetypes.Records[entityRecord.Archetype];
 		const EntityStorage& storage = GetEntityStorage(entityRecord.Archetype);
 
-		std::optional<size_t> componentIndex = m_Archetypes.GetArchetypeComponentIndex(entityRecord.Archetype, component);
+		std::optional<size_t> componentIndex = archetype.TryGetComponentIndex(component);
 		if (!componentIndex.has_value())
 			return {};
 
@@ -568,7 +568,7 @@ namespace Flare
 		const ArchetypeRecord& archetype = m_Archetypes.Records[entityRecord.Archetype];
 		const EntityStorage& storage = GetEntityStorage(entityRecord.Archetype);
 
-		std::optional<size_t> componentIndex = m_Archetypes.GetArchetypeComponentIndex(entityRecord.Archetype, component);
+		std::optional<size_t> componentIndex = archetype.TryGetComponentIndex(component);
 		if (!componentIndex.has_value())
 			return nullptr;
 
@@ -689,7 +689,9 @@ namespace Flare
 	{
 		auto it = FindEntity(entity);
 		FLARE_CORE_ASSERT(it != m_EntityToRecord.end());
-		return m_Archetypes.GetArchetypeComponentIndex(m_EntityRecords[it->second].Archetype, component).has_value();
+
+		const ArchetypeRecord& archetype = m_Archetypes[m_EntityRecords[it->second].Archetype];
+		return archetype.TryGetComponentIndex(component).has_value();
 	}
 
 	EntityRecord& Entities::operator[](size_t index)

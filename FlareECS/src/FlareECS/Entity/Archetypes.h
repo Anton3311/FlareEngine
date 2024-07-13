@@ -43,25 +43,6 @@ namespace Flare
 		
 		ArchetypeId CreateArchetype(Span<const ComponentId> sortedComponentIds);
 		ArchetypeId CreateArchetype(std::vector<ComponentId>&& sortedComponentIds);
-
-		std::optional<size_t> GetArchetypeComponentIndex(ArchetypeId archetype, ComponentId component) const
-		{
-			FLARE_CORE_ASSERT(IsIdValid(archetype));
-
-			auto it = ComponentToArchetype.find(component);
-			if (it != ComponentToArchetype.end())
-			{
-				auto it2 = it->second.find(archetype);
-				if (it2 != it->second.end())
-				{
-					return { it2->second };
-				}
-				else
-					return {};
-			}
-			else
-				return {};
-		}
 		
 		std::vector<ArchetypeRecord> Records;
 		std::unordered_map<ComponentSet, ArchetypeId> ComponentSetToArchetype;

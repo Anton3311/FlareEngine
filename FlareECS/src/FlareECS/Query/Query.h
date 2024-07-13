@@ -204,7 +204,7 @@ namespace Flare
 				size_t index = 0;
 				([&]()
 				{
-					std::optional<size_t> componentIndex = archetypes.GetArchetypeComponentIndex(matchedArchetype, COMPONENT_ID(std::remove_reference_t<Args>));
+					std::optional<size_t> componentIndex = archetype.TryGetComponentIndex(COMPONENT_ID(std::remove_reference_t<Args>));
 					if (componentIndex)
 						componentOffsets[index] = archetype.ComponentOffsets[*componentIndex];
 					index++;
