@@ -1,14 +1,14 @@
-[submodule ".\\Flare\\vendor\\GLFW"]
-	path = .\\Flare\\vendor\\GLFW
+[submodule "Flare/vendor/GLFW"]
+	path = Flare/vendor/GLFW
 	url = git@github.com:Anton3311/glfw.git
-[submodule ".\\Flare\\vendor\\glm"]
-	path = .\\Flare\\vendor\\glm
+[submodule "Flare/vendor/glm"]
+	path = Flare/vendor/glm
 	url = git@github.com:g-truc/glm.git
-[submodule ".\\Flare\\vendor\\spdlog"]
-	path = .\\Flare\\vendor\\spdlog
+[submodule "Flare/vendor/spdlog"]
+	path = Flare/vendor/spdlog
 	url = git@github.com:gabime/spdlog.git
-[submodule ".\\Flare\\vendor\\ImGUI"]
-	path = .\\Flare\\vendor\\ImGUI
+[submodule "Flare/vendor/ImGUI"]
+	path = Flare/vendor/ImGUI
 	url = git@github.com:Anton3311/imgui.git
 [submodule "Flare/vendor/yaml-cpp"]
 	path = Flare/vendor/yaml-cpp
@@ -16,11 +16,11 @@
 [submodule "Flare/vendor/ImGuizmo"]
 	path = Flare/vendor/ImGuizmo
 	url = git@github.com:CedricGuillemet/ImGuizmo.git
-[submodule ".\\Flare\\vendor\\msdf/msdf-atlas-gen"]
-	path = .\\Flare\\vendor\\msdf/msdf-atlas-gen
+[submodule "Flare/vendor/msdf/msdf-atlas-gen"]
+	path = Flare/vendor/msdf/msdf-atlas-gen
 	url = git@github.com:Chlumsky/msdf-atlas-gen.git
-[submodule ".\\Flare\\vendor\\msdf\\freetype\\"]
-	path = .\\Flare\\vendor\\msdf\\freetype\\
+[submodule "Flare/vendor/msdf/freetype/"]
+	path = Flare/vendor/msdf/freetype
 	url = git@github.com:freetype/freetype.git
 [submodule "Flare/vendor/assimp/assimp"]
 	path = Flare/vendor/assimp/assimp
