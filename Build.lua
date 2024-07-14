@@ -24,8 +24,8 @@ workspace "Flare"
 	}
 
 group "Dependencies"
-    include "Flare/vendor/GLFW"
-    include "Flare/vendor/ImGUI"
+    include "Flare/vendor/GLFW/GLFW.Build.lua"
+    include "Flare/vendor/ImGUI/ImGUI.Build.lua"
     include "Flare/vendor/yaml-cpp"
 	include "Flare/vendor/msdf/MSDF.Build.lua"
 group ""
