@@ -183,10 +183,12 @@ namespace Flare
 
 			using IteratorArguments = typename IteratorTraits::Arguments;
 			using IterationHelper = QueryIterationHelper<IteratorArguments>;
-			using FirstArg = std::remove_cv_t<typename FirstArgument<IteratorArguments>::Type>;
+			using FirstArg = FirstArgument<IteratorArguments>::Type;
+
+			using FirstArgType = std::remove_const_t<std::remove_reference_t<FirstArg>>;
 
 			// QueryChynk + at least 1 component view
-			static_assert(std::is_same_v<FirstArg, QueryChunk>);
+			static_assert(std::is_same_v<FirstArgType, QueryChunk>);
 
 			size_t componentOffsets[IteratorTraits::ArgumentsCount];
 			const Archetypes& archetypes = m_Entities->GetArchetypes();
