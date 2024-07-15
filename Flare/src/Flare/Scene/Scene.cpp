@@ -55,14 +55,15 @@ namespace Flare
 		m_OnFrameStart = systemsManager.CreateGroup("On Frame End");
 		m_OnFrameEnd = systemsManager.CreateGroup("On Frame End");
 
-		m_CameraDataUpdateQuery = m_World.NewQuery().All().With<TransformComponent, CameraComponent>().Build();
+		m_CamerasQuery = m_World.NewQuery().All().With<TransformComponent, CameraComponent>().Build();
 		m_DirectionalLightQuery = m_World.NewQuery().All().With<TransformComponent, DirectionalLight>().Build();
 		m_EnvironmentQuery = m_World.NewQuery().All().With<Environment>().Build();
 		m_PointLightsQuery = m_World.NewQuery().All().With<TransformComponent, PointLight>().Build();
 		m_SpotLightsQuery = m_World.NewQuery().All().With<TransformComponent, SpotLight>().Build();
 
-		systemsManager.RegisterSystem("Sprites Renderer", new SpritesRendererSystem());
-		systemsManager.RegisterSystem("Meshes Renderer", new MeshesRendererSystem());
+		systemsManager.RegisterSystem("Sprite Renderer", new SpriteRendererSystem());
+		systemsManager.RegisterSystem("Meshe Renderer", new MeshRendererSystem());
+		systemsManager.RegisterSystem("Decal Renderer", new DecalRendererSystem());
 
 		m_PostProcessingManager.AddEffect(CreateRef<SSAO>());
 		m_PostProcessingManager.AddEffect(CreateRef<Atmosphere>());
@@ -90,115 +91,91 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		float aspectRation = viewport.GetAspectRatio();
-
-		for (EntityView entityView : m_CameraDataUpdateQuery)
-		{
-			auto cameras = entityView.View<const CameraComponent>();
-			auto transforms = entityView.View<const TransformComponent>();
-
-			for (EntityViewElement entity : entityView)
+		m_CamerasQuery.ForEachChunk([&viewport](QueryChunk chunk,
+			ComponentView<TransformComponent> transforms,
+			ComponentView<CameraComponent> cameras)
 			{
-				const CameraComponent& camera = cameras[entity];
-				const TransformComponent& transform = transforms[entity];
-
-				float halfSize = camera.Size / 2;
-
-				viewport.FrameData.Camera.ViewDirection = transform.TransformDirection(glm::vec3(0.0f, 0.0f, -1.0f));
-				viewport.FrameData.Camera.Position = transforms[entity].Position;
-
-				viewport.FrameData.Camera.Near = camera.Near;
-				viewport.FrameData.Camera.Far = camera.Far;
-
-				viewport.FrameData.Camera.FOV = cameras[entity].FOV;
-
-				if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
+				float aspectRation = viewport.GetAspectRatio();
+				for (auto entity : chunk)
 				{
-					if (camera.Projection == CameraComponent::ProjectionType::Orthographic)
+					const CameraComponent& camera = cameras[entity];
+					const TransformComponent& transform = transforms[entity];
+
+					float halfSize = camera.Size / 2;
+
+					viewport.FrameData.Camera.ViewDirection = transform.TransformDirection(glm::vec3(0.0f, 0.0f, -1.0f));
+					viewport.FrameData.Camera.Position = transforms[entity].Position;
+
+					viewport.FrameData.Camera.Near = camera.Near;
+					viewport.FrameData.Camera.Far = camera.Far;
+
+					viewport.FrameData.Camera.FOV = cameras[entity].FOV;
+
+					if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
 					{
-						viewport.FrameData.Camera.SetViewAndProjection(
-							glm::orthoRH_ZO(-halfSize * aspectRation, halfSize * aspectRation, -halfSize, halfSize, camera.Near, camera.Far),
-							glm::inverse(transforms[entity].GetTransformationMatrix()));
+						if (camera.Projection == CameraComponent::ProjectionType::Orthographic)
+						{
+							viewport.FrameData.Camera.SetViewAndProjection(
+								glm::orthoRH_ZO(-halfSize * aspectRation, halfSize * aspectRation, -halfSize, halfSize, camera.Near, camera.Far),
+								glm::inverse(transforms[entity].GetTransformationMatrix()));
+						}
+						else
+						{
+							viewport.FrameData.Camera.SetViewAndProjection(
+								glm::perspectiveRH_ZO<float>(glm::radians(camera.FOV), aspectRation, camera.Near, camera.Far),
+								glm::inverse(transforms[entity].GetTransformationMatrix()));
+						}
 					}
 					else
 					{
-						viewport.FrameData.Camera.SetViewAndProjection(
-							glm::perspectiveRH_ZO<float>(glm::radians(camera.FOV), aspectRation, camera.Near, camera.Far),
-							glm::inverse(transforms[entity].GetTransformationMatrix()));
+						if (camera.Projection == CameraComponent::ProjectionType::Orthographic)
+						{
+							viewport.FrameData.Camera.SetViewAndProjection(
+								glm::ortho(-halfSize * aspectRation, halfSize * aspectRation, -halfSize, halfSize, camera.Near, camera.Far),
+								glm::inverse(transforms[entity].GetTransformationMatrix()));
+						}
+						else
+						{
+							viewport.FrameData.Camera.SetViewAndProjection(
+								glm::perspective<float>(glm::radians(camera.FOV), aspectRation, camera.Near, camera.Far),
+								glm::inverse(transforms[entity].GetTransformationMatrix()));
+						}
 					}
 				}
-				else
-				{
-					if (camera.Projection == CameraComponent::ProjectionType::Orthographic)
-					{
-						viewport.FrameData.Camera.SetViewAndProjection(
-							glm::ortho(-halfSize * aspectRation, halfSize * aspectRation, -halfSize, halfSize, camera.Near, camera.Far),
-							glm::inverse(transforms[entity].GetTransformationMatrix()));
-					}
-					else
-					{
-						viewport.FrameData.Camera.SetViewAndProjection(
-							glm::perspective<float>(glm::radians(camera.FOV), aspectRation, camera.Near, camera.Far),
-							glm::inverse(transforms[entity].GetTransformationMatrix()));
-					}
-				}
+			});
+
+		if (std::optional<Entity> directionalLightEntity = m_DirectionalLightQuery.TryGetFirstEntityId())
+		{
+			const TransformComponent& transform = m_World.GetEntityComponent<const TransformComponent>(*directionalLightEntity);
+			const DirectionalLight& directionalLight = m_World.GetEntityComponent<const DirectionalLight>(*directionalLightEntity);
+
+			glm::vec3 direction = transform.TransformDirection(glm::vec3(0.0f, 0.0f, -1.0f));
+			glm::vec3 right = transform.TransformDirection(glm::vec3(1.0f, 0.0f, 0.0f));
+
+			viewport.FrameData.LightBasis.Right = right;
+			viewport.FrameData.LightBasis.Forward = direction;
+			viewport.FrameData.LightBasis.Up = glm::cross(right, direction);
+
+			LightData& light = viewport.FrameData.Light;
+			light.Color = directionalLight.Color;
+			light.Intensity = directionalLight.Intensity;
+			light.Direction = direction;
+			light.Near = 0.1f;
+
+			for (size_t i = 0; i < 4; i++)
+			{
+				RenderView& lightView = viewport.FrameData.LightView[i];
+				lightView.Position = transform.Position;
 			}
 		}
 
-		bool hasLight = false;
-		for (EntityView entityView : m_DirectionalLightQuery)
+		if (std::optional<Entity> environmentEntity = m_EnvironmentQuery.TryGetFirstEntityId())
 		{
-			auto transforms = entityView.View<TransformComponent>();
-			auto lights = entityView.View<DirectionalLight>();
+			const Environment& environment = m_World.GetEntityComponent<const Environment>(*environmentEntity);
 
-			for (EntityViewElement entity : entityView)
-			{
-				TransformComponent& transform = transforms[entity];
-				glm::vec3 direction = transform.TransformDirection(glm::vec3(0.0f, 0.0f, -1.0f));
-				glm::vec3 right = transform.TransformDirection(glm::vec3(1.0f, 0.0f, 0.0f));
-
-				viewport.FrameData.LightBasis.Right = right;
-				viewport.FrameData.LightBasis.Forward = direction;
-				viewport.FrameData.LightBasis.Up = glm::cross(right, direction);
-
-				LightData& light = viewport.FrameData.Light;
-				light.Color = lights[entity].Color;
-				light.Intensity = lights[entity].Intensity;
-				light.Direction = direction;
-				light.Near = 0.1f;
-
-				for (size_t i = 0; i < 4; i++)
-				{
-					RenderView& lightView = viewport.FrameData.LightView[i];
-					lightView.Position = transform.Position;
-				}
-
-				hasLight = true;
-				break;
-			}
-
-			if (hasLight)
-				break;
-		}
-
-		bool hasEnviroment = false;
-		for (EntityView view : m_EnvironmentQuery)
-		{
-			auto environments = view.View<const Environment>();
-
-			for (EntityViewElement entity : view)
-			{
-				viewport.FrameData.Light.EnvironmentLight = glm::vec4(
-					environments[entity].EnvironmentColor,
-					environments[entity].EnvironmentColorIntensity
-				);
-
-				hasEnviroment = true;
-				break;
-			}
-
-			if (hasEnviroment)
-				break;
+			viewport.FrameData.Light.EnvironmentLight = glm::vec4(
+				environment.EnvironmentColor,
+				environment.EnvironmentColorIntensity);
 		}
 
 		m_PointLightsQuery.ForEachChunk([](QueryChunk chunk,

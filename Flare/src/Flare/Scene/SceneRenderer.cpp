@@ -11,7 +11,7 @@
 
 namespace Flare
 {
-	void SpritesRendererSystem::OnConfig(World& world, SystemConfig& config)
+	void SpriteRendererSystem::OnConfig(World& world, SystemConfig& config)
 	{
 		std::optional<uint32_t> groupId = world.GetSystemsManager().FindGroup("Rendering");
 		FLARE_CORE_ASSERT(groupId);
@@ -21,13 +21,13 @@ namespace Flare
 		m_TextQuery = world.NewQuery().All().With<TransformComponent, TextComponent>().Build();
 	}
 
-	void SpritesRendererSystem::OnUpdate(World& world, SystemExecutionContext& context)
+	void SpriteRendererSystem::OnUpdate(World& world, SystemExecutionContext& context)
 	{
 		RenderQuads(world, context);
 		RenderText(context);
 	}
 
-	void SpritesRendererSystem::RenderQuads(World& world, SystemExecutionContext& context)
+	void SpriteRendererSystem::RenderQuads(World& world, SystemExecutionContext& context)
 	{
 		m_SortedEntities.clear();
 		m_SortedEntities.reserve(m_SpritesQuery.GetEntitiesCount());
@@ -89,7 +89,7 @@ namespace Flare
 		}
 	}
 
-	void SpritesRendererSystem::RenderText(SystemExecutionContext& context)
+	void SpriteRendererSystem::RenderText(SystemExecutionContext& context)
 	{
 		for (EntityView view : m_TextQuery)
 		{
@@ -111,19 +111,18 @@ namespace Flare
 		}
 	}
 
-	// Meshes Renderer
+	// Meshe Renderer
 
-	void MeshesRendererSystem::OnConfig(World& world, SystemConfig& config)
+	void MeshRendererSystem::OnConfig(World& world, SystemConfig& config)
 	{
 		std::optional<uint32_t> groupId = world.GetSystemsManager().FindGroup("Rendering");
 		FLARE_CORE_ASSERT(groupId);
 		config.Group = *groupId;
 
 		m_Query = world.NewQuery().All().With<TransformComponent, MeshComponent>().Build();
-		m_DecalsQuery = world.NewQuery().All().With<TransformComponent, Decal>().Build();
 	}
 
-	void MeshesRendererSystem::OnUpdate(World& world, SystemExecutionContext& context)
+	void MeshRendererSystem::OnUpdate(World& world, SystemExecutionContext& context)
 	{
 		FLARE_PROFILE_FUNCTION();
 
@@ -199,22 +198,29 @@ namespace Flare
 				}
 			}
 		}
+	}
 
-		for (EntityView view : m_DecalsQuery)
-		{
-			auto transforms = view.View<TransformComponent>();
-			auto decals = view.View<Decal>();
 
-			for (EntityViewIterator entity = view.begin(); entity != view.end(); ++entity)
+
+	void DecalRendererSystem::OnConfig(World& world, SystemConfig& config)
+	{
+		std::optional<uint32_t> groupId = world.GetSystemsManager().FindGroup("Rendering");
+		FLARE_CORE_ASSERT(groupId);
+		config.Group = *groupId;
+
+		m_DecalsQuery = world.NewQuery().All().With<TransformComponent, Decal>().Build();
+	}
+
+	void DecalRendererSystem::OnUpdate(World& world, SystemExecutionContext& context)
+	{
+		m_DecalsQuery.ForEachChunk([](QueryChunk chunk,
+			ComponentView<const TransformComponent> transforms,
+			ComponentView<const Decal> decals)
 			{
-				const TransformComponent& transform = transforms[*entity];
-				std::optional<Entity> id = view.GetEntity(entity.GetEntityIndex());
-
-				if (!id)
-					continue;
-
-				Renderer::SubmitDecal(decals[*entity].Material, transform.GetTransformationMatrix(), id->GetIndex());
-			}
-		}
+				for (auto entity : chunk)
+				{
+					Renderer::SubmitDecal(decals[entity].Material, transforms[entity].GetTransformationMatrix(), 0);
+				}
+			});
 	}
 }
