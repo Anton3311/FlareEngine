@@ -24,7 +24,7 @@ Entities:
       - Name: struct Flare::DirectionalLight
         Data:
           Color: [0.895885348, 0.960160494, 0.960854113]
-          Intensity: 2
+          Intensity: 5
       - Name: struct Flare::TransformComponent
         Data:
           Position: [0, 1.96195173, 7.10875416]
@@ -38,19 +38,20 @@ Entities:
       - Name: struct Flare::Environment
         Data:
           EnvironmentColor: [0.967971504, 0.954756439, 0.919745147]
-          EnvironmentColorIntensity: 0.300000012
+          EnvironmentColorIntensity: 0.5
           ShadowSettings:
             Enabled: true
-            LightSize: 0.00899999961
-            Bias: 0
+            LightSize: 2
+            Bias: 0.100000001
+            NormalBias: 0.200000003
             Quality: 2
             Cascades: 4
-            Softness: 16
-            FadeDistance: 50
-            CascadeSplit0: 25
-            CascadeSplit1: 50
-            CascadeSplit2: 150
-            CascadeSplit3: 300
+            Softness: 8
+            FadeDistance: 10
+            CascadeSplit0: 10
+            CascadeSplit1: 25
+            CascadeSplit2: 70
+            CascadeSplit3: 100
   - SerializationId: 5429343776136486452
     Components:
       - Name: struct Flare::NameComponent
@@ -240,29 +241,43 @@ Editor:
   Camera:
     RotationOrigin: [-13.0828304, -5.08186245, -10.2559996]
     Rotation: [38, -788, 0]
-    Zoom: 29.2166786
+    Zoom: 10.4000034
   SceneViewSettings:
     ShowAABBs: false
     ShowCameraFrustum: true
     ShowLights: true
     ShowGrid: false
 PostProcessing:
-  - Name: class Flare::ToneMapping
-    Data:
-      Enabled: true
-  - Name: class Flare::Vignette
-    Data:
-      Enabled: true
-      Color: [0, 0, 0, 0.5]
-      Radius: 1
-      Smoothness: 1
   - Name: class Flare::SSAO
+    Enabled: true
     Data:
-      Enabled: true
       Radius: 0.5
       Bias: 0.100000001
       BlurSize: 2
-  - Name: class Flare::AtmospherePass
+  - Name: class Flare::Atmosphere
+    Enabled: true
     Data:
-      Enabled: true
-      AtmosphereMaterial: 6603499577536286740
+      PlaneRadius: 6360
+      AtmosphereThickness: 100
+      MieHeight: 1.20000005
+      RayleighHeight: 8
+      ObserverHeight: 0.200000003
+      RayleighCoefficients: [5.80200005, 13.5500002, 33.0999985]
+      RayleighAbsorbtion: 0
+      MieCoefficient: 0.398999989
+      MieAbsorbtion: 4.4000001
+      OzoneAbsorbtion: [0.605000019, 1.88, 0.850000024]
+      GroundColor: [0.00999999978, 0.0960000008, 0.105999999]
+      ViewRaySteps: 10
+      SunTransmittanceSteps: 10
+      SunTransmittanceLUTSteps: 100
+  - Name: class Flare::Vignette
+    Enabled: true
+    Data:
+      Color: [0, 0, 0, 0.5]
+      Radius: 1
+      Smoothness: 1
+  - Name: class Flare::ToneMapping
+    Enabled: true
+    Data:
+      {}
