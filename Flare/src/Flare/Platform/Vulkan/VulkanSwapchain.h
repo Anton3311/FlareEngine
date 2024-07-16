@@ -25,7 +25,7 @@ namespace Flare
 		void SetWindowSize(glm::uvec2 windowSize) { m_WindowSize = windowSize; }
 		void AcquireNextImage();
 
-		void Present(Span<VkSemaphore> waitSemaphores, glm::uvec2 windowSize);
+		void Present(Span<const VkSemaphore> waitSemaphores, glm::uvec2 windowSize);
 
 		void Recreate();
 

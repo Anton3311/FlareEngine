@@ -105,6 +105,8 @@ namespace Flare
 
 		Ref<VulkanCommandBuffer> GetPrimaryCommandBuffer() const { return m_PrimaryCommandBuffer; }
 
+		inline VkSemaphore GetRenderCompleteSemaphore() const { return m_SyncObjects[GetCurrentFrameInFlight()].RenderingCompleteSemaphore; }
+
 		uint32_t GetCurrentFrameInFlight() const { return m_Swapchain->GetFrameInFlight(); }
 		Ref<VulkanFrameBuffer> GetSwapChainFrameBuffer(uint32_t index) const { return m_Swapchain->GetFrameBuffer(index); }
 

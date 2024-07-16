@@ -9,6 +9,8 @@
 #include "Flare/Platform/Vulkan/VulkanRenderPass.h"
 #include "Flare/Platform/Vulkan/VulkanTexture.h"
 
+#include "FlareEditor/ImGui/ImGuiVulkanRenderer.h"
+
 #include <ImGuizmo.h>
 
 #include <backends/imgui_impl_vulkan.h>
@@ -16,6 +18,52 @@
 
 namespace Flare
 {
+	static void RendererCreateWindow(ImGuiViewport* viewport)
+	{
+		FLARE_PROFILE_FUNCTION();
+		ImGuiPlatformIO& platformIO = ImGui::GetPlatformIO();
+		VkSurfaceKHR surface = VK_NULL_HANDLE;
+		VK_CHECK_RESULT((VkResult)platformIO.Platform_CreateVkSurface(viewport,
+			(ImU64)VulkanContext::GetInstance().GetVulkanInstance(),
+			nullptr,
+			(ImU64*)&surface));
+
+		ImGuiVulkanRenderer* vulkanRenderer = new ImGuiVulkanRenderer(surface);
+		viewport->RendererUserData = (void*)vulkanRenderer;
+
+		vulkanRenderer->Create(viewport);
+	}
+
+	static void RendererDestroyWindow(ImGuiViewport* viewport)
+	{
+		FLARE_PROFILE_FUNCTION();
+		ImGuiVulkanRenderer* vulkanRenderer = (ImGuiVulkanRenderer*)viewport->RendererUserData;
+		delete vulkanRenderer;
+
+		viewport->RendererUserData = nullptr;
+	}
+
+	static void RendererSetWindowSize(ImGuiViewport* viewport, ImVec2 size)
+	{
+		FLARE_PROFILE_FUNCTION();
+		ImGuiVulkanRenderer* vulkanRenderer = (ImGuiVulkanRenderer*)viewport->RendererUserData;
+		vulkanRenderer->SetSize(glm::uvec2((uint32_t)size.x, (uint32_t)size.y));
+	}
+
+	static void RendererSwapBuffers(ImGuiViewport* viewport, void* renderArgs)
+	{
+		FLARE_PROFILE_FUNCTION();
+		ImGuiVulkanRenderer* vulkanRenderer = (ImGuiVulkanRenderer*)viewport->RendererUserData;
+		vulkanRenderer->Present();
+	}
+
+	static void RendererRenderWindow(ImGuiViewport* viewport, void* renderArgs)
+	{
+		FLARE_PROFILE_FUNCTION();
+		ImGuiVulkanRenderer* vulkanRenderer = (ImGuiVulkanRenderer*)viewport->RendererUserData;
+		vulkanRenderer->RenderWindow(viewport, renderArgs);
+	}
+
 	void ImGuiLayerVulkan::InitializeRenderer()
 	{
         FLARE_PROFILE_FUNCTION();
@@ -51,6 +99,13 @@ namespace Flare
 		info.ImageCount = 2;
 		info.MinImageCount = 2;
 		ImGui_ImplVulkan_Init(&info, VulkanContext::GetInstance().GetColorOnlyPass()->GetHandle());
+
+		ImGuiPlatformIO& platformIO = ImGui::GetPlatformIO();
+		platformIO.Renderer_CreateWindow = RendererCreateWindow;
+		platformIO.Renderer_DestroyWindow = RendererDestroyWindow;
+		platformIO.Renderer_SetWindowSize = RendererSetWindowSize;
+		platformIO.Renderer_SwapBuffers = RendererSwapBuffers;
+		platformIO.Renderer_RenderWindow = RendererRenderWindow;
 
 		VulkanContext::GetInstance().SetImageViewDeletionHandler([this](VkImageView imageView)
 		{

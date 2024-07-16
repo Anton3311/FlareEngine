@@ -116,6 +116,11 @@ namespace Flare
         ImGui::End();
 	}
 
+	Ref<ImGuiLayer> ImGuiLayer::GetInstance()
+	{
+		return s_Instance;
+	}
+
 	ImTextureID ImGuiLayer::GetId(const Ref<const Texture>& texture)
 	{
 		return s_Instance->GetTextureId(texture);

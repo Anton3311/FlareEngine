@@ -56,7 +56,7 @@ namespace Flare
 		}
 	}
 
-	void VulkanSwapchain::Present(Span<VkSemaphore> waitSemaphores, glm::uvec2 windowSize)
+	void VulkanSwapchain::Present(Span<const VkSemaphore> waitSemaphores, glm::uvec2 windowSize)
 	{
 		FLARE_PROFILE_FUNCTION();
 

@@ -322,7 +322,7 @@ namespace Flare
 		int32_t width, height;
 		glfwGetFramebufferSize((GLFWwindow*)m_Window->GetNativeWindow(), &width, &height);
 
-		m_Swapchain->Present(Span<VkSemaphore>(&m_CurrentSyncObjects.RenderingCompleteSemaphore, 1), glm::uvec2((uint32_t)width, (uint32_t)height));
+		m_Swapchain->Present(Span<const VkSemaphore>(&m_CurrentSyncObjects.RenderingCompleteSemaphore, 1), glm::uvec2((uint32_t)width, (uint32_t)height));
 
 		{
 			FLARE_PROFILE_SCOPE("WaitIdle");
