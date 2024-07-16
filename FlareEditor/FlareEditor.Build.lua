@@ -65,7 +65,7 @@ project "FlareEditor"
 
 	debugargs
 	{
-		"%{wks.location}/Sandbox/Sandbox.flareproj"
+		"--project=%{wks.location}/Sandbox/Sandbox.flareproj --vulkan-debug"
 	}
 
 	targetdir("%{wks.location}/bin/" .. OUTPUT_DIRECTORY)
