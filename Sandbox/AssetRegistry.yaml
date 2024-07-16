@@ -184,14 +184,6 @@ AssetRegistry:
     Parent: 0
     SubAssets:
       []
-  - Handle: 6603499577536286740
-    Type: Material
-    BuiltIn: false
-    Path: Skybox.flrmat
-    Source: File
-    Parent: 0
-    SubAssets:
-      []
   - Handle: 6908186570440597389
     Type: Shader
     BuiltIn: false
@@ -383,14 +375,6 @@ AssetRegistry:
     Type: Shader
     BuiltIn: true
     Path: ../../Content/Runtime/Shaders/Common/Camera.glsl
-    Source: File
-    Parent: 0
-    SubAssets:
-      []
-  - Handle: 16424552927406339039
-    Type: Material
-    BuiltIn: false
-    Path: Skybox.flrmat
     Source: File
     Parent: 0
     SubAssets:
