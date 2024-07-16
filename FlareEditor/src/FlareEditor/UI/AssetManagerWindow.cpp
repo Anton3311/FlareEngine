@@ -3,6 +3,8 @@
 #include "FlareCore/Assert.h"
 #include "FlareCore/Profiler/Profiler.h"
 
+#include "Flare/Core/Application.h"
+
 #include "Flare/Project/Project.h"
 
 #include "Flare/Renderer/Material.h"
@@ -250,9 +252,8 @@ namespace Flare
                 if (node)
                 {
                     node->Handle = NULL_ASSET_HANDLE;
+					m_AssetManager->RemoveFromRegistry(handle);
                 }
-
-                m_AssetManager->RemoveFromRegistry(handle);
             }
 
             if (ImGui::MenuItem("Reload"))
