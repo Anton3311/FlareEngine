@@ -20,37 +20,33 @@ namespace Flare
 		RendererStatistics& statistics,
 		const RenderView& lightView,
 		const std::vector<uint32_t>& visibleObjects,
-		Ref<Texture> cascadeTexture,
-		Ref<UniformBuffer> shadowDataBuffer,
-		Ref<DescriptorSet> set,
-		Ref<DescriptorSetPool> pool)
+		Ref<Texture> cascadeTexture)
 		: m_OpaqueObjects(opaqueObjects),
 		m_Statistics(statistics),
 		m_LightView(lightView),
 		m_VisibleObjects(visibleObjects),
-		m_CascadeTexture(cascadeTexture),
-		m_ShadowDataBuffer(shadowDataBuffer),
-		m_Set(set),
-		m_Pool(pool)
+		m_CascadeTexture(cascadeTexture)
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		m_CameraBuffer = UniformBuffer::Create(sizeof(RenderView));
-
-		constexpr size_t maxInstanceCount = 1000;
-
-		m_InstanceBuffer = ShaderStorageBuffer::Create(maxInstanceCount * sizeof(InstanceData));
 		m_Timer = GPUTimer::Create();
 
-		m_Set->WriteUniformBuffer(m_CameraBuffer, 0);
-		m_Set->WriteUniformBuffer(m_ShadowDataBuffer, 2);
-		m_Set->WriteStorageBuffer(m_InstanceBuffer, 3);
-		m_Set->FlushWrites();
+		m_CameraBuffer = UniformBuffer::Create(sizeof(RenderView));
+		m_CameraDescriptor = Renderer::GetCameraDescriptorSetPool()->AllocateSet();
+		m_CameraDescriptor->WriteUniformBuffer(m_CameraBuffer, 0);
+		m_CameraDescriptor->FlushWrites();
+
+		constexpr size_t maxInstanceCount = 1000;
+		m_InstanceBuffer = ShaderStorageBuffer::Create(maxInstanceCount * sizeof(InstanceData));
+		m_InstanceBufferDescriptor = Renderer::GetInstanceDataDescriptorSetPool()->AllocateSet();
+		m_InstanceBufferDescriptor->WriteStorageBuffer(m_InstanceBuffer, 0);
+		m_InstanceBufferDescriptor->FlushWrites();
 	}
 
 	ShadowCascadePass::~ShadowCascadePass()
 	{
-		m_Pool->ReleaseSet(m_Set);
+		Renderer::GetInstanceDataDescriptorSetPool()->ReleaseSet(m_InstanceBufferDescriptor);
+		Renderer::GetCameraDescriptorSetPool()->ReleaseSet(m_CameraDescriptor);
 	}
 
 	void ShadowCascadePass::OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
@@ -113,24 +109,20 @@ namespace Flare
 		uint32_t shadowMapResolution = GetShadowMapResolution(shadowSettings.Quality);
 		commandBuffer->SetViewportAndScisors(Math::Rect(0.0f, 0.0f, (float)shadowMapResolution, (float)shadowMapResolution));
 
-		DrawCascade(commandBuffer);
+		DrawCascade(context, commandBuffer);
 
 		commandBuffer->EndRenderTarget();
 
 		commandBuffer->StopTimer(m_Timer);
 	}
 
-	void ShadowCascadePass::DrawCascade(const Ref<CommandBuffer>& commandBuffer)
+	void ShadowCascadePass::DrawCascade(const RenderGraphContext& context, const Ref<CommandBuffer>& commandBuffer)
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
-		{
-			Ref<VulkanCommandBuffer> vulkanCommandBuffer = As<VulkanCommandBuffer>(commandBuffer);
-
-			vulkanCommandBuffer->SetPrimaryDescriptorSet(m_Set);
-			vulkanCommandBuffer->SetSecondaryDescriptorSet(nullptr);
-		}
+		commandBuffer->SetGlobalDescriptorSet(m_CameraDescriptor, 0);
+		commandBuffer->SetGlobalDescriptorSet(context.GetViewport().GlobalResources.GlobalDescriptorSetWithoutShadows, 1);
+		commandBuffer->SetGlobalDescriptorSet(m_InstanceBufferDescriptor, 2);
 
 		commandBuffer->ApplyMaterial(Renderer::GetDepthOnlyMaterial());
 

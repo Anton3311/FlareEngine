@@ -126,15 +126,8 @@ namespace Flare
 		m_PreviousLUTSteps = m_Parameters->SunTransmittanceLUTSteps;
 
 		commandBuffer->BeginRenderTarget(context.GetRenderTarget());
-
-		if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
-		{
-			Ref<VulkanCommandBuffer> commandBuffer = VulkanContext::GetInstance().GetPrimaryCommandBuffer();
-
-			commandBuffer->SetPrimaryDescriptorSet(Renderer::GetPrimaryDescriptorSet());
-			commandBuffer->SetSecondaryDescriptorSet(nullptr);
-		}
-
+		commandBuffer->SetGlobalDescriptorSet(context.GetViewport().GlobalResources.CameraDescriptorSet, 0);
+		commandBuffer->SetGlobalDescriptorSet(context.GetViewport().GlobalResources.GlobalDescriptorSet, 1);
 		commandBuffer->ApplyMaterial(m_AtmosphereMaterial);
 
 		const auto& renderTargetSpecifications = context.GetRenderTarget()->GetSpecifications();

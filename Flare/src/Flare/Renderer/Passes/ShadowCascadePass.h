@@ -25,10 +25,7 @@ namespace Flare
 			RendererStatistics& statistics,
 			const RenderView& lightView,
 			const std::vector<uint32_t>& visibleObjects,
-			Ref<Texture> cascadeTexture,
-			Ref<UniformBuffer> shadowDataBuffer,
-			Ref<DescriptorSet> set,
-			Ref<DescriptorSetPool> pool);
+			Ref<Texture> cascadeTexture);
 
 		~ShadowCascadePass();
 
@@ -47,7 +44,7 @@ namespace Flare
 			uint32_t InstanceCount = 0;
 		};
 	private:
-		void DrawCascade(const Ref<CommandBuffer>& commandBuffer);
+		void DrawCascade(const RenderGraphContext& context, const Ref<CommandBuffer>& commandBuffer);
 		void FlushBatch(const Ref<CommandBuffer>& commandBuffer, const Batch& batch);
 	private:
 		const RendererSubmitionQueue& m_OpaqueObjects;
@@ -56,11 +53,11 @@ namespace Flare
 		Ref<GPUTimer> m_Timer = nullptr;
 		Ref<Texture> m_CascadeTexture = nullptr;
 
-		Ref<UniformBuffer> m_ShadowDataBuffer = nullptr;
 		Ref<UniformBuffer> m_CameraBuffer = nullptr;
-		Ref<DescriptorSet> m_Set = nullptr;
-		Ref<DescriptorSetPool> m_Pool = nullptr;
+		Ref<DescriptorSet> m_CameraDescriptor = nullptr;
+
 		Ref<ShaderStorageBuffer> m_InstanceBuffer = nullptr;
+		Ref<DescriptorSet> m_InstanceBufferDescriptor = nullptr;
 
 		const RenderView& m_LightView;
 		const std::vector<uint32_t>& m_VisibleObjects;

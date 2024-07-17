@@ -3,7 +3,7 @@
 
 #include "BRDF.glsl"
 
-layout(std140, set = 0, binding = 1) uniform LightData
+layout(std140, set = 1, binding = 1) uniform LightData
 {
 	vec4 u_LightColor;
 	vec3 u_LightDirection;
@@ -30,12 +30,12 @@ struct SpotLightData
 	vec4 Color;
 };
 
-layout(std140, set = 0, binding = 4) buffer PointLightsData
+layout(std140, set = 1, binding = 2) buffer PointLightsData
 {
 	PointLightData[] Lights;
 } u_PointLights;
 
-layout(std140, set = 0, binding = 5) buffer SpotLightsData
+layout(std140, set = 1, binding = 3) buffer SpotLightsData
 {
 	SpotLightData[] Lights;
 } u_SpotLights;

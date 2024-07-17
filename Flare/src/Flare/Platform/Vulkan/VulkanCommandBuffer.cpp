@@ -102,35 +102,11 @@ namespace Flare
 
 		BindPipeline(pipeline);
 
-		Ref<VulkanDescriptorSet> emptyDescriptorSet = As<VulkanDescriptorSet>(VulkanContext::GetInstance().GetEmptyDescriptorSet());
-
-		ShaderDescriptorSetUsage primaryDescriptorSetUsage = metadata->DescriptorSetUsage[0];
-		if (primaryDescriptorSetUsage == ShaderDescriptorSetUsage::Used)
-		{
-			FLARE_CORE_ASSERT(m_PrimaryDescriptorSet);
-			BindDescriptorSet(m_PrimaryDescriptorSet, pipelineLayout, 0);
-		}
-		else if (primaryDescriptorSetUsage == ShaderDescriptorSetUsage::Empty)
-		{
-			BindDescriptorSet(emptyDescriptorSet, pipelineLayout, 0);
-		}
-
-		ShaderDescriptorSetUsage secondaryDescriptorSetUsage = metadata->DescriptorSetUsage[1];
-		if (secondaryDescriptorSetUsage == ShaderDescriptorSetUsage::Used)
-		{
-			FLARE_CORE_ASSERT(m_SecondaryDescriptorSet);
-			BindDescriptorSet(m_SecondaryDescriptorSet, pipelineLayout, 1);
-		}
-		else if (secondaryDescriptorSetUsage == ShaderDescriptorSetUsage::Empty)
-		{
-			BindDescriptorSet(emptyDescriptorSet, pipelineLayout, 1);
-		}
-
 		Ref<DescriptorSet> materialDescriptorSet = vulkanMaterial->GetDescriptorSet();
 		if (materialDescriptorSet)
 		{
 			vulkanMaterial->UpdateDescriptorSet();
-			BindDescriptorSet(As<VulkanDescriptorSet>(materialDescriptorSet), pipelineLayout, 2);
+			BindDescriptorSet(As<VulkanDescriptorSet>(materialDescriptorSet), pipelineLayout, 3);
 		}
 	}
 
@@ -192,19 +168,39 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		if (m_CurrentGraphicsPipeline.get() == pipeline.get())
-			return;
+		auto vulkanPipeline = As<const VulkanPipeline>(pipeline);
+		VkPipelineLayout pipelineLayout = vulkanPipeline->GetLayoutHandle();
 
-		for (uint32_t i = 0; i < 4; i++)
+		if (m_CurrentGraphicsPipeline.get() != pipeline.get())
 		{
-			m_CurrentDescriptorSets[i] = {};
+			for (uint32_t i = 0; i < 4; i++)
+			{
+				m_CurrentDescriptorSets[i] = {};
+			}
+
+			vkCmdBindPipeline(m_CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vulkanPipeline->GetHandle());
+
+			m_UsedPipelines.push_back(pipeline);
+			m_CurrentGraphicsPipeline = pipeline;
 		}
 
-		auto vulkanPipeline = As<const VulkanPipeline>(pipeline);
-		vkCmdBindPipeline(m_CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vulkanPipeline->GetHandle());
+		// Bind global descriptor sets
+		Ref<const ShaderMetadata> metadata = m_CurrentGraphicsPipeline->GetSpecifications().Shader->GetMetadata();
+		Ref<VulkanDescriptorSet> emptyDescriptorSet = As<VulkanDescriptorSet>(VulkanContext::GetInstance().GetEmptyDescriptorSet());
 
-		m_UsedPipelines.push_back(pipeline);
-		m_CurrentGraphicsPipeline = pipeline;
+		for (size_t i = 0; i < GLOBAL_DESCRIPTOR_SET_COUNT; i++)
+		{
+			ShaderDescriptorSetUsage setUsage = metadata->DescriptorSetUsage[i];
+			if (setUsage == ShaderDescriptorSetUsage::Used)
+			{
+				FLARE_CORE_ASSERT(m_GlobalDescriptorSets[i]);
+				BindDescriptorSet(m_GlobalDescriptorSets[i], pipelineLayout, (uint32_t)i);
+			}
+			else if (setUsage == ShaderDescriptorSetUsage::Empty)
+			{
+				BindDescriptorSet(emptyDescriptorSet, pipelineLayout, (uint32_t)i);
+			}
+		}
 	}
 
 	void VulkanCommandBuffer::BindVertexBuffer(Ref<const VertexBuffer> buffer, uint32_t index)
@@ -353,6 +349,12 @@ namespace Flare
 		vkCmdBlitImage(m_CommandBuffer, sourceImage, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, destinationImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &blit, blitFilter);
 	}
 
+	void VulkanCommandBuffer::SetGlobalDescriptorSet(Ref<const DescriptorSet> set, uint32_t index)
+	{
+		FLARE_CORE_ASSERT(index < 3);
+		m_GlobalDescriptorSets[index] = As<const VulkanDescriptorSet>(set);
+	}
+
 	void VulkanCommandBuffer::DispatchCompute(Ref<ComputePipeline> pipeline, const glm::uvec3& groupCount)
 	{
 		FLARE_PROFILE_FUNCTION();
@@ -389,8 +391,10 @@ namespace Flare
 		m_CurrentGraphicsPipeline = nullptr;
 		m_CurrentMesh = nullptr;
 
-		m_PrimaryDescriptorSet = nullptr;
-		m_SecondaryDescriptorSet = nullptr;
+		for (size_t i = 0; i < GLOBAL_DESCRIPTOR_SET_COUNT; i++)
+		{
+			m_GlobalDescriptorSets[i] = nullptr;
+		}
 
 		m_UsedPipelines.clear();
 	}
@@ -721,16 +725,6 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 		VkDescriptorSet setHandle = descriptorSet->GetHandle();
 		vkCmdBindDescriptorSets(m_CommandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, index, 1, &setHandle, 0, nullptr);
-	}
-
-	void VulkanCommandBuffer::SetPrimaryDescriptorSet(const Ref<DescriptorSet>& set)
-	{
-		m_PrimaryDescriptorSet = As<VulkanDescriptorSet>(set);
-	}
-
-	void VulkanCommandBuffer::SetSecondaryDescriptorSet(const Ref<DescriptorSet>& set)
-	{
-		m_SecondaryDescriptorSet = As<VulkanDescriptorSet>(set);
 	}
 
 	void VulkanCommandBuffer::DepthImagesBarrier(Span<VkImage> images, bool hasStencil,

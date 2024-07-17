@@ -39,9 +39,6 @@ namespace Flare
 
 		bool RenderGraphRebuildIsRequired = false;
 
-		Ref<UniformBuffer> CameraBuffer = nullptr;
-		Ref<UniformBuffer> LightBuffer = nullptr;
-
 		Ref<Texture> WhiteTexture = nullptr;
 		Ref<Texture> DefaultNormalMap = nullptr;
 		Ref<Texture> DummyDepthTexture = nullptr;
@@ -59,12 +56,11 @@ namespace Flare
 
 		// Lighting
 		std::vector<PointLightData> PointLights;
-		Ref<ShaderStorageBuffer> PointLightsShaderBuffer = nullptr;
 		std::vector<SpotLightData> SpotLights;
-		Ref<ShaderStorageBuffer> SpotLightsShaderBuffer = nullptr;
 
-		Ref<DescriptorSet> PrimaryDescriptorSet = nullptr;
-		Ref<DescriptorSetPool> PrimaryDescriptorPool = nullptr;
+		Ref<DescriptorSetPool> CameraDescriptorSetPool = nullptr;
+		Ref<DescriptorSetPool> GlobalDescriptorSetPool = nullptr;
+		Ref<DescriptorSetPool> InstanceDataDescriptorSetPool = nullptr;
 
 		// Decals
 		Ref<DescriptorSetPool> DecalsDescriptorSetPool = nullptr;
@@ -92,18 +88,6 @@ namespace Flare
 
 	void Renderer::Initialize()
 	{
-		size_t maxPointLights = 32;
-		size_t maxSpotLights = 32;
-
-		s_RendererData.CameraBuffer = UniformBuffer::Create(sizeof(RenderView));
-		s_RendererData.LightBuffer = UniformBuffer::Create(sizeof(LightData));
-
-		s_RendererData.PointLightsShaderBuffer = ShaderStorageBuffer::Create(maxPointLights * sizeof(PointLightData));
-		s_RendererData.PointLightsShaderBuffer->SetDebugName("PointLightsDataBuffer");
-
-		s_RendererData.SpotLightsShaderBuffer = ShaderStorageBuffer::Create(maxSpotLights * sizeof(SpotLightData));
-		s_RendererData.SpotLightsShaderBuffer->SetDebugName("SpotLightsDataBuffer");
-
 		{
 			uint32_t whiteTextureData = 0xffffffff;
 			s_RendererData.WhiteTexture = Texture::Create(1, 1, &whiteTextureData, TextureFormat::RGBA8);
@@ -143,86 +127,77 @@ namespace Flare
 
 		if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
 		{
-			VkDescriptorSetLayoutBinding bindings[6 + 4 + 4] = {};
-			// Camera
-			bindings[0].binding = 0;
-			bindings[0].descriptorCount = 1;
-			bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-			bindings[0].pImmutableSamplers = nullptr;
-			bindings[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
-
-			// Light
-			bindings[1].binding = 1;
-			bindings[1].descriptorCount = 1;
-			bindings[1].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-			bindings[1].pImmutableSamplers = nullptr;
-			bindings[1].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-			
-			// Shadow data
-			bindings[2].binding = 2;
-			bindings[2].descriptorCount = 1;
-			bindings[2].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-			bindings[2].pImmutableSamplers = nullptr;
-			bindings[2].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-			// Instance data
-			bindings[3].binding = 3;
-			bindings[3].descriptorCount = 1;
-			bindings[3].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-			bindings[3].pImmutableSamplers = nullptr;
-			bindings[3].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-
-			// Point lights
-			bindings[4].binding = 4;
-			bindings[4].descriptorCount = 1;
-			bindings[4].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-			bindings[4].pImmutableSamplers = nullptr;
-			bindings[4].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-			// Spot lights
-			bindings[5].binding = 5;
-			bindings[5].descriptorCount = 1;
-			bindings[5].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-			bindings[5].pImmutableSamplers = nullptr;
-			bindings[5].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-			// Shadow cascades
-			for (uint32_t i = 0; i < 4; i++)
 			{
-				bindings[i + 6].binding = i + 28;
-				bindings[i + 6].descriptorCount = 1;
-				bindings[i + 6].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-				bindings[i + 6].pImmutableSamplers = nullptr;
-				bindings[i + 6].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+				VkDescriptorSetLayoutBinding bindings[4 + 4 + 4] = {};
+				auto& shadowDataBinding = bindings[0];
+				shadowDataBinding.binding = 0;
+				shadowDataBinding.descriptorCount = 1;
+				shadowDataBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+				shadowDataBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+
+				auto& lightDataBinding = bindings[1];
+				lightDataBinding.binding = 1;
+				lightDataBinding.descriptorCount = 1;
+				lightDataBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+				lightDataBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+
+				auto& pointLightsBinding = bindings[2];
+				pointLightsBinding.binding = 2;
+				pointLightsBinding.descriptorCount = 1;
+				pointLightsBinding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+				pointLightsBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+
+				auto& spotLightsBinding = bindings[3];
+				spotLightsBinding.binding = 3;
+				spotLightsBinding.descriptorCount = 1;
+				spotLightsBinding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+				spotLightsBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+
+				for (uint32_t i = 0; i < ShadowSettings::MaxCascades; i++)
+				{
+					auto& cascadeBinding = bindings[i + 4];
+					cascadeBinding.binding = i + 4;
+					cascadeBinding.descriptorCount = 1;
+					cascadeBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+					cascadeBinding.pImmutableSamplers = nullptr;
+					cascadeBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+				}
+
+				for (uint32_t i = 0; i < ShadowSettings::MaxCascades; i++)
+				{
+					auto& cascadeBinding = bindings[i + 8];
+					cascadeBinding.binding = i + 8;
+					cascadeBinding.descriptorCount = 1;
+					cascadeBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+					cascadeBinding.pImmutableSamplers = nullptr;
+					cascadeBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+				}
+
+				s_RendererData.GlobalDescriptorSetPool = CreateRef<VulkanDescriptorSetPool>(8, Span(bindings, 12));
 			}
 
-			// Shadow cascades (with comapare samplers)
-			for (uint32_t i = 0; i < 4; i++)
 			{
-				bindings[i + 10].binding = i + 32;
-				bindings[i + 10].descriptorCount = 1;
-				bindings[i + 10].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-				bindings[i + 10].pImmutableSamplers = nullptr;
-				bindings[i + 10].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+				VkDescriptorSetLayoutBinding cameraBinding{};
+				cameraBinding.binding = 0;
+				cameraBinding.descriptorCount = 1;
+				cameraBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+				cameraBinding.pImmutableSamplers = nullptr;
+				cameraBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+
+				s_RendererData.CameraDescriptorSetPool = CreateRef<VulkanDescriptorSetPool>(32, Span(&cameraBinding, 1));
 			}
 
-			s_RendererData.PrimaryDescriptorPool = CreateRef<VulkanDescriptorSetPool>(64, Span(bindings, 6 + 4 + 4));
-			s_RendererData.PrimaryDescriptorSet = s_RendererData.PrimaryDescriptorPool->AllocateSet();
-			s_RendererData.PrimaryDescriptorSet->SetDebugName("PrimarySet");
-
-			// Setup primary descriptor set
-			s_RendererData.PrimaryDescriptorSet->WriteUniformBuffer(s_RendererData.CameraBuffer, 0);
-			s_RendererData.PrimaryDescriptorSet->WriteUniformBuffer(s_RendererData.LightBuffer, 1);
-			s_RendererData.PrimaryDescriptorSet->WriteStorageBuffer(s_RendererData.PointLightsShaderBuffer, 4);
-			s_RendererData.PrimaryDescriptorSet->WriteStorageBuffer(s_RendererData.SpotLightsShaderBuffer, 5);
-
-			for (size_t i = 0; i < ShadowSettings::MaxCascades; i++)
 			{
-				s_RendererData.PrimaryDescriptorSet->WriteImage(s_RendererData.WhiteTexture, (uint32_t)(28 + i));
+				VkDescriptorSetLayoutBinding instanceDataBinding{};
+				instanceDataBinding.binding = 0;
+				instanceDataBinding.descriptorCount = 1;
+				instanceDataBinding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+				instanceDataBinding.pImmutableSamplers = nullptr;
+				instanceDataBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+
+				s_RendererData.InstanceDataDescriptorSetPool = CreateRef<VulkanDescriptorSetPool>(32, Span(&instanceDataBinding, 1));
 			}
 
-			s_RendererData.PrimaryDescriptorSet->FlushWrites();
-			
 			// Decals descriptor set
 			VkDescriptorSetLayoutBinding decalDepthBinding{};
 			decalDepthBinding.binding = 0;
@@ -230,7 +205,7 @@ namespace Flare
 			decalDepthBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 			decalDepthBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
-			s_RendererData.DecalsDescriptorSetPool = CreateRef<VulkanDescriptorSetPool>(2, Span(&decalDepthBinding, 1));
+			s_RendererData.DecalsDescriptorSetPool = CreateRef<VulkanDescriptorSetPool>(32, Span(&decalDepthBinding, 1));
 		}
 
 		Project::OnProjectOpen.Bind(ReloadShaders);
@@ -238,8 +213,6 @@ namespace Flare
 
 	void Renderer::Shutdown()
 	{
-		s_RendererData.PrimaryDescriptorPool->ReleaseSet(s_RendererData.PrimaryDescriptorSet);
-
 		s_RendererData = {};
 	}
 
@@ -285,24 +258,24 @@ namespace Flare
 			FLARE_PROFILE_SCOPE("UpdateLightUniformBuffer");
 			s_RendererData.CurrentViewport->FrameData.Light.PointLightsCount = (uint32_t)s_RendererData.PointLights.size();
 			s_RendererData.CurrentViewport->FrameData.Light.SpotLightsCount = (uint32_t)s_RendererData.SpotLights.size();
-			s_RendererData.LightBuffer->SetData(&viewport.FrameData.Light, sizeof(viewport.FrameData.Light), 0);
+			s_RendererData.CurrentViewport->GlobalResources.LightBuffer->SetData(&viewport.FrameData.Light, sizeof(viewport.FrameData.Light), 0);
 		}
 
 		{
 			FLARE_PROFILE_SCOPE("UpdateCameraUniformBuffer");
 			const auto& spec = viewport.RenderTarget->GetSpecifications();
 			viewport.FrameData.Camera.ViewportSize = glm::ivec2(spec.Width, spec.Height);
-			s_RendererData.CameraBuffer->SetData(&viewport.FrameData.Camera, sizeof(RenderView), 0);
+			s_RendererData.CurrentViewport->GlobalResources.CameraBuffer->SetData(&viewport.FrameData.Camera, sizeof(RenderView), 0);
 		}
 
 		{
 			FLARE_PROFILE_SCOPE("UploadPointLightsData");
-			s_RendererData.PointLightsShaderBuffer->SetData(MemorySpan::FromVector(s_RendererData.PointLights), 0, commandBuffer);
+			s_RendererData.CurrentViewport->GlobalResources.PointLightsBuffer->SetData(MemorySpan::FromVector(s_RendererData.PointLights), 0, commandBuffer);
 		}
 
 		{
 			FLARE_PROFILE_SCOPE("UploadSpotLightsData");
-			s_RendererData.SpotLightsShaderBuffer->SetData(MemorySpan::FromVector(s_RendererData.SpotLights), 0, commandBuffer);
+			s_RendererData.CurrentViewport->GlobalResources.SpotLightsBuffer->SetData(MemorySpan::FromVector(s_RendererData.SpotLights), 0, commandBuffer);
 		}
 
 		{
@@ -401,6 +374,21 @@ namespace Flare
 		return s_RendererData.DepthOnlyMeshMaterial;
 	}
 
+	Ref<DescriptorSetPool> Renderer::GetGlobalDescriptorSetPool()
+	{
+		return s_RendererData.GlobalDescriptorSetPool;
+	}
+
+	Ref<DescriptorSetPool> Renderer::GetCameraDescriptorSetPool()
+	{
+		return s_RendererData.CameraDescriptorSetPool;
+	}
+
+	Ref<DescriptorSetPool> Renderer::GetInstanceDataDescriptorSetPool()
+	{
+		return s_RendererData.InstanceDataDescriptorSetPool;
+	}
+
 	const ShadowSettings& Renderer::GetShadowSettings()
 	{
 		return s_RendererData.ShadowMappingSettings;
@@ -419,37 +407,21 @@ namespace Flare
 		return s_RendererData.RenderGraphRebuildIsRequired;
 	}
 
-	Ref<DescriptorSet> Renderer::GetPrimaryDescriptorSet()
-	{
-		return s_RendererData.PrimaryDescriptorSet;
-	}
-
-	Ref<const DescriptorSetLayout> Renderer::GetPrimaryDescriptorSetLayout()
-	{
-		return s_RendererData.PrimaryDescriptorPool->GetLayout();
-	}
-
 	Ref<const DescriptorSetLayout> Renderer::GetDecalsDescriptorSetLayout()
 	{
 		return s_RendererData.DecalsDescriptorSetPool->GetLayout();
 	}
 
-	static void SetupPrimaryDescriptorSet(Ref<DescriptorSet> set, Ref<UniformBuffer> shadowData)
+	static void SetupPrimaryDescriptorSet(Ref<DescriptorSet> set, Ref<Sampler> comparisonSampler)
 	{
-		set->WriteUniformBuffer(s_RendererData.CameraBuffer, 0);
-		set->WriteUniformBuffer(s_RendererData.LightBuffer, 1);
-		set->WriteUniformBuffer(shadowData, 2);
-		set->WriteStorageBuffer(s_RendererData.PointLightsShaderBuffer, 4);
-		set->WriteStorageBuffer(s_RendererData.SpotLightsShaderBuffer, 5);
-
 		for (size_t i = 0; i < ShadowSettings::MaxCascades; i++)
 		{
-			set->WriteImage(s_RendererData.DummyDepthTexture, (uint32_t)(28 + i));
+			set->WriteImage(s_RendererData.DummyDepthTexture, (uint32_t)(4 + i));
 		}
 
 		for (size_t i = 0; i < ShadowSettings::MaxCascades; i++)
 		{
-			set->WriteImage(s_RendererData.DummyDepthTexture, (uint32_t)(32 + i));
+			set->WriteImage(s_RendererData.DummyDepthTexture, comparisonSampler, (uint32_t)(8 + i));
 		}
 
 		set->FlushWrites();
@@ -471,8 +443,6 @@ namespace Flare
 			return shadowPass;
 		}
 
-		Ref<UniformBuffer> shadowDataBuffer = shadowPass->GetShadowDataBuffer();
-
 		uint32_t textureResolution = GetShadowMapResolution(s_RendererData.ShadowMappingSettings.Quality);
 
 		TextureSpecifications cascadeSpec{};
@@ -488,24 +458,6 @@ namespace Flare
 			cascadeTextures[cascadeIndex] = Texture::Create(cascadeSpec);
 			cascadeTextures[cascadeIndex]->SetDebugName(fmt::format("CascadeTexture.{}", cascadeIndex));
 
-			Ref<DescriptorSet> set = s_RendererData.PrimaryDescriptorPool->AllocateSet();
-			set->WriteUniformBuffer(s_RendererData.LightBuffer, 1);
-			set->WriteStorageBuffer(s_RendererData.PointLightsShaderBuffer, 4);
-			set->WriteStorageBuffer(s_RendererData.SpotLightsShaderBuffer, 5);
-
-			for (uint32_t i = 0; i < ShadowSettings::MaxCascades; i++)
-			{
-				set->WriteImage(s_RendererData.DummyDepthTexture, 28 + i);
-			}
-
-			for (uint32_t i = 0; i < ShadowSettings::MaxCascades; i++)
-			{
-				set->WriteImage(s_RendererData.DummyDepthTexture, shadowPass->GetCompareSampler(), 32 + i);
-			}
-
-			set->FlushWrites();
-			set->SetDebugName(fmt::format("Cascade{}.PrimaryDescriptorSet", cascadeIndex));
-
 			RenderGraphPassSpecifications cascadePassSpec{};
 			cascadePassSpec.SetDebugName(fmt::format("ShadowCascadePass{}", cascadeIndex));
 			cascadePassSpec.AddOutput(cascadeTextures[cascadeIndex], 0, 1.0f);
@@ -515,9 +467,7 @@ namespace Flare
 				s_RendererData.Statistics,
 				shadowPass->GetLightView(cascadeIndex),
 				shadowPass->GetVisibleObjects(cascadeIndex),
-				cascadeTextures[cascadeIndex],
-				shadowDataBuffer,
-				set, s_RendererData.PrimaryDescriptorPool);
+				cascadeTextures[cascadeIndex]);
 
 			viewport.Graph.AddPass(cascadePassSpec, cascadePass);
 		}
@@ -530,15 +480,9 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 		std::array<Ref<Texture>, ShadowSettings::MaxCascades> cascadeTextures = { nullptr };
 		Ref<ShadowPass> shadowPass = ConfigureShadowPass(viewport, cascadeTextures);
-		Ref<UniformBuffer> shadowDataBuffer = shadowPass->GetShadowDataBuffer();
 
-		Ref<DescriptorSet> primarySet = s_RendererData.PrimaryDescriptorPool->AllocateSet();
-		primarySet->SetDebugName("PrimarySet");
-		SetupPrimaryDescriptorSet(primarySet, shadowDataBuffer);
-
-		Ref<DescriptorSet> primarySetWithoutShadows = s_RendererData.PrimaryDescriptorPool->AllocateSet();
-		primarySetWithoutShadows->SetDebugName("PrimarySetWithoutShadows");
-		SetupPrimaryDescriptorSet(primarySetWithoutShadows, shadowDataBuffer);
+		SetupPrimaryDescriptorSet(viewport.GlobalResources.GlobalDescriptorSet, shadowPass->GetCompareSampler());
+		SetupPrimaryDescriptorSet(viewport.GlobalResources.GlobalDescriptorSetWithoutShadows, shadowPass->GetCompareSampler());
 
 		RenderGraphPassSpecifications geometryPass{};
 		geometryPass.SetDebugName("GeometryPass");
@@ -548,6 +492,15 @@ namespace Flare
 
 		if (viewport.IsShadowMappingEnabled())
 		{
+			Ref<DescriptorSet> set = viewport.GlobalResources.GlobalDescriptorSet;
+			for (uint32_t i = 0; i < (uint32_t)Renderer::GetShadowSettings().Cascades; i++)
+			{
+				set->WriteImage(cascadeTextures[i], 4 + i);
+				set->WriteImage(cascadeTextures[i], shadowPass->GetCompareSampler(), 8 + i);
+			}
+
+			set->FlushWrites();
+
 			for (size_t i = 0; i < cascadeTextures.size(); i++)
 			{
 				if (cascadeTextures[i] == nullptr)
@@ -555,38 +508,19 @@ namespace Flare
 
 				geometryPass.AddInput(cascadeTextures[i]);
 			}
-
-			// Fill first cascades with textures from shadow casacde passes,
-			// the rest of cascades were filled with white textures when setting up the descriptor set
-			for (uint32_t i = 0; i < (uint32_t)s_RendererData.ShadowMappingSettings.Cascades; i++)
-			{
-				primarySet->WriteImage(cascadeTextures[i], 28 + i);
-				primarySet->WriteImage(cascadeTextures[i], shadowPass->GetCompareSampler(), 32 + i);
-			}
 		}
-
-		primarySet->FlushWrites();
 
 		viewport.Graph.AddPass(geometryPass, CreateRef<GeometryPass>(
 			s_RendererData.OpaqueQueue,
-			s_RendererData.Statistics,
-			primarySet,
-			primarySetWithoutShadows,
-			s_RendererData.PrimaryDescriptorPool));
+			s_RendererData.Statistics));
 
 		// Decal pass
 		RenderGraphPassSpecifications decalPass{};
 		decalPass.AddInput(viewport.DepthTexture);
 		decalPass.AddOutput(viewport.ColorTexture, 0);
 
-		Ref<DescriptorSet> decalPrimarySet = s_RendererData.PrimaryDescriptorPool->AllocateSet();
-		decalPrimarySet->SetDebugName("DecalPrimarySet");
-		SetupPrimaryDescriptorSet(decalPrimarySet, shadowDataBuffer);
-
 		viewport.Graph.AddPass(decalPass, CreateRef<DecalsPass>(
 			s_RendererData.Decals,
-			decalPrimarySet,
-			s_RendererData.PrimaryDescriptorPool,
 			s_RendererData.DecalsDescriptorSetPool,
 			viewport.DepthTexture));
 	}

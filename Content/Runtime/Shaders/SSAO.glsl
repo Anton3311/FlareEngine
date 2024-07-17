@@ -25,8 +25,8 @@ void main()
 
 layout(location = 0) in vec2 i_UV;
 
-layout(set = 2, binding = 0) uniform sampler2D u_NormalsTexture;
-layout(set = 2, binding = 1) uniform sampler2D u_DepthTexture;
+layout(set = 3, binding = 0) uniform sampler2D u_NormalsTexture;
+layout(set = 3, binding = 1) uniform sampler2D u_DepthTexture;
 
 layout(std140, push_constant) uniform Params
 {

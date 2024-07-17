@@ -1,7 +1,41 @@
 #include "Viewport.h"
 
+#include "Flare/Renderer/Renderer.h"
+#include "Flare/Renderer/UniformBuffer.h"
+#include "Flare/Renderer/ShaderStorageBuffer.h"
+#include "Flare/Renderer/DescriptorSet.h"
+
+#include "Flare/Renderer/Passes/ShadowPass.h"
+
 namespace Flare
 {
+	Viewport::Viewport()
+	{
+		FLARE_PROFILE_FUNCTION();
+		GlobalResources.CameraBuffer = UniformBuffer::Create(sizeof(RenderView));
+		GlobalResources.LightBuffer = UniformBuffer::Create(sizeof(LightData));
+		GlobalResources.ShadowDataBuffer = UniformBuffer::Create(sizeof(ShadowPass::ShadowData));
+		GlobalResources.PointLightsBuffer = ShaderStorageBuffer::Create(16 * sizeof(PointLightData));
+		GlobalResources.SpotLightsBuffer = ShaderStorageBuffer::Create(16 * sizeof(SpotLightData));
+
+		GlobalResources.CameraDescriptorSet = Renderer::GetCameraDescriptorSetPool()->AllocateSet();
+		GlobalResources.CameraDescriptorSet->WriteUniformBuffer(GlobalResources.CameraBuffer, 0);
+		GlobalResources.CameraDescriptorSet->FlushWrites();
+
+		GlobalResources.GlobalDescriptorSet = Renderer::GetGlobalDescriptorSetPool()->AllocateSet();
+		GlobalResources.GlobalDescriptorSetWithoutShadows = Renderer::GetGlobalDescriptorSetPool()->AllocateSet();
+		
+		SetupGlobalDescriptorSet(GlobalResources.GlobalDescriptorSet);
+		SetupGlobalDescriptorSet(GlobalResources.GlobalDescriptorSetWithoutShadows);
+	}
+
+	Viewport::~Viewport()
+	{
+		Renderer::GetCameraDescriptorSetPool()->ReleaseSet(GlobalResources.CameraDescriptorSet);
+		Renderer::GetGlobalDescriptorSetPool()->ReleaseSet(GlobalResources.GlobalDescriptorSet);
+		Renderer::GetGlobalDescriptorSetPool()->ReleaseSet(GlobalResources.GlobalDescriptorSetWithoutShadows);
+	}
+
 	void Viewport::Resize(glm::ivec2 position, glm::ivec2 size)
 	{
 		m_Position = position;
@@ -33,5 +67,14 @@ namespace Flare
 
 		m_DebugRenderingEnabled = enabled;
 		Graph.SetNeedsRebuilding();
+	}
+
+	void Viewport::SetupGlobalDescriptorSet(Ref<DescriptorSet> set)
+	{
+		set->WriteUniformBuffer(GlobalResources.ShadowDataBuffer, 0);
+		set->WriteUniformBuffer(GlobalResources.LightBuffer, 1);
+		set->WriteStorageBuffer(GlobalResources.PointLightsBuffer, 2);
+		set->WriteStorageBuffer(GlobalResources.SpotLightsBuffer, 3);
+		set->FlushWrites();
 	}
 }

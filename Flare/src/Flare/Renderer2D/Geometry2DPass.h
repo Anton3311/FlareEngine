@@ -18,7 +18,7 @@ namespace Flare
 		void OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer) override;
 	private:
 		void ReleaseDescriptorSets();
-		void FlushBatch(const QuadsBatch& batch, Ref<CommandBuffer> commandBuffer);
+		void FlushBatch(const RenderGraphContext& context, const QuadsBatch& batch, Ref<CommandBuffer> commandBuffer);
 	private:
 		const Renderer2DFrameData& m_FrameData;
 		const Renderer2DLimits& m_RendererLimits;

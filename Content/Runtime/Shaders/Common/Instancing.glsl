@@ -5,7 +5,7 @@ struct InstanceData
 	vec4 PackedTransform2;
 };
 
-layout(std140, set = 0, binding = 3) readonly buffer InstaceData
+layout(std140, set = 2, binding = 0) readonly buffer InstaceData
 {
 	InstanceData u_InstanceData[];
 };

@@ -19,11 +19,13 @@ namespace Flare
 
 	TextPass::~TextPass()
 	{
+		FLARE_PROFILE_FUNCTION();
 		ReleaseDescriptorSets();
 	}
 
 	void TextPass::OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
 	{
+		FLARE_PROFILE_FUNCTION();
 		ReleaseDescriptorSets();
 
 		if (m_FrameData.TextQuadCount > 0)
@@ -49,7 +51,7 @@ namespace Flare
 
 			Ref<const DescriptorSetLayout> layouts[] =
 			{
-				Renderer::GetPrimaryDescriptorSetLayout(),
+				Renderer::GetCameraDescriptorSetPool()->GetLayout(),
 				m_FrameData.TextDescriptorSetsPool->GetLayout()
 			};
 
@@ -60,10 +62,9 @@ namespace Flare
 		}
 
 		commandBuffer->BeginRenderTarget(context.GetRenderTarget());
-		
-		Ref<VulkanCommandBuffer> vulkanCommandBuffer = As<VulkanCommandBuffer>(commandBuffer);
-		vulkanCommandBuffer->BindPipeline(m_TextPipeline);
-		vulkanCommandBuffer->SetViewportAndScisors(Math::Rect(glm::vec2(0.0f), (glm::vec2)renderTarget->GetSize()));
+		commandBuffer->SetViewportAndScisors(Math::Rect(glm::vec2(0.0f), (glm::vec2)renderTarget->GetSize()));
+
+		commandBuffer->SetGlobalDescriptorSet(context.GetViewport().GlobalResources.CameraDescriptorSet, 0);
 		
 		for (const auto& batch : m_FrameData.TextBatches)
 		{
@@ -78,19 +79,16 @@ namespace Flare
 
 	void TextPass::FlushBatch(const TextBatch& batch, Ref<CommandBuffer> commandBuffer)
 	{
-		Ref<VulkanCommandBuffer> vulkanCommandBuffer = As<VulkanCommandBuffer>(commandBuffer);
-
+		FLARE_PROFILE_FUNCTION();
 		Ref<DescriptorSet> set = m_FrameData.TextDescriptorSetsPool->AllocateSet();
-		m_UsedSets.push_back(set);
-
 		set->SetDebugName("TextDescriptorSet");
 		set->WriteImage(batch.Font->GetAtlas(), 0);
 		set->FlushWrites();
 
-		VkPipelineLayout pipelineLayout = As<const VulkanPipeline>(m_TextPipeline)->GetLayoutHandle();
+		m_UsedSets.push_back(set);
 
-		vulkanCommandBuffer->BindDescriptorSet(As<VulkanDescriptorSet>(Renderer::GetPrimaryDescriptorSet()), pipelineLayout, 0);
-		vulkanCommandBuffer->BindDescriptorSet(As<VulkanDescriptorSet>(set), pipelineLayout, 1);
+		commandBuffer->SetGlobalDescriptorSet(set, 1);
+		commandBuffer->BindPipeline(m_TextPipeline);
 
 		commandBuffer->BindVertexBuffers(Span((Ref<const VertexBuffer>)m_VertexBuffer), 0);
 		commandBuffer->BindIndexBuffer(m_IndexBuffer);
@@ -99,6 +97,7 @@ namespace Flare
 
 	void TextPass::ReleaseDescriptorSets()
 	{
+		FLARE_PROFILE_FUNCTION();
 		for (const auto& set : m_UsedSets)
 		{
 			m_FrameData.TextDescriptorSetsPool->ReleaseSet(set);

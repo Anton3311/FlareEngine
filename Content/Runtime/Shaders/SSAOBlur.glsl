@@ -22,8 +22,8 @@ void main()
 
 layout(location = 0) in vec2 i_UV;
 
-layout(set = 2, binding = 0) uniform sampler2D u_AOTexture;
-layout(set = 2, binding = 1) uniform sampler2D u_ColorTexture;
+layout(set = 3, binding = 0) uniform sampler2D u_AOTexture;
+layout(set = 3, binding = 1) uniform sampler2D u_ColorTexture;
 
 layout(location = 0) out vec4 o_Color;
 

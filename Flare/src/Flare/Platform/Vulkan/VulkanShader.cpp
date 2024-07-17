@@ -145,8 +145,6 @@ namespace Flare
 
 			for (const auto& descriptorProperty : m_Metadata->DescriptorProperties)
 			{
-				FLARE_CORE_ASSERT(descriptorProperty.Set < 3);
-
 				m_DescriptorSetsUsageMask |= (1 << descriptorProperty.Set);
 
 				if (descriptorProperty.Set != GetMaterialDescriptorSetIndex(m_Metadata->Type))
@@ -186,33 +184,44 @@ namespace Flare
 			}
 		}
 
-		Ref<const VulkanDescriptorSetLayout> primaryDescriptorSet = As<const VulkanDescriptorSetLayout>(Renderer::GetPrimaryDescriptorSetLayout());
-		Ref<DescriptorSetLayout> emptyDescriptorSetLayout = VulkanContext::GetInstance().GetEmptyDescriptorSetLayout();
+		Ref<const VulkanDescriptorSetLayout> cameraDescriptorLayout = As<const VulkanDescriptorSetLayout>(Renderer::GetCameraDescriptorSetPool()->GetLayout());
+		Ref<const VulkanDescriptorSetLayout> globalDescriptorSetLayout = As<const VulkanDescriptorSetLayout>(Renderer::GetGlobalDescriptorSetPool()->GetLayout());
+		Ref<const VulkanDescriptorSetLayout> instanceDescriptorLayout = As<const VulkanDescriptorSetLayout>(Renderer::GetInstanceDataDescriptorSetPool()->GetLayout());
+		Ref<const VulkanDescriptorSetLayout> emptyDescriptorSetLayout = As<const VulkanDescriptorSetLayout>(VulkanContext::GetInstance().GetEmptyDescriptorSetLayout());
 
 		std::vector<VkPushConstantRange> pushConstantsRanges;
-		VkDescriptorSetLayout descriptorSetLayouts[3] = { nullptr };
+		VkDescriptorSetLayout descriptorSetLayouts[4] = { nullptr };
 
 		if (HAS_BIT(m_DescriptorSetsUsageMask, 1 << 0))
-			descriptorSetLayouts[0] = primaryDescriptorSet->GetHandle();
+			descriptorSetLayouts[0] = cameraDescriptorLayout->GetHandle();
 
-		if (HAS_BIT(m_DescriptorSetsUsageMask, 1 << 1))
+		switch (m_Metadata->Type)
 		{
-			switch (m_Metadata->Type)
-			{
-			case ShaderType::Decal:
+		case ShaderType::Decal:
+			if (HAS_BIT(m_DescriptorSetsUsageMask, 1 << 1))
 				descriptorSetLayouts[1] = As<const VulkanDescriptorSetLayout>(Renderer::GetDecalsDescriptorSetLayout())->GetHandle();
-				break;
-			case ShaderType::_2D:
+			if (HAS_BIT(m_DescriptorSetsUsageMask, 1 << 2))
+				descriptorSetLayouts[2] = instanceDescriptorLayout->GetHandle();
+			break;
+		case ShaderType::Surface:
+			if (HAS_BIT(m_DescriptorSetsUsageMask, 1 << 1))
+				descriptorSetLayouts[1] = globalDescriptorSetLayout->GetHandle();
+			if (HAS_BIT(m_DescriptorSetsUsageMask, 1 << 2))
+				descriptorSetLayouts[2] = instanceDescriptorLayout->GetHandle();
+			break;
+		case ShaderType::FullscreenQuad:
+			if (HAS_BIT(m_DescriptorSetsUsageMask, 1 << 1))
+				descriptorSetLayouts[1] = globalDescriptorSetLayout->GetHandle();
+			break;
+		case ShaderType::_2D:
+			if (HAS_BIT(m_DescriptorSetsUsageMask, 1 << 1))
 				descriptorSetLayouts[1] = As<const VulkanDescriptorSetLayout>(Renderer2D::GetDescriptorSetLayout())->GetHandle();
-				break;
-			default:
-				FLARE_CORE_ASSERT(false);
-			}
+			break;
 		}
 
 		if (m_SetPool)
 		{
-			descriptorSetLayouts[2] = As<const VulkanDescriptorSetLayout>(m_SetPool->GetLayout())->GetHandle();
+			descriptorSetLayouts[3] = As<const VulkanDescriptorSetLayout>(m_SetPool->GetLayout())->GetHandle();
 		}
 
 		for (size_t i = 0; i < m_Metadata->PushConstantsRanges.size(); i++)
@@ -236,7 +245,7 @@ namespace Flare
 		}
 
 		uint32_t setLayoutCount = 0;
-		for (uint32_t i = 0; i < 3; i++)
+		for (uint32_t i = 0; i < 4; i++)
 		{
 			if (descriptorSetLayouts[i] != nullptr)
 				setLayoutCount = glm::max(setLayoutCount, i + 1);
@@ -245,7 +254,7 @@ namespace Flare
 		for (uint32_t i = 0; i < setLayoutCount; i++)
 		{
 			if (descriptorSetLayouts[i] == nullptr)
-				descriptorSetLayouts[i] = As<VulkanDescriptorSetLayout>(emptyDescriptorSetLayout)->GetHandle();
+				descriptorSetLayouts[i] = emptyDescriptorSetLayout->GetHandle();
 		}
 
 		// Create pipeline layout

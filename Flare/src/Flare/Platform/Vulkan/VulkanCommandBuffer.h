@@ -61,6 +61,8 @@ namespace Flare
 		void Blit(Ref<FrameBuffer> source, uint32_t sourceAttachment, Ref<FrameBuffer> destination, uint32_t destinationAttachment, TextureFiltering filter) override;
 		void Blit(Ref<Texture> source, Ref<Texture> destination, TextureFiltering filter) override;
 
+		void SetGlobalDescriptorSet(Ref<const DescriptorSet> set, uint32_t index) override;
+
 		void DispatchCompute(Ref<ComputePipeline> pipeline, const glm::uvec3& groupCount) override;
 
 		void StartTimer(Ref<GPUTimer> timer) override;
@@ -90,9 +92,6 @@ namespace Flare
 		void BindDescriptorSet(const Ref<const VulkanDescriptorSet>& descriptorSet, VkPipelineLayout pipelineLayout, uint32_t index);
 		void BindComputeDescriptorSet(const Ref<const VulkanDescriptorSet>& descriptorSet, VkPipelineLayout pipelineLayout, uint32_t index);
 
-		void SetPrimaryDescriptorSet(const Ref<DescriptorSet>& set);
-		void SetSecondaryDescriptorSet(const Ref<DescriptorSet>& set);
-
 		void DepthImagesBarrier(Span<VkImage> images, bool hasStencil,
 			VkPipelineStageFlags srcStage, VkAccessFlags srcAccessMask,
 			VkPipelineStageFlags dstStage, VkAccessFlags dstAccessMask,
@@ -103,12 +102,12 @@ namespace Flare
 
 		VkCommandBuffer GetHandle() const { return m_CommandBuffer; }
 	private:
+		static constexpr size_t GLOBAL_DESCRIPTOR_SET_COUNT = 3;
 		std::vector<VkImageMemoryBarrier> m_ImageBarriers;
 
 		Ref<const Mesh> m_CurrentMesh = nullptr;
 
-		Ref<VulkanDescriptorSet> m_PrimaryDescriptorSet = nullptr;
-		Ref<VulkanDescriptorSet> m_SecondaryDescriptorSet = nullptr;
+		Ref<const VulkanDescriptorSet> m_GlobalDescriptorSets[GLOBAL_DESCRIPTOR_SET_COUNT] = { nullptr }; // Slot 3 is material resources
 
 		struct BoundDescriptorSet
 		{

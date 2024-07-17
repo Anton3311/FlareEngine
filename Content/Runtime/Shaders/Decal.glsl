@@ -33,8 +33,8 @@ void main()
 
 #include "Common/Camera.glsl"
 
-layout(set = 1, binding = 0) uniform sampler2D u_DepthTexture;
-layout(set = 2, binding = 0) uniform sampler2D u_ColorTexture;
+layout(set = 2, binding = 0) uniform sampler2D u_DepthTexture;
+layout(set = 3, binding = 0) uniform sampler2D u_ColorTexture;
 
 layout(location = 0) in flat mat4 i_ViewToObjectSpace;
 

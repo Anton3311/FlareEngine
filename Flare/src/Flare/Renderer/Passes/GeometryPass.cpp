@@ -15,56 +15,37 @@
 
 namespace Flare
 {
-	GeometryPass::GeometryPass(const RendererSubmitionQueue& opaqueObjects,
-		RendererStatistics& statistics,
-		Ref<DescriptorSet> primarySet,
-		Ref<DescriptorSet> primarySetWithoutShadows,
-		Ref<DescriptorSetPool> pool)
-		: m_OpaqueObjects(opaqueObjects),
-		m_Statistics(statistics),
-		m_PrimaryDescriptorSet(primarySet),
-		m_PrimaryDescriptorSetWithoutShadows(primarySetWithoutShadows),
-		m_Pool(pool)
+	GeometryPass::GeometryPass(const RendererSubmitionQueue& opaqueObjects, RendererStatistics& statistics)
+		: m_OpaqueObjects(opaqueObjects), m_Statistics(statistics)
 	{
 		FLARE_PROFILE_FUNCTION();
 		constexpr size_t maxInstances = 1000;
 		m_InstanceStorageBuffer = ShaderStorageBuffer::Create(maxInstances * sizeof(InstanceData));
 
-		// HACK
-		primarySet->WriteStorageBuffer(m_InstanceStorageBuffer, 3);
-		primarySet->FlushWrites();
-
-		primarySetWithoutShadows->WriteStorageBuffer(m_InstanceStorageBuffer, 3);
-		primarySetWithoutShadows->FlushWrites();
+		m_InstanceDataDescriptor = Renderer::GetInstanceDataDescriptorSetPool()->AllocateSet();
+		m_InstanceDataDescriptor->WriteStorageBuffer(m_InstanceStorageBuffer, 0);
+		m_InstanceDataDescriptor->FlushWrites();
 
 		m_Timer = GPUTimer::Create();
 	}
 
 	GeometryPass::~GeometryPass()
 	{
-		m_Pool->ReleaseSet(m_PrimaryDescriptorSet);
-		m_Pool->ReleaseSet(m_PrimaryDescriptorSetWithoutShadows);
+		Renderer::GetInstanceDataDescriptorSetPool()->ReleaseSet(m_InstanceDataDescriptor);
 	}
 
 	void GeometryPass::OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
-		{
-			Ref<VulkanCommandBuffer> vulkanCommandBuffer = As<VulkanCommandBuffer>(commandBuffer);
-			
-			if (Renderer::GetShadowSettings().Enabled)
-			{
-				vulkanCommandBuffer->SetPrimaryDescriptorSet(m_PrimaryDescriptorSet);
-			}
-			else
-			{
-				vulkanCommandBuffer->SetPrimaryDescriptorSet(m_PrimaryDescriptorSetWithoutShadows);
-			}
+		commandBuffer->SetGlobalDescriptorSet(context.GetViewport().GlobalResources.CameraDescriptorSet, 0);
 
-			vulkanCommandBuffer->SetSecondaryDescriptorSet(nullptr);
-		}
+		if (context.GetViewport().IsShadowMappingEnabled() && Renderer::GetShadowSettings().Enabled)
+			commandBuffer->SetGlobalDescriptorSet(context.GetViewport().GlobalResources.GlobalDescriptorSet, 1);
+		else
+			commandBuffer->SetGlobalDescriptorSet(context.GetViewport().GlobalResources.GlobalDescriptorSetWithoutShadows, 1);
+
+		commandBuffer->SetGlobalDescriptorSet(m_InstanceDataDescriptor, 2);
 
 		m_VisibleObjects.clear();
 

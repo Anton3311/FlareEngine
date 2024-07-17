@@ -7,14 +7,11 @@ namespace Flare
 		switch (type)
 		{
 		case ShaderType::_2D:
-			return 2;
 		case ShaderType::Decal:
 		case ShaderType::Surface:
-			return 2;
 		case ShaderType::FullscreenQuad:
-			return 2;
 		case ShaderType::Unknown:
-			return 2;
+			return 3;
 		}
 
 		FLARE_CORE_ASSERT(false);

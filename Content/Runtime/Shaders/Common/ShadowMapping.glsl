@@ -6,7 +6,7 @@
 
 const int CASCADES_COUNT = 4;
 
-layout(std140, set = 0, binding = 2) uniform ShadowData
+layout(std140, set = 1, binding = 0) uniform ShadowData
 {
 	float u_LightSize;
 	float u_LightFar;
@@ -31,15 +31,15 @@ layout(std140, set = 0, binding = 2) uniform ShadowData
 
 };
 
-layout(set = 0, binding = 28) uniform sampler2D u_ShadowMap0;
-layout(set = 0, binding = 29) uniform sampler2D u_ShadowMap1;
-layout(set = 0, binding = 30) uniform sampler2D u_ShadowMap2;
-layout(set = 0, binding = 31) uniform sampler2D u_ShadowMap3;
+layout(set = 1, binding = 4) uniform sampler2D u_ShadowMap0;
+layout(set = 1, binding = 5) uniform sampler2D u_ShadowMap1;
+layout(set = 1, binding = 6) uniform sampler2D u_ShadowMap2;
+layout(set = 1, binding = 7) uniform sampler2D u_ShadowMap3;
 
-layout(set = 0, binding = 32) uniform sampler2DShadow u_ShadowMapCompareSampler0;
-layout(set = 0, binding = 33) uniform sampler2DShadow u_ShadowMapCompareSampler1;
-layout(set = 0, binding = 34) uniform sampler2DShadow u_ShadowMapCompareSampler2;
-layout(set = 0, binding = 35) uniform sampler2DShadow u_ShadowMapCompareSampler3;
+layout(set = 1, binding = 8) uniform sampler2DShadow u_ShadowMapCompareSampler0;
+layout(set = 1, binding = 9) uniform sampler2DShadow u_ShadowMapCompareSampler1;
+layout(set = 1, binding = 10) uniform sampler2DShadow u_ShadowMapCompareSampler2;
+layout(set = 1, binding = 11) uniform sampler2DShadow u_ShadowMapCompareSampler3;
 
 // Vogel disk points
 const vec2[] SAMPLE_POINTS = {

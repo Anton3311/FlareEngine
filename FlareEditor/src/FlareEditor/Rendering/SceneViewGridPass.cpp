@@ -58,7 +58,7 @@ namespace Flare
 		int32_t scaleLevel = (int32_t)glm::floor(y / step);
 
 		vulkanCommandBuffer->BindPipeline(m_Pipeline);
-		vulkanCommandBuffer->BindDescriptorSet(As<VulkanDescriptorSet>(Renderer::GetPrimaryDescriptorSet()), pipeline->GetLayoutHandle(), 0);
+		vulkanCommandBuffer->BindDescriptorSet(As<VulkanDescriptorSet>(context.GetViewport().GlobalResources.CameraDescriptorSet), pipeline->GetLayoutHandle(), 0);
 		vulkanCommandBuffer->BindVertexBuffers(Span((Ref<const VertexBuffer>*) & m_VertexBuffer, 1), 0);
 
 		// First draw the secondary grid and only than the primary one.

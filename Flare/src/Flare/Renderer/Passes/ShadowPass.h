@@ -25,27 +25,6 @@ namespace Flare
 	class FLARE_API ShadowPass : public RenderGraphPass
 	{
 	public:
-		static constexpr size_t MaxCascades = 4;
-
-		ShadowPass(const RendererSubmitionQueue& opaqueObjects);
-
-		void OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer) override;
-
-		inline const std::vector<uint32_t>& GetVisibleObjects(size_t cascadeIndex) const
-		{
-			FLARE_CORE_ASSERT(cascadeIndex < MaxCascades);
-			return m_VisibleObjects[cascadeIndex];
-		}
-
-		inline const RenderView& GetLightView(size_t cascadeIndex) const
-		{
-			FLARE_CORE_ASSERT(cascadeIndex < MaxCascades);
-			return m_LightViews[cascadeIndex];
-		}
-
-		inline Ref<UniformBuffer> GetShadowDataBuffer() const { return m_ShadowDataBuffer; }
-		inline Ref<Sampler> GetCompareSampler() const { return m_CompareSampler; }
-	private:
 		struct ShadowData
 		{
 			float LightSize = 0.0f;
@@ -65,9 +44,28 @@ namespace Flare
 			float MaxShadowDistance = 0.0f;
 
 			int32_t MaxCascadeIndex = 0;
-
 		};
 
+		static constexpr size_t MaxCascades = 4;
+
+		ShadowPass(const RendererSubmitionQueue& opaqueObjects);
+
+		void OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer) override;
+
+		inline const std::vector<uint32_t>& GetVisibleObjects(size_t cascadeIndex) const
+		{
+			FLARE_CORE_ASSERT(cascadeIndex < MaxCascades);
+			return m_VisibleObjects[cascadeIndex];
+		}
+
+		inline const RenderView& GetLightView(size_t cascadeIndex) const
+		{
+			FLARE_CORE_ASSERT(cascadeIndex < MaxCascades);
+			return m_LightViews[cascadeIndex];
+		}
+
+		inline Ref<Sampler> GetCompareSampler() const { return m_CompareSampler; }
+	private:
 		void CalculateShadowMappingParameters(const RenderGraphContext& context);
 		void ComputeShaderProjectionsAndCullObjects(const RenderGraphContext& context);
 	private:
@@ -75,7 +73,6 @@ namespace Flare
 
 		ShadowData m_ShadowData;
 		Ref<Sampler> m_CompareSampler = nullptr;
-		Ref<UniformBuffer> m_ShadowDataBuffer = nullptr;
 
 		RenderView m_LightViews[MaxCascades];
 		std::vector<uint32_t> m_VisibleObjects[MaxCascades];

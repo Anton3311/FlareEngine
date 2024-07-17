@@ -68,6 +68,8 @@ namespace Flare
 		virtual void Blit(Ref<FrameBuffer> source, uint32_t sourceAttachment, Ref<FrameBuffer> destination, uint32_t destinationAttachment, TextureFiltering filter) = 0;
 		virtual void Blit(Ref<Texture> source, Ref<Texture> destination, TextureFiltering filter) = 0;
 
+		virtual void SetGlobalDescriptorSet(Ref<const DescriptorSet> set, uint32_t index) = 0;
+
 		virtual void DispatchCompute(Ref<ComputePipeline> pipeline, const glm::uvec3& groupCount) = 0;
 
 		virtual void StartTimer(Ref<GPUTimer> timer) = 0;

@@ -109,13 +109,8 @@ namespace Flare
 	void SSAOMainPass::OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
 	{
 		FLARE_PROFILE_FUNCTION();
-		if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
-		{
-			Ref<VulkanCommandBuffer> vulkanCommandBuffer = As<VulkanCommandBuffer>(commandBuffer);
-			vulkanCommandBuffer->SetPrimaryDescriptorSet(Renderer::GetPrimaryDescriptorSet());
-			vulkanCommandBuffer->SetSecondaryDescriptorSet(nullptr);
-		}
 
+		commandBuffer->SetGlobalDescriptorSet(context.GetViewport().GlobalResources.CameraDescriptorSet, 0);
 		commandBuffer->BeginRenderTarget(context.GetRenderTarget());
 
 		auto biasIndex = m_Material->GetShader()->GetPropertyIndex("u_Params.Bias");

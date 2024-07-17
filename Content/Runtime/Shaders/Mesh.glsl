@@ -73,9 +73,9 @@ struct VertexData
 	vec3 ViewSpacePosition;
 };
 
-layout(set = 2, binding = 7) uniform sampler2D u_Texture;
-layout(set = 2, binding = 8) uniform sampler2D u_NormalMap;
-layout(set = 2, binding = 9) uniform sampler2D u_RoughnessMap;
+layout(set = 3, binding = 0) uniform sampler2D u_Texture;
+layout(set = 3, binding = 1) uniform sampler2D u_NormalMap;
+layout(set = 3, binding = 2) uniform sampler2D u_RoughnessMap;
 
 layout(location = 0) in VertexData i_Vertex;
 

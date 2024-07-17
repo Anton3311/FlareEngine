@@ -28,6 +28,9 @@ namespace Flare
 
 	void Geometry2DPass::OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
 	{
+		// NOTE: This pass should be removed from the RenderGraph
+		//       if there are weren't anything submitted for rendering
+
 		FLARE_PROFILE_FUNCTION();
 
 		if (m_FrameData.QuadCount > 0)
@@ -37,10 +40,9 @@ namespace Flare
 
 		ReleaseDescriptorSets();
 
-		// NOTE: This pass should be removed from the RenderGraph
-		//       if there are weren't anything submitted for rendering
-
 		commandBuffer->BeginRenderTarget(context.GetRenderTarget());
+
+		commandBuffer->SetGlobalDescriptorSet(context.GetViewport().GlobalResources.CameraDescriptorSet, 0);
 		commandBuffer->BindVertexBuffers(Span((Ref<const VertexBuffer>*)&m_VertexBuffer, 1), 0);
 		commandBuffer->BindIndexBuffer(m_IndexBuffer);
 
@@ -49,7 +51,7 @@ namespace Flare
 			if (batch.Count == 0)
 				continue;
 
-			FlushBatch(batch, commandBuffer);
+			FlushBatch(context, batch, commandBuffer);
 		}
 
 		commandBuffer->EndRenderTarget();
@@ -66,27 +68,25 @@ namespace Flare
 		m_UsedSets.clear();
 	}
 
-	void Geometry2DPass::FlushBatch(const QuadsBatch& batch, Ref<CommandBuffer> commandBuffer)
+	void Geometry2DPass::FlushBatch(const RenderGraphContext& context, const QuadsBatch& batch, Ref<CommandBuffer> commandBuffer)
 	{
 		FLARE_PROFILE_FUNCTION();
 
 		if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
 		{
 			Ref<VulkanCommandBuffer> vulkanCommandBuffer = As<VulkanCommandBuffer>(commandBuffer);
-			Ref<VulkanFrameBuffer> renderTarget = As<VulkanFrameBuffer>(Renderer::GetCurrentViewport().RenderTarget);
+			Ref<FrameBuffer> renderTarget = Renderer::GetCurrentViewport().RenderTarget;
 
 			Ref<DescriptorSet> descriptorSet = m_FrameData.QuadDescriptorSetsPool->AllocateSet();
 			descriptorSet->SetDebugName("QuadsDescriptorSet");
-
-			m_UsedSets.push_back(descriptorSet);
-
 			descriptorSet->WriteImages(Span((Ref<const Texture>*)batch.Textures, Renderer2DLimits::MaxTexturesCount), 0, 0);
 			descriptorSet->FlushWrites();
 
-			vulkanCommandBuffer->SetPrimaryDescriptorSet(Renderer::GetPrimaryDescriptorSet());
-			vulkanCommandBuffer->SetSecondaryDescriptorSet(descriptorSet);
+			m_UsedSets.push_back(descriptorSet);
 
+			commandBuffer->SetGlobalDescriptorSet(descriptorSet, 1);
 			commandBuffer->ApplyMaterial(batch.Material);
+
 			commandBuffer->SetViewportAndScisors(Math::Rect(glm::vec2(0.0f), (glm::vec2)renderTarget->GetSize()));
 			commandBuffer->DrawIndexed(batch.Start * 6, batch.Count * 6, 0, 0, 1);
 		}
