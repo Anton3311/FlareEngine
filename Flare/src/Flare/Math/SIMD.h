@@ -42,6 +42,15 @@ namespace Flare::Math::SIMD
 		return _mm_andnot_ps(mask, value);
 	}
 
+	inline float Dot(__m128 a, __m128 b)
+	{
+		a = _mm_mul_ps(a, b);
+		a = _mm_hadd_ps(a, a);
+		a = _mm_hadd_ps(a, a);
+
+		return *(float*)&a;
+	}
+
 	inline AABB TransformAABB(const AABB& aabb, const glm::mat4& transform)
 	{
 		__m128 min = _mm_loadu_ps(glm::value_ptr(glm::vec4(aabb.Min, 1.0f)));
