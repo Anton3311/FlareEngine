@@ -76,31 +76,37 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(material->GetShader());
 		Ref<VulkanMaterial> vulkanMaterial = As<VulkanMaterial>(std::const_pointer_cast<Material>(material));
-		Ref<Pipeline> pipeline = vulkanMaterial->GetPipeline(m_CurrentRenderPass);
-		VkPipelineLayout pipelineLayout = As<const VulkanPipeline>(vulkanMaterial->GetPipeline(m_CurrentRenderPass))->GetLayoutHandle();
+		Ref<VulkanPipeline> pipeline = As<VulkanPipeline>(vulkanMaterial->GetPipeline(m_CurrentRenderPass));
+		VkPipelineLayout pipelineLayout = pipeline->GetLayoutHandle();
 		Ref<const ShaderMetadata> metadata = material->GetShader()->GetMetadata();
 
-		for (size_t i = 0; i < metadata->PushConstantsRanges.size(); i++)
 		{
-			const ShaderPushConstantsRange& range = metadata->PushConstantsRanges[i];
-			if (range.Size == 0)
-				continue;
-
-			VkShaderStageFlags stage = 0;
-			switch (range.Stage)
+			FLARE_PROFILE_SCOPE("PushConstants");
+			for (size_t i = 0; i < metadata->PushConstantsRanges.size(); i++)
 			{
-			case ShaderStageType::Vertex:
-				stage = VK_SHADER_STAGE_VERTEX_BIT;
-				break;
-			case ShaderStageType::Pixel:
-				stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-				break;
-			}
+				const ShaderPushConstantsRange& range = metadata->PushConstantsRanges[i];
+				if (range.Size == 0)
+					continue;
 
-			vkCmdPushConstants(m_CommandBuffer, pipelineLayout, stage, (uint32_t)range.Offset, (uint32_t)range.Size, material->GetPropertiesBuffer() + range.Offset);
+				VkShaderStageFlags stage = 0;
+				switch (range.Stage)
+				{
+				case ShaderStageType::Vertex:
+					stage = VK_SHADER_STAGE_VERTEX_BIT;
+					break;
+				case ShaderStageType::Pixel:
+					stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+					break;
+				}
+
+				vkCmdPushConstants(m_CommandBuffer, pipelineLayout, stage, (uint32_t)range.Offset, (uint32_t)range.Size, material->GetPropertiesBuffer() + range.Offset);
+			}
 		}
 
-		BindPipeline(pipeline);
+		if (m_GlobalDescriptorSetsRequireBinding || pipeline.get() != m_CurrentGraphicsPipeline.get())
+		{
+			BindPipeline(pipeline);
+		}
 
 		Ref<DescriptorSet> materialDescriptorSet = vulkanMaterial->GetDescriptorSet();
 		if (materialDescriptorSet)
@@ -182,25 +188,32 @@ namespace Flare
 
 			m_UsedPipelines.push_back(pipeline);
 			m_CurrentGraphicsPipeline = pipeline;
+			m_GlobalDescriptorSetsRequireBinding = true;
 		}
 
 		// Bind global descriptor sets
-		Ref<const ShaderMetadata> metadata = m_CurrentGraphicsPipeline->GetSpecifications().Shader->GetMetadata();
-		Ref<VulkanDescriptorSet> emptyDescriptorSet = As<VulkanDescriptorSet>(VulkanContext::GetInstance().GetEmptyDescriptorSet());
 
-		for (size_t i = 0; i < GLOBAL_DESCRIPTOR_SET_COUNT; i++)
+		if (m_GlobalDescriptorSetsRequireBinding)
 		{
-			ShaderDescriptorSetUsage setUsage = metadata->DescriptorSetUsage[i];
-			if (setUsage == ShaderDescriptorSetUsage::Used)
+			Ref<const ShaderMetadata> metadata = m_CurrentGraphicsPipeline->GetSpecifications().Shader->GetMetadata();
+			Ref<VulkanDescriptorSet> emptyDescriptorSet = As<VulkanDescriptorSet>(VulkanContext::GetInstance().GetEmptyDescriptorSet());
+
+			for (size_t i = 0; i < GLOBAL_DESCRIPTOR_SET_COUNT; i++)
 			{
-				FLARE_CORE_ASSERT(m_GlobalDescriptorSets[i]);
-				BindDescriptorSet(m_GlobalDescriptorSets[i], pipelineLayout, (uint32_t)i);
-			}
-			else if (setUsage == ShaderDescriptorSetUsage::Empty)
-			{
-				BindDescriptorSet(emptyDescriptorSet, pipelineLayout, (uint32_t)i);
+				ShaderDescriptorSetUsage setUsage = metadata->DescriptorSetUsage[i];
+				if (setUsage == ShaderDescriptorSetUsage::Used)
+				{
+					FLARE_CORE_ASSERT(m_GlobalDescriptorSets[i]);
+					BindDescriptorSet(m_GlobalDescriptorSets[i], pipelineLayout, (uint32_t)i);
+				}
+				else if (setUsage == ShaderDescriptorSetUsage::Empty)
+				{
+					BindDescriptorSet(emptyDescriptorSet, pipelineLayout, (uint32_t)i);
+				}
 			}
 		}
+
+		m_GlobalDescriptorSetsRequireBinding = false;
 	}
 
 	void VulkanCommandBuffer::BindVertexBuffer(Ref<const VertexBuffer> buffer, uint32_t index)
@@ -369,6 +382,7 @@ namespace Flare
 	{
 		FLARE_CORE_ASSERT(index < 3);
 		m_GlobalDescriptorSets[index] = As<const VulkanDescriptorSet>(set);
+		m_GlobalDescriptorSetsRequireBinding = true;
 	}
 
 	void VulkanCommandBuffer::DispatchCompute(Ref<ComputePipeline> pipeline, const glm::uvec3& groupCount)

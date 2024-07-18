@@ -112,6 +112,7 @@ namespace Flare
 		Ref<const Mesh> m_CurrentMesh = nullptr;
 
 		Ref<const VulkanDescriptorSet> m_GlobalDescriptorSets[GLOBAL_DESCRIPTOR_SET_COUNT] = { nullptr }; // Slot 3 is material resources
+		bool m_GlobalDescriptorSetsRequireBinding = false;
 
 		struct BoundDescriptorSet
 		{
