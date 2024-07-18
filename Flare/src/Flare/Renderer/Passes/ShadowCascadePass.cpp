@@ -116,12 +116,7 @@ namespace Flare
 
 		for (const auto& batch : m_CascadeData.Batches)
 		{
-			const auto& subMeshes = batch.Mesh->GetSubMeshes();
-			for (size_t i = 0; i < subMeshes.size(); i++)
-			{
-				commandBuffer->DrawMeshIndexed(batch.Mesh, (uint32_t)i, instanceIndex, batch.Count);
-			}
-
+			commandBuffer->DrawMeshIndexed(batch.Mesh, instanceIndex, batch.Count);
 			instanceIndex += batch.Count;
 		}
 	}

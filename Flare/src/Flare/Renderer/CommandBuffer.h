@@ -49,6 +49,7 @@ namespace Flare
 		virtual void BindVertexBuffers(Span<Ref<const VertexBuffer>> buffers, uint32_t baseBindingIndex) = 0;
 		virtual void BindIndexBuffer(Ref<const IndexBuffer> buffer) = 0;
 
+		virtual void DrawMeshIndexed(const Ref<const Mesh>& mesh, uint32_t baseInstance, uint32_t instanceCount) = 0;
 		virtual void DrawMeshIndexed(const Ref<const Mesh>& mesh,
 			uint32_t subMeshIndex,
 			uint32_t baseInstance,

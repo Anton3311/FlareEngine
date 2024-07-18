@@ -239,25 +239,18 @@ namespace Flare
 				: VK_INDEX_TYPE_UINT32);
 	}
 
+	void VulkanCommandBuffer::DrawMeshIndexed(const Ref<const Mesh>& mesh, uint32_t baseInstance, uint32_t instanceCount)
+	{
+		FLARE_PROFILE_FUNCTION();
+		BindMesh(mesh);
+		vkCmdDrawIndexed(m_CommandBuffer, (uint32_t)mesh->GetIndexCount(), instanceCount, 0, 0, baseInstance);
+	}
+
 	void VulkanCommandBuffer::DrawMeshIndexed(const Ref<const Mesh>& mesh, uint32_t subMeshIndex, uint32_t baseInstance, uint32_t instanceCount)
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		if (m_CurrentMesh.get() != mesh.get())
-		{
-			Ref<const VertexBuffer> vertexBuffers[] =
-			{
-				mesh->GetVertices(),
-				mesh->GetNormals(),
-				mesh->GetTangents(),
-				mesh->GetUVs()
-			};
-
-			BindVertexBuffers(Span(vertexBuffers, 4), 0);
-			BindIndexBuffer(mesh->GetIndexBuffer());
-
-			m_CurrentMesh = mesh;
-		}
+		BindMesh(mesh);
 
 		const auto& subMesh = mesh->GetSubMeshes()[subMeshIndex];
 		vkCmdDrawIndexed(m_CommandBuffer, subMesh.IndicesCount, instanceCount, subMesh.BaseIndex, subMesh.BaseVertex, baseInstance);
@@ -725,6 +718,25 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 		VkDescriptorSet setHandle = descriptorSet->GetHandle();
 		vkCmdBindDescriptorSets(m_CommandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, index, 1, &setHandle, 0, nullptr);
+	}
+
+	void VulkanCommandBuffer::BindMesh(const Ref<const Mesh>& mesh)
+	{
+		if (m_CurrentMesh.get() != mesh.get())
+		{
+			Ref<const VertexBuffer> vertexBuffers[] =
+			{
+				mesh->GetVertices(),
+				mesh->GetNormals(),
+				mesh->GetTangents(),
+				mesh->GetUVs()
+			};
+
+			BindVertexBuffers(Span(vertexBuffers, 4), 0);
+			BindIndexBuffer(mesh->GetIndexBuffer());
+
+			m_CurrentMesh = mesh;
+		}
 	}
 
 	void VulkanCommandBuffer::DepthImagesBarrier(Span<VkImage> images, bool hasStencil,

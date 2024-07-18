@@ -42,6 +42,7 @@ namespace Flare
 		void BindVertexBuffers(Span<Ref<const VertexBuffer>> vertexBuffers, uint32_t baseBindingIndex) override;
 		void BindIndexBuffer(Ref<const IndexBuffer> buffer) override;
 
+		void DrawMeshIndexed(const Ref<const Mesh>& mesh, uint32_t baseInstance, uint32_t instanceCount) override;
 		void DrawMeshIndexed(const Ref<const Mesh>& mesh, uint32_t subMeshIndex, uint32_t baseInstance, uint32_t instanceCount) override;
 
 		void DrawIndexed(uint32_t baseIndex,
@@ -91,6 +92,8 @@ namespace Flare
 
 		void BindDescriptorSet(const Ref<const VulkanDescriptorSet>& descriptorSet, VkPipelineLayout pipelineLayout, uint32_t index);
 		void BindComputeDescriptorSet(const Ref<const VulkanDescriptorSet>& descriptorSet, VkPipelineLayout pipelineLayout, uint32_t index);
+
+		void BindMesh(const Ref<const Mesh>& mesh);
 
 		void DepthImagesBarrier(Span<VkImage> images, bool hasStencil,
 			VkPipelineStageFlags srcStage, VkAccessFlags srcAccessMask,
