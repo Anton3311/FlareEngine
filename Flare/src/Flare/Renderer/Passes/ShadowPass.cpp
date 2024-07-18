@@ -34,6 +34,7 @@ namespace Flare
 
 	void ShadowPass::OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
 	{
+		FLARE_PROFILE_FUNCTION();
 		if (context.GetViewport().IsShadowMappingEnabled())
 		{
 			for (ShadowCascadeData& cascadeData : m_CascadeData)
@@ -46,23 +47,7 @@ namespace Flare
 		CalculateShadowMappingParameters(context);
 	}
 
-	struct CascadeFrustum
-	{
-		static constexpr size_t LeftIndex = 0;
-		static constexpr size_t RightIndex = 1;
-		static constexpr size_t TopIndex = 2;
-		static constexpr size_t BottomIndex = 3;
-
-		Math::Plane Planes[4];
-	};
-
-	struct ShadowMappingParams
-	{
-		glm::vec3 CameraFrustumCenter;
-		float BoundingSphereRadius;
-	};
-
-	static void CalculateShadowFrustumParamsAroundCamera(ShadowMappingParams& params,
+	static void CalculateShadowFrustumParamsAroundCamera(ShadowCascadeData& cascadeData,
 		glm::vec3 lightDirection,
 		const Viewport& viewport,
 		float nearPlaneDistance,
@@ -118,27 +103,33 @@ namespace Flare
 		for (size_t i = 0; i < frustumCorners.size(); i++)
 			boundingSphereRadius = glm::max(boundingSphereRadius, glm::distance(frustumCenter, (glm::vec3)frustumCorners[i]));
 
-		params.CameraFrustumCenter = frustumCenter;
-		params.BoundingSphereRadius = boundingSphereRadius;
+		cascadeData.BoundingSphereCenter = frustumCenter;
+		cascadeData.BoundingSphereRadius = boundingSphereRadius;
 	}
 
-	static void CalculateShadowProjectionFrustum(CascadeFrustum* outPlanes, const ShadowMappingParams& params, glm::vec3 lightDirection, const Math::Basis& lightBasis)
+	static void CalculateShadowProjectionFrustum(ShadowCascadeData& cascadeData, glm::vec3 lightDirection, const Math::Basis& lightBasis)
 	{
 		FLARE_PROFILE_FUNCTION();
-		outPlanes->Planes[CascadeFrustum::LeftIndex] = Math::Plane::TroughPoint(
-			params.CameraFrustumCenter - lightBasis.Right * params.BoundingSphereRadius,
+
+		constexpr size_t LeftIndex = 0;
+		constexpr size_t RightIndex = 1;
+		constexpr size_t TopIndex = 2;
+		constexpr size_t BottomIndex = 3;
+
+		cascadeData.FrustumPlanes[LeftIndex] = Math::Plane::TroughPoint(
+			cascadeData.BoundingSphereCenter - lightBasis.Right * cascadeData.BoundingSphereRadius,
 			lightBasis.Right);
 
-		outPlanes->Planes[CascadeFrustum::RightIndex] = Math::Plane::TroughPoint(
-			params.CameraFrustumCenter + lightBasis.Right * params.BoundingSphereRadius,
+		cascadeData.FrustumPlanes[RightIndex] = Math::Plane::TroughPoint(
+			cascadeData.BoundingSphereCenter + lightBasis.Right * cascadeData.BoundingSphereRadius,
 			-lightBasis.Right);
 
-		outPlanes->Planes[CascadeFrustum::TopIndex] = Math::Plane::TroughPoint(
-			params.CameraFrustumCenter + lightBasis.Up * params.BoundingSphereRadius,
+		cascadeData.FrustumPlanes[TopIndex] = Math::Plane::TroughPoint(
+			cascadeData.BoundingSphereCenter + lightBasis.Up * cascadeData.BoundingSphereRadius,
 			-lightBasis.Up);
 
-		outPlanes->Planes[CascadeFrustum::BottomIndex] = Math::Plane::TroughPoint(
-			params.CameraFrustumCenter - lightBasis.Up * params.BoundingSphereRadius,
+		cascadeData.FrustumPlanes[BottomIndex] = Math::Plane::TroughPoint(
+			cascadeData.BoundingSphereCenter - lightBasis.Up * cascadeData.BoundingSphereRadius,
 			lightBasis.Up);
 	}
 
@@ -173,7 +164,7 @@ namespace Flare
 		FullyVisible,
 	};
 
-	inline static CullResult CullAABB(const Math::AABB& aabb, const CascadeFrustum& frustum, const Math::Compact3DTransform& transform)
+	inline static CullResult CullAABB(const Math::AABB& aabb, Math::Plane* planes, const Math::Compact3DTransform& transform)
 	{
 		Math::AABB transformedAABB = aabb.Transformed(transform.ToMatrix4x4());
 		glm::vec3 center = transformedAABB.GetCenter();
@@ -183,7 +174,7 @@ namespace Flare
 		bool intersects = true;
 		for (size_t i = 0; i < 4; i++)
 		{
-			Math::Plane plane = frustum.Planes[i];
+			Math::Plane plane = planes[i];
 
 			float projectedDistance = glm::dot(glm::abs(plane.Normal), extents);
 			float signedDistance = plane.SignedDistance(center);
@@ -206,9 +197,6 @@ namespace Flare
 		const Math::Basis& lightBasis = viewport.FrameData.LightBasis;
 		const ShadowSettings& shadowSettings = Renderer::GetShadowSettings();
 
-		ShadowMappingParams perCascadeParams[ShadowSettings::MaxCascades];
-		CascadeFrustum cascadeFrustums[ShadowSettings::MaxCascades];
-
 		{
 			FLARE_PROFILE_SCOPE("CalculateCascadeFrustum");
 
@@ -216,65 +204,28 @@ namespace Flare
 			for (size_t i = 0; i < shadowSettings.Cascades; i++)
 			{
 				// 1. Calculate a fit frustum around camera's furstum
-				CalculateShadowFrustumParamsAroundCamera(perCascadeParams[i], lightDirection,
+				CalculateShadowFrustumParamsAroundCamera(m_CascadeData[i], lightDirection,
 					viewport, currentNearPlane,
 					shadowSettings.CascadeSplits[i]);
 
 				// 2. Calculate projection frustum planes (except near and far)
 				CalculateShadowProjectionFrustum(
-					&cascadeFrustums[i],
-					perCascadeParams[i],
+					m_CascadeData[i],
 					lightDirection,
 					lightBasis);
 
 				currentNearPlane = shadowSettings.CascadeSplits[i];
 
-				m_ShadowData.FrustumWidth[i] = perCascadeParams[i].BoundingSphereRadius * 2.0f;
+				m_ShadowData.FrustumWidth[i] = m_CascadeData->BoundingSphereRadius * 2.0f;
 			}
 		}
 
-		{
-			FLARE_PROFILE_SCOPE("FilterSubmitions");
-			const auto& submitedBatches = m_OpaqueObjects.GetShadowPassBatches();
-
-			for (size_t batchIndex = 0; batchIndex < submitedBatches.size(); batchIndex++)
-			{
-				const RendererSubmitionQueue::ShadowPassBatch& batch = submitedBatches[batchIndex];
-				for (size_t cascadeIndex = 0; cascadeIndex < (size_t)shadowSettings.Cascades; cascadeIndex++)
-				{
-					ShadowCascadeData& cascadeData = m_CascadeData[cascadeIndex];
-					FilteredShadowPassBatch filteredBatch{};
-					filteredBatch.Mesh = batch.Mesh;
-					filteredBatch.FirstEntryIndex = (uint32_t)m_FilteredTransforms.size();
-
-					for (size_t submitionIndex = 0; submitionIndex < batch.Submitions.size(); submitionIndex++)
-					{
-						CullResult result = CullAABB(
-							filteredBatch.Mesh->GetBounds(),
-							cascadeFrustums[cascadeIndex],
-							batch.Submitions[submitionIndex].Transform);
-
-						if (result == CullResult::FullyVisible)
-						{
-							m_FilteredTransforms.push_back(batch.Submitions[submitionIndex].Transform);
-							filteredBatch.Count++;
-						}
-					}
-
-					if (filteredBatch.Count > 0)
-					{
-						cascadeData.Batches.push_back(filteredBatch);
-					}
-				}
-			}
-		}
+		FilterSubmitions();
 
 		{
 			float currentNearPlane = viewport.FrameData.Light.Near;
 			for (size_t cascadeIndex = 0; cascadeIndex < shadowSettings.Cascades; cascadeIndex++)
 			{
-				ShadowMappingParams params = perCascadeParams[cascadeIndex];
-
 				float nearPlaneDistance = 0;
 				float farPlaneDistance = 0;
 #if !FIXED_SHADOW_NEAR_AND_FAR
@@ -309,35 +260,37 @@ namespace Flare
 				farPlaneDistance = fixedPlaneDistance;
 #endif
 
+				ShadowCascadeData& cascadeData = m_CascadeData[cascadeIndex];
+
 				// Move shadow map in texel size increaments. in order to avoid shadow edge swimming
 				// https://alextardif.com/shadowmapping.html
-				float texelsPerUnit = (float)GetShadowMapResolution(Renderer::GetShadowSettings().Quality) / (params.BoundingSphereRadius * 2.0f);
+				float texelsPerUnit = (float)GetShadowMapResolution(Renderer::GetShadowSettings().Quality) / (cascadeData.BoundingSphereRadius * 2.0f);
 
 				glm::mat4 view = glm::scale(
 					glm::lookAt(
-						params.CameraFrustumCenter + lightDirection * nearPlaneDistance,
-						params.CameraFrustumCenter, glm::vec3(0.0f, 1.0f, 0.0f)),
+						cascadeData.BoundingSphereCenter + lightDirection * nearPlaneDistance,
+						cascadeData.BoundingSphereCenter, glm::vec3(0.0f, 1.0f, 0.0f)),
 					glm::vec3(texelsPerUnit));
 
-				glm::vec4 projectedCenter = view * glm::vec4(params.CameraFrustumCenter, 1.0f);
+				glm::vec4 projectedCenter = view * glm::vec4(cascadeData.BoundingSphereCenter, 1.0f);
 				projectedCenter.x = glm::round(projectedCenter.x);
 				projectedCenter.y = glm::round(projectedCenter.y);
 
-				params.CameraFrustumCenter = glm::inverse(view) * glm::vec4((glm::vec3)projectedCenter, 1.0f);
+				cascadeData.BoundingSphereCenter = glm::inverse(view) * glm::vec4((glm::vec3)projectedCenter, 1.0f);
 
 				view = glm::lookAt(
-					params.CameraFrustumCenter + lightDirection * nearPlaneDistance,
-					params.CameraFrustumCenter, glm::vec3(0.0f, 1.0f, 0.0f));
+					cascadeData.BoundingSphereCenter + lightDirection * nearPlaneDistance,
+					cascadeData.BoundingSphereCenter, glm::vec3(0.0f, 1.0f, 0.0f));
 
 				glm::mat4 projection;
 				
 				if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
 				{
 					projection = glm::orthoRH_ZO(
-						-params.BoundingSphereRadius,
-						params.BoundingSphereRadius,
-						-params.BoundingSphereRadius,
-						params.BoundingSphereRadius,
+						-cascadeData.BoundingSphereRadius,
+						cascadeData.BoundingSphereRadius,
+						-cascadeData.BoundingSphereRadius,
+						cascadeData.BoundingSphereRadius,
 						viewport.FrameData.Light.Near,
 						farPlaneDistance - nearPlaneDistance);
 				}
@@ -348,6 +301,44 @@ namespace Flare
 				m_ShadowData.LightProjections[cascadeIndex] = m_CascadeData[cascadeIndex].View.ViewProjection;
 
 				currentNearPlane = shadowSettings.CascadeSplits[cascadeIndex];
+			}
+		}
+	}
+
+	void ShadowPass::FilterSubmitions()
+	{
+		FLARE_PROFILE_FUNCTION();
+		const ShadowSettings& shadowSettings = Renderer::GetShadowSettings();
+		const auto& submitedBatches = m_OpaqueObjects.GetShadowPassBatches();
+
+		for (size_t batchIndex = 0; batchIndex < submitedBatches.size(); batchIndex++)
+		{
+			const RendererSubmitionQueue::ShadowPassBatch& batch = submitedBatches[batchIndex];
+			for (size_t cascadeIndex = 0; cascadeIndex < (size_t)shadowSettings.Cascades; cascadeIndex++)
+			{
+				ShadowCascadeData& cascadeData = m_CascadeData[cascadeIndex];
+				FilteredShadowPassBatch filteredBatch{};
+				filteredBatch.Mesh = batch.Mesh;
+				filteredBatch.FirstEntryIndex = (uint32_t)m_FilteredTransforms.size();
+
+				for (size_t submitionIndex = 0; submitionIndex < batch.Submitions.size(); submitionIndex++)
+				{
+					CullResult result = CullAABB(
+						filteredBatch.Mesh->GetBounds(),
+						cascadeData.FrustumPlanes,
+						batch.Submitions[submitionIndex].Transform);
+
+					if (result == CullResult::FullyVisible)
+					{
+						m_FilteredTransforms.push_back(batch.Submitions[submitionIndex].Transform);
+						filteredBatch.Count++;
+					}
+				}
+
+				if (filteredBatch.Count > 0)
+				{
+					cascadeData.Batches.push_back(filteredBatch);
+				}
 			}
 		}
 	}

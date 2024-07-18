@@ -32,6 +32,11 @@ namespace Flare
 	struct ShadowCascadeData
 	{
 		RenderView View;
+		Math::Plane FrustumPlanes[4];
+
+		glm::vec3 BoundingSphereCenter = glm::vec3(0.0f);
+		float BoundingSphereRadius = 0.0f;
+
 		std::vector<FilteredShadowPassBatch> Batches;
 	};
 
@@ -71,6 +76,7 @@ namespace Flare
 	private:
 		void CalculateShadowMappingParameters(const RenderGraphContext& context);
 		void ComputeShaderProjectionsAndCullObjects(const RenderGraphContext& context);
+		void FilterSubmitions();
 	private:
 		const RendererSubmitionQueue& m_OpaqueObjects;
 
