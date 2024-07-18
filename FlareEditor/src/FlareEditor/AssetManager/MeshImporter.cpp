@@ -33,26 +33,31 @@ namespace Flare
         std::vector<uint32_t> UsedMaterials;
     };
 
+    static void CountVerticesAndIndices(const aiNode* node, const aiScene* scene, size_t& vertexCount, size_t& indexCount)
+    {
+        FLARE_PROFILE_FUNCTION();
+		for (uint32_t i = 0; i < node->mNumMeshes; i++)
+		{
+			aiMesh* nodeMesh = scene->mMeshes[node->mMeshes[i]];
+			vertexCount += nodeMesh->mNumVertices;
+
+			for (uint32_t face = 0; face < nodeMesh->mNumFaces; face++)
+			{
+				aiFace& f = nodeMesh->mFaces[face];
+				indexCount += (size_t)f.mNumIndices;
+			}
+		}
+    }
+
     static bool ProcessMeshNode(aiNode* node, const aiScene* scene, SceneData& data)
     {
         FLARE_PROFILE_FUNCTION();
         if (node->mNumMeshes > 0)
         {
-            size_t verticesCount = 0;
+            size_t vertexCount = 0;
             size_t indexCount = 0;
-            size_t subMeshes = node->mNumMeshes;
 
-            for (uint32_t i = 0; i < node->mNumMeshes; i++)
-            {
-                aiMesh* nodeMesh = scene->mMeshes[node->mMeshes[i]];
-                verticesCount += nodeMesh->mNumVertices;
-
-                for (uint32_t face = 0; face < nodeMesh->mNumFaces; face++)
-                {
-                    aiFace& f = nodeMesh->mFaces[face];
-                    indexCount += (size_t)f.mNumIndices;
-                }
-            }
+            CountVerticesAndIndices(node, scene, vertexCount, indexCount);
 
             if (indexCount < (size_t)std::numeric_limits<uint16_t>::max())
             {
@@ -64,12 +69,12 @@ namespace Flare
                 data.Indices32.reserve(indexCount);
             }
 
-            data.Vertices.resize(verticesCount);
-            data.Normals.resize(verticesCount);
-            data.Tangents.resize(verticesCount);
-            data.UVs.resize(verticesCount);
+            data.Vertices.resize(vertexCount);
+            data.Normals.resize(vertexCount);
+            data.Tangents.resize(vertexCount);
+            data.UVs.resize(vertexCount);
 
-            data.SubMeshes.reserve(subMeshes);
+            data.SubMeshes.reserve(node->mNumMeshes);
 
             size_t vertexOffset = 0;
             size_t indexOffset = 0;
@@ -107,7 +112,7 @@ namespace Flare
                         subMeshIndexCount += f.mNumIndices;
 
                         for (uint32_t i = 0; i < f.mNumIndices; i++)
-                            data.Indices16.push_back((uint16_t)f.mIndices[i]);
+                            data.Indices16.push_back((uint16_t)f.mIndices[i] + (uint16_t)vertexOffset);
                     }
                 }
                 else
@@ -118,21 +123,23 @@ namespace Flare
                         subMeshIndexCount += f.mNumIndices;
 
                         for (uint32_t i = 0; i < f.mNumIndices; i++)
-                            data.Indices32.push_back((uint32_t)f.mIndices[i]);
+                            data.Indices32.push_back((uint32_t)f.mIndices[i] + (uint32_t)vertexOffset);
                     }
                 }
 
-                auto& subMesh = data.SubMeshes.emplace_back();
-                subMesh.BaseVertex = (uint32_t)vertexOffset;
-                subMesh.BaseIndex = (uint32_t)indexOffset;
-                subMesh.IndicesCount = (uint32_t)subMeshIndexCount;
-
-                subMesh.Bounds.Min = data.Vertices[vertexOffset];
-                subMesh.Bounds.Max = data.Vertices[vertexOffset];
-                for (size_t i = vertexOffset + 1; i < vertexOffset + (size_t)nodeMesh->mNumVertices; i++)
                 {
-                    subMesh.Bounds.Min = glm::min(data.Vertices[i], subMesh.Bounds.Min);
-                    subMesh.Bounds.Max = glm::max(data.Vertices[i], subMesh.Bounds.Max);
+                    FLARE_PROFILE_SCOPE("CreateSubMesh");
+					auto& subMesh = data.SubMeshes.emplace_back();
+                    subMesh.BaseVertex = 0; (uint32_t)vertexOffset;
+                    subMesh.BaseIndex = (uint32_t)indexOffset;
+					subMesh.IndicesCount = (uint32_t)subMeshIndexCount;
+					subMesh.Bounds.Min = data.Vertices[vertexOffset];
+					subMesh.Bounds.Max = data.Vertices[vertexOffset];
+					for (size_t i = vertexOffset + 1; i < vertexOffset + (size_t)nodeMesh->mNumVertices; i++)
+					{
+						subMesh.Bounds.Min = glm::min(data.Vertices[i], subMesh.Bounds.Min);
+						subMesh.Bounds.Max = glm::max(data.Vertices[i], subMesh.Bounds.Max);
+					}
                 }
 
                 vertexOffset += nodeMesh->mNumVertices;
