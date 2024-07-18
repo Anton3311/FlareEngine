@@ -29,6 +29,22 @@ namespace Flare
 		uint32_t Count = 0;
 	};
 
+	struct PartiallyVisibleMesh
+	{
+		Ref<const Mesh> Mesh = nullptr;
+		Math::Compact3DTransform Transform;
+		uint32_t FirstSubMeshRange = 0;
+		uint32_t SubMeshRangeCount = 0;
+	};
+
+	struct VisibleSubMeshRange
+	{
+		inline uint32_t GetEnd() const { return Start + Count - 1; }
+
+		uint32_t Start = 0;
+		uint32_t Count = 0;
+	};
+
 	struct ShadowCascadeData
 	{
 		RenderView View;
@@ -38,6 +54,7 @@ namespace Flare
 		float BoundingSphereRadius = 0.0f;
 
 		std::vector<FilteredShadowPassBatch> Batches;
+		std::vector<PartiallyVisibleMesh> PartiallyVisible;
 	};
 
 	class FLARE_API ShadowPass : public RenderGraphPass
@@ -73,10 +90,15 @@ namespace Flare
 		inline Ref<Sampler> GetCompareSampler() const { return m_CompareSampler; }
 		inline const ShadowCascadeData& GetCascadeData(size_t index) const { return m_CascadeData[index]; }
 		inline const std::vector<Math::Compact3DTransform>& GetFilteredTransforms() const { return m_FilteredTransforms; }
+		inline const std::vector<VisibleSubMeshRange>& GetVisibleSubMeshIndices() const { return m_VisibleSubMeshRanges; }
 	private:
 		void CalculateShadowMappingParameters(const RenderGraphContext& context);
 		void ComputeShaderProjectionsAndCullObjects(const RenderGraphContext& context);
 		void FilterSubmitions();
+
+		void CullSubMeshes(PartiallyVisibleMesh& mesh,
+			const Math::Compact3DTransform& transform,
+			const Math::Plane* frustumPlanes);
 	private:
 		const RendererSubmitionQueue& m_OpaqueObjects;
 
@@ -85,5 +107,6 @@ namespace Flare
 
 		ShadowCascadeData m_CascadeData[MaxCascades];
 		std::vector<Math::Compact3DTransform> m_FilteredTransforms;
+		std::vector<VisibleSubMeshRange> m_VisibleSubMeshRanges;
 	};
 }

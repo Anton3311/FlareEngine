@@ -44,6 +44,7 @@ namespace Flare
 
 		void DrawMeshIndexed(const Ref<const Mesh>& mesh, uint32_t baseInstance, uint32_t instanceCount) override;
 		void DrawMeshIndexed(const Ref<const Mesh>& mesh, uint32_t subMeshIndex, uint32_t baseInstance, uint32_t instanceCount) override;
+		void DrawMeshIndexed(const Ref<const Mesh>& mesh, uint32_t firstSubMesh, uint32_t subMeshCount, uint32_t baseInstance, uint32_t instanceCount);
 
 		void DrawIndexed(uint32_t baseIndex,
 			uint32_t indexCount,

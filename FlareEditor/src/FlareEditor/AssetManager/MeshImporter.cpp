@@ -130,7 +130,7 @@ namespace Flare
                 {
                     FLARE_PROFILE_SCOPE("CreateSubMesh");
 					auto& subMesh = data.SubMeshes.emplace_back();
-                    subMesh.BaseVertex = 0; (uint32_t)vertexOffset;
+                    subMesh.BaseVertex = 0;
                     subMesh.BaseIndex = (uint32_t)indexOffset;
 					subMesh.IndicesCount = (uint32_t)subMeshIndexCount;
 					subMesh.Bounds.Min = data.Vertices[vertexOffset];

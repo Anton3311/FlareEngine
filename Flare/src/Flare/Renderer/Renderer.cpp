@@ -466,6 +466,7 @@ namespace Flare
 				s_RendererData.Statistics,
 				shadowPass->GetCascadeData((size_t)cascadeIndex),
 				shadowPass->GetFilteredTransforms(),
+				shadowPass->GetVisibleSubMeshIndices(),
 				cascadeTextures[cascadeIndex]);
 
 			viewport.Graph.AddPass(cascadePassSpec, cascadePass);

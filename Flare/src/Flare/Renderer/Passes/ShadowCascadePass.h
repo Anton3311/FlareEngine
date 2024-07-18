@@ -14,6 +14,7 @@ namespace Flare
 	class GPUTimer;
 
 	struct ShadowCascadeData;
+	struct VisibleSubMeshRange;
 
 	class ShadowCascadePass : public RenderGraphPass
 	{
@@ -24,6 +25,7 @@ namespace Flare
 			RendererStatistics& statistics,
 			const ShadowCascadeData& cascadeData,
 			const std::vector<Math::Compact3DTransform>& filteredTransforms,
+			const std::vector<VisibleSubMeshRange>& visibleSubMeshRanges,
 			Ref<Texture> cascadeTexture);
 
 		~ShadowCascadePass();
@@ -44,13 +46,13 @@ namespace Flare
 		};
 	private:
 		void DrawCascade(const RenderGraphContext& context, const Ref<CommandBuffer>& commandBuffer);
-		void FlushBatch(const Ref<CommandBuffer>& commandBuffer, const Batch& batch);
 	private:
 		const RendererSubmitionQueue& m_OpaqueObjects;
 		RendererStatistics& m_Statistics;
 
 		const ShadowCascadeData& m_CascadeData;
 		const std::vector<Math::Compact3DTransform>& m_FilteredTransforms;
+		const std::vector<VisibleSubMeshRange>& m_VisibleSubMeshRanges;
 
 		Ref<GPUTimer> m_Timer = nullptr;
 		Ref<Texture> m_CascadeTexture = nullptr;

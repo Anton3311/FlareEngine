@@ -22,11 +22,13 @@ namespace Flare
 		RendererStatistics& statistics,
 		const ShadowCascadeData& cascadeData,
 		const std::vector<Math::Compact3DTransform>& filteredTransforms,
+		const std::vector<VisibleSubMeshRange>& visibleSubMeshRanges,
 		Ref<Texture> cascadeTexture)
 		: m_OpaqueObjects(opaqueObjects),
 		m_Statistics(statistics),
 		m_CascadeData(cascadeData),
 		m_FilteredTransforms(filteredTransforms),
+		m_VisibleSubMeshRanges(visibleSubMeshRanges),
 		m_CascadeTexture(cascadeTexture)
 	{
 		FLARE_PROFILE_FUNCTION();
@@ -58,7 +60,7 @@ namespace Flare
 		const Viewport& currentViewport = context.GetViewport();
 		const ShadowSettings& shadowSettings = Renderer::GetShadowSettings();
 
-		if (m_CascadeData.Batches.size() == 0)
+		if (m_CascadeData.Batches.size() == 0 && m_CascadeData.PartiallyVisible.size() == 0)
 		{
 			commandBuffer->BeginRenderTarget(context.GetRenderTarget());
 			commandBuffer->EndRenderTarget();
@@ -84,6 +86,15 @@ namespace Flare
 					instanceData.PackedTransform[1] = glm::vec4(transform.RotationScale[1], transform.Translation.y);
 					instanceData.PackedTransform[2] = glm::vec4(transform.RotationScale[2], transform.Translation.z);
 				}
+			}
+
+			for (const auto& visibleMesh : m_CascadeData.PartiallyVisible)
+			{
+				auto& instanceData = m_InstanceDataBuffer.emplace_back();
+				const auto& transform = visibleMesh.Transform;
+				instanceData.PackedTransform[0] = glm::vec4(transform.RotationScale[0], transform.Translation.x);
+				instanceData.PackedTransform[1] = glm::vec4(transform.RotationScale[1], transform.Translation.y);
+				instanceData.PackedTransform[2] = glm::vec4(transform.RotationScale[2], transform.Translation.z);
 			}
 		}
 
@@ -114,23 +125,34 @@ namespace Flare
 
 		uint32_t instanceIndex = 0;
 
-		for (const auto& batch : m_CascadeData.Batches)
 		{
-			commandBuffer->DrawMeshIndexed(batch.Mesh, instanceIndex, batch.Count);
-			instanceIndex += batch.Count;
+			FLARE_PROFILE_SCOPE("DrawFullyVisible");
+
+			for (const auto& batch : m_CascadeData.Batches)
+			{
+				commandBuffer->DrawMeshIndexed(batch.Mesh, instanceIndex, batch.Count);
+				instanceIndex += batch.Count;
+
+				m_Statistics.DrawCallCount++;
+			}
 		}
-	}
 
-	void ShadowCascadePass::FlushBatch(const Ref<CommandBuffer>& commandBuffer, const Batch& batch)
-	{
-		FLARE_PROFILE_FUNCTION();
+		{
+			FLARE_PROFILE_SCOPE("DrawPartiallyVisible");
 
-		if (batch.InstanceCount == 0)
-			return;
+			Ref<VulkanCommandBuffer> vulkanCommandBuffer = As<VulkanCommandBuffer>(commandBuffer);
+			for (const auto& visibleMesh : m_CascadeData.PartiallyVisible)
+			{
+				for (uint32_t i = 0; i < visibleMesh.SubMeshRangeCount; i++)
+				{
+					VisibleSubMeshRange range = m_VisibleSubMeshRanges[visibleMesh.FirstSubMeshRange + i];
+					vulkanCommandBuffer->DrawMeshIndexed(visibleMesh.Mesh, range.Start, range.Count, instanceIndex, 1);
 
-		m_Statistics.DrawCallCount++;
-		m_Statistics.DrawCallsSavedByInstancing += batch.InstanceCount - 1;
+					m_Statistics.DrawCallCount++;
+				}
 
-		commandBuffer->DrawMeshIndexed(batch.Mesh, batch.SubMesh, batch.BaseInstance, batch.InstanceCount);
+				instanceIndex++;
+			}
+		}
 	}
 }

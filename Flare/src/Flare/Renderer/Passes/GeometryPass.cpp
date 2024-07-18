@@ -166,7 +166,11 @@ namespace Flare
 		m_Statistics.DrawCallCount++;
 		m_Statistics.DrawCallsSavedByInstancing += batch.InstanceCount - 1;
 
-		commandBuffer->ApplyMaterial(batch.Material);
+		if (batch.Material == nullptr)
+			commandBuffer->ApplyMaterial(Renderer::GetErrorMaterial());
+		else
+			commandBuffer->ApplyMaterial(batch.Material);
+
 		commandBuffer->DrawMeshIndexed(batch.Mesh, batch.SubMesh, batch.BaseInstance, batch.InstanceCount);
 	}
 }

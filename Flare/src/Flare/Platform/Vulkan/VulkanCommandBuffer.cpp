@@ -256,6 +256,29 @@ namespace Flare
 		vkCmdDrawIndexed(m_CommandBuffer, subMesh.IndicesCount, instanceCount, subMesh.BaseIndex, subMesh.BaseVertex, baseInstance);
 	}
 
+	void VulkanCommandBuffer::DrawMeshIndexed(const Ref<const Mesh>& mesh, uint32_t firstSubMesh, uint32_t subMeshCount, uint32_t baseInstance, uint32_t instanceCount)
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		BindMesh(mesh);
+
+		const auto& subMeshes = mesh->GetSubMeshes();
+
+		uint32_t lastSubMeshIndex = firstSubMesh + subMeshCount;
+		uint32_t indexCount = 0;
+
+		if (lastSubMeshIndex == (uint32_t)subMeshes.size())
+		{
+			indexCount = (uint32_t)mesh->GetIndexCount() - subMeshes[firstSubMesh].BaseIndex;
+		}
+		else
+		{
+			indexCount = subMeshes[lastSubMeshIndex].BaseIndex - subMeshes[firstSubMesh].BaseIndex;
+		}
+
+		vkCmdDrawIndexed(m_CommandBuffer, indexCount, instanceCount, subMeshes[firstSubMesh].BaseIndex, 0, baseInstance);
+	}
+
 	void VulkanCommandBuffer::DrawIndexed(uint32_t baseIndex, uint32_t indexCount, uint32_t vertexOffset, uint32_t baseInstance, uint32_t instanceCount)
 	{
 		vkCmdDrawIndexed(m_CommandBuffer, indexCount, instanceCount, baseIndex, vertexOffset, baseInstance);

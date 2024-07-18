@@ -38,9 +38,14 @@ namespace Flare
 		if (context.GetViewport().IsShadowMappingEnabled())
 		{
 			for (ShadowCascadeData& cascadeData : m_CascadeData)
+			{
 				cascadeData.Batches.clear();
+				cascadeData.PartiallyVisible.clear();
+			}
 
 			m_FilteredTransforms.clear();
+			m_VisibleSubMeshRanges.clear();
+
 			ComputeShaderProjectionsAndCullObjects(context);
 		}
 
@@ -164,7 +169,7 @@ namespace Flare
 		FullyVisible,
 	};
 
-	inline static CullResult CullAABB(const Math::AABB& aabb, Math::Plane* planes, const Math::Compact3DTransform& transform)
+	inline static CullResult CullAABB(const Math::AABB& aabb, const Math::Plane* planes, const Math::Compact3DTransform& transform)
 	{
 		Math::AABB transformedAABB = aabb.Transformed(transform.ToMatrix4x4());
 		glm::vec3 center = transformedAABB.GetCenter();
@@ -328,10 +333,26 @@ namespace Flare
 						cascadeData.FrustumPlanes,
 						batch.Submitions[submitionIndex].Transform);
 
+					if (result == CullResult::PartiallyVisible && filteredBatch.Mesh->GetSubMeshes().size() == 1)
+						result = CullResult::FullyVisible;
+
 					if (result == CullResult::FullyVisible)
 					{
 						m_FilteredTransforms.push_back(batch.Submitions[submitionIndex].Transform);
 						filteredBatch.Count++;
+					}
+					else if (result == CullResult::PartiallyVisible)
+					{
+						PartiallyVisibleMesh partiallyVisibleMesh{};
+						partiallyVisibleMesh.Mesh = filteredBatch.Mesh;
+						partiallyVisibleMesh.Transform = batch.Submitions[submitionIndex].Transform;
+
+						CullSubMeshes(partiallyVisibleMesh, batch.Submitions[submitionIndex].Transform, cascadeData.FrustumPlanes);
+
+						if (partiallyVisibleMesh.SubMeshRangeCount > 0)
+						{
+							cascadeData.PartiallyVisible.push_back(partiallyVisibleMesh);
+						}
 					}
 				}
 
@@ -340,6 +361,48 @@ namespace Flare
 					cascadeData.Batches.push_back(filteredBatch);
 				}
 			}
+		}
+	}
+
+	void ShadowPass::CullSubMeshes(PartiallyVisibleMesh& mesh, const Math::Compact3DTransform& transform, const Math::Plane* frustumPlanes)
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		mesh.FirstSubMeshRange = (uint32_t)m_VisibleSubMeshRanges.size();
+
+		VisibleSubMeshRange currentRange{};
+		currentRange.Start = UINT32_MAX;
+		currentRange.Count = 0;
+
+		const auto& subMeshes = mesh.Mesh->GetSubMeshes();
+		uint32_t subMeshCount = (uint32_t)subMeshes.size();
+		for (uint32_t i = 0; i < subMeshCount; i++)
+		{
+			CullResult result = CullAABB(subMeshes[i].Bounds, frustumPlanes, transform);
+			if (result == CullResult::NotVisible)
+				continue;
+
+			if (currentRange.Start == UINT32_MAX || i != currentRange.GetEnd() + 1)
+			{
+				if (currentRange.Count > 0)
+				{
+					m_VisibleSubMeshRanges.push_back(currentRange);
+					mesh.SubMeshRangeCount++;
+				}
+
+				currentRange.Start = i;
+				currentRange.Count = 1;
+			}
+			else
+			{
+				currentRange.Count++;
+			}
+		}
+
+		if (currentRange.Count > 0)
+		{
+			m_VisibleSubMeshRanges.push_back(currentRange);
+			mesh.SubMeshRangeCount++;
 		}
 	}
 }
