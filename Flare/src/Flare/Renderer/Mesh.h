@@ -62,6 +62,8 @@ namespace Flare
 		inline Ref<VertexBuffer> GetTangents() const { return m_Tangents; }
 		inline Ref<VertexBuffer> GetUVs() const { return m_UVs; }
 
+		inline const Math::AABB& GetBounds() const { return m_Bounds; }
+
 		inline const std::vector<SubMesh>& GetSubMeshes() const { return m_SubMeshes; }
 		inline IndexBuffer::IndexFormat GetIndexFormat() const { return m_IndexFormat; }
 	public:
@@ -75,6 +77,8 @@ namespace Flare
 			Span<glm::vec2> uvs);
 	protected:
 		IndexBuffer::IndexFormat m_IndexFormat;
+
+		Math::AABB m_Bounds;
 
 		size_t m_VertexBufferSize = 0;
 		size_t m_IndexBufferSize = 0;

@@ -137,6 +137,16 @@ namespace Flare
 
 	void Mesh::AddSubMesh(const SubMesh& subMesh)
 	{
+		if (m_SubMeshes.size() == 0)
+		{
+			m_Bounds = subMesh.Bounds;
+		}
+		else
+		{
+			m_Bounds.Min = glm::min(subMesh.Bounds.Min, m_Bounds.Min);
+			m_Bounds.Max = glm::max(subMesh.Bounds.Max, m_Bounds.Max);
+		}
+
 		m_SubMeshes.push_back(subMesh);
 	}
 

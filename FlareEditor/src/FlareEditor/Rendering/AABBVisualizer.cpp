@@ -38,58 +38,31 @@ namespace Flare
 		if (!EditorLayer::GetInstance().GetSceneViewSettings().ShowAABBs)
 			return;
 
-		for (EntityView view : m_Query)
-		{
-			auto transforms = view.View<TransformComponent>();
-			auto meshes = view.View<MeshComponent>();
-
-			for (EntityViewElement entity : view)
+		m_Query.ForEachChunk([](QueryChunk chunk,
+			ComponentView<const MeshComponent> meshes,
+			ComponentView<const TransformComponent> transforms)
 			{
-				glm::mat4 transform = transforms[entity].GetTransformationMatrix();
-
-				if (meshes[entity].Mesh == nullptr)
-					continue;
-
-				const auto& subMeshes = meshes[entity].Mesh->GetSubMeshes();
-
-				for (const auto& subMesh : subMeshes)
+				for (auto entity : chunk)
 				{
-					const Math::AABB& bounds = subMesh.Bounds;
+					glm::mat4 transform = transforms[entity].GetTransformationMatrix();
 
-					glm::vec3 corners[8];
-					bounds.GetCorners(corners);
+					if (meshes[entity].Mesh == nullptr)
+						continue;
 
-					Math::AABB newBounds;
-					for (size_t i = 0; i < 8; i++)
-					{
-						glm::vec3 transformed = transform * glm::vec4(corners[i], 1.0f);
-						if (i == 0)
-						{
-							newBounds.Min = transformed;
-							newBounds.Max = transformed;
-						}
-						else
-						{
-							newBounds.Min = glm::min(newBounds.Min, transformed);
-							newBounds.Max = glm::max(newBounds.Max, transformed);
-						}
-					}
-
-					DebugRenderer::DrawAABB(newBounds);
+					Math::AABB meshBounds = meshes[entity].Mesh->GetBounds();
+					DebugRenderer::DrawAABB(meshBounds.Transformed(transform));
 				}
-			}
-		}
+			});
 
-		Math::AABB cubeAABB = RendererPrimitives::GetCube()->GetSubMeshes()[0].Bounds;
-		for (EntityView view : m_DecalsQuery)
-		{
-			auto transforms = view.View<TransformComponent>();
-			auto decals = view.View<Decal>();
-
-			for (EntityViewElement entity : view)
+		Math::AABB cubeAABB = RendererPrimitives::GetCube()->GetBounds();
+		m_DecalsQuery.ForEachChunk([&cubeAABB](QueryChunk chunk,
+			ComponentView<const TransformComponent> transforms,
+			ComponentView<const Decal> decals)
 			{
-				DebugRenderer::DrawAABB(cubeAABB.Transformed(transforms[entity].GetTransformationMatrix()));
-			}
-		}
+				for (auto entity : chunk)
+				{
+					DebugRenderer::DrawAABB(cubeAABB.Transformed(transforms[entity].GetTransformationMatrix()));
+				}
+			});
 	}
 }
