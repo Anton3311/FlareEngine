@@ -36,9 +36,10 @@ namespace Flare
 	{
 		if (context.GetViewport().IsShadowMappingEnabled())
 		{
-			for (auto& visibleObjects : m_VisibleObjects)
-				visibleObjects.clear();
+			for (ShadowCascadeData& cascadeData : m_CascadeData)
+				cascadeData.Batches.clear();
 
+			m_FilteredTransforms.clear();
 			ComputeShaderProjectionsAndCullObjects(context);
 		}
 
@@ -165,6 +166,37 @@ namespace Flare
 		context.GetViewport().GlobalResources.ShadowDataBuffer->SetData(&m_ShadowData, sizeof(m_ShadowData), 0);
 	}
 
+	enum class CullResult
+	{
+		NotVisible,
+		PartiallyVisible,
+		FullyVisible,
+	};
+
+	inline static CullResult CullAABB(const Math::AABB& aabb, const CascadeFrustum& frustum, const Math::Compact3DTransform& transform)
+	{
+		Math::AABB transformedAABB = aabb.Transformed(transform.ToMatrix4x4());
+		glm::vec3 center = transformedAABB.GetCenter();
+		glm::vec3 extents = transformedAABB.Max - center;
+
+		size_t inFrontCount = 0;
+		bool intersects = true;
+		for (size_t i = 0; i < 4; i++)
+		{
+			Math::Plane plane = frustum.Planes[i];
+
+			float projectedDistance = glm::dot(glm::abs(plane.Normal), extents);
+			float signedDistance = plane.SignedDistance(center);
+
+			inFrontCount += (projectedDistance <= signedDistance) ? 1 : 0;
+
+			if (-projectedDistance > signedDistance) // No intersection and not in front
+				return CullResult::NotVisible;
+		}
+
+		return inFrontCount == 4 ? CullResult::FullyVisible : CullResult::PartiallyVisible;
+	}
+
 	void ShadowPass::ComputeShaderProjectionsAndCullObjects(const RenderGraphContext& context)
 	{
 		FLARE_PROFILE_FUNCTION();
@@ -202,28 +234,37 @@ namespace Flare
 		}
 
 		{
-			FLARE_PROFILE_SCOPE("DivideIntoGroups");
-			for (size_t objectIndex = 0; objectIndex < m_OpaqueObjects.GetSize(); objectIndex++)
-			{
-				const auto& object = m_OpaqueObjects[objectIndex];
-				if (HAS_BIT(object.Flags, MeshRenderFlags::DontCastShadows))
-					continue;
+			FLARE_PROFILE_SCOPE("FilterSubmitions");
+			const auto& submitedBatches = m_OpaqueObjects.GetShadowPassBatches();
 
-				Math::AABB objectAABB = Math::SIMD::TransformAABB(object.Mesh->GetSubMeshes()[object.SubMeshIndex].Bounds, object.Transform.ToMatrix4x4());
-				for (size_t cascadeIndex = 0; cascadeIndex < shadowSettings.Cascades; cascadeIndex++)
+			for (size_t batchIndex = 0; batchIndex < submitedBatches.size(); batchIndex++)
+			{
+				const RendererSubmitionQueue::ShadowPassBatch& batch = submitedBatches[batchIndex];
+				for (size_t cascadeIndex = 0; cascadeIndex < (size_t)shadowSettings.Cascades; cascadeIndex++)
 				{
-					bool intersects = true;
-					for (size_t i = 0; i < 4; i++)
+					ShadowCascadeData& cascadeData = m_CascadeData[cascadeIndex];
+					FilteredShadowPassBatch filteredBatch{};
+					filteredBatch.Mesh = batch.Mesh;
+					filteredBatch.FirstEntryIndex = (uint32_t)m_FilteredTransforms.size();
+
+					for (size_t submitionIndex = 0; submitionIndex < batch.Submitions.size(); submitionIndex++)
 					{
-						if (!objectAABB.IntersectsOrInFrontOfPlane(cascadeFrustums[cascadeIndex].Planes[i]))
+						CullResult result = CullAABB(
+							filteredBatch.Mesh->GetBounds(),
+							cascadeFrustums[cascadeIndex],
+							batch.Submitions[submitionIndex].Transform);
+
+						if (result == CullResult::FullyVisible)
 						{
-							intersects = false;
-							break;
+							m_FilteredTransforms.push_back(batch.Submitions[submitionIndex].Transform);
+							filteredBatch.Count++;
 						}
 					}
 
-					if (intersects)
-						m_VisibleObjects[cascadeIndex].push_back((uint32_t)objectIndex);
+					if (filteredBatch.Count > 0)
+					{
+						cascadeData.Batches.push_back(filteredBatch);
+					}
 				}
 			}
 		}
@@ -301,10 +342,10 @@ namespace Flare
 						farPlaneDistance - nearPlaneDistance);
 				}
 
-				m_LightViews[cascadeIndex].SetViewAndProjection(projection, view);
+				m_CascadeData[cascadeIndex].View.SetViewAndProjection(projection, view);
 
 				m_ShadowData.LightFar = farPlaneDistance - nearPlaneDistance;
-				m_ShadowData.LightProjections[cascadeIndex] = m_LightViews[cascadeIndex].ViewProjection;
+				m_ShadowData.LightProjections[cascadeIndex] = m_CascadeData[cascadeIndex].View.ViewProjection;
 
 				currentNearPlane = shadowSettings.CascadeSplits[cascadeIndex];
 			}

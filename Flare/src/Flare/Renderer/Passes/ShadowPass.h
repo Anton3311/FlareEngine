@@ -22,6 +22,19 @@ namespace Flare
 	class Material;
 	class Mesh;
 
+	struct FilteredShadowPassBatch
+	{
+		Ref<const Mesh> Mesh = nullptr;
+		uint32_t FirstEntryIndex = 0;
+		uint32_t Count = 0;
+	};
+
+	struct ShadowCascadeData
+	{
+		RenderView View;
+		std::vector<FilteredShadowPassBatch> Batches;
+	};
+
 	class FLARE_API ShadowPass : public RenderGraphPass
 	{
 	public:
@@ -52,19 +65,9 @@ namespace Flare
 
 		void OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer) override;
 
-		inline const std::vector<uint32_t>& GetVisibleObjects(size_t cascadeIndex) const
-		{
-			FLARE_CORE_ASSERT(cascadeIndex < MaxCascades);
-			return m_VisibleObjects[cascadeIndex];
-		}
-
-		inline const RenderView& GetLightView(size_t cascadeIndex) const
-		{
-			FLARE_CORE_ASSERT(cascadeIndex < MaxCascades);
-			return m_LightViews[cascadeIndex];
-		}
-
 		inline Ref<Sampler> GetCompareSampler() const { return m_CompareSampler; }
+		inline const ShadowCascadeData& GetCascadeData(size_t index) const { return m_CascadeData[index]; }
+		inline const std::vector<Math::Compact3DTransform>& GetFilteredTransforms() const { return m_FilteredTransforms; }
 	private:
 		void CalculateShadowMappingParameters(const RenderGraphContext& context);
 		void ComputeShaderProjectionsAndCullObjects(const RenderGraphContext& context);
@@ -74,7 +77,7 @@ namespace Flare
 		ShadowData m_ShadowData;
 		Ref<Sampler> m_CompareSampler = nullptr;
 
-		RenderView m_LightViews[MaxCascades];
-		std::vector<uint32_t> m_VisibleObjects[MaxCascades];
+		ShadowCascadeData m_CascadeData[MaxCascades];
+		std::vector<Math::Compact3DTransform> m_FilteredTransforms;
 	};
 }

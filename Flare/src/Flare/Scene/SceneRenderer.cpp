@@ -111,7 +111,7 @@ namespace Flare
 		}
 	}
 
-	// Meshe Renderer
+	// Mesh Renderer
 
 	void MeshRendererSystem::OnConfig(World& world, SystemConfig& config)
 	{
@@ -130,6 +130,8 @@ namespace Flare
 		Ref<Material> currentMaterial = nullptr;
 		Ref<MaterialsTable> currentMaterialsTable = nullptr;
 		Ref<Material> errorMaterial = Renderer::GetErrorMaterial();
+
+		RendererSubmitionQueue& submitionQueue = Renderer::GetOpaqueSubmitionQueue();
 
 		bool isMaterialTable = false;
 
@@ -181,20 +183,10 @@ namespace Flare
 				}
 				else
 				{
-					for (size_t i = 0; i < mesh->GetSubMeshes().size(); i++)
-					{
-						Ref<Material> material = nullptr;
-
-						if (i < currentMaterialsTable->Materials.size())
-							material = AssetManager::GetAsset<Material>(currentMaterialsTable->Materials[i]);
-
-						Renderer::DrawMesh(mesh,
-							(uint32_t)i,
-							material == nullptr ? errorMaterial : material,
-							transform.GetTransformationMatrix(),
-							meshes[*entity].Flags,
-							id.value().GetIndex());
-					}
+					submitionQueue.Submit(mesh,
+						Span<AssetHandle>::FromVector(currentMaterialsTable->Materials),
+						Math::Compact3DTransform(transform.GetTransformationMatrix()),
+						meshes[*entity].Flags);
 				}
 			}
 		}

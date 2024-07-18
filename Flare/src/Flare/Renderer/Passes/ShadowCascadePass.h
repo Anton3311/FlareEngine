@@ -4,10 +4,6 @@
 #include "Flare/Renderer/RenderGraph/RenderGraphPass.h"
 #include "Flare/Renderer/RendererStatistics.h"
 
-#ifndef FIXED_SHADOW_NEAR_AND_FAR
-	#define FIXED_SHADOW_NEAR_AND_FAR 1
-#endif
-
 namespace Flare
 {
 	struct RenderView;
@@ -16,6 +12,9 @@ namespace Flare
 	class UniformBuffer;
 	class ShaderStorageBuffer;
 	class GPUTimer;
+
+	struct ShadowCascadeData;
+
 	class ShadowCascadePass : public RenderGraphPass
 	{
 	public:
@@ -23,8 +22,8 @@ namespace Flare
 
 		ShadowCascadePass(const RendererSubmitionQueue& opaqueObjects,
 			RendererStatistics& statistics,
-			const RenderView& lightView,
-			const std::vector<uint32_t>& visibleObjects,
+			const ShadowCascadeData& cascadeData,
+			const std::vector<Math::Compact3DTransform>& filteredTransforms,
 			Ref<Texture> cascadeTexture);
 
 		~ShadowCascadePass();
@@ -50,6 +49,9 @@ namespace Flare
 		const RendererSubmitionQueue& m_OpaqueObjects;
 		RendererStatistics& m_Statistics;
 
+		const ShadowCascadeData& m_CascadeData;
+		const std::vector<Math::Compact3DTransform>& m_FilteredTransforms;
+
 		Ref<GPUTimer> m_Timer = nullptr;
 		Ref<Texture> m_CascadeTexture = nullptr;
 
@@ -58,9 +60,6 @@ namespace Flare
 
 		Ref<ShaderStorageBuffer> m_InstanceBuffer = nullptr;
 		Ref<DescriptorSet> m_InstanceBufferDescriptor = nullptr;
-
-		const RenderView& m_LightView;
-		const std::vector<uint32_t>& m_VisibleObjects;
 
 		std::vector<InstanceData> m_InstanceDataBuffer;
 	};

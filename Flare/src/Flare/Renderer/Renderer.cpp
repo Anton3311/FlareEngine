@@ -74,7 +74,6 @@ namespace Flare
 		if (errorShaderHandle && AssetManager::IsAssetHandleValid(*errorShaderHandle))
 		{
 			s_RendererData.ErrorMaterial = Material::Create(AssetManager::GetAsset<Shader>(*errorShaderHandle));
-			s_RendererData.OpaqueQueue.m_ErrorMaterial = s_RendererData.ErrorMaterial;
 		}
 		else
 			FLARE_CORE_ERROR("Renderer: Failed to find Error shader");
@@ -250,7 +249,7 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 
 		s_RendererData.CurrentViewport = &viewport;
-		s_RendererData.OpaqueQueue.m_CameraPosition = viewport.FrameData.Camera.Position;
+		s_RendererData.OpaqueQueue.SetCameraPosition(viewport.FrameData.Camera.Position);
 
 		Ref<CommandBuffer> commandBuffer = GraphicsContext::GetInstance().GetCommandBuffer();
 
@@ -305,7 +304,7 @@ namespace Flare
 		s_RendererData.SpotLights.clear();
 		s_RendererData.Decals.clear();
 
-		s_RendererData.OpaqueQueue.m_Buffer.clear();
+		s_RendererData.OpaqueQueue.Clear();
 	}
 
 	void Renderer::SubmitPointLight(const PointLightData& light)
@@ -465,8 +464,8 @@ namespace Flare
 			Ref<ShadowCascadePass> cascadePass = CreateRef<ShadowCascadePass>(
 				s_RendererData.OpaqueQueue,
 				s_RendererData.Statistics,
-				shadowPass->GetLightView(cascadeIndex),
-				shadowPass->GetVisibleObjects(cascadeIndex),
+				shadowPass->GetCascadeData((size_t)cascadeIndex),
+				shadowPass->GetFilteredTransforms(),
 				cascadeTextures[cascadeIndex]);
 
 			viewport.Graph.AddPass(cascadePassSpec, cascadePass);

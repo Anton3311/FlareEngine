@@ -14,9 +14,21 @@
 namespace Flare
 {
 	class Renderer;
-	class RendererSubmitionQueue
+	class FLARE_API RendererSubmitionQueue
 	{
 	public:
+		struct ShadowPassMeshSubmition
+		{
+			Math::Compact3DTransform Transform;
+			float SortKey = 0.0f;
+		};
+
+		struct ShadowPassBatch
+		{
+			Ref<const Mesh> Mesh = nullptr;
+			std::vector<ShadowPassMeshSubmition> Submitions;
+		};
+
 		struct Item
 		{
 			Ref<const Mesh> Mesh;
@@ -38,6 +50,10 @@ namespace Flare
 			Submit(mesh, subMesh, material, Math::Compact3DTransform(transform), flags, entityIndex);
 		}
 
+		void Submit(Ref<const Mesh> mesh, Span<AssetHandle> materialHandles, const Math::Compact3DTransform& transform, MeshRenderFlags flags);
+
+		void SubmitForShadowPass(const Ref<const Mesh>& mesh, const Math::Compact3DTransform& transform);
+
 		void Submit(const Ref<const Mesh>& mesh,
 			uint32_t subMesh,
 			const Ref<const Material>& material,
@@ -45,16 +61,8 @@ namespace Flare
 			MeshRenderFlags flags,
 			int32_t entityIndex)
 		{
-			if (m_ErrorMaterial == nullptr)
-				return;
-
 			Item& object = m_Buffer.emplace_back();
-
-			if (material)
-				object.Material = material->GetShader() == nullptr ? m_ErrorMaterial : material;
-			else
-				object.Material = m_ErrorMaterial;
-
+			object.Material = material;
 			object.Flags = flags;
 			object.Mesh = mesh;
 			object.SubMeshIndex = subMesh;
@@ -68,11 +76,15 @@ namespace Flare
 		inline size_t GetSize() const { return m_Buffer.size(); }
 		inline Item& operator[](size_t index) { return m_Buffer[index]; }
 		inline const Item& operator[](size_t index) const { return m_Buffer[index]; }
+
+		inline const std::vector<ShadowPassBatch>& GetShadowPassBatches() const { return m_ShadowPassBatches; }
+
+		inline void SetCameraPosition(glm::vec3 cameraPosition) { m_CameraPosition = cameraPosition; }
+		void Clear();
 	private:
-		glm::vec3 m_CameraPosition;
-		Ref<const Material> m_ErrorMaterial;
+		glm::vec3 m_CameraPosition = glm::vec3(0.0f);
 		std::vector<Item> m_Buffer;
 
-		friend class Renderer;
+		std::vector<ShadowPassBatch> m_ShadowPassBatches;
 	};
 }
