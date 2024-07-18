@@ -17,7 +17,9 @@ namespace Flare
 	public:
 		void AddPass(const RenderGraphPassSpecifications& specifications, Ref<RenderGraphPass> pass);
 		void InsertPass(const RenderGraphPassSpecifications& specifications, Ref<RenderGraphPass> pass, size_t index);
-		std::optional<size_t> FindPassByName(std::string_view name);
+
+		const RenderPassNode* GetRenderPassNode(size_t index) const;
+		std::optional<size_t> FindPassByName(std::string_view name) const;
 
 		void AddExternalResource(const ExternalRenderGraphResource& resource);
 

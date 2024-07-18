@@ -25,7 +25,15 @@ namespace Flare
 		m_Nodes.insert(m_Nodes.begin() + index, RenderPassNode{ specifications, pass, nullptr, {} });
 	}
 
-	std::optional<size_t> RenderGraph::FindPassByName(std::string_view name)
+	const RenderPassNode* RenderGraph::GetRenderPassNode(size_t index) const
+	{
+		if (index < m_Nodes.size())
+			return &m_Nodes[index];
+
+		return nullptr;
+	}
+
+	std::optional<size_t> RenderGraph::FindPassByName(std::string_view name) const
 	{
 		for (size_t i = 0; i < m_Nodes.size(); i++)
 		{
