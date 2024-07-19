@@ -31,6 +31,11 @@ namespace Flare
 		void SetData(MemorySpan data, size_t offset, Ref<CommandBuffer> commandBuffer);
 		void EnsureAllocated();
 
+		// Resizes a buffer to a new size.
+		//
+		// NOTE: Contents of the buffer are not presserved
+		void Resize(size_t newSize);
+
 		inline size_t GetSize() const { return m_Size; }
 		inline VkBuffer GetBuffer() const { return m_Buffer; }
 
@@ -38,6 +43,8 @@ namespace Flare
 		inline const std::string& GetDebugName() const { return m_DebugName; }
 	private:
 		void Create();
+		void Release();
+		void UpdateDebugName();
 		VulkanStagingBuffer FillStagingBuffer(MemorySpan data);
 	protected:
 		std::string m_DebugName;

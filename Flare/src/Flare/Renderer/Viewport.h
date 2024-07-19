@@ -41,6 +41,7 @@ namespace Flare
 		inline float GetAspectRatio() const { return (float)m_Size.x / (float)m_Size.y; }
 
 		void Resize(glm::ivec2 position, glm::ivec2 size);
+		void UpdateGlobalDescriptorSets();
 	public:
 		inline bool IsPostProcessingEnabled() const { return m_PostProcessingEnabled; }
 		void SetPostProcessingEnabled(bool enabled);

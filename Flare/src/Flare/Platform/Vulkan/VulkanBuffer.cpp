@@ -21,18 +21,7 @@ namespace Flare
 
 	VulkanBuffer::~VulkanBuffer()
 	{
-		FLARE_CORE_ASSERT(VulkanContext::GetInstance().IsValid());
-
-		VkDevice device = VulkanContext::GetInstance().GetDevice();
-
-		if (m_Mapped)
-		{
-			vmaUnmapMemory(VulkanContext::GetInstance().GetMemoryAllocator(), m_Allocation.Handle);
-			m_Mapped = nullptr;
-		}
-
-		vmaFreeMemory(VulkanContext::GetInstance().GetMemoryAllocator(), m_Allocation.Handle);
-		vkDestroyBuffer(device, m_Buffer, nullptr);
+		Release();
 	}
 
 	void VulkanBuffer::SetData(const void* data, size_t size, size_t offset)
@@ -122,10 +111,25 @@ namespace Flare
 		Create();
 	}
 
+	void VulkanBuffer::Resize(size_t newSize)
+	{
+		FLARE_PROFILE_FUNCTION();
+		FLARE_CORE_ASSERT(newSize > 0);
+
+		Release();
+
+		m_Size = newSize;
+
+		Create();
+
+		if (m_DebugName.size() > 0)
+			UpdateDebugName();
+	}
+
 	void VulkanBuffer::SetDebugName(std::string_view name)
 	{
 		m_DebugName = name;
-		VulkanContext::GetInstance().SetDebugName(VK_OBJECT_TYPE_BUFFER, (uint64_t)m_Buffer, m_DebugName.c_str());
+		UpdateDebugName();
 	}
 
 	void VulkanBuffer::Create()
@@ -163,6 +167,31 @@ namespace Flare
 		{
 			VK_CHECK_RESULT(vmaMapMemory(VulkanContext::GetInstance().GetMemoryAllocator(), m_Allocation.Handle, &m_Mapped));
 		}
+	}
+
+	void VulkanBuffer::Release()
+	{
+		FLARE_PROFILE_FUNCTION();
+		FLARE_CORE_ASSERT(VulkanContext::GetInstance().IsValid());
+
+		VkDevice device = VulkanContext::GetInstance().GetDevice();
+
+		if (m_Mapped)
+		{
+			vmaUnmapMemory(VulkanContext::GetInstance().GetMemoryAllocator(), m_Allocation.Handle);
+			m_Mapped = nullptr;
+		}
+
+		vmaFreeMemory(VulkanContext::GetInstance().GetMemoryAllocator(), m_Allocation.Handle);
+		vkDestroyBuffer(device, m_Buffer, nullptr);
+
+		m_Buffer = VK_NULL_HANDLE;
+		m_Allocation = {};
+	}
+
+	void VulkanBuffer::UpdateDebugName()
+	{
+		VulkanContext::GetInstance().SetDebugName(VK_OBJECT_TYPE_BUFFER, (uint64_t)m_Buffer, m_DebugName.c_str());
 	}
 
 	VulkanStagingBuffer VulkanBuffer::FillStagingBuffer(MemorySpan data)

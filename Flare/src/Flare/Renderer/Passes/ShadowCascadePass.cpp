@@ -40,7 +40,7 @@ namespace Flare
 		m_CameraDescriptor->WriteUniformBuffer(m_CameraBuffer, 0);
 		m_CameraDescriptor->FlushWrites();
 
-		constexpr size_t maxInstanceCount = 1000;
+		constexpr size_t maxInstanceCount = 16;
 		m_InstanceBuffer = ShaderStorageBuffer::Create(maxInstanceCount * sizeof(InstanceData));
 		m_InstanceBufferDescriptor = Renderer::GetInstanceDataDescriptorSetPool()->AllocateSet();
 		m_InstanceBufferDescriptor->WriteStorageBuffer(m_InstanceBuffer, 0);
@@ -96,6 +96,14 @@ namespace Flare
 				instanceData.PackedTransform[1] = glm::vec4(transform.RotationScale[1], transform.Translation.y);
 				instanceData.PackedTransform[2] = glm::vec4(transform.RotationScale[2], transform.Translation.z);
 			}
+		}
+
+		size_t instanceDataSize = sizeof(InstanceData) * m_InstanceDataBuffer.size();
+		if (instanceDataSize > m_InstanceBuffer->GetSize())
+		{
+			m_InstanceBuffer->Resize(instanceDataSize);
+			m_InstanceBufferDescriptor->WriteStorageBuffer(m_InstanceBuffer, 0);
+			m_InstanceBufferDescriptor->FlushWrites();
 		}
 
 		m_InstanceBuffer->SetData(MemorySpan::FromVector(m_InstanceDataBuffer), 0, commandBuffer);

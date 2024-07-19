@@ -19,7 +19,7 @@ namespace Flare
 		: m_OpaqueObjects(opaqueObjects), m_Statistics(statistics)
 	{
 		FLARE_PROFILE_FUNCTION();
-		constexpr size_t maxInstances = 1000;
+		constexpr size_t maxInstances = 16;
 		m_InstanceStorageBuffer = ShaderStorageBuffer::Create(maxInstances * sizeof(InstanceData));
 
 		m_InstanceDataDescriptor = Renderer::GetInstanceDataDescriptorSetPool()->AllocateSet();
@@ -74,6 +74,14 @@ namespace Flare
 				instanceData.PackedTransform[1] = glm::vec4(transform.RotationScale[1], transform.Translation.y);
 				instanceData.PackedTransform[2] = glm::vec4(transform.RotationScale[2], transform.Translation.z);
 			}
+		}
+
+		size_t instanceDataSize = sizeof(InstanceData) * m_InstanceBuffer.size();
+		if (instanceDataSize > m_InstanceStorageBuffer->GetSize())
+		{
+			m_InstanceStorageBuffer->Resize(instanceDataSize);
+			m_InstanceDataDescriptor->WriteStorageBuffer(m_InstanceStorageBuffer, 0);
+			m_InstanceDataDescriptor->FlushWrites();
 		}
 
 		m_InstanceStorageBuffer->SetData(MemorySpan::FromVector(m_InstanceBuffer), 0, commandBuffer);
@@ -166,7 +174,7 @@ namespace Flare
 		m_Statistics.DrawCallCount++;
 		m_Statistics.DrawCallsSavedByInstancing += batch.InstanceCount - 1;
 
-		if (batch.Material == nullptr)
+		if (batch.Material == nullptr || batch.Material->GetShader() == nullptr)
 			commandBuffer->ApplyMaterial(Renderer::GetErrorMaterial());
 		else
 			commandBuffer->ApplyMaterial(batch.Material);

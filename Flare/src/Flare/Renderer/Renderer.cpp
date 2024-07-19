@@ -267,15 +267,36 @@ namespace Flare
 			s_RendererData.CurrentViewport->GlobalResources.CameraBuffer->SetData(&viewport.FrameData.Camera, sizeof(RenderView), 0);
 		}
 
+		bool updateViewportDescriptorSets = false;
+
 		{
 			FLARE_PROFILE_SCOPE("UploadPointLightsData");
-			s_RendererData.CurrentViewport->GlobalResources.PointLightsBuffer->SetData(MemorySpan::FromVector(s_RendererData.PointLights), 0, commandBuffer);
+			MemorySpan pointLightsData = MemorySpan::FromVector(s_RendererData.PointLights);
+
+			if (pointLightsData.GetSize() > s_RendererData.CurrentViewport->GlobalResources.PointLightsBuffer->GetSize())
+			{
+				s_RendererData.CurrentViewport->GlobalResources.PointLightsBuffer->Resize(pointLightsData.GetSize());
+				updateViewportDescriptorSets = true;
+			}
+
+			s_RendererData.CurrentViewport->GlobalResources.PointLightsBuffer->SetData(pointLightsData, 0, commandBuffer);
 		}
 
 		{
 			FLARE_PROFILE_SCOPE("UploadSpotLightsData");
-			s_RendererData.CurrentViewport->GlobalResources.SpotLightsBuffer->SetData(MemorySpan::FromVector(s_RendererData.SpotLights), 0, commandBuffer);
+
+			MemorySpan spotLightsData = MemorySpan::FromVector(s_RendererData.SpotLights);
+
+			if (spotLightsData.GetSize() > s_RendererData.CurrentViewport->GlobalResources.SpotLightsBuffer->GetSize())
+			{
+				s_RendererData.CurrentViewport->GlobalResources.SpotLightsBuffer->Resize(spotLightsData.GetSize());
+				updateViewportDescriptorSets = true;
+			}
+
+			s_RendererData.CurrentViewport->GlobalResources.SpotLightsBuffer->SetData(spotLightsData, 0, commandBuffer);
 		}
+
+		s_RendererData.CurrentViewport->UpdateGlobalDescriptorSets();
 
 		{
 			// Generate camera frustum planes

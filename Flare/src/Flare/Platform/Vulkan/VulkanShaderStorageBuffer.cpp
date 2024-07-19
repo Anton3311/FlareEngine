@@ -31,6 +31,11 @@ namespace Flare
 		m_Buffer.SetData(data, offset, commandBuffer);
 	}
 
+	void VulkanShaderStorageBuffer::Resize(size_t size)
+	{
+		m_Buffer.Resize(size);
+	}
+
 	void VulkanShaderStorageBuffer::SetDebugName(std::string_view name)
 	{
 		m_Buffer.SetDebugName(name);

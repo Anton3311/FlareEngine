@@ -24,13 +24,11 @@ namespace Flare
 
 		GlobalResources.GlobalDescriptorSet = Renderer::GetGlobalDescriptorSetPool()->AllocateSet();
 		GlobalResources.GlobalDescriptorSetWithoutShadows = Renderer::GetGlobalDescriptorSetPool()->AllocateSet();
-		
-		SetupGlobalDescriptorSet(GlobalResources.GlobalDescriptorSet);
-		SetupGlobalDescriptorSet(GlobalResources.GlobalDescriptorSetWithoutShadows);
 	}
 
 	Viewport::~Viewport()
 	{
+		FLARE_PROFILE_FUNCTION();
 		Renderer::GetCameraDescriptorSetPool()->ReleaseSet(GlobalResources.CameraDescriptorSet);
 		Renderer::GetGlobalDescriptorSetPool()->ReleaseSet(GlobalResources.GlobalDescriptorSet);
 		Renderer::GetGlobalDescriptorSetPool()->ReleaseSet(GlobalResources.GlobalDescriptorSetWithoutShadows);
@@ -40,6 +38,14 @@ namespace Flare
 	{
 		m_Position = position;
 		m_Size = size;
+	}
+
+	void Viewport::UpdateGlobalDescriptorSets()
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		SetupGlobalDescriptorSet(GlobalResources.GlobalDescriptorSet);
+		SetupGlobalDescriptorSet(GlobalResources.GlobalDescriptorSetWithoutShadows);
 	}
 
 	void Viewport::SetPostProcessingEnabled(bool enabled)
@@ -71,6 +77,7 @@ namespace Flare
 
 	void Viewport::SetupGlobalDescriptorSet(Ref<DescriptorSet> set)
 	{
+		FLARE_PROFILE_FUNCTION();
 		set->WriteUniformBuffer(GlobalResources.ShadowDataBuffer, 0);
 		set->WriteUniformBuffer(GlobalResources.LightBuffer, 1);
 		set->WriteStorageBuffer(GlobalResources.PointLightsBuffer, 2);
