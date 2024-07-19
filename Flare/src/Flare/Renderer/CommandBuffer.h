@@ -66,8 +66,7 @@ namespace Flare
 			uint32_t baseInstance,
 			uint32_t instanceCount) = 0;
 
-		virtual void Blit(Ref<FrameBuffer> source, uint32_t sourceAttachment, Ref<FrameBuffer> destination, uint32_t destinationAttachment, TextureFiltering filter) = 0;
-		virtual void Blit(Ref<Texture> source, Ref<Texture> destination, TextureFiltering filter) = 0;
+		virtual void Blit(Ref<const Texture> source, Ref<const Texture> destination, TextureFiltering filter) = 0;
 
 		virtual void SetGlobalDescriptorSet(Ref<const DescriptorSet> set, uint32_t index) = 0;
 

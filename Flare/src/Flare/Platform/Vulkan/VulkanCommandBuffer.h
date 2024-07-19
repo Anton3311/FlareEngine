@@ -60,8 +60,7 @@ namespace Flare
 		// Expects source attachment to be in TRANSFER_SRC
 		// Destination attachment - TRANSFER_DST
 		// Leaves layouts unchanged
-		void Blit(Ref<FrameBuffer> source, uint32_t sourceAttachment, Ref<FrameBuffer> destination, uint32_t destinationAttachment, TextureFiltering filter) override;
-		void Blit(Ref<Texture> source, Ref<Texture> destination, TextureFiltering filter) override;
+		void Blit(Ref<const Texture> source, Ref<const Texture> destination, TextureFiltering filter) override;
 
 		void SetGlobalDescriptorSet(Ref<const DescriptorSet> set, uint32_t index) override;
 
