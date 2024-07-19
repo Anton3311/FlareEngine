@@ -19,8 +19,12 @@ Run `GenerateProject.bat` inside `/Sandbox/`, to generate a solution.
 
 The editor can be started using Visual Studio, or from the command line by running the `.exe` from the `FlareEditor` folder.
 
-### Command line arguments:
+### Command line arguments
+
 `--project=<path>` - A project to open on editor startup. Must be a path to .flareproj file.
+
 `--api=<name>` - API to use for rendering. Only `--api=vulkan` is supported, which is also a default.
+
 `--vulkan-debug` - enables Vulkan validation layers and generation of debug names for Vulkan objects. Disabled by default.
+
 `--device=<type>` - specify a type of GPU device to use for rendering. Can be one of two: `integrated` or `discrete`. `discrete` is the default.
