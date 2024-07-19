@@ -171,15 +171,10 @@ namespace Flare
 
 				if (!isMaterialTable)
 				{
-					for (size_t i = 0; i < mesh->GetSubMeshes().size(); i++)
-					{
-						Renderer::DrawMesh(mesh,
-							(uint32_t)i,
-							currentMaterial,
-							transform.GetTransformationMatrix(),
-							meshes[*entity].Flags,
-							id.value().GetIndex());
-					}
+					submitionQueue.Submit(mesh,
+						currentMaterial,
+						Math::Compact3DTransform(transform.GetTransformationMatrix()),
+						meshes[*entity].Flags);
 				}
 				else
 				{
@@ -211,7 +206,7 @@ namespace Flare
 			{
 				for (auto entity : chunk)
 				{
-					Renderer::SubmitDecal(decals[entity].Material, transforms[entity].GetTransformationMatrix(), 0);
+					Renderer::SubmitDecal(decals[entity].Material, transforms[entity].GetTransformationMatrix());
 				}
 			});
 	}

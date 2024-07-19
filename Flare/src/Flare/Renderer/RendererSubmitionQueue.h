@@ -31,26 +31,17 @@ namespace Flare
 
 		struct Item
 		{
-			Ref<const Mesh> Mesh;
-			Ref<const Material> Material;
-			uint32_t SubMeshIndex;
+			Ref<const Mesh> Mesh = nullptr;
+			Ref<const Material> Material = nullptr;
+			uint32_t SubMeshIndex = 0;
 			Math::Compact3DTransform Transform;
-			MeshRenderFlags Flags;
+			MeshRenderFlags Flags = MeshRenderFlags::None;
 
-			float SortKey;
+			float SortKey = 0.0f;
 		};
 
-		void Submit(const Ref<const Mesh>& mesh,
-			uint32_t subMesh,
-			const Ref<const Material>& material,
-			const glm::mat4& transform,
-			MeshRenderFlags flags,
-			int32_t entityIndex)
-		{
-			Submit(mesh, subMesh, material, Math::Compact3DTransform(transform), flags, entityIndex);
-		}
-
 		void Submit(Ref<const Mesh> mesh, Span<AssetHandle> materialHandles, const Math::Compact3DTransform& transform, MeshRenderFlags flags);
+		void Submit(Ref<const Mesh> mesh, Ref<const Material> material, const Math::Compact3DTransform& transform, MeshRenderFlags flags);
 
 		void SubmitForShadowPass(const Ref<const Mesh>& mesh, const Math::Compact3DTransform& transform);
 
@@ -58,8 +49,7 @@ namespace Flare
 			uint32_t subMesh,
 			const Ref<const Material>& material,
 			const Math::Compact3DTransform& transform,
-			MeshRenderFlags flags,
-			int32_t entityIndex)
+			MeshRenderFlags flags)
 		{
 			Item& object = m_Buffer.emplace_back();
 			object.Material = material;

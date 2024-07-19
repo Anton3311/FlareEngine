@@ -160,10 +160,9 @@ namespace Flare
 			uint32_t subMesh,
 			const Ref<Material>& material,
 			const glm::mat4& transform,
-			MeshRenderFlags flags = MeshRenderFlags::None,
-			int32_t entityIndex = INT32_MAX);
+			MeshRenderFlags flags = MeshRenderFlags::None);
 
-		static void SubmitDecal(const Ref<const Material>& material, const glm::mat4& transform, int32_t entityIndex);
+		static void SubmitDecal(const Ref<const Material>& material, const glm::mat4& transform);
 
 		static RendererSubmitionQueue& GetOpaqueSubmitionQueue();
 

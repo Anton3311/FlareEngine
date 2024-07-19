@@ -317,12 +317,12 @@ namespace Flare
 		s_RendererData.SpotLights.push_back(light);
 	}
 
-	void Renderer::DrawMesh(const Ref<Mesh>& mesh, uint32_t subMesh, const Ref<Material>& material, const glm::mat4& transform, MeshRenderFlags flags, int32_t entityIndex)
+	void Renderer::DrawMesh(const Ref<Mesh>& mesh, uint32_t subMesh, const Ref<Material>& material, const glm::mat4& transform, MeshRenderFlags flags)
 	{
-		s_RendererData.OpaqueQueue.Submit(mesh, subMesh, material, transform, flags, entityIndex);
+		s_RendererData.OpaqueQueue.Submit(mesh, subMesh, material, Math::Compact3DTransform(transform), flags);
 	}
 
-	void Renderer::SubmitDecal(const Ref<const Material>& material, const glm::mat4& transform, int32_t entityIndex)
+	void Renderer::SubmitDecal(const Ref<const Material>& material, const glm::mat4& transform)
 	{
 		if (material == nullptr || material->GetShader() == nullptr)
 			return;
