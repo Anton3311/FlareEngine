@@ -1,15 +1,20 @@
 #pragma once
 
-#include "Flare/Core/Window.h"
+#include "FlareCore/Core.h"
 #include "Flare/Core/LayerStack.h"
-#include "Flare/Core/ImGUILayer.h"
+#include "Flare/Core/CommandLineArguments.h"
+
+#include "Flare/Renderer/GraphicsContext.h"
+
+#include "FlarePlatform/Window.h"
 
 namespace Flare
 {
-	class Application
+	class FLARE_API Application
 	{
 	public:
-		Application();
+		Application(CommandLineArguments arguments);
+		virtual ~Application();
 
 		void Run();
 		void Close();
@@ -17,18 +22,21 @@ namespace Flare
 		void PushLayer(const Ref<Layer>& layer);
 		void PushOverlay(const Ref<Layer>& layer);
 
+		void ExecuteAfterEndOfFrame(std::function<void()>&& function);
+
 		Ref<Window> GetWindow() const { return m_Window; }
+		CommandLineArguments GetCommandLineArguments() const { return m_CommandLineArguments; }
 
 		static Application& GetInstance();
 	protected:
 		Ref<Window> m_Window;
+		CommandLineArguments m_CommandLineArguments;
 	private:
 		LayerStack m_LayersStack;
-		Ref<ImGUILayer> m_ImGuiLayer;
+
+		std::vector<std::function<void()>> m_AfterEndOfFrameFunctions;
 
 		bool m_Running;
 		float m_PreviousFrameTime;
-	private:
-		static Application* s_Instance;
 	};
 }

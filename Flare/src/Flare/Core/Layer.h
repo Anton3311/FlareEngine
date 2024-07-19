@@ -1,12 +1,12 @@
 #pragma once
 
-#include "Flare/Core/Event.h"
+#include "FlarePlatform/Event.h"
 
 #include <string>
 
 namespace Flare
 {
-	class Layer
+	class FLARE_API Layer
 	{
 	public:
 		Layer(std::string_view debugName)

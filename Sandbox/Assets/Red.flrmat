@@ -1,0 +1,23 @@
+Shader: 17504616539540010642
+Properties:
+  - Name: u_Material.Color
+    Type: 7
+    Value: [0.868327379, 0.24103038, 0.24103038, 0]
+  - Name: u_Material.Roughness
+    Type: 4
+    Value: 0.699999988
+  - Name: u_ShadowMap0
+    Type: 8
+    Value: 0
+  - Name: u_ShadowMap1
+    Type: 8
+    Value: 0
+  - Name: u_ShadowMap2
+    Type: 8
+    Value: 0
+  - Name: u_ShadowMap3
+    Type: 8
+    Value: 0
+  - Name: u_Texture
+    Type: 8
+    Value: 2080111666818199829

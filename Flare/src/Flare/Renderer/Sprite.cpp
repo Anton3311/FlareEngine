@@ -2,11 +2,19 @@
 
 namespace Flare
 {
-	Sprite::Sprite(const Ref<Texture>& atlas, glm::i32vec2 pixelsMin, glm::i32vec2 pixelsMax)
-		: m_Atlas(atlas)
+	FLARE_IMPL_ASSET(Sprite);
+	FLARE_SERIALIZABLE_IMPL(Sprite);
+
+	Sprite::Sprite()
+		: Asset(AssetType::Sprite), m_Texture(nullptr), UVMin(0.0f), UVMax(0.0f)
 	{
-		glm::vec2 size = glm::vec2((float)atlas->GetWidth(), (float)atlas->GetHeight());
-		m_UVMin = glm::vec2(pixelsMin) / size;
-		m_UVMax = glm::vec2(pixelsMax) / size;
+	}
+
+	Sprite::Sprite(const Ref<Texture>& texture, glm::i32vec2 pixelsMin, glm::i32vec2 pixelsMax)
+		: Asset(AssetType::Sprite), m_Texture(texture)
+	{
+		glm::vec2 size = glm::vec2((float)texture->GetWidth(), (float)texture->GetHeight());
+		UVMin = glm::vec2(pixelsMin) / size;
+		UVMax = glm::vec2(pixelsMax) / size;
 	}
 }

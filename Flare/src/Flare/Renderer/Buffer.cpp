@@ -1,7 +1,8 @@
 #include "Buffer.h"
 
 #include "Flare/Renderer/RendererAPI.h"
-#include "Flare/Platform/OpenGL/OpenGLBuffer.h"
+#include "Flare/Platform/Vulkan/VulkanVertexBuffer.h"
+#include "Flare/Platform/Vulkan/VulkanIndexBuffer.h"
 
 namespace Flare
 {
@@ -9,45 +10,109 @@ namespace Flare
 	{
 		switch (RendererAPI::GetAPI())
 		{
-		case RendererAPI::API::OpenGL:
-			return CreateRef<OpenGLVertexBuffer>(size);
+		case RendererAPI::API::Vulkan:
+			return CreateRef<VulkanVertexBuffer>(size);
 		}
+
+		FLARE_CORE_ASSERT(false);
+		return nullptr;
+	}
+
+	Ref<VertexBuffer> VertexBuffer::Create(size_t size, GPUBufferUsage usage)
+	{
+		switch (RendererAPI::GetAPI())
+		{
+		case RendererAPI::API::Vulkan:
+			return CreateRef<VulkanVertexBuffer>(size, usage);
+		}
+
+		FLARE_CORE_ASSERT(false);
+		return nullptr;
 	}
 
 	Ref<VertexBuffer> VertexBuffer::Create(size_t size, const void* data)
 	{
-		Ref<VertexBuffer> vertexBuffer = nullptr;
-
 		switch (RendererAPI::GetAPI())
 		{
-		case RendererAPI::API::OpenGL:
-			vertexBuffer = CreateRef<OpenGLVertexBuffer>(size, data);
-			break;
+		case RendererAPI::API::Vulkan:
+			return CreateRef<VulkanVertexBuffer>(data, size);
 		}
 
-		vertexBuffer->SetData(data, size);
-		return vertexBuffer;
+		FLARE_CORE_ASSERT(false);
+		return nullptr;
 	}
-	
-	Ref<IndexBuffer> IndexBuffer::Create(size_t count)
+
+	Ref<VertexBuffer> VertexBuffer::Create(size_t size, const void* data, Ref<CommandBuffer> commandBuffer)
 	{
 		switch (RendererAPI::GetAPI())
 		{
-		case RendererAPI::API::OpenGL:
-			return CreateRef<OpenGLIndexBuffer>(count);
+		case RendererAPI::API::Vulkan:
+			return CreateRef<VulkanVertexBuffer>(data, size, commandBuffer);
 		}
-	}
-	
-	Ref<IndexBuffer> IndexBuffer::Create(size_t count, const void* data)
-	{
-		Ref<IndexBuffer> indexBuffer = nullptr;
 
+		FLARE_CORE_ASSERT(false);
+		return nullptr;
+	}
+
+	size_t IndexBuffer::GetIndexFormatSize(IndexFormat format)
+	{
+		switch (format)
+		{
+		case IndexFormat::UInt16:
+			return sizeof(uint16_t);
+		case IndexFormat::UInt32:
+			return sizeof(uint32_t);
+		}
+
+		FLARE_CORE_ASSERT(false);
+		return 0;
+	}
+
+	Ref<IndexBuffer> IndexBuffer::Create(IndexFormat format, size_t size)
+	{
 		switch (RendererAPI::GetAPI())
 		{
-		case RendererAPI::API::OpenGL:
-			indexBuffer = CreateRef<OpenGLIndexBuffer>(count, data);
-			break;
+		case RendererAPI::API::Vulkan:
+			return CreateRef<VulkanIndexBuffer>(format, size);
 		}
-		return indexBuffer;
+
+		FLARE_CORE_ASSERT(false);
+		return nullptr;
+	}
+
+	Ref<IndexBuffer> IndexBuffer::Create(IndexFormat format, size_t size, GPUBufferUsage usage)
+	{
+		switch (RendererAPI::GetAPI())
+		{
+		case RendererAPI::API::Vulkan:
+			return CreateRef<VulkanIndexBuffer>(format, size, usage);
+		}
+
+		FLARE_CORE_ASSERT(false);
+		return nullptr;
+	}
+	
+	Ref<IndexBuffer> IndexBuffer::Create(IndexBuffer::IndexFormat format, const MemorySpan& indices)
+	{
+		switch (RendererAPI::GetAPI())
+		{
+		case RendererAPI::API::Vulkan:
+			return CreateRef<VulkanIndexBuffer>(format, indices);
+		}
+
+		FLARE_CORE_ASSERT(false);
+		return nullptr;
+	}
+
+	Ref<IndexBuffer> IndexBuffer::Create(IndexFormat format, const MemorySpan& indices, Ref<CommandBuffer> commandBuffer)
+	{
+		switch (RendererAPI::GetAPI())
+		{
+		case RendererAPI::API::Vulkan:
+			return CreateRef<VulkanIndexBuffer>(format, indices, commandBuffer);
+		}
+
+		FLARE_CORE_ASSERT(false);
+		return nullptr;
 	}
 }

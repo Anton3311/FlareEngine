@@ -1,0 +1,405 @@
+AssetRegistry:
+  - Handle: 58408753792518442
+    Type: Material
+    BuiltIn: false
+    Name: DefaultMaterial
+    Source: Memory
+    Parent: 10342322337781790464
+    SubAssets:
+      []
+  - Handle: 189433620407732915
+    Type: Material
+    BuiltIn: false
+    Name: DefaultMaterial
+    Source: Memory
+    Parent: 10342322337781790464
+    SubAssets:
+      []
+  - Handle: 450755765800898062
+    Type: Shader
+    BuiltIn: true
+    Path: ../../Content/Runtime/Shaders/Common/ShadowMapping.glsl
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
+  - Handle: 964263398511694496
+    Type: Shader
+    BuiltIn: true
+    Path: ../../Content/Runtime/Shaders/Common/Light.glsl
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
+  - Handle: 1806579514501821626
+    Type: Material
+    BuiltIn: false
+    Name: DefaultMaterial
+    Source: Memory
+    Parent: 10490832977963679498
+    SubAssets:
+      []
+  - Handle: 2080111666818199829
+    Type: Texture
+    BuiltIn: false
+    Path: White.png
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
+  - Handle: 2768644555319864744
+    Type: MaterialsTable
+    BuiltIn: false
+    Name: DefaultMaterialsTable
+    Source: Memory
+    Parent: 10342322337781790464
+    SubAssets:
+      []
+  - Handle: 2840866884888145189
+    Type: Shader
+    BuiltIn: true
+    Path: ../../Content/Editor/Shaders/SceneViewGrid.glsl
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
+  - Handle: 3278682457232475599
+    Type: Material
+    BuiltIn: false
+    Name: Material
+    Source: Memory
+    Parent: 15517588840512804130
+    SubAssets:
+      []
+  - Handle: 3295823452647246966
+    Type: Shader
+    BuiltIn: true
+    Path: ../../Content/Runtime/Shaders/AcesToneMapping.glsl
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
+  - Handle: 3478378963703612906
+    Type: Mesh
+    BuiltIn: false
+    Path: Terrain.fbx
+    Source: File
+    Parent: 0
+    SubAssets:
+      - 7922235498107244779
+      - 7418829293977948505
+  - Handle: 3678465252855055468
+    Type: Shader
+    BuiltIn: true
+    Path: ../../Content/Runtime/Shaders/SSAO.glsl
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
+  - Handle: 4281963350691683183
+    Type: Shader
+    BuiltIn: true
+    Path: ../../Content/Runtime/Shaders/Common/Instancing.glsl
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
+  - Handle: 4863939858706944738
+    Type: Shader
+    BuiltIn: true
+    Path: ../../Content/Runtime/Shaders/Debug.glsl
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
+  - Handle: 5193090395626261884
+    Type: Texture
+    BuiltIn: false
+    Path: Texture.png
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
+  - Handle: 5454023769249736678
+    Type: Shader
+    BuiltIn: true
+    Path: ../../Content/Runtime/Shaders/Mesh.glsl
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
+  - Handle: 5621682485723603558
+    Type: Shader
+    BuiltIn: true
+    Path: ../../Content/Runtime/Shaders/MeshDepthOnly.glsl
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
+  - Handle: 5752695420435092164
+    Type: Shader
+    BuiltIn: true
+    Path: ../../Content/Editor/Shaders/DebugIcon.glsl
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
+  - Handle: 5928554661217249784
+    Type: Shader
+    BuiltIn: true
+    Path: ../../Content/Runtime/Shaders/Vignette.glsl
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
+  - Handle: 6092405504639898937
+    Type: Scene
+    BuiltIn: false
+    Path: Main.flare
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
+  - Handle: 6369735420549778150
+    Type: Shader
+    BuiltIn: true
+    Path: ../../Content/Runtime/Shaders/Common/Math.glsl
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
+  - Handle: 6410815514331586712
+    Type: Shader
+    BuiltIn: true
+    Path: ../../Content/Runtime/Shaders/Decal.glsl
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
+  - Handle: 6504930104558170205
+    Type: Shader
+    BuiltIn: true
+    Path: ../../Content/Editor/Shaders/SelectionOutline.glsl
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
+  - Handle: 6908186570440597389
+    Type: Shader
+    BuiltIn: false
+    Path: Skybox.glsl
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
+  - Handle: 7418829293977948505
+    Type: MaterialsTable
+    BuiltIn: false
+    Name: DefaultMaterialsTable
+    Source: Memory
+    Parent: 3478378963703612906
+    SubAssets:
+      []
+  - Handle: 7838026630944631535
+    Type: Shader
+    BuiltIn: true
+    Path: ../../Content/Runtime/Shaders/SSAOBlur.glsl
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
+  - Handle: 7922235498107244779
+    Type: Material
+    BuiltIn: false
+    Name: Material
+    Source: Memory
+    Parent: 3478378963703612906
+    SubAssets:
+      []
+  - Handle: 8007099998881589886
+    Type: Material
+    BuiltIn: false
+    Path: DefaultDecal.flrmat
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
+  - Handle: 8591874641572217228
+    Type: Material
+    BuiltIn: false
+    Name: Material
+    Source: Memory
+    Parent: 15517588840512804130
+    SubAssets:
+      []
+  - Handle: 9310982406467906395
+    Type: Scene
+    BuiltIn: false
+    Path: AtmosphereScene.flare
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
+  - Handle: 9373102666595912975
+    Type: Material
+    BuiltIn: false
+    Name: DefaultMaterial
+    Source: Memory
+    Parent: 10490832977963679498
+    SubAssets:
+      []
+  - Handle: 9410272321376708478
+    Type: MaterialsTable
+    BuiltIn: false
+    Name: DefaultMaterialsTable
+    Source: Memory
+    Parent: 15517588840512804130
+    SubAssets:
+      []
+  - Handle: 9524196172539617218
+    Type: Shader
+    BuiltIn: true
+    Path: ../../Content/Runtime/Shaders/Common/AtmosphericScattering.glsl
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
+  - Handle: 10212638568194390425
+    Type: Shader
+    BuiltIn: true
+    Path: ../../Content/Runtime/Shaders/Error.glsl
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
+  - Handle: 10342322337781790464
+    Type: Mesh
+    BuiltIn: false
+    Path: Cube.fbx
+    Source: File
+    Parent: 0
+    SubAssets:
+      - 58408753792518442
+      - 2768644555319864744
+  - Handle: 10490832977963679498
+    Type: Mesh
+    BuiltIn: false
+    Path: Sphere.fbx
+    Source: File
+    Parent: 0
+    SubAssets:
+      - 1806579514501821626
+      - 13546900663232991514
+  - Handle: 11273132474447840936
+    Type: Scene
+    BuiltIn: false
+    Path: Test.flare
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
+  - Handle: 12270226353674110624
+    Type: Shader
+    BuiltIn: true
+    Path: ../../Content/Runtime/Shaders/Atmosphere.glsl
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
+  - Handle: 12282093172728938585
+    Type: Shader
+    BuiltIn: true
+    Path: ../../Content/Runtime/Shaders/QuadShader.glsl
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
+  - Handle: 12561055223819313244
+    Type: Prefab
+    BuiltIn: false
+    Path: Sphere Prefab.flrprefab
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
+  - Handle: 13332619822904143834
+    Type: Material
+    BuiltIn: false
+    Path: Test Decal.flrmat
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
+  - Handle: 13546900663232991514
+    Type: MaterialsTable
+    BuiltIn: false
+    Name: DefaultMaterialsTable
+    Source: Memory
+    Parent: 10490832977963679498
+    SubAssets:
+      []
+  - Handle: 13848330115087688443
+    Type: Material
+    BuiltIn: false
+    Name: DefaultMaterial
+    Source: Memory
+    Parent: 4960296120538696191
+    SubAssets:
+      []
+  - Handle: 13900636449532140235
+    Type: Material
+    BuiltIn: false
+    Path: Red.flrmat
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
+  - Handle: 15401541460371875425
+    Type: Shader
+    BuiltIn: true
+    Path: ../../Content/Runtime/Shaders/Common/BRDF.glsl
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
+  - Handle: 15517588840512804130
+    Type: Mesh
+    BuiltIn: false
+    Path: Cone.fbx
+    Source: File
+    Parent: 0
+    SubAssets:
+      - 8591874641572217228
+      - 9410272321376708478
+  - Handle: 16145234905884150251
+    Type: Shader
+    BuiltIn: true
+    Path: ../../Content/Runtime/Shaders/Common/Camera.glsl
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
+  - Handle: 16707388620857689085
+    Type: MaterialsTable
+    BuiltIn: false
+    Name: DefaultMaterialsTable
+    Source: Memory
+    Parent: 4960296120538696191
+    SubAssets:
+      []
+  - Handle: 17895015149746534536
+    Type: Shader
+    BuiltIn: true
+    Path: ../../Content/Runtime/Shaders/AtmosphereSunTransmittanceLUT.glsl
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
+  - Handle: 18051550058127508280
+    Type: Shader
+    BuiltIn: true
+    Path: ../../Content/Runtime/Shaders/Text.glsl
+    Source: File
+    Parent: 0
+    SubAssets:
+      []

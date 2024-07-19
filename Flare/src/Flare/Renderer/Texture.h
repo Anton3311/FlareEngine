@@ -1,8 +1,17 @@
 #pragma once
 
-#include "Flare/Core/Core.h"
+#include "FlareCore/Core.h"
+#include "FlareCore/Collections/Span.h"
+#include "FlareCore/Serialization/TypeInitializer.h"
+#include "FlareCore/Serialization/Metadata.h"
+
+#include "Flare/AssetManager/Asset.h"
+
+#include <glm/glm.hpp>
 
 #include <filesystem>
+#include <optional>
+#include <FlareCore/KeyCode.h>
 
 namespace Flare
 {
@@ -16,26 +25,100 @@ namespace Flare
 	{
 		RGB8,
 		RGBA8,
+
+		R11G11B10,
+
+		R32G32B32,
+		R32G32B32A32,
+
+		RG8,
+		RG16,
+
+		RF32,
+
+		R8,
+
+		Depth24Stencil8,
+		Depth32,
+
+		// Compressed formats at the end
+		BC1_RGB,
+		BC1_RGBA,
+
+		BC2_RGB,
+		BC3_RGB,
+		BC4_RGB,
+		BC5_RGB,
 	};
+
+	FLARE_API bool IsCompressedTextureFormat(TextureFormat format);
+	FLARE_API const char* TextureFormatToString(TextureFormat format);
+	FLARE_API bool IsDepthTextureFormat(TextureFormat format);
+	FLARE_API bool HasStencilComponent(TextureFormat format);
 
 	enum class TextureFiltering
 	{
-		NoFiltering,
+		Closest,
 		Linear,
+	};
+
+	enum class TextureUsage : uint8_t
+	{
+		None = 0,
+		Sampling = 1,
+		RenderTarget = 2,
+	};
+
+	FLARE_IMPL_ENUM_BITFIELD(TextureUsage);
+
+	enum class ImageLayout
+	{
+		Undefined,
+		General,
+		ReadOnly,
+		AttachmentOutput,
+		TransferSource,
+		TransferDestination,
 	};
 
 	struct TextureSpecifications
 	{
-		uint32_t Width;
-		uint32_t Height;
-		TextureFormat Format;
-		TextureFiltering Filtering;
+		static constexpr uint32_t DefaultMipLevelsCount = 4;
+
+		uint32_t Width = 0;
+		uint32_t Height = 0;
+		TextureFormat Format = TextureFormat::RGB8;
+		TextureFiltering Filtering = TextureFiltering::Linear;
+		TextureWrap Wrap = TextureWrap::Clamp;
+		TextureUsage Usage = TextureUsage::Sampling;
+
+		bool GenerateMipMaps = false;
 	};
 
-	class Texture
+	FLARE_API const char* TextureWrapToString(TextureWrap wrap);
+	FLARE_API const char* TextureFilteringToString(TextureFiltering filtering);
+
+	FLARE_API std::optional<TextureWrap> TextureWrapFromString(std::string_view string);
+	FLARE_API std::optional<TextureFiltering> TextureFilteringFromString(std::string_view string);
+
+	struct FLARE_API TexturePixelData
+	{
+		~TexturePixelData();
+
+		std::vector<MemorySpan> Mips;
+		size_t Size = 0;
+		void* Data = nullptr;
+	};
+
+	class FLARE_API Texture : public Asset
 	{
 	public:
-		virtual void Bind(uint32_t slot = 0) = 0;
+		FLARE_ASSET;
+		FLARE_SERIALIZABLE;
+
+		Texture()
+			: Asset(AssetType::Texture) {}
+
 		virtual void SetData(const void* data, size_t size) = 0;
 
 		virtual const TextureSpecifications& GetSpecifications() const = 0;
@@ -44,8 +127,41 @@ namespace Flare
 		virtual uint32_t GetHeight() const = 0;
 		virtual TextureFormat GetFormat() const = 0;
 		virtual TextureFiltering GetFiltering() const = 0;
+
+		virtual void Resize(uint32_t width, uint32_t height) = 0;
+
+		virtual void SetDebugName(std::string_view debugName) = 0;
+		virtual const std::string& GetDebugName() const = 0;
 	public:
-		static Ref<Texture> Create(const std::filesystem::path& path, TextureFiltering filtering = TextureFiltering::Linear);
+		static Ref<Texture> Create(const TextureSpecifications& specifications);
+		static Ref<Texture> Create(const TextureSpecifications& specifications, MemorySpan pixelData);
+		static Ref<Texture> Create(const std::filesystem::path& path, const TextureSpecifications& specifications);
 		static Ref<Texture> Create(uint32_t width, uint32_t height, const void* data, TextureFormat format, TextureFiltering filtering = TextureFiltering::Linear);
+		static Ref<Texture> Create(const TextureSpecifications& specifications, const TexturePixelData& textureData);
+
+		static bool ReadDataFromFile(const std::filesystem::path& path, TextureSpecifications& specifications, TexturePixelData& data);
+	};
+
+
+
+	struct Texture3DSpecifications
+	{
+		glm::uvec3 Size;
+		TextureFormat Format;
+		TextureFiltering Filtering;
+		TextureWrap Wrap;
+	};
+
+	class FLARE_API Texture3D
+	{
+	public:
+		virtual void Bind(uint32_t slot = 0) = 0;
+		virtual void* GetRendererId() const = 0;
+
+		virtual void SetData(const void* data, glm::uvec3 dataSize) = 0;
+		virtual const Texture3DSpecifications& GetSpecifications() const = 0;
+	public:
+		static Ref<Texture3D> Create(const Texture3DSpecifications& specifications);
+		static Ref<Texture3D> Create(const Texture3DSpecifications& specifications, const void* data, glm::uvec3 dataSize);
 	};
 }

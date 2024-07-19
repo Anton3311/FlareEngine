@@ -4,5 +4,5 @@
 
 Flare::Scope<Flare::Application> Flare::CreateFlareApplication(Flare::CommandLineArguments arguments)
 {
-	return Flare::CreateScope<Flare::EditorApplication>();
+	return Flare::CreateScope<Flare::EditorApplication>(arguments);
 }

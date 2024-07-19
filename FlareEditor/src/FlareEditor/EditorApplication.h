@@ -3,14 +3,14 @@
 #include "Flare/Core/Application.h"
 #include "Flare/Renderer2D/Renderer2D.h"
 
-#include "FlareEditor/EditorLayer.h"
+#include "Flare/Core/CommandLineArguments.h"
 
 namespace Flare
 {
 	class EditorApplication : public Application
 	{
 	public:
-		EditorApplication();
+		EditorApplication(CommandLineArguments arguments);
 		~EditorApplication();
 	};
 }

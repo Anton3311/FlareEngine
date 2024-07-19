@@ -1,22 +1,38 @@
 #pragma once
 
-#include "Flare/Core/Core.h"
+#include "FlareCore/Core.h"
 
-#include <filesystem>
+#include "Flare/AssetManager/Asset.h"
+#include "Flare/Renderer/RendererAPI.h"
+#include "Flare/Renderer/ShaderMetadata.h"
 
 #include <glm/glm.hpp>
 
+#include <filesystem>
+#include <optional>
+
 namespace Flare
 {
-	class Shader
+	class FLARE_API Shader : public Asset
 	{
 	public:
-		virtual void Bind() = 0;
+		FLARE_SERIALIZABLE;
+		FLARE_ASSET;
 
-		virtual void SetInt(const std::string& name, int value) = 0;
-		virtual void SetIntArray(const std::string& name, const int* values, uint32_t count) = 0;
-		virtual void SetMatrix4(const std::string& name, const glm::mat4& matrix) = 0;
+		Shader()
+			: Asset(AssetType::Shader) {}
+
+		virtual ~Shader() = default;
+
+		virtual void Load() = 0;
+		virtual bool IsLoaded() const = 0;
+
+		virtual Ref<const ShaderMetadata> GetMetadata() const = 0;
+		virtual const ShaderProperties& GetProperties() const = 0;
+		virtual const ShaderOutputs& GetOutputs() const = 0;
+		virtual ShaderFeatures GetFeatures() const = 0;
+		virtual std::optional<uint32_t> GetPropertyIndex(std::string_view name) const = 0;
 	public:
-		static Ref<Shader> Create(const std::filesystem::path& path);
+		static Ref<Shader> Create();
 	};
 }

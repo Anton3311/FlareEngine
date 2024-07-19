@@ -1,34 +1,76 @@
 #include "Application.h"
 
-#include "Flare/Renderer/RenderCommand.h"
+#include "Flare/Core/Time.h"
+
+#include "FlareCore/Profiler/Profiler.h"
+
+#include "Flare/AssetManager/AssetManager.h"
+
+#include "Flare/Renderer/Renderer.h"
+#include "Flare/Renderer/RendererPrimitives.h"
+#include "Flare/Renderer2D/Renderer2D.h"
+#include "Flare/DebugRenderer/DebugRenderer.h"
+
+#include "Flare/Scripting/ScriptingEngine.h"
+#include "Flare/Input/InputManager.h"
+
+#include "FlarePlatform/Event.h"
+#include "FlarePlatform/Events.h"
+
+#include "FlarePlatform/Platform.h"
+#include "FlarePlatform/Windows/WindowsWindow.h"
 
 namespace Flare
 {
-	Application* Application::s_Instance = nullptr;
+	Application* s_Instance = nullptr;
 
-	Application::Application()
-		: m_Running(true)
+	Application::Application(CommandLineArguments arguments)
+		: m_Running(true), m_CommandLineArguments(arguments), m_PreviousFrameTime(0)
 	{
 		s_Instance = this;
 
 		WindowProperties properties;
 		properties.Title = "Flare Engine";
-		properties.Width = 1280;
-		properties.Height = 720;
+		properties.Size = glm::uvec2(1280, 720);
+		properties.CustomTitleBar = true;
+
+		const std::string_view apiArgument = "--api=";
+		RendererAPI::API rendererApi = RendererAPI::API::Vulkan;
+		for (uint32_t i = 0; i < m_CommandLineArguments.ArgumentsCount; i++)
+		{
+			std::string_view argument = m_CommandLineArguments.Arguments[i];
+
+			if (argument._Starts_with(apiArgument))
+			{
+				std::string_view apiName = argument.substr(apiArgument.size());
+
+				if (apiName == "vulkan")
+				{
+					rendererApi = RendererAPI::API::Vulkan;
+				}
+			}
+		}
+
+		RendererAPI::Create(rendererApi);
 
 		m_Window = Window::Create(properties);
+		switch (RendererAPI::GetAPI())
+		{
+		case RendererAPI::API::Vulkan:
+			As<WindowsWindow>(m_Window)->SetUsesVulkan();
+			break;
+		}
+
+		m_Window->Initialize();
+
+		GraphicsContext::Create(m_Window);
+		
 		m_Window->SetEventCallback([this](Event& event)
 		{
 			EventDispatcher dispatcher(event);
 			dispatcher.Dispatch<WindowCloseEvent>([this](WindowCloseEvent& event) -> bool
 			{
 				Close();
-				return true;
-			});
-
-			dispatcher.Dispatch<WindowResizeEvent>([this](WindowResizeEvent& event) -> bool
-			{
-				RenderCommand::SetViewport(0, 0, event.GetWidth(), event.GetHeight());
 				return true;
 			});
 
@@ -40,39 +82,99 @@ namespace Flare
 					return;
 			}
 		});
+	}
 
-		m_ImGuiLayer = CreateRef<ImGUILayer>();
-		PushOverlay(m_ImGuiLayer);
+	Application::~Application()
+	{
+		ScriptingEngine::Shutdown();
 
-		RenderCommand::Initialize();
+		Renderer2D::Shutdown();
+		DebugRenderer::Shutdown();
+		Renderer::Shutdown();
+		RendererPrimitives::Clear();
+		GraphicsContext::Shutdown();
 	}
 
 	void Application::Run()
 	{
+		InputManager::Initialize();
+
+		Renderer::Initialize();
+		DebugRenderer::Initialize();
+		Renderer2D::Initialize();
+
+		ScriptingEngine::Initialize();
+
 		for (const Ref<Layer>& layer : m_LayersStack.GetLayers())
 			layer->OnAttach();
 
 		while (m_Running)
 		{
-			RenderCommand::Clear();
+			FLARE_PROFILE_BEGIN_FRAME("Main");
 
-			float currentTime = Time::GetTime();
-			float deltaTime = currentTime - m_PreviousFrameTime;
+			{
+				FLARE_PROFILE_SCOPE("Application::Update");
 
-			for (const Ref<Layer>& layer : m_LayersStack.GetLayers())
-				layer->OnUpdate(deltaTime);
+				float currentTime = Platform::GetTime();
+				float deltaTime = currentTime - m_PreviousFrameTime;
 
-			m_ImGuiLayer->Begin();
-			for (const Ref<Layer>& layer : m_LayersStack.GetLayers())
-				layer->OnImGUIRender();
-			m_ImGuiLayer->End();
+				Time::UpdateDeltaTime();
 
-			m_Window->OnUpdate();
-			m_PreviousFrameTime = currentTime;
+				InputManager::Update();
+				m_Window->OnUpdate();
+
+				if (!m_Window->GetProperties().IsMinimized)
+				{
+					GraphicsContext::GetInstance().BeginFrame();
+					Renderer::BeginFrame();
+					Renderer2D::BeginFrame();
+
+					{
+						FLARE_PROFILE_SCOPE("Layers::OnUpdate");
+						for (const Ref<Layer>& layer : m_LayersStack.GetLayers())
+							layer->OnUpdate(deltaTime);
+					}
+
+					{
+						FLARE_PROFILE_SCOPE("Layers::OnImGui");
+						for (const Ref<Layer>& layer : m_LayersStack.GetLayers())
+							layer->OnImGUIRender();
+					}
+
+					Renderer2D::EndFrame();
+					Renderer::EndFrame();
+
+					{
+						FLARE_PROFILE_SCOPE("Present");
+						GraphicsContext::GetInstance().Present();
+					}
+				}
+
+				m_PreviousFrameTime = currentTime;
+
+				{
+					FLARE_PROFILE_SCOPE("ExecuteAfterEndFrameFunctions");
+					for (const auto& function : m_AfterEndOfFrameFunctions)
+					{
+						function();
+					}
+
+					m_AfterEndOfFrameFunctions.clear();
+				}
+			}
+
+			FLARE_PROFILE_END_FRAME("Main");
 		}
+
+		GraphicsContext::GetInstance().WaitForDevice();
 
 		for (const Ref<Layer>& layer : m_LayersStack.GetLayers())
 			layer->OnDetach();
+
+		AssetManager::Uninitialize();
+		Font::SetDefault(nullptr);
+
+		m_LayersStack.Clear();
 	}
 
 	void Application::Close()
@@ -88,6 +190,11 @@ namespace Flare
 	void Application::PushOverlay(const Ref<Layer>& layer)
 	{
 		m_LayersStack.PushOverlay(layer);
+	}
+
+	void Application::ExecuteAfterEndOfFrame(std::function<void()>&& function)
+	{
+		m_AfterEndOfFrameFunctions.push_back(function);
 	}
 
 	Application& Application::GetInstance()

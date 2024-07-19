@@ -1,17 +1,18 @@
 #include "RendererAPI.h"
 
-#include "Flare/Platform/OpenGL/OpenGLRendererAPI.h"
+#include "FlareCore/Assert.h"
 
 namespace Flare
 {
-	RendererAPI::API RendererAPI::s_API = RendererAPI::API::OpenGL;
+	RendererAPI::API s_API = RendererAPI::API::Vulkan;
 
-	Scope<RendererAPI> RendererAPI::Create()
+	void RendererAPI::Create(RendererAPI::API api)
 	{
-		switch (s_API)
-		{
-		case API::OpenGL:
-			return CreateScope<OpenGLRendererAPI>();
-		}
+		s_API = api;
+	}
+
+	RendererAPI::API RendererAPI::GetAPI()
+	{
+		return s_API;
 	}
 }

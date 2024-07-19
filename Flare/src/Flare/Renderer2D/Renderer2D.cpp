@@ -1,192 +1,548 @@
 #include "Renderer2D.h"
 
-#include "Flare/Renderer/RenderCommand.h"
+#include "FlareCore/Core.h"
+#include "FlareCore/Profiler/Profiler.h"
+
+#include "Flare/Math/Math.h"
+
+#include "Flare/AssetManager/AssetManager.h"
+
+#include "Flare/Renderer/Viewport.h"
+#include "Flare/Renderer/Renderer.h"
+#include "Flare/Renderer/ShaderLibrary.h"
+#include "Flare/Renderer/Pipeline.h"
+
+#include "Flare/Renderer2D/Renderer2DFrameData.h"
+#include "Flare/Renderer2D/Geometry2DPass.h"
+#include "Flare/Renderer2D/TextPass.h"
+
+#include "Flare/Project/Project.h"
+
+#include "Flare/Platform/Vulkan/VulkanPipeline.h"
+#include "Flare/Platform/Vulkan/VulkanContext.h"
+#include "Flare/Platform/Vulkan/VulkanDescriptorSet.h"
+
+#include <algorithm>
+#include <cctype>
 
 namespace Flare
 {
-	Renderer2DData* Renderer2D::s_Data = nullptr;
+	struct Renderer2DData
+	{
+		Renderer2DStats Stats;
+
+		Renderer2DFrameData FrameData;
+		Renderer2DLimits Limits;
+
+		Ref<IndexBuffer> IndexBuffer = nullptr;
+
+		Ref<Material> DefaultMaterial = nullptr;
+		Ref<Material> CurrentMaterial = nullptr;
+		Ref<Shader> TextShader = nullptr;
+
+		glm::vec3 QuadVertices[4] = { glm::vec3(0.0f) };
+		glm::vec2 QuadUV[4] = { glm::vec2(0.0f) };
+	};
+
+	Renderer2DData s_Renderer2DData;
+
+	static void ReloadShaders();
 
 	void Renderer2D::Initialize(size_t maxQuads)
 	{
-		s_Data = new Renderer2DData();
-		s_Data->QuadIndex = 0;
-		s_Data->MaxQuadCount = maxQuads;
-		s_Data->Vertices.resize(maxQuads * 4);
-		s_Data->CurrentShader = nullptr;
+		s_Renderer2DData.Limits.MaxQuadCount = (uint32_t)maxQuads;
+
+		s_Renderer2DData.FrameData.QuadVertices.resize(maxQuads * 4);
+		s_Renderer2DData.FrameData.TextVertices.resize(maxQuads * 4);
 
 		std::vector<uint32_t> indices(maxQuads * 6);
 
 		for (size_t quadIndex = 0; quadIndex < maxQuads; quadIndex++)
 		{
-			indices[quadIndex * 6 + 0] = quadIndex * 4 + 0;
-			indices[quadIndex * 6 + 1] = quadIndex * 4 + 1;
-			indices[quadIndex * 6 + 2] = quadIndex * 4 + 2;
-			indices[quadIndex * 6 + 3] = quadIndex * 4 + 0;
-			indices[quadIndex * 6 + 4] = quadIndex * 4 + 2;
-			indices[quadIndex * 6 + 5] = quadIndex * 4 + 3;
+			indices[quadIndex * 6 + 0] = (uint32_t)(quadIndex * 4 + 0);
+			indices[quadIndex * 6 + 1] = (uint32_t)(quadIndex * 4 + 1);
+			indices[quadIndex * 6 + 2] = (uint32_t)(quadIndex * 4 + 2);
+			indices[quadIndex * 6 + 3] = (uint32_t)(quadIndex * 4 + 0);
+			indices[quadIndex * 6 + 4] = (uint32_t)(quadIndex * 4 + 2);
+			indices[quadIndex * 6 + 5] = (uint32_t)(quadIndex * 4 + 3);
 		}
 
-		s_Data->VertexArray = VertexArray::Create();
-		s_Data->VertexBuffer = VertexBuffer::Create(maxQuads * 4 * sizeof(QuadVertex));
-		s_Data->IndexBuffer = IndexBuffer::Create(maxQuads * 6, indices.data());
+		s_Renderer2DData.IndexBuffer = IndexBuffer::Create(IndexBuffer::IndexFormat::UInt32, MemorySpan::FromVector(indices));
 
-		s_Data->VertexBuffer->SetLayout({
-			BufferLayoutElement("i_Position", ShaderDataType::Float3),
-			BufferLayoutElement("i_Color", ShaderDataType::Float4),
-			BufferLayoutElement("i_UV", ShaderDataType::Float2),
-			BufferLayoutElement("i_TextureIndex", ShaderDataType::Float),
-			BufferLayoutElement("i_TextureTilling", ShaderDataType::Float2),
-		});
+		s_Renderer2DData.QuadVertices[0] = glm::vec3(-0.5f, -0.5f, 0.0f);
+		s_Renderer2DData.QuadVertices[1] = glm::vec3(-0.5f, 0.5f, 0.0f);
+		s_Renderer2DData.QuadVertices[2] = glm::vec3(0.5f, 0.5f, 0.0f);
+		s_Renderer2DData.QuadVertices[3] = glm::vec3(0.5f, -0.5f, 0.0f);
 
-		s_Data->VertexArray->SetIndexBuffer(s_Data->IndexBuffer);
-		s_Data->VertexArray->AddVertexBuffer(s_Data->VertexBuffer);
+		s_Renderer2DData.QuadUV[0] = glm::vec2(0.0f, 0.0f);
+		s_Renderer2DData.QuadUV[1] = glm::vec2(0.0f, 1.0f);
+		s_Renderer2DData.QuadUV[2] = glm::vec2(1.0f, 1.0f);
+		s_Renderer2DData.QuadUV[3] = glm::vec2(1.0f, 0.0f);
 
-		s_Data->VertexArray->Unbind();
+		s_Renderer2DData.Stats.DrawCalls = 0;
+		s_Renderer2DData.Stats.QuadsCount = 0;
 
-		s_Data->QuadVertices[0] = glm::vec3(-0.5f, -0.5f, 0.0f);
-		s_Data->QuadVertices[1] = glm::vec3(-0.5f, 0.5f, 0.0f);
-		s_Data->QuadVertices[2] = glm::vec3(0.5f, 0.5f, 0.0f);
-		s_Data->QuadVertices[3] = glm::vec3(0.5f, -0.5f, 0.0f);
+		Project::OnProjectOpen.Bind(ReloadShaders);
 
-		s_Data->QuadUV[0] = glm::vec2(0.0f, 0.0f);
-		s_Data->QuadUV[1] = glm::vec2(0.0f, 1.0f);
-		s_Data->QuadUV[2] = glm::vec2(1.0f, 1.0f);
-		s_Data->QuadUV[3] = glm::vec2(1.0f, 0.0f);
-
+		if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
 		{
-			uint32_t whiteTextureData = 0xffffffff;
-			s_Data->WhiteTexture = Texture::Create(1, 1, &whiteTextureData, TextureFormat::RGBA8);
+			{
+				VkDescriptorSetLayoutBinding bindings[1] = {};
+				bindings[0].binding = 0;
+				bindings[0].descriptorCount = Renderer2DLimits::MaxTexturesCount;
+				bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+				bindings[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+				bindings[0].pImmutableSamplers = nullptr;
+
+				s_Renderer2DData.FrameData.QuadDescriptorSetsPool = CreateRef<VulkanDescriptorSetPool>(32, Span(bindings, 1));
+			}
+
+			{
+				VkDescriptorSetLayoutBinding bindings[1] = {};
+				bindings[0].binding = 0;
+				bindings[0].descriptorCount = 1;
+				bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+				bindings[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+				bindings[0].pImmutableSamplers = nullptr;
+
+				s_Renderer2DData.FrameData.TextDescriptorSetsPool = CreateRef<VulkanDescriptorSetPool>(32, Span(bindings, 1));
+			}
+		}
+	}
+
+	static void ReloadShaders()
+	{
+		std::optional<AssetHandle> quadShaderHandle = ShaderLibrary::FindShader("QuadShader");
+
+		if (!quadShaderHandle || !AssetManager::IsAssetHandleValid(quadShaderHandle.value()))
+			FLARE_CORE_ERROR("Renderer 2D: Failed to find Quad shader");
+		else
+		{
+			Ref<Shader> quadShader = AssetManager::GetAsset<Shader>(quadShaderHandle.value());
+			s_Renderer2DData.DefaultMaterial = Material::Create(quadShader);
+			s_Renderer2DData.CurrentMaterial = s_Renderer2DData.DefaultMaterial;
 		}
 
-		s_Data->Textures[0] = s_Data->WhiteTexture;
-		s_Data->TextureIndex = 1;
+		std::optional<AssetHandle> textShaderHandle = ShaderLibrary::FindShader("Text");
+		if (!textShaderHandle || !AssetManager::IsAssetHandleValid(textShaderHandle.value()))
+			FLARE_CORE_ERROR("Renderer 2D: Failed to find Text shader");
+		else
+		{
+			s_Renderer2DData.TextShader = AssetManager::GetAsset<Shader>(textShaderHandle.value());
+		}
+	}
 
-		s_Data->Stats.DrawCalls = 0;
-		s_Data->Stats.QuadsCount = 0;
+	static void FillRemainingTextureSlots(QuadsBatch& batch)
+	{
+		Ref<Texture> whiteTexture = Renderer::GetWhiteTexture();
+		for (uint32_t i = batch.TexturesCount; i < Renderer2DLimits::MaxTexturesCount; i++)
+		{
+			batch.Textures[i] = whiteTexture;
+		}
+	}
+
+	static QuadsBatch& BeginQuadBatch()
+	{
+		// Fill remaining texture slots of the previous batch with white textures
+		if (s_Renderer2DData.FrameData.QuadBatches.size() > 0)
+		{
+			FillRemainingTextureSlots(s_Renderer2DData.FrameData.QuadBatches.back());
+		}
+
+		return s_Renderer2DData.FrameData.QuadBatches.emplace_back();
 	}
 
 	void Renderer2D::Shutdown()
 	{
-		delete s_Data;
-		s_Data = nullptr;
+		s_Renderer2DData = {};
 	}
 
-	void Renderer2D::Begin(const Ref<Shader>& shader, const glm::mat4& projectionMatrix)
+	void Renderer2D::BeginFrame()
 	{
-		FLARE_CORE_ASSERT(shader);
-		if (s_Data->QuadIndex > 0)
-			Flush();
+		FLARE_PROFILE_FUNCTION();
 
-		s_Data->CameraProjectionMatrix = projectionMatrix;
-		s_Data->CurrentShader = shader;
+		s_Renderer2DData.FrameData.QuadBatches.clear();
 	}
-	
-	void Renderer2D::Flush()
+
+	void Renderer2D::EndFrame()
 	{
-		FLARE_CORE_ASSERT(s_Data->CurrentShader, "Shader was not provided");
-		s_Data->VertexBuffer->SetData(s_Data->Vertices.data(), sizeof(QuadVertex) * s_Data->QuadIndex * 4);
 
-		int32_t slots[MaxTexturesCount];
-		for (size_t i = 0; i < MaxTexturesCount; i++)
-			slots[i] = i;
-
-		for (int32_t i = 0; i < s_Data->TextureIndex; i++)
-			s_Data->Textures[i]->Bind(i);
-
-		s_Data->CurrentShader->Bind();
-		s_Data->CurrentShader->SetMatrix4("u_Projection", s_Data->CameraProjectionMatrix);
-		s_Data->CurrentShader->SetIntArray("u_Textures", slots, MaxTexturesCount);
-		
-		RenderCommand::DrawIndexed(s_Data->VertexArray, s_Data->QuadIndex * 6);
-
-		s_Data->QuadIndex = 0;
-		s_Data->TextureIndex = 1;
-
-		s_Data->Stats.DrawCalls++;
 	}
-	
-	void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color)
+
+	void Renderer2D::Begin(const Ref<Material>& material)
 	{
-		glm::vec2 halfSize = size / 2.0f;
+		s_Renderer2DData.FrameData.Reset();
 
-		if (s_Data->QuadIndex >= s_Data->MaxQuadCount)
-			Flush();
-
-		size_t vertexIndex = s_Data->QuadIndex * 4;
-		for (uint32_t i = 0; i < 4; i++)
-		{
-			QuadVertex& vertex = s_Data->Vertices[vertexIndex + i];
-			vertex.Position = s_Data->QuadVertices[i] * glm::vec3(size, 0.0f) + position;
-			vertex.Color = color;
-			vertex.UV = s_Data->QuadUV[i];
-			vertex.TextuteIndex = 0; // White texture
-		}
-
-		s_Data->QuadIndex++;
-		s_Data->Stats.QuadsCount++;
+		s_Renderer2DData.CurrentMaterial = material == nullptr ? s_Renderer2DData.DefaultMaterial : material;
 	}
 
-	void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const Ref<Texture>& texture, glm::vec4 tint, glm::vec2 tiling)
-	{
-		DrawQuad(position, size, texture, tint, tiling, s_Data->QuadUV);
-	}
-
-	void Renderer2D::DrawSprite(const Sprite& sprite, const glm::vec3& position, const glm::vec2& size, const glm::vec4& color)
-	{
-		glm::vec2 uv[4] =
-		{
-			sprite.GetUVMin(),
-			glm::vec2(sprite.GetUVMin().x, sprite.GetUVMax().y),
-			sprite.GetUVMax(),
-			glm::vec2(sprite.GetUVMax().x, sprite.GetUVMin().y),
-		};
-
-		DrawQuad(position, size, sprite.GetAtlas(), color, glm::vec2(1.0f), uv);
-	}
-	
 	void Renderer2D::End()
 	{
-		if (s_Data->QuadIndex > 0)
-			Flush();
+		// Make sure that all empty texture slots of the last batch are filled with white textures
+		if (s_Renderer2DData.FrameData.QuadBatches.size() > 0)
+		{
+			FillRemainingTextureSlots(s_Renderer2DData.FrameData.QuadBatches.back());
+		}
+	}
+
+	void Renderer2D::ConfigurePasses(Viewport& viewport)
+	{
+		FLARE_PROFILE_FUNCTION();
+		RenderGraphPassSpecifications geometryPass{};
+		geometryPass.SetDebugName("2DGeometryPass");
+		geometryPass.SetType(RenderGraphPassType::Graphics);
+		geometryPass.AddOutput(viewport.ColorTexture, 0);
+		
+		viewport.Graph.AddPass(geometryPass, CreateRef<Geometry2DPass>(
+			s_Renderer2DData.FrameData,
+			s_Renderer2DData.Limits,
+			s_Renderer2DData.IndexBuffer,
+			s_Renderer2DData.DefaultMaterial));
+
+		RenderGraphPassSpecifications textPass{};
+		textPass.SetDebugName("TextPass");
+		textPass.SetType(RenderGraphPassType::Graphics);
+		textPass.AddOutput(viewport.ColorTexture, 0);
+
+		viewport.Graph.AddPass(textPass, CreateRef<TextPass>(
+			s_Renderer2DData.FrameData,
+			s_Renderer2DData.Limits,
+			s_Renderer2DData.IndexBuffer,
+			s_Renderer2DData.TextShader));
 	}
 
 	void Renderer2D::ResetStats()
 	{
-		s_Data->Stats.DrawCalls = 0;
-		s_Data->Stats.QuadsCount = 0;
+		s_Renderer2DData.Stats.DrawCalls = 0;
+		s_Renderer2DData.Stats.QuadsCount = 0;
 	}
 
-	void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const Ref<Texture>& texture, const glm::vec4& tint, const glm::vec2& tiling, const glm::vec2* uv)
+	const Renderer2DStats& Renderer2D::GetStats()
 	{
-		if (s_Data->QuadIndex >= s_Data->MaxQuadCount)
-			Flush();
+		return s_Renderer2DData.Stats;
+	}
 
-		if (s_Data->TextureIndex == MaxTexturesCount)
-			Flush();
+	void Renderer2D::SetMaterial(const Ref<Material>& material)
+	{
+		FLARE_CORE_ASSERT(s_Renderer2DData.FrameData.QuadBatches.size() > 0);
+		FLARE_CORE_ASSERT(material);
 
-		int32_t textureIndex = 0;
-		size_t vertexIndex = s_Data->QuadIndex * 4;
+		size_t lastBatchIndex = s_Renderer2DData.FrameData.QuadBatches.size() - 1;
+		QuadsBatch& batch = BeginQuadBatch();
+		batch.Material = material;
+		batch.Count = 0;
 
-		for (textureIndex = 0; textureIndex < s_Data->TextureIndex; textureIndex++)
+		if (s_Renderer2DData.FrameData.QuadBatches.size() > 0)
+			batch.Start = s_Renderer2DData.FrameData.QuadBatches[lastBatchIndex].GetEnd();
+
+		s_Renderer2DData.CurrentMaterial = material;
+	}
+
+	Ref<Material> Renderer2D::GetMaterial()
+	{
+		return s_Renderer2DData.CurrentMaterial;
+	}
+
+	void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color)
+	{
+		glm::vec3 vertices[4];
+		for (size_t i = 0; i < 4; i++)
+			vertices[i] = s_Renderer2DData.QuadVertices[i] * glm::vec3(size, 1.0f) + position;
+
+		DrawQuad(vertices, nullptr, color, glm::vec2(1.0f), s_Renderer2DData.QuadUV, INT32_MAX);
+	}
+
+	void Renderer2D::DrawQuad(const glm::vec3& position,
+		const glm::vec2& size,
+		const glm::vec4& color,
+		const Ref<Texture> texture,
+		glm::vec2 uvMin, glm::vec2 uvMax)
+	{
+		glm::vec2 uvs[] =
 		{
-			if (s_Data->Textures[textureIndex].get() == texture.get())
-				break;
+			uvMin,
+			glm::vec2(uvMin.x, uvMax.y),
+			uvMax,
+			glm::vec2(uvMax.x, uvMin.y)
+		};
+
+		glm::vec3 vertices[4];
+		for (size_t i = 0; i < 4; i++)
+			vertices[i] = s_Renderer2DData.QuadVertices[i] * glm::vec3(size, 1.0f) + position;
+
+		DrawQuad(vertices, texture, color, glm::vec2(1.0f), uvs, INT32_MAX);
+	}
+
+	void Renderer2D::DrawQuad(const glm::mat4& transform, const glm::vec4& tint, const Ref<Texture>& texture,
+		glm::vec2 tiling, int32_t entityIndex, SpriteRenderFlags flags)
+	{
+		glm::vec3 vertices[4];
+		for (size_t i = 0; i < 4; i++)
+			vertices[i] = transform * glm::vec4(s_Renderer2DData.QuadVertices[i], 1.0f);
+
+		glm::vec2 uvs[4];
+		for (size_t i = 0; i < 4; i++)
+			uvs[i] = s_Renderer2DData.QuadUV[i];
+
+		if (HAS_BIT(flags, SpriteRenderFlags::FlipX))
+		{
+			for (size_t i = 0; i < 4; i++)
+				uvs[i].x = 1.0f - uvs[i].x;
 		}
 
-		if (textureIndex >= s_Data->TextureIndex)
-			s_Data->Textures[s_Data->TextureIndex++] = texture;
+		if (HAS_BIT(flags, SpriteRenderFlags::FlipY))
+		{
+			for (size_t i = 0; i < 4; i++)
+				uvs[i].y = 1.0f - uvs[i].y;
+		}
+
+		DrawQuad(vertices, texture, tint, tiling, uvs, entityIndex);
+	}
+
+	void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const Ref<Texture>& texture, glm::vec4 tint, glm::vec2 tiling, int32_t entityIndex)
+	{
+		glm::vec3 vertices[4];
+		for (size_t i = 0; i < 4; i++)
+			vertices[i] = s_Renderer2DData.QuadVertices[i] * glm::vec3(size, 1.0f) + position;
+
+		DrawQuad(vertices, texture, tint, tiling, s_Renderer2DData.QuadUV, entityIndex);
+	}
+
+	void Renderer2D::DrawSprite(const Sprite& sprite, const glm::vec3& position, const glm::vec2& size, const glm::vec4& color, int32_t entityIndex)
+	{
+		glm::vec2 uv[4] =
+		{
+			sprite.UVMin,
+			glm::vec2(sprite.UVMin.x, sprite.UVMax.y),
+			sprite.UVMax,
+			glm::vec2(sprite.UVMax.x, sprite.UVMin.y),
+		};
+
+		glm::vec3 vertices[4];
+		for (size_t i = 0; i < 4; i++)
+			vertices[i] = s_Renderer2DData.QuadVertices[i] * glm::vec3(size, 1.0f) + position;
+
+		DrawQuad(vertices, sprite.GetTexture(), color, glm::vec2(1.0f), uv, entityIndex);
+	}
+
+	void Renderer2D::DrawSprite(const Ref<Sprite>& sprite, const glm::mat4& transform, const glm::vec4& color, glm::vec2 tilling, SpriteRenderFlags flags, int32_t entityIndex)
+	{
+		glm::vec2 uvMin = glm::vec2(0.0f);
+		glm::vec2 uvMax = glm::vec2(1.0f);
+
+		if (sprite)
+		{
+			uvMin = sprite->UVMin;
+			uvMax = sprite->UVMax;
+		}
+
+		if (HAS_BIT(flags, SpriteRenderFlags::FlipX))
+			std::swap(uvMin.x, uvMax.x);
+		if (HAS_BIT(flags, SpriteRenderFlags::FlipY))
+			std::swap(uvMin.y, uvMax.y);
+
+		glm::vec2 uv[4] =
+		{
+			uvMin,
+			glm::vec2(uvMin.x, uvMax.y),
+			uvMax,
+			glm::vec2(uvMax.x, uvMin.y),
+		};
+
+		for (size_t i = 0; i < 4; i++)
+			uv[i] *= tilling;
+
+		glm::vec3 vertices[4];
+
+		for (size_t i = 0; i < 4; i++)
+			vertices[i] = transform * glm::vec4(s_Renderer2DData.QuadVertices[i], 1.0f);
+
+		DrawQuad(vertices, sprite == nullptr ? nullptr : sprite->GetTexture(), color, tilling, uv, entityIndex);
+	}
+
+	void Renderer2D::DrawQuad(const glm::vec3* vertices, const Ref<Texture>& texture, const glm::vec4& tint, const glm::vec2& tiling, const glm::vec2* uv, int32_t entityIndex)
+	{
+		if (s_Renderer2DData.FrameData.QuadBatches.size() == 0)
+		{
+			QuadsBatch& batch = BeginQuadBatch();
+			batch.Material = s_Renderer2DData.DefaultMaterial;
+		}
+
+		if (s_Renderer2DData.FrameData.QuadCount >= s_Renderer2DData.Limits.MaxQuadCount)
+		{
+			FLARE_CORE_ASSERT(false);
+		}
+
+		if (s_Renderer2DData.FrameData.QuadBatches.back().TexturesCount == Renderer2DLimits::MaxTexturesCount)
+		{
+			BeginQuadBatch();
+		}
+
+		QuadsBatch& currentBatch = s_Renderer2DData.FrameData.QuadBatches.back();
+		size_t vertexIndex = s_Renderer2DData.FrameData.QuadCount * 4;
+		uint32_t textureIndex = currentBatch.GetTextureIndex(texture == nullptr ? Renderer::GetWhiteTexture() : texture);
 
 		for (uint32_t i = 0; i < 4; i++)
 		{
-			QuadVertex& vertex = s_Data->Vertices[vertexIndex + i];
-			vertex.Position = s_Data->QuadVertices[i] * glm::vec3(size, 0.0f) + position;
+			QuadVertex& vertex = s_Renderer2DData.FrameData.QuadVertices[vertexIndex + i];
+			vertex.Position = vertices[i];
 			vertex.Color = tint;
-			vertex.UV = uv[i];
-			vertex.TextureTiling = tiling;
-			vertex.TextuteIndex = textureIndex;
+			vertex.UV = uv[i] * tiling;
+			vertex.TextureIndex = textureIndex;
+			vertex.EntityIndex = entityIndex;
 		}
 
-		s_Data->QuadIndex++;
-		s_Data->Stats.QuadsCount++;
+		currentBatch.Count++;
+		s_Renderer2DData.FrameData.QuadCount++;
+		s_Renderer2DData.Stats.QuadsCount++;
+	}
+
+	void Renderer2D::DrawString(std::string_view text, const glm::mat4& transform, const Ref<Font>& font, const glm::vec4& color, int32_t entityIndex)
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		if (s_Renderer2DData.FrameData.TextBatches.empty() || s_Renderer2DData.FrameData.TextBatches.back().Font.get() != font.get())
+		{
+			TextBatch& batch = s_Renderer2DData.FrameData.TextBatches.emplace_back();
+			batch.Start = (uint32_t)s_Renderer2DData.FrameData.TextQuadCount;
+			batch.Count = 0;
+			batch.Font = font;
+		}
+
+		TextBatch& batch = s_Renderer2DData.FrameData.TextBatches.back();
+
+		const auto& msdfData = font->GetData();
+		const auto& geometry = msdfData.Geometry;
+		const auto& metrics = msdfData.Geometry.getMetrics();
+
+		float kerningOffset = 0.0f;
+		float lineHeightOffset = 0.0f;
+
+		const Ref<Texture>& fontAtlas = font->GetAtlas();
+		glm::vec2 texelSize = glm::vec2(1.0f / fontAtlas->GetWidth(), 1.0f / fontAtlas->GetHeight());
+		glm::vec2 position = glm::vec2(0.0f);
+
+		float fontScale = 1.0f / (float)(metrics.ascenderY - metrics.descenderY);
+		position.y = -fontScale * (float)metrics.ascenderY;
+
+		const msdf_atlas::GlyphGeometry* errorGlyph = geometry.getGlyph('?');
+		const msdf_atlas::GlyphGeometry* spaceGlyph = geometry.getGlyph(' ');
+		
+		struct Rect
+		{
+			double Top;
+			double Right;
+			double Bottom;
+			double Left;
+		};
+
+		for (size_t charIndex = 0; charIndex < text.size(); charIndex++)
+		{
+			if (text[charIndex] == 0)
+				break;
+
+			const msdf_atlas::GlyphGeometry* glyph = geometry.getGlyph(text[charIndex]);
+
+			if (!glyph)
+				glyph = errorGlyph;
+			if (!glyph)
+				return;
+
+			if (text[charIndex] == '\r')
+				continue;
+			else if (text[charIndex] == '\t')
+				glyph = spaceGlyph;
+			else if (text[charIndex] == '\n')
+			{
+				position.x = 0;
+				position.y -= fontScale * (float)metrics.lineHeight + lineHeightOffset;
+				continue;
+			}
+			else if (!std::isspace(text[charIndex]))
+			{
+				Rect atlasBounds;
+				Rect planeBounds;
+				glyph->getQuadAtlasBounds(atlasBounds.Left, atlasBounds.Bottom, atlasBounds.Right, atlasBounds.Top);
+				glyph->getQuadPlaneBounds(planeBounds.Left, planeBounds.Bottom, planeBounds.Right, planeBounds.Top);
+
+				glm::vec2 min = glm::vec2(planeBounds.Left, planeBounds.Bottom);
+				glm::vec2 max = glm::vec2(planeBounds.Right, planeBounds.Top);
+
+				min = min * fontScale + position;
+				max = max * fontScale + position;
+
+				atlasBounds.Left *= texelSize.x;
+				atlasBounds.Right *= texelSize.x;
+				atlasBounds.Top *= texelSize.y;
+				atlasBounds.Bottom *= texelSize.y;
+
+				size_t textVertexIndex = s_Renderer2DData.FrameData.TextQuadCount * 4;
+
+				{
+					TextVertex& vertex = s_Renderer2DData.FrameData.TextVertices[textVertexIndex + 0];
+					vertex.Position = transform * glm::vec4(min, 0.0f, 1.0f);
+					vertex.Color = color;
+					vertex.UV = glm::vec2((float)atlasBounds.Left, (float)atlasBounds.Bottom);
+					vertex.EntityIndex = entityIndex;
+				}
+
+				{
+					TextVertex& vertex = s_Renderer2DData.FrameData.TextVertices[textVertexIndex + 1];
+					vertex.Position = transform * glm::vec4(min.x, max.y, 0.0f, 1.0f);
+					vertex.Color = color;
+					vertex.UV = glm::vec2((float)atlasBounds.Left, (float)atlasBounds.Top);
+					vertex.EntityIndex = entityIndex;
+				}
+
+				{
+					TextVertex& vertex = s_Renderer2DData.FrameData.TextVertices[textVertexIndex + 2];
+					vertex.Position = transform * glm::vec4(max, 0.0f, 1.0f);
+					vertex.Color = color;
+					vertex.UV = glm::vec2((float)atlasBounds.Right, (float)atlasBounds.Top);
+					vertex.EntityIndex = entityIndex;
+				}
+
+				{
+					TextVertex& vertex = s_Renderer2DData.FrameData.TextVertices[textVertexIndex + 3];
+					vertex.Position = transform * glm::vec4(max.x, min.y, 0.0f, 1.0f);
+					vertex.Color = color;
+					vertex.UV = glm::vec2((float)atlasBounds.Right, (float)atlasBounds.Bottom);
+					vertex.EntityIndex = entityIndex;
+				}
+
+				batch.Count++;
+				s_Renderer2DData.FrameData.TextQuadCount++;
+				s_Renderer2DData.Stats.QuadsCount++;
+
+				FLARE_CORE_ASSERT(s_Renderer2DData.FrameData.TextQuadCount < s_Renderer2DData.Limits.MaxQuadCount);
+			}
+
+			if (charIndex + 1 < text.size())
+			{
+				double advance = 0.0;
+
+				// TODO: properly handle tabs
+				char currentChar = text[charIndex];
+				if (currentChar == '\t')
+					currentChar = ' ';
+
+				geometry.getAdvance(advance, currentChar, text[charIndex + 1]);
+
+				if (text[charIndex] == '\t')
+					advance *= 4.0;
+
+				position.x += fontScale * (float)advance + kerningOffset;
+			}
+		}
+	}
+
+	Ref<const DescriptorSetLayout> Renderer2D::GetDescriptorSetLayout()
+	{
+		return s_Renderer2DData.FrameData.QuadDescriptorSetsPool->GetLayout();
+	}
+
+	const Renderer2DLimits& Renderer2D::GetLimits()
+	{
+		return s_Renderer2DData.Limits;
 	}
 }
