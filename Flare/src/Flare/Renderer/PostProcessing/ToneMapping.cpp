@@ -26,29 +26,19 @@ namespace Flare
 		if (!IsEnabled())
 			return;
 
-		TextureSpecifications colorTextureSpecifications{};
-		colorTextureSpecifications.Filtering = TextureFiltering::Closest;
-		colorTextureSpecifications.Format = TextureFormat::R11G11B10;
-		colorTextureSpecifications.Wrap = TextureWrap::Clamp;
-		colorTextureSpecifications.GenerateMipMaps = false;
-		colorTextureSpecifications.Width = viewport.GetSize().x;
-		colorTextureSpecifications.Height = viewport.GetSize().y;
-		colorTextureSpecifications.Usage = TextureUsage::RenderTarget | TextureUsage::Sampling;
-
-		Ref<Texture> intermediateTexture = Texture::Create(colorTextureSpecifications);
-		intermediateTexture->SetDebugName("ToneMapping.IntermediateColorTexture");
+		RenderGraphTextureId intermediateTexture = renderGraph.CreateTexture(TextureFormat::R11G11B10, "ToneMapping.IntermediateColorTexture");
 
 		RenderGraphPassSpecifications toneMappingPass{};
 		toneMappingPass.SetDebugName("ToneMapping");
-		toneMappingPass.AddInput(viewport.ColorTexture);
+		toneMappingPass.AddInput(viewport.ColorTextureId);
 		toneMappingPass.AddOutput(intermediateTexture, 0);
 
 		RenderGraphPassSpecifications blitPass{};
 		blitPass.SetDebugName("ToneMappingBlit");
-		BlitPass::ConfigureSpecifications(blitPass, intermediateTexture, viewport.ColorTexture);
+		BlitPass::ConfigureSpecifications(blitPass, intermediateTexture, viewport.ColorTextureId);
 
-		renderGraph.AddPass(toneMappingPass, CreateRef<ToneMappingPass>(viewport.ColorTexture));
-		renderGraph.AddPass(blitPass, CreateRef<BlitPass>(intermediateTexture, viewport.ColorTexture, TextureFiltering::Closest));
+		renderGraph.AddPass(toneMappingPass, CreateRef<ToneMappingPass>(viewport.ColorTextureId));
+		renderGraph.AddPass(blitPass, CreateRef<BlitPass>(intermediateTexture, viewport.ColorTextureId, TextureFiltering::Closest));
 	}
 
 	const SerializableObjectDescriptor& ToneMapping::GetSerializationDescriptor() const
@@ -58,7 +48,7 @@ namespace Flare
 
 
 
-	ToneMappingPass::ToneMappingPass(Ref<Texture> colorTexture)
+	ToneMappingPass::ToneMappingPass(RenderGraphTextureId colorTexture)
 		: m_ColorTexture(colorTexture)
 	{
 		FLARE_PROFILE_FUNCTION();
@@ -82,7 +72,7 @@ namespace Flare
 
 		auto colorTextureIndex = m_Material->GetShader()->GetPropertyIndex("u_ScreenBuffer");
 		if (colorTextureIndex)
-			m_Material->SetTextureProperty(*colorTextureIndex, m_ColorTexture);
+			m_Material->SetTextureProperty(*colorTextureIndex, context.GetRenderGraphResourceManager().GetTexture(m_ColorTexture));
 
 		commandBuffer->BeginRenderTarget(context.GetRenderTarget());
 		commandBuffer->SetViewportAndScisors(Math::Rect(glm::vec2(0.0f, 0.0f), (glm::vec2)context.GetViewport().GetSize()));

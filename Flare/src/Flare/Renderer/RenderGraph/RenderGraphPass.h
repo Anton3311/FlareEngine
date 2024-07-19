@@ -2,6 +2,9 @@
 
 #include "FlareCore/Core.h"
 #include "Flare/Renderer/RenderGraph/RenderGraphContext.h"
+#include "Flare/Renderer/RenderGraph/RenderGraphCommon.h"
+#include "Flare/Renderer/RenderGraph/RenderGraphResourceManager.h"
+
 #include "Flare/Renderer/Texture.h"
 
 #include <string>
@@ -45,13 +48,13 @@ namespace Flare
 	public:
 		struct Input
 		{
-			Ref<Texture> InputTexture = nullptr;
+			RenderGraphTextureId InputTexture;
 			ImageLayout Layout = ImageLayout::Undefined;
 		};
 
 		struct OutputAttachment
 		{
-			Ref<Texture> AttachmentTexture = nullptr;
+			RenderGraphTextureId AttachmentTexture;
 			uint32_t AttachmentIndex = 0;
 			ImageLayout Layout = ImageLayout::Undefined;
 			std::optional<AttachmentClearValue> ClearValue;
@@ -60,15 +63,15 @@ namespace Flare
 		void SetType(RenderGraphPassType type) { m_Type = type; }
 
 		void SetDebugName(std::string_view debugName);
-		void AddInput(const Ref<Texture>& texture, ImageLayout layout = ImageLayout::ReadOnly);
-		void AddOutput(const Ref<Texture>& texture, uint32_t attachmentIndex, ImageLayout layout = ImageLayout::AttachmentOutput);
+		void AddInput(RenderGraphTextureId textureId, ImageLayout layout = ImageLayout::ReadOnly);
+		void AddOutput(RenderGraphTextureId textureId, uint32_t attachmentIndex, ImageLayout layout = ImageLayout::AttachmentOutput);
 
-		void AddOutput(const Ref<Texture>& texture,
+		void AddOutput(RenderGraphTextureId textureId,
 			uint32_t attachmentIndex,
 			const glm::vec4& clearColor,
 			ImageLayout layout = ImageLayout::AttachmentOutput);
 
-		void AddOutput(const Ref<Texture>& texture,
+		void AddOutput(RenderGraphTextureId textureId,
 			uint32_t attachmentIndex,
 			float depthClearValue,
 			ImageLayout layout = ImageLayout::AttachmentOutput);

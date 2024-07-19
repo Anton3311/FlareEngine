@@ -34,11 +34,11 @@ namespace Flare
 	class FLARE_API ToneMappingPass : public RenderGraphPass
 	{
 	public:
-		ToneMappingPass(Ref<Texture> colorTexture);
+		ToneMappingPass(RenderGraphTextureId colorTexture);
 
 		void OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer) override;
 	private:
 		Ref<Material> m_Material = nullptr;
-		Ref<Texture> m_ColorTexture = nullptr;
+		RenderGraphTextureId m_ColorTexture;
 	};
 }

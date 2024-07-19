@@ -447,7 +447,7 @@ namespace Flare
 		set->FlushWrites();
 	}
 
-	static Ref<ShadowPass> ConfigureShadowPass(Viewport& viewport, std::array<Ref<Texture>, ShadowSettings::MaxCascades>& cascadeTextures)
+	static Ref<ShadowPass> ConfigureShadowPass(Viewport& viewport, std::array<RenderGraphTextureId, ShadowSettings::MaxCascades>& cascadeTextures)
 	{
 		FLARE_PROFILE_FUNCTION();
 
@@ -475,8 +475,10 @@ namespace Flare
 
 		for (int32_t cascadeIndex = 0; cascadeIndex < s_RendererData.ShadowMappingSettings.Cascades; cascadeIndex++)
 		{
-			cascadeTextures[cascadeIndex] = Texture::Create(cascadeSpec);
-			cascadeTextures[cascadeIndex]->SetDebugName(fmt::format("CascadeTexture.{}", cascadeIndex));
+			Ref<Texture> cascadeTexture = Texture::Create(cascadeSpec);
+			cascadeTexture->SetDebugName(fmt::format("CascadeTexture.{}", cascadeIndex));
+
+			cascadeTextures[cascadeIndex] = viewport.Graph.GetResourceManager().RegisterExistingTexture(cascadeTexture);
 
 			RenderGraphPassSpecifications cascadePassSpec{};
 			cascadePassSpec.SetDebugName(fmt::format("ShadowCascadePass{}", cascadeIndex));
@@ -487,8 +489,7 @@ namespace Flare
 				s_RendererData.Statistics,
 				shadowPass->GetCascadeData((size_t)cascadeIndex),
 				shadowPass->GetFilteredTransforms(),
-				shadowPass->GetVisibleSubMeshIndices(),
-				cascadeTextures[cascadeIndex]);
+				shadowPass->GetVisibleSubMeshIndices());
 
 			viewport.Graph.AddPass(cascadePassSpec, cascadePass);
 		}
@@ -499,7 +500,7 @@ namespace Flare
 	void Renderer::ConfigurePasses(Viewport& viewport)
 	{
 		FLARE_PROFILE_FUNCTION();
-		std::array<Ref<Texture>, ShadowSettings::MaxCascades> cascadeTextures = { nullptr };
+		std::array<RenderGraphTextureId, ShadowSettings::MaxCascades> cascadeTextures = { RenderGraphTextureId() };
 		Ref<ShadowPass> shadowPass = ConfigureShadowPass(viewport, cascadeTextures);
 
 		SetupPrimaryDescriptorSet(viewport.GlobalResources.GlobalDescriptorSet, shadowPass->GetCompareSampler());
@@ -507,24 +508,25 @@ namespace Flare
 
 		RenderGraphPassSpecifications geometryPass{};
 		geometryPass.SetDebugName("GeometryPass");
-		geometryPass.AddOutput(viewport.ColorTexture, 0);
-		geometryPass.AddOutput(viewport.NormalsTexture, 1);
-		geometryPass.AddOutput(viewport.DepthTexture, 2);
+		geometryPass.AddOutput(viewport.ColorTextureId, 0);
+		geometryPass.AddOutput(viewport.NormalsTextureId, 1);
+		geometryPass.AddOutput(viewport.DepthTextureId, 2);
 
 		if (viewport.IsShadowMappingEnabled())
 		{
 			Ref<DescriptorSet> set = viewport.GlobalResources.GlobalDescriptorSet;
 			for (uint32_t i = 0; i < (uint32_t)Renderer::GetShadowSettings().Cascades; i++)
 			{
-				set->WriteImage(cascadeTextures[i], 4 + i);
-				set->WriteImage(cascadeTextures[i], shadowPass->GetCompareSampler(), 8 + i);
+				Ref<Texture> cascadeTexture = viewport.Graph.GetResourceManager().GetTexture(cascadeTextures[i]);
+				set->WriteImage(cascadeTexture, 4 + i);
+				set->WriteImage(cascadeTexture, shadowPass->GetCompareSampler(), 8 + i);
 			}
 
 			set->FlushWrites();
 
 			for (size_t i = 0; i < cascadeTextures.size(); i++)
 			{
-				if (cascadeTextures[i] == nullptr)
+				if (cascadeTextures[i].GetValue() == UINT32_MAX)
 					break;
 
 				geometryPass.AddInput(cascadeTextures[i]);
@@ -537,8 +539,8 @@ namespace Flare
 
 		// Decal pass
 		RenderGraphPassSpecifications decalPass{};
-		decalPass.AddInput(viewport.DepthTexture);
-		decalPass.AddOutput(viewport.ColorTexture, 0);
+		decalPass.AddInput(viewport.DepthTextureId);
+		decalPass.AddOutput(viewport.ColorTextureId, 0);
 
 		viewport.Graph.AddPass(decalPass, CreateRef<DecalsPass>(
 			s_RendererData.Decals,

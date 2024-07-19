@@ -39,14 +39,14 @@ namespace Flare
 	class FLARE_API SSAOMainPass : public RenderGraphPass
 	{
 	public:
-		SSAOMainPass(Ref<Texture> normalsTexture, Ref<Texture> depthTexture);
+		SSAOMainPass(RenderGraphTextureId normalsTexture, RenderGraphTextureId depthTexture);
 
 		void OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer) override;
 	private:
 		Ref<Material> m_Material = nullptr;
 
-		Ref<Texture> m_NormalsTexture = nullptr;
-		Ref<Texture> m_DepthTexture = nullptr;
+		RenderGraphTextureId m_NormalsTexture;
+		RenderGraphTextureId m_DepthTexture;
 
 		Ref<SSAO> m_Parameters = nullptr;
 	};
@@ -54,13 +54,13 @@ namespace Flare
 	class FLARE_API SSAOComposingPass : public RenderGraphPass
 	{
 	public:
-		SSAOComposingPass(Ref<Texture> colorTexture, Ref<Texture> aoTexture);
+		SSAOComposingPass(RenderGraphTextureId colorTexture, RenderGraphTextureId aoTexture);
 
 		void OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer) override;
 	private:
-		Ref<Texture> m_ColorTexture = nullptr;
+		RenderGraphTextureId m_ColorTexture;
 
-		Ref<Texture> m_AOTexture = nullptr;
+		RenderGraphTextureId m_AOTexture;
 		Ref<Material> m_Material = nullptr;
 
 		Ref<SSAO> m_Parameters = nullptr;

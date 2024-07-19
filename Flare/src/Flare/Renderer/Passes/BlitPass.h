@@ -8,13 +8,14 @@ namespace Flare
 	class FLARE_API BlitPass : public RenderGraphPass
 	{
 	public:
-		BlitPass(Ref<Texture> sourceTexture, Ref<Texture> destination, TextureFiltering filter);
+		BlitPass(RenderGraphTextureId sourceTexture, RenderGraphTextureId destination, TextureFiltering filter);
+
 		void OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer) override;
 
-		static void ConfigureSpecifications(RenderGraphPassSpecifications& specifications, Ref<Texture> source, Ref<Texture> destination);
+		static void ConfigureSpecifications(RenderGraphPassSpecifications& specifications, RenderGraphTextureId source, RenderGraphTextureId destination);
 	private:
 		TextureFiltering m_Filter = TextureFiltering::Closest;
-		Ref<Texture> m_SourceTexture = nullptr;
-		Ref<Texture> m_Destination = nullptr;
+		RenderGraphTextureId m_SourceTexture;
+		RenderGraphTextureId m_Destination;
 	};
 }

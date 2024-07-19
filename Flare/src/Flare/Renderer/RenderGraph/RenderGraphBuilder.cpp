@@ -9,8 +9,11 @@
 
 namespace Flare
 {
-	RenderGraphBuilder::RenderGraphBuilder(CompiledRenderGraph& result, Span<RenderPassNode> nodes, Span<ExternalRenderGraphResource> externalResources)
-		: m_Result(result), m_Nodes(nodes), m_ExternalResources(externalResources)
+	RenderGraphBuilder::RenderGraphBuilder(CompiledRenderGraph& result,
+		Span<RenderPassNode> nodes,
+		const RenderGraphResourceManager& resourceManager,
+		Span<ExternalRenderGraphResource> externalResources)
+		: m_Result(result), m_Nodes(nodes), m_ExternalResources(externalResources), m_ResourceManager(resourceManager)
 	{
 	}
 
@@ -24,7 +27,7 @@ namespace Flare
 			if (resource.InitialLayout == ImageLayout::Undefined)
 				continue;
 
-			ResourceState& state = m_States[GetResoureId(resource.TextureHandle)];
+			ResourceState& state = m_States[resource.Texture];
 			state.Layout = resource.InitialLayout;
 		}
 
@@ -40,7 +43,7 @@ namespace Flare
 		m_Result.ExternalResourceFinalTransitions = LayoutTransitionsRange((uint32_t)m_Result.LayoutTransitions.size());
 		for (const auto& resource : m_ExternalResources)
 		{
-			AddTransition(resource.TextureHandle, resource.FinalLayout, m_Result.ExternalResourceFinalTransitions);
+			AddTransition(resource.Texture, resource.FinalLayout, m_Result.ExternalResourceFinalTransitions);
 		}
 
 		CreateRenderTargets();
@@ -67,20 +70,17 @@ namespace Flare
 		for (size_t outputIndex = 0; outputIndex < node.Specifications.GetOutputs().size(); outputIndex++)
 		{
 			const auto& output = outputs[outputIndex];
-
-			FLARE_CORE_ASSERT(output.AttachmentTexture != nullptr);
-			ResourceId id = GetResoureId(output.AttachmentTexture);
-			auto it = m_States.find(id);
+			auto it = m_States.find(output.AttachmentTexture);
 
 			// Only outputs with AttachmentOutput image layout can be used in a RenderPass
 			if (output.Layout == ImageLayout::AttachmentOutput)
 			{
 				LayoutTransition& transition = m_RenderPassTransitions[nodeIndex][outputIndex];
-				transition.TextureHandle = output.AttachmentTexture;
+				transition.Texture = output.AttachmentTexture;
 				transition.InitialLayout = GetCurrentLayout(output.AttachmentTexture);
 				transition.FinalLayout = output.Layout;
 
-				ResourceState& state = m_States[id];
+				ResourceState& state = m_States[output.AttachmentTexture];
 				state.Layout = output.Layout;
 				state.LastWritingPass = WritingRenderPass{};
 				state.LastWritingPass->RenderPassIndex = (uint32_t)nodeIndex;
@@ -134,7 +134,7 @@ namespace Flare
 				for (size_t outputIndex = 0; outputIndex < outputs.size(); outputIndex++)
 				{
 					const LayoutTransition& transition = m_RenderPassTransitions[nodeIndex][outputIndex];
-					TextureFormat format = outputs[outputIndex].AttachmentTexture->GetFormat();
+					TextureFormat format = m_ResourceManager.GetTextureFormat(outputs[outputIndex].AttachmentTexture);
 
 					RenderPassAttachmentKey& attachmentKey = renderPassKey.Attachments.emplace_back();
 					attachmentKey.Format = format;
@@ -167,7 +167,7 @@ namespace Flare
 
 			for (size_t outputIndex = 0; outputIndex < outputs.size(); outputIndex++)
 			{
-				attachmentTextures.push_back(outputs[outputIndex].AttachmentTexture);
+				attachmentTextures.push_back(m_ResourceManager.GetTexture(outputs[outputIndex].AttachmentTexture));
 			}
 
 			Ref<VulkanRenderPass> compatibleRenderPass = renderPassCache.GetOrCreate(renderPassKey);
@@ -188,15 +188,12 @@ namespace Flare
 		}
 	}
 
-	void RenderGraphBuilder::AddExplicitTransition(Ref<Texture> texture, ImageLayout layout, LayoutTransitionsRange& transitions)
+	void RenderGraphBuilder::AddExplicitTransition(RenderGraphTextureId texture, ImageLayout layout, LayoutTransitionsRange& transitions)
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		FLARE_CORE_ASSERT(texture);
 		FLARE_CORE_ASSERT(layout != ImageLayout::Undefined);
-
-		ResourceId id = GetResoureId(texture);
-		ResourceStateIterator it = m_States.find(id);
+		ResourceStateIterator it = m_States.find(texture);
 
 		ImageLayout initialLayout = ImageLayout::Undefined;
 
@@ -210,22 +207,20 @@ namespace Flare
 
 		transitions.End++;
 		auto& transition = m_Result.LayoutTransitions.emplace_back();
-		transition.TextureHandle = texture;
+		transition.Texture = texture;
 		transition.InitialLayout = initialLayout;
 		transition.FinalLayout = layout;
 
-		m_States[id] = { layout, {} };
+		m_States[texture] = { layout, {} };
 	}
 
-	void RenderGraphBuilder::AddTransition(Ref<Texture> texture, ImageLayout layout, LayoutTransitionsRange& transitions)
+	void RenderGraphBuilder::AddTransition(RenderGraphTextureId texture, ImageLayout layout, LayoutTransitionsRange& transitions)
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		FLARE_CORE_ASSERT(texture);
 		FLARE_CORE_ASSERT(layout != ImageLayout::Undefined);
 
-		ResourceId id = GetResoureId(texture);
-		auto it = m_States.find(id);
+		auto it = m_States.find(texture);
 
 		bool explicitTransition = false;
 		if (it == m_States.end())
@@ -256,11 +251,9 @@ namespace Flare
 		}
 	}
 
-	ImageLayout RenderGraphBuilder::GetCurrentLayout(Ref<Texture> texture)
+	ImageLayout RenderGraphBuilder::GetCurrentLayout(RenderGraphTextureId texture)
 	{
-		FLARE_CORE_ASSERT(texture != nullptr);
-
-		auto it = m_States.find(GetResoureId(texture));
+		auto it = m_States.find(texture);
 		if (it == m_States.end())
 		{
 			return ImageLayout::Undefined;

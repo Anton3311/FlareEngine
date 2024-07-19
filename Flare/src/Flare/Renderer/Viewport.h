@@ -57,6 +57,10 @@ namespace Flare
 
 		RenderGraph Graph;
 
+		RenderGraphTextureId ColorTextureId;
+		RenderGraphTextureId NormalsTextureId;
+		RenderGraphTextureId DepthTextureId;
+
 		Ref<Texture> ColorTexture = nullptr;
 		Ref<Texture> NormalsTexture = nullptr;
 		Ref<Texture> DepthTexture = nullptr;

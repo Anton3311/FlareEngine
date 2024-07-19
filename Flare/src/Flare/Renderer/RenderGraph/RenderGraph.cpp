@@ -8,6 +8,11 @@
 
 namespace Flare
 {
+	RenderGraph::RenderGraph(const Viewport& viewport)
+		: m_Viewport(viewport), m_ResourceManager(viewport)
+	{
+	}
+
 	void RenderGraph::AddPass(const RenderGraphPassSpecifications& specifications, Ref<RenderGraphPass> pass)
 	{
 		FLARE_CORE_ASSERT(pass != nullptr);
@@ -48,7 +53,6 @@ namespace Flare
 
 	void RenderGraph::AddExternalResource(const ExternalRenderGraphResource& resource)
 	{
-		FLARE_CORE_ASSERT(resource.TextureHandle);
 		FLARE_CORE_ASSERT(resource.FinalLayout != ImageLayout::Undefined);
 		m_ExternalResources.push_back(resource);
 	}
@@ -60,7 +64,7 @@ namespace Flare
 
 		for (const auto& node : m_Nodes)
 		{
-			RenderGraphContext context(Renderer::GetCurrentViewport(), node.RenderTarget);
+			RenderGraphContext context(Renderer::GetCurrentViewport(), node.RenderTarget, *this, m_ResourceManager);
 
 			ExecuteLayoutTransitions(commandBuffer, node.Transitions);
 
@@ -75,6 +79,7 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 		RenderGraphBuilder builder(m_CompiledRenderGraph,
 			Span<RenderPassNode>::FromVector(m_Nodes),
+			m_ResourceManager,
 			Span<ExternalRenderGraphResource>::FromVector(m_ExternalResources));
 
 		builder.Build();
@@ -87,6 +92,7 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 		m_Nodes.clear();
 		m_CompiledRenderGraph.Reset();
+		m_ResourceManager.Clear();
 	}
 
 	void RenderGraph::ExecuteLayoutTransitions(Ref<CommandBuffer> commandBuffer, LayoutTransitionsRange range)
@@ -97,9 +103,11 @@ namespace Flare
 		for (uint32_t i = range.Start; i < range.End; i++)
 		{
 			const LayoutTransition& transition = m_CompiledRenderGraph.LayoutTransitions[i];
-			VkImage image = As<VulkanTexture>(transition.TextureHandle)->GetImageHandle();
 
-			TextureFormat format = transition.TextureHandle->GetFormat();
+			Ref<Texture> texture = m_ResourceManager.GetTexture(transition.Texture);
+			VkImage image = As<VulkanTexture>(texture)->GetImageHandle();
+
+			TextureFormat format = texture->GetFormat();
 			VkImageLayout initialLayout = ImageLayoutToVulkanImageLayout(transition.InitialLayout, format);
 			VkImageLayout finalLayout = ImageLayoutToVulkanImageLayout(transition.FinalLayout, format);
 

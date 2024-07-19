@@ -186,8 +186,8 @@ namespace Flare
 		if (EditorLayer::GetInstance().GetSceneViewSettings().ShowGrid)
 		{
 			RenderGraphPassSpecifications gridPass{};
-			gridPass.AddOutput(m_Viewport.ColorTexture, 0);
-			gridPass.AddOutput(m_Viewport.DepthTexture, 1);
+			gridPass.AddOutput(m_Viewport.ColorTextureId, 0);
+			gridPass.AddOutput(m_Viewport.DepthTextureId, 1);
 			gridPass.SetDebugName("SceneViewGridPass");
 			gridPass.SetType(RenderGraphPassType::Graphics);
 
@@ -223,6 +223,10 @@ namespace Flare
 		m_Viewport.NormalsTexture->SetDebugName("Normals");
 		m_Viewport.DepthTexture->SetDebugName("Depth");
 
+		m_Viewport.ColorTextureId = m_Viewport.Graph.GetResourceManager().RegisterExistingTexture(m_Viewport.ColorTexture);
+		m_Viewport.NormalsTextureId = m_Viewport.Graph.GetResourceManager().RegisterExistingTexture(m_Viewport.NormalsTexture);
+		m_Viewport.DepthTextureId = m_Viewport.Graph.GetResourceManager().RegisterExistingTexture(m_Viewport.DepthTexture);
+
 		Ref<Texture> attachmentTextures[] = { m_Viewport.ColorTexture, m_Viewport.NormalsTexture, m_Viewport.DepthTexture };
 
 		m_Viewport.RenderTarget = FrameBuffer::Create(Span(attachmentTextures, 3));
@@ -230,17 +234,17 @@ namespace Flare
 		ExternalRenderGraphResource colorTextureResource{};
 		colorTextureResource.InitialLayout = ImageLayout::AttachmentOutput;
 		colorTextureResource.FinalLayout = ImageLayout::ReadOnly;
-		colorTextureResource.TextureHandle = m_Viewport.ColorTexture;
+		colorTextureResource.Texture = m_Viewport.ColorTextureId;
 
 		ExternalRenderGraphResource normalsTextureResource{};
 		normalsTextureResource.InitialLayout = ImageLayout::AttachmentOutput;
 		normalsTextureResource.FinalLayout = ImageLayout::ReadOnly;
-		normalsTextureResource.TextureHandle = m_Viewport.NormalsTexture;
+		normalsTextureResource.Texture = m_Viewport.NormalsTextureId;
 
 		ExternalRenderGraphResource depthTextureResource{};
 		depthTextureResource.InitialLayout = ImageLayout::AttachmentOutput;
 		depthTextureResource.FinalLayout = ImageLayout::ReadOnly;
-		depthTextureResource.TextureHandle = m_Viewport.DepthTexture;
+		depthTextureResource.Texture = m_Viewport.DepthTextureId;
 
 		m_Viewport.Graph.AddExternalResource(colorTextureResource);
 		m_Viewport.Graph.AddExternalResource(normalsTextureResource);

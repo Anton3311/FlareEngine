@@ -250,8 +250,8 @@ namespace Flare
 			return;
 
 		RenderGraphPassSpecifications linesPass{};
-		linesPass.AddOutput(viewport.ColorTexture, 0);
-		linesPass.AddOutput(viewport.DepthTexture, 1);
+		linesPass.AddOutput(viewport.ColorTextureId, 0);
+		linesPass.AddOutput(viewport.DepthTextureId, 1);
 		linesPass.SetType(RenderGraphPassType::Graphics);
 		linesPass.SetDebugName("DebugLinesPass");
 
@@ -261,8 +261,8 @@ namespace Flare
 			s_DebugRendererData.FrameData));
 
 		RenderGraphPassSpecifications raysPass{};
-		raysPass.AddOutput(viewport.ColorTexture, 0);
-		raysPass.AddOutput(viewport.DepthTexture, 1);
+		raysPass.AddOutput(viewport.ColorTextureId, 0);
+		raysPass.AddOutput(viewport.DepthTextureId, 1);
 		raysPass.SetType(RenderGraphPassType::Graphics);
 		raysPass.SetDebugName("DebugRaysPass");
 

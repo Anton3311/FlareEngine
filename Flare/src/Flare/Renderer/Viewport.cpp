@@ -10,6 +10,7 @@
 namespace Flare
 {
 	Viewport::Viewport()
+		: Graph(*this)
 	{
 		FLARE_PROFILE_FUNCTION();
 		GlobalResources.CameraBuffer = UniformBuffer::Create(sizeof(RenderView));

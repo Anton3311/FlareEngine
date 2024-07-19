@@ -4,20 +4,22 @@
 
 #include "Flare/Renderer/Texture.h"
 
+#include "Flare/Renderer/RenderGraph/RenderGraphResourceManager.h"
+
 #include <stdint.h>
 
 namespace Flare
 {
 	struct LayoutTransition
 	{
-		Ref<Texture> TextureHandle = nullptr;
+		RenderGraphTextureId Texture;
 		ImageLayout InitialLayout = ImageLayout::Undefined;
 		ImageLayout FinalLayout = ImageLayout::Undefined;
 	};
 
 	struct ExternalRenderGraphResource
 	{
-		Ref<Texture> TextureHandle = nullptr;
+		RenderGraphTextureId Texture;
 		ImageLayout InitialLayout = ImageLayout::Undefined;
 		ImageLayout FinalLayout = ImageLayout::Undefined;
 	};

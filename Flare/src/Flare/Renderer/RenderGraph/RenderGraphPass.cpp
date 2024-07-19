@@ -9,31 +9,28 @@ namespace Flare
 		m_DebugName = debugName;
 	}
 
-	void RenderGraphPassSpecifications::AddInput(const Ref<Texture>& texture, ImageLayout layout)
+	void RenderGraphPassSpecifications::AddInput(RenderGraphTextureId textureId, ImageLayout layout)
 	{
-		FLARE_CORE_ASSERT(texture != nullptr);
 		Input& input = m_Inputs.emplace_back();
-		input.InputTexture = texture;
+		input.InputTexture = textureId;
 		input.Layout = layout;
 	}
 
-	void RenderGraphPassSpecifications::AddOutput(const Ref<Texture>& texture, uint32_t attachmentIndex, ImageLayout layout)
+	void RenderGraphPassSpecifications::AddOutput(RenderGraphTextureId textureId, uint32_t attachmentIndex, ImageLayout layout)
 	{
-		FLARE_CORE_ASSERT(texture != nullptr);
 		auto& output = m_Outputs.emplace_back();
-		output.AttachmentTexture = texture;
+		output.AttachmentTexture = textureId;
 		output.AttachmentIndex = attachmentIndex;
 		output.Layout = layout;
 	}
 
-	void RenderGraphPassSpecifications::AddOutput(const Ref<Texture>& texture,
+	void RenderGraphPassSpecifications::AddOutput(RenderGraphTextureId textureId,
 		uint32_t attachmentIndex,
 		const glm::vec4& clearColor,
 		ImageLayout layout)
 	{
-		FLARE_CORE_ASSERT(texture != nullptr);
 		auto& output = m_Outputs.emplace_back();
-		output.AttachmentTexture = texture;
+		output.AttachmentTexture = textureId;
 		output.AttachmentIndex = attachmentIndex;
 		output.Layout = layout;
 		output.ClearValue = AttachmentClearValue(clearColor);
@@ -41,14 +38,13 @@ namespace Flare
 		m_HasOutputClearValues = true;
 	}
 
-	void RenderGraphPassSpecifications::AddOutput(const Ref<Texture>& texture,
+	void RenderGraphPassSpecifications::AddOutput(RenderGraphTextureId textureId,
 		uint32_t attachmentIndex,
 		float depthClearValue,
 		ImageLayout layout)
 	{
-		FLARE_CORE_ASSERT(texture != nullptr);
 		auto& output = m_Outputs.emplace_back();
-		output.AttachmentTexture = texture;
+		output.AttachmentTexture = textureId;
 		output.AttachmentIndex = attachmentIndex;
 		output.Layout = layout;
 		output.ClearValue = AttachmentClearValue(depthClearValue);

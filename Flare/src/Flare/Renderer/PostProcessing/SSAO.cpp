@@ -35,49 +35,28 @@ namespace Flare
 		if (!IsEnabled())
 			return;
 
-		TextureSpecifications aoTextureSpecifications{};
-		aoTextureSpecifications.Filtering = TextureFiltering::Closest;
-		aoTextureSpecifications.Format = TextureFormat::RF32;
-		aoTextureSpecifications.Wrap = TextureWrap::Clamp;
-		aoTextureSpecifications.GenerateMipMaps = false;
-		aoTextureSpecifications.Width = viewport.GetSize().x;
-		aoTextureSpecifications.Height = viewport.GetSize().y;
-		aoTextureSpecifications.Usage = TextureUsage::RenderTarget | TextureUsage::Sampling;
-
-		TextureSpecifications colorTextureSpecifications{};
-		colorTextureSpecifications.Filtering = TextureFiltering::Closest;
-		colorTextureSpecifications.Format = TextureFormat::R11G11B10;
-		colorTextureSpecifications.Wrap = TextureWrap::Clamp;
-		colorTextureSpecifications.GenerateMipMaps = false;
-		colorTextureSpecifications.Width = viewport.GetSize().x;
-		colorTextureSpecifications.Height = viewport.GetSize().y;
-		colorTextureSpecifications.Usage = TextureUsage::RenderTarget | TextureUsage::Sampling;
-
-		Ref<Texture> aoTexture = Texture::Create(aoTextureSpecifications);
-		Ref<Texture> intermediateColorTexture = Texture::Create(colorTextureSpecifications);
-
-		aoTexture->SetDebugName("SSAO.AOTexture");
-		intermediateColorTexture->SetDebugName("SSAO.IntermediateColorTexture");
+		RenderGraphTextureId aoTexture = renderGraph.CreateTexture(TextureFormat::RF32, "SSAO.AOTexture");
+		RenderGraphTextureId intermediateColorTexture = renderGraph.CreateTexture(TextureFormat::R11G11B10, "SSAO.IntermediateColorTexture");
 
 		RenderGraphPassSpecifications ssaoMainPass{};
 		ssaoMainPass.SetDebugName("SSAOMainPass");
-		ssaoMainPass.AddInput(viewport.NormalsTexture);
-		ssaoMainPass.AddInput(viewport.DepthTexture);
+		ssaoMainPass.AddInput(viewport.NormalsTextureId);
+		ssaoMainPass.AddInput(viewport.DepthTextureId);
 		ssaoMainPass.AddOutput(aoTexture, 0);
 
 		RenderGraphPassSpecifications ssaoComposingPass{};
 		ssaoComposingPass.SetDebugName("SSAOComposingPass");
 		ssaoComposingPass.AddInput(aoTexture);
-		ssaoComposingPass.AddInput(viewport.ColorTexture);
+		ssaoComposingPass.AddInput(viewport.ColorTextureId);
 		ssaoComposingPass.AddOutput(intermediateColorTexture, 0);
 
 		RenderGraphPassSpecifications ssaoBlitPass{};
 		ssaoBlitPass.SetDebugName("SSAOBlitPass");
-		BlitPass::ConfigureSpecifications(ssaoBlitPass, intermediateColorTexture, viewport.ColorTexture);
+		BlitPass::ConfigureSpecifications(ssaoBlitPass, intermediateColorTexture, viewport.ColorTextureId);
 
-		renderGraph.AddPass(ssaoMainPass, CreateRef<SSAOMainPass>(viewport.NormalsTexture, viewport.DepthTexture));
-		renderGraph.AddPass(ssaoComposingPass, CreateRef<SSAOComposingPass>(viewport.ColorTexture, aoTexture));
-		renderGraph.AddPass(ssaoBlitPass, CreateRef<BlitPass>(intermediateColorTexture, viewport.ColorTexture, TextureFiltering::Closest));
+		renderGraph.AddPass(ssaoMainPass, CreateRef<SSAOMainPass>(viewport.NormalsTextureId, viewport.DepthTextureId));
+		renderGraph.AddPass(ssaoComposingPass, CreateRef<SSAOComposingPass>(viewport.ColorTextureId, aoTexture));
+		renderGraph.AddPass(ssaoBlitPass, CreateRef<BlitPass>(intermediateColorTexture, viewport.ColorTextureId, TextureFiltering::Closest));
 	}
 
 	const SerializableObjectDescriptor& SSAO::GetSerializationDescriptor() const
@@ -87,7 +66,7 @@ namespace Flare
 
 
 
-	SSAOMainPass::SSAOMainPass(Ref<Texture> normalsTexture, Ref<Texture> depthTexture)
+	SSAOMainPass::SSAOMainPass(RenderGraphTextureId normalsTexture, RenderGraphTextureId depthTexture)
 		: m_NormalsTexture(normalsTexture), m_DepthTexture(depthTexture)
 	{
 		FLARE_PROFILE_FUNCTION();
@@ -121,8 +100,8 @@ namespace Flare
 
 		m_Material->WritePropertyValue(*biasIndex, m_Parameters->Bias);
 		m_Material->WritePropertyValue(*radiusIndex, m_Parameters->Radius);
-		m_Material->SetTextureProperty(*normalsTextureIndex, m_NormalsTexture);
-		m_Material->SetTextureProperty(*depthTextureIndex, m_DepthTexture);
+		m_Material->SetTextureProperty(*normalsTextureIndex, context.GetRenderGraphResourceManager().GetTexture(m_NormalsTexture));
+		m_Material->SetTextureProperty(*depthTextureIndex, context.GetRenderGraphResourceManager().GetTexture(m_DepthTexture));
 
 		commandBuffer->SetViewportAndScisors(Math::Rect(glm::vec2(0.0f, 0.0f), (glm::vec2)context.GetViewport().GetSize()));
 
@@ -134,7 +113,7 @@ namespace Flare
 
 
 
-	SSAOComposingPass::SSAOComposingPass(Ref<Texture> colorTexture, Ref<Texture> aoTexture)
+	SSAOComposingPass::SSAOComposingPass(RenderGraphTextureId colorTexture, RenderGraphTextureId aoTexture)
 		: m_ColorTexture(colorTexture), m_AOTexture(aoTexture)
 	{
 		FLARE_PROFILE_FUNCTION();
@@ -168,8 +147,8 @@ namespace Flare
 
 		m_Material->WritePropertyValue(*blurSizePropertyIndex, m_Parameters->BlurSize);
 		m_Material->WritePropertyValue(*texelSizePropertyIndex, texelSize);
-		m_Material->SetTextureProperty(*aoTextureIndex, m_AOTexture);
-		m_Material->SetTextureProperty(*colorTextureIndex, m_ColorTexture);
+		m_Material->SetTextureProperty(*aoTextureIndex, context.GetRenderGraphResourceManager().GetTexture(m_AOTexture));
+		m_Material->SetTextureProperty(*colorTextureIndex, context.GetRenderGraphResourceManager().GetTexture(m_ColorTexture));
 
 		commandBuffer->ApplyMaterial(m_Material);
 		commandBuffer->DrawMeshIndexed(RendererPrimitives::GetFullscreenQuadMesh(), 0, 0, 1);
