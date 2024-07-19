@@ -195,71 +195,6 @@ namespace Flare
 		}
 	}
 
-	void SceneViewportWindow::CreateFrameBuffer()
-	{
-		FLARE_PROFILE_FUNCTION();
-		TextureSpecifications specifications{};
-		specifications.Width = m_Viewport.GetSize().x;
-		specifications.Height = m_Viewport.GetSize().y;
-		specifications.Wrap = TextureWrap::Clamp;
-		specifications.Filtering = TextureFiltering::Closest;
-		specifications.GenerateMipMaps = false;
-		specifications.Usage = TextureUsage::Sampling | TextureUsage::RenderTarget;
-
-		TextureSpecifications colorSpecifications = specifications;
-		colorSpecifications.Format = TextureFormat::R11G11B10;
-
-		TextureSpecifications normalsSpecifications = specifications;
-		normalsSpecifications.Format = TextureFormat::RGB8;
-
-		TextureSpecifications depthSpecifications = specifications;
-		depthSpecifications.Format = TextureFormat::Depth32;
-
-		m_Viewport.ColorTexture = Texture::Create(colorSpecifications);
-		m_Viewport.NormalsTexture = Texture::Create(normalsSpecifications);
-		m_Viewport.DepthTexture = Texture::Create(depthSpecifications);
-
-		m_Viewport.ColorTexture->SetDebugName("Color");
-		m_Viewport.NormalsTexture->SetDebugName("Normals");
-		m_Viewport.DepthTexture->SetDebugName("Depth");
-
-		m_Viewport.ColorTextureId = m_Viewport.Graph.GetResourceManager().RegisterExistingTexture(m_Viewport.ColorTexture);
-		m_Viewport.NormalsTextureId = m_Viewport.Graph.GetResourceManager().RegisterExistingTexture(m_Viewport.NormalsTexture);
-		m_Viewport.DepthTextureId = m_Viewport.Graph.GetResourceManager().RegisterExistingTexture(m_Viewport.DepthTexture);
-
-		Ref<Texture> attachmentTextures[] = { m_Viewport.ColorTexture, m_Viewport.NormalsTexture, m_Viewport.DepthTexture };
-
-		m_Viewport.RenderTarget = FrameBuffer::Create(Span(attachmentTextures, 3));
-
-		ExternalRenderGraphResource colorTextureResource{};
-		colorTextureResource.InitialLayout = ImageLayout::AttachmentOutput;
-		colorTextureResource.FinalLayout = ImageLayout::ReadOnly;
-		colorTextureResource.Texture = m_Viewport.ColorTextureId;
-
-		ExternalRenderGraphResource normalsTextureResource{};
-		normalsTextureResource.InitialLayout = ImageLayout::AttachmentOutput;
-		normalsTextureResource.FinalLayout = ImageLayout::ReadOnly;
-		normalsTextureResource.Texture = m_Viewport.NormalsTextureId;
-
-		ExternalRenderGraphResource depthTextureResource{};
-		depthTextureResource.InitialLayout = ImageLayout::AttachmentOutput;
-		depthTextureResource.FinalLayout = ImageLayout::ReadOnly;
-		depthTextureResource.Texture = m_Viewport.DepthTextureId;
-
-		m_Viewport.Graph.AddExternalResource(colorTextureResource);
-		m_Viewport.Graph.AddExternalResource(normalsTextureResource);
-		m_Viewport.Graph.AddExternalResource(depthTextureResource);
-	}
-
-	void SceneViewportWindow::OnClear()
-	{
-		FLARE_PROFILE_FUNCTION();
-		Ref<CommandBuffer> commandBuffer = GraphicsContext::GetInstance().GetCommandBuffer();
-		commandBuffer->ClearColor(m_Viewport.ColorTexture, glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
-		commandBuffer->ClearColor(m_Viewport.NormalsTexture, glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
-		commandBuffer->ClearDepth(m_Viewport.DepthTexture, 1.0f);
-	}
-
 	void SceneViewportWindow::RenderWindowContents()
 	{
 		FLARE_PROFILE_FUNCTION();
@@ -269,13 +204,13 @@ namespace Flare
 		switch (m_Overlay)
 		{
 		case ViewportOverlay::Default:
-			RenderViewportBuffer(m_Viewport.ColorTexture);
+			RenderViewportBuffer(m_Viewport.Graph.GetTexture(m_Viewport.ColorTextureId));
 			break;
 		case ViewportOverlay::Normal:
-			RenderViewportBuffer(m_Viewport.NormalsTexture);
+			RenderViewportBuffer(m_Viewport.Graph.GetTexture(m_Viewport.NormalsTextureId));
 			break;
 		case ViewportOverlay::Depth:
-			RenderViewportBuffer(m_Viewport.DepthTexture);
+			RenderViewportBuffer(m_Viewport.Graph.GetTexture(m_Viewport.DepthTextureId));
 			break;
 		}
 

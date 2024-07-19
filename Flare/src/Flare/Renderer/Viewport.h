@@ -42,7 +42,9 @@ namespace Flare
 
 		void Resize(glm::ivec2 position, glm::ivec2 size);
 		void UpdateGlobalDescriptorSets();
-	public:
+
+		void OnBuildRenderGraph();
+
 		inline bool IsPostProcessingEnabled() const { return m_PostProcessingEnabled; }
 		void SetPostProcessingEnabled(bool enabled);
 
@@ -53,17 +55,12 @@ namespace Flare
 		void SetDebugRenderingEnabled(bool enabled);
 	public:
 		RenderData FrameData;
-		Ref<FrameBuffer> RenderTarget = nullptr;
 
 		RenderGraph Graph;
 
 		RenderGraphTextureId ColorTextureId;
 		RenderGraphTextureId NormalsTextureId;
 		RenderGraphTextureId DepthTextureId;
-
-		Ref<Texture> ColorTexture = nullptr;
-		Ref<Texture> NormalsTexture = nullptr;
-		Ref<Texture> DepthTexture = nullptr;
 
 		ViewportGlobalResources GlobalResources;
 	private:
@@ -72,7 +69,11 @@ namespace Flare
 		bool m_PostProcessingEnabled = true;
 		bool m_ShadowMappingEnabled = true;
 		bool m_DebugRenderingEnabled = false;
-	private:
+
+		TextureFormat m_ColorTextureFormat = TextureFormat::RGB8;
+		TextureFormat m_NormalsTextureFormat = TextureFormat::RGB8;
+		TextureFormat m_DepthTextureFormat = TextureFormat::Depth32;
+
 		glm::ivec2 m_Position = glm::ivec2(0, 0);
 		glm::ivec2 m_Size = glm::ivec2(0, 0);
 	};

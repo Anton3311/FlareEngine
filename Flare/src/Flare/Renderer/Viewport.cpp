@@ -49,6 +49,34 @@ namespace Flare
 		SetupGlobalDescriptorSet(GlobalResources.GlobalDescriptorSetWithoutShadows);
 	}
 
+	void Viewport::OnBuildRenderGraph()
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		ColorTextureId = Graph.CreateTexture(m_ColorTextureFormat, "Color");
+		NormalsTextureId = Graph.CreateTexture(m_NormalsTextureFormat, "Normals");
+		DepthTextureId = Graph.CreateTexture(m_DepthTextureFormat, "Depth");
+
+		ExternalRenderGraphResource colorTextureResource{};
+		colorTextureResource.InitialLayout = ImageLayout::AttachmentOutput;
+		colorTextureResource.FinalLayout = ImageLayout::ReadOnly;
+		colorTextureResource.Texture = ColorTextureId;
+
+		ExternalRenderGraphResource normalsTextureResource{};
+		normalsTextureResource.InitialLayout = ImageLayout::AttachmentOutput;
+		normalsTextureResource.FinalLayout = ImageLayout::ReadOnly;
+		normalsTextureResource.Texture = NormalsTextureId;
+
+		ExternalRenderGraphResource depthTextureResource{};
+		depthTextureResource.InitialLayout = ImageLayout::AttachmentOutput;
+		depthTextureResource.FinalLayout = ImageLayout::ReadOnly;
+		depthTextureResource.Texture = DepthTextureId;
+
+		Graph.AddExternalResource(colorTextureResource);
+		Graph.AddExternalResource(normalsTextureResource);
+		Graph.AddExternalResource(depthTextureResource);
+	}
+
 	void Viewport::SetPostProcessingEnabled(bool enabled)
 	{
 		if (m_PostProcessingEnabled == enabled)

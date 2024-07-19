@@ -30,6 +30,8 @@ namespace Flare
 			return m_ResourceManager.CreateTexture(format, debugName);
 		}
 
+		inline Ref<Texture> GetTexture(RenderGraphTextureId textureId) const { return m_ResourceManager.GetTexture(textureId); }
+
 		const RenderPassNode* GetRenderPassNode(size_t index) const;
 		std::optional<size_t> FindPassByName(std::string_view name) const;
 

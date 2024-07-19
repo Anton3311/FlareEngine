@@ -49,7 +49,6 @@ namespace Flare
 		void RenderViewportBuffer(const Ref<Texture>& texture);
 		void EndImGui();
 
-		virtual void CreateFrameBuffer();
 		virtual void OnClear();
 		virtual void OnViewportChanged();
 	private:

@@ -262,8 +262,7 @@ namespace Flare
 
 		{
 			FLARE_PROFILE_SCOPE("UpdateCameraUniformBuffer");
-			const auto& spec = viewport.RenderTarget->GetSpecifications();
-			viewport.FrameData.Camera.ViewportSize = glm::ivec2(spec.Width, spec.Height);
+			viewport.FrameData.Camera.ViewportSize = (glm::ivec2)viewport.GetSize();
 			s_RendererData.CurrentViewport->GlobalResources.CameraBuffer->SetData(&viewport.FrameData.Camera, sizeof(RenderView), 0);
 		}
 
@@ -545,6 +544,6 @@ namespace Flare
 		viewport.Graph.AddPass(decalPass, CreateRef<DecalsPass>(
 			s_RendererData.Decals,
 			s_RendererData.DecalsDescriptorSetPool,
-			viewport.DepthTexture));
+			viewport.DepthTextureId));
 	}
 }

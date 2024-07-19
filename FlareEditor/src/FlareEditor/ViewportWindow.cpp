@@ -72,14 +72,6 @@ namespace Flare
 
 		if (m_Viewport.GetSize() != glm::ivec2(0))
 		{
-			const FrameBufferSpecifications frameBufferSpecs = m_Viewport.RenderTarget->GetSpecifications();
-
-			if (frameBufferSpecs.Width != m_Viewport.GetSize().x || frameBufferSpecs.Height != m_Viewport.GetSize().y)
-			{
-				m_Viewport.RenderTarget->Resize(m_Viewport.GetSize().x, m_Viewport.GetSize().y);
-				OnViewportChanged();
-			}
-
 			if (m_Viewport.Graph.NeedsRebuilding())
 			{
 				BuildRenderGraph();
@@ -179,9 +171,6 @@ namespace Flare
 		{
 			bool shouldCreateFrameBuffers = m_Viewport.GetSize() == glm::ivec2(0);
 			m_Viewport.Resize(viewportPosition, viewportSize);
-
-			if (shouldCreateFrameBuffers)
-				CreateFrameBuffer();
 		}
 
 		if (changed)
@@ -195,12 +184,8 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 		ImVec2 windowSize = ImGui::GetContentRegionAvail();
 
-		if (m_Viewport.RenderTarget != nullptr)
-		{
-			const FrameBufferSpecifications frameBufferSpecs = m_Viewport.RenderTarget->GetSpecifications();
-			ImVec2 imageSize = ImVec2((float)frameBufferSpecs.Width, (float)frameBufferSpecs.Height);
-			ImGui::Image(ImGuiLayer::GetId(texture), windowSize, ImVec2(0, 1), ImVec2(1, 0));
-		}
+		ImVec2 imageSize = ImVec2((float)m_Viewport.GetSize().x, (float)m_Viewport.GetSize().y);
+		ImGui::Image(ImGuiLayer::GetId(texture), windowSize, ImVec2(0, 1), ImVec2(1, 0));
 	}
 
 	void ViewportWindow::EndImGui()
@@ -210,70 +195,16 @@ namespace Flare
 		ImGui::PopStyleVar(2); // Pop window padding & border size
 	}
 
-	void ViewportWindow::CreateFrameBuffer()
-	{
-		FLARE_PROFILE_FUNCTION();
-
-		TextureSpecifications specifications{};
-		specifications.Width = m_Viewport.GetSize().x;
-		specifications.Height = m_Viewport.GetSize().y;
-		specifications.Wrap = TextureWrap::Clamp;
-		specifications.Filtering = TextureFiltering::Closest;
-		specifications.GenerateMipMaps = false;
-		specifications.Usage = TextureUsage::Sampling | TextureUsage::RenderTarget;
-
-		TextureSpecifications colorSpecifications = specifications;
-		colorSpecifications.Format = TextureFormat::R11G11B10;
-
-		TextureSpecifications normalsSpecifications = specifications;
-		normalsSpecifications.Format = TextureFormat::RGB8;
-
-		TextureSpecifications depthSpecifications = specifications;
-		depthSpecifications.Format = TextureFormat::Depth32;
-
-		m_Viewport.ColorTexture = Texture::Create(colorSpecifications);
-		m_Viewport.NormalsTexture = Texture::Create(normalsSpecifications);
-		m_Viewport.DepthTexture = Texture::Create(depthSpecifications);
-
-		m_Viewport.ColorTexture->SetDebugName("Color");
-		m_Viewport.NormalsTexture->SetDebugName("Normals");
-		m_Viewport.DepthTexture->SetDebugName("Depth");
-
-		m_Viewport.ColorTextureId = m_Viewport.Graph.GetResourceManager().RegisterExistingTexture(m_Viewport.ColorTexture);
-		m_Viewport.NormalsTextureId = m_Viewport.Graph.GetResourceManager().RegisterExistingTexture(m_Viewport.NormalsTexture);
-		m_Viewport.DepthTextureId = m_Viewport.Graph.GetResourceManager().RegisterExistingTexture(m_Viewport.DepthTexture);
-
-		Ref<Texture> attachmentTextures[] = { m_Viewport.ColorTexture, m_Viewport.NormalsTexture, m_Viewport.DepthTexture };
-
-		m_Viewport.RenderTarget = FrameBuffer::Create(Span(attachmentTextures, 3));
-
-		ExternalRenderGraphResource colorTextureResource{};
-		colorTextureResource.InitialLayout = ImageLayout::AttachmentOutput;
-		colorTextureResource.FinalLayout = ImageLayout::ReadOnly;
-		colorTextureResource.Texture = m_Viewport.ColorTextureId;
-
-		ExternalRenderGraphResource normalsTextureResource{};
-		normalsTextureResource.InitialLayout = ImageLayout::AttachmentOutput;
-		normalsTextureResource.FinalLayout = ImageLayout::ReadOnly;
-		normalsTextureResource.Texture = m_Viewport.NormalsTextureId;
-
-		ExternalRenderGraphResource depthTextureResource{};
-		depthTextureResource.InitialLayout = ImageLayout::AttachmentOutput;
-		depthTextureResource.FinalLayout = ImageLayout::ReadOnly;
-		depthTextureResource.Texture = m_Viewport.DepthTextureId;
-
-		m_Viewport.Graph.AddExternalResource(colorTextureResource);
-		m_Viewport.Graph.AddExternalResource(normalsTextureResource);
-		m_Viewport.Graph.AddExternalResource(depthTextureResource);
-	}
-
 	void ViewportWindow::OnClear()
 	{
 		FLARE_PROFILE_FUNCTION();
 		Ref<CommandBuffer> commandBuffer = GraphicsContext::GetInstance().GetCommandBuffer();
-		commandBuffer->ClearColor(m_Viewport.ColorTexture, glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
-		commandBuffer->ClearColor(m_Viewport.NormalsTexture, glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
-		commandBuffer->ClearDepth(m_Viewport.DepthTexture, 1.0f);
+
+		const auto& resourceManager = m_Viewport.Graph.GetResourceManager();
+
+		commandBuffer->ClearColor(resourceManager.GetTexture(m_Viewport.ColorTextureId), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+		commandBuffer->ClearColor(resourceManager.GetTexture(m_Viewport.NormalsTextureId), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+		commandBuffer->ClearDepth(resourceManager.GetTexture(m_Viewport.DepthTextureId), 1.0f);
 	}
 
 	void ViewportWindow::OnViewportChanged()
@@ -290,8 +221,7 @@ namespace Flare
 			scene->GetPostProcessingManager().MarkAsDirty();
 
 		m_Viewport.Graph.Clear();
-
-		CreateFrameBuffer();
+		m_Viewport.OnBuildRenderGraph();
 
 		Renderer::ConfigurePasses(m_Viewport);
 		Renderer2D::ConfigurePasses(m_Viewport);
@@ -320,7 +250,12 @@ namespace Flare
 			return;
 
 		BeginImGui();
-		RenderViewportBuffer(m_Viewport.ColorTexture);
+
+		if (m_Viewport.ColorTextureId != RenderGraphTextureId())
+		{
+			RenderViewportBuffer(m_Viewport.Graph.GetTexture(m_Viewport.ColorTextureId));
+		}
+
 		EndImGui();
 	}
 }

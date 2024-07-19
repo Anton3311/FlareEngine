@@ -19,7 +19,7 @@ namespace Flare
 	class DecalsPass : public RenderGraphPass
 	{
 	public:
-		DecalsPass(const std::vector<DecalSubmitionData>& submitedDecals, Ref<DescriptorSetPool> decalDescriptorPool, Ref<Texture> depthTexture);
+		DecalsPass(const std::vector<DecalSubmitionData>& submitedDecals, Ref<DescriptorSetPool> decalDescriptorPool, RenderGraphTextureId depthTexture);
 
 		~DecalsPass();
 	public:
@@ -32,7 +32,8 @@ namespace Flare
 
 		const std::vector<DecalSubmitionData>& m_SubmitedDecals;
 
-		Ref<Texture> m_DepthTexture = nullptr;
+		bool m_ShouldUpdateDescriptorSet = false;
+		RenderGraphTextureId m_DepthTexture;
 
 		std::vector<InstanceData> m_InstanceData;
 		Ref<ShaderStorageBuffer> m_InstanceBuffer = nullptr;

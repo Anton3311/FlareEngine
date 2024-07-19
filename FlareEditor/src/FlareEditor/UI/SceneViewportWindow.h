@@ -32,9 +32,6 @@ namespace Flare
 		virtual void OnRenderImGui() override;
 		virtual void OnEvent(Event& event) override;
 		virtual void OnAddRenderPasses() override;
-	protected:
-		virtual void CreateFrameBuffer() override;
-		virtual void OnClear() override;
 	private:
 		void RenderWindowContents();
 		void RenderToolBar();

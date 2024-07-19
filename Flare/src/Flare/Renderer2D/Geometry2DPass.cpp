@@ -75,7 +75,7 @@ namespace Flare
 		if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
 		{
 			Ref<VulkanCommandBuffer> vulkanCommandBuffer = As<VulkanCommandBuffer>(commandBuffer);
-			Ref<FrameBuffer> renderTarget = Renderer::GetCurrentViewport().RenderTarget;
+			Ref<FrameBuffer> renderTarget = context.GetRenderTarget();
 
 			Ref<DescriptorSet> descriptorSet = m_FrameData.QuadDescriptorSetsPool->AllocateSet();
 			descriptorSet->SetDebugName("QuadsDescriptorSet");
