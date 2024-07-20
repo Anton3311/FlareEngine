@@ -298,17 +298,6 @@ namespace Flare
 		}
 
 		s_RendererData.CurrentViewport->UpdateGlobalDescriptorSets();
-
-		{
-			// Generate camera frustum planes
-			FLARE_PROFILE_SCOPE("CalculateFrustumPlanes");
-
-			auto& frameData = s_RendererData.CurrentViewport->FrameData;
-			frameData.CameraFrustumPlanes.SetFromViewAndProjection(
-				frameData.Camera.View,
-				frameData.Camera.InverseViewProjection,
-				frameData.Camera.ViewDirection);
-		}
 	}
 
 	void Renderer::Flush()

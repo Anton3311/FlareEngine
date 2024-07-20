@@ -75,9 +75,7 @@ namespace Flare
 	struct RenderData
 	{
 		RenderView Camera;
-		FrustumPlanes CameraFrustumPlanes;
 		LightData Light;
 		Math::Basis LightBasis;
-		RenderView LightView[4];
 	};
 }
