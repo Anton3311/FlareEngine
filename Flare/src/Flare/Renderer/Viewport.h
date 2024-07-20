@@ -44,6 +44,7 @@ namespace Flare
 		void UpdateGlobalDescriptorSets();
 
 		void OnBuildRenderGraph();
+		void PrepareViewport();
 
 		inline bool IsPostProcessingEnabled() const { return m_PostProcessingEnabled; }
 		void SetPostProcessingEnabled(bool enabled);
@@ -69,6 +70,8 @@ namespace Flare
 		bool m_PostProcessingEnabled = true;
 		bool m_ShadowMappingEnabled = true;
 		bool m_DebugRenderingEnabled = false;
+
+		bool m_ShouldResizeRenderGraphTextures = false;
 
 		TextureFormat m_ColorTextureFormat = TextureFormat::RGB8;
 		TextureFormat m_NormalsTextureFormat = TextureFormat::RGB8;

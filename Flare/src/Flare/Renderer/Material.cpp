@@ -129,8 +129,14 @@ namespace Flare
 		FLARE_CORE_ASSERT(properties[propertyIndex].Type == ShaderDataType::Sampler);
 		
 		const Ref<Texture>& oldTexture = m_Textures[properties[propertyIndex].SamplerIndex];
-		if (oldTexture.get() == texture.get())
-			return;
+
+		// TODO: Avoid updating if texture are the same
+		// TODO: Handle the case when texture objects are the same,
+		//       but the texture was resized and has a different VkImage & VkImageView.
+		//       This would require updating the descrptor set.
+
+		//if (oldTexture.get() == texture.get())
+			//return;
 
 		m_Textures[properties[propertyIndex].SamplerIndex] = texture;
 		m_IsDirty = true;

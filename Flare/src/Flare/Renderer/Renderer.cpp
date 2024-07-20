@@ -248,6 +248,8 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
+		viewport.PrepareViewport();
+
 		s_RendererData.CurrentViewport = &viewport;
 		s_RendererData.OpaqueQueue.SetCameraPosition(viewport.FrameData.Camera.Position);
 

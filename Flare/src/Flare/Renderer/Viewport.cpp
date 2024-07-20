@@ -37,6 +37,9 @@ namespace Flare
 
 	void Viewport::Resize(glm::ivec2 position, glm::ivec2 size)
 	{
+		if (m_Size != size)
+			m_ShouldResizeRenderGraphTextures = true;
+
 		m_Position = position;
 		m_Size = size;
 	}
@@ -75,6 +78,17 @@ namespace Flare
 		Graph.AddExternalResource(colorTextureResource);
 		Graph.AddExternalResource(normalsTextureResource);
 		Graph.AddExternalResource(depthTextureResource);
+	}
+
+	void Viewport::PrepareViewport()
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		if (m_ShouldResizeRenderGraphTextures)
+		{
+			Graph.OnViewportResize();
+			m_ShouldResizeRenderGraphTextures = false;
+		}
 	}
 
 	void Viewport::SetPostProcessingEnabled(bool enabled)

@@ -40,6 +40,7 @@ namespace Flare
 
 	std::optional<size_t> RenderGraph::FindPassByName(std::string_view name) const
 	{
+		FLARE_PROFILE_FUNCTION();
 		for (size_t i = 0; i < m_Nodes.size(); i++)
 		{
 			if (m_Nodes[i].Specifications.GetDebugName() == name)
@@ -60,6 +61,8 @@ namespace Flare
 	void RenderGraph::Execute(Ref<CommandBuffer> commandBuffer)
 	{
 		FLARE_PROFILE_FUNCTION();
+		FLARE_CORE_ASSERT(m_IsValid);
+
 		Ref<VulkanCommandBuffer> vulkanCommandBuffer = As<VulkanCommandBuffer>(commandBuffer);
 
 		for (const auto& node : m_Nodes)
@@ -85,6 +88,7 @@ namespace Flare
 		builder.Build();
 
 		m_NeedsRebuilding = false;
+		m_IsValid = true;
 	}
 
 	void RenderGraph::Clear()
@@ -93,6 +97,44 @@ namespace Flare
 		m_Nodes.clear();
 		m_CompiledRenderGraph.Reset();
 		m_ResourceManager.Clear();
+
+		m_IsValid = false;
+	}
+
+	void RenderGraph::OnViewportResize()
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		m_ResourceManager.ResizeTextures();
+		CreateRenderTargets();
+	}
+
+	void RenderGraph::CreateRenderTargets()
+	{
+		FLARE_PROFILE_FUNCTION();
+		FLARE_CORE_ASSERT(m_IsValid);
+
+		std::vector<Ref<Texture>> attachmentTextures;
+		for (RenderPassNode& node : m_Nodes)
+		{
+			if (node.RenderTarget == nullptr)
+				continue;
+
+			attachmentTextures.clear();
+
+			for (const auto& output : node.Specifications.GetOutputs())
+			{
+				attachmentTextures.push_back(m_ResourceManager.GetTexture(output.AttachmentTexture));
+			}
+
+			Ref<VulkanRenderPass> compatibleRenderPass = As<VulkanFrameBuffer>(node.RenderTarget)->GetCompatibleRenderPass();
+
+			node.RenderTarget = CreateRef<VulkanFrameBuffer>(attachmentTextures[0]->GetWidth(),
+				attachmentTextures[0]->GetHeight(),
+				compatibleRenderPass,
+				Span<Ref<Texture>>::FromVector(attachmentTextures),
+				false);
+		}
 	}
 
 	void RenderGraph::ExecuteLayoutTransitions(Ref<CommandBuffer> commandBuffer, LayoutTransitionsRange range)

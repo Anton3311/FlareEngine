@@ -19,6 +19,7 @@ namespace Flare
 		RenderGraphTextureResource& resource = m_Textures.emplace_back();
 		resource.DebugName = debugName;
 		resource.Format = format;
+		resource.TextureSizeConstraint = RenderGraphTextureResource::SizeConstraint::ViewportSize;
 
 		TextureSpecifications specifications{};
 		specifications.Width = m_Viewport.GetSize().x;
@@ -30,6 +31,7 @@ namespace Flare
 		specifications.Filtering = TextureFiltering::Closest;
 
 		resource.Texture = Texture::Create(specifications);
+		resource.Texture->SetDebugName(debugName);
 
 		return id;
 	}
@@ -42,6 +44,7 @@ namespace Flare
 		resource.Texture = texture;
 		resource.DebugName = texture->GetDebugName();
 		resource.Format = texture->GetFormat();
+		resource.TextureSizeConstraint = RenderGraphTextureResource::SizeConstraint::Fixed;
 
 		return id;
 	}
@@ -51,5 +54,18 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 
 		m_Textures.clear();
+	}
+
+	void RenderGraphResourceManager::ResizeTextures()
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		for (const RenderGraphTextureResource& resource : m_Textures)
+		{
+			if (resource.TextureSizeConstraint == RenderGraphTextureResource::SizeConstraint::Fixed)
+				continue;
+
+			resource.Texture->Resize((uint32_t)m_Viewport.GetSize().x, (uint32_t)m_Viewport.GetSize().y);
+		}
 	}
 }

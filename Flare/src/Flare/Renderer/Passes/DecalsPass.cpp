@@ -38,13 +38,13 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		if (m_ShouldUpdateDescriptorSet)
-		{
+		//if (m_ShouldUpdateDescriptorSet)
+		//{
 			m_DecalSet->WriteImage(context.GetRenderGraph().GetTexture(m_DepthTexture), 0);
 			m_DecalSet->FlushWrites();
 
 			m_ShouldUpdateDescriptorSet = false;
-		}
+		//}
 
 		{
 			FLARE_PROFILE_SCOPE("FillInstanceData");

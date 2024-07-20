@@ -38,12 +38,22 @@ namespace Flare
 {
 	struct RenderGraphTextureResource
 	{
+		enum class SizeConstraint
+		{
+			// The texture has a fixed size
+			Fixed,
+
+			// The size of a texture always matches the viewport size
+			ViewportSize,
+		};
+
 		std::string DebugName;
 		TextureFormat Format = TextureFormat::RGBA8;
 
 		Ref<Texture> Texture = nullptr;
 
 		uint32_t TextureObjectIndex = UINT32_MAX;
+		SizeConstraint TextureSizeConstraint = SizeConstraint::Fixed;
 	};
 
 	class Viewport;
@@ -56,6 +66,8 @@ namespace Flare
 		RenderGraphTextureId RegisterExistingTexture(Ref<Texture> texture);
 
 		void Clear();
+
+		void ResizeTextures();
 
 		inline bool IsTextureIdValid(RenderGraphTextureId textureId) const { return textureId.GetValue() < (uint32_t)m_Textures.size(); }
 		inline Ref<Texture> GetTexture(RenderGraphTextureId textureId) const

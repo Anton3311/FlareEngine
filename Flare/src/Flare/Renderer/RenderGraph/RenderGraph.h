@@ -41,11 +41,15 @@ namespace Flare
 		void Build();
 		void Clear();
 
+		void OnViewportResize();
+
 		inline bool NeedsRebuilding() const { return m_NeedsRebuilding; }
 		inline void SetNeedsRebuilding() { m_NeedsRebuilding = true; }
 	private:
+		void CreateRenderTargets();
 		void ExecuteLayoutTransitions(Ref<CommandBuffer> commandBuffer, LayoutTransitionsRange range);
 	private:
+		bool m_IsValid = false;
 		const Viewport& m_Viewport;
 
 		std::vector<RenderPassNode> m_Nodes;

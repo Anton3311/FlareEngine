@@ -45,9 +45,10 @@ namespace Flare
 		{
 			scene->OnBeforeRender(m_Viewport);
 
+			Renderer::BeginScene(m_Viewport);
+
 			OnClear();
 
-			Renderer::BeginScene(m_Viewport);
 			scene->OnRender(m_Viewport);
 			Renderer::EndScene();
 		}
@@ -209,7 +210,6 @@ namespace Flare
 
 	void ViewportWindow::OnViewportChanged()
 	{
-		m_Viewport.Graph.SetNeedsRebuilding();
 	}
 
 	void ViewportWindow::BuildRenderGraph()
@@ -241,6 +241,8 @@ namespace Flare
 
 	void ViewportWindow::OnAttach()
 	{
+		FLARE_PROFILE_FUNCTION();
+		m_Viewport.Graph.SetNeedsRebuilding();
 	}
 
 	void ViewportWindow::OnRenderImGui()
