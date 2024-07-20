@@ -20,7 +20,7 @@ namespace Flare
 
 		// Renders the scene to a given viewport.
 		// In case the given view is null, uses the one given by SceneSubmition.
-		void RenderViewport(Viewport& viewport, RenderView* viewOverride = nullptr);
+		void RenderViewport(Viewport& viewport, const RenderView* viewOverride = nullptr);
 	private:
 		void InitializeQueries();
 

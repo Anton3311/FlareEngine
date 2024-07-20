@@ -14,6 +14,9 @@ namespace Flare
 {
 	class Viewport;
 	class FrameBuffer;
+
+	struct RenderView;
+
 	class FLARE_API RenderGraph
 	{
 	public:
@@ -37,7 +40,7 @@ namespace Flare
 
 		void AddExternalResource(const ExternalRenderGraphResource& resource);
 
-		void Execute(Ref<CommandBuffer> commandBuffer);
+		void Execute(Ref<CommandBuffer> commandBuffer, const SceneSubmition& sceneSubmition, const RenderView& view);
 		void Build();
 		void Clear();
 

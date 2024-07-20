@@ -269,7 +269,6 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 
 		s_RendererData.Statistics.ObjectsSubmitted += (uint32_t)s_RendererData.OpaqueQueue.GetSize();
-		s_RendererData.CurrentViewport->Graph.Execute(GraphicsContext::GetInstance().GetCommandBuffer());
 	}
 
 	void Renderer::EndScene()
@@ -317,7 +316,8 @@ namespace Flare
 
 	RendererSubmitionQueue& Renderer::GetOpaqueSubmitionQueue()
 	{
-		return s_RendererData.OpaqueQueue;
+		FLARE_CORE_ASSERT(s_RendererData.Submition);
+		return s_RendererData.Submition->OpaqueGeometrySubmitions;
 	}
 
 	Viewport& Renderer::GetMainViewport()
@@ -491,9 +491,7 @@ namespace Flare
 			}
 		}
 
-		viewport.Graph.AddPass(geometryPass, CreateRef<GeometryPass>(
-			s_RendererData.OpaqueQueue,
-			s_RendererData.Statistics));
+		viewport.Graph.AddPass(geometryPass, CreateRef<GeometryPass>(s_RendererData.Statistics));
 
 		// Decal pass
 		RenderGraphPassSpecifications decalPass{};

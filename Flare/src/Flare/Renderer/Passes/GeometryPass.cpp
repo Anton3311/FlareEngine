@@ -5,6 +5,7 @@
 #include "Flare/Renderer/Viewport.h"
 #include "Flare/Renderer/ShaderStorageBuffer.h"
 #include "Flare/Renderer/GPUTimer.h"
+#include "Flare/Renderer/SceneSubmition.h"
 
 #include "Flare/Renderer2D/Renderer2D.h"
 
@@ -15,8 +16,8 @@
 
 namespace Flare
 {
-	GeometryPass::GeometryPass(const RendererSubmitionQueue& opaqueObjects, RendererStatistics& statistics)
-		: m_OpaqueObjects(opaqueObjects), m_Statistics(statistics)
+	GeometryPass::GeometryPass(RendererStatistics& statistics)
+		: m_Statistics(statistics)
 	{
 		FLARE_PROFILE_FUNCTION();
 		constexpr size_t maxInstances = 16;
@@ -54,11 +55,13 @@ namespace Flare
 		m_Statistics.GeometryPassTime += m_Timer->GetElapsedTime().value_or(0.0f); // Read the time from the previous frame
 		m_Statistics.ObjectsVisible += (uint32_t)m_VisibleObjects.size();
 
+		const RendererSubmitionQueue& opaqueGeometry = context.GetSceneSubmition().OpaqueGeometrySubmitions;
+
 		{
 			FLARE_PROFILE_SCOPE("Sort");
-			std::sort(m_VisibleObjects.begin(), m_VisibleObjects.end(), [this](uint32_t a, uint32_t b) -> bool
+			std::sort(m_VisibleObjects.begin(), m_VisibleObjects.end(), [&opaqueGeometry](uint32_t a, uint32_t b) -> bool
 			{
-				return m_OpaqueObjects[a].SortKey < m_OpaqueObjects[b].SortKey;
+				return opaqueGeometry[a].SortKey < opaqueGeometry[b].SortKey;
 			});
 		}
 
@@ -69,7 +72,7 @@ namespace Flare
 			for (uint32_t objectIndex : m_VisibleObjects)
 			{
 				auto& instanceData = m_InstanceBuffer.emplace_back();
-				const auto& transform = m_OpaqueObjects[objectIndex].Transform;
+				const auto& transform = opaqueGeometry[objectIndex].Transform;
 				instanceData.PackedTransform[0] = glm::vec4(transform.RotationScale[0], transform.Translation.x);
 				instanceData.PackedTransform[1] = glm::vec4(transform.RotationScale[1], transform.Translation.y);
 				instanceData.PackedTransform[2] = glm::vec4(transform.RotationScale[2], transform.Translation.z);
@@ -97,7 +100,7 @@ namespace Flare
 		for (uint32_t currentInstance = 0; currentInstance < (uint32_t)m_VisibleObjects.size(); currentInstance++)
 		{
 			uint32_t objectIndex = m_VisibleObjects[currentInstance];
-			const auto& object = m_OpaqueObjects[objectIndex];
+			const auto& object = opaqueGeometry[objectIndex];
 
 			if (batch.Mesh.get() != object.Mesh.get()
 				|| batch.SubMesh != object.SubMeshIndex)
@@ -141,14 +144,16 @@ namespace Flare
 
 		Math::AABB objectAABB;
 
-		const RenderView& cameraView = context.GetViewport().FrameData.Camera;
+		const RenderView& cameraView = context.GetRenderView();
 
 		FrustumPlanes planes{};
 		planes.SetFromViewAndProjection(cameraView.View, cameraView.InverseViewProjection, cameraView.ViewDirection);
 
-		for (size_t i = 0; i < m_OpaqueObjects.GetSize(); i++)
+		const RendererSubmitionQueue& opaqueGeometry = context.GetSceneSubmition().OpaqueGeometrySubmitions;
+
+		for (size_t i = 0; i < opaqueGeometry.GetSize(); i++)
 		{
-			const auto& object = m_OpaqueObjects[i];
+			const auto& object = opaqueGeometry[i];
 			objectAABB = Math::SIMD::TransformAABB(object.Mesh->GetSubMeshes()[object.SubMeshIndex].Bounds, object.Transform.ToMatrix4x4());
 
 			bool intersects = true;

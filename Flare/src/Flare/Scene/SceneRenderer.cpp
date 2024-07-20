@@ -32,6 +32,8 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(m_Scene);
 
+		m_SceneSubmition.Clear();
+
 		World& world = m_Scene->GetECSWorld();
 		SystemsManager& systemsManager = world.GetSystemsManager();
 
@@ -148,7 +150,7 @@ namespace Flare
 		Scene::SetActive(previousActiveScene);
 	}
 
-	void SceneRenderer::RenderViewport(Viewport& viewport, RenderView* view)
+	void SceneRenderer::RenderViewport(Viewport& viewport, const RenderView* view)
 	{
 		FLARE_PROFILE_FUNCTION();
 
@@ -156,12 +158,16 @@ namespace Flare
 
 		viewport.PrepareViewport();
 
-		if (view == nullptr)
-			PrepareViewportForRendering(viewport, viewport.FrameData.Camera);
-		else
-			PrepareViewportForRendering(viewport, *view);
+		const RenderView* renderView = view;
 
-		viewport.Graph.Execute(GraphicsContext::GetInstance().GetCommandBuffer());
+		if (view == nullptr)
+			renderView = &viewport.FrameData.Camera;
+
+		FLARE_CORE_ASSERT(renderView);
+
+		PrepareViewportForRendering(viewport, *renderView);
+
+		viewport.Graph.Execute(GraphicsContext::GetInstance().GetCommandBuffer(), m_SceneSubmition, *renderView);
 	}
 
 	void SceneRenderer::InitializeQueries()
