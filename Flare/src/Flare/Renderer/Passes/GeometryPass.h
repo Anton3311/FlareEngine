@@ -38,8 +38,7 @@ namespace Flare
 			glm::vec4 PackedTransform[3];
 		};
 	
-		void CullObjects();
-
+		void CullObjects(const RenderGraphContext& context);
 		void FlushBatch(const Ref<CommandBuffer>& commandBuffer, const Batch& batch);
 	private:
 		Ref<GPUTimer> m_Timer = nullptr;

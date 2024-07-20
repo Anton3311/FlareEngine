@@ -49,7 +49,7 @@ namespace Flare
 
 		m_VisibleObjects.clear();
 
-		CullObjects();
+		CullObjects(context);
 
 		m_Statistics.GeometryPassTime += m_Timer->GetElapsedTime().value_or(0.0f); // Read the time from the previous frame
 		m_Statistics.ObjectsVisible += (uint32_t)m_VisibleObjects.size();
@@ -135,13 +135,17 @@ namespace Flare
 		return m_Timer->GetElapsedTime();
 	}
 
-	void GeometryPass::CullObjects()
+	void GeometryPass::CullObjects(const RenderGraphContext& context)
 	{
 		FLARE_PROFILE_FUNCTION();
 
 		Math::AABB objectAABB;
 
-		const FrustumPlanes& planes = Renderer::GetCurrentViewport().FrameData.CameraFrustumPlanes;
+		const RenderView& cameraView = context.GetViewport().FrameData.Camera;
+
+		FrustumPlanes planes{};
+		planes.SetFromViewAndProjection(cameraView.View, cameraView.InverseViewProjection, cameraView.ViewDirection);
+
 		for (size_t i = 0; i < m_OpaqueObjects.GetSize(); i++)
 		{
 			const auto& object = m_OpaqueObjects[i];
