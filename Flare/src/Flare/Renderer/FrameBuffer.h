@@ -44,6 +44,7 @@ namespace Flare
 		virtual const FrameBufferSpecifications& GetSpecifications() const = 0;
 
 		virtual void SetDebugName(std::string_view debugName) = 0;
+		virtual const std::string& GetDebugName() const = 0;
 
 		inline glm::uvec2 GetSize() const
 		{

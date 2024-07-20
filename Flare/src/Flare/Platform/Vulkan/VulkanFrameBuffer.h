@@ -34,6 +34,7 @@ namespace Flare
 
 		const FrameBufferSpecifications& GetSpecifications() const override;
 		void SetDebugName(std::string_view debugName) override;
+		const std::string& GetDebugName() const override;
 
 		glm::uvec2 GetSize() const { return glm::uvec2(m_Specifications.Width, m_Specifications.Height); }
 

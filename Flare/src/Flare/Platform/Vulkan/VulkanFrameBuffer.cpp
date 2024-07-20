@@ -141,6 +141,11 @@ namespace Flare
 		VulkanContext::GetInstance().SetDebugName(VK_OBJECT_TYPE_FRAMEBUFFER, (uint64_t)m_FrameBuffer, m_DebugName.c_str());
 	}
 
+	const std::string& VulkanFrameBuffer::GetDebugName() const
+	{
+		return m_DebugName;
+	}
+
 	void VulkanFrameBuffer::Create()
 	{
 		FLARE_PROFILE_FUNCTION();
