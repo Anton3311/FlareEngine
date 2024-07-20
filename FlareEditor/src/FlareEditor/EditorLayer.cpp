@@ -107,9 +107,9 @@ namespace Flare
             OpenScene(handle);
         });
 
-        m_GameWindow = CreateRef<ViewportWindow>("Game");
+        m_GameWindow = CreateRef<ViewportWindow>(m_SceneRenderer, "Game");
 
-        m_ViewportWindows.emplace_back(CreateRef<SceneViewportWindow>(m_Camera));
+        m_ViewportWindows.emplace_back(CreateRef<SceneViewportWindow>(m_Camera, m_SceneRenderer));
         m_ViewportWindows.emplace_back(m_GameWindow);
 
         Renderer::SetMainViewport(m_GameWindow->GetViewport());
@@ -179,6 +179,8 @@ namespace Flare
         FLARE_PROFILE_FUNCTION();
         EditorAssetManager::GetInstance()->SerializeRegistry();
 
+        m_SceneRenderer.reset();
+
         m_AssetManagerWindow.Uninitialize();
         m_AssetEditorWindows.clear();
 
@@ -247,6 +249,11 @@ namespace Flare
                 activeScene->OnUpdateRuntime();
             else if (m_Mode == EditorMode::Edit && activeScene)
                 activeScene->OnUpdateEditor();
+        }
+
+        if (m_SceneRenderer)
+        {
+			m_SceneRenderer->CollectSceneData();
         }
 
         {
@@ -488,6 +495,8 @@ namespace Flare
 
 		ResetViewportRenderGraphs();
 
+        m_SceneRenderer.reset();
+
 		Ref<Scene> active = Scene::GetActive();
 
 		Ref<EditorAssetManager> editorAssetManager = As<EditorAssetManager>(AssetManager::GetInstance());
@@ -506,6 +515,8 @@ namespace Flare
 		m_EditedSceneHandle = handle;
 
 		m_PostProcessingWindow = PostProcessingWindow(active);
+
+        m_SceneRenderer.reset(new SceneRenderer(active));
     }
 
     void EditorLayer::HandleKeyboardShortcuts()

@@ -63,11 +63,6 @@ namespace Flare
 			Renderer2D::SetMaterial(m_DebugIconsMaterial);
 		}
 
-		ImRect pointLightIconUVs = EditorGUI::GetIcons().GetIconUVs(EditorIcons::PointLightIcon);
-		ImRect spotlightIconUVs = EditorGUI::GetIcons().GetIconUVs(EditorIcons::SpotlightIcon);
-		const Ref<Texture>& iconsTexture = EditorGUI::GetIcons().GetTexture();
-
-		const glm::mat4& cameraView = Renderer::GetCurrentViewport().FrameData.Camera.View;
 		for (EntityView view : m_PointLightsQuery)
 		{
 			auto transforms = view.View<TransformComponent>();
@@ -76,23 +71,11 @@ namespace Flare
 			for (EntityViewElement entity : view)
 			{
 				glm::vec3 position = transforms[entity].Position;
-				glm::vec3 iconPosition = cameraView * glm::vec4(position, 1.0f);
 
 				const float intensityLimit = 0.1f;
 				float radius = glm::sqrt(lights[entity].Intensity / intensityLimit);
 
 				DebugRenderer::DrawWireSphere(position, radius, glm::vec4(lights[entity].Color, 1.0f));
-
-				if (RendererAPI::GetAPI() != RendererAPI::API::Vulkan)
-				{
-					Renderer2D::DrawQuad(iconPosition,
-						glm::vec2(1.0f),
-						glm::vec4(lights[entity].Color, 1.0f),
-						iconsTexture,
-						glm::vec2(pointLightIconUVs.Min.x, pointLightIconUVs.Max.y),
-						glm::vec2(pointLightIconUVs.Max.x, pointLightIconUVs.Min.y)
-					);
-				}
 			}
 		}
 
@@ -104,18 +87,6 @@ namespace Flare
 			for (EntityViewElement entity : view)
 			{
 				glm::vec3 iconPosition = transforms[entity].Position;
-				iconPosition = cameraView * glm::vec4(iconPosition, 1.0f);
-
-				if (RendererAPI::GetAPI() != RendererAPI::API::Vulkan)
-				{
-					Renderer2D::DrawQuad(iconPosition,
-						glm::vec2(1.0f),
-						glm::vec4(lights[entity].Color, 1.0f),
-						iconsTexture,
-						glm::vec2(spotlightIconUVs.Min.x, spotlightIconUVs.Max.y),
-						glm::vec2(spotlightIconUVs.Max.x, spotlightIconUVs.Min.y)
-					);
-				}
 
 				glm::vec3 lightDirection = transforms[entity].TransformDirection(glm::vec3(0.0f, 0.0f, 1.0f));
 				glm::vec3 tangent = transforms[entity].TransformDirection(glm::vec3(1.0f, 0.0f, 0.0f));

@@ -28,8 +28,8 @@
 
 namespace Flare
 {
-	SceneViewportWindow::SceneViewportWindow(EditorCamera& camera, std::string_view name)
-		: ViewportWindow(name),
+	SceneViewportWindow::SceneViewportWindow(EditorCamera& camera, const Scope<SceneRenderer>& sceneRenderer, std::string_view name)
+		: ViewportWindow(sceneRenderer, name),
 		m_Camera(camera),
 		m_Overlay(ViewportOverlay::Default),
 		m_IsToolbarHovered(false),
@@ -57,20 +57,18 @@ namespace Flare
 			return;
 
 		std::optional<SystemGroupId> debugRenderingGroup = scene->GetECSWorld().GetSystemsManager().FindGroup("Debug Rendering");
-		scene->OnBeforeRender(m_Viewport);
 
-		// Override with EditorCamera's data
-		m_Viewport.FrameData.Camera.SetViewAndProjection(
-			m_Camera.GetProjectionMatrix(),
-			m_Camera.GetViewMatrix());
+		RenderView editorCameraView{};
+		editorCameraView.SetViewAndProjection(m_Camera.GetProjectionMatrix(), m_Camera.GetViewMatrix());
+		editorCameraView.Position = m_Camera.GetPosition();
+		editorCameraView.ViewDirection = m_Camera.GetViewDirection();
+		editorCameraView.Near = m_Camera.GetSettings().Near;
+		editorCameraView.Far = m_Camera.GetSettings().Far;
+		editorCameraView.FOV = m_Camera.GetSettings().FOV;
 
-		m_Viewport.FrameData.Camera.Position = m_Camera.GetPosition();
-		m_Viewport.FrameData.Camera.ViewDirection = m_Camera.GetViewDirection();
+		m_SceneRenderer->RenderViewport(m_Viewport);
 
-		m_Viewport.FrameData.Camera.Near = m_Camera.GetSettings().Near;
-		m_Viewport.FrameData.Camera.Far = m_Camera.GetSettings().Far;
-
-		m_Viewport.FrameData.Camera.FOV = m_Camera.GetSettings().FOV;
+		return;
 
 		Renderer::BeginScene(m_Viewport);
 		OnClear();

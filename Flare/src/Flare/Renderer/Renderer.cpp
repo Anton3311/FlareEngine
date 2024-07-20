@@ -1,6 +1,7 @@
 #include "Renderer.h"
 
 #include "Flare/Renderer/RendererPrimitives.h"
+#include "Flare/Renderer/SceneSubmition.h"
 
 #include "Flare/AssetManager/AssetManager.h"
 
@@ -34,6 +35,8 @@ namespace Flare
 
 	struct RendererData
 	{
+		SceneSubmition* Submition = nullptr;
+
 		Viewport* MainViewport = nullptr;
 		Viewport* CurrentViewport = nullptr;
 
@@ -244,60 +247,21 @@ namespace Flare
 	{
 	}
 
+	SceneSubmition& Renderer::GetCurrentSceneSubmition()
+	{
+		FLARE_CORE_ASSERT(s_RendererData.Submition);
+		return *s_RendererData.Submition;
+	}
+
+	void Renderer::BeginScene(SceneSubmition& sceneSubmition)
+	{
+		FLARE_CORE_ASSERT(s_RendererData.Submition == nullptr);
+
+		s_RendererData.Submition = &sceneSubmition;
+	}
+
 	void Renderer::BeginScene(Viewport& viewport)
 	{
-		FLARE_PROFILE_FUNCTION();
-
-		viewport.PrepareViewport();
-
-		s_RendererData.CurrentViewport = &viewport;
-		s_RendererData.OpaqueQueue.SetCameraPosition(viewport.FrameData.Camera.Position);
-
-		Ref<CommandBuffer> commandBuffer = GraphicsContext::GetInstance().GetCommandBuffer();
-
-		{
-			FLARE_PROFILE_SCOPE("UpdateLightUniformBuffer");
-			s_RendererData.CurrentViewport->FrameData.Light.PointLightsCount = (uint32_t)s_RendererData.PointLights.size();
-			s_RendererData.CurrentViewport->FrameData.Light.SpotLightsCount = (uint32_t)s_RendererData.SpotLights.size();
-			s_RendererData.CurrentViewport->GlobalResources.LightBuffer->SetData(&viewport.FrameData.Light, sizeof(viewport.FrameData.Light), 0);
-		}
-
-		{
-			FLARE_PROFILE_SCOPE("UpdateCameraUniformBuffer");
-			viewport.FrameData.Camera.ViewportSize = (glm::ivec2)viewport.GetSize();
-			s_RendererData.CurrentViewport->GlobalResources.CameraBuffer->SetData(&viewport.FrameData.Camera, sizeof(RenderView), 0);
-		}
-
-		bool updateViewportDescriptorSets = false;
-
-		{
-			FLARE_PROFILE_SCOPE("UploadPointLightsData");
-			MemorySpan pointLightsData = MemorySpan::FromVector(s_RendererData.PointLights);
-
-			if (pointLightsData.GetSize() > s_RendererData.CurrentViewport->GlobalResources.PointLightsBuffer->GetSize())
-			{
-				s_RendererData.CurrentViewport->GlobalResources.PointLightsBuffer->Resize(pointLightsData.GetSize());
-				updateViewportDescriptorSets = true;
-			}
-
-			s_RendererData.CurrentViewport->GlobalResources.PointLightsBuffer->SetData(pointLightsData, 0, commandBuffer);
-		}
-
-		{
-			FLARE_PROFILE_SCOPE("UploadSpotLightsData");
-
-			MemorySpan spotLightsData = MemorySpan::FromVector(s_RendererData.SpotLights);
-
-			if (spotLightsData.GetSize() > s_RendererData.CurrentViewport->GlobalResources.SpotLightsBuffer->GetSize())
-			{
-				s_RendererData.CurrentViewport->GlobalResources.SpotLightsBuffer->Resize(spotLightsData.GetSize());
-				updateViewportDescriptorSets = true;
-			}
-
-			s_RendererData.CurrentViewport->GlobalResources.SpotLightsBuffer->SetData(spotLightsData, 0, commandBuffer);
-		}
-
-		s_RendererData.CurrentViewport->UpdateGlobalDescriptorSets();
 	}
 
 	void Renderer::Flush()
@@ -311,6 +275,10 @@ namespace Flare
 	void Renderer::EndScene()
 	{
 		FLARE_PROFILE_FUNCTION();
+
+		FLARE_CORE_ASSERT(s_RendererData.Submition);
+		s_RendererData.Submition = nullptr;
+
 		s_RendererData.PointLights.clear();
 		s_RendererData.SpotLights.clear();
 		s_RendererData.Decals.clear();

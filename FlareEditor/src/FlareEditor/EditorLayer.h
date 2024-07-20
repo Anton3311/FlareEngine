@@ -39,6 +39,8 @@ namespace Flare
 		Play,
 	};
 
+	class SceneRenderer;
+
 	class EditorLayer : public Layer
 	{
 	public:
@@ -100,6 +102,8 @@ namespace Flare
 		bool m_ExitPlayModeScheduled = false;
 
 		std::set<AssetHandle> m_AssetReloadQueue;
+
+		Scope<SceneRenderer> m_SceneRenderer = nullptr;
 
 		SceneViewSettings m_SceneViewSettings;
 

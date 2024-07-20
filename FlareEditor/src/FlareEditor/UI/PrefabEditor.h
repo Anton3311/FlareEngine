@@ -13,6 +13,7 @@
 
 namespace Flare
 {
+	class SceneRenderer;
 	class PrefabEditor : public AssetEditor
 	{
 	public:
@@ -28,6 +29,8 @@ namespace Flare
 		inline World& GetWorld() { return m_PreviewScene->GetECSWorld(); }
 	private:
 		Ref<Scene> m_PreviewScene;
+
+		Scope<SceneRenderer> m_SceneRenderer = nullptr;
 		
 		EditorCamera m_EditorCamera;
 		SceneViewportWindow m_ViewportWindow;

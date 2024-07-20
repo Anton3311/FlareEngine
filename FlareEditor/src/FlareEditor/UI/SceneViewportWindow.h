@@ -23,7 +23,7 @@ namespace Flare
 			Depth,
 		};
 
-		SceneViewportWindow(EditorCamera& camera, std::string_view name = "Scene Viewport");
+		SceneViewportWindow(EditorCamera& camera, const Scope<SceneRenderer>& sceneRenderer, std::string_view name = "Scene Viewport");
 
 		virtual void OnAttach() override;
 

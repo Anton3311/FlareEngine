@@ -17,7 +17,7 @@ namespace Flare
 	class ViewportWindow
 	{
 	public:
-		ViewportWindow(std::string_view name);
+		ViewportWindow(const Scope<SceneRenderer>& sceneRenderer, std::string_view name);
 		virtual ~ViewportWindow() = default;
 	public:
 		virtual void OnAttach();
@@ -58,6 +58,9 @@ namespace Flare
 	protected:
 		std::string m_Name;
 		Ref<Scene> m_Scene;
+
+		const Scope<SceneRenderer>& m_SceneRenderer;
+
 		Viewport m_Viewport;
 
 		bool m_Maximized = false;

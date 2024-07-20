@@ -131,6 +131,7 @@ namespace Flare
 		glm::vec4 Color;
 	};
 
+	struct SceneSubmition;
 	class DescriptorSet;
 	class DescriptorSetLayout;
 	class DescriptorSetPool;
@@ -149,9 +150,12 @@ namespace Flare
 		static void BeginFrame();
 		static void EndFrame();
 
+		static SceneSubmition& GetCurrentSceneSubmition();
+		static void BeginScene(SceneSubmition& sceneSubmition);
+		static void EndScene();
+
 		static void BeginScene(Viewport& viewport);
 		static void Flush();
-		static void EndScene();
 
 		static void SubmitPointLight(const PointLightData& light);
 		static void SubmitSpotLight(const SpotLightData& light);

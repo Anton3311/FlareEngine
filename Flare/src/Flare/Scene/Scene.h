@@ -30,7 +30,6 @@ namespace Flare
 		void OnRuntimeStart();
 		void OnRuntimeEnd();
 
-		void OnBeforeRender(Viewport& viewport);
 		void OnRender(const Viewport& viewport);
 
 		void OnUpdateRuntime();

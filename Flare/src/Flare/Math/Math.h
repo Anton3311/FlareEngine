@@ -17,9 +17,9 @@ namespace Flare::Math
 			return glm::mat3(Right, Up, Forward);
 		}
 
-		glm::vec3 Right;
-		glm::vec3 Up;
-		glm::vec3 Forward;
+		glm::vec3 Right = glm::vec3(0.0f);
+		glm::vec3 Up = glm::vec3(0.0f);
+		glm::vec3 Forward = glm::vec3(0.0f);
 	};
 
 	struct Plane
