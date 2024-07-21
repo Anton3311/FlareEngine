@@ -60,7 +60,7 @@ namespace Flare
 
 	void ViewportWindow::PrepareViewport()
 	{
-		if (GetScene()->GetPostProcessingManager().IsDirty())
+		if (m_Viewport.IsPostProcessingEnabled() && GetScene()->GetPostProcessingManager().IsDirty())
 			m_Viewport.Graph.SetNeedsRebuilding();
 
 		if (Renderer::RequiresRenderGraphRebuild())

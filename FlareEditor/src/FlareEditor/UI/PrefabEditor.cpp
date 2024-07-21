@@ -16,6 +16,7 @@ namespace Flare
         m_Properties(GetWorld()), m_SelectedEntity(Entity()),
         m_ViewportWindow(m_EditorCamera, m_SceneRenderer, "Prefab Preview")
     {
+        FLARE_PROFILE_FUNCTION();
         m_SceneRenderer.reset(new SceneRenderer(m_PreviewScene));
         m_ViewportWindow.SetScene(m_PreviewScene);
 
@@ -30,6 +31,7 @@ namespace Flare
 
     void PrefabEditor::OnOpen(AssetHandle asset)
     {
+        FLARE_PROFILE_FUNCTION();
         FLARE_CORE_ASSERT(AssetManager::IsAssetHandleValid(asset));
         m_Prefab = AssetManager::GetAsset<Prefab>(asset);
         m_Prefab->CreateInstance(GetWorld());
@@ -42,6 +44,7 @@ namespace Flare
 
     void PrefabEditor::OnClose()
     {
+        FLARE_PROFILE_FUNCTION();
         AssetHandle prefabHandle = m_Prefab->Handle;
         Entity entity = Entity();
         World& world = GetWorld();
@@ -56,6 +59,7 @@ namespace Flare
 
     void PrefabEditor::OnRenderImGui(bool& show)
     {
+        FLARE_PROFILE_FUNCTION();
         m_SceneRenderer->CollectSceneData();
 
         m_ViewportWindow.OnRenderViewport();
@@ -74,11 +78,13 @@ namespace Flare
 
     void PrefabEditor::OnAttach()
     {
+        FLARE_PROFILE_FUNCTION();
         m_ViewportWindow.OnAttach();
     }
 
     void PrefabEditor::OnEvent(Event& event)
     {
+        FLARE_PROFILE_FUNCTION();
         m_ViewportWindow.OnEvent(event);
     }
 }
