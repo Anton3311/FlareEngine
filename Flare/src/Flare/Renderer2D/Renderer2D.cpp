@@ -11,6 +11,7 @@
 #include "Flare/Renderer/Renderer.h"
 #include "Flare/Renderer/ShaderLibrary.h"
 #include "Flare/Renderer/Pipeline.h"
+#include "Flare/Renderer/SceneSubmition.h"
 
 #include "Flare/Renderer2D/Renderer2DFrameData.h"
 #include "Flare/Renderer2D/Geometry2DPass.h"
@@ -31,7 +32,9 @@ namespace Flare
 	{
 		Renderer2DStats Stats;
 
-		Renderer2DFrameData FrameData;
+		SceneSubmition* SceneSubmition = nullptr;
+		Renderer2DFrameData* Submition = nullptr;
+
 		Renderer2DLimits Limits;
 
 		Ref<IndexBuffer> IndexBuffer = nullptr;
@@ -39,6 +42,9 @@ namespace Flare
 		Ref<Material> DefaultMaterial = nullptr;
 		Ref<Material> CurrentMaterial = nullptr;
 		Ref<Shader> TextShader = nullptr;
+
+		Ref<DescriptorSetPool> QuadsDescriptorSetPool = nullptr;
+		Ref<DescriptorSetPool> TextDescriptorSetPool = nullptr;
 
 		glm::vec3 QuadVertices[4] = { glm::vec3(0.0f) };
 		glm::vec2 QuadUV[4] = { glm::vec2(0.0f) };
@@ -51,9 +57,6 @@ namespace Flare
 	void Renderer2D::Initialize(size_t maxQuads)
 	{
 		s_Renderer2DData.Limits.MaxQuadCount = (uint32_t)maxQuads;
-
-		s_Renderer2DData.FrameData.QuadVertices.resize(maxQuads * 4);
-		s_Renderer2DData.FrameData.TextVertices.resize(maxQuads * 4);
 
 		std::vector<uint32_t> indices(maxQuads * 6);
 
@@ -94,7 +97,7 @@ namespace Flare
 				bindings[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 				bindings[0].pImmutableSamplers = nullptr;
 
-				s_Renderer2DData.FrameData.QuadDescriptorSetsPool = CreateRef<VulkanDescriptorSetPool>(32, Span(bindings, 1));
+				s_Renderer2DData.QuadsDescriptorSetPool = CreateRef<VulkanDescriptorSetPool>(32, Span(bindings, 1));
 			}
 
 			{
@@ -105,7 +108,7 @@ namespace Flare
 				bindings[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 				bindings[0].pImmutableSamplers = nullptr;
 
-				s_Renderer2DData.FrameData.TextDescriptorSetsPool = CreateRef<VulkanDescriptorSetPool>(32, Span(bindings, 1));
+				s_Renderer2DData.TextDescriptorSetPool = CreateRef<VulkanDescriptorSetPool>(32, Span(bindings, 1));
 			}
 		}
 	}
@@ -143,13 +146,15 @@ namespace Flare
 
 	static QuadsBatch& BeginQuadBatch()
 	{
+		FLARE_ASSERT(s_Renderer2DData.Submition);
+
 		// Fill remaining texture slots of the previous batch with white textures
-		if (s_Renderer2DData.FrameData.QuadBatches.size() > 0)
+		if (s_Renderer2DData.Submition->QuadBatches.size() > 0)
 		{
-			FillRemainingTextureSlots(s_Renderer2DData.FrameData.QuadBatches.back());
+			FillRemainingTextureSlots(s_Renderer2DData.Submition->QuadBatches.back());
 		}
 
-		return s_Renderer2DData.FrameData.QuadBatches.emplace_back();
+		return s_Renderer2DData.Submition->QuadBatches.emplace_back();
 	}
 
 	void Renderer2D::Shutdown()
@@ -159,9 +164,6 @@ namespace Flare
 
 	void Renderer2D::BeginFrame()
 	{
-		FLARE_PROFILE_FUNCTION();
-
-		s_Renderer2DData.FrameData.QuadBatches.clear();
 	}
 
 	void Renderer2D::EndFrame()
@@ -169,20 +171,29 @@ namespace Flare
 
 	}
 
-	void Renderer2D::Begin(const Ref<Material>& material)
+	void Renderer2D::BeginScene(SceneSubmition& sceneSubmition)
 	{
-		s_Renderer2DData.FrameData.Reset();
+		FLARE_CORE_ASSERT(s_Renderer2DData.Submition == nullptr);
+		s_Renderer2DData.SceneSubmition = &sceneSubmition;
+		s_Renderer2DData.Submition = &sceneSubmition.Renderer2DSubmition;
 
-		s_Renderer2DData.CurrentMaterial = material == nullptr ? s_Renderer2DData.DefaultMaterial : material;
+		s_Renderer2DData.Submition->QuadVertices.resize(4 * s_Renderer2DData.Limits.MaxQuadCount);
+		s_Renderer2DData.Submition->TextVertices.resize(4 * s_Renderer2DData.Limits.MaxQuadCount);
+
+		s_Renderer2DData.Submition->QuadCount = 0;
+		s_Renderer2DData.Submition->TextQuadCount = 0;
 	}
 
-	void Renderer2D::End()
+	void Renderer2D::EndScene()
 	{
-		// Make sure that all empty texture slots of the last batch are filled with white textures
-		if (s_Renderer2DData.FrameData.QuadBatches.size() > 0)
+		FLARE_CORE_ASSERT(s_Renderer2DData.Submition);
+		if (s_Renderer2DData.Submition->QuadBatches.size() > 0)
 		{
-			FillRemainingTextureSlots(s_Renderer2DData.FrameData.QuadBatches.back());
+			FillRemainingTextureSlots(s_Renderer2DData.Submition->QuadBatches.back());
 		}
+		
+		s_Renderer2DData.Submition = nullptr;
+		s_Renderer2DData.SceneSubmition = nullptr;
 	}
 
 	void Renderer2D::ConfigurePasses(Viewport& viewport)
@@ -194,10 +205,10 @@ namespace Flare
 		geometryPass.AddOutput(viewport.ColorTextureId, 0);
 		
 		viewport.Graph.AddPass(geometryPass, CreateRef<Geometry2DPass>(
-			s_Renderer2DData.FrameData,
 			s_Renderer2DData.Limits,
 			s_Renderer2DData.IndexBuffer,
-			s_Renderer2DData.DefaultMaterial));
+			s_Renderer2DData.DefaultMaterial,
+			s_Renderer2DData.QuadsDescriptorSetPool));
 
 		RenderGraphPassSpecifications textPass{};
 		textPass.SetDebugName("TextPass");
@@ -205,10 +216,10 @@ namespace Flare
 		textPass.AddOutput(viewport.ColorTextureId, 0);
 
 		viewport.Graph.AddPass(textPass, CreateRef<TextPass>(
-			s_Renderer2DData.FrameData,
 			s_Renderer2DData.Limits,
 			s_Renderer2DData.IndexBuffer,
-			s_Renderer2DData.TextShader));
+			s_Renderer2DData.TextShader,
+			s_Renderer2DData.TextDescriptorSetPool));
 	}
 
 	void Renderer2D::ResetStats()
@@ -224,16 +235,16 @@ namespace Flare
 
 	void Renderer2D::SetMaterial(const Ref<Material>& material)
 	{
-		FLARE_CORE_ASSERT(s_Renderer2DData.FrameData.QuadBatches.size() > 0);
+		FLARE_CORE_ASSERT(s_Renderer2DData.Submition->QuadBatches.size() > 0);
 		FLARE_CORE_ASSERT(material);
 
-		size_t lastBatchIndex = s_Renderer2DData.FrameData.QuadBatches.size() - 1;
+		size_t lastBatchIndex = s_Renderer2DData.Submition->QuadBatches.size() - 1;
 		QuadsBatch& batch = BeginQuadBatch();
 		batch.Material = material;
 		batch.Count = 0;
 
-		if (s_Renderer2DData.FrameData.QuadBatches.size() > 0)
-			batch.Start = s_Renderer2DData.FrameData.QuadBatches[lastBatchIndex].GetEnd();
+		if (s_Renderer2DData.Submition->QuadBatches.size() > 0)
+			batch.Start = s_Renderer2DData.Submition->QuadBatches[lastBatchIndex].GetEnd();
 
 		s_Renderer2DData.CurrentMaterial = material;
 	}
@@ -362,29 +373,29 @@ namespace Flare
 
 	void Renderer2D::DrawQuad(const glm::vec3* vertices, const Ref<Texture>& texture, const glm::vec4& tint, const glm::vec2& tiling, const glm::vec2* uv, int32_t entityIndex)
 	{
-		if (s_Renderer2DData.FrameData.QuadBatches.size() == 0)
+		if (s_Renderer2DData.Submition->QuadBatches.size() == 0)
 		{
 			QuadsBatch& batch = BeginQuadBatch();
 			batch.Material = s_Renderer2DData.DefaultMaterial;
 		}
 
-		if (s_Renderer2DData.FrameData.QuadCount >= s_Renderer2DData.Limits.MaxQuadCount)
+		if (s_Renderer2DData.Submition->QuadCount >= s_Renderer2DData.Limits.MaxQuadCount)
 		{
 			FLARE_CORE_ASSERT(false);
 		}
 
-		if (s_Renderer2DData.FrameData.QuadBatches.back().TexturesCount == Renderer2DLimits::MaxTexturesCount)
+		if (s_Renderer2DData.Submition->QuadBatches.back().TexturesCount == Renderer2DLimits::MaxTexturesCount)
 		{
 			BeginQuadBatch();
 		}
 
-		QuadsBatch& currentBatch = s_Renderer2DData.FrameData.QuadBatches.back();
-		size_t vertexIndex = s_Renderer2DData.FrameData.QuadCount * 4;
+		QuadsBatch& currentBatch = s_Renderer2DData.Submition->QuadBatches.back();
+		size_t vertexIndex = s_Renderer2DData.Submition->QuadCount * 4;
 		uint32_t textureIndex = currentBatch.GetTextureIndex(texture == nullptr ? Renderer::GetWhiteTexture() : texture);
 
 		for (uint32_t i = 0; i < 4; i++)
 		{
-			QuadVertex& vertex = s_Renderer2DData.FrameData.QuadVertices[vertexIndex + i];
+			QuadVertex& vertex = s_Renderer2DData.Submition->QuadVertices[vertexIndex + i];
 			vertex.Position = vertices[i];
 			vertex.Color = tint;
 			vertex.UV = uv[i] * tiling;
@@ -393,7 +404,7 @@ namespace Flare
 		}
 
 		currentBatch.Count++;
-		s_Renderer2DData.FrameData.QuadCount++;
+		s_Renderer2DData.Submition->QuadCount++;
 		s_Renderer2DData.Stats.QuadsCount++;
 	}
 
@@ -401,15 +412,15 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		if (s_Renderer2DData.FrameData.TextBatches.empty() || s_Renderer2DData.FrameData.TextBatches.back().Font.get() != font.get())
+		if (s_Renderer2DData.Submition->TextBatches.empty() || s_Renderer2DData.Submition->TextBatches.back().Font.get() != font.get())
 		{
-			TextBatch& batch = s_Renderer2DData.FrameData.TextBatches.emplace_back();
-			batch.Start = (uint32_t)s_Renderer2DData.FrameData.TextQuadCount;
+			TextBatch& batch = s_Renderer2DData.Submition->TextBatches.emplace_back();
+			batch.Start = (uint32_t)s_Renderer2DData.Submition->TextQuadCount;
 			batch.Count = 0;
 			batch.Font = font;
 		}
 
-		TextBatch& batch = s_Renderer2DData.FrameData.TextBatches.back();
+		TextBatch& batch = s_Renderer2DData.Submition->TextBatches.back();
 
 		const auto& msdfData = font->GetData();
 		const auto& geometry = msdfData.Geometry;
@@ -476,10 +487,10 @@ namespace Flare
 				atlasBounds.Top *= texelSize.y;
 				atlasBounds.Bottom *= texelSize.y;
 
-				size_t textVertexIndex = s_Renderer2DData.FrameData.TextQuadCount * 4;
+				size_t textVertexIndex = s_Renderer2DData.Submition->TextQuadCount * 4;
 
 				{
-					TextVertex& vertex = s_Renderer2DData.FrameData.TextVertices[textVertexIndex + 0];
+					TextVertex& vertex = s_Renderer2DData.Submition->TextVertices[textVertexIndex + 0];
 					vertex.Position = transform * glm::vec4(min, 0.0f, 1.0f);
 					vertex.Color = color;
 					vertex.UV = glm::vec2((float)atlasBounds.Left, (float)atlasBounds.Bottom);
@@ -487,7 +498,7 @@ namespace Flare
 				}
 
 				{
-					TextVertex& vertex = s_Renderer2DData.FrameData.TextVertices[textVertexIndex + 1];
+					TextVertex& vertex = s_Renderer2DData.Submition->TextVertices[textVertexIndex + 1];
 					vertex.Position = transform * glm::vec4(min.x, max.y, 0.0f, 1.0f);
 					vertex.Color = color;
 					vertex.UV = glm::vec2((float)atlasBounds.Left, (float)atlasBounds.Top);
@@ -495,7 +506,7 @@ namespace Flare
 				}
 
 				{
-					TextVertex& vertex = s_Renderer2DData.FrameData.TextVertices[textVertexIndex + 2];
+					TextVertex& vertex = s_Renderer2DData.Submition->TextVertices[textVertexIndex + 2];
 					vertex.Position = transform * glm::vec4(max, 0.0f, 1.0f);
 					vertex.Color = color;
 					vertex.UV = glm::vec2((float)atlasBounds.Right, (float)atlasBounds.Top);
@@ -503,7 +514,7 @@ namespace Flare
 				}
 
 				{
-					TextVertex& vertex = s_Renderer2DData.FrameData.TextVertices[textVertexIndex + 3];
+					TextVertex& vertex = s_Renderer2DData.Submition->TextVertices[textVertexIndex + 3];
 					vertex.Position = transform * glm::vec4(max.x, min.y, 0.0f, 1.0f);
 					vertex.Color = color;
 					vertex.UV = glm::vec2((float)atlasBounds.Right, (float)atlasBounds.Bottom);
@@ -511,10 +522,10 @@ namespace Flare
 				}
 
 				batch.Count++;
-				s_Renderer2DData.FrameData.TextQuadCount++;
+				s_Renderer2DData.Submition->TextQuadCount++;
 				s_Renderer2DData.Stats.QuadsCount++;
 
-				FLARE_CORE_ASSERT(s_Renderer2DData.FrameData.TextQuadCount < s_Renderer2DData.Limits.MaxQuadCount);
+				FLARE_CORE_ASSERT(s_Renderer2DData.Submition->TextQuadCount < s_Renderer2DData.Limits.MaxQuadCount);
 			}
 
 			if (charIndex + 1 < text.size())
@@ -538,7 +549,7 @@ namespace Flare
 
 	Ref<const DescriptorSetLayout> Renderer2D::GetDescriptorSetLayout()
 	{
-		return s_Renderer2DData.FrameData.QuadDescriptorSetsPool->GetLayout();
+		return s_Renderer2DData.QuadsDescriptorSetPool->GetLayout();
 	}
 
 	const Renderer2DLimits& Renderer2D::GetLimits()

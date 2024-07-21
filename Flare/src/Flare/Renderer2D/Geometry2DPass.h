@@ -1,18 +1,25 @@
 #pragma once
 
 #include "Flare/Renderer/RenderGraph/RenderGraphPass.h"
-#include "Flare/Renderer2D/Renderer2DFrameData.h"
 
 namespace Flare
 {
-	class VertexBuffer;
+	struct Renderer2DLimits;
+	struct QuadsBatch;
+
+	class DescriptorSet;
+	class DescriptorSetPool;
 	class IndexBuffer;
+	class VertexBuffer;
+	class Material;
 
 	class Geometry2DPass : public RenderGraphPass
 	{
 	public:
-		Geometry2DPass(const Renderer2DFrameData& frameData, const Renderer2DLimits& limits,
-			Ref<IndexBuffer> indexBuffer, Ref<Material> defaultMaterial);
+		Geometry2DPass(const Renderer2DLimits& limits,
+			Ref<IndexBuffer> indexBuffer,
+			Ref<Material> defaultMaterial,
+			Ref<DescriptorSetPool> quadsDescriptorSetPool);
 		~Geometry2DPass();
 
 		void OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer) override;
@@ -20,8 +27,9 @@ namespace Flare
 		void ReleaseDescriptorSets();
 		void FlushBatch(const RenderGraphContext& context, const QuadsBatch& batch, Ref<CommandBuffer> commandBuffer);
 	private:
-		const Renderer2DFrameData& m_FrameData;
 		const Renderer2DLimits& m_RendererLimits;
+
+		Ref<DescriptorSetPool> m_QuadsDescriptorSetPool = nullptr;
 
 		std::vector<Ref<DescriptorSet>> m_UsedSets;
 

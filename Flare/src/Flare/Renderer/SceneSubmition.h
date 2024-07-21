@@ -3,6 +3,8 @@
 #include "Flare/Renderer/RenderData.h"
 #include "Flare/Renderer/RendererSubmitionQueue.h"
 
+#include "Flare/Renderer2D/Renderer2DFrameData.h"
+
 #include "Flare/Math/Math.h"
 
 namespace Flare
@@ -100,5 +102,7 @@ namespace Flare
 		std::vector<SpotLightSubmition> SpotLights;
 
 		std::vector<DecalSubmition> DecalSubmitions;
+
+		Renderer2DFrameData Renderer2DSubmition;
 	};
 }

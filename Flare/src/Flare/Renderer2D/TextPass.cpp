@@ -3,6 +3,9 @@
 #include "Flare/Renderer/Buffer.h"
 #include "Flare/Renderer/Renderer.h"
 #include "Flare/Renderer/Font.h"
+#include "Flare/Renderer/SceneSubmition.h"
+
+#include "Flare/Renderer2D/Renderer2DFrameData.h"
 
 #include "Flare/Platform/Vulkan/VulkanVertexBuffer.h"
 #include "Flare/Platform/Vulkan/VulkanCommandBuffer.h"
@@ -10,8 +13,8 @@
 
 namespace Flare
 {
-	TextPass::TextPass(const Renderer2DFrameData& frameData, const Renderer2DLimits& limits, Ref<IndexBuffer> indexBuffer, Ref<Shader> textShader)
-		: m_FrameData(frameData), m_RendererLimits(limits), m_IndexBuffer(indexBuffer), m_TextShader(textShader)
+	TextPass::TextPass(const Renderer2DLimits& limits, Ref<IndexBuffer> indexBuffer, Ref<Shader> textShader, Ref<DescriptorSetPool> descriptorSetPool)
+		: m_RendererLimits(limits), m_IndexBuffer(indexBuffer), m_TextShader(textShader), m_DescriptorSetPool(descriptorSetPool)
 	{
 		m_VertexBuffer = VertexBuffer::Create(sizeof(TextVertex) * 4 * m_RendererLimits.MaxQuadCount, GPUBufferUsage::Static);
 		As<VulkanVertexBuffer>(m_VertexBuffer)->GetBuffer().EnsureAllocated(); // HACk: To avoid binding NULL buffer
@@ -28,9 +31,11 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 		ReleaseDescriptorSets();
 
-		if (m_FrameData.TextQuadCount > 0)
+		const Renderer2DFrameData& submition = context.GetSceneSubmition().Renderer2DSubmition;
+
+		if (submition.TextQuadCount > 0)
 		{
-			m_VertexBuffer->SetData(MemorySpan(const_cast<TextVertex*>(m_FrameData.TextVertices.data()), m_FrameData.TextQuadCount * 4), 0, commandBuffer);
+			m_VertexBuffer->SetData(MemorySpan(submition.TextVertices.data(), submition.TextQuadCount * 4), 0, commandBuffer);
 		}
 
 		Ref<FrameBuffer> renderTarget = context.GetRenderTarget();
@@ -52,7 +57,7 @@ namespace Flare
 			Ref<const DescriptorSetLayout> layouts[] =
 			{
 				Renderer::GetCameraDescriptorSetPool()->GetLayout(),
-				m_FrameData.TextDescriptorSetsPool->GetLayout()
+				m_DescriptorSetPool->GetLayout()
 			};
 
 			m_TextPipeline = CreateRef<VulkanPipeline>(specificaionts,
@@ -66,7 +71,7 @@ namespace Flare
 
 		commandBuffer->SetGlobalDescriptorSet(context.GetViewport().GlobalResources.CameraDescriptorSet, 0);
 		
-		for (const auto& batch : m_FrameData.TextBatches)
+		for (const auto& batch : submition.TextBatches)
 		{
 			if (batch.Count == 0)
 				continue;
@@ -80,7 +85,7 @@ namespace Flare
 	void TextPass::FlushBatch(const TextBatch& batch, Ref<CommandBuffer> commandBuffer)
 	{
 		FLARE_PROFILE_FUNCTION();
-		Ref<DescriptorSet> set = m_FrameData.TextDescriptorSetsPool->AllocateSet();
+		Ref<DescriptorSet> set = m_DescriptorSetPool->AllocateSet();
 		set->SetDebugName("TextDescriptorSet");
 		set->WriteImage(batch.Font->GetAtlas(), 0);
 		set->FlushWrites();
@@ -100,7 +105,7 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 		for (const auto& set : m_UsedSets)
 		{
-			m_FrameData.TextDescriptorSetsPool->ReleaseSet(set);
+			m_DescriptorSetPool->ReleaseSet(set);
 		}
 
 		m_UsedSets.clear();

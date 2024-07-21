@@ -30,6 +30,7 @@ namespace Flare
 	FLARE_IMPL_ENUM_BITFIELD(SpriteRenderFlags);
 
 	struct Renderer2DLimits;
+	struct SceneSubmition;
 
 	class Viewport;
 	class DescriptorSetLayout;
@@ -42,8 +43,8 @@ namespace Flare
 		static void BeginFrame();
 		static void EndFrame();
 
-		static void Begin(const Ref<Material>& material = nullptr);
-		static void End();
+		static void BeginScene(SceneSubmition& sceneSubmition);
+		static void EndScene();
 
 		static void ConfigurePasses(Viewport& viewport);
 		

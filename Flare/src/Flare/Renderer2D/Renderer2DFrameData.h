@@ -86,9 +86,6 @@ namespace Flare
 		std::vector<QuadVertex> QuadVertices;
 		std::vector<QuadsBatch> QuadBatches;
 
-		Ref<DescriptorSetPool> QuadDescriptorSetsPool = nullptr;
-		std::vector<Ref<DescriptorSet>> UsedQuadDescriptorSets;
-
 		// Text
 		size_t TextQuadCount = 0;
 		std::vector<TextVertex> TextVertices;
