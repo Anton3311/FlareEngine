@@ -70,6 +70,7 @@ namespace Flare
 
 		return;
 
+#if 0
 		Renderer::BeginScene(m_Viewport);
 		OnClear();
 
@@ -115,6 +116,7 @@ namespace Flare
 		}
 
 		Renderer::EndScene();
+#endif
 	}
 
 	void SceneViewportWindow::OnViewportChanged()

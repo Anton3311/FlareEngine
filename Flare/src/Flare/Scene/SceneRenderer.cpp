@@ -130,6 +130,7 @@ namespace Flare
 		Scene::SetActive(m_Scene);
 
 		Renderer::BeginScene(m_SceneSubmition);
+		Renderer2D::Begin();
 
 		if (renderingGroupId)
 		{
@@ -145,6 +146,7 @@ namespace Flare
 		}
 		DebugRenderer::End();
 
+		Renderer2D::End();
 		Renderer::EndScene();
 
 		Scene::SetActive(previousActiveScene);
