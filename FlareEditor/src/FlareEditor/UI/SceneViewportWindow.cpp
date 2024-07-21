@@ -439,7 +439,11 @@ namespace Flare
 				ImGui::MenuItem("Show AABBs", nullptr, &settings.ShowAABBs);
 				ImGui::MenuItem("Show Lights", nullptr, &settings.ShowLights);
 				ImGui::MenuItem("Show Camera Frustums", nullptr, &settings.ShowCameraFrustum);
-				ImGui::MenuItem("Show Grid", nullptr, &settings.ShowGrid);
+
+				if (ImGui::MenuItem("Show Grid", nullptr, &settings.ShowGrid))
+				{
+					m_Viewport.Graph.SetNeedsRebuilding();
+				}
 
 				ImGui::EndCombo();
 			}
