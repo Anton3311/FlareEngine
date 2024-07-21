@@ -30,8 +30,6 @@ namespace Flare
 		void OnRuntimeStart();
 		void OnRuntimeEnd();
 
-		void OnRender(const Viewport& viewport);
-
 		void OnUpdateRuntime();
 		void OnUpdateEditor();
 		void OnViewportResize(uint32_t width, uint32_t height);
