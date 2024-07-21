@@ -73,7 +73,7 @@ namespace Flare
 
 		bool m_ShouldResizeRenderGraphTextures = false;
 
-		TextureFormat m_ColorTextureFormat = TextureFormat::RGB8;
+		TextureFormat m_ColorTextureFormat = TextureFormat::R11G11B10;
 		TextureFormat m_NormalsTextureFormat = TextureFormat::RGB8;
 		TextureFormat m_DepthTextureFormat = TextureFormat::Depth32;
 
