@@ -59,12 +59,7 @@ namespace Flare
 		std::optional<SystemGroupId> debugRenderingGroup = scene->GetECSWorld().GetSystemsManager().FindGroup("Debug Rendering");
 
 		RenderView editorCameraView{};
-		editorCameraView.SetViewAndProjection(m_Camera.GetProjectionMatrix(), m_Camera.GetViewMatrix());
-		editorCameraView.Position = m_Camera.GetPosition();
-		editorCameraView.ViewDirection = m_Camera.GetViewDirection();
-		editorCameraView.Near = m_Camera.GetSettings().Near;
-		editorCameraView.Far = m_Camera.GetSettings().Far;
-		editorCameraView.FOV = m_Camera.GetSettings().FOV;
+		m_Camera.FillRenderView(editorCameraView);
 
 		m_SceneRenderer->RenderViewport(m_Viewport, &editorCameraView);
 
@@ -199,6 +194,12 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 		if (GetScene() == nullptr)
+			return;
+
+		if (!m_Viewport.Graph.IsValid())
+			return;
+
+		if (m_Viewport.GetSize().x == 0 || m_Viewport.GetSize().y == 0)
 			return;
 
 		switch (m_Overlay)

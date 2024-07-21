@@ -35,6 +35,7 @@ namespace Flare
         m_Prefab->CreateInstance(GetWorld());
 
         m_PreviewScene->InitializeRuntime();
+        m_ViewportWindow.GetViewport().Graph.SetNeedsRebuilding();
 
         m_ViewportWindow.ShowWindow = true;
     }
@@ -55,6 +56,8 @@ namespace Flare
 
     void PrefabEditor::OnRenderImGui(bool& show)
     {
+        m_SceneRenderer->CollectSceneData();
+
         m_ViewportWindow.OnRenderViewport();
         m_ViewportWindow.OnRenderImGui();
 

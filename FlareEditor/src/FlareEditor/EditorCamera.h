@@ -33,6 +33,8 @@ namespace Flare
 		inline glm::vec3 GetRotationOrigin() const { return m_Origin; }
 		inline float GetZoom() const { return m_DistanceToOrigin; }
 
+		void FillRenderView(RenderView& view);
+
 		void SetRotationOrigin(glm::vec3 position);
 		void SetRotation(glm::vec3 rotation);
 		void SetZoom(float zoom);

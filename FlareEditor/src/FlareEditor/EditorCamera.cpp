@@ -21,6 +21,16 @@ namespace Flare
 		return m_Origin - TransformDirection(glm::vec3(0.0f, 0.0f, -1.0f)) * m_DistanceToOrigin;
 	}
 
+	void EditorCamera::FillRenderView(RenderView& view)
+	{
+		view.SetViewAndProjection(GetProjectionMatrix(), GetViewMatrix());
+		view.Position = GetPosition();
+		view.ViewDirection = GetViewDirection();
+		view.Near = GetSettings().Near;
+		view.Far = GetSettings().Far;
+		view.FOV = GetSettings().FOV;
+	}
+
 	void EditorCamera::SetRotationOrigin(glm::vec3 position)
 	{
 		m_Origin = position;

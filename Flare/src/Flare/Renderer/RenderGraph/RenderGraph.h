@@ -34,6 +34,7 @@ namespace Flare
 		}
 
 		inline Ref<Texture> GetTexture(RenderGraphTextureId textureId) const { return m_ResourceManager.GetTexture(textureId); }
+		inline bool IsValid() const { return m_IsValid; }
 
 		const RenderPassNode* GetRenderPassNode(size_t index) const;
 		std::optional<size_t> FindPassByName(std::string_view name) const;
