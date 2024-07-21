@@ -211,10 +211,13 @@ namespace Flare
 		const DirectionalLightSubmition& directionalLight = context.GetSceneSubmition().DirectionalLight;
 		const ShadowSettings& shadowSettings = Renderer::GetShadowSettings();
 
+		constexpr float LIGHT_NEAR = 0.1f;
+
 		{
 			FLARE_PROFILE_SCOPE("CalculateCascadeFrustum");
 
-			float currentNearPlane = viewport.FrameData.Light.Near;
+			// TODO: Shouldn't be hard coded
+			float currentNearPlane = LIGHT_NEAR;
 			for (size_t i = 0; i < shadowSettings.Cascades; i++)
 			{
 				// 1. Calculate a fit frustum around camera's furstum
@@ -239,7 +242,7 @@ namespace Flare
 		FilterSubmitions(context);
 
 		{
-			float currentNearPlane = viewport.FrameData.Light.Near;
+			float currentNearPlane = LIGHT_NEAR;
 			for (size_t cascadeIndex = 0; cascadeIndex < shadowSettings.Cascades; cascadeIndex++)
 			{
 				float nearPlaneDistance = 0;
@@ -307,7 +310,7 @@ namespace Flare
 						cascadeData.BoundingSphereRadius,
 						-cascadeData.BoundingSphereRadius,
 						cascadeData.BoundingSphereRadius,
-						viewport.FrameData.Light.Near,
+						LIGHT_NEAR,
 						farPlaneDistance - nearPlaneDistance);
 				}
 

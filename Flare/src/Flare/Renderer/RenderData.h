@@ -71,11 +71,4 @@ namespace Flare
 		uint32_t PointLightsCount = 0;
 		uint32_t SpotLightsCount = 0;
 	};
-
-	struct RenderData
-	{
-		RenderView Camera;
-		LightData Light;
-		Math::Basis LightBasis;
-	};
 }

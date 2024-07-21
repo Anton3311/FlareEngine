@@ -88,11 +88,12 @@ namespace Flare
 		if (totalVertexCount > m_Vertices.size())
 			m_Vertices.resize(totalVertexCount);
 
+		const RenderView& renderView = context.GetRenderView();
 		for (size_t rayIndex = 0; rayIndex < m_FrameData.Rays.size(); rayIndex++)
 		{
 			const DebugRayData& ray = m_FrameData.Rays[rayIndex];
 
-			glm::vec3 fromCameraDirection = viewport.FrameData.Camera.Position - ray.Origin;
+			glm::vec3 fromCameraDirection = renderView.Position - ray.Origin;
 			glm::vec3 up = glm::normalize(glm::cross(fromCameraDirection, ray.Direction)) * m_Settings.RayThickness / 2.0f;
 
 			for (uint32_t i = 0; i < DebugRendererSettings::VerticesPerRay; i++)

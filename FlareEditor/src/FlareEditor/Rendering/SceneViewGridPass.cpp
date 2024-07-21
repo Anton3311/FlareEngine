@@ -52,7 +52,7 @@ namespace Flare
 		Ref<VulkanPipeline> pipeline = As<VulkanPipeline>(m_Pipeline);
 
 		// Scale the grid based on camera's Y position
-		float y = glm::abs(context.GetViewport().FrameData.Camera.Position.y);
+		float y = glm::abs(context.GetRenderView().Position.y);
 		const float step = 20.0f;
 
 		int32_t scaleLevel = (int32_t)glm::floor(y / step);

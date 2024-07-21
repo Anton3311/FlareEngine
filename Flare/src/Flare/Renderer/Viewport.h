@@ -55,8 +55,6 @@ namespace Flare
 		inline bool IsDebugRenderingEnabled() const { return m_DebugRenderingEnabled; }
 		void SetDebugRenderingEnabled(bool enabled);
 	public:
-		RenderData FrameData;
-
 		RenderGraph Graph;
 
 		RenderGraphTextureId ColorTextureId;
