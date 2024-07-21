@@ -17,6 +17,11 @@ namespace Flare::Math
 			Translation = transformationMatrix[3];
 		}
 
+		glm::vec3 TransformDirection(glm::vec3 direction) const
+		{
+			return RotationScale * direction;
+		}
+
 		glm::mat4 ToMatrix4x4() const
 		{
 			return glm::mat4(
