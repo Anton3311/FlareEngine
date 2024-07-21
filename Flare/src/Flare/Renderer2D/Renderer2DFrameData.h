@@ -90,8 +90,5 @@ namespace Flare
 		size_t TextQuadCount = 0;
 		std::vector<TextVertex> TextVertices;
 		std::vector<TextBatch> TextBatches;
-
-		Ref<DescriptorSetPool> TextDescriptorSetsPool = nullptr;
-		std::vector<Ref<DescriptorSet>> UsedTextDescriptorSets;
 	};
 }

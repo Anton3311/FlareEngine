@@ -179,9 +179,6 @@ namespace Flare
 
 		s_Renderer2DData.Submition->QuadVertices.resize(4 * s_Renderer2DData.Limits.MaxQuadCount);
 		s_Renderer2DData.Submition->TextVertices.resize(4 * s_Renderer2DData.Limits.MaxQuadCount);
-
-		s_Renderer2DData.Submition->QuadCount = 0;
-		s_Renderer2DData.Submition->TextQuadCount = 0;
 	}
 
 	void Renderer2D::EndScene()

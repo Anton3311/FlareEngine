@@ -28,13 +28,15 @@ namespace Flare
 		glm::vec4 Color = glm::vec4(1.0f);
 	};
 
-	struct DebugRendererFrameData
+	struct FLARE_API DebugRendererFrameData
 	{
 		struct Vertex
 		{
 			glm::vec3 Position = glm::vec3(0.0f);
 			glm::vec4 Color = glm::vec4(1.0f);
 		};
+
+		void Reset();
 
 		uint32_t LineCount = 0;
 		uint32_t RayCount = 0;

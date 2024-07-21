@@ -13,9 +13,7 @@ namespace Flare
 		SpotLights.clear();
 		DecalSubmitions.clear();
 
-		DebugRendererSubmition.LineCount = 0;
-		DebugRendererSubmition.RayCount = 0;
-		DebugRendererSubmition.LineVertices.clear();
-		DebugRendererSubmition.Rays.clear();
+		Renderer2DSubmition.Reset();
+		DebugRendererSubmition.Reset();
 	}
 }
