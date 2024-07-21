@@ -54,7 +54,7 @@ vec3 CalculateLight(vec3 N, vec3 V, vec3 H, vec3 color, vec3 incomingLight, vec3
 	return brdf * incomingLight * max(0.0, dot(lightDirection, N));
 }
 
-vec3 CalculatePointLightsContribution(vec3 N, vec3 V, vec3 H, vec3 color, vec3 position, float roughness)
+vec3 CalculatePointLightsContribution(vec3 N, vec3 V, vec3 color, vec3 position, float roughness)
 {
 	vec3 finalColor = vec3(0.0);
 	for (uint i = 0; i < u_PointLightsCount; i++)
@@ -63,9 +63,12 @@ vec3 CalculatePointLightsContribution(vec3 N, vec3 V, vec3 H, vec3 color, vec3 p
 		float distance = length(direction);
 		float attenuation = 1.0f / (distance * distance);
 
+		direction /= distance;
+
+		vec3 halfWayVector = normalize(V + direction);
 		vec3 incomingLight = u_PointLights.Lights[i].Color.rgb * u_PointLights.Lights[i].Color.w;
 
-		finalColor += CalculateLight(N, V, H, color,
+		finalColor += CalculateLight(N, V, halfWayVector, color,
 			incomingLight * attenuation,
 			direction / distance, roughness);
 	}
@@ -73,7 +76,7 @@ vec3 CalculatePointLightsContribution(vec3 N, vec3 V, vec3 H, vec3 color, vec3 p
 	return finalColor;
 }
 
-vec3 CalculateSpotLightsContribution(vec3 N, vec3 V, vec3 H, vec3 color, vec3 position, float roughness)
+vec3 CalculateSpotLightsContribution(vec3 N, vec3 V, vec3 color, vec3 position, float roughness)
 {
 	vec3 finalColor = vec3(0.0);
 	for (uint i = 0; i < u_SpotLightsCount; i++)
@@ -86,12 +89,14 @@ vec3 CalculateSpotLightsContribution(vec3 N, vec3 V, vec3 H, vec3 color, vec3 po
 
 		direction /= distance;
 
-		float angleCos = dot(direction, spotLight.Direction);
+		vec3 halfWayVector = normalize(V + direction);
 
+		float angleCos = dot(direction, spotLight.Direction);
 		float fade = 1.0f - smoothstep(spotLight.InnerrRadiusCos, spotLight.OuterRadiusCos, angleCos);
+
 		vec3 incomingLight = spotLight.Color.rgb * spotLight.Color.w * fade;
 
-		finalColor += CalculateLight(N, V, H, color,
+		finalColor += CalculateLight(N, V, halfWayVector, color,
 			incomingLight * attenuation,
 			direction, roughness);
 	}

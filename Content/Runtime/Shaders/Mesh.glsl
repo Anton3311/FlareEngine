@@ -132,8 +132,8 @@ void main()
 		u_LightColor.rgb * u_LightColor.w, -u_LightDirection,
 		roughness) * shadow;
 
-	finalColor += CalculatePointLightsContribution(N, V, H, color.rgb, i_Vertex.Position.xyz, roughness);
-	finalColor += CalculateSpotLightsContribution(N, V, H, color.rgb, i_Vertex.Position.xyz, roughness);
+	finalColor += CalculatePointLightsContribution(N, V, color.rgb, i_Vertex.Position.xyz, roughness);
+	finalColor += CalculateSpotLightsContribution(N, V, color.rgb, i_Vertex.Position.xyz, roughness);
 
 	finalColor += u_EnvironmentLight.rgb * u_EnvironmentLight.w * color.rgb;
 
