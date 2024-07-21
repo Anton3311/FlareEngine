@@ -71,18 +71,12 @@ namespace Flare
 
 	struct SpotLightSubmition
 	{
-		SpotLightSubmition(glm::vec3 position, glm::vec3 direction, float innerAngle, float outerAngle, glm::vec4 color)
-			: Position(position),
-			InnerAngleCos(glm::cos(glm::radians(innerAngle))),
-			Direction(glm::normalize(direction)),
-			OuterAngleCos(glm::cos(glm::radians(outerAngle))),
-			Color(color) {}
-
-		glm::vec3 Position;
-		float InnerAngleCos;
-		glm::vec3 Direction;
-		float OuterAngleCos;
-		glm::vec4 Color;
+		glm::vec3 Position = glm::vec3(0.0f);
+		float InnerAngleCos = 0.0f;
+		glm::vec3 Direction = glm::vec3(0.0f);
+		float OuterAngleCos = 0.0f;
+		glm::vec3 Color = glm::vec3(0.0f);
+		float Intensity = 0.0f;
 	};
 
 	struct DecalSubmition

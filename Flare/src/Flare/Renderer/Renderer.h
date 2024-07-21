@@ -157,9 +157,6 @@ namespace Flare
 		static void BeginScene(Viewport& viewport);
 		static void Flush();
 
-		static void SubmitPointLight(const PointLightData& light);
-		static void SubmitSpotLight(const SpotLightData& light);
-
 		static void DrawMesh(const Ref<Mesh>& mesh,
 			uint32_t subMesh,
 			const Ref<Material>& material,

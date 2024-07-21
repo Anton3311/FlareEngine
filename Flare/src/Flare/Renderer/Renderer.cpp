@@ -55,9 +55,6 @@ namespace Flare
 		ShadowSettings ShadowMappingSettings;
 
 		// Lighting
-		std::vector<PointLightData> PointLights;
-		std::vector<SpotLightData> SpotLights;
-
 		Ref<DescriptorSetPool> CameraDescriptorSetPool = nullptr;
 		Ref<DescriptorSetPool> GlobalDescriptorSetPool = nullptr;
 		Ref<DescriptorSetPool> InstanceDataDescriptorSetPool = nullptr;
@@ -272,19 +269,6 @@ namespace Flare
 
 		FLARE_CORE_ASSERT(s_RendererData.Submition);
 		s_RendererData.Submition = nullptr;
-
-		s_RendererData.PointLights.clear();
-		s_RendererData.SpotLights.clear();
-	}
-
-	void Renderer::SubmitPointLight(const PointLightData& light)
-	{
-		s_RendererData.PointLights.push_back(light);
-	}
-
-	void Renderer::SubmitSpotLight(const SpotLightData& light)
-	{
-		s_RendererData.SpotLights.push_back(light);
 	}
 
 	void Renderer::DrawMesh(const Ref<Mesh>& mesh, uint32_t subMesh, const Ref<Material>& material, const glm::mat4& transform, MeshRenderFlags flags)

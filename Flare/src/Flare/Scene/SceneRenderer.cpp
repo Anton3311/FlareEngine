@@ -86,20 +86,20 @@ namespace Flare
 			m_SceneSubmition.Environment.EnvironmentColorIntensity = environment.EnvironmentColorIntensity;
 		}
 
-#if 0
-		m_PointLightsQuery.ForEachChunk([](QueryChunk chunk,
+		m_PointLightsQuery.ForEachChunk([submitions = &m_SceneSubmition.PointLights](QueryChunk chunk,
 			ComponentView<const TransformComponent> transforms,
 			ComponentView<const PointLight> lights)
 			{
 				for (auto entity : chunk)
 				{
-					Renderer::SubmitPointLight(PointLightData{
-						transforms[entity].Position,
-						glm::vec4(lights[entity].Color, lights[entity].Intensity) });
+					PointLightSubmition& submition = submitions->emplace_back();
+					submition.Color = lights[entity].Color;
+					submition.Intensity = lights[entity].Intensity;
+					submition.Position = transforms[entity].Position;
 				}
 			});
 
-		m_SpotLightsQuery.ForEachChunk([](QueryChunk chunk,
+		m_SpotLightsQuery.ForEachChunk([submitions = &m_SceneSubmition.SpotLights](QueryChunk chunk,
 			ComponentView<const TransformComponent> transforms,
 			ComponentView<const SpotLight> lights)
 			{
@@ -111,16 +111,15 @@ namespace Flare
 					glm::vec3 position = transforms[entity].Position;
 					glm::vec3 direction = transforms[entity].TransformDirection(glm::vec3(0.0f, 0.0f, -1.0f));
 
-					Renderer::SubmitSpotLight(SpotLightData(
-						position,
-						direction,
-						lights[entity].InnerAngle,
-						lights[entity].OuterAngle,
-						glm::vec4(lights[entity].Color, lights[entity].Intensity)
-					));
+					SpotLightSubmition& submition = submitions->emplace_back();
+					submition.Color = lights[entity].Color;
+					submition.Intensity = lights[entity].Intensity;
+					submition.Direction = direction;
+					submition.Position = position;
+					submition.InnerAngleCos = glm::cos(glm::radians(lights[entity].InnerAngle));
+					submition.OuterAngleCos = glm::cos(glm::radians(lights[entity].OuterAngle));
 				}
 			});
-#endif
 
 		std::optional<SystemGroupId> renderingGroupId = systemsManager.FindGroup("Rendering");
 		std::optional<SystemGroupId> debugRenderingGroupId = systemsManager.FindGroup("Debug Rendering");
