@@ -8,6 +8,7 @@
 
 #include "Flare/Renderer/ShaderLibrary.h"
 #include "Flare/Renderer/Shader.h"
+#include "Flare/Renderer/SceneSubmition.h"
 
 #include "Flare/Project/Project.h"
 
@@ -21,16 +22,13 @@ namespace Flare
 
 	struct DebugRendererData
 	{
-		uint32_t LineCount = 0;
-		Vertex* LinesBufferBase = nullptr;
-		Vertex* LinesBuffer = nullptr;
+		SceneSubmition* SceneSubmition = nullptr;
+		DebugRendererFrameData* Submition = nullptr;
 
 		Ref<Shader> DebugShader = nullptr;
-
 		Ref<IndexBuffer> RaysIndexBuffer = nullptr;
 
 		DebugRendererSettings Settings;
-		DebugRendererFrameData FrameData;
 	};
 
 	DebugRendererData s_DebugRendererData;
@@ -78,35 +76,33 @@ namespace Flare
 
 		delete[] indices;
 
-		s_DebugRendererData.LinesBufferBase = new Vertex[s_DebugRendererData.Settings.MaxLines * DebugRendererSettings::VerticesPerLine];
-		s_DebugRendererData.LinesBuffer = s_DebugRendererData.LinesBufferBase;
-
 		Project::OnProjectOpen.Bind(ReloadShader);
 	}
 
 	void DebugRenderer::Shutdown()
 	{
-		FLARE_CORE_ASSERT(s_DebugRendererData.LinesBufferBase);
-
-		s_DebugRendererData.LinesBufferBase = nullptr;
-		s_DebugRendererData.LinesBuffer = nullptr;
-
 		s_DebugRendererData = {};
 	}
 
-	void DebugRenderer::Begin()
+	void DebugRenderer::BeginScene(SceneSubmition& sceneSubmition)
 	{
 		FLARE_PROFILE_FUNCTION();
-		s_DebugRendererData.LinesBuffer = s_DebugRendererData.LinesBufferBase;
-		s_DebugRendererData.LineCount = 0;
+		FLARE_CORE_ASSERT(s_DebugRendererData.SceneSubmition == nullptr);
 
-		s_DebugRendererData.FrameData.Rays.clear();
+		s_DebugRendererData.SceneSubmition = &sceneSubmition;
+		s_DebugRendererData.Submition = &sceneSubmition.DebugRendererSubmition;
+
+		s_DebugRendererData.Submition->LineVertices.resize(s_DebugRendererData.Settings.MaxLines * 2);
+		s_DebugRendererData.Submition->Rays.resize(s_DebugRendererData.Settings.MaxRays * 2);
 	}
 
-	void DebugRenderer::End()
+	void DebugRenderer::EndScene()
 	{
 		FLARE_PROFILE_FUNCTION();
-		s_DebugRendererData.FrameData.LineVertices = Span(s_DebugRendererData.LinesBufferBase, s_DebugRendererData.LineCount * 2);
+		FLARE_CORE_ASSERT(s_DebugRendererData.SceneSubmition != nullptr);
+
+		s_DebugRendererData.SceneSubmition = nullptr;
+		s_DebugRendererData.Submition = nullptr;
 	}
 
 	void DebugRenderer::DrawLine(const glm::vec3& start, const glm::vec3& end)
@@ -121,23 +117,30 @@ namespace Flare
 
 	void DebugRenderer::DrawLine(const glm::vec3& start, const glm::vec3& end, const glm::vec4& startColor, const glm::vec4& endColor)
 	{
-		s_DebugRendererData.LinesBuffer->Position = start;
-		s_DebugRendererData.LinesBuffer->Color = startColor;
-		s_DebugRendererData.LinesBuffer++;
+		FLARE_CORE_ASSERT(s_DebugRendererData.Submition->LineCount < s_DebugRendererData.Settings.MaxLines);
+		uint32_t lineIndex = s_DebugRendererData.Submition->LineCount;
 
-		s_DebugRendererData.LinesBuffer->Position = end;
-		s_DebugRendererData.LinesBuffer->Color = endColor;
-		s_DebugRendererData.LinesBuffer++;
+		Vertex& startVertex = s_DebugRendererData.Submition->LineVertices[lineIndex * 2 + 0];
+		Vertex& endVertex = s_DebugRendererData.Submition->LineVertices[lineIndex * 2 + 1];
 
-		s_DebugRendererData.LineCount++;
+		startVertex.Position = start;
+		startVertex.Color = startColor;
+
+		endVertex.Position = end;
+		endVertex.Color = endColor;
+
+		s_DebugRendererData.Submition->LineCount++;
 	}
 
 	void DebugRenderer::DrawRay(const glm::vec3& origin, const glm::vec3& direction, const glm::vec4& color)
 	{
-		DebugRayData& ray = s_DebugRendererData.FrameData.Rays.emplace_back();
+		FLARE_CORE_ASSERT(s_DebugRendererData.Submition->RayCount < s_DebugRendererData.Settings.MaxRays);
+		DebugRayData& ray = s_DebugRendererData.Submition->Rays[s_DebugRendererData.Submition->RayCount];
 		ray.Origin = origin;
 		ray.Direction = direction;
 		ray.Color = color;
+
+		s_DebugRendererData.Submition->RayCount++;
 	}
 
 	void DebugRenderer::DrawCircle(const glm::vec3& position, const glm::vec3& normal, const glm::vec3& tangent, float radius, const glm::vec4& color, uint32_t segments)
@@ -257,8 +260,7 @@ namespace Flare
 
 		viewport.Graph.AddPass(linesPass, CreateRef<DebugLinesPass>(
 			s_DebugRendererData.DebugShader,
-			s_DebugRendererData.Settings,
-			s_DebugRendererData.FrameData));
+			s_DebugRendererData.Settings));
 
 		RenderGraphPassSpecifications raysPass{};
 		raysPass.AddOutput(viewport.ColorTextureId, 0);
@@ -269,7 +271,6 @@ namespace Flare
 		viewport.Graph.AddPass(raysPass, CreateRef<DebugRaysPass>(
 			s_DebugRendererData.RaysIndexBuffer,
 			s_DebugRendererData.DebugShader,
-			s_DebugRendererData.FrameData,
 			s_DebugRendererData.Settings));
 	}
 }

@@ -4,6 +4,7 @@
 
 #include "Flare/Renderer/CommandBuffer.h"
 #include "Flare/Renderer/Renderer.h"
+#include "Flare/Renderer/SceneSubmition.h"
 
 #include "Flare/Platform/Vulkan/VulkanFrameBuffer.h"
 #include "Flare/Platform/Vulkan/VulkanPipeline.h"
@@ -12,11 +13,8 @@
 
 namespace Flare
 {
-	DebugRaysPass::DebugRaysPass(Ref<IndexBuffer> indexBuffer,
-		Ref<Shader> debugShader,
-		const DebugRendererFrameData& frameData,
-		const DebugRendererSettings& settings)
-		: m_Shader(debugShader), m_FrameData(frameData), m_Settings(settings), m_IndexBuffer(indexBuffer)
+	DebugRaysPass::DebugRaysPass(Ref<IndexBuffer> indexBuffer, Ref<Shader> debugShader, const DebugRendererSettings& settings)
+		: m_Shader(debugShader), m_Settings(settings), m_IndexBuffer(indexBuffer)
 	{
 		FLARE_PROFILE_FUNCTION();
 		size_t bufferSize = sizeof(DebugRendererFrameData::Vertex) * DebugRendererSettings::VerticesPerRay * m_Settings.MaxRays;
@@ -28,6 +26,8 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 		GenerateVertices(context);
+
+		const DebugRendererFrameData& submition = context.GetSceneSubmition().DebugRendererSubmition;
 
 		using Vertex = DebugRendererFrameData::Vertex;
 		m_VertexBuffer->SetData(
@@ -49,7 +49,7 @@ namespace Flare
 			As<VulkanPipeline>(m_Pipeline)->GetLayoutHandle(),
 			0);
 
-		vulkanCommandBuffer->DrawIndexed(0, (uint32_t)m_FrameData.Rays.size() * DebugRendererSettings::IndicesPerRay, 0, 0, 1);
+		vulkanCommandBuffer->DrawIndexed(0, (uint32_t)submition.RayCount * DebugRendererSettings::IndicesPerRay, 0, 0, 1);
 
 		commandBuffer->EndRenderTarget();
 	}
@@ -83,15 +83,17 @@ namespace Flare
 		const Viewport& viewport = context.GetViewport();
 		const float triangleHeight = glm::sqrt(3.0f) * m_Settings.RayThickness;
 
-		size_t totalVertexCount = m_FrameData.Rays.size() * DebugRendererSettings::VerticesPerRay;
+		const DebugRendererFrameData& submition = context.GetSceneSubmition().DebugRendererSubmition;
+
+		uint32_t totalVertexCount = submition.RayCount * DebugRendererSettings::VerticesPerRay;
 
 		if (totalVertexCount > m_Vertices.size())
 			m_Vertices.resize(totalVertexCount);
 
 		const RenderView& renderView = context.GetRenderView();
-		for (size_t rayIndex = 0; rayIndex < m_FrameData.Rays.size(); rayIndex++)
+		for (uint32_t rayIndex = 0; rayIndex < submition.RayCount; rayIndex++)
 		{
-			const DebugRayData& ray = m_FrameData.Rays[rayIndex];
+			const DebugRayData& ray = submition.Rays[rayIndex];
 
 			glm::vec3 fromCameraDirection = renderView.Position - ray.Origin;
 			glm::vec3 up = glm::normalize(glm::cross(fromCameraDirection, ray.Direction)) * m_Settings.RayThickness / 2.0f;

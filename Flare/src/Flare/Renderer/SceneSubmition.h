@@ -4,6 +4,7 @@
 #include "Flare/Renderer/RendererSubmitionQueue.h"
 
 #include "Flare/Renderer2D/Renderer2DFrameData.h"
+#include "Flare/DebugRenderer/DebugRendererFrameData.h"
 
 #include "Flare/Math/Math.h"
 
@@ -104,5 +105,6 @@ namespace Flare
 		std::vector<DecalSubmition> DecalSubmitions;
 
 		Renderer2DFrameData Renderer2DSubmition;
+		DebugRendererFrameData DebugRendererSubmition;
 	};
 }

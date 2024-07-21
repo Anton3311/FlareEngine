@@ -137,13 +137,13 @@ namespace Flare
 			systemsManager.ExecuteGroup(*renderingGroupId);
 		}
 
-		DebugRenderer::Begin();
+		DebugRenderer::BeginScene(m_SceneSubmition);
 		if (debugRenderingGroupId)
 		{
 			FLARE_PROFILE_SCOPE("ExecuteDebugRenderingSystems");
 			systemsManager.ExecuteGroup(*debugRenderingGroupId);
 		}
-		DebugRenderer::End();
+		DebugRenderer::EndScene();
 
 		Renderer2D::EndScene();
 		Renderer::EndScene();

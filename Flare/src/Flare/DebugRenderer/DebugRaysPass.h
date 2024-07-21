@@ -14,14 +14,13 @@ namespace Flare
 	class DebugRaysPass : public RenderGraphPass
 	{
 	public:
-		DebugRaysPass(Ref<IndexBuffer> indexBuffer, Ref<Shader> debugShader, const DebugRendererFrameData& frameData, const DebugRendererSettings& settings);
+		DebugRaysPass(Ref<IndexBuffer> indexBuffer, Ref<Shader> debugShader, const DebugRendererSettings& settings);
 
 		void OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer) override;
 	private:
 		void CreatePipeline(const RenderGraphContext& context);
 		void GenerateVertices(const RenderGraphContext& context);
 	private:
-		const DebugRendererFrameData& m_FrameData;
 		const DebugRendererSettings& m_Settings;
 
 		Ref<Shader> m_Shader = nullptr;

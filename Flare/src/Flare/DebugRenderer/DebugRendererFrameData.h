@@ -36,7 +36,10 @@ namespace Flare
 			glm::vec4 Color = glm::vec4(1.0f);
 		};
 
-		Span<Vertex> LineVertices;
+		uint32_t LineCount = 0;
+		uint32_t RayCount = 0;
+
+		std::vector<Vertex> LineVertices;
 		std::vector<DebugRayData> Rays;
 	};
 }

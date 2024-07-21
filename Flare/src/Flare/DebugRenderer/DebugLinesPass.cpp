@@ -1,6 +1,9 @@
 #include "DebugLinesPass.h"
 
 #include "Flare/Renderer/Renderer.h"
+#include "Flare/Renderer/SceneSubmition.h"
+
+#include "Flare/DebugRenderer/DebugRendererFrameData.h"
 
 #include "Flare/Platform/Vulkan/VulkanPipeline.h"
 #include "Flare/Platform/Vulkan/VulkanFrameBuffer.h"
@@ -9,8 +12,8 @@
 
 namespace Flare
 {
-	DebugLinesPass::DebugLinesPass(Ref<Shader> debugShader, const DebugRendererSettings& settings, const DebugRendererFrameData& frameData)
-		: m_Shader(debugShader), m_Settings(settings), m_FrameData(frameData)
+	DebugLinesPass::DebugLinesPass(Ref<Shader> debugShader, const DebugRendererSettings& settings)
+		: m_Shader(debugShader), m_Settings(settings)
 	{
 		FLARE_PROFILE_FUNCTION();
 		m_VertexBuffer = VertexBuffer::Create(sizeof(DebugRendererFrameData::Vertex) * 2 * m_Settings.MaxLines, GPUBufferUsage::Static);
@@ -26,9 +29,9 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 		using Vertex = DebugRendererFrameData::Vertex;
 
-		m_VertexBuffer->SetData(
-			MemorySpan(const_cast<Vertex*>(m_FrameData.LineVertices.GetData()), m_FrameData.LineVertices.GetSize()),
-			0, commandBuffer);
+		const DebugRendererFrameData& submition = context.GetSceneSubmition().DebugRendererSubmition;
+
+		m_VertexBuffer->SetData(MemorySpan(submition.LineVertices.data(), submition.LineCount * 2), 0, commandBuffer);
 
 		commandBuffer->BeginRenderTarget(context.GetRenderTarget());
 
@@ -43,7 +46,7 @@ namespace Flare
 			As<VulkanDescriptorSet>(context.GetViewport().GlobalResources.CameraDescriptorSet),
 			As<VulkanPipeline>(m_Pipeline)->GetLayoutHandle(), 0);
 
-		vulkanCommandBuffer->Draw(0, (uint32_t)m_FrameData.LineVertices.GetSize(), 0, 1);
+		vulkanCommandBuffer->Draw(0, (uint32_t)submition.LineCount * 2, 0, 1);
 
 		commandBuffer->EndRenderTarget();
 	}

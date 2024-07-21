@@ -2,10 +2,10 @@
 
 #include "Flare/Renderer/RenderGraph/RenderGraphPass.h"
 
-#include "Flare/DebugRenderer/DebugRendererFrameData.h"
-
 namespace Flare
 {
+	struct DebugRendererSettings;
+
 	class Shader;
 	class Pipeline;
 	class VertexBuffer;
@@ -13,9 +13,7 @@ namespace Flare
 	class DebugLinesPass : public RenderGraphPass
 	{
 	public:
-		DebugLinesPass(Ref<Shader> debugShader,
-			const DebugRendererSettings& settings,
-			const DebugRendererFrameData& frameData);
+		DebugLinesPass(Ref<Shader> debugShader, const DebugRendererSettings& settings);
 		~DebugLinesPass();
 
 		void OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer) override;
@@ -23,7 +21,6 @@ namespace Flare
 		void CreatePipeline(const RenderGraphContext& context);
 	private:
 		const DebugRendererSettings& m_Settings;
-		const DebugRendererFrameData& m_FrameData;
 
 		Ref<VertexBuffer> m_VertexBuffer = nullptr;
 

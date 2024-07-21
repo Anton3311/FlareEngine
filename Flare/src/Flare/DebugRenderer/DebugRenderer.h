@@ -1,11 +1,12 @@
 #pragma once
 
 #include "FlareCore/Core.h"
-#include "Flare/Renderer/RenderData.h"
 #include "Flare/Math/Math.h"
 
 namespace Flare
 {
+	struct SceneSubmition;
+
 	class Viewport;
 	class FLARE_API DebugRenderer
 	{
@@ -13,8 +14,8 @@ namespace Flare
 		static void Initialize();
 		static void Shutdown();
 
-		static void Begin();
-		static void End();
+		static void BeginScene(SceneSubmition& sceneSubmition);
+		static void EndScene();
 
 		static void DrawLine(const glm::vec3& start, const glm::vec3& end);
 		static void DrawLine(const glm::vec3& start, const glm::vec3& end, const glm::vec4& color);
