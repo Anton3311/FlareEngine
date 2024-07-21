@@ -160,51 +160,52 @@ namespace Flare
 
 		viewport.PrepareViewport();
 
-		const CameraSubmition& sceneCamera = m_SceneSubmition.Camera;
-
 		RenderView sceneCameraView{};
-		sceneCameraView.Near = sceneCamera.NearPlane;
-		sceneCameraView.Far = sceneCamera.FarPlane;
-		sceneCameraView.FOV = sceneCamera.FOVAngle;
-		sceneCameraView.Position = sceneCamera.Transform.Translation;
-		sceneCameraView.ViewDirection = sceneCamera.Transform.TransformDirection(glm::vec3(0.0f, 0.0f, -1.0f));
-
-		float viewportAspectRatio = viewport.GetAspectRatio();
-		glm::mat4 viewMatrix = glm::inverse(sceneCamera.Transform.ToMatrix4x4());
-		if (sceneCamera.Projection == CameraSubmition::ProjectionType::Orthographic)
+		if (view != nullptr)
 		{
-			float halfSize = sceneCamera.Size / 2.0f;
-			sceneCameraView.SetViewAndProjection(
-				glm::orthoRH_ZO(
-					-halfSize * viewportAspectRatio,
-					+halfSize * viewportAspectRatio,
-					-halfSize,
-					+halfSize,
-					sceneCamera.NearPlane,
-					sceneCamera.FarPlane),
-				viewMatrix);
+			sceneCameraView = *view;
 		}
 		else
 		{
-			sceneCameraView.SetViewAndProjection(
-				glm::perspectiveRH_ZO(
-					glm::radians(sceneCamera.FOVAngle),
-					viewportAspectRatio,
-					sceneCamera.NearPlane,
-					sceneCamera.FarPlane),
-				viewMatrix);
+			const CameraSubmition& sceneCamera = m_SceneSubmition.Camera;
+			sceneCameraView.Near = sceneCamera.NearPlane;
+			sceneCameraView.Far = sceneCamera.FarPlane;
+			sceneCameraView.FOV = sceneCamera.FOVAngle;
+			sceneCameraView.Position = sceneCamera.Transform.Translation;
+			sceneCameraView.ViewDirection = sceneCamera.Transform.TransformDirection(glm::vec3(0.0f, 0.0f, -1.0f));
+
+			float viewportAspectRatio = viewport.GetAspectRatio();
+			glm::mat4 viewMatrix = glm::inverse(sceneCamera.Transform.ToMatrix4x4());
+			if (sceneCamera.Projection == CameraSubmition::ProjectionType::Orthographic)
+			{
+				float halfSize = sceneCamera.Size / 2.0f;
+				sceneCameraView.SetViewAndProjection(
+					glm::orthoRH_ZO(
+						-halfSize * viewportAspectRatio,
+						+halfSize * viewportAspectRatio,
+						-halfSize,
+						+halfSize,
+						sceneCamera.NearPlane,
+						sceneCamera.FarPlane),
+					viewMatrix);
+			}
+			else
+			{
+				sceneCameraView.SetViewAndProjection(
+					glm::perspectiveRH_ZO(
+						glm::radians(sceneCamera.FOVAngle),
+						viewportAspectRatio,
+						sceneCamera.NearPlane,
+						sceneCamera.FarPlane),
+					viewMatrix);
+			}
 		}
 
-		const RenderView* renderView = view;
+		sceneCameraView.ViewportSize = viewport.GetSize();
 
-		if (view == nullptr)
-			renderView = &sceneCameraView;
+		PrepareViewportForRendering(viewport, sceneCameraView);
 
-		FLARE_CORE_ASSERT(renderView);
-
-		PrepareViewportForRendering(viewport, *renderView);
-
-		viewport.Graph.Execute(GraphicsContext::GetInstance().GetCommandBuffer(), m_SceneSubmition, *renderView);
+		viewport.Graph.Execute(GraphicsContext::GetInstance().GetCommandBuffer(), m_SceneSubmition, sceneCameraView);
 	}
 
 	void SceneRenderer::InitializeQueries()
