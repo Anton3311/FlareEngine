@@ -11,5 +11,6 @@ namespace Flare
 		OpaqueGeometrySubmitions.Clear();
 		PointLights.clear();
 		SpotLights.clear();
+		DecalSubmitions.clear();
 	}
 }

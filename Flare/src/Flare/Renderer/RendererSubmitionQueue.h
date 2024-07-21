@@ -13,7 +13,6 @@
 
 namespace Flare
 {
-	class Renderer;
 	class FLARE_API RendererSubmitionQueue
 	{
 	public:

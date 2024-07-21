@@ -7,6 +7,8 @@
 
 namespace Flare
 {
+	class Material;
+
 	struct CameraSubmition
 	{
 		enum class ProjectionType
@@ -83,6 +85,12 @@ namespace Flare
 		glm::vec4 Color;
 	};
 
+	struct DecalSubmition
+	{
+		Ref<const Material> Material = nullptr;
+		Math::Compact3DTransform Transform;
+	};
+
 	struct FLARE_API SceneSubmition
 	{
 		void Clear();
@@ -96,5 +104,7 @@ namespace Flare
 
 		std::vector<PointLightSubmition> PointLights;
 		std::vector<SpotLightSubmition> SpotLights;
+
+		std::vector<DecalSubmition> DecalSubmitions;
 	};
 }

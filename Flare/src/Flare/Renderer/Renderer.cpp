@@ -51,9 +51,6 @@ namespace Flare
 		
 		RendererStatistics Statistics;
 
-		RendererSubmitionQueue OpaqueQueue;
-		std::vector<DecalSubmitionData> Decals;
-
 		// Shadows
 		ShadowSettings ShadowMappingSettings;
 
@@ -267,8 +264,6 @@ namespace Flare
 	void Renderer::Flush()
 	{
 		FLARE_PROFILE_FUNCTION();
-
-		s_RendererData.Statistics.ObjectsSubmitted += (uint32_t)s_RendererData.OpaqueQueue.GetSize();
 	}
 
 	void Renderer::EndScene()
@@ -280,9 +275,6 @@ namespace Flare
 
 		s_RendererData.PointLights.clear();
 		s_RendererData.SpotLights.clear();
-		s_RendererData.Decals.clear();
-
-		s_RendererData.OpaqueQueue.Clear();
 	}
 
 	void Renderer::SubmitPointLight(const PointLightData& light)
@@ -297,7 +289,7 @@ namespace Flare
 
 	void Renderer::DrawMesh(const Ref<Mesh>& mesh, uint32_t subMesh, const Ref<Material>& material, const glm::mat4& transform, MeshRenderFlags flags)
 	{
-		s_RendererData.OpaqueQueue.Submit(mesh, subMesh, material, Math::Compact3DTransform(transform), flags);
+		s_RendererData.Submition->OpaqueGeometrySubmitions.Submit(mesh, subMesh, material, Math::Compact3DTransform(transform), flags);
 	}
 
 	void Renderer::SubmitDecal(const Ref<const Material>& material, const glm::mat4& transform)
@@ -307,11 +299,9 @@ namespace Flare
 
 		Math::Compact3DTransform compactTransform(transform);
 
-		auto& decal = s_RendererData.Decals.emplace_back();
+		auto& decal = s_RendererData.Submition->DecalSubmitions.emplace_back();
 		decal.Material = material;
-		decal.PackedTransform[0] = glm::vec4(compactTransform.RotationScale[0], compactTransform.Translation.x);
-		decal.PackedTransform[1] = glm::vec4(compactTransform.RotationScale[1], compactTransform.Translation.y);
-		decal.PackedTransform[2] = glm::vec4(compactTransform.RotationScale[2], compactTransform.Translation.z);
+		decal.Transform = Math::Compact3DTransform(transform);
 	}
 
 	RendererSubmitionQueue& Renderer::GetOpaqueSubmitionQueue()
@@ -498,7 +488,6 @@ namespace Flare
 		decalPass.AddOutput(viewport.ColorTextureId, 0);
 
 		viewport.Graph.AddPass(decalPass, CreateRef<DecalsPass>(
-			s_RendererData.Decals,
 			s_RendererData.DecalsDescriptorSetPool,
 			viewport.DepthTextureId));
 	}

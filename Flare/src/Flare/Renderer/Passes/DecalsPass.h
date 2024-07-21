@@ -10,16 +10,10 @@ namespace Flare
 	class ShaderStorageBuffer;
 	class Texture;
 
-	struct DecalSubmitionData
-	{
-		Ref<const Material> Material = nullptr;
-		glm::vec4 PackedTransform[4] = { glm::vec4(0.0f) };
-	};
-
 	class DecalsPass : public RenderGraphPass
 	{
 	public:
-		DecalsPass(const std::vector<DecalSubmitionData>& submitedDecals, Ref<DescriptorSetPool> decalDescriptorPool, RenderGraphTextureId depthTexture);
+		DecalsPass(Ref<DescriptorSetPool> decalDescriptorPool, RenderGraphTextureId depthTexture);
 
 		~DecalsPass();
 	public:
@@ -29,8 +23,6 @@ namespace Flare
 		{
 			glm::vec4 PackedTransform[3];
 		};
-
-		const std::vector<DecalSubmitionData>& m_SubmitedDecals;
 
 		bool m_ShouldUpdateDescriptorSet = false;
 		RenderGraphTextureId m_DepthTexture;

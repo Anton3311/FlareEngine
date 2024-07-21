@@ -8,13 +8,14 @@
 #include "Flare/Renderer/CommandBuffer.h"
 #include "Flare/Renderer/DescriptorSet.h"
 #include "Flare/Renderer/ShaderStorageBuffer.h"
+#include "Flare/Renderer/SceneSubmition.h"
 
 #include "Flare/Platform/Vulkan/VulkanCommandBuffer.h"
 
 namespace Flare
 {
-	DecalsPass::DecalsPass(const std::vector<DecalSubmitionData>& submitedDecals, Ref<DescriptorSetPool> decalDescriptorPool, RenderGraphTextureId depthTexture)
-		: m_SubmitedDecals(submitedDecals), m_DepthTexture(depthTexture), m_DecalDescriptorPool(decalDescriptorPool)
+	DecalsPass::DecalsPass(Ref<DescriptorSetPool> decalDescriptorPool, RenderGraphTextureId depthTexture)
+		: m_DepthTexture(depthTexture), m_DecalDescriptorPool(decalDescriptorPool)
 	{
 		const size_t maxDecals = 1000;
 		m_InstanceBuffer = ShaderStorageBuffer::Create(maxDecals * sizeof(InstanceData));
@@ -46,17 +47,20 @@ namespace Flare
 			m_ShouldUpdateDescriptorSet = false;
 		//}
 
+		const auto& submittedDecals = context.GetSceneSubmition().DecalSubmitions;
+
 		{
 			FLARE_PROFILE_SCOPE("FillInstanceData");
-			m_InstanceData.clear();
-			m_InstanceData.reserve(m_SubmitedDecals.size());
 
-			for (const DecalSubmitionData& decal : m_SubmitedDecals)
+			m_InstanceData.clear();
+			m_InstanceData.reserve(submittedDecals.size());
+
+			for (const DecalSubmition& decal : submittedDecals)
 			{
 				InstanceData& instanceData = m_InstanceData.emplace_back();
-				instanceData.PackedTransform[0] = decal.PackedTransform[0];
-				instanceData.PackedTransform[1] = decal.PackedTransform[1];
-				instanceData.PackedTransform[2] = decal.PackedTransform[2];
+				instanceData.PackedTransform[0] = glm::vec4(decal.Transform.RotationScale[0], decal.Transform.Translation.x);
+				instanceData.PackedTransform[1] = glm::vec4(decal.Transform.RotationScale[1], decal.Transform.Translation.y);
+				instanceData.PackedTransform[2] = glm::vec4(decal.Transform.RotationScale[2], decal.Transform.Translation.z);
 			}
 		}
 
@@ -68,9 +72,9 @@ namespace Flare
 		commandBuffer->SetGlobalDescriptorSet(m_InstanceDataDescriptor, 2);
 
 		Ref<const Mesh> cubeMesh = RendererPrimitives::GetCube();
-		for (size_t decalIndex = 0; decalIndex < m_SubmitedDecals.size(); decalIndex++)
+		for (size_t decalIndex = 0; decalIndex < submittedDecals.size(); decalIndex++)
 		{
-			const DecalSubmitionData& decal = m_SubmitedDecals[decalIndex];
+			const DecalSubmition& decal = submittedDecals[decalIndex];
 
 			commandBuffer->ApplyMaterial(decal.Material);
 			commandBuffer->DrawMeshIndexed(cubeMesh, 0, (uint32_t)decalIndex, 1);
