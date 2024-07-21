@@ -83,7 +83,7 @@ namespace Flare
 
 		static constexpr size_t MaxCascades = 4;
 
-		ShadowPass(const RendererSubmitionQueue& opaqueObjects);
+		ShadowPass();
 
 		void OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer) override;
 
@@ -94,14 +94,12 @@ namespace Flare
 	private:
 		void CalculateShadowMappingParameters(const RenderGraphContext& context);
 		void ComputeShaderProjectionsAndCullObjects(const RenderGraphContext& context);
-		void FilterSubmitions();
+		void FilterSubmitions(const RenderGraphContext& context);
 
 		void CullSubMeshes(PartiallyVisibleMesh& mesh,
 			const Math::Compact3DTransform& transform,
 			const Math::Plane* frustumPlanes);
 	private:
-		const RendererSubmitionQueue& m_OpaqueObjects;
-
 		ShadowData m_ShadowData;
 		Ref<Sampler> m_CompareSampler = nullptr;
 

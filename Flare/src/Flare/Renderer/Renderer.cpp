@@ -412,7 +412,7 @@ namespace Flare
 		RenderGraphPassSpecifications shadowPassSpec{};
 		shadowPassSpec.SetDebugName("ShadowPass");
 
-		Ref<ShadowPass> shadowPass = CreateRef<ShadowPass>(s_RendererData.OpaqueQueue);
+		Ref<ShadowPass> shadowPass = CreateRef<ShadowPass>();
 
 		viewport.Graph.AddPass(shadowPassSpec, shadowPass);
 
@@ -443,7 +443,6 @@ namespace Flare
 			cascadePassSpec.AddOutput(cascadeTextures[cascadeIndex], 0, 1.0f);
 
 			Ref<ShadowCascadePass> cascadePass = CreateRef<ShadowCascadePass>(
-				s_RendererData.OpaqueQueue,
 				s_RendererData.Statistics,
 				shadowPass->GetCascadeData((size_t)cascadeIndex),
 				shadowPass->GetFilteredTransforms(),

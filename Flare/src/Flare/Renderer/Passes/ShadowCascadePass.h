@@ -21,8 +21,7 @@ namespace Flare
 	public:
 		static constexpr size_t MaxCascades = 4;
 
-		ShadowCascadePass(const RendererSubmitionQueue& opaqueObjects,
-			RendererStatistics& statistics,
+		ShadowCascadePass(RendererStatistics& statistics,
 			const ShadowCascadeData& cascadeData,
 			const std::vector<Math::Compact3DTransform>& filteredTransforms,
 			const std::vector<VisibleSubMeshRange>& visibleSubMeshRanges);
@@ -46,7 +45,6 @@ namespace Flare
 	private:
 		void DrawCascade(const RenderGraphContext& context, const Ref<CommandBuffer>& commandBuffer);
 	private:
-		const RendererSubmitionQueue& m_OpaqueObjects;
 		RendererStatistics& m_Statistics;
 
 		const ShadowCascadeData& m_CascadeData;

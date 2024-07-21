@@ -18,13 +18,11 @@
 
 namespace Flare
 {
-	ShadowCascadePass::ShadowCascadePass(const RendererSubmitionQueue& opaqueObjects,
-		RendererStatistics& statistics,
+	ShadowCascadePass::ShadowCascadePass(RendererStatistics& statistics,
 		const ShadowCascadeData& cascadeData,
 		const std::vector<Math::Compact3DTransform>& filteredTransforms,
 		const std::vector<VisibleSubMeshRange>& visibleSubMeshRanges)
-		: m_OpaqueObjects(opaqueObjects),
-		m_Statistics(statistics),
+		: m_Statistics(statistics),
 		m_CascadeData(cascadeData),
 		m_FilteredTransforms(filteredTransforms),
 		m_VisibleSubMeshRanges(visibleSubMeshRanges)
