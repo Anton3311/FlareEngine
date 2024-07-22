@@ -1,13 +1,11 @@
 #pragma once
 
 #include "FlareCore/Core.h"
-#include "Flare/Renderer/RenderData.h"
-#include "Flare/Renderer/Viewport.h"
-#include "Flare/Renderer/RendererSubmitionQueue.h"
-#include "Flare/Renderer/RendererStatistics.h"
+#include "FlareCore/Serialization/TypeInitializer.h"
 
-#include "Flare/Renderer/Material.h"
 #include "Flare/Renderer/Mesh.h"
+
+#include "Flare/Renderer/RendererStatistics.h"
 
 #include <glm/glm.hpp>
 
@@ -132,9 +130,17 @@ namespace Flare
 	};
 
 	struct SceneSubmition;
+
 	class DescriptorSet;
 	class DescriptorSetLayout;
 	class DescriptorSetPool;
+
+	class Material;
+
+	class RendererSubmitionQueue;
+	class Texture;
+	class Viewport;
+
 	class FLARE_API Renderer
 	{
 	public:

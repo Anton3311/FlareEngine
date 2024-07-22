@@ -4,6 +4,7 @@
 #include "Flare/Renderer/Renderer.h"
 #include "Flare/Renderer/Font.h"
 #include "Flare/Renderer/SceneSubmition.h"
+#include "Flare/Renderer/Viewport.h"
 
 #include "Flare/Renderer2D/Renderer2DFrameData.h"
 

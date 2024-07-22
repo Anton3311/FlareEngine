@@ -7,7 +7,6 @@
 
 namespace Flare
 {
-	class Shader;
 	class FLARE_API ShaderConstantBuffer
 	{
 	public:

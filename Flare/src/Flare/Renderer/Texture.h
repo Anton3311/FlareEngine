@@ -11,7 +11,6 @@
 
 #include <filesystem>
 #include <optional>
-#include <FlareCore/KeyCode.h>
 
 namespace Flare
 {

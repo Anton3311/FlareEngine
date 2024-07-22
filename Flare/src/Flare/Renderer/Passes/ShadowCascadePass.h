@@ -1,20 +1,22 @@
 #pragma once
 
-#include "Flare/Renderer/RendererSubmitionQueue.h"
+#include "Flare/Math/Transform.h"
+
 #include "Flare/Renderer/RenderGraph/RenderGraphPass.h"
 #include "Flare/Renderer/RendererStatistics.h"
 
 namespace Flare
 {
 	struct RenderView;
-	class DescriptorSet;
-	class DescriptorSetPool;
-	class UniformBuffer;
-	class ShaderStorageBuffer;
-	class GPUTimer;
-
 	struct ShadowCascadeData;
 	struct VisibleSubMeshRange;
+
+	class DescriptorSet;
+	class DescriptorSetPool;
+	class GPUTimer;
+	class Mesh;
+	class ShaderStorageBuffer;
+	class UniformBuffer;
 
 	class ShadowCascadePass : public RenderGraphPass
 	{

@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Flare/Renderer/RendererSubmitionQueue.h"
 #include "Flare/Renderer/RendererStatistics.h"
 
 #include "Flare/Renderer/RenderGraph/RenderGraphPass.h"
@@ -11,8 +10,10 @@ namespace Flare
 {
 	class DescriptorSet;
 	class DescriptorSetPool;
-	class ShaderStorageBuffer;
 	class GPUTimer;
+	class ShaderStorageBuffer;
+	class Material;
+	class Mesh;
 
 	class GeometryPass : public RenderGraphPass 
 	{

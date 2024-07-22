@@ -6,6 +6,7 @@
 #include "Flare/Renderer/ShaderStorageBuffer.h"
 #include "Flare/Renderer/GPUTimer.h"
 #include "Flare/Renderer/SceneSubmition.h"
+#include "Flare/Renderer/RenderData.h"
 
 #include "Flare/Renderer2D/Renderer2D.h"
 

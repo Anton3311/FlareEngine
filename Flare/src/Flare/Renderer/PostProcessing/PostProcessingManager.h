@@ -1,12 +1,12 @@
 #pragma once
 
-#include "Flare/Renderer/RenderGraph/RenderGraph.h"
 #include "Flare/Renderer/PostProcessing/PostProcessingEffect.h"
 
 #include <optional>
 
 namespace Flare
 {
+	class RenderGraph;
 	class FLARE_API PostProcessingManager
 	{
 	public:

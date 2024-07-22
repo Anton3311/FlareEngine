@@ -9,6 +9,7 @@
 #include "Flare/Renderer/Sampler.h"
 #include "Flare/Renderer/GPUTimer.h"
 #include "Flare/Renderer/SceneSubmition.h"
+#include "Flare/Renderer/Viewport.h"
 
 #include "Flare/Math/SIMD.h"
 

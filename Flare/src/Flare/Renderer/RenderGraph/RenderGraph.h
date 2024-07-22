@@ -2,7 +2,6 @@
 
 #include "FlareCore/Collections/Span.h"
 
-#include "Flare/Renderer/Texture.h"
 #include "Flare/Renderer/RenderGraph/RenderGraphPass.h"
 #include "Flare/Renderer/RenderGraph/RenderPassNode.h"
 #include "Flare/Renderer/RenderGraph/RenderGraphCommon.h"

@@ -1,9 +1,13 @@
 #include "SceneViewGridPass.h"
 
+#include "FlareCore/Profiler/Profiler.h"
+
 #include "Flare/Renderer/CommandBuffer.h"
 #include "Flare/Renderer/Renderer.h"
 #include "Flare/Renderer/ShaderLibrary.h"
 #include "Flare/Renderer/Material.h"
+#include "Flare/Renderer/RenderData.h"
+#include "Flare/Renderer/Viewport.h"
 
 #include "Flare/Platform/Vulkan/VulkanPipeline.h"
 #include "Flare/Platform/Vulkan/VulkanCommandBuffer.h"

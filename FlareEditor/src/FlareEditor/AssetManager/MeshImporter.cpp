@@ -1,8 +1,12 @@
 #include "MeshImporter.h"
 
+#include "FlareCore/Profiler/Profiler.h"
+
 #include "Flare/AssetManager/AssetManager.h"
 #include "Flare/Renderer/Material.h"
 #include "Flare/Renderer/MaterialsTable.h"
+#include "Flare/Renderer/Mesh.h"
+#include "Flare/Renderer/Texture.h"
 #include "Flare/Renderer/ShaderLibrary.h"
 #include "Flare/Renderer/Renderer.h"
 

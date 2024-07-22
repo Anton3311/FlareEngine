@@ -197,7 +197,7 @@ namespace Flare
             As<EditorAssetManager>(AssetManager::GetInstance())->UnloadAsset(Scene::GetActive()->Handle);
 
         if (m_PrefabEditor)
-        m_PrefabEditor->OnDetach();
+			m_PrefabEditor->OnDetach();
 
         m_PrefabEditor = nullptr;
 

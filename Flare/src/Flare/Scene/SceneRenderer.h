@@ -7,6 +7,8 @@
 
 namespace Flare
 {
+	struct RenderView;
+
 	class Viewport;
 	class Scene;
 	class FLARE_API SceneRenderer
