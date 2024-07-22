@@ -152,14 +152,20 @@ namespace Flare
                 Project::OpenProject(projectPath.value());
         }
 
-        m_PrefabEditor = CreateRef<PrefabEditor>(m_ECSContext);
         m_SpriteEditor = CreateRef<SpriteEditor>();
 
-        m_AssetEditorWindows.push_back(m_PrefabEditor);
         m_AssetEditorWindows.push_back(m_SpriteEditor);
 
         m_AssetManagerWindow.SetOpenAction(AssetType::Prefab, [this](AssetHandle handle)
         {
+			if (m_PrefabEditor == nullptr)
+			{
+				m_PrefabEditor = CreateRef<PrefabEditor>(m_ECSContext);
+				m_PrefabEditor->OnAttach();
+
+                m_AssetEditorWindows.push_back(m_PrefabEditor);
+			}
+
             m_PrefabEditor->Open(handle);
         });
 
@@ -170,8 +176,6 @@ namespace Flare
 
         for (auto& viewportWindow : m_ViewportWindows)
             viewportWindow->OnAttach();
-
-        m_PrefabEditor->OnAttach();
     }
 
     void EditorLayer::OnDetach()
@@ -192,7 +196,9 @@ namespace Flare
         if (Scene::GetActive() != nullptr && AssetManager::IsAssetHandleValid(Scene::GetActive()->Handle))
             As<EditorAssetManager>(AssetManager::GetInstance())->UnloadAsset(Scene::GetActive()->Handle);
 
+        if (m_PrefabEditor)
         m_PrefabEditor->OnDetach();
+
         m_PrefabEditor = nullptr;
 
         m_ViewportWindows.clear();
@@ -356,8 +362,10 @@ namespace Flare
             return false;
         });
 
-        if (!event.Handled)
+        if (!event.Handled && m_PrefabEditor)
+        {
             m_PrefabEditor->OnEvent(event);
+        }
         
         // InputManager only works with Game viewport,
         // so the events should only be processed when the Game window is focused
@@ -446,7 +454,12 @@ namespace Flare
             ECSInspector::GetInstance().OnImGuiRender();
 
             for (auto& window : m_AssetEditorWindows)
+            {
+                if (!window)
+                    continue;
+
                 window->OnUpdate();
+            }
         }
 
         m_ImGuiLayer->EndDockSpace();

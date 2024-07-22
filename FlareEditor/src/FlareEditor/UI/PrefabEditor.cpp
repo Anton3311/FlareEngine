@@ -26,6 +26,8 @@ namespace Flare
         settings.Far = 1000.0f;
         settings.RotationSpeed = 1.0f;
 
+        m_PreviewScene->InitializeRuntime();
+
         m_ViewportWindow.GetViewport().SetPostProcessingEnabled(false);
     }
 
@@ -36,7 +38,6 @@ namespace Flare
         m_Prefab = AssetManager::GetAsset<Prefab>(asset);
         m_Prefab->CreateInstance(GetWorld());
 
-        m_PreviewScene->InitializeRuntime();
         m_ViewportWindow.GetViewport().Graph.SetNeedsRebuilding();
 
         m_ViewportWindow.ShowWindow = true;
