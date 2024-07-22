@@ -4,7 +4,7 @@
 
 #include "Flare/Renderer/Buffer.h"
 #include "Flare/Platform/Vulkan/VulkanAllocation.h"
-#include "Flare/Platform/Vulkan/VulkanContext.h"
+#include "Flare/Platform/Vulkan/VulkanStagingBufferPool.h"
 
 #include <vulkan/vulkan.h>
 

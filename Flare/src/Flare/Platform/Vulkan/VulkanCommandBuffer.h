@@ -1,11 +1,6 @@
 #pragma once
 
-#include "Flare/Renderer/Pipeline.h"
 #include "Flare/Renderer/CommandBuffer.h"
-
-#include "Flare/Platform/Vulkan/VulkanRenderPass.h"
-#include "Flare/Platform/Vulkan/VulkanFrameBuffer.h"
-#include "Flare/Platform/Vulkan/VulkanDescriptorSet.h"
 
 #include <vulkan/vulkan.h>
 
@@ -13,10 +8,14 @@
 
 namespace Flare
 {
+	class FrameBuffer;
 	class Material;
+
+	class VulkanDescriptorSet;
+	class VulkanFrameBuffer;
+	class VulkanGPUTimer;
 	class VulkanPipeline;
 	class VulkanRenderPass;
-	class VulkanGPUTimer;
 
 	class FLARE_API VulkanCommandBuffer : public CommandBuffer
 	{

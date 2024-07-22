@@ -5,6 +5,7 @@
 
 #include "Flare/Platform/Vulkan/VulkanPipeline.h"
 #include "Flare/Platform/Vulkan/VulkanDescriptorSet.h"
+#include "Flare/Platform/Vulkan/VulkanCommandBuffer.h"
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>

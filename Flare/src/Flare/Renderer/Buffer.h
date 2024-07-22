@@ -1,13 +1,11 @@
 #pragma once
 
 #include "FlareCore/Core.h"
-
-#include "Flare/Renderer/ShaderMetadata.h"
+#include "FlareCore/Collections/Span.h"
 
 #include <stdint.h>
 #include <string>
 #include <string_view>
-#include <vector>
 
 namespace Flare
 {

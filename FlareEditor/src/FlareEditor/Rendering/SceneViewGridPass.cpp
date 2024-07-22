@@ -12,6 +12,7 @@
 #include "Flare/Platform/Vulkan/VulkanPipeline.h"
 #include "Flare/Platform/Vulkan/VulkanCommandBuffer.h"
 #include "Flare/Platform/Vulkan/VulkanDescriptorSet.h"
+#include "Flare/Platform/Vulkan/VulkanFrameBuffer.h"
 
 #include "Flare/AssetManager/AssetManager.h"
 

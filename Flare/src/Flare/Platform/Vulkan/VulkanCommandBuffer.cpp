@@ -4,6 +4,7 @@
 #include "Flare/Renderer/Renderer.h"
 
 #include "Flare/Platform/Vulkan/VulkanContext.h"
+#include "Flare/Platform/Vulkan/VulkanFrameBuffer.h"
 #include "Flare/Platform/Vulkan/VulkanPipeline.h"
 #include "Flare/Platform/Vulkan/VulkanVertexBuffer.h"
 #include "Flare/Platform/Vulkan/VulkanIndexBuffer.h"

@@ -1,7 +1,9 @@
 #include "VulkanBuffer.h"
 
-#include "Flare/Platform/Vulkan/VulkanContext.h"
 #include "FlareCore/Profiler/Profiler.h"
+
+#include "Flare/Platform/Vulkan/VulkanContext.h"
+#include "Flare/Platform/Vulkan/VulkanCommandBuffer.h"
 
 namespace Flare
 {

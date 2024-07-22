@@ -3,9 +3,9 @@
 #include "FlareCore/Assert.h"
 #include "FlareCore/Collections/Span.h"
 
+#include "Flare/Renderer/ShaderMetadata.h"
+
 #include "Flare/Renderer/GraphicsContext.h"
-#include "Flare/Platform/Vulkan/VulkanCommandBuffer.h"
-#include "Flare/Platform/Vulkan/VulkanFrameBuffer.h"
 #include "Flare/Platform/Vulkan/VulkanTexture.h"
 #include "Flare/Platform/Vulkan/VulkanAllocation.h"
 #include "Flare/Platform/Vulkan/VulkanRenderPassCache.h"
@@ -76,6 +76,14 @@ struct std::hash<Flare::RenderPassKey>
 
 namespace Flare
 {
+	class DescriptorSet;
+	class DescriptorSetLayout;
+	class DescriptorSetPool;
+	class Shader;
+
+	class VulkanCommandBuffer;
+	class VulkanFrameBuffer;
+
 	FLARE_API VkImageLayout ImageLayoutToVulkanImageLayout(ImageLayout layout, TextureFormat format);
 	FLARE_API VkCompareOp DepthComparisonFunctionToVulkanCompareOp(DepthComparisonFunction function);
 

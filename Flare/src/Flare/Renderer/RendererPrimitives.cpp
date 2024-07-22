@@ -1,5 +1,7 @@
 #include "RendererPrimitives.h"
 
+#include "Flare/Renderer/Mesh.h"
+
 namespace Flare
 {
 	struct RendererPrimitivesData

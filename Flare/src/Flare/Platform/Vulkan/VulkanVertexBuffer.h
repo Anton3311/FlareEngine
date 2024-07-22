@@ -3,8 +3,6 @@
 #include "Flare/Renderer/Buffer.h"
 #include "Flare/Platform/Vulkan/VulkanBuffer.h"
 
-#include <vulkan/vulkan.h>
-
 namespace Flare
 {
 	class VulkanVertexBuffer : public VertexBuffer

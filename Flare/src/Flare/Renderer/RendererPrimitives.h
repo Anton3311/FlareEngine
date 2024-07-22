@@ -1,10 +1,10 @@
 #pragma once
 
 #include "FlareCore/Core.h"
-#include "Flare/Renderer/Mesh.h"
 
 namespace Flare
 {
+	class Mesh;
 	class FLARE_API RendererPrimitives
 	{
 	public:
