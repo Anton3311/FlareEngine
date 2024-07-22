@@ -1,12 +1,12 @@
 #pragma once
 
 #include "Flare/Renderer/RenderGraph/RenderGraphPass.h"
-#include "Flare/Renderer/FrameBuffer.h"
 
 #include "Flare/Renderer/RenderGraph/RenderGraphCommon.h"
 
 namespace Flare
 {
+	class FrameBuffer;
 	struct RenderPassNode
 	{
 		RenderGraphPassSpecifications Specifications;
