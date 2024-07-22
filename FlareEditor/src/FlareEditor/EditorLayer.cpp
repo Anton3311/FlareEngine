@@ -3,7 +3,6 @@
 #include "FlareCore/Profiler/Profiler.h"
 #include "FlareCore/Serialization/SerializationStream.h"
 
-#include "Flare.h"
 #include "Flare/Core/Application.h"
 #include "Flare/Core/Time.h"
 #include "Flare/Renderer2D/Renderer2D.h"

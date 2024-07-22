@@ -12,6 +12,9 @@
 #include "Flare/Renderer/ShaderLibrary.h"
 #include "Flare/Renderer/Pipeline.h"
 #include "Flare/Renderer/SceneSubmition.h"
+#include "Flare/Renderer/Sprite.h"
+#include "Flare/Renderer/Texture.h"
+#include "Flare/Renderer/Font.h"
 
 #include "Flare/Renderer2D/Renderer2DFrameData.h"
 #include "Flare/Renderer2D/Geometry2DPass.h"

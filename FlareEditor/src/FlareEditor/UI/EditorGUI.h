@@ -1,7 +1,5 @@
 #pragma once
 
-#include "Flare.h"
-
 #include "Flare/Scripting/ScriptingEngine.h"
 
 #include "FlareCore/Serialization/Serialization.h"

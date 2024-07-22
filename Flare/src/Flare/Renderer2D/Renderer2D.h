@@ -1,16 +1,21 @@
 #pragma once
 
-#include "Flare.h"
+#include "FlareCore/Core.h"
 
-#include "Flare/Renderer/Material.h"
-#include "Flare/Renderer/Font.h"
-
-#include <vector>
+#include <glm/glm.hpp>
+#include <string_view>
 
 namespace Flare
 {
-	class VulkanDescriptorSet;
-	class VulkanDescriptorSetPool;
+	struct Renderer2DLimits;
+	struct SceneSubmition;
+
+	class DescriptorSetLayout;
+	class Font;
+	class Material;
+	class Sprite;
+	class Texture;
+	class Viewport;
 
 	struct Renderer2DStats
 	{
@@ -29,11 +34,6 @@ namespace Flare
 
 	FLARE_IMPL_ENUM_BITFIELD(SpriteRenderFlags);
 
-	struct Renderer2DLimits;
-	struct SceneSubmition;
-
-	class Viewport;
-	class DescriptorSetLayout;
 	class FLARE_API Renderer2D
 	{
 	public:

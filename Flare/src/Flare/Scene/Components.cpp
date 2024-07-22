@@ -2,6 +2,9 @@
 
 #include "Flare/AssetManager/AssetManager.h"
 
+#include "Flare/Renderer/Renderer.h"
+#include "Flare/Renderer/Viewport.h"
+
 namespace Flare
 {
 	FLARE_IMPL_COMPONENT(NameComponent);

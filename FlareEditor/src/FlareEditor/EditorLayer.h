@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Flare.h"
 #include "Flare/Core/Layer.h"
 #include "Flare/Core/CommandLineArguments.h"
 

@@ -3,10 +3,11 @@
 #include "FlareCore/Serialization/TypeSerializer.h"
 #include "FlareCore/Serialization/SerializationStream.h"
 
-#include "Flare.h"
 #include "Flare/Renderer2D/Renderer2D.h"
 #include "Flare/Renderer/Renderer.h"
 
+#include "Flare/Renderer/Font.h"
+#include "Flare/Renderer/Sprite.h"
 #include "Flare/Renderer/Mesh.h"
 #include "Flare/Renderer/Material.h"
 

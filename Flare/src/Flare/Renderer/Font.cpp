@@ -2,6 +2,8 @@
 
 #include "FlareCore/Assert.h"
 
+#include "Flare/Renderer/Texture.h"
+
 #include <msdfgen.h>
 #include <msdfgen-ext.h>
 
