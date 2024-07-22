@@ -5,7 +5,7 @@
 
 namespace Flare
 {
-	class VulkanVertexBuffer : public VertexBuffer
+	class FLARE_API VulkanVertexBuffer : public VertexBuffer
 	{
 	public:
 		VulkanVertexBuffer(size_t size);

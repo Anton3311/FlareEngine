@@ -11,7 +11,7 @@
 namespace Flare
 {
 	class CommandBuffer;
-	class VulkanBuffer
+	class FLARE_API VulkanBuffer
 	{
 	public:
 		struct PipelineDependecy

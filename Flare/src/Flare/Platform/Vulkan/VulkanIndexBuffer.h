@@ -5,7 +5,7 @@
 
 namespace Flare
 {
-	class VulkanIndexBuffer : public IndexBuffer
+	class FLARE_API VulkanIndexBuffer : public IndexBuffer
 	{
 	public:
 		VulkanIndexBuffer(IndexFormat format, size_t count);
@@ -20,6 +20,9 @@ namespace Flare
 
 		void SetDebugName(std::string_view debugName) override;
 		const std::string& GetDebugName() const override;
+
+		inline VulkanBuffer& GetBuffer() { return m_Buffer; }
+		inline const VulkanBuffer& GetBuffer() const { return m_Buffer; }
 
 		inline VkBuffer GetHandle() const { return m_Buffer.GetBuffer(); }
 	private:
