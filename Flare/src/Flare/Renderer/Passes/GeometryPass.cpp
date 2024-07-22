@@ -1,6 +1,7 @@
 #include "GeometryPass.h"
 
 #include "Flare/Renderer/DescriptorSet.h"
+#include "Flare/Renderer/FrameBuffer.h"
 #include "Flare/Renderer/GraphicsContext.h"
 #include "Flare/Renderer/GPUTimer.h"
 #include "Flare/Renderer/RenderData.h"
