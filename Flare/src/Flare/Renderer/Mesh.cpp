@@ -6,6 +6,7 @@
 #include "Flare/Renderer/GraphicsContext.h"
 
 #include "Flare/Platform/Vulkan/VulkanContext.h"
+#include "Flare/Platform/Vulkan/VulkanCommandBuffer.h"
 
 namespace Flare
 {

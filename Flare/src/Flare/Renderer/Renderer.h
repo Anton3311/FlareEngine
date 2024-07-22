@@ -1,6 +1,7 @@
 #pragma once
 
 #include "FlareCore/Core.h"
+#include "FlareCore/Serialization/SerializationStream.h"
 #include "FlareCore/Serialization/TypeInitializer.h"
 
 #include "Flare/Renderer/Mesh.h"

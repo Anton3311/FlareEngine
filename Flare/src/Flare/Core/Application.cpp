@@ -6,9 +6,12 @@
 
 #include "Flare/AssetManager/AssetManager.h"
 
+#include "Flare/Renderer/Font.h"
+#include "Flare/Renderer/RendererAPI.h"
 #include "Flare/Renderer/Renderer.h"
 #include "Flare/Renderer/RendererPrimitives.h"
 #include "Flare/Renderer2D/Renderer2D.h"
+
 #include "Flare/DebugRenderer/DebugRenderer.h"
 
 #include "Flare/Scripting/ScriptingEngine.h"

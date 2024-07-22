@@ -2,6 +2,7 @@
 
 #include "Flare/Renderer/Renderer.h"
 #include "Flare/Renderer/SceneSubmition.h"
+#include "FLare/Renderer/Viewport.h"
 
 #include "Flare/DebugRenderer/DebugRendererFrameData.h"
 

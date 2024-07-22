@@ -1,7 +1,6 @@
 #include "Math.h"
 
-#include "Flare.h"
-
+#include <glm/glm.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
 
 namespace Flare::Math

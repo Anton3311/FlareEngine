@@ -3,6 +3,7 @@
 #include "FlareCore/Profiler/Profiler.h"
 
 #include "Flare/Platform/Vulkan/VulkanContext.h"
+#include "Flare/Platform/Vulkan/VulkanCommandBuffer.h"
 
 #include <vk_mem_alloc.h>
 #include <stb_image/stb_image.h>

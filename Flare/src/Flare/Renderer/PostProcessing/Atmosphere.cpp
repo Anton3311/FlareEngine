@@ -11,6 +11,7 @@
 
 #include "Flare/Platform/Vulkan/VulkanCommandBuffer.h"
 #include "Flare/Platform/Vulkan/VulkanContext.h"
+#include "Flare/Platform/Vulkan/VulkanFrameBuffer.h"
 
 #include <glm/gtc/epsilon.hpp>
 

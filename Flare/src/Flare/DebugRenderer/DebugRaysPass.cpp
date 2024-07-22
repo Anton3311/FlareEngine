@@ -3,8 +3,10 @@
 #include "FlareCore/Profiler/Profiler.h"
 
 #include "Flare/Renderer/CommandBuffer.h"
+#include "Flare/Renderer/RenderData.h"
 #include "Flare/Renderer/Renderer.h"
 #include "Flare/Renderer/SceneSubmition.h"
+#include "Flare/Renderer/Viewport.h"
 
 #include "Flare/Platform/Vulkan/VulkanFrameBuffer.h"
 #include "Flare/Platform/Vulkan/VulkanPipeline.h"
