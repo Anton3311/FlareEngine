@@ -35,6 +35,8 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
+		m_Swapchain.Release();
+
 		VkDevice device = VulkanContext::GetInstance().GetDevice();
 		vkDestroySurfaceKHR(VulkanContext::GetInstance().GetVulkanInstance(), m_Surface, nullptr);
 		vkDestroyCommandPool(device, m_CommandPool, nullptr);
