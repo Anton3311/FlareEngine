@@ -44,7 +44,6 @@ namespace Flare
 		for (const FrameData& frame : m_FrameData)
 		{
 			vkDestroySemaphore(device, frame.RenderCompleteSemaphore, nullptr);
-			vkDestroyFence(device, frame.FrameFence, nullptr);
 		}
 
 		m_FrameData.clear();
@@ -71,7 +70,6 @@ namespace Flare
 
 		for (size_t i = 0; i < m_FrameData.size(); i++)
 		{
-			vkCreateFence(device, &fenceCreateInfo, nullptr, &m_FrameData[i].FrameFence);
 			vkCreateSemaphore(device, &semaphoreCreateInfo, nullptr, &m_FrameData[i].RenderCompleteSemaphore);
 
 			VkCommandBuffer commandBuffer = VK_NULL_HANDLE;
@@ -107,15 +105,16 @@ namespace Flare
 		m_Swapchain.AcquireNextImage();
 
 		VkDevice device = VulkanContext::GetInstance().GetDevice();
-		//VK_CHECK_RESULT(vkWaitForFences(device, 1, &m_FrameData[m_FrameDataIndex].FrameFence, VK_TRUE, UINT64_MAX));
+
+		// NOTE: Don't need to wait for a fence because everything is submitted in a single vkQueueSubmit,
+		//       which is singals a fence in VulkanContext. VulkanContext waits for this fence at the start of the frame
+
 		VK_CHECK_RESULT(vkResetCommandPool(device, m_CommandPool, 0));
 
 		m_FrameDataIndex = (m_FrameDataIndex + 1) % m_Swapchain.GetFrameCount();
 
 		FrameData& frameData = m_FrameData[m_FrameDataIndex];
 		Ref<VulkanCommandBuffer> commandBuffer = frameData.CommandBuffer;
-
-		VK_CHECK_RESULT(vkResetFences(device, 1, &frameData.FrameFence));
 
 		commandBuffer->Begin();
 
@@ -132,34 +131,17 @@ namespace Flare
 		commandBuffer->EndRenderPass();
 		commandBuffer->End();
 
-		VkCommandBuffer commandBufferHandle = commandBuffer->GetHandle();
-		VkPipelineStageFlags waitStages = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-
 		VkSemaphore waitSemaphores[] =
 		{
 			m_Swapchain.GetImageAvailableSemaphore(),
 			VulkanContext::GetInstance().GetRenderCompleteSemaphore()
 		};
 
-		VkSubmitInfo submitInfo{};
-		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-		submitInfo.commandBufferCount = 1;
-		submitInfo.pCommandBuffers = &commandBufferHandle;
-		submitInfo.pWaitDstStageMask = &waitStages;
-		submitInfo.signalSemaphoreCount = 1;
-		submitInfo.pSignalSemaphores = &frameData.RenderCompleteSemaphore;
-		submitInfo.waitSemaphoreCount = 2;
-		submitInfo.pWaitSemaphores = waitSemaphores;
-
 		VulkanContext::GetInstance().SignalSecondarySemaphore();
-		VulkanContext::GetInstance().SubmitToGraphicsQueue(frameData.CommandBuffer, Span(waitSemaphores, 2), Span(&frameData.RenderCompleteSemaphore, 1));
-
-#if 0
-		VK_CHECK_RESULT(vkQueueSubmit(
-			VulkanContext::GetInstance().GetGraphicsQueue(),
-			1, &submitInfo,
-			frameData.FrameFence));
-#endif
+		VulkanContext::GetInstance().SubmitToGraphicsQueue(
+			frameData.CommandBuffer,
+			Span(waitSemaphores, 2),
+			Span(&frameData.RenderCompleteSemaphore, 1));
 	}
 
 	// Based on ImGui_ImplVulkan_RenderDrawData

@@ -19,7 +19,6 @@ namespace Flare
 		struct FrameData
 		{
 			VkSemaphore RenderCompleteSemaphore = VK_NULL_HANDLE;
-			VkFence FrameFence = VK_NULL_HANDLE;
 			Ref<VulkanCommandBuffer> CommandBuffer = nullptr;
 			Ref<VulkanVertexBuffer> VertexBuffer = nullptr;
 			Ref<VulkanIndexBuffer> IndexBuffer = nullptr;
