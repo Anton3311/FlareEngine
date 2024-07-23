@@ -390,7 +390,7 @@ namespace Flare
             m_FullscreenViewport->OnRenderImGui();
 
             m_ImGuiLayer->End();
-			m_ImGuiLayer->RenderCurrentWindow();
+            m_ImGuiLayer->RenderWindows();
 			m_ImGuiLayer->UpdateWindows();
 
             return;
@@ -464,12 +464,9 @@ namespace Flare
         m_ImGuiLayer->EndDockSpace();
 
         m_ImGuiLayer->End();
-        m_ImGuiLayer->RenderCurrentWindow();
 
-        Application::GetInstance().ExecuteAfterEndOfFrame([this]()
-			{
-				m_ImGuiLayer->UpdateWindows();
-			});
+        m_ImGuiLayer->UpdateWindows();
+        m_ImGuiLayer->RenderWindows();
     }
 
     void EditorLayer::UpdateWindowTitle()

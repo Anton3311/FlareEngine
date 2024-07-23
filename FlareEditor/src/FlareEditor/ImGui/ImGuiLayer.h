@@ -50,7 +50,6 @@ namespace Flare
 		void BeginDockSpace();
 		void EndDockSpace();
 
-		virtual void RenderCurrentWindow() = 0;
 		virtual void RenderWindows() = 0;
 		virtual void UpdateWindows() = 0;
 

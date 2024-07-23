@@ -18,7 +18,6 @@ namespace Flare
 		void Begin() override;
 		void End() override;
 
-		void RenderCurrentWindow() override;
 		void RenderWindows() override;
 		void UpdateWindows() override;
 
@@ -30,6 +29,8 @@ namespace Flare
 		inline VkPipelineLayout GetPipelineLayout() const { return m_PipelineLayout; }
 	private:
 		ImTextureID GetImageId(VkImageView imageView, VkSampler defaultSampler);
+
+		void RenderCurrentWindow();
 
 		void CreatePipeline();
 		void CreatePipelineLayout();

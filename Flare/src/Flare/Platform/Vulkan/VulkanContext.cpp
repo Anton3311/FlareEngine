@@ -294,6 +294,8 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
+		m_PrimaryCommandBuffer->End();
+
 		if (m_Window->GetProperties().IsMinimized)
 		{
 			m_SkipWaitForFrameFence = true;
@@ -414,18 +416,6 @@ namespace Flare
 
 			m_VSyncEnabled = m_Window->GetProperties().VSyncEnabled;
 		}
-	}
-
-	void VulkanContext::SubmitCommands()
-	{
-		FLARE_PROFILE_FUNCTION();
-
-		m_PrimaryCommandBuffer->End();
-
-		VkSemaphore waitSemaphores[] = { m_Swapchain->GetImageAvailableSemaphore() };
-		VkSemaphore signalSemaphores[2] = { m_CurrentSyncObjects.RenderingCompleteSemaphore, m_CurrentSyncObjects.RenderingCompleteSemaphore2 };
-
-		//SubmitToGraphicsQueue(m_PrimaryCommandBuffer, Span(waitSemaphores, 1), Span(signalSemaphores, m_SignalSecondarySemaphore ? 2 : 1));
 	}
 
 	void VulkanContext::WaitForDevice()

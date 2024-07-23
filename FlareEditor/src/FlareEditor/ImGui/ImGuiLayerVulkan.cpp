@@ -170,7 +170,6 @@ namespace Flare
 		Ref<VulkanCommandBuffer> commandBuffer = context.GetPrimaryCommandBuffer();
 		commandBuffer->BeginRenderPass(context.GetColorOnlyPass(), context.GetSwapChainFrameBuffer(context.GetCurrentFrameInFlight()));
 
-		//ImGui_ImplVulkan_RenderDrawData(drawData, commandBuffer->GetHandle());
 		ImGuiVulkanRenderer::RenderViewportData(
 			drawData,
 			commandBuffer->GetHandle(),
@@ -181,7 +180,15 @@ namespace Flare
 
 	void ImGuiLayerVulkan::RenderWindows()
 	{
-		VulkanContext::GetInstance().SignalSecondarySemaphore();
+		FLARE_PROFILE_FUNCTION();
+
+		RenderCurrentWindow();
+
+		ImGuiIO& io = ImGui::GetIO();
+		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+		{
+			ImGui::RenderPlatformWindowsDefault();
+		}
 	}
 
 	void ImGuiLayerVulkan::UpdateWindows()
@@ -192,7 +199,6 @@ namespace Flare
 		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
 		{
 			ImGui::UpdatePlatformWindows();
-			ImGui::RenderPlatformWindowsDefault();
 		}
 	}
 

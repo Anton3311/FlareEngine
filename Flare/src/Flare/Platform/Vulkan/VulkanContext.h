@@ -97,7 +97,6 @@ namespace Flare
 		void Release() override;
 		void BeginFrame() override;
 		void Present() override;
-		void SubmitCommands();
 		void WaitForDevice() override;
 
 		Ref<CommandBuffer> GetCommandBuffer() const override;

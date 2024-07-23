@@ -151,8 +151,8 @@ namespace Flare
 				}
 
 				{
-					FLARE_PROFILE_SCOPE("SubmitCommands");
-					VulkanContext::GetInstance().SubmitCommands();
+					FLARE_PROFILE_SCOPE("Present");
+					GraphicsContext::GetInstance().Present();
 				}
 
 				{
@@ -163,11 +163,6 @@ namespace Flare
 					}
 
 					m_AfterEndOfFrameFunctions.clear();
-				}
-
-				{
-					FLARE_PROFILE_SCOPE("Present");
-					GraphicsContext::GetInstance().Present();
 				}
 
 				m_PreviousFrameTime = currentTime;
