@@ -267,10 +267,14 @@ namespace Flare
 	void VulkanSwapchain::Release()
 	{
 		FLARE_PROFILE_FUNCTION();
+		if (m_Swapchain == VK_NULL_HANDLE)
+			return;
+
 		ReleaseImageViews();
 		ReleaseSemaphores();
 
 		vkDestroySwapchainKHR(VulkanContext::GetInstance().GetDevice(), m_Swapchain, nullptr);
+		m_Swapchain = VK_NULL_HANDLE;
 	}
 
 	void VulkanSwapchain::ReleaseImageViews()
@@ -284,6 +288,8 @@ namespace Flare
 			vkDestroyImageView(device, m_FrameData[i].ImageView, nullptr);
 			m_FrameData[i].ImageView = VK_NULL_HANDLE;
 		}
+
+		m_FrameData.clear();
 	}
 
 	void VulkanSwapchain::ReleaseSemaphores()
