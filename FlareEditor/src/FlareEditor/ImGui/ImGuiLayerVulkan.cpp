@@ -127,6 +127,15 @@ namespace Flare
 		ImGui::DestroyPlatformWindows();
 
 		m_MainViewportFrameResources.clear();
+		m_FontsTexture = nullptr;
+
+		VkDevice device = VulkanContext::GetInstance().GetDevice();
+		vkDestroyPipeline(device, m_Pipeline, nullptr);
+		vkDestroyPipelineLayout(device, m_PipelineLayout, nullptr);
+		vkDestroyDescriptorSetLayout(device, m_DescriptorSetLayout, nullptr);
+
+		vkFreeDescriptorSets(device, m_DescriptorPool, 1, &m_FontsTextureDescriptor);
+		m_FontsTextureDescriptor = VK_NULL_HANDLE;
 
 		ImGui_ImplGlfw_Shutdown();
 		vkDestroyDescriptorPool(VulkanContext::GetInstance().GetDevice(), m_DescriptorPool, nullptr);
@@ -478,7 +487,11 @@ namespace Flare
 		info.renderPass = VulkanContext::GetInstance().GetColorOnlyPass()->GetHandle();
 		info.subpass = 0;
 
-		VK_CHECK_RESULT(vkCreateGraphicsPipelines(VulkanContext::GetInstance().GetDevice(), VK_NULL_HANDLE, 1, &info, nullptr, &m_Pipeline));
+		VkDevice device = VulkanContext::GetInstance().GetDevice();
+		VK_CHECK_RESULT(vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &info, nullptr, &m_Pipeline));
+
+		vkDestroyShaderModule(device, vertexShaderModule, nullptr);
+		vkDestroyShaderModule(device, fragmentShaderModule, nullptr);
 	}
 
 	void ImGuiLayerVulkan::CreatePipelineLayout()
