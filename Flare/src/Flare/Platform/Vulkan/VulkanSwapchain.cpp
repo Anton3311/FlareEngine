@@ -62,29 +62,33 @@ namespace Flare
 
 		m_WindowSize = windowSize;
 
-		// TODO: Avoid doing a call to vkQueuePresentKHR, instead generate
-		//       a VkPresentInfoKHR and send it to VulkanContext wich should
-		//       do a single call to vkQueuePresent
+		std::vector<VkSemaphore> semaphores(waitSemaphores.begin(), waitSemaphores.end());
+		VulkanContext::GetInstance().SubmitSwapchainPresent([this, s = std::move(semaphores)]()
+			{
+				// TODO: Avoid doing a call to vkQueuePresentKHR, instead generate
+				//       a VkPresentInfoKHR and send it to VulkanContext wich should
+				//       do a single call to vkQueuePresent
 
-		VkPresentInfoKHR presentInfo{};
-		presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-		presentInfo.waitSemaphoreCount = (uint32_t)waitSemaphores.GetSize();
-		presentInfo.pWaitSemaphores = waitSemaphores.GetData();
-		presentInfo.swapchainCount = 1;
-		presentInfo.pSwapchains = &m_Swapchain;
-		presentInfo.pImageIndices = &m_CurrentFrameInFlight;
+				VkPresentInfoKHR presentInfo{};
+				presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+				presentInfo.waitSemaphoreCount = (uint32_t)s.size();
+				presentInfo.pWaitSemaphores = s.data();
+				presentInfo.swapchainCount = 1;
+				presentInfo.pSwapchains = &m_Swapchain;
+				presentInfo.pImageIndices = &m_CurrentFrameInFlight;
 
-		VkQueue presentQueue = VulkanContext::GetInstance().GetPresentQueue();
+				VkQueue presentQueue = VulkanContext::GetInstance().GetPresentQueue();
 
-		VkResult presentResult = vkQueuePresentKHR(presentQueue, &presentInfo);
-		if (presentResult == VK_ERROR_OUT_OF_DATE_KHR)
-		{
-			Recreate();
-		}
-		else if (presentResult != VK_SUCCESS)
-		{
-			FLARE_CORE_ERROR("Failed to present");
-		}
+				VkResult presentResult = vkQueuePresentKHR(presentQueue, &presentInfo);
+				if (presentResult == VK_ERROR_OUT_OF_DATE_KHR)
+				{
+					Recreate();
+				}
+				else if (presentResult != VK_SUCCESS)
+				{
+					FLARE_CORE_ERROR("Failed to present");
+				}
+			});
 	}
 
 	void VulkanSwapchain::Recreate()

@@ -178,6 +178,11 @@ namespace Flare
 		commandBuffer->EndRenderPass();
 	}
 
+	void ImGuiLayerVulkan::RenderWindows()
+	{
+		VulkanContext::GetInstance().SignalSecondarySemaphore();
+	}
+
 	void ImGuiLayerVulkan::UpdateWindows()
 	{
 		FLARE_PROFILE_FUNCTION();

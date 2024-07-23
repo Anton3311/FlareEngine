@@ -105,7 +105,7 @@ namespace Flare
 		m_Swapchain.AcquireNextImage();
 
 		VkDevice device = VulkanContext::GetInstance().GetDevice();
-		VK_CHECK_RESULT(vkWaitForFences(device, 1, &m_FrameData[m_FrameDataIndex].FrameFence, VK_TRUE, UINT64_MAX));
+		//VK_CHECK_RESULT(vkWaitForFences(device, 1, &m_FrameData[m_FrameDataIndex].FrameFence, VK_TRUE, UINT64_MAX));
 		VK_CHECK_RESULT(vkResetCommandPool(device, m_CommandPool, 0));
 
 		m_FrameDataIndex = (m_FrameDataIndex + 1) % m_Swapchain.GetFrameCount();
@@ -149,10 +149,15 @@ namespace Flare
 		submitInfo.waitSemaphoreCount = 2;
 		submitInfo.pWaitSemaphores = waitSemaphores;
 
+		VulkanContext::GetInstance().SignalSecondarySemaphore();
+		VulkanContext::GetInstance().SubmitToGraphicsQueue(frameData.CommandBuffer, Span(waitSemaphores, 2), Span(&frameData.RenderCompleteSemaphore, 1));
+
+#if 0
 		VK_CHECK_RESULT(vkQueueSubmit(
 			VulkanContext::GetInstance().GetGraphicsQueue(),
 			1, &submitInfo,
 			frameData.FrameFence));
+#endif
 	}
 
 	// Based on ImGui_ImplVulkan_RenderDrawData

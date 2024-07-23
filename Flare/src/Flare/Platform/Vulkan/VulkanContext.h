@@ -97,6 +97,7 @@ namespace Flare
 		void Release() override;
 		void BeginFrame() override;
 		void Present() override;
+		void SubmitCommands();
 		void WaitForDevice() override;
 
 		Ref<CommandBuffer> GetCommandBuffer() const override;
@@ -105,7 +106,12 @@ namespace Flare
 
 		Ref<VulkanCommandBuffer> GetPrimaryCommandBuffer() const { return m_PrimaryCommandBuffer; }
 
-		inline VkSemaphore GetRenderCompleteSemaphore() const { return m_SyncObjects[GetCurrentFrameInFlight()].RenderingCompleteSemaphore; }
+		inline VkSemaphore GetRenderCompleteSemaphore() const { return m_SyncObjects[m_CurrentFrameSyncObjectsIndex].RenderingCompleteSemaphore2; }
+		inline void SignalSecondarySemaphore() { m_SignalSecondarySemaphore = true; }
+
+		void SubmitToGraphicsQueue(Ref<CommandBuffer> commandBuffer, Span<VkSemaphore> waitSempahores, Span<VkSemaphore> signalSemaphores);
+		void SubmitSwapchainPresent(VkSwapchainKHR swapchain, Span<VkSemaphore> waitSemaphores, uint32_t imageIndex);
+		void SubmitSwapchainPresent(const std::function<void()>& function);
 
 		uint32_t GetCurrentFrameInFlight() const { return m_Swapchain->GetFrameInFlight(); }
 		Ref<VulkanFrameBuffer> GetSwapChainFrameBuffer(uint32_t index) const { return m_Swapchain->GetFrameBuffer(index); }
@@ -175,7 +181,30 @@ namespace Flare
 		{
 			VkFence FrameFence = VK_NULL_HANDLE;
 			VkSemaphore RenderingCompleteSemaphore = VK_NULL_HANDLE;
+			VkSemaphore RenderingCompleteSemaphore2 = VK_NULL_HANDLE;
 		};
+
+		struct GraphicsQueueSubmition
+		{
+			Ref<CommandBuffer> CommandBuffer = nullptr;
+			uint32_t FirstWaitSemaphore = UINT32_MAX;
+			uint32_t WaitSemaphoreCount = UINT32_MAX;
+			uint32_t FirstSignalSemaphore = UINT32_MAX;
+			uint32_t SignalSemaphoreCount = UINT32_MAX;
+		};
+
+		struct PresentSubmition
+		{
+			VkSwapchainKHR Swapchain = VK_NULL_HANDLE;
+			uint32_t FirstWaitSemaphore = UINT32_MAX;
+			uint32_t WaitSemaphoreCount = UINT32_MAX;
+			uint32_t ImageIndex = UINT32_MAX;
+		};
+
+		std::vector<GraphicsQueueSubmition> m_GraphicsQueueSubmitions;
+		std::vector<PresentSubmition> m_PresentSubmitions;
+		std::vector<std::function<void()>> m_PresentQueueSubmitions;
+		std::vector<VkSemaphore> m_UsedSemaphores;
 
 		std::function<void(VkImageView)> m_ImageDeletationHandler = nullptr;
 
@@ -214,6 +243,7 @@ namespace Flare
 		Scope<VulkanSwapchain> m_Swapchain;
 
 		bool m_SkipWaitForFrameFence = false;
+		bool m_SignalSecondarySemaphore = false;
 
 		uint32_t m_CurrentFrameSyncObjectsIndex = 0;
 		FrameSyncObjects m_CurrentSyncObjects;

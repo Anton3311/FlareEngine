@@ -18,6 +18,7 @@ namespace Flare
 		void End() override;
 
 		void RenderCurrentWindow() override;
+		void RenderWindows() override;
 		void UpdateWindows() override;
 
 		ImTextureID GetTextureId(const Ref<const Texture>& texture) override;

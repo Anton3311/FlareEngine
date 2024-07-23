@@ -465,7 +465,11 @@ namespace Flare
 
         m_ImGuiLayer->End();
         m_ImGuiLayer->RenderCurrentWindow();
-        m_ImGuiLayer->UpdateWindows();
+
+        Application::GetInstance().ExecuteAfterEndOfFrame([this]()
+			{
+				m_ImGuiLayer->UpdateWindows();
+			});
     }
 
     void EditorLayer::UpdateWindowTitle()

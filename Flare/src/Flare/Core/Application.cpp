@@ -23,6 +23,8 @@
 #include "FlarePlatform/Platform.h"
 #include "FlarePlatform/Windows/WindowsWindow.h"
 
+#include "Flare/Platform/Vulkan/VulkanContext.h"
+
 namespace Flare
 {
 	Application* s_Instance = nullptr;
@@ -146,14 +148,12 @@ namespace Flare
 
 					Renderer2D::EndFrame();
 					Renderer::EndFrame();
-
-					{
-						FLARE_PROFILE_SCOPE("Present");
-						GraphicsContext::GetInstance().Present();
-					}
 				}
 
-				m_PreviousFrameTime = currentTime;
+				{
+					FLARE_PROFILE_SCOPE("SubmitCommands");
+					VulkanContext::GetInstance().SubmitCommands();
+				}
 
 				{
 					FLARE_PROFILE_SCOPE("ExecuteAfterEndFrameFunctions");
@@ -164,6 +164,13 @@ namespace Flare
 
 					m_AfterEndOfFrameFunctions.clear();
 				}
+
+				{
+					FLARE_PROFILE_SCOPE("Present");
+					GraphicsContext::GetInstance().Present();
+				}
+
+				m_PreviousFrameTime = currentTime;
 			}
 
 			FLARE_PROFILE_END_FRAME("Main");

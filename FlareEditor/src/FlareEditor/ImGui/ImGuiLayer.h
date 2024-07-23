@@ -51,6 +51,7 @@ namespace Flare
 		void EndDockSpace();
 
 		virtual void RenderCurrentWindow() = 0;
+		virtual void RenderWindows() = 0;
 		virtual void UpdateWindows() = 0;
 
 		virtual ImTextureID GetTextureId(const Ref<const Texture>& texture) = 0;
