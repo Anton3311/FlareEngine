@@ -202,6 +202,8 @@ namespace Flare
 		m_EmptyDescriptorSetPool = CreateRef<VulkanDescriptorSetPool>(1, Span(&emptyBinding, 1));
 		m_EmptyDescriptorSetLayout = CreateRef<VulkanDescriptorSetLayout>(Span<VkDescriptorSetLayoutBinding>());
 		m_EmptyDescriptorSet = As<VulkanDescriptorSetPool>(m_EmptyDescriptorSetPool)->AllocateSet(m_EmptyDescriptorSetLayout);
+
+		std::this_thread::sleep_for(std::chrono::nanoseconds(10));
 	}
 
 	void VulkanContext::Release()
@@ -303,17 +305,27 @@ namespace Flare
 		{
 			FLARE_PROFILE_SCOPE("Submit");
 
-			VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
 			VkCommandBuffer commandBufferHandle = m_PrimaryCommandBuffer->GetHandle();
 
 			VkSemaphore waitSemaphore = m_Swapchain->GetImageAvailableSemaphore();
 			VkSemaphore signalSemaphores[] = { m_CurrentSyncObjects.RenderingCompleteSemaphore, m_CurrentSyncObjects.RenderingCompleteSemaphore2 };
+
+			VkPipelineStageFlags colorAttachmentStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+
+			uint32_t maxWaitStagesCount = 0;
+			for (const auto& submition : m_GraphicsQueueSubmitions)
+			{
+				maxWaitStagesCount = glm::max(maxWaitStagesCount, submition.WaitSemaphoreCount);
+			}
+
+			std::vector<VkPipelineStageFlags> waitStages;
+			waitStages.assign(maxWaitStagesCount, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
 			
 			VkSubmitInfo submitInfo{};
 			submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 			submitInfo.commandBufferCount = 1;
 			submitInfo.pCommandBuffers = &commandBufferHandle;
-			submitInfo.pWaitDstStageMask = waitStages;
+			submitInfo.pWaitDstStageMask = &colorAttachmentStage;
 			submitInfo.signalSemaphoreCount = m_SignalSecondarySemaphore ? 2 : 1;
 			submitInfo.pSignalSemaphores = signalSemaphores;
 			submitInfo.waitSemaphoreCount = 1;
@@ -327,7 +339,7 @@ namespace Flare
 				submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 				submitInfo.commandBufferCount = 1;
 				submitInfo.pCommandBuffers = VK_NULL_HANDLE;
-				submitInfo.pWaitDstStageMask = waitStages;
+				submitInfo.pWaitDstStageMask = waitStages.data();
 				submitInfo.waitSemaphoreCount = submition.WaitSemaphoreCount;
 				submitInfo.pWaitSemaphores = m_UsedSemaphores.data() + submition.FirstWaitSemaphore;
 				submitInfo.signalSemaphoreCount = submition.SignalSemaphoreCount;
