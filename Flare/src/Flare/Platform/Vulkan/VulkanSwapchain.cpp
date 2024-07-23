@@ -91,6 +91,16 @@ namespace Flare
 			});
 	}
 
+	void VulkanSwapchain::EnsureCreated()
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		if (m_Swapchain == VK_NULL_HANDLE)
+		{
+			Create();
+		}
+	}
+
 	void VulkanSwapchain::Recreate()
 	{
 		FLARE_PROFILE_FUNCTION();

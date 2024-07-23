@@ -183,7 +183,7 @@ namespace Flare
 			m_ColorOnlyPass->SetDefaultClearValues(Span(&clearValue, 1));
 		}
 
-		m_Swapchain->Recreate();
+		m_Swapchain->EnsureCreated();
 
 		CreateSyncObjects();
 
@@ -202,8 +202,6 @@ namespace Flare
 		m_EmptyDescriptorSetPool = CreateRef<VulkanDescriptorSetPool>(1, Span(&emptyBinding, 1));
 		m_EmptyDescriptorSetLayout = CreateRef<VulkanDescriptorSetLayout>(Span<VkDescriptorSetLayoutBinding>());
 		m_EmptyDescriptorSet = As<VulkanDescriptorSetPool>(m_EmptyDescriptorSetPool)->AllocateSet(m_EmptyDescriptorSetLayout);
-
-		std::this_thread::sleep_for(std::chrono::nanoseconds(10));
 	}
 
 	void VulkanContext::Release()

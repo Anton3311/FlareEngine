@@ -56,7 +56,7 @@ namespace Flare
 		FLARE_CORE_ASSERT(m_FrameData.size() == 0);
 
 		m_Swapchain.SetWindowSize(glm::uvec2((uint32_t)viewport->Size.x, (uint32_t)viewport->Size.y));
-		m_Swapchain.Recreate();
+		m_Swapchain.EnsureCreated();
 
 		m_FrameData.resize(m_Swapchain.GetFrameCount());
 

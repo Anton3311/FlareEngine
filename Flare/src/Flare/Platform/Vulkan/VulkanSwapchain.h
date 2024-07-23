@@ -27,6 +27,7 @@ namespace Flare
 
 		void Present(Span<const VkSemaphore> waitSemaphores, glm::uvec2 windowSize);
 
+		void EnsureCreated();
 		void Recreate();
 
 		inline void SetPresentMode(VkPresentModeKHR presentMode) { m_PresentMode = presentMode; }
