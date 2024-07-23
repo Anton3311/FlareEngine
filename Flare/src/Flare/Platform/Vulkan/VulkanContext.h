@@ -96,6 +96,7 @@ namespace Flare
 		void Initialize() override;
 		void Release() override;
 		void BeginFrame() override;
+		void EndFrame() override;
 		void Present() override;
 		void WaitForDevice() override;
 

@@ -23,8 +23,6 @@
 #include "FlarePlatform/Platform.h"
 #include "FlarePlatform/Windows/WindowsWindow.h"
 
-#include "Flare/Platform/Vulkan/VulkanContext.h"
-
 namespace Flare
 {
 	Application* s_Instance = nullptr;
@@ -148,6 +146,11 @@ namespace Flare
 
 					Renderer2D::EndFrame();
 					Renderer::EndFrame();
+				}
+
+				{
+					FLARE_PROFILE_SCOPE("EndFrame");
+					GraphicsContext::GetInstance().EndFrame();
 				}
 
 				{

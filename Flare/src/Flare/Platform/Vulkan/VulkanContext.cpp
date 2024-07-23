@@ -290,19 +290,18 @@ namespace Flare
 		m_PrimaryCommandBuffer->Begin();
 	}
 
-	void VulkanContext::Present()
+	void VulkanContext::EndFrame()
 	{
 		FLARE_PROFILE_FUNCTION();
 
 		m_PrimaryCommandBuffer->End();
+		m_StagingBufferPool.FlushMemory();
 
 		if (m_Window->GetProperties().IsMinimized)
 		{
 			m_SkipWaitForFrameFence = true;
 			return;
 		}
-
-		m_StagingBufferPool.FlushMemory();
 
 		{
 			FLARE_PROFILE_SCOPE("Submit");
@@ -362,6 +361,12 @@ namespace Flare
 			m_SignalSecondarySemaphore = false;
 			m_GraphicsQueueSubmitions.clear();
 		}
+
+	}
+
+	void VulkanContext::Present()
+	{
+		FLARE_PROFILE_FUNCTION();
 
 		int32_t width, height;
 		glfwGetFramebufferSize((GLFWwindow*)m_Window->GetNativeWindow(), &width, &height);

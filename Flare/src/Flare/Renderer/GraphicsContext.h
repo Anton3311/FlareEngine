@@ -15,6 +15,7 @@ namespace Flare
 		virtual void Initialize() = 0;
 		virtual void Release() = 0;
 		virtual void BeginFrame() = 0;
+		virtual void EndFrame() = 0;
 		virtual void Present() = 0;
 
 		virtual void WaitForDevice() = 0;
