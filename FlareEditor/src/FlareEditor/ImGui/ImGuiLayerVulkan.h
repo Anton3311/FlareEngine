@@ -1,6 +1,7 @@
 #pragma once
 
 #include "FlareEditor/ImGui/ImGuiLayer.h"
+#include "FlareEditor/ImGui/ImGuiVulkanRenderer.h"
 
 #include <vulkan/vulkan.h>
 
@@ -38,6 +39,8 @@ namespace Flare
 		VkDescriptorPool m_DescriptorPool = VK_NULL_HANDLE;
 		VkDescriptorSetLayout m_DescriptorSetLayout = VK_NULL_HANDLE;
 		std::unordered_map<uint64_t, VkDescriptorSet> m_ImageToDescriptor;
+
+		std::vector<ImGuiVulkanRenderer::Resources> m_MainViewportFrameResources;
 
 		VkDescriptorSet m_FontsTextureDescriptor = VK_NULL_HANDLE;
 

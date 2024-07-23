@@ -126,7 +126,7 @@ namespace Flare
 
 		commandBuffer->BeginRenderPass(m_RenderPass, m_Swapchain.GetFrameBuffer(m_Swapchain.GetFrameInFlight()));
 
-		RenderViewportData(viewport->DrawData, frameData);
+		RenderViewportData(viewport->DrawData, commandBuffer->GetHandle(), frameData.FrameResources);
 
 		commandBuffer->EndRenderPass();
 		commandBuffer->End();
@@ -145,83 +145,37 @@ namespace Flare
 	}
 
 	// Based on ImGui_ImplVulkan_RenderDrawData
-	void ImGuiVulkanRenderer::RenderViewportData(ImDrawData* draw_data, FrameData& frameData)
+	void ImGuiVulkanRenderer::RenderViewportData(ImDrawData* drawData, VkCommandBuffer commandBuffer, Resources& frameResources)
 	{
 		FLARE_PROFILE_FUNCTION();
-		Ref<VulkanCommandBuffer> commandBuffer = frameData.CommandBuffer;
-		VkCommandBuffer commandBufferHandle = commandBuffer->GetHandle();
 
 		glm::ivec2 viewportSize = glm::ivec2(
-			(int)(draw_data->DisplaySize.x * draw_data->FramebufferScale.x),
-			(int)(draw_data->DisplaySize.y * draw_data->FramebufferScale.y));
+			(int)(drawData->DisplaySize.x * drawData->FramebufferScale.x),
+			(int)(drawData->DisplaySize.y * drawData->FramebufferScale.y));
 
 		if (viewportSize.x <= 0 || viewportSize.y <= 0)
 			return;
 
-		if (draw_data->TotalVtxCount > 0)
-		{
-			FLARE_PROFILE_SCOPE("SetupBuffers");
-
-			size_t vertexBufferSize = draw_data->TotalVtxCount * sizeof(ImDrawVert);
-			size_t indexBufferSize = draw_data->TotalIdxCount * sizeof(ImDrawIdx);
-
-			if (frameData.VertexBuffer == nullptr)
-			{
-				frameData.VertexBuffer = CreateRef<VulkanVertexBuffer>(vertexBufferSize, GPUBufferUsage::Dynamic);
-				frameData.VertexBuffer->GetBuffer().EnsureAllocated();
-			}
-
-			if (frameData.IndexBuffer == nullptr)
-			{
-				if (sizeof(ImDrawIdx) == 2)
-					frameData.IndexBuffer = CreateRef<VulkanIndexBuffer>(IndexBuffer::IndexFormat::UInt32, indexBufferSize / 2, GPUBufferUsage::Dynamic);
-				else
-					frameData.IndexBuffer = CreateRef<VulkanIndexBuffer>(IndexBuffer::IndexFormat::UInt16, indexBufferSize, GPUBufferUsage::Dynamic);
-
-				frameData.IndexBuffer->GetBuffer().EnsureAllocated();
-			}
-
-			if (frameData.VertexBuffer->GetBuffer().GetSize() < vertexBufferSize)
-				frameData.VertexBuffer->GetBuffer().Resize(vertexBufferSize);
-
-			if (frameData.IndexBuffer->GetBuffer().GetSize() < indexBufferSize)
-				frameData.IndexBuffer->GetBuffer().Resize(indexBufferSize);
-
-			size_t vertexOffset = 0;
-			size_t indexOffset = 0;
-			for (int32_t i = 0; i < draw_data->CmdListsCount; i++)
-			{
-				const ImDrawList* cmd_list = draw_data->CmdLists[i];
-
-				size_t vertexDataSize = cmd_list->VtxBuffer.Size * sizeof(ImDrawVert);
-				size_t indexDataSize = cmd_list->IdxBuffer.Size * sizeof(ImDrawIdx);
-
-				frameData.VertexBuffer->SetData(cmd_list->VtxBuffer.Data, vertexDataSize, vertexOffset);
-				frameData.IndexBuffer->SetData(MemorySpan::FromRawBytes(cmd_list->IdxBuffer.Data, indexDataSize), indexOffset);
-				
-				vertexOffset += vertexDataSize;
-				indexOffset += indexDataSize;
-			}
-		}
+		SetupFrameResources(drawData, frameResources);
 
 		Ref<ImGuiLayerVulkan> imGuiLayer = As<ImGuiLayerVulkan>(ImGuiLayer::GetInstance());
 		VkPipeline pipeline = imGuiLayer->GetPipeline();
 		VkPipelineLayout pipelineLayout = imGuiLayer->GetPipelineLayout();
 		VkDescriptorSet fontsDescriptor = imGuiLayer->GetFontsTextureDescrptor();
 
-		SetupRenderState(draw_data, frameData, commandBufferHandle, pipeline, pipelineLayout, viewportSize);
+		SetupRenderState(drawData, frameResources, commandBuffer, pipeline, pipelineLayout, viewportSize);
 
 		// Will project scissor/clipping rectangles into framebuffer space
-		ImVec2 clip_off = draw_data->DisplayPos;         // (0,0) unless using multi-viewports
-		ImVec2 clip_scale = draw_data->FramebufferScale; // (1,1) unless using retina display which are often (2,2)
+		ImVec2 clip_off = drawData->DisplayPos;         // (0,0) unless using multi-viewports
+		ImVec2 clip_scale = drawData->FramebufferScale; // (1,1) unless using retina display which are often (2,2)
 
 		// Render command lists
 		// (Because we merged all buffers into a single one, we maintain our own offset into them)
 		int global_vtx_offset = 0;
 		int global_idx_offset = 0;
-		for (int n = 0; n < draw_data->CmdListsCount; n++)
+		for (int n = 0; n < drawData->CmdListsCount; n++)
 		{
-			const ImDrawList* cmd_list = draw_data->CmdLists[n];
+			const ImDrawList* cmd_list = drawData->CmdLists[n];
 			for (int cmd_i = 0; cmd_i < cmd_list->CmdBuffer.Size; cmd_i++)
 			{
 				const ImDrawCmd* pcmd = &cmd_list->CmdBuffer[cmd_i];
@@ -230,7 +184,7 @@ namespace Flare
 					// User callback, registered via ImDrawList::AddCallback()
 					// (ImDrawCallback_ResetRenderState is a special callback value used by the user to request the renderer to reset render state.)
 					if (pcmd->UserCallback == ImDrawCallback_ResetRenderState)
-						SetupRenderState(draw_data, frameData, commandBufferHandle, pipeline, pipelineLayout, viewportSize);
+						SetupRenderState(drawData, frameResources, commandBuffer, pipeline, pipelineLayout, viewportSize);
 					else
 						pcmd->UserCallback(cmd_list, pcmd);
 				}
@@ -254,7 +208,7 @@ namespace Flare
 					scissor.offset.y = (int32_t)(clip_min.y);
 					scissor.extent.width = (uint32_t)(clip_max.x - clip_min.x);
 					scissor.extent.height = (uint32_t)(clip_max.y - clip_min.y);
-					vkCmdSetScissor(commandBufferHandle, 0, 1, &scissor);
+					vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
 					// Bind DescriptorSet with font or user texture
 					VkDescriptorSet desc_set[1] = { (VkDescriptorSet)pcmd->TextureId };
@@ -267,10 +221,10 @@ namespace Flare
 
 						desc_set[0] = fontsDescriptor;
 					}
-					vkCmdBindDescriptorSets(commandBufferHandle, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, desc_set, 0, nullptr);
+					vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, desc_set, 0, nullptr);
 
 					// Draw
-					vkCmdDrawIndexed(commandBufferHandle, pcmd->ElemCount, 1, pcmd->IdxOffset + global_idx_offset, pcmd->VtxOffset + global_vtx_offset, 0);
+					vkCmdDrawIndexed(commandBuffer, pcmd->ElemCount, 1, pcmd->IdxOffset + global_idx_offset, pcmd->VtxOffset + global_vtx_offset, 0);
 				}
 			}
 			global_idx_offset += cmd_list->IdxBuffer.Size;
@@ -285,11 +239,63 @@ namespace Flare
 		// In theory we should aim to backup/restore those values but I am not sure this is possible.
 		// We perform a call to vkCmdSetScissor() to set back a full viewport which is likely to fix things for 99% users but technically this is not perfect. (See github #4644)
 		VkRect2D scissor = { { 0, 0 }, { (uint32_t)viewportSize.x, (uint32_t)viewportSize.y} };
-		vkCmdSetScissor(commandBufferHandle, 0, 1, &scissor);
+		vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+	}
+
+	void ImGuiVulkanRenderer::SetupFrameResources(ImDrawData* drawData, Resources& resources)
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		if (drawData->TotalVtxCount > 0)
+		{
+			FLARE_PROFILE_SCOPE("SetupBuffers");
+
+			size_t vertexBufferSize = drawData->TotalVtxCount * sizeof(ImDrawVert);
+			size_t indexBufferSize = drawData->TotalIdxCount * sizeof(ImDrawIdx);
+
+			if (resources.VertexBuffer == nullptr)
+			{
+				resources.VertexBuffer = CreateRef<VulkanVertexBuffer>(vertexBufferSize, GPUBufferUsage::Dynamic);
+				resources.VertexBuffer->GetBuffer().EnsureAllocated();
+			}
+
+			if (resources.IndexBuffer == nullptr)
+			{
+				if (sizeof(ImDrawIdx) == 2)
+					resources.IndexBuffer = CreateRef<VulkanIndexBuffer>(IndexBuffer::IndexFormat::UInt32, indexBufferSize / 2, GPUBufferUsage::Dynamic);
+				else
+					resources.IndexBuffer = CreateRef<VulkanIndexBuffer>(IndexBuffer::IndexFormat::UInt16, indexBufferSize, GPUBufferUsage::Dynamic);
+
+				resources.IndexBuffer->GetBuffer().EnsureAllocated();
+			}
+
+			if (resources.VertexBuffer->GetBuffer().GetSize() < vertexBufferSize)
+				resources.VertexBuffer->GetBuffer().Resize(vertexBufferSize);
+
+			if (resources.IndexBuffer->GetBuffer().GetSize() < indexBufferSize)
+				resources.IndexBuffer->GetBuffer().Resize(indexBufferSize);
+
+			size_t vertexOffset = 0;
+			size_t indexOffset = 0;
+			for (int32_t i = 0; i < drawData->CmdListsCount; i++)
+			{
+				const ImDrawList* cmd_list = drawData->CmdLists[i];
+
+				size_t vertexDataSize = cmd_list->VtxBuffer.Size * sizeof(ImDrawVert);
+				size_t indexDataSize = cmd_list->IdxBuffer.Size * sizeof(ImDrawIdx);
+
+				resources.VertexBuffer->SetData(cmd_list->VtxBuffer.Data, vertexDataSize, vertexOffset);
+				resources.IndexBuffer->SetData(MemorySpan::FromRawBytes(cmd_list->IdxBuffer.Data, indexDataSize), indexOffset);
+				
+				vertexOffset += vertexDataSize;
+				indexOffset += indexDataSize;
+			}
+		}
+
 	}
 
 	void ImGuiVulkanRenderer::SetupRenderState(ImDrawData* drawData,
-		const FrameData& frameData,
+		Resources& frameResources,
 		VkCommandBuffer commandBuffer,
 		VkPipeline pipeline,
 		VkPipelineLayout pipelineLayout,
@@ -304,10 +310,10 @@ namespace Flare
 		// Bind Vertex And Index Buffer:
 		if (drawData->TotalVtxCount > 0)
 		{
-			VkBuffer vertex_buffers[1] = { frameData.VertexBuffer->GetHandle() };
+			VkBuffer vertex_buffers[1] = { frameResources.VertexBuffer->GetHandle() };
 			VkDeviceSize vertex_offset[1] = { 0 };
 			vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertex_buffers, vertex_offset);
-			vkCmdBindIndexBuffer(commandBuffer, frameData.IndexBuffer->GetHandle(), 0, sizeof(ImDrawIdx) == 2 ? VK_INDEX_TYPE_UINT16 : VK_INDEX_TYPE_UINT32);
+			vkCmdBindIndexBuffer(commandBuffer, frameResources.IndexBuffer->GetHandle(), 0, sizeof(ImDrawIdx) == 2 ? VK_INDEX_TYPE_UINT16 : VK_INDEX_TYPE_UINT32);
 		}
 
 		// Setup viewport:

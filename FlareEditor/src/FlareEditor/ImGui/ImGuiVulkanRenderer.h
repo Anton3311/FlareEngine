@@ -16,12 +16,17 @@ namespace Flare
 	class ImGuiVulkanRenderer
 	{
 	public:
+		struct Resources
+		{
+			Ref<VulkanVertexBuffer> VertexBuffer = nullptr;
+			Ref<VulkanIndexBuffer> IndexBuffer = nullptr;
+		};
+
 		struct FrameData
 		{
 			VkSemaphore RenderCompleteSemaphore = VK_NULL_HANDLE;
 			Ref<VulkanCommandBuffer> CommandBuffer = nullptr;
-			Ref<VulkanVertexBuffer> VertexBuffer = nullptr;
-			Ref<VulkanIndexBuffer> IndexBuffer = nullptr;
+			Resources FrameResources;
 		};
 
 		ImGuiVulkanRenderer(VkSurfaceKHR surface);
@@ -31,10 +36,12 @@ namespace Flare
 		void SetSize(glm::uvec2 size);
 		void Present();
 		void RenderWindow(ImGuiViewport* viewport, void* renderArgs);
+
+		static void RenderViewportData(ImDrawData* drawData, VkCommandBuffer commandBuffer, Resources& frameResources);
 	private:
-		void RenderViewportData(ImDrawData* drawData, FrameData& frameData);
-		void SetupRenderState(ImDrawData* drawData,
-			const FrameData& frameData,
+		static void SetupFrameResources(ImDrawData* drawData, Resources& resources);
+		static void SetupRenderState(ImDrawData* drawData,
+			Resources& frameResources,
 			VkCommandBuffer commandBuffer,
 			VkPipeline pipeline,
 			VkPipelineLayout pipelineLayout,

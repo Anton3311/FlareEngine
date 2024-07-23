@@ -91,17 +91,9 @@ namespace Flare
 
 		ImGui_ImplGlfw_InitForVulkan((GLFWwindow*)window->GetNativeWindow(), true);
 
-		ImGui_ImplVulkan_InitInfo info{};
-		info.CheckVkResultFn = [](VkResult vulkanResult) { VK_CHECK_RESULT(vulkanResult); };
-		info.DescriptorPool = m_DescriptorPool;
-		info.Instance = VulkanContext::GetInstance().GetVulkanInstance();
-		info.PhysicalDevice = VulkanContext::GetInstance().GetPhysicalDevice();
-		info.Queue = VulkanContext::GetInstance().GetGraphicsQueue();
-		info.QueueFamily = VulkanContext::GetInstance().GetGraphicsQueueFamilyIndex();
-		info.Device = VulkanContext::GetInstance().GetDevice();
-		info.ImageCount = 2;
-		info.MinImageCount = 2;
-		ImGui_ImplVulkan_Init(&info, VulkanContext::GetInstance().GetColorOnlyPass()->GetHandle());
+		ImGuiIO& io = ImGui::GetIO();
+		io.BackendRendererName = "FlareEngine";
+		io.BackendFlags |= ImGuiBackendFlags_RendererHasVtxOffset | ImGuiBackendFlags_RendererHasViewports;
 
 		ImGuiPlatformIO& platformIO = ImGui::GetPlatformIO();
 		platformIO.Renderer_CreateWindow = RendererCreateWindow;
@@ -115,10 +107,12 @@ namespace Flare
 			auto it = m_ImageToDescriptor.find((uint64_t)imageView);
 			if (it != m_ImageToDescriptor.end())
 			{
-				ImGui_ImplVulkan_RemoveTexture(it->second);
+				vkFreeDescriptorSets(VulkanContext::GetInstance().GetDevice(), m_DescriptorPool, 1, &it->second);
 				m_ImageToDescriptor.erase(it);
 			}
 		});
+
+		m_MainViewportFrameResources.resize(VulkanContext::GetInstance().GetFrameInFlightCount());
 
 		CreateDescriptorSetLayout();
 		CreatePipelineLayout();
@@ -130,7 +124,10 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 		VulkanContext::GetInstance().SetImageViewDeletionHandler(nullptr);
 
-		ImGui_ImplVulkan_Shutdown();
+		ImGui::DestroyPlatformWindows();
+
+		m_MainViewportFrameResources.clear();
+
 		ImGui_ImplGlfw_Shutdown();
 		vkDestroyDescriptorPool(VulkanContext::GetInstance().GetDevice(), m_DescriptorPool, nullptr);
 	}
@@ -173,7 +170,11 @@ namespace Flare
 		Ref<VulkanCommandBuffer> commandBuffer = context.GetPrimaryCommandBuffer();
 		commandBuffer->BeginRenderPass(context.GetColorOnlyPass(), context.GetSwapChainFrameBuffer(context.GetCurrentFrameInFlight()));
 
-		ImGui_ImplVulkan_RenderDrawData(drawData, commandBuffer->GetHandle());
+		//ImGui_ImplVulkan_RenderDrawData(drawData, commandBuffer->GetHandle());
+		ImGuiVulkanRenderer::RenderViewportData(
+			drawData,
+			commandBuffer->GetHandle(),
+			m_MainViewportFrameResources[VulkanContext::GetInstance().GetCurrentFrameInFlight()]);
 
 		commandBuffer->EndRenderPass();
 	}
