@@ -35,19 +35,23 @@ namespace Flare
 			break;
 		}
 
+		uint32_t frameInFlight = VulkanContext::GetInstance().IsValid()
+			? VulkanContext::GetInstance().GetCurrentFrameInFlight()
+			: 0;
+
 		switch (messageSeverity)
 		{
 		case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
-			FLARE_CORE_INFO("Validation layers[Info]: {} {}", messageType, pCallbackData->pMessage);
+			FLARE_CORE_INFO("FIF={} [Info]: {} {}", frameInFlight, messageType, pCallbackData->pMessage);
 			break;
 		case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
-			FLARE_CORE_ERROR("Validation layers[Error]: {} {}", messageType, pCallbackData->pMessage);
+			FLARE_CORE_ERROR("FIF={} [Error]: {} {}", frameInFlight, messageType, pCallbackData->pMessage);
 			break;
 		case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
-			FLARE_CORE_WARN("Validation layers[Warning]: {} {}", messageType, pCallbackData->pMessage);
+			FLARE_CORE_WARN("FIF={} [Warning]: {} {}", frameInFlight, messageType, pCallbackData->pMessage);
 			break;
 		case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
-			FLARE_CORE_TRACE("Validation layers[Verbose]: {} {}", messageType, pCallbackData->pMessage);
+			FLARE_CORE_TRACE("FIF={} [Verbose]: {} {}", frameInFlight, messageType, pCallbackData->pMessage);
 			break;
 		}
 

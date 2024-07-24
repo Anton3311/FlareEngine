@@ -172,11 +172,6 @@ namespace Flare
 				}
 			}
 
-			for (size_t outputIndex = 0; outputIndex < outputs.size(); outputIndex++)
-			{
-				attachmentTextures.push_back(m_ResourceManager.GetTexture(outputs[outputIndex].AttachmentTexture));
-			}
-
 			Ref<VulkanRenderPass> compatibleRenderPass = renderPassCache.GetOrCreate(renderPassKey);
 
 			if (node.Specifications.HasOutputClearValues())
@@ -185,8 +180,14 @@ namespace Flare
 			}
 
 			node.RenderTargetHandleIndex = (uint32_t)m_RenderPassTargets.size();
-			for (uint32_t i = 0; i < framesInFlightCount; i++)
+			for (uint32_t frameInFlight = 0; frameInFlight < framesInFlightCount; frameInFlight++)
 			{
+				attachmentTextures.clear();
+				for (size_t outputIndex = 0; outputIndex < outputs.size(); outputIndex++)
+				{
+					attachmentTextures.push_back(m_ResourceManager.GetTextureForFrameInFlight(outputs[outputIndex].AttachmentTexture, frameInFlight));
+				}
+
 				Ref<FrameBuffer> renderTarget = CreateRef<VulkanFrameBuffer>(
 					attachmentTextures[0]->GetWidth(),
 					attachmentTextures[0]->GetHeight(),
@@ -194,7 +195,7 @@ namespace Flare
 					Span<Ref<Texture>>::FromVector(attachmentTextures),
 					false);
 
-				renderTarget->SetDebugName(node.Specifications.GetDebugName());
+				renderTarget->SetDebugName(fmt::format("{}.#{}", node.Specifications.GetDebugName(), frameInFlight));
 				m_RenderPassTargets.push_back(renderTarget);
 			}
 		}
