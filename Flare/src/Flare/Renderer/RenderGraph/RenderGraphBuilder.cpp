@@ -14,8 +14,13 @@ namespace Flare
 	RenderGraphBuilder::RenderGraphBuilder(CompiledRenderGraph& result,
 		Span<RenderPassNode> nodes,
 		const RenderGraphResourceManager& resourceManager,
-		Span<ExternalRenderGraphResource> externalResources)
-		: m_Result(result), m_Nodes(nodes), m_ExternalResources(externalResources), m_ResourceManager(resourceManager)
+		Span<ExternalRenderGraphResource> externalResources,
+		std::vector<Ref<FrameBuffer>>& renderPassTargets)
+		: m_Result(result),
+		m_Nodes(nodes),
+		m_ExternalResources(externalResources),
+		m_ResourceManager(resourceManager),
+		m_RenderPassTargets(renderPassTargets)
 	{
 	}
 
@@ -99,7 +104,6 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		std::vector<VkAttachmentDescription> attachmentDescriptions;
 		std::vector<Ref<Texture>> attachmentTextures;
 		std::vector<VkClearValue> clearValues;
 
@@ -113,7 +117,6 @@ namespace Flare
 			if (node.Specifications.GetType() != RenderGraphPassType::Graphics)
 				continue;
 
-			attachmentDescriptions.clear();
 			attachmentTextures.clear();
 
 			const auto& outputs = m_Nodes[nodeIndex].Specifications.GetOutputs();
@@ -179,14 +182,17 @@ namespace Flare
 				compatibleRenderPass->SetDefaultClearValues(Span<VkClearValue>::FromVector(clearValues));
 			}
 
-			node.RenderTarget = CreateRef<VulkanFrameBuffer>(
+			Ref<FrameBuffer> renderTarget = CreateRef<VulkanFrameBuffer>(
 				attachmentTextures[0]->GetWidth(),
 				attachmentTextures[0]->GetHeight(),
 				compatibleRenderPass,
 				Span<Ref<Texture>>::FromVector(attachmentTextures),
 				false);
 
-			node.RenderTarget->SetDebugName(node.Specifications.GetDebugName());
+			renderTarget->SetDebugName(node.Specifications.GetDebugName());
+
+			node.RenderTargetHandleIndex = (uint32_t)m_RenderPassTargets.size();
+			m_RenderPassTargets.push_back(renderTarget);
 		}
 	}
 

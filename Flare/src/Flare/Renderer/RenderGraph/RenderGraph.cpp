@@ -28,7 +28,10 @@ namespace Flare
 		FLARE_CORE_ASSERT(pass != nullptr);
 		FLARE_CORE_ASSERT(index <= m_Nodes.size());
 
-		m_Nodes.insert(m_Nodes.begin() + index, RenderPassNode{ specifications, pass, nullptr, {} });
+		RenderPassNode passNode{};
+		passNode.Pass = pass;
+		passNode.Specifications = specifications;
+		m_Nodes.insert(m_Nodes.begin() + index, passNode);
 	}
 
 	const RenderPassNode* RenderGraph::GetRenderPassNode(size_t index) const
@@ -68,7 +71,15 @@ namespace Flare
 
 		for (const auto& node : m_Nodes)
 		{
-			RenderGraphContext context(m_Viewport, node.RenderTarget, *this, m_ResourceManager, sceneSubmition, view);
+			Ref<FrameBuffer> renderTarget = node.RenderTargetHandleIndex == RenderPassNode::INVALID_TARGET_INDEX
+				? nullptr
+				: m_RenderPassTargets[node.RenderTargetHandleIndex];
+
+			RenderGraphContext context(
+				m_Viewport,
+				renderTarget,
+				*this, m_ResourceManager,
+				sceneSubmition, view);
 
 			commandBuffer->BeginLabel(node.Specifications.GetDebugColor(), node.Specifications.GetDebugName());
 
@@ -85,10 +96,13 @@ namespace Flare
 	void RenderGraph::Build()
 	{
 		FLARE_PROFILE_FUNCTION();
+		FLARE_CORE_ASSERT(!m_IsValid);
+
 		RenderGraphBuilder builder(m_CompiledRenderGraph,
 			Span<RenderPassNode>::FromVector(m_Nodes),
 			m_ResourceManager,
-			Span<ExternalRenderGraphResource>::FromVector(m_ExternalResources));
+			Span<ExternalRenderGraphResource>::FromVector(m_ExternalResources),
+			m_RenderPassTargets);
 
 		builder.Build();
 
@@ -102,6 +116,7 @@ namespace Flare
 		m_Nodes.clear();
 		m_CompiledRenderGraph.Reset();
 		m_ResourceManager.Clear();
+		m_RenderPassTargets.clear();
 
 		m_IsValid = false;
 	}
@@ -122,7 +137,7 @@ namespace Flare
 		std::vector<Ref<Texture>> attachmentTextures;
 		for (RenderPassNode& node : m_Nodes)
 		{
-			if (node.RenderTarget == nullptr)
+			if (node.RenderTargetHandleIndex == RenderPassNode::INVALID_TARGET_INDEX)
 				continue;
 
 			attachmentTextures.clear();
@@ -132,16 +147,18 @@ namespace Flare
 				attachmentTextures.push_back(m_ResourceManager.GetTexture(output.AttachmentTexture));
 			}
 
-			Ref<VulkanRenderPass> compatibleRenderPass = As<VulkanFrameBuffer>(node.RenderTarget)->GetCompatibleRenderPass();
+			Ref<FrameBuffer> renderTarget = m_RenderPassTargets[node.RenderTargetHandleIndex];
 
-			std::string debugName = node.RenderTarget->GetDebugName();
+			Ref<VulkanRenderPass> compatibleRenderPass = As<VulkanFrameBuffer>(renderTarget)->GetCompatibleRenderPass();
 
-			node.RenderTarget = CreateRef<VulkanFrameBuffer>(attachmentTextures[0]->GetWidth(),
+			std::string debugName = renderTarget->GetDebugName();
+
+			m_RenderPassTargets[node.RenderTargetHandleIndex] = CreateRef<VulkanFrameBuffer>(attachmentTextures[0]->GetWidth(),
 				attachmentTextures[0]->GetHeight(),
 				compatibleRenderPass,
 				Span<Ref<Texture>>::FromVector(attachmentTextures),
 				false);
-			node.RenderTarget->SetDebugName(debugName);
+			m_RenderPassTargets[node.RenderTargetHandleIndex]->SetDebugName(debugName);
 		}
 	}
 

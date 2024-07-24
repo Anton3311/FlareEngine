@@ -18,7 +18,8 @@ namespace Flare
 		RenderGraphBuilder(CompiledRenderGraph& result,
 			Span<RenderPassNode> nodes,
 			const RenderGraphResourceManager& resourceManager,
-			Span<ExternalRenderGraphResource> externalResources);
+			Span<ExternalRenderGraphResource> externalResources,
+			std::vector<Ref<FrameBuffer>>& renderPassTargets);
 
 		void Build();
 	private:
@@ -62,5 +63,6 @@ namespace Flare
 		std::unordered_map<RenderGraphTextureId, ResourceState> m_States;
 
 		std::vector<std::vector<LayoutTransition>> m_RenderPassTransitions;
+		std::vector<Ref<FrameBuffer>>& m_RenderPassTargets;
 	};
 }

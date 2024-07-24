@@ -59,6 +59,7 @@ namespace Flare
 
 		std::vector<RenderPassNode> m_Nodes;
 		std::vector<ExternalRenderGraphResource> m_ExternalResources;
+		std::vector<Ref<FrameBuffer>> m_RenderPassTargets;
 
 		RenderGraphResourceManager m_ResourceManager;
 
