@@ -220,6 +220,7 @@ namespace Flare
 		std::function<void(VkImageView)> m_ImageDeletationHandler = nullptr;
 
 		bool m_DebugEnabled = false;
+		bool m_DebugMarkersEnabled = false;
 
 		PFN_vkCreateDebugUtilsMessengerEXT m_CreateDebugMessenger = nullptr;
 		PFN_vkDestroyDebugUtilsMessengerEXT m_DestroyDebugMessenger = nullptr;

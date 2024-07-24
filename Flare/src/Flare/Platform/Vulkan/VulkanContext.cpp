@@ -80,6 +80,11 @@ namespace Flare
 			if (std::strcmp(argument, "--vulkan-debug") == 0)
 			{
 				m_DebugEnabled = true;
+				m_DebugMarkersEnabled = true;
+			}
+			else if (std::strcmp(argument, "--vulkan-debug-markers") == 0)
+			{
+				m_DebugMarkersEnabled = true;
 			}
 
 			if (std::strcmp(commandLineArguments.Arguments[i], "--device=discrete") == 0)
@@ -123,9 +128,6 @@ namespace Flare
 		if (m_DebugEnabled)
 		{
 			CreateDebugMessenger();
-
-			m_SetDebugNameFunction = reinterpret_cast<PFN_vkSetDebugUtilsObjectNameEXT>(vkGetInstanceProcAddr(m_Instance, "vkSetDebugUtilsObjectNameEXT"));
-			FLARE_CORE_ASSERT(m_SetDebugNameFunction);
 		}
 
 		CreateSurface();
@@ -153,6 +155,12 @@ namespace Flare
 		};
 
 		CreateLogicalDevice(Span<const char*>::FromVector(enabledLayers), Span<const char*>::FromVector(deviceExtensions));
+
+		if (m_DebugMarkersEnabled)
+		{
+			m_SetDebugNameFunction = reinterpret_cast<PFN_vkSetDebugUtilsObjectNameEXT>(vkGetInstanceProcAddr(m_Instance, "vkSetDebugUtilsObjectNameEXT"));
+		}
+
 
 		CreateMemoryAllocator();
 
@@ -634,7 +642,7 @@ namespace Flare
 	VkResult VulkanContext::SetDebugName(VkObjectType objectType, uint64_t objectHandle, const char* name)
 	{
 		FLARE_PROFILE_FUNCTION();
-		if (m_DebugEnabled)
+		if (m_DebugMarkersEnabled)
 		{
 			if (m_SetDebugNameFunction == nullptr)
 			{
@@ -853,7 +861,7 @@ namespace Flare
 				instanceExtensions.push_back(extesions[i]);
 		}
 
-		if (m_DebugEnabled)
+		if (m_DebugMarkersEnabled)
 		{
 			instanceExtensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 		}

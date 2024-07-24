@@ -25,6 +25,8 @@ The editor can be started using Visual Studio, or from the command line by runni
 
 `--api=<name>` - API to use for rendering. Only `--api=vulkan` is supported, which is also a default.
 
-`--vulkan-debug` - enables Vulkan validation layers and generation of debug names for Vulkan objects. Disabled by default.
+`--vulkan-debug` - enables Vulkan validation layers and `--vulkan-debug-markers`. Disabled by default.
+
+`--vulkan-debug-markers` - enables debug names for Vulkan objects. Disabled by default.
 
 `--device=<type>` - specify a type of GPU device to use for rendering. Can be one of two: `integrated` or `discrete`. `discrete` is the default.
