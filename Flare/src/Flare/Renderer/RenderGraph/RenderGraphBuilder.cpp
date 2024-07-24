@@ -104,6 +104,8 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
+		uint32_t framesInFlightCount = GraphicsContext::GetInstance().GetFrameInFlightCount();
+
 		std::vector<Ref<Texture>> attachmentTextures;
 		std::vector<VkClearValue> clearValues;
 
@@ -182,17 +184,19 @@ namespace Flare
 				compatibleRenderPass->SetDefaultClearValues(Span<VkClearValue>::FromVector(clearValues));
 			}
 
-			Ref<FrameBuffer> renderTarget = CreateRef<VulkanFrameBuffer>(
-				attachmentTextures[0]->GetWidth(),
-				attachmentTextures[0]->GetHeight(),
-				compatibleRenderPass,
-				Span<Ref<Texture>>::FromVector(attachmentTextures),
-				false);
-
-			renderTarget->SetDebugName(node.Specifications.GetDebugName());
-
 			node.RenderTargetHandleIndex = (uint32_t)m_RenderPassTargets.size();
-			m_RenderPassTargets.push_back(renderTarget);
+			for (uint32_t i = 0; i < framesInFlightCount; i++)
+			{
+				Ref<FrameBuffer> renderTarget = CreateRef<VulkanFrameBuffer>(
+					attachmentTextures[0]->GetWidth(),
+					attachmentTextures[0]->GetHeight(),
+					compatibleRenderPass,
+					Span<Ref<Texture>>::FromVector(attachmentTextures),
+					false);
+
+				renderTarget->SetDebugName(node.Specifications.GetDebugName());
+				m_RenderPassTargets.push_back(renderTarget);
+			}
 		}
 	}
 

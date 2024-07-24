@@ -67,13 +67,14 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(m_IsValid);
 
+		uint32_t frameInFlight = GraphicsContext::GetInstance().GetCurrentFrameInFlight();
 		Ref<VulkanCommandBuffer> vulkanCommandBuffer = As<VulkanCommandBuffer>(commandBuffer);
 
 		for (const auto& node : m_Nodes)
 		{
 			Ref<FrameBuffer> renderTarget = node.RenderTargetHandleIndex == RenderPassNode::INVALID_TARGET_INDEX
 				? nullptr
-				: m_RenderPassTargets[node.RenderTargetHandleIndex];
+				: m_RenderPassTargets[node.RenderTargetHandleIndex + frameInFlight];
 
 			RenderGraphContext context(
 				m_Viewport,
@@ -134,6 +135,8 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(m_IsValid);
 
+		uint32_t frameInFlightCount = GraphicsContext::GetInstance().GetFrameInFlightCount();
+
 		std::vector<Ref<Texture>> attachmentTextures;
 		for (RenderPassNode& node : m_Nodes)
 		{
@@ -147,18 +150,23 @@ namespace Flare
 				attachmentTextures.push_back(m_ResourceManager.GetTexture(output.AttachmentTexture));
 			}
 
-			Ref<FrameBuffer> renderTarget = m_RenderPassTargets[node.RenderTargetHandleIndex];
+			for (uint32_t frameIndex = 0; frameIndex < frameInFlightCount; frameIndex++)
+			{
+				uint32_t renderTargetIndex = node.RenderTargetHandleIndex + frameIndex;
 
-			Ref<VulkanRenderPass> compatibleRenderPass = As<VulkanFrameBuffer>(renderTarget)->GetCompatibleRenderPass();
+				Ref<FrameBuffer> renderTarget = m_RenderPassTargets[renderTargetIndex];
+				Ref<VulkanRenderPass> compatibleRenderPass = As<VulkanFrameBuffer>(renderTarget)->GetCompatibleRenderPass();
 
-			std::string debugName = renderTarget->GetDebugName();
+				std::string debugName = renderTarget->GetDebugName();
 
-			m_RenderPassTargets[node.RenderTargetHandleIndex] = CreateRef<VulkanFrameBuffer>(attachmentTextures[0]->GetWidth(),
-				attachmentTextures[0]->GetHeight(),
-				compatibleRenderPass,
-				Span<Ref<Texture>>::FromVector(attachmentTextures),
-				false);
-			m_RenderPassTargets[node.RenderTargetHandleIndex]->SetDebugName(debugName);
+				m_RenderPassTargets[renderTargetIndex] = CreateRef<VulkanFrameBuffer>(attachmentTextures[0]->GetWidth(),
+					attachmentTextures[0]->GetHeight(),
+					compatibleRenderPass,
+					Span<Ref<Texture>>::FromVector(attachmentTextures),
+					false);
+
+				m_RenderPassTargets[renderTargetIndex]->SetDebugName(debugName);
+			}
 		}
 	}
 
