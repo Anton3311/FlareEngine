@@ -76,11 +76,11 @@ namespace Flare
 		HandlePresentResult(presentResult);
 	}
 
-	void VulkanSwapchain::SubmitPresent(Span<const VkSemaphore> waitSemaphores, glm::uvec2 windowSize)
+	void VulkanSwapchain::SubmitPresent(Span<const VkSemaphore> waitSemaphores, glm::uvec2 windowSize, bool waitForMainRenderingSubmition)
 	{
 		m_WindowSize = windowSize;
 
-		VulkanContext::GetInstance().SubmitSwapchainPresent(*this, waitSemaphores);
+		VulkanContext::GetInstance().SubmitSwapchainPresent(*this, waitSemaphores, waitForMainRenderingSubmition);
 	}
 
 	void VulkanSwapchain::HandlePresentResult(VkResult result)

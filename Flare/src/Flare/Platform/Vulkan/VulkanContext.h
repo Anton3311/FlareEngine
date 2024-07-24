@@ -106,11 +106,14 @@ namespace Flare
 
 		Ref<VulkanCommandBuffer> GetPrimaryCommandBuffer() const { return m_PrimaryCommandBuffer; }
 
-		inline VkSemaphore GetRenderCompleteSemaphore() const { return m_SyncObjects[m_CurrentFrameSyncObjectsIndex].RenderingCompleteSemaphore2; }
-		inline void SignalSecondarySemaphore() { m_SignalSecondarySemaphore = true; }
+		void SubmitToGraphicsQueue(Ref<CommandBuffer> commandBuffer,
+			Span<const VkSemaphore> waitSempahores,
+			Span<const VkSemaphore> signalSemaphores,
+			bool waitForMainRenderingSubmition);
 
-		void SubmitToGraphicsQueue(Ref<CommandBuffer> commandBuffer, Span<const VkSemaphore> waitSempahores, Span<const VkSemaphore> signalSemaphores);
-		void SubmitSwapchainPresent(VulkanSwapchain& swapchain, Span<const VkSemaphore> waitSemaphores);
+		void SubmitSwapchainPresent(VulkanSwapchain& swapchain,
+			Span<const VkSemaphore> waitSemaphores,
+			bool waitForMainRenderingSubmition);
 
 		uint32_t GetCurrentFrameInFlight() const { return m_Swapchain->GetFrameInFlight(); }
 		uint32_t GetFrameInFlightCount() const { return m_Swapchain->GetFrameCount(); }
@@ -174,14 +177,15 @@ namespace Flare
 		void CreateCommandBufferPool();
 		VkCommandBuffer CreateCommandBuffer();
 		void CreateSyncObjects();
+
+		VkSemaphore AcquireSemaphore();
 	private:
 		std::vector<VkLayerProperties> EnumerateAvailableLayers();
 	private:
 		struct FrameSyncObjects
 		{
 			VkFence FrameFence = VK_NULL_HANDLE;
-			VkSemaphore RenderingCompleteSemaphore = VK_NULL_HANDLE;
-			VkSemaphore RenderingCompleteSemaphore2 = VK_NULL_HANDLE;
+			std::vector<VkSemaphore> RenderingCompleteSemaphores;
 		};
 
 		struct GraphicsQueueSubmition
@@ -246,14 +250,16 @@ namespace Flare
 		bool m_VSyncEnabled = false;
 		Ref<Window> m_Window = nullptr;
 
+		// Syncronization
+		std::vector<VkSemaphore> m_SemaphorePool;
+
 		// Swap chain
 		Scope<VulkanSwapchain> m_Swapchain;
 
 		bool m_SkipWaitForFrameFence = false;
-		bool m_SignalSecondarySemaphore = false;
 
 		uint32_t m_CurrentFrameSyncObjectsIndex = 0;
-		FrameSyncObjects m_CurrentSyncObjects;
+		FrameSyncObjects* m_CurrentSyncObjects = nullptr;
 		std::vector<FrameSyncObjects> m_SyncObjects;
 
 		// Command buffers

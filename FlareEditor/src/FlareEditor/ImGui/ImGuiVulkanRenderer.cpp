@@ -96,7 +96,7 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 
 		const FrameData& frameData = m_FrameData[m_FrameDataIndex];
-		m_Swapchain.SubmitPresent(Span(&frameData.RenderCompleteSemaphore, 1), m_Swapchain.GetWindowSize());
+		m_Swapchain.SubmitPresent(Span(&frameData.RenderCompleteSemaphore, 1), m_Swapchain.GetWindowSize(), true);
 	}
 
 	void ImGuiVulkanRenderer::RenderWindow(ImGuiViewport* viewport, void* renderArgs)
@@ -131,17 +131,13 @@ namespace Flare
 		commandBuffer->EndRenderPass();
 		commandBuffer->End();
 
-		VkSemaphore waitSemaphores[] =
-		{
-			m_Swapchain.GetImageAvailableSemaphore(),
-			VulkanContext::GetInstance().GetRenderCompleteSemaphore()
-		};
+		VkSemaphore waitSemaphores[] = { m_Swapchain.GetImageAvailableSemaphore() };
 
-		VulkanContext::GetInstance().SignalSecondarySemaphore();
 		VulkanContext::GetInstance().SubmitToGraphicsQueue(
 			frameData.CommandBuffer,
-			Span<const VkSemaphore>(waitSemaphores, 2),
-			Span<const VkSemaphore>(&frameData.RenderCompleteSemaphore, 1));
+			Span<const VkSemaphore>(waitSemaphores, 1),
+			Span<const VkSemaphore>(&frameData.RenderCompleteSemaphore, 1),
+			true);
 	}
 
 	// Based on ImGui_ImplVulkan_RenderDrawData
