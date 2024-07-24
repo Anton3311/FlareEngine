@@ -118,6 +118,12 @@ namespace Flare
 		Create();
 	}
 
+	void VulkanSwapchain::SetDebugName(std::string_view debugName)
+	{
+		m_DebugName = debugName;
+		UpdateDebugName();
+	}
+
 	void VulkanSwapchain::Create()
 	{
 		FLARE_PROFILE_FUNCTION();
@@ -194,6 +200,8 @@ namespace Flare
 		{
 			vkDestroySwapchainKHR(device, oldSwapChain, nullptr);
 		}
+
+		UpdateDebugName();
 
 		CreateImageViews();
 		CreateFrameBuffers();
@@ -317,6 +325,14 @@ namespace Flare
 			vkDestroySemaphore(device, semaphore, nullptr);
 
 		m_ImageAvailableSemaphores.clear();
+	}
+
+	void VulkanSwapchain::UpdateDebugName()
+	{
+		if (m_Swapchain != VK_NULL_HANDLE && m_DebugName.size() != 0)
+		{
+			VulkanContext::GetInstance().SetDebugName(VK_OBJECT_TYPE_SWAPCHAIN_KHR, (uint64_t)m_Swapchain, m_DebugName.c_str());
+		}
 	}
 
 	std::vector<VkSurfaceFormatKHR> VulkanSwapchain::GetSurfaceFormats()

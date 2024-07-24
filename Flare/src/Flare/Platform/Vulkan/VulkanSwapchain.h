@@ -60,6 +60,9 @@ namespace Flare
 		uint32_t GetFrameCount() const { return (uint32_t)m_FrameData.size(); }
 		uint32_t GetFrameInFlight() const { return m_CurrentFrameInFlight; }
 		VkSemaphore GetImageAvailableSemaphore() const { return m_ImageAvailableSemaphores[m_CurrentImageAvailableSemaphore]; }
+
+		void SetDebugName(std::string_view debugName);
+		inline const std::string& GetDebugName() const { return m_DebugName; }
 	private:
 		void Create();
 		void CreateImageViews();
@@ -68,6 +71,8 @@ namespace Flare
 
 		void ReleaseImageViews();
 		void ReleaseSemaphores();
+
+		void UpdateDebugName();
 
 		std::vector<VkSurfaceFormatKHR> GetSurfaceFormats();
 
@@ -80,6 +85,8 @@ namespace Flare
 			VkImageView ImageView = VK_NULL_HANDLE;
 			Ref<VulkanFrameBuffer> FrameBuffer = nullptr;
 		};
+
+		std::string m_DebugName;
 
 		std::vector<FrameData> m_FrameData;
 

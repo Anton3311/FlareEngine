@@ -158,6 +158,7 @@ namespace Flare
 
 		m_Swapchain = CreateScope<VulkanSwapchain>(m_Surface);
 		m_Swapchain->Initialize();
+		m_Swapchain->SetDebugName("MainSwapchain");
 
 		{
 			VkAttachmentDescription attachment{};

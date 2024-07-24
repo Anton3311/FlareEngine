@@ -17,6 +17,7 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 		m_Swapchain.SetPresentMode(VK_PRESENT_MODE_FIFO_KHR);
 		m_Swapchain.Initialize();
+		m_Swapchain.SetDebugName("ImGuiViewport");
 
 		VkCommandPoolCreateInfo createInfo{};
 		createInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
