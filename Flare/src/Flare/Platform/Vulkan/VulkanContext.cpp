@@ -266,7 +266,9 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		if (!m_Window->GetProperties().IsMinimized)
+		m_WindowMinimizedAtStartOfFrame = m_Window->GetProperties().IsMinimized;
+
+		if (!m_WindowMinimizedAtStartOfFrame && m_ShouldAcquireNextSwapchainImage)
 		{
 			{
 				FLARE_PROFILE_SCOPE("WaitForFence");
@@ -277,7 +279,7 @@ namespace Flare
 					//       This can happen, if in the previous frame the window was
 					//       minimized and nothing was submitted for rendering, which
 					//       means that the frame fence wasn't signalled, thus it leads
-					//       to waiting for an unsugnalled fence in the current frame.
+					//       to waiting for an unsignalled fence in the current frame.
 					VK_CHECK_RESULT(vkWaitForFences(m_Device, 1, &m_CurrentSyncObjects->FrameFence, VK_TRUE, UINT64_MAX));
 				}
 
@@ -286,17 +288,6 @@ namespace Flare
 
 			m_CurrentFrameSyncObjectsIndex = (m_CurrentFrameSyncObjectsIndex + 1) % m_Swapchain->GetFrameCount();
 			m_CurrentSyncObjects = &m_SyncObjects[m_CurrentFrameSyncObjectsIndex];
-
-			// Move all the used render complete semaphores to the pool
-			{
-				FLARE_PROFILE_SCOPE("MoveRenderCompleteSemaphores");
-				for (VkSemaphore semaphore : m_CurrentSyncObjects->RenderingCompleteSemaphores)
-				{
-					m_SemaphorePool.push_back(semaphore);
-				}
-
-				m_CurrentSyncObjects->RenderingCompleteSemaphores.clear();
-			}
 
 			VK_CHECK_RESULT(vkResetFences(m_Device, 1, &m_CurrentSyncObjects->FrameFence));
 
@@ -308,20 +299,54 @@ namespace Flare
 		m_StagingBufferPool.Reset();
 
 		m_PrimaryCommandBuffer->Begin();
+
+		// Move all the used render complete semaphores to the pool
+		{
+			FLARE_PROFILE_SCOPE("MoveRenderCompleteSemaphores");
+			for (VkSemaphore semaphore : m_CurrentSyncObjects->RenderingCompleteSemaphores)
+			{
+				m_SemaphorePool.push_back(semaphore);
+			}
+
+			m_CurrentSyncObjects->RenderingCompleteSemaphores.clear();
+		}
 	}
 
 	void VulkanContext::EndFrame()
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		m_PrimaryCommandBuffer->End();
 		m_StagingBufferPool.FlushMemory();
 
 		if (m_Window->GetProperties().IsMinimized)
 		{
 			m_SkipWaitForFrameFence = true;
+
+			// NOTE: At the start of the frame the window was fully visible,
+			//       thus BeginFrame method managed to acquire the next swapchain image.
+			// 
+			//       However at the time when EndFrame is called the window got minimized
+			//       and the rendering of current frame is skipped, which also includes vkQueuePresentKHR,
+			//       which should return an acquired image.
+			//
+			//       Skipping the vkQueuePresentKHR means that the acquired image was not return
+			//       and it might lead to acquiring multiple swapchain images while processing subsequent frames.
+
+			// TODO: A potential fix would require delaying all updates of the minimized state
+			//       until the vkQueueSubit & vkQueuePresentKHR have been executed.
+			// 
+			//       This should hopefully simplify the logic of this case.
+			if (!m_WindowMinimizedAtStartOfFrame)
+			{
+				m_ShouldAcquireNextSwapchainImage = false;
+			}
+
 			return;
 		}
+
+		m_ShouldAcquireNextSwapchainImage = true;
+
+		m_PrimaryCommandBuffer->End();
 
 		int32_t width, height;
 		glfwGetFramebufferSize((GLFWwindow*)m_Window->GetNativeWindow(), &width, &height);

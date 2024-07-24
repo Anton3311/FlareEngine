@@ -247,7 +247,9 @@ namespace Flare
 		Ref<DescriptorSet> m_EmptyDescriptorSet = nullptr;
 
 		// Window
+		bool m_WindowMinimizedAtStartOfFrame = false;
 		bool m_VSyncEnabled = false;
+		bool m_ShouldAcquireNextSwapchainImage = true;
 		Ref<Window> m_Window = nullptr;
 
 		// Syncronization
