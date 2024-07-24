@@ -10,7 +10,7 @@
 #include "Flare/Renderer/Viewport.h"
 #include "Flare/Renderer/UniformBuffer.h"
 #include "Flare/Renderer/ShaderLibrary.h"
-#include "Flare/Renderer2D/Renderer2D.h"
+#include "Flare/Renderer/Sampler.h"
 #include "Flare/Renderer/ShaderStorageBuffer.h"
 #include "Flare/Renderer/GPUTimer.h"
 #include "Flare/Renderer/DescriptorSet.h"
@@ -19,6 +19,8 @@
 #include "Flare/Renderer/Passes/ShadowPass.h"
 #include "Flare/Renderer/Passes/ShadowCascadePass.h"
 #include "Flare/Renderer/Passes/DecalsPass.h"
+
+#include "Flare/Renderer2D/Renderer2D.h"
 
 #include "Flare/Project/Project.h"
 
@@ -50,6 +52,8 @@ namespace Flare
 		Ref<Material> DepthOnlyMeshMaterial = nullptr;
 		
 		RendererStatistics Statistics;
+
+		Ref<Sampler> DefaultShadowSampler = nullptr;
 
 		// Shadows
 		ShadowSettings ShadowMappingSettings;
@@ -203,6 +207,14 @@ namespace Flare
 
 			s_RendererData.DecalsDescriptorSetPool = CreateRef<VulkanDescriptorSetPool>(48, Span(&decalDepthBinding, 1));
 		}
+
+		SamplerSpecifications samplerSpecifications{};
+		samplerSpecifications.ComparisonEnabled = true;
+		samplerSpecifications.ComparisonFunction = DepthComparisonFunction::Less;
+		samplerSpecifications.Filter = TextureFiltering::Linear;
+		samplerSpecifications.WrapMode = TextureWrap::Clamp;
+
+		s_RendererData.DefaultShadowSampler = Sampler::Create(samplerSpecifications);
 
 		Project::OnProjectOpen.Bind(ReloadShaders);
 	}
@@ -359,6 +371,11 @@ namespace Flare
 		return s_RendererData.RenderGraphRebuildIsRequired;
 	}
 
+	Ref<Sampler> Renderer::GetDefaultShadowSampler()
+	{
+		return s_RendererData.DefaultShadowSampler;
+	}
+
 	Ref<const DescriptorSetLayout> Renderer::GetDecalsDescriptorSetLayout()
 	{
 		return s_RendererData.DecalsDescriptorSetPool->GetLayout();
@@ -435,13 +452,12 @@ namespace Flare
 		Ref<ShadowPass> shadowPass = ConfigureShadowPass(viewport, cascadeTextures);
 
 		uint32_t frameInFlightCount = GraphicsContext::GetInstance().GetFrameInFlightCount();
-		const ViewportFrameResources& viewportFrameResources = viewport.GetFrameResources();
 
 		for (uint32_t i = 0; i < frameInFlightCount; i++)
 		{
 			const ViewportFrameResources& viewportFrameResources = viewport.GetFrameResources(i);
-			SetupGlobalDescriptorSet(viewportFrameResources.GlobalDescriptorSet, shadowPass->GetCompareSampler());
-			SetupGlobalDescriptorSet(viewportFrameResources.GlobalDescriptorSetWithoutShadows, shadowPass->GetCompareSampler());
+			SetupGlobalDescriptorSet(viewportFrameResources.GlobalDescriptorSet, s_RendererData.DefaultShadowSampler);
+			SetupGlobalDescriptorSet(viewportFrameResources.GlobalDescriptorSetWithoutShadows, s_RendererData.DefaultShadowSampler);
 		}
 
 		RenderGraphPassSpecifications geometryPass{};
@@ -460,7 +476,7 @@ namespace Flare
 				{
 					Ref<Texture> cascadeTexture = viewport.Graph.GetResourceManager().GetTexture(cascadeTextures[i]);
 					set->WriteImage(cascadeTexture, 4 + i);
-					set->WriteImage(cascadeTexture, shadowPass->GetCompareSampler(), 8 + i);
+					set->WriteImage(cascadeTexture, s_RendererData.DefaultShadowSampler, 8 + i);
 				}
 
 				set->FlushWrites();

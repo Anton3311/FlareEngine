@@ -135,10 +135,9 @@ namespace Flare
 	class DescriptorSet;
 	class DescriptorSetLayout;
 	class DescriptorSetPool;
-
 	class Material;
-
 	class RendererSubmitionQueue;
+	class Sampler;
 	class Texture;
 	class Viewport;
 
@@ -190,6 +189,7 @@ namespace Flare
 		static void SetShadowSettings(const ShadowSettings& settings);
 
 		static bool RequiresRenderGraphRebuild();
+		static Ref<Sampler> GetDefaultShadowSampler();
 
 		static Ref<const DescriptorSetLayout> GetDecalsDescriptorSetLayout();
 

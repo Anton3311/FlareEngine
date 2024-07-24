@@ -87,7 +87,6 @@ namespace Flare
 
 		void OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer) override;
 
-		inline Ref<Sampler> GetCompareSampler() const { return m_CompareSampler; }
 		inline const ShadowCascadeData& GetCascadeData(size_t index) const { return m_CascadeData[index]; }
 		inline const std::vector<Math::Compact3DTransform>& GetFilteredTransforms() const { return m_FilteredTransforms; }
 		inline const std::vector<VisibleSubMeshRange>& GetVisibleSubMeshIndices() const { return m_VisibleSubMeshRanges; }
@@ -101,7 +100,6 @@ namespace Flare
 			const Math::Plane* frustumPlanes);
 	private:
 		ShadowData m_ShadowData;
-		Ref<Sampler> m_CompareSampler = nullptr;
 
 		ShadowCascadeData m_CascadeData[MaxCascades];
 		std::vector<Math::Compact3DTransform> m_FilteredTransforms;

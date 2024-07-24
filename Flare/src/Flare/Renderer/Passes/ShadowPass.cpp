@@ -22,15 +22,6 @@ namespace Flare
 {
 	ShadowPass::ShadowPass()
 	{
-		FLARE_PROFILE_FUNCTION();
-
-		SamplerSpecifications samplerSpecifications{};
-		samplerSpecifications.ComparisonEnabled = true;
-		samplerSpecifications.ComparisonFunction = DepthComparisonFunction::Less;
-		samplerSpecifications.Filter = TextureFiltering::Linear;
-		samplerSpecifications.WrapMode = TextureWrap::Clamp;
-
-		m_CompareSampler = Sampler::Create(samplerSpecifications);
 	}
 
 	void ShadowPass::OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
