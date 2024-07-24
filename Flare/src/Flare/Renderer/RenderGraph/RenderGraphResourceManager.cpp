@@ -31,10 +31,14 @@ namespace Flare
 		specifications.Wrap = TextureWrap::Clamp;
 		specifications.Filtering = TextureFiltering::Closest;
 
-		Ref<Texture> texture = Texture::Create(specifications);
-		texture->SetDebugName(debugName);
+		uint32_t frameInFlightCount = GraphicsContext::GetInstance().GetFrameInFlightCount();
+		for (uint32_t i = 0; i < frameInFlightCount; i++)
+		{
+			Ref<Texture> texture = Texture::Create(specifications);
+			texture->SetDebugName(fmt::format("{}.#{}", debugName, i));
 
-		m_TextureHandles.push_back(texture);
+			m_TextureHandles.push_back(texture);
+		}
 
 		return id;
 	}
@@ -60,16 +64,21 @@ namespace Flare
 		specifications.Wrap = TextureWrap::Clamp;
 		specifications.Filtering = TextureFiltering::Closest;
 
-		Ref<Texture> texture = Texture::Create(specifications);
-		texture->SetDebugName(debugName);
+		uint32_t frameInFlightCount = GraphicsContext::GetInstance().GetFrameInFlightCount();
+		for (uint32_t i = 0; i < frameInFlightCount; i++)
+		{
+			Ref<Texture> texture = Texture::Create(specifications);
+			texture->SetDebugName(fmt::format("{}.#{}", debugName, i));
 
-		m_TextureHandles.push_back(texture);
+			m_TextureHandles.push_back(texture);
+		}
 
 		return id;
 	}
 
 	RenderGraphTextureId RenderGraphResourceManager::RegisterExistingTexture(Ref<Texture> texture)
 	{
+		FLARE_CORE_ASSERT(false);
 		RenderGraphTextureId id = RenderGraphTextureId((uint32_t)m_Textures.size());
 
 		RenderGraphTextureResource& resource = m_Textures.emplace_back();
@@ -95,14 +104,24 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
+		uint32_t frameInFlightCount = GraphicsContext::GetInstance().GetFrameInFlightCount();
 		for (const RenderGraphTextureResource& resource : m_Textures)
 		{
 			if (resource.TextureSizeConstraint == RenderGraphTextureResource::SizeConstraint::Fixed)
 				continue;
 
-			m_TextureHandles[resource.TextureHandleIndex]->Resize(
-				(uint32_t)m_Viewport.GetSize().x,
-				(uint32_t)m_Viewport.GetSize().y);
+			Span<const Ref<Texture>> textures = GetTexturesForEachFrameInFlight(resource);
+			for (const Ref<Texture>& texture : textures)
+			{
+				texture->Resize((uint32_t)m_Viewport.GetSize().x, (uint32_t)m_Viewport.GetSize().y);
+			}
 		}
+	}
+
+	Span<const Ref<Texture>> RenderGraphResourceManager::GetTexturesForEachFrameInFlight(const RenderGraphTextureResource& textureResource)
+	{
+		return Span<const Ref<Texture>>(
+			m_TextureHandles.data() + textureResource.TextureHandleIndex,
+			GraphicsContext::GetInstance().GetFrameInFlightCount());
 	}
 }

@@ -459,15 +459,16 @@ namespace Flare
 
 		if (viewport.IsShadowMappingEnabled())
 		{
-			for (uint32_t i = 0; i < frameInFlightCount; i++)
+			const RenderGraphResourceManager& resourceManager = viewport.Graph.GetResourceManager();
+			for (uint32_t frameIndex = 0; frameIndex < frameInFlightCount; frameIndex++)
 			{
-				const ViewportFrameResources& viewportFrameResources = viewport.GetFrameResources(i);
+				const ViewportFrameResources& viewportFrameResources = viewport.GetFrameResources(frameIndex);
 				Ref<DescriptorSet> set = viewportFrameResources.GlobalDescriptorSet;
-				for (uint32_t i = 0; i < (uint32_t)Renderer::GetShadowSettings().Cascades; i++)
+				for (uint32_t cascadeIndex = 0; cascadeIndex < (uint32_t)Renderer::GetShadowSettings().Cascades; cascadeIndex++)
 				{
-					Ref<Texture> cascadeTexture = viewport.Graph.GetResourceManager().GetTexture(cascadeTextures[i]);
-					set->WriteImage(cascadeTexture, 4 + i);
-					set->WriteImage(cascadeTexture, s_RendererData.DefaultShadowSampler, 8 + i);
+					Ref<Texture> cascadeTexture = resourceManager.GetTextureForFrameInFlight(cascadeTextures[cascadeIndex], frameIndex);
+					set->WriteImage(cascadeTexture, 4 + cascadeIndex);
+					set->WriteImage(cascadeTexture, s_RendererData.DefaultShadowSampler, 8 + cascadeIndex);
 				}
 
 				set->FlushWrites();

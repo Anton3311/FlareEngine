@@ -2,6 +2,8 @@
 
 #include "Flare/Renderer/Texture.h"
 
+#include "Flare/Renderer/GraphicsContext.h"
+
 #include <string>
 #include <stdint.h>
 
@@ -50,6 +52,11 @@ namespace Flare
 		std::string DebugName;
 		TextureFormat Format = TextureFormat::RGBA8;
 
+		// Textures are stored sequentially for each frame in flight
+		// 
+		// Texture for frame 0 is at index: TextureHandleIndex + 0
+		// Texture for frame 1 is at index: TextureHandleIndex + 1
+		// Texture for frame 2 is at index: TextureHandleIndex + 2
 		uint32_t TextureHandleIndex = UINT32_MAX;
 		SizeConstraint TextureSizeConstraint = SizeConstraint::Fixed;
 	};
@@ -74,7 +81,14 @@ namespace Flare
 			FLARE_CORE_ASSERT(IsTextureIdValid(textureId));
 
 			uint32_t textureHandleIndex = m_Textures[textureId.GetValue()].TextureHandleIndex;
-			return m_TextureHandles[textureHandleIndex];
+			return m_TextureHandles[textureHandleIndex + GraphicsContext::GetInstance().GetCurrentFrameInFlight()];
+		}
+
+		inline Ref<Texture> GetTextureForFrameInFlight(RenderGraphTextureId textureId, uint32_t frameInFlightIndex) const
+		{
+			FLARE_CORE_ASSERT(frameInFlightIndex < GraphicsContext::GetInstance().GetFrameInFlightCount());
+			uint32_t textureHandleIndex = m_Textures[textureId.GetValue()].TextureHandleIndex;
+			return m_TextureHandles[textureHandleIndex + frameInFlightIndex];
 		}
 
 		inline TextureFormat GetTextureFormat(RenderGraphTextureId textureId) const
@@ -82,6 +96,8 @@ namespace Flare
 			FLARE_CORE_ASSERT(IsTextureIdValid(textureId));
 			return m_Textures[textureId.GetValue()].Format;
 		}
+
+		Span<const Ref<Texture>> GetTexturesForEachFrameInFlight(const RenderGraphTextureResource& textureResource);
 
 		size_t GetTextureResourceCount() const { return m_Textures.size(); }
 	private:

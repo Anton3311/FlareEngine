@@ -143,15 +143,18 @@ namespace Flare
 			if (node.RenderTargetHandleIndex == RenderPassNode::INVALID_TARGET_INDEX)
 				continue;
 
-			attachmentTextures.clear();
+			const auto& outputs = node.Specifications.GetOutputs();
 
-			for (const auto& output : node.Specifications.GetOutputs())
-			{
-				attachmentTextures.push_back(m_ResourceManager.GetTexture(output.AttachmentTexture));
-			}
+			attachmentTextures.clear();
+			attachmentTextures.resize(outputs.size(), nullptr);
 
 			for (uint32_t frameIndex = 0; frameIndex < frameInFlightCount; frameIndex++)
 			{
+				for (size_t outputIndex = 0; outputIndex < outputs.size(); outputIndex++)
+				{
+					attachmentTextures[outputIndex] = m_ResourceManager.GetTextureForFrameInFlight(outputs[outputIndex].AttachmentTexture, frameIndex);
+				}
+
 				uint32_t renderTargetIndex = node.RenderTargetHandleIndex + frameIndex;
 
 				Ref<FrameBuffer> renderTarget = m_RenderPassTargets[renderTargetIndex];
