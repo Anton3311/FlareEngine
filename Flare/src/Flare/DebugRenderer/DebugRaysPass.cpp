@@ -47,7 +47,7 @@ namespace Flare
 		vulkanCommandBuffer->BindIndexBuffer(m_IndexBuffer);
 
 		vulkanCommandBuffer->BindDescriptorSet(
-			As<VulkanDescriptorSet>(context.GetViewport().GlobalResources.CameraDescriptorSet),
+			As<VulkanDescriptorSet>(context.GetViewport().GetFrameResources().CameraDescriptorSet),
 			As<VulkanPipeline>(m_Pipeline)->GetLayoutHandle(),
 			0);
 

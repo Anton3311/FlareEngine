@@ -127,8 +127,8 @@ namespace Flare
 		m_PreviousLUTSteps = m_Parameters->SunTransmittanceLUTSteps;
 
 		commandBuffer->BeginRenderTarget(context.GetRenderTarget());
-		commandBuffer->SetGlobalDescriptorSet(context.GetViewport().GlobalResources.CameraDescriptorSet, 0);
-		commandBuffer->SetGlobalDescriptorSet(context.GetViewport().GlobalResources.GlobalDescriptorSet, 1);
+		commandBuffer->SetGlobalDescriptorSet(context.GetViewport().GetFrameResources().CameraDescriptorSet, 0);
+		commandBuffer->SetGlobalDescriptorSet(context.GetViewport().GetFrameResources().GlobalDescriptorSet, 1);
 		commandBuffer->ApplyMaterial(m_AtmosphereMaterial);
 
 		const auto& renderTargetSpecifications = context.GetRenderTarget()->GetSpecifications();

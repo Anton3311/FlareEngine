@@ -89,7 +89,7 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		commandBuffer->SetGlobalDescriptorSet(context.GetViewport().GlobalResources.CameraDescriptorSet, 0);
+		commandBuffer->SetGlobalDescriptorSet(context.GetViewport().GetFrameResources().CameraDescriptorSet, 0);
 		commandBuffer->BeginRenderTarget(context.GetRenderTarget());
 
 		auto biasIndex = m_Material->GetShader()->GetPropertyIndex("u_Params.Bias");

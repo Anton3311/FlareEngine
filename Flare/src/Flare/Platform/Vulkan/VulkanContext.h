@@ -98,6 +98,10 @@ namespace Flare
 		void BeginFrame() override;
 		void EndFrame() override;
 		void Present() override;
+
+		uint32_t GetFrameInFlightCount() const override;
+		uint32_t GetCurrentFrameInFlight() const override;
+
 		void WaitForDevice() override;
 
 		Ref<CommandBuffer> GetCommandBuffer() const override;
@@ -115,8 +119,6 @@ namespace Flare
 			Span<const VkSemaphore> waitSemaphores,
 			bool waitForMainRenderingSubmition);
 
-		uint32_t GetCurrentFrameInFlight() const { return m_Swapchain->GetFrameInFlight(); }
-		uint32_t GetFrameInFlightCount() const { return m_Swapchain->GetFrameCount(); }
 		Ref<VulkanFrameBuffer> GetSwapChainFrameBuffer(uint32_t index) const { return m_Swapchain->GetFrameBuffer(index); }
 
 		Ref<VulkanCommandBuffer> BeginTemporaryCommandBuffer();

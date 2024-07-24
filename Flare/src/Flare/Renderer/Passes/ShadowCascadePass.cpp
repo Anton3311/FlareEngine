@@ -124,7 +124,7 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 
 		commandBuffer->SetGlobalDescriptorSet(m_CameraDescriptor, 0);
-		commandBuffer->SetGlobalDescriptorSet(context.GetViewport().GlobalResources.GlobalDescriptorSetWithoutShadows, 1);
+		commandBuffer->SetGlobalDescriptorSet(context.GetViewport().GetFrameResources().GlobalDescriptorSetWithoutShadows, 1);
 		commandBuffer->SetGlobalDescriptorSet(m_InstanceBufferDescriptor, 2);
 
 		commandBuffer->ApplyMaterial(Renderer::GetDepthOnlyMaterial());

@@ -160,7 +160,7 @@ namespace Flare
 		m_ShadowData.MaxShadowDistance = settings.CascadeSplits[settings.Cascades - 1];
 		m_ShadowData.ShadowFadeStartDistance = m_ShadowData.MaxShadowDistance - settings.FadeDistance;
 
-		context.GetViewport().GlobalResources.ShadowDataBuffer->SetData(&m_ShadowData, sizeof(m_ShadowData), 0);
+		context.GetViewport().GetFrameResources().ShadowDataBuffer->SetData(&m_ShadowData, sizeof(m_ShadowData), 0);
 	}
 
 	enum class CullResult

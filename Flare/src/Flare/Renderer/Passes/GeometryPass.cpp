@@ -42,12 +42,13 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		commandBuffer->SetGlobalDescriptorSet(context.GetViewport().GlobalResources.CameraDescriptorSet, 0);
+		const ViewportFrameResources& viewportFrameResources = context.GetViewport().GetFrameResources();
+		commandBuffer->SetGlobalDescriptorSet(viewportFrameResources.CameraDescriptorSet, 0);
 
 		if (context.GetViewport().IsShadowMappingEnabled() && Renderer::GetShadowSettings().Enabled)
-			commandBuffer->SetGlobalDescriptorSet(context.GetViewport().GlobalResources.GlobalDescriptorSet, 1);
+			commandBuffer->SetGlobalDescriptorSet(viewportFrameResources.GlobalDescriptorSet, 1);
 		else
-			commandBuffer->SetGlobalDescriptorSet(context.GetViewport().GlobalResources.GlobalDescriptorSetWithoutShadows, 1);
+			commandBuffer->SetGlobalDescriptorSet(viewportFrameResources.GlobalDescriptorSetWithoutShadows, 1);
 
 		commandBuffer->SetGlobalDescriptorSet(m_InstanceDataDescriptor, 2);
 

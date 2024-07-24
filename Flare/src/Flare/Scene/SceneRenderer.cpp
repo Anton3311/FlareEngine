@@ -157,8 +157,6 @@ namespace Flare
 
 		Renderer::SetCurrentViewport(viewport);
 
-		viewport.PrepareViewport();
-
 		RenderView sceneCameraView{};
 		if (view != nullptr)
 		{
@@ -225,6 +223,8 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
+		viewport.PrepareViewport();
+
 		Ref<CommandBuffer> commandBuffer = GraphicsContext::GetInstance().GetCommandBuffer();
 
 		LightData lightData{};
@@ -239,14 +239,16 @@ namespace Flare
 		lightData.PointLightsCount = (uint32_t)m_SceneSubmition.PointLights.size();
 		lightData.SpotLightsCount = (uint32_t)m_SceneSubmition.SpotLights.size();
 
+		const ViewportFrameResources& viewportFrameResources = viewport.GetFrameResources();
+
 		{
 			FLARE_PROFILE_SCOPE("UpdateLightUniformBuffer");
-			viewport.GlobalResources.LightBuffer->SetData(&lightData, sizeof(lightData), 0);
+			viewportFrameResources.LightBuffer->SetData(&lightData, sizeof(lightData), 0);
 		}
 
 		{
 			FLARE_PROFILE_SCOPE("UpdateCameraUniformBuffer");
-			viewport.GlobalResources.CameraBuffer->SetData(&view, sizeof(view), 0);
+			viewportFrameResources.CameraBuffer->SetData(&view, sizeof(view), 0);
 		}
 
 		bool updateViewportDescriptorSets = false;
@@ -255,13 +257,13 @@ namespace Flare
 			FLARE_PROFILE_SCOPE("UploadPointLightsData");
 			MemorySpan pointLightsData = MemorySpan::FromVector(m_SceneSubmition.PointLights);
 
-			if (pointLightsData.GetSize() > viewport.GlobalResources.PointLightsBuffer->GetSize())
+			if (pointLightsData.GetSize() > viewportFrameResources.PointLightsBuffer->GetSize())
 			{
-				viewport.GlobalResources.PointLightsBuffer->Resize(pointLightsData.GetSize());
+				viewportFrameResources.PointLightsBuffer->Resize(pointLightsData.GetSize());
 				updateViewportDescriptorSets = true;
 			}
 
-			viewport.GlobalResources.PointLightsBuffer->SetData(pointLightsData, 0, commandBuffer);
+			viewportFrameResources.PointLightsBuffer->SetData(pointLightsData, 0, commandBuffer);
 		}
 
 		{
@@ -269,13 +271,13 @@ namespace Flare
 
 			MemorySpan spotLightsData = MemorySpan::FromVector(m_SceneSubmition.SpotLights);
 
-			if (spotLightsData.GetSize() > viewport.GlobalResources.SpotLightsBuffer->GetSize())
+			if (spotLightsData.GetSize() > viewportFrameResources.SpotLightsBuffer->GetSize())
 			{
-				viewport.GlobalResources.SpotLightsBuffer->Resize(spotLightsData.GetSize());
+				viewportFrameResources.SpotLightsBuffer->Resize(spotLightsData.GetSize());
 				updateViewportDescriptorSets = true;
 			}
 
-			viewport.GlobalResources.SpotLightsBuffer->SetData(spotLightsData, 0, commandBuffer);
+			viewportFrameResources.SpotLightsBuffer->SetData(spotLightsData, 0, commandBuffer);
 		}
 
 		viewport.UpdateGlobalDescriptorSets();

@@ -169,7 +169,7 @@ namespace Flare
 					cascadeBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 				}
 
-				s_RendererData.GlobalDescriptorSetPool = CreateRef<VulkanDescriptorSetPool>(8, Span(bindings, 12));
+				s_RendererData.GlobalDescriptorSetPool = CreateRef<VulkanDescriptorSetPool>(32, Span(bindings, 12));
 			}
 
 			{
@@ -180,7 +180,7 @@ namespace Flare
 				cameraBinding.pImmutableSamplers = nullptr;
 				cameraBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
 
-				s_RendererData.CameraDescriptorSetPool = CreateRef<VulkanDescriptorSetPool>(32, Span(&cameraBinding, 1));
+				s_RendererData.CameraDescriptorSetPool = CreateRef<VulkanDescriptorSetPool>(48, Span(&cameraBinding, 1));
 			}
 
 			{
@@ -191,7 +191,7 @@ namespace Flare
 				instanceDataBinding.pImmutableSamplers = nullptr;
 				instanceDataBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
 
-				s_RendererData.InstanceDataDescriptorSetPool = CreateRef<VulkanDescriptorSetPool>(32, Span(&instanceDataBinding, 1));
+				s_RendererData.InstanceDataDescriptorSetPool = CreateRef<VulkanDescriptorSetPool>(48, Span(&instanceDataBinding, 1));
 			}
 
 			// Decals descriptor set
@@ -201,7 +201,7 @@ namespace Flare
 			decalDepthBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 			decalDepthBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
-			s_RendererData.DecalsDescriptorSetPool = CreateRef<VulkanDescriptorSetPool>(32, Span(&decalDepthBinding, 1));
+			s_RendererData.DecalsDescriptorSetPool = CreateRef<VulkanDescriptorSetPool>(48, Span(&decalDepthBinding, 1));
 		}
 
 		Project::OnProjectOpen.Bind(ReloadShaders);
@@ -364,7 +364,7 @@ namespace Flare
 		return s_RendererData.DecalsDescriptorSetPool->GetLayout();
 	}
 
-	static void SetupPrimaryDescriptorSet(Ref<DescriptorSet> set, Ref<Sampler> comparisonSampler)
+	static void SetupGlobalDescriptorSet(Ref<DescriptorSet> set, Ref<Sampler> comparisonSampler)
 	{
 		for (size_t i = 0; i < ShadowSettings::MaxCascades; i++)
 		{
@@ -434,8 +434,15 @@ namespace Flare
 		std::array<RenderGraphTextureId, ShadowSettings::MaxCascades> cascadeTextures = { RenderGraphTextureId() };
 		Ref<ShadowPass> shadowPass = ConfigureShadowPass(viewport, cascadeTextures);
 
-		SetupPrimaryDescriptorSet(viewport.GlobalResources.GlobalDescriptorSet, shadowPass->GetCompareSampler());
-		SetupPrimaryDescriptorSet(viewport.GlobalResources.GlobalDescriptorSetWithoutShadows, shadowPass->GetCompareSampler());
+		uint32_t frameInFlightCount = GraphicsContext::GetInstance().GetFrameInFlightCount();
+		const ViewportFrameResources& viewportFrameResources = viewport.GetFrameResources();
+
+		for (uint32_t i = 0; i < frameInFlightCount; i++)
+		{
+			const ViewportFrameResources& viewportFrameResources = viewport.GetFrameResources(i);
+			SetupGlobalDescriptorSet(viewportFrameResources.GlobalDescriptorSet, shadowPass->GetCompareSampler());
+			SetupGlobalDescriptorSet(viewportFrameResources.GlobalDescriptorSetWithoutShadows, shadowPass->GetCompareSampler());
+		}
 
 		RenderGraphPassSpecifications geometryPass{};
 		geometryPass.SetDebugName("GeometryPass");
@@ -445,15 +452,19 @@ namespace Flare
 
 		if (viewport.IsShadowMappingEnabled())
 		{
-			Ref<DescriptorSet> set = viewport.GlobalResources.GlobalDescriptorSet;
-			for (uint32_t i = 0; i < (uint32_t)Renderer::GetShadowSettings().Cascades; i++)
+			for (uint32_t i = 0; i < frameInFlightCount; i++)
 			{
-				Ref<Texture> cascadeTexture = viewport.Graph.GetResourceManager().GetTexture(cascadeTextures[i]);
-				set->WriteImage(cascadeTexture, 4 + i);
-				set->WriteImage(cascadeTexture, shadowPass->GetCompareSampler(), 8 + i);
-			}
+				const ViewportFrameResources& viewportFrameResources = viewport.GetFrameResources(i);
+				Ref<DescriptorSet> set = viewportFrameResources.GlobalDescriptorSet;
+				for (uint32_t i = 0; i < (uint32_t)Renderer::GetShadowSettings().Cascades; i++)
+				{
+					Ref<Texture> cascadeTexture = viewport.Graph.GetResourceManager().GetTexture(cascadeTextures[i]);
+					set->WriteImage(cascadeTexture, 4 + i);
+					set->WriteImage(cascadeTexture, shadowPass->GetCompareSampler(), 8 + i);
+				}
 
-			set->FlushWrites();
+				set->FlushWrites();
+			}
 
 			for (size_t i = 0; i < cascadeTextures.size(); i++)
 			{

@@ -470,6 +470,16 @@ namespace Flare
 		}
 	}
 
+	uint32_t VulkanContext::GetFrameInFlightCount() const
+	{
+		return m_Swapchain->GetFrameCount();
+	}
+
+	uint32_t VulkanContext::GetCurrentFrameInFlight() const
+	{
+		return m_Swapchain->GetFrameInFlight();
+	}
+
 	void VulkanContext::WaitForDevice()
 	{
 		FLARE_PROFILE_FUNCTION();

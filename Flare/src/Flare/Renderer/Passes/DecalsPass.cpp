@@ -67,7 +67,7 @@ namespace Flare
 		m_InstanceBuffer->SetData(MemorySpan::FromVector(m_InstanceData), 0, commandBuffer);
 
 		commandBuffer->BeginRenderTarget(context.GetRenderTarget());
-		commandBuffer->SetGlobalDescriptorSet(context.GetViewport().GlobalResources.CameraDescriptorSet, 0);
+		commandBuffer->SetGlobalDescriptorSet(context.GetViewport().GetFrameResources().CameraDescriptorSet, 0);
 		commandBuffer->SetGlobalDescriptorSet(m_DecalSet, 1);
 		commandBuffer->SetGlobalDescriptorSet(m_InstanceDataDescriptor, 2);
 

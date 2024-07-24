@@ -18,6 +18,9 @@ namespace Flare
 		virtual void EndFrame() = 0;
 		virtual void Present() = 0;
 
+		virtual uint32_t GetFrameInFlightCount() const = 0;
+		virtual uint32_t GetCurrentFrameInFlight() const = 0;
+
 		virtual void WaitForDevice() = 0;
 		virtual Ref<CommandBuffer> GetCommandBuffer() const = 0;
 	public:

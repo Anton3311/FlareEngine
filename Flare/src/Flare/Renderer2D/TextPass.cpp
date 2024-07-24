@@ -71,7 +71,7 @@ namespace Flare
 		commandBuffer->BeginRenderTarget(context.GetRenderTarget());
 		commandBuffer->SetViewportAndScisors(Math::Rect(glm::vec2(0.0f), (glm::vec2)renderTarget->GetSize()));
 
-		commandBuffer->SetGlobalDescriptorSet(context.GetViewport().GlobalResources.CameraDescriptorSet, 0);
+		commandBuffer->SetGlobalDescriptorSet(context.GetViewport().GetFrameResources().CameraDescriptorSet, 0);
 		
 		for (const auto& batch : submition.TextBatches)
 		{

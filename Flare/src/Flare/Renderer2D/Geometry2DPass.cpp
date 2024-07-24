@@ -52,7 +52,7 @@ namespace Flare
 
 		commandBuffer->BeginRenderTarget(context.GetRenderTarget());
 
-		commandBuffer->SetGlobalDescriptorSet(context.GetViewport().GlobalResources.CameraDescriptorSet, 0);
+		commandBuffer->SetGlobalDescriptorSet(context.GetViewport().GetFrameResources().CameraDescriptorSet, 0);
 		commandBuffer->BindVertexBuffers(Span((Ref<const VertexBuffer>*)&m_VertexBuffer, 1), 0);
 		commandBuffer->BindIndexBuffer(m_IndexBuffer);
 

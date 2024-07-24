@@ -16,26 +16,38 @@ namespace Flare
 		: Graph(*this)
 	{
 		FLARE_PROFILE_FUNCTION();
-		GlobalResources.CameraBuffer = UniformBuffer::Create(sizeof(RenderView));
-		GlobalResources.LightBuffer = UniformBuffer::Create(sizeof(LightData));
-		GlobalResources.ShadowDataBuffer = UniformBuffer::Create(sizeof(ShadowPass::ShadowData));
-		GlobalResources.PointLightsBuffer = ShaderStorageBuffer::Create(16 * sizeof(PointLightData));
-		GlobalResources.SpotLightsBuffer = ShaderStorageBuffer::Create(16 * sizeof(SpotLightData));
 
-		GlobalResources.CameraDescriptorSet = Renderer::GetCameraDescriptorSetPool()->AllocateSet();
-		GlobalResources.CameraDescriptorSet->WriteUniformBuffer(GlobalResources.CameraBuffer, 0);
-		GlobalResources.CameraDescriptorSet->FlushWrites();
+		m_GlobalResources.FrameResources.resize(GraphicsContext::GetInstance().GetFrameInFlightCount());
 
-		GlobalResources.GlobalDescriptorSet = Renderer::GetGlobalDescriptorSetPool()->AllocateSet();
-		GlobalResources.GlobalDescriptorSetWithoutShadows = Renderer::GetGlobalDescriptorSetPool()->AllocateSet();
+		for (size_t frameIndex = 0; frameIndex < m_GlobalResources.FrameResources.size(); frameIndex++)
+		{
+			ViewportFrameResources& frameResources = m_GlobalResources.FrameResources[frameIndex];
+
+			frameResources.CameraBuffer = UniformBuffer::Create(sizeof(RenderView));
+			frameResources.LightBuffer = UniformBuffer::Create(sizeof(LightData));
+			frameResources.ShadowDataBuffer = UniformBuffer::Create(sizeof(ShadowPass::ShadowData));
+			frameResources.PointLightsBuffer = ShaderStorageBuffer::Create(16 * sizeof(PointLightData));
+			frameResources.SpotLightsBuffer = ShaderStorageBuffer::Create(16 * sizeof(SpotLightData));
+
+			frameResources.CameraDescriptorSet = Renderer::GetCameraDescriptorSetPool()->AllocateSet();
+			frameResources.CameraDescriptorSet->WriteUniformBuffer(frameResources.CameraBuffer, 0);
+			frameResources.CameraDescriptorSet->FlushWrites();
+
+			frameResources.GlobalDescriptorSet = Renderer::GetGlobalDescriptorSetPool()->AllocateSet();
+			frameResources.GlobalDescriptorSetWithoutShadows = Renderer::GetGlobalDescriptorSetPool()->AllocateSet();
+		}
 	}
 
 	Viewport::~Viewport()
 	{
 		FLARE_PROFILE_FUNCTION();
-		Renderer::GetCameraDescriptorSetPool()->ReleaseSet(GlobalResources.CameraDescriptorSet);
-		Renderer::GetGlobalDescriptorSetPool()->ReleaseSet(GlobalResources.GlobalDescriptorSet);
-		Renderer::GetGlobalDescriptorSetPool()->ReleaseSet(GlobalResources.GlobalDescriptorSetWithoutShadows);
+
+		for (const ViewportFrameResources& frameResources : m_GlobalResources.FrameResources)
+		{
+			Renderer::GetCameraDescriptorSetPool()->ReleaseSet(frameResources.CameraDescriptorSet);
+			Renderer::GetGlobalDescriptorSetPool()->ReleaseSet(frameResources.GlobalDescriptorSet);
+			Renderer::GetGlobalDescriptorSetPool()->ReleaseSet(frameResources.GlobalDescriptorSetWithoutShadows);
+		}
 	}
 
 	void Viewport::Resize(glm::ivec2 position, glm::ivec2 size)
@@ -50,9 +62,10 @@ namespace Flare
 	void Viewport::UpdateGlobalDescriptorSets()
 	{
 		FLARE_PROFILE_FUNCTION();
+		FLARE_CORE_ASSERT(m_CurrentFrameResources);
 
-		SetupGlobalDescriptorSet(GlobalResources.GlobalDescriptorSet);
-		SetupGlobalDescriptorSet(GlobalResources.GlobalDescriptorSetWithoutShadows);
+		SetupGlobalDescriptorSet(*m_CurrentFrameResources, m_CurrentFrameResources->GlobalDescriptorSet);
+		SetupGlobalDescriptorSet(*m_CurrentFrameResources, m_CurrentFrameResources->GlobalDescriptorSetWithoutShadows);
 	}
 
 	void Viewport::OnBuildRenderGraph()
@@ -86,6 +99,8 @@ namespace Flare
 	void Viewport::PrepareViewport()
 	{
 		FLARE_PROFILE_FUNCTION();
+
+		m_CurrentFrameResources = &m_GlobalResources.FrameResources[GraphicsContext::GetInstance().GetCurrentFrameInFlight()];
 
 		if (m_ShouldResizeRenderGraphTextures)
 		{
@@ -129,13 +144,18 @@ namespace Flare
 		Graph.SetNeedsRebuilding();
 	}
 
-	void Viewport::SetupGlobalDescriptorSet(Ref<DescriptorSet> set)
+	const ViewportFrameResources& Viewport::GetFrameResources() const
+	{
+		return m_GlobalResources.FrameResources[GraphicsContext::GetInstance().GetCurrentFrameInFlight()];
+	}
+
+	void Viewport::SetupGlobalDescriptorSet(const ViewportFrameResources& frameResources, Ref<DescriptorSet> set)
 	{
 		FLARE_PROFILE_FUNCTION();
-		set->WriteUniformBuffer(GlobalResources.ShadowDataBuffer, 0);
-		set->WriteUniformBuffer(GlobalResources.LightBuffer, 1);
-		set->WriteStorageBuffer(GlobalResources.PointLightsBuffer, 2);
-		set->WriteStorageBuffer(GlobalResources.SpotLightsBuffer, 3);
+		set->WriteUniformBuffer(frameResources.ShadowDataBuffer, 0);
+		set->WriteUniformBuffer(frameResources.LightBuffer, 1);
+		set->WriteStorageBuffer(frameResources.PointLightsBuffer, 2);
+		set->WriteStorageBuffer(frameResources.SpotLightsBuffer, 3);
 		set->FlushWrites();
 	}
 }
