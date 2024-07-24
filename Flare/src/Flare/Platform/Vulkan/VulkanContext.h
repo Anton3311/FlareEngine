@@ -109,9 +109,8 @@ namespace Flare
 		inline VkSemaphore GetRenderCompleteSemaphore() const { return m_SyncObjects[m_CurrentFrameSyncObjectsIndex].RenderingCompleteSemaphore2; }
 		inline void SignalSecondarySemaphore() { m_SignalSecondarySemaphore = true; }
 
-		void SubmitToGraphicsQueue(Ref<CommandBuffer> commandBuffer, Span<VkSemaphore> waitSempahores, Span<VkSemaphore> signalSemaphores);
-		void SubmitSwapchainPresent(VkSwapchainKHR swapchain, Span<VkSemaphore> waitSemaphores, uint32_t imageIndex);
-		void SubmitSwapchainPresent(const std::function<void()>& function);
+		void SubmitToGraphicsQueue(Ref<CommandBuffer> commandBuffer, Span<const VkSemaphore> waitSempahores, Span<const VkSemaphore> signalSemaphores);
+		void SubmitSwapchainPresent(VulkanSwapchain& swapchain, Span<const VkSemaphore> waitSemaphores);
 
 		uint32_t GetCurrentFrameInFlight() const { return m_Swapchain->GetFrameInFlight(); }
 		uint32_t GetFrameInFlightCount() const { return m_Swapchain->GetFrameCount(); }
@@ -196,16 +195,23 @@ namespace Flare
 
 		struct PresentSubmition
 		{
-			VkSwapchainKHR Swapchain = VK_NULL_HANDLE;
+			PresentSubmition(VulkanSwapchain& swapchain, uint32_t firstWaitSemaphore, uint32_t waitSemaphoreCount)
+				: Swapchain(swapchain),
+				SwapchainHandle(swapchain.GetHandle()),
+				ImageIndex(swapchain.GetFrameInFlight()),
+				FirstWaitSemaphore(firstWaitSemaphore),
+				WaitSemaphoreCount(waitSemaphoreCount) {}
+
+			VulkanSwapchain& Swapchain;
+			VkSwapchainKHR SwapchainHandle = VK_NULL_HANDLE;
+			uint32_t ImageIndex = UINT32_MAX;
 			uint32_t FirstWaitSemaphore = UINT32_MAX;
 			uint32_t WaitSemaphoreCount = UINT32_MAX;
-			uint32_t ImageIndex = UINT32_MAX;
 		};
 
+		std::vector<VkSemaphore> m_UsedSemaphores;
 		std::vector<GraphicsQueueSubmition> m_GraphicsQueueSubmitions;
 		std::vector<PresentSubmition> m_PresentSubmitions;
-		std::vector<std::function<void()>> m_PresentQueueSubmitions;
-		std::vector<VkSemaphore> m_UsedSemaphores;
 
 		std::function<void(VkImageView)> m_ImageDeletationHandler = nullptr;
 

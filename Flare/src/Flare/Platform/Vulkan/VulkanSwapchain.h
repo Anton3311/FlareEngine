@@ -26,6 +26,8 @@ namespace Flare
 		void AcquireNextImage();
 
 		void Present(Span<const VkSemaphore> waitSemaphores, glm::uvec2 windowSize);
+		void SubmitPresent(Span<const VkSemaphore> waitSemaphores, glm::uvec2 windowSize);
+		void HandlePresentResult(VkResult result);
 
 		void EnsureCreated();
 		void Recreate();

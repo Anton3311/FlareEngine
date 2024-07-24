@@ -231,6 +231,8 @@ namespace Flare
 			vmaUnmapMemory(allocator, entry.BufferAllocation.Handle);
 			vkDestroyBuffer(device, entry.Buffer, nullptr);
 			vmaFreeMemory(allocator, entry.BufferAllocation.Handle);
+
+			entry.BufferAllocation = {};
 		}
 
 		m_PoolEntries.erase(m_PoolEntries.begin() + rangeStart, m_PoolEntries.begin() + rangeEnd);

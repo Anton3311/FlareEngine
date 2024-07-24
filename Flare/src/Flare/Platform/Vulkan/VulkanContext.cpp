@@ -369,31 +369,27 @@ namespace Flare
 		int32_t width, height;
 		glfwGetFramebufferSize((GLFWwindow*)m_Window->GetNativeWindow(), &width, &height);
 
-		m_Swapchain->Present(Span<const VkSemaphore>(&m_CurrentSyncObjects.RenderingCompleteSemaphore, 1), glm::uvec2((uint32_t)width, (uint32_t)height));
+		m_Swapchain->SubmitPresent(Span<const VkSemaphore>(&m_CurrentSyncObjects.RenderingCompleteSemaphore, 1), glm::uvec2((uint32_t)width, (uint32_t)height));
 
 		{
 			FLARE_PROFILE_SCOPE("Present");
-			std::vector<VkPresentInfoKHR> presentInfos;
-
-			for (const PresentSubmition& submition : m_PresentSubmitions)
+			for (size_t i = 0; i < m_PresentSubmitions.size(); i++)
 			{
-				VkPresentInfoKHR& presentInfo = presentInfos.emplace_back();
+				PresentSubmition& submition = m_PresentSubmitions[i];
+
+				VkPresentInfoKHR presentInfo{};
 				presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 				presentInfo.swapchainCount = 1;
-				presentInfo.pSwapchains = &submition.Swapchain;
+				presentInfo.pSwapchains = &submition.SwapchainHandle;
 				presentInfo.pImageIndices = &submition.ImageIndex;
 				presentInfo.waitSemaphoreCount = submition.WaitSemaphoreCount;
 				presentInfo.pWaitSemaphores = m_UsedSemaphores.data() + submition.FirstWaitSemaphore;
+
+				VkResult result = vkQueuePresentKHR(m_PresentQueue, &presentInfo);
+				submition.Swapchain.HandlePresentResult(result);
 			}
 
-			//VK_CHECK_RESULT(vkQueuePresentKHR());
-
-			for (const auto& f : m_PresentQueueSubmitions)
-			{
-				f();
-			}
-
-			m_PresentQueueSubmitions.clear();
+			m_PresentSubmitions.clear();
 		}
 
 		{
@@ -432,7 +428,7 @@ namespace Flare
 		return m_PrimaryCommandBuffer;
 	}
 
-	void VulkanContext::SubmitToGraphicsQueue(Ref<CommandBuffer> commandBuffer, Span<VkSemaphore> waitSempahores, Span<VkSemaphore> signalSemaphores)
+	void VulkanContext::SubmitToGraphicsQueue(Ref<CommandBuffer> commandBuffer, Span<const VkSemaphore> waitSempahores, Span<const VkSemaphore> signalSemaphores)
 	{
 		GraphicsQueueSubmition& submition = m_GraphicsQueueSubmitions.emplace_back();
 		submition.CommandBuffer = commandBuffer;
@@ -449,23 +445,14 @@ namespace Flare
 			m_UsedSemaphores.push_back(semaphore);
 	}
 
-	void VulkanContext::SubmitSwapchainPresent(VkSwapchainKHR swapchain, Span<VkSemaphore> waitSemaphores, uint32_t imageIndex)
+	void VulkanContext::SubmitSwapchainPresent(VulkanSwapchain& swapchain, Span<const VkSemaphore> waitSemaphores)
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		PresentSubmition& submition = m_PresentSubmitions.emplace_back();
-		submition.Swapchain = swapchain;
-		submition.ImageIndex = imageIndex;
-		submition.FirstWaitSemaphore = (uint32_t)m_UsedSemaphores.size();
-		submition.WaitSemaphoreCount = (uint32_t)waitSemaphores.GetSize();
+		m_PresentSubmitions.emplace_back(swapchain, (uint32_t)m_UsedSemaphores.size(), (uint32_t)waitSemaphores.GetSize());
 
 		for (VkSemaphore semaphore : waitSemaphores)
 			m_UsedSemaphores.push_back(semaphore);
-	}
-
-	void VulkanContext::SubmitSwapchainPresent(const std::function<void()>& function)
-	{
-		m_PresentQueueSubmitions.push_back(function);
 	}
 
 	Ref<VulkanCommandBuffer> VulkanContext::BeginTemporaryCommandBuffer()

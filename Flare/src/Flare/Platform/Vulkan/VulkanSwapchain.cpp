@@ -62,33 +62,39 @@ namespace Flare
 
 		m_WindowSize = windowSize;
 
-		std::vector<VkSemaphore> semaphores(waitSemaphores.begin(), waitSemaphores.end());
-		VulkanContext::GetInstance().SubmitSwapchainPresent([this, s = std::move(semaphores)]()
-			{
-				// TODO: Avoid doing a call to vkQueuePresentKHR, instead generate
-				//       a VkPresentInfoKHR and send it to VulkanContext wich should
-				//       do a single call to vkQueuePresent
+		VkPresentInfoKHR presentInfo{};
+		presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+		presentInfo.waitSemaphoreCount = (uint32_t)waitSemaphores.GetSize();
+		presentInfo.pWaitSemaphores = waitSemaphores.GetData();
+		presentInfo.swapchainCount = 1;
+		presentInfo.pSwapchains = &m_Swapchain;
+		presentInfo.pImageIndices = &m_CurrentFrameInFlight;
 
-				VkPresentInfoKHR presentInfo{};
-				presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-				presentInfo.waitSemaphoreCount = (uint32_t)s.size();
-				presentInfo.pWaitSemaphores = s.data();
-				presentInfo.swapchainCount = 1;
-				presentInfo.pSwapchains = &m_Swapchain;
-				presentInfo.pImageIndices = &m_CurrentFrameInFlight;
+		VkQueue presentQueue = VulkanContext::GetInstance().GetPresentQueue();
+		VkResult presentResult = vkQueuePresentKHR(presentQueue, &presentInfo);
 
-				VkQueue presentQueue = VulkanContext::GetInstance().GetPresentQueue();
+		HandlePresentResult(presentResult);
+	}
 
-				VkResult presentResult = vkQueuePresentKHR(presentQueue, &presentInfo);
-				if (presentResult == VK_ERROR_OUT_OF_DATE_KHR)
-				{
-					Recreate();
-				}
-				else if (presentResult != VK_SUCCESS)
-				{
-					FLARE_CORE_ERROR("Failed to present");
-				}
-			});
+	void VulkanSwapchain::SubmitPresent(Span<const VkSemaphore> waitSemaphores, glm::uvec2 windowSize)
+	{
+		m_WindowSize = windowSize;
+
+		VulkanContext::GetInstance().SubmitSwapchainPresent(*this, waitSemaphores);
+	}
+
+	void VulkanSwapchain::HandlePresentResult(VkResult result)
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		if (result == VK_ERROR_OUT_OF_DATE_KHR)
+		{
+			Recreate();
+		}
+		else if (result != VK_SUCCESS)
+		{
+			FLARE_CORE_ERROR("Failed to present");
+		}
 	}
 
 	void VulkanSwapchain::EnsureCreated()
