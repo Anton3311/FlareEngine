@@ -36,6 +36,32 @@ namespace Flare
 		return id;
 	}
 
+	RenderGraphTextureId RenderGraphResourceManager::CreateFixedSizeTexture(TextureFormat format, glm::uvec2 size, std::string_view debugName)
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		RenderGraphTextureId id = RenderGraphTextureId((uint32_t)m_Textures.size());
+
+		RenderGraphTextureResource& resource = m_Textures.emplace_back();
+		resource.DebugName = debugName;
+		resource.Format = format;
+		resource.TextureSizeConstraint = RenderGraphTextureResource::SizeConstraint::Fixed;
+
+		TextureSpecifications specifications{};
+		specifications.Width = size.x;
+		specifications.Height = size.y;
+		specifications.Format = resource.Format;
+		specifications.Usage = TextureUsage::Sampling | TextureUsage::RenderTarget;
+		specifications.GenerateMipMaps = false;
+		specifications.Wrap = TextureWrap::Clamp;
+		specifications.Filtering = TextureFiltering::Closest;
+
+		resource.Texture = Texture::Create(specifications);
+		resource.Texture->SetDebugName(debugName);
+
+		return id;
+	}
+
 	RenderGraphTextureId RenderGraphResourceManager::RegisterExistingTexture(Ref<Texture> texture)
 	{
 		RenderGraphTextureId id = RenderGraphTextureId((uint32_t)m_Textures.size());

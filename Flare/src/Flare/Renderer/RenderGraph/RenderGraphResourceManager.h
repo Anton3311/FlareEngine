@@ -63,6 +63,7 @@ namespace Flare
 		RenderGraphResourceManager(const Viewport& viewport);
 
 		RenderGraphTextureId CreateTexture(TextureFormat format, std::string_view debugName);
+		RenderGraphTextureId CreateFixedSizeTexture(TextureFormat format, glm::uvec2 size, std::string_view debugName);
 		RenderGraphTextureId RegisterExistingTexture(Ref<Texture> texture);
 
 		void Clear();

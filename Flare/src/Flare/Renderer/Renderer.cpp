@@ -412,22 +412,13 @@ namespace Flare
 			return shadowPass;
 		}
 
-		uint32_t textureResolution = GetShadowMapResolution(s_RendererData.ShadowMappingSettings.Quality);
-
-		TextureSpecifications cascadeSpec{};
-		cascadeSpec.Filtering = TextureFiltering::Closest;
-		cascadeSpec.Wrap = TextureWrap::Clamp;
-		cascadeSpec.Format = TextureFormat::Depth32;
-		cascadeSpec.Usage = TextureUsage::RenderTarget | TextureUsage::Sampling;
-		cascadeSpec.Width = textureResolution;
-		cascadeSpec.Height = textureResolution;
-
+		uint32_t shadowTextureResolution = GetShadowMapResolution(s_RendererData.ShadowMappingSettings.Quality);
 		for (int32_t cascadeIndex = 0; cascadeIndex < s_RendererData.ShadowMappingSettings.Cascades; cascadeIndex++)
 		{
-			Ref<Texture> cascadeTexture = Texture::Create(cascadeSpec);
-			cascadeTexture->SetDebugName(fmt::format("CascadeTexture.{}", cascadeIndex));
-
-			cascadeTextures[cascadeIndex] = viewport.Graph.GetResourceManager().RegisterExistingTexture(cascadeTexture);
+			cascadeTextures[cascadeIndex] = viewport.Graph.GetResourceManager().CreateFixedSizeTexture(
+				TextureFormat::Depth32,
+				glm::uvec2(shadowTextureResolution),
+				fmt::format("CascadeTexture.{}", cascadeIndex));
 
 			RenderGraphPassSpecifications cascadePassSpec{};
 			cascadePassSpec.SetDebugName(fmt::format("ShadowCascadePass{}", cascadeIndex));
