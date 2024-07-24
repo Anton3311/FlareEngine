@@ -50,9 +50,7 @@ namespace Flare
 		std::string DebugName;
 		TextureFormat Format = TextureFormat::RGBA8;
 
-		Ref<Texture> Texture = nullptr;
-
-		uint32_t TextureObjectIndex = UINT32_MAX;
+		uint32_t TextureHandleIndex = UINT32_MAX;
 		SizeConstraint TextureSizeConstraint = SizeConstraint::Fixed;
 	};
 
@@ -74,7 +72,9 @@ namespace Flare
 		inline Ref<Texture> GetTexture(RenderGraphTextureId textureId) const
 		{
 			FLARE_CORE_ASSERT(IsTextureIdValid(textureId));
-			return m_Textures[textureId.GetValue()].Texture;
+
+			uint32_t textureHandleIndex = m_Textures[textureId.GetValue()].TextureHandleIndex;
+			return m_TextureHandles[textureHandleIndex];
 		}
 
 		inline TextureFormat GetTextureFormat(RenderGraphTextureId textureId) const
@@ -87,5 +87,6 @@ namespace Flare
 	private:
 		const Viewport& m_Viewport;
 		std::vector<RenderGraphTextureResource> m_Textures;
+		std::vector<Ref<Texture>> m_TextureHandles;
 	};
 }
