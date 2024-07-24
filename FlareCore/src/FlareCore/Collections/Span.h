@@ -29,6 +29,18 @@ namespace Flare
 		constexpr T* GetData() { return m_Values; }
 		constexpr const T* GetData() const { return m_Values; }
 
+		inline Span<T> Slice(size_t start) const
+		{
+			FLARE_CORE_ASSERT(start < m_Size);
+			return Span<T>(m_Values + start, m_Size - start);
+		}
+
+		inline Span<T> Slice(size_t start, size_t size) const
+		{
+			FLARE_CORE_ASSERT(start + size <= m_Size);
+			return Span<T>(m_Values + start, size);
+		}
+
 		bool operator==(const Span<T>& other) const
 		{
 			if (this == &other)
