@@ -79,12 +79,14 @@ namespace Flare
 		inline const std::vector<Input>& GetInputs() const { return m_Inputs; };
 		inline const std::vector<OutputAttachment>& GetOutputs() const { return m_Outputs; }
 		inline const std::string& GetDebugName() const { return m_DebugName; }
+		inline glm::vec4 GetDebugColor() const { return m_DebugColor; }
 		inline RenderGraphPassType GetType() const { return m_Type; }
 
 		inline bool HasOutputClearValues() const { return m_HasOutputClearValues; }
 	private:
 		RenderGraphPassType m_Type = RenderGraphPassType::Graphics;
 		std::string m_DebugName;
+		glm::vec4 m_DebugColor = glm::vec4(1.0f);
 		std::vector<Input> m_Inputs;
 		std::vector<OutputAttachment> m_Outputs;
 

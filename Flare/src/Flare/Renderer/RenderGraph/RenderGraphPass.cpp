@@ -7,6 +7,16 @@ namespace Flare
 	void RenderGraphPassSpecifications::SetDebugName(std::string_view debugName)
 	{
 		m_DebugName = debugName;
+
+		size_t hash = std::hash<std::string>()(m_DebugName);
+		uint8_t r = hash & 0xff;
+		uint8_t g = (hash >> 8) & 0xff;
+		uint8_t b = (hash >> 16) & 0xff;
+
+		m_DebugColor.r = glm::clamp((float)r / 255.0f, 0.0f, 1.0f);
+		m_DebugColor.g = glm::clamp((float)g / 255.0f, 0.0f, 1.0f);
+		m_DebugColor.b = glm::clamp((float)b / 255.0f, 0.0f, 1.0f);
+		m_DebugColor.a = 1.0f;
 	}
 
 	void RenderGraphPassSpecifications::AddInput(RenderGraphTextureId textureId, ImageLayout layout)
