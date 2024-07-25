@@ -6,6 +6,5 @@ namespace Flare
 {
 	VulkanAllocation::~VulkanAllocation()
 	{
-		FLARE_CORE_ASSERT(Handle == VK_NULL_HANDLE);
 	}
 }
