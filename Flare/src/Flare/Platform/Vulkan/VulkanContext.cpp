@@ -199,13 +199,10 @@ namespace Flare
 
 		m_Swapchain->EnsureCreated();
 
-		CreateSyncObjects();
-
-		m_CurrentSyncObjects = &m_SyncObjects[m_CurrentFrameSyncObjectsIndex];
-
 		CreateCommandBufferPool();
+		CreateFrameResources();
 
-		m_PrimaryCommandBuffer = CreateRef<VulkanCommandBuffer>(CreateCommandBuffer());
+		m_CurrentFrameResources = &m_FrameResouces[m_CurrentFrameFrameResourcesIndex];
 
 		VkDescriptorSetLayoutBinding emptyBinding{};
 		emptyBinding.binding = 0;
@@ -247,25 +244,27 @@ namespace Flare
 		m_RenderPasses.clear();
 		m_ColorOnlyPass = nullptr;
 
-		VkCommandBuffer commandBuffer = m_PrimaryCommandBuffer->GetHandle();
-		vkFreeCommandBuffers(m_Device, m_CommandBufferPool, 1, &commandBuffer);
-		vkDestroyCommandPool(m_Device, m_CommandBufferPool, nullptr);
-		m_PrimaryCommandBuffer = nullptr;
-
 		vmaDestroyAllocator(m_Allocator);
 
 		m_Swapchain.reset();
 
-		for (FrameSyncObjects& objects : m_SyncObjects)
+		for (FrameResources& frameResources : m_FrameResouces)
 		{
-			vkDestroyFence(m_Device, objects.FrameFence, nullptr);
-			ReleaseSemaphores(m_Device, objects.RenderingCompleteSemaphores);
+			vkDestroyFence(m_Device, frameResources.FrameFence, nullptr);
+			ReleaseSemaphores(m_Device, frameResources.RenderingCompleteSemaphores);
+
+			VkCommandBuffer commandBuffer = frameResources.CommandBuffer->GetHandle();
+			vkFreeCommandBuffers(m_Device, m_CommandBufferPool, 1, &commandBuffer);
 		}
+
+		m_FrameResouces.clear();
+
+		vkDestroyCommandPool(m_Device, m_CommandBufferPool, nullptr);
 
 		ReleaseSemaphores(m_Device, m_SemaphorePool);
 
-		m_SyncObjects.clear();
-		m_CurrentSyncObjects = {};
+		m_FrameResouces.clear();
+		m_CurrentFrameResources = {};
 
 		vkDestroySurfaceKHR(m_Instance, m_Surface, nullptr);
 
@@ -293,35 +292,35 @@ namespace Flare
 					//       minimized and nothing was submitted for rendering, which
 					//       means that the frame fence wasn't signalled, thus it leads
 					//       to waiting for an unsignalled fence in the current frame.
-					VK_CHECK_RESULT(vkWaitForFences(m_Device, 1, &m_CurrentSyncObjects->FrameFence, VK_TRUE, UINT64_MAX));
+					VK_CHECK_RESULT(vkWaitForFences(m_Device, 1, &m_CurrentFrameResources->FrameFence, VK_TRUE, UINT64_MAX));
 				}
 
 				m_SkipWaitForFrameFence = false;
 			}
 
-			m_CurrentFrameSyncObjectsIndex = (m_CurrentFrameSyncObjectsIndex + 1) % m_Swapchain->GetFrameCount();
-			m_CurrentSyncObjects = &m_SyncObjects[m_CurrentFrameSyncObjectsIndex];
+			m_CurrentFrameFrameResourcesIndex = (m_CurrentFrameFrameResourcesIndex + 1) % m_Swapchain->GetFrameCount();
+			m_CurrentFrameResources = &m_FrameResouces[m_CurrentFrameFrameResourcesIndex];
 
-			VK_CHECK_RESULT(vkResetFences(m_Device, 1, &m_CurrentSyncObjects->FrameFence));
+			VK_CHECK_RESULT(vkResetFences(m_Device, 1, &m_CurrentFrameResources->FrameFence));
 
 			m_Swapchain->AcquireNextImage();
 		}
 
-		m_PrimaryCommandBuffer->Reset();
+		m_CurrentFrameResources->CommandBuffer->Reset();
 
 		m_StagingBufferPool.Reset();
 
-		m_PrimaryCommandBuffer->Begin();
+		m_CurrentFrameResources->CommandBuffer->Begin();
 
 		// Move all the used render complete semaphores to the pool
 		{
 			FLARE_PROFILE_SCOPE("MoveRenderCompleteSemaphores");
-			for (VkSemaphore semaphore : m_CurrentSyncObjects->RenderingCompleteSemaphores)
+			for (VkSemaphore semaphore : m_CurrentFrameResources->RenderingCompleteSemaphores)
 			{
 				m_SemaphorePool.push_back(semaphore);
 			}
 
-			m_CurrentSyncObjects->RenderingCompleteSemaphores.clear();
+			m_CurrentFrameResources->RenderingCompleteSemaphores.clear();
 		}
 	}
 
@@ -359,7 +358,7 @@ namespace Flare
 
 		m_ShouldAcquireNextSwapchainImage = true;
 
-		m_PrimaryCommandBuffer->End();
+		m_CurrentFrameResources->CommandBuffer->End();
 
 		int32_t width, height;
 		glfwGetFramebufferSize((GLFWwindow*)m_Window->GetNativeWindow(), &width, &height);
@@ -368,7 +367,7 @@ namespace Flare
 		{
 			FLARE_PROFILE_SCOPE("Submit");
 
-			VkCommandBuffer commandBufferHandle = m_PrimaryCommandBuffer->GetHandle();
+			VkCommandBuffer commandBufferHandle = m_CurrentFrameResources->CommandBuffer->GetHandle();
 
 			VkSemaphore waitSemaphore = m_Swapchain->GetImageAvailableSemaphore();
 
@@ -388,8 +387,8 @@ namespace Flare
 			submitInfo.commandBufferCount = 1;
 			submitInfo.pCommandBuffers = &commandBufferHandle;
 			submitInfo.pWaitDstStageMask = &colorAttachmentStage;
-			submitInfo.signalSemaphoreCount = (uint32_t)m_CurrentSyncObjects->RenderingCompleteSemaphores.size();
-			submitInfo.pSignalSemaphores = m_CurrentSyncObjects->RenderingCompleteSemaphores.data();
+			submitInfo.signalSemaphoreCount = (uint32_t)m_CurrentFrameResources->RenderingCompleteSemaphores.size();
+			submitInfo.pSignalSemaphores = m_CurrentFrameResources->RenderingCompleteSemaphores.data();
 			submitInfo.waitSemaphoreCount = 1;
 			submitInfo.pWaitSemaphores = &waitSemaphore;
 
@@ -417,7 +416,7 @@ namespace Flare
 
 			submitInfos.insert(submitInfos.begin(), submitInfo);
 
-			VK_CHECK_RESULT(vkQueueSubmit(m_GraphicsQueue, (uint32_t)submitInfos.size(), submitInfos.data(), m_CurrentSyncObjects->FrameFence));
+			VK_CHECK_RESULT(vkQueueSubmit(m_GraphicsQueue, (uint32_t)submitInfos.size(), submitInfos.data(), m_CurrentFrameResources->FrameFence));
 
 			m_GraphicsQueueSubmitions.clear();
 		}
@@ -492,7 +491,7 @@ namespace Flare
 
 	Ref<CommandBuffer> VulkanContext::GetCommandBuffer() const
 	{
-		return m_PrimaryCommandBuffer;
+		return m_CurrentFrameResources->CommandBuffer;
 	}
 
 	void VulkanContext::SubmitToGraphicsQueue(Ref<CommandBuffer> commandBuffer,
@@ -518,7 +517,7 @@ namespace Flare
 		if (waitForMainRenderingSubmition)
 		{
 			VkSemaphore semaphore = AcquireSemaphore();
-			m_CurrentSyncObjects->RenderingCompleteSemaphores.push_back(semaphore);
+			m_CurrentFrameResources->RenderingCompleteSemaphores.push_back(semaphore);
 
 			m_UsedSemaphores.push_back(semaphore);
 			submition.WaitSemaphoreCount++;
@@ -542,7 +541,7 @@ namespace Flare
 		if (waitForMainRenderingSubmition)
 		{
 			VkSemaphore semaphore = AcquireSemaphore();
-			m_CurrentSyncObjects->RenderingCompleteSemaphores.push_back(semaphore);
+			m_CurrentFrameResources->RenderingCompleteSemaphores.push_back(semaphore);
 
 			m_UsedSemaphores.push_back(semaphore);
 			submition.WaitSemaphoreCount++;
@@ -1073,7 +1072,7 @@ namespace Flare
 		return commandBuffer;
 	}
 
-	void VulkanContext::CreateSyncObjects()
+	void VulkanContext::CreateFrameResources()
 	{
 		FLARE_PROFILE_FUNCTION();
 		VkSemaphoreCreateInfo semaphoreCreateInfo{};
@@ -1083,11 +1082,18 @@ namespace Flare
 		fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
 		fenceCreateInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
-		m_SyncObjects.resize(m_Swapchain->GetFrameCount());
+		m_FrameResouces.resize(m_Swapchain->GetFrameCount());
 
-		for (uint32_t i = 0; i < m_Swapchain->GetFrameCount(); i++)
+		for (uint32_t frameIndex = 0; frameIndex < m_Swapchain->GetFrameCount(); frameIndex++)
 		{
-			VK_CHECK_RESULT(vkCreateFence(m_Device, &fenceCreateInfo, nullptr, &m_SyncObjects[i].FrameFence));
+			VK_CHECK_RESULT(vkCreateFence(m_Device, &fenceCreateInfo, nullptr, &m_FrameResouces[frameIndex].FrameFence));
+
+			VkCommandBuffer commandBufferHandle = CreateCommandBuffer();
+
+			std::string name = fmt::format("Primary.#{}", frameIndex);
+			SetDebugName(VK_OBJECT_TYPE_COMMAND_BUFFER, (uint64_t)commandBufferHandle, name.c_str());
+
+			m_FrameResouces[frameIndex].CommandBuffer = CreateRef<VulkanCommandBuffer>(commandBufferHandle);
 		}
 	}
 

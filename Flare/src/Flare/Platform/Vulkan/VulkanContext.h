@@ -108,7 +108,7 @@ namespace Flare
 
 		bool IsValid() const { return m_Device != VK_NULL_HANDLE; }
 
-		Ref<VulkanCommandBuffer> GetPrimaryCommandBuffer() const { return m_PrimaryCommandBuffer; }
+		Ref<VulkanCommandBuffer> GetPrimaryCommandBuffer() const { return m_CurrentFrameResources->CommandBuffer; }
 
 		void SubmitToGraphicsQueue(Ref<CommandBuffer> commandBuffer,
 			Span<const VkSemaphore> waitSempahores,
@@ -182,15 +182,16 @@ namespace Flare
 	
 		void CreateCommandBufferPool();
 		VkCommandBuffer CreateCommandBuffer();
-		void CreateSyncObjects();
+		void CreateFrameResources();
 
 		VkSemaphore AcquireSemaphore();
 	private:
 		std::vector<VkLayerProperties> EnumerateAvailableLayers();
 	private:
-		struct FrameSyncObjects
+		struct FrameResources
 		{
 			VkFence FrameFence = VK_NULL_HANDLE;
+			Ref<VulkanCommandBuffer> CommandBuffer = nullptr;
 			std::vector<VkSemaphore> RenderingCompleteSemaphores;
 		};
 
@@ -269,13 +270,12 @@ namespace Flare
 
 		bool m_SkipWaitForFrameFence = false;
 
-		uint32_t m_CurrentFrameSyncObjectsIndex = 0;
-		FrameSyncObjects* m_CurrentSyncObjects = nullptr;
-		std::vector<FrameSyncObjects> m_SyncObjects;
+		uint32_t m_CurrentFrameFrameResourcesIndex = 0;
+		FrameResources* m_CurrentFrameResources = nullptr;
+		std::vector<FrameResources> m_FrameResouces;
 
 		// Command buffers
 		VkCommandPool m_CommandBufferPool = VK_NULL_HANDLE;
-		Ref<VulkanCommandBuffer> m_PrimaryCommandBuffer = nullptr;
 
 		// Render pass
 		Ref<VulkanRenderPass> m_ColorOnlyPass = nullptr;
