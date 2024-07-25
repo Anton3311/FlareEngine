@@ -122,6 +122,10 @@ namespace Flare
 		Ref<VulkanCommandBuffer> BeginTemporaryCommandBuffer();
 		void EndTemporaryCommandBuffer(Ref<VulkanCommandBuffer> commandBuffer);
 
+		inline bool AreDebugMarkersEnabled() const { return m_DebugMarkersEnabled; }
+		inline PFN_vkCmdBeginDebugUtilsLabelEXT GetBeginDebugLabelFunction() const { return m_BeginDebugLabel; }
+		inline PFN_vkCmdEndDebugUtilsLabelEXT GetEndDebugLabelFunction() const { return m_EndDebugLabel; }
+
 		VkInstance GetVulkanInstance() const { return m_Instance; }
 		VkDevice GetDevice() const { return m_Device; }
 		VkPhysicalDevice GetPhysicalDevice() const { return m_PhysicalDevice; }
@@ -226,6 +230,8 @@ namespace Flare
 		PFN_vkDestroyDebugUtilsMessengerEXT m_DestroyDebugMessenger = nullptr;
 
 		PFN_vkSetDebugUtilsObjectNameEXT m_SetDebugNameFunction = nullptr;
+		PFN_vkCmdBeginDebugUtilsLabelEXT m_BeginDebugLabel = nullptr;
+		PFN_vkCmdEndDebugUtilsLabelEXT m_EndDebugLabel = nullptr;
 
 		VkDebugUtilsMessengerEXT m_DebugMessenger = VK_NULL_HANDLE;
 

@@ -25,6 +25,9 @@ namespace Flare
 		void BeginRenderTarget(const Ref<FrameBuffer> frameBuffer) override;
 		void EndRenderTarget() override;
 
+		void BeginLabel(const glm::vec4& color, const std::string& label) override;
+		void EndLabel() override;
+
 		void ClearColorAttachment(Ref<FrameBuffer> frameBuffer, uint32_t index, const glm::vec4& clearColor) override;
 		void ClearDepthAttachment(Ref<FrameBuffer> frameBuffer, float depth) override;
 

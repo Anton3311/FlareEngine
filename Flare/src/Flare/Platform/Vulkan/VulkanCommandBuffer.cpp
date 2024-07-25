@@ -29,6 +29,37 @@ namespace Flare
 		EndRenderPass();
 	}
 
+	void VulkanCommandBuffer::BeginLabel(const glm::vec4& color, const std::string& label)
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		VulkanContext& context = VulkanContext::GetInstance();
+		if (context.AreDebugMarkersEnabled())
+		{
+			VkDebugUtilsLabelEXT labelInfo{};
+			labelInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT;
+			labelInfo.color[0] = color.r;
+			labelInfo.color[1] = color.g;
+			labelInfo.color[2] = color.b;
+			labelInfo.color[3] = color.a;
+			labelInfo.pLabelName = label.c_str();
+
+			context.GetBeginDebugLabelFunction()(m_CommandBuffer, &labelInfo);
+		}
+	}
+
+	void VulkanCommandBuffer::EndLabel()
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		VulkanContext& context = VulkanContext::GetInstance();
+
+		if (context.AreDebugMarkersEnabled())
+		{
+			context.GetEndDebugLabelFunction()(m_CommandBuffer);
+		}
+	}
+
 	void VulkanCommandBuffer::ClearColorAttachment(Ref<FrameBuffer> frameBuffer, uint32_t index, const glm::vec4& clearColor)
 	{
 		FLARE_CORE_ASSERT(index < frameBuffer->GetAttachmentsCount());

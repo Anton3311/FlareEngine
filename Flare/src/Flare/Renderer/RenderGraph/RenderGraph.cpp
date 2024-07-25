@@ -70,9 +70,13 @@ namespace Flare
 		{
 			RenderGraphContext context(m_Viewport, node.RenderTarget, *this, m_ResourceManager, sceneSubmition, view);
 
+			commandBuffer->BeginLabel(glm::vec4(1.0f, 0.0f, 0.0f, 1.0f), node.Specifications.GetDebugName());
+
 			ExecuteLayoutTransitions(commandBuffer, node.Transitions);
 
 			node.Pass->OnRender(context, commandBuffer);
+
+			commandBuffer->EndLabel();
 		}
 
 		ExecuteLayoutTransitions(commandBuffer, m_CompiledRenderGraph.ExternalResourceFinalTransitions);
