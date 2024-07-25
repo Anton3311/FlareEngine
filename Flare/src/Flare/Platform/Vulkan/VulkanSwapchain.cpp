@@ -367,7 +367,7 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 		for (uint32_t i = 0; i < (uint32_t)formats.size(); i++)
 		{
-			if (formats[i].format == VK_FORMAT_R8G8B8A8_SRGB && formats[i].colorSpace == VK_COLORSPACE_SRGB_NONLINEAR_KHR)
+			if (formats[i].format == VK_FORMAT_R8G8B8A8_UINT && formats[i].colorSpace == VK_COLORSPACE_SRGB_NONLINEAR_KHR)
 				return i;
 		}
 
