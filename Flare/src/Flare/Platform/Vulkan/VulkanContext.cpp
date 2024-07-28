@@ -445,16 +445,6 @@ namespace Flare
 			m_PresentSubmitions.clear();
 		}
 
-		{
-			FLARE_PROFILE_SCOPE("WaitIdle");
-			VkResult waitResult = vkQueueWaitIdle(m_PresentQueue);
-			if (waitResult != VK_SUCCESS)
-			{
-				FLARE_CORE_ERROR("Failed with result: {}", (std::underlying_type_t<VkResult>)waitResult);
-				FLARE_CORE_ASSERT(false);
-			}
-		}
-
 		glfwSwapBuffers((GLFWwindow*)m_Window->GetNativeWindow());
 
 		if (m_VSyncEnabled != m_Window->GetProperties().VSyncEnabled)
