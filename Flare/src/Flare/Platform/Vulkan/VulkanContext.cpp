@@ -61,9 +61,7 @@ namespace Flare
 
 
 	VulkanContext::VulkanContext(Ref<Window> window)
-		: m_Window(window),
-		m_VSyncEnabled(window->GetProperties().VSyncEnabled),
-		m_StagingBufferPool(1024 * 32, 4)
+		: m_Window(window), m_VSyncEnabled(window->GetProperties().VSyncEnabled)
 	{
 	}
 
@@ -234,7 +232,6 @@ namespace Flare
 		m_EmptyDescriptorSetPool = nullptr;
 
 		m_RenderPassCache.Clear();
-		m_StagingBufferPool.Release();
 
 		m_DefaultPipelines.clear();
 
@@ -244,12 +241,12 @@ namespace Flare
 		m_RenderPasses.clear();
 		m_ColorOnlyPass = nullptr;
 
-		vmaDestroyAllocator(m_Allocator);
-
 		m_Swapchain.reset();
 
 		for (FrameResources& frameResources : m_FrameResouces)
 		{
+			frameResources.StagingBufferPool.Release();
+
 			vkDestroyFence(m_Device, frameResources.FrameFence, nullptr);
 			ReleaseSemaphores(m_Device, frameResources.RenderingCompleteSemaphores);
 
@@ -258,6 +255,8 @@ namespace Flare
 		}
 
 		m_FrameResouces.clear();
+
+		vmaDestroyAllocator(m_Allocator);
 
 		vkDestroyCommandPool(m_Device, m_CommandBufferPool, nullptr);
 
@@ -307,9 +306,7 @@ namespace Flare
 		}
 
 		m_CurrentFrameResources->CommandBuffer->Reset();
-
-		m_StagingBufferPool.Reset();
-
+		m_CurrentFrameResources->StagingBufferPool.Reset();
 		m_CurrentFrameResources->CommandBuffer->Begin();
 
 		// Move all the used render complete semaphores to the pool
@@ -328,7 +325,7 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		m_StagingBufferPool.FlushMemory();
+		m_CurrentFrameResources->StagingBufferPool.FlushMemory();
 
 		if (m_Window->GetProperties().IsMinimized)
 		{

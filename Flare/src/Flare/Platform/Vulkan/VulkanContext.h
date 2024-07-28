@@ -150,8 +150,8 @@ namespace Flare
 		Ref<Pipeline> GetDefaultPipelineForShader(Ref<Shader> shader, Ref<VulkanRenderPass> renderPass);
 
 		VulkanRenderPassCache& GetRenderPassCache();
-		VulkanStagingBufferPool& GetStagingBufferPool() { return m_StagingBufferPool; }
-		const VulkanStagingBufferPool& GetStagingBufferPool() const { return m_StagingBufferPool; }
+		VulkanStagingBufferPool& GetStagingBufferPool() { return m_FrameResouces[GetCurrentFrameInFlight()].StagingBufferPool; }
+		const VulkanStagingBufferPool& GetStagingBufferPool() const { return m_FrameResouces[GetCurrentFrameInFlight()].StagingBufferPool; }
 
 		Ref<DescriptorSet> GetEmptyDescriptorSet() const { return m_EmptyDescriptorSet; }
 		Ref<DescriptorSetLayout> GetEmptyDescriptorSetLayout() const { return m_EmptyDescriptorSetLayout; }
@@ -190,9 +190,14 @@ namespace Flare
 	private:
 		struct FrameResources
 		{
+			FrameResources()
+				: StagingBufferPool(1024 * 32, 4) {}
+
 			VkFence FrameFence = VK_NULL_HANDLE;
 			Ref<VulkanCommandBuffer> CommandBuffer = nullptr;
 			std::vector<VkSemaphore> RenderingCompleteSemaphores;
+
+			VulkanStagingBufferPool StagingBufferPool;
 		};
 
 		struct GraphicsQueueSubmition
@@ -286,8 +291,5 @@ namespace Flare
 
 		// Allocator
 		VmaAllocator m_Allocator = VK_NULL_HANDLE;
-
-		// Staging buffers
-		VulkanStagingBufferPool m_StagingBufferPool;
 	};
 }
