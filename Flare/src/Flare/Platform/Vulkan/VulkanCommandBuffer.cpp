@@ -140,10 +140,10 @@ namespace Flare
 			BindPipeline(pipeline);
 		}
 
+		vulkanMaterial->UpdateDescriptorSet();
 		Ref<DescriptorSet> materialDescriptorSet = vulkanMaterial->GetDescriptorSet();
 		if (materialDescriptorSet)
 		{
-			vulkanMaterial->UpdateDescriptorSet();
 			BindDescriptorSet(As<VulkanDescriptorSet>(materialDescriptorSet), pipelineLayout, 3);
 		}
 	}

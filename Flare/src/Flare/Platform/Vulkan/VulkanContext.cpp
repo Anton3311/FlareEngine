@@ -243,6 +243,14 @@ namespace Flare
 
 		m_Swapchain.reset();
 
+		// Release all queued descriptor sets
+		for (const DescriptorSetReleaseParams& params : m_DescriptorSetReleaseQueue)
+		{
+			params.Pool->ReleaseSet(params.Set);
+		}
+
+		m_DescriptorSetReleaseQueue.clear();
+
 		for (FrameResources& frameResources : m_FrameResouces)
 		{
 			frameResources.StagingBufferPool.Release();
@@ -308,6 +316,8 @@ namespace Flare
 		m_CurrentFrameResources->CommandBuffer->Reset();
 		m_CurrentFrameResources->StagingBufferPool.Reset();
 		m_CurrentFrameResources->CommandBuffer->Begin();
+
+		ReleaseQueuedDescriptorSets();
 
 		// Move all the used render complete semaphores to the pool
 		{
@@ -741,6 +751,17 @@ namespace Flare
 		return pipeline;
 	}
 
+	void VulkanContext::EnqueueDescriptorRelease(Ref<DescriptorSet> set, Ref<DescriptorSetPool> pool)
+	{
+		FLARE_CORE_ASSERT(set);
+		FLARE_CORE_ASSERT(pool);
+		
+		DescriptorSetReleaseParams& params = m_DescriptorSetReleaseQueue.emplace_back();
+		params.FrameIndex = GraphicsContext::GetInstance().GetCurrentFrameInFlight();
+		params.Pool = pool;
+		params.Set = set;
+	}
+
 	VulkanRenderPassCache& VulkanContext::GetRenderPassCache()
 	{
 		return m_RenderPassCache;
@@ -1104,6 +1125,40 @@ namespace Flare
 		VK_CHECK_RESULT(vkCreateSemaphore(m_Device, &createInfo, nullptr, &semaphore));
 
 		return semaphore;
+	}
+
+	void VulkanContext::ReleaseQueuedDescriptorSets()
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		if (m_DescriptorSetReleaseQueue.size() == 0)
+			return;
+
+		uint32_t frameIndex = GetCurrentFrameInFlight();
+
+		size_t insertionPosition = 0;
+		for (size_t i = 0; i < m_DescriptorSetReleaseQueue.size(); i++)
+		{
+			if (m_DescriptorSetReleaseQueue[i].FrameIndex == frameIndex)
+			{
+				m_DescriptorSetReleaseQueue[i].Pool->ReleaseSet(m_DescriptorSetReleaseQueue[i].Set);
+				continue;
+			}
+
+			if (insertionPosition != i)
+			{
+				m_DescriptorSetReleaseQueue[insertionPosition] = std::move(m_DescriptorSetReleaseQueue[i]);
+			}
+
+			insertionPosition++;
+		}
+
+		if (insertionPosition < m_DescriptorSetReleaseQueue.size())
+		{
+			m_DescriptorSetReleaseQueue.erase(
+				m_DescriptorSetReleaseQueue.begin() + insertionPosition,
+				m_DescriptorSetReleaseQueue.end());
+		}
 	}
 
 	std::vector<VkLayerProperties> VulkanContext::EnumerateAvailableLayers()

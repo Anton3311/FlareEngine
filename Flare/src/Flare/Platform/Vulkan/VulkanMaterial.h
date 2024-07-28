@@ -23,16 +23,10 @@ namespace Flare
 
 		void UpdateDescriptorSet();
 	private:
+		Ref<VulkanDescriptorSet> AllocateDescriptorSet() const;
 		void ReleaseDescriptorSet();
 	private:
 		Ref<VulkanPipeline> m_Pipeline = nullptr;
-
-		struct DescriptorSetState
-		{
-			Ref<DescriptorSet> Set = nullptr;
-			bool IsDirty = false;
-		};
-
-		std::vector<DescriptorSetState> m_SetStates;
+		Ref<VulkanDescriptorSet> m_Set = nullptr;
 	};
 }

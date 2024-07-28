@@ -149,6 +149,9 @@ namespace Flare
 
 		Ref<Pipeline> GetDefaultPipelineForShader(Ref<Shader> shader, Ref<VulkanRenderPass> renderPass);
 
+		// Adds the descriptor set to the queue of sets that get deleted when no longer used in rendering.
+		void EnqueueDescriptorRelease(Ref<DescriptorSet> set, Ref<DescriptorSetPool> pool);
+
 		VulkanRenderPassCache& GetRenderPassCache();
 		VulkanStagingBufferPool& GetStagingBufferPool() { return m_FrameResouces[GetCurrentFrameInFlight()].StagingBufferPool; }
 		const VulkanStagingBufferPool& GetStagingBufferPool() const { return m_FrameResouces[GetCurrentFrameInFlight()].StagingBufferPool; }
@@ -185,6 +188,8 @@ namespace Flare
 		void CreateFrameResources();
 
 		VkSemaphore AcquireSemaphore();
+
+		void ReleaseQueuedDescriptorSets();
 	private:
 		std::vector<VkLayerProperties> EnumerateAvailableLayers();
 	private:
@@ -223,6 +228,13 @@ namespace Flare
 			uint32_t ImageIndex = UINT32_MAX;
 			uint32_t FirstWaitSemaphore = UINT32_MAX;
 			uint32_t WaitSemaphoreCount = UINT32_MAX;
+		};
+
+		struct DescriptorSetReleaseParams
+		{
+			Ref<DescriptorSetPool> Pool = nullptr;
+			Ref<DescriptorSet> Set = nullptr;
+			uint32_t FrameIndex = UINT32_MAX;
 		};
 
 		std::vector<VkSemaphore> m_UsedSemaphores;
@@ -291,5 +303,7 @@ namespace Flare
 
 		// Allocator
 		VmaAllocator m_Allocator = VK_NULL_HANDLE;
+
+		std::vector<DescriptorSetReleaseParams> m_DescriptorSetReleaseQueue;
 	};
 }
