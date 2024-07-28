@@ -24,23 +24,34 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 		constexpr size_t maxInstances = 16;
-		m_InstanceStorageBuffer = ShaderStorageBuffer::Create(maxInstances * sizeof(InstanceData));
 
-		m_InstanceDataDescriptor = Renderer::GetInstanceDataDescriptorSetPool()->AllocateSet();
-		m_InstanceDataDescriptor->WriteStorageBuffer(m_InstanceStorageBuffer, 0);
-		m_InstanceDataDescriptor->FlushWrites();
+		uint32_t frameInFlightCount = GraphicsContext::GetInstance().GetFrameInFlightCount();
+		for (uint32_t i = 0; i < frameInFlightCount; i++)
+		{
+			FrameResources& resouces = m_FrameResources.emplace_back();
+			resouces.InstanceBuffer = ShaderStorageBuffer::Create(maxInstances * sizeof(InstanceData));
+
+			resouces.InstanceBufferDescriptor = Renderer::GetInstanceDataDescriptorSetPool()->AllocateSet();
+			resouces.InstanceBufferDescriptor->WriteStorageBuffer(resouces.InstanceBuffer, 0);
+			resouces.InstanceBufferDescriptor->FlushWrites();
+		}
 
 		m_Timer = GPUTimer::Create();
 	}
 
 	GeometryPass::~GeometryPass()
 	{
-		Renderer::GetInstanceDataDescriptorSetPool()->ReleaseSet(m_InstanceDataDescriptor);
+		for (const FrameResources& frameResouces : m_FrameResources)
+		{
+			Renderer::GetInstanceDataDescriptorSetPool()->ReleaseSet(frameResouces.InstanceBufferDescriptor);
+		}
 	}
 
 	void GeometryPass::OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
 	{
 		FLARE_PROFILE_FUNCTION();
+
+		const FrameResources& frameResources = m_FrameResources[GraphicsContext::GetInstance().GetCurrentFrameInFlight()];
 
 		const ViewportFrameResources& viewportFrameResources = context.GetViewport().GetFrameResources();
 		commandBuffer->SetGlobalDescriptorSet(viewportFrameResources.CameraDescriptorSet, 0);
@@ -50,7 +61,7 @@ namespace Flare
 		else
 			commandBuffer->SetGlobalDescriptorSet(viewportFrameResources.GlobalDescriptorSetWithoutShadows, 1);
 
-		commandBuffer->SetGlobalDescriptorSet(m_InstanceDataDescriptor, 2);
+		commandBuffer->SetGlobalDescriptorSet(frameResources.InstanceBufferDescriptor, 2);
 
 		m_VisibleObjects.clear();
 
@@ -69,13 +80,13 @@ namespace Flare
 			});
 		}
 
-		m_InstanceBuffer.clear();
+		m_InstanceData.clear();
 
 		{
 			FLARE_PROFILE_SCOPE("FillInstacesData");
 			for (uint32_t objectIndex : m_VisibleObjects)
 			{
-				auto& instanceData = m_InstanceBuffer.emplace_back();
+				auto& instanceData = m_InstanceData.emplace_back();
 				const auto& transform = opaqueGeometry[objectIndex].Transform;
 				instanceData.PackedTransform[0] = glm::vec4(transform.RotationScale[0], transform.Translation.x);
 				instanceData.PackedTransform[1] = glm::vec4(transform.RotationScale[1], transform.Translation.y);
@@ -83,15 +94,15 @@ namespace Flare
 			}
 		}
 
-		size_t instanceDataSize = sizeof(InstanceData) * m_InstanceBuffer.size();
-		if (instanceDataSize > m_InstanceStorageBuffer->GetSize())
+		size_t instanceDataSize = sizeof(InstanceData) * m_InstanceData.size();
+		if (instanceDataSize > frameResources.InstanceBuffer->GetSize())
 		{
-			m_InstanceStorageBuffer->Resize(instanceDataSize);
-			m_InstanceDataDescriptor->WriteStorageBuffer(m_InstanceStorageBuffer, 0);
-			m_InstanceDataDescriptor->FlushWrites();
+			frameResources.InstanceBuffer->Resize(instanceDataSize);
+			frameResources.InstanceBufferDescriptor->WriteStorageBuffer(frameResources.InstanceBuffer, 0);
+			frameResources.InstanceBufferDescriptor->FlushWrites();
 		}
 
-		m_InstanceStorageBuffer->SetData(MemorySpan::FromVector(m_InstanceBuffer), 0, commandBuffer);
+		frameResources.InstanceBuffer->SetData(MemorySpan::FromVector(m_InstanceData), 0, commandBuffer);
 
 		Ref<FrameBuffer> renderTarget = context.GetRenderTarget();
 

@@ -42,13 +42,18 @@ namespace Flare
 		void CullObjects(const RenderGraphContext& context);
 		void FlushBatch(const Ref<CommandBuffer>& commandBuffer, const Batch& batch);
 	private:
+		struct FrameResources
+		{
+			Ref<ShaderStorageBuffer> InstanceBuffer = nullptr;
+			Ref<DescriptorSet> InstanceBufferDescriptor = nullptr;
+		};
+
 		Ref<GPUTimer> m_Timer = nullptr;
 
 		RendererStatistics& m_Statistics;
 		std::vector<uint32_t> m_VisibleObjects;
-		std::vector<InstanceData> m_InstanceBuffer;
+		std::vector<InstanceData> m_InstanceData;
 
-		Ref<ShaderStorageBuffer> m_InstanceStorageBuffer = nullptr;
-		Ref<DescriptorSet> m_InstanceDataDescriptor = nullptr;
+		std::vector<FrameResources> m_FrameResources;
 	};
 }
