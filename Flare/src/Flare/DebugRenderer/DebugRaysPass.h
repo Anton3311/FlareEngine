@@ -21,14 +21,19 @@ namespace Flare
 		void CreatePipeline(const RenderGraphContext& context);
 		void GenerateVertices(const RenderGraphContext& context);
 	private:
+		struct FrameResources
+		{
+			Ref<VertexBuffer> VertexBuffer = nullptr;
+		};
+
 		const DebugRendererSettings& m_Settings;
 
 		Ref<Shader> m_Shader = nullptr;
 		Ref<Pipeline> m_Pipeline = nullptr;
 
-		Ref<VertexBuffer> m_VertexBuffer = nullptr;
 		Ref<IndexBuffer> m_IndexBuffer = nullptr;
 
+		std::vector<FrameResources> m_FrameResources;
 		std::vector<DebugRendererFrameData::Vertex> m_Vertices;
 	};
 }

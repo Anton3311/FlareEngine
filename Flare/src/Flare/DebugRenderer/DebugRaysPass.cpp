@@ -19,9 +19,16 @@ namespace Flare
 		: m_Shader(debugShader), m_Settings(settings), m_IndexBuffer(indexBuffer)
 	{
 		FLARE_PROFILE_FUNCTION();
-		size_t bufferSize = sizeof(DebugRendererFrameData::Vertex) * DebugRendererSettings::VerticesPerRay * m_Settings.MaxRays;
-		m_VertexBuffer = VertexBuffer::Create(bufferSize, GPUBufferUsage::Static);
-		As<VulkanVertexBuffer>(m_VertexBuffer)->GetBuffer().EnsureAllocated(); // HACk: To avoid binding NULL buffer
+
+		uint32_t frameInFlightCount = GraphicsContext::GetInstance().GetFrameInFlightCount();
+		for (uint32_t i = 0; i < frameInFlightCount; i++)
+		{
+			FrameResources& resources = m_FrameResources.emplace_back();
+
+			size_t bufferSize = sizeof(DebugRendererFrameData::Vertex) * DebugRendererSettings::VerticesPerRay * m_Settings.MaxRays;
+			resources.VertexBuffer = VertexBuffer::Create(bufferSize, GPUBufferUsage::Static);
+			As<VulkanVertexBuffer>(resources.VertexBuffer)->GetBuffer().EnsureAllocated(); // HACk: To avoid binding NULL buffer
+		}
 	}
 
 	void DebugRaysPass::OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
@@ -30,9 +37,10 @@ namespace Flare
 		GenerateVertices(context);
 
 		const DebugRendererFrameData& submition = context.GetSceneSubmition().DebugRendererSubmition;
+		const FrameResources& frameResources = m_FrameResources[GraphicsContext::GetInstance().GetCurrentFrameInFlight()];
 
 		using Vertex = DebugRendererFrameData::Vertex;
-		m_VertexBuffer->SetData(
+		frameResources.VertexBuffer->SetData(
 			MemorySpan(const_cast<Vertex*>(m_Vertices.data()), m_Vertices.size()),
 			0, commandBuffer);
 
@@ -43,7 +51,7 @@ namespace Flare
 
 		Ref<VulkanCommandBuffer> vulkanCommandBuffer = As<VulkanCommandBuffer>(commandBuffer);
 		vulkanCommandBuffer->BindPipeline(m_Pipeline);
-		vulkanCommandBuffer->BindVertexBuffers(Span((Ref<const VertexBuffer>*)&m_VertexBuffer, 1), 0);
+		vulkanCommandBuffer->BindVertexBuffers(Span((Ref<const VertexBuffer>*)&frameResources.VertexBuffer, 1), 0);
 		vulkanCommandBuffer->BindIndexBuffer(m_IndexBuffer);
 
 		vulkanCommandBuffer->BindDescriptorSet(
