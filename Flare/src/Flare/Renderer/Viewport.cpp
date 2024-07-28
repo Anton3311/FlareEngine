@@ -35,6 +35,10 @@ namespace Flare
 
 			frameResources.GlobalDescriptorSet = Renderer::GetGlobalDescriptorSetPool()->AllocateSet();
 			frameResources.GlobalDescriptorSetWithoutShadows = Renderer::GetGlobalDescriptorSetPool()->AllocateSet();
+			
+			frameResources.CameraBuffer->SetDebugName(fmt::format("CameraSet.#{}", frameIndex));
+			frameResources.GlobalDescriptorSet->SetDebugName(fmt::format("GlobalSet.#{}", frameIndex));
+			frameResources.GlobalDescriptorSetWithoutShadows->SetDebugName(fmt::format("GlobalSetWithoutShadows.#{}", frameIndex));
 		}
 	}
 
