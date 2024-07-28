@@ -33,22 +33,32 @@ namespace Flare
 
 		m_Timer = GPUTimer::Create();
 
-		m_CameraBuffer = UniformBuffer::Create(sizeof(RenderView));
-		m_CameraDescriptor = Renderer::GetCameraDescriptorSetPool()->AllocateSet();
-		m_CameraDescriptor->WriteUniformBuffer(m_CameraBuffer, 0);
-		m_CameraDescriptor->FlushWrites();
+		uint32_t frameInFlightCount = GraphicsContext::GetInstance().GetFrameInFlightCount();
 
 		constexpr size_t maxInstanceCount = 16;
-		m_InstanceBuffer = ShaderStorageBuffer::Create(maxInstanceCount * sizeof(InstanceData));
-		m_InstanceBufferDescriptor = Renderer::GetInstanceDataDescriptorSetPool()->AllocateSet();
-		m_InstanceBufferDescriptor->WriteStorageBuffer(m_InstanceBuffer, 0);
-		m_InstanceBufferDescriptor->FlushWrites();
+		for (uint32_t i = 0; i < frameInFlightCount; i++)
+		{
+			FrameResources& resources = m_FrameResources.emplace_back();
+
+			resources.CameraBuffer = UniformBuffer::Create(sizeof(RenderView));
+			resources.CameraDescriptor = Renderer::GetCameraDescriptorSetPool()->AllocateSet();
+			resources.CameraDescriptor->WriteUniformBuffer(resources.CameraBuffer, 0);
+			resources.CameraDescriptor->FlushWrites();
+
+			resources.InstanceBuffer = ShaderStorageBuffer::Create(maxInstanceCount * sizeof(InstanceData));
+			resources.InstanceBufferDescriptor = Renderer::GetInstanceDataDescriptorSetPool()->AllocateSet();
+			resources.InstanceBufferDescriptor->WriteStorageBuffer(resources.InstanceBuffer, 0);
+			resources.InstanceBufferDescriptor->FlushWrites();
+		}
 	}
 
 	ShadowCascadePass::~ShadowCascadePass()
 	{
-		Renderer::GetInstanceDataDescriptorSetPool()->ReleaseSet(m_InstanceBufferDescriptor);
-		Renderer::GetCameraDescriptorSetPool()->ReleaseSet(m_CameraDescriptor);
+		for (const FrameResources& resources : m_FrameResources)
+		{
+			Renderer::GetInstanceDataDescriptorSetPool()->ReleaseSet(resources.InstanceBufferDescriptor);
+			Renderer::GetCameraDescriptorSetPool()->ReleaseSet(resources.CameraDescriptor);
+		}
 	}
 
 	void ShadowCascadePass::OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
@@ -58,6 +68,8 @@ namespace Flare
 		const Viewport& currentViewport = context.GetViewport();
 		const ShadowSettings& shadowSettings = Renderer::GetShadowSettings();
 
+		const FrameResources& resources = m_FrameResources[GraphicsContext::GetInstance().GetCurrentFrameInFlight()];
+
 		if (m_CascadeData.Batches.size() == 0 && m_CascadeData.PartiallyVisible.size() == 0)
 		{
 			commandBuffer->BeginRenderTarget(context.GetRenderTarget());
@@ -65,7 +77,7 @@ namespace Flare
 			return;
 		}
 
-		m_CameraBuffer->SetData(&m_CascadeData.View, sizeof(m_CascadeData.View), 0);
+		resources.CameraBuffer->SetData(&m_CascadeData.View, sizeof(m_CascadeData.View), 0);
 
 		m_Statistics.ShadowPassTime += m_Timer->GetElapsedTime().value_or(0.0f);
 
@@ -97,14 +109,14 @@ namespace Flare
 		}
 
 		size_t instanceDataSize = sizeof(InstanceData) * m_InstanceDataBuffer.size();
-		if (instanceDataSize > m_InstanceBuffer->GetSize())
+		if (instanceDataSize > resources.InstanceBuffer->GetSize())
 		{
-			m_InstanceBuffer->Resize(instanceDataSize);
-			m_InstanceBufferDescriptor->WriteStorageBuffer(m_InstanceBuffer, 0);
-			m_InstanceBufferDescriptor->FlushWrites();
+			resources.InstanceBuffer->Resize(instanceDataSize);
+			resources.InstanceBufferDescriptor->WriteStorageBuffer(resources.InstanceBuffer, 0);
+			resources.InstanceBufferDescriptor->FlushWrites();
 		}
 
-		m_InstanceBuffer->SetData(MemorySpan::FromVector(m_InstanceDataBuffer), 0, commandBuffer);
+		resources.InstanceBuffer->SetData(MemorySpan::FromVector(m_InstanceDataBuffer), 0, commandBuffer);
 
 		commandBuffer->StartTimer(m_Timer);
 
@@ -123,9 +135,11 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		commandBuffer->SetGlobalDescriptorSet(m_CameraDescriptor, 0);
+		const FrameResources& resources = m_FrameResources[GraphicsContext::GetInstance().GetCurrentFrameInFlight()];
+
+		commandBuffer->SetGlobalDescriptorSet(resources.CameraDescriptor, 0);
 		commandBuffer->SetGlobalDescriptorSet(context.GetViewport().GetFrameResources().GlobalDescriptorSetWithoutShadows, 1);
-		commandBuffer->SetGlobalDescriptorSet(m_InstanceBufferDescriptor, 2);
+		commandBuffer->SetGlobalDescriptorSet(resources.InstanceBufferDescriptor, 2);
 
 		commandBuffer->ApplyMaterial(Renderer::GetDepthOnlyMaterial());
 

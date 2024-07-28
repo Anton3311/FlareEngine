@@ -47,6 +47,15 @@ namespace Flare
 	private:
 		void DrawCascade(const RenderGraphContext& context, const Ref<CommandBuffer>& commandBuffer);
 	private:
+		struct FrameResources
+		{
+			Ref<UniformBuffer> CameraBuffer = nullptr;
+			Ref<DescriptorSet> CameraDescriptor = nullptr;
+
+			Ref<ShaderStorageBuffer> InstanceBuffer = nullptr;
+			Ref<DescriptorSet> InstanceBufferDescriptor = nullptr;
+		};
+
 		RendererStatistics& m_Statistics;
 
 		const ShadowCascadeData& m_CascadeData;
@@ -55,12 +64,7 @@ namespace Flare
 
 		Ref<GPUTimer> m_Timer = nullptr;
 
-		Ref<UniformBuffer> m_CameraBuffer = nullptr;
-		Ref<DescriptorSet> m_CameraDescriptor = nullptr;
-
-		Ref<ShaderStorageBuffer> m_InstanceBuffer = nullptr;
-		Ref<DescriptorSet> m_InstanceBufferDescriptor = nullptr;
-
+		std::vector<FrameResources> m_FrameResources;
 		std::vector<InstanceData> m_InstanceDataBuffer;
 	};
 }
