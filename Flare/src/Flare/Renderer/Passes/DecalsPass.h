@@ -24,14 +24,19 @@ namespace Flare
 			glm::vec4 PackedTransform[3];
 		};
 
+		struct FrameResources
+		{
+			Ref<ShaderStorageBuffer> InstanceBuffer = nullptr;
+			Ref<DescriptorSet> InstanceBufferDescriptor = nullptr;
+			Ref<DescriptorSet> DecalSet = nullptr;
+		};
+
 		bool m_ShouldUpdateDescriptorSet = false;
 		RenderGraphTextureId m_DepthTexture;
 
+		std::vector<FrameResources> m_FrameResources;
 		std::vector<InstanceData> m_InstanceData;
-		Ref<ShaderStorageBuffer> m_InstanceBuffer = nullptr;
-		Ref<DescriptorSet> m_InstanceDataDescriptor = nullptr;
 
-		Ref<DescriptorSet> m_DecalSet = nullptr;
 		Ref<DescriptorSetPool> m_DecalDescriptorPool = nullptr;
 	};
 }

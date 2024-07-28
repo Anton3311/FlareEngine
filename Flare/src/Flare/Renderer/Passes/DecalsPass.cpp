@@ -18,31 +18,42 @@ namespace Flare
 		: m_DepthTexture(depthTexture), m_DecalDescriptorPool(decalDescriptorPool)
 	{
 		const size_t maxDecals = 1000;
-		m_InstanceBuffer = ShaderStorageBuffer::Create(maxDecals * sizeof(InstanceData));
+		uint32_t frameInFlightCount = GraphicsContext::GetInstance().GetFrameInFlightCount();
 
-		m_DecalSet = m_DecalDescriptorPool->AllocateSet();
-		m_ShouldUpdateDescriptorSet = true;
+		for (uint32_t i = 0; i < frameInFlightCount; i++)
+		{
+			FrameResources& frameResources = m_FrameResources.emplace_back();
 
-		m_InstanceDataDescriptor = Renderer::GetInstanceDataDescriptorSetPool()->AllocateSet();
-		m_InstanceDataDescriptor->WriteStorageBuffer(m_InstanceBuffer, 0);
-		m_InstanceDataDescriptor->FlushWrites();
+			frameResources.InstanceBuffer = ShaderStorageBuffer::Create(maxDecals * sizeof(InstanceData));
+
+			frameResources.DecalSet = m_DecalDescriptorPool->AllocateSet();
+			m_ShouldUpdateDescriptorSet = true;
+
+			frameResources.InstanceBufferDescriptor = Renderer::GetInstanceDataDescriptorSetPool()->AllocateSet();
+			frameResources.InstanceBufferDescriptor->WriteStorageBuffer(frameResources.InstanceBuffer, 0);
+			frameResources.InstanceBufferDescriptor->FlushWrites();
+		}
 	}
 
 	DecalsPass::~DecalsPass()
 	{
-		m_DecalDescriptorPool->ReleaseSet(m_DecalSet);
-
-		Renderer::GetInstanceDataDescriptorSetPool()->ReleaseSet(m_InstanceDataDescriptor);
+		for (FrameResources& resources : m_FrameResources)
+		{
+			m_DecalDescriptorPool->ReleaseSet(resources.DecalSet);
+			Renderer::GetInstanceDataDescriptorSetPool()->ReleaseSet(resources.InstanceBufferDescriptor);
+		}
 	}
 
 	void DecalsPass::OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
 	{
 		FLARE_PROFILE_FUNCTION();
 
+		const FrameResources& frameResources = m_FrameResources[GraphicsContext::GetInstance().GetCurrentFrameInFlight()];
+
 		//if (m_ShouldUpdateDescriptorSet)
 		//{
-			m_DecalSet->WriteImage(context.GetRenderGraph().GetTexture(m_DepthTexture), 0);
-			m_DecalSet->FlushWrites();
+			frameResources.DecalSet->WriteImage(context.GetRenderGraph().GetTexture(m_DepthTexture), 0);
+			frameResources.DecalSet->FlushWrites();
 
 			m_ShouldUpdateDescriptorSet = false;
 		//}
@@ -64,12 +75,12 @@ namespace Flare
 			}
 		}
 
-		m_InstanceBuffer->SetData(MemorySpan::FromVector(m_InstanceData), 0, commandBuffer);
+		frameResources.InstanceBuffer->SetData(MemorySpan::FromVector(m_InstanceData), 0, commandBuffer);
 
 		commandBuffer->BeginRenderTarget(context.GetRenderTarget());
 		commandBuffer->SetGlobalDescriptorSet(context.GetViewport().GetFrameResources().CameraDescriptorSet, 0);
-		commandBuffer->SetGlobalDescriptorSet(m_DecalSet, 1);
-		commandBuffer->SetGlobalDescriptorSet(m_InstanceDataDescriptor, 2);
+		commandBuffer->SetGlobalDescriptorSet(frameResources.DecalSet, 1);
+		commandBuffer->SetGlobalDescriptorSet(frameResources.InstanceBufferDescriptor, 2);
 
 		Ref<const Mesh> cubeMesh = RendererPrimitives::GetCube();
 		for (size_t decalIndex = 0; decalIndex < submittedDecals.size(); decalIndex++)
