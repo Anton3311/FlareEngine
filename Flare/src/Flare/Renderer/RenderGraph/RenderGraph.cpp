@@ -126,6 +126,8 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
+		GraphicsContext::GetInstance().WaitForDevice();
+
 		m_ResourceManager.ResizeTextures();
 		CreateRenderTargets();
 	}
