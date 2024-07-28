@@ -18,26 +18,37 @@ namespace Flare
 	TextPass::TextPass(const Renderer2DLimits& limits, Ref<IndexBuffer> indexBuffer, Ref<Shader> textShader, Ref<DescriptorSetPool> descriptorSetPool)
 		: m_RendererLimits(limits), m_IndexBuffer(indexBuffer), m_TextShader(textShader), m_DescriptorSetPool(descriptorSetPool)
 	{
-		m_VertexBuffer = VertexBuffer::Create(sizeof(TextVertex) * 4 * m_RendererLimits.MaxQuadCount, GPUBufferUsage::Static);
-		As<VulkanVertexBuffer>(m_VertexBuffer)->GetBuffer().EnsureAllocated(); // HACk: To avoid binding NULL buffer
+		FLARE_PROFILE_FUNCTION();
+		uint32_t frameInFlightCount = GraphicsContext::GetInstance().GetFrameInFlightCount();
+
+		for (uint32_t i = 0; i < frameInFlightCount; i++)
+		{
+			FrameResources& resources = m_FrameResources.emplace_back();
+
+			resources.VertexBuffer = VertexBuffer::Create(sizeof(TextVertex) * 4 * m_RendererLimits.MaxQuadCount, GPUBufferUsage::Static);
+			As<VulkanVertexBuffer>(resources.VertexBuffer)->GetBuffer().EnsureAllocated(); // HACk: To avoid binding NULL buffer
+		}
 	}
 
 	TextPass::~TextPass()
 	{
 		FLARE_PROFILE_FUNCTION();
-		ReleaseDescriptorSets();
+
+		for (FrameResources& resources : m_FrameResources)
+			ReleaseDescriptorSets(resources.UsedSets);
 	}
 
 	void TextPass::OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
 	{
 		FLARE_PROFILE_FUNCTION();
-		ReleaseDescriptorSets();
-
+		FrameResources& frameResources = m_FrameResources[GraphicsContext::GetInstance().GetCurrentFrameInFlight()];
 		const Renderer2DFrameData& submition = context.GetSceneSubmition().Renderer2DSubmition;
+
+		ReleaseDescriptorSets(frameResources.UsedSets);
 
 		if (submition.TextQuadCount > 0)
 		{
-			m_VertexBuffer->SetData(MemorySpan(submition.TextVertices.data(), submition.TextQuadCount * 4), 0, commandBuffer);
+			frameResources.VertexBuffer->SetData(MemorySpan(submition.TextVertices.data(), submition.TextQuadCount * 4), 0, commandBuffer);
 		}
 
 		Ref<FrameBuffer> renderTarget = context.GetRenderTarget();
@@ -87,29 +98,32 @@ namespace Flare
 	void TextPass::FlushBatch(const TextBatch& batch, Ref<CommandBuffer> commandBuffer)
 	{
 		FLARE_PROFILE_FUNCTION();
+
+		FrameResources& frameResources = m_FrameResources[GraphicsContext::GetInstance().GetCurrentFrameInFlight()];
+
 		Ref<DescriptorSet> set = m_DescriptorSetPool->AllocateSet();
 		set->SetDebugName("TextDescriptorSet");
 		set->WriteImage(batch.Font->GetAtlas(), 0);
 		set->FlushWrites();
 
-		m_UsedSets.push_back(set);
+		frameResources.UsedSets.push_back(set);
 
 		commandBuffer->SetGlobalDescriptorSet(set, 1);
 		commandBuffer->BindPipeline(m_TextPipeline);
 
-		commandBuffer->BindVertexBuffers(Span((Ref<const VertexBuffer>)m_VertexBuffer), 0);
+		commandBuffer->BindVertexBuffers(Span((Ref<const VertexBuffer>)frameResources.VertexBuffer), 0);
 		commandBuffer->BindIndexBuffer(m_IndexBuffer);
 		commandBuffer->DrawIndexed(batch.Start * 6, batch.Count * 6, 0, 0, 1);
 	}
 
-	void TextPass::ReleaseDescriptorSets()
+	void TextPass::ReleaseDescriptorSets(std::vector<Ref<DescriptorSet>>& sets)
 	{
 		FLARE_PROFILE_FUNCTION();
-		for (const auto& set : m_UsedSets)
+		for (const auto& set : sets)
 		{
 			m_DescriptorSetPool->ReleaseSet(set);
 		}
 
-		m_UsedSets.clear();
+		sets.clear();
 	}
 }
