@@ -224,6 +224,7 @@ namespace Flare
 
 	void VulkanContext::Release()
 	{
+		FLARE_PROFILE_FUNCTION();
 		WaitForDevice();
 
 		m_EmptyDescriptorSetPool->ReleaseSet(m_EmptyDescriptorSet);

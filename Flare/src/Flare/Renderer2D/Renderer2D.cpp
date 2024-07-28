@@ -59,6 +59,7 @@ namespace Flare
 
 	void Renderer2D::Initialize(size_t maxQuads)
 	{
+		FLARE_PROFILE_FUNCTION();
 		s_Renderer2DData.Limits.MaxQuadCount = (uint32_t)maxQuads;
 
 		std::vector<uint32_t> indices(maxQuads * 6);

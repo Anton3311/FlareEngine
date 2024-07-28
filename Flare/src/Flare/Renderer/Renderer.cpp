@@ -88,6 +88,7 @@ namespace Flare
 
 	void Renderer::Initialize()
 	{
+		FLARE_PROFILE_FUNCTION();
 		{
 			uint32_t whiteTextureData = 0xffffffff;
 			s_RendererData.WhiteTexture = Texture::Create(1, 1, &whiteTextureData, TextureFormat::RGBA8);
