@@ -31,24 +31,30 @@ namespace Flare
 			return;
 		}
 
+		uint32_t frameInFlightCount = GraphicsContext::GetInstance().GetFrameInFlightCount();
+
+		if ((uint32_t)m_SetStates.size() < frameInFlightCount)
+		{
+			m_SetStates.resize(frameInFlightCount);
+		}
+
 		m_Pipeline = nullptr;
-		m_Set = nullptr;
+		m_SetStates.assign(m_SetStates.size(), DescriptorSetState{});
 
 		Ref<VulkanShader> vulkanShader = As<VulkanShader>(shader);
 		auto pool = vulkanShader->GetDescriptorSetPool();
 
 		if (pool)
 		{
-			m_Set = As<VulkanDescriptorSet>(pool->AllocateSet());
-
 			const AssetMetadata* metadata = AssetManager::GetAssetMetadata(Handle);
-			if (metadata != nullptr)
+			for (uint32_t i = 0; i < frameInFlightCount; i++)
 			{
-				m_Set->SetDebugName(metadata->Name);
-			}
-			else
-			{
-				m_Set->SetDebugName(As<VulkanShader>(m_Shader)->GetDebugName());
+				m_SetStates[i].Set = As<VulkanDescriptorSet>(pool->AllocateSet());
+
+				if (metadata != nullptr)
+					m_SetStates[i].Set->SetDebugName(metadata->Name);
+				else
+					m_SetStates[i].Set->SetDebugName(As<VulkanShader>(m_Shader)->GetDebugName());
 			}
 		}
 
@@ -65,11 +71,29 @@ namespace Flare
 		return m_Pipeline;
 	}
 
+	Ref<DescriptorSet> VulkanMaterial::GetDescriptorSet() const
+	{
+		return m_SetStates[GraphicsContext::GetInstance().GetCurrentFrameInFlight()].Set;
+	}
+
 	void VulkanMaterial::UpdateDescriptorSet()
 	{
 		FLARE_PROFILE_FUNCTION();
-		if (!m_IsDirty)
+
+		uint32_t frameInFlight = GraphicsContext::GetInstance().GetCurrentFrameInFlight();
+		if (!m_IsDirty && !m_SetStates[frameInFlight].IsDirty)
+		{
 			return;
+		}
+
+		// NOTE: Material properties were updated during the current frame,
+		//       but becuase the material has multiple descriptor sets for each frame in flight,
+		//       it is neccessary to propagate these changes to all descriptor sets.
+		if (m_IsDirty)
+		{
+			for (auto& state : m_SetStates)
+				state.IsDirty = true;
+		}
 
 		const auto& properties = m_Shader->GetMetadata()->Properties;
 		for (size_t i = 0; i < properties.size(); i++)
@@ -81,16 +105,17 @@ namespace Flare
 			const auto& texture = GetTextureProperty((uint32_t)i);
 			if (texture)
 			{
-				m_Set->WriteImage(texture, property.Binding);
+				m_SetStates[frameInFlight].Set->WriteImage(texture, property.Binding);
 			}
 			else
 			{
 				FLARE_CORE_WARN("Material has an invalid texture property at index {}. A white texture is used instead", i);
-				m_Set->WriteImage(Renderer::GetWhiteTexture(), property.Binding);
+				m_SetStates[frameInFlight].Set->WriteImage(Renderer::GetWhiteTexture(), property.Binding);
 			}
 		}
 
-		m_Set->FlushWrites();
+		m_SetStates[frameInFlight].Set->FlushWrites();
+		m_SetStates[frameInFlight].IsDirty = false;
 
 		m_IsDirty = false;
 	}
@@ -98,13 +123,19 @@ namespace Flare
 	void VulkanMaterial::ReleaseDescriptorSet()
 	{
 		FLARE_PROFILE_FUNCTION();
-		if (!m_Shader || !m_Set)
+		if (!m_Shader)
 			return;
 
 		const auto& pool = As<VulkanShader>(m_Shader)->GetDescriptorSetPool();
 		if (pool)
 		{
-			pool->ReleaseSet(m_Set);
+			for (const DescriptorSetState& state : m_SetStates)
+			{
+				if (state.Set == nullptr)
+					continue;
+
+				pool->ReleaseSet(state.Set);
+			}
 		}
 	}
 }

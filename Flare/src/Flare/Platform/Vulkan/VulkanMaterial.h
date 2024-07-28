@@ -19,13 +19,20 @@ namespace Flare
 		virtual void SetShader(const Ref<Shader>& shader) override;
 
 		Ref<VulkanPipeline> GetPipeline(const Ref<VulkanRenderPass>& renderPass);
-		Ref<DescriptorSet> GetDescriptorSet() const { return m_Set; }
+		Ref<DescriptorSet> GetDescriptorSet() const;
 
 		void UpdateDescriptorSet();
 	private:
 		void ReleaseDescriptorSet();
 	private:
 		Ref<VulkanPipeline> m_Pipeline = nullptr;
-		Ref<DescriptorSet> m_Set = nullptr;
+
+		struct DescriptorSetState
+		{
+			Ref<DescriptorSet> Set = nullptr;
+			bool IsDirty = false;
+		};
+
+		std::vector<DescriptorSetState> m_SetStates;
 	};
 }
