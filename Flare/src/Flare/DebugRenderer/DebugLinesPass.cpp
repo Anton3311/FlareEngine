@@ -17,8 +17,14 @@ namespace Flare
 		: m_Shader(debugShader), m_Settings(settings)
 	{
 		FLARE_PROFILE_FUNCTION();
-		m_VertexBuffer = VertexBuffer::Create(sizeof(DebugRendererFrameData::Vertex) * 2 * m_Settings.MaxLines, GPUBufferUsage::Static);
-		As<VulkanVertexBuffer>(m_VertexBuffer)->GetBuffer().EnsureAllocated(); // HACk: To avoid binding NULL buffer
+
+		uint32_t frameInFlightCount = GraphicsContext::GetInstance().GetFrameInFlightCount();
+		for (uint32_t i = 0; i < frameInFlightCount; i++)
+		{
+			FrameResources& resources = m_FrameResources.emplace_back();
+			resources.VertexBuffer = VertexBuffer::Create(sizeof(DebugRendererFrameData::Vertex) * 2 * m_Settings.MaxLines, GPUBufferUsage::Static);
+			As<VulkanVertexBuffer>(resources.VertexBuffer)->GetBuffer().EnsureAllocated(); // HACk: To avoid binding NULL buffer
+		}
 	}
 
 	DebugLinesPass::~DebugLinesPass()
@@ -30,9 +36,10 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 		using Vertex = DebugRendererFrameData::Vertex;
 
+		const FrameResources& frameResources = m_FrameResources[GraphicsContext::GetInstance().GetCurrentFrameInFlight()];
 		const DebugRendererFrameData& submition = context.GetSceneSubmition().DebugRendererSubmition;
 
-		m_VertexBuffer->SetData(MemorySpan(submition.LineVertices.data(), submition.LineCount * 2), 0, commandBuffer);
+		frameResources.VertexBuffer->SetData(MemorySpan(submition.LineVertices.data(), submition.LineCount * 2), 0, commandBuffer);
 
 		commandBuffer->BeginRenderTarget(context.GetRenderTarget());
 
@@ -42,7 +49,7 @@ namespace Flare
 		Ref<VulkanCommandBuffer> vulkanCommandBuffer = As<VulkanCommandBuffer>(commandBuffer);
 
 		vulkanCommandBuffer->BindPipeline(m_Pipeline);
-		vulkanCommandBuffer->BindVertexBuffers(Span((Ref<const VertexBuffer>*)&m_VertexBuffer, 1), 0);
+		vulkanCommandBuffer->BindVertexBuffers(Span((Ref<const VertexBuffer>*)&frameResources.VertexBuffer, 1), 0);
 		vulkanCommandBuffer->BindDescriptorSet(
 			As<VulkanDescriptorSet>(context.GetViewport().GetFrameResources().CameraDescriptorSet),
 			As<VulkanPipeline>(m_Pipeline)->GetLayoutHandle(), 0);
