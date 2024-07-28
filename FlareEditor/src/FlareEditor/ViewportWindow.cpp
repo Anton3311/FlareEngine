@@ -248,7 +248,7 @@ namespace Flare
 
 		BeginImGui();
 
-		if (m_Viewport.ColorTextureId != RenderGraphTextureId())
+		if (m_Viewport.Graph.GetResourceManager().IsTextureIdValid(m_Viewport.ColorTextureId))
 		{
 			RenderViewportBuffer(m_Viewport.Graph.GetTexture(m_Viewport.ColorTextureId));
 		}
