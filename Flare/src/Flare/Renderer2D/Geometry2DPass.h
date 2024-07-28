@@ -24,17 +24,22 @@ namespace Flare
 
 		void OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer) override;
 	private:
-		void ReleaseDescriptorSets();
+		void ReleaseDescriptorSets(std::vector<Ref<DescriptorSet>>& sets);
 		void FlushBatch(const RenderGraphContext& context, const QuadsBatch& batch, Ref<CommandBuffer> commandBuffer);
 	private:
+		struct FrameResources
+		{
+			std::vector<Ref<DescriptorSet>> UsedSets;
+
+			Ref<VertexBuffer> VertexBuffer = nullptr;
+		};
+
 		const Renderer2DLimits& m_RendererLimits;
 
+		std::vector<FrameResources> m_FrameResources;
+
 		Ref<DescriptorSetPool> m_QuadsDescriptorSetPool = nullptr;
-
-		std::vector<Ref<DescriptorSet>> m_UsedSets;
-
-		Ref<VertexBuffer> m_VertexBuffer = nullptr;
-		Ref<IndexBuffer> m_IndexBuffer = nullptr;
 		Ref<Material> m_DefaultMaterial = nullptr;
+		Ref<IndexBuffer> m_IndexBuffer = nullptr;
 	};
 }

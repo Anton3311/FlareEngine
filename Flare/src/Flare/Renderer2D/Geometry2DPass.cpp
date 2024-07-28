@@ -26,13 +26,20 @@ namespace Flare
 		Ref<DescriptorSetPool> quadsDescriptorSetPool)
 		: m_RendererLimits(limits), m_IndexBuffer(indexBuffer), m_DefaultMaterial(defaultMaterial), m_QuadsDescriptorSetPool(quadsDescriptorSetPool)
 	{
-		m_VertexBuffer = VertexBuffer::Create(sizeof(QuadVertex) * 4 * m_RendererLimits.MaxQuadCount, GPUBufferUsage::Static);
-		As<VulkanVertexBuffer>(m_VertexBuffer)->GetBuffer().EnsureAllocated(); // HACk: To avoid binding NULL buffer
+		uint32_t frameInFlightCount = GraphicsContext::GetInstance().GetFrameInFlightCount();
+
+		for (uint32_t i = 0; i < frameInFlightCount; i++)
+		{
+			FrameResources& resources = m_FrameResources.emplace_back();
+			resources.VertexBuffer = VertexBuffer::Create(sizeof(QuadVertex) * 4 * m_RendererLimits.MaxQuadCount, GPUBufferUsage::Static);
+			As<VulkanVertexBuffer>(resources.VertexBuffer)->GetBuffer().EnsureAllocated(); // HACk: To avoid binding NULL buffer
+		}
 	}
 
 	Geometry2DPass::~Geometry2DPass()
 	{
-		ReleaseDescriptorSets();
+		for (FrameResources& resources : m_FrameResources)
+			ReleaseDescriptorSets(resources.UsedSets);
 	}
 
 	void Geometry2DPass::OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
@@ -43,17 +50,19 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 
 		const Renderer2DFrameData& submition = context.GetSceneSubmition().Renderer2DSubmition;
+		FrameResources& frameResources = m_FrameResources[GraphicsContext::GetInstance().GetCurrentFrameInFlight()];
+
 		if (submition.QuadCount > 0)
 		{
-			m_VertexBuffer->SetData(MemorySpan(const_cast<QuadVertex*>(submition.QuadVertices.data()), submition.QuadCount * 4), 0, commandBuffer);
+			frameResources.VertexBuffer->SetData(MemorySpan(const_cast<QuadVertex*>(submition.QuadVertices.data()), submition.QuadCount * 4), 0, commandBuffer);
 		}
 
-		ReleaseDescriptorSets();
+		ReleaseDescriptorSets(frameResources.UsedSets);
 
 		commandBuffer->BeginRenderTarget(context.GetRenderTarget());
 
 		commandBuffer->SetGlobalDescriptorSet(context.GetViewport().GetFrameResources().CameraDescriptorSet, 0);
-		commandBuffer->BindVertexBuffers(Span((Ref<const VertexBuffer>*)&m_VertexBuffer, 1), 0);
+		commandBuffer->BindVertexBuffers(Span((Ref<const VertexBuffer>*)&frameResources.VertexBuffer, 1), 0);
 		commandBuffer->BindIndexBuffer(m_IndexBuffer);
 
 		for (const auto& batch : submition.QuadBatches)
@@ -67,22 +76,23 @@ namespace Flare
 		commandBuffer->EndRenderTarget();
 	}
 
-	void Geometry2DPass::ReleaseDescriptorSets()
+	void Geometry2DPass::ReleaseDescriptorSets(std::vector<Ref<DescriptorSet>>& sets)
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		for (auto set : m_UsedSets)
+		for (auto set : sets)
 		{
 			m_QuadsDescriptorSetPool->ReleaseSet(set);
 		}
 
-		m_UsedSets.clear();
+		sets.clear();
 	}
 
 	void Geometry2DPass::FlushBatch(const RenderGraphContext& context, const QuadsBatch& batch, Ref<CommandBuffer> commandBuffer)
 	{
 		FLARE_PROFILE_FUNCTION();
 
+		FrameResources& frameResources = m_FrameResources[GraphicsContext::GetInstance().GetCurrentFrameInFlight()];
 		Ref<FrameBuffer> renderTarget = context.GetRenderTarget();
 
 		Ref<DescriptorSet> descriptorSet = m_QuadsDescriptorSetPool->AllocateSet();
@@ -90,7 +100,7 @@ namespace Flare
 		descriptorSet->WriteImages(Span((Ref<const Texture>*)batch.Textures, Renderer2DLimits::MaxTexturesCount), 0, 0);
 		descriptorSet->FlushWrites();
 
-		m_UsedSets.push_back(descriptorSet);
+		frameResources.UsedSets.push_back(descriptorSet);
 
 		commandBuffer->SetGlobalDescriptorSet(descriptorSet, 1);
 		commandBuffer->ApplyMaterial(batch.Material);
