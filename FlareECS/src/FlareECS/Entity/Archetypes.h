@@ -43,7 +43,9 @@ namespace Flare
 		
 		ArchetypeId CreateArchetype(Span<const ComponentId> sortedComponentIds);
 		ArchetypeId CreateArchetype(std::vector<ComponentId>&& sortedComponentIds);
-		
+	private:
+		void CalculateComponentOffsetsAndEntitySize(ArchetypeRecord& archetype);
+	public:
 		std::vector<ArchetypeRecord> Records;
 		std::unordered_map<ComponentSet, ArchetypeId> ComponentSetToArchetype;
 		std::unordered_map<ComponentId, std::unordered_map<ArchetypeId, size_t>> ComponentToArchetype;

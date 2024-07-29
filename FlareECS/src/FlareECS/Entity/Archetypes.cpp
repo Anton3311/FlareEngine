@@ -3,6 +3,7 @@
 #include "FlareCore/Profiler/Profiler.h"
 
 #include "FlareECS/Entity/Components.h"
+#include "FlareECS/Entity/ComponentInitializer.h"
 
 namespace Flare
 {
@@ -53,12 +54,7 @@ namespace Flare
 			record.CreatedEntitiesQueryReferences = 0;
 			record.DeletionQueryReferences = 0;
 
-			size_t offset = 0;
-			for (size_t i = 0; i < record.Components.size(); i++)
-			{
-				record.ComponentOffsets[i] = offset;
-				offset += m_ComponentsRegistry.GetComponentInfo(record.Components[i]).Size;
-			}
+			CalculateComponentOffsetsAndEntitySize(record);
 
 			return &record;
 		}
@@ -69,6 +65,11 @@ namespace Flare
 	ArchetypeId Archetypes::CreateArchetype(Span<const ComponentId> sortedComponentIds)
 	{
 		return CreateArchetype(std::vector<ComponentId>(sortedComponentIds.begin(), sortedComponentIds.end()));
+	}
+	
+	inline static size_t Align(size_t value, size_t alignment)
+	{
+		return (value + alignment - 1) / alignment * alignment;
 	}
 
 	ArchetypeId Archetypes::CreateArchetype(std::vector<ComponentId>&& sortedComponentIds)
@@ -81,19 +82,8 @@ namespace Flare
 		record.CreatedEntitiesQueryReferences = 0;
 		record.DeletionQueryReferences = 0;
 		record.Components = sortedComponentIds;
-		record.ComponentOffsets.resize(record.Components.size());
 
-		size_t entitySize = 0;
-		size_t offset = 0;
-		for (size_t i = 0; i < record.Components.size(); i++)
-		{
-			size_t componentSize = m_ComponentsRegistry.GetComponentInfo(record.Components[i]).Size;
-			record.ComponentOffsets[i] = offset;
-			offset += componentSize;
-			entitySize += componentSize;
-		}
-
-		record.EntitySize = entitySize;
+		CalculateComponentOffsetsAndEntitySize(record);
 
 		ComponentSetToArchetype[ComponentSet(record.Components)] = archetypeId;
 
@@ -104,5 +94,28 @@ namespace Flare
 		}
 
 		return archetypeId;
+	}
+
+	void Archetypes::CalculateComponentOffsetsAndEntitySize(ArchetypeRecord& archetype)
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		archetype.ComponentOffsets.resize(archetype.Components.size(), 0);
+
+		size_t offset = 0;
+		for (size_t i = 0; i < archetype.Components.size(); i++)
+		{
+			const ComponentInfo& info = m_ComponentsRegistry.GetComponentInfo(archetype.Components[i]);
+			size_t componentSize = info.Size;
+
+			offset = Align(offset, info.Initializer->Type.Alignment);
+
+			archetype.ComponentOffsets[i] = offset;
+
+			offset += componentSize;
+			archetype.EntitySize += componentSize;
+		}
+
+		archetype.EntitySize = Align(archetype.EntitySize, m_ComponentsRegistry.GetComponentInfo(archetype.Components[0]).Initializer->Type.Alignment);
 	}
 }

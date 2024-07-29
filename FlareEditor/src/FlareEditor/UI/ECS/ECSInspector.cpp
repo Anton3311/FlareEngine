@@ -89,6 +89,8 @@ namespace Flare
 
 									uint32_t size = (uint32_t)component.Size;
 									EditorGUI::UIntPropertyField("Size", size);
+									uint32_t alignment = (uint32_t)component.Initializer->Type.Alignment;
+									EditorGUI::UIntPropertyField("Alignment", alignment);
 
 									ImGui::EndDisabled();
 

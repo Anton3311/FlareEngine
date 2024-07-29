@@ -119,12 +119,6 @@ namespace Flare
 			if (components[i].second == nullptr)
 				continue;
 
-			size_t componentSize = 0;
-			if (i == count - 1)
-				componentSize = GetEntityStorage(result.Archetype).GetEntitySize() - archetypeRecord.ComponentOffsets[count - 1];
-			else
-				componentSize = archetypeRecord.ComponentOffsets[i + 1] - archetypeRecord.ComponentOffsets[i];
-
 			uint8_t* componentLocation = result.Data + archetypeRecord.ComponentOffsets[i];
 
 			const ComponentInfo& info = m_Components.GetComponentInfo(components[i].first);
