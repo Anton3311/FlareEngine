@@ -9,6 +9,8 @@ namespace Flare
 	RenderGraphResourceManager::RenderGraphResourceManager(const Viewport& viewport)
 		: m_Viewport(viewport)
 	{
+		uint32_t frameInFlightCount = GraphicsContext::GetInstance().GetFrameInFlightCount();
+		m_FrameInFlightViewportSizes.resize(frameInFlightCount, (glm::uvec2)viewport.GetSize());
 	}
 
 	RenderGraphTextureId RenderGraphResourceManager::CreateTexture(TextureFormat format, std::string_view debugName)
@@ -100,22 +102,27 @@ namespace Flare
 		m_TextureHandles.clear();
 	}
 
-	void RenderGraphResourceManager::ResizeTextures()
+	bool RenderGraphResourceManager::ResizeTextures()
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		uint32_t frameInFlightCount = GraphicsContext::GetInstance().GetFrameInFlightCount();
+		uint32_t frameIndex = GraphicsContext::GetInstance().GetCurrentFrameInFlight();
+		glm::uvec2 viewportSize = (glm::vec2)m_Viewport.GetSize();
+
+		if (m_FrameInFlightViewportSizes[frameIndex] == viewportSize)
+			return false;
+
 		for (const RenderGraphTextureResource& resource : m_Textures)
 		{
 			if (resource.TextureSizeConstraint == RenderGraphTextureResource::SizeConstraint::Fixed)
 				continue;
 
-			Span<const Ref<Texture>> textures = GetTexturesForEachFrameInFlight(resource);
-			for (const Ref<Texture>& texture : textures)
-			{
-				texture->Resize((uint32_t)m_Viewport.GetSize().x, (uint32_t)m_Viewport.GetSize().y);
-			}
+			Ref<Texture> texture = GetTextureForFrameInFlight(resource, frameIndex);
+			texture->Resize(viewportSize.x, viewportSize.y);
 		}
+
+		m_FrameInFlightViewportSizes[frameIndex] = viewportSize;
+		return true;
 	}
 
 	Span<const Ref<Texture>> RenderGraphResourceManager::GetTexturesForEachFrameInFlight(const RenderGraphTextureResource& textureResource)

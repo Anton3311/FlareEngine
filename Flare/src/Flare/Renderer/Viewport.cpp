@@ -106,11 +106,7 @@ namespace Flare
 
 		m_CurrentFrameResources = &m_GlobalResources.FrameResources[GraphicsContext::GetInstance().GetCurrentFrameInFlight()];
 
-		if (m_ShouldResizeRenderGraphTextures)
-		{
-			Graph.OnViewportResize();
-			m_ShouldResizeRenderGraphTextures = false;
-		}
+		Graph.Prepare();
 
 		Ref<CommandBuffer> commandBuffer = GraphicsContext::GetInstance().GetCommandBuffer();
 

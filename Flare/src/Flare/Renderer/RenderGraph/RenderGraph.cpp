@@ -122,14 +122,15 @@ namespace Flare
 		m_IsValid = false;
 	}
 
-	void RenderGraph::OnViewportResize()
+	void RenderGraph::Prepare()
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		GraphicsContext::GetInstance().WaitForDevice();
-
-		m_ResourceManager.ResizeTextures();
-		CreateRenderTargets();
+		if (m_ResourceManager.ResizeTextures())
+		{
+			// Textures were resized, so recreate render targets
+			CreateRenderTargets();
+		}
 	}
 
 	void RenderGraph::CreateRenderTargets()
@@ -138,6 +139,7 @@ namespace Flare
 		FLARE_CORE_ASSERT(m_IsValid);
 
 		uint32_t frameInFlightCount = GraphicsContext::GetInstance().GetFrameInFlightCount();
+		uint32_t frameIndex = GraphicsContext::GetInstance().GetCurrentFrameInFlight();
 
 		std::vector<Ref<Texture>> attachmentTextures;
 		for (RenderPassNode& node : m_Nodes)
@@ -150,28 +152,25 @@ namespace Flare
 			attachmentTextures.clear();
 			attachmentTextures.resize(outputs.size(), nullptr);
 
-			for (uint32_t frameIndex = 0; frameIndex < frameInFlightCount; frameIndex++)
+			for (size_t outputIndex = 0; outputIndex < outputs.size(); outputIndex++)
 			{
-				for (size_t outputIndex = 0; outputIndex < outputs.size(); outputIndex++)
-				{
-					attachmentTextures[outputIndex] = m_ResourceManager.GetTextureForFrameInFlight(outputs[outputIndex].AttachmentTexture, frameIndex);
-				}
-
-				uint32_t renderTargetIndex = node.RenderTargetHandleIndex + frameIndex;
-
-				Ref<FrameBuffer> renderTarget = m_RenderPassTargets[renderTargetIndex];
-				Ref<VulkanRenderPass> compatibleRenderPass = As<VulkanFrameBuffer>(renderTarget)->GetCompatibleRenderPass();
-
-				std::string debugName = renderTarget->GetDebugName();
-
-				m_RenderPassTargets[renderTargetIndex] = CreateRef<VulkanFrameBuffer>(attachmentTextures[0]->GetWidth(),
-					attachmentTextures[0]->GetHeight(),
-					compatibleRenderPass,
-					Span<Ref<Texture>>::FromVector(attachmentTextures),
-					false);
-
-				m_RenderPassTargets[renderTargetIndex]->SetDebugName(debugName);
+				attachmentTextures[outputIndex] = m_ResourceManager.GetTextureForFrameInFlight(outputs[outputIndex].AttachmentTexture, frameIndex);
 			}
+
+			uint32_t renderTargetIndex = node.RenderTargetHandleIndex + frameIndex;
+
+			Ref<FrameBuffer> renderTarget = m_RenderPassTargets[renderTargetIndex];
+			Ref<VulkanRenderPass> compatibleRenderPass = As<VulkanFrameBuffer>(renderTarget)->GetCompatibleRenderPass();
+
+			std::string debugName = renderTarget->GetDebugName();
+
+			m_RenderPassTargets[renderTargetIndex] = CreateRef<VulkanFrameBuffer>(attachmentTextures[0]->GetWidth(),
+				attachmentTextures[0]->GetHeight(),
+				compatibleRenderPass,
+				Span<Ref<Texture>>::FromVector(attachmentTextures),
+				false);
+
+			m_RenderPassTargets[renderTargetIndex]->SetDebugName(debugName);
 		}
 	}
 

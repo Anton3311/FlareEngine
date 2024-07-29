@@ -46,7 +46,7 @@ namespace Flare
 		void Build();
 		void Clear();
 
-		void OnViewportResize();
+		void Prepare();
 
 		inline bool NeedsRebuilding() const { return m_NeedsRebuilding; }
 		inline void SetNeedsRebuilding() { m_NeedsRebuilding = true; }

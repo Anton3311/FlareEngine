@@ -73,7 +73,9 @@ namespace Flare
 
 		void Clear();
 
-		void ResizeTextures();
+		// Resizes the texture with SizeConstraint::ViewportSize.
+		// Returns whether any textures were resized.
+		bool ResizeTextures();
 
 		inline bool IsTextureIdValid(RenderGraphTextureId textureId) const { return textureId.GetValue() < (uint32_t)m_Textures.size(); }
 		inline Ref<Texture> GetTexture(RenderGraphTextureId textureId) const
@@ -91,6 +93,13 @@ namespace Flare
 			return m_TextureHandles[textureHandleIndex + frameInFlightIndex];
 		}
 
+		inline Ref<Texture> GetTextureForFrameInFlight(const RenderGraphTextureResource& texture, uint32_t frameInFlightIndex) const
+		{
+			FLARE_CORE_ASSERT(frameInFlightIndex < GraphicsContext::GetInstance().GetFrameInFlightCount());
+			uint32_t textureHandleIndex = texture.TextureHandleIndex;
+			return m_TextureHandles[textureHandleIndex + frameInFlightIndex];
+		}
+
 		inline TextureFormat GetTextureFormat(RenderGraphTextureId textureId) const
 		{
 			FLARE_CORE_ASSERT(IsTextureIdValid(textureId));
@@ -104,5 +113,9 @@ namespace Flare
 		const Viewport& m_Viewport;
 		std::vector<RenderGraphTextureResource> m_Textures;
 		std::vector<Ref<Texture>> m_TextureHandles;
+
+		// The size of each texture with SizeConstraint::ViewportSize
+		// that is used in specific frame in flight.
+		std::vector<glm::uvec2> m_FrameInFlightViewportSizes;
 	};
 }
