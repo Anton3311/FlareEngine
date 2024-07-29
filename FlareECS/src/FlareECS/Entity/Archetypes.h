@@ -10,6 +10,12 @@
 
 namespace Flare
 {
+	class ArchetypeUpdateHandler
+	{
+	public:
+		virtual void OnArchetypeCreated(ArchetypeId id) = 0;
+	};
+
 	struct Components;
 	struct FLAREECS_API Archetypes
 	{
@@ -43,6 +49,9 @@ namespace Flare
 		
 		ArchetypeId CreateArchetype(Span<const ComponentId> sortedComponentIds);
 		ArchetypeId CreateArchetype(std::vector<ComponentId>&& sortedComponentIds);
+
+		void AddUpdateHandler(ArchetypeUpdateHandler* handler);
+		void RemoveUpdateHandler(ArchetypeUpdateHandler* handler);
 	private:
 		void CalculateComponentOffsetsAndEntitySize(ArchetypeRecord& archetype);
 	public:
@@ -51,5 +60,7 @@ namespace Flare
 		std::unordered_map<ComponentId, std::unordered_map<ArchetypeId, size_t>> ComponentToArchetype;
 	private:
 		const Components& m_ComponentsRegistry;
+
+		std::vector<ArchetypeUpdateHandler*> m_UpdateHandlers;
 	};
 }

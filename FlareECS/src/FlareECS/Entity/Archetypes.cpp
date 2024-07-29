@@ -47,14 +47,21 @@ namespace Flare
 		auto it = ComponentSetToArchetype.find(ComponentSet(idsCopy));
 		if (it == ComponentSetToArchetype.end())
 		{
-			ArchetypeId id = Records.size();
+			ArchetypeId archetypeId = Records.size();
 			ArchetypeRecord& record = Records.emplace_back();
-			record.Id = id;
+			record.Id = archetypeId;
 			record.Components = std::move(idsCopy);
 			record.CreatedEntitiesQueryReferences = 0;
 			record.DeletionQueryReferences = 0;
 
 			CalculateComponentOffsetsAndEntitySize(record);
+
+			{
+				FLARE_PROFILE_SCOPE("NotifyHandlers");
+
+				for (ArchetypeUpdateHandler* handler : m_UpdateHandlers)
+					handler->OnArchetypeCreated(archetypeId);
+			}
 
 			return &record;
 		}
@@ -64,6 +71,7 @@ namespace Flare
 
 	ArchetypeId Archetypes::CreateArchetype(Span<const ComponentId> sortedComponentIds)
 	{
+		FLARE_PROFILE_FUNCTION();
 		return CreateArchetype(std::vector<ComponentId>(sortedComponentIds.begin(), sortedComponentIds.end()));
 	}
 	
@@ -74,6 +82,7 @@ namespace Flare
 
 	ArchetypeId Archetypes::CreateArchetype(std::vector<ComponentId>&& sortedComponentIds)
 	{
+		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(sortedComponentIds.size() > 0);
 
 		ArchetypeId archetypeId = Records.size();
@@ -93,7 +102,28 @@ namespace Flare
 			ComponentToArchetype[component].emplace(archetypeId, i);
 		}
 
+		{
+			FLARE_PROFILE_SCOPE("NotifyHandlers");
+
+			for (ArchetypeUpdateHandler* handler : m_UpdateHandlers)
+				handler->OnArchetypeCreated(archetypeId);
+		}
+
 		return archetypeId;
+	}
+
+	void Archetypes::AddUpdateHandler(ArchetypeUpdateHandler* handler)
+	{
+		m_UpdateHandlers.push_back(handler);
+	}
+
+	void Archetypes::RemoveUpdateHandler(ArchetypeUpdateHandler* handler)
+	{
+		auto it = std::find(m_UpdateHandlers.begin(), m_UpdateHandlers.end(), handler);
+		if (it == m_UpdateHandlers.end())
+			return;
+
+		m_UpdateHandlers.erase(it);
 	}
 
 	void Archetypes::CalculateComponentOffsetsAndEntitySize(ArchetypeRecord& archetype)

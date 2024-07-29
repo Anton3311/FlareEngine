@@ -15,8 +15,8 @@
 
 namespace Flare
 {
-	Entities::Entities(Components& components, QueryCache& queries, Archetypes& archetypes)
-		: m_Components(components), m_Queries(queries), m_Archetypes(archetypes)
+	Entities::Entities(Components& components, Archetypes& archetypes)
+		: m_Components(components), m_Archetypes(archetypes)
 	{
 		FLARE_PROFILE_FUNCTION();
 		EntityChunksPool::Initialize(16);
@@ -289,7 +289,6 @@ namespace Flare
 				}
 			}
 
-			bool shouldNotifyQueryCache = false;
 			auto it = m_Archetypes.ComponentSetToArchetype.find(ComponentSet(newComponents));
 			if (it != m_Archetypes.ComponentSetToArchetype.end())
 			{
@@ -302,15 +301,10 @@ namespace Flare
 
 				EntityStorage& storage = GetEntityStorage(newArchetypeId);
 				storage.SetEntitySize(archetype.EntitySize);
-
-				shouldNotifyQueryCache = true;
 			}
 
 			m_Archetypes.Records[entityRecord.Archetype].Edges.emplace(componentId, ArchetypeEdge{newArchetypeId, INVALID_ARCHETYPE_ID});
 			m_Archetypes.Records[newArchetypeId].Edges.emplace(componentId, ArchetypeEdge{INVALID_ARCHETYPE_ID, entityRecord.Archetype});
-
-			if (shouldNotifyQueryCache)
-				m_Queries.OnArchetypeCreated(newArchetypeId);
 		}
 
 		FLARE_CORE_ASSERT(insertedComponentIndex != SIZE_MAX);
@@ -749,7 +743,6 @@ namespace Flare
 			record.Archetype = newArchetypeId;
 
 			GetEntityStorage(newArchetypeId).SetEntitySize(m_Archetypes[newArchetypeId].EntitySize);
-			m_Queries.OnArchetypeCreated(newArchetypeId);
 		}
 
 		ArchetypeRecord& archetypeRecord = m_Archetypes.Records[record.Archetype];

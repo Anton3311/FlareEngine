@@ -37,7 +37,7 @@ namespace Flare
 	class FLAREECS_API Entities
 	{
 	public:
-		Entities(Components& components, QueryCache& queries, Archetypes& archetypes);
+		Entities(Components& components, Archetypes& archetypes);
 		Entities(const Entities&) = delete;
 
 		Entities& operator=(const Entities&) = delete;
@@ -139,7 +139,6 @@ namespace Flare
 		std::vector<ComponentId> m_TemporaryComponentSet;
 
 		Archetypes& m_Archetypes;
-		QueryCache& m_Queries;
 		Components& m_Components;
 
 		std::vector<EntityStorage> m_EntityStorages;

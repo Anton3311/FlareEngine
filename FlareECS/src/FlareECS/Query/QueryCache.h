@@ -16,11 +16,10 @@ namespace Flare
 	class FLAREECS_API Entities;
 	class FLAREECS_API Query;
 
-	class FLAREECS_API QueryCache
+	class FLAREECS_API QueryCache : public ArchetypeUpdateHandler
 	{
 	public:
-		QueryCache(Entities& entities, Archetypes& archetypes)
-			: m_Entities(entities), m_Archetypes(archetypes) {}
+		QueryCache(Entities& entities, Archetypes& archetypes);
 
 		~QueryCache();
 
@@ -35,7 +34,7 @@ namespace Flare
 
 		QueryId CreateQuery(QueryCreationData& creationData);
 
-		void OnArchetypeCreated(ArchetypeId archetype);
+		void OnArchetypeCreated(ArchetypeId archetype) override;
 	private:
 		bool CompareComponentSets(const std::vector<ComponentId>& archetypeComponents, const std::vector<ComponentId>& queryComponents);
 	private:
