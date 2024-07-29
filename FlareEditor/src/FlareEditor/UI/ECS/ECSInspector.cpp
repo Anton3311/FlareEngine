@@ -229,11 +229,12 @@ namespace Flare
 	void ECSInspector::RenderSystem(uint32_t systemIndex)
 	{
 		World& world = World::GetCurrent();
-		const SystemsManager& systems = world.GetSystemsManager();
-		const SystemData& systemData = systems.GetSystems()[systemIndex];
+		const SystemsRegistry& systemsRegsitry = world.GetSystemsManager().GetSystemsRegistry();
+
+		const SystemRecord& systemRecord = systemsRegsitry.GetRecord(systemIndex);
 
 		ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_Leaf;
-		bool opened = ImGui::TreeNodeEx((void*)systemData.Name.c_str(), flags, "System '%s'", systemData.Name.c_str());
+		bool opened = ImGui::TreeNodeEx((void*)systemRecord.Descriptor->TypeName, flags, "System '%s'", systemRecord.Descriptor->TypeName);
 		if (opened)
 		{
 			ImGui::TreePop();

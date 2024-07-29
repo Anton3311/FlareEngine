@@ -75,8 +75,8 @@ namespace Flare
 			Scene::SetActive(nullptr);
             m_PostProcessingWindow = PostProcessingWindow();
 
-            ScriptingEngine::UnloadAllModules();
             m_ECSContext.Clear();
+            ScriptingEngine::UnloadAllModules();
         });
     }
 
@@ -493,6 +493,7 @@ namespace Flare
 
         ScriptingEngine::LoadModules();
         m_ECSContext.Components.RegisterComponents();
+        m_ECSContext.SystemsRegistry.RegisterSystems();
 
         OpenSceneImmediately(startScene);
         assetManager->ReloadPrefabs(); // HACK: component ids have changed after reregistering components, so reload prefabs
@@ -759,11 +760,12 @@ namespace Flare
 
         ScriptingEngine::LoadModules();
         m_ECSContext.Components.ReregisterComponents();
+        m_ECSContext.SystemsRegistry.ReregisterSystems();
 
         active = CreateRef<Scene>(m_ECSContext);
         active->Handle = activeSceneHandle;
         SceneSerializer::Deserialize(active, activeScenePath, m_Camera, m_SceneViewSettings);
-
+        
         active->GetECSWorld().GetSystemsManager().RegisterSystems();
         active->InitializeRuntime();
         Scene::SetActive(active);

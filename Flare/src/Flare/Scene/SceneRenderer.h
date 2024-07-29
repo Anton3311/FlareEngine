@@ -42,6 +42,8 @@ namespace Flare
 	struct SpriteRendererSystem : public System
 	{
 	public:
+		FLARE_SYSTEM;
+
 		virtual void OnConfig(World& world, SystemConfig& config) override;
 		virtual void OnUpdate(World& world, SystemExecutionContext& context) override;
 	private:
@@ -63,6 +65,8 @@ namespace Flare
 	struct MeshRendererSystem : public System
 	{
 	public:
+		FLARE_SYSTEM;
+
 		void OnConfig(World& world, SystemConfig& config) override;
 		void OnUpdate(World& world, SystemExecutionContext& context) override;
 	private:
@@ -72,6 +76,8 @@ namespace Flare
 	struct DecalRendererSystem : public System
 	{
 	public:
+		FLARE_SYSTEM;
+
 		void OnConfig(World& world, SystemConfig& config) override;
 		void OnUpdate(World& world, SystemExecutionContext& context) override;
 	private:

@@ -17,16 +17,15 @@ namespace Flare
 {
 	class System;
 	class World;
+	class SystemsRegistry;
 	class FLAREECS_API SystemsManager
 	{
 	public:
-		SystemsManager(World& world);
+		SystemsManager(World& world, SystemsRegistry& registry);
 		~SystemsManager();
 
 		SystemGroupId CreateGroup(std::string_view name);
 		std::optional<SystemGroupId> FindGroup(std::string_view name) const;
-
-		SystemId RegisterSystem(std::string_view name, System* systemInstance);
 
 		void RegisterSystems();
 
@@ -52,18 +51,18 @@ namespace Flare
 		}
 
 		bool IsGroupIdValid(SystemGroupId id) const;
-		bool IsSystemIdValid(SystemId id) const;
 		void RebuildExecutionGraphs();
+
+		const SystemsRegistry& GetSystemsRegistry() const { return m_Registry; }
 		
 		const std::vector<SystemGroup>& GetGroups() const;
 		std::vector<SystemGroup>& GetGroups();
 
 		const std::vector<SystemData>& GetSystems() const;
 	private:
-		SystemId AddSystem(std::string_view name, System* systemInstance);
-		void ConfigureSystem(SystemId id);
-	private:
 		World& m_World;
+		SystemsRegistry& m_Registry;
+
 		EntitiesCommandBuffer m_CommandBuffer;
 
 		SystemGroupId m_DefaultSystemGroupId = 0;

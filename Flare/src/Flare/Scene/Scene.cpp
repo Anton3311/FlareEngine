@@ -54,10 +54,6 @@ namespace Flare
 		m_PointLightsQuery = m_World.NewQuery().All().With<TransformComponent, PointLight>().Build();
 		m_SpotLightsQuery = m_World.NewQuery().All().With<TransformComponent, SpotLight>().Build();
 
-		systemsManager.RegisterSystem("Sprite Renderer", new SpriteRendererSystem());
-		systemsManager.RegisterSystem("Meshe Renderer", new MeshRendererSystem());
-		systemsManager.RegisterSystem("Decal Renderer", new DecalRendererSystem());
-
 		m_PostProcessingManager.AddEffect(CreateRef<SSAO>());
 		m_PostProcessingManager.AddEffect(CreateRef<Atmosphere>());
 		m_PostProcessingManager.AddEffect(CreateRef<Vignette>());

@@ -288,6 +288,7 @@ namespace Flare
 	// Renderer Submition Systems
 	//
 	
+	FLARE_IMPL_SYSTEM(SpriteRendererSystem);
 	void SpriteRendererSystem::OnConfig(World& world, SystemConfig& config)
 	{
 		std::optional<uint32_t> groupId = world.GetSystemsManager().FindGroup("Rendering");
@@ -388,8 +389,11 @@ namespace Flare
 		}
 	}
 
+	//
 	// Mesh Renderer
+	//
 
+	FLARE_IMPL_SYSTEM(MeshRendererSystem);
 	void MeshRendererSystem::OnConfig(World& world, SystemConfig& config)
 	{
 		std::optional<uint32_t> groupId = world.GetSystemsManager().FindGroup("Rendering");
@@ -464,8 +468,11 @@ namespace Flare
 		}
 	}
 
+	//
+	// Decals Renderer
+	//
 
-
+	FLARE_IMPL_SYSTEM(DecalRendererSystem);
 	void DecalRendererSystem::OnConfig(World& world, SystemConfig& config)
 	{
 		std::optional<uint32_t> groupId = world.GetSystemsManager().FindGroup("Rendering");

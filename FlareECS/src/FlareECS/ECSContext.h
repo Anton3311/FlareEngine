@@ -2,6 +2,7 @@
 
 #include "FlareECS/Entity/Archetypes.h"
 #include "FlareECS/Entity/Components.h"
+#include "FlareECS/System/SystemsRegistry.h"
 
 namespace Flare
 {
@@ -13,9 +14,11 @@ namespace Flare
 		{
 			Archetypes.Clear();
 			Components.Clear();
+			SystemsRegistry.Clear();
 		}
 
 		Flare::Archetypes Archetypes;
 		Flare::Components Components;
+		Flare::SystemsRegistry SystemsRegistry;
 	};
 }

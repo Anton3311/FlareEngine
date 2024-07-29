@@ -9,8 +9,11 @@ namespace Flare
 {
 	class EntitiesCommandBuffer;
 
-	using SystemGroupId = uint32_t;
 	using SystemId = uint32_t;
+	using SystemGroupId = uint32_t;
+
+	constexpr SystemId INVALID_SYSTEM_ID = std::numeric_limits<SystemId>::max();
+	constexpr SystemId INVALID_SYSTEM_GROUP_ID = std::numeric_limits<SystemId>::max();
 
 	struct SystemExecutionContext
 	{
@@ -23,9 +26,6 @@ namespace Flare
 	public:
 		SystemData() = default;
 	public:
-		std::string Name;
-
-		SystemExecutionContext ExecutionContext;
 		System* SystemInstance = nullptr;
 
 		SystemId Id = INT32_MAX;

@@ -7,6 +7,7 @@
 namespace Flare
 {
 	class SystemsManager;
+	class SystemsRegsitry;
 	struct FLAREECS_API SystemInitializer
 	{
 		using CreateSystemFunction = System*(*)();
@@ -22,7 +23,9 @@ namespace Flare
 		CreateSystemFunction CreateSystem;
 	private:
 		SystemId m_Id;
+
 		friend class SystemsManager;
+		friend class SystemsRegistry;
 	};
 
 #define FLARE_SYSTEM static Flare::SystemInitializer _SystemInitializer;
