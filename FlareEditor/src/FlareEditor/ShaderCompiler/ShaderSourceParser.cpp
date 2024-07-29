@@ -2,6 +2,7 @@
 
 #include "FlareCore/Core.h"
 #include "FlareCore/Assert.h"
+#include "FlareCore/Profiler/Profiler.h"
 
 #include <string_view>
 #include <vector>
@@ -17,6 +18,7 @@ namespace Flare
 
 	void ShaderSourceParser::Parse()
 	{
+		FLARE_PROFILE_FUNCTION();
 		m_CurrentBlockIndex = CreateBlock();
 
 		while (IsReadPositionValid())
@@ -71,6 +73,7 @@ namespace Flare
 
 	std::optional<Identifier> ShaderSourceParser::ReadIdentifier()
 	{
+		FLARE_PROFILE_FUNCTION();
 		SkipWhitespace();
 
 		if (!IsReadPositionValid())
@@ -125,6 +128,7 @@ namespace Flare
 
 	uint32_t ShaderSourceParser::ParseBlock()
 	{
+		FLARE_PROFILE_FUNCTION();
 		if (!IsReadPositionValid() || m_ShaderSource[m_ReadPosition] != '{')
 		{
 			m_Errors.emplace_back(m_CurrentPosition, "Shader block must start with '{'");
@@ -162,6 +166,7 @@ namespace Flare
 
 	void ShaderSourceParser::ParseBlockElement(const Identifier& name)
 	{
+		FLARE_PROFILE_FUNCTION();
 		std::optional<Identifier> nextToken = ReadIdentifier();
 		if (!nextToken)
 			return;
@@ -202,6 +207,7 @@ namespace Flare
 
 	bool ShaderSourceParser::SkipUntil(std::string_view token)
 	{
+		FLARE_PROFILE_FUNCTION();
 		size_t matchPosition = 0;
 		while (IsReadPositionValid())
 		{
@@ -248,6 +254,7 @@ namespace Flare
 
 	void ShaderSourceParser::SkipWhitespace()
 	{
+		FLARE_PROFILE_FUNCTION();
 		while (IsReadPositionValid())
 		{
 			if (!iswspace(m_ShaderSource[m_ReadPosition]))

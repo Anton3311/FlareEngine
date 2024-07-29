@@ -32,6 +32,7 @@ namespace Flare
 			const char* requesting_source,
 			size_t include_depth)
 		{
+			FLARE_PROFILE_FUNCTION();
 			std::filesystem::path requestingPath = requesting_source;
 			std::filesystem::path parent = requestingPath.parent_path();
 			std::filesystem::path includedFilePath = parent / requested_source;
@@ -104,6 +105,7 @@ namespace Flare
 
 	static std::optional<std::vector<uint32_t>> CompileVulkanGlslToSpirv(const std::string& path, const std::string& source, shaderc_shader_kind programKind)
 	{
+		FLARE_PROFILE_FUNCTION();
 		shaderc::Compiler compiler;
 		shaderc::CompileOptions options;
 		options.SetSourceLanguage(shaderc_source_language_glsl);
@@ -141,82 +143,6 @@ namespace Flare
 		return std::vector<uint32_t>(shaderModule.cbegin(), shaderModule.cend());
 	}
 
-	struct CrossCompilationOptions
-	{
-		shaderc_shader_kind ProgramKind;
-		uint32_t LocationBase;
-	};
-
-	static uint32_t CountRegistersUsedByStruct(const spirv_cross::Compiler& compiler, const spirv_cross::SPIRType& structType)
-	{
-		const uint32_t fieldAlignment = 16; // in OpenGL everything is aligned to 16 bytes
-
-		size_t structSize = compiler.get_declared_struct_size(structType);
-		return (uint32_t)((structSize + fieldAlignment - 1) / fieldAlignment);
-	}
-
-	static std::optional<std::vector<uint32_t>> CompileSpirvToGlsl(const std::string& path, const std::vector<uint32_t>& spirvData, const CrossCompilationOptions& options)
-	{
-		Scope<spirv_cross::CompilerGLSL> glslCompiler = CreateScope<spirv_cross::CompilerGLSL>(spirvData);
-
-		{
-			uint32_t location = options.LocationBase;
-			spirv_cross::Compiler crossCompiler(spirvData.data(), spirvData.size());
-
-			const auto& resources = crossCompiler.get_shader_resources();
-			auto updateResourcesLocations = [&](const spirv_cross::SmallVector<spirv_cross::Resource>& resources, bool isStruct = false)
-			{
-				for (const auto& resource : resources)
-				{
-					glslCompiler->set_decoration(resource.id, spv::DecorationLocation, location);
-					const spirv_cross::SPIRType& baseType = crossCompiler.get_type(resource.base_type_id);
-
-					uint32_t registers = glm::max((uint32_t)baseType.member_types.size(), 1u);
-
-					// TODO: Propertly handle arrays, because spirv_cross::CompilerGLSL
-					//       doesn't provided an array size for a resource type
-					for (auto size : baseType.array)
-						registers *= size;
-
-					location += registers;
-				}
-			};
-
-			updateResourcesLocations(resources.push_constant_buffers, true);
-			updateResourcesLocations(resources.sampled_images);
-		}
-
-		std::string glsl = glslCompiler->compile();
-
-		shaderc::Compiler compiler;
-		shaderc::CompileOptions compilerOptions;
-		compilerOptions.SetTargetEnvironment(shaderc_target_env_opengl, shaderc_env_version_opengl_4_5);
-		compilerOptions.SetSourceLanguage(shaderc_source_language_glsl);
-		compilerOptions.SetGenerateDebugInfo();
-		compilerOptions.SetOptimizationLevel(shaderc_optimization_level_performance);
-
-		shaderc::SpvCompilationResult shaderModule = compiler.CompileGlslToSpv(glsl, options.ProgramKind, path.c_str(), compilerOptions);
-		if (shaderModule.GetCompilationStatus() != shaderc_compilation_status_success)
-		{
-			std::string_view stageName = "";
-			switch (options.ProgramKind)
-			{
-			case shaderc_vertex_shader:
-				stageName = "Vertex";
-				break;
-			case shaderc_fragment_shader:
-				stageName = "Pixel";
-				break;
-			}
-
-			FLARE_CORE_ERROR("Failed to compile shader '{}' Stage = {}", path, stageName);
-			FLARE_CORE_ERROR("Shader Error: {}", shaderModule.GetErrorMessage());
-			return {};
-		}
-
-		return std::vector<uint32_t>(shaderModule.cbegin(), shaderModule.cend());
-	}
-
 	static void PrintError(const ShaderError& error)
 	{
 		if (error.Position.Line == UINT32_MAX || error.Position.Column == UINT32_MAX)
@@ -244,6 +170,7 @@ namespace Flare
 		std::vector<ShaderError>& errors,
 		const std::unordered_map<std::string, size_t>& propertyNameToIndex)
 	{
+		FLARE_PROFILE_FUNCTION();
 		ShaderFeatures& features = metadata->Features;
 		const Block& rootBlock = parser.GetBlock(0);
 		for (const auto& element : rootBlock.Elements)
@@ -466,6 +393,7 @@ namespace Flare
 
 	static void ExtractVertexShaderInputs(spirv_cross::Compiler& compiler, std::vector<VertexShaderInput>& inputs)
 	{
+		FLARE_PROFILE_FUNCTION();
 		const spirv_cross::ShaderResources& resources = compiler.get_shader_resources();
 		for (const auto& vertexInput : resources.stage_inputs)
 		{
@@ -488,6 +416,7 @@ namespace Flare
 										ShaderPushConstantsRange& pushConstantsRange,
 										uint32_t descriptorSetMask)
 	{
+		FLARE_PROFILE_FUNCTION();
 		const spirv_cross::ShaderResources& resources = compiler.get_shader_resources();
 
 		size_t lastPropertyOffset = 0;
@@ -646,6 +575,7 @@ namespace Flare
 		std::unordered_map<std::string, size_t>& propertyNameToIndex,
 		Ref<ShaderMetadata> metadata)
 	{
+		FLARE_PROFILE_FUNCTION();
 		auto& pushConstantsRange = metadata->PushConstantsRanges.emplace_back();
 		pushConstantsRange.Offset = 0;
 		pushConstantsRange.Stage = stage;
@@ -695,6 +625,7 @@ namespace Flare
 
 	static void ExtractShaderOutputs(spirv_cross::Compiler& compiler, ShaderOutputs& outputs)
 	{
+		FLARE_PROFILE_FUNCTION();
 		const spirv_cross::ShaderResources& resources = compiler.get_shader_resources();
 
 		outputs.reserve(resources.stage_outputs.size());
@@ -723,6 +654,7 @@ namespace Flare
 
 	static bool CompileGraphicsShader(AssetHandle shaderHandle, bool forceRecompile, const ShaderSourceParser& parser, std::vector<ShaderError>& errors)
 	{
+		FLARE_PROFILE_FUNCTION();
 		const std::filesystem::path& shaderPath = AssetManager::GetAssetMetadata(shaderHandle)->Path;
 		std::string pathString = shaderPath.string();
 		std::vector<PreprocessedShaderProgram> programs;
@@ -769,19 +701,6 @@ namespace Flare
 		for (const PreprocessedShaderProgram& program : programs)
 		{
 			shaderc_shader_kind shaderKind = ShaderStageTypeToShaderCStageType(program.Stage);
-
-			CrossCompilationOptions options;
-			options.LocationBase = 0;
-			options.ProgramKind = shaderKind;
-
-			if (shaderKind == shaderc_fragment_shader)
-			{
-				// NOTE: Uniform locations in pixel shaders start at 100,
-				//       in order to avoid overlaps with vertex shader uniform locations
-
-				// TODO: Find a better solution
-				options.LocationBase = 100;
-			}
 
 			std::optional<std::vector<uint32_t>> compiledVulkanShader = {};
 
@@ -830,6 +749,7 @@ namespace Flare
 
 	static void ReflectComputeShader(spirv_cross::Compiler& compiler, Ref<ComputeShaderMetadata> metadata)
 	{
+		FLARE_PROFILE_FUNCTION();
 		metadata->LocalGroupSize.x = compiler.get_execution_mode_argument(spv::ExecutionModeLocalSize, 0);
 		metadata->LocalGroupSize.y = compiler.get_execution_mode_argument(spv::ExecutionModeLocalSize, 1);
 		metadata->LocalGroupSize.z = compiler.get_execution_mode_argument(spv::ExecutionModeLocalSize, 2);
@@ -852,6 +772,7 @@ namespace Flare
 
 	static bool CompileComputeShader(AssetHandle shaderHandle, bool forceRecompile, const ShaderSourceParser& parser, std::vector<ShaderError>& errors)
 	{
+		FLARE_PROFILE_FUNCTION();
 		const std::filesystem::path& shaderPath = AssetManager::GetAssetMetadata(shaderHandle)->Path;
 		std::string shaderPathString = shaderPath.generic_string();
 
@@ -916,12 +837,14 @@ namespace Flare
 	
 	bool ShaderCompiler::Compile(AssetHandle shaderHandle, bool forceRecompile)
 	{
+		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(AssetManager::IsAssetHandleValid(shaderHandle));
 
 		const AssetMetadata* assetMetadata = AssetManager::GetAssetMetadata(shaderHandle);
 		const std::filesystem::path& shaderPath = assetMetadata->Path;
 		std::string source = "";
 		{
+			FLARE_PROFILE_SCOPE("ReadTextFile");
 			std::ifstream file(shaderPath);
 			if (!file.is_open())
 			{
