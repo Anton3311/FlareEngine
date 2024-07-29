@@ -12,6 +12,8 @@
 
 #ifdef FLARE_PLATFORM_WINDOWS
 
+#include <cstdlib>
+
 #include <windows.h>
 #include <shellapi.h>
 #include <commdlg.h>
@@ -156,6 +158,16 @@ namespace Flare
 
 		FLARE_CORE_ERROR("Failed to open explorer: {}", errorName);
 		return false;
+	}
+
+	void* Platform::AllocateAligned(size_t size, size_t alginment)
+	{
+		return _aligned_malloc(size, alginment);
+	}
+
+	void Platform::FreeAligned(void* memory)
+	{
+		_aligned_free(memory);
 	}
 
 	std::optional<std::filesystem::path> Platform::ShowOpenFileDialog(const wchar_t* filter, const Ref<Window>& window)

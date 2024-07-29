@@ -2,8 +2,6 @@
 
 #include "FlareCore/Core.h"
 
-#include "FlarePlatform/Window.h"
-
 #include <filesystem>
 #include <optional>
 
@@ -18,6 +16,7 @@ namespace Flare
 		std::filesystem::path WorkingDirectory = std::filesystem::current_path();
 	};
 
+	class Window;
 	class FLAREPLATFORM_API Platform
 	{
 	public:
@@ -32,6 +31,9 @@ namespace Flare
 		static int32_t CreateProcess(std::filesystem::path& path, const ProcessCreationSettings& settings);
 
 		static bool OpenFileExplorer(const std::filesystem::path& path);
+
+		static void* AllocateAligned(size_t size, size_t alginment);
+		static void FreeAligned(void* memory);
 
 		static std::optional<std::filesystem::path> ShowOpenFileDialog(const wchar_t* filter, const Ref<Window>& window);
 		static std::optional<std::filesystem::path> ShowSaveFileDialog(const wchar_t* filter, const Ref<Window>& window);
