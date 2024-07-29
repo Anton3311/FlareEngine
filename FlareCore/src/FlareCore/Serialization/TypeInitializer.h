@@ -21,7 +21,7 @@ namespace Flare
         using CopyConstructorFunction = void(*)(void* instance, const void* copyFrom);
         using MoveConstructorFunction = void(*)(void* instance, void* moveFrom);
 
-        TypeInitializer(std::string_view typeName, size_t size, 
+        TypeInitializer(std::string_view typeName, size_t size, size_t alignment,
             const SerializableObjectDescriptor& serializationDescriptor,
             DestructorFunction destructor, 
             DefaultConstructorFunction constructor,
@@ -37,6 +37,7 @@ namespace Flare
         const CopyConstructorFunction CopyConstructor;
         const MoveConstructorFunction MoveConstructor;
         const size_t Size;
+        const size_t Alignment;
         const SerializableObjectDescriptor& SerializationDescriptor;
     };
 }
@@ -45,7 +46,7 @@ namespace Flare
     FLARE_SERIALIZABLE
 
 #define FLARE_IMPL_TYPE(typeName) Flare::TypeInitializer typeName::_Type =                            \
-    Flare::TypeInitializer(typeid(typeName).name(), sizeof(typeName),                                 \
+    Flare::TypeInitializer(typeid(typeName).name(), sizeof(typeName), alignof(typeName),              \
     FLARE_SERIALIZATION_DESCRIPTOR_OF(typeName),                                                      \
     [](void* instance) { ((typeName*)instance)->~typeName(); },                                       \
     [](void* instance) { new(instance) typeName;},                                                    \
