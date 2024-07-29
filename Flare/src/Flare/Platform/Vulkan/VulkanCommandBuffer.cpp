@@ -839,12 +839,14 @@ namespace Flare
 
 	void VulkanCommandBuffer::BeginTimer(Ref<VulkanGPUTimer> timer, VkPipelineStageFlagBits pipelineStages)
 	{
+		FLARE_PROFILE_FUNCTION();
 		vkCmdResetQueryPool(m_CommandBuffer, timer->GetPoolHandle(), 0, 2);
 		vkCmdWriteTimestamp(m_CommandBuffer, pipelineStages, timer->GetPoolHandle(), 0);
 	}
 
 	void VulkanCommandBuffer::EndTimer(Ref<VulkanGPUTimer> timer, VkPipelineStageFlagBits pipelineStages)
 	{
+		FLARE_PROFILE_FUNCTION();
 		vkCmdWriteTimestamp(m_CommandBuffer, pipelineStages, timer->GetPoolHandle(), 1);
 	}
 }

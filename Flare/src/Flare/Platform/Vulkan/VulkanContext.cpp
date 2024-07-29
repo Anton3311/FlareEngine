@@ -956,6 +956,7 @@ namespace Flare
 			if (properties.deviceType == deviceType)
 			{
 				m_PhysicalDevice = device;
+				m_PhysicalDeviceLimits = properties.limits;
 			}
 		}
 

@@ -6,6 +6,7 @@ namespace Flare
 {
 	VulkanGPUTimer::VulkanGPUTimer()
 	{
+		FLARE_PROFILE_FUNCTION();
 		VkQueryPoolCreateInfo info{};
 		info.sType = VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO;
 		info.queryCount = 2;
@@ -16,18 +17,20 @@ namespace Flare
 
 	VulkanGPUTimer::~VulkanGPUTimer()
 	{
+		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(GraphicsContext::IsInitialized());
 		vkDestroyQueryPool(VulkanContext::GetInstance().GetDevice(), m_Pool, nullptr);
 	}
 
 	std::optional<float> VulkanGPUTimer::GetElapsedTime()
 	{
-		VkPhysicalDeviceProperties properties{};
-		vkGetPhysicalDeviceProperties(VulkanContext::GetInstance().GetPhysicalDevice(), &properties);
+		FLARE_PROFILE_FUNCTION();
+
+		VulkanContext& context = VulkanContext::GetInstance();
 
 		uint64_t timestamps[4] = { 0 };
 		VkResult result = vkGetQueryPoolResults(
-			VulkanContext::GetInstance().GetDevice(),
+			context.GetDevice(),
 			m_Pool, 0, 2, sizeof(timestamps),
 			&timestamps, 2 * sizeof(uint64_t),
 			VK_QUERY_RESULT_64_BIT | VK_QUERY_RESULT_WITH_AVAILABILITY_BIT);
@@ -40,8 +43,10 @@ namespace Flare
 		if (timestamps[1] != 1 || timestamps[3] != 1)
 			return {};
 
+		const VkPhysicalDeviceLimits& limits = context.GetPhysicalDeviceLimits();
+
 		uint64_t time = timestamps[2] - timestamps[0];
-		double milliseconds = time * properties.limits.timestampPeriod / 1000000.0;
+		double milliseconds = time * limits.timestampPeriod / 1000000.0;
 
 		return (float)milliseconds;
 	}

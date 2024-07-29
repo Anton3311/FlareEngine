@@ -128,6 +128,8 @@ namespace Flare
 		inline PFN_vkCmdBeginDebugUtilsLabelEXT GetBeginDebugLabelFunction() const { return m_BeginDebugLabel; }
 		inline PFN_vkCmdEndDebugUtilsLabelEXT GetEndDebugLabelFunction() const { return m_EndDebugLabel; }
 
+		inline const VkPhysicalDeviceLimits& GetPhysicalDeviceLimits() const { return m_PhysicalDeviceLimits; }
+
 		VkInstance GetVulkanInstance() const { return m_Instance; }
 		VkDevice GetDevice() const { return m_Device; }
 		VkPhysicalDevice GetPhysicalDevice() const { return m_PhysicalDevice; }
@@ -259,6 +261,7 @@ namespace Flare
 
 		VkInstance m_Instance = VK_NULL_HANDLE;
 
+		VkPhysicalDeviceLimits m_PhysicalDeviceLimits;
 		VkPhysicalDevice m_PhysicalDevice = VK_NULL_HANDLE;
 		VkDevice m_Device = VK_NULL_HANDLE;
 
