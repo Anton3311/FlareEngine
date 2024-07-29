@@ -1,21 +1,25 @@
 #pragma once
 
+#include "FlarePlatform/Platform.h"
+
 #include <stdint.h>
+#include <intrin.h>
 
 namespace Flare
 {
-	constexpr size_t ENTITY_CHUNK_SIZE = 4096;
-
 	class EntityStorageChunk
 	{
 	public:
+		static constexpr size_t CHUNK_SIZE = 4096;
+		static constexpr size_t CHUNK_ALIGNMENT = std::max(alignof(std::max_align_t), alignof(__m128));
+
 		EntityStorageChunk()
 			: m_Buffer(nullptr) {}
 
 		EntityStorageChunk(EntityStorageChunk& other)
 		{
 			if (m_Buffer != nullptr)
-				delete[] m_Buffer;
+				Platform::FreeAligned(m_Buffer);
 
 			m_Buffer = other.m_Buffer;
 			other.m_Buffer = nullptr;
@@ -24,7 +28,7 @@ namespace Flare
 		EntityStorageChunk(EntityStorageChunk&& other) noexcept
 		{
 			if (m_Buffer != nullptr)
-				delete[] m_Buffer;
+				Platform::FreeAligned(m_Buffer);
 
 			m_Buffer = other.m_Buffer;
 			other.m_Buffer = nullptr;
@@ -33,7 +37,7 @@ namespace Flare
 		~EntityStorageChunk()
 		{
 			if (m_Buffer != nullptr)
-				delete[] m_Buffer;
+				Platform::FreeAligned(m_Buffer);
 
 			m_Buffer = nullptr;
 		}
@@ -41,7 +45,7 @@ namespace Flare
 		void operator=(EntityStorageChunk& other)
 		{
 			if (m_Buffer != nullptr)
-				delete[] m_Buffer;
+				Platform::FreeAligned(m_Buffer);
 
 			m_Buffer = other.m_Buffer;
 			other.m_Buffer = nullptr;
@@ -50,7 +54,9 @@ namespace Flare
 		void Allocate()
 		{
 			if (m_Buffer == nullptr)
-				m_Buffer = new uint8_t[ENTITY_CHUNK_SIZE];
+			{
+				m_Buffer = (uint8_t*)Platform::AllocateAligned(CHUNK_SIZE, CHUNK_ALIGNMENT);
+			}
 		}
 
 		inline bool IsAllocated() const { return m_Buffer != nullptr; }

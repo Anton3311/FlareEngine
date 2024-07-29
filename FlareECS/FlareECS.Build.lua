@@ -7,6 +7,7 @@ project "FlareECS"
 
 	build_tool.define_module("FlareECS")
 	build_tool.add_module_ref("FlareCore")
+	build_tool.add_module_ref("FlarePlatform")
 
     files
     {
@@ -19,6 +20,7 @@ project "FlareECS"
 		"src/",
 		"include/",
 		"%{wks.location}/FlareCore/src/",
+		"%{wks.location}/FlarePlatform/src/",
 		INCLUDE_DIRS.spdlog,
 		INCLUDE_DIRS.glm,
 		INCLUDE_DIRS.tracy
@@ -27,6 +29,7 @@ project "FlareECS"
 	links
 	{
 		"FlareCore",
+		"FlarePlatform",
 	}
 
 	filter "system:windows"

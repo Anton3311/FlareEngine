@@ -48,7 +48,7 @@ namespace Flare
 		size_t bytesOffset = (index % EntitiesPerChunk * EntitySize);
 		size_t chunkIndex = index / EntitiesPerChunk;
 
-		FLARE_CORE_ASSERT(bytesOffset <= ENTITY_CHUNK_SIZE - EntitySize);
+		FLARE_CORE_ASSERT(bytesOffset <= EntityStorageChunk::CHUNK_SIZE - EntitySize);
 		FLARE_CORE_ASSERT(chunkIndex < Chunks.size());
 
 		return Chunks[chunkIndex].GetBuffer() + bytesOffset;
@@ -73,7 +73,7 @@ namespace Flare
 	{
 		FLARE_CORE_ASSERT(EntitiesCount == 0, "Entity size can only be set if the storage is empty");
 		EntitySize = entitySize;
-		EntitiesPerChunk = (size_t)floor((float)ENTITY_CHUNK_SIZE / (float)entitySize);
+		EntitiesPerChunk = (size_t)floor((float)EntityStorageChunk::CHUNK_SIZE / (float)entitySize);
 	}
 
 	size_t EntityDataStorage::GetEntitiesCountInChunk(size_t index) const
