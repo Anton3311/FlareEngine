@@ -9,10 +9,15 @@
 namespace Flare
 {
 	SystemsManager::SystemsManager(World& world, SystemsRegistry& registry)
-		: m_CommandBuffer(world), m_World(world), m_Registry(registry) {}
+		: m_CommandBuffer(world), m_World(world), m_Registry(registry)
+	{
+		m_Registry.AddResigteringHandler(this);
+	}
 
 	SystemsManager::~SystemsManager()
 	{
+		m_Registry.RemoveRegisteringHandler(this);
+
 		for (SystemData& system : m_Systems)
 		{
 			delete system.SystemInstance;
@@ -37,6 +42,26 @@ namespace Flare
 		if (it == m_GroupNameToId.end())
 			return {};
 		return it->second;
+	}
+
+	void SystemsManager::Clear()
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		m_Systems.clear();
+		m_Groups.clear();
+		m_GroupNameToId.clear();
+	}
+
+	void SystemsManager::ClearSystems()
+	{
+		FLARE_PROFILE_FUNCTION();
+		m_Systems.clear();
+
+		for (SystemGroup& group : m_Groups)
+		{
+			group.Graph = {};
+		}
 	}
 
 	void SystemsManager::RegisterSystems()
@@ -173,5 +198,18 @@ namespace Flare
 	const std::vector<SystemData>& SystemsManager::GetSystems() const
 	{
 		return m_Systems;
+	}
+
+	void SystemsManager::OnUnregisterSystems()
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		ClearSystems();
+	}
+
+	void SystemsManager::OnRegisterSystems()
+	{
+		FLARE_PROFILE_FUNCTION();
+		RegisterSystems();
 	}
 }

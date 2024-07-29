@@ -4,6 +4,7 @@
 
 #include "FlareECS/System/System.h"
 #include "FlareECS/System/SystemData.h"
+#include "FlareECS/System/SystemsRegistry.h"
 
 #include "FlareECS/Commands/CommandBuffer.h"
 
@@ -17,8 +18,7 @@ namespace Flare
 {
 	class System;
 	class World;
-	class SystemsRegistry;
-	class FLAREECS_API SystemsManager
+	class FLAREECS_API SystemsManager : public SystemsRegisteringHandler
 	{
 	public:
 		SystemsManager(World& world, SystemsRegistry& registry);
@@ -26,6 +26,9 @@ namespace Flare
 
 		SystemGroupId CreateGroup(std::string_view name);
 		std::optional<SystemGroupId> FindGroup(std::string_view name) const;
+
+		void Clear();
+		void ClearSystems();
 
 		void RegisterSystems();
 
@@ -59,6 +62,9 @@ namespace Flare
 		std::vector<SystemGroup>& GetGroups();
 
 		const std::vector<SystemData>& GetSystems() const;
+
+		void OnUnregisterSystems() override;
+		void OnRegisterSystems() override;
 	private:
 		World& m_World;
 		SystemsRegistry& m_Registry;

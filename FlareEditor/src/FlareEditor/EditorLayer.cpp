@@ -766,7 +766,6 @@ namespace Flare
         active->Handle = activeSceneHandle;
         SceneSerializer::Deserialize(active, activeScenePath, m_Camera, m_SceneViewSettings);
         
-        active->GetECSWorld().GetSystemsManager().RegisterSystems();
         active->InitializeRuntime();
         Scene::SetActive(active);
 

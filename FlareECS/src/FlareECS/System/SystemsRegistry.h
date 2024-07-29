@@ -18,6 +18,13 @@ namespace Flare
 		const SystemInitializer* Descriptor = nullptr;
 	};
 
+	class SystemsRegisteringHandler
+	{
+	public:
+		virtual void OnUnregisterSystems() = 0;
+		virtual void OnRegisterSystems() = 0;
+	};
+
 	class FLAREECS_API SystemsRegistry
 	{
 	public:
@@ -36,8 +43,12 @@ namespace Flare
 
 		const SystemRecord& GetRecord(SystemId id) const;
 
+		void AddResigteringHandler(SystemsRegisteringHandler* handler);
+		void RemoveRegisteringHandler(SystemsRegisteringHandler* handler);
+
 		inline bool IsSystemIdValid(SystemId id) const { return (size_t)id < m_SystemRecords.size(); }
 	private:
 		std::vector<SystemRecord> m_SystemRecords;
+		std::vector<SystemsRegisteringHandler*> m_RegisteringHandlers;
 	};
 }
