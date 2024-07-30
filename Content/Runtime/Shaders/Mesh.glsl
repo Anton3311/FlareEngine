@@ -21,11 +21,11 @@ layout(location = 3) in vec2 i_UV;
 
 struct VertexData
 {
-	vec4 Position;
+	vec3 Position;
+	float UVx;
 	vec3 Normal;
+	float UVy;
 	vec3 Tangent;
-	vec2 UV;
-	vec3 ViewSpacePosition;
 };
 
 layout(location = 0) out VertexData o_Vertex;
@@ -37,13 +37,12 @@ void main()
 	o_Vertex.Tangent = (transform * vec4(i_Tangent, 0.0)).xyz;
     
 	vec4 transformed = transform * vec4(i_Position, 1.0);
-	vec4 position = u_Camera.ViewProjection * transformed;
-	o_Vertex.Position = transformed;
+	o_Vertex.Position = transformed.xyz;
 
-	o_Vertex.UV = i_UV;
-	o_Vertex.ViewSpacePosition = (u_Camera.View * transformed).xyz;
+	o_Vertex.UVx = i_UV.x;
+	o_Vertex.UVy = i_UV.y;
 
-    gl_Position = position;
+    gl_Position = u_Camera.ViewProjection * transformed;
 }
 #end
 
@@ -66,11 +65,11 @@ layout(std140, push_constant) uniform InstanceData
 
 struct VertexData
 {
-	vec4 Position;
+	vec3 Position;
+	float UVx;
 	vec3 Normal;
+	float UVy;
 	vec3 Tangent;
-	vec2 UV;
-	vec3 ViewSpacePosition;
 };
 
 layout(set = 3, binding = 0) uniform sampler2D u_Texture;
@@ -107,12 +106,13 @@ vec3 UnpackNormal(vec3 packedNormal)
 
 void main()
 {
-	vec4 color = u_Material.Color * texture(u_Texture, i_Vertex.UV);
+	vec2 uv = vec2(i_Vertex.UVx, i_Vertex.UVy);
+	vec4 color = u_Material.Color * texture(u_Texture, uv);
 	if (color.a == 0.0f)
 		discard;
 
 	vec3 vertexNormal = normalize(i_Vertex.Normal);
-	vec3 V = normalize(u_Camera.Position - i_Vertex.Position.xyz);
+	vec3 V = normalize(u_Camera.Position - i_Vertex.Position);
 	vec3 H = normalize(V - u_LightDirection);
 	vec3 N = vertexNormal;
 
@@ -121,19 +121,19 @@ void main()
 
 	vec3 bitangent = cross(N, tangent);
 	mat3 tbn = mat3(tangent, bitangent, N);
-	vec3 sampledNormal = UnpackNormal(texture(u_NormalMap, i_Vertex.UV).xyz);
+	vec3 sampledNormal = UnpackNormal(texture(u_NormalMap, uv).xyz);
 
 	N = normalize(tbn * sampledNormal);
 
-	float roughness = u_Material.Roughness * texture(u_RoughnessMap, i_Vertex.UV).r;
-	float shadow = CalculateShadow(vertexNormal, i_Vertex.Position, i_Vertex.ViewSpacePosition);
+	float roughness = u_Material.Roughness * texture(u_RoughnessMap, uv).r;
+	float shadow = CalculateShadow(vertexNormal, i_Vertex.Position);
 
 	vec3 finalColor = CalculateLight(N, V, H, color.rgb,
 		u_LightColor.rgb * u_LightColor.w, -u_LightDirection,
 		roughness) * shadow;
 
-	finalColor += CalculatePointLightsContribution(N, V, color.rgb, i_Vertex.Position.xyz, roughness);
-	finalColor += CalculateSpotLightsContribution(N, V, color.rgb, i_Vertex.Position.xyz, roughness);
+	finalColor += CalculatePointLightsContribution(N, V, color.rgb, i_Vertex.Position, roughness);
+	finalColor += CalculateSpotLightsContribution(N, V, color.rgb, i_Vertex.Position, roughness);
 
 	finalColor += u_EnvironmentLight.rgb * u_EnvironmentLight.w * color.rgb;
 

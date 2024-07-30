@@ -3,6 +3,7 @@
 
 #include "Light.glsl"
 #include "Math.glsl"
+#include "Camera.glsl"
 
 const int CASCADES_COUNT = 4;
 
@@ -272,7 +273,7 @@ int CalculateCascadeIndex(vec3 viewSpacePosition)
 #define DEBUG_CASCADES 0
 #endif
 
-float CalculateShadow(vec3 N, vec4 position, vec3 viewSpacePosition)
+float CalculateShadow(vec3 N, vec3 position)
 {
 	if (u_MaxCascadeIndex == 0)
 		return 1.0f;
@@ -283,23 +284,23 @@ float CalculateShadow(vec3 N, vec4 position, vec3 viewSpacePosition)
 	if (NoL <= 0.0f)
 		return 0.0f;
 
-	float viewSpaceDistance = abs(viewSpacePosition.z);
+	float distanceToCameraPlane = CalculateDistanceToCameraPlane(position);
 
 	int cascadeIndex = CASCADES_COUNT;
 	for (int i = 0; i < CASCADES_COUNT; i++)
 	{
-		if (viewSpaceDistance <= u_CascadeSplits[i])
+		if (distanceToCameraPlane < u_CascadeSplits[i])
 		{
 			cascadeIndex = i;
 			break;
 		}
 	}
 
-	float shadowFade = smoothstep(u_ShadowFadeDistance, u_MaxShadowDistance, viewSpaceDistance);
+	float shadowFade = smoothstep(u_ShadowFadeDistance, u_MaxShadowDistance, distanceToCameraPlane);
 	float rotationAngle = 2.0f * PI * InterleavedGradientNoise(gl_FragCoord.xy);
 
 	ShadowMappingSurfaceParams params;
-	params.Position = position.xyz;
+	params.Position = position;
 	params.Normal = N;
 	params.ConstantBias = bias * (cascadeIndex + 1);
 	params.SamplesRotation = vec2(cos(rotationAngle), sin(rotationAngle));
@@ -309,13 +310,13 @@ float CalculateShadow(vec3 N, vec4 position, vec3 viewSpacePosition)
 #if CASCADE_BLENDING_ENABLED
 	const float BLENDING_THRESHOLD = 3.0f;
 
-	float distanceToNextCascade = u_CascadeSplits[cascadeIndex] - viewSpaceDistance;
+	float distanceToNextCascade = u_CascadeSplits[cascadeIndex] - distanceToCameraPlane;
 	if (distanceToNextCascade <= BLENDING_THRESHOLD && cascadeIndex < CASCADES_COUNT - 1)
 	{
 		int nextCascade = cascadeIndex + 1;
 
 		ShadowMappingSurfaceParams nextCascadeParams;
-		nextCascadeParams.Position = position.xyz;
+		nextCascadeParams.Position = position;
 		nextCascadeParams.Normal = N;
 		nextCascadeParams.ConstantBias = bias * (nextCascade + 1);
 		nextCascadeParams.SamplesRotation = vec2(cos(rotationAngle), sin(rotationAngle));

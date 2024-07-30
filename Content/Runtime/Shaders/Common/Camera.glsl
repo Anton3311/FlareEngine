@@ -1,3 +1,6 @@
+#ifndef CAMERA_H
+#define CAMERA_H
+
 layout(std140, set = 0, binding = 0) uniform Camera
 {
 	vec3 Position;
@@ -30,3 +33,11 @@ vec3 ReconstructViewSpacePositionFromDepth(vec2 screenPosition, float depth)
 	vec4 viewSpacePosition = u_Camera.InverseProjection * clipSpacePosition;
 	return viewSpacePosition.xyz / viewSpacePosition.w;
 }
+
+float CalculateDistanceToCameraPlane(vec3 position)
+{
+	float offset = -dot(u_Camera.ViewDirection, u_Camera.Position);
+	return dot(u_Camera.ViewDirection, position) + offset;
+}
+
+#endif
