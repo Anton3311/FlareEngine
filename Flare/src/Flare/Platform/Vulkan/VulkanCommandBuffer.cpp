@@ -232,13 +232,13 @@ namespace Flare
 
 			for (size_t i = 0; i < GLOBAL_DESCRIPTOR_SET_COUNT; i++)
 			{
-				ShaderDescriptorSetUsage setUsage = metadata->DescriptorSetUsage[i];
-				if (setUsage == ShaderDescriptorSetUsage::Used)
+				const ShaderDescriptorSetUsage& setUsage = metadata->DescriptorSetUsage[i];
+				if (setUsage.Usage == ShaderDescriptorSetUsage::UsageType::Used)
 				{
 					FLARE_CORE_ASSERT(m_GlobalDescriptorSets[i]);
 					BindDescriptorSet(m_GlobalDescriptorSets[i], pipelineLayout, (uint32_t)i);
 				}
-				else if (setUsage == ShaderDescriptorSetUsage::Empty)
+				else if (setUsage.Usage == ShaderDescriptorSetUsage::UsageType::Empty)
 				{
 					BindDescriptorSet(emptyDescriptorSet, pipelineLayout, (uint32_t)i);
 				}

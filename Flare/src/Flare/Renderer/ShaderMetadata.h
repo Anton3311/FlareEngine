@@ -186,22 +186,36 @@ namespace Flare
 		ShaderDataType Type = ShaderDataType::Float;
 	};
 
-	enum class ShaderDescriptorSetUsage
+	struct ShaderDescriptorSetUsage
 	{
-		Used,
-		NotUsed,
+		enum class UsageType
+		{
+			Used,
+			NotUsed,
 
-		// Empty descriptor sets are used to fill gaps.
-		// 
-		// For example, if the shader uses descriptor sets 0 and 2
-		// an empty descriptor set is used to fill slot at index 1
-		Empty,
+			// Empty descriptor sets are used to fill gaps.
+			// 
+			// For example, if the shader uses descriptor sets 0 and 2
+			// an empty descriptor set is used to fill slot at index 1
+			Empty,
+		};
+
+		UsageType Usage = UsageType::NotUsed;
+
+		uint32_t FirstPropertyInSet = UINT32_MAX;
+		uint32_t PropertyCount = 0;
 	};
 
 	struct ShaderMetadata
 	{
+		ShaderMetadata()
+		{
+			for (ShaderDescriptorSetUsage& usage : DescriptorSetUsage)
+				usage = ShaderDescriptorSetUsage();
+		}
+
 		std::string Name;
-		ShaderDescriptorSetUsage DescriptorSetUsage[4] = { ShaderDescriptorSetUsage::NotUsed };
+		ShaderDescriptorSetUsage DescriptorSetUsage[4];
 		std::vector<ShaderProperty> Properties;
 		std::vector<ShaderDescriptorProperty> DescriptorProperties;
 		std::vector<ShaderPushConstantsRange> PushConstantsRanges;

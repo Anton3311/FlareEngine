@@ -598,7 +598,7 @@ namespace Flare
 		// Fill DescriptorSetUsage
 		for (size_t i = 0; i < sizeof(metadata->DescriptorSetUsage) / sizeof(metadata->DescriptorSetUsage[0]); i++)
 		{
-			metadata->DescriptorSetUsage[i] = ShaderDescriptorSetUsage::NotUsed;
+			metadata->DescriptorSetUsage[i].Usage = ShaderDescriptorSetUsage::UsageType::NotUsed;
 		}
 
 		int32_t maxUsedSet = -1;
@@ -613,12 +613,12 @@ namespace Flare
 		// as ShaderDescriptorSetUsage::Empty, thus filling empty gaps
 		for (int32_t i = 0; i <= maxUsedSet; i++)
 		{
-			metadata->DescriptorSetUsage[i] = ShaderDescriptorSetUsage::Empty;
+			metadata->DescriptorSetUsage[i].Usage = ShaderDescriptorSetUsage::UsageType::Empty;
 		}
 
 		for (const ShaderDescriptorProperty& descriptor : metadata->DescriptorProperties)
 		{
-			metadata->DescriptorSetUsage[descriptor.Set] = ShaderDescriptorSetUsage::Used;
+			metadata->DescriptorSetUsage[descriptor.Set].Usage = ShaderDescriptorSetUsage::UsageType::Used;
 		}
 	}
 
@@ -736,6 +736,25 @@ namespace Flare
 			{
 				FLARE_CORE_ERROR("Shader reflection failed: {}", e.what());
 			}
+		}
+
+		std::sort(metadata->DescriptorProperties.begin(),
+			metadata->DescriptorProperties.end(),
+			[](const ShaderDescriptorProperty& a, const ShaderDescriptorProperty& b) -> bool
+			{
+				return a.Set < b.Set;
+			});
+
+		for (size_t i = 0; i < metadata->DescriptorProperties.size(); i++)
+		{
+			const ShaderDescriptorProperty& descriptor = metadata->DescriptorProperties[i];
+
+			if (metadata->DescriptorSetUsage[descriptor.Set].FirstPropertyInSet == UINT32_MAX)
+			{
+				metadata->DescriptorSetUsage[descriptor.Set].FirstPropertyInSet = (uint32_t)i;
+			}
+
+			metadata->DescriptorSetUsage[descriptor.Set].PropertyCount++;
 		}
 
 		metadata->Outputs = std::move(shaderOutputs);
