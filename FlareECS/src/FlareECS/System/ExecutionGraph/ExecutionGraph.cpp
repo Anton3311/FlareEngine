@@ -9,19 +9,15 @@
 
 namespace Flare
 {
-	void ExecutionGraph::AddExecutionSettings()
+	ExecutionGraph::ExecutionGraph(Span<const SystemData> systems, Span<const SystemId> groupSystems, std::vector<SystemId>& outExecutionOrder)
+		: m_Systems(systems), m_GroupSystems(groupSystems), m_OutExecutionOrder(outExecutionOrder)
 	{
-		m_ExecutionSettings.emplace_back();
-	}
-
-	void ExecutionGraph::AddExecutionSettings(std::vector<ExecutionOrder> settings)
-	{
-		m_ExecutionSettings.push_back(std::move(settings));
 	}
 
 	ExecutionGraph::BuildResult ExecutionGraph::RebuildGraph()
 	{
 		FLARE_PROFILE_FUNCTION();
+#if 0
 		m_Graph.resize(m_ExecutionSettings.size());
 		for (size_t nodeIndex = 0; nodeIndex < m_Graph.size(); nodeIndex++)
 		{
@@ -45,30 +41,33 @@ namespace Flare
 				}
 			}
 		}
-
-		m_Visited.resize(m_Graph.size(), VisitedFlag::None);
+#endif
+		m_Visited.resize(m_Systems.GetSize(), VisitedFlag::None);
 
 		if (CheckForCicularDependecies())
 			return BuildResult::CircularDependecy;
 
-		m_Visited.assign(m_Graph.size(), VisitedFlag::None);
-		m_ExecutionOrder.reserve(m_Graph.size());
+		m_Visited.assign(m_Systems.GetSize(), VisitedFlag::None);
+		m_OutExecutionOrder.reserve(m_Systems.GetSize());
 
-		std::unordered_set<uint32_t> unresolvedNodes;
-		for (size_t i = 0; i < m_Graph.size(); i++)
+		std::unordered_set<SystemId> unresolvedNodes;
+
+		for (SystemId system : m_GroupSystems)
 		{
-			if (m_Graph[i].Dependecies.size() == 0)
-				GenerateExecutionOrderList((uint32_t)i, unresolvedNodes);
+			if (m_Systems[system].GetDependecies().GetSize() == 0)
+				GenerateExecutionOrderList(system, unresolvedNodes);
+			else
+				unresolvedNodes.insert(system);
 		}
 
 		return BuildResult::Success;
 	}
 
-	void ExecutionGraph::GenerateExecutionOrderList(uint32_t initialNode, std::unordered_set<uint32_t>& unresolvedNodes)
+	void ExecutionGraph::GenerateExecutionOrderList(SystemId initialSystem, std::unordered_set<SystemId>& unresolvedNodes)
 	{
 		FLARE_PROFILE_FUNCTION();
-		std::queue<uint32_t> queue;
-		queue.push(initialNode);
+		std::queue<SystemId> queue;
+		queue.push(initialSystem);
 
 		constexpr size_t MAX_ITER = 100;
 		size_t iter = 0;
@@ -92,17 +91,15 @@ namespace Flare
 			if (queue.size() == 0)
 				break;
 
-			uint32_t nodeIndex = queue.front();
+			SystemId systemId = queue.front();
 			queue.pop();
 
-			FLARE_CORE_ASSERT(nodeIndex < (uint32_t)m_Graph.size());
+			const SystemData& node = m_Systems[systemId];
+			m_Visited[systemId] = VisitedFlag::Visited;
 
-			const GraphNode& node = m_Graph[nodeIndex];
-			m_Visited[nodeIndex] = VisitedFlag::Visited;
+			m_OutExecutionOrder.push_back(systemId);
 
-			m_ExecutionOrder.push_back(nodeIndex);
-
-			for (uint32_t childNode : node.Children)
+			for (SystemId childNode : node.GetDependentSystems())
 			{
 				if (unresolvedNodes.find(childNode) != unresolvedNodes.end())
 					continue;
@@ -120,14 +117,14 @@ namespace Flare
 	bool ExecutionGraph::CheckForCicularDependecies()
 	{
 		FLARE_PROFILE_FUNCTION();
-		if (m_Graph.size() == 0)
+		if (m_Systems.GetSize() == 0)
 			return false;
 
-		for (uint32_t i = 0; i < (uint32_t)m_Graph.size(); i++)
+		for (SystemId system : m_GroupSystems)
 		{
-			if (m_Visited[i] == VisitedFlag::None)
+			if (m_Visited[system] == VisitedFlag::None)
 			{
-				if (CheckForCicularDependecies(i))
+				if (CheckForCicularDependecies(system))
 					return true;
 			}
 		}
@@ -135,13 +132,12 @@ namespace Flare
 		return false;
 	}
 
-	bool ExecutionGraph::CheckForCicularDependecies(uint32_t node)
+	bool ExecutionGraph::CheckForCicularDependecies(SystemId node)
 	{
 		FLARE_PROFILE_FUNCTION();
-		FLARE_CORE_ASSERT(node < (uint32_t)m_Graph.size());
 		m_Visited[node] = VisitedFlag::Visited | VisitedFlag::InCurrentPath;
 
-		for (uint32_t dependecy : m_Graph[node].Dependecies)
+		for (SystemId dependecy : m_Systems[node].GetDependecies())
 		{
 			if (HAS_BIT(m_Visited[dependecy], VisitedFlag::Visited))
 			{
@@ -156,11 +152,10 @@ namespace Flare
 		return false;
 	}
 
-	bool ExecutionGraph::HasIncompleteDependecies(uint32_t index)
+	bool ExecutionGraph::HasIncompleteDependecies(SystemId systemId)
 	{
 		FLARE_PROFILE_FUNCTION();
-		FLARE_CORE_ASSERT(index < (uint32_t)m_Graph.size());
-		for (uint32_t depedency : m_Graph[index].Dependecies)
+		for (SystemId depedency : m_Systems[systemId].GetDependecies())
 		{
 			FLARE_CORE_ASSERT(depedency < (uint32_t)m_Visited.size());
 			if (m_Visited[depedency] == VisitedFlag::None)

@@ -7,15 +7,17 @@ namespace Flare
 	class World;
 	struct SystemConfig
 	{
-		SystemGroupId Group;
+		SystemConfig(SystemData& systemData)
+			: m_Data(systemData) {}
 
 		template<typename T>
 		void ExecuteAfter()
 		{
 			static_assert(std::is_base_of_v<System, T>, "T must be System type");
 			SystemId id = T::_SystemInitializer.GetId();
-			FLARE_CORE_ASSERT(id != UINT32_MAX);
-			m_ExecutionOrder.push_back(ExecutionOrder::After(id));
+			FLARE_CORE_ASSERT(id != INVALID_SYSTEM_ID);
+
+			m_Data.AddDependecy(id);
 		}
 
 		template<typename T>
@@ -23,13 +25,14 @@ namespace Flare
 		{
 			static_assert(std::is_base_of_v<System, T>, "T must be System type");
 			SystemId id = T::_SystemInitializer.GetId();
-			FLARE_CORE_ASSERT(id != UINT32_MAX);
-			m_ExecutionOrder.push_back(ExecutionOrder::Before(id));
-		}
+			FLARE_CORE_ASSERT(id != INVALID_SYSTEM_ID);
 
-		constexpr const std::vector<ExecutionOrder>& GetExecutionOrder() const { return m_ExecutionOrder; }
+			m_Data.AddDependentSystem(id);
+		}
+	public:
+		SystemGroupId Group = INVALID_SYSTEM_GROUP_ID;
 	private:
-		std::vector<ExecutionOrder> m_ExecutionOrder;
+		SystemData& m_Data;
 	};
 
 	class System

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "FlareECS/System/ExecutionGraph/ExecutionGraph.h"
+#include "FlareCore/Collections/Span.h"
 
 #include <string>
 #include <optional>
@@ -21,29 +21,24 @@ namespace Flare
 	};
 
 	class System;
-	struct SystemData
+	struct FLAREECS_API SystemData
 	{
-	public:
-		SystemData() = default;
 	public:
 		System* SystemInstance = nullptr;
 
 		bool Enabled = true;
 
-		SystemId Id = INT32_MAX;
+		SystemId Id = INVALID_SYSTEM_ID;
 		uint32_t IndexInGroup = UINT32_MAX;
-		SystemGroupId GroupId = UINT32_MAX;
-	};
+		SystemGroupId GroupId = INVALID_SYSTEM_GROUP_ID;
 
-	struct SystemGroup
-	{
-		SystemGroupId Id = UINT32_MAX;
-		std::string Name;
- 
-		std::vector<uint32_t> SystemIndices;
+		void AddDependecy(SystemId system);
+		void AddDependentSystem(SystemId system);
 
-		bool ExecutionGraphIsDirty = false;
-
-		ExecutionGraph Graph;
+		inline Span<const SystemId> GetDependecies() const { return Span(m_Dependecies.data(), m_DependecyCount); }
+		inline Span<const SystemId> GetDependentSystems() const { return Span(m_Dependecies.data(), m_Dependecies.size()).Slice(m_DependecyCount); }
+	private:
+		std::vector<SystemId> m_Dependecies;
+		size_t m_DependecyCount = 0;
 	};
 }

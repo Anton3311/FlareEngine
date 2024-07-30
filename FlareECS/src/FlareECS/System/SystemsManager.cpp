@@ -60,7 +60,8 @@ namespace Flare
 
 		for (SystemGroup& group : m_Groups)
 		{
-			group.Graph = {};
+			group.ExecutionOrder.clear();
+			group.SystemIndices.clear();
 		}
 	}
 
@@ -70,42 +71,32 @@ namespace Flare
 		FLARE_CORE_ASSERT(m_Groups.size() > 0);
 		auto& initializers = SystemInitializer::GetInitializers();
 
-		struct SystemEntry
-		{
-			SystemId Id = UINT32_MAX;
-			SystemConfig Config;
-		};
-
-		std::vector<SystemEntry> addedSystems;
-		addedSystems.reserve(initializers.size());
-
 		for (SystemInitializer* initializer : initializers)
 		{
 			FLARE_CORE_ASSERT(m_Registry.IsSystemIdValid(initializer->GetId()));
-
-			SystemEntry& entry = addedSystems.emplace_back();
-			entry.Id = initializer->GetId();
 
 			SystemData& systemData = m_Systems.emplace_back();
 			systemData.Id = initializer->GetId();
 			systemData.SystemInstance = initializer->CreateSystem();
 
-			m_Systems[initializer->GetId()].SystemInstance->OnConfig(m_World, entry.Config);
+			SystemConfig config(systemData);
 
-			FLARE_CORE_ASSERT(IsGroupIdValid(entry.Config.Group));
+			systemData.SystemInstance->OnConfig(m_World, config);
 
-			AddSystemToGroup(initializer->GetId(), entry.Config.Group);
-		}
-
-		for (const SystemEntry& entry : addedSystems)
-		{
-			const auto& executionOrder = entry.Config.GetExecutionOrder();
-			for (auto& order : executionOrder)
+			if (!IsGroupIdValid(config.Group))
 			{
-				FLARE_CORE_ASSERT(m_Registry.IsSystemIdValid(order.ItemIndex));
+				config.Group = m_DefaultSystemGroupId;
 			}
 
-			AddSystemExecutionSettings(entry.Id, &entry.Config.GetExecutionOrder());
+			AddSystemToGroup(initializer->GetId(), config.Group);
+		}
+
+		for (SystemData& system : m_Systems)
+		{
+			for (SystemId dependentSystem : system.GetDependentSystems())
+			{
+				m_Systems[dependentSystem].AddDependecy(system.Id);
+			}
 		}
 	}
 
@@ -127,35 +118,15 @@ namespace Flare
 		data.IndexInGroup = (uint32_t)m_Groups[group].SystemIndices.size() - 1;
 	}
 
-	void SystemsManager::AddSystemExecutionSettings(SystemId system, const std::vector<ExecutionOrder>* executionOrder)
-	{
-		FLARE_PROFILE_FUNCTION();
-		SystemData& data = m_Systems[system];
-
-		if (executionOrder == nullptr || executionOrder != nullptr && executionOrder->size() == 0)
-			m_Groups[data.GroupId].Graph.AddExecutionSettings();
-		else
-		{
-			std::vector<ExecutionOrder> order = *executionOrder;
-			for (auto& i : order)
-			{
-				FLARE_CORE_ASSERT(i.ItemIndex < (SystemId)m_Systems.size());
-				i.ItemIndex = m_Systems[i.ItemIndex].IndexInGroup;
-			}
-
-			m_Groups[data.GroupId].Graph.AddExecutionSettings(std::move(order));
-		}
-	}
-
 	void SystemsManager::ExecuteGroup(SystemGroupId id)
 	{
 		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(id < (SystemGroupId)m_Groups.size());
 
 		SystemGroup& group = m_Groups[id];
-		for (size_t i : group.Graph.GetExecutionOrder())
+		for (SystemId id : group.ExecutionOrder)
 		{
-			const SystemData& data = m_Systems[group.SystemIndices[i]];
+			const SystemData& data = m_Systems[id];
 
 			SystemExecutionContext context{};
 			context.Commands = &m_CommandBuffer;
@@ -177,7 +148,14 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 		for (SystemGroup& group : m_Groups)
 		{
-			if (group.Graph.RebuildGraph() == ExecutionGraph::BuildResult::CircularDependecy)
+			group.ExecutionOrder.clear();
+
+			ExecutionGraph graph(
+				Span<const SystemData>(m_Systems.data(), m_Systems.size()),
+				Span<const SystemId>(group.SystemIndices.data(), group.SystemIndices.size()),
+				group.ExecutionOrder);
+
+			if (graph.RebuildGraph() == ExecutionGraph::BuildResult::CircularDependecy)
 			{
 				FLARE_CORE_ERROR("Failed to build an execution graph for '{0}' because of circular dependecy", group.Name);
 				continue;

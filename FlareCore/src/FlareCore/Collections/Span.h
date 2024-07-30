@@ -31,7 +31,7 @@ namespace Flare
 
 		inline Span<T> Slice(size_t start) const
 		{
-			FLARE_CORE_ASSERT(start < m_Size);
+			FLARE_CORE_ASSERT(start <= m_Size);
 			return Span<T>(m_Values + start, m_Size - start);
 		}
 

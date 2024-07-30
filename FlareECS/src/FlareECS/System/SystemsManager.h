@@ -5,6 +5,7 @@
 #include "FlareECS/System/System.h"
 #include "FlareECS/System/SystemData.h"
 #include "FlareECS/System/SystemsRegistry.h"
+#include "FlareECS/System/ExecutionGraph/ExecutionGraph.h"
 
 #include "FlareECS/Commands/CommandBuffer.h"
 
@@ -16,6 +17,18 @@
 
 namespace Flare
 {
+	struct SystemGroup
+	{
+		SystemGroupId Id = INVALID_SYSTEM_GROUP_ID;
+		std::string Name;
+ 
+		std::vector<uint32_t> SystemIndices;
+
+		bool ExecutionGraphIsDirty = false;
+
+		std::vector<SystemId> ExecutionOrder;
+	};
+
 	class System;
 	class World;
 	class FLAREECS_API SystemsManager : public SystemsRegisteringHandler
@@ -35,7 +48,6 @@ namespace Flare
 		void SetDefaultSystemsGroup(SystemGroupId groupId);
 
 		void AddSystemToGroup(SystemId system, SystemGroupId group);
-		void AddSystemExecutionSettings(SystemId system, const std::vector<ExecutionOrder>* executionOrder);
 
 		void ExecuteGroup(SystemGroupId id);
 

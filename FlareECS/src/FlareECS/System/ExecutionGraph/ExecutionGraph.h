@@ -1,6 +1,9 @@
 #pragma once
 
 #include "FlareCore/Core.h"
+#include "FlareCore/Collections/Span.h"
+
+#include "FlareECS/System/SystemData.h"
 
 #include <vector>
 #include <unordered_set>
@@ -32,7 +35,7 @@ namespace Flare
 
 	FLARE_IMPL_ENUM_BITFIELD(ExecutionOrder::Order);
 
-	class ExecutionGraph
+	class FLAREECS_API ExecutionGraph
 	{
 	public:
 		struct GraphNode
@@ -54,22 +57,22 @@ namespace Flare
 			CircularDependecy,
 		};
 	public:
-		void AddExecutionSettings();
-		void AddExecutionSettings(std::vector<ExecutionOrder> settings);
+		ExecutionGraph(Span<const SystemData> systems, Span<const SystemId> groupSystems, std::vector<SystemId>& outExecutionOrder);
 
-		inline const std::vector<uint32_t>& GetExecutionOrder() const { return m_ExecutionOrder; }
-	
 		BuildResult RebuildGraph();
 	private:
-		void GenerateExecutionOrderList(uint32_t initialNode, std::unordered_set<uint32_t>& unresolvedNodes);
+		void GenerateExecutionOrderList(SystemId initialSystem, std::unordered_set<SystemId>& unresolvedNodes);
 		bool CheckForCicularDependecies();
-		bool CheckForCicularDependecies(uint32_t node);
-		bool HasIncompleteDependecies(uint32_t index);
+		bool CheckForCicularDependecies(SystemId node);
+		bool HasIncompleteDependecies(SystemId systemId);
 	private:
-		std::vector<std::vector<ExecutionOrder>> m_ExecutionSettings;
-		std::vector<uint32_t> m_ExecutionOrder;
+		std::vector<SystemId>& m_OutExecutionOrder;
+		Span<const SystemData> m_Systems;
+		Span<const SystemId> m_GroupSystems;
+
+		//std::vector<std::vector<ExecutionOrder>> m_ExecutionSettings;
 		std::vector<VisitedFlag> m_Visited;
-		std::vector<GraphNode> m_Graph;
+		//std::vector<GraphNode> m_Graph;
 	};
 
 	FLARE_IMPL_ENUM_BITFIELD(ExecutionGraph::VisitedFlag);
