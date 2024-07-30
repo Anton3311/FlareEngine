@@ -174,7 +174,7 @@ namespace Flare
 					cascadeBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 				}
 
-				s_RendererData.GlobalDescriptorSetPool = CreateRef<VulkanDescriptorSetPool>(32, Span(bindings, 12));
+				s_RendererData.GlobalDescriptorSetPool = CreateRef<VulkanDescriptorSetPool>(64, Span(bindings, 12));
 			}
 
 			{
@@ -185,7 +185,7 @@ namespace Flare
 				cameraBinding.pImmutableSamplers = nullptr;
 				cameraBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
 
-				s_RendererData.CameraDescriptorSetPool = CreateRef<VulkanDescriptorSetPool>(48, Span(&cameraBinding, 1));
+				s_RendererData.CameraDescriptorSetPool = CreateRef<VulkanDescriptorSetPool>(64, Span(&cameraBinding, 1));
 			}
 
 			{
@@ -196,7 +196,7 @@ namespace Flare
 				instanceDataBinding.pImmutableSamplers = nullptr;
 				instanceDataBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
 
-				s_RendererData.InstanceDataDescriptorSetPool = CreateRef<VulkanDescriptorSetPool>(48, Span(&instanceDataBinding, 1));
+				s_RendererData.InstanceDataDescriptorSetPool = CreateRef<VulkanDescriptorSetPool>(64, Span(&instanceDataBinding, 1));
 			}
 
 			// Decals descriptor set
@@ -206,7 +206,7 @@ namespace Flare
 			decalDepthBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 			decalDepthBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
-			s_RendererData.DecalsDescriptorSetPool = CreateRef<VulkanDescriptorSetPool>(48, Span(&decalDepthBinding, 1));
+			s_RendererData.DecalsDescriptorSetPool = CreateRef<VulkanDescriptorSetPool>(64, Span(&decalDepthBinding, 1));
 		}
 
 		SamplerSpecifications samplerSpecifications{};
