@@ -274,6 +274,9 @@ int CalculateCascadeIndex(vec3 viewSpacePosition)
 
 float CalculateShadow(vec3 N, vec4 position, vec3 viewSpacePosition)
 {
+	if (u_MaxCascadeIndex == 0)
+		return 1.0f;
+
 	float NoL = dot(N, -u_LightDirection);
 	float bias = max(u_NormalBias * (1.0f - NoL), 0.0f) + u_Bias;
 

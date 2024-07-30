@@ -137,6 +137,8 @@ namespace Flare
 		const ShadowSettings& settings = Renderer::GetShadowSettings();
 		const Viewport& viewport = context.GetViewport();
 
+		bool enabled = viewport.IsShadowMappingEnabled() && settings.Enabled;
+
 		m_ShadowData.Bias = settings.Bias;
 		m_ShadowData.NormalBias = settings.NormalBias;
 		m_ShadowData.LightSize = settings.LightSize;
@@ -146,7 +148,10 @@ namespace Flare
 		for (size_t i = 0; i < 4; i++)
 			m_ShadowData.CascadeSplits[i] = settings.CascadeSplits[i];
 
-		m_ShadowData.MaxCascadeIndex = settings.Cascades - 1;
+		if (enabled)
+			m_ShadowData.MaxCascadeIndex = settings.Cascades - 1;
+		else
+			m_ShadowData.MaxCascadeIndex = 0;
 
 		m_ShadowData.MaxShadowDistance = settings.CascadeSplits[settings.Cascades - 1];
 		m_ShadowData.ShadowFadeStartDistance = m_ShadowData.MaxShadowDistance - settings.FadeDistance;
