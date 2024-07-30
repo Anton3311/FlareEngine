@@ -77,6 +77,10 @@ namespace Flare
 			light.LightBasis.Forward = direction;
 			light.LightBasis.Up = glm::cross(right, direction);
 		}
+		else
+		{
+			m_SceneSubmition.DirectionalLight = m_DefaultDirectionalLight;
+		}
 
 		if (std::optional<Entity> environmentEntity = m_EnvironmentQuery.TryGetFirstEntityId())
 		{
@@ -84,6 +88,10 @@ namespace Flare
 
 			m_SceneSubmition.Environment.EnvironmentColor = environment.EnvironmentColor;
 			m_SceneSubmition.Environment.EnvironmentColorIntensity = environment.EnvironmentColorIntensity;
+		}
+		else
+		{
+			m_SceneSubmition.Environment = m_DefaultEnvironment;
 		}
 
 		m_PointLightsQuery.ForEachChunk([submitions = &m_SceneSubmition.PointLights](QueryChunk chunk,
@@ -203,6 +211,23 @@ namespace Flare
 		PrepareViewportForRendering(viewport, sceneCameraView);
 
 		viewport.Graph.Execute(GraphicsContext::GetInstance().GetCommandBuffer(), m_SceneSubmition, sceneCameraView);
+	}
+
+	void SceneRenderer::SetDefaultEnvironmentLight(const glm::vec3& color, float intensity)
+	{
+		m_DefaultEnvironment.EnvironmentColor = color;
+		m_DefaultEnvironment.EnvironmentColorIntensity = intensity;
+	}
+
+	void SceneRenderer::SetDefaultDirectionalLight(const glm::vec3& direction, const glm::vec3& color, float intensity)
+	{
+		m_DefaultDirectionalLight.Color = color;
+		m_DefaultDirectionalLight.Intensity = intensity;
+		m_DefaultDirectionalLight.Direction = direction;
+
+		m_DefaultDirectionalLight.LightBasis.Forward = direction;
+		m_DefaultDirectionalLight.LightBasis.Right = glm::cross(direction, glm::vec3(0.0f, 1.0f, 0.0f));
+		m_DefaultDirectionalLight.LightBasis.Up = glm::cross(m_DefaultDirectionalLight.LightBasis.Right, direction);
 	}
 
 	void SceneRenderer::InitializeQueries()
