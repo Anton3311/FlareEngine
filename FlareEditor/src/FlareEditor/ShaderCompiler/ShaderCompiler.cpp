@@ -165,7 +165,7 @@ namespace Flare
 		return {};
 	}
 
-	static void ParseShaderMetadata(const ShaderSourceParser& parser,
+	static void ParseGraphicsShaderMetadata(const ShaderSourceParser& parser,
 		Ref<GraphicsShaderMetadata> metadata,
 		std::vector<ShaderError>& errors,
 		const std::unordered_map<std::string, size_t>& propertyNameToIndex)
@@ -573,15 +573,14 @@ namespace Flare
 	static void Reflect(spirv_cross::Compiler& compiler,
 		ShaderStageType stage,
 		std::unordered_map<std::string, size_t>& propertyNameToIndex,
-		Ref<GraphicsShaderMetadata> metadata)
+		Ref<ShaderMetadata> metadata, uint32_t descriptorSetMask)
 	{
 		FLARE_PROFILE_FUNCTION();
 		auto& pushConstantsRange = metadata->PushConstantsRanges.emplace_back();
 		pushConstantsRange.Offset = 0;
 		pushConstantsRange.Stage = stage;
 
-		uint32_t materialDescriptorSetIndex = GetMaterialDescriptorSetIndex(metadata->Type);
-		ExtractShaderProperties(compiler, metadata->Properties, pushConstantsRange, 1 << materialDescriptorSetIndex);
+		ExtractShaderProperties(compiler, metadata->Properties, pushConstantsRange, descriptorSetMask);
 
 		const auto& shaderResource = compiler.get_shader_resources();
 		ReflectDescriptorProperties(compiler, shaderResource.uniform_buffers, metadata->DescriptorProperties, ShaderDescriptorType::UniformBuffer);
@@ -721,7 +720,7 @@ namespace Flare
 			try
 			{
 				spirv_cross::Compiler compiler(compiledVulkanShader.value());
-				Reflect(compiler, program.Stage, propertyNameToIndex, metadata);
+				Reflect(compiler, program.Stage, propertyNameToIndex, metadata, 1 << GetMaterialDescriptorSetIndex(metadata->Type));
 
 				switch (program.Stage)
 				{
@@ -740,7 +739,7 @@ namespace Flare
 		}
 
 		metadata->Outputs = std::move(shaderOutputs);
-		ParseShaderMetadata(parser, metadata, errors, propertyNameToIndex);
+		ParseGraphicsShaderMetadata(parser, metadata, errors, propertyNameToIndex);
 
 		EditorShaderCache::GetInstance().SetShaderEntry(shaderHandle, metadata);
 

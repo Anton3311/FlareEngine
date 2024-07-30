@@ -198,19 +198,22 @@ namespace Flare
 		Empty,
 	};
 
-	struct GraphicsShaderMetadata
+	struct ShaderMetadata
 	{
 		std::string Name;
+		ShaderDescriptorSetUsage DescriptorSetUsage[4] = { ShaderDescriptorSetUsage::NotUsed };
+		std::vector<ShaderProperty> Properties;
+		std::vector<ShaderDescriptorProperty> DescriptorProperties;
+		std::vector<ShaderPushConstantsRange> PushConstantsRanges;
+	};
+
+	struct GraphicsShaderMetadata : public ShaderMetadata
+	{
 		ShaderType Type = ShaderType::Unknown;
 		ShaderFeatures Features;
 		ShaderOutputs Outputs;
 
-		ShaderDescriptorSetUsage DescriptorSetUsage[4] = { ShaderDescriptorSetUsage::NotUsed };
-
-		std::vector<ShaderProperty> Properties;
-		std::vector<ShaderDescriptorProperty> DescriptorProperties;
 		std::vector<ShaderStageType> Stages;
-		std::vector<ShaderPushConstantsRange> PushConstantsRanges;
 		std::vector<VertexShaderInput> VertexShaderInputs;
 	};
 }
