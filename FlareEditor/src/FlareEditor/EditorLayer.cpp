@@ -108,7 +108,7 @@ namespace Flare
 
         m_GameWindow = CreateRef<ViewportWindow>(m_SceneRenderer, "Game");
 
-        m_ViewportWindows.emplace_back(CreateRef<SceneViewportWindow>(m_Camera, m_SceneRenderer));
+        m_ViewportWindows.emplace_back(CreateRef<SceneViewportWindow>(m_Camera, m_SceneRenderer, m_SceneViewSettings));
         m_ViewportWindows.emplace_back(m_GameWindow);
 
         Renderer::SetMainViewport(m_GameWindow->GetViewport());

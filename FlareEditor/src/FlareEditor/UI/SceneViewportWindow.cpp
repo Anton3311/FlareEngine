@@ -28,13 +28,11 @@
 
 namespace Flare
 {
-	SceneViewportWindow::SceneViewportWindow(EditorCamera& camera, const Scope<SceneRenderer>& sceneRenderer, std::string_view name)
-		: ViewportWindow(sceneRenderer, name),
-		m_Camera(camera),
-		m_Overlay(ViewportOverlay::Default),
-		m_IsToolbarHovered(false),
-		m_CameraController(m_Camera),
-		m_Guizmo(GuizmoMode::None)
+	SceneViewportWindow::SceneViewportWindow(EditorCamera& camera,
+		const Scope<SceneRenderer>& sceneRenderer,
+		SceneViewSettings& sceneViewSettings,
+		std::string_view name)
+		: ViewportWindow(sceneRenderer, name), m_Camera(camera), m_CameraController(m_Camera), m_SceneViewSettings(sceneViewSettings)
 	{
 		m_Viewport.SetDebugRenderingEnabled(true);
 	}
@@ -413,7 +411,6 @@ namespace Flare
 		
 		{
 			ImGui::PushID("SceneViewSettings");
-			SceneViewSettings& settings = EditorLayer::GetInstance().GetSceneViewSettings();
 			if (ImGui::BeginCombo("", "Settings"))
 			{
 				{
@@ -436,11 +433,11 @@ namespace Flare
 
 				ImGui::Separator();
 
-				ImGui::MenuItem("Show AABBs", nullptr, &settings.ShowAABBs);
-				ImGui::MenuItem("Show Lights", nullptr, &settings.ShowLights);
-				ImGui::MenuItem("Show Camera Frustums", nullptr, &settings.ShowCameraFrustum);
+				ImGui::MenuItem("Show AABBs", nullptr, &m_SceneViewSettings.ShowAABBs);
+				ImGui::MenuItem("Show Lights", nullptr, &m_SceneViewSettings.ShowLights);
+				ImGui::MenuItem("Show Camera Frustums", nullptr, &m_SceneViewSettings.ShowCameraFrustum);
 
-				if (ImGui::MenuItem("Show Grid", nullptr, &settings.ShowGrid))
+				if (ImGui::MenuItem("Show Grid", nullptr, &m_SceneViewSettings.ShowGrid))
 				{
 					m_Viewport.Graph.SetNeedsRebuilding();
 				}

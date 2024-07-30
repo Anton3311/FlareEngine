@@ -14,12 +14,17 @@ namespace Flare
         : m_PreviewScene(CreateRef<Scene>(context)),
         m_Entities(GetWorld(), EntitiesHierarchyFeatures::None),
         m_Properties(GetWorld()), m_SelectedEntity(Entity()),
-        m_ViewportWindow(m_EditorCamera, m_SceneRenderer, "Prefab Preview")
+        m_ViewportWindow(m_EditorCamera, m_SceneRenderer, m_SceneViewSettings, "Prefab Preview")
     {
         FLARE_PROFILE_FUNCTION();
         m_SceneRenderer.reset(new SceneRenderer(m_PreviewScene));
         m_SceneRenderer->SetDefaultDirectionalLight(glm::normalize(glm::vec3(1.0f, -1.0f, 1.0f)), glm::vec3(1.0f), 2.0f);
         m_SceneRenderer->SetDefaultEnvironmentLight(glm::vec3(1.0f), 0.8f);
+
+        m_SceneViewSettings.ShowAABBs = false;
+        m_SceneViewSettings.ShowCameraFrustum = false;
+        m_SceneViewSettings.ShowLights = true;
+        m_SceneViewSettings.ShowGrid = true;
 
         m_ViewportWindow.SetScene(m_PreviewScene);
 

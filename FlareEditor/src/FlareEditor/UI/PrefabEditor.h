@@ -5,6 +5,8 @@
 
 #include "FlareECS/World.h"
 
+#include "FlareEditor/SceneViewSettings.h"
+
 #include "FlareEditor/UI/AssetEditor.h"
 #include "FlareEditor/UI/ECS/EntitiesHierarchy.h"
 #include "FlareEditor/UI/ECS/EntityProperties.h"
@@ -31,6 +33,8 @@ namespace Flare
 		Ref<Scene> m_PreviewScene;
 
 		Scope<SceneRenderer> m_SceneRenderer = nullptr;
+
+		SceneViewSettings m_SceneViewSettings;
 		
 		EditorCamera m_EditorCamera;
 		SceneViewportWindow m_ViewportWindow;

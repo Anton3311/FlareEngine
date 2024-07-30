@@ -6,6 +6,7 @@
 
 #include "FlareECS/Entity/Entity.h"
 
+#include "FlareEditor/SceneViewSettings.h"
 #include "FlareEditor/Guizmo.h"
 #include "FlareEditor/ViewportWindow.h"
 #include "FlareEditor/EditorCamera.h"
@@ -23,7 +24,10 @@ namespace Flare
 			Depth,
 		};
 
-		SceneViewportWindow(EditorCamera& camera, const Scope<SceneRenderer>& sceneRenderer, std::string_view name = "Scene Viewport");
+		SceneViewportWindow(EditorCamera& camera,
+			const Scope<SceneRenderer>& sceneRenderer,
+			SceneViewSettings& sceneViewSettings,
+			std::string_view name = "Scene Viewport");
 
 		virtual void OnAttach() override;
 
@@ -38,11 +42,13 @@ namespace Flare
 
 		void HandleAssetDragAndDrop(AssetHandle handle);
 	private:
-		GuizmoMode m_Guizmo;
+		SceneViewSettings& m_SceneViewSettings;
+
+		GuizmoMode m_Guizmo = GuizmoMode::None;
 		EditorCamera& m_Camera;
 		EditorCameraController m_CameraController;
-		bool m_IsToolbarHovered;
+		bool m_IsToolbarHovered = false;
 
-		ViewportOverlay m_Overlay;
+		ViewportOverlay m_Overlay = ViewportOverlay::Default;
 	};
 }
