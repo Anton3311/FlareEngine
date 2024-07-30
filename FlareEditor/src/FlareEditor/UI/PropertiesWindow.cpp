@@ -445,7 +445,7 @@ namespace Flare
 
 		EditorShaderCache* shaderCache = (EditorShaderCache*)ShaderCacheManager::GetInstance().get();
 
-		Ref<const ShaderMetadata> shaderEntry = shaderCache->FindShaderMetadata(shaderHandle);
+		Ref<const GraphicsShaderMetadata> shaderEntry = shaderCache->FindShaderMetadata(shaderHandle);
 		if (shaderEntry)
 		{
 			const ShaderProperties& properties = shaderEntry->Properties;

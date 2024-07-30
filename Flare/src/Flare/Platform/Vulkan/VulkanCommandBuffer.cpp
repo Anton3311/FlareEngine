@@ -110,7 +110,7 @@ namespace Flare
 		Ref<VulkanMaterial> vulkanMaterial = As<VulkanMaterial>(std::const_pointer_cast<Material>(material));
 		Ref<VulkanPipeline> pipeline = As<VulkanPipeline>(vulkanMaterial->GetPipeline(m_CurrentRenderPass));
 		VkPipelineLayout pipelineLayout = pipeline->GetLayoutHandle();
-		Ref<const ShaderMetadata> metadata = material->GetShader()->GetMetadata();
+		Ref<const GraphicsShaderMetadata> metadata = material->GetShader()->GetMetadata();
 
 		{
 			FLARE_PROFILE_SCOPE("PushConstants");
@@ -151,7 +151,7 @@ namespace Flare
 	void VulkanCommandBuffer::PushConstants(const ShaderConstantBuffer& constantBuffer)
 	{
 		FLARE_CORE_ASSERT(constantBuffer.GetShader());
-		Ref<const ShaderMetadata> metadata = constantBuffer.GetShader()->GetMetadata();
+		Ref<const GraphicsShaderMetadata> metadata = constantBuffer.GetShader()->GetMetadata();
 
 		VkPipelineLayout pipelineLayout = As<const VulkanPipeline>(m_CurrentGraphicsPipeline)->GetLayoutHandle();
 
@@ -227,7 +227,7 @@ namespace Flare
 
 		if (m_GlobalDescriptorSetsRequireBinding)
 		{
-			Ref<const ShaderMetadata> metadata = m_CurrentGraphicsPipeline->GetSpecifications().Shader->GetMetadata();
+			Ref<const GraphicsShaderMetadata> metadata = m_CurrentGraphicsPipeline->GetSpecifications().Shader->GetMetadata();
 			Ref<VulkanDescriptorSet> emptyDescriptorSet = As<VulkanDescriptorSet>(VulkanContext::GetInstance().GetEmptyDescriptorSet());
 
 			for (size_t i = 0; i < GLOBAL_DESCRIPTOR_SET_COUNT; i++)

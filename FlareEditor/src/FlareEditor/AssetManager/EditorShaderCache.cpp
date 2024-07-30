@@ -59,7 +59,7 @@ namespace Flare
 		return compiledShader;
 	}
 
-	Ref<const ShaderMetadata> EditorShaderCache::FindShaderMetadata(AssetHandle shaderHandle)
+	Ref<const GraphicsShaderMetadata> EditorShaderCache::FindShaderMetadata(AssetHandle shaderHandle)
 	{
 		auto it = m_Entries.find(shaderHandle);
 		if (it == m_Entries.end())
@@ -88,7 +88,7 @@ namespace Flare
 		return std::filesystem::exists(cacheFile);
 	}
 
-	void EditorShaderCache::SetShaderEntry(AssetHandle shaderHandle, Ref<const ShaderMetadata> metadata)
+	void EditorShaderCache::SetShaderEntry(AssetHandle shaderHandle, Ref<const GraphicsShaderMetadata> metadata)
 	{
 		m_Entries[shaderHandle] = metadata;
 	}

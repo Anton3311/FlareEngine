@@ -13,12 +13,12 @@ namespace Flare
 
 		std::optional<std::vector<uint32_t>> FindCache(AssetHandle shaderHandle, ShaderStageType stageType) override;
 
-		Ref<const ShaderMetadata> FindShaderMetadata(AssetHandle shaderHandle) override;
+		Ref<const GraphicsShaderMetadata> FindShaderMetadata(AssetHandle shaderHandle) override;
 		Ref<const ComputeShaderMetadata> FindComputeShaderMetadata(AssetHandle shaderHandle) override;
 
 		bool HasCache(AssetHandle shaderHandle, ShaderStageType stage) override;
 
-		void SetShaderEntry(AssetHandle shaderHandle, Ref<const ShaderMetadata> metadata);
+		void SetShaderEntry(AssetHandle shaderHandle, Ref<const GraphicsShaderMetadata> metadata);
 		void SetComputeShaderEntry(AssetHandle shaderHandle, Ref<const ComputeShaderMetadata> metadata);
 
 		std::filesystem::path GetCacheDirectoryPath();
@@ -26,7 +26,7 @@ namespace Flare
 	public:
 		static EditorShaderCache& GetInstance();
 	private:
-		std::unordered_map<AssetHandle, Ref<const ShaderMetadata>> m_Entries;
+		std::unordered_map<AssetHandle, Ref<const GraphicsShaderMetadata>> m_Entries;
 		std::unordered_map<AssetHandle, Ref<const ComputeShaderMetadata>> m_ComputeShaderEntries;
 	};
 }

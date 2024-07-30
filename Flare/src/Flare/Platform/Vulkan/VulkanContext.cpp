@@ -687,7 +687,7 @@ namespace Flare
 			}
 		}
 
-		Ref<const ShaderMetadata> metadata = shader->GetMetadata();
+		Ref<const GraphicsShaderMetadata> metadata = shader->GetMetadata();
 
 		PipelineSpecifications specifications{};
 		specifications.Shader = shader;

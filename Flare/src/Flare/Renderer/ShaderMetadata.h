@@ -198,7 +198,7 @@ namespace Flare
 		Empty,
 	};
 
-	struct ShaderMetadata
+	struct GraphicsShaderMetadata
 	{
 		std::string Name;
 		ShaderType Type = ShaderType::Unknown;

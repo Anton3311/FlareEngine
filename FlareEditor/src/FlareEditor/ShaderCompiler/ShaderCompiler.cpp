@@ -166,7 +166,7 @@ namespace Flare
 	}
 
 	static void ParseShaderMetadata(const ShaderSourceParser& parser,
-		Ref<ShaderMetadata> metadata,
+		Ref<GraphicsShaderMetadata> metadata,
 		std::vector<ShaderError>& errors,
 		const std::unordered_map<std::string, size_t>& propertyNameToIndex)
 	{
@@ -573,7 +573,7 @@ namespace Flare
 	static void Reflect(spirv_cross::Compiler& compiler,
 		ShaderStageType stage,
 		std::unordered_map<std::string, size_t>& propertyNameToIndex,
-		Ref<ShaderMetadata> metadata)
+		Ref<GraphicsShaderMetadata> metadata)
 	{
 		FLARE_PROFILE_FUNCTION();
 		auto& pushConstantsRange = metadata->PushConstantsRanges.emplace_back();
@@ -691,7 +691,7 @@ namespace Flare
 			program.Stage = sourceBlock.Stage;
 		}
 
-		Ref<ShaderMetadata> metadata = CreateRef<ShaderMetadata>();
+		Ref<GraphicsShaderMetadata> metadata = CreateRef<GraphicsShaderMetadata>();
 		metadata->Type = ShaderType::Surface;
 		metadata->Name = shaderPath.filename().replace_extension().generic_string();
 

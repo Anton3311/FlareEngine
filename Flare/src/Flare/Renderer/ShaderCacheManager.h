@@ -10,7 +10,7 @@
 
 namespace Flare
 {
-	struct ShaderMetadata;
+	struct GraphicsShaderMetadata;
 	struct ComputeShaderMetadata;
 
 	class FLARE_API ShaderCacheManager
@@ -20,7 +20,7 @@ namespace Flare
 
 		virtual std::optional<std::vector<uint32_t>> FindCache(AssetHandle shaderHandle, ShaderStageType stageType) = 0;
 
-		virtual Ref<const ShaderMetadata> FindShaderMetadata(AssetHandle shaderHandle) = 0;
+		virtual Ref<const GraphicsShaderMetadata> FindShaderMetadata(AssetHandle shaderHandle) = 0;
 		virtual Ref<const ComputeShaderMetadata> FindComputeShaderMetadata(AssetHandle shaderHandle) = 0;
 
 		virtual bool HasCache(AssetHandle shaderHandle, ShaderStageType stage) = 0;

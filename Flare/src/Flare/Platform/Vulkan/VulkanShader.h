@@ -24,7 +24,7 @@ namespace Flare
 		void Load() override;
 		bool IsLoaded() const override;
 
-		Ref<const ShaderMetadata> GetMetadata() const override;
+		Ref<const GraphicsShaderMetadata> GetMetadata() const override;
 		const ShaderProperties& GetProperties() const override;
 		const ShaderOutputs& GetOutputs() const override;
 		ShaderFeatures GetFeatures() const override;
@@ -49,7 +49,7 @@ namespace Flare
 
 		std::string m_DebugName;
 
-		Ref<const ShaderMetadata> m_Metadata = nullptr;
+		Ref<const GraphicsShaderMetadata> m_Metadata = nullptr;
 		std::vector<ShaderStageModule> m_Modules;
 
 		VkPipelineLayout m_PipelineLayout = VK_NULL_HANDLE;

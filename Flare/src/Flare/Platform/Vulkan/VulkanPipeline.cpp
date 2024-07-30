@@ -214,7 +214,7 @@ namespace Flare
 		stages[1].flags = 0;
 
 		std::vector<VkVertexInputBindingDescription> vertexBindingDescriptions;
-		Ref<const ShaderMetadata> metadata = m_Specifications.Shader->GetMetadata();
+		Ref<const GraphicsShaderMetadata> metadata = m_Specifications.Shader->GetMetadata();
 		const auto& vertexShaderInputs = metadata->VertexShaderInputs;
 
 		for (size_t i = 0; i < m_Specifications.InputLayout.Elements.size(); i++)
