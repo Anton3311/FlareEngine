@@ -50,6 +50,8 @@ namespace Flare
 				SystemExecutionContext context;
 				context.Commands = &m_CommandBuffer;
 				m_Systems[id].SystemInstance->OnUpdate(m_World, context);
+
+				m_CommandBuffer.Execute();
 			}
 		}
 
