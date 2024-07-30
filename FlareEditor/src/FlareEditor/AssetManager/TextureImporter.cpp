@@ -107,6 +107,9 @@ namespace Flare
 		if (textureData.Mips.size() > 1)
 			specifications.GenerateMipMaps = false;
 
-		return Texture::Create(specifications, textureData);
+		Ref<Texture> texture = Texture::Create(specifications, textureData);
+		texture->SetDebugName(metadata.Path.filename().string());
+
+		return texture;
 	}
 }
