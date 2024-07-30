@@ -1,5 +1,7 @@
 #pragma once
 
+#include "FlareCore/Core.h"
+
 #include <vector>
 #include <unordered_set>
 #include <stdint.h>
@@ -27,6 +29,8 @@ namespace Flare
 		Order ExecutionOrder;
 		uint32_t ItemIndex;
 	};
+
+	FLARE_IMPL_ENUM_BITFIELD(ExecutionOrder::Order);
 
 	class ExecutionGraph
 	{
@@ -67,4 +71,6 @@ namespace Flare
 		std::vector<VisitedFlag> m_Visited;
 		std::vector<GraphNode> m_Graph;
 	};
+
+	FLARE_IMPL_ENUM_BITFIELD(ExecutionGraph::VisitedFlag);
 }

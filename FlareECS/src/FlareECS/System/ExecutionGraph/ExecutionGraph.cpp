@@ -9,26 +9,6 @@
 
 namespace Flare
 {
-	constexpr ExecutionGraph::VisitedFlag operator|(ExecutionGraph::VisitedFlag a, ExecutionGraph::VisitedFlag b)
-	{
-		return (ExecutionGraph::VisitedFlag)((uint8_t)a | (uint8_t)b);
-	}
-
-	constexpr ExecutionGraph::VisitedFlag operator&(ExecutionGraph::VisitedFlag a, ExecutionGraph::VisitedFlag b)
-	{
-		return (ExecutionGraph::VisitedFlag)((uint8_t)a & (uint8_t)b);
-	}
-
-	constexpr ExecutionGraph::VisitedFlag operator~(ExecutionGraph::VisitedFlag a)
-	{
-		return (ExecutionGraph::VisitedFlag)(~(uint8_t)a);
-	}
-
-	constexpr bool operator!=(ExecutionGraph::VisitedFlag a, int32_t b)
-	{
-		return (int32_t)a != b;
-	}
-
 	void ExecutionGraph::AddExecutionSettings()
 	{
 		m_ExecutionSettings.emplace_back();
@@ -86,6 +66,7 @@ namespace Flare
 
 	void ExecutionGraph::GenerateExecutionOrderList(uint32_t initialNode, std::unordered_set<uint32_t>& unresolvedNodes)
 	{
+		FLARE_PROFILE_FUNCTION();
 		std::queue<uint32_t> queue;
 		queue.push(initialNode);
 
