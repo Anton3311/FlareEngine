@@ -185,21 +185,6 @@ namespace Flare
 		}
 	}
 
-	const std::vector<SystemGroup>& SystemsManager::GetGroups() const
-	{
-		return m_Groups;
-	}
-
-	std::vector<SystemGroup>& SystemsManager::GetGroups()
-	{
-		return m_Groups;
-	}
-
-	const std::vector<SystemData>& SystemsManager::GetSystems() const
-	{
-		return m_Systems;
-	}
-
 	void SystemsManager::OnUnregisterSystems()
 	{
 		FLARE_PROFILE_FUNCTION();

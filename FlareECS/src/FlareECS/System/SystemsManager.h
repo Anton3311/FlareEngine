@@ -40,6 +40,35 @@ namespace Flare
 		void ExecuteGroup(SystemGroupId id);
 
 		template<typename T>
+		bool IsSystemEnabled() const
+		{
+			static_assert(std::is_base_of_v<System, T>);
+			SystemId id = T::_SystemInitializer.GetId();
+
+			FLARE_CORE_ASSERT(id < (uint32_t)m_Systems.size());
+
+			return m_Systems[id].Enabled;
+		}
+
+		template<typename T>
+		void SetSystemEnabled(bool enabled)
+		{
+			static_assert(std::is_base_of_v<System, T>);
+			SystemId id = T::_SystemInitializer.GetId();
+
+			FLARE_CORE_ASSERT(id < (uint32_t)m_Systems.size());
+
+			SystemData& systemData = m_Systems[id];
+			if (systemData.Enabled != enabled)
+			{
+				systemData.Enabled = enabled;
+				FLARE_CORE_ASSERT(IsGroupIdValid(systemData.GroupId));
+
+				m_Groups[systemData.GroupId].ExecutionGraphIsDirty = true;
+			}
+		}
+
+		template<typename T>
 		void ExecuteSystem()
 		{
 			static_assert(std::is_base_of_v<System, T>);
@@ -60,10 +89,8 @@ namespace Flare
 
 		const SystemsRegistry& GetSystemsRegistry() const { return m_Registry; }
 		
-		const std::vector<SystemGroup>& GetGroups() const;
-		std::vector<SystemGroup>& GetGroups();
-
-		const std::vector<SystemData>& GetSystems() const;
+		inline const std::vector<SystemGroup>& GetGroups() const { return m_Groups; }
+		inline const std::vector<SystemData>& GetSystems() const { return m_Systems; }
 
 		void OnUnregisterSystems() override;
 		void OnRegisterSystems() override;

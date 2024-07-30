@@ -28,6 +28,8 @@ namespace Flare
 	public:
 		System* SystemInstance = nullptr;
 
+		bool Enabled = true;
+
 		SystemId Id = INT32_MAX;
 		uint32_t IndexInGroup = UINT32_MAX;
 		SystemGroupId GroupId = UINT32_MAX;
@@ -39,6 +41,8 @@ namespace Flare
 		std::string Name;
  
 		std::vector<uint32_t> SystemIndices;
+
+		bool ExecutionGraphIsDirty = false;
 
 		ExecutionGraph Graph;
 	};
