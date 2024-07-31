@@ -13,8 +13,8 @@
 
 namespace Flare
 {
-	class FLAREECS_API Entities;
-	class FLAREECS_API Query;
+	class Entities;
+	class Query;
 
 	class FLAREECS_API QueryCache : public ArchetypeUpdateHandler
 	{

@@ -1,5 +1,8 @@
 #include "ECSInspector.h"
 
+#include "FlareECS/EntityStorage/EntityStorage.h"
+#include "FlareECS/EntityStorage/DeletedEntitiesStorage.h"
+
 #include "FlareEditor/EditorSelection.h"
 #include "FlareEditor/EditorLayer.h"
 

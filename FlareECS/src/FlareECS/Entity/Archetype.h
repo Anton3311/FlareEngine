@@ -1,7 +1,6 @@
 #pragma once
 
 #include "FlareECS/Entity/Component.h"
-#include "FlareECS/EntityStorage/EntityStorage.h"
 
 #include <vector>
 #include <optional>

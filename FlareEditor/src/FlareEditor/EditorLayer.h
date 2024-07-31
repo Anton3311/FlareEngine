@@ -5,27 +5,18 @@
 
 #include "FlareECS/ECSContext.h"
 
-#include "FlarePlatform/FileWatcher.h"
-
-#include "FlareEditor/UI/AssetEditor.h"
-
 #include "FlareEditor/UI/SceneWindow.h"
 #include "FlareEditor/UI/PropertiesWindow.h"
 #include "FlareEditor/UI/AssetManagerWindow.h"
 
 #include "FlareEditor/UI/EditorTitleBar.h"
-#include "FlareEditor/UI/PrefabEditor.h"
-#include "FlareEditor/UI/SpriteEditor.h"
 #include "FlareEditor/UI/QuickSearch/QuickSearch.h"
 #include "FlareEditor/UI/PostProcessingWindow.h"
 
-#include "FlareEditor/ViewportWindow.h"
 #include "FlareEditor/EditorCamera.h"
 
 #include "FlareEditor/EditorSelection.h"
 #include "FlareEditor/SceneViewSettings.h"
-
-#include "FlareEditor/ImGui/ImGuiLayer.h"
 
 #include <vector>
 #include <set>
@@ -38,7 +29,13 @@ namespace Flare
 		Play,
 	};
 
+	class AssetEditor;
+	class FileWatcher;
+	class ImGuiLayer;
+	class PrefabEditor;
 	class SceneRenderer;
+	class SpriteEditor;
+	class ViewportWindow;
 
 	class EditorLayer : public Layer
 	{

@@ -10,6 +10,8 @@
 #include "FlareECS/Entity/ComponentInitializer.h"
 
 #include "FlareECS/EntityStorage/EntityChunksPool.h"
+#include "FlareECS/EntityStorage/EntityStorage.h"
+#include "FlareECS/EntityStorage/DeletedEntitiesStorage.h"
 
 #include <algorithm>
 

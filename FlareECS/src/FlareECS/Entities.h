@@ -12,9 +12,6 @@
 #include "FlareECS/Entity/Archetypes.h"
 #include "FlareECS/Entity/EntityIndex.h"
 
-#include "FlareECS/EntityStorage/EntityStorage.h"
-#include "FlareECS/EntityStorage/DeletedEntitiesStorage.h"
-
 #include "FlareECS/Query/QueryCache.h"
 
 #include <unordered_map>
@@ -25,6 +22,8 @@ namespace Flare
 {
 	class FLAREECS_API Query;
 
+	class EntityStorage;
+	struct DeletedEntitiesStorage;
 	class EntityView;
 	class EntitiesIterator;
 
@@ -32,6 +31,15 @@ namespace Flare
 	{
 		Zero,
 		DefaultConstructor,
+	};
+
+	struct EntityRecord
+	{
+		Entity Id;
+
+		uint32_t RegistryIndex;
+		ArchetypeId Archetype;
+		size_t BufferIndex;
 	};
 
 	class FLAREECS_API Entities

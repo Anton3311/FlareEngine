@@ -8,6 +8,7 @@
 #include "Flare/Platform/Vulkan/VulkanContext.h"
 
 #include "Flare/Scene/Components.h"
+#include "Flare/Scene/Transform.h"
 #include "Flare/Scene/Scene.h"
 #include "Flare/Scene/Prefab.h"
 

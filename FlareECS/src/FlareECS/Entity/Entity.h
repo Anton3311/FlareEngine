@@ -1,7 +1,5 @@
 #pragma once
 
-#include "FlareECS/Entity/Archetype.h"
-
 #include "FlareCore/Serialization/TypeInitializer.h"
 #include "FlareCore/Serialization/TypeSerializer.h"
 
@@ -46,15 +44,6 @@ namespace Flare
 		};
 
 		friend struct std::hash<Entity>;
-	};
-
-	struct EntityRecord
-	{
-		Entity Id;
-
-		uint32_t RegistryIndex;
-		ArchetypeId Archetype;
-		size_t BufferIndex;
 	};
 }
 

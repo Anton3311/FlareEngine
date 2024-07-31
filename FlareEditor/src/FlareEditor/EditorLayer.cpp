@@ -9,8 +9,6 @@
 #include "Flare/Renderer/Renderer.h"
 #include "Flare/Renderer/Font.h"
 
-#include "Flare/Renderer/PostProcessing/ToneMapping.h"
-
 #include "Flare/AssetManager/AssetManager.h"
 
 #include "Flare/Project/Project.h"
@@ -20,13 +18,18 @@
 
 #include "FlarePlatform/Platform.h"
 #include "FlarePlatform/Events.h"
+#include "FlarePlatform/FileWatcher.h"
 
 #include "FlareEditor/Serialization/SceneSerializer.h"
 #include "FlareEditor/Serialization/YAMLSerialization.h"
 #include "FlareEditor/AssetManager/EditorAssetManager.h"
 #include "FlareEditor/AssetManager/EditorShaderCache.h"
 
+#include "FlareEditor/ViewportWindow.h"
+
 #include "FlareEditor/ImGui/ImGuiLayer.h"
+
+#include "FlareEditor/UI/AssetEditor.h"
 #include "FlareEditor/UI/EditorGUI.h"
 #include "FlareEditor/UI/EditorTitleBar.h"
 #include "FlareEditor/UI/ProjectSettingsWindow.h"
@@ -35,6 +38,8 @@
 #include "FlareEditor/UI/SceneViewportWindow.h"
 #include "FlareEditor/UI/SerializablePropertyRenderer.h"
 #include "FlareEditor/UI/ShaderLibraryWindow.h"
+#include "FlareEditor/UI/PrefabEditor.h"
+#include "FlareEditor/UI/SpriteEditor.h"
 
 #include "FlareEditor/Scripting/BuildSystem/BuildSystem.h"
 

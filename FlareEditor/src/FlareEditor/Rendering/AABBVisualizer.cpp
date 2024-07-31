@@ -1,6 +1,7 @@
 #include "AABBVisualizer.h"
 
 #include "Flare/Scene/Components.h"
+#include "Flare/Scene/Transform.h"
 #include "Flare/AssetManager/AssetManager.h"
 
 #include "Flare/Renderer/RendererPrimitives.h"

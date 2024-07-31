@@ -866,7 +866,7 @@ namespace Flare
 			std::ifstream file(shaderPath);
 			if (!file.is_open())
 			{
-				FLARE_CORE_ERROR("Failed not read shader file: {}", shaderPath.string());
+				FLARE_CORE_ERROR("Failed to read shader file: {}", shaderPath.string());
 				return false;
 			}
 
