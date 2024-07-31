@@ -5,7 +5,7 @@
 #include "Flare/Renderer/Texture.h"
 
 #include "Flare/Platform/Vulkan/VulkanContext.h"
-#include "Flare/Platform/Vulkan/VulkanTexture.h"
+#include "Flare/Platform/Vulkan/VulkanRenderPass.h"
 #include "Flare/Platform/Vulkan/VulkanCommandBuffer.h"
 
 namespace Flare

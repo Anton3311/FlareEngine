@@ -3,7 +3,7 @@
 #include "FlareCore/Collections/Span.h"
 
 #include "Flare/Renderer/FrameBuffer.h"
-#include "Flare/Platform/Vulkan/VulkanRenderPass.h"
+
 #include "Flare/Platform/Vulkan/VulkanAllocation.h"
 #include "Flare/Platform/Vulkan/VulkanTexture.h"
 
@@ -12,6 +12,7 @@
 
 namespace Flare
 {
+	class VulkanRenderPass;
 	class VulkanFrameBuffer : public FrameBuffer
 	{
 	public:
