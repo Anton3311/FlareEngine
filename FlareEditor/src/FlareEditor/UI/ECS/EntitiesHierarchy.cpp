@@ -2,6 +2,7 @@
 
 #include "FlareCore/Profiler/Profiler.h"
 
+#include "Flare/Scene/Transform.h"
 #include "Flare/Scene/Components.h"
 #include "Flare/Scene/Hierarchy.h"
 

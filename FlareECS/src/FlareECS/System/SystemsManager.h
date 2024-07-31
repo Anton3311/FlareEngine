@@ -1,7 +1,5 @@
 #pragma once
 
-#include "FlareECS/Query/Query.h"
-
 #include "FlareECS/System/System.h"
 #include "FlareECS/System/SystemData.h"
 #include "FlareECS/System/SystemsRegistry.h"

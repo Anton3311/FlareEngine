@@ -5,6 +5,8 @@
 #include "Flare/Scene/Components.h"
 #include "Flare/Scene/Transform.h"
 
+#include "Flare/Renderer/Viewport.h"
+
 #include "Flare/DebugRenderer/DebugRenderer.h"
 
 #include "FlareECS/World.h"
