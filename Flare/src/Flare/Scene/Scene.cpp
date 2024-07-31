@@ -48,11 +48,7 @@ namespace Flare
 		m_OnFrameStart = systemsManager.CreateGroup("On Frame End");
 		m_OnFrameEnd = systemsManager.CreateGroup("On Frame End");
 
-		m_CamerasQuery = m_World.NewQuery().All().With<TransformComponent, CameraComponent>().Build();
-		m_DirectionalLightQuery = m_World.NewQuery().All().With<TransformComponent, DirectionalLight>().Build();
 		m_EnvironmentQuery = m_World.NewQuery().All().With<Environment>().Build();
-		m_PointLightsQuery = m_World.NewQuery().All().With<TransformComponent, PointLight>().Build();
-		m_SpotLightsQuery = m_World.NewQuery().All().With<TransformComponent, SpotLight>().Build();
 
 		m_PostProcessingManager.AddEffect(CreateRef<SSAO>());
 		m_PostProcessingManager.AddEffect(CreateRef<Atmosphere>());
