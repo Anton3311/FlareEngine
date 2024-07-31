@@ -12,9 +12,9 @@ namespace Flare
 {
 	struct EditorCameraSettings
 	{
-		float FOV = 0.1f;
-		float Near = 1000.0f;
-		float Far = 60.0f;
+		float FOV = 60.0f;
+		float Near = 0.1f;
+		float Far = 1000.0f;
 
 		float RotationSpeed = 1.0f;
 	};

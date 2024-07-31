@@ -12,7 +12,6 @@
 #include "Flare/Renderer/ShaderLibrary.h"
 
 #include "FlareEditor/EditorLayer.h"
-
 #include "FlareEditor/ShaderCompiler/ShaderCompiler.h"
 
 #include "FlareEditor/AssetManager/TextureImporter.h"
@@ -22,6 +21,8 @@
 #include "FlareEditor/AssetManager/MaterialImporter.h"
 #include "FlareEditor/AssetManager/MeshImporter.h"
 #include "FlareEditor/AssetManager/ShaderImporter.h"
+
+#include "FlareEditor/UI/SceneViewportWindow.h"
 
 #include <yaml-cpp/yaml.h>
 
@@ -42,7 +43,7 @@ namespace Flare
 			FLARE_PROFILE_FUNCTION();
             Ref<Scene> scene = CreateRef<Scene>(EditorLayer::GetInstance().GetECSContext());
             SceneSerializer::Deserialize(scene, metadata.Path,
-                EditorLayer::GetInstance().GetCamera(),
+                EditorLayer::GetInstance().GetSceneViewportWindow()->GetEditorCamera(),
                 EditorLayer::GetInstance().GetSceneViewSettings());
 
             return scene;

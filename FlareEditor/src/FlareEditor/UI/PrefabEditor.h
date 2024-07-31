@@ -10,7 +10,6 @@
 #include "FlareEditor/UI/AssetEditor.h"
 #include "FlareEditor/UI/ECS/EntitiesHierarchy.h"
 #include "FlareEditor/UI/ECS/EntityProperties.h"
-
 #include "FlareEditor/UI/SceneViewportWindow.h"
 
 namespace Flare
@@ -36,7 +35,6 @@ namespace Flare
 
 		SceneViewSettings m_SceneViewSettings;
 		
-		EditorCamera m_EditorCamera;
 		SceneViewportWindow m_ViewportWindow;
 
 		EntitiesHierarchy m_Entities;

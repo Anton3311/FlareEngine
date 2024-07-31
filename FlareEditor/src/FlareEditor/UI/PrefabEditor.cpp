@@ -14,7 +14,7 @@ namespace Flare
         : m_PreviewScene(CreateRef<Scene>(context)),
         m_Entities(GetWorld(), EntitiesHierarchyFeatures::None),
         m_Properties(GetWorld()), m_SelectedEntity(Entity()),
-        m_ViewportWindow(m_EditorCamera, m_SceneRenderer, m_SceneViewSettings, "Prefab Preview")
+        m_ViewportWindow(m_SceneRenderer, m_SceneViewSettings, "Prefab Preview")
     {
         FLARE_PROFILE_FUNCTION();
         m_SceneRenderer.reset(new SceneRenderer(m_PreviewScene));
@@ -27,12 +27,6 @@ namespace Flare
         m_SceneViewSettings.ShowGrid = true;
 
         m_ViewportWindow.SetScene(m_PreviewScene);
-
-        EditorCameraSettings& settings = m_EditorCamera.GetSettings();
-        settings.FOV = 60.0f;
-        settings.Near = 0.1f;
-        settings.Far = 1000.0f;
-        settings.RotationSpeed = 1.0f;
 
         m_PreviewScene->InitializeRuntime();
 

@@ -29,11 +29,10 @@
 
 namespace Flare
 {
-	SceneViewportWindow::SceneViewportWindow(EditorCamera& camera,
-		const Scope<SceneRenderer>& sceneRenderer,
+	SceneViewportWindow::SceneViewportWindow(const Scope<SceneRenderer>& sceneRenderer,
 		SceneViewSettings& sceneViewSettings,
 		std::string_view name)
-		: ViewportWindow(sceneRenderer, name), m_Camera(camera), m_CameraController(m_Camera), m_SceneViewSettings(sceneViewSettings)
+		: ViewportWindow(sceneRenderer, name), m_CameraController(m_EditorCamera), m_SceneViewSettings(sceneViewSettings)
 	{
 		m_Viewport.SetDebugRenderingEnabled(true);
 	}
@@ -58,7 +57,7 @@ namespace Flare
 		std::optional<SystemGroupId> debugRenderingGroup = scene->GetECSWorld().GetSystemsManager().FindGroup("Debug Rendering");
 
 		RenderView editorCameraView{};
-		m_Camera.FillRenderView(editorCameraView);
+		m_EditorCamera.FillRenderView(editorCameraView);
 
 		m_SceneRenderer->RenderViewport(m_Viewport, &editorCameraView);
 
@@ -117,7 +116,7 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 		ViewportWindow::OnViewportChanged();
-		m_Camera.OnViewportChanged(m_Viewport.GetSize(), m_Viewport.GetPosition());
+		m_EditorCamera.OnViewportChanged(m_Viewport.GetSize(), m_Viewport.GetPosition());
 	}
 
 	void SceneViewportWindow::OnRenderImGui()
@@ -161,7 +160,7 @@ namespace Flare
 					const TransformComponent* transform = world.TryGetEntityComponent<TransformComponent>(editorSelection.GetEntity());
 
 					if (transform)
-						m_Camera.SetRotationOrigin(transform->Position);
+						m_EditorCamera.SetRotationOrigin(transform->Position);
 				}
 			}
 				
@@ -277,8 +276,8 @@ namespace Flare
 				bool snappingEnabled = InputManager::IsKeyHeld(KeyCode::LeftControl) || InputManager::IsKeyHeld(KeyCode::RightControl);
 
 				if (ImGuizmo::Manipulate(
-					glm::value_ptr(m_Camera.GetViewMatrix()),
-					glm::value_ptr(m_Camera.GetProjectionMatrix()),
+					glm::value_ptr(m_EditorCamera.GetViewMatrix()),
+					glm::value_ptr(m_EditorCamera.GetProjectionMatrix()),
 					operation, mode,
 					glm::value_ptr(transformationMatrix),
 					nullptr, snappingEnabled ? &snapValue : nullptr))

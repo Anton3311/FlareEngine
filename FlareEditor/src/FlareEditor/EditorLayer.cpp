@@ -112,17 +112,12 @@ namespace Flare
         });
 
         m_GameWindow = CreateRef<ViewportWindow>(m_SceneRenderer, "Game");
+        m_SceneViewport = CreateRef<SceneViewportWindow>(m_SceneRenderer, m_SceneViewSettings);
 
-        m_ViewportWindows.emplace_back(CreateRef<SceneViewportWindow>(m_Camera, m_SceneRenderer, m_SceneViewSettings));
+        m_ViewportWindows.emplace_back(m_SceneViewport);
         m_ViewportWindows.emplace_back(m_GameWindow);
 
         Renderer::SetMainViewport(m_GameWindow->GetViewport());
-
-        EditorCameraSettings& settings = m_Camera.GetSettings();
-        settings.FOV = 60.0f;
-        settings.Near = 0.1f;
-        settings.Far = 1000.0f;
-        settings.RotationSpeed = 1.0f;
 
         if (Application::GetInstance().GetCommandLineArguments().ArgumentsCount >= 2)
         {
@@ -589,7 +584,7 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
         FLARE_CORE_ASSERT(Scene::GetActive());
         if (AssetManager::IsAssetHandleValid(Scene::GetActive()->Handle))
-            SceneSerializer::Serialize(Scene::GetActive(), m_Camera, m_SceneViewSettings);
+            SceneSerializer::Serialize(Scene::GetActive(), m_SceneViewport->GetEditorCamera(), m_SceneViewSettings);
         else
             SaveActiveSceneAs();
     }
@@ -611,7 +606,7 @@ namespace Flare
 				if (!path.has_extension())
 					path.replace_extension(".flare");
 
-				SceneSerializer::Serialize(Scene::GetActive(), path, m_Camera, m_SceneViewSettings);
+				SceneSerializer::Serialize(Scene::GetActive(), path, m_SceneViewport->GetEditorCamera(), m_SceneViewSettings);
 				AssetHandle handle = As<EditorAssetManager>(AssetManager::GetInstance())->ImportAsset(path);
 				OpenSceneImmediately(handle);
 			}
@@ -693,7 +688,7 @@ namespace Flare
 			active = nullptr;
 
 			Ref<Scene> playModeScene = CreateRef<Scene>(m_ECSContext);
-			SceneSerializer::Deserialize(playModeScene, activeScenePath, m_Camera, m_SceneViewSettings);
+			SceneSerializer::Deserialize(playModeScene, activeScenePath, m_SceneViewport->GetEditorCamera(), m_SceneViewSettings);
 
 			Scene::SetActive(playModeScene);
 			m_Mode = EditorMode::Play;
@@ -769,7 +764,7 @@ namespace Flare
 
         active = CreateRef<Scene>(m_ECSContext);
         active->Handle = activeSceneHandle;
-        SceneSerializer::Deserialize(active, activeScenePath, m_Camera, m_SceneViewSettings);
+        SceneSerializer::Deserialize(active, activeScenePath, m_SceneViewport->GetEditorCamera(), m_SceneViewSettings);
         
         active->InitializeRuntime();
         Scene::SetActive(active);

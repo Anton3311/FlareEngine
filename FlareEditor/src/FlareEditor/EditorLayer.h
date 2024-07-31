@@ -34,6 +34,7 @@ namespace Flare
 	class ImGuiLayer;
 	class PrefabEditor;
 	class SceneRenderer;
+	class SceneViewportWindow;
 	class SpriteEditor;
 	class ViewportWindow;
 
@@ -70,9 +71,6 @@ namespace Flare
 
 		inline EditorMode GetMode() const { return m_Mode; }
 
-		inline EditorCamera& GetCamera() { return m_Camera; }
-		inline const EditorCamera& GetCamera() const { return m_Camera; }
-
 		inline ECSContext& GetECSContext() { return m_ECSContext; }
 		inline const ECSContext& GetECSContext() const { return m_ECSContext; }
 
@@ -81,6 +79,8 @@ namespace Flare
 
 		inline SceneViewSettings& GetSceneViewSettings() { return m_SceneViewSettings; }
 		inline const SceneViewSettings& GetSceneViewSettings() const { return m_SceneViewSettings; }
+
+		inline Ref<SceneViewportWindow> GetSceneViewportWindow() const { return m_SceneViewport; }
 
 		static EditorLayer& GetInstance();
 	private:
@@ -107,6 +107,7 @@ namespace Flare
 
 		EditorTitleBar m_TitleBar;
 		Ref<ViewportWindow> m_GameWindow;
+		Ref<SceneViewportWindow> m_SceneViewport;
 
 		Ref<ViewportWindow> m_FullscreenViewport = nullptr;
 
@@ -122,7 +123,6 @@ namespace Flare
 
 		std::vector<Ref<ViewportWindow>> m_ViewportWindows;
 
-		EditorCamera m_Camera;
 		AssetHandle m_EditedSceneHandle;
 		bool m_PlaymodePaused;
 		EditorMode m_Mode;
