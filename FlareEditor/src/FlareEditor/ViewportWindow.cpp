@@ -1,5 +1,6 @@
 #include "ViewportWindow.h"
 
+#include "Flare/Renderer/CommandBuffer.h"
 #include "Flare/Renderer/Renderer.h"
 #include "Flare/Renderer/Passes/BlitPass.h"
 

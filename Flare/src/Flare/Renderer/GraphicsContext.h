@@ -2,11 +2,10 @@
 
 #include "FlareCore/Core.h"
 
-#include "Flare/Renderer/CommandBuffer.h"
-#include "FlarePlatform/Window.h"
-
 namespace Flare
 {
+	class Window;
+	class CommandBuffer;
 	class FLARE_API GraphicsContext
 	{
 	public:

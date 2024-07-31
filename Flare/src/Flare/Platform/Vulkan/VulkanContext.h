@@ -79,6 +79,7 @@ namespace Flare
 	class DescriptorSet;
 	class DescriptorSetLayout;
 	class DescriptorSetPool;
+	class Pipeline;
 	class Shader;
 
 	class VulkanCommandBuffer;

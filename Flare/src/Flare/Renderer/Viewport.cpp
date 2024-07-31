@@ -2,6 +2,7 @@
 
 #include "FlareCore/Profiler/Profiler.h"
 
+#include "Flare/Renderer/CommandBuffer.h"
 #include "Flare/Renderer/Renderer.h"
 #include "Flare/Renderer/UniformBuffer.h"
 #include "Flare/Renderer/ShaderStorageBuffer.h"
