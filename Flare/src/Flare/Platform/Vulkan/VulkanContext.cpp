@@ -208,7 +208,7 @@ namespace Flare
 		emptyBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 		emptyBinding.stageFlags = VK_SHADER_STAGE_ALL_GRAPHICS;
 
-		m_EmptyDescriptorSetPool = CreateRef<VulkanDescriptorSetPool>(1, Span(&emptyBinding, 1));
+		m_EmptyDescriptorSetPool = CreateRef<VulkanDescriptorSetPool>(Span(&emptyBinding, 1));
 		m_EmptyDescriptorSetLayout = CreateRef<VulkanDescriptorSetLayout>(Span<VkDescriptorSetLayoutBinding>());
 		m_EmptyDescriptorSet = As<VulkanDescriptorSetPool>(m_EmptyDescriptorSetPool)->AllocateSet(m_EmptyDescriptorSetLayout);
 	}

@@ -101,7 +101,7 @@ namespace Flare
 				bindings[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 				bindings[0].pImmutableSamplers = nullptr;
 
-				s_Renderer2DData.QuadsDescriptorSetPool = CreateRef<VulkanDescriptorSetPool>(32, Span(bindings, 1));
+				s_Renderer2DData.QuadsDescriptorSetPool = CreateRef<VulkanDescriptorSetPool>(Span(bindings, 1));
 			}
 
 			{
@@ -112,7 +112,7 @@ namespace Flare
 				bindings[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 				bindings[0].pImmutableSamplers = nullptr;
 
-				s_Renderer2DData.TextDescriptorSetPool = CreateRef<VulkanDescriptorSetPool>(32, Span(bindings, 1));
+				s_Renderer2DData.TextDescriptorSetPool = CreateRef<VulkanDescriptorSetPool>(Span(bindings, 1));
 			}
 		}
 	}

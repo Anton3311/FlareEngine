@@ -87,7 +87,7 @@ namespace Flare
 
 		if (bindings.size() > 0)
 		{
-			m_SetPool = CreateRef<VulkanDescriptorSetPool>(4, Span(bindings.data(), bindings.size()));
+			m_SetPool = CreateRef<VulkanDescriptorSetPool>(Span(bindings.data(), bindings.size()));
 		}
 
 		VkPushConstantRange pushConstantRange{};

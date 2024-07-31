@@ -28,7 +28,7 @@ namespace Flare
 	class FLARE_API VulkanDescriptorSet : public DescriptorSet
 	{
 	public:
-		VulkanDescriptorSet(VulkanDescriptorSetPool* pool, VkDescriptorSet set);
+		VulkanDescriptorSet(VulkanDescriptorSetPool* pool, VkDescriptorPool subPool, VkDescriptorSet set);
 		~VulkanDescriptorSet();
 
 		void WriteImage(Ref<const Texture> texture, uint32_t binding) override;
@@ -45,21 +45,37 @@ namespace Flare
 
 		void SetDebugName(std::string_view name) override;
 		const std::string& GetDebugName() const override;
-	public:
+
+		inline const VulkanDescriptorSetPool* GetOwnerPool() const { return m_OwnerPool; }
+		inline const VkDescriptorPool GetSubPoolHandle() const { return m_SubPoolHandle; }
 		inline VkDescriptorSet GetHandle() const { return m_Set; }
 	private:
+		void ResetAllocation();
+	private:
 		std::string m_DebugName;
+
 		VkDescriptorSet m_Set = VK_NULL_HANDLE;
+		VulkanDescriptorSetPool* m_OwnerPool = nullptr;
+		VkDescriptorPool m_SubPoolHandle = nullptr;
 
 		std::vector<VkWriteDescriptorSet> m_Writes;
 		std::vector<VkDescriptorImageInfo> m_Images;
 		std::vector<VkDescriptorBufferInfo> m_Buffers;
+
+		friend class VulkanDescriptorSetPool;
 	};
 
 	class FLARE_API VulkanDescriptorSetPool : public DescriptorSetPool
 	{
 	public:
-		VulkanDescriptorSetPool(size_t maxSets, const Span<VkDescriptorSetLayoutBinding>& bindings);
+		struct PoolEntry
+		{
+			VkDescriptorPool Pool = VK_NULL_HANDLE;
+			size_t MaxSets = 0;
+			size_t AllocatedSets = 0;
+		};
+
+		VulkanDescriptorSetPool(const Span<VkDescriptorSetLayoutBinding>& bindings);
 		~VulkanDescriptorSetPool();
 
 		Ref<DescriptorSet> AllocateSet() override;
@@ -69,10 +85,12 @@ namespace Flare
 
 		Ref<const DescriptorSetLayout> GetLayout() const override;
 	private:
+		void ReleaseSubPool(PoolEntry& entry);
+		void AllocateSubPool();
+	private:
 		Ref<VulkanDescriptorSetLayout> m_Layout = nullptr;
-		VkDescriptorPool m_Pool = VK_NULL_HANDLE;
 
-		size_t m_MaxSets = 0;
-		size_t m_AllocatedSets = 0;
+		std::vector<VkDescriptorPoolSize> m_PoolSizes;
+		std::vector<PoolEntry> m_SubPools;
 	};
 }

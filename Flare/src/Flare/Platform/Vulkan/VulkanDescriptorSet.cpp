@@ -11,6 +11,10 @@
 
 namespace Flare
 {
+	//
+	// VulkanDescriptorSetLayout
+	//
+
 	VulkanDescriptorSetLayout::VulkanDescriptorSetLayout(const Span<VkDescriptorSetLayoutBinding>& bindings)
 	{
 		for (const auto& binding : bindings)
@@ -42,10 +46,12 @@ namespace Flare
 		vkDestroyDescriptorSetLayout(VulkanContext::GetInstance().GetDevice(), m_Layout, nullptr);
 	}
 
+	//
+	// VulkanDescriptorSet
+	//
 
-
-	VulkanDescriptorSet::VulkanDescriptorSet(VulkanDescriptorSetPool* pool, VkDescriptorSet set)
-		: m_Set(set)
+	VulkanDescriptorSet::VulkanDescriptorSet(VulkanDescriptorSetPool* pool, VkDescriptorPool subPool, VkDescriptorSet set)
+		: m_OwnerPool(pool), m_SubPoolHandle(subPool), m_Set(set)
 	{
 		Ref<const VulkanDescriptorSetLayout> layout = As<const VulkanDescriptorSetLayout>(pool->GetLayout());
 		m_Buffers.reserve(layout->GetBufferBindingsCount());
@@ -223,74 +229,139 @@ namespace Flare
 		return m_DebugName;
 	}
 
-
-
-	VulkanDescriptorSetPool::VulkanDescriptorSetPool(size_t maxSets, const Span<VkDescriptorSetLayoutBinding>& bindings)
-		: m_MaxSets(maxSets)
+	void VulkanDescriptorSet::ResetAllocation()
 	{
-		std::vector<VkDescriptorPoolSize> sizes(bindings.GetSize());
+		m_OwnerPool = nullptr;
+		m_Set = VK_NULL_HANDLE;
+		m_SubPoolHandle = VK_NULL_HANDLE;
+	}
+
+	//
+	// VulkanDescriptorSetPool
+	//
+
+	VulkanDescriptorSetPool::VulkanDescriptorSetPool(const Span<VkDescriptorSetLayoutBinding>& bindings)
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		m_PoolSizes.resize(bindings.GetSize());
 		for (size_t i = 0; i < bindings.GetSize(); i++)
 		{
-			sizes[i].descriptorCount = bindings[i].descriptorCount;
-			sizes[i].type = bindings[i].descriptorType;
+			m_PoolSizes[i].descriptorCount = bindings[i].descriptorCount;
+			m_PoolSizes[i].type = bindings[i].descriptorType;
 		}
-
-		VkDescriptorPoolCreateInfo info{};
-		info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-		info.maxSets = (uint32_t)maxSets;
-		info.poolSizeCount = (uint32_t)sizes.size();
-		info.pPoolSizes = sizes.data();
-		info.pNext = nullptr;
-		info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
-
-		VK_CHECK_RESULT(vkCreateDescriptorPool(VulkanContext::GetInstance().GetDevice(), &info, nullptr, &m_Pool));
 
 		m_Layout = CreateRef<VulkanDescriptorSetLayout>(bindings);
 	}
 
 	VulkanDescriptorSetPool::~VulkanDescriptorSetPool()
 	{
-		FLARE_CORE_ASSERT(m_AllocatedSets == 0);
-		vkDestroyDescriptorPool(VulkanContext::GetInstance().GetDevice(), m_Pool, nullptr);
+		FLARE_PROFILE_FUNCTION();
+
+		for (PoolEntry& entry : m_SubPools)
+		{
+			ReleaseSubPool(entry);
+		}
 	}
 
 	Ref<DescriptorSet> VulkanDescriptorSetPool::AllocateSet()
 	{
+		FLARE_PROFILE_FUNCTION();
 		return AllocateSet(m_Layout);
 	}
 
 	void VulkanDescriptorSetPool::ReleaseSet(Ref<DescriptorSet> set)
 	{
-		FLARE_CORE_ASSERT(m_AllocatedSets > 0);
+		FLARE_PROFILE_FUNCTION();
 
-		VkDescriptorSet setHandles[] = { As<VulkanDescriptorSet>(set)->GetHandle() };
-		VK_CHECK_RESULT(vkFreeDescriptorSets(VulkanContext::GetInstance().GetDevice(), m_Pool, 1, setHandles));
+		Ref<VulkanDescriptorSet> descriptorSet = As<VulkanDescriptorSet>(set);
 
-		m_AllocatedSets--;
+		FLARE_CORE_ASSERT(descriptorSet->GetOwnerPool() == this, "A given descriptor set was allocated from a different descriptor set pool");
+
+		auto it = std::find_if(m_SubPools.begin(),
+			m_SubPools.end(),
+			[&](const PoolEntry& entry) -> bool
+			{
+				return entry.Pool == descriptorSet->GetSubPoolHandle();
+			});
+		
+		FLARE_CORE_ASSERT(it != m_SubPools.end(), "The set cannot be released, because the sub pool entry it was allocated from cannot be found");
+		FLARE_CORE_ASSERT(it->AllocatedSets > 0);
+
+		VkDescriptorSet setHandles[] = { descriptorSet->GetHandle() };
+		VK_CHECK_RESULT(vkFreeDescriptorSets(VulkanContext::GetInstance().GetDevice(), it->Pool, 1, setHandles));
+
+		it->AllocatedSets--;
+
+		descriptorSet->ResetAllocation();
 	}
 
 	Ref<DescriptorSet> VulkanDescriptorSetPool::AllocateSet(Ref<const DescriptorSetLayout> layout)
 	{
-		FLARE_CORE_ASSERT(m_AllocatedSets < m_MaxSets, "Out of descriptor pool memory");
+		FLARE_PROFILE_FUNCTION();
+
+		auto it = std::find_if(m_SubPools.begin(),
+			m_SubPools.end(),
+			[](const PoolEntry& entry) -> bool
+			{
+				return entry.AllocatedSets < entry.MaxSets;
+			});
+
+		if (it == m_SubPools.end())
+		{
+			AllocateSubPool();
+
+			it = m_SubPools.end() - 1;
+		}
 
 		VkDescriptorSetLayout layoutHandle = As<const VulkanDescriptorSetLayout>(layout)->GetHandle();
 		VkDescriptorSetAllocateInfo info{};
 		info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-		info.descriptorPool = m_Pool;
+		info.descriptorPool = it->Pool;
 		info.descriptorSetCount = 1;
 		info.pNext = nullptr;
 		info.pSetLayouts = &layoutHandle;
 
-		m_AllocatedSets++;
-
 		VkDescriptorSet set = VK_NULL_HANDLE;
 
 		VK_CHECK_RESULT(vkAllocateDescriptorSets(VulkanContext::GetInstance().GetDevice(), &info, &set));
-		return CreateRef<VulkanDescriptorSet>(this, set);
+
+		it->AllocatedSets++;
+
+		return CreateRef<VulkanDescriptorSet>(this, it->Pool, set);
 	}
 
 	Ref<const DescriptorSetLayout> VulkanDescriptorSetPool::GetLayout() const
 	{
 		return m_Layout;
+	}
+
+	void VulkanDescriptorSetPool::ReleaseSubPool(PoolEntry& entry)
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		FLARE_CORE_ASSERT(entry.AllocatedSets == 0, "Some allocated descriptor sets were not released");
+
+		vkDestroyDescriptorPool(VulkanContext::GetInstance().GetDevice(), entry.Pool, nullptr);
+
+		entry = {};
+	}
+
+	void VulkanDescriptorSetPool::AllocateSubPool()
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		PoolEntry& entry = m_SubPools.emplace_back();
+		entry.MaxSets = 16;
+
+		VkDescriptorPoolCreateInfo info{};
+		info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+		info.maxSets = (uint32_t)entry.MaxSets;
+		info.poolSizeCount = (uint32_t)m_PoolSizes.size();
+		info.pPoolSizes = m_PoolSizes.data();
+		info.pNext = nullptr;
+		info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+
+		VK_CHECK_RESULT(vkCreateDescriptorPool(VulkanContext::GetInstance().GetDevice(), &info, nullptr, &entry.Pool));
 	}
 }
