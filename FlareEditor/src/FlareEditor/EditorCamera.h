@@ -1,12 +1,6 @@
 #pragma once
 
-#include "Flare/Renderer/RenderData.h"
-#include "Flare/Renderer/Viewport.h"
-
-#include "FlarePlatform/Event.h"
-
 #include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
 
 namespace Flare
 {
@@ -19,6 +13,7 @@ namespace Flare
 		float RotationSpeed = 1.0f;
 	};
 
+	struct RenderView;
 	class EditorCamera
 	{
 	public:

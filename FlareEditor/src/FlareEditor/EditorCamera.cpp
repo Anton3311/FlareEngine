@@ -2,12 +2,14 @@
 
 #include "FlareCore/Log.h"
 #include "Flare/Math/Math.h"
-#include "Flare/Input/InputManager.h"
+
+#include "Flare/Renderer/RenderData.h"
 
 #include "FlarePlatform/Events.h"
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 namespace Flare
 {
