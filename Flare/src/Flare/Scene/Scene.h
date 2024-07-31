@@ -10,7 +10,7 @@
 
 #include "Flare/Scene/SceneRenderer.h"
 
-#include "FlareECS.h"
+#include "FlareECS/World.h"
 
 namespace Flare
 {
