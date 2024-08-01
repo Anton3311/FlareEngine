@@ -9,6 +9,7 @@
 #include "FlarePlatform/Window.h"
 
 #include "FlareEditor/EditorLayer.h"
+#include "FlareEditor/ViewportWindow.h"
 
 #include "FlareEditor/UI/EditorGUI.h"
 #include "FlareEditor/UI/ProjectSettingsWindow.h"
