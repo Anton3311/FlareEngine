@@ -1,11 +1,7 @@
 #pragma once
 
-#include "Flare/Scene/Scene.h"
-#include "Flare/Renderer/FrameBuffer.h"
 #include "Flare/Renderer/RenderData.h"
 #include "Flare/Renderer/Viewport.h"
-
-#include "FlarePlatform/Event.h"
 
 #include <glm/glm.hpp>
 
@@ -14,6 +10,9 @@
 
 namespace Flare
 {
+	class Event;
+	class Scene;
+	class SceneRenderer;
 	class ViewportWindow
 	{
 	public:
@@ -43,7 +42,7 @@ namespace Flare
 
 		void PrepareViewport();
 	protected:
-		inline Ref<Scene> GetScene() const { return m_Scene == nullptr ? Scene::GetActive() : m_Scene; }
+		Ref<Scene> GetScene() const;
 
 		void BeginImGui();
 		void RenderViewportBuffer(const Ref<Texture>& texture);

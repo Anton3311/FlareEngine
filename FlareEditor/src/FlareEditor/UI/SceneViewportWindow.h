@@ -1,11 +1,5 @@
 #pragma once
 
-#include "Flare/Scene/Scene.h"
-#include "Flare/Renderer/Shader.h"
-#include "Flare/Renderer/Material.h"
-
-#include "FlareECS/Entity/Entity.h"
-
 #include "FlareEditor/SceneViewSettings.h"
 #include "FlareEditor/Guizmo.h"
 #include "FlareEditor/ViewportWindow.h"
@@ -14,6 +8,7 @@
 
 namespace Flare
 {
+	class Scene;
 	class SceneViewportWindow : public ViewportWindow
 	{
 	public:

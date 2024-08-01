@@ -1,20 +1,24 @@
 #include "ViewportWindow.h"
 
+#include "FlareCore/Profiler/Profiler.h"
+
+#include "Flare/Core/Application.h"
+
+#include "Flare/DebugRenderer/DebugRenderer.h"
+
 #include "Flare/Renderer/CommandBuffer.h"
 #include "Flare/Renderer/Renderer.h"
 #include "Flare/Renderer/Passes/BlitPass.h"
 
 #include "Flare/Renderer2D/Renderer2D.h"
-#include "Flare/DebugRenderer/DebugRenderer.h"
-
-#include "Flare/Platform/Vulkan/VulkanContext.h"
 
 #include "Flare/Scene/Scene.h"
 
-#include "Flare/Core/Application.h"
-#include "FlareCore/Profiler/Profiler.h"
+#include "Flare/Platform/Vulkan/VulkanContext.h"
 
 #include "FlareEditor/ImGui/ImGuiLayer.h"
+
+#include "FlarePlatform/Event.h"
 
 namespace Flare
 {
@@ -74,6 +78,11 @@ namespace Flare
 				BuildRenderGraph();
 			}
 		}
+	}
+
+	Ref<Scene> ViewportWindow::GetScene() const
+	{
+		return m_Scene == nullptr ? Scene::GetActive() : m_Scene;
 	}
 
 	void ViewportWindow::BeginImGui()

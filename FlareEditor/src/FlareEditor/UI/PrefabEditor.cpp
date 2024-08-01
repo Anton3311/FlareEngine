@@ -1,5 +1,8 @@
 #include "PrefabEditor.h"
 
+#include "Flare/Scene/Prefab.h"
+#include "Flare/Scene/Scene.h"
+
 #include "Flare/AssetManager/AssetManager.h"
 
 #include "Flare/Scene/SceneRenderer.h"
@@ -77,6 +80,11 @@ namespace Flare
         ImGui::End();
 
         show = m_ViewportWindow.ShowWindow;
+    }
+
+    World& PrefabEditor::GetWorld()
+    {
+		return m_PreviewScene->GetECSWorld();
     }
 
     void PrefabEditor::OnAttach()

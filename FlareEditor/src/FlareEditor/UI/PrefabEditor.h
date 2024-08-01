@@ -1,9 +1,6 @@
 #pragma once
 
-#include "Flare/Scene/Prefab.h"
-#include "Flare/Scene/Scene.h"
-
-#include "FlareECS/World.h"
+#include "FlareECS/Entity/Entity.h"
 
 #include "FlareEditor/SceneViewSettings.h"
 
@@ -14,7 +11,10 @@
 
 namespace Flare
 {
+	class Prefab;
+	class Scene;
 	class SceneRenderer;
+	class World;
 	class PrefabEditor : public AssetEditor
 	{
 	public:
@@ -27,7 +27,7 @@ namespace Flare
 		virtual void OnClose() override;
 		virtual void OnRenderImGui(bool& show) override;
 	private:
-		inline World& GetWorld() { return m_PreviewScene->GetECSWorld(); }
+		World& GetWorld();
 	private:
 		Ref<Scene> m_PreviewScene;
 
