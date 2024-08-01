@@ -36,6 +36,7 @@ namespace Flare
 	{
 	public:
 		FLARE_TYPE;
+		FLARE_SERIALIZABLE;
 
 		void RegisterRenderPasses(RenderGraph& renderGraph, const Viewport& viewport) override;
 		const SerializableObjectDescriptor& GetSerializationDescriptor() const override;

@@ -16,7 +16,7 @@ namespace Flare
 	{
 	public:
 		FLARE_ASSET;
-		FLARE_TYPE;
+		FLARE_SERIALIZABLE;
 
 		Material();
 		Material(Ref<Shader> shader);

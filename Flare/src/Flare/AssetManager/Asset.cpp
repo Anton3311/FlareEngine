@@ -3,8 +3,9 @@
 namespace Flare
 {
 	FLARE_IMPL_TYPE(AssetHandle);
+	FLARE_SERIALIZABLE_IMPL(AssetHandle);
 
-	FLARE_API std::string_view AssetSourceToString(AssetSource source)
+	std::string_view AssetSourceToString(AssetSource source)
 	{
 		switch (source)
 		{
@@ -18,7 +19,7 @@ namespace Flare
 		return "";
 	}
 
-	FLARE_API AssetSource AssetSourceFromString(std::string_view string)
+	AssetSource AssetSourceFromString(std::string_view string)
 	{
 		if (string == "File")
 			return AssetSource::File;
@@ -98,13 +99,13 @@ namespace Flare
 		container.SerializationDescritproToAsset.emplace(&descriptor, this);
 	}
 
-	FLARE_API AssetDescriptor::DescriptorsContainer& AssetDescriptor::GetDescriptors()
+	AssetDescriptor::DescriptorsContainer& AssetDescriptor::GetDescriptors()
 	{
 		static DescriptorsContainer s_Descriptors;
 		return s_Descriptors;
 	}
 
-	FLARE_API const AssetDescriptor* AssetDescriptor::FindBySerializationDescriptor(const SerializableObjectDescriptor& descriptor)
+	const AssetDescriptor* AssetDescriptor::FindBySerializationDescriptor(const SerializableObjectDescriptor& descriptor)
 	{
 		auto& container = GetDescriptors();
 		auto it = container.SerializationDescritproToAsset.find(&descriptor);

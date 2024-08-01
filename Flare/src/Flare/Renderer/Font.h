@@ -1,8 +1,7 @@
 #pragma once
 
 #include "FlareCore/Core.h"
-#include "FlareCore/Serialization/Serialization.h"
-#include "FlareCore/Serialization/TypeInitializer.h"
+#include "FlareCore/Serialization/Metadata.h"
 
 #include "Flare/AssetManager/Asset.h"
 

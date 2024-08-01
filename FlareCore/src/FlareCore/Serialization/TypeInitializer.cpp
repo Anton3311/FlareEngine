@@ -5,13 +5,11 @@
 namespace Flare
 {
     TypeInitializer::TypeInitializer(std::string_view typeName, size_t size, size_t alignment,
-        const SerializableObjectDescriptor& serializationDescriptor,
         DestructorFunction destructor,
         DefaultConstructorFunction constructor,
         MoveConstructorFunction moveConstructor,
         CopyConstructorFunction copyConstructor)
         : TypeName(typeName), Size(size), Alignment(alignment),
-          SerializationDescriptor(serializationDescriptor),
           Destructor(destructor),
           DefaultConstructor(constructor),
           MoveConstructor(moveConstructor),

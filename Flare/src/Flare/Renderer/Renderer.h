@@ -22,6 +22,7 @@ namespace Flare
 	struct ShadowSettings
 	{
 		FLARE_TYPE;
+		FLARE_SERIALIZABLE;
 
 		static constexpr uint32_t MaxCascades = 4;
 

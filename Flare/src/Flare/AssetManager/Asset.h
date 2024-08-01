@@ -5,6 +5,7 @@
 
 #include "FlareCore/Serialization/TypeInitializer.h"
 #include "FlareCore/Serialization/TypeSerializer.h"
+#include "FlareCore/Serialization/Metadata.h"
 
 #include <filesystem>
 #include <string_view>
@@ -15,6 +16,7 @@ namespace Flare
 	{
 	public:
 		FLARE_TYPE;
+		FLARE_SERIALIZABLE;
 
 		AssetHandle() = default;
 		constexpr AssetHandle(UUID uuid)

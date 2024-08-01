@@ -2,6 +2,7 @@
 
 #include "FlareCore/Serialization/TypeInitializer.h"
 #include "FlareCore/Serialization/TypeSerializer.h"
+#include "FlareCore/Serialization/Metadata.h"
 
 #include <stdint.h>
 #include <xhash>
@@ -12,6 +13,7 @@ namespace Flare
 	{
 	public:
 		FLARE_TYPE;
+		FLARE_SERIALIZABLE;
 
 		constexpr Entity()
 			: m_Packed(SIZE_MAX) {}

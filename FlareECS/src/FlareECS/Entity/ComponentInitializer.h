@@ -2,6 +2,8 @@
 
 #include "FlareCore/Core.h"
 #include "FlareCore/Serialization/TypeInitializer.h"
+#include "FlareCore/Serialization/Serialization.h"
+#include "FlareCore/Serialization/Metadata.h"
 
 #include "FlareECS/Entity/Component.h"
 
@@ -13,7 +15,7 @@ namespace Flare
 	class FLAREECS_API ComponentInitializer
 	{
 	public:
-		ComponentInitializer(const TypeInitializer& type);
+		ComponentInitializer(const TypeInitializer& type, const SerializableObjectDescriptor& serializationDescriptor);
 		~ComponentInitializer();
 
 		static std::vector<ComponentInitializer*>& GetInitializers();
@@ -21,6 +23,7 @@ namespace Flare
 		constexpr ComponentId GetId() const { return m_Id; }
 	public:
 		const TypeInitializer& Type;
+		const SerializableObjectDescriptor& SerializationDescriptor;
 	private:
 		ComponentId m_Id;
 
@@ -30,10 +33,12 @@ namespace Flare
 
 #define FLARE_COMPONENT                             \
 	FLARE_TYPE                                      \
+	FLARE_SERIALIZABLE                              \
 	static Flare::ComponentInitializer _Component;
 
 #define FLARE_IMPL_COMPONENT(typeName)                                \
 	FLARE_IMPL_TYPE(typeName);                                        \
-	Flare::ComponentInitializer typeName::_Component(typeName::_Type);
+	FLARE_SERIALIZABLE_IMPL(typeName);                                \
+	Flare::ComponentInitializer typeName::_Component(typeName::_Type, FLARE_SERIALIZATION_DESCRIPTOR_OF(typeName));
 
 #define COMPONENT_ID(typeName) (typeName::_Component.GetId())

@@ -1,7 +1,10 @@
 #pragma once
 
 #include "FlareCore/Core.h"
+#include "FlareCore/Serialization/Metadata.h"
+
 #include "Flare/AssetManager/Asset.h"
+
 #include "Flare/Renderer/ShaderMetadata.h"
 
 namespace Flare

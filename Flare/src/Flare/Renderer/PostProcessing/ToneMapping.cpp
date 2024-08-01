@@ -20,6 +20,7 @@
 namespace Flare
 {
 	FLARE_IMPL_TYPE(ToneMapping);
+	FLARE_SERIALIZABLE_IMPL(ToneMapping);
 
 	ToneMapping::ToneMapping()
 	{

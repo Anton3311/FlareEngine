@@ -14,6 +14,7 @@ namespace Flare
 	{
 	public:
 		FLARE_TYPE;
+		FLARE_SERIALIZABLE;
 
 		Vignette();
 

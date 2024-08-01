@@ -16,6 +16,7 @@
 namespace Flare
 {
 	FLARE_IMPL_TYPE(Vignette);
+	FLARE_SERIALIZABLE_IMPL(Vignette);
 
 	static uint32_t s_ColorPropertyIndex = UINT32_MAX;
 	static uint32_t s_RadiusPropertyIndex = UINT32_MAX;

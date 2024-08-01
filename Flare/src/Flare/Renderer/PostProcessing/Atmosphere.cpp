@@ -40,6 +40,8 @@ namespace Flare
 	}
 
 	FLARE_IMPL_TYPE(Atmosphere);
+	FLARE_SERIALIZABLE_IMPL(Atmosphere);
+
 	void Atmosphere::RegisterRenderPasses(RenderGraph& renderGraph, const Viewport& viewport)
 	{
 		if (!IsEnabled())

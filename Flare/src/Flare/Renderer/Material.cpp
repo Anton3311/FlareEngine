@@ -16,7 +16,7 @@
 namespace Flare
 {
 	FLARE_IMPL_ASSET(Material);
-	FLARE_IMPL_TYPE(Material);
+	FLARE_SERIALIZABLE_IMPL(Material);
 
 	Material::Material()
 		: Asset(AssetType::Material), m_Shader(nullptr) {}

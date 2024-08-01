@@ -29,10 +29,10 @@ namespace Flare
 		{
 			YAMLSerializer serializer(emitter, &world);
 			emitter << YAML::BeginMap;
-			emitter << YAML::Key << "Name" << YAML::Value << info.Initializer->Type.SerializationDescriptor.Name;
+			emitter << YAML::Key << "Name" << YAML::Value << info.Initializer->SerializationDescriptor.Name;
 
 			emitter << YAML::Key << "Data" << YAML::Value;
-			serializer.SerializeObject(info.Initializer->Type.SerializationDescriptor, (void*)entityData.value(), false, 0);
+			serializer.SerializeObject(info.Initializer->SerializationDescriptor, (void*)entityData.value(), false, 0);
 			emitter << YAML::EndMap;
 		}
 	}
@@ -135,7 +135,7 @@ namespace Flare
 			const ComponentInfo& info = world.Components.GetComponentInfo(componentId.value());
 			if (info.Initializer)
 			{
-				const SerializableObjectDescriptor& serializationDescriptor = info.Initializer->Type.SerializationDescriptor;
+				const SerializableObjectDescriptor& serializationDescriptor = info.Initializer->SerializationDescriptor;
 				uint8_t* componentData = AddDeserializedComponent(world, entity, componentId.value());
 
 				YAML::Node componentDataNode = componentNode["Data"];

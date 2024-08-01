@@ -2,8 +2,8 @@
 
 namespace Flare
 {
-    ComponentInitializer::ComponentInitializer(const TypeInitializer& type)
-        : m_Id(ComponentId()), Type(type)
+    ComponentInitializer::ComponentInitializer(const TypeInitializer& type, const SerializableObjectDescriptor& serializationDescriptor)
+        : m_Id(ComponentId()), Type(type), SerializationDescriptor(serializationDescriptor)
     {
         GetInitializers().push_back(this);
     }

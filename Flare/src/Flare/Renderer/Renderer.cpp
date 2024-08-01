@@ -34,6 +34,7 @@
 namespace Flare
 {
 	FLARE_IMPL_TYPE(ShadowSettings);
+	FLARE_SERIALIZABLE_IMPL(ShadowSettings);
 
 	struct RendererData
 	{

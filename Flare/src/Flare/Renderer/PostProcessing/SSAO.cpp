@@ -22,6 +22,7 @@
 namespace Flare
 {
 	FLARE_IMPL_TYPE(SSAO);
+	FLARE_SERIALIZABLE_IMPL(SSAO);
 
 	SSAO::SSAO()
 		: Bias(0.1f), Radius(0.5f), BlurSize(2.0f)
