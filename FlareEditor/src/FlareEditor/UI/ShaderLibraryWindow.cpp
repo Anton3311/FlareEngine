@@ -47,6 +47,7 @@ namespace Flare
 
 	void ShaderLibraryWindow::RenderShaderItem(AssetHandle handle)
 	{
+		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(AssetManager::IsAssetHandleValid(handle));
 		const AssetMetadata* metadata = AssetManager::GetAssetMetadata(handle);
 
@@ -54,18 +55,18 @@ namespace Flare
 
 		ImGui::Separator();
 		EditorGUI::PropertyName("Name");
-		EditorGUI::MoveCursor(ImVec2(0.0f, style.FramePadding.y));
+		EditorGUI::MoveCursor(glm::vec2(0.0f, style.FramePadding.y));
 		ImGui::Text("%s", metadata->Name.c_str());
-		EditorGUI::MoveCursor(ImVec2(0.0f, -style.FramePadding.y));
+		EditorGUI::MoveCursor(glm::vec2(0.0f, -style.FramePadding.y));
 
 		EditorGUI::PropertyName("Handle");
-		EditorGUI::MoveCursor(ImVec2(0.0f, style.FramePadding.y));
+		EditorGUI::MoveCursor(glm::vec2(0.0f, style.FramePadding.y));
 		ImGui::Text("%llu", (uint64_t)handle);
-		EditorGUI::MoveCursor(ImVec2(0.0f, style.FramePadding.y));
+		EditorGUI::MoveCursor(glm::vec2(0.0f, style.FramePadding.y));
 
 		EditorGUI::PropertyName("Path");
-		EditorGUI::MoveCursor(ImVec2(0.0f, style.FramePadding.y));
+		EditorGUI::MoveCursor(glm::vec2(0.0f, style.FramePadding.y));
 		ImGui::Text("%s", metadata->Path.generic_string().c_str());
-		EditorGUI::MoveCursor(ImVec2(0.0f, style.FramePadding.y));
+		EditorGUI::MoveCursor(glm::vec2(0.0f, style.FramePadding.y));
 	}
 }

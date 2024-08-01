@@ -1,8 +1,13 @@
 #include "AssetFieldRenderer.h"
 
+#include "FlareCore/Profiler/Profiler.h"
+
+#include "Flare/Scene/Components.h"
+
 #include "FlareEditor/EditorLayer.h"
 #include "FlareEditor/ImGui/ImGuiLayer.h"
 #include "FlareEditor/UI/EditorGUI.h"
+#include "FlareEditor/UI/EditorIcons.h"
 
 namespace Flare
 {
@@ -16,6 +21,7 @@ namespace Flare
 
 	bool AssetFieldRenderer::OnRenderImGui()
 	{
+        FLARE_PROFILE_FUNCTION();
         GetValidHandle();
 
         bool result = false;
@@ -159,6 +165,7 @@ namespace Flare
 
     void AssetFieldRenderer::RenderAssetPreview(ImVec2 previewSize, ImVec2 previewPosition, bool hovered)
     {
+        FLARE_PROFILE_FUNCTION();
         ImDrawList* drawList = ImGui::GetCurrentWindow()->DrawList;
         const ImGuiStyle& style = ImGui::GetStyle();
 

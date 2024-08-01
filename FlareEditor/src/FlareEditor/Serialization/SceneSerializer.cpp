@@ -1,5 +1,6 @@
 #include "SceneSerializer.h"
 
+#include "Flare/Scene/Scene.h"
 #include "Flare/Scene/Components.h"
 #include "Flare/AssetManager/AssetManager.h"
 
@@ -8,6 +9,7 @@
 
 #include "FlareECS/Query/EntitiesIterator.h"
 
+#include "FlareEditor/EditorCamera.h"
 #include "FlareEditor/Serialization/SerializationId.h"
 #include "FlareEditor/Serialization/YAMLSerialization.h"
 

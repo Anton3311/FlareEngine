@@ -1,5 +1,7 @@
 #include "EntityView.h"
 
+#include "FlareECS/EntityStorage/DeletedEntitiesStorage.h"
+
 namespace Flare
 {
 	EntityView::EntityView(Entities& entities, QueryTarget target, ArchetypeId archetype)

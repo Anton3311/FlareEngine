@@ -15,6 +15,7 @@
 #include "FlareEditor/UI/ProjectSettingsWindow.h"
 #include "FlareEditor/UI/ECS/ECSInspector.h"
 #include "FlareEditor/UI/ShaderLibraryWindow.h"
+#include "FlareEditor/UI/EditorIcons.h"
 
 #include <imgui_internal.h>
 

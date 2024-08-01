@@ -1,5 +1,6 @@
 #include "ECSInspector.h"
 
+#include "FlareECS/World.h"
 #include "FlareECS/EntityStorage/EntityStorage.h"
 #include "FlareECS/EntityStorage/DeletedEntitiesStorage.h"
 

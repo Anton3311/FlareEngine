@@ -1,8 +1,6 @@
 #pragma once
 
 #include "FlareCore/Core.h"
-#include "Flare/Renderer/Texture.h"
-#include "Flare/Renderer/FrameBuffer.h"
 
 #include <stdint.h>
 
@@ -34,6 +32,8 @@ namespace Flare
 		static ImVec4 Surface;
 	};
 
+	class Texture;
+	class FrameBuffer;
 	class ImGuiLayer
 	{
 	public:

@@ -11,7 +11,7 @@
 #include "FlareEditor/UI/SerializablePropertyRenderer.h"
 #include "FlareEditor/UI/AssetFieldRenderer.h"
 
-#include <spdlog/spdlog.h>
+#include "FlareEditor/UI/EditorIcons.h"
 
 #include <imgui.h>
 #include <imgui_internal.h>
@@ -22,16 +22,19 @@ namespace Flare
 
     void EditorGUI::Initialize()
     {
+        FLARE_PROFILE_FUNCTION();
         s_EditorIcons.Initialize();
     }
 
     void EditorGUI::Uninitialize()
     {
+        FLARE_PROFILE_FUNCTION();
         s_EditorIcons.Uninitialize();
     }
 
     bool EditorGUI::BeginPropertyGrid(float width)
     {
+        FLARE_PROFILE_FUNCTION();
         float windowWidth = width == 0.0f ? ImGui::GetContentRegionAvail().x : width;
         if (ImGui::BeginTable("Property Grid", 2))
         {
@@ -66,9 +69,9 @@ namespace Flare
         return s_EditorIcons;
     }
 
-    void EditorGUI::MoveCursor(ImVec2 offset)
+    void EditorGUI::MoveCursor(glm::vec2 offset)
     {
-        ImGui::SetCursorPos(ImGui::GetCursorPos() + offset);
+        ImGui::SetCursorPos(ImGui::GetCursorPos() + ImVec2(offset.x, offset.y));
     }
 
     bool EditorGUI::BeginMenu(const char* name)
@@ -222,6 +225,7 @@ namespace Flare
 
     static int32_t InputTextCallback(ImGuiInputTextCallbackData* data)
     {
+        FLARE_PROFILE_FUNCTION();
         if (data->EventFlag == ImGuiInputTextFlags_CallbackResize)
         {
             std::string* str = (std::string*)data->UserData;
@@ -285,6 +289,7 @@ namespace Flare
 
     bool EditorGUI::EntityField(const World& world, Entity& entity)
     {
+        FLARE_PROFILE_FUNCTION();
         bool alive = world.IsEntityAlive(entity);
         float buttonWidth = ImGui::GetContentRegionAvail().x - 60.0f;
 

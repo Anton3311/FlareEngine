@@ -2,10 +2,11 @@
 
 #include "Flare/AssetManager/AssetManager.h"
 
-#include "FlareECS/World.h"
+#include "FlareECS/Entity/Entity.h"
 
 namespace Flare
 {
+	class World;
 	class PrefabImporter
 	{
 	public:

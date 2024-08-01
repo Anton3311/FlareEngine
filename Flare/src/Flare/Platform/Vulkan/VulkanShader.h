@@ -26,8 +26,6 @@ namespace Flare
 
 		Ref<const GraphicsShaderMetadata> GetMetadata() const override;
 		const ShaderProperties& GetProperties() const override;
-		const ShaderOutputs& GetOutputs() const override;
-		ShaderFeatures GetFeatures() const override;
 		std::optional<uint32_t> GetPropertyIndex(std::string_view name) const override;
 
 		inline VkPipelineLayout GetPipelineLayout() const { return m_PipelineLayout; }

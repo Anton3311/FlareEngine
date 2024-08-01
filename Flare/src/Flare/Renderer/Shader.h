@@ -3,7 +3,6 @@
 #include "FlareCore/Core.h"
 
 #include "Flare/AssetManager/Asset.h"
-#include "Flare/Renderer/RendererAPI.h"
 #include "Flare/Renderer/ShaderMetadata.h"
 
 #include <glm/glm.hpp>
@@ -29,8 +28,6 @@ namespace Flare
 
 		virtual Ref<const GraphicsShaderMetadata> GetMetadata() const = 0;
 		virtual const ShaderProperties& GetProperties() const = 0;
-		virtual const ShaderOutputs& GetOutputs() const = 0;
-		virtual ShaderFeatures GetFeatures() const = 0;
 		virtual std::optional<uint32_t> GetPropertyIndex(std::string_view name) const = 0;
 	public:
 		static Ref<Shader> Create();

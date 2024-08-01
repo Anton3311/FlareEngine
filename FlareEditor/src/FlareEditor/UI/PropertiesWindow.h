@@ -1,7 +1,5 @@
 #pragma once
 
-#include "Flare/Scene/Components.h"
-
 #include "FlareEditor/AssetManager/TextureImporter.h"
 #include "FlareEditor/UI/AssetManagerWindow.h"
 

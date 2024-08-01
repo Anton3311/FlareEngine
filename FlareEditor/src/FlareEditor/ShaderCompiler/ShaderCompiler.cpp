@@ -3,6 +3,7 @@
 #include "FlareCore/Profiler/Profiler.h"
 
 #include "Flare/Renderer/ComputeShader.h"
+#include "Flare/Renderer/RendererAPI.h"
 
 #include "Flare/AssetManager/AssetManager.h"
 #include "FlareEditor/AssetManager/EditorShaderCache.h"

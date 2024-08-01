@@ -1,18 +1,11 @@
 #include "SceneWindow.h"
 
-#include "Flare/Scene/Components.h"
 #include "Flare/Scene/Scene.h"
 
 #include "FlareECS/World.h"
-#include "FlareECS/Query/EntitiesIterator.h"
-#include "FlareECS/Entities.h"
 
 #include "FlareEditor/ImGui/ImGuiLayer.h"
 #include "FlareEditor/EditorLayer.h"
-#include "FlareEditor/UI/EditorGUI.h"
-
-#include <imgui.h>
-#include <imgui_internal.h>
 
 namespace Flare
 {

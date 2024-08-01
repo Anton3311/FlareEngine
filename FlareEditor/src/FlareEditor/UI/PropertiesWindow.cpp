@@ -1,7 +1,7 @@
 #include "PropertiesWindow.h"
 
 #include "Flare/Scene/Scene.h"
-#include "Flare/Scripting/ScriptingEngine.h"
+#include "Flare/Scene/Components.h"
 
 #include "Flare/Renderer/ComputeShader.h"
 #include "Flare/Renderer/Material.h"
@@ -9,7 +9,6 @@
 
 #include "FlareEditor/UI/EditorGUI.h"
 #include "FlareEditor/UI/ECS/EntityProperties.h"
-#include "FlareEditor/UI/SpriteEditor.h"
 #include "FlareEditor/UI/SerializablePropertyRenderer.h"
 
 #include "FlareEditor/EditorLayer.h"
@@ -28,6 +27,7 @@ namespace Flare
 
 	void PropertiesWindow::OnAttach()
 	{
+		FLARE_PROFILE_FUNCTION();
 		m_AssetManagerWindow.OnAssetSelectionChanged.Bind([this](AssetHandle handle)
 		{
 			if (!AssetManager::IsAssetHandleValid(handle))
@@ -45,6 +45,7 @@ namespace Flare
 
 	void PropertiesWindow::OnImGuiRender()
 	{
+		FLARE_PROFILE_FUNCTION();
 		bool windowVisible = ImGui::Begin("Properties");
 
 		if (Scene::GetActive() == nullptr)
@@ -83,38 +84,41 @@ namespace Flare
 
 	static void RenderTableRow(const char* rowName, int32_t value)
 	{
+		FLARE_PROFILE_FUNCTION();
 		const ImGuiStyle& style = ImGui::GetStyle();
 
 		ImGui::TableNextRow();
 		ImGui::TableSetColumnIndex(0);
 
-		EditorGUI::MoveCursor(ImVec2(0, style.FramePadding.y));
+		EditorGUI::MoveCursor(glm::vec2(0, style.FramePadding.y));
 		ImGui::TextUnformatted(rowName);
 
 		ImGui::TableSetColumnIndex(1);
 
-		EditorGUI::MoveCursor(ImVec2(0, style.FramePadding.y));
+		EditorGUI::MoveCursor(glm::vec2(0, style.FramePadding.y));
 		ImGui::Text("%d", value);
 	}
 
 	static void RenderTableRow(const char* rowName, const char* text)
 	{
+		FLARE_PROFILE_FUNCTION();
 		const ImGuiStyle& style = ImGui::GetStyle();
 
 		ImGui::TableNextRow();
 		ImGui::TableSetColumnIndex(0);
 
-		EditorGUI::MoveCursor(ImVec2(0, style.FramePadding.y));
+		EditorGUI::MoveCursor(glm::vec2(0, style.FramePadding.y));
 		ImGui::TextUnformatted(rowName);
 
 		ImGui::TableSetColumnIndex(1);
 
-		EditorGUI::MoveCursor(ImVec2(0, style.FramePadding.y));
+		EditorGUI::MoveCursor(glm::vec2(0, style.FramePadding.y));
 		ImGui::TextUnformatted(text);
 	}
 
 	void PropertiesWindow::RenderAssetProperties(AssetHandle handle)
 	{
+		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(AssetManager::IsAssetHandleValid(handle));
 		const AssetMetadata* assetMetadata = AssetManager::GetAssetMetadata(handle);
 		FLARE_CORE_ASSERT(assetMetadata);
@@ -186,16 +190,16 @@ namespace Flare
 				const ImGuiStyle& style = ImGui::GetStyle();
 				EditorGUI::PropertyName("Name");
 
-				EditorGUI::MoveCursor(ImVec2(0, style.FramePadding.y));
+				EditorGUI::MoveCursor(glm::vec2(0, style.FramePadding.y));
 				ImGui::TextUnformatted(computeShader->GetMetadata()->Name.c_str());
-				EditorGUI::MoveCursor(ImVec2(0, style.FramePadding.y));
+				EditorGUI::MoveCursor(glm::vec2(0, style.FramePadding.y));
 
 				EditorGUI::PropertyName("Local Group Size");
 
-				EditorGUI::MoveCursor(ImVec2(0, style.FramePadding.y));
+				EditorGUI::MoveCursor(glm::vec2(0, style.FramePadding.y));
 				glm::uvec3 localGroupSize = computeShader->GetMetadata()->LocalGroupSize;
 				ImGui::Text("X: %u Y: %u Z: %u", localGroupSize.x, localGroupSize.y, localGroupSize.z);
-				EditorGUI::MoveCursor(ImVec2(0, style.FramePadding.y));
+				EditorGUI::MoveCursor(glm::vec2(0, style.FramePadding.y));
 				EditorGUI::EndPropertyGrid();
 			}
 			break;
@@ -220,6 +224,7 @@ namespace Flare
 
 	bool PropertiesWindow::RenderTextureSettingsEditor(AssetHandle handle, TextureImportSettings& importSettings)
 	{
+		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(AssetManager::IsAssetHandleValid(handle));
 		FLARE_CORE_ASSERT(AssetManager::GetAssetMetadata(handle)->Type == AssetType::Texture);
 
@@ -239,15 +244,15 @@ namespace Flare
 			{
 				EditorGUI::PropertyName("Size");
 
-				EditorGUI::MoveCursor(ImVec2(0, style.FramePadding.y));
+				EditorGUI::MoveCursor(glm::vec2(0, style.FramePadding.y));
 				ImGui::Text("%u x %u", texture->GetWidth(), texture->GetHeight());
-				EditorGUI::MoveCursor(ImVec2(0, style.FramePadding.y));
+				EditorGUI::MoveCursor(glm::vec2(0, style.FramePadding.y));
 
 				EditorGUI::PropertyName("Format");
 
-				EditorGUI::MoveCursor(ImVec2(0, style.FramePadding.y));
+				EditorGUI::MoveCursor(glm::vec2(0, style.FramePadding.y));
 				ImGui::TextUnformatted(TextureFormatToString(texture->GetSpecifications().Format));
-				EditorGUI::MoveCursor(ImVec2(0, style.FramePadding.y));
+				EditorGUI::MoveCursor(glm::vec2(0, style.FramePadding.y));
 
 				{
 					const char* previewText = TextureFilteringToString(importSettings.Filtering);
@@ -329,6 +334,7 @@ namespace Flare
 
 	bool PropertiesWindow::RenderMaterialEditor(AssetHandle handle)
 	{
+		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(AssetManager::IsAssetHandleValid(handle));
 		Ref<Material> material = AssetManager::GetAsset<Material>(handle);
 
@@ -364,7 +370,7 @@ namespace Flare
 
 			if (hasShader)
 			{
-				ShaderFeatures features = material->GetShader()->GetFeatures();
+				ShaderFeatures features = material->GetShader()->GetMetadata()->Features;
 
 				EditorGUI::BoolPropertyField("Depth Test", features.DepthTesting);
 				EditorGUI::BoolPropertyField("Depth Write", features.DepthWrite);

@@ -2,6 +2,8 @@
 
 #include "FlareCore/Profiler/Profiler.h"
 
+#include "FlareECS/Query/QueryCache.h"
+
 namespace Flare
 {
 	template<>

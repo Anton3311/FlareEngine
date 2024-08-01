@@ -2,12 +2,13 @@
 
 #include "FlareCore/Core.h"
 
-#include "FlareECS/Query/QueryCache.h"
 #include "FlareECS/Query/QueryFilters.h"
 #include "FlareECS/Query/Query.h"
 
 namespace Flare
 {
+	class QueryCache;
+
 	template<typename T>
 	class QueryBuilder
 	{

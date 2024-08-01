@@ -7,6 +7,8 @@
 #include "Flare/Serialization/Serialization.h"
 #include "Flare/Project/Project.h"
 
+#include "Flare/Scene/Scene.h"
+
 #include "Flare/Renderer/Texture.h"
 #include "Flare/Renderer/Font.h"
 #include "Flare/Renderer/ShaderLibrary.h"

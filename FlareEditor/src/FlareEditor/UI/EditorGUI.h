@@ -1,20 +1,20 @@
 #pragma once
 
-#include "Flare/Scripting/ScriptingEngine.h"
-
 #include "FlareCore/Serialization/Serialization.h"
-#include "FlareCore/Serialization/TypeInitializer.h"
+#include "FlareCore/UUID.h"
+
+#include "Flare/AssetManager/Asset.h"
 
 #include "FlareECS/Entity/Entity.h"
-#include "FlareECS/World.h"
 
 #include "FlareEditor/ImGui/ImGuiLayer.h"
-#include "FlareEditor/UI/EditorIcons.h"
 
 namespace Flare
 {
 	constexpr char* ENTITY_PAYLOAD_NAME = "ENTITY_PAYLOAD";
 
+	class EditorIcons;
+	class World;
 	class EditorGUI
 	{
 	public:
@@ -27,7 +27,7 @@ namespace Flare
 		static void DrawIcon(glm::ivec2 iconPosition, float size = 0.0f);
 		static const EditorIcons& GetIcons();
 
-		static void MoveCursor(ImVec2 offset);
+		static void MoveCursor(glm::vec2 offset);
 
 		static bool BeginMenu(const char* name);
 		static void EndMenu();

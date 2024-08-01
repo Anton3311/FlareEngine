@@ -2,7 +2,7 @@
 
 #include "FlareCore/Core.h"
 
-#include "FlareECS/World.h"
+#include "FlareECS/Entity/Entity.h"
 
 namespace Flare
 {
@@ -17,6 +17,7 @@ namespace Flare
 	};
 	FLARE_IMPL_ENUM_BITFIELD(EntitiesHierarchyFeatures);
 
+	class World;
 	class EntitiesHierarchy
 	{
 	public:

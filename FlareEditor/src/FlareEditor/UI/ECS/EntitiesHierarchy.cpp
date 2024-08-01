@@ -6,13 +6,13 @@
 #include "Flare/Scene/Components.h"
 #include "Flare/Scene/Hierarchy.h"
 
+#include "FlareECS/World.h"
+
 #include "FlareEditor/EditorLayer.h"
 #include "FlareEditor/UI/EditorGUI.h"
 #include "FlareEditor/ImGui/ImGuiLayer.h"
 
 #include "FlareEditor/Serialization/SerializationId.h"
-
-#include <imgui.h>
 
 namespace Flare
 {

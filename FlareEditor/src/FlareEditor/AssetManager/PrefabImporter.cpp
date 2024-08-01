@@ -1,5 +1,7 @@
 #include "PrefabImporter.h"
 
+#include "FlareCore/Profiler/Profiler.h"
+
 #include "Flare/Scene/Prefab.h"
 
 #include "FlareECS/World.h"

@@ -289,16 +289,6 @@ namespace Flare
 		return m_Metadata->Properties;
 	}
 
-	const ShaderOutputs& VulkanShader::GetOutputs() const
-	{
-		return m_Metadata->Outputs;
-	}
-
-	ShaderFeatures VulkanShader::GetFeatures() const
-	{
-		return m_Metadata->Features;
-	}
-
 	std::optional<uint32_t> VulkanShader::GetPropertyIndex(std::string_view name) const
 	{
 		auto it = m_NameToIndex.find(name);

@@ -5,11 +5,14 @@
 
 #include "Flare/Core/Application.h"
 #include "Flare/Core/Time.h"
+
 #include "Flare/Renderer2D/Renderer2D.h"
 #include "Flare/Renderer/Renderer.h"
 #include "Flare/Renderer/Font.h"
 
 #include "Flare/AssetManager/AssetManager.h"
+
+#include "Flare/Scene/Scene.h"
 
 #include "Flare/Project/Project.h"
 

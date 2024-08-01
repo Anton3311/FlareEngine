@@ -2,10 +2,9 @@
 
 #include "FlareCore/UUID.h"
 
-#include "Flare/Scene/Scene.h"
 #include "FlareECS/Entity/Entity.h"
+#include "FlareECS/Entity/Component.h"
 
-#include "FlareEditor/EditorCamera.h"
 #include "FlareEditor/SceneViewSettings.h"
 
 #include <yaml-cpp/yaml.h>
@@ -15,6 +14,9 @@
 
 namespace Flare
 {
+	class EditorCamera;
+	class Scene;
+	class World;
 	class SceneSerializer
 	{
 	public:
