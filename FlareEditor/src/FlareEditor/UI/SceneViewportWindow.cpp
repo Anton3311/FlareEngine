@@ -1,23 +1,18 @@
 #include "SceneViewportWindow.h"
 
-#include "Flare/Renderer/Renderer.h"
-#include "Flare/Renderer/ShaderLibrary.h"
-
 #include "Flare/DebugRenderer/DebugRenderer.h"
+
+#include "Flare/Math/Math.h"
 
 #include "Flare/Scene/Components.h"
 #include "Flare/Scene/Transform.h"
 #include "Flare/Scene/Scene.h"
 #include "Flare/Scene/Prefab.h"
 
-#include "Flare/Math/Math.h"
-
 #include "FlareEditor/Rendering/SceneViewGridPass.h"
 
-#include "FlareEditor/AssetManager/EditorAssetManager.h"
 #include "FlareEditor/ImGui/ImGuiLayer.h"
 #include "FlareEditor/EditorLayer.h"
-#include "FlareEditor/UI/EditorGUI.h"
 
 #include "FlarePlatform/Events.h"
 
@@ -56,56 +51,6 @@ namespace Flare
 		m_EditorCamera.FillRenderView(editorCameraView);
 
 		m_SceneRenderer->RenderViewport(m_Viewport, &editorCameraView);
-
-		return;
-
-#if 0
-		Renderer::BeginScene(m_Viewport);
-		OnClear();
-
-		scene->OnRender(m_Viewport);
-
-		std::optional<Entity> selectedEntity = EditorLayer::GetInstance().Selection.TryGetEntity();
-		if (debugRenderingGroup.has_value())
-		{
-			FLARE_PROFILE_SCOPE("DebugRendering");
-			DebugRenderer::Begin();
-
-			scene->GetECSWorld().GetSystemsManager().ExecuteGroup(debugRenderingGroup.value());
-
-			// Draw bouding box for decal projectors
-			if (selectedEntity)
-			{
-				const Decal* decal = scene->GetECSWorld().TryGetEntityComponent<const Decal>(*selectedEntity);
-				const TransformComponent* transform = scene->GetECSWorld().TryGetEntityComponent<const TransformComponent>(*selectedEntity);
-				if (decal && transform)
-				{
-					glm::vec3 cubeCorners[] =
-					{
-						glm::vec3(-0.5f, -0.5f, -0.5f),
-						glm::vec3(+0.5f, -0.5f, -0.5f),
-						glm::vec3(-0.5f, +0.5f, -0.5f),
-						glm::vec3(+0.5f, +0.5f, -0.5f),
-
-						glm::vec3(-0.5f, -0.5f, +0.5f),
-						glm::vec3(+0.5f, -0.5f, +0.5f),
-						glm::vec3(-0.5f, +0.5f, +0.5f),
-						glm::vec3(+0.5f, +0.5f, +0.5f),
-					};
-
-					glm::mat4 transformationMatrix = transform->GetTransformationMatrix();
-					for (size_t i = 0; i < 8; i++)
-						cubeCorners[i] = transformationMatrix * glm::vec4(cubeCorners[i], 1.0f);
-
-					DebugRenderer::DrawWireBox(cubeCorners);
-				}
-			}
-
-			DebugRenderer::End();
-		}
-
-		Renderer::EndScene();
-#endif
 	}
 
 	void SceneViewportWindow::OnViewportChanged()

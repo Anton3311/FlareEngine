@@ -201,18 +201,6 @@ namespace Flare
 		ImGui::PopStyleVar(2); // Pop window padding & border size
 	}
 
-	void ViewportWindow::OnClear()
-	{
-		FLARE_PROFILE_FUNCTION();
-		Ref<CommandBuffer> commandBuffer = GraphicsContext::GetInstance().GetCommandBuffer();
-
-		const auto& resourceManager = m_Viewport.Graph.GetResourceManager();
-
-		commandBuffer->ClearColor(resourceManager.GetTexture(m_Viewport.ColorTextureId), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
-		commandBuffer->ClearColor(resourceManager.GetTexture(m_Viewport.NormalsTextureId), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
-		commandBuffer->ClearDepth(resourceManager.GetTexture(m_Viewport.DepthTextureId), 1.0f);
-	}
-
 	void ViewportWindow::OnViewportChanged()
 	{
 	}
