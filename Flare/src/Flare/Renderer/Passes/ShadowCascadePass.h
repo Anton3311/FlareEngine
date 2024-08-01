@@ -34,7 +34,7 @@ namespace Flare
 	public:
 		struct InstanceData
 		{
-			glm::mat4 TransformAndViewProjection;
+			glm::vec4 PackedTransform[3];
 		};
 
 		struct Batch

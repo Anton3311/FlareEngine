@@ -92,14 +92,25 @@ namespace Flare
 				for (uint32_t i = 0; i < batch.Count; i++)
 				{
 					auto& instanceData = m_InstanceDataBuffer.emplace_back();
-					instanceData.TransformAndViewProjection = viewProjection * m_FilteredTransforms[batch.FirstEntryIndex + i].ToMatrix4x4();
+					glm::mat4 transformAndViewProjection = viewProjection * m_FilteredTransforms[batch.FirstEntryIndex + i].ToMatrix4x4();
+					glm::vec3 translation = transformAndViewProjection[3];
+
+					instanceData.PackedTransform[0] = glm::vec4((glm::vec3)transformAndViewProjection[0], translation.x);
+					instanceData.PackedTransform[1] = glm::vec4((glm::vec3)transformAndViewProjection[1], translation.y);
+					instanceData.PackedTransform[2] = glm::vec4((glm::vec3)transformAndViewProjection[2], translation.z);
 				}
 			}
 
 			for (const auto& visibleMesh : m_CascadeData.PartiallyVisible)
 			{
 				auto& instanceData = m_InstanceDataBuffer.emplace_back();
-				instanceData.TransformAndViewProjection = viewProjection * visibleMesh.Transform.ToMatrix4x4();
+				glm::mat4 transformAndViewProjection = viewProjection * visibleMesh.Transform.ToMatrix4x4();
+
+				glm::vec3 translation = transformAndViewProjection[3];
+
+				instanceData.PackedTransform[0] = glm::vec4((glm::vec3)transformAndViewProjection[0], translation.x);
+				instanceData.PackedTransform[1] = glm::vec4((glm::vec3)transformAndViewProjection[1], translation.y);
+				instanceData.PackedTransform[2] = glm::vec4((glm::vec3)transformAndViewProjection[2], translation.z);
 			}
 		}
 
