@@ -5,16 +5,12 @@
 
 #include "Flare/DebugRenderer/DebugRenderer.h"
 
-#include "Flare/Platform/Vulkan/VulkanContext.h"
-
 #include "Flare/Scene/Components.h"
 #include "Flare/Scene/Transform.h"
 #include "Flare/Scene/Scene.h"
 #include "Flare/Scene/Prefab.h"
 
 #include "Flare/Math/Math.h"
-
-#include "Flare/Input/InputManager.h"
 
 #include "FlareEditor/Rendering/SceneViewGridPass.h"
 
@@ -273,8 +269,7 @@ namespace Flare
 
 				ImGuizmo::MODE mode = ImGuizmo::WORLD;
 
-				bool snappingEnabled = InputManager::IsKeyHeld(KeyCode::LeftControl) || InputManager::IsKeyHeld(KeyCode::RightControl);
-
+				bool snappingEnabled =  ImGui::IsKeyDown(ImGuiKey_LeftCtrl) || ImGui::IsKeyDown(ImGuiKey_RightCtrl);
 				if (ImGuizmo::Manipulate(
 					glm::value_ptr(m_EditorCamera.GetViewMatrix()),
 					glm::value_ptr(m_EditorCamera.GetProjectionMatrix()),
