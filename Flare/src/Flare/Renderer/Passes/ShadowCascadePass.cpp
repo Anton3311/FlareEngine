@@ -86,25 +86,20 @@ namespace Flare
 
 			m_InstanceDataBuffer.clear();
 
+			const glm::mat4& viewProjection = m_CascadeData.View.ViewProjection;
 			for (const auto& batch : m_CascadeData.Batches)
 			{
 				for (uint32_t i = 0; i < batch.Count; i++)
 				{
 					auto& instanceData = m_InstanceDataBuffer.emplace_back();
-					const auto& transform = m_FilteredTransforms[batch.FirstEntryIndex + i];
-					instanceData.PackedTransform[0] = glm::vec4(transform.RotationScale[0], transform.Translation.x);
-					instanceData.PackedTransform[1] = glm::vec4(transform.RotationScale[1], transform.Translation.y);
-					instanceData.PackedTransform[2] = glm::vec4(transform.RotationScale[2], transform.Translation.z);
+					instanceData.TransformAndViewProjection = viewProjection * m_FilteredTransforms[batch.FirstEntryIndex + i].ToMatrix4x4();
 				}
 			}
 
 			for (const auto& visibleMesh : m_CascadeData.PartiallyVisible)
 			{
 				auto& instanceData = m_InstanceDataBuffer.emplace_back();
-				const auto& transform = visibleMesh.Transform;
-				instanceData.PackedTransform[0] = glm::vec4(transform.RotationScale[0], transform.Translation.x);
-				instanceData.PackedTransform[1] = glm::vec4(transform.RotationScale[1], transform.Translation.y);
-				instanceData.PackedTransform[2] = glm::vec4(transform.RotationScale[2], transform.Translation.z);
+				instanceData.TransformAndViewProjection = viewProjection * visibleMesh.Transform.ToMatrix4x4();
 			}
 		}
 
