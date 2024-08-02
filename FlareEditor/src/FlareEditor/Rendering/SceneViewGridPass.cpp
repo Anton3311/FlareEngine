@@ -47,15 +47,14 @@ namespace Flare
 
 	void SceneViewGridPass::OnPrepare(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
 	{
+		FLARE_PROFILE_FUNCTION();
+		if (m_Pipeline == nullptr)
+			CreatePipeline(context);
 	}
 
 	void SceneViewGridPass::OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
 	{
 		FLARE_PROFILE_FUNCTION();
-		if (m_Pipeline == nullptr)
-			CreatePipeline(context);
-
-		commandBuffer->BeginRenderTarget(context.GetRenderTarget());
 
 		Ref<VulkanCommandBuffer> vulkanCommandBuffer = As<VulkanCommandBuffer>(commandBuffer);
 		Ref<VulkanPipeline> pipeline = As<VulkanPipeline>(m_Pipeline);
@@ -75,8 +74,6 @@ namespace Flare
 		// becuase is has smaller cells and the grid lines overlap.
 		DrawGridLevel(commandBuffer, scaleLevel, m_Settings.SecondaryColor);
 		DrawGridLevel(commandBuffer, scaleLevel + 1, m_Settings.PrimaryColor);
-
-		commandBuffer->EndRenderTarget();
 	}
 
 	void SceneViewGridPass::GenerateGridMesh()

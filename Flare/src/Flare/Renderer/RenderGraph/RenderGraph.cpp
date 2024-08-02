@@ -84,9 +84,20 @@ namespace Flare
 
 			commandBuffer->BeginLabel(node.Specifications.GetDebugColor(), node.Specifications.GetDebugName());
 
+			node.Pass->OnPrepare(context, commandBuffer);
+
 			ExecuteLayoutTransitions(commandBuffer, node.Transitions);
 
-			node.Pass->OnRender(context, commandBuffer);
+			if (renderTarget)
+			{
+				commandBuffer->BeginRenderTarget(renderTarget);
+				node.Pass->OnRender(context, commandBuffer);
+				commandBuffer->EndRenderTarget();
+			}
+			else
+			{
+				node.Pass->OnRender(context, commandBuffer);
+			}
 
 			commandBuffer->EndLabel();
 		}

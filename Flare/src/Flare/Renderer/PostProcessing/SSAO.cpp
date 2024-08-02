@@ -95,7 +95,6 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 
 		commandBuffer->SetGlobalDescriptorSet(context.GetViewport().GetFrameResources().CameraDescriptorSet, 0);
-		commandBuffer->BeginRenderTarget(context.GetRenderTarget());
 
 		auto biasIndex = m_Material->GetShader()->GetPropertyIndex("u_Params.Bias");
 		auto radiusIndex = m_Material->GetShader()->GetPropertyIndex("u_Params.SampleRadius");
@@ -112,8 +111,6 @@ namespace Flare
 
 		commandBuffer->ApplyMaterial(m_Material);
 		commandBuffer->DrawMeshIndexed(RendererPrimitives::GetFullscreenQuadMesh(), 0, 0, 1);
-
-		commandBuffer->EndRenderTarget();
 	}
 
 
@@ -144,8 +141,6 @@ namespace Flare
 	void SSAOComposingPass::OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
 	{
 		FLARE_PROFILE_FUNCTION();
-		commandBuffer->BeginRenderTarget(context.GetRenderTarget());
-
 		commandBuffer->SetViewportAndScisors(Math::Rect(glm::vec2(0.0f, 0.0f), (glm::vec2)context.GetViewport().GetSize()));
 		glm::vec2 texelSize = glm::vec2(1.0f) / (glm::vec2)context.GetViewport().GetSize();
 
@@ -161,7 +156,5 @@ namespace Flare
 
 		commandBuffer->ApplyMaterial(m_Material);
 		commandBuffer->DrawMeshIndexed(RendererPrimitives::GetFullscreenQuadMesh(), 0, 0, 1);
-
-		commandBuffer->EndRenderTarget();
 	}
 }

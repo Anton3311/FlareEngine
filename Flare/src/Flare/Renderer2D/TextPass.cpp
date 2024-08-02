@@ -40,11 +40,8 @@ namespace Flare
 
 	void TextPass::OnPrepare(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
 	{
-	}
-
-	void TextPass::OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
-	{
 		FLARE_PROFILE_FUNCTION();
+
 		FrameResources& frameResources = m_FrameResources[GraphicsContext::GetInstance().GetCurrentFrameInFlight()];
 		const Renderer2DFrameData& submition = context.GetSceneSubmition().Renderer2DSubmition;
 
@@ -54,8 +51,6 @@ namespace Flare
 		{
 			frameResources.VertexBuffer->SetData(MemorySpan(submition.TextVertices.data(), submition.TextQuadCount * 4), 0, commandBuffer);
 		}
-
-		Ref<FrameBuffer> renderTarget = context.GetRenderTarget();
 
 		if (m_TextPipeline == nullptr)
 		{
@@ -77,13 +72,23 @@ namespace Flare
 				m_DescriptorSetPool->GetLayout()
 			};
 
+			Ref<FrameBuffer> renderTarget = context.GetRenderTarget();
 			m_TextPipeline = CreateRef<VulkanPipeline>(specificaionts,
 				As<VulkanFrameBuffer>(renderTarget)->GetCompatibleRenderPass(),
 				Span<Ref<const DescriptorSetLayout>>(layouts, 2),
 				Span<ShaderPushConstantsRange>());
 		}
+	}
 
-		commandBuffer->BeginRenderTarget(context.GetRenderTarget());
+	void TextPass::OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		Ref<FrameBuffer> renderTarget = context.GetRenderTarget();
+
+		const FrameResources& frameResources = m_FrameResources[GraphicsContext::GetInstance().GetCurrentFrameInFlight()];
+		const Renderer2DFrameData& submition = context.GetSceneSubmition().Renderer2DSubmition;
+
 		commandBuffer->SetViewportAndScisors(Math::Rect(glm::vec2(0.0f), (glm::vec2)renderTarget->GetSize()));
 
 		commandBuffer->SetGlobalDescriptorSet(context.GetViewport().GetFrameResources().CameraDescriptorSet, 0);
@@ -95,8 +100,6 @@ namespace Flare
 
 			FlushBatch(batch, commandBuffer);
 		}
-
-		commandBuffer->EndRenderTarget();
 	}
 
 	void TextPass::FlushBatch(const TextBatch& batch, Ref<CommandBuffer> commandBuffer)

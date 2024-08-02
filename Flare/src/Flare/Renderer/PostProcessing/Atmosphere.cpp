@@ -88,6 +88,9 @@ namespace Flare
 	void AtmospherePass::OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
 	{
 		FLARE_PROFILE_FUNCTION();
+
+		return;
+
 		Ref<Shader> shader = m_AtmosphereMaterial->GetShader();
 
 		std::optional<uint32_t> planetRadius = shader->GetPropertyIndex("u_Params.PlanetRadius");
@@ -132,7 +135,6 @@ namespace Flare
 		m_PreviousScatteringParameters = m_Parameters->ScatteringParameters;
 		m_PreviousLUTSteps = m_Parameters->SunTransmittanceLUTSteps;
 
-		commandBuffer->BeginRenderTarget(context.GetRenderTarget());
 		commandBuffer->SetGlobalDescriptorSet(context.GetViewport().GetFrameResources().CameraDescriptorSet, 0);
 		commandBuffer->SetGlobalDescriptorSet(context.GetViewport().GetFrameResources().GlobalDescriptorSet, 1);
 		commandBuffer->ApplyMaterial(m_AtmosphereMaterial);
@@ -141,7 +143,6 @@ namespace Flare
 		commandBuffer->SetViewportAndScisors(Math::Rect(0.0f, 0.0f, (float)renderTargetSpecifications.Width, (float)renderTargetSpecifications.Height));
 
 		commandBuffer->DrawMeshIndexed(RendererPrimitives::GetFullscreenQuadMesh(), 0, 0, 1);
-		commandBuffer->EndRenderTarget();
 	}
 
 	void AtmospherePass::GenerateSunTransmittanceLUT(Ref<CommandBuffer> commandBuffer)

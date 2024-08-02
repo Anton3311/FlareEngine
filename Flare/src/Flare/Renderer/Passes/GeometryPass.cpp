@@ -49,10 +49,6 @@ namespace Flare
 
 	void GeometryPass::OnPrepare(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
 	{
-	}
-
-	void GeometryPass::OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
-	{
 		FLARE_PROFILE_FUNCTION();
 
 		const FrameResources& frameResources = m_FrameResources[GraphicsContext::GetInstance().GetCurrentFrameInFlight()];
@@ -107,11 +103,17 @@ namespace Flare
 		}
 
 		frameResources.InstanceBuffer->SetData(MemorySpan::FromVector(m_InstanceData), 0, commandBuffer);
+	}
+
+	void GeometryPass::OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
+	{
+		FLARE_PROFILE_FUNCTION();
 
 		Ref<FrameBuffer> renderTarget = context.GetRenderTarget();
 
-		commandBuffer->StartTimer(m_Timer);
-		commandBuffer->BeginRenderTarget(renderTarget);
+		const RendererSubmitionQueue& opaqueGeometry = context.GetSceneSubmition().OpaqueGeometrySubmitions;
+
+		//commandBuffer->StartTimer(m_Timer);
 		commandBuffer->SetViewportAndScisors(Math::Rect(glm::vec2(0.0f, 0.0f), (glm::vec2)renderTarget->GetSize()));
 
 		Batch batch{};
@@ -148,8 +150,7 @@ namespace Flare
 		batch.InstanceCount = (uint32_t)m_VisibleObjects.size() - batch.BaseInstance;
 		FlushBatch(commandBuffer, batch);
 
-		commandBuffer->EndRenderTarget();
-		commandBuffer->StopTimer(m_Timer);
+		//commandBuffer->StopTimer(m_Timer);
 	}
 
 	std::optional<float> GeometryPass::GetElapsedTime() const

@@ -63,10 +63,6 @@ namespace Flare
 
 	void ShadowCascadePass::OnPrepare(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
 	{
-	}
-
-	void ShadowCascadePass::OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
-	{
 		FLARE_PROFILE_FUNCTION();
 
 		const Viewport& currentViewport = context.GetViewport();
@@ -127,18 +123,22 @@ namespace Flare
 		}
 
 		resources.InstanceBuffer->SetData(MemorySpan::FromVector(m_InstanceDataBuffer), 0, commandBuffer);
+	}
 
-		commandBuffer->StartTimer(m_Timer);
+	void ShadowCascadePass::OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
+	{
+		FLARE_PROFILE_FUNCTION();
 
-		commandBuffer->BeginRenderTarget(context.GetRenderTarget());
+		const ShadowSettings& shadowSettings = Renderer::GetShadowSettings();
+
+		//commandBuffer->StartTimer(m_Timer);
+
 		uint32_t shadowMapResolution = GetShadowMapResolution(shadowSettings.Quality);
 		commandBuffer->SetViewportAndScisors(Math::Rect(0.0f, 0.0f, (float)shadowMapResolution, (float)shadowMapResolution));
 
 		DrawCascade(context, commandBuffer);
 
-		commandBuffer->EndRenderTarget();
-
-		commandBuffer->StopTimer(m_Timer);
+		//commandBuffer->StopTimer(m_Timer);
 	}
 
 	void ShadowCascadePass::DrawCascade(const RenderGraphContext& context, const Ref<CommandBuffer>& commandBuffer)

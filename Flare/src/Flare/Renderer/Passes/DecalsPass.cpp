@@ -46,10 +46,6 @@ namespace Flare
 
 	void DecalsPass::OnPrepare(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
 	{
-	}
-
-	void DecalsPass::OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
-	{
 		FLARE_PROFILE_FUNCTION();
 
 		const FrameResources& frameResources = m_FrameResources[GraphicsContext::GetInstance().GetCurrentFrameInFlight()];
@@ -81,7 +77,15 @@ namespace Flare
 
 		frameResources.InstanceBuffer->SetData(MemorySpan::FromVector(m_InstanceData), 0, commandBuffer);
 
-		commandBuffer->BeginRenderTarget(context.GetRenderTarget());
+	}
+
+	void DecalsPass::OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		const FrameResources& frameResources = m_FrameResources[GraphicsContext::GetInstance().GetCurrentFrameInFlight()];
+		const auto& submittedDecals = context.GetSceneSubmition().DecalSubmitions;
+
 		commandBuffer->SetGlobalDescriptorSet(context.GetViewport().GetFrameResources().CameraDescriptorSet, 0);
 		commandBuffer->SetGlobalDescriptorSet(frameResources.DecalSet, 1);
 		commandBuffer->SetGlobalDescriptorSet(frameResources.InstanceBufferDescriptor, 2);
@@ -94,7 +98,5 @@ namespace Flare
 			commandBuffer->ApplyMaterial(decal.Material);
 			commandBuffer->DrawMeshIndexed(cubeMesh, 0, (uint32_t)decalIndex, 1);
 		}
-
-		commandBuffer->EndRenderTarget();
 	}
 }

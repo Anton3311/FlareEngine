@@ -33,19 +33,22 @@ namespace Flare
 
 	void DebugLinesPass::OnPrepare(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
 	{
-	}
-
-	void DebugLinesPass::OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
-	{
 		FLARE_PROFILE_FUNCTION();
+
 		using Vertex = DebugRendererFrameData::Vertex;
 
 		const FrameResources& frameResources = m_FrameResources[GraphicsContext::GetInstance().GetCurrentFrameInFlight()];
 		const DebugRendererFrameData& submition = context.GetSceneSubmition().DebugRendererSubmition;
 
 		frameResources.VertexBuffer->SetData(MemorySpan(submition.LineVertices.data(), submition.LineCount * 2), 0, commandBuffer);
+	}
 
-		commandBuffer->BeginRenderTarget(context.GetRenderTarget());
+	void DebugLinesPass::OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		const FrameResources& frameResources = m_FrameResources[GraphicsContext::GetInstance().GetCurrentFrameInFlight()];
+		const DebugRendererFrameData& submition = context.GetSceneSubmition().DebugRendererSubmition;
 
 		if (m_Pipeline == nullptr)
 			CreatePipeline(context);
@@ -59,8 +62,6 @@ namespace Flare
 			As<VulkanPipeline>(m_Pipeline)->GetLayoutHandle(), 0);
 
 		vulkanCommandBuffer->Draw(0, (uint32_t)submition.LineCount * 2, 0, 1);
-
-		commandBuffer->EndRenderTarget();
 	}
 
 	void DebugLinesPass::CreatePipeline(const RenderGraphContext& context)

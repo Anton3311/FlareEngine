@@ -44,13 +44,6 @@ namespace Flare
 
 	void Geometry2DPass::OnPrepare(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
 	{
-	}
-
-	void Geometry2DPass::OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
-	{
-		// NOTE: This pass should be removed from the RenderGraph
-		//       if there are weren't anything submitted for rendering
-
 		FLARE_PROFILE_FUNCTION();
 
 		const Renderer2DFrameData& submition = context.GetSceneSubmition().Renderer2DSubmition;
@@ -62,8 +55,14 @@ namespace Flare
 		}
 
 		ReleaseDescriptorSets(frameResources.UsedSets);
+	}
 
-		commandBuffer->BeginRenderTarget(context.GetRenderTarget());
+	void Geometry2DPass::OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		const Renderer2DFrameData& submition = context.GetSceneSubmition().Renderer2DSubmition;
+		const FrameResources& frameResources = m_FrameResources[GraphicsContext::GetInstance().GetCurrentFrameInFlight()];
 
 		commandBuffer->SetGlobalDescriptorSet(context.GetViewport().GetFrameResources().CameraDescriptorSet, 0);
 		commandBuffer->BindVertexBuffers(Span((Ref<const VertexBuffer>*)&frameResources.VertexBuffer, 1), 0);
@@ -76,8 +75,6 @@ namespace Flare
 
 			FlushBatch(context, batch, commandBuffer);
 		}
-
-		commandBuffer->EndRenderTarget();
 	}
 
 	void Geometry2DPass::ReleaseDescriptorSets(std::vector<Ref<DescriptorSet>>& sets)

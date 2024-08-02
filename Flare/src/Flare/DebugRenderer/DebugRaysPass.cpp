@@ -33,11 +33,8 @@ namespace Flare
 
 	void DebugRaysPass::OnPrepare(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
 	{
-	}
-
-	void DebugRaysPass::OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
-	{
 		FLARE_PROFILE_FUNCTION();
+
 		GenerateVertices(context);
 
 		const DebugRendererFrameData& submition = context.GetSceneSubmition().DebugRendererSubmition;
@@ -50,8 +47,14 @@ namespace Flare
 
 		if (m_Pipeline == nullptr)
 			CreatePipeline(context);
+	}
 
-		commandBuffer->BeginRenderTarget(context.GetRenderTarget());
+	void DebugRaysPass::OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		const DebugRendererFrameData& submition = context.GetSceneSubmition().DebugRendererSubmition;
+		const FrameResources& frameResources = m_FrameResources[GraphicsContext::GetInstance().GetCurrentFrameInFlight()];
 
 		Ref<VulkanCommandBuffer> vulkanCommandBuffer = As<VulkanCommandBuffer>(commandBuffer);
 		vulkanCommandBuffer->BindPipeline(m_Pipeline);
@@ -64,8 +67,6 @@ namespace Flare
 			0);
 
 		vulkanCommandBuffer->DrawIndexed(0, (uint32_t)submition.RayCount * DebugRendererSettings::IndicesPerRay, 0, 0, 1);
-
-		commandBuffer->EndRenderTarget();
 	}
 
 	void DebugRaysPass::CreatePipeline(const RenderGraphContext& context)
