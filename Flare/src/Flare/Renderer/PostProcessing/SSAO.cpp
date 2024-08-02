@@ -86,6 +86,10 @@ namespace Flare
 		m_Parameters = *result;
 	}
 
+	void SSAOMainPass::OnPrepare(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
+	{
+	}
+
 	void SSAOMainPass::OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
 	{
 		FLARE_PROFILE_FUNCTION();
@@ -131,6 +135,10 @@ namespace Flare
 		auto result = Scene::GetActive()->GetPostProcessingManager().GetEffect<SSAO>();
 		FLARE_CORE_ASSERT(result.has_value());
 		m_Parameters = *result;
+	}
+
+	void SSAOComposingPass::OnPrepare(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
+	{
 	}
 
 	void SSAOComposingPass::OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)

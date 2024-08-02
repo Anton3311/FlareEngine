@@ -20,6 +20,7 @@ namespace Flare
 		TextPass(const Renderer2DLimits& limits, Ref<IndexBuffer> indexBuffer, Ref<Shader> textShader, Ref<DescriptorSetPool> descriptorSetPool);
 		~TextPass();
 
+		void OnPrepare(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer) override;
 		void OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer) override;
 	private:
 		void FlushBatch(const TextBatch& batch, Ref<CommandBuffer> commandBuffer);

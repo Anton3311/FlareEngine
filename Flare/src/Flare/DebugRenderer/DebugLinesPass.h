@@ -16,6 +16,7 @@ namespace Flare
 		DebugLinesPass(Ref<Shader> debugShader, const DebugRendererSettings& settings);
 		~DebugLinesPass();
 
+		void OnPrepare(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer) override;
 		void OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer) override;
 	private:
 		void CreatePipeline(const RenderGraphContext& context);

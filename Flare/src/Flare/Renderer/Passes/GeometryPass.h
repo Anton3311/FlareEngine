@@ -22,6 +22,7 @@ namespace Flare
 
 		~GeometryPass();
 
+		void OnPrepare(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer) override;
 		void OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer) override;
 		std::optional<float> GetElapsedTime() const;
 	private:

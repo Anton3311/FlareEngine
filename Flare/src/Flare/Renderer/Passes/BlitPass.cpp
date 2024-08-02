@@ -12,6 +12,10 @@ namespace Flare
 	{
 	}
 
+	void BlitPass::OnPrepare(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
+	{
+	}
+
 	void BlitPass::OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
 	{
 		FLARE_PROFILE_FUNCTION();

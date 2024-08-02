@@ -81,6 +81,10 @@ namespace Flare
 		m_Parameters = *result;
 	}
 
+	void AtmospherePass::OnPrepare(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
+	{
+	}
+
 	void AtmospherePass::OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
 	{
 		FLARE_PROFILE_FUNCTION();

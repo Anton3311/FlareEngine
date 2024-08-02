@@ -22,6 +22,7 @@ namespace Flare
 			Ref<DescriptorSetPool> quadsDescriptorSetPool);
 		~Geometry2DPass();
 
+		void OnPrepare(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer) override;
 		void OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer) override;
 	private:
 		void ReleaseDescriptorSets(std::vector<Ref<DescriptorSet>>& sets);

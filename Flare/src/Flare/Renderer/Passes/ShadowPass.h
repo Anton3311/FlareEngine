@@ -85,6 +85,7 @@ namespace Flare
 
 		ShadowPass();
 
+		void OnPrepare(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer) override;
 		void OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer) override;
 
 		inline const ShadowCascadeData& GetCascadeData(size_t index) const { return m_CascadeData[index]; }

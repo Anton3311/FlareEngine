@@ -97,6 +97,8 @@ namespace Flare
 	{
 	public:
 		virtual ~RenderGraphPass() = default;
+
+		virtual void OnPrepare(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer) = 0;
 		virtual void OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer) = 0;
 	};
 }

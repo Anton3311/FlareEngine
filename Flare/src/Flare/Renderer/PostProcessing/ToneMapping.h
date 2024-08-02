@@ -37,6 +37,7 @@ namespace Flare
 	public:
 		ToneMappingPass(RenderGraphTextureId colorTexture);
 
+		void OnPrepare(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer) override;
 		void OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer) override;
 	private:
 		Ref<Material> m_Material = nullptr;

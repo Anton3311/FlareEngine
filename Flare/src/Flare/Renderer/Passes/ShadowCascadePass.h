@@ -30,6 +30,7 @@ namespace Flare
 
 		~ShadowCascadePass();
 
+		void OnPrepare(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer) override;
 		void OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer) override;
 	public:
 		struct InstanceData

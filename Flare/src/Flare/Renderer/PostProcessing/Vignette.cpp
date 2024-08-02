@@ -74,6 +74,10 @@ namespace Flare
 		m_Material = Material::Create(shader);
 	}
 
+	void VignettePass::OnPrepare(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
+	{
+	}
+
 	void VignettePass::OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
 	{
 		FLARE_PROFILE_FUNCTION();

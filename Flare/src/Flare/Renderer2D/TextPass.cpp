@@ -38,6 +38,10 @@ namespace Flare
 			ReleaseDescriptorSets(resources.UsedSets);
 	}
 
+	void TextPass::OnPrepare(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
+	{
+	}
+
 	void TextPass::OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
 	{
 		FLARE_PROFILE_FUNCTION();

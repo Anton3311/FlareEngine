@@ -42,6 +42,10 @@ namespace Flare
 			ReleaseDescriptorSets(resources.UsedSets);
 	}
 
+	void Geometry2DPass::OnPrepare(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
+	{
+	}
+
 	void Geometry2DPass::OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
 	{
 		// NOTE: This pass should be removed from the RenderGraph

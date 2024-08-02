@@ -42,6 +42,7 @@ namespace Flare
 	public:
 		SSAOMainPass(RenderGraphTextureId normalsTexture, RenderGraphTextureId depthTexture);
 
+		void OnPrepare(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer) override;
 		void OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer) override;
 	private:
 		Ref<Material> m_Material = nullptr;
@@ -57,6 +58,7 @@ namespace Flare
 	public:
 		SSAOComposingPass(RenderGraphTextureId colorTexture, RenderGraphTextureId aoTexture);
 
+		void OnPrepare(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer) override;
 		void OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer) override;
 	private:
 		RenderGraphTextureId m_ColorTexture;

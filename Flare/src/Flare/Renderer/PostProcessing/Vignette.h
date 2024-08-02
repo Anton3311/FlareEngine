@@ -36,6 +36,8 @@ namespace Flare
 	{
 	public:
 		VignettePass();
+
+		void OnPrepare(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer) override;
 		void OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer) override;
 	private:
 		Ref<Vignette> m_Parameters = nullptr;
