@@ -8,6 +8,7 @@ namespace Flare
 	VulkanComputePipeline::VulkanComputePipeline(const ComputePipelineSpecifications& specifications)
 		: m_Specifications(specifications)
 	{
+		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(specifications.Shader);
 		FLARE_CORE_ASSERT(specifications.Shader->IsLoaded());
 
@@ -31,6 +32,7 @@ namespace Flare
 
 	VulkanComputePipeline::~VulkanComputePipeline()
 	{
+		FLARE_PROFILE_FUNCTION();
 		vkDestroyPipeline(VulkanContext::GetInstance().GetDevice(), m_Pipeline, nullptr);
 	}
 

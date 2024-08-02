@@ -1,5 +1,7 @@
 #include "VulkanComputeShader.h"
 
+#include "FlareCore/Profiler/Profiler.h"
+
 #include "Flare/Platform/Vulkan/VulkanContext.h"
 
 #include "Flare/Renderer/ShaderCacheManager.h"
@@ -10,6 +12,7 @@ namespace Flare
 
 	VulkanComputeShader::~VulkanComputeShader()
 	{
+		FLARE_PROFILE_FUNCTION();
 		vkDestroyShaderModule(VulkanContext::GetInstance().GetDevice(), m_Module, nullptr);
 		vkDestroyPipelineLayout(VulkanContext::GetInstance().GetDevice(), m_PipelineLayout, nullptr);
 
@@ -24,6 +27,7 @@ namespace Flare
 
 	void Flare::VulkanComputeShader::Load()
 	{
+		FLARE_PROFILE_FUNCTION();
 		m_IsLoaded = false;
 
 		bool hasValidCache = ShaderCacheManager::GetInstance()->HasCache(Handle, ShaderStageType::Compute);
@@ -58,6 +62,7 @@ namespace Flare
 
 	void VulkanComputeShader::CreatePipelineLayout()
 	{
+		FLARE_PROFILE_FUNCTION();
 		std::vector<VkDescriptorSetLayoutBinding> bindings;
 		for (size_t i = 0; i < m_Metadata->Properties.size(); i++)
 		{
