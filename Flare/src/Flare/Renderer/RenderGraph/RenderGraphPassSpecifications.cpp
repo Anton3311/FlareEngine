@@ -1,6 +1,4 @@
-#include "RenderGraphPass.h"
-
-#include "FlareCore/Assert.h"
+#include "RenderGraphPassSpecifications.h"
 
 namespace Flare
 {

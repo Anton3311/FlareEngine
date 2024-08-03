@@ -11,6 +11,7 @@
 
 namespace Flare
 {
+	class FrameBuffer;
 	class RenderGraphResourceManager;
 	class FLARE_API RenderGraphBuilder
 	{

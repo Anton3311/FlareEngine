@@ -5,6 +5,7 @@
 
 namespace Flare
 {
+	class RenderGraphPassSpecifications;
 	class FLARE_API BlitPass : public RenderGraphPass
 	{
 	public:

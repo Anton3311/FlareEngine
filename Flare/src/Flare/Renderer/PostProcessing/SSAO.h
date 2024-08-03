@@ -8,6 +8,7 @@
 
 namespace Flare
 {
+	class ComputePipeline;
 	class Material;
 
 	class FLARE_API SSAO : public PostProcessingEffect
@@ -65,6 +66,8 @@ namespace Flare
 
 		RenderGraphTextureId m_AOTexture;
 		Ref<Material> m_Material = nullptr;
+
+		Ref<ComputePipeline> m_ComputePipeline = nullptr;
 
 		Ref<SSAO> m_Parameters = nullptr;
 	};

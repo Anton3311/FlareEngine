@@ -3,6 +3,7 @@
 #include "FlareCore/Collections/Span.h"
 
 #include "Flare/Renderer/RenderGraph/RenderGraphPass.h"
+#include "Flare/Renderer/RenderGraph/RenderGraphPassSpecifications.h"
 #include "Flare/Renderer/RenderGraph/RenderPassNode.h"
 #include "Flare/Renderer/RenderGraph/RenderGraphCommon.h"
 #include "Flare/Renderer/RenderGraph/RenderGraphResourceManager.h"

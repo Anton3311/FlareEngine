@@ -3,7 +3,8 @@
 #include "FlareCore/Profiler/Profiler.h"
 
 #include "Flare/Renderer/CommandBuffer.h"
-#include "Flare/Renderer/FrameBuffer.h"
+
+#include "Flare/Renderer/RenderGraph/RenderGraphPassSpecifications.h"
 
 namespace Flare
 {
