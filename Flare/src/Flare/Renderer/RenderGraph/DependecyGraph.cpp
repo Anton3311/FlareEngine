@@ -11,6 +11,7 @@ namespace Flare
 	AdjacencyMatrix::AdjacencyMatrix(uint32_t size)
 		: m_Size(size)
 	{
+		FLARE_PROFILE_FUNCTION();
 		m_Elements = new bool[m_Size * m_Size];
 		std::memset(m_Elements, 0, m_Size * m_Size);
 	}
@@ -22,6 +23,7 @@ namespace Flare
 
 	AdjacencyMatrix::AdjacencyMatrix(const AdjacencyMatrix& other)
 	{
+		FLARE_PROFILE_FUNCTION();
 		m_Size = other.m_Size;
 		m_Elements = new bool[m_Size * m_Size];
 
@@ -39,6 +41,7 @@ namespace Flare
 
 	AdjacencyMatrix& AdjacencyMatrix::operator=(const AdjacencyMatrix& other)
 	{
+		FLARE_PROFILE_FUNCTION();
 		delete[] m_Elements;
 
 		m_Size = other.m_Size;
@@ -61,6 +64,7 @@ namespace Flare
 
 	AdjacencyMatrix AdjacencyMatrix::operator*(const AdjacencyMatrix& b) const
 	{
+		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(GetSize() == b.GetSize());
 
 		AdjacencyMatrix output(m_Size);
@@ -87,6 +91,7 @@ namespace Flare
 
 	AdjacencyMatrix& AdjacencyMatrix::operator|=(const AdjacencyMatrix& other)
 	{
+		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(GetSize() == other.GetSize());
 
 		for (uint32_t y = 0; y < m_Size; y++)
@@ -102,6 +107,7 @@ namespace Flare
 
 	AdjacencyMatrix AdjacencyMatrix::NotAnd(const AdjacencyMatrix& other) const
 	{
+		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(GetSize() == other.GetSize());
 		AdjacencyMatrix output(m_Size);
 
@@ -165,13 +171,6 @@ namespace Flare
 
 		AdjacencyMatrix AB = adjacencyMatrix * transitiveClosure;
 
-		FLARE_CORE_INFO("Adjacency Matrix");
-		PrintMatrix(adjacencyMatrix);
-		FLARE_CORE_INFO("AB");
-		PrintMatrix(AB);
-		FLARE_CORE_INFO("Transitive Closure");
-		PrintMatrix(transitiveClosure);
-
 		{
 			FLARE_PROFILE_SCOPE("GenerateDependecies");
 			for (uint32_t y = 0; y < adjacencyMatrix.GetSize(); y++)
@@ -185,19 +184,6 @@ namespace Flare
 				}
 			}
 		}
-
-		FLARE_CORE_WARN("");
-		for (GraphNode& node : m_Graph)
-		{
-			FLARE_CORE_ERROR("Node: {}", node.PassNode->Specifications.GetDebugName());
-			FLARE_CORE_INFO("Dependecies:");
-
-			for (GraphNode* dependecy : node.Dependecies)
-			{
-				FLARE_CORE_TRACE("\t{}", dependecy->PassNode->Specifications.GetDebugName());
-			}
-		}
-		FLARE_CORE_WARN("");
 	}
 
 	void DependecyGraph::GenerateAdjacencyMatrix(AdjacencyMatrix& adjacencyMatrix)
@@ -206,7 +192,6 @@ namespace Flare
 
 		for (GraphNode& node : m_Graph)
 		{
-			FLARE_CORE_INFO("Node: {}", node.PassNode->Specifications.GetDebugName());
 			for (const auto& input : node.PassNode->Specifications.GetInputs())
 			{
 				auto it = m_Writers.find(input.InputTexture);
@@ -234,7 +219,6 @@ namespace Flare
 				}
 			}
 		}
-
 	}
 
 	void DependecyGraph::GenerateTransitiveClosure(AdjacencyMatrix& matrix)
