@@ -1,5 +1,7 @@
 #include "Tonemapping.h"
 
+#include "FlareCore/Log.h"
+
 #include "Flare/AssetManager/AssetManager.h"
 
 #include "Flare/Renderer/CommandBuffer.h"

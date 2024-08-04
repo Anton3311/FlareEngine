@@ -7,6 +7,8 @@
 #include <vulkan/vulkan.h>
 
 #include <vector>
+#include <string>
+#include <string_view>
 #include <glm/glm.hpp>
 
 namespace Flare

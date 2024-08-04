@@ -1,5 +1,6 @@
 #include "ShaderSourceParser.h"
 
+#include "FlareCore/Log.h"
 #include "FlareCore/Core.h"
 #include "FlareCore/Assert.h"
 #include "FlareCore/Profiler/Profiler.h"

@@ -1,5 +1,7 @@
 #include "BuildSystem.h"
 
+#include "FlareCore/Log.h"
+
 #include "Flare/Project/Project.h"
 #include "FlarePlatform/Platform.h"
 

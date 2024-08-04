@@ -3,6 +3,7 @@
 #include "FlareCore/Collections/Span.h"
 
 #include <stdint.h>
+#include <string_view>
 
 namespace Flare
 {

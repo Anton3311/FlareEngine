@@ -9,6 +9,7 @@
 
 #include <filesystem>
 #include <string_view>
+#include <unordered_map>
 
 namespace Flare
 {

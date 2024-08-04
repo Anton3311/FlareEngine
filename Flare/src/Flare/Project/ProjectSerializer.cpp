@@ -1,5 +1,7 @@
 #include "ProjectSerializer.h"
 
+#include "FlareCore/Log.h"
+
 #include <yaml-cpp/yaml.h>
 #include <fstream>
 

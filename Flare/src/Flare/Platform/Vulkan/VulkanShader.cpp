@@ -1,5 +1,7 @@
 #include "VulkanShader.h"
 
+#include "FlareCore/Log.h"
+
 #include "Flare/AssetManager/AssetManager.h"
 #include "Flare/Renderer/ShaderCacheManager.h"
 #include "Flare/Renderer/Renderer.h"

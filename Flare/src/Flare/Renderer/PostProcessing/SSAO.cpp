@@ -134,15 +134,6 @@ namespace Flare
 		auto result = Scene::GetActive()->GetPostProcessingManager().GetEffect<SSAO>();
 		FLARE_CORE_ASSERT(result.has_value());
 		m_Parameters = *result;
-
-		std::optional<AssetHandle> computeHandle = ShaderLibrary::FindShader("Test");
-		if (computeHandle && AssetManager::IsAssetHandleValid(*computeHandle))
-		{
-			ComputePipelineSpecifications specifications{};
-			specifications.Shader = AssetManager::GetAsset<ComputeShader>(*computeHandle);
-
-			m_ComputePipeline = ComputePipeline::Create(specifications);
-		}
 	}
 
 	void SSAOComposingPass::OnPrepare(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
@@ -152,14 +143,6 @@ namespace Flare
 	void SSAOComposingPass::OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
 	{
 		FLARE_PROFILE_FUNCTION();
-
-#if 0
-		glm::uvec2 renderTargetSize = context.GetRenderTarget()->GetSize();
-
-		commandBuffer->DispatchCompute(m_ComputePipeline, glm::uvec3(renderTargetSize.x + 15 / 16, renderTargetSize.y + 15 / 16, 1));
-
-		return;
-#endif
 
 		commandBuffer->SetViewportAndScisors(Math::Rect(glm::vec2(0.0f, 0.0f), (glm::vec2)context.GetViewport().GetSize()));
 		glm::vec2 texelSize = glm::vec2(1.0f) / (glm::vec2)context.GetViewport().GetSize();

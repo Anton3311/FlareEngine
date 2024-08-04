@@ -1,5 +1,6 @@
 #include "RenderGraphResourceManager.h"
 
+#include "FlareCore/Log.h"
 #include "FlareCore/Profiler/Profiler.h"
 
 #include "Flare/Renderer/Viewport.h"

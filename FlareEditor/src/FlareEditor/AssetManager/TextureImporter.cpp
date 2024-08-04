@@ -1,5 +1,6 @@
 #include "TextureImporter.h"
 
+#include "FlareCore/Log.h"
 #include "FlareCore/Profiler/Profiler.h"
 
 #include "FlareEditor/AssetManager/EditorAssetManager.h"
@@ -100,7 +101,7 @@ namespace Flare
 		TexturePixelData textureData{};
 		if (!Texture::ReadDataFromFile(metadata.Path, specifications, textureData))
 		{
-			FLARE_CORE_ASSERT("Failed to load texture: {}", metadata.Path.string());
+			FLARE_CORE_ERROR("Failed to load texture: {}", metadata.Path.string());
 			return nullptr;
 		}
 

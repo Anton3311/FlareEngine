@@ -1,5 +1,7 @@
 #include "Asset.h"
 
+#include "FlareCore/Log.h"
+
 namespace Flare
 {
 	FLARE_IMPL_TYPE(AssetHandle);
@@ -15,7 +17,7 @@ namespace Flare
 			return "Memory";
 		}
 
-		FLARE_CORE_ASSERT("Unhandled asset source type");
+		FLARE_CORE_ERROR("Unknown asset source type '{}'", (std::underlying_type_t<AssetSource>)source);
 		return "";
 	}
 
@@ -26,7 +28,7 @@ namespace Flare
 		if (string == "Memory")
 			return AssetSource::Memory;
 
-		FLARE_CORE_ASSERT("Unknown asset source type '{}'", string);
+		FLARE_CORE_ERROR("Unknown asset source type '{}'", string);
 		return AssetSource::File;
 	}
 

@@ -67,8 +67,6 @@ namespace Flare
 		RenderGraphTextureId m_AOTexture;
 		Ref<Material> m_Material = nullptr;
 
-		Ref<ComputePipeline> m_ComputePipeline = nullptr;
-
 		Ref<SSAO> m_Parameters = nullptr;
 	};
 }

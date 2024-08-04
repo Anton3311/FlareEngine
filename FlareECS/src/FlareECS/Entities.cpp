@@ -1,5 +1,7 @@
 #include "Entities.h"
 
+#include "FlareCore/Assert.h"
+#include "FlareCore/Log.h"
 #include "FlareCore/Profiler/Profiler.h"
 
 #include "FlareECS/Query/EntityView.h"

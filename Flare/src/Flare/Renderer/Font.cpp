@@ -1,5 +1,6 @@
 #include "Font.h"
 
+#include "FlareCore/Log.h"
 #include "FlareCore/Assert.h"
 
 #include "Flare/Renderer/Texture.h"

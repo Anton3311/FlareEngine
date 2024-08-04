@@ -19,19 +19,19 @@
 #include <functional>
 #include <unordered_map>
 
-#define VK_CHECK_RESULT(expression) {                       \
-		VkResult __result = (expression);                   \
-		if (__result != VK_SUCCESS)                         \
-		{                                                   \
-			FLARE_CORE_ERROR("'{}' failed with result: {}", \
-			#expression,                                    \
-			(std::underlying_type_t<VkResult>)__result);    \
-			FLARE_CORE_ASSERT(false);                       \
-		}                                                   \
-	}
-
 namespace Flare
 {
+	FLARE_API void LogVkCheckMessage(const char* expression, VkResult result);
+
+	#define VK_CHECK_RESULT(expression) {                       \
+			VkResult __result = (expression);                   \
+			if (__result != VK_SUCCESS)                         \
+			{                                                   \
+				LogVkCheckMessage(#expression, __result);       \
+				FLARE_DEBUGBREAK;                               \
+			}                                                   \
+		}
+
 	struct RenderPassKey
 	{
 		bool operator==(const RenderPassKey& other) const

@@ -1,6 +1,8 @@
 #include "VulkanContext.h"
 
+#include "FlareCore/Log.h"
 #include "FlareCore/Profiler/Profiler.h"
+
 #include "Flare/Core/Application.h"
 
 #include "Flare/Platform/Vulkan/VulkanPipeline.h"
@@ -59,6 +61,15 @@ namespace Flare
 	}
 
 
+
+	void LogVkCheckMessage(const char* expression, VkResult result)
+	{
+		FLARE_CORE_ERROR("'{}' failed with result '{}'", expression, (std::underlying_type_t<decltype(result)>)result);
+	}
+
+	//
+	// VulkanContext
+	//
 
 	VulkanContext::VulkanContext(Ref<Window> window)
 		: m_Window(window), m_VSyncEnabled(window->GetProperties().VSyncEnabled)

@@ -1,6 +1,7 @@
 #include "Renderer2D.h"
 
 #include "FlareCore/Core.h"
+#include "FlareCore/Log.h"
 #include "FlareCore/Profiler/Profiler.h"
 
 #include "Flare/Math/Math.h"
@@ -150,7 +151,7 @@ namespace Flare
 
 	static QuadsBatch& BeginQuadBatch()
 	{
-		FLARE_ASSERT(s_Renderer2DData.Submition);
+		FLARE_CORE_ASSERT(s_Renderer2DData.Submition);
 
 		// Fill remaining texture slots of the previous batch with white textures
 		if (s_Renderer2DData.Submition->QuadBatches.size() > 0)

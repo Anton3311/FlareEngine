@@ -1,6 +1,7 @@
 #include "EditorShaderCache.h"
 
 #include "FlareCore/Core.h"
+#include "FlareCore/Log.h"
 #include "FlareCore/Profiler/Profiler.h"
 
 #include "Flare/AssetManager/AssetManager.h"

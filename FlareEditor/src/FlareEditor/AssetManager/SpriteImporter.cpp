@@ -1,6 +1,8 @@
 #include "SpriteImporter.h"
 
+#include "FlareCore/Log.h"
 #include "FlareCore/Profiler/Profiler.h"
+
 #include "FlareEditor/Serialization/YAMLSerialization.h"
 
 #include <fstream>

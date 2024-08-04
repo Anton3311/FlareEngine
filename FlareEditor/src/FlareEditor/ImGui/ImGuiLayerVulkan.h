@@ -4,6 +4,7 @@
 #include "FlareEditor/ImGui/ImGuiVulkanRenderer.h"
 
 #include <vulkan/vulkan.h>
+#include <unordered_map>
 
 namespace Flare
 {

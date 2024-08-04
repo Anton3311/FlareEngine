@@ -3,6 +3,7 @@
 #include "FlareCore/Collections/Span.h"
 
 #include <vulkan/vulkan.h>
+#include <string_view>
 #include <optional>
 
 namespace Flare

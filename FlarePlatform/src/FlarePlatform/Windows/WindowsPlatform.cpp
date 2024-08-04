@@ -3,7 +3,7 @@
 #include "FlarePlatform/Windows/WindowsPlatform.h"
 
 #include "FlareCore/Assert.h"
-#include "FlareCore/Assert.h"
+#include "FlareCore/Log.h"
 
 #include "FlarePlatform/Window.h"
 

@@ -1,5 +1,6 @@
 #include "AssetManagerWindow.h"
 
+#include "FlareCore/Log.h"
 #include "FlareCore/Assert.h"
 #include "FlareCore/Profiler/Profiler.h"
 

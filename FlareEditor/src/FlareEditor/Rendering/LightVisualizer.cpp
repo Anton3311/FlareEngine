@@ -1,5 +1,6 @@
 #include "LightVisualizer.h"
 
+#include "FlareCore/Log.h"
 #include "FlareCore/Profiler/Profiler.h"
 
 #include "FlareECS/World.h"

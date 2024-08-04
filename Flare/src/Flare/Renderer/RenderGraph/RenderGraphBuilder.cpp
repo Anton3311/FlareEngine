@@ -1,6 +1,7 @@
 #include "RenderGraphBuilder.h"
 
 #include "FlareCore/Assert.h"
+#include "FlareCore/Log.h"
 #include "FlareCore/Profiler/Profiler.h"
 
 #include "Flare/Platform/Vulkan/VulkanContext.h"

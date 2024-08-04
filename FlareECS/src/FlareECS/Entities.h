@@ -1,6 +1,5 @@
 #pragma once
 
-#include "FlareCore/Assert.h"
 #include "FlareCore/Core.h"
 #include "FlareCore/Collections/Span.h"
 

@@ -1,5 +1,6 @@
 #include "PrefabImporter.h"
 
+#include "FlareCore/Log.h"
 #include "FlareCore/Profiler/Profiler.h"
 
 #include "Flare/Scene/Prefab.h"
@@ -119,7 +120,7 @@ namespace Flare
         }
         catch (std::exception& e)
         {
-            FLARE_CORE_ERROR("Failed to import prefab '{0}': {1}", metadata.Path.generic_string(), e.what());
+            FLARE_CORE_ERROR("Failed to import prefab '{}': {}", metadata.Path.generic_string(), e.what());
         }
 
         return nullptr;

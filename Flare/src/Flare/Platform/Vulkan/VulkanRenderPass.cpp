@@ -1,5 +1,7 @@
 #include "VulkanRenderPass.h"
 
+#include "FlareCore/Log.h"
+
 #include "Flare/Platform/Vulkan/VulkanContext.h"
 
 namespace Flare

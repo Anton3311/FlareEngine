@@ -1,6 +1,7 @@
 #include "WindowsWindow.h"
 
 #include "FlareCore/Assert.h"
+#include "FlareCore/Log.h"
 #include "FlareCore/KeyCode.h"
 #include "FlareCore/MouseCode.h"
 
