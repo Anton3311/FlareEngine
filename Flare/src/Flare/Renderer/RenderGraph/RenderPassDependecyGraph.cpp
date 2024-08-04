@@ -151,6 +151,8 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
+		AdjacencyMatrix adjacencyMatrix((uint32_t)m_Graph.size(), (uint32_t)m_Graph.size());
+
 		for (GraphNode& node : m_Graph)
 		{
 			FLARE_CORE_INFO("Node: {}", node.PassNode->Specifications.GetDebugName());
@@ -159,24 +161,11 @@ namespace Flare
 				auto it = m_Writers.find(input.InputTexture);
 				if (it != m_Writers.end())
 				{
-					std::vector<GraphNode*> allDependecies = CollectAllDependecies(&node);
+					uint32_t nodeIndex = (uint32_t)(&node - m_Graph.data());
 
 					for (GraphNode* dependecy : it->second)
 					{
-						dependecy->Children.insert(&node);
-						node.Dependecies.insert(dependecy);
-					}
-
-					for (GraphNode* a : allDependecies)
-						FLARE_CORE_CRITICAL("\t{}", a->PassNode->Specifications.GetDebugName());
-
-					for (GraphNode* decendent : allDependecies)
-					{
-						if (node.Dependecies.find(decendent) == node.Dependecies.end())
-						{
-							decendent->Children.erase(&node);
-							node.Dependecies.erase(decendent);
-						}
+						adjacencyMatrix.Set(nodeIndex, (uint32_t)(dependecy - m_Graph.data()), true);
 					}
 				}
 			}
@@ -195,61 +184,20 @@ namespace Flare
 			}
 		}
 
-#if 0
-		AdjacencyMatrix matrix((uint32_t)m_Graph.size(), (uint32_t)m_Graph.size());
+		AdjacencyMatrix transitiveClosure = adjacencyMatrix;
 
-		for (GraphNode& node : m_Graph)
+		for (uint32_t k = 0; k < adjacencyMatrix.GetSize().x; k++)
 		{
-			size_t nodeIndex = (size_t)(&node - m_Graph.data());
-			for (GraphNode* a : node.Dependecies)
+			for (uint32_t y = 0; y < adjacencyMatrix.GetSize().y; y++)
 			{
-				size_t aIndex = (size_t)(a - m_Graph.data());
-				matrix.Set(nodeIndex, aIndex, true);
-				matrix.Set(aIndex, nodeIndex, true);
-			}
-
-			for (GraphNode* a : node.Children)
-			{
-				size_t aIndex = (size_t)(a - m_Graph.data());
-				matrix.Set(nodeIndex, aIndex, true);
-				matrix.Set(aIndex, nodeIndex, true);
-			}
-		}
-#else
-		AdjacencyMatrix matrix(4, 4);
-		matrix.Set(0, 1, true);
-		matrix.Set(1, 2, true);
-		matrix.Set(2, 3, true);
-		matrix.Set(1, 3, true);
-#endif
-
-		AdjacencyMatrix transitiveClosure(matrix.GetSize().x, matrix.GetSize().y);
-
-#if 0
-		for (uint32_t i = 1; i < matrix.GetSize().x; i++)
-		{
-			AdjacencyMatrix copy = transitiveClosure;
-			transitiveClosure |= transitiveClosure * copy;
-		}
-#elif 1
-		{
-			AdjacencyMatrix c0 = matrix;
-			for (uint32_t k = 0; k < matrix.GetSize().x; k++)
-			{
-				for (uint32_t y = 0; y < matrix.GetSize().y; y++)
+				for (uint32_t x = 0; x < adjacencyMatrix.GetSize().x; x++)
 				{
-					for (uint32_t x = 0; x < matrix.GetSize().x; x++)
-					{
-						c0.Set(x, y, c0.Get(x, y) || c0.Get(x, k) && c0.Get(k, y));
-					}
+					transitiveClosure.Set(x, y, transitiveClosure.Get(x, y) || transitiveClosure.Get(x, k) && transitiveClosure.Get(k, y));
 				}
 			}
-
-			transitiveClosure = c0;
 		}
-#endif
 
-		AdjacencyMatrix ab = matrix * transitiveClosure;
+		AdjacencyMatrix ab = adjacencyMatrix * transitiveClosure;
 
 		auto printMatrix = [](const AdjacencyMatrix& matrix)
 			{
@@ -269,16 +217,16 @@ namespace Flare
 			};
 
 		FLARE_CORE_INFO("Matrix");
-		printMatrix(matrix);
+		printMatrix(adjacencyMatrix);
 		FLARE_CORE_INFO("AB");
 		printMatrix(ab);
 		FLARE_CORE_INFO("Transitive Closure");
 		printMatrix(transitiveClosure);
 
 		FLARE_CORE_INFO("Transitive Closure 2:");
-		for (uint32_t y = 0; y < matrix.GetSize().y; y++)
+		for (uint32_t y = 0; y < adjacencyMatrix.GetSize().y; y++)
 		{
-			for (uint32_t x = 0; x < matrix.GetSize().x; x++)
+			for (uint32_t x = 0; x < adjacencyMatrix.GetSize().x; x++)
 			{
 				if (transitiveClosure.Get(x, y))
 				{
@@ -288,11 +236,11 @@ namespace Flare
 		}
 
 		FLARE_CORE_INFO("Transitive Reduction:");
-		for (uint32_t y = 0; y < matrix.GetSize().y; y++)
+		for (uint32_t y = 0; y < adjacencyMatrix.GetSize().y; y++)
 		{
-			for (uint32_t x = 0; x < matrix.GetSize().x; x++)
+			for (uint32_t x = 0; x < adjacencyMatrix.GetSize().x; x++)
 			{
-				if (matrix.Get(x, y) && !ab.Get(x, y))
+				if (adjacencyMatrix.Get(x, y) && !ab.Get(x, y))
 				{
 					FLARE_CORE_WARN("{} -> {}", x + 1, y + 1);
 				}
@@ -304,87 +252,6 @@ namespace Flare
 		printMatrix(sdf);
 		
 		return;
-
-#if 0
-		struct ResolutionState
-		{
-			bool Visited = false;
-			bool Resolved = false;
-			uint32_t CompleteDependecyCount = 0;
-		};
-
-		std::deque<GraphNode*> unresolvedNodes;
-		std::vector<ResolutionState> state;
-		state.resize(m_Graph.size(), ResolutionState{});
-
-		for (GraphNode& node : m_Graph)
-		{
-			if (node.Dependecies.size() == 0)
-				unresolvedNodes.push_back(&node);
-		}
-
-		while (unresolvedNodes.size() > 0)
-		{
-			GraphNode* node = unresolvedNodes.front();
-			unresolvedNodes.pop_front();
-
-			ResolutionState& nodeState = state[node - m_Graph.data()];
-			if (nodeState.Visited)
-				continue;
-
-			nodeState.Visited = true;
-
-			FLARE_CORE_WARN("Visit: {} {}/{} Children: {}",
-				node->PassNode->Specifications.GetDebugName(),
-				nodeState.CompleteDependecyCount,
-				node->Dependecies.size(),
-				node->Children.size());
-
-			if (nodeState.CompleteDependecyCount == (uint32_t)node->Dependecies.size())
-			{
-				std::vector<GraphNode*> removedDependecies;
-				for (GraphNode* dependecy : node->Dependecies)
-				{
-					auto& dependecyState = state[dependecy - m_Graph.data()];
-					
-					FLARE_CORE_ERROR("\tName: {} Resolved: {}", dependecy->PassNode->Specifications.GetDebugName(), dependecyState.Resolved);
-
-					if (dependecyState.Resolved)
-					{
-						removedDependecies.push_back(dependecy);
-					}
-					
-					dependecyState.Resolved = true;
-
-				}
-
-				for (GraphNode* dependecy : removedDependecies)
-				{
-					node->Dependecies.erase(dependecy);
-				}
-
-				FLARE_CORE_CRITICAL("Children: {}", node->Children.size());
-				for (GraphNode* child : node->Children)
-				{
-					size_t nodeIndex = (size_t)(child - m_Graph.data());
-					state[nodeIndex].CompleteDependecyCount++;
-
-					if (!state[nodeIndex].Visited)
-					{
-						FLARE_CORE_CRITICAL("Added: {}", child->PassNode->Specifications.GetDebugName());
-						unresolvedNodes.push_back(child);
-					}
-				}
-			}
-			else
-			{
-				FLARE_CORE_CRITICAL("Repeat: {}", node->PassNode->Specifications.GetDebugName());
-				unresolvedNodes.push_back(node);
-
-				nodeState.Visited = false;
-			}
-		}
-#endif
 
 		FLARE_CORE_WARN("");
 		for (GraphNode& node : m_Graph)
