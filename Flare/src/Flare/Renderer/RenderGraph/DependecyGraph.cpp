@@ -143,6 +143,8 @@ namespace Flare
 	// RenderPassDependecyGraph
 	//
 
+	DependecyGraph::DependecyGraph() {}
+
 	DependecyGraph::DependecyGraph(Span<const RenderPassNode> nodes)
 		: m_Nodes(nodes)
 	{
@@ -180,8 +182,17 @@ namespace Flare
 					if (adjacencyMatrix.Get(x, y) && !AB.Get(x, y))
 					{
 						m_Graph[x].Dependecies.insert(&m_Graph[y]);
+						m_Graph[y].Children.insert(&m_Graph[x]);
 					}
 				}
+			}
+		}
+
+		for (GraphNode& node : m_Graph)
+		{
+			if (node.Dependecies.size() == 0)
+			{
+				DetermineDependencyLayers(&node);
 			}
 		}
 	}
@@ -192,6 +203,20 @@ namespace Flare
 
 		for (GraphNode& node : m_Graph)
 		{
+			for (const auto& output : node.PassNode->Specifications.GetOutputs())
+			{
+				auto it = m_Writers.find(output.AttachmentTexture);
+				if (it != m_Writers.end())
+				{
+					uint32_t nodeIndex = (uint32_t)(&node - m_Graph.data());
+
+					for (GraphNode* dependecy : it->second)
+					{
+						adjacencyMatrix.Set(nodeIndex, (uint32_t)(dependecy - m_Graph.data()), true);
+					}
+				}
+			}
+
 			for (const auto& input : node.PassNode->Specifications.GetInputs())
 			{
 				auto it = m_Writers.find(input.InputTexture);
@@ -233,6 +258,43 @@ namespace Flare
 				{
 					matrix.Set(x, y, matrix.Get(x, y) || matrix.Get(x, k) && matrix.Get(k, y));
 				}
+			}
+		}
+	}
+
+	void DependecyGraph::DetermineDependencyLayers(GraphNode* start)
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		std::vector<bool> visited(m_Graph.size(), false);
+		std::deque<GraphNode*> queue;
+
+		queue.push_back(start);
+
+		start->DependencyLayer = 0;
+
+		while (queue.size() > 0)
+		{
+			GraphNode* node = queue.front();
+			queue.pop_front();
+
+			if (visited[node - m_Graph.data()])
+				continue;
+
+			visited[node - m_Graph.data()] = true;
+
+			for (GraphNode* child : node->Children)
+			{
+				uint32_t layer = node->DependencyLayer + 1;
+
+				if (child->DependencyLayer == UINT32_MAX)
+					child->DependencyLayer = layer;
+				else
+					child->DependencyLayer = glm::max(child->DependencyLayer, layer);
+
+				m_MaxDependencyLayer = glm::max(m_MaxDependencyLayer, child->DependencyLayer);
+
+				queue.push_back(child);
 			}
 		}
 	}

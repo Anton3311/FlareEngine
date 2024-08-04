@@ -44,21 +44,30 @@ namespace Flare
 	public:
 		struct GraphNode
 		{
+			uint32_t DependencyLayer = UINT32_MAX;
 			const RenderPassNode* PassNode = nullptr;
 			std::unordered_set<GraphNode*> Children;
 			std::unordered_set<GraphNode*> Dependecies;
 		};
 
+		DependecyGraph();
 		DependecyGraph(Span<const RenderPassNode> nodes);
 
 		void Build();
+
+		inline const std::vector<GraphNode>& GetNodes() const { return m_Graph; }
+		inline uint32_t GetMaxDependencyLayer() const { return m_MaxDependencyLayer; }
 	private:
 		void GenerateAdjacencyMatrix(AdjacencyMatrix& adjacencyMatrix);
 
 		// Generates the transitive closure using Warshall algorithm
 		void GenerateTransitiveClosure(AdjacencyMatrix& matrix);
+
+		void DetermineDependencyLayers(GraphNode* start);
 	private:
 		Span<const RenderPassNode> m_Nodes;
+
+		uint32_t m_MaxDependencyLayer = 0;
 
 		std::vector<GraphNode> m_Graph;
 

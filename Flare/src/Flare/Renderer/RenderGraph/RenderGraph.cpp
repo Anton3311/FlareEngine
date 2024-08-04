@@ -120,8 +120,8 @@ namespace Flare
 
 		builder.Build();
 
-		DependecyGraph dependecyGraph(Span<const RenderPassNode>(m_Nodes.data(), m_Nodes.size()));
-		dependecyGraph.Build();
+		m_DependecyGraph = DependecyGraph(Span<const RenderPassNode>(m_Nodes.data(), m_Nodes.size()));
+		m_DependecyGraph.Build();
 
 		m_NeedsRebuilding = false;
 		m_IsValid = true;

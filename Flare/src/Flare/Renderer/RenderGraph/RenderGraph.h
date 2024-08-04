@@ -2,6 +2,7 @@
 
 #include "FlareCore/Collections/Span.h"
 
+#include "Flare/Renderer/RenderGraph/DependecyGraph.h"
 #include "Flare/Renderer/RenderGraph/RenderGraphPass.h"
 #include "Flare/Renderer/RenderGraph/RenderGraphPassSpecifications.h"
 #include "Flare/Renderer/RenderGraph/RenderPassNode.h"
@@ -51,6 +52,8 @@ namespace Flare
 
 		inline bool NeedsRebuilding() const { return m_NeedsRebuilding; }
 		inline void SetNeedsRebuilding() { m_NeedsRebuilding = true; }
+
+		inline const DependecyGraph& GetDependecyGraph() const { return m_DependecyGraph; }
 	private:
 		void CreateRenderTargets();
 		void ExecuteLayoutTransitions(Ref<CommandBuffer> commandBuffer, LayoutTransitionsRange range);
@@ -63,6 +66,7 @@ namespace Flare
 		std::vector<Ref<FrameBuffer>> m_RenderPassTargets;
 
 		RenderGraphResourceManager m_ResourceManager;
+		DependecyGraph m_DependecyGraph;
 
 		CompiledRenderGraph m_CompiledRenderGraph;
 
