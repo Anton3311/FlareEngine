@@ -53,6 +53,10 @@ namespace Flare
 
 		void Build();
 	private:
+		void GenerateAdjacencyMatrix(AdjacencyMatrix& adjacencyMatrix);
+
+		// Generates the transitive closure using Warshall algorithm
+		void GenerateTransitiveClosure(AdjacencyMatrix& matrix);
 	private:
 		Span<const RenderPassNode> m_Nodes;
 

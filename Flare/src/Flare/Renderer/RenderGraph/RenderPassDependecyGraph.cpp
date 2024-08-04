@@ -116,6 +116,23 @@ namespace Flare
 		return output;
 	}
 
+	static void PrintMatrix(const AdjacencyMatrix& matrix)
+	{
+		for (uint32_t y = 0; y < matrix.GetSize(); y++)
+		{
+			std::string line = "";
+			for (uint32_t x = 0; x < matrix.GetSize(); x++)
+			{
+				if (matrix.Get(x, y))
+					line += "1 ";
+				else
+					line += "0 ";
+			}
+
+			FLARE_CORE_TRACE(line);
+		}
+	}
+
 	//
 	// RenderPassDependecyGraph
 	//
@@ -137,6 +154,55 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 
 		AdjacencyMatrix adjacencyMatrix((uint32_t)m_Graph.size());
+
+		GenerateAdjacencyMatrix(adjacencyMatrix);
+
+		AdjacencyMatrix transitiveClosure = adjacencyMatrix;
+		GenerateTransitiveClosure(transitiveClosure);
+
+		// Generate transitive reduction based on the transitive closure
+		// https://en.wikipedia.org/wiki/Transitive_reduction#Computing_the_reduction_using_the_closure
+
+		AdjacencyMatrix AB = adjacencyMatrix * transitiveClosure;
+
+		FLARE_CORE_INFO("Adjacency Matrix");
+		PrintMatrix(adjacencyMatrix);
+		FLARE_CORE_INFO("AB");
+		PrintMatrix(AB);
+		FLARE_CORE_INFO("Transitive Closure");
+		PrintMatrix(transitiveClosure);
+
+		{
+			FLARE_PROFILE_SCOPE("GenerateDependecies");
+			for (uint32_t y = 0; y < adjacencyMatrix.GetSize(); y++)
+			{
+				for (uint32_t x = 0; x < adjacencyMatrix.GetSize(); x++)
+				{
+					if (adjacencyMatrix.Get(x, y) && !AB.Get(x, y))
+					{
+						m_Graph[x].Dependecies.insert(&m_Graph[y]);
+					}
+				}
+			}
+		}
+
+		FLARE_CORE_WARN("");
+		for (GraphNode& node : m_Graph)
+		{
+			FLARE_CORE_ERROR("Node: {}", node.PassNode->Specifications.GetDebugName());
+			FLARE_CORE_INFO("Dependecies:");
+
+			for (GraphNode* dependecy : node.Dependecies)
+			{
+				FLARE_CORE_TRACE("\t{}", dependecy->PassNode->Specifications.GetDebugName());
+			}
+		}
+		FLARE_CORE_WARN("");
+	}
+
+	void RenderPassDependecyGraph::GenerateAdjacencyMatrix(AdjacencyMatrix& adjacencyMatrix)
+	{
+		FLARE_PROFILE_FUNCTION();
 
 		for (GraphNode& node : m_Graph)
 		{
@@ -169,86 +235,21 @@ namespace Flare
 			}
 		}
 
-		AdjacencyMatrix transitiveClosure = adjacencyMatrix;
+	}
 
-		for (uint32_t k = 0; k < adjacencyMatrix.GetSize(); k++)
+	void RenderPassDependecyGraph::GenerateTransitiveClosure(AdjacencyMatrix& matrix)
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		for (uint32_t k = 0; k < matrix.GetSize(); k++)
 		{
-			for (uint32_t y = 0; y < adjacencyMatrix.GetSize(); y++)
+			for (uint32_t y = 0; y < matrix.GetSize(); y++)
 			{
-				for (uint32_t x = 0; x < adjacencyMatrix.GetSize(); x++)
+				for (uint32_t x = 0; x < matrix.GetSize(); x++)
 				{
-					transitiveClosure.Set(x, y, transitiveClosure.Get(x, y) || transitiveClosure.Get(x, k) && transitiveClosure.Get(k, y));
+					matrix.Set(x, y, matrix.Get(x, y) || matrix.Get(x, k) && matrix.Get(k, y));
 				}
 			}
 		}
-
-		AdjacencyMatrix ab = adjacencyMatrix * transitiveClosure;
-
-		auto printMatrix = [](const AdjacencyMatrix& matrix)
-			{
-				for (uint32_t y = 0; y < matrix.GetSize(); y++)
-				{
-					std::string line = "";
-					for (uint32_t x = 0; x < matrix.GetSize(); x++)
-					{
-						if (matrix.Get(x, y))
-							line += "1 ";
-						else
-							line += "0 ";
-					}
-
-					FLARE_CORE_TRACE(line);
-				}
-			};
-
-		FLARE_CORE_INFO("Matrix");
-		printMatrix(adjacencyMatrix);
-		FLARE_CORE_INFO("AB");
-		printMatrix(ab);
-		FLARE_CORE_INFO("Transitive Closure");
-		printMatrix(transitiveClosure);
-
-		FLARE_CORE_INFO("Transitive Closure 2:");
-		for (uint32_t y = 0; y < adjacencyMatrix.GetSize(); y++)
-		{
-			for (uint32_t x = 0; x < adjacencyMatrix.GetSize(); x++)
-			{
-				if (transitiveClosure.Get(x, y))
-				{
-					FLARE_CORE_WARN("{} -> {}", x + 1, y + 1);
-				}
-			}
-		}
-
-		FLARE_CORE_INFO("Transitive Reduction:");
-		for (uint32_t y = 0; y < adjacencyMatrix.GetSize(); y++)
-		{
-			for (uint32_t x = 0; x < adjacencyMatrix.GetSize(); x++)
-			{
-				if (adjacencyMatrix.Get(x, y) && !ab.Get(x, y))
-				{
-					FLARE_CORE_WARN("{} -> {}", x + 1, y + 1);
-				}
-			}
-		}
-
-		AdjacencyMatrix sdf = transitiveClosure.NotAnd(ab);
-		FLARE_CORE_INFO("jslkdf");
-		printMatrix(sdf);
-		
-		return;
-
-		FLARE_CORE_WARN("");
-		for (GraphNode& node : m_Graph)
-		{
-			FLARE_CORE_ERROR("Node: {}", node.PassNode->Specifications.GetDebugName());
-			FLARE_CORE_INFO("Dependecies:");
-
-			for (GraphNode* dependecy : node.Dependecies)
-			{
-				FLARE_CORE_TRACE("\t{}", dependecy->PassNode->Specifications.GetDebugName());
-			}
-		}
-		FLARE_CORE_WARN("");
 	}
 }
