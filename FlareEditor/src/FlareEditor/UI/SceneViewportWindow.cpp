@@ -9,6 +9,8 @@
 #include "Flare/Scene/Scene.h"
 #include "Flare/Scene/Prefab.h"
 
+#include "FlareEditor/UI/RenderGraphVisualizer.h"
+
 #include "FlareEditor/Rendering/SceneViewGridPass.h"
 
 #include "FlareEditor/ImGui/ImGuiLayer.h"
@@ -231,6 +233,8 @@ namespace Flare
 				}
 			}
 		}
+
+		RenderGraphVisualizer::OnRenderImGui(m_Viewport.Graph);
 	}
 
 	static bool GuizmoButton(const char* text, bool active)
