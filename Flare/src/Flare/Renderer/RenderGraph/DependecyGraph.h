@@ -46,8 +46,8 @@ namespace Flare
 		{
 			uint32_t DependencyLayer = UINT32_MAX;
 			const RenderPassNode* PassNode = nullptr;
-			std::unordered_set<GraphNode*> Children;
-			std::unordered_set<GraphNode*> Dependecies;
+			std::unordered_set<size_t> Children;
+			std::unordered_set<size_t> Dependecies;
 		};
 
 		DependecyGraph();
@@ -63,14 +63,11 @@ namespace Flare
 		// Generates the transitive closure using Warshall algorithm
 		void GenerateTransitiveClosure(AdjacencyMatrix& matrix);
 
-		void DetermineDependencyLayers(GraphNode* start);
+		void DetermineDependencyLayers(size_t start);
 	private:
 		Span<const RenderPassNode> m_Nodes;
 
 		uint32_t m_MaxDependencyLayer = 0;
-
 		std::vector<GraphNode> m_Graph;
-
-		std::unordered_map<RenderGraphTextureId, std::vector<GraphNode*>> m_Writers;
 	};
 }

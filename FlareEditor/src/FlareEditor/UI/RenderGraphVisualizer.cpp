@@ -42,10 +42,8 @@ namespace Flare
 
 				drawList->AddText(textPosition + cursorPosition, UINT32_MAX, name);
 
-				for (const auto* dependecy : node.Dependecies)
+				for (size_t dependecyIndex : node.Dependecies)
 				{
-					size_t dependecyIndex = (size_t)(dependecy - nodes.data());
-
 					ImVec2 dependecyPosition = positions[dependecyIndex];
 
 					ImVec2 start = ImVec2(dependecyPosition.x, dependecyPosition.y + textHeight / 2.0f);
