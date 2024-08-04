@@ -39,7 +39,7 @@ namespace Flare
 	// RenderPassDependecyGraph
 	//
 
-	class FLARE_API RenderPassDependecyGraph
+	class FLARE_API DependecyGraph
 	{
 	public:
 		struct GraphNode
@@ -49,7 +49,7 @@ namespace Flare
 			std::unordered_set<GraphNode*> Dependecies;
 		};
 
-		RenderPassDependecyGraph(Span<const RenderPassNode> nodes);
+		DependecyGraph(Span<const RenderPassNode> nodes);
 
 		void Build();
 	private:

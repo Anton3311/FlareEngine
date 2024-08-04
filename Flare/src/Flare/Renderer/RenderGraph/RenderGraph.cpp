@@ -3,7 +3,7 @@
 #include "Flare/Renderer/Renderer.h"
 #include "Flare/Renderer/RenderGraph/RenderGraphBuilder.h"
 
-#include "Flare/Renderer/RenderGraph/RenderPassDependecyGraph.h"
+#include "Flare/Renderer/RenderGraph/DependecyGraph.h"
 
 #include "Flare/Platform/Vulkan/VulkanContext.h"
 #include "Flare/Platform/Vulkan/VulkanCommandBuffer.h"
@@ -120,7 +120,7 @@ namespace Flare
 
 		builder.Build();
 
-		RenderPassDependecyGraph dependecyGraph(Span<const RenderPassNode>(m_Nodes.data(), m_Nodes.size()));
+		DependecyGraph dependecyGraph(Span<const RenderPassNode>(m_Nodes.data(), m_Nodes.size()));
 		dependecyGraph.Build();
 
 		m_NeedsRebuilding = false;

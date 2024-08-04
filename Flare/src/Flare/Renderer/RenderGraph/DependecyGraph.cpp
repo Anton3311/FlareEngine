@@ -1,4 +1,4 @@
-#include "RenderPassDependecyGraph.h"
+#include "DependecyGraph.h"
 
 #include "FlareCore/Log.h"
 #include "FlareCore/Profiler/Profiler.h"
@@ -137,7 +137,7 @@ namespace Flare
 	// RenderPassDependecyGraph
 	//
 
-	RenderPassDependecyGraph::RenderPassDependecyGraph(Span<const RenderPassNode> nodes)
+	DependecyGraph::DependecyGraph(Span<const RenderPassNode> nodes)
 		: m_Nodes(nodes)
 	{
 		FLARE_PROFILE_FUNCTION();
@@ -149,7 +149,7 @@ namespace Flare
 		}
 	}
 
-	void RenderPassDependecyGraph::Build()
+	void DependecyGraph::Build()
 	{
 		FLARE_PROFILE_FUNCTION();
 
@@ -200,7 +200,7 @@ namespace Flare
 		FLARE_CORE_WARN("");
 	}
 
-	void RenderPassDependecyGraph::GenerateAdjacencyMatrix(AdjacencyMatrix& adjacencyMatrix)
+	void DependecyGraph::GenerateAdjacencyMatrix(AdjacencyMatrix& adjacencyMatrix)
 	{
 		FLARE_PROFILE_FUNCTION();
 
@@ -237,7 +237,7 @@ namespace Flare
 
 	}
 
-	void RenderPassDependecyGraph::GenerateTransitiveClosure(AdjacencyMatrix& matrix)
+	void DependecyGraph::GenerateTransitiveClosure(AdjacencyMatrix& matrix)
 	{
 		FLARE_PROFILE_FUNCTION();
 
