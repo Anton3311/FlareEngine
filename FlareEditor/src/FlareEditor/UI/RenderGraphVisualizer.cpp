@@ -17,26 +17,45 @@ namespace Flare
 		if (dependecyGraph.GetMaxDependencyLayer() == 0)
 			return;
 
-		std::vector<float> offsets(dependecyGraph.GetMaxDependencyLayer() + 1, 0.0f);
+		std::vector<float> offsets(dependecyGraph.GetMaxDependencyLayer() + 1, 100.0f);
+		std::vector<ImVec2> positions(dependecyGraph.GetNodes().size(), ImVec2(0.0f, 0.0f));
+
+		const auto& nodes = dependecyGraph.GetNodes();
+		float textHeight = ImGui::GetFontSize();
 
 		if (ImGui::Begin("Render Graph Visualizer"))
 		{
 			ImGuiWindow* window = ImGui::GetCurrentWindow();
 			ImDrawList* drawList = window->DrawList;
 
-			for (const auto& node : dependecyGraph.GetNodes())
+			for (size_t nodeIndex = 0; nodeIndex < nodes.size(); nodeIndex++)
 			{
+				const auto& node = nodes[nodeIndex];
 				const char* name = node.PassNode->Specifications.GetDebugName().c_str();
 				ImVec2 textSize = ImGui::CalcTextSize(name);
 
 				const ImVec2 textPosition(window->DC.CursorPos.x, window->DC.CursorPos.y + window->DC.CurrLineTextBaseOffset);
-				ImVec2 cursorPosition = ImVec2(offsets[node.DependencyLayer], node.DependencyLayer * ImGui::GetFontSize() * 2.0f);
-
-				FLARE_CORE_ASSERT(node.DependencyLayer < (uint32_t)offsets.size());
+				ImVec2 cursorPosition = ImVec2(offsets[node.DependencyLayer], node.DependencyLayer * textHeight * 5.0f);
 
 				offsets[node.DependencyLayer] += textSize.x + 100.0f;
+				positions[nodeIndex] = cursorPosition + textSize / 2.0f;
 
 				drawList->AddText(textPosition + cursorPosition, UINT32_MAX, name);
+
+				for (const auto* dependecy : node.Dependecies)
+				{
+					size_t dependecyIndex = (size_t)(dependecy - nodes.data());
+
+					ImVec2 dependecyPosition = positions[dependecyIndex];
+
+					ImVec2 start = ImVec2(dependecyPosition.x, dependecyPosition.y + textHeight / 2.0f);
+					ImVec2 end = ImVec2(cursorPosition.x, cursorPosition.y - textHeight / 2.0f) + textSize / 2.0f;
+
+					start += window->DC.CursorPos;
+					end += window->DC.CursorPos;
+
+					drawList->AddLine(start, end, UINT32_MAX);
+				}
 			}
 
 			ImGui::End();
