@@ -17,7 +17,9 @@ namespace Flare
 		if (dependecyGraph.GetMaxDependencyLayer() == 0)
 			return;
 
-		std::vector<float> offsets(dependecyGraph.GetMaxDependencyLayer() + 1, 100.0f);
+		float graphOffset = 400.0f;
+
+		std::vector<float> offsets(dependecyGraph.GetMaxDependencyLayer() + 1, graphOffset);
 		std::vector<ImVec2> positions(dependecyGraph.GetNodes().size(), ImVec2(0.0f, 0.0f));
 
 		const auto& nodes = dependecyGraph.GetNodes();
@@ -54,6 +56,16 @@ namespace Flare
 
 					drawList->AddLine(start, end, UINT32_MAX);
 				}
+			}
+
+			const ImGuiStyle& style = ImGui::GetStyle();
+
+			ImVec2 position = window->DC.CursorPos + style.FramePadding;
+			for (size_t nodeIndex : dependecyGraph.GetExecutionOrder())
+			{
+				drawList->AddText(position, UINT32_MAX, nodes[nodeIndex].PassNode->Specifications.GetDebugName().c_str());
+
+				position.y += textHeight * 1.5f;
 			}
 
 			ImGui::End();

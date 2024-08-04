@@ -57,6 +57,7 @@ namespace Flare
 
 		inline const std::vector<GraphNode>& GetNodes() const { return m_Graph; }
 		inline uint32_t GetMaxDependencyLayer() const { return m_MaxDependencyLayer; }
+		inline const std::vector<size_t>& GetExecutionOrder() const { return m_ExecutionOrder; }
 	private:
 		void GenerateAdjacencyMatrix(AdjacencyMatrix& adjacencyMatrix);
 
@@ -64,10 +65,14 @@ namespace Flare
 		void GenerateTransitiveClosure(AdjacencyMatrix& matrix);
 
 		void DetermineDependencyLayers(size_t start);
+
+		void GenerateExecutionOrder();
 	private:
 		Span<const RenderPassNode> m_Nodes;
 
 		uint32_t m_MaxDependencyLayer = 0;
 		std::vector<GraphNode> m_Graph;
+
+		std::vector<size_t> m_ExecutionOrder;
 	};
 }

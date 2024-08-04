@@ -195,6 +195,8 @@ namespace Flare
 				DetermineDependencyLayers(i);
 			}
 		}
+
+		GenerateExecutionOrder();
 	}
 
 	void DependecyGraph::GenerateAdjacencyMatrix(AdjacencyMatrix& adjacencyMatrix)
@@ -298,6 +300,44 @@ namespace Flare
 				m_MaxDependencyLayer = glm::max(m_MaxDependencyLayer, child.DependencyLayer);
 
 				queue.push_back(childIndex);
+			}
+		}
+	}
+
+	void DependecyGraph::GenerateExecutionOrder()
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		m_ExecutionOrder.reserve(m_Graph.size());
+		std::vector<uint32_t> visited(m_Graph.size(), 0);
+
+		std::deque<size_t> queue;
+
+		for (size_t i = 0; i < m_Graph.size(); i++)
+		{
+			if (m_Graph[i].Dependecies.size() == 0)
+				queue.push_back(i);
+		}
+
+		while (queue.size() > 0)
+		{
+			size_t nodeIndex = queue.front();
+			queue.pop_front();
+
+			if (visited[nodeIndex] != (uint32_t)m_Graph[nodeIndex].Dependecies.size())
+			{
+				queue.push_back(nodeIndex);
+				continue;
+			}
+
+			m_ExecutionOrder.push_back(nodeIndex);
+
+			for (size_t childIndex : m_Graph[nodeIndex].Children)
+			{
+				if (visited[childIndex] == 0)
+					queue.push_back(childIndex);
+
+				visited[childIndex]++;
 			}
 		}
 	}
