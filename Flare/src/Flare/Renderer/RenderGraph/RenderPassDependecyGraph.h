@@ -10,6 +10,35 @@
 
 namespace Flare
 {
+	// A sqaure boolean matrix
+	struct FLARE_API AdjacencyMatrix
+	{
+	public:
+		AdjacencyMatrix(uint32_t size);
+		~AdjacencyMatrix();
+
+		AdjacencyMatrix(const AdjacencyMatrix& other);
+		AdjacencyMatrix(AdjacencyMatrix&& other) noexcept;
+
+		AdjacencyMatrix& operator=(const AdjacencyMatrix& other);
+		AdjacencyMatrix& operator=(AdjacencyMatrix&& other) noexcept;
+
+		inline uint32_t GetSize() const { return m_Size; }
+		inline void Set(uint32_t x, uint32_t y, bool value) { m_Elements[y * m_Size + x] = value; }
+		inline bool Get(uint32_t x, uint32_t y) const { return m_Elements[y * m_Size + x]; }
+
+		AdjacencyMatrix operator*(const AdjacencyMatrix& b) const;
+		AdjacencyMatrix& operator|=(const AdjacencyMatrix& other);
+		AdjacencyMatrix NotAnd(const AdjacencyMatrix& other) const;
+	private:
+		uint32_t m_Size = 0;
+		bool* m_Elements = nullptr;
+	};
+
+	//
+	// RenderPassDependecyGraph
+	//
+
 	class FLARE_API RenderPassDependecyGraph
 	{
 	public:
@@ -24,10 +53,6 @@ namespace Flare
 
 		void Build();
 	private:
-		bool IsReachable(GraphNode* start, GraphNode* target);
-		bool IsReachable(GraphNode* start, GraphNode* target, std::vector<bool>& visited);
-
-		std::vector<GraphNode*> CollectAllDependecies(GraphNode* node);
 	private:
 		Span<const RenderPassNode> m_Nodes;
 
