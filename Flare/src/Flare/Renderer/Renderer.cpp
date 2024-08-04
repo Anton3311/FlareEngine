@@ -491,6 +491,7 @@ namespace Flare
 		RenderGraphPassSpecifications decalPass{};
 		decalPass.AddInput(viewport.DepthTextureId);
 		decalPass.AddOutput(viewport.ColorTextureId, 0);
+		decalPass.SetDebugName("DecalsPass");
 
 		viewport.Graph.AddPass(decalPass, CreateRef<DecalsPass>(
 			s_RendererData.DecalsDescriptorSetPool,
