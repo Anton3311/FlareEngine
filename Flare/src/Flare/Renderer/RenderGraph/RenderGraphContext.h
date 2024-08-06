@@ -3,7 +3,6 @@
 namespace Flare
 {
 	class Viewport;
-	class FrameBuffer;
 	class RenderGraph;
 	class RenderGraphResourceManager;
 
@@ -14,13 +13,11 @@ namespace Flare
 	{
 	public:
 		RenderGraphContext(const Viewport& viewport,
-			Ref<FrameBuffer> renderTarget,
 			const RenderGraph& renderGraph,
 			const RenderGraphResourceManager& resourceManager,
 			const SceneSubmition& sceneSubmition,
 			const RenderView& view)
 			: m_Viewport(viewport),
-			m_RenderTarget(renderTarget),
 			m_RenderGraph(renderGraph),
 			m_SceneSubmition(sceneSubmition),
 			m_RenderView(view),
@@ -33,9 +30,7 @@ namespace Flare
 		inline const RenderView& GetRenderView() const { return m_RenderView; }
 
 		inline const Viewport& GetViewport() const { return m_Viewport; }
-		inline Ref<FrameBuffer> GetRenderTarget() const { return m_RenderTarget; }
 	private:
-		Ref<FrameBuffer> m_RenderTarget = nullptr;
 		const Viewport& m_Viewport;
 		const SceneSubmition& m_SceneSubmition;
 		const RenderView& m_RenderView;

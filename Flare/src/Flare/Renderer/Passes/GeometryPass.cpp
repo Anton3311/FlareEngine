@@ -109,12 +109,10 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		Ref<FrameBuffer> renderTarget = context.GetRenderTarget();
-
 		const RendererSubmitionQueue& opaqueGeometry = context.GetSceneSubmition().OpaqueGeometrySubmitions;
 
 		//commandBuffer->StartTimer(m_Timer);
-		commandBuffer->SetViewportAndScisors(Math::Rect(glm::vec2(0.0f, 0.0f), (glm::vec2)renderTarget->GetSize()));
+		commandBuffer->SetDefaltViewportAndScissors();
 
 		Batch batch{};
 

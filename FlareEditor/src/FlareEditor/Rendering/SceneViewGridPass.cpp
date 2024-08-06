@@ -133,8 +133,7 @@ namespace Flare
 			PipelineInputLayoutElement(0, 0, ShaderDataType::Float2)
 		});
 
-		Ref<VulkanFrameBuffer> renderTarget = As<VulkanFrameBuffer>(context.GetRenderTarget());
-		m_Pipeline = CreateRef<VulkanPipeline>(specifications, renderTarget->GetCompatibleRenderPass());
+		m_Pipeline = CreateRef<VulkanPipeline>(specifications);
 	}
 
 	void SceneViewGridPass::DrawGridLevel(Ref<CommandBuffer> commandBuffer, int32_t level, glm::vec3 color)

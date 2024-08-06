@@ -41,11 +41,7 @@ namespace Flare
 				renderTarget = m_RenderTargets[m_NodeData[nodeIndex].RenderTargetHandleIndex + frameInFlight];
 			}
 
-			RenderGraphContext context(
-				GetViewport(),
-				renderTarget,
-				*this, GetResourceManager(),
-				sceneSubmition, view);
+			RenderGraphContext context(GetViewport(), *this, GetResourceManager(), sceneSubmition, view);
 
 			commandBuffer->BeginLabel(node.Specifications.GetDebugColor(), node.Specifications.GetDebugName());
 

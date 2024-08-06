@@ -82,13 +82,10 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		Ref<FrameBuffer> renderTarget = context.GetRenderTarget();
-
 		const FrameResources& frameResources = m_FrameResources[GraphicsContext::GetInstance().GetCurrentFrameInFlight()];
 		const Renderer2DFrameData& submition = context.GetSceneSubmition().Renderer2DSubmition;
 
-		commandBuffer->SetViewportAndScisors(Math::Rect(glm::vec2(0.0f), (glm::vec2)renderTarget->GetSize()));
-
+		commandBuffer->SetDefaltViewportAndScissors();
 		commandBuffer->SetGlobalDescriptorSet(context.GetViewport().GetFrameResources().CameraDescriptorSet, 0);
 		
 		for (const auto& batch : submition.TextBatches)

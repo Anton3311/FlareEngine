@@ -139,9 +139,7 @@ namespace Flare
 		commandBuffer->SetGlobalDescriptorSet(context.GetViewport().GetFrameResources().GlobalDescriptorSet, 1);
 		commandBuffer->ApplyMaterial(m_AtmosphereMaterial);
 
-		const auto& renderTargetSpecifications = context.GetRenderTarget()->GetSpecifications();
-		commandBuffer->SetViewportAndScisors(Math::Rect(0.0f, 0.0f, (float)renderTargetSpecifications.Width, (float)renderTargetSpecifications.Height));
-
+		commandBuffer->SetDefaltViewportAndScissors();
 		commandBuffer->DrawMeshIndexed(RendererPrimitives::GetFullscreenQuadMesh(), 0, 0, 1);
 	}
 

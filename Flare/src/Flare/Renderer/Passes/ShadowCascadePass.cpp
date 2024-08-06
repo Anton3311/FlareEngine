@@ -71,11 +71,7 @@ namespace Flare
 		const FrameResources& resources = m_FrameResources[GraphicsContext::GetInstance().GetCurrentFrameInFlight()];
 
 		if (m_CascadeData.Batches.size() == 0 && m_CascadeData.PartiallyVisible.size() == 0)
-		{
-			commandBuffer->BeginRenderTarget(context.GetRenderTarget());
-			commandBuffer->EndRenderTarget();
 			return;
-		}
 
 		resources.CameraBuffer->SetData(&m_CascadeData.View, sizeof(m_CascadeData.View), 0);
 

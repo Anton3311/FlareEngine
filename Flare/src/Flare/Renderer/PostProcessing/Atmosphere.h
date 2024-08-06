@@ -11,6 +11,7 @@ namespace Flare
 {
 	class AtmospherePass;
 	class CommandBuffer;
+	class FrameBuffer;
 	class Material;
 
 	struct FLARE_API AtmosphericScatteringParameters

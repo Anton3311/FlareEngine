@@ -46,6 +46,7 @@ namespace Flare
 		virtual void PushConstants(const ShaderConstantBuffer& constantBuffer) = 0;
 
 		virtual void SetViewportAndScisors(Math::Rect viewportRect) = 0;
+		virtual void SetDefaltViewportAndScissors() = 0;
 
 		virtual void BindPipeline(Ref<Pipeline> pipeline) = 0;
 		virtual void BindVertexBuffer(Ref<const VertexBuffer> buffer, uint32_t index) = 0;

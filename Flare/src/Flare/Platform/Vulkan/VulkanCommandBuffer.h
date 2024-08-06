@@ -40,6 +40,7 @@ namespace Flare
 		void PushConstants(const ShaderConstantBuffer& constantBuffer) override;
 
 		void SetViewportAndScisors(Math::Rect viewportRect) override;
+		void SetDefaltViewportAndScissors() override;
 
 		void BindPipeline(Ref<Pipeline> pipeline) override;
 		void BindVertexBuffer(Ref<const VertexBuffer> buffer, uint32_t index) override;
@@ -127,6 +128,8 @@ namespace Flare
 		Ref<Pipeline> m_CurrentGraphicsPipeline = nullptr;
 
 		VkCommandBuffer m_CommandBuffer = VK_NULL_HANDLE;
+
+		Ref<VulkanFrameBuffer> m_CurrentRenderTarget = nullptr;
 		Ref<VulkanRenderPass> m_CurrentRenderPass = nullptr;
 
 		std::vector<Ref<const Pipeline>> m_UsedPipelines;

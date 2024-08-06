@@ -94,7 +94,6 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 
 		FrameResources& frameResources = m_FrameResources[GraphicsContext::GetInstance().GetCurrentFrameInFlight()];
-		Ref<FrameBuffer> renderTarget = context.GetRenderTarget();
 
 		Ref<DescriptorSet> descriptorSet = m_QuadsDescriptorSetPool->AllocateSet();
 		descriptorSet->SetDebugName("QuadsDescriptorSet");
@@ -106,7 +105,7 @@ namespace Flare
 		commandBuffer->SetGlobalDescriptorSet(descriptorSet, 1);
 		commandBuffer->ApplyMaterial(batch.Material);
 
-		commandBuffer->SetViewportAndScisors(Math::Rect(glm::vec2(0.0f), (glm::vec2)renderTarget->GetSize()));
+		commandBuffer->SetDefaltViewportAndScissors();
 		commandBuffer->DrawIndexed(batch.Start * 6, batch.Count * 6, 0, 0, 1);
 	}
 }

@@ -202,6 +202,30 @@ namespace Flare
 		vkCmdSetScissor(m_CommandBuffer, 0, 1, &scissors);
 	}
 
+	void VulkanCommandBuffer::SetDefaltViewportAndScissors()
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		const auto& spec = m_CurrentRenderTarget->GetSpecifications();
+
+		VkRect2D scissors{};
+		scissors.offset.x = 0;
+		scissors.offset.y = 0;
+		scissors.extent.width = (int32_t)spec.Width;
+		scissors.extent.height = (int32_t)spec.Height;
+
+		VkViewport viewport{};
+		viewport.width = (float)spec.Width;
+		viewport.height = (float)spec.Height;
+		viewport.minDepth = 0.0f;
+		viewport.maxDepth = 1.0f;
+		viewport.x = 0.0f;
+		viewport.y = 0.0f;
+
+		vkCmdSetViewport(m_CommandBuffer, 0, 1, &viewport);
+		vkCmdSetScissor(m_CommandBuffer, 0, 1, &scissors);
+	}
+
 	void VulkanCommandBuffer::BindPipeline(Ref<Pipeline> pipeline)
 	{
 		FLARE_PROFILE_FUNCTION();
@@ -494,6 +518,7 @@ namespace Flare
 		vkCmdBeginRenderPass(m_CommandBuffer, &info, VK_SUBPASS_CONTENTS_INLINE);
 
 		m_CurrentRenderPass = renderPass;
+		m_CurrentRenderTarget = frameBuffer;
 	}
 
 	void VulkanCommandBuffer::EndRenderPass()
@@ -503,6 +528,7 @@ namespace Flare
 
 		vkCmdEndRenderPass(m_CommandBuffer);
 		m_CurrentRenderPass = nullptr;
+		m_CurrentRenderTarget = nullptr;
 	}
 
 	void VulkanCommandBuffer::TransitionImageLayout(VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout)
