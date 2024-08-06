@@ -24,12 +24,10 @@ namespace Flare
 	{
 	public:
 		RenderGraph(const Viewport& viewport);
+		virtual ~RenderGraph() = default;
 
 		void AddPass(const RenderGraphPassSpecifications& specifications, Ref<RenderGraphPass> pass);
 		void InsertPass(const RenderGraphPassSpecifications& specifications, Ref<RenderGraphPass> pass, size_t index);
-
-		inline RenderGraphResourceManager& GetResourceManager() { return m_ResourceManager; }
-		inline const RenderGraphResourceManager& GetResourceManager() const { return m_ResourceManager; }
 
 		inline RenderGraphTextureId CreateTexture(TextureFormat format, std::string_view debugName)
 		{
@@ -44,7 +42,8 @@ namespace Flare
 
 		void AddExternalResource(const ExternalRenderGraphResource& resource);
 
-		void Execute(Ref<CommandBuffer> commandBuffer, const SceneSubmition& sceneSubmition, const RenderView& view);
+		virtual void Execute(Ref<CommandBuffer> commandBuffer, const SceneSubmition& sceneSubmition, const RenderView& view) = 0;
+
 		void Build();
 		void Clear();
 
@@ -53,7 +52,13 @@ namespace Flare
 		inline bool NeedsRebuilding() const { return m_NeedsRebuilding; }
 		inline void SetNeedsRebuilding() { m_NeedsRebuilding = true; }
 
+		inline RenderGraphResourceManager& GetResourceManager() { return m_ResourceManager; }
+		inline const RenderGraphResourceManager& GetResourceManager() const { return m_ResourceManager; }
+
+		inline const std::vector<RenderPassNode>& GetNodes() const { return m_Nodes; }
+		inline const std::vector<ExternalRenderGraphResource>& GetExternalResources() const { return m_ExternalResources; }
 		inline const DependecyGraph& GetDependecyGraph() const { return m_DependecyGraph; }
+		inline const Viewport& GetViewport() const { return m_Viewport; }
 
 		static Scope<RenderGraph> Create(const Viewport& viewport);
 	protected:
@@ -61,9 +66,6 @@ namespace Flare
 		virtual void OnTexturesResize() {}
 		virtual void OnClear() {}
 		virtual void OnBuild() {}
-	private:
-		void CreateRenderTargets();
-		void ExecuteLayoutTransitions(Ref<CommandBuffer> commandBuffer, LayoutTransitionsRange range);
 	private:
 		bool m_IsValid = false;
 		const Viewport& m_Viewport;
@@ -75,8 +77,9 @@ namespace Flare
 		RenderGraphResourceManager m_ResourceManager;
 		DependecyGraph m_DependecyGraph;
 
-		CompiledRenderGraph m_CompiledRenderGraph;
-
 		bool m_NeedsRebuilding = false;
+
+	protected:
+		CompiledRenderGraph m_CompiledRenderGraph;
 	};
 }

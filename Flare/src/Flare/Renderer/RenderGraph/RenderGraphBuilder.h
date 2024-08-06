@@ -21,8 +21,7 @@ namespace Flare
 			const DependecyGraph& dependecyGraph,
 			Span<const RenderPassNode> nodes,
 			const RenderGraphResourceManager& resourceManager,
-			Span<const ExternalRenderGraphResource> externalResources,
-			std::vector<Ref<FrameBuffer>>& renderPassTargets);
+			Span<const ExternalRenderGraphResource> externalResources);
 
 		void Build();
 		void CreateRenderTargets(size_t nodeIndex, Ref<FrameBuffer>* outTargets);
@@ -74,6 +73,5 @@ namespace Flare
 		std::unordered_map<RenderGraphTextureId, ResourceState> m_States;
 
 		std::vector<PassTransitions> m_RenderPassTransitions;
-		std::vector<Ref<FrameBuffer>>& m_RenderPassTargets;
 	};
 }

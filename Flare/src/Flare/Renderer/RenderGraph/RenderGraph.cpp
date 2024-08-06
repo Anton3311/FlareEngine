@@ -67,49 +67,6 @@ namespace Flare
 		m_ExternalResources.push_back(resource);
 	}
 
-	void RenderGraph::Execute(Ref<CommandBuffer> commandBuffer, const SceneSubmition& sceneSubmition, const RenderView& view)
-	{
-		FLARE_PROFILE_FUNCTION();
-		FLARE_CORE_ASSERT(m_IsValid);
-
-		uint32_t frameInFlight = GraphicsContext::GetInstance().GetCurrentFrameInFlight();
-		Ref<VulkanCommandBuffer> vulkanCommandBuffer = As<VulkanCommandBuffer>(commandBuffer);
-
-		for (const auto& node : m_Nodes)
-		{
-			Ref<FrameBuffer> renderTarget = node.RenderTargetHandleIndex == RenderPassNode::INVALID_TARGET_INDEX
-				? nullptr
-				: m_RenderPassTargets[node.RenderTargetHandleIndex + frameInFlight];
-
-			RenderGraphContext context(
-				m_Viewport,
-				renderTarget,
-				*this, m_ResourceManager,
-				sceneSubmition, view);
-
-			commandBuffer->BeginLabel(node.Specifications.GetDebugColor(), node.Specifications.GetDebugName());
-
-			node.Pass->OnPrepare(context, commandBuffer);
-
-			ExecuteLayoutTransitions(commandBuffer, node.Transitions);
-
-			if (renderTarget)
-			{
-				commandBuffer->BeginRenderTarget(renderTarget);
-				node.Pass->OnRender(context, commandBuffer);
-				commandBuffer->EndRenderTarget();
-			}
-			else
-			{
-				node.Pass->OnRender(context, commandBuffer);
-			}
-
-			commandBuffer->EndLabel();
-		}
-
-		ExecuteLayoutTransitions(commandBuffer, m_CompiledRenderGraph.ExternalResourceFinalTransitions);
-	}
-
 	void RenderGraph::Build()
 	{
 		FLARE_PROFILE_FUNCTION();
@@ -119,34 +76,6 @@ namespace Flare
 
 		m_DependecyGraph = DependecyGraph(Span<const RenderPassNode>(m_Nodes.data(), m_Nodes.size()));
 		m_DependecyGraph.Build();
-
-		RenderGraphBuilder builder(m_CompiledRenderGraph,
-			m_DependecyGraph,
-			Span<const RenderPassNode>(m_Nodes.data(), m_Nodes.size()),
-			m_ResourceManager,
-			Span<const ExternalRenderGraphResource>(m_ExternalResources.data(), m_ExternalResources.size()),
-			m_RenderPassTargets);
-
-		builder.Build();
-
-		std::vector<Ref<FrameBuffer>> temp(GraphicsContext::GetInstance().GetFrameInFlightCount(), nullptr);
-		for (size_t nodeIndex = 0; nodeIndex < m_Nodes.size(); nodeIndex++)
-		{
-			builder.CreateRenderTargets(nodeIndex, temp.data());
-
-			m_Nodes[nodeIndex].Transitions = builder.GetExplicitTransitions(nodeIndex);
-
-			if (temp[0])
-			{
-				m_Nodes[nodeIndex].RenderTargetHandleIndex = (uint32_t)m_RenderPassTargets.size();
-			}
-
-			for (Ref<FrameBuffer>& target : temp)
-			{
-				m_RenderPassTargets.push_back(target);
-				target = nullptr;
-			}
-		}
 
 		OnBuild();
 		
@@ -174,8 +103,6 @@ namespace Flare
 		if (m_ResourceManager.ResizeTextures())
 		{
 			// Textures were resized, so recreate render targets
-			CreateRenderTargets();
-
 			OnTexturesResize();
 		}
 
@@ -193,73 +120,5 @@ namespace Flare
 		FLARE_CORE_ASSERT(false);
 
 		return nullptr;
-	}
-
-	void RenderGraph::CreateRenderTargets()
-	{
-		FLARE_PROFILE_FUNCTION();
-		FLARE_CORE_ASSERT(m_IsValid);
-
-		uint32_t frameInFlightCount = GraphicsContext::GetInstance().GetFrameInFlightCount();
-		uint32_t frameIndex = GraphicsContext::GetInstance().GetCurrentFrameInFlight();
-
-		std::vector<Ref<Texture>> attachmentTextures;
-		for (RenderPassNode& node : m_Nodes)
-		{
-			if (node.RenderTargetHandleIndex == RenderPassNode::INVALID_TARGET_INDEX)
-				continue;
-
-			const auto& outputs = node.Specifications.GetOutputs();
-
-			attachmentTextures.clear();
-			attachmentTextures.resize(outputs.size(), nullptr);
-
-			for (size_t outputIndex = 0; outputIndex < outputs.size(); outputIndex++)
-			{
-				attachmentTextures[outputIndex] = m_ResourceManager.GetTextureForFrameInFlight(outputs[outputIndex].AttachmentTexture, frameIndex);
-			}
-
-			uint32_t renderTargetIndex = node.RenderTargetHandleIndex + frameIndex;
-
-			Ref<FrameBuffer> renderTarget = m_RenderPassTargets[renderTargetIndex];
-			Ref<VulkanRenderPass> compatibleRenderPass = As<VulkanFrameBuffer>(renderTarget)->GetCompatibleRenderPass();
-
-			std::string debugName = renderTarget->GetDebugName();
-
-			m_RenderPassTargets[renderTargetIndex] = CreateRef<VulkanFrameBuffer>(attachmentTextures[0]->GetWidth(),
-				attachmentTextures[0]->GetHeight(),
-				compatibleRenderPass,
-				Span<Ref<Texture>>::FromVector(attachmentTextures),
-				false);
-
-			m_RenderPassTargets[renderTargetIndex]->SetDebugName(debugName);
-		}
-	}
-
-	void RenderGraph::ExecuteLayoutTransitions(Ref<CommandBuffer> commandBuffer, LayoutTransitionsRange range)
-	{
-		FLARE_PROFILE_FUNCTION();
-		Ref<VulkanCommandBuffer> vulkanCommandBuffer = As<VulkanCommandBuffer>(commandBuffer);
-
-		for (uint32_t i = range.Start; i < range.End; i++)
-		{
-			const LayoutTransition& transition = m_CompiledRenderGraph.LayoutTransitions[i];
-
-			Ref<Texture> texture = m_ResourceManager.GetTexture(transition.Texture);
-			VkImage image = As<VulkanTexture>(texture)->GetImageHandle();
-
-			TextureFormat format = texture->GetFormat();
-			VkImageLayout initialLayout = ImageLayoutToVulkanImageLayout(transition.InitialLayout, format);
-			VkImageLayout finalLayout = ImageLayoutToVulkanImageLayout(transition.FinalLayout, format);
-
-			if (IsDepthTextureFormat(format))
-			{
-				vulkanCommandBuffer->TransitionDepthImageLayout(image, HasStencilComponent(format), initialLayout, finalLayout);
-			}
-			else
-			{
-				vulkanCommandBuffer->TransitionImageLayout(image, initialLayout, finalLayout);
-			}
-		}
 	}
 }

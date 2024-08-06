@@ -18,14 +18,12 @@ namespace Flare
 		const DependecyGraph& dependecyGraph,
 		Span<const RenderPassNode> nodes,
 		const RenderGraphResourceManager& resourceManager,
-		Span<const ExternalRenderGraphResource> externalResources,
-		std::vector<Ref<FrameBuffer>>& renderPassTargets)
+		Span<const ExternalRenderGraphResource> externalResources)
 		: m_Result(result),
 		m_DependecyGraph(dependecyGraph),
 		m_Nodes(nodes),
 		m_ExternalResources(externalResources),
-		m_ResourceManager(resourceManager),
-		m_RenderPassTargets(renderPassTargets)
+		m_ResourceManager(resourceManager)
 	{
 	}
 
