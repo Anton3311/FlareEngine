@@ -577,8 +577,8 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
         for (auto& viewportWindow : m_ViewportWindows)
         {
-            viewportWindow->GetViewport().Graph.Clear();
-            viewportWindow->GetViewport().Graph.SetNeedsRebuilding();
+            viewportWindow->GetViewport().GetRenderGraph()->Clear();
+            viewportWindow->GetViewport().GetRenderGraph()->SetNeedsRebuilding();
         }
     }
 

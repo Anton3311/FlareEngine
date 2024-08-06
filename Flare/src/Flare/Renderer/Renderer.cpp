@@ -407,7 +407,7 @@ namespace Flare
 
 		Ref<ShadowPass> shadowPass = CreateRef<ShadowPass>();
 
-		viewport.Graph.AddPass(shadowPassSpec, shadowPass);
+		viewport.GetRenderGraph()->AddPass(shadowPassSpec, shadowPass);
 
 		if (!viewport.IsShadowMappingEnabled())
 		{
@@ -417,7 +417,7 @@ namespace Flare
 		uint32_t shadowTextureResolution = GetShadowMapResolution(s_RendererData.ShadowMappingSettings.Quality);
 		for (int32_t cascadeIndex = 0; cascadeIndex < s_RendererData.ShadowMappingSettings.Cascades; cascadeIndex++)
 		{
-			cascadeTextures[cascadeIndex] = viewport.Graph.GetResourceManager().CreateFixedSizeTexture(
+			cascadeTextures[cascadeIndex] = viewport.GetRenderGraph()->GetResourceManager().CreateFixedSizeTexture(
 				TextureFormat::Depth32,
 				glm::uvec2(shadowTextureResolution),
 				fmt::format("CascadeTexture.{}", cascadeIndex));
@@ -432,7 +432,7 @@ namespace Flare
 				shadowPass->GetFilteredTransforms(),
 				shadowPass->GetVisibleSubMeshIndices());
 
-			viewport.Graph.AddPass(cascadePassSpec, cascadePass);
+			viewport.GetRenderGraph()->AddPass(cascadePassSpec, cascadePass);
 		}
 
 		return shadowPass;
@@ -461,7 +461,7 @@ namespace Flare
 
 		if (viewport.IsShadowMappingEnabled())
 		{
-			const RenderGraphResourceManager& resourceManager = viewport.Graph.GetResourceManager();
+			const RenderGraphResourceManager& resourceManager = viewport.GetRenderGraph()->GetResourceManager();
 			for (uint32_t frameIndex = 0; frameIndex < frameInFlightCount; frameIndex++)
 			{
 				const ViewportFrameResources& viewportFrameResources = viewport.GetFrameResources(frameIndex);
@@ -485,7 +485,7 @@ namespace Flare
 			}
 		}
 
-		viewport.Graph.AddPass(geometryPass, CreateRef<GeometryPass>(s_RendererData.Statistics));
+		viewport.GetRenderGraph()->AddPass(geometryPass, CreateRef<GeometryPass>(s_RendererData.Statistics));
 
 		// Decal pass
 		RenderGraphPassSpecifications decalPass{};
@@ -493,7 +493,7 @@ namespace Flare
 		decalPass.AddOutput(viewport.ColorTextureId, 0);
 		decalPass.SetDebugName("DecalsPass");
 
-		viewport.Graph.AddPass(decalPass, CreateRef<DecalsPass>(
+		viewport.GetRenderGraph()->AddPass(decalPass, CreateRef<DecalsPass>(
 			s_RendererData.DecalsDescriptorSetPool,
 			viewport.DepthTextureId));
 	}

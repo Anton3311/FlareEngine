@@ -66,14 +66,14 @@ namespace Flare
 	void ViewportWindow::PrepareViewport()
 	{
 		if (m_Viewport.IsPostProcessingEnabled() && GetScene()->GetPostProcessingManager().IsDirty())
-			m_Viewport.Graph.SetNeedsRebuilding();
+			m_Viewport.GetRenderGraph()->SetNeedsRebuilding();
 
 		if (Renderer::RequiresRenderGraphRebuild())
-			m_Viewport.Graph.SetNeedsRebuilding();
+			m_Viewport.GetRenderGraph()->SetNeedsRebuilding();
 
 		if (m_Viewport.GetSize() != glm::ivec2(0))
 		{
-			if (m_Viewport.Graph.NeedsRebuilding())
+			if (m_Viewport.GetRenderGraph()->NeedsRebuilding())
 			{
 				BuildRenderGraph();
 			}
@@ -213,7 +213,7 @@ namespace Flare
 		if (scene != nullptr)
 			scene->GetPostProcessingManager().MarkAsDirty();
 
-		m_Viewport.Graph.Clear();
+		m_Viewport.GetRenderGraph()->Clear();
 		m_Viewport.OnBuildRenderGraph();
 
 		Renderer::ConfigurePasses(m_Viewport);
@@ -223,19 +223,19 @@ namespace Flare
 		{
 			PostProcessingManager& postProcessing = scene->GetPostProcessingManager();
 			postProcessing.MarkAsDirty(); // HACK
-			postProcessing.RegisterRenderPasses(m_Viewport.Graph, m_Viewport);
+			postProcessing.RegisterRenderPasses(*m_Viewport.GetRenderGraph(), m_Viewport);
 		}
 
 		OnAddRenderPasses();
 		DebugRenderer::ConfigurePasses(m_Viewport);
 
-		m_Viewport.Graph.Build();
+		m_Viewport.GetRenderGraph()->Build();
 	}
 
 	void ViewportWindow::OnAttach()
 	{
 		FLARE_PROFILE_FUNCTION();
-		m_Viewport.Graph.SetNeedsRebuilding();
+		m_Viewport.GetRenderGraph()->SetNeedsRebuilding();
 	}
 
 	void ViewportWindow::OnRenderImGui()
@@ -246,9 +246,9 @@ namespace Flare
 
 		BeginImGui();
 
-		if (m_Viewport.Graph.GetResourceManager().IsTextureIdValid(m_Viewport.ColorTextureId))
+		if (m_Viewport.GetRenderGraph()->GetResourceManager().IsTextureIdValid(m_Viewport.ColorTextureId))
 		{
-			RenderViewportBuffer(m_Viewport.Graph.GetTexture(m_Viewport.ColorTextureId));
+			RenderViewportBuffer(m_Viewport.GetRenderGraph()->GetTexture(m_Viewport.ColorTextureId));
 		}
 
 		EndImGui();

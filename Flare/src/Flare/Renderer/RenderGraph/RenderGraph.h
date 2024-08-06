@@ -54,6 +54,13 @@ namespace Flare
 		inline void SetNeedsRebuilding() { m_NeedsRebuilding = true; }
 
 		inline const DependecyGraph& GetDependecyGraph() const { return m_DependecyGraph; }
+
+		static Scope<RenderGraph> Create(const Viewport& viewport);
+	protected:
+		virtual void OnPrepare() {}
+		virtual void OnTexturesResize() {}
+		virtual void OnClear() {}
+		virtual void OnBuild() {}
 	private:
 		void CreateRenderTargets();
 		void ExecuteLayoutTransitions(Ref<CommandBuffer> commandBuffer, LayoutTransitionsRange range);

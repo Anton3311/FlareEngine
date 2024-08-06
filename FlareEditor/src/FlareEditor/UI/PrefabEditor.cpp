@@ -43,7 +43,7 @@ namespace Flare
         m_Prefab = AssetManager::GetAsset<Prefab>(asset);
         m_Prefab->CreateInstance(GetWorld());
 
-        m_ViewportWindow.GetViewport().Graph.SetNeedsRebuilding();
+        m_ViewportWindow.GetViewport().GetRenderGraph()->SetNeedsRebuilding();
 
         m_ViewportWindow.ShowWindow = true;
     }

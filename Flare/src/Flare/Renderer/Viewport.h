@@ -44,6 +44,8 @@ namespace Flare
 
 		inline float GetAspectRatio() const { return (float)m_Size.x / (float)m_Size.y; }
 
+		inline const Scope<RenderGraph>& GetRenderGraph() const { return m_RenderGraph; }
+
 		void Resize(glm::ivec2 position, glm::ivec2 size);
 		void UpdateGlobalDescriptorSets();
 
@@ -65,8 +67,6 @@ namespace Flare
 		// Returns frame resources of a specific frame in flight
 		inline const ViewportFrameResources& GetFrameResources(uint32_t frameIndex) const { return m_GlobalResources.FrameResources[frameIndex]; }
 	public:
-		RenderGraph Graph;
-
 		RenderGraphTextureId ColorTextureId;
 		RenderGraphTextureId NormalsTextureId;
 		RenderGraphTextureId DepthTextureId;
@@ -78,6 +78,8 @@ namespace Flare
 		bool m_DebugRenderingEnabled = false;
 
 		bool m_ShouldResizeRenderGraphTextures = false;
+
+		Scope<RenderGraph> m_RenderGraph;
 
 		TextureFormat m_ColorTextureFormat = TextureFormat::R11G11B10;
 		TextureFormat m_NormalsTextureFormat = TextureFormat::RGB8;

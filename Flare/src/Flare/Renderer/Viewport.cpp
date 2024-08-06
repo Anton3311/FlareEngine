@@ -14,9 +14,10 @@
 namespace Flare
 {
 	Viewport::Viewport()
-		: Graph(*this)
 	{
 		FLARE_PROFILE_FUNCTION();
+
+		m_RenderGraph = RenderGraph::Create(*this);
 
 		m_GlobalResources.FrameResources.resize(GraphicsContext::GetInstance().GetFrameInFlightCount());
 
@@ -77,9 +78,9 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		ColorTextureId = Graph.CreateTexture(m_ColorTextureFormat, "Color");
-		NormalsTextureId = Graph.CreateTexture(m_NormalsTextureFormat, "Normals");
-		DepthTextureId = Graph.CreateTexture(m_DepthTextureFormat, "Depth");
+		ColorTextureId = m_RenderGraph->CreateTexture(m_ColorTextureFormat, "Color");
+		NormalsTextureId = m_RenderGraph->CreateTexture(m_NormalsTextureFormat, "Normals");
+		DepthTextureId = m_RenderGraph->CreateTexture(m_DepthTextureFormat, "Depth");
 
 		ExternalRenderGraphResource colorTextureResource{};
 		colorTextureResource.InitialLayout = ImageLayout::AttachmentOutput;
@@ -96,9 +97,9 @@ namespace Flare
 		depthTextureResource.FinalLayout = ImageLayout::ReadOnly;
 		depthTextureResource.Texture = DepthTextureId;
 
-		Graph.AddExternalResource(colorTextureResource);
-		Graph.AddExternalResource(normalsTextureResource);
-		Graph.AddExternalResource(depthTextureResource);
+		m_RenderGraph->AddExternalResource(colorTextureResource);
+		m_RenderGraph->AddExternalResource(normalsTextureResource);
+		m_RenderGraph->AddExternalResource(depthTextureResource);
 	}
 
 	void Viewport::PrepareViewport()
@@ -107,11 +108,11 @@ namespace Flare
 
 		m_CurrentFrameResources = &m_GlobalResources.FrameResources[GraphicsContext::GetInstance().GetCurrentFrameInFlight()];
 
-		Graph.Prepare();
+		m_RenderGraph->Prepare();
 
 		Ref<CommandBuffer> commandBuffer = GraphicsContext::GetInstance().GetCommandBuffer();
 
-		const auto& resourceManager = Graph.GetResourceManager();
+		const auto& resourceManager = m_RenderGraph->GetResourceManager();
 
 		commandBuffer->ClearColor(resourceManager.GetTexture(ColorTextureId), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
 		commandBuffer->ClearColor(resourceManager.GetTexture(NormalsTextureId), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
@@ -124,7 +125,7 @@ namespace Flare
 			return;
 
 		m_PostProcessingEnabled = enabled;
-		Graph.SetNeedsRebuilding();
+		m_RenderGraph->SetNeedsRebuilding();
 	}
 
 	void Viewport::SetShadowMappingEnabled(bool enabled)
@@ -133,7 +134,7 @@ namespace Flare
 			return;
 
 		m_ShadowMappingEnabled = enabled;
-		Graph.SetNeedsRebuilding();
+		m_RenderGraph->SetNeedsRebuilding();
 	}
 
 	void Viewport::SetDebugRenderingEnabled(bool enabled)
@@ -142,7 +143,7 @@ namespace Flare
 			return;
 
 		m_DebugRenderingEnabled = enabled;
-		Graph.SetNeedsRebuilding();
+		m_RenderGraph->SetNeedsRebuilding();
 	}
 
 	const ViewportFrameResources& Viewport::GetFrameResources() const

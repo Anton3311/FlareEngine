@@ -206,7 +206,7 @@ namespace Flare
 		geometryPass.SetType(RenderGraphPassType::Graphics);
 		geometryPass.AddOutput(viewport.ColorTextureId, 0);
 		
-		viewport.Graph.AddPass(geometryPass, CreateRef<Geometry2DPass>(
+		viewport.GetRenderGraph()->AddPass(geometryPass, CreateRef<Geometry2DPass>(
 			s_Renderer2DData.Limits,
 			s_Renderer2DData.IndexBuffer,
 			s_Renderer2DData.DefaultMaterial,
@@ -217,7 +217,7 @@ namespace Flare
 		textPass.SetType(RenderGraphPassType::Graphics);
 		textPass.AddOutput(viewport.ColorTextureId, 0);
 
-		viewport.Graph.AddPass(textPass, CreateRef<TextPass>(
+		viewport.GetRenderGraph()->AddPass(textPass, CreateRef<TextPass>(
 			s_Renderer2DData.Limits,
 			s_Renderer2DData.IndexBuffer,
 			s_Renderer2DData.TextShader,

@@ -127,7 +127,7 @@ namespace Flare
 			gridPass.SetDebugName("SceneViewGridPass");
 			gridPass.SetType(RenderGraphPassType::Graphics);
 
-			m_Viewport.Graph.AddPass(gridPass, CreateRef<SceneViewGridPass>());
+			m_Viewport.GetRenderGraph()->AddPass(gridPass, CreateRef<SceneViewGridPass>());
 		}
 	}
 
@@ -137,7 +137,7 @@ namespace Flare
 		if (GetScene() == nullptr)
 			return;
 
-		if (!m_Viewport.Graph.IsValid())
+		if (!m_Viewport.GetRenderGraph()->IsValid())
 			return;
 
 		if (m_Viewport.GetSize().x == 0 || m_Viewport.GetSize().y == 0)
@@ -146,13 +146,13 @@ namespace Flare
 		switch (m_Overlay)
 		{
 		case ViewportOverlay::Default:
-			RenderViewportBuffer(m_Viewport.Graph.GetTexture(m_Viewport.ColorTextureId));
+			RenderViewportBuffer(m_Viewport.GetRenderGraph()->GetTexture(m_Viewport.ColorTextureId));
 			break;
 		case ViewportOverlay::Normal:
-			RenderViewportBuffer(m_Viewport.Graph.GetTexture(m_Viewport.NormalsTextureId));
+			RenderViewportBuffer(m_Viewport.GetRenderGraph()->GetTexture(m_Viewport.NormalsTextureId));
 			break;
 		case ViewportOverlay::Depth:
-			RenderViewportBuffer(m_Viewport.Graph.GetTexture(m_Viewport.DepthTextureId));
+			RenderViewportBuffer(m_Viewport.GetRenderGraph()->GetTexture(m_Viewport.DepthTextureId));
 			break;
 		}
 
@@ -234,7 +234,7 @@ namespace Flare
 			}
 		}
 
-		RenderGraphVisualizer::OnRenderImGui(m_Viewport.Graph);
+		RenderGraphVisualizer::OnRenderImGui(*m_Viewport.GetRenderGraph());
 	}
 
 	static bool GuizmoButton(const char* text, bool active)
@@ -383,7 +383,7 @@ namespace Flare
 
 				if (ImGui::MenuItem("Show Grid", nullptr, &m_SceneViewSettings.ShowGrid))
 				{
-					m_Viewport.Graph.SetNeedsRebuilding();
+					m_Viewport.GetRenderGraph()->SetNeedsRebuilding();
 				}
 
 				ImGui::EndCombo();

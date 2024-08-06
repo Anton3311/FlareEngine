@@ -1,6 +1,7 @@
 #include "RenderGraph.h"
 
 #include "Flare/Renderer/Renderer.h"
+#include "Flare/Renderer/RendererAPI.h"
 #include "Flare/Renderer/RenderGraph/RenderGraphBuilder.h"
 
 #include "Flare/Renderer/RenderGraph/DependecyGraph.h"
@@ -8,6 +9,8 @@
 #include "Flare/Platform/Vulkan/VulkanContext.h"
 #include "Flare/Platform/Vulkan/VulkanCommandBuffer.h"
 #include "Flare/Platform/Vulkan/VulkanFrameBuffer.h"
+
+#include "Flare/Platform/Vulkan/RenderGraph/VulkanRenderGraph.h"
 
 namespace Flare
 {
@@ -144,6 +147,8 @@ namespace Flare
 				target = nullptr;
 			}
 		}
+
+		OnBuild();
 		
 		m_NeedsRebuilding = false;
 		m_IsValid = true;
@@ -157,6 +162,8 @@ namespace Flare
 		m_ResourceManager.Clear();
 		m_RenderPassTargets.clear();
 
+		OnClear();
+
 		m_IsValid = false;
 	}
 
@@ -168,7 +175,24 @@ namespace Flare
 		{
 			// Textures were resized, so recreate render targets
 			CreateRenderTargets();
+
+			OnTexturesResize();
 		}
+
+		OnPrepare();
+	}
+
+	Scope<RenderGraph> RenderGraph::Create(const Viewport& viewport)
+	{
+		switch (RendererAPI::GetAPI())
+		{
+		case RendererAPI::API::Vulkan:
+			return CreateScope<VulkanRenderGraph>(viewport);
+		}
+
+		FLARE_CORE_ASSERT(false);
+
+		return nullptr;
 	}
 
 	void RenderGraph::CreateRenderTargets()

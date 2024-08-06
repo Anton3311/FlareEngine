@@ -210,7 +210,7 @@ namespace Flare
 
 		PrepareViewportForRendering(viewport, sceneCameraView);
 
-		viewport.Graph.Execute(GraphicsContext::GetInstance().GetCommandBuffer(), m_SceneSubmition, sceneCameraView);
+		viewport.GetRenderGraph()->Execute(GraphicsContext::GetInstance().GetCommandBuffer(), m_SceneSubmition, sceneCameraView);
 	}
 
 	void SceneRenderer::SetDefaultEnvironmentLight(const glm::vec3& color, float intensity)
