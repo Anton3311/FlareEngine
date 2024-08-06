@@ -25,6 +25,8 @@ namespace Flare
 		void BeginRenderTarget(const Ref<FrameBuffer> frameBuffer) override;
 		void EndRenderTarget() override;
 
+		inline Ref<VulkanRenderPass> GetCurrentRenderPass() const { return m_CurrentRenderPass; }
+
 		void BeginLabel(const glm::vec4& color, const std::string& label) override;
 		void EndLabel() override;
 
@@ -122,7 +124,7 @@ namespace Flare
 		};
 
 		BoundDescriptorSet m_CurrentDescriptorSets[4] = { nullptr };
-		Ref<const Pipeline> m_CurrentGraphicsPipeline = nullptr;
+		Ref<Pipeline> m_CurrentGraphicsPipeline = nullptr;
 
 		VkCommandBuffer m_CommandBuffer = VK_NULL_HANDLE;
 		Ref<VulkanRenderPass> m_CurrentRenderPass = nullptr;

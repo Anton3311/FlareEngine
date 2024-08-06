@@ -205,8 +205,9 @@ namespace Flare
 	void VulkanCommandBuffer::BindPipeline(Ref<Pipeline> pipeline)
 	{
 		FLARE_PROFILE_FUNCTION();
+		FLARE_CORE_ASSERT(m_CurrentRenderPass);
 
-		auto vulkanPipeline = As<const VulkanPipeline>(pipeline);
+		auto vulkanPipeline = As<VulkanPipeline>(pipeline);
 		VkPipelineLayout pipelineLayout = vulkanPipeline->GetLayoutHandle();
 
 		if (m_CurrentGraphicsPipeline.get() != pipeline.get())
@@ -216,7 +217,7 @@ namespace Flare
 				m_CurrentDescriptorSets[i] = {};
 			}
 
-			vkCmdBindPipeline(m_CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vulkanPipeline->GetHandle());
+			vkCmdBindPipeline(m_CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vulkanPipeline->GetHandle(m_CurrentRenderPass));
 
 			m_UsedPipelines.push_back(pipeline);
 			m_CurrentGraphicsPipeline = pipeline;

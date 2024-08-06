@@ -72,9 +72,7 @@ namespace Flare
 				m_DescriptorSetPool->GetLayout()
 			};
 
-			Ref<FrameBuffer> renderTarget = context.GetRenderTarget();
 			m_TextPipeline = CreateRef<VulkanPipeline>(specificaionts,
-				As<VulkanFrameBuffer>(renderTarget)->GetCompatibleRenderPass(),
 				Span<Ref<const DescriptorSetLayout>>(layouts, 2),
 				Span<ShaderPushConstantsRange>());
 		}

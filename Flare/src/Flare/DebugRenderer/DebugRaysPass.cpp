@@ -85,11 +85,7 @@ namespace Flare
 			{ 0, 1, ShaderDataType::Float4 }
 		});
 
-		Ref<VulkanFrameBuffer> vulkanFrameBuffer = As<VulkanFrameBuffer>(context.GetRenderTarget());
-
-		m_Pipeline = CreateRef<VulkanPipeline>(
-			rayPipelineSpecifications,
-			vulkanFrameBuffer->GetCompatibleRenderPass());
+		m_Pipeline = Pipeline::Create(rayPipelineSpecifications);
 	}
 
 	void DebugRaysPass::GenerateVertices(const RenderGraphContext& context)

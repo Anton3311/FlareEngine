@@ -15,20 +15,29 @@ namespace Flare
 			const Ref<VulkanRenderPass>& renderPass,
 			const Span<Ref<const DescriptorSetLayout>>& layouts,
 			const Span<ShaderPushConstantsRange>& pushConstantsRanges);
+		
+		VulkanPipeline(const PipelineSpecifications& specifications,
+			const Span<Ref<const DescriptorSetLayout>>& layouts,
+			const Span<ShaderPushConstantsRange>& pushConstantsRanges);
+
 		VulkanPipeline(const PipelineSpecifications& specifications, const Ref<VulkanRenderPass>& renderPass);
+		VulkanPipeline(const PipelineSpecifications& specifications);
 		~VulkanPipeline();
 
 		const PipelineSpecifications& GetSpecifications() const override;
 
-		inline VkPipeline GetHandle() const { return m_Pipeline; }
+		VkPipeline GetHandle(const Ref<VulkanRenderPass>& renderPass);
+
 		inline VkPipelineLayout GetLayoutHandle() const { return m_PipelineLayout; }
-		inline Ref<VulkanRenderPass> GetCompatibleRenderPass() const { return m_CompatbileRenderPass; }
+		inline Ref<VulkanRenderPass> GetCompatibleRenderPass() const { return m_CompatibleRenderPass; }
 	private:
 		void CreatePipelineLayout(const Span<Ref<const DescriptorSetLayout>>& layouts, const Span<ShaderPushConstantsRange>& pushConstantsRanges);
 		void Create();
+
+		void ReleasePipeline();
 	private:
 		PipelineSpecifications m_Specifications;
-		Ref<VulkanRenderPass> m_CompatbileRenderPass = nullptr;
+		Ref<VulkanRenderPass> m_CompatibleRenderPass = nullptr;
 
 		bool m_OwnsPipelineLayout = true;
 		VkPipeline m_Pipeline = VK_NULL_HANDLE;

@@ -80,10 +80,6 @@ namespace Flare
 			{ 0, 1, ShaderDataType::Float4 }
 		});
 
-		Ref<VulkanFrameBuffer> vulkanFrameBuffer = As<VulkanFrameBuffer>(context.GetRenderTarget());
-
-		m_Pipeline = CreateRef<VulkanPipeline>(
-			linePipelineSpecifications,
-			vulkanFrameBuffer->GetCompatibleRenderPass());
+		m_Pipeline = Pipeline::Create(linePipelineSpecifications);
 	}
 }
