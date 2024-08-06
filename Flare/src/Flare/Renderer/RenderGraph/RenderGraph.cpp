@@ -112,17 +112,39 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(!m_IsValid);
 
-		RenderGraphBuilder builder(m_CompiledRenderGraph,
-			Span<RenderPassNode>::FromVector(m_Nodes),
-			m_ResourceManager,
-			Span<ExternalRenderGraphResource>::FromVector(m_ExternalResources),
-			m_RenderPassTargets);
-
-		builder.Build();
+		m_RenderPassTargets.clear();
 
 		m_DependecyGraph = DependecyGraph(Span<const RenderPassNode>(m_Nodes.data(), m_Nodes.size()));
 		m_DependecyGraph.Build();
 
+		RenderGraphBuilder builder(m_CompiledRenderGraph,
+			m_DependecyGraph,
+			Span<const RenderPassNode>(m_Nodes.data(), m_Nodes.size()),
+			m_ResourceManager,
+			Span<const ExternalRenderGraphResource>(m_ExternalResources.data(), m_ExternalResources.size()),
+			m_RenderPassTargets);
+
+		builder.Build();
+
+		std::vector<Ref<FrameBuffer>> temp(GraphicsContext::GetInstance().GetFrameInFlightCount(), nullptr);
+		for (size_t nodeIndex = 0; nodeIndex < m_Nodes.size(); nodeIndex++)
+		{
+			builder.CreateRenderTargets(nodeIndex, temp.data());
+
+			m_Nodes[nodeIndex].Transitions = builder.GetExplicitTransitions(nodeIndex);
+
+			if (temp[0])
+			{
+				m_Nodes[nodeIndex].RenderTargetHandleIndex = (uint32_t)m_RenderPassTargets.size();
+			}
+
+			for (Ref<FrameBuffer>& target : temp)
+			{
+				m_RenderPassTargets.push_back(target);
+				target = nullptr;
+			}
+		}
+		
 		m_NeedsRebuilding = false;
 		m_IsValid = true;
 	}

@@ -4,6 +4,8 @@
 #include "FlareCore/Log.h"
 #include "FlareCore/Profiler/Profiler.h"
 
+#include "Flare/Renderer/RenderGraph/DependecyGraph.h"
+
 #include "Flare/Platform/Vulkan/VulkanContext.h"
 #include "Flare/Platform/Vulkan/VulkanFrameBuffer.h"
 #include "Flare/Platform/Vulkan/VulkanRenderPass.h"
@@ -13,11 +15,13 @@
 namespace Flare
 {
 	RenderGraphBuilder::RenderGraphBuilder(CompiledRenderGraph& result,
-		Span<RenderPassNode> nodes,
+		const DependecyGraph& dependecyGraph,
+		Span<const RenderPassNode> nodes,
 		const RenderGraphResourceManager& resourceManager,
-		Span<ExternalRenderGraphResource> externalResources,
+		Span<const ExternalRenderGraphResource> externalResources,
 		std::vector<Ref<FrameBuffer>>& renderPassTargets)
 		: m_Result(result),
+		m_DependecyGraph(dependecyGraph),
 		m_Nodes(nodes),
 		m_ExternalResources(externalResources),
 		m_ResourceManager(resourceManager),
@@ -39,11 +43,11 @@ namespace Flare
 			state.Layout = resource.InitialLayout;
 		}
 
-		m_RenderPassTransitions.reserve(m_Nodes.GetSize());
+		m_RenderPassTransitions.resize(m_Nodes.GetSize());
 
-		for (size_t nodeIndex = 0; nodeIndex < m_Nodes.GetSize(); nodeIndex++)
+		for (size_t nodeIndex : m_DependecyGraph.GetExecutionOrder())
 		{
-			m_Nodes[nodeIndex].Transitions = LayoutTransitionsRange((uint32_t)m_Result.LayoutTransitions.size());
+			m_RenderPassTransitions[nodeIndex].ExplicitTransitions = LayoutTransitionsRange((uint32_t)m_Result.LayoutTransitions.size());
 			GenerateInputTransitions(nodeIndex);
 			GenerateOutputTransitions(nodeIndex);
 		}
@@ -53,27 +57,25 @@ namespace Flare
 		{
 			AddTransition(resource.Texture, resource.FinalLayout, m_Result.ExternalResourceFinalTransitions);
 		}
-
-		CreateRenderTargets();
 	}
 
 	void RenderGraphBuilder::GenerateInputTransitions(size_t nodeIndex)
 	{
 		FLARE_PROFILE_FUNCTION();
-		RenderPassNode& node = m_Nodes[nodeIndex];
+		const RenderPassNode& node = m_Nodes[nodeIndex];
 
-		m_RenderPassTransitions.emplace_back().resize(node.Specifications.GetOutputs().size());
+		m_RenderPassTransitions[nodeIndex].AttachmentTransitions.resize(node.Specifications.GetOutputs().size());
 
 		for (const auto& input : node.Specifications.GetInputs())
 		{
-			AddTransition(input.InputTexture, input.Layout, node.Transitions);
+			AddTransition(input.InputTexture, input.Layout, m_RenderPassTransitions[nodeIndex].ExplicitTransitions);
 		}
 	}
 
 	void RenderGraphBuilder::GenerateOutputTransitions(size_t nodeIndex)
 	{
 		FLARE_PROFILE_FUNCTION();
-		RenderPassNode& node = m_Nodes[nodeIndex];
+		const RenderPassNode& node = m_Nodes[nodeIndex];
 		const auto& outputs = node.Specifications.GetOutputs();
 		for (size_t outputIndex = 0; outputIndex < node.Specifications.GetOutputs().size(); outputIndex++)
 		{
@@ -83,7 +85,7 @@ namespace Flare
 			// Only outputs with AttachmentOutput image layout can be used in a RenderPass
 			if (output.Layout == ImageLayout::AttachmentOutput)
 			{
-				LayoutTransition& transition = m_RenderPassTransitions[nodeIndex][outputIndex];
+				LayoutTransition& transition = m_RenderPassTransitions[nodeIndex].AttachmentTransitions[outputIndex];
 				transition.Texture = output.AttachmentTexture;
 				transition.InitialLayout = GetCurrentLayout(output.AttachmentTexture);
 				transition.FinalLayout = output.Layout;
@@ -96,12 +98,12 @@ namespace Flare
 			}
 			else
 			{
-				AddExplicitTransition(output.AttachmentTexture, output.Layout, node.Transitions);
+				AddExplicitTransition(output.AttachmentTexture, output.Layout, m_RenderPassTransitions[nodeIndex].ExplicitTransitions);
 			}
 		}
 	}
 
-	void RenderGraphBuilder::CreateRenderTargets()
+	void RenderGraphBuilder::CreateRenderTargets(size_t nodeIndex, Ref<FrameBuffer>* outTargets)
 	{
 		FLARE_PROFILE_FUNCTION();
 
@@ -112,94 +114,95 @@ namespace Flare
 
 		VulkanRenderPassCache& renderPassCache = VulkanContext::GetInstance().GetRenderPassCache();
 
-		for (size_t nodeIndex = 0; nodeIndex < m_Nodes.GetSize(); nodeIndex++)
+		const RenderPassNode& node = m_Nodes[nodeIndex];
+
+		// RenderTargets are only created for Graphics render passes
+		if (node.Specifications.GetType() != RenderGraphPassType::Graphics)
+			return;
+
+		attachmentTextures.clear();
+
+		const auto& outputs = m_Nodes[nodeIndex].Specifications.GetOutputs();
+
+		if (node.Specifications.HasOutputClearValues())
 		{
-			RenderPassNode& node = m_Nodes[nodeIndex];
+			clearValues.clear();
+			clearValues.resize(outputs.size());
+		}
 
-			// RenderTargets are only created for Graphics render passes
-			if (node.Specifications.GetType() != RenderGraphPassType::Graphics)
-				continue;
+		if (outputs.size() == 0)
+			return;
 
-			attachmentTextures.clear();
+		VulkanRenderPassKey renderPassKey;
 
-			const auto& outputs = m_Nodes[nodeIndex].Specifications.GetOutputs();
+		{
+			FLARE_PROFILE_SCOPE("GenerateRenderPassKey");
 
-			if (node.Specifications.HasOutputClearValues())
+			renderPassKey.Attachments.reserve(outputs.size());
+			for (size_t outputIndex = 0; outputIndex < outputs.size(); outputIndex++)
 			{
-				clearValues.clear();
-				clearValues.resize(outputs.size());
-			}
+				const LayoutTransition& transition = m_RenderPassTransitions[nodeIndex].AttachmentTransitions[outputIndex];
+				TextureFormat format = m_ResourceManager.GetTextureFormat(outputs[outputIndex].AttachmentTexture);
 
-			if (outputs.size() == 0)
-				continue;
-
-			VulkanRenderPassKey renderPassKey;
-
-			{
-				FLARE_PROFILE_SCOPE("GenerateRenderPassKey");
-
-				renderPassKey.Attachments.reserve(outputs.size());
-				for (size_t outputIndex = 0; outputIndex < outputs.size(); outputIndex++)
-				{
-					const LayoutTransition& transition = m_RenderPassTransitions[nodeIndex][outputIndex];
-					TextureFormat format = m_ResourceManager.GetTextureFormat(outputs[outputIndex].AttachmentTexture);
-
-					RenderPassAttachmentKey& attachmentKey = renderPassKey.Attachments.emplace_back();
-					attachmentKey.Format = format;
-					attachmentKey.InitialLayout = transition.InitialLayout;
-					attachmentKey.FinalLayout = transition.FinalLayout;
-					attachmentKey.HasClearValue = outputs[outputIndex].ClearValue.has_value();
-				}
-			}
-
-			if (node.Specifications.HasOutputClearValues())
-			{
-				for (size_t outputIndex = 0; outputIndex < outputs.size(); outputIndex++)
-				{
-					auto clearValue = outputs[outputIndex].ClearValue.value();
-
-					if (clearValue.Type == AttachmentClearValueType::Color)
-					{
-						clearValues[outputIndex].color.float32[0] = clearValue.Color.x;
-						clearValues[outputIndex].color.float32[1] = clearValue.Color.y;
-						clearValues[outputIndex].color.float32[2] = clearValue.Color.z;
-						clearValues[outputIndex].color.float32[3] = clearValue.Color.w;
-					}
-					else
-					{
-						clearValues[outputIndex].depthStencil.depth = clearValue.Depth;
-						clearValues[outputIndex].depthStencil.stencil = 0;
-					}
-				}
-			}
-
-			Ref<VulkanRenderPass> compatibleRenderPass = renderPassCache.GetOrCreate(renderPassKey);
-
-			if (node.Specifications.HasOutputClearValues())
-			{
-				compatibleRenderPass->SetDefaultClearValues(Span<VkClearValue>::FromVector(clearValues));
-			}
-
-			node.RenderTargetHandleIndex = (uint32_t)m_RenderPassTargets.size();
-			for (uint32_t frameInFlight = 0; frameInFlight < framesInFlightCount; frameInFlight++)
-			{
-				attachmentTextures.clear();
-				for (size_t outputIndex = 0; outputIndex < outputs.size(); outputIndex++)
-				{
-					attachmentTextures.push_back(m_ResourceManager.GetTextureForFrameInFlight(outputs[outputIndex].AttachmentTexture, frameInFlight));
-				}
-
-				Ref<FrameBuffer> renderTarget = CreateRef<VulkanFrameBuffer>(
-					attachmentTextures[0]->GetWidth(),
-					attachmentTextures[0]->GetHeight(),
-					compatibleRenderPass,
-					Span<Ref<Texture>>::FromVector(attachmentTextures),
-					false);
-
-				renderTarget->SetDebugName(fmt::format("{}.#{}", node.Specifications.GetDebugName(), frameInFlight));
-				m_RenderPassTargets.push_back(renderTarget);
+				RenderPassAttachmentKey& attachmentKey = renderPassKey.Attachments.emplace_back();
+				attachmentKey.Format = format;
+				attachmentKey.InitialLayout = transition.InitialLayout;
+				attachmentKey.FinalLayout = transition.FinalLayout;
+				attachmentKey.HasClearValue = outputs[outputIndex].ClearValue.has_value();
 			}
 		}
+
+		if (node.Specifications.HasOutputClearValues())
+		{
+			for (size_t outputIndex = 0; outputIndex < outputs.size(); outputIndex++)
+			{
+				auto clearValue = outputs[outputIndex].ClearValue.value();
+
+				if (clearValue.Type == AttachmentClearValueType::Color)
+				{
+					clearValues[outputIndex].color.float32[0] = clearValue.Color.x;
+					clearValues[outputIndex].color.float32[1] = clearValue.Color.y;
+					clearValues[outputIndex].color.float32[2] = clearValue.Color.z;
+					clearValues[outputIndex].color.float32[3] = clearValue.Color.w;
+				}
+				else
+				{
+					clearValues[outputIndex].depthStencil.depth = clearValue.Depth;
+					clearValues[outputIndex].depthStencil.stencil = 0;
+				}
+			}
+		}
+
+		Ref<VulkanRenderPass> compatibleRenderPass = renderPassCache.GetOrCreate(renderPassKey);
+
+		if (node.Specifications.HasOutputClearValues())
+		{
+			compatibleRenderPass->SetDefaultClearValues(Span<VkClearValue>::FromVector(clearValues));
+		}
+
+		for (uint32_t frameInFlight = 0; frameInFlight < framesInFlightCount; frameInFlight++)
+		{
+			attachmentTextures.clear();
+			for (size_t outputIndex = 0; outputIndex < outputs.size(); outputIndex++)
+			{
+				attachmentTextures.push_back(m_ResourceManager.GetTextureForFrameInFlight(outputs[outputIndex].AttachmentTexture, frameInFlight));
+			}
+
+			Ref<FrameBuffer> renderTarget = CreateRef<VulkanFrameBuffer>(
+				attachmentTextures[0]->GetWidth(),
+				attachmentTextures[0]->GetHeight(),
+				compatibleRenderPass,
+				Span<Ref<Texture>>::FromVector(attachmentTextures),
+				false);
+
+			renderTarget->SetDebugName(fmt::format("{}.#{}", node.Specifications.GetDebugName(), frameInFlight));
+			outTargets[frameInFlight] = renderTarget;
+		}
+	}
+
+	LayoutTransitionsRange RenderGraphBuilder::GetExplicitTransitions(size_t nodeIndex) const
+	{
+		return m_RenderPassTransitions[nodeIndex].ExplicitTransitions;
 	}
 
 	void RenderGraphBuilder::AddExplicitTransition(RenderGraphTextureId texture, ImageLayout layout, LayoutTransitionsRange& transitions)
@@ -248,7 +251,7 @@ namespace Flare
 			if (state.LastWritingPass)
 			{
 				auto lastRenderPass = state.LastWritingPass;
-				m_RenderPassTransitions[lastRenderPass->RenderPassIndex][lastRenderPass->AttachmentIndex].FinalLayout = layout;
+				m_RenderPassTransitions[lastRenderPass->RenderPassIndex].AttachmentTransitions[lastRenderPass->AttachmentIndex].FinalLayout = layout;
 
 				state.Layout = layout;
 				state.LastWritingPass = {};

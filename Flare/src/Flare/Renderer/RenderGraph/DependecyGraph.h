@@ -45,6 +45,7 @@ namespace Flare
 		struct GraphNode
 		{
 			uint32_t DependencyLayer = UINT32_MAX;
+			uint32_t OrderIndex = UINT32_MAX;
 			const RenderPassNode* PassNode = nullptr;
 			std::unordered_set<size_t> Children;
 			std::unordered_set<size_t> Dependecies;
@@ -55,7 +56,7 @@ namespace Flare
 
 		void Build();
 
-		inline const std::vector<GraphNode>& GetNodes() const { return m_Graph; }
+		inline const std::vector<GraphNode>& GetGraphNodes() const { return m_Graph; }
 		inline uint32_t GetMaxDependencyLayer() const { return m_MaxDependencyLayer; }
 		inline const std::vector<size_t>& GetExecutionOrder() const { return m_ExecutionOrder; }
 	private:

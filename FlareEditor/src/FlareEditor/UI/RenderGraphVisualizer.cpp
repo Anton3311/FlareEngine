@@ -20,9 +20,9 @@ namespace Flare
 		float graphOffset = 400.0f;
 
 		std::vector<float> offsets(dependecyGraph.GetMaxDependencyLayer() + 1, graphOffset);
-		std::vector<ImVec2> positions(dependecyGraph.GetNodes().size(), ImVec2(0.0f, 0.0f));
+		std::vector<ImVec2> positions(dependecyGraph.GetGraphNodes().size(), ImVec2(0.0f, 0.0f));
 
-		const auto& nodes = dependecyGraph.GetNodes();
+		const auto& nodes = dependecyGraph.GetGraphNodes();
 		float textHeight = ImGui::GetFontSize();
 
 		if (ImGui::Begin("Render Graph Visualizer"))

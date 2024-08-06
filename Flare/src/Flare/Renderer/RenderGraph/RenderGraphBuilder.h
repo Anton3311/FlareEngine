@@ -13,20 +13,23 @@ namespace Flare
 {
 	class FrameBuffer;
 	class RenderGraphResourceManager;
+	class DependecyGraph;
 	class FLARE_API RenderGraphBuilder
 	{
 	public:
 		RenderGraphBuilder(CompiledRenderGraph& result,
-			Span<RenderPassNode> nodes,
+			const DependecyGraph& dependecyGraph,
+			Span<const RenderPassNode> nodes,
 			const RenderGraphResourceManager& resourceManager,
-			Span<ExternalRenderGraphResource> externalResources,
+			Span<const ExternalRenderGraphResource> externalResources,
 			std::vector<Ref<FrameBuffer>>& renderPassTargets);
 
 		void Build();
+		void CreateRenderTargets(size_t nodeIndex, Ref<FrameBuffer>* outTargets);
+		LayoutTransitionsRange GetExplicitTransitions(size_t nodeIndex) const;
 	private:
 		void GenerateInputTransitions(size_t nodeIndex);
 		void GenerateOutputTransitions(size_t nodeIndex);
-		void CreateRenderTargets();
 	private:
 		struct WritingRenderPass
 		{
@@ -55,15 +58,22 @@ namespace Flare
 		// or ImageLayout::Undefiend, in case the state is not present.
 		ImageLayout GetCurrentLayout(RenderGraphTextureId texture);
 	private:
+		struct PassTransitions
+		{
+			LayoutTransitionsRange ExplicitTransitions;
+			std::vector<LayoutTransition> AttachmentTransitions;
+		};
+
 		CompiledRenderGraph& m_Result;
+		const DependecyGraph& m_DependecyGraph;
 		const RenderGraphResourceManager& m_ResourceManager;
 
-		Span<RenderPassNode> m_Nodes;
-		Span<ExternalRenderGraphResource> m_ExternalResources;
+		Span<const RenderPassNode> m_Nodes;
+		Span<const ExternalRenderGraphResource> m_ExternalResources;
 
 		std::unordered_map<RenderGraphTextureId, ResourceState> m_States;
 
-		std::vector<std::vector<LayoutTransition>> m_RenderPassTransitions;
+		std::vector<PassTransitions> m_RenderPassTransitions;
 		std::vector<Ref<FrameBuffer>>& m_RenderPassTargets;
 	};
 }

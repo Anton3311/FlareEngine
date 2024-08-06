@@ -330,6 +330,7 @@ namespace Flare
 				continue;
 			}
 
+			m_Graph[nodeIndex].OrderIndex = (uint32_t)m_ExecutionOrder.size();
 			m_ExecutionOrder.push_back(nodeIndex);
 
 			for (size_t childIndex : m_Graph[nodeIndex].Children)
