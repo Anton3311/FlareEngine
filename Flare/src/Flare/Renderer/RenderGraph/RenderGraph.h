@@ -17,7 +17,6 @@ namespace Flare
 	struct SceneSubmition;
 
 	class Commanduffer;
-	class FrameBuffer;
 	class Viewport;
 
 	class FLARE_API RenderGraph
@@ -62,23 +61,21 @@ namespace Flare
 
 		static Scope<RenderGraph> Create(const Viewport& viewport);
 	protected:
-		virtual void OnPrepare() {}
-		virtual void OnTexturesResize() {}
-		virtual void OnClear() {}
-		virtual void OnBuild() {}
+		virtual void OnPrepare() = 0;
+		virtual void OnTexturesResize() = 0;
+		virtual void OnClear() = 0;
+		virtual void OnBuild() = 0;
 	private:
 		bool m_IsValid = false;
 		const Viewport& m_Viewport;
 
 		std::vector<RenderPassNode> m_Nodes;
 		std::vector<ExternalRenderGraphResource> m_ExternalResources;
-		std::vector<Ref<FrameBuffer>> m_RenderPassTargets;
 
 		RenderGraphResourceManager m_ResourceManager;
 		DependecyGraph m_DependecyGraph;
 
 		bool m_NeedsRebuilding = false;
-
 	protected:
 		CompiledRenderGraph m_CompiledRenderGraph;
 	};

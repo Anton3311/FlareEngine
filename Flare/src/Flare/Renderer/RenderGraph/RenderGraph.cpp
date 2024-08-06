@@ -1,14 +1,12 @@
 #include "RenderGraph.h"
 
+#include "FlareCore/Profiler/Profiler.h"
+
 #include "Flare/Renderer/Renderer.h"
 #include "Flare/Renderer/RendererAPI.h"
 #include "Flare/Renderer/RenderGraph/RenderGraphBuilder.h"
 
 #include "Flare/Renderer/RenderGraph/DependecyGraph.h"
-
-#include "Flare/Platform/Vulkan/VulkanContext.h"
-#include "Flare/Platform/Vulkan/VulkanCommandBuffer.h"
-#include "Flare/Platform/Vulkan/VulkanFrameBuffer.h"
 
 #include "Flare/Platform/Vulkan/RenderGraph/VulkanRenderGraph.h"
 
@@ -72,8 +70,6 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(!m_IsValid);
 
-		m_RenderPassTargets.clear();
-
 		m_DependecyGraph = DependecyGraph(Span<const RenderPassNode>(m_Nodes.data(), m_Nodes.size()));
 		m_DependecyGraph.Build();
 
@@ -89,7 +85,6 @@ namespace Flare
 		m_Nodes.clear();
 		m_CompiledRenderGraph.Reset();
 		m_ResourceManager.Clear();
-		m_RenderPassTargets.clear();
 
 		OnClear();
 

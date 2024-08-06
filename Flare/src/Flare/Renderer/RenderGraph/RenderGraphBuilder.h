@@ -11,7 +11,6 @@
 
 namespace Flare
 {
-	class FrameBuffer;
 	class RenderGraphResourceManager;
 	class DependecyGraph;
 	class FLARE_API RenderGraphBuilder
@@ -24,8 +23,16 @@ namespace Flare
 			Span<const ExternalRenderGraphResource> externalResources);
 
 		void Build();
-		void CreateRenderTargets(size_t nodeIndex, Ref<FrameBuffer>* outTargets);
-		LayoutTransitionsRange GetExplicitTransitions(size_t nodeIndex) const;
+
+		inline LayoutTransitionsRange GetExplicitTransitions(size_t nodeIndex) const
+		{
+			return m_RenderPassTransitions[nodeIndex].ExplicitTransitions;
+		}
+
+	 	inline const std::vector<LayoutTransition>& GetRenderPassAttachmentTransitions(size_t nodeIndex) const
+		{
+			return m_RenderPassTransitions[nodeIndex].AttachmentTransitions;
+		}
 	private:
 		void GenerateInputTransitions(size_t nodeIndex);
 		void GenerateOutputTransitions(size_t nodeIndex);

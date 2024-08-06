@@ -6,10 +6,6 @@
 
 #include "Flare/Renderer/RenderGraph/DependecyGraph.h"
 
-#include "Flare/Platform/Vulkan/VulkanContext.h"
-#include "Flare/Platform/Vulkan/VulkanFrameBuffer.h"
-#include "Flare/Platform/Vulkan/VulkanRenderPass.h"
-
 #include <vulkan/vulkan.h>
 
 namespace Flare
@@ -99,108 +95,6 @@ namespace Flare
 				AddExplicitTransition(output.AttachmentTexture, output.Layout, m_RenderPassTransitions[nodeIndex].ExplicitTransitions);
 			}
 		}
-	}
-
-	void RenderGraphBuilder::CreateRenderTargets(size_t nodeIndex, Ref<FrameBuffer>* outTargets)
-	{
-		FLARE_PROFILE_FUNCTION();
-
-		uint32_t framesInFlightCount = GraphicsContext::GetInstance().GetFrameInFlightCount();
-
-		std::vector<Ref<Texture>> attachmentTextures;
-		std::vector<VkClearValue> clearValues;
-
-		VulkanRenderPassCache& renderPassCache = VulkanContext::GetInstance().GetRenderPassCache();
-
-		const RenderPassNode& node = m_Nodes[nodeIndex];
-
-		// RenderTargets are only created for Graphics render passes
-		if (node.Specifications.GetType() != RenderGraphPassType::Graphics)
-			return;
-
-		attachmentTextures.clear();
-
-		const auto& outputs = m_Nodes[nodeIndex].Specifications.GetOutputs();
-
-		if (node.Specifications.HasOutputClearValues())
-		{
-			clearValues.clear();
-			clearValues.resize(outputs.size());
-		}
-
-		if (outputs.size() == 0)
-			return;
-
-		VulkanRenderPassKey renderPassKey;
-
-		{
-			FLARE_PROFILE_SCOPE("GenerateRenderPassKey");
-
-			renderPassKey.Attachments.reserve(outputs.size());
-			for (size_t outputIndex = 0; outputIndex < outputs.size(); outputIndex++)
-			{
-				const LayoutTransition& transition = m_RenderPassTransitions[nodeIndex].AttachmentTransitions[outputIndex];
-				TextureFormat format = m_ResourceManager.GetTextureFormat(outputs[outputIndex].AttachmentTexture);
-
-				RenderPassAttachmentKey& attachmentKey = renderPassKey.Attachments.emplace_back();
-				attachmentKey.Format = format;
-				attachmentKey.InitialLayout = transition.InitialLayout;
-				attachmentKey.FinalLayout = transition.FinalLayout;
-				attachmentKey.HasClearValue = outputs[outputIndex].ClearValue.has_value();
-			}
-		}
-
-		if (node.Specifications.HasOutputClearValues())
-		{
-			for (size_t outputIndex = 0; outputIndex < outputs.size(); outputIndex++)
-			{
-				auto clearValue = outputs[outputIndex].ClearValue.value();
-
-				if (clearValue.Type == AttachmentClearValueType::Color)
-				{
-					clearValues[outputIndex].color.float32[0] = clearValue.Color.x;
-					clearValues[outputIndex].color.float32[1] = clearValue.Color.y;
-					clearValues[outputIndex].color.float32[2] = clearValue.Color.z;
-					clearValues[outputIndex].color.float32[3] = clearValue.Color.w;
-				}
-				else
-				{
-					clearValues[outputIndex].depthStencil.depth = clearValue.Depth;
-					clearValues[outputIndex].depthStencil.stencil = 0;
-				}
-			}
-		}
-
-		Ref<VulkanRenderPass> compatibleRenderPass = renderPassCache.GetOrCreate(renderPassKey);
-
-		if (node.Specifications.HasOutputClearValues())
-		{
-			compatibleRenderPass->SetDefaultClearValues(Span<VkClearValue>::FromVector(clearValues));
-		}
-
-		for (uint32_t frameInFlight = 0; frameInFlight < framesInFlightCount; frameInFlight++)
-		{
-			attachmentTextures.clear();
-			for (size_t outputIndex = 0; outputIndex < outputs.size(); outputIndex++)
-			{
-				attachmentTextures.push_back(m_ResourceManager.GetTextureForFrameInFlight(outputs[outputIndex].AttachmentTexture, frameInFlight));
-			}
-
-			Ref<FrameBuffer> renderTarget = CreateRef<VulkanFrameBuffer>(
-				attachmentTextures[0]->GetWidth(),
-				attachmentTextures[0]->GetHeight(),
-				compatibleRenderPass,
-				Span<Ref<Texture>>::FromVector(attachmentTextures),
-				false);
-
-			renderTarget->SetDebugName(fmt::format("{}.#{}", node.Specifications.GetDebugName(), frameInFlight));
-			outTargets[frameInFlight] = renderTarget;
-		}
-	}
-
-	LayoutTransitionsRange RenderGraphBuilder::GetExplicitTransitions(size_t nodeIndex) const
-	{
-		return m_RenderPassTransitions[nodeIndex].ExplicitTransitions;
 	}
 
 	void RenderGraphBuilder::AddExplicitTransition(RenderGraphTextureId texture, ImageLayout layout, LayoutTransitionsRange& transitions)

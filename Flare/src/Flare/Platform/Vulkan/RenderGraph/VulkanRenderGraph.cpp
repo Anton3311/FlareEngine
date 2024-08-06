@@ -12,6 +12,8 @@
 #include "Flare/Platform/Vulkan/VulkanContext.h"
 #include "Flare/Platform/Vulkan/VulkanFrameBuffer.h"
 #include "Flare/Platform/Vulkan/VulkanTexture.h"
+#include "Flare/Platform/Vulkan/VulkanRenderPass.h"
+#include "Flare/Platform/Vulkan/VulkanRenderPassCache.h"
 
 namespace Flare
 {
@@ -107,13 +109,9 @@ namespace Flare
 		}
 	}
 
-	void VulkanRenderGraph::CreateRenderTargets()
+	void VulkanRenderGraph::CreateRenderTargets(uint32_t frameIndex)
 	{
 		FLARE_PROFILE_FUNCTION();
-		FLARE_CORE_ASSERT(IsValid());
-
-		uint32_t frameInFlightCount = GraphicsContext::GetInstance().GetFrameInFlightCount();
-		uint32_t frameIndex = GraphicsContext::GetInstance().GetCurrentFrameInFlight();
 
 		std::vector<Ref<Texture>> attachmentTextures;
 		const auto& nodes = GetNodes();
@@ -123,6 +121,7 @@ namespace Flare
 				continue;
 
 			const auto& outputs = nodes[nodeIndex].Specifications.GetOutputs();
+			FLARE_CORE_ASSERT(outputs.size() > 0);
 
 			attachmentTextures.clear();
 			attachmentTextures.resize(outputs.size(), nullptr);
@@ -133,19 +132,107 @@ namespace Flare
 			}
 
 			uint32_t renderTargetIndex = m_NodeData[nodeIndex].RenderTargetHandleIndex + frameIndex;
-
 			Ref<VulkanFrameBuffer> renderTarget = m_RenderTargets[renderTargetIndex];
-			Ref<VulkanRenderPass> compatibleRenderPass = renderTarget->GetCompatibleRenderPass();
 
-			std::string debugName = renderTarget->GetDebugName();
+			FLARE_CORE_ASSERT(m_NodeData[nodeIndex].VulkanRenderPassHandle);
 
 			m_RenderTargets[renderTargetIndex] = CreateRef<VulkanFrameBuffer>(attachmentTextures[0]->GetWidth(),
 				attachmentTextures[0]->GetHeight(),
-				compatibleRenderPass,
+				m_NodeData[nodeIndex].VulkanRenderPassHandle,
 				Span<Ref<Texture>>::FromVector(attachmentTextures),
 				false);
 
-			m_RenderTargets[renderTargetIndex]->SetDebugName(debugName);
+			if (renderTarget)
+			{
+				std::string debugName = renderTarget->GetDebugName();
+				m_RenderTargets[renderTargetIndex]->SetDebugName(debugName);
+			}
+		}
+	}
+
+	void VulkanRenderGraph::SelectVulkanRenderPasses(const RenderGraphBuilder& renderGraphBuilder)
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		uint32_t framesInFlightCount = GraphicsContext::GetInstance().GetFrameInFlightCount();
+
+		std::vector<Ref<Texture>> attachmentTextures;
+		std::vector<VkClearValue> clearValues;
+
+		VulkanRenderPassCache& renderPassCache = VulkanContext::GetInstance().GetRenderPassCache();
+
+		const auto& nodes = GetNodes();
+		for (size_t nodeIndex = 0; nodeIndex < nodes.size(); nodeIndex++)
+		{
+			const RenderPassNode& node = nodes[nodeIndex];
+
+			// RenderTargets are only created for Graphics render passes
+			if (node.Specifications.GetType() != RenderGraphPassType::Graphics)
+				continue;
+
+			attachmentTextures.clear();
+
+			const auto& outputs = nodes[nodeIndex].Specifications.GetOutputs();
+
+			if (node.Specifications.HasOutputClearValues())
+			{
+				clearValues.clear();
+				clearValues.resize(outputs.size());
+			}
+
+			if (outputs.size() == 0)
+				continue;
+
+			VulkanRenderPassKey renderPassKey;
+
+			{
+				FLARE_PROFILE_SCOPE("GenerateRenderPassKey");
+
+				renderPassKey.Attachments.reserve(outputs.size());
+
+				const auto& attachmentTransitions = renderGraphBuilder.GetRenderPassAttachmentTransitions(nodeIndex);
+				for (size_t outputIndex = 0; outputIndex < outputs.size(); outputIndex++)
+				{
+					const LayoutTransition& transition = attachmentTransitions[outputIndex];
+					TextureFormat format = GetResourceManager().GetTextureFormat(outputs[outputIndex].AttachmentTexture);
+
+					RenderPassAttachmentKey& attachmentKey = renderPassKey.Attachments.emplace_back();
+					attachmentKey.Format = format;
+					attachmentKey.InitialLayout = transition.InitialLayout;
+					attachmentKey.FinalLayout = transition.FinalLayout;
+					attachmentKey.HasClearValue = outputs[outputIndex].ClearValue.has_value();
+				}
+			}
+
+			if (node.Specifications.HasOutputClearValues())
+			{
+				for (size_t outputIndex = 0; outputIndex < outputs.size(); outputIndex++)
+				{
+					auto clearValue = outputs[outputIndex].ClearValue.value();
+
+					if (clearValue.Type == AttachmentClearValueType::Color)
+					{
+						clearValues[outputIndex].color.float32[0] = clearValue.Color.x;
+						clearValues[outputIndex].color.float32[1] = clearValue.Color.y;
+						clearValues[outputIndex].color.float32[2] = clearValue.Color.z;
+						clearValues[outputIndex].color.float32[3] = clearValue.Color.w;
+					}
+					else
+					{
+						clearValues[outputIndex].depthStencil.depth = clearValue.Depth;
+						clearValues[outputIndex].depthStencil.stencil = 0;
+					}
+				}
+			}
+
+			Ref<VulkanRenderPass> compatibleRenderPass = renderPassCache.GetOrCreate(renderPassKey);
+
+			if (node.Specifications.HasOutputClearValues())
+			{
+				compatibleRenderPass->SetDefaultClearValues(Span<VkClearValue>::FromVector(clearValues));
+			}
+
+			m_NodeData[nodeIndex].VulkanRenderPassHandle = compatibleRenderPass;
 		}
 	}
 
@@ -158,7 +245,7 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		CreateRenderTargets();
+		CreateRenderTargets(GraphicsContext::GetInstance().GetCurrentFrameInFlight());
 	}
 
 	void VulkanRenderGraph::OnClear()
@@ -186,25 +273,28 @@ namespace Flare
 
 		builder.Build();
 
-		std::vector<Ref<FrameBuffer>> temp(GraphicsContext::GetInstance().GetFrameInFlightCount(), nullptr);
+		SelectVulkanRenderPasses(builder);
+
+		uint32_t frameInFlightCount = GraphicsContext::GetInstance().GetFrameInFlightCount();
+
+		uint32_t renderTargetIndex = 0;
 		for (size_t nodeIndex = 0; nodeIndex < nodes.size(); nodeIndex++)
 		{
-			builder.CreateRenderTargets(nodeIndex, temp.data());
-
-			m_NodeData[nodeIndex].RenderTargetHandleIndex = (uint32_t)m_RenderTargets.size();
+			const auto& spec = nodes[nodeIndex].Specifications;
 			m_NodeData[nodeIndex].ExplicitTransitions = builder.GetExplicitTransitions(nodeIndex);
 
-			if (temp[0] == nullptr)
+			if (spec.GetType() == RenderGraphPassType::Graphics && spec.GetOutputs().size() > 0)
 			{
-				m_NodeData[nodeIndex].RenderTargetHandleIndex = NodeData::INVALID_TARGET_INDEX;
-				continue;
+				m_NodeData[nodeIndex].RenderTargetHandleIndex = renderTargetIndex;
+				renderTargetIndex += frameInFlightCount;
 			}
+		}
 
-			for (Ref<FrameBuffer>& target : temp)
-			{
-				m_RenderTargets.push_back(As<VulkanFrameBuffer>(target));
-				target = nullptr;
-			}
+		m_RenderTargets.resize(renderTargetIndex, nullptr);
+
+		for (uint32_t frameIndex = 0; frameIndex < frameInFlightCount; frameIndex++)
+		{
+			CreateRenderTargets(frameIndex);
 		}
 	}
 }
