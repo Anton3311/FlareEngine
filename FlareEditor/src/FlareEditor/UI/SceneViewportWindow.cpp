@@ -9,7 +9,7 @@
 #include "Flare/Scene/Scene.h"
 #include "Flare/Scene/Prefab.h"
 
-#include "FlareEditor/UI/RenderGraphVisualizer.h"
+#include "FlareEditor/UI/RenderGraphInspector.h"
 
 #include "FlareEditor/Rendering/SceneViewGridPass.h"
 
@@ -234,7 +234,10 @@ namespace Flare
 			}
 		}
 
-		RenderGraphVisualizer::OnRenderImGui(*m_Viewport.GetRenderGraph());
+		if (m_RenderGraphInspector)
+		{
+			m_RenderGraphInspector->OnRenderImGui();
+		}
 	}
 
 	static bool GuizmoButton(const char* text, bool active)
@@ -384,6 +387,16 @@ namespace Flare
 				if (ImGui::MenuItem("Show Grid", nullptr, &m_SceneViewSettings.ShowGrid))
 				{
 					m_Viewport.GetRenderGraph()->SetNeedsRebuilding();
+				}
+
+				if (ImGui::MenuItem("Inspect Render Graph"))
+				{
+					if (!m_RenderGraphInspector)
+					{
+						m_RenderGraphInspector = CreateScope<RenderGraphInspector>(*m_Viewport.GetRenderGraph());
+					}
+
+					m_RenderGraphInspector->SetVisible(true);
 				}
 
 				ImGui::EndCombo();

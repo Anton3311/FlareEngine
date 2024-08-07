@@ -6,6 +6,8 @@
 #include "FlareEditor/EditorCamera.h"
 #include "FlareEditor/EditorCameraController.h"
 
+#include "FlareEditor/UI/RenderGraphInspector.h"
+
 namespace Flare
 {
 	class Scene;
@@ -45,6 +47,8 @@ namespace Flare
 		EditorCamera m_EditorCamera;
 		EditorCameraController m_CameraController;
 		bool m_IsToolbarHovered = false;
+
+		Scope<RenderGraphInspector> m_RenderGraphInspector = nullptr;
 
 		ViewportOverlay m_Overlay = ViewportOverlay::Default;
 	};

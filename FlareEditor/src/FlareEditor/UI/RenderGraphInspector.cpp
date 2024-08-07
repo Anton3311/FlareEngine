@@ -1,4 +1,4 @@
-#include "RenderGraphVisualizer.h"
+#include "RenderGraphInspector.h"
 
 #include "FlareCore/Log.h"
 #include "FlareCore/Profiler/Profiler.h"
@@ -9,24 +9,33 @@
 
 namespace Flare
 {
-	void RenderGraphVisualizer::OnRenderImGui(const RenderGraph& renderGraph)
+	RenderGraphInspector::RenderGraphInspector(const RenderGraph& renderGraph)
+		: m_RenderGraph(renderGraph) {}
+
+	void RenderGraphInspector::OnRenderImGui()
 	{
 		FLARE_PROFILE_FUNCTION();
-		const DependecyGraph& dependecyGraph = renderGraph.GetDependecyGraph();
 
+		if (!m_IsVisible)
+			return;
+
+		const DependecyGraph& dependecyGraph = m_RenderGraph.GetDependecyGraph();
 		if (dependecyGraph.GetMaxDependencyLayer() == 0)
 			return;
 
-		float graphOffset = 400.0f;
-
-		std::vector<float> offsets(dependecyGraph.GetMaxDependencyLayer() + 1, graphOffset);
-		std::vector<ImVec2> positions(dependecyGraph.GetGraphNodes().size(), ImVec2(0.0f, 0.0f));
-
-		const auto& nodes = dependecyGraph.GetGraphNodes();
-		float textHeight = ImGui::GetFontSize();
-
-		if (ImGui::Begin("Render Graph Visualizer"))
+		if (ImGui::Begin("Render Graph Visualizer", &m_IsVisible))
 		{
+			float graphOffset = 400.0f;
+
+			m_LayerOffsets.resize(dependecyGraph.GetMaxDependencyLayer() + 1);
+			m_NodePositions.resize(dependecyGraph.GetGraphNodes().size());
+
+			m_NodePositions.assign(m_NodePositions.size(), glm::vec2(0.0f, 0.0f));
+			m_LayerOffsets.assign(m_LayerOffsets.size(), graphOffset);
+
+			const auto& nodes = dependecyGraph.GetGraphNodes();
+			float textHeight = ImGui::GetFontSize();
+
 			ImGuiWindow* window = ImGui::GetCurrentWindow();
 			ImDrawList* drawList = window->DrawList;
 
@@ -37,16 +46,17 @@ namespace Flare
 				ImVec2 textSize = ImGui::CalcTextSize(name);
 
 				const ImVec2 textPosition(window->DC.CursorPos.x, window->DC.CursorPos.y + window->DC.CurrLineTextBaseOffset);
-				ImVec2 cursorPosition = ImVec2(offsets[node.DependencyLayer], node.DependencyLayer * textHeight * 5.0f);
+				ImVec2 cursorPosition = ImVec2(m_LayerOffsets[node.DependencyLayer], node.DependencyLayer * textHeight * 5.0f);
 
-				offsets[node.DependencyLayer] += textSize.x + 100.0f;
-				positions[nodeIndex] = cursorPosition + textSize / 2.0f;
+				m_LayerOffsets[node.DependencyLayer] += textSize.x + 100.0f;
+				m_NodePositions[nodeIndex].x = cursorPosition.x + textSize.x / 2.0f;
+				m_NodePositions[nodeIndex].y = cursorPosition.y + textSize.y / 2.0f;
 
 				drawList->AddText(textPosition + cursorPosition, UINT32_MAX, name);
 
 				for (size_t dependecyIndex : node.Dependecies)
 				{
-					ImVec2 dependecyPosition = positions[dependecyIndex];
+					glm::vec2 dependecyPosition = m_NodePositions[dependecyIndex];
 
 					ImVec2 start = ImVec2(dependecyPosition.x, dependecyPosition.y + textHeight / 2.0f);
 					ImVec2 end = ImVec2(cursorPosition.x, cursorPosition.y - textHeight / 2.0f) + textSize / 2.0f;
