@@ -1,5 +1,7 @@
 #include "ShaderMetadata.h"
 
+#include "FlareCore/Profiler/Profiler.h"
+
 namespace Flare
 {
 	FLARE_API uint32_t GetMaterialDescriptorSetIndex(ShaderType type)
@@ -175,5 +177,21 @@ namespace Flare
 
 		FLARE_CORE_ASSERT(false, "Unhandled ShaderStageType");
 		return nullptr;
+	}
+
+	//
+	// ShaderMetadata
+	//
+
+	std::optional<size_t> ShaderMetadata::FindDescriptorProperty(std::string_view name) const
+	{
+		FLARE_PROFILE_FUNCTION();
+		for (size_t i = 0; i < DescriptorProperties.size(); i++)
+		{
+			if (DescriptorProperties[i].Name == name)
+				return i;
+		}
+
+		return {};
 	}
 }

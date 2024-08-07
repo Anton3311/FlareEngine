@@ -156,21 +156,13 @@ namespace Flare
 
 	struct ShaderFeatures
 	{
-		ShaderFeatures()
-			: Blending(BlendMode::Opaque),
-			Culling(CullingMode::Back),
-			DepthFunction(DepthComparisonFunction::Less),
-			DepthTesting(true),
-			DepthWrite(true),
-			DepthBiasEnabled(false) {}
-
-		BlendMode Blending;
-		CullingMode Culling;
-		DepthComparisonFunction DepthFunction;
-		bool DepthTesting;
-		bool DepthWrite;
-		bool DepthBiasEnabled;
-		bool DepthClampEnabled;
+		BlendMode Blending = BlendMode::Opaque;
+		CullingMode Culling = CullingMode::Back;
+		DepthComparisonFunction DepthFunction = DepthComparisonFunction::Less;
+		bool DepthTesting = true;
+		bool DepthWrite = true;
+		bool DepthBiasEnabled = false;
+		bool DepthClampEnabled = false;
 	};
 
 	struct ShaderPushConstantsRange
@@ -206,13 +198,15 @@ namespace Flare
 		uint32_t PropertyCount = 0;
 	};
 
-	struct ShaderMetadata
+	struct FLARE_API ShaderMetadata
 	{
 		ShaderMetadata()
 		{
 			for (ShaderDescriptorSetUsage& usage : DescriptorSetUsage)
 				usage = ShaderDescriptorSetUsage();
 		}
+
+		std::optional<size_t> FindDescriptorProperty(std::string_view name) const;
 
 		std::string Name;
 		ShaderDescriptorSetUsage DescriptorSetUsage[4];
