@@ -65,11 +65,13 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 		std::vector<VkDescriptorSetLayoutBinding> bindings;
-		for (size_t i = 0; i < m_Metadata->Properties.size(); i++)
+		for (size_t i = 0; i < m_Metadata->DescriptorProperties.size(); i++)
 		{
-			const auto& property = m_Metadata->Properties[i];
+			const auto& property = m_Metadata->DescriptorProperties[i];
+			if (property.Set != 3)
+				continue;
 
-			if (property.Type == ShaderDataType::Sampler)
+			if (property.Type == ShaderDescriptorType::Sampler)
 			{
 				auto& binding = bindings.emplace_back();
 				binding = {};
@@ -79,7 +81,7 @@ namespace Flare
 				binding.pImmutableSamplers = nullptr;
 				binding.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
 			}
-			else if (property.Type == ShaderDataType::StorageImage)
+			else if (property.Type == ShaderDescriptorType::StorageImage)
 			{
 				auto& binding = bindings.emplace_back();
 				binding = {};
@@ -96,29 +98,42 @@ namespace Flare
 			m_SetPool = CreateRef<VulkanDescriptorSetPool>(Span(bindings.data(), bindings.size()));
 		}
 
-		VkPushConstantRange pushConstantRange{};
-		pushConstantRange.offset = (uint32_t)m_Metadata->PushConstantsRange.Offset;
-		pushConstantRange.size = (uint32_t)m_Metadata->PushConstantsRange.Size;
-		pushConstantRange.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+		Ref<const VulkanDescriptorSetLayout> emptyDescriptorSetLayout = As<const VulkanDescriptorSetLayout>(VulkanContext::GetInstance().GetEmptyDescriptorSetLayout());
+
+		uint32_t usedDescriptorSetCount = 0;
+
+		VkDescriptorSetLayout layoutHandles[4] = { VK_NULL_HANDLE };
+		for (size_t i = 0; i < 4; i++)
+		{
+			ShaderDescriptorSetUsage usage = m_Metadata->DescriptorSetUsage[i];
+			if (usage.Usage == ShaderDescriptorSetUsage::UsageType::NotUsed)
+				break;
+
+			if (usage.Usage == ShaderDescriptorSetUsage::UsageType::Empty)
+			{
+				layoutHandles[i] = emptyDescriptorSetLayout->GetHandle();
+			}
+
+			usedDescriptorSetCount = (uint32_t)(i + 1);
+		}
+
+		if (m_SetPool != nullptr)
+		{
+			layoutHandles[3] = As<const VulkanDescriptorSetLayout>(m_SetPool->GetLayout())->GetHandle();
+		}
 
 		VkPipelineLayoutCreateInfo createInfo{};
 		createInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+		createInfo.pSetLayouts = layoutHandles;
+		createInfo.setLayoutCount = usedDescriptorSetCount;
 
-		VkDescriptorSetLayout layoutHandle = VK_NULL_HANDLE;
-		if (m_SetPool == nullptr)
+		VkPushConstantRange pushConstantRange{};
+		if (m_Metadata->PushConstantsRanges.size() > 0 && m_Metadata->PushConstantsRanges[0].Size > 0)
 		{
-			createInfo.pSetLayouts = nullptr;
-			createInfo.setLayoutCount = 0;
-		}
-		else
-		{
-			layoutHandle = As<const VulkanDescriptorSetLayout>(m_SetPool->GetLayout())->GetHandle();
-			createInfo.pSetLayouts = &layoutHandle;
-			createInfo.setLayoutCount = 1;
-		}
+			pushConstantRange.offset = (uint32_t)m_Metadata->PushConstantsRanges[0].Offset;
+			pushConstantRange.size = (uint32_t)m_Metadata->PushConstantsRanges[0].Size;
+			pushConstantRange.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
 
-		if (pushConstantRange.size > 0)
-		{
 			createInfo.pPushConstantRanges = &pushConstantRange;
 			createInfo.pushConstantRangeCount = 1;
 		}

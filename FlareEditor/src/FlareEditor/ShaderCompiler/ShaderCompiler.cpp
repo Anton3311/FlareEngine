@@ -572,30 +572,14 @@ namespace Flare
 		}
 	}
 
-	static void Reflect(spirv_cross::Compiler& compiler,
-		ShaderStageType stage,
-		std::unordered_map<std::string, size_t>& propertyNameToIndex,
-		Ref<ShaderMetadata> metadata, uint32_t descriptorSetMask)
+	static void ReflectDescriptorProperties(spirv_cross::Compiler& compiler, Ref<ShaderMetadata> metadata)
 	{
 		FLARE_PROFILE_FUNCTION();
-		auto& pushConstantsRange = metadata->PushConstantsRanges.emplace_back();
-		pushConstantsRange.Offset = 0;
-		pushConstantsRange.Stage = stage;
-
-		ExtractShaderProperties(compiler, metadata->Properties, pushConstantsRange, descriptorSetMask);
-
 		const auto& shaderResource = compiler.get_shader_resources();
 		ReflectDescriptorProperties(compiler, shaderResource.uniform_buffers, metadata->DescriptorProperties, ShaderDescriptorType::UniformBuffer);
 		ReflectDescriptorProperties(compiler, shaderResource.storage_buffers, metadata->DescriptorProperties, ShaderDescriptorType::StorageBuffer);
 		ReflectDescriptorProperties(compiler, shaderResource.sampled_images, metadata->DescriptorProperties, ShaderDescriptorType::Sampler);
 		ReflectDescriptorProperties(compiler, shaderResource.storage_images, metadata->DescriptorProperties, ShaderDescriptorType::StorageImage);
-
-		for (size_t i = 0; i < metadata->Properties.size(); i++)
-		{
-			propertyNameToIndex[metadata->Properties[i].Name] = i;
-		}
-
-
 
 		// Fill DescriptorSetUsage
 		for (size_t i = 0; i < sizeof(metadata->DescriptorSetUsage) / sizeof(metadata->DescriptorSetUsage[0]); i++)
@@ -622,6 +606,48 @@ namespace Flare
 		{
 			metadata->DescriptorSetUsage[descriptor.Set].Usage = ShaderDescriptorSetUsage::UsageType::Used;
 		}
+	}
+
+	static void SortRelfectedDescriptorProperties(Ref<ShaderMetadata> metadata)
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		std::sort(metadata->DescriptorProperties.begin(),
+			metadata->DescriptorProperties.end(),
+			[](const ShaderDescriptorProperty& a, const ShaderDescriptorProperty& b) -> bool
+			{
+				return a.Set < b.Set;
+			});
+
+		for (size_t i = 0; i < metadata->DescriptorProperties.size(); i++)
+		{
+			const ShaderDescriptorProperty& descriptor = metadata->DescriptorProperties[i];
+
+			if (metadata->DescriptorSetUsage[descriptor.Set].FirstPropertyInSet == UINT32_MAX)
+				metadata->DescriptorSetUsage[descriptor.Set].FirstPropertyInSet = (uint32_t)i;
+
+			metadata->DescriptorSetUsage[descriptor.Set].PropertyCount++;
+		}
+	}
+
+	static void Reflect(spirv_cross::Compiler& compiler,
+		ShaderStageType stage,
+		std::unordered_map<std::string, size_t>& propertyNameToIndex,
+		Ref<ShaderMetadata> metadata, uint32_t descriptorSetMask)
+	{
+		FLARE_PROFILE_FUNCTION();
+		auto& pushConstantsRange = metadata->PushConstantsRanges.emplace_back();
+		pushConstantsRange.Offset = 0;
+		pushConstantsRange.Stage = stage;
+
+		ExtractShaderProperties(compiler, metadata->Properties, pushConstantsRange, descriptorSetMask);
+
+		for (size_t i = 0; i < metadata->Properties.size(); i++)
+		{
+			propertyNameToIndex[metadata->Properties[i].Name] = i;
+		}
+
+		ReflectDescriptorProperties(compiler, metadata);
 	}
 
 	static void ExtractShaderOutputs(spirv_cross::Compiler& compiler, ShaderOutputs& outputs)
@@ -740,24 +766,7 @@ namespace Flare
 			}
 		}
 
-		std::sort(metadata->DescriptorProperties.begin(),
-			metadata->DescriptorProperties.end(),
-			[](const ShaderDescriptorProperty& a, const ShaderDescriptorProperty& b) -> bool
-			{
-				return a.Set < b.Set;
-			});
-
-		for (size_t i = 0; i < metadata->DescriptorProperties.size(); i++)
-		{
-			const ShaderDescriptorProperty& descriptor = metadata->DescriptorProperties[i];
-
-			if (metadata->DescriptorSetUsage[descriptor.Set].FirstPropertyInSet == UINT32_MAX)
-			{
-				metadata->DescriptorSetUsage[descriptor.Set].FirstPropertyInSet = (uint32_t)i;
-			}
-
-			metadata->DescriptorSetUsage[descriptor.Set].PropertyCount++;
-		}
+		SortRelfectedDescriptorProperties(metadata);
 
 		metadata->Outputs = std::move(shaderOutputs);
 		ParseGraphicsShaderMetadata(parser, metadata, errors, propertyNameToIndex);
@@ -782,12 +791,16 @@ namespace Flare
 			uint32_t binding = compiler.get_decoration(resource.id, spv::DecorationBinding);
 			uint32_t membersCount = (uint32_t)bufferType.member_types.size();
 
-			metadata->PushConstantsRange.Offset = 0;
-			metadata->PushConstantsRange.Size = bufferSize;
-			metadata->PushConstantsRange.Stage = ShaderStageType::Compute;
+			ShaderPushConstantsRange& pushConstantRange = metadata->PushConstantsRanges.emplace_back();
+			pushConstantRange.Offset = 0;
+			pushConstantRange.Size = bufferSize;
+			pushConstantRange.Stage = ShaderStageType::Compute;
+
+			ExtractShaderProperties(compiler, metadata->Properties, pushConstantRange, UINT32_MAX);
 		}
 
-		ExtractShaderProperties(compiler, metadata->Properties, metadata->PushConstantsRange, UINT32_MAX);
+		ReflectDescriptorProperties(compiler, metadata);
+		SortRelfectedDescriptorProperties(metadata);
 	}
 
 	static bool CompileComputeShader(AssetHandle shaderHandle, bool forceRecompile, const ShaderSourceParser& parser, std::vector<ShaderError>& errors)
