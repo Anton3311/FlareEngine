@@ -1,4 +1,4 @@
-#include "RenderGraphBuilder.h"
+#include "LayoutTransitionsGenerator.h"
 
 #include "FlareCore/Assert.h"
 #include "FlareCore/Log.h"
@@ -6,11 +6,9 @@
 
 #include "Flare/Renderer/RenderGraph/DependecyGraph.h"
 
-#include <vulkan/vulkan.h>
-
 namespace Flare
 {
-	RenderGraphBuilder::RenderGraphBuilder(CompiledRenderGraph& result,
+	LayoutTransitionsGenerator::LayoutTransitionsGenerator(CompiledRenderGraph& result,
 		const DependecyGraph& dependecyGraph,
 		Span<const RenderPassNode> nodes,
 		const RenderGraphResourceManager& resourceManager,
@@ -23,7 +21,7 @@ namespace Flare
 	{
 	}
 
-	void RenderGraphBuilder::Build()
+	void LayoutTransitionsGenerator::Build()
 	{
 		FLARE_PROFILE_FUNCTION();
 
@@ -53,7 +51,7 @@ namespace Flare
 		}
 	}
 
-	void RenderGraphBuilder::GenerateInputTransitions(size_t nodeIndex)
+	void LayoutTransitionsGenerator::GenerateInputTransitions(size_t nodeIndex)
 	{
 		FLARE_PROFILE_FUNCTION();
 		const RenderPassNode& node = m_Nodes[nodeIndex];
@@ -66,7 +64,7 @@ namespace Flare
 		}
 	}
 
-	void RenderGraphBuilder::GenerateOutputTransitions(size_t nodeIndex)
+	void LayoutTransitionsGenerator::GenerateOutputTransitions(size_t nodeIndex)
 	{
 		FLARE_PROFILE_FUNCTION();
 		const RenderPassNode& node = m_Nodes[nodeIndex];
@@ -97,7 +95,7 @@ namespace Flare
 		}
 	}
 
-	void RenderGraphBuilder::AddExplicitTransition(RenderGraphTextureId texture, ImageLayout layout, LayoutTransitionsRange& transitions)
+	void LayoutTransitionsGenerator::AddExplicitTransition(RenderGraphTextureId texture, ImageLayout layout, LayoutTransitionsRange& transitions)
 	{
 		FLARE_PROFILE_FUNCTION();
 
@@ -123,7 +121,7 @@ namespace Flare
 		m_States[texture] = { layout, {} };
 	}
 
-	void RenderGraphBuilder::AddTransition(RenderGraphTextureId texture, ImageLayout layout, LayoutTransitionsRange& transitions)
+	void LayoutTransitionsGenerator::AddTransition(RenderGraphTextureId texture, ImageLayout layout, LayoutTransitionsRange& transitions)
 	{
 		FLARE_PROFILE_FUNCTION();
 
@@ -160,7 +158,7 @@ namespace Flare
 		}
 	}
 
-	ImageLayout RenderGraphBuilder::GetCurrentLayout(RenderGraphTextureId texture)
+	ImageLayout LayoutTransitionsGenerator::GetCurrentLayout(RenderGraphTextureId texture)
 	{
 		auto it = m_States.find(texture);
 		if (it == m_States.end())

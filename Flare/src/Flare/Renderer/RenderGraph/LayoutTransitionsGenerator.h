@@ -13,10 +13,10 @@ namespace Flare
 {
 	class RenderGraphResourceManager;
 	class DependecyGraph;
-	class FLARE_API RenderGraphBuilder
+	class FLARE_API LayoutTransitionsGenerator
 	{
 	public:
-		RenderGraphBuilder(CompiledRenderGraph& result,
+		LayoutTransitionsGenerator(CompiledRenderGraph& result,
 			const DependecyGraph& dependecyGraph,
 			Span<const RenderPassNode> nodes,
 			const RenderGraphResourceManager& resourceManager,

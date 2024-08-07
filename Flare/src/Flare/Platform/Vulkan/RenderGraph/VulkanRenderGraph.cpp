@@ -6,7 +6,7 @@
 #include "Flare/Renderer/CommandBuffer.h"
 #include "Flare/Renderer/GraphicsContext.h"
 
-#include "Flare/Renderer/RenderGraph/RenderGraphBuilder.h"
+#include "Flare/Renderer/RenderGraph/LayoutTransitionsGenerator.h"
 
 #include "Flare/Platform/Vulkan/VulkanCommandBuffer.h"
 #include "Flare/Platform/Vulkan/VulkanContext.h"
@@ -146,7 +146,7 @@ namespace Flare
 		}
 	}
 
-	void VulkanRenderGraph::SelectVulkanRenderPasses(const RenderGraphBuilder& renderGraphBuilder)
+	void VulkanRenderGraph::SelectVulkanRenderPasses(const LayoutTransitionsGenerator& renderGraphBuilder)
 	{
 		FLARE_PROFILE_FUNCTION();
 
@@ -261,7 +261,7 @@ namespace Flare
 
 		m_NodeData.resize(nodes.size(), NodeData{});
 
-		RenderGraphBuilder builder(m_CompiledRenderGraph,
+		LayoutTransitionsGenerator builder(m_CompiledRenderGraph,
 			GetDependecyGraph(),
 			Span<const RenderPassNode>(nodes.data(), nodes.size()),
 			GetResourceManager(),

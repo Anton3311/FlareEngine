@@ -4,7 +4,7 @@
 
 namespace Flare
 {
-	class RenderGraphBuilder;
+	class LayoutTransitionsGenerator;
 	class VulkanRenderPass;
 	class VulkanFrameBuffer;
 	class FLARE_API VulkanRenderGraph : public RenderGraph
@@ -19,7 +19,7 @@ namespace Flare
 		void ExecuteLayoutTransitions(Ref<CommandBuffer> commandBuffer, LayoutTransitionsRange range);
 		void CreateRenderTargets(uint32_t frameIndex);
 
-		void SelectVulkanRenderPasses(const RenderGraphBuilder& renderGraphBuilder);
+		void SelectVulkanRenderPasses(const LayoutTransitionsGenerator& renderGraphBuilder);
 	protected:
 		void OnPrepare() override;
 		void OnTexturesResize() override;
