@@ -35,6 +35,7 @@ namespace Flare
 		}
 	private:
 		void GenerateInputTransitions(size_t nodeIndex);
+		void GenerateGeneralResourceTransitions(size_t nodeIndex);
 		void GenerateOutputTransitions(size_t nodeIndex);
 	private:
 		struct WritingRenderPass

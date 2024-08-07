@@ -205,45 +205,43 @@ namespace Flare
 
 		std::unordered_map<RenderGraphTextureId, std::vector<size_t>> writingPasses;
 
+		auto createConnections = [&writingPasses, &adjacencyMatrix](RenderGraphTextureId textureId, size_t nodeIndex)
+			{
+				auto it = writingPasses.find(textureId);
+				if (it != writingPasses.end())
+				{
+					for (size_t dependecyIndex : it->second)
+					{
+						adjacencyMatrix.Set((uint32_t)nodeIndex, (uint32_t)dependecyIndex, true);
+					}
+				}
+			};
+
 		for (size_t nodeIndex = 0; nodeIndex < m_Graph.size(); nodeIndex++)
 		{
 			const GraphNode& node = m_Graph[nodeIndex];
-			for (const auto& output : node.PassNode->Specifications.GetOutputs())
-			{
-				auto it = writingPasses.find(output.AttachmentTexture);
-				if (it != writingPasses.end())
-				{
-					for (size_t dependecyIndex : it->second)
-					{
-						adjacencyMatrix.Set((uint32_t)nodeIndex, (uint32_t)dependecyIndex, true);
-					}
-				}
-			}
+			RenderGraphPassType passType = node.PassNode->Specifications.GetType();
 
-			for (const auto& input : node.PassNode->Specifications.GetInputs())
+			if (passType == RenderGraphPassType::Graphics || passType == RenderGraphPassType::Other)
 			{
-				auto it = writingPasses.find(input.InputTexture);
-				if (it != writingPasses.end())
-				{
-					uint32_t nodeIndex = (uint32_t)(&node - m_Graph.data());
+				for (const auto& output : node.PassNode->Specifications.GetOutputs())
+					createConnections(output.AttachmentTexture, nodeIndex);
 
-					for (size_t dependecyIndex : it->second)
-					{
-						adjacencyMatrix.Set((uint32_t)nodeIndex, (uint32_t)dependecyIndex, true);
-					}
-				}
-			}
+				for (const auto& input : node.PassNode->Specifications.GetInputs())
+					createConnections(input.InputTexture, nodeIndex);
 
-			for (const auto& output : node.PassNode->Specifications.GetOutputs())
-			{
-				auto it = writingPasses.find(output.AttachmentTexture);
-				if (it != writingPasses.end())
-				{
-					it->second.push_back(nodeIndex);
-				}
-				else
-				{
+				for (const auto& output : node.PassNode->Specifications.GetOutputs())
 					writingPasses[output.AttachmentTexture].push_back(nodeIndex);
+			}
+			else if (passType == RenderGraphPassType::Compute)
+			{
+				for (const auto& resource : node.PassNode->Specifications.GetGeneralTextureResources())
+					createConnections(resource.TextureId, nodeIndex);
+
+				for (const auto& resource : node.PassNode->Specifications.GetGeneralTextureResources())
+				{
+					if (HAS_BIT(resource.Access, ResourceAccess::Write))
+						writingPasses[resource.TextureId].push_back(nodeIndex);
 				}
 			}
 		}

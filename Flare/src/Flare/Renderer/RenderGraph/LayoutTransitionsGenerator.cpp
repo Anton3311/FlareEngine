@@ -40,8 +40,23 @@ namespace Flare
 		for (size_t nodeIndex : m_DependecyGraph.GetExecutionOrder())
 		{
 			m_RenderPassTransitions[nodeIndex].ExplicitTransitions = LayoutTransitionsRange((uint32_t)m_Result.LayoutTransitions.size());
-			GenerateInputTransitions(nodeIndex);
-			GenerateOutputTransitions(nodeIndex);
+
+			const RenderPassNode& node = m_Nodes[nodeIndex];
+			RenderGraphPassType passType = node.Specifications.GetType();
+
+			if (passType == RenderGraphPassType::Graphics || passType == RenderGraphPassType::Other)
+			{
+				FLARE_CORE_ASSERT(node.Specifications.GetGeneralTextureResources().size() == 0);
+				GenerateInputTransitions(nodeIndex);
+				GenerateOutputTransitions(nodeIndex);
+			}
+			else if (passType == RenderGraphPassType::Compute)
+			{
+				FLARE_CORE_ASSERT(node.Specifications.GetInputs().size() == 0);
+				FLARE_CORE_ASSERT(node.Specifications.GetOutputs().size() == 0);
+
+				GenerateGeneralResourceTransitions(nodeIndex);
+			}
 		}
 
 		m_Result.ExternalResourceFinalTransitions = LayoutTransitionsRange((uint32_t)m_Result.LayoutTransitions.size());
@@ -64,19 +79,34 @@ namespace Flare
 		}
 	}
 
+	void LayoutTransitionsGenerator::GenerateGeneralResourceTransitions(size_t nodeIndex)
+	{
+		FLARE_PROFILE_FUNCTION();
+		const RenderPassNode& node = m_Nodes[nodeIndex];
+
+		for (const auto& resource : node.Specifications.GetGeneralTextureResources())
+		{
+			AddTransition(resource.TextureId, ImageLayout::General, m_RenderPassTransitions[nodeIndex].ExplicitTransitions);
+		}
+	}
+
 	void LayoutTransitionsGenerator::GenerateOutputTransitions(size_t nodeIndex)
 	{
 		FLARE_PROFILE_FUNCTION();
 		const RenderPassNode& node = m_Nodes[nodeIndex];
 		const auto& outputs = node.Specifications.GetOutputs();
+
+		bool isGraphicsPass = node.Specifications.GetType() == RenderGraphPassType::Graphics;
+
 		for (size_t outputIndex = 0; outputIndex < node.Specifications.GetOutputs().size(); outputIndex++)
 		{
 			const auto& output = outputs[outputIndex];
 			auto it = m_States.find(output.AttachmentTexture);
 
-			// Only outputs with AttachmentOutput image layout can be used in a RenderPass
-			if (output.Layout == ImageLayout::AttachmentOutput)
+			if (isGraphicsPass)
 			{
+				FLARE_CORE_ASSERT(output.Layout == ImageLayout::AttachmentOutput);
+
 				LayoutTransition& transition = m_RenderPassTransitions[nodeIndex].AttachmentTransitions[outputIndex];
 				transition.Texture = output.AttachmentTexture;
 				transition.InitialLayout = GetCurrentLayout(output.AttachmentTexture);

@@ -32,6 +32,15 @@ namespace Flare
 		output.Layout = layout;
 	}
 
+	void RenderGraphPassSpecifications::AddResource(RenderGraphTextureId textureId, ResourceAccess access)
+	{
+		FLARE_CORE_ASSERT(access != ResourceAccess::None);
+
+		auto& resource = m_GeneralTextureResources.emplace_back();
+		resource.Access = access;
+		resource.TextureId = textureId;
+	}
+
 	void RenderGraphPassSpecifications::AddOutput(RenderGraphTextureId textureId,
 		uint32_t attachmentIndex,
 		const glm::vec4& clearColor,
