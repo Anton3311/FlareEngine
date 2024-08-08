@@ -20,6 +20,8 @@ namespace Flare
 			Ref<const Sampler> Sampler = nullptr;
 		};
 
+		~ShaderDescriptorBuffer();
+
 		void SetShader(Ref<ComputeShader> shader);
 
 		void SetTexture(size_t propertyIndex, Ref<const Texture> texture);

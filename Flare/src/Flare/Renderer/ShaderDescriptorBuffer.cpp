@@ -11,6 +11,11 @@
 
 namespace Flare
 {
+	ShaderDescriptorBuffer::~ShaderDescriptorBuffer()
+	{
+		Reset();
+	}
+
 	void ShaderDescriptorBuffer::SetShader(Ref<ComputeShader> shader)
 	{
 		FLARE_PROFILE_FUNCTION();
