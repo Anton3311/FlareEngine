@@ -145,7 +145,7 @@ namespace Flare
 
 		commandBuffer->SetDefaltViewportAndScissors();
 
-		glm::vec2 texelSize = glm::vec2(1.0f) / (glm::vec2)context.GetViewport().GetSize();
+		glm::vec2 texelSize = glm::vec2(1.0f) / (glm::vec2)context.RenderAreaSize;
 
 		auto colorTextureIndex = m_Material->GetShader()->GetPropertyIndex("u_ColorTexture");
 		auto aoTextureIndex = m_Material->GetShader()->GetPropertyIndex("u_AOTexture");
