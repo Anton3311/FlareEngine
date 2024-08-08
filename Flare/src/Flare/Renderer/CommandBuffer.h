@@ -19,6 +19,7 @@ namespace Flare
 	class VertexBuffer;
 	class IndexBuffer;
 	class ShaderConstantBuffer;
+	class ShaderDescriptorBuffer;
 
 	class CommandBuffer
 	{
@@ -43,6 +44,8 @@ namespace Flare
 		virtual void ClearDepth(const Ref<Texture>& texture, float depth) = 0;
 
 		virtual void ApplyMaterial(const Ref<const Material>& material) = 0;
+
+		virtual void PushDescriptorProperties(ShaderDescriptorBuffer& descriptorProperties) = 0;
 		virtual void PushConstants(const ShaderConstantBuffer& constantBuffer) = 0;
 
 		virtual void SetViewportAndScisors(Math::Rect viewportRect) = 0;
@@ -74,7 +77,8 @@ namespace Flare
 
 		virtual void SetGlobalDescriptorSet(Ref<const DescriptorSet> set, uint32_t index) = 0;
 
-		virtual void DispatchCompute(Ref<ComputePipeline> pipeline, const glm::uvec3& groupCount) = 0;
+		virtual void BindComputePipeline(Ref<ComputePipeline> pipeline) = 0;
+		virtual void DispatchCompute(const glm::uvec3& groupCount) = 0;
 
 		virtual void StartTimer(Ref<GPUTimer> timer) = 0;
 		virtual void StopTimer(Ref<GPUTimer> timer) = 0;
