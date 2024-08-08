@@ -1,5 +1,7 @@
 #pragma once
 
+#include <glm/glm.hpp>
+
 namespace Flare
 {
 	class Viewport;
@@ -13,11 +15,13 @@ namespace Flare
 	{
 	public:
 		RenderGraphContext(const Viewport& viewport,
+			glm::uvec2 renderAreaSize,
 			const RenderGraph& renderGraph,
 			const RenderGraphResourceManager& resourceManager,
 			const SceneSubmition& sceneSubmition,
 			const RenderView& view)
 			: m_Viewport(viewport),
+			RenderAreaSize(renderAreaSize),
 			m_RenderGraph(renderGraph),
 			m_SceneSubmition(sceneSubmition),
 			m_RenderView(view),
@@ -30,6 +34,8 @@ namespace Flare
 		inline const RenderView& GetRenderView() const { return m_RenderView; }
 
 		inline const Viewport& GetViewport() const { return m_Viewport; }
+	public:
+		const glm::uvec2 RenderAreaSize = glm::uvec2(0, 0);
 	private:
 		const Viewport& m_Viewport;
 		const SceneSubmition& m_SceneSubmition;

@@ -41,7 +41,13 @@ namespace Flare
 				renderTarget = m_RenderTargets[m_NodeData[nodeIndex].RenderTargetHandleIndex + frameInFlight];
 			}
 
-			RenderGraphContext context(GetViewport(), *this, GetResourceManager(), sceneSubmition, view);
+			RenderGraphContext context(
+				GetViewport(),
+				renderTarget ? renderTarget->GetSize() : glm::uvec2(0, 0), // TODO: Specify a valid size even if the render target is null
+				*this,
+				GetResourceManager(),
+				sceneSubmition,
+				view);
 
 			commandBuffer->BeginLabel(node.Specifications.GetDebugColor(), node.Specifications.GetDebugName());
 
