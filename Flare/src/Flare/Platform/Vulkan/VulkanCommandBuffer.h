@@ -37,6 +37,8 @@ namespace Flare
 		void ClearDepth(const Ref<Texture>& texture, float depth) override;
 
 		void ApplyMaterial(const Ref<const Material>& material) override;
+
+		void PushDescriptorProperties(ShaderDescriptorBuffer& descriptorProperties) override;
 		void PushConstants(const ShaderConstantBuffer& constantBuffer) override;
 
 		void SetViewportAndScisors(Math::Rect viewportRect) override;
@@ -69,12 +71,15 @@ namespace Flare
 
 		void SetGlobalDescriptorSet(Ref<const DescriptorSet> set, uint32_t index) override;
 
-		void DispatchCompute(Ref<ComputePipeline> pipeline, const glm::uvec3& groupCount) override;
+		void BindComputePipeline(Ref<ComputePipeline> pipeline) override;
+		void DispatchCompute(const glm::uvec3& groupCount) override;
 
 		void StartTimer(Ref<GPUTimer> timer) override;
 		void StopTimer(Ref<GPUTimer> timer) override;
 	public:
 		void Reset();
+		void ResetBoundPipelineState();
+		void ResetCurrentDescriptorSets();
 
 		void Begin();
 		void End();
@@ -118,6 +123,16 @@ namespace Flare
 		Ref<const VulkanDescriptorSet> m_GlobalDescriptorSets[GLOBAL_DESCRIPTOR_SET_COUNT] = { nullptr }; // Slot 3 is material resources
 		bool m_GlobalDescriptorSetsRequireBinding = false;
 
+		struct BoundPipelineState
+		{
+			VkPipelineBindPoint BindPoint = VK_PIPELINE_BIND_POINT_MAX_ENUM;
+			VkPipelineLayout LayoutHandle = VK_NULL_HANDLE;
+			VkPipeline PipelineHandle = VK_NULL_HANDLE;
+
+			Ref<Pipeline> GraphicsPipeline = nullptr;
+			Ref<ComputePipeline> ComputePipeline = nullptr;
+		};
+
 		struct BoundDescriptorSet
 		{
 			Ref<const VulkanDescriptorSet> Set = nullptr;
@@ -125,7 +140,7 @@ namespace Flare
 		};
 
 		BoundDescriptorSet m_CurrentDescriptorSets[4] = { nullptr };
-		Ref<Pipeline> m_CurrentGraphicsPipeline = nullptr;
+		BoundPipelineState m_BoundPipeline;
 
 		VkCommandBuffer m_CommandBuffer = VK_NULL_HANDLE;
 

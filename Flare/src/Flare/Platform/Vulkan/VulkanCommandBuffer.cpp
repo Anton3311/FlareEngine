@@ -2,6 +2,7 @@
 
 #include "Flare/Renderer/Material.h"
 #include "Flare/Renderer/Renderer.h"
+#include "Flare/Renderer/ShaderDescriptorBuffer.h"
 
 #include "Flare/Platform/Vulkan/VulkanContext.h"
 #include "Flare/Platform/Vulkan/VulkanFrameBuffer.h"
@@ -135,7 +136,7 @@ namespace Flare
 			}
 		}
 
-		if (m_GlobalDescriptorSetsRequireBinding || pipeline.get() != m_CurrentGraphicsPipeline.get())
+		if (m_GlobalDescriptorSetsRequireBinding || pipeline.get() != m_BoundPipeline.GraphicsPipeline.get())
 		{
 			BindPipeline(pipeline);
 		}
@@ -148,12 +149,24 @@ namespace Flare
 		}
 	}
 
+	void VulkanCommandBuffer::PushDescriptorProperties(ShaderDescriptorBuffer& descriptorProperties)
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		descriptorProperties.UpdateDescriptorSet();
+		descriptorProperties.MarkAsUsedInRendering();
+
+		FLARE_CORE_ASSERT(m_BoundPipeline.LayoutHandle);
+
+		BindDescriptorSet(As<const VulkanDescriptorSet>(descriptorProperties.GetDescriptorSet()), m_BoundPipeline.LayoutHandle, 3);
+	}
+
 	void VulkanCommandBuffer::PushConstants(const ShaderConstantBuffer& constantBuffer)
 	{
 		FLARE_CORE_ASSERT(constantBuffer.GetShader());
-		Ref<const GraphicsShaderMetadata> metadata = constantBuffer.GetShader()->GetMetadata();
+		FLARE_CORE_ASSERT(m_BoundPipeline.LayoutHandle);
 
-		VkPipelineLayout pipelineLayout = As<const VulkanPipeline>(m_CurrentGraphicsPipeline)->GetLayoutHandle();
+		Ref<const GraphicsShaderMetadata> metadata = constantBuffer.GetShader()->GetMetadata();
 
 		for (size_t i = 0; i < metadata->PushConstantsRanges.size(); i++)
 		{
@@ -173,7 +186,7 @@ namespace Flare
 			}
 
 			vkCmdPushConstants(m_CommandBuffer,
-				pipelineLayout,
+				m_BoundPipeline.LayoutHandle,
 				stage,
 				(uint32_t)range.Offset,
 				(uint32_t)range.Size,
@@ -231,28 +244,30 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(m_CurrentRenderPass);
 
-		auto vulkanPipeline = As<VulkanPipeline>(pipeline);
-		VkPipelineLayout pipelineLayout = vulkanPipeline->GetLayoutHandle();
-
-		if (m_CurrentGraphicsPipeline.get() != pipeline.get())
+		if (m_BoundPipeline.GraphicsPipeline.get() != pipeline.get())
 		{
-			for (uint32_t i = 0; i < 4; i++)
-			{
-				m_CurrentDescriptorSets[i] = {};
-			}
+			auto vulkanPipeline = As<VulkanPipeline>(pipeline);
+			VkPipelineLayout pipelineLayout = vulkanPipeline->GetLayoutHandle();
 
-			vkCmdBindPipeline(m_CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vulkanPipeline->GetHandle(m_CurrentRenderPass));
+			ResetCurrentDescriptorSets();
+			ResetBoundPipelineState();
 
 			m_UsedPipelines.push_back(pipeline);
-			m_CurrentGraphicsPipeline = pipeline;
+
+			m_BoundPipeline.GraphicsPipeline = pipeline;
+			m_BoundPipeline.BindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+			m_BoundPipeline.LayoutHandle = pipelineLayout;
+			m_BoundPipeline.PipelineHandle = vulkanPipeline->GetHandle(m_CurrentRenderPass);
+
+			vkCmdBindPipeline(m_CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_BoundPipeline.PipelineHandle);
+
 			m_GlobalDescriptorSetsRequireBinding = true;
 		}
 
 		// Bind global descriptor sets
-
 		if (m_GlobalDescriptorSetsRequireBinding)
 		{
-			Ref<const GraphicsShaderMetadata> metadata = m_CurrentGraphicsPipeline->GetSpecifications().Shader->GetMetadata();
+			Ref<const GraphicsShaderMetadata> metadata = m_BoundPipeline.GraphicsPipeline->GetSpecifications().Shader->GetMetadata();
 			Ref<VulkanDescriptorSet> emptyDescriptorSet = As<VulkanDescriptorSet>(VulkanContext::GetInstance().GetEmptyDescriptorSet());
 
 			for (size_t i = 0; i < GLOBAL_DESCRIPTOR_SET_COUNT; i++)
@@ -261,11 +276,11 @@ namespace Flare
 				if (setUsage.Usage == ShaderDescriptorSetUsage::UsageType::Used)
 				{
 					FLARE_CORE_ASSERT(m_GlobalDescriptorSets[i]);
-					BindDescriptorSet(m_GlobalDescriptorSets[i], pipelineLayout, (uint32_t)i);
+					BindDescriptorSet(m_GlobalDescriptorSets[i], m_BoundPipeline.LayoutHandle, (uint32_t)i);
 				}
 				else if (setUsage.Usage == ShaderDescriptorSetUsage::UsageType::Empty)
 				{
-					BindDescriptorSet(emptyDescriptorSet, pipelineLayout, (uint32_t)i);
+					BindDescriptorSet(emptyDescriptorSet, m_BoundPipeline.LayoutHandle, (uint32_t)i);
 				}
 			}
 		}
@@ -437,11 +452,30 @@ namespace Flare
 		m_GlobalDescriptorSetsRequireBinding = true;
 	}
 
-	void VulkanCommandBuffer::DispatchCompute(Ref<ComputePipeline> pipeline, const glm::uvec3& groupCount)
+	void VulkanCommandBuffer::BindComputePipeline(Ref<ComputePipeline> pipeline)
 	{
 		FLARE_PROFILE_FUNCTION();
 		Ref<VulkanComputePipeline> vulkanPipeline = As<VulkanComputePipeline>(pipeline);
 		vkCmdBindPipeline(m_CommandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, vulkanPipeline->GetHandle());
+
+		Ref<ComputeShader> computeShader = pipeline->GetSpecifications().Shader;
+		Ref<const ComputeShaderMetadata> metadata = computeShader->GetMetadata();
+
+		VkPipelineLayout pipelineLayout = As<const VulkanComputeShader>(computeShader)->GetPipelineLayoutHandle();
+
+		Ref<const VulkanDescriptorSet> emptySet = As<const VulkanDescriptorSet>(VulkanContext::GetInstance().GetEmptyDescriptorSet());
+		for (size_t i = 0; i < 4; i++)
+		{
+			if (metadata->DescriptorSetUsage[i].Usage == ShaderDescriptorSetUsage::UsageType::Empty)
+			{
+				BindComputeDescriptorSet(emptySet, pipelineLayout, (uint32_t)i);
+			}
+		}
+	}
+
+	void VulkanCommandBuffer::DispatchCompute(const glm::uvec3& groupCount)
+	{
+		FLARE_PROFILE_FUNCTION();
 		vkCmdDispatch(m_CommandBuffer, groupCount.x, groupCount.y, groupCount.z);
 	}
 
@@ -470,7 +504,8 @@ namespace Flare
 			m_CurrentDescriptorSets[i] = {};
 		}
 
-		m_CurrentGraphicsPipeline = nullptr;
+		ResetBoundPipelineState();
+
 		m_CurrentMesh = nullptr;
 
 		for (size_t i = 0; i < GLOBAL_DESCRIPTOR_SET_COUNT; i++)
@@ -479,6 +514,21 @@ namespace Flare
 		}
 
 		m_UsedPipelines.clear();
+	}
+
+	void VulkanCommandBuffer::ResetBoundPipelineState()
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		m_BoundPipeline = {};
+	}
+
+	void VulkanCommandBuffer::ResetCurrentDescriptorSets()
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		for (auto& boundSet : m_CurrentDescriptorSets)
+			boundSet = {};
 	}
 
 	void VulkanCommandBuffer::Begin()
@@ -813,6 +863,7 @@ namespace Flare
 
 	void VulkanCommandBuffer::BindMesh(const Ref<const Mesh>& mesh)
 	{
+		FLARE_PROFILE_FUNCTION();
 		if (m_CurrentMesh.get() != mesh.get())
 		{
 			Ref<const VertexBuffer> vertexBuffers[] =
