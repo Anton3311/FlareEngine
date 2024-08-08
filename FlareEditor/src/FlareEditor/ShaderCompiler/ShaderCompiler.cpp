@@ -578,7 +578,7 @@ namespace Flare
 		const auto& shaderResource = compiler.get_shader_resources();
 		ReflectDescriptorProperties(compiler, shaderResource.uniform_buffers, metadata->DescriptorProperties, ShaderDescriptorType::UniformBuffer);
 		ReflectDescriptorProperties(compiler, shaderResource.storage_buffers, metadata->DescriptorProperties, ShaderDescriptorType::StorageBuffer);
-		ReflectDescriptorProperties(compiler, shaderResource.sampled_images, metadata->DescriptorProperties, ShaderDescriptorType::Sampler);
+		ReflectDescriptorProperties(compiler, shaderResource.sampled_images, metadata->DescriptorProperties, ShaderDescriptorType::SampledImage);
 		ReflectDescriptorProperties(compiler, shaderResource.storage_images, metadata->DescriptorProperties, ShaderDescriptorType::StorageImage);
 
 		// Fill DescriptorSetUsage

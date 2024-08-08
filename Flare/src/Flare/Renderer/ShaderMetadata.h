@@ -91,7 +91,7 @@ namespace Flare
 	{
 		UniformBuffer,
 		StorageBuffer,
-		Sampler,
+		SampledImage,
 		StorageImage,
 	};
 

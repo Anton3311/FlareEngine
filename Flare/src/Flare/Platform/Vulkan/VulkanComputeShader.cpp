@@ -84,7 +84,7 @@ namespace Flare
 			if (property.Set != 3)
 				continue;
 
-			if (property.Type == ShaderDescriptorType::Sampler)
+			if (property.Type == ShaderDescriptorType::SampledImage)
 			{
 				auto& binding = bindings.emplace_back();
 				binding = {};

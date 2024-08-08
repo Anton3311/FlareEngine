@@ -90,7 +90,7 @@ namespace Flare
 			case ShaderDescriptorType::StorageImage:
 				m_DescriptorSet->WriteStorageImage(textureDescriptor.Texture, descriptorProperty.Binding);
 				break;
-			case ShaderDescriptorType::Sampler:
+			case ShaderDescriptorType::SampledImage:
 				if (textureDescriptor.Texture)
 					m_DescriptorSet->WriteImage(textureDescriptor.Texture, descriptorProperty.Binding);
 				else

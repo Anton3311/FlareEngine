@@ -145,7 +145,7 @@ namespace Flare
 	{
 		switch (type)
 		{
-		case ShaderDescriptorType::Sampler:
+		case ShaderDescriptorType::SampledImage:
 			return "Sampler";
 		case ShaderDescriptorType::StorageBuffer:
 			return "StorageBuffer";

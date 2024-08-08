@@ -163,7 +163,7 @@ namespace Flare
 				case ShaderDescriptorType::UniformBuffer:
 					binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 					break;
-				case ShaderDescriptorType::Sampler:
+				case ShaderDescriptorType::SampledImage:
 					binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 					break;
 				case ShaderDescriptorType::StorageBuffer:
