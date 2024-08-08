@@ -47,6 +47,9 @@ namespace Flare
 			if (passType == RenderGraphPassType::Graphics || passType == RenderGraphPassType::Other)
 			{
 				FLARE_CORE_ASSERT(node.Specifications.GetGeneralTextureResources().size() == 0);
+
+				m_RenderPassTransitions[nodeIndex].AttachmentTransitions.resize(node.Specifications.GetOutputs().size());
+
 				GenerateInputTransitions(nodeIndex);
 				GenerateOutputTransitions(nodeIndex);
 			}
@@ -70,8 +73,6 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 		const RenderPassNode& node = m_Nodes[nodeIndex];
-
-		m_RenderPassTransitions[nodeIndex].AttachmentTransitions.resize(node.Specifications.GetOutputs().size());
 
 		for (const auto& input : node.Specifications.GetInputs())
 		{

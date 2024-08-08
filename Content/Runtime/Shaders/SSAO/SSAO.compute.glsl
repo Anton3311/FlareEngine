@@ -1,40 +1,21 @@
-Type = FullscreenQuad
-DepthTest = false
-DepthWrite = false
-
-#begin vertex
+#begin compute
 #version 450
 
-layout(location = 0) in vec3 i_Position;
+#include "../Common/Camera.glsl"
+#include "../Common/Math.glsl"
 
-layout(location = 0) out vec2 o_UV;
+layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
 
-void main()
+layout(set = 3, binding = 0) uniform sampler2D u_Depth;
+layout(set = 3, binding = 1) uniform sampler2D u_Normals;
+layout(rgba8, set = 3, binding = 2) uniform writeonly image2D u_AO;
+
+layout(std140, push_constant) uniform Constants
 {
-	gl_Position = vec4(i_Position.xy, 0.0, 1.0);
-	o_UV = i_Position.xy / 2.0 + vec2(0.5);
-}
-
-#end
-
-#begin pixel
-#version 450
-
-#include "Common/Camera.glsl"
-#include "Common/Math.glsl"
-
-layout(location = 0) in vec2 i_UV;
-
-layout(set = 3, binding = 0) uniform sampler2D u_NormalsTexture;
-layout(set = 3, binding = 1) uniform sampler2D u_DepthTexture;
-
-layout(std140, push_constant) uniform Params
-{
-	float Bias;
-	float SampleRadius;
-} u_Params;
-
-layout(location = 0) out vec4 o_Color;
+	ivec2 u_AOImageSize;
+	float u_Bias;
+	float u_SampleRadius;
+};
 
 const vec3[] RANDOM_VECTORS = 
 {
@@ -76,22 +57,38 @@ const int SAMPLES_COUNT = 32;
 
 void main()
 {
-	float depth = texture(u_DepthTexture, i_UV).r;
-	vec3 viewSpacePosition = ReconstructViewSpacePositionFromDepth(i_UV * 2.0f - vec2(1.0f), depth);
+	ivec2 pixelCoordinates = ivec2(gl_GlobalInvocationID.xy);
+	if (pixelCoordinates.x >= u_AOImageSize.x || pixelCoordinates.y >= u_AOImageSize.y)
+		return;
+
+	vec2 uv = vec2(pixelCoordinates) / vec2(u_AOImageSize);
+
+	float depth = texture(u_Depth, uv).r;
+	vec3 viewSpacePosition = ReconstructViewSpacePositionFromDepth(uv * 2.0f - vec2(1.0f), depth);
 
 	mat4 worldNormalToView = transpose(u_Camera.InverseView);
-	vec3 sampledNormal = texture(u_NormalsTexture, i_UV).xyz;
+	vec3 sampledNormal = texture(u_Normals, uv).xyz;
 
-	if (length(sampledNormal) < 0.01)
 	{
-		o_Color = vec4(1.0f); // No AO
-	 	return;
+		// AO Image size = viewport size / 2
+		vec2 texelSize = vec2(1.0f) / vec2(u_AOImageSize * 2);
+		vec3 sampledNormal1 = texture(u_Normals, uv + vec2(texelSize.x, 0.0f)).rgb;
+		vec3 sampledNormal2 = texture(u_Normals, uv + vec2(0.0f, texelSize.y)).rgb;
+		vec3 sampledNormal3 = texture(u_Normals, uv + texelSize).rgb;
+
+		if (sampledNormal == vec3(0.0f) || sampledNormal1 == vec3(0.0f) || sampledNormal2 == vec3(0.0f) || sampledNormal3 == vec3(0.0f))
+		{
+			imageStore(u_AO, pixelCoordinates, vec4(1.0f));
+			return;
+		}
 	}
 
-	vec3 worldSpaceNormal = normalize(sampledNormal * 2.0f - vec3(1.0f));
+	sampledNormal = sampledNormal * 2.0f - vec3(1.0f);
+
+	vec3 worldSpaceNormal = normalize(sampledNormal);
 	vec3 normal = (worldNormalToView * vec4(worldSpaceNormal, 1.0)).xyz;
 
-	float angle = 2.0f * PI * InterleavedGradientNoise(gl_FragCoord.xy);
+	float angle = 2.0f * PI * InterleavedGradientNoise(pixelCoordinates.xy);
 	vec3 randomVector = vec3(cos(angle), sin(angle), 0.0f);
 	randomVector = normalize(randomVector.xyz * 2.0f - vec3(1.0f));
 
@@ -103,20 +100,22 @@ void main()
 	float aoFactor = 0.0f;
 	for (int i = 0; i < SAMPLES_COUNT; i++)
 	{
-		vec3 samplePosition = viewSpacePosition + tbn * (RANDOM_VECTORS[i] * u_Params.SampleRadius);
+		vec3 samplePosition = viewSpacePosition + tbn * (RANDOM_VECTORS[i] * u_SampleRadius);
 		vec4 projected = u_Camera.Projection * vec4(samplePosition, 1.0);
 		projected.xyz /= projected.w;
 
 		vec2 uv = projected.xy * 0.5f + vec2(0.5f);
-		float sampleDepth = texture(u_DepthTexture, uv).r;
+		float sampleDepth = texture(u_Depth, uv).r;
 		vec3 sampleViewSpace = ReconstructViewSpacePositionFromDepth(uv, sampleDepth);
 
-		float rangeCheck = smoothstep(0.0, 1.0, u_Params.SampleRadius / abs(sampleViewSpace.z - samplePosition.z));
-		if (samplePosition.z + u_Params.Bias <= sampleViewSpace.z)
+		float rangeCheck = smoothstep(0.0, 1.0, u_SampleRadius / abs(sampleViewSpace.z - samplePosition.z));
+		if (samplePosition.z + u_Bias <= sampleViewSpace.z)
 			aoFactor += rangeCheck;
 	}
 
-	o_Color = vec4(vec3(1.0 - aoFactor / float(SAMPLES_COUNT)), 1.0);
+	vec4 ao = vec4(vec3(1.0 - aoFactor / float(SAMPLES_COUNT)), 1.0);
+
+	imageStore(u_AO, pixelCoordinates, ao);
 }
 
 #end

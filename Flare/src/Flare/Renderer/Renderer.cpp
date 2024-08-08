@@ -135,25 +135,25 @@ namespace Flare
 				shadowDataBinding.binding = 0;
 				shadowDataBinding.descriptorCount = 1;
 				shadowDataBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-				shadowDataBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+				shadowDataBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_COMPUTE_BIT;
 
 				auto& lightDataBinding = bindings[1];
 				lightDataBinding.binding = 1;
 				lightDataBinding.descriptorCount = 1;
 				lightDataBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-				lightDataBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+				lightDataBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_COMPUTE_BIT;
 
 				auto& pointLightsBinding = bindings[2];
 				pointLightsBinding.binding = 2;
 				pointLightsBinding.descriptorCount = 1;
 				pointLightsBinding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-				pointLightsBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+				pointLightsBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_COMPUTE_BIT;
 
 				auto& spotLightsBinding = bindings[3];
 				spotLightsBinding.binding = 3;
 				spotLightsBinding.descriptorCount = 1;
 				spotLightsBinding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-				spotLightsBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+				spotLightsBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_COMPUTE_BIT;
 
 				for (uint32_t i = 0; i < ShadowSettings::MaxCascades; i++)
 				{
@@ -184,7 +184,7 @@ namespace Flare
 				cameraBinding.descriptorCount = 1;
 				cameraBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 				cameraBinding.pImmutableSamplers = nullptr;
-				cameraBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+				cameraBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_COMPUTE_BIT;
 
 				s_RendererData.CameraDescriptorSetPool = CreateRef<VulkanDescriptorSetPool>(Span(&cameraBinding, 1));
 			}

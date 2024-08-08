@@ -222,8 +222,10 @@ namespace Flare
 			const GraphNode& node = m_Graph[nodeIndex];
 			RenderGraphPassType passType = node.PassNode->Specifications.GetType();
 
-			if (passType == RenderGraphPassType::Graphics || passType == RenderGraphPassType::Other)
+			switch (passType)
 			{
+			case RenderGraphPassType::Graphics:
+			case RenderGraphPassType::Other:
 				for (const auto& output : node.PassNode->Specifications.GetOutputs())
 					createConnections(output.AttachmentTexture, nodeIndex);
 
@@ -232,9 +234,11 @@ namespace Flare
 
 				for (const auto& output : node.PassNode->Specifications.GetOutputs())
 					writingPasses[output.AttachmentTexture].push_back(nodeIndex);
-			}
-			else if (passType == RenderGraphPassType::Compute)
-			{
+				break;
+			case RenderGraphPassType::Compute:
+				for (const auto& input : node.PassNode->Specifications.GetInputs())
+					createConnections(input.InputTexture, nodeIndex);
+
 				for (const auto& resource : node.PassNode->Specifications.GetGeneralTextureResources())
 					createConnections(resource.TextureId, nodeIndex);
 
@@ -243,6 +247,7 @@ namespace Flare
 					if (HAS_BIT(resource.Access, ResourceAccess::Write))
 						writingPasses[resource.TextureId].push_back(nodeIndex);
 				}
+				break;
 			}
 		}
 	}

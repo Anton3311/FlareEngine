@@ -31,8 +31,6 @@ namespace Flare
 
 	void ShaderDescriptorBuffer::SetTexture(size_t propertyIndex, Ref<const Texture> texture)
 	{
-		FLARE_CORE_ASSERT(propertyIndex < m_TextureDescriptors.size());
-
 		TextureDescriptor& descriptor = m_TextureDescriptors[PropertyIndexToTextureDescriptorIndex(propertyIndex)];
 		descriptor.Texture = texture;
 		descriptor.Sampler = nullptr;
@@ -42,8 +40,6 @@ namespace Flare
 
 	void ShaderDescriptorBuffer::SetTexture(size_t propertyIndex, Ref<const Texture> texture, Ref<const Sampler> sampler)
 	{
-		FLARE_CORE_ASSERT(propertyIndex < m_TextureDescriptors.size());
-
 		TextureDescriptor& descriptor = m_TextureDescriptors[PropertyIndexToTextureDescriptorIndex(propertyIndex)];
 		descriptor.Texture = texture;
 		descriptor.Sampler = sampler;

@@ -44,7 +44,7 @@ namespace Flare
 	class FLARE_API SSAOMainPass : public RenderGraphPass
 	{
 	public:
-		SSAOMainPass(RenderGraphTextureId normalsTexture, RenderGraphTextureId depthTexture);
+		SSAOMainPass(RenderGraphTextureId normalsTexture, RenderGraphTextureId depthTexture, RenderGraphTextureId aoTexture);
 
 		void OnPrepare(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer) override;
 		void OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer) override;
@@ -53,6 +53,19 @@ namespace Flare
 
 		RenderGraphTextureId m_NormalsTexture;
 		RenderGraphTextureId m_DepthTexture;
+		RenderGraphTextureId m_AOTexture;
+
+		Ref<ComputeShader> m_Shader = nullptr;
+		ShaderConstantBuffer m_ConstantBuffer;
+		ShaderDescriptorBuffer m_DescriptorBuffer;
+
+		std::optional<size_t> m_NormalsTextureProperty;
+		std::optional<size_t> m_DepthTextureProperty;
+		std::optional<size_t> m_AOImageProperty;
+
+		std::optional<size_t> m_BiasProperty;
+		std::optional<size_t> m_ImageSizeProperty;
+		std::optional<size_t> m_RadiusProperty;
 
 		Ref<SSAO> m_Parameters = nullptr;
 	};

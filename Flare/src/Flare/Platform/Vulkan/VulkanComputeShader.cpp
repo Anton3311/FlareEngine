@@ -3,6 +3,8 @@
 #include "FlareCore/Log.h"
 #include "FlareCore/Profiler/Profiler.h"
 
+#include "Flare/Renderer/Renderer.h"
+
 #include "Flare/Platform/Vulkan/VulkanContext.h"
 #include "Flare/Platform/Vulkan/VulkanDescriptorSet.h"
 
@@ -129,6 +131,20 @@ namespace Flare
 
 			usedDescriptorSetCount = (uint32_t)(i + 1);
 		}
+
+		if (m_Metadata->DescriptorSetUsage[0].Usage == ShaderDescriptorSetUsage::UsageType::Used)
+		{
+			Ref<const VulkanDescriptorSetLayout> cameraDescriptorLayout = As<const VulkanDescriptorSetLayout>(Renderer::GetCameraDescriptorSetPool()->GetLayout());
+			layoutHandles[0] = cameraDescriptorLayout->GetHandle();
+		}
+		
+		if (m_Metadata->DescriptorSetUsage[1].Usage == ShaderDescriptorSetUsage::UsageType::Used)
+		{
+			Ref<const VulkanDescriptorSetLayout> globalDescriptorSetLayout = As<const VulkanDescriptorSetLayout>(Renderer::GetGlobalDescriptorSetPool()->GetLayout());
+			layoutHandles[1] = globalDescriptorSetLayout->GetHandle();
+		}
+
+		FLARE_CORE_ASSERT(m_Metadata->DescriptorSetUsage[2].Usage != ShaderDescriptorSetUsage::UsageType::Used, "Set 2 is not currently supported for compute shaders");
 
 		if (m_SetPool != nullptr)
 		{
