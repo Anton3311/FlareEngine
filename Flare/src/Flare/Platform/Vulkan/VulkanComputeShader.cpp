@@ -4,6 +4,7 @@
 #include "FlareCore/Profiler/Profiler.h"
 
 #include "Flare/Platform/Vulkan/VulkanContext.h"
+#include "Flare/Platform/Vulkan/VulkanDescriptorSet.h"
 
 #include "Flare/Renderer/ShaderCacheManager.h"
 
@@ -14,11 +15,7 @@ namespace Flare
 	VulkanComputeShader::~VulkanComputeShader()
 	{
 		FLARE_PROFILE_FUNCTION();
-		vkDestroyShaderModule(VulkanContext::GetInstance().GetDevice(), m_Module, nullptr);
-		vkDestroyPipelineLayout(VulkanContext::GetInstance().GetDevice(), m_PipelineLayout, nullptr);
-
-		m_Module = VK_NULL_HANDLE;
-		m_PipelineLayout = VK_NULL_HANDLE;
+		Release();
 	}
 
 	Ref<const ComputeShaderMetadata> VulkanComputeShader::GetMetadata() const
@@ -52,6 +49,7 @@ namespace Flare
 		VK_CHECK_RESULT(vkCreateShaderModule(VulkanContext::GetInstance().GetDevice(), &createInfo, nullptr, &m_Module));
 
 		CreatePipelineLayout();
+		CreatePipeline();
 
 		m_IsLoaded = true;
 	}
@@ -59,6 +57,21 @@ namespace Flare
 	bool Flare::VulkanComputeShader::IsLoaded() const
 	{
 		return m_IsLoaded;
+	}
+
+	void VulkanComputeShader::Release()
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		VkDevice device = VulkanContext::GetInstance().GetDevice();
+
+		vkDestroyShaderModule(device, m_Module, nullptr);
+		vkDestroyPipelineLayout(device, m_PipelineLayout, nullptr);
+		vkDestroyPipeline(device, m_Pipeline, nullptr);
+
+		m_Module = VK_NULL_HANDLE;
+		m_PipelineLayout = VK_NULL_HANDLE;
+		m_Pipeline = nullptr;
 	}
 
 	void VulkanComputeShader::CreatePipelineLayout()
@@ -144,5 +157,24 @@ namespace Flare
 		}
 
 		VK_CHECK_RESULT(vkCreatePipelineLayout(VulkanContext::GetInstance().GetDevice(), &createInfo, nullptr, &m_PipelineLayout));
+	}
+
+	void VulkanComputeShader::CreatePipeline()
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		VkComputePipelineCreateInfo info{};
+		info.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
+		info.basePipelineHandle = VK_NULL_HANDLE;
+		info.basePipelineIndex = 0;
+		info.layout = m_PipelineLayout;
+
+		VkPipelineShaderStageCreateInfo& stageInfo = info.stage;
+		stageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+		stageInfo.pName = "main";
+		stageInfo.module = m_Module;
+		stageInfo.stage = VK_SHADER_STAGE_COMPUTE_BIT;
+
+		VK_CHECK_RESULT(vkCreateComputePipelines(VulkanContext::GetInstance().GetDevice(), VK_NULL_HANDLE, 1, &info, nullptr, &m_Pipeline));
 	}
 }

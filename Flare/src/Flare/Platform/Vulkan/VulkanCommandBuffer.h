@@ -71,7 +71,7 @@ namespace Flare
 
 		void SetGlobalDescriptorSet(Ref<const DescriptorSet> set, uint32_t index) override;
 
-		void BindComputePipeline(Ref<ComputePipeline> pipeline) override;
+		void BindComputeShader(Ref<ComputeShader> computeShader) override;
 		void DispatchCompute(const glm::uvec3& groupCount) override;
 
 		void StartTimer(Ref<GPUTimer> timer) override;
@@ -136,7 +136,7 @@ namespace Flare
 			VkPipeline PipelineHandle = VK_NULL_HANDLE;
 
 			Ref<Pipeline> GraphicsPipeline = nullptr;
-			Ref<ComputePipeline> ComputePipeline = nullptr;
+			Ref<ComputeShader> ComputeShader = nullptr;
 		};
 
 		struct BoundDescriptorSet
@@ -153,7 +153,7 @@ namespace Flare
 		Ref<VulkanFrameBuffer> m_CurrentRenderTarget = nullptr;
 		Ref<VulkanRenderPass> m_CurrentRenderPass = nullptr;
 
-		std::vector<Ref<const ComputePipeline>> m_UsedComputePipelines;
+		std::vector<Ref<const ComputeShader>> m_UsedComputeShader;
 		std::vector<Ref<const Pipeline>> m_UsedPipelines;
 	};
 }

@@ -5,7 +5,6 @@
 #include "Flare/Renderer/Renderer.h"
 #include "Flare/Renderer/RendererPrimitives.h"
 #include "Flare/Renderer/CommandBuffer.h"
-#include "Flare/Renderer/ComputePipeline.h"
 #include "Flare/Renderer/FrameBuffer.h"
 #include "Flare/Renderer/ShaderLibrary.h"
 #include "Flare/Renderer/GraphicsContext.h"

@@ -12,7 +12,6 @@
 #include "Flare/Platform/Vulkan/VulkanMaterial.h"
 #include "Flare/Platform/Vulkan/VulkanGPUTimer.h"
 #include "Flare/Platform/Vulkan/VulkanComputeShader.h"
-#include "Flare/Platform/Vulkan/VulkanComputePipeline.h"
 
 namespace Flare
 {
@@ -438,25 +437,24 @@ namespace Flare
 		m_GlobalDescriptorSetsRequireBinding = true;
 	}
 
-	void VulkanCommandBuffer::BindComputePipeline(Ref<ComputePipeline> pipeline)
+	void VulkanCommandBuffer::BindComputeShader(Ref<ComputeShader> computeShader)
 	{
 		FLARE_PROFILE_FUNCTION();
 
 		ResetCurrentDescriptorSets();
 		ResetBoundPipelineState();
 
-		Ref<ComputeShader> computeShader = pipeline->GetSpecifications().Shader;
 		Ref<const ComputeShaderMetadata> metadata = computeShader->GetMetadata();
 
 		m_BoundPipeline.BindPoint = VK_PIPELINE_BIND_POINT_COMPUTE;
-		m_BoundPipeline.ComputePipeline = pipeline;
+		m_BoundPipeline.ComputeShader = computeShader;
 		m_BoundPipeline.GraphicsPipeline = nullptr;
 		m_BoundPipeline.LayoutHandle = As<const VulkanComputeShader>(computeShader)->GetPipelineLayoutHandle();
-		m_BoundPipeline.PipelineHandle = As<VulkanComputePipeline>(pipeline)->GetHandle();
+		m_BoundPipeline.PipelineHandle = As<VulkanComputeShader>(computeShader)->GetPipeline();
 
 		vkCmdBindPipeline(m_CommandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_BoundPipeline.PipelineHandle);
 
-		m_UsedComputePipelines.push_back(pipeline);
+		m_UsedComputeShader.push_back(computeShader);
 
 		RebindGlobalDescriptorSets();
 	}
@@ -502,7 +500,7 @@ namespace Flare
 		}
 
 		m_UsedPipelines.clear();
-		m_UsedComputePipelines.clear();
+		m_UsedComputeShader.clear();
 	}
 
 	void VulkanCommandBuffer::ResetBoundPipelineState()
@@ -534,9 +532,9 @@ namespace Flare
 		{
 			metadata = m_BoundPipeline.GraphicsPipeline->GetSpecifications().Shader->GetMetadata();
 		}
-		else if (m_BoundPipeline.ComputePipeline)
+		else if (m_BoundPipeline.ComputeShader)
 		{
-			metadata = m_BoundPipeline.ComputePipeline->GetSpecifications().Shader->GetMetadata();
+			metadata = m_BoundPipeline.ComputeShader->GetMetadata();
 		}
 		else
 		{

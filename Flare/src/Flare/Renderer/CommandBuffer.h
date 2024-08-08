@@ -13,7 +13,7 @@ namespace Flare
 	class Material;
 	class Mesh;
 	class GPUTimer;
-	class ComputePipeline;
+	class ComputeShader;
 	class Pipeline;
 	class DescriptorSet;
 	class VertexBuffer;
@@ -77,7 +77,7 @@ namespace Flare
 
 		virtual void SetGlobalDescriptorSet(Ref<const DescriptorSet> set, uint32_t index) = 0;
 
-		virtual void BindComputePipeline(Ref<ComputePipeline> pipeline) = 0;
+		virtual void BindComputeShader(Ref<ComputeShader> computeShader) = 0;
 		virtual void DispatchCompute(const glm::uvec3& groupCount) = 0;
 
 		virtual void StartTimer(Ref<GPUTimer> timer) = 0;
