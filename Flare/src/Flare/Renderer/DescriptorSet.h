@@ -24,6 +24,8 @@ namespace Flare
 		virtual void WriteImage(Ref<const FrameBuffer> frameBuffer, uint32_t attachmentIndex, uint32_t binding) = 0;
 		virtual void WriteImages(Span<Ref<const Texture>> textures, uint32_t arrayOffset, uint32_t binding) = 0;
 
+		virtual void WriteStorageImage(Ref<const Texture> texture, uint32_t binding) = 0;
+
 		virtual void WriteStorageImage(Ref<const FrameBuffer> frameBuffer, uint32_t attachmentIndex, uint32_t binding) = 0;
 
 		virtual void WriteUniformBuffer(Ref<const UniformBuffer> buffer, uint32_t binding) = 0;

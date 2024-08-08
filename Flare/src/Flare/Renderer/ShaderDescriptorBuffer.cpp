@@ -76,10 +76,22 @@ namespace Flare
 			const TextureDescriptor& textureDescriptor = m_TextureDescriptors[textureIndex];
 			const ShaderDescriptorProperty& descriptorProperty = descriptorProperties[setUsage.FirstPropertyInSet + (uint32_t)textureIndex];
 
-			if (textureDescriptor.Texture)
-				m_DescriptorSet->WriteImage(textureDescriptor.Texture, descriptorProperty.Binding);
-			else
-				m_DescriptorSet->WriteImage(Renderer::GetWhiteTexture(), descriptorProperty.Binding);
+			switch (descriptorProperty.Type)
+			{
+			case ShaderDescriptorType::UniformBuffer:
+			case ShaderDescriptorType::StorageBuffer:
+				FLARE_CORE_ASSERT(false);
+				break;
+			case ShaderDescriptorType::StorageImage:
+				m_DescriptorSet->WriteStorageImage(textureDescriptor.Texture, descriptorProperty.Binding);
+				break;
+			case ShaderDescriptorType::Sampler:
+				if (textureDescriptor.Texture)
+					m_DescriptorSet->WriteImage(textureDescriptor.Texture, descriptorProperty.Binding);
+				else
+					m_DescriptorSet->WriteImage(Renderer::GetWhiteTexture(), descriptorProperty.Binding);
+				break;
+			}
 		}
 
 		m_DescriptorSet->FlushWrites();

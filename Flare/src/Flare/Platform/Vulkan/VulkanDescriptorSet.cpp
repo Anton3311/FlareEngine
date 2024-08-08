@@ -141,6 +141,29 @@ namespace Flare
 		write.pTexelBufferView = nullptr;
 	}
 
+	void VulkanDescriptorSet::WriteStorageImage(Ref<const Texture> texture, uint32_t binding)
+	{
+		FLARE_CORE_ASSERT(m_Images.size() < m_Images.capacity());
+		FLARE_CORE_ASSERT(texture);
+
+		auto vulkanTexture = As<const VulkanTexture>(texture);
+		auto& image = m_Images.emplace_back();
+		image.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+		image.imageView = vulkanTexture->GetImageViewHandle();
+		image.sampler = VK_NULL_HANDLE;
+
+		auto& write = m_Writes.emplace_back();
+		write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		write.descriptorCount = 1;
+		write.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+		write.dstBinding = binding;
+		write.dstArrayElement = 0;
+		write.dstSet = m_Set;
+		write.pBufferInfo = nullptr;
+		write.pImageInfo = &image;
+		write.pTexelBufferView = nullptr;
+	}
+
 	void VulkanDescriptorSet::WriteStorageImage(Ref<const FrameBuffer> frameBuffer, uint32_t attachmentIndex, uint32_t binding)
 	{
 		FLARE_CORE_ASSERT(m_Images.size() < m_Images.capacity());
