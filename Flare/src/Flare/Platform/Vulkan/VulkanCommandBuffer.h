@@ -81,6 +81,8 @@ namespace Flare
 		void ResetBoundPipelineState();
 		void ResetCurrentDescriptorSets();
 
+		void RebindGlobalDescriptorSets();
+
 		void Begin();
 		void End();
 
@@ -151,6 +153,7 @@ namespace Flare
 		Ref<VulkanFrameBuffer> m_CurrentRenderTarget = nullptr;
 		Ref<VulkanRenderPass> m_CurrentRenderPass = nullptr;
 
+		std::vector<Ref<const ComputePipeline>> m_UsedComputePipelines;
 		std::vector<Ref<const Pipeline>> m_UsedPipelines;
 	};
 }

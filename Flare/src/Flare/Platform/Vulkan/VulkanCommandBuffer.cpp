@@ -266,28 +266,7 @@ namespace Flare
 			m_GlobalDescriptorSetsRequireBinding = true;
 		}
 
-		// Bind global descriptor sets
-		if (m_GlobalDescriptorSetsRequireBinding)
-		{
-			Ref<const GraphicsShaderMetadata> metadata = m_BoundPipeline.GraphicsPipeline->GetSpecifications().Shader->GetMetadata();
-			Ref<VulkanDescriptorSet> emptyDescriptorSet = As<VulkanDescriptorSet>(VulkanContext::GetInstance().GetEmptyDescriptorSet());
-
-			for (size_t i = 0; i < GLOBAL_DESCRIPTOR_SET_COUNT; i++)
-			{
-				const ShaderDescriptorSetUsage& setUsage = metadata->DescriptorSetUsage[i];
-				if (setUsage.Usage == ShaderDescriptorSetUsage::UsageType::Used)
-				{
-					FLARE_CORE_ASSERT(m_GlobalDescriptorSets[i]);
-					BindDescriptorSet(m_GlobalDescriptorSets[i], m_BoundPipeline.LayoutHandle, m_BoundPipeline.BindPoint, (uint32_t)i);
-				}
-				else if (setUsage.Usage == ShaderDescriptorSetUsage::UsageType::Empty)
-				{
-					BindDescriptorSet(emptyDescriptorSet, m_BoundPipeline.LayoutHandle, m_BoundPipeline.BindPoint, (uint32_t)i);
-				}
-			}
-		}
-
-		m_GlobalDescriptorSetsRequireBinding = false;
+		RebindGlobalDescriptorSets();
 	}
 
 	void VulkanCommandBuffer::BindVertexBuffer(Ref<const VertexBuffer> buffer, uint32_t index)
@@ -457,22 +436,24 @@ namespace Flare
 	void VulkanCommandBuffer::BindComputePipeline(Ref<ComputePipeline> pipeline)
 	{
 		FLARE_PROFILE_FUNCTION();
-		Ref<VulkanComputePipeline> vulkanPipeline = As<VulkanComputePipeline>(pipeline);
-		vkCmdBindPipeline(m_CommandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, vulkanPipeline->GetHandle());
+
+		ResetCurrentDescriptorSets();
+		ResetBoundPipelineState();
 
 		Ref<ComputeShader> computeShader = pipeline->GetSpecifications().Shader;
 		Ref<const ComputeShaderMetadata> metadata = computeShader->GetMetadata();
 
-		VkPipelineLayout pipelineLayout = As<const VulkanComputeShader>(computeShader)->GetPipelineLayoutHandle();
+		m_BoundPipeline.BindPoint = VK_PIPELINE_BIND_POINT_COMPUTE;
+		m_BoundPipeline.ComputePipeline = pipeline;
+		m_BoundPipeline.GraphicsPipeline = nullptr;
+		m_BoundPipeline.LayoutHandle = As<const VulkanComputeShader>(computeShader)->GetPipelineLayoutHandle();
+		m_BoundPipeline.PipelineHandle = As<VulkanComputePipeline>(pipeline)->GetHandle();
 
-		Ref<const VulkanDescriptorSet> emptySet = As<const VulkanDescriptorSet>(VulkanContext::GetInstance().GetEmptyDescriptorSet());
-		for (size_t i = 0; i < 4; i++)
-		{
-			if (metadata->DescriptorSetUsage[i].Usage == ShaderDescriptorSetUsage::UsageType::Empty)
-			{
-				BindDescriptorSet(emptySet, pipelineLayout, m_BoundPipeline.BindPoint, (uint32_t)i);
-			}
-		}
+		vkCmdBindPipeline(m_CommandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_BoundPipeline.PipelineHandle);
+
+		m_UsedComputePipelines.push_back(pipeline);
+
+		RebindGlobalDescriptorSets();
 	}
 
 	void VulkanCommandBuffer::DispatchCompute(const glm::uvec3& groupCount)
@@ -516,6 +497,7 @@ namespace Flare
 		}
 
 		m_UsedPipelines.clear();
+		m_UsedComputePipelines.clear();
 	}
 
 	void VulkanCommandBuffer::ResetBoundPipelineState()
@@ -531,6 +513,48 @@ namespace Flare
 
 		for (auto& boundSet : m_CurrentDescriptorSets)
 			boundSet = {};
+	}
+
+	void VulkanCommandBuffer::RebindGlobalDescriptorSets()
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		if (!m_GlobalDescriptorSetsRequireBinding)
+			return;
+
+		// Bind global descriptor sets
+		Ref<const ShaderMetadata> metadata = nullptr;
+
+		if (m_BoundPipeline.GraphicsPipeline)
+		{
+			metadata = m_BoundPipeline.GraphicsPipeline->GetSpecifications().Shader->GetMetadata();
+		}
+		else if (m_BoundPipeline.ComputePipeline)
+		{
+			metadata = m_BoundPipeline.ComputePipeline->GetSpecifications().Shader->GetMetadata();
+		}
+		else
+		{
+			FLARE_CORE_ASSERT(false);
+		}
+
+		Ref<VulkanDescriptorSet> emptyDescriptorSet = As<VulkanDescriptorSet>(VulkanContext::GetInstance().GetEmptyDescriptorSet());
+
+		for (size_t i = 0; i < GLOBAL_DESCRIPTOR_SET_COUNT; i++)
+		{
+			const ShaderDescriptorSetUsage& setUsage = metadata->DescriptorSetUsage[i];
+			if (setUsage.Usage == ShaderDescriptorSetUsage::UsageType::Used)
+			{
+				FLARE_CORE_ASSERT(m_GlobalDescriptorSets[i]);
+				BindDescriptorSet(m_GlobalDescriptorSets[i], m_BoundPipeline.LayoutHandle, m_BoundPipeline.BindPoint, (uint32_t)i);
+			}
+			else if (setUsage.Usage == ShaderDescriptorSetUsage::UsageType::Empty)
+			{
+				BindDescriptorSet(emptyDescriptorSet, m_BoundPipeline.LayoutHandle, m_BoundPipeline.BindPoint, (uint32_t)i);
+			}
+		}
+
+		m_GlobalDescriptorSetsRequireBinding = false;
 	}
 
 	void VulkanCommandBuffer::Begin()
