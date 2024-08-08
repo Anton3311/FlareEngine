@@ -37,7 +37,7 @@ namespace Flare
 		if (!IsEnabled())
 			return;
 
-		RenderGraphTextureId aoTexture = renderGraph.CreateTexture(TextureFormat::RF32, "SSAO.AOTexture");
+		RenderGraphTextureId aoTexture = renderGraph.CreateTexture(TextureFormat::RF32, "SSAO.AOTexture", 0.5f);
 		RenderGraphTextureId intermediateColorTexture = renderGraph.CreateTexture(TextureFormat::R11G11B10, "SSAO.IntermediateColorTexture");
 
 		RenderGraphPassSpecifications ssaoMainPass{};
@@ -108,7 +108,7 @@ namespace Flare
 		m_Material->SetTextureProperty(*normalsTextureIndex, context.GetRenderGraphResourceManager().GetTexture(m_NormalsTexture));
 		m_Material->SetTextureProperty(*depthTextureIndex, context.GetRenderGraphResourceManager().GetTexture(m_DepthTexture));
 
-		commandBuffer->SetViewportAndScisors(Math::Rect(glm::vec2(0.0f, 0.0f), (glm::vec2)context.GetViewport().GetSize()));
+		commandBuffer->SetDefaltViewportAndScissors();
 
 		commandBuffer->ApplyMaterial(m_Material);
 		commandBuffer->DrawMeshIndexed(RendererPrimitives::GetFullscreenQuadMesh(), 0, 0, 1);
@@ -143,7 +143,8 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		commandBuffer->SetViewportAndScisors(Math::Rect(glm::vec2(0.0f, 0.0f), (glm::vec2)context.GetViewport().GetSize()));
+		commandBuffer->SetDefaltViewportAndScissors();
+
 		glm::vec2 texelSize = glm::vec2(1.0f) / (glm::vec2)context.GetViewport().GetSize();
 
 		auto colorTextureIndex = m_Material->GetShader()->GetPropertyIndex("u_ColorTexture");
