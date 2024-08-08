@@ -52,9 +52,9 @@ namespace Flare
 			}
 			else if (passType == RenderGraphPassType::Compute)
 			{
-				FLARE_CORE_ASSERT(node.Specifications.GetInputs().size() == 0);
 				FLARE_CORE_ASSERT(node.Specifications.GetOutputs().size() == 0);
 
+				GenerateInputTransitions(nodeIndex);
 				GenerateGeneralResourceTransitions(nodeIndex);
 			}
 		}

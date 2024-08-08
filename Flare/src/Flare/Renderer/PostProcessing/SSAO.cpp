@@ -5,6 +5,7 @@
 #include "Flare/Renderer/Renderer.h"
 #include "Flare/Renderer/RendererPrimitives.h"
 #include "Flare/Renderer/CommandBuffer.h"
+#include "Flare/Renderer/ComputeShader.h"
 #include "Flare/Renderer/FrameBuffer.h"
 #include "Flare/Renderer/ShaderLibrary.h"
 #include "Flare/Renderer/GraphicsContext.h"
@@ -38,7 +39,6 @@ namespace Flare
 			return;
 
 		RenderGraphTextureId aoTexture = renderGraph.CreateTexture(TextureFormat::RF32, "SSAO.AOTexture", 0.5f);
-		RenderGraphTextureId intermediateColorTexture = renderGraph.CreateTexture(TextureFormat::R11G11B10, "SSAO.IntermediateColorTexture");
 
 		RenderGraphPassSpecifications ssaoMainPass{};
 		ssaoMainPass.SetDebugName("SSAOMainPass");
@@ -48,17 +48,12 @@ namespace Flare
 
 		RenderGraphPassSpecifications ssaoComposingPass{};
 		ssaoComposingPass.SetDebugName("SSAOComposingPass");
+		ssaoComposingPass.SetType(RenderGraphPassType::Compute);
 		ssaoComposingPass.AddInput(aoTexture);
-		ssaoComposingPass.AddInput(viewport.ColorTextureId);
-		ssaoComposingPass.AddOutput(intermediateColorTexture, 0);
-
-		RenderGraphPassSpecifications ssaoBlitPass{};
-		ssaoBlitPass.SetDebugName("SSAOBlitPass");
-		BlitPass::ConfigureSpecifications(ssaoBlitPass, intermediateColorTexture, viewport.ColorTextureId);
+		ssaoComposingPass.AddResource(viewport.ColorTextureId, ResourceAccess::ReadWrite);
 
 		renderGraph.AddPass(ssaoMainPass, CreateRef<SSAOMainPass>(viewport.NormalsTextureId, viewport.DepthTextureId));
 		renderGraph.AddPass(ssaoComposingPass, CreateRef<SSAOComposingPass>(viewport.ColorTextureId, aoTexture));
-		renderGraph.AddPass(ssaoBlitPass, CreateRef<BlitPass>(intermediateColorTexture, viewport.ColorTextureId, TextureFiltering::Closest));
 	}
 
 	const SerializableObjectDescriptor& SSAO::GetSerializationDescriptor() const
@@ -120,14 +115,24 @@ namespace Flare
 		: m_ColorTexture(colorTexture), m_AOTexture(aoTexture)
 	{
 		FLARE_PROFILE_FUNCTION();
-		std::optional<AssetHandle> shaderHandle = ShaderLibrary::FindShader("SSAOBlur");
+		std::optional<AssetHandle> shaderHandle = ShaderLibrary::FindShader("SSAOCompose");
 		if (shaderHandle && AssetManager::IsAssetHandleValid(shaderHandle.value()))
 		{
-			m_Material = Material::Create(AssetManager::GetAsset<Shader>(shaderHandle.value()));
+			m_Shader = AssetManager::GetAsset<ComputeShader>(*shaderHandle);
+
+			Ref<const ComputeShaderMetadata> metadata = m_Shader->GetMetadata();
+
+			m_ColorImageProperty = metadata->FindDescriptorProperty("u_Color");
+			m_AOImageProperty = metadata->FindDescriptorProperty("u_AO");
+			m_ImageSizeProperty = metadata->FindConstantProperty("u_ImageSize");
+			m_BlurSizeProperty = metadata->FindConstantProperty("u_BlurSize");
+
+			m_ConstantBuffer.SetShader(m_Shader);
+			m_DescriptorBuffer.SetShader(m_Shader);
 		}
 		else
 		{
-			FLARE_CORE_ERROR("SSAO: Failed to find SSAO Blur shader");
+			FLARE_CORE_ERROR("SSAO: Failed to find SSAOCompose shader");
 		}
 
 		auto result = Scene::GetActive()->GetPostProcessingManager().GetEffect<SSAO>();
@@ -137,27 +142,29 @@ namespace Flare
 
 	void SSAOComposingPass::OnPrepare(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
 	{
+		FLARE_PROFILE_FUNCTION();
+
+		const TextureSpecifications& colorTextureSpec = context.GetRenderGraphResourceManager().GetTexture(m_ColorTexture)->GetSpecifications();
+		m_ConstantBuffer.SetProperty(*m_ImageSizeProperty, glm::ivec2((int32_t)colorTextureSpec.Width, (int32_t)colorTextureSpec.Height));
+		m_ConstantBuffer.SetProperty(*m_BlurSizeProperty, m_Parameters->BlurSize);
+
+		m_DescriptorBuffer.SetTexture(*m_AOImageProperty, context.GetRenderGraphResourceManager().GetTexture(m_AOTexture));
+		m_DescriptorBuffer.SetTexture(*m_ColorImageProperty, context.GetRenderGraphResourceManager().GetTexture(m_ColorTexture));
 	}
 
 	void SSAOComposingPass::OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		commandBuffer->SetDefaltViewportAndScissors();
+		commandBuffer->BindComputeShader(m_Shader);
+		commandBuffer->PushConstants(m_ConstantBuffer);
+		commandBuffer->PushDescriptorProperties(m_DescriptorBuffer);
 
-		glm::vec2 texelSize = glm::vec2(1.0f) / (glm::vec2)context.RenderAreaSize;
+		glm::uvec2 renderAreaSize = (glm::uvec2)context.GetViewport().GetSize();
+		glm::uvec2 localGroupSize = m_Shader->GetMetadata()->LocalGroupSize;
 
-		auto colorTextureIndex = m_Material->GetShader()->GetPropertyIndex("u_ColorTexture");
-		auto aoTextureIndex = m_Material->GetShader()->GetPropertyIndex("u_AOTexture");
-		auto blurSizePropertyIndex = m_Material->GetShader()->GetPropertyIndex("u_Params.BlurSize");
-		auto texelSizePropertyIndex = m_Material->GetShader()->GetPropertyIndex("u_Params.TexelSize");
+		glm::uvec2 groupCount = (renderAreaSize + localGroupSize - glm::uvec2(1)) / localGroupSize;
 
-		m_Material->WritePropertyValue(*blurSizePropertyIndex, m_Parameters->BlurSize);
-		m_Material->WritePropertyValue(*texelSizePropertyIndex, texelSize);
-		m_Material->SetTextureProperty(*aoTextureIndex, context.GetRenderGraphResourceManager().GetTexture(m_AOTexture));
-		m_Material->SetTextureProperty(*colorTextureIndex, context.GetRenderGraphResourceManager().GetTexture(m_ColorTexture));
-
-		commandBuffer->ApplyMaterial(m_Material);
-		commandBuffer->DrawMeshIndexed(RendererPrimitives::GetFullscreenQuadMesh(), 0, 0, 1);
+		commandBuffer->DispatchCompute(glm::uvec3(groupCount, 1));
 	}
 }

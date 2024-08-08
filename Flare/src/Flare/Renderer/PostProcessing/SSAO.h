@@ -3,12 +3,15 @@
 #include "FlareCore/Serialization/TypeSerializer.h"
 #include "FlareCore//Serialization/SerializationStream.h"
 
+#include "Flare/Renderer/ShaderConstantBuffer.h"
+#include "Flare/Renderer/ShaderDescriptorBuffer.h"
+
 #include "Flare/Renderer/RenderGraph/RenderGraphPass.h"
 #include "Flare/Renderer/PostProcessing/PostProcessingEffect.h"
 
 namespace Flare
 {
-	class ComputePipeline;
+	class ComputeShader;
 	class Material;
 
 	class FLARE_API SSAO : public PostProcessingEffect
@@ -63,9 +66,16 @@ namespace Flare
 		void OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer) override;
 	private:
 		RenderGraphTextureId m_ColorTexture;
-
 		RenderGraphTextureId m_AOTexture;
-		Ref<Material> m_Material = nullptr;
+
+		Ref<ComputeShader> m_Shader = nullptr;
+		ShaderConstantBuffer m_ConstantBuffer;
+		ShaderDescriptorBuffer m_DescriptorBuffer;
+
+		std::optional<size_t> m_ColorImageProperty;
+		std::optional<size_t> m_AOImageProperty;
+		std::optional<size_t> m_ImageSizeProperty;
+		std::optional<size_t> m_BlurSizeProperty;
 
 		Ref<SSAO> m_Parameters = nullptr;
 	};
