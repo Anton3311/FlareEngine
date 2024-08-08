@@ -1,10 +1,19 @@
 #include "ShaderConstantBuffer.h"
 
+#include "FlareCore/Profiler/Profiler.h"
+
+#include "Flare/Renderer/ComputeShader.h"
+
 namespace Flare
 {
-	ShaderConstantBuffer::ShaderConstantBuffer(Ref<Shader> shader)
+	ShaderConstantBuffer::ShaderConstantBuffer(Ref<const Shader> shader)
 	{
 		SetShader(shader);
+	}
+
+	ShaderConstantBuffer::ShaderConstantBuffer(Ref<const ComputeShader> computeShader)
+	{
+		SetShader(computeShader);
 	}
 
 	ShaderConstantBuffer::~ShaderConstantBuffer()
@@ -16,7 +25,7 @@ namespace Flare
 	{
 		Release();
 
-		m_Shader = other.m_Shader;
+		m_ShaderMetadata = other.m_ShaderMetadata;
 		m_BufferSize = other.m_BufferSize;
 
 		if (m_BufferSize > 0)
@@ -31,7 +40,7 @@ namespace Flare
 	{
 		Release();
 
-		m_Shader = std::move(other.m_Shader);
+		m_ShaderMetadata = std::move(other.m_ShaderMetadata);
 		m_BufferSize = other.m_BufferSize;
 		m_Buffer = other.m_Buffer;
 
@@ -43,7 +52,7 @@ namespace Flare
 	{
 		Release();
 
-		m_Shader = other.m_Shader;
+		m_ShaderMetadata = other.m_ShaderMetadata;
 		m_BufferSize = other.m_BufferSize;
 
 		if (m_BufferSize > 0)
@@ -60,7 +69,7 @@ namespace Flare
 	{
 		Release();
 
-		m_Shader = std::move(other.m_Shader);
+		m_ShaderMetadata = std::move(other.m_ShaderMetadata);
 		m_BufferSize = other.m_BufferSize;
 		m_Buffer = other.m_Buffer;
 
@@ -73,31 +82,41 @@ namespace Flare
 	void ShaderConstantBuffer::SetShader(Ref<const Shader> shader)
 	{
 		Release();
+		m_ShaderMetadata = shader->GetMetadata();
 
-		m_Shader = shader;
+		Initialize();
+	}
+
+	void ShaderConstantBuffer::SetShader(Ref<const ComputeShader> computeShader)
+	{
+		Release();
+		m_ShaderMetadata = computeShader->GetMetadata();
+
+		Initialize();
+	}
+
+	void ShaderConstantBuffer::Release()
+	{
+		FLARE_PROFILE_FUNCTION();
+		if (m_Buffer != nullptr)
+			delete[] m_Buffer;
+
+		m_Buffer = nullptr;
 		m_BufferSize = 0;
+		m_ShaderMetadata = nullptr;
+	}
 
-		const ShaderProperties& properties = m_Shader->GetProperties();
-		const Ref<const GraphicsShaderMetadata> metadata = m_Shader->GetMetadata();
-		for (const auto& range : metadata->PushConstantsRanges)
-		{
+	void ShaderConstantBuffer::Initialize()
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		for (const auto& range : m_ShaderMetadata->PushConstantsRanges)
 			m_BufferSize = glm::max(range.Offset + range.Size, m_BufferSize);
-		}
 
 		if (m_BufferSize > 0)
 		{
 			m_Buffer = new uint8_t[m_BufferSize];
 			std::memset(m_Buffer, 0, m_BufferSize);
 		}
-	}
-
-	void ShaderConstantBuffer::Release()
-	{
-		if (m_Buffer != nullptr)
-			delete[] m_Buffer;
-
-		m_Buffer = nullptr;
-		m_BufferSize = 0;
-		m_Shader = nullptr;
 	}
 }

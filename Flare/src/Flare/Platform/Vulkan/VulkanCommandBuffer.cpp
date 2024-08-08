@@ -165,10 +165,10 @@ namespace Flare
 
 	void VulkanCommandBuffer::PushConstants(const ShaderConstantBuffer& constantBuffer)
 	{
-		FLARE_CORE_ASSERT(constantBuffer.GetShader());
+		FLARE_CORE_ASSERT(constantBuffer.GetShaderMetadata());
 		FLARE_CORE_ASSERT(m_BoundPipeline.LayoutHandle);
 
-		Ref<const GraphicsShaderMetadata> metadata = constantBuffer.GetShader()->GetMetadata();
+		Ref<const ShaderMetadata> metadata = constantBuffer.GetShaderMetadata();
 
 		for (size_t i = 0; i < metadata->PushConstantsRanges.size(); i++)
 		{
@@ -185,6 +185,11 @@ namespace Flare
 			case ShaderStageType::Pixel:
 				stage = VK_SHADER_STAGE_FRAGMENT_BIT;
 				break;
+			case ShaderStageType::Compute:
+				stage = VK_SHADER_STAGE_COMPUTE_BIT;
+				break;
+			default:
+				FLARE_CORE_ASSERT(false);
 			}
 
 			vkCmdPushConstants(m_CommandBuffer,

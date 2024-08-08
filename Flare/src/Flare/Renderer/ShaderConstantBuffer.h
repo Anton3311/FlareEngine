@@ -7,11 +7,14 @@
 
 namespace Flare
 {
+	class ComputeShader;
+	class Shader;
 	class FLARE_API ShaderConstantBuffer
 	{
 	public:
 		ShaderConstantBuffer() = default;
-		ShaderConstantBuffer(Ref<Shader> shader);
+		ShaderConstantBuffer(Ref<const Shader> shader);
+		ShaderConstantBuffer(Ref<const ComputeShader> computeShader);
 		~ShaderConstantBuffer();
 
 		ShaderConstantBuffer(const ShaderConstantBuffer& other);
@@ -21,14 +24,16 @@ namespace Flare
 		ShaderConstantBuffer& operator=(ShaderConstantBuffer&& other) noexcept;
 
 		void SetShader(Ref<const Shader> shader);
-		Ref<const Shader> GetShader() const { return m_Shader; }
+		void SetShader(Ref<const ComputeShader> computeShader);
+
+		Ref<const ShaderMetadata> GetShaderMetadata() const { return m_ShaderMetadata; }
 
 		template<typename T>
 		T& GetProperty(size_t index)
 		{
 			FLARE_CORE_ASSERT(m_Buffer != nullptr);
 
-			const ShaderProperties& shaderProperties = m_Shader->GetProperties();
+			const ShaderProperties& shaderProperties = m_ShaderMetadata->Properties;
 			FLARE_CORE_ASSERT(index < shaderProperties.size());
 			FLARE_CORE_ASSERT(sizeof(T) == shaderProperties[index].Size);
 
@@ -40,7 +45,7 @@ namespace Flare
 		{
 			FLARE_CORE_ASSERT(m_Buffer != nullptr);
 
-			const ShaderProperties& shaderProperties = m_Shader->GetProperties();
+			const ShaderProperties& shaderProperties = m_ShaderMetadata->Properties;
 			FLARE_CORE_ASSERT(index < shaderProperties.size());
 			FLARE_CORE_ASSERT(sizeof(T) == shaderProperties[index].Size);
 
@@ -52,7 +57,7 @@ namespace Flare
 		{
 			FLARE_CORE_ASSERT(m_Buffer != nullptr);
 
-			const ShaderProperties& shaderProperties = m_Shader->GetProperties();
+			const ShaderProperties& shaderProperties = m_ShaderMetadata->Properties;
 			FLARE_CORE_ASSERT(index < shaderProperties.size());
 			FLARE_CORE_ASSERT(sizeof(T) == shaderProperties[index].Size);
 
@@ -66,7 +71,10 @@ namespace Flare
 
 		void Release();
 	private:
-		Ref<const Shader> m_Shader = nullptr;
+		void Initialize();
+	private:
+		Ref<const ShaderMetadata> m_ShaderMetadata = nullptr;
+
 		uint8_t* m_Buffer = nullptr;
 		size_t m_BufferSize = 0;
 	};

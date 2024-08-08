@@ -207,6 +207,7 @@ namespace Flare
 		}
 
 		std::optional<size_t> FindDescriptorProperty(std::string_view name) const;
+		std::optional<size_t> FindConstantProperty(std::string_view name) const;
 
 		std::string Name;
 		ShaderDescriptorSetUsage DescriptorSetUsage[4];

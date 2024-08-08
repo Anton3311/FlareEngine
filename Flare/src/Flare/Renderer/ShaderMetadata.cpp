@@ -194,4 +194,16 @@ namespace Flare
 
 		return {};
 	}
+
+	std::optional<size_t> ShaderMetadata::FindConstantProperty(std::string_view name) const
+	{
+		FLARE_PROFILE_FUNCTION();
+		for (size_t i = 0; i < Properties.size(); i++)
+		{
+			if (Properties[i].Name == name)
+				return i;
+		}
+
+		return {};
+	}
 }
