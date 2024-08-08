@@ -60,11 +60,7 @@ namespace Flare
 		vulkanCommandBuffer->BindPipeline(m_Pipeline);
 		vulkanCommandBuffer->BindVertexBuffers(Span((Ref<const VertexBuffer>*)&frameResources.VertexBuffer, 1), 0);
 		vulkanCommandBuffer->BindIndexBuffer(m_IndexBuffer);
-
-		vulkanCommandBuffer->BindDescriptorSet(
-			As<VulkanDescriptorSet>(context.GetViewport().GetFrameResources().CameraDescriptorSet),
-			As<VulkanPipeline>(m_Pipeline)->GetLayoutHandle(),
-			0);
+		vulkanCommandBuffer->BindDescriptorSet(context.GetViewport().GetFrameResources().CameraDescriptorSet, 0);
 
 		vulkanCommandBuffer->DrawIndexed(0, (uint32_t)submition.RayCount * DebugRendererSettings::IndicesPerRay, 0, 0, 1);
 	}

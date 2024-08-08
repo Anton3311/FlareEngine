@@ -100,8 +100,12 @@ namespace Flare
 
 		void GenerateImageMipMaps(VkImage image, uint32_t mipLevels, glm::uvec2 imageSize);
 
-		void BindDescriptorSet(const Ref<const VulkanDescriptorSet>& descriptorSet, VkPipelineLayout pipelineLayout, uint32_t index);
-		void BindComputeDescriptorSet(const Ref<const VulkanDescriptorSet>& descriptorSet, VkPipelineLayout pipelineLayout, uint32_t index);
+		void BindDescriptorSet(Ref<const DescriptorSet> descriptorSet, uint32_t index);
+
+		void BindDescriptorSet(const Ref<const VulkanDescriptorSet>& descriptorSet,
+			VkPipelineLayout pipelineLayout,
+			VkPipelineBindPoint bindPoint,
+			uint32_t index);
 
 		void BindMesh(const Ref<const Mesh>& mesh);
 

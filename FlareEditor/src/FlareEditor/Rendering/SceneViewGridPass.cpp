@@ -57,7 +57,6 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 
 		Ref<VulkanCommandBuffer> vulkanCommandBuffer = As<VulkanCommandBuffer>(commandBuffer);
-		Ref<VulkanPipeline> pipeline = As<VulkanPipeline>(m_Pipeline);
 
 		// Scale the grid based on camera's Y position
 		float y = glm::abs(context.GetRenderView().Position.y);
@@ -66,8 +65,8 @@ namespace Flare
 		int32_t scaleLevel = (int32_t)glm::floor(y / step);
 
 		vulkanCommandBuffer->BindPipeline(m_Pipeline);
-		vulkanCommandBuffer->BindDescriptorSet(As<VulkanDescriptorSet>(context.GetViewport().GetFrameResources().CameraDescriptorSet), pipeline->GetLayoutHandle(), 0);
-		vulkanCommandBuffer->BindVertexBuffers(Span((Ref<const VertexBuffer>*) & m_VertexBuffer, 1), 0);
+		vulkanCommandBuffer->BindDescriptorSet(context.GetViewport().GetFrameResources().CameraDescriptorSet, 0);
+		vulkanCommandBuffer->BindVertexBuffers(Span((Ref<const VertexBuffer>*)&m_VertexBuffer, 1), 0);
 
 		// First draw the secondary grid and only than the primary one.
 		// This ovoids secondary grid completely converting a primary one,
