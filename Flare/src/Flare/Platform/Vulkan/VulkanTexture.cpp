@@ -239,6 +239,9 @@ namespace Flare
 		// TODO: Add TextureUsage::Blit?
 		imageInfo.usage |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
 
+		if (!IsDepthTextureFormat(m_Specifications.Format))
+			imageInfo.usage |= VK_IMAGE_USAGE_STORAGE_BIT;
+
 		if (m_MipLevels > 1)
 		{
 			imageInfo.usage |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
