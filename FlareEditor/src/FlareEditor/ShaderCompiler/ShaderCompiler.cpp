@@ -450,13 +450,13 @@ namespace Flare
 				shaderProperty.Size = compiler.get_declared_struct_member_size(bufferType, (uint32_t)i);
 				shaderProperty.Hidden = true;
 
+				const std::string& memberName = compiler.get_member_name(resource.base_type_id, (uint32_t)i);
 				if (resource.name.empty())
 				{
-					shaderProperty.Name = resource.name;
+					shaderProperty.Name = memberName;
 				}
 				else
 				{
-					const std::string& memberName = compiler.get_member_name(resource.base_type_id, (uint32_t)i);
 					shaderProperty.Name = fmt::format("{}.{}", resource.name, memberName);
 				}
 
