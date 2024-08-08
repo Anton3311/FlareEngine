@@ -33,6 +33,11 @@ namespace Flare
 			return m_ResourceManager.CreateTexture(format, debugName);
 		}
 
+		inline RenderGraphTextureId CreateTexture(TextureFormat format, std::string_view debugName, float scale)
+		{
+			return m_ResourceManager.CreateTexture(format, debugName, scale);
+		}
+
 		inline Ref<Texture> GetTexture(RenderGraphTextureId textureId) const { return m_ResourceManager.GetTexture(textureId); }
 		inline bool IsValid() const { return m_IsValid; }
 

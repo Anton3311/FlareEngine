@@ -14,7 +14,12 @@ namespace Flare
 		m_FrameInFlightViewportSizes.resize(frameInFlightCount, (glm::uvec2)viewport.GetSize());
 	}
 
-	RenderGraphTextureId RenderGraphResourceManager::CreateTexture(TextureFormat format, std::string_view debugName)
+	inline static glm::uvec2 CalculateTextureSize(glm::uvec2 viewportSize, float textureScale)
+	{
+		return (glm::uvec2)glm::ceil((glm::vec2)viewportSize * textureScale);
+	}
+
+	RenderGraphTextureId RenderGraphResourceManager::CreateTexture(TextureFormat format, std::string_view debugName, float scale)
 	{
 		FLARE_PROFILE_FUNCTION();
 		RenderGraphTextureId id = RenderGraphTextureId((uint32_t)m_Textures.size());
@@ -24,10 +29,13 @@ namespace Flare
 		resource.Format = format;
 		resource.TextureSizeConstraint = RenderGraphTextureResource::SizeConstraint::ViewportSize;
 		resource.TextureHandleIndex = (uint32_t)m_TextureHandles.size();
+		resource.Scale = scale;
+
+		glm::uvec2 textureSize = CalculateTextureSize((glm::uvec2)m_Viewport.GetSize(), resource.Scale);
 
 		TextureSpecifications specifications{};
-		specifications.Width = m_Viewport.GetSize().x;
-		specifications.Height = m_Viewport.GetSize().y;
+		specifications.Width = textureSize.x;
+		specifications.Height = textureSize.y;
 		specifications.Format = resource.Format;
 		specifications.Usage = TextureUsage::Sampling | TextureUsage::RenderTarget;
 		specifications.GenerateMipMaps = false;
@@ -57,6 +65,7 @@ namespace Flare
 		resource.Format = format;
 		resource.TextureSizeConstraint = RenderGraphTextureResource::SizeConstraint::Fixed;
 		resource.TextureHandleIndex = (uint32_t)m_TextureHandles.size();
+		resource.Scale = 1.0f;
 
 		TextureSpecifications specifications{};
 		specifications.Width = size.x;
@@ -119,7 +128,9 @@ namespace Flare
 				continue;
 
 			Ref<Texture> texture = GetTextureForFrameInFlight(resource, frameIndex);
-			texture->Resize(viewportSize.x, viewportSize.y);
+			glm::uvec2 textureSize = CalculateTextureSize(viewportSize, resource.Scale);
+
+			texture->Resize(textureSize.x, textureSize.y);
 		}
 
 		m_FrameInFlightViewportSizes[frameIndex] = viewportSize;

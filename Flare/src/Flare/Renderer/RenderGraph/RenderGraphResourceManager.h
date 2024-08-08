@@ -52,6 +52,8 @@ namespace Flare
 		std::string DebugName;
 		TextureFormat Format = TextureFormat::RGBA8;
 
+		float Scale = 1.0f;
+
 		// Textures are stored sequentially for each frame in flight
 		// 
 		// Texture for frame 0 is at index: TextureHandleIndex + 0
@@ -67,7 +69,7 @@ namespace Flare
 	public:
 		RenderGraphResourceManager(const Viewport& viewport);
 
-		RenderGraphTextureId CreateTexture(TextureFormat format, std::string_view debugName);
+		RenderGraphTextureId CreateTexture(TextureFormat format, std::string_view debugName, float scale = 1.0f);
 		RenderGraphTextureId CreateFixedSizeTexture(TextureFormat format, glm::uvec2 size, std::string_view debugName);
 		RenderGraphTextureId RegisterExistingTexture(Ref<Texture> texture);
 
