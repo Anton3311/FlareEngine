@@ -392,6 +392,36 @@ namespace Flare
 
 		FLARE_CORE_ASSERT(imageSize > 0);
 
+		VulkanStagingBuffer stagingBuffer = FillStagingBuffer(mips, imageSize);
+
+		{
+			Ref<VulkanCommandBuffer> commandBuffer = VulkanContext::GetInstance().BeginTemporaryCommandBuffer();
+
+			uint32_t providedMipCount = (uint32_t)mips.GetSize();
+			CopyImageMips(commandBuffer, mips, stagingBuffer, providedMipCount);
+
+			if (m_Specifications.GenerateMipMaps && m_MipLevels > 1 && providedMipCount == 1)
+			{
+				commandBuffer->TransitionImageLayout(m_Image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, 0, 1);
+				commandBuffer->GenerateImageMipMaps(m_Image, m_MipLevels, glm::uvec2(m_Specifications.Width, m_Specifications.Height));
+				commandBuffer->TransitionImageLayout(m_Image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, 0, m_MipLevels);
+			}
+			else
+			{
+				commandBuffer->TransitionImageLayout(m_Image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, 0, providedMipCount);
+			}
+
+			VulkanContext::GetInstance().EndTemporaryCommandBuffer(commandBuffer);
+		}
+
+		VulkanStagingBufferPool& stagingBufferPool = VulkanContext::GetInstance().GetStagingBufferPool();
+		stagingBufferPool.ReleaseStagingBuffer(stagingBuffer);
+	}
+
+	VulkanStagingBuffer VulkanTexture::FillStagingBuffer(Span<const MemorySpan> mips, size_t imageSize)
+	{
+		FLARE_PROFILE_FUNCTION();
+
 		VulkanStagingBufferPool& stagingBufferPool = VulkanContext::GetInstance().GetStagingBufferPool();
 		VulkanStagingBuffer stagingBuffer;
 
@@ -411,10 +441,12 @@ namespace Flare
 
 			// Add alpha channel
 			uint8_t* rgbaData = new uint8_t[imageSize];
+			std::memset(rgbaData, 0, imageSize);
+
 			const uint8_t* oldData = (const uint8_t*)mips[0].GetBuffer();
 
 			size_t j = 0;
-			for (size_t i = 0; i < imageSize; i += 4)
+			for (size_t i = 0; i < imageSize && i + 3 < imageSize; i += 4)
 			{
 				rgbaData[i + 0] = oldData[j + 0];
 				rgbaData[i + 1] = oldData[j + 1];
@@ -439,66 +471,56 @@ namespace Flare
 			}
 		}
 
+		return stagingBuffer;
+	}
+
+	void VulkanTexture::CopyImageMips(Ref<VulkanCommandBuffer> commandBuffer,
+		Span<const MemorySpan> mips,
+		const VulkanStagingBuffer& stagingBuffer,
+		uint32_t mipCount)
+	{
+		FLARE_PROFILE_FUNCTION();
+		
+		commandBuffer->TransitionImageLayout(m_Image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 0, mipCount);
+
+		if (IsCompressedTextureFormat(m_Specifications.Format))
 		{
-			Ref<VulkanCommandBuffer> commandBuffer = VulkanContext::GetInstance().BeginTemporaryCommandBuffer();
+			VkExtent3D size{};
+			size.width = m_Specifications.Width;
+			size.height = m_Specifications.Height;
+			size.depth = 1;
 
-			uint32_t providedMipCount = (uint32_t)mips.GetSize();
-
-			commandBuffer->TransitionImageLayout(m_Image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 0, providedMipCount);
-
-			if (IsCompressedTextureFormat(m_Specifications.Format))
+			size_t bufferOffset = stagingBuffer.Offset;
+			for (uint32_t i = 0; i < mipCount; i++)
 			{
-				VkExtent3D size{};
-				size.width = m_Specifications.Width;
-				size.height = m_Specifications.Height;
-				size.depth = 1;
+				commandBuffer->CopyBufferToImage(stagingBuffer.Buffer, m_Image, size, bufferOffset, i);
 
-				size_t bufferOffset = stagingBuffer.Offset;
-				for (uint32_t i = 0; i < providedMipCount; i++)
-				{
-					commandBuffer->CopyBufferToImage(stagingBuffer.Buffer, m_Image, size, bufferOffset, i);
+				bufferOffset += mips[i].GetSize();
 
-					bufferOffset += mips[i].GetSize();
-
-					size.width /= 2;
-					size.height /= 2;
-				}
+				size.width /= 2;
+				size.height /= 2;
 			}
-			else
+		}
+		else
+		{
+			VkExtent3D size{};
+			size.width = m_Specifications.Width;
+			size.height = m_Specifications.Height;
+			size.depth = 1;
+
+			size_t bufferOffset = stagingBuffer.Offset;
+			size_t pixelSize = GetImagePixelSizeInBytes();
+			for (uint32_t i = 0; i < mipCount; i++)
 			{
-				VkExtent3D size{};
-				size.width = m_Specifications.Width;
-				size.height = m_Specifications.Height;
-				size.depth = 1;
+				commandBuffer->CopyBufferToImage(stagingBuffer.Buffer, m_Image, size, bufferOffset, i);
 
-				size_t bufferOffset = stagingBuffer.Offset;
-				size_t pixelSize = GetImagePixelSizeInBytes();
-				for (uint32_t i = 0; i < providedMipCount; i++)
-				{
-					commandBuffer->CopyBufferToImage(stagingBuffer.Buffer, m_Image, size, bufferOffset, i);
+				bufferOffset += size.width * size.height * pixelSize;
 
-					bufferOffset += size.width * size.height * pixelSize;
-
-					size.width /= 2;
-					size.height /= 2;
-				}
+				size.width /= 2;
+				size.height /= 2;
 			}
-
-			if (m_Specifications.GenerateMipMaps && m_MipLevels > 1 && providedMipCount == 1)
-			{
-				commandBuffer->TransitionImageLayout(m_Image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, 0, 1);
-				commandBuffer->GenerateImageMipMaps(m_Image, m_MipLevels, glm::uvec2(m_Specifications.Width, m_Specifications.Height));
-				commandBuffer->TransitionImageLayout(m_Image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, 0, m_MipLevels);
-			}
-			else
-			{
-				commandBuffer->TransitionImageLayout(m_Image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, 0, providedMipCount);
-			}
-
-			VulkanContext::GetInstance().EndTemporaryCommandBuffer(commandBuffer);
 		}
 
-		stagingBufferPool.ReleaseStagingBuffer(stagingBuffer);
 	}
 
 	size_t VulkanTexture::GetImagePixelSizeInBytes()

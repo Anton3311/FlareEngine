@@ -2,6 +2,7 @@
 
 #include "Flare/Renderer/Texture.h"
 #include "Flare/Platform/Vulkan/VulkanAllocation.h"
+#include "Flare/Platform/Vulkan/VulkanStagingBufferPool.h"
 
 #include <vulkan/vulkan.h>
 
@@ -9,6 +10,7 @@ namespace Flare
 {
 	VkFormat TextureFormatToVulkanFormat(TextureFormat format);
 
+	class VulkanCommandBuffer;
 	class VulkanTexture : public Texture
 	{
 	public:
@@ -40,6 +42,13 @@ namespace Flare
 		void CreateImage();
 		void CreateSampler();
 		void UploadPixelData(Span<const MemorySpan> mips);
+		VulkanStagingBuffer FillStagingBuffer(Span<const MemorySpan> mips, size_t imageSize);
+
+		void CopyImageMips(Ref<VulkanCommandBuffer> commandBuffer,
+			Span<const MemorySpan> mips,
+			const VulkanStagingBuffer& stagingBuffer,
+			uint32_t mipCount);
+
 		size_t GetImagePixelSizeInBytes();
 
 		void ReleaseImage();
