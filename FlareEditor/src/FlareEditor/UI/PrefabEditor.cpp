@@ -57,6 +57,8 @@ namespace Flare
         if (world.Entities.GetEntityRecords().size() > 0)
             entity = world.Entities.GetEntityRecords()[0].Id;
 
+        m_Prefab->GetHierarchy().CopyFromWorld(world);
+
         PrefabImporter::SerializePrefab(prefabHandle, world, entity);
 
         m_Prefab = nullptr;

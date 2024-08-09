@@ -8,19 +8,64 @@
 
 namespace Flare
 {
+	//
+	// PrefabHierarchy
+	//
+
+	class FLARE_API PrefabHierarchy
+	{
+	public:
+		struct Node
+		{
+			size_t DataOffset = 0;
+			size_t Size = 0;
+			ArchetypeId Archetype = INVALID_ARCHETYPE_ID;
+		};
+
+		PrefabHierarchy(const Components& compatibleComponents, const Archetypes& compatibleArchetypes);
+		~PrefabHierarchy();
+
+		void CopyFromWorld(const World& world);
+	private:
+		void Release();
+		void ReleaseEntityData();
+	private:
+		uint8_t* m_Buffer = nullptr;
+		size_t m_BufferSize = 0;
+
+		const Archetypes& m_CompatibleArchetypes;
+		const Components& m_CompatibleComponentsRegistry;
+
+		std::vector<Node> m_Nodes;
+	};
+
+	//
+	// Prefab
+	//
+
 	class FLARE_API Prefab : public Asset
 	{
 	public:
 		FLARE_ASSET;
 		FLARE_SERIALIZABLE;
 
-		Prefab(const uint8_t* prefabData, const Components* compatibleComponentsRegistry, std::vector<std::pair<ComponentId, void*>>&& components);	
+		Prefab(const uint8_t* prefabData,
+			const Components& compatibleComponentsRegistry,
+			const Archetypes& compatibleArchetypes,
+			std::vector<std::pair<ComponentId, void*>>&& components);	
 		~Prefab();
 	
 		Entity CreateInstance(World& world);
+
+		inline PrefabHierarchy& GetHierarchy() { return m_Hierarchy; }
+		inline const PrefabHierarchy& GetHierarchy() const { return m_Hierarchy; }
 	private:
 		std::vector<std::pair<ComponentId, void*>> m_Components;
-		const Components* m_CompatibleComponentsRegistry = nullptr;
+
+		PrefabHierarchy m_Hierarchy;
+
+		const Components& m_CompatibleComponentsRegistry;
+		const Archetypes& m_CompatibleArchetypes;
 		const uint8_t* m_Data;
 	};
 	
