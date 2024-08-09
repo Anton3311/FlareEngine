@@ -29,6 +29,11 @@ namespace Flare
 		constexpr T* GetData() { return m_Values; }
 		constexpr const T* GetData() const { return m_Values; }
 
+		constexpr operator Span<const T>() const
+		{
+			return Span<const T>(m_Values, m_Size);
+		}
+
 		inline Span<T> Slice(size_t start) const
 		{
 			FLARE_CORE_ASSERT(start <= m_Size);
@@ -101,6 +106,11 @@ namespace Flare
 		{
 			return Span<T>(vector.data(), vector.size());
 		}
+
+		inline static Span<const T> FromVector(const std::vector<T>& vector)
+		{
+			return Span<const T>(vector.data(), vector.size());
+		}
 	private:
 		T* m_Values;
 		size_t m_Size;
@@ -124,7 +134,7 @@ namespace Flare
 		constexpr size_t GetSize() const { return m_Size; }
 
 		template<typename T>
-		inline static MemorySpan FromVector(std::vector<T>& vector)
+		inline static MemorySpan FromVector(const std::vector<T>& vector)
 		{
 			return MemorySpan(vector.data(), vector.size());
 		}

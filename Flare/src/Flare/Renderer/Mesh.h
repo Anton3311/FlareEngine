@@ -38,18 +38,18 @@ namespace Flare
 
 		Mesh(MemorySpan indices,
 			IndexBuffer::IndexFormat indexFormat,
-			Span<glm::vec3> vertices,
-			Span<glm::vec3> normals,
-			Span<glm::vec3> tangents,
-			Span<glm::vec2> uvs);
+			Span<const glm::vec3> vertices,
+			Span<const glm::vec3> normals,
+			Span<const glm::vec3> tangents,
+			Span<const glm::vec2> uvs);
 
 		~Mesh();
 
 		virtual void AddSubMesh(const Span<glm::vec3>& vertices,
 			const MemorySpan& indices,
-			const Span<glm::vec3>& normals,
-			const Span<glm::vec3>& tangents,
-			const Span<glm::vec2>& uvs);
+			const Span<const glm::vec3>& normals,
+			const Span<const glm::vec3>& tangents,
+			const Span<const glm::vec2>& uvs);
 
 		void AddSubMesh(const SubMesh& subMesh);
 
@@ -78,10 +78,10 @@ namespace Flare
 
 		static Ref<Mesh> Create(MemorySpan indices,
 			IndexBuffer::IndexFormat indexFormat,
-			Span<glm::vec3> vertices,
-			Span<glm::vec3> normals,
-			Span<glm::vec3> tangents,
-			Span<glm::vec2> uvs);
+			Span<const glm::vec3> vertices,
+			Span<const glm::vec3> normals,
+			Span<const glm::vec3> tangents,
+			Span<const glm::vec2> uvs);
 	protected:
 		std::string m_DebugName;
 		IndexBuffer::IndexFormat m_IndexFormat;

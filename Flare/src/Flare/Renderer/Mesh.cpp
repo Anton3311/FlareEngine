@@ -24,10 +24,10 @@ namespace Flare
 
 	Mesh::Mesh(MemorySpan indices,
 		IndexBuffer::IndexFormat indexFormat,
-		Span<glm::vec3> vertices,
-		Span<glm::vec3> normals,
-		Span<glm::vec3> tangents,
-		Span<glm::vec2> uvs)
+		Span<const glm::vec3> vertices,
+		Span<const glm::vec3> normals,
+		Span<const glm::vec3> tangents,
+		Span<const glm::vec2> uvs)
 		: Asset(AssetType::Mesh),
 		m_IndexFormat(indexFormat),
 		m_VertexBufferSize(vertices.GetSize()),
@@ -70,9 +70,9 @@ namespace Flare
 
 	void Mesh::AddSubMesh(const Span<glm::vec3>& vertices,
 		const MemorySpan& indices,
-		const Span<glm::vec3>& normals,
-		const Span<glm::vec3>& tangents,
-		const Span<glm::vec2>& uvs)
+		const Span<const glm::vec3>& normals,
+		const Span<const glm::vec3>& tangents,
+		const Span<const glm::vec2>& uvs)
 	{
 		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(vertices.GetSize() > 0);
@@ -136,10 +136,10 @@ namespace Flare
 		{
 			Ref<CommandBuffer> commandBuffer = VulkanContext::GetInstance().BeginTemporaryCommandBuffer();
 
-			m_Vertices->SetData(MemorySpan(const_cast<glm::vec3*>(vertices.GetData()), vertices.GetSize()), m_VertexBufferOffset * sizeof(glm::vec3), commandBuffer);
-			m_Normals->SetData(MemorySpan(const_cast<glm::vec3*>(normals.GetData()), normals.GetSize()), m_VertexBufferOffset * sizeof(glm::vec3), commandBuffer);
-			m_Tangents->SetData(MemorySpan(const_cast<glm::vec3*>(tangents.GetData()), tangents.GetSize()), m_VertexBufferOffset * sizeof(glm::vec3), commandBuffer);
-			m_UVs->SetData(MemorySpan(const_cast<glm::vec2*>(uvs.GetData()), uvs.GetSize()), m_VertexBufferOffset * sizeof(glm::vec2), commandBuffer);
+			m_Vertices->SetData(MemorySpan(vertices.GetData(), vertices.GetSize()), m_VertexBufferOffset * sizeof(glm::vec3), commandBuffer);
+			m_Normals->SetData(MemorySpan(normals.GetData(), normals.GetSize()), m_VertexBufferOffset * sizeof(glm::vec3), commandBuffer);
+			m_Tangents->SetData(MemorySpan(tangents.GetData(), tangents.GetSize()), m_VertexBufferOffset * sizeof(glm::vec3), commandBuffer);
+			m_UVs->SetData(MemorySpan(uvs.GetData(), uvs.GetSize()), m_VertexBufferOffset * sizeof(glm::vec2), commandBuffer);
 
 			m_IndexBuffer->SetData(indices, m_IndexBufferOffset, commandBuffer);
 
@@ -209,10 +209,10 @@ namespace Flare
 
 	Ref<Mesh> Mesh::Create(MemorySpan indices,
 		IndexBuffer::IndexFormat indexFormat,
-		Span<glm::vec3> vertices,
-		Span<glm::vec3> normals,
-		Span<glm::vec3> tangents,
-		Span<glm::vec2> uvs)
+		Span<const glm::vec3> vertices,
+		Span<const glm::vec3> normals,
+		Span<const glm::vec3> tangents,
+		Span<const glm::vec2> uvs)
 	{
 		FLARE_PROFILE_FUNCTION();
 
