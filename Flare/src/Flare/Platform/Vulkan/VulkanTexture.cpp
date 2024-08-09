@@ -447,6 +447,7 @@ namespace Flare
 
 		if (m_Specifications.Format == TextureFormat::RGB8)
 		{
+			FLARE_PROFILE_SCOPE("ConvertToSupportedFormat");
 			FLARE_CORE_ASSERT(mips.GetSize() == 1);
 
 			// Add alpha channel
