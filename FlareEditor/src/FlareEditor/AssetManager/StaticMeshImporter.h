@@ -40,10 +40,11 @@ namespace Flare
 
 		inline const SceneData& GetSceneData() const { return m_SceneData; }
 	private:
-		void WalkHierarchy(const aiNode* node);
-		void VisitNode(const aiNode* node);
+		void WalkHierarchy(const aiNode* node, const glm::mat4& parentTransform);
+		void VisitNode(const aiNode* node, const glm::mat4& parentTransform);
 
 		void CopySubMeshData(const aiMesh* node);
+		void FlattenHierarchy(const aiNode* node, const glm::mat4& transform, size_t subMeshStart, size_t subMeshEnd);
 
 		void ReserveBuffers();
 		void CountVerticesAndIndicesRecursively(const aiNode* node, size_t& vertexCount, size_t& indexCount);

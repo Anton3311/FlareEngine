@@ -1,5 +1,6 @@
 #include "StaticMeshImporter.h"
 
+#include "FlareCore/Log.h"
 #include "FlareCore/Profiler/Profiler.h"
 
 #include <assimp/Importer.hpp>
@@ -14,35 +15,62 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 
 		ReserveBuffers();
-		WalkHierarchy(m_Scene->mRootNode);
+		WalkHierarchy(m_Scene->mRootNode, glm::mat4(1.0f));
 	}
 
-	void StaticMeshImporter::WalkHierarchy(const aiNode* node)
+	inline static glm::mat4 ConvertToColumnMajor(const aiMatrix4x4& matrix)
+	{
+		return glm::mat4(
+			matrix.a1, matrix.b1, matrix.c1, matrix.d1,
+			matrix.a2, matrix.b2, matrix.c2, matrix.d2,
+			matrix.a3, matrix.b3, matrix.c3, matrix.d3,
+			matrix.d4, matrix.b4, matrix.c4, matrix.d4);
+	}
+
+	void StaticMeshImporter::WalkHierarchy(const aiNode* node, const glm::mat4& parentTransform)
 	{
 		FLARE_PROFILE_FUNCTION();
 
+		glm::mat4 nodeTransform = parentTransform * ConvertToColumnMajor(node->mTransformation);
+
 		for (uint32_t i = 0; i < node->mNumChildren; i++)
 		{
-			VisitNode(node->mChildren[i]);
-			WalkHierarchy(node->mChildren[i]);
+			VisitNode(node->mChildren[i], parentTransform);
+			WalkHierarchy(node->mChildren[i], parentTransform);
 		}
 	}
 
-	void StaticMeshImporter::VisitNode(const aiNode* node)
+	void StaticMeshImporter::VisitNode(const aiNode* node, const glm::mat4& parentTransform)
 	{
 		FLARE_PROFILE_FUNCTION();
 
 		if (node->mNumMeshes == 0)
 			return;
 
+		glm::mat4 nodeTransform = parentTransform * ConvertToColumnMajor(node->mTransformation);
+
 		for (uint32_t i = 0; i < node->mNumMeshes; i++)
 		{
 			aiMesh* nodeMesh = m_Scene->mMeshes[node->mMeshes[i]];
 			m_SceneData.UsedMaterials.push_back(nodeMesh->mMaterialIndex);
 
-			CopySubMeshData(nodeMesh);
+			size_t subMeshStart = m_VertexOffset;
+			size_t subMeshEnd = m_VertexOffset + (size_t)nodeMesh->mNumVertices;
 
-			node->mTransformation;
+			CopySubMeshData(nodeMesh);
+			FlattenHierarchy(node, nodeTransform, subMeshStart, subMeshEnd);
+
+			{
+				FLARE_PROFILE_SCOPE("CalculateBounds");
+				SubMesh& subMesh = m_SceneData.SubMeshes.back();
+				subMesh.Bounds.Min = m_SceneData.Vertices[subMeshStart];
+				subMesh.Bounds.Max = m_SceneData.Vertices[subMeshStart];
+				for (size_t i = subMeshStart + 1; i < subMeshEnd; i++)
+				{
+					subMesh.Bounds.Min = glm::min(m_SceneData.Vertices[i], subMesh.Bounds.Min);
+					subMesh.Bounds.Max = glm::max(m_SceneData.Vertices[i], subMesh.Bounds.Max);
+				}
+			}
 		}
 	}
 
@@ -97,16 +125,29 @@ namespace Flare
 		subMesh.BaseVertex = 0;
 		subMesh.BaseIndex = (uint32_t)m_IndexOffset;
 		subMesh.IndicesCount = (uint32_t)subMeshIndexCount;
-		subMesh.Bounds.Min = m_SceneData.Vertices[m_VertexOffset];
-		subMesh.Bounds.Max = m_SceneData.Vertices[m_VertexOffset];
-		for (size_t i = m_VertexOffset + 1; i < m_VertexOffset + (size_t)mesh->mNumVertices; i++)
-		{
-			subMesh.Bounds.Min = glm::min(m_SceneData.Vertices[i], subMesh.Bounds.Min);
-			subMesh.Bounds.Max = glm::max(m_SceneData.Vertices[i], subMesh.Bounds.Max);
-		}
 
 		m_VertexOffset += mesh->mNumVertices;
 		m_IndexOffset += subMeshIndexCount;
+	}
+
+	void StaticMeshImporter::FlattenHierarchy(const aiNode* node, const glm::mat4& transform, size_t subMeshStart, size_t subMeshEnd)
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		for (size_t i = subMeshStart; i < subMeshEnd; i++)
+		{
+			m_SceneData.Vertices[i] = transform * glm::vec4(m_SceneData.Vertices[i], 1.0f);
+		}
+
+		for (size_t i = subMeshStart; i < subMeshEnd; i++)
+		{
+			m_SceneData.Normals[i] = transform * glm::vec4(m_SceneData.Normals[i], 0.0f);
+		}
+
+		for (size_t i = subMeshStart; i < subMeshEnd; i++)
+		{
+			m_SceneData.Tangents[i] = transform * glm::vec4(m_SceneData.Tangents[i], 0.0f);
+		}
 	}
 
 	void StaticMeshImporter::ReserveBuffers()
