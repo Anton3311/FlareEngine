@@ -1,5 +1,7 @@
 #include "RendererPrimitives.h"
 
+#include "FlareCore/Profiler/Profiler.h"
+
 #include "Flare/Renderer/Mesh.h"
 
 namespace Flare
@@ -12,8 +14,17 @@ namespace Flare
 
 	static RendererPrimitivesData s_Primitives;
 
+	void RendererPrimitives::Initialize()
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		GetCube();
+		GetFullscreenQuadMesh();
+	}
+
 	Ref<const Mesh> RendererPrimitives::GetCube()
 	{
+		FLARE_PROFILE_FUNCTION();
 		if (s_Primitives.Cube)
 			return s_Primitives.Cube;
 
@@ -96,6 +107,7 @@ namespace Flare
 
 	Ref<const Mesh> RendererPrimitives::GetFullscreenQuadMesh()
 	{
+		FLARE_PROFILE_FUNCTION();
 		if (s_Primitives.FullscreenQuadMesh)
 			return s_Primitives.FullscreenQuadMesh;
 

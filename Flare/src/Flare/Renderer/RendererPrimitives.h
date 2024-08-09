@@ -8,6 +8,8 @@ namespace Flare
 	class FLARE_API RendererPrimitives
 	{
 	public:
+		static void Initialize();
+
 		static Ref<const Mesh> GetCube();
 		static Ref<const Mesh> GetFullscreenQuadMesh();
 

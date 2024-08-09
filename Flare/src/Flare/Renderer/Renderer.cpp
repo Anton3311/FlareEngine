@@ -217,6 +217,8 @@ namespace Flare
 
 		s_RendererData.DefaultShadowSampler = Sampler::Create(samplerSpecifications);
 
+		RendererPrimitives::Initialize();
+
 		Project::OnProjectOpen.Bind(ReloadShaders);
 	}
 
