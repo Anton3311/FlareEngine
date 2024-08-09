@@ -297,6 +297,8 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
+		SubmitUploadCommandBuffer();
+
 		m_WindowMinimizedAtStartOfFrame = m_Window->GetProperties().IsMinimized;
 
 		if (!m_WindowMinimizedAtStartOfFrame && m_ShouldAcquireNextSwapchainImage)
@@ -328,6 +330,9 @@ namespace Flare
 		m_CurrentFrameResources->CommandBuffer->Reset();
 		m_CurrentFrameResources->StagingBufferPool.Reset();
 		m_CurrentFrameResources->CommandBuffer->Begin();
+
+		m_CurrentFrameResources->UploadCommandBuffer = m_CurrentFrameResources->CommandBuffer;
+		m_CurrentFrameResources->DedicatedUploadCommandBuffer = false;
 
 		ReleaseQueuedDescriptorSets();
 
@@ -378,10 +383,14 @@ namespace Flare
 		m_ShouldAcquireNextSwapchainImage = true;
 
 		m_CurrentFrameResources->CommandBuffer->End();
+		if (!m_CurrentFrameResources->DedicatedUploadCommandBuffer)
+			m_CurrentFrameResources->UploadCommandBuffer = nullptr;
 
 		int32_t width, height;
 		glfwGetFramebufferSize((GLFWwindow*)m_Window->GetNativeWindow(), &width, &height);
 		m_Swapchain->SubmitPresent(Span<const VkSemaphore>(), glm::uvec2((uint32_t)width, (uint32_t)height), true);
+
+		SubmitUploadCommandBuffer();
 
 		{
 			FLARE_PROFILE_SCOPE("Submit");
@@ -557,6 +566,20 @@ namespace Flare
 		}
 	}
 
+	Ref<VulkanCommandBuffer> VulkanContext::GetUploadCommandBuffer()
+	{
+		FLARE_PROFILE_FUNCTION();
+		if (m_CurrentFrameResources->UploadCommandBuffer)
+			return m_CurrentFrameResources->UploadCommandBuffer;
+		
+		FLARE_CORE_ASSERT(!m_CurrentFrameResources->DedicatedUploadCommandBuffer);
+
+		m_CurrentFrameResources->DedicatedUploadCommandBuffer = true;
+		m_CurrentFrameResources->UploadCommandBuffer = BeginTemporaryCommandBuffer();
+
+		return m_CurrentFrameResources->UploadCommandBuffer;
+	}
+
 	Ref<VulkanCommandBuffer> VulkanContext::BeginTemporaryCommandBuffer()
 	{
 		FLARE_PROFILE_FUNCTION();
@@ -604,7 +627,10 @@ namespace Flare
 			VK_CHECK_RESULT(vkQueueWaitIdle(m_GraphicsQueue));
 		}
 
-		vkFreeCommandBuffers(m_Device, m_CommandBufferPool, 1, &buffer);
+		{
+			FLARE_PROFILE_SCOPE("FreeCommandBuffer");
+			vkFreeCommandBuffers(m_Device, m_CommandBufferPool, 1, &buffer);
+		}
 	}
 
 	Ref<VulkanRenderPass> VulkanContext::FindOrCreateRenderPass(Span<TextureFormat> formats)
@@ -1171,6 +1197,17 @@ namespace Flare
 			m_DescriptorSetReleaseQueue.erase(
 				m_DescriptorSetReleaseQueue.begin() + insertionPosition,
 				m_DescriptorSetReleaseQueue.end());
+		}
+	}
+
+	void VulkanContext::SubmitUploadCommandBuffer()
+	{
+		FLARE_PROFILE_FUNCTION();
+		if (m_CurrentFrameResources->UploadCommandBuffer && m_CurrentFrameResources->DedicatedUploadCommandBuffer)
+		{
+			EndTemporaryCommandBuffer(m_CurrentFrameResources->UploadCommandBuffer);
+			m_CurrentFrameResources->UploadCommandBuffer = nullptr;
+			m_CurrentFrameResources->DedicatedUploadCommandBuffer = false;
 		}
 	}
 

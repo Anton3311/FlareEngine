@@ -395,8 +395,15 @@ namespace Flare
 
 		// TODO: Implement async upload (no temporary command buffer)
 
+		bool asyncUpload = HAS_BIT(m_Specifications.Flags, TextureFlags::AsyncUpload);
+
 		VulkanStagingBuffer stagingBuffer = FillStagingBuffer(mips, imageSize);
-		Ref<VulkanCommandBuffer> commandBuffer = VulkanContext::GetInstance().BeginTemporaryCommandBuffer();
+		Ref<VulkanCommandBuffer> commandBuffer = nullptr;
+		
+		if (asyncUpload)
+			commandBuffer = VulkanContext::GetInstance().GetUploadCommandBuffer();
+		else
+			commandBuffer = VulkanContext::GetInstance().BeginTemporaryCommandBuffer();
 
 		uint32_t providedMipCount = (uint32_t)mips.GetSize();
 		CopyImageMips(commandBuffer, mips, stagingBuffer, providedMipCount);
@@ -412,10 +419,13 @@ namespace Flare
 			commandBuffer->TransitionImageLayout(m_Image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, 0, providedMipCount);
 		}
 
-		VulkanContext::GetInstance().EndTemporaryCommandBuffer(commandBuffer);
+		if (!asyncUpload)
+		{
+			VulkanContext::GetInstance().EndTemporaryCommandBuffer(commandBuffer);
 
-		VulkanStagingBufferPool& stagingBufferPool = VulkanContext::GetInstance().GetStagingBufferPool();
-		stagingBufferPool.ReleaseStagingBuffer(stagingBuffer);
+			VulkanStagingBufferPool& stagingBufferPool = VulkanContext::GetInstance().GetStagingBufferPool();
+			stagingBufferPool.ReleaseStagingBuffer(stagingBuffer);
+		}
 	}
 
 	VulkanStagingBuffer VulkanTexture::FillStagingBuffer(Span<const MemorySpan> mips, size_t imageSize)

@@ -122,6 +122,8 @@ namespace Flare
 
 		Ref<VulkanFrameBuffer> GetSwapChainFrameBuffer(uint32_t index) const { return m_Swapchain->GetFrameBuffer(index); }
 
+		Ref<VulkanCommandBuffer> GetUploadCommandBuffer();
+
 		Ref<VulkanCommandBuffer> BeginTemporaryCommandBuffer();
 		void EndTemporaryCommandBuffer(Ref<VulkanCommandBuffer> commandBuffer);
 
@@ -193,6 +195,7 @@ namespace Flare
 		VkSemaphore AcquireSemaphore();
 
 		void ReleaseQueuedDescriptorSets();
+		void SubmitUploadCommandBuffer();
 	private:
 		std::vector<VkLayerProperties> EnumerateAvailableLayers();
 	private:
@@ -203,6 +206,10 @@ namespace Flare
 
 			VkFence FrameFence = VK_NULL_HANDLE;
 			Ref<VulkanCommandBuffer> CommandBuffer = nullptr;
+
+			Ref<VulkanCommandBuffer> UploadCommandBuffer = nullptr;
+			bool DedicatedUploadCommandBuffer = false;
+
 			std::vector<VkSemaphore> RenderingCompleteSemaphores;
 
 			VulkanStagingBufferPool StagingBufferPool;
