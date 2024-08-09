@@ -9,7 +9,6 @@ namespace Flare
 	{
 		TextureSpecifications specifications;
 		specifications.Filtering = TextureFiltering::Linear;
-		specifications.GenerateMipMaps = false;
 		specifications.Wrap = TextureWrap::Clamp;
 
 		m_IconsTexture = Texture::Create("assets/Icons.png", specifications);

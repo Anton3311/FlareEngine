@@ -96,7 +96,10 @@ namespace Flare
 		TextureSpecifications specifications;
 		specifications.Filtering = importSettings.Filtering;
 		specifications.Wrap = importSettings.WrapMode;
-		specifications.GenerateMipMaps = importSettings.GenerateMipMaps;
+		specifications.Flags = TextureFlags::AsyncUpload;
+
+		if (importSettings.GenerateMipMaps)
+			specifications.Flags |= TextureFlags::GenerateMipMaps;
 
 		TexturePixelData textureData{};
 		if (!Texture::ReadDataFromFile(metadata.Path, specifications, textureData))
@@ -104,9 +107,6 @@ namespace Flare
 			FLARE_CORE_ERROR("Failed to load texture: {}", metadata.Path.string());
 			return nullptr;
 		}
-
-		if (textureData.Mips.size() > 1)
-			specifications.GenerateMipMaps = false;
 
 		Ref<Texture> texture = Texture::Create(specifications, textureData);
 		texture->SetDebugName(metadata.Path.filename().string());

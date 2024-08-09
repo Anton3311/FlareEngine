@@ -80,6 +80,15 @@ namespace Flare
 		TransferDestination,
 	};
 
+	enum class TextureFlags
+	{
+		None = 0,
+		GenerateMipMaps = 1,
+		AsyncUpload = 2,
+	};
+
+	FLARE_IMPL_ENUM_BITFIELD(TextureFlags);
+
 	struct TextureSpecifications
 	{
 		static constexpr uint32_t DefaultMipLevelsCount = 4;
@@ -90,8 +99,7 @@ namespace Flare
 		TextureFiltering Filtering = TextureFiltering::Linear;
 		TextureWrap Wrap = TextureWrap::Clamp;
 		TextureUsage Usage = TextureUsage::Sampling;
-
-		bool GenerateMipMaps = false;
+		TextureFlags Flags = TextureFlags::None;
 	};
 
 	FLARE_API const char* TextureWrapToString(TextureWrap wrap);

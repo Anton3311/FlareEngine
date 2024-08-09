@@ -213,7 +213,6 @@ namespace Flare
 			specifications.Format = attachmentSpecifications.Format;
 			specifications.Filtering = attachmentSpecifications.Filtering;
 			specifications.Wrap = attachmentSpecifications.Wrap;
-			specifications.GenerateMipMaps = false;
 			specifications.Usage = TextureUsage::Sampling | TextureUsage::RenderTarget;
 
 			m_Attachments.push_back(As<VulkanTexture>(Texture::Create(specifications)));

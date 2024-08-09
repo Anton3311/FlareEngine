@@ -257,7 +257,6 @@ namespace Flare
 			specifications.Filtering = TextureFiltering::Closest;
 			specifications.Wrap = TextureWrap::Clamp;
 			specifications.Usage = TextureUsage::RenderTarget;
-			specifications.GenerateMipMaps = false;
 			specifications.Format = TextureFormat::RGBA8;
 
 			Ref<Texture> attachmentTexture = CreateRef<VulkanTexture>(specifications, m_FrameData[i].Image, m_FrameData[i].ImageView);

@@ -38,7 +38,6 @@ namespace Flare
 		specifications.Height = textureSize.y;
 		specifications.Format = resource.Format;
 		specifications.Usage = TextureUsage::Sampling | TextureUsage::RenderTarget;
-		specifications.GenerateMipMaps = false;
 		specifications.Wrap = TextureWrap::Clamp;
 		specifications.Filtering = TextureFiltering::Closest;
 
@@ -72,7 +71,6 @@ namespace Flare
 		specifications.Height = size.y;
 		specifications.Format = resource.Format;
 		specifications.Usage = TextureUsage::Sampling | TextureUsage::RenderTarget;
-		specifications.GenerateMipMaps = false;
 		specifications.Wrap = TextureWrap::Clamp;
 		specifications.Filtering = TextureFiltering::Closest;
 

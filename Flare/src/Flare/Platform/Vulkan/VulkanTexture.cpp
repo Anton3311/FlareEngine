@@ -95,7 +95,7 @@ namespace Flare
 		m_Specifications.Filtering = filtering;
 		m_Specifications.Format = format;
 
-		if (m_Specifications.GenerateMipMaps)
+		if (HAS_BIT(m_Specifications.Flags, TextureFlags::GenerateMipMaps))
 		{
 			m_MipLevels = CalculateMipCount(m_Specifications.Width, m_Specifications.Height);
 		}
@@ -111,7 +111,7 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		if (m_Specifications.GenerateMipMaps)
+		if (HAS_BIT(m_Specifications.Flags, TextureFlags::GenerateMipMaps))
 		{
 			m_MipLevels = CalculateMipCount(m_Specifications.Width, m_Specifications.Height);
 		}
@@ -127,9 +127,10 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		FLARE_CORE_ASSERT(m_Specifications.GenerateMipMaps && data.Mips.size() == 1 || !m_Specifications.GenerateMipMaps);
+		bool generateMipMaps = HAS_BIT(m_Specifications.Flags, TextureFlags::GenerateMipMaps);
+		FLARE_CORE_ASSERT(generateMipMaps && data.Mips.size() == 1 || !generateMipMaps);
 
-		if (m_Specifications.GenerateMipMaps)
+		if (generateMipMaps)
 			m_MipLevels = CalculateMipCount(m_Specifications.Width, m_Specifications.Height);
 		else
 			m_MipLevels = (uint32_t)data.Mips.size();
@@ -392,27 +393,26 @@ namespace Flare
 
 		FLARE_CORE_ASSERT(imageSize > 0);
 
+		// TODO: Implement async upload (no temporary command buffer)
+
 		VulkanStagingBuffer stagingBuffer = FillStagingBuffer(mips, imageSize);
+		Ref<VulkanCommandBuffer> commandBuffer = VulkanContext::GetInstance().BeginTemporaryCommandBuffer();
 
+		uint32_t providedMipCount = (uint32_t)mips.GetSize();
+		CopyImageMips(commandBuffer, mips, stagingBuffer, providedMipCount);
+
+		if (HAS_BIT(m_Specifications.Flags, TextureFlags::GenerateMipMaps) && m_MipLevels > 1 && providedMipCount == 1)
 		{
-			Ref<VulkanCommandBuffer> commandBuffer = VulkanContext::GetInstance().BeginTemporaryCommandBuffer();
-
-			uint32_t providedMipCount = (uint32_t)mips.GetSize();
-			CopyImageMips(commandBuffer, mips, stagingBuffer, providedMipCount);
-
-			if (m_Specifications.GenerateMipMaps && m_MipLevels > 1 && providedMipCount == 1)
-			{
-				commandBuffer->TransitionImageLayout(m_Image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, 0, 1);
-				commandBuffer->GenerateImageMipMaps(m_Image, m_MipLevels, glm::uvec2(m_Specifications.Width, m_Specifications.Height));
-				commandBuffer->TransitionImageLayout(m_Image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, 0, m_MipLevels);
-			}
-			else
-			{
-				commandBuffer->TransitionImageLayout(m_Image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, 0, providedMipCount);
-			}
-
-			VulkanContext::GetInstance().EndTemporaryCommandBuffer(commandBuffer);
+			commandBuffer->TransitionImageLayout(m_Image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, 0, 1);
+			commandBuffer->GenerateImageMipMaps(m_Image, m_MipLevels, glm::uvec2(m_Specifications.Width, m_Specifications.Height));
+			commandBuffer->TransitionImageLayout(m_Image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, 0, m_MipLevels);
 		}
+		else
+		{
+			commandBuffer->TransitionImageLayout(m_Image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, 0, providedMipCount);
+		}
+
+		VulkanContext::GetInstance().EndTemporaryCommandBuffer(commandBuffer);
 
 		VulkanStagingBufferPool& stagingBufferPool = VulkanContext::GetInstance().GetStagingBufferPool();
 		stagingBufferPool.ReleaseStagingBuffer(stagingBuffer);

@@ -109,7 +109,6 @@ namespace Flare
 			specifications.Format = TextureFormat::Depth32;
 			specifications.Filtering = TextureFiltering::Closest;
 			specifications.Wrap = TextureWrap::Clamp;
-			specifications.GenerateMipMaps = false;
 			specifications.Usage = TextureUsage::Sampling | TextureUsage::RenderTarget;
 			s_RendererData.DummyDepthTexture = Texture::Create(specifications);
 			s_RendererData.DummyDepthTexture->SetDebugName("DummyDepthTexture");
