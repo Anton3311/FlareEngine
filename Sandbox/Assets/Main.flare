@@ -1,5 +1,5 @@
 Entities:
-  - SerializationId: 6879222354018861521
+  - SerializationId: 6879222352832364544
     Components:
       - Name: struct Flare::NameComponent
         Data:
@@ -16,7 +16,7 @@ Entities:
           Position: [0, 0, 0]
           Rotation: [0, 0, 0]
           Scale: [1, 1, 1]
-  - SerializationId: 5112676808506839086
+  - SerializationId: 16934175378184730234
     Components:
       - Name: struct Flare::NameComponent
         Data:
@@ -52,7 +52,7 @@ Entities:
             CascadeSplit1: 25
             CascadeSplit2: 70
             CascadeSplit3: 100
-  - SerializationId: 5429343776136486452
+  - SerializationId: 18086609012960167649
     Components:
       - Name: struct Flare::NameComponent
         Data:
@@ -66,8 +66,8 @@ Entities:
         Data:
           Position: [-4.67081642, 0, -9.77812767]
           Rotation: [0, -0, 0]
-          Scale: [1, 1, 1]
-  - SerializationId: 12495803614744137463
+          Scale: [0.00999999978, 0.00999999978, 0.00999999978]
+  - SerializationId: 4379074414733882942
     Components:
       - Name: struct Flare::MeshComponent
         Data:
@@ -78,8 +78,8 @@ Entities:
         Data:
           Position: [0, -4.02802563, 0]
           Rotation: [0, -0, 0]
-          Scale: [40, 0.571664393, 40]
-  - SerializationId: 10392799965563644219
+          Scale: [0.400000006, 0.00571999978, 0.400000006]
+  - SerializationId: 2958584072127851397
     Components:
       - Name: struct Flare::NameComponent
         Data:
@@ -92,9 +92,9 @@ Entities:
       - Name: struct Flare::TransformComponent
         Data:
           Position: [-0.0616625547, 0, -9.77812767]
-          Rotation: [-90, -0, 0]
-          Scale: [1, 1, 1]
-  - SerializationId: 4486894099065327795
+          Rotation: [0, -0, 0]
+          Scale: [0.00999999978, 0.00999999978, 0.00999999978]
+  - SerializationId: 7765885090687521340
     Components:
       - Name: struct Flare::TextComponent
         Data:
@@ -106,7 +106,7 @@ Entities:
           Position: [-3.42949963, 3.6701169, -12.693181]
           Rotation: [0, -0, 0]
           Scale: [3.62999964, 3.62999964, 3.62999964]
-  - SerializationId: 15799785695220381521
+  - SerializationId: 4311911470098791001
     Components:
       - Name: struct Flare::TextComponent
         Data:
@@ -118,7 +118,7 @@ Entities:
           Position: [8.73184109, 9.13318253, -12.693182]
           Rotation: [0, -0, 0]
           Scale: [3.62999964, 3.62999964, 3.62999964]
-  - SerializationId: 12457681439659901596
+  - SerializationId: 15443529135574101794
     Components:
       - Name: struct Flare::Decal
         Data:
@@ -128,7 +128,7 @@ Entities:
           Position: [10.6670866, -2.72236538, -9.55473804]
           Rotation: [0, -0, 0]
           Scale: [3.11999965, 3.11999965, 3.11999965]
-  - SerializationId: 8317481162844878243
+  - SerializationId: 6730369338776074345
     Components:
       - Name: struct Flare::MeshComponent
         Data:
@@ -139,22 +139,22 @@ Entities:
         Data:
           Position: [10.6200171, -3.9022398, -9.77812767]
           Rotation: [-50.9320412, -0, 0]
-          Scale: [1, 0.999999642, 0.999999642]
-  - SerializationId: 8195331949024818936
+          Scale: [0.00999999978, 0.00999999978, 0.00999999978]
+  - SerializationId: 6038790163040496426
     Components:
       - Name: struct Flare::NameComponent
         Data:
           Value: Point light
       - Name: struct Flare::PointLight
         Data:
-          Color: [0.287989527, 0.953736663, 0.0916401967]
-          Intensity: 22
+          Color: [0.918149471, 0.905068099, 0.182976395]
+          Intensity: 378
       - Name: struct Flare::TransformComponent
         Data:
-          Position: [-3.19203019, 2.9339509, -7.11802721]
+          Position: [-3.19203019, -1.32721543, -7.11802721]
           Rotation: [0, -0, 0]
           Scale: [1, 1, 1]
-  - SerializationId: 5600492058128415083
+  - SerializationId: 8350001927552710250
     Components:
       - Name: struct Flare::NameComponent
         Data:
@@ -170,7 +170,7 @@ Entities:
           Position: [-14.2633619, 4.80785513, -8.2634058]
           Rotation: [90, -0, 0]
           Scale: [1, 0.99995029, 0.99995029]
-  - SerializationId: 12725389737198954025
+  - SerializationId: 2329916854350544047
     Components:
       - Name: struct Flare::NameComponent
         Data:
@@ -184,8 +184,8 @@ Entities:
         Data:
           Position: [-12.316617, 0, -9.77812767]
           Rotation: [0, -0, 0]
-          Scale: [4.12645626, 21.6443214, 1]
-  - SerializationId: 237578395046688509
+          Scale: [0.0412600003, 0.219999999, 0.00999999978]
+  - SerializationId: 237578393376260096
     Components:
       - Name: struct Flare::NameComponent
         Data:
@@ -198,7 +198,7 @@ Entities:
           OuterAngle: 31
       - Name: struct Flare::Parent
         Data:
-          ParentEntity: 13839467288061322450
+          ParentEntity: 3578117572941315248
           IndexInParent: 0
       - Name: struct Flare::TransformComponent
         Data:
@@ -210,7 +210,7 @@ Entities:
           Position: [-9.11040115, -7.72627306, -10.7680902]
           Rotation: [-5.34057617e-05, 8.53773656e-07, -26.1180172]
           Scale: [2.15280008, 0.423997372, 2.15266728]
-  - SerializationId: 1694589035617075651
+  - SerializationId: 17634377074356498417
     Components:
       - Name: struct Flare::MeshComponent
         Data:
@@ -221,8 +221,8 @@ Entities:
         Data:
           Position: [15.6301889, -0.480205297, -9.77812767]
           Rotation: [0, -0, 0]
-          Scale: [2.27964044, 2.20861769, 0.999999642]
-  - SerializationId: 13839467288061322450
+          Scale: [0.0228000004, 0.0220899992, 0.00999999978]
+  - SerializationId: 3578117572941315248
     Components:
       - Name: struct Flare::Decal
         Data:
@@ -230,7 +230,7 @@ Entities:
       - Name: struct Flare::Children
         Data:
           ChildrenEntities:
-            - 237578395046688509
+            - 237578393376260096
           ? {}
       - Name: struct Flare::TransformComponent
         Data:
@@ -239,9 +239,9 @@ Entities:
           Scale: [2.15280008, 0.424019426, 2.15277934]
 Editor:
   Camera:
-    RotationOrigin: [-13.0828304, -5.08186245, -10.2559996]
-    Rotation: [38, -788, 0]
-    Zoom: 10.4000034
+    RotationOrigin: [4.51117897, 0.807224751, -11.7820234]
+    Rotation: [43, -1433, 0]
+    Zoom: 42.4000015
   SceneViewSettings:
     ShowAABBs: false
     ShowCameraFrustum: true
