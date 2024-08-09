@@ -1,5 +1,6 @@
 #include "Mesh.h"
 
+#include "FlareCore/Log.h"
 #include "FlareCore/Profiler/Profiler.h"
 
 #include "Flare/Renderer/RendererAPI.h"
@@ -97,20 +98,39 @@ namespace Flare
 			subMesh.Bounds.Max = glm::max(subMesh.Bounds.Max, vertices[i]);
 		}
 
+		bool buffersCreated = false;
 		if (!m_IndexBuffer)
+		{
 			m_IndexBuffer = IndexBuffer::Create(m_IndexFormat, m_IndexBufferSize, GPUBufferUsage::Static);
+			buffersCreated = true;
+		}
 
 		if (!m_Vertices)
+		{
 			m_Vertices = VertexBuffer::Create(m_VertexBufferSize * sizeof(glm::vec3), GPUBufferUsage::Static);
+			buffersCreated = true;
+		}
 
 		if (!m_Normals)
+		{
 			m_Normals = VertexBuffer::Create(m_VertexBufferSize * sizeof(glm::vec3), GPUBufferUsage::Static);
+			buffersCreated = true;
+		}
 
 		if (!m_Tangents)
+		{
 			m_Tangents = VertexBuffer::Create(m_VertexBufferSize * sizeof(glm::vec3), GPUBufferUsage::Static);
+			buffersCreated = true;
+		}
 
 		if (!m_UVs)
+		{
 			m_UVs = VertexBuffer::Create(m_VertexBufferSize * sizeof(glm::vec2), GPUBufferUsage::Static);
+			buffersCreated = true;
+		}
+
+		if (buffersCreated)
+			UpdateBufferDebugNames();
 
 		if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
 		{
@@ -149,6 +169,28 @@ namespace Flare
 		}
 
 		m_SubMeshes.push_back(subMesh);
+	}
+
+	void Mesh::SetDebugName(std::string_view debugName)
+	{
+		FLARE_PROFILE_FUNCTION();
+		m_DebugName = debugName;
+
+		UpdateBufferDebugNames();
+	}
+
+	void Mesh::UpdateBufferDebugNames()
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		if (m_DebugName.empty())
+			return;
+
+		m_Vertices->SetDebugName(fmt::format("{}.Vertices", m_DebugName));
+		m_Normals->SetDebugName(fmt::format("{}.Normals", m_DebugName));
+		m_IndexBuffer->SetDebugName(fmt::format("{}.Indices", m_DebugName));
+		m_Tangents->SetDebugName(fmt::format("{}.Tangents", m_DebugName));
+		m_UVs->SetDebugName(fmt::format("{}.UVs", m_DebugName));
 	}
 
 	Ref<Mesh> Mesh::Create(size_t vertexBufferSize, IndexBuffer::IndexFormat indexFormat, size_t indexBufferSize)

@@ -359,6 +359,8 @@ namespace Flare
             Span<glm::vec3>::FromVector(data.Tangents),
             Span<glm::vec2>::FromVector(data.UVs));
 
+        mesh->SetDebugName(metadata.Name);
+
         for (const auto& subMesh : data.SubMeshes)
         {
             mesh->AddSubMesh(subMesh);

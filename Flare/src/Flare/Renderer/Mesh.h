@@ -53,6 +53,9 @@ namespace Flare
 
 		void AddSubMesh(const SubMesh& subMesh);
 
+		void SetDebugName(std::string_view debugName);
+		inline const std::string& GetDebugName() const { return m_DebugName; }
+
 		constexpr size_t GetVertexBufferSize() const { return m_VertexBufferSize; }
 		constexpr size_t GetIndexBufferSize() const { return m_IndexBufferSize; }
 
@@ -68,6 +71,8 @@ namespace Flare
 
 		inline const std::vector<SubMesh>& GetSubMeshes() const { return m_SubMeshes; }
 		inline IndexBuffer::IndexFormat GetIndexFormat() const { return m_IndexFormat; }
+	private:
+		void UpdateBufferDebugNames();
 	public:
 		static Ref<Mesh> Create( size_t vertexBufferSize, IndexBuffer::IndexFormat indexFormat, size_t indexBufferSize);
 
@@ -78,6 +83,7 @@ namespace Flare
 			Span<glm::vec3> tangents,
 			Span<glm::vec2> uvs);
 	protected:
+		std::string m_DebugName;
 		IndexBuffer::IndexFormat m_IndexFormat;
 
 		Math::AABB m_Bounds;
