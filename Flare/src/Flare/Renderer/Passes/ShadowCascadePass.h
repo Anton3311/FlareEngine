@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Flare/Math/Transform.h"
+#include "Flare/Math/AffineTransform.h"
 
 #include "Flare/Renderer/RenderGraph/RenderGraphPass.h"
 #include "Flare/Renderer/RendererStatistics.h"

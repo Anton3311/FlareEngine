@@ -1,5 +1,7 @@
 #include "Hierarchy.h"
 
+#include "FlareCore/Profiler/Profiler.h"
+
 #include "Flare/Scene/Transform.h"
 
 #include <glm/glm.hpp>
@@ -20,7 +22,7 @@ namespace Flare
 		FLARE_CORE_ASSERT(groupId.has_value());
 		config.Group = *groupId;
 
-		m_Qeury = world.NewQuery()
+		m_Query = world.NewQuery()
 			.All()
 			.With<TransformComponent, Children>()
 			.Without<Parent>()
@@ -29,32 +31,35 @@ namespace Flare
 
 	void TransformPropagationSystem::OnUpdate(World& world, SystemExecutionContext& context)
 	{
-		for (auto view : m_Qeury)
-		{
-			auto transforms = view.View<TransformComponent>();
-			auto childrenComponents = view.View<Children>();
+		FLARE_PROFILE_FUNCTION();
 
-			for (auto entity : view)
+		m_Query.ForEachChunk([&world](QueryChunk chunk,
+			ComponentView<const TransformComponent> transforms,
+			ComponentView<const Children> childrenComponents)
 			{
-				const TransformComponent& parentTransform = transforms[entity];
-				const Children& children = childrenComponents[entity];
-
-				glm::quat parentRotation = glm::quat(glm::radians(parentTransform.Rotation));
-
-				for (Entity child : children.ChildrenEntities)
+				for (auto entity : chunk)
 				{
-					GlobalTransform* globalTransform = world.TryGetEntityComponent<GlobalTransform>(child);
-					const TransformComponent* transform = world.TryGetEntityComponent<const TransformComponent>(child);
+					const TransformComponent& parentTransform = transforms[entity];
+					const Children& children = childrenComponents[entity];
 
-					if (!globalTransform || !transform)
-						continue;
+					glm::quat parentRotation = glm::quat(glm::radians(parentTransform.Rotation));
 
-					glm::vec3 rotatedPosition = parentRotation * (transform->Position * parentTransform.Scale);
-					globalTransform->Position = rotatedPosition + parentTransform.Position;
-					globalTransform->Rotation = parentTransform.Rotation + transform->Rotation;
-					globalTransform->Scale = parentTransform.Scale * transform->Scale;
+					for (Entity child : children.ChildrenEntities)
+					{
+						TransformComponent* globalTransform = world.TryGetEntityComponent<TransformComponent>(child);
+						const LocalTransform* localTransform = world.TryGetEntityComponent<const LocalTransform>(child);
+
+						if (!globalTransform || !localTransform)
+							continue;
+
+						glm::vec3 rotatedPosition = parentRotation * (localTransform->Position * parentTransform.Scale);
+						globalTransform->Position = rotatedPosition + parentTransform.Position;
+						globalTransform->Rotation = parentTransform.Rotation + localTransform->Rotation;
+						globalTransform->Scale = parentTransform.Scale * localTransform->Scale;
+
+						// TODO: Visit entities deeper in the hierarchy
+					}
 				}
-			}
-		}
+			});
 	}
 }

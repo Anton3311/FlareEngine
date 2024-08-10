@@ -58,6 +58,6 @@ namespace Flare
 		void OnConfig(World& world, SystemConfig& config) override;
 		void OnUpdate(World& world, SystemExecutionContext& context) override;
 	private:
-		Query m_Qeury;
+		Query m_Query;
 	};
 }

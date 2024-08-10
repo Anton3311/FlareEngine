@@ -2,7 +2,7 @@
 
 #include "FlareCore/Core.h"
 
-#include "Flare/Math/Transform.h"
+#include "Flare/Math/AffineTransform.h"
 #include "Flare/Renderer/RenderData.h"
 #include "Flare/Renderer/RenderGraph/RenderGraphPass.h"
 

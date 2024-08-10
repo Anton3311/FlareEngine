@@ -4,7 +4,8 @@
 
 #include "Flare/Renderer/Mesh.h"
 #include "Flare/Renderer/Material.h"
-#include "Flare/Math/Transform.h"
+
+#include "Flare/Math/AffineTransform.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtx/norm.hpp>

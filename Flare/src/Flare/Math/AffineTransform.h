@@ -1,6 +1,10 @@
 #pragma once
 
+#include "FlareCore/Core.h"
+
 #include <glm/glm.hpp>
+#include <glm/gtx/quaternion.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 namespace Flare::Math
 {
@@ -34,4 +38,29 @@ namespace Flare::Math
 		glm::mat3 RotationScale = glm::mat3(1.0f);
 		glm::vec3 Translation = glm::vec3(0.0f);
 	};
+
+	//
+	// AffineTransform
+	//
+
+    struct FLARE_API AffineTransform
+    {
+		AffineTransform()
+			: Position(glm::vec3(0.0f)),
+			Rotation(glm::vec3(0.0f)),
+			Scale(glm::vec3(1.0f)) {}
+
+		AffineTransform(const glm::vec3& position)
+			: Position(position), Rotation(glm::vec3(0.0f)), Scale(glm::vec3(1.0f)) {}
+
+		AffineTransform(const glm::vec3& position, const glm::vec3& rotation, const glm::vec3& scale)
+			: Position(position), Rotation(rotation), Scale(scale) {}
+        
+		glm::mat4 GetTransformationMatrix() const;
+		glm::vec3 TransformDirection(const glm::vec3& direction) const;
+
+        glm::vec3 Position;
+        glm::vec3 Rotation;
+        glm::vec3 Scale;
+    };
 }

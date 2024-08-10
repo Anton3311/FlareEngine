@@ -3,6 +3,8 @@
 #include "FlareCore/Serialization/TypeSerializer.h"
 #include "FlareCore/Serialization/SerializationStream.h"
 
+#include "Flare/Math/AffineTransform.h"
+
 #include "FlareECS/Entity/ComponentInitializer.h"
 
 #include <glm/glm.hpp>
@@ -11,73 +13,51 @@
 
 namespace Flare
 {
-    struct FLARE_API TransformComponent
-    {
-        FLARE_COMPONENT;
+	struct FLARE_API TransformComponent : public Math::AffineTransform
+	{
+		FLARE_COMPONENT;
 
-		TransformComponent()
-			: Position(glm::vec3(0.0f)),
-			Rotation(glm::vec3(0.0f)),
-			Scale(glm::vec3(1.0f)) {}
-
+		TransformComponent() = default;
 		TransformComponent(const glm::vec3& position)
-			: Position(position), Rotation(glm::vec3(0.0f)), Scale(glm::vec3(1.0f)) {}
-
+			: AffineTransform(position) {}
 		TransformComponent(const glm::vec3& position, const glm::vec3& rotation, const glm::vec3& scale)
-			: Position(position), Rotation(rotation), Scale(scale) {}
-        
-        glm::mat4 GetTransformationMatrix() const;
-        glm::vec3 TransformDirection(const glm::vec3& direction) const;
+			: AffineTransform(position, rotation, scale) {}
+	};
 
-        glm::vec3 Position;
-        glm::vec3 Rotation;
-        glm::vec3 Scale;
-    };
+	template<>
+	struct TypeSerializer<TransformComponent>
+	{
+		void OnSerialize(TransformComponent& transform, SerializationStream& stream)
+		{
+			stream.Serialize("Position", SerializationValue(transform.Position));
+			stream.Serialize("Rotation", SerializationValue(transform.Rotation));
+			stream.Serialize("Scale", SerializationValue(transform.Scale));
+		}
+	};
 
-    template<>
-    struct TypeSerializer<TransformComponent>
-    {
-        void OnSerialize(TransformComponent& transform, SerializationStream& stream)
-        {
-            stream.Serialize("Position", SerializationValue(transform.Position));
-            stream.Serialize("Rotation", SerializationValue(transform.Rotation));
-            stream.Serialize("Scale", SerializationValue(transform.Scale));
-        }
-    };
+	//
+	// LocalTransform
+	//
 
+	struct FLARE_API LocalTransform : public Math::AffineTransform
+	{
+		FLARE_COMPONENT;
 
+		LocalTransform() = default;
+		LocalTransform(const glm::vec3& position)
+			: AffineTransform(position) {}
+		LocalTransform(const glm::vec3& position, const glm::vec3& rotation, const glm::vec3& scale)
+			: AffineTransform(position, rotation, scale) {}
+	};
 
-    struct FLARE_API GlobalTransform
-    {
-        FLARE_COMPONENT;
-
-		GlobalTransform()
-			: Position(glm::vec3(0.0f)),
-			Rotation(glm::vec3(0.0f)),
-			Scale(glm::vec3(1.0f)) {}
-
-		GlobalTransform(const glm::vec3& position)
-			: Position(position), Rotation(glm::vec3(0.0f)), Scale(glm::vec3(1.0f)) {}
-
-		GlobalTransform(const glm::vec3& position, const glm::vec3& rotation, const glm::vec3& scale)
-			: Position(position), Rotation(rotation), Scale(scale) {}
-        
-        glm::mat4 GetTransformationMatrix() const;
-        glm::vec3 TransformDirection(const glm::vec3& direction) const;
-
-        glm::vec3 Position;
-        glm::vec3 Rotation;
-        glm::vec3 Scale;
-    };
-
-    template<>
-    struct TypeSerializer<GlobalTransform>
-    {
-        void OnSerialize(GlobalTransform& transform, SerializationStream& stream)
-        {
-            stream.Serialize("Position", SerializationValue(transform.Position));
-            stream.Serialize("Rotation", SerializationValue(transform.Rotation));
-            stream.Serialize("Scale", SerializationValue(transform.Scale));
-        }
-    };
+	template<>
+	struct TypeSerializer<LocalTransform>
+	{
+		void OnSerialize(LocalTransform& transform, SerializationStream& stream)
+		{
+			stream.Serialize("Position", SerializationValue(transform.Position));
+			stream.Serialize("Rotation", SerializationValue(transform.Rotation));
+			stream.Serialize("Scale", SerializationValue(transform.Scale));
+		}
+	};
 }
