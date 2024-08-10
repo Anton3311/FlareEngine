@@ -12,7 +12,7 @@ namespace Flare
 	// PrefabHierarchy
 	//
 
-	PrefabHierarchy::PrefabHierarchy(const Components& compatibleComponents, const Archetypes& compatibleArchetypes)
+	PrefabHierarchy::PrefabHierarchy(const Components& compatibleComponents, Archetypes& compatibleArchetypes)
 		: m_CompatibleComponentsRegistry(compatibleComponents), m_CompatibleArchetypes(compatibleArchetypes)
 	{
 	}
@@ -70,7 +70,48 @@ namespace Flare
 			}
 		}
 
-		// TODO: Patch entity references, because the ones copyed are only valid inside the given world
+		// TODO: Patch entity references, because the ones copied are only valid inside the given world
+	}
+
+	void PrefabHierarchy::AddEntity(ArchetypeId archetype)
+	{
+		FLARE_CORE_ASSERT(m_CompatibleArchetypes.IsIdValid(archetype));
+		FLARE_CORE_ASSERT(IsEmpty());
+
+		const ArchetypeRecord& record = m_CompatibleArchetypes[archetype];
+
+		size_t offset = 0;
+		if (m_Nodes.size() > 0)
+			offset = m_Nodes.back().DataOffset + m_Nodes.back().Size;
+
+		Node& node = m_Nodes.emplace_back();
+		node.Archetype = archetype;
+		node.DataOffset = offset;
+		node.Size = record.EntitySize;
+	}
+
+	uint8_t* PrefabHierarchy::GetEntityData(size_t nodeIndex) const
+	{
+		FLARE_CORE_ASSERT(nodeIndex < m_Nodes.size());
+		FLARE_CORE_ASSERT(m_Buffer);
+
+		const Node& node = m_Nodes[nodeIndex];
+
+		FLARE_CORE_ASSERT(node.DataOffset + node.Size <= m_BufferSize);
+		return m_Buffer + node.DataOffset;
+	}
+
+	void PrefabHierarchy::EnsureAllocated()
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		if (m_Nodes.size() == 0)
+			return;
+
+		const Node& lastNode = m_Nodes.back();
+		
+		m_BufferSize = lastNode.DataOffset + lastNode.Size;
+		m_Buffer = new uint8_t[m_BufferSize];
 	}
 
 	void PrefabHierarchy::Release()
@@ -112,9 +153,15 @@ namespace Flare
 	FLARE_IMPL_ASSET(Prefab);
 	FLARE_SERIALIZABLE_IMPL(Prefab);
 
+	Prefab::Prefab(const Components& compatibleComponentsRegistry, Archetypes& compatibleArchetypes)
+		: Asset(AssetType::Prefab),
+		m_CompatibleComponentsRegistry(compatibleComponentsRegistry),
+		m_CompatibleArchetypes(compatibleArchetypes),
+		m_Hierarchy(compatibleComponentsRegistry, compatibleArchetypes)	{}
+
 	Prefab::Prefab(const uint8_t* prefabData,
 		const Components& compatibleComponentsRegistry,
-		const Archetypes& compatibleArchetypes,
+		Archetypes& compatibleArchetypes,
 		std::vector<std::pair<ComponentId, void*>>&& components)
 		: Asset(AssetType::Prefab),
 		m_Data(prefabData),
@@ -142,8 +189,49 @@ namespace Flare
 	Entity Prefab::CreateInstance(World& world)
 	{
 		FLARE_PROFILE_FUNCTION();
+
 		FLARE_CORE_ASSERT(&world.Components == &m_CompatibleComponentsRegistry);
+#if 0
 		return world.Entities.CreateEntity(m_Components.data(), m_Components.size(), true);
+#else
+		return IntantiateHierarchy(world);
+#endif
+	}
+
+	Entity Prefab::IntantiateHierarchy(World& world) const
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		const auto& nodes = m_Hierarchy.GetNodes();
+		FLARE_CORE_ASSERT(nodes.size() > 0);
+
+		Entity rootEntity = Entity();
+
+		for (size_t i = 0; i < nodes.size(); i++)
+		{
+			const auto& node = nodes[i];
+
+			Entity entity = world.Entities.CreateEntityFromArchetype(node.Archetype, ComponentInitializationStrategy::DefaultConstructor);
+			if (i == 0)
+				rootEntity = entity;
+
+			const uint8_t* hierarchyEntityData = m_Hierarchy.GetEntityData(i);
+
+			std::optional<uint8_t*> worldEntityData = world.Entities.GetEntityData(entity);
+			FLARE_CORE_ASSERT(worldEntityData);
+
+			const ArchetypeRecord& archetype = m_Hierarchy.GetCompatibleArchetypes()[node.Archetype];
+			for (size_t componentIndex = 0; componentIndex < archetype.Components.size(); componentIndex++)
+			{
+				const ComponentInfo& component = m_Hierarchy.GetCompatibleComponents().GetComponentInfo(archetype.Components[componentIndex]);
+				size_t componentOffset = archetype.ComponentOffsets[componentIndex];
+				uint8_t* componentData = *worldEntityData + componentOffset;
+
+				component.Initializer->Type.CopyConstructor(componentData, hierarchyEntityData + componentOffset);
+			}
+		}
+
+		return rootEntity;
 	}
 
 	InstantiatePrefab::InstantiatePrefab(const Ref<Prefab>& prefab)
