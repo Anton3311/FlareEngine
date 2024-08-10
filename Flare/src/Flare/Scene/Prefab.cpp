@@ -159,43 +159,11 @@ namespace Flare
 		m_CompatibleArchetypes(compatibleArchetypes),
 		m_Hierarchy(compatibleComponentsRegistry, compatibleArchetypes)	{}
 
-	Prefab::Prefab(const uint8_t* prefabData,
-		const Components& compatibleComponentsRegistry,
-		Archetypes& compatibleArchetypes,
-		std::vector<std::pair<ComponentId, void*>>&& components)
-		: Asset(AssetType::Prefab),
-		m_Data(prefabData),
-		m_Hierarchy(compatibleComponentsRegistry, compatibleArchetypes),
-		m_Components(std::move(components)),
-		m_CompatibleComponentsRegistry(compatibleComponentsRegistry),
-		m_CompatibleArchetypes(compatibleArchetypes)
-	{
-	}
-
-	Prefab::~Prefab()
-	{
-		if (m_Data != nullptr)
-		{
-			for (const auto& [id, data] : m_Components)
-			{
-				auto& info = m_CompatibleComponentsRegistry.GetComponentInfo(id);
-				info.Deleter(data);
-			}
-
-			delete[] m_Data;
-		}
-	}
-
 	Entity Prefab::CreateInstance(World& world)
 	{
 		FLARE_PROFILE_FUNCTION();
-
 		FLARE_CORE_ASSERT(&world.Components == &m_CompatibleComponentsRegistry);
-#if 0
-		return world.Entities.CreateEntity(m_Components.data(), m_Components.size(), true);
-#else
 		return IntantiateHierarchy(world);
-#endif
 	}
 
 	Entity Prefab::IntantiateHierarchy(World& world) const
@@ -234,12 +202,12 @@ namespace Flare
 		return rootEntity;
 	}
 
-	InstantiatePrefab::InstantiatePrefab(const Ref<Prefab>& prefab)
-		: m_Prefab(prefab) {}
-
 	//
 	// InstantiatePrefab
 	//
+
+	InstantiatePrefab::InstantiatePrefab(const Ref<Prefab>& prefab)
+		: m_Prefab(prefab) {}
 
 	void InstantiatePrefab::Apply(CommandContext& context, World& world)
 	{

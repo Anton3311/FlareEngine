@@ -62,11 +62,6 @@ namespace Flare
 		FLARE_SERIALIZABLE;
 
 		Prefab(const Components& compatibleComponentsRegistry, Archetypes& compatibleArchetypes);
-		Prefab(const uint8_t* prefabData,
-			const Components& compatibleComponentsRegistry,
-			Archetypes& compatibleArchetypes,
-			std::vector<std::pair<ComponentId, void*>>&& components);	
-		~Prefab();
 	
 		Entity CreateInstance(World& world);
 
@@ -75,13 +70,10 @@ namespace Flare
 	private:
 		Entity IntantiateHierarchy(World& world) const;
 	private:
-		std::vector<std::pair<ComponentId, void*>> m_Components;
-
 		PrefabHierarchy m_Hierarchy;
 
 		const Components& m_CompatibleComponentsRegistry;
 		const Archetypes& m_CompatibleArchetypes;
-		const uint8_t* m_Data;
 	};
 	
 	class FLARE_API InstantiatePrefab : public EntityCommand
