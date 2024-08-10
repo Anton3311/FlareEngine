@@ -32,10 +32,11 @@ namespace Flare
 		FLARE_COMPONENT;
 
 		Parent()
-			: ParentEntity(Entity()), IndexInParent(0) {}
+			: ParentEntity(Entity()) {}
+		Parent(Entity parent)
+			: ParentEntity(parent) {}
 
 		Entity ParentEntity;
-		uint32_t IndexInParent;
 	};
 
 	template<>
@@ -44,11 +45,25 @@ namespace Flare
 		static void OnSerialize(Parent& parent, SerializationStream& stream)
 		{
 			stream.Serialize("ParentEntity", SerializationValue(parent.ParentEntity));
-			stream.Serialize("IndexInParent", SerializationValue(parent.IndexInParent));
 		}
 	};
 
-	
+	//
+	// HierarchyHelper
+	//
+
+	class FLARE_API HierarchyHelper
+	{
+	public:
+		static void SetParent(World& world, Entity child, Entity parent);
+		static void AddParent(World& world, Entity child, Entity parent);
+	private:
+		static void RemoveFromParent(World& world, Entity child, Entity parent);
+	};
+
+	//
+	// TransformPropagationSystem
+	//
 
 	class TransformPropagationSystem : public System
 	{

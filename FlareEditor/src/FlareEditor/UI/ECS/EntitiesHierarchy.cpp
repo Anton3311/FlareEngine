@@ -34,7 +34,11 @@ namespace Flare
 		ImGuiListClipper clipper;
 		clipper.Begin((int32_t)records.size());
 
-		result |= RenderContextMenu(selectedEntity);
+		if (ImGui::BeginPopupContextWindow("Entity Hierarchy Context Menu"))
+		{
+			result |= RenderContextMenu(selectedEntity, nullptr);
+			ImGui::EndMenu();
+		}
 
 		std::optional<Entity> deletedEntity;
 		while (clipper.Step())
@@ -56,76 +60,77 @@ namespace Flare
 		return result;
 	}
 
-	bool EntitiesHierarchy::RenderContextMenu(Entity& selectedEntity)
+	bool EntitiesHierarchy::RenderContextMenu(Entity& selectedEntity, Entity* root)
 	{
 		FLARE_PROFILE_FUNCTION();
 
 		bool result = false;
-		if (ImGui::BeginPopupContextWindow("Entity Hierarchy Context Menu"))
+		if (HAS_BIT(m_Features, EntitiesHierarchyFeatures::CreateEntity))
 		{
-			if (HAS_BIT(m_Features, EntitiesHierarchyFeatures::CreateEntity))
+			if (ImGui::BeginMenu("Create"))
 			{
-				if (ImGui::BeginMenu("Create"))
+				if (ImGui::MenuItem("Entity"))
 				{
-					if (ImGui::MenuItem("Entity"))
-					{
-						selectedEntity = m_World->CreateEntity<TransformComponent, SerializationId>();
-						result = true;
-					}
-
-					if (ImGui::MenuItem("Sprite"))
-					{
-						selectedEntity = m_World->CreateEntity<TransformComponent, SpriteComponent, SerializationId>();
-						result = true;
-					}
-
-					if (ImGui::MenuItem("Perspective Camera"))
-					{
-						selectedEntity = m_World->CreateEntity(
-							TransformComponent(),
-							SerializationId(),
-							CameraComponent(CameraComponent::ProjectionType::Perspective));
-						result = true;
-					}
-
-					if (ImGui::MenuItem("Orthographic Camera"))
-					{
-						selectedEntity = m_World->CreateEntity(
-							TransformComponent(),
-							SerializationId(),
-							CameraComponent(CameraComponent::ProjectionType::Orthographic));
-						result = true;
-					}
-
-					if (ImGui::MenuItem("Directional Light"))
-					{
-						selectedEntity = m_World->CreateEntity(TransformComponent(), SerializationId(), DirectionalLight());
-						result = true;
-					}
-
-					if (ImGui::MenuItem("Point Light"))
-					{
-						selectedEntity = m_World->CreateEntity(TransformComponent(), SerializationId(), PointLight());
-						result = true;
-					}
-
-					if (ImGui::MenuItem("Spot Light"))
-					{
-						selectedEntity = m_World->CreateEntity(TransformComponent(), SerializationId(), SpotLight());
-						result = true;
-					}
-
-					if (ImGui::MenuItem("Environment"))
-					{
-						selectedEntity = m_World->CreateEntity(TransformComponent(), SerializationId(), Environment());
-						result = true;
-					}
-
-					ImGui::EndMenu();
+					selectedEntity = m_World->CreateEntity<TransformComponent, SerializationId>();
+					result = true;
 				}
-			}
 
-			ImGui::EndMenu();
+				if (ImGui::MenuItem("Sprite"))
+				{
+					selectedEntity = m_World->CreateEntity<TransformComponent, SpriteComponent, SerializationId>();
+					result = true;
+				}
+
+				if (ImGui::MenuItem("Perspective Camera"))
+				{
+					selectedEntity = m_World->CreateEntity(
+						TransformComponent(),
+						SerializationId(),
+						CameraComponent(CameraComponent::ProjectionType::Perspective));
+					result = true;
+				}
+
+				if (ImGui::MenuItem("Orthographic Camera"))
+				{
+					selectedEntity = m_World->CreateEntity(
+						TransformComponent(),
+						SerializationId(),
+						CameraComponent(CameraComponent::ProjectionType::Orthographic));
+					result = true;
+				}
+
+				if (ImGui::MenuItem("Directional Light"))
+				{
+					selectedEntity = m_World->CreateEntity(TransformComponent(), SerializationId(), DirectionalLight());
+					result = true;
+				}
+
+				if (ImGui::MenuItem("Point Light"))
+				{
+					selectedEntity = m_World->CreateEntity(TransformComponent(), SerializationId(), PointLight());
+					result = true;
+				}
+
+				if (ImGui::MenuItem("Spot Light"))
+				{
+					selectedEntity = m_World->CreateEntity(TransformComponent(), SerializationId(), SpotLight());
+					result = true;
+				}
+
+				if (ImGui::MenuItem("Environment"))
+				{
+					selectedEntity = m_World->CreateEntity(TransformComponent(), SerializationId(), Environment());
+					result = true;
+				}
+
+				if (result && root)
+				{
+					HierarchyHelper::AddParent(*m_World, selectedEntity, *root);
+					m_World->AddEntityComponent(selectedEntity, LocalTransform());
+				}
+
+				ImGui::EndMenu();
+			}
 		}
 
 		return result;
@@ -237,6 +242,8 @@ namespace Flare
 		bool result = false;
 		if (ImGui::BeginPopupContextItem())
 		{
+			RenderContextMenu(selectedEntity, &entity);
+
 			if (HAS_BIT(m_Features, EntitiesHierarchyFeatures::DeleteEntity) && ImGui::MenuItem("Delete"))
 				m_World->DeleteEntity(entity);
 

@@ -28,7 +28,7 @@ namespace Flare
 
 		inline void SetWorld(World& world) { m_World = &world; }
 	private:
-		bool RenderContextMenu(Entity& selectedEntity);
+		bool RenderContextMenu(Entity& selectedEntity, Entity* root);
 		
 		Entity DuplicateEntity(Entity entity);
 	private:

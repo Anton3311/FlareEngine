@@ -13,7 +13,77 @@ namespace Flare
 	FLARE_IMPL_COMPONENT(Children);
 	FLARE_IMPL_COMPONENT(Parent);
 
+	//
+	// HierarchyHelper
+	//
 
+	void HierarchyHelper::SetParent(World& world, Entity child, Entity parent)
+	{
+		FLARE_PROFILE_FUNCTION();
+		FLARE_CORE_ASSERT(world.IsEntityAlive(child) && world.IsEntityAlive(parent));
+
+		Parent* childParent = world.TryGetEntityComponent<Parent>(child);
+		if (childParent && childParent->ParentEntity == parent)
+			return;
+		
+		if (!childParent)
+		{
+			AddParent(world, child, parent);
+			return;
+		}
+
+		RemoveFromParent(world, child, childParent->ParentEntity);
+
+		childParent->ParentEntity = parent;
+
+		Children* children = world.TryGetEntityComponent<Children>(parent);
+		if (!children)
+		{
+			world.AddEntityComponent<Children>(parent, Children());
+			children = &world.GetEntityComponent<Children>(parent);
+		}
+
+		children->ChildrenEntities.push_back(child);
+	}
+
+	void HierarchyHelper::AddParent(World& world, Entity child, Entity parent)
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		world.AddEntityComponent(child, Parent(parent));
+
+		Children* children = world.TryGetEntityComponent<Children>(parent);
+		if (!children)
+		{
+			world.AddEntityComponent(parent, Children());
+			children = &world.GetEntityComponent<Children>(parent);
+		}
+
+		children->ChildrenEntities.push_back(child);
+	}
+
+	void HierarchyHelper::RemoveFromParent(World& world, Entity child, Entity parent)
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		Children* children = world.TryGetEntityComponent<Children>(parent);
+		if (!children)
+			return;
+
+		auto it = std::find(
+			children->ChildrenEntities.begin(),
+			children->ChildrenEntities.end(),
+			child);
+
+		if (it == children->ChildrenEntities.end())
+			return;
+
+		children->ChildrenEntities.erase(it);
+	}
+
+	//
+	// TransformPropagationSystem
+	//
 
 	FLARE_IMPL_SYSTEM(TransformPropagationSystem);
 	void TransformPropagationSystem::OnConfig(World& world, SystemConfig& config)
@@ -28,6 +98,7 @@ namespace Flare
 			.Without<Parent>()
 			.Build();
 	}
+
 
 	void TransformPropagationSystem::OnUpdate(World& world, SystemExecutionContext& context)
 	{
