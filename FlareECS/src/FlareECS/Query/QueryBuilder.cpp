@@ -1,4 +1,4 @@
-#include "QueyrBuilder.h"
+#include "QueryBuilder.h"
 
 #include "FlareCore/Profiler/Profiler.h"
 

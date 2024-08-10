@@ -10,7 +10,7 @@
 #include "FlareECS/Entity/Archetypes.h"
 
 #include "FlareECS/Query/QueryFilters.h"
-#include "FlareECS/Query/QueyrBuilder.h"
+#include "FlareECS/Query/QueryBuilder.h"
 #include "FlareECS/Query/Query.h"
 
 #include "FlareECS/System/SystemsManager.h"
