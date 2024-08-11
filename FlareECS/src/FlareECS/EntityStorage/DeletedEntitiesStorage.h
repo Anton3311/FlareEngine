@@ -9,7 +9,7 @@ namespace Flare
 	{
 		inline void Clear()
 		{
-			DataStorage.Clear();
+			DataStorage.Release();
 			Ids.clear();
 		}
 

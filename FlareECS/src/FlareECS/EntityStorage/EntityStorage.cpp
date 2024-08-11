@@ -1,42 +1,13 @@
 #include "EntityStorage.h"
 
+#include "FlareCore/Profiler/Profiler.h"
+
 #include <cmath>
 
 namespace Flare
 {
-	EntityDataStorage::EntityDataStorage(EntityDataStorage&& other) noexcept
-		: m_Chunks(std::move(other.m_Chunks)),
-		m_EntitySize(other.m_EntitySize),
-		m_EntitiesPerChunk(other.m_EntitiesPerChunk),
-		m_EntityCount(other.m_EntityCount),
-		m_UsedChunkBytes(other.m_UsedChunkBytes)
-	{
-		other.m_UsedChunkBytes = 0;
-		other.m_EntityCount = 0;
-		other.m_EntitySize = 0;
-		other.m_EntitiesPerChunk = 0;
-	}
-
-	EntityDataStorage& EntityDataStorage::operator=(EntityDataStorage&& other) noexcept
-	{
-		m_UsedChunkBytes = other.m_UsedChunkBytes;
-		m_Chunks = std::move(other.m_Chunks);
-		m_EntitySize = other.m_EntitySize;
-		m_EntitiesPerChunk = other.m_EntitiesPerChunk;
-		m_EntityCount = other.m_EntityCount;
-
-		other.m_UsedChunkBytes = 0;
-		other.m_EntitySize = 0;
-		other.m_EntitiesPerChunk = 0;
-		other.m_EntityCount = 0;
-
-		return *this;
-	}
-
 	size_t EntityDataStorage::AddEntity()
 	{
-		FLARE_CORE_ASSERT(m_EntitySize > 0, "Entity has no size");
-
 		if (m_EntityCount % m_EntitiesPerChunk == 0)
 			m_Chunks.push_back(EntityChunksPool::GetInstance()->GetOrCreate());
 
@@ -46,10 +17,10 @@ namespace Flare
 
 	uint8_t* EntityDataStorage::GetEntityData(size_t index) const
 	{
-		size_t bytesOffset = (index % m_EntitiesPerChunk * m_EntitySize);
+		size_t bytesOffset = (index % m_EntitiesPerChunk * m_StorageRequirements.EntitySize);
 		size_t chunkIndex = index / m_EntitiesPerChunk;
 
-		FLARE_CORE_ASSERT(bytesOffset + m_EntitySize <= m_UsedChunkBytes);
+		FLARE_CORE_ASSERT(bytesOffset + m_StorageRequirements.EntitySize <= m_UsedChunkBytes);
 		FLARE_CORE_ASSERT(chunkIndex < m_Chunks.size());
 
 		return m_Chunks[chunkIndex].GetBuffer() + bytesOffset;
@@ -60,7 +31,7 @@ namespace Flare
 		FLARE_CORE_ASSERT(index < m_EntityCount);
 
 		if (index != m_EntityCount - 1)
-			std::memcpy(GetEntityData(index), GetEntityData(m_EntityCount - 1), m_EntitySize);
+			std::memcpy(GetEntityData(index), GetEntityData(m_EntityCount - 1), m_StorageRequirements.EntitySize);
 		m_EntityCount--;
 
 		if (m_EntityCount % m_EntitiesPerChunk == 0)
@@ -68,15 +39,6 @@ namespace Flare
 			EntityChunksPool::GetInstance()->Add(std::move(m_Chunks.back()));
 			m_Chunks.erase(m_Chunks.end() - 1);
 		}
-	}
-
-	void EntityDataStorage::SetEntitySize(size_t entitySize)
-	{
-		FLARE_CORE_ASSERT(m_EntityCount == 0, "Entity size can only be set if the storage is empty");
-		FLARE_CORE_ASSERT(m_UsedChunkBytes);
-
-		m_EntitySize = entitySize;
-		m_EntitiesPerChunk = (size_t)floor((float)m_UsedChunkBytes / (float)entitySize);
 	}
 
 	size_t EntityDataStorage::GetEntitiesCountInChunk(size_t index) const
@@ -87,13 +49,27 @@ namespace Flare
 		return m_EntitiesPerChunk;
 	}
 
-	void EntityDataStorage::Clear()
+	void EntityDataStorage::Initialize(const EntityStorageRequirements& storageRequirements)
 	{
-		m_EntityCount = 0;
+		FLARE_PROFILE_FUNCTION();
+
+		FLARE_CORE_ASSERT(storageRequirements.IsValid());
+
+		m_StorageRequirements = storageRequirements;
+		m_EntitiesPerChunk = (size_t)floor((float)m_UsedChunkBytes / (float)m_StorageRequirements.EntitySize);
+	}
+
+	void EntityDataStorage::Release()
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		m_StorageRequirements = {};
+
 		for (EntityStorageChunk& chunk : m_Chunks)
 			EntityChunksPool::GetInstance()->Add(std::move(chunk));
 
 		m_Chunks.clear();
+		m_EntityCount = 0;
 	}
 
 
@@ -133,11 +109,6 @@ namespace Flare
 		m_EntityIndices.erase(m_EntityIndices.end() - 1);
 
 		m_DataStorage.RemoveEntityData(entityIndex);
-	}
-
-	void EntityStorage::SetEntitySize(size_t entitySize)
-	{
-		m_DataStorage.SetEntitySize(entitySize);
 	}
 
 	void EntityStorage::UpdateEntityRegistryIndex(size_t entityIndex, uint32_t newRegistryIndex)

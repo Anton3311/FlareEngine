@@ -304,7 +304,11 @@ namespace Flare
 				const ArchetypeRecord& archetype = m_Archetypes[newArchetypeId];
 
 				EntityStorage& storage = GetEntityStorage(newArchetypeId);
-				storage.SetEntitySize(archetype.EntitySize);
+
+				EntityStorageRequirements storageRequirements{};
+				storageRequirements.EntitySize = archetype.EntitySize;
+				storageRequirements.EntityAlignment = archetype.EntityAlignment;
+				storage.Initialize(storageRequirements);
 			}
 
 			m_Archetypes.Records[entityRecord.Archetype].Edges.emplace(componentId, ArchetypeEdge{newArchetypeId, INVALID_ARCHETYPE_ID});
@@ -422,7 +426,11 @@ namespace Flare
 				const ArchetypeRecord& archetype = m_Archetypes[newArchetypeId];
 
 				EntityStorage& storage = GetEntityStorage(newArchetypeId);
-				storage.SetEntitySize(archetype.EntitySize);
+
+				EntityStorageRequirements storageRequirements{};
+				storageRequirements.EntitySize = archetype.EntitySize;
+				storageRequirements.EntityAlignment = archetype.EntityAlignment;
+				storage.Initialize(storageRequirements);
 			}
 
 			m_Archetypes.Records[entityRecord.Archetype].Edges.emplace(componentId, ArchetypeEdge{ INVALID_ARCHETYPE_ID, newArchetypeId });
@@ -709,10 +717,11 @@ namespace Flare
 			for (size_t i = oldSize; i < m_EntityStorages.size(); i++)
 			{
 				FLARE_CORE_ASSERT(m_Archetypes[i].Components.size() > 0);
-				ComponentId lastComponent = m_Archetypes[i].Components.back();
-				size_t entitySize = m_Archetypes[i].ComponentOffsets.back() + m_Components.GetComponentInfo(lastComponent).Size;
 
-				m_EntityStorages[i].SetEntitySize(entitySize);
+				EntityStorageRequirements storageRequirements{};
+				storageRequirements.EntitySize = m_Archetypes[i].EntitySize;
+				storageRequirements.EntityAlignment = m_Archetypes[i].EntityAlignment;
+				m_EntityStorages[i].Initialize(storageRequirements);
 			}
 		}
 
@@ -743,10 +752,14 @@ namespace Flare
 			record.Archetype = it->second;
 		else
 		{
-			ArchetypeId newArchetypeId = m_Archetypes.CreateArchetype(Span<const ComponentId>(components.GetIds(), components.GetCount()));
-			record.Archetype = newArchetypeId;
+			record.Archetype = m_Archetypes.CreateArchetype(Span<const ComponentId>(components.GetIds(), components.GetCount()));
 
-			GetEntityStorage(newArchetypeId).SetEntitySize(m_Archetypes[newArchetypeId].EntitySize);
+			const ArchetypeRecord& archetype = m_Archetypes[record.Archetype];
+
+			EntityStorageRequirements storageRequirements{};
+			storageRequirements.EntitySize = archetype.EntitySize;
+			storageRequirements.EntityAlignment = archetype.EntityAlignment;
+			GetEntityStorage(record.Archetype).Initialize(storageRequirements);
 		}
 
 		ArchetypeRecord& archetypeRecord = m_Archetypes.Records[record.Archetype];
@@ -835,17 +848,12 @@ namespace Flare
 		{
 			DeletedEntitiesStorage& storage = m_DeletedEntitiesStorages.insert({ archetype, DeletedEntitiesStorage() }).first->second;
 
-			size_t entitySize = 0;
-			const auto& archetypeRecord = m_Archetypes[archetype];
+			const ArchetypeRecord& archetypeRecord = m_Archetypes[archetype];
 
-			FLARE_CORE_ASSERT(archetypeRecord.ComponentOffsets.size() > 0);
-			FLARE_CORE_ASSERT(archetypeRecord.Components.size() > 0);
-
-			entitySize = archetypeRecord.ComponentOffsets.back() + m_Components.GetComponentInfo(archetypeRecord.Components.back()).Size;
-
-			FLARE_CORE_ASSERT(entitySize > 0);
-
-			storage.DataStorage.SetEntitySize(entitySize);
+			EntityStorageRequirements storageRequirements{};
+			storageRequirements.EntitySize = archetypeRecord.EntitySize;
+			storageRequirements.EntityAlignment = archetypeRecord.EntityAlignment;
+			storage.DataStorage.Initialize(storageRequirements);
 			return storage;
 		}
 

@@ -144,6 +144,7 @@ namespace Flare
 
 			offset += componentSize;
 			archetype.EntitySize += componentSize;
+			archetype.EntityAlignment = std::max(archetype.EntityAlignment, info.Initializer->Type.Alignment);
 		}
 
 		archetype.EntitySize = Align(archetype.EntitySize, m_ComponentsRegistry.GetComponentInfo(archetype.Components[0]).Initializer->Type.Alignment);
