@@ -27,11 +27,7 @@ namespace Flare
 			if (storage.GetEntitiesCount() == 0)
 				continue;
 
-			uint32_t firstEntityIndex = storage.GetEntityIndices()[0];
-			std::optional<Entity> entity = m_Entities->FindEntityByIndex(firstEntityIndex);
-
-			FLARE_CORE_ASSERT(entity);
-			return *entity;
+			return storage.GetEntityIds()[0];
 		}
 
 		return {};

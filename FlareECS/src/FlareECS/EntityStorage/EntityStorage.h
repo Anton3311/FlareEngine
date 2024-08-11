@@ -2,6 +2,7 @@
 
 #include "FlareCore/Assert.h"
 
+#include "FlareECS/Entity/Entity.h"
 #include "FlareECS/EntityStorage/EntityStorageChunk.h"
 
 #include <stdint.h>
@@ -64,7 +65,7 @@ namespace Flare
 		EntityStorage& operator=(const EntityStorage&) = delete;
 		EntityStorage& operator=(EntityStorage&& other) noexcept;
 		
-		size_t AddEntity(uint32_t registryIndex);
+		size_t AddEntity(Entity entity);
 		uint8_t* GetEntityData(size_t entityIndex) const;
 
 		void RemoveEntityData(size_t entityIndex);
@@ -76,7 +77,7 @@ namespace Flare
 
 		void Initialize(const EntityStorageRequirements& storageRequirements) { m_DataStorage.Initialize(storageRequirements); }
 
-		void UpdateEntityRegistryIndex(size_t entityIndex, uint32_t newRegistryIndex);
+		void UpdateEntityRegistryIndex(size_t entityIndex, Entity newId);
 
 		inline size_t GetChunksCount() const { return m_DataStorage.GetChunkCount(); }
 		inline size_t GetEntitiesPerChunkCount() const { return m_DataStorage.GetEntitiesPerChunk(); }
@@ -86,9 +87,9 @@ namespace Flare
 		uint8_t* GetChunkBuffer(size_t index);
 		const uint8_t* GetChunkBuffer(size_t index) const;
 
-		inline const std::vector<uint32_t>& GetEntityIndices() const { return m_EntityIndices; }
+		inline const std::vector<Entity>& GetEntityIds() const { return m_EntityIds; }
 	private:
 		EntityDataStorage m_DataStorage;
-		std::vector<uint32_t> m_EntityIndices;
+		std::vector<Entity> m_EntityIds;
 	};
 }

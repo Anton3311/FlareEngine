@@ -153,7 +153,7 @@ namespace Flare
 		const ArchetypeRecord& archetypeRecord = m_Archetypes[archetype];
 		EntityStorage& storage = GetEntityStorage(archetype);
 
-		record.BufferIndex = storage.AddEntity(record.RegistryIndex);
+		record.BufferIndex = storage.AddEntity(record.Id);
 
 		uint8_t* entityData = storage.GetEntityData(record.BufferIndex);
 		switch (initStrategy)
@@ -197,9 +197,13 @@ namespace Flare
 
 		EntityStorage& storage = GetEntityStorage(record.Archetype);
 
-		uint32_t lastEntityInBuffer = storage.GetEntityIndices().back();
-		if (lastEntityInBuffer != record.RegistryIndex)
-			m_EntityRecords[lastEntityInBuffer].BufferIndex = record.BufferIndex;
+		Entity lastEntityInBuffer = storage.GetEntityIds().back();
+		if (lastEntityInBuffer != entity)
+		{
+			auto it = m_EntityToRecord.find(lastEntityInBuffer);
+			EntityRecord& lastEntityInBufferRecord = m_EntityRecords[it->second];
+			lastEntityInBufferRecord.BufferIndex = record.BufferIndex;
+		}
 
 		const ArchetypeRecord& archetype = m_Archetypes.Records[record.Archetype];
 		if (archetype.IsUsedInDeletionQuery())
@@ -231,8 +235,7 @@ namespace Flare
 
 		if (lastEntityRecord.Id != entity)
 		{
-			GetEntityStorage(record.Archetype).UpdateEntityRegistryIndex(record.BufferIndex, record.RegistryIndex);
-			m_EntityToRecord[record.Id] = record.RegistryIndex;
+			m_EntityToRecord[lastEntityRecord.Id] = lastEntityRecord.RegistryIndex;
 		}
 
 		m_EntityRecords.erase(m_EntityRecords.end() - 1);
@@ -323,7 +326,7 @@ namespace Flare
 		EntityStorage& oldStorage = GetEntityStorage(oldArchetype.Id);
 		EntityStorage& newStorage = GetEntityStorage(newArchetypeId);
 
-		size_t newEntityIndex = newStorage.AddEntity(entityRecord.RegistryIndex);
+		size_t newEntityIndex = newStorage.AddEntity(entityRecord.Id);
 		uint8_t* newEntityData = newStorage.GetEntityData(newEntityIndex);
 		uint8_t* oldEntityData = oldStorage.GetEntityData(entityRecord.BufferIndex);
 
@@ -446,7 +449,7 @@ namespace Flare
 		size_t sizeBefore = oldArchetype.ComponentOffsets[removedComponentIndex];
 		size_t sizeAfter = oldStorage.GetEntitySize() - (sizeBefore + componentInfo.Size);
 
-		size_t newEntityIndex = newStorage.AddEntity(entityRecord.RegistryIndex);
+		size_t newEntityIndex = newStorage.AddEntity(entityRecord.Id);
 
 		uint8_t* newEntityData = newStorage.GetEntityData(newEntityIndex);
 		uint8_t* oldEntityData = oldStorage.GetEntityData(entityRecord.BufferIndex);
@@ -665,7 +668,7 @@ namespace Flare
 			return {};
 		}
 
-		return m_EntityRecords[storage.GetEntityIndices()[0]].Id;
+		return storage.GetEntityIds()[0];
 	}
 
 	EntitiesIterator Entities::begin()
@@ -764,7 +767,7 @@ namespace Flare
 
 		ArchetypeRecord& archetypeRecord = m_Archetypes.Records[record.Archetype];
 		EntityStorage& storage = GetEntityStorage(record.Archetype);
-		record.BufferIndex = storage.AddEntity(record.RegistryIndex);
+		record.BufferIndex = storage.AddEntity(record.Id);
 
 		m_EntityToRecord.emplace(record.Id, record.RegistryIndex);
 
@@ -917,7 +920,12 @@ namespace Flare
 		ArchetypeRecord& archetypeRecord = m_Archetypes.Records[archetype];
 
 		EntityStorage& storage = GetEntityStorage(archetype);
-		EntityRecord& lastEntityRecord = m_EntityRecords[storage.GetEntityIndices().back()];
+		FLARE_CORE_ASSERT(storage.GetEntitiesCount() > 0);
+
+		auto it = m_EntityToRecord.find(storage.GetEntityIds().back());
+		FLARE_CORE_ASSERT(it != m_EntityToRecord.end());
+
+		EntityRecord& lastEntityRecord = m_EntityRecords[it->second];
 
 		storage.RemoveEntityData(entityBufferIndex);
 		lastEntityRecord.BufferIndex = entityBufferIndex;

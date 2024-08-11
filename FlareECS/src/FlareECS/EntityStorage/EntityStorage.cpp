@@ -77,20 +77,20 @@ namespace Flare
 	EntityStorage::EntityStorage() {}
 
 	EntityStorage::EntityStorage(EntityStorage&& other) noexcept
-		: m_EntityIndices(std::move(other.m_EntityIndices)), m_DataStorage(std::move(other.m_DataStorage)) {}
+		: m_EntityIds(std::move(other.m_EntityIds)), m_DataStorage(std::move(other.m_DataStorage)) {}
 
 	EntityStorage& EntityStorage::operator=(EntityStorage&& other) noexcept
 	{
-		m_EntityIndices = std::move(other.m_EntityIndices);
+		m_EntityIds = std::move(other.m_EntityIds);
 		m_DataStorage = std::move(other.m_DataStorage);
 		
 		return *this;
 	}
 
-	size_t EntityStorage::AddEntity(uint32_t registryIndex)
+	size_t EntityStorage::AddEntity(Entity entity)
 	{
 		size_t index = m_DataStorage.AddEntity();
-		m_EntityIndices.push_back(registryIndex);
+		m_EntityIds.push_back(entity);
 		return index;
 	}
 
@@ -103,18 +103,18 @@ namespace Flare
 	{
 		FLARE_CORE_ASSERT(entityIndex < m_DataStorage.GetEntityCount());
 
-		uint32_t lastEntityIndex = m_EntityIndices.back();
+		Entity lastEntity = m_EntityIds.back();
 
-		m_EntityIndices[entityIndex] = lastEntityIndex;
-		m_EntityIndices.erase(m_EntityIndices.end() - 1);
+		m_EntityIds[entityIndex] = lastEntity;
+		m_EntityIds.erase(m_EntityIds.end() - 1);
 
 		m_DataStorage.RemoveEntityData(entityIndex);
 	}
 
-	void EntityStorage::UpdateEntityRegistryIndex(size_t entityIndex, uint32_t newRegistryIndex)
+	void EntityStorage::UpdateEntityRegistryIndex(size_t entityIndex, Entity newId)
 	{
-		FLARE_CORE_ASSERT(entityIndex < m_EntityIndices.size());
-		m_EntityIndices[entityIndex] = newRegistryIndex;
+		FLARE_CORE_ASSERT(entityIndex < m_EntityIds.size());
+		m_EntityIds[entityIndex] = newId;
 	}
 
 	uint8_t* EntityStorage::GetChunkBuffer(size_t index)
