@@ -17,7 +17,7 @@ namespace Flare
 
 		constexpr Entity()
 			: m_Index(UINT32_MAX), m_Generation(UINT16_MAX) {}
-		constexpr Entity(uint32_t id)
+		constexpr explicit Entity(uint32_t id)
 			: m_Index(id), m_Generation(0) {}
 		constexpr Entity(uint32_t id, uint16_t generation)
 			: m_Index(id), m_Generation(generation) {}
