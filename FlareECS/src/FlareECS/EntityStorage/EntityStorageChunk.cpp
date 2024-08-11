@@ -1,10 +1,32 @@
-#include "EntityChunksPool.h"
+#include "EntityStorageChunk.h"
 
-#include "FlareCore/Assert.h"
 #include "FlareCore/Profiler/Profiler.h"
 
-namespace Flare
+#include "FlarePlatform/Platform.h"
+
+namespace Flare 
 {
+	//
+	// EntityStorageChunk
+	//
+
+	EntityStorageChunk::EntityStorageChunk()
+	{
+		m_Buffer = (uint8_t*)Platform::AllocateAligned(CHUNK_SIZE, CHUNK_ALIGNMENT);
+	}
+
+	EntityStorageChunk::~EntityStorageChunk()
+	{
+		if (m_Buffer != nullptr)
+			Platform::FreeAligned(m_Buffer);
+
+		m_Buffer = nullptr;
+	}
+
+	//
+	// EntityChunksPool
+	//
+
 	Scope<EntityChunksPool> EntityChunksPool::s_Instance = nullptr;
 
 	EntityChunksPool::EntityChunksPool(size_t capacity)
@@ -20,25 +42,23 @@ namespace Flare
 		if (m_Count == 0)
 		{
 			EntityStorageChunk chunk = EntityStorageChunk();
-			chunk.Allocate();
 			return chunk;
 		}
 
-		EntityStorageChunk chunk = m_Chunks[m_Count - 1];
+		EntityStorageChunk chunk = std::move(m_Chunks[m_Count - 1]);
 		m_Count--;
 		return chunk;
 	}
 
-	void EntityChunksPool::Add(EntityStorageChunk& chunk)
+	void EntityChunksPool::Add(EntityStorageChunk&& chunk)
 	{
 		FLARE_PROFILE_FUNCTION();
 		if (m_Count == m_Capacity)
 		{
-			chunk.~EntityStorageChunk();
 			return;
 		}
 
-		m_Chunks[m_Count++] = chunk;
+		m_Chunks[m_Count++] = std::move(chunk);
 	}
 
 	void EntityChunksPool::Initialize(size_t capacity)

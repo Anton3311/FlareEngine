@@ -1,7 +1,5 @@
 #include "EntityStorage.h"
 
-#include "FlareECS/EntityStorage/EntityChunksPool.h"
-
 #include <cmath>
 
 namespace Flare
@@ -67,7 +65,7 @@ namespace Flare
 
 		if (m_EntityCount % m_EntitiesPerChunk == 0)
 		{
-			EntityChunksPool::GetInstance()->Add(m_Chunks.back());
+			EntityChunksPool::GetInstance()->Add(std::move(m_Chunks.back()));
 			m_Chunks.erase(m_Chunks.end() - 1);
 		}
 	}
@@ -93,7 +91,7 @@ namespace Flare
 	{
 		m_EntityCount = 0;
 		for (EntityStorageChunk& chunk : m_Chunks)
-			EntityChunksPool::GetInstance()->Add(chunk);
+			EntityChunksPool::GetInstance()->Add(std::move(chunk));
 
 		m_Chunks.clear();
 	}

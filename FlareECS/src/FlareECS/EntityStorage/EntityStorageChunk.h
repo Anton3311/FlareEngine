@@ -1,68 +1,66 @@
 #pragma once
 
-#include "FlarePlatform/Platform.h"
+#include "FlareCore/Core.h"
 
 #include <stdint.h>
 #include <intrin.h>
 
 namespace Flare
 {
-	class EntityStorageChunk
+	//
+	// EntityStorageChunk
+	//
+
+	class FLAREECS_API EntityStorageChunk
 	{
 	public:
 		static constexpr size_t CHUNK_SIZE = 4096;
 		static constexpr size_t CHUNK_ALIGNMENT = std::max(alignof(std::max_align_t), alignof(__m128));
 
-		EntityStorageChunk()
-			: m_Buffer(nullptr) {}
+		EntityStorageChunk();
+		~EntityStorageChunk();
 
-		EntityStorageChunk(EntityStorageChunk& other)
-		{
-			if (m_Buffer != nullptr)
-				Platform::FreeAligned(m_Buffer);
-
-			m_Buffer = other.m_Buffer;
-			other.m_Buffer = nullptr;
-		}
-
+		EntityStorageChunk(const EntityStorageChunk& other) = delete;
 		EntityStorageChunk(EntityStorageChunk&& other) noexcept
 		{
-			if (m_Buffer != nullptr)
-				Platform::FreeAligned(m_Buffer);
-
-			m_Buffer = other.m_Buffer;
-			other.m_Buffer = nullptr;
+			std::swap(m_Buffer, other.m_Buffer);
 		}
 
-		~EntityStorageChunk()
+		void operator=(const EntityStorageChunk& other) = delete;
+		inline void operator=(EntityStorageChunk&& other) noexcept
 		{
-			if (m_Buffer != nullptr)
-				Platform::FreeAligned(m_Buffer);
-
-			m_Buffer = nullptr;
+			std::swap(m_Buffer, other.m_Buffer);
 		}
 
-		void operator=(EntityStorageChunk& other)
-		{
-			if (m_Buffer != nullptr)
-				Platform::FreeAligned(m_Buffer);
-
-			m_Buffer = other.m_Buffer;
-			other.m_Buffer = nullptr;
-		}
-
-		void Allocate()
-		{
-			if (m_Buffer == nullptr)
-			{
-				m_Buffer = (uint8_t*)Platform::AllocateAligned(CHUNK_SIZE, CHUNK_ALIGNMENT);
-			}
-		}
-
-		inline bool IsAllocated() const { return m_Buffer != nullptr; }
-
-		uint8_t* GetBuffer() const { return m_Buffer; }
+		constexpr bool IsAllocated() const { return m_Buffer != nullptr; }
+		constexpr uint8_t* GetBuffer() const { return m_Buffer; }
 	private:
 		uint8_t* m_Buffer = nullptr;
+	};
+
+	//
+	// EntityChunksPool
+	//
+
+	class FLAREECS_API EntityChunksPool
+	{
+	public:
+		EntityChunksPool(size_t capacity);
+
+		EntityStorageChunk GetOrCreate();
+		void Add(EntityStorageChunk&& chunk);
+
+		inline size_t GetCount() const { return m_Count; }
+		inline size_t GetCapacity() const { return m_Capacity; }
+	public:
+		static void Initialize(size_t capacity);
+		static Scope<EntityChunksPool>& GetInstance();
+	private:
+		size_t m_Capacity;
+		size_t m_Count;
+
+		EntityStorageChunk* m_Chunks;
+	private:
+		static Scope<EntityChunksPool> s_Instance;
 	};
 }
