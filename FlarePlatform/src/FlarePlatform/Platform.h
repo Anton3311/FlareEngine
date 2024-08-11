@@ -32,7 +32,7 @@ namespace Flare
 
 		static bool OpenFileExplorer(const std::filesystem::path& path);
 
-		static void* AllocateAligned(size_t size, size_t alginment);
+		static void* AllocateAligned(size_t size, size_t alignment);
 		static void FreeAligned(void* memory);
 
 		static std::optional<std::filesystem::path> ShowOpenFileDialog(const wchar_t* filter, const Ref<Window>& window);

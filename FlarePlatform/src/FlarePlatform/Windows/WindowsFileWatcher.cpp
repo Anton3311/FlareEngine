@@ -4,12 +4,13 @@
 
 #include "FlareCore/Core.h"
 #include "FlareCore/Log.h"
+#include "FlareCore/Profiler/Profiler.h"
 
 #include "FlarePlatform/Platform.h"
 
 namespace Flare
 {
-    static constexpr size_t s_EventsBufferSize = 1024;
+    static constexpr size_t EVENTS_BUFFER_SIZE = 1024;
 
     WindowsFileWatcher::WindowsFileWatcher(const std::filesystem::path& directoryPath, EventsMask eventsMask)
         : m_DirectoryHandle(nullptr),
@@ -22,6 +23,7 @@ namespace Flare
         m_NextEventOffset(0),
         m_IsValid(false)
     {
+        FLARE_PROFILE_FUNCTION();
         if (!std::filesystem::exists(directoryPath))
         {
             FLARE_CORE_ERROR("FileWatcher: Invalid directory path '{}'", directoryPath.generic_string());
@@ -46,14 +48,14 @@ namespace Flare
         m_CompletionPort = CreateIoCompletionPort(m_DirectoryHandle, nullptr, m_CompletionKey, 0);
         if (GetLastError())
         {
-            FLARE_CORE_ERROR("FileWathcer: Failed to create a completion port");
+            FLARE_CORE_ERROR("FileWatcher: Failed to create a completion port");
             LogError();
             return;
         }
 
         ZeroMemory(&m_Overlapped, sizeof(m_Overlapped));
 
-        m_EventsBuffer = new uint8_t[s_EventsBufferSize];
+        m_EventsBuffer = new uint8_t[EVENTS_BUFFER_SIZE];
         m_IsValid = true;
     }
 
@@ -70,6 +72,7 @@ namespace Flare
 
     bool WindowsFileWatcher::Update()
     {
+        FLARE_PROFILE_FUNCTION();
         if (!m_IsValid)
             return false;
 
@@ -88,7 +91,7 @@ namespace Flare
         if (ReadDirectoryChangesW(
             m_DirectoryHandle,
             m_EventsBuffer,
-            s_EventsBufferSize,
+            EVENTS_BUFFER_SIZE,
             true,
             notifyFilter,
             nullptr,
@@ -126,6 +129,7 @@ namespace Flare
 
     FileWatcher::Result WindowsFileWatcher::TryGetNextEvent(FileChangeEvent& outEvent)
     {
+        FLARE_PROFILE_FUNCTION();
         if (!m_IsValid)
             return FileWatcher::Result::Error;
 

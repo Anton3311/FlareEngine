@@ -4,6 +4,7 @@
 
 #include "FlareCore/Assert.h"
 #include "FlareCore/Log.h"
+#include "FlareCore/Profiler/Profiler.h"
 
 #include "FlarePlatform/Window.h"
 
@@ -26,6 +27,7 @@ namespace Flare
 {
 	void LogError()
 	{
+		FLARE_PROFILE_FUNCTION();
 		DWORD errorCode = GetLastError();
 		LPSTR messageBuffer = nullptr;
 
@@ -38,11 +40,13 @@ namespace Flare
 
 	float Platform::GetTime()
 	{
+		FLARE_PROFILE_FUNCTION();
 		return (float)glfwGetTime();
 	}
 
 	void* Platform::LoadSharedLibrary(const std::filesystem::path& path)
 	{
+		FLARE_PROFILE_FUNCTION();
 		HMODULE library = LoadLibraryW(path.c_str());
 		DWORD errorCode = GetLastError();
 		if (library == NULL)
@@ -56,12 +60,14 @@ namespace Flare
 
 	void Platform::FreeSharedLibrary(void* library)
 	{
+		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(library != nullptr);
 		FreeLibrary((HMODULE)library);
 	}
 
 	void* Platform::LoadFunction(void* library, const std::string& name)
 	{
+		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(library != nullptr);
 		auto function = GetProcAddress((HMODULE)library, name.c_str());
 
@@ -78,6 +84,7 @@ namespace Flare
 
 	bool Platform::IsDebuggerAttached()
 	{
+		FLARE_PROFILE_FUNCTION();
 		return IsDebuggerPresent();
 	}
 
@@ -85,6 +92,7 @@ namespace Flare
 
 	int32_t Platform::CreateProcess(std::filesystem::path& path, const ProcessCreationSettings& settings)
 	{
+		FLARE_PROFILE_FUNCTION();
 		STARTUPINFO startUpInfo;
 		PROCESS_INFORMATION processInfo;
 		ZeroMemory(&startUpInfo, sizeof(startUpInfo));
@@ -127,6 +135,7 @@ namespace Flare
 
 	bool Platform::OpenFileExplorer(const std::filesystem::path& path)
 	{
+		FLARE_PROFILE_FUNCTION();
 		bool isDirectory = std::filesystem::is_directory(path);
 		std::wstring pathString = std::filesystem::absolute(path).wstring();
 
@@ -160,18 +169,21 @@ namespace Flare
 		return false;
 	}
 
-	void* Platform::AllocateAligned(size_t size, size_t alginment)
+	void* Platform::AllocateAligned(size_t size, size_t alignment)
 	{
-		return _aligned_malloc(size, alginment);
+		FLARE_PROFILE_FUNCTION();
+		return _aligned_malloc(size, alignment);
 	}
 
 	void Platform::FreeAligned(void* memory)
 	{
+		FLARE_PROFILE_FUNCTION();
 		_aligned_free(memory);
 	}
 
 	std::optional<std::filesystem::path> Platform::ShowOpenFileDialog(const wchar_t* filter, const Ref<Window>& window)
 	{
+		FLARE_PROFILE_FUNCTION();
 		wchar_t buffer[256] = { 0 };
 
 		OPENFILENAMEW openFile{};
@@ -197,6 +209,7 @@ namespace Flare
 
 	std::optional<std::filesystem::path> Platform::ShowSaveFileDialog(const wchar_t* filter, const Ref<Window>& window)
 	{
+		FLARE_PROFILE_FUNCTION();
 		wchar_t buffer[256] = { 0 };
 
 		OPENFILENAMEW openFile{};
