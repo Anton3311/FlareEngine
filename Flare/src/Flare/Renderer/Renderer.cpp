@@ -2,7 +2,7 @@
 
 #include "Flare/AssetManager/AssetManager.h"
 
-#include "Flare/Math/Transform.h"
+#include "Flare/Math/AffineTransform.h"
 #include "Flare/Math/SIMD.h"
 
 #include "Flare/Renderer/RendererPrimitives.h"

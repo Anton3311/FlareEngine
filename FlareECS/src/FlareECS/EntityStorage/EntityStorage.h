@@ -8,10 +8,10 @@
 
 namespace Flare	
 {
-	struct FLAREECS_API EntityDataStorage
+	class FLAREECS_API EntityDataStorage
 	{
 	public:
-		EntityDataStorage();
+		EntityDataStorage() = default;
 		EntityDataStorage(const EntityDataStorage&) = delete;
 		EntityDataStorage(EntityDataStorage&& other) noexcept;
 
@@ -27,11 +27,20 @@ namespace Flare
 
 		void Clear();
 
-		std::vector<EntityStorageChunk> Chunks;
+		inline size_t GetEntitySize() const { return m_EntitySize; }
+		inline size_t GetEntityCount() const { return m_EntityCount; }
+		inline size_t GetEntitiesPerChunk() const { return m_EntitiesPerChunk; }
+		inline const std::vector<EntityStorageChunk>& GetChunks() const { return m_Chunks; }
 
-		size_t EntitySize;
-		size_t EntitiesCount;
-		size_t EntitiesPerChunk;
+		inline size_t GetChunkCount() const { return m_Chunks.size(); }
+		inline const EntityStorageChunk& GetChunk(size_t index) const { return m_Chunks[index]; }
+	private:
+		std::vector<EntityStorageChunk> m_Chunks;
+
+		size_t m_UsedChunkBytes = EntityStorageChunk::CHUNK_SIZE;
+		size_t m_EntitySize = 0;
+		size_t m_EntityCount = 0;
+		size_t m_EntitiesPerChunk = 0;
 	};
 
 	class FLAREECS_API EntityStorage
@@ -51,14 +60,14 @@ namespace Flare
 
 		EntityDataStorage& GetDataStorage() { return m_DataStorage; }
 		
-		inline size_t GetEntitiesCount() const { return m_DataStorage.EntitiesCount; }
-		inline size_t GetEntitySize() const { return m_DataStorage.EntitySize; }
+		inline size_t GetEntitiesCount() const { return m_DataStorage.GetEntityCount(); }
+		inline size_t GetEntitySize() const { return m_DataStorage.GetEntitySize(); }
 
 		void SetEntitySize(size_t entitySize);
 		void UpdateEntityRegistryIndex(size_t entityIndex, uint32_t newRegistryIndex);
 
-		inline size_t GetChunksCount() const { return m_DataStorage.Chunks.size(); }
-		inline size_t GetEntitiesPerChunkCount() const { return m_DataStorage.EntitiesPerChunk; }
+		inline size_t GetChunksCount() const { return m_DataStorage.GetChunkCount(); }
+		inline size_t GetEntitiesPerChunkCount() const { return m_DataStorage.GetEntitiesPerChunk(); }
 
 		size_t GetEntitiesCountInChunk(size_t index) const { return m_DataStorage.GetEntitiesCountInChunk(index); }
 

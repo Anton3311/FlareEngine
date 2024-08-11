@@ -880,7 +880,7 @@ namespace Flare
 				continue;
 
 			DeletedEntitiesStorage& storage = it->second;
-			for (size_t entityIndex = 0; entityIndex < storage.DataStorage.EntitiesCount; entityIndex++)
+			for (size_t entityIndex = 0; entityIndex < storage.DataStorage.GetEntityCount(); entityIndex++)
 			{
 				uint8_t* entityData = storage.DataStorage.GetEntityData(entityIndex);
 				for (size_t i = 0; i < archetype.Components.size(); i++)

@@ -209,7 +209,7 @@ namespace Flare
 				EditorGUI::IntPropertyField("References in created entities queries", references);
 			}
 
-			uint32_t queuedForDeletion = (uint32_t)world.Entities.GetDeletedEntityStorage(archetype).DataStorage.EntitiesCount;
+			uint32_t queuedForDeletion = (uint32_t)world.Entities.GetDeletedEntityStorage(archetype).DataStorage.GetEntityCount();
 			EditorGUI::UIntPropertyField("Queued for deletion", queuedForDeletion);
 			ImGui::EndDisabled();
 

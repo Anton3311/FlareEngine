@@ -30,7 +30,7 @@ namespace Flare
 		case QueryTarget::DeletedEntities:
 		{
 			EntityDataStorage& storage = m_Entities.GetDeletedEntityStorage(m_Archetype).DataStorage;
-			return EntityViewIterator(storage, storage.EntitiesCount);
+			return EntityViewIterator(storage, storage.GetEntityCount());
 		}
 		default:
 			FLARE_CORE_ASSERT(false);
@@ -52,7 +52,7 @@ namespace Flare
 		case QueryTarget::DeletedEntities:
 		{
 			const DeletedEntitiesStorage& storage = m_Entities.GetDeletedEntityStorage(m_Archetype);
-			if (index >= storage.DataStorage.EntitiesCount)
+			if (index >= storage.DataStorage.GetEntityCount())
 				return {};
 			return storage.Ids[index];
 		}
