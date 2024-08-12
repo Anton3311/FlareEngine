@@ -118,15 +118,15 @@ namespace Flare
 
 	void Scene::UpdateEnvironmentSettings()
 	{
-		for (EntityView view : m_EnvironmentQuery)
-		{
-			auto environments = view.View<const Environment>();
+		FLARE_PROFILE_FUNCTION();
 
-			for (EntityViewElement entity : view)
+		m_EnvironmentQuery.ForEachChunk([](QueryChunk chunk, ComponentView<const Environment> environments)
 			{
-				Renderer::SetShadowSettings(environments[entity].ShadowSettings);
-				return;
-			}
-		}
+				for (EntityViewElement entity : chunk)
+				{
+					Renderer::SetShadowSettings(environments[entity].ShadowSettings);
+					return;
+				}
+			});
 	}
 }

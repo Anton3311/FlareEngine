@@ -316,6 +316,7 @@ namespace Flare
 	FLARE_IMPL_SYSTEM(SpriteRendererSystem);
 	void SpriteRendererSystem::OnConfig(World& world, SystemConfig& config)
 	{
+		FLARE_PROFILE_FUNCTION();
 		std::optional<uint32_t> groupId = world.GetSystemsManager().FindGroup("Rendering");
 		FLARE_CORE_ASSERT(groupId);
 		config.Group = *groupId;
@@ -326,12 +327,14 @@ namespace Flare
 
 	void SpriteRendererSystem::OnUpdate(World& world, SystemExecutionContext& context)
 	{
+		FLARE_PROFILE_FUNCTION();
 		RenderQuads(world, context);
 		RenderText(context);
 	}
 
 	void SpriteRendererSystem::RenderQuads(World& world, SystemExecutionContext& context)
 	{
+		FLARE_PROFILE_FUNCTION();
 		m_SortedEntities.clear();
 		m_SortedEntities.reserve(m_SpritesQuery.GetEntitiesCount());
 
@@ -361,12 +364,15 @@ namespace Flare
 			}
 		}
 
-		std::sort(m_SortedEntities.begin(), m_SortedEntities.end(), [](const EntityQueueElement& a, const EntityQueueElement& b) -> bool
 		{
-			if (a.SortingLayer == b.SortingLayer)
-				return (size_t)a.Material < (size_t)b.Material;
-			return a.SortingLayer < b.SortingLayer;
-		});
+			FLARE_PROFILE_SCOPE("Sort");
+			std::sort(m_SortedEntities.begin(), m_SortedEntities.end(), [](const EntityQueueElement& a, const EntityQueueElement& b) -> bool
+				{
+					if (a.SortingLayer == b.SortingLayer)
+						return (size_t)a.Material < (size_t)b.Material;
+					return a.SortingLayer < b.SortingLayer;
+				});
+		}
 
 		AssetHandle currentMaterial = NULL_ASSET_HANDLE;
 
@@ -394,24 +400,21 @@ namespace Flare
 
 	void SpriteRendererSystem::RenderText(SystemExecutionContext& context)
 	{
-		for (EntityView view : m_TextQuery)
-		{
-			auto transforms = view.View<TransformComponent>();
-			auto texts = view.View<TextComponent>();
+		FLARE_PROFILE_FUNCTION();
 
-			for (EntityViewIterator entity = view.begin(); entity != view.end(); ++entity)
+		m_TextQuery.ForEachChunk([](QueryChunk chunk, ComponentView<const TransformComponent> transforms, ComponentView<const TextComponent> textComponents)
 			{
-				glm::mat4 transform = transforms[*entity].GetTransformationMatrix();
+				for (auto entity : chunk)
+				{
+					glm::mat4 transform = transforms[entity].GetTransformationMatrix();
+					const TextComponent& text = textComponents[entity];
 
-				Entity entityId = view.GetEntity(entity.GetEntityIndex()).value_or(Entity());
-				const TextComponent& text = texts[*entity];
-
-				Renderer2D::DrawString(
-					text.Text, transform,
-					text.Font ? text.Font : Font::GetDefault(),
-					text.Color, entityId.GetIndex());
-			}
-		}
+					Renderer2D::DrawString(
+						text.Text, transform,
+						text.Font ? text.Font : Font::GetDefault(),
+						text.Color, 0);
+				}
+			});
 	}
 
 	//
@@ -421,6 +424,7 @@ namespace Flare
 	FLARE_IMPL_SYSTEM(MeshRendererSystem);
 	void MeshRendererSystem::OnConfig(World& world, SystemConfig& config)
 	{
+		FLARE_PROFILE_FUNCTION();
 		std::optional<uint32_t> groupId = world.GetSystemsManager().FindGroup("Rendering");
 		FLARE_CORE_ASSERT(groupId);
 		config.Group = *groupId;
@@ -441,56 +445,52 @@ namespace Flare
 
 		bool isMaterialTable = false;
 
-		for (EntityView view : m_Query)
-		{
-			auto transforms = view.View<TransformComponent>();
-			auto meshes = view.View<MeshComponent>();
-
-			for (EntityViewIterator entity = view.begin(); entity != view.end(); ++entity)
+		m_Query.ForEachChunk([&](QueryChunk chunk, ComponentView<const TransformComponent> transforms, ComponentView<const MeshComponent> meshes)
 			{
-				const Ref<Mesh>& mesh = meshes[*entity].Mesh;
-				const TransformComponent& transform = transforms[*entity];
-				std::optional<Entity> id = view.GetEntity(entity.GetEntityIndex());
-
-				if (!mesh || !id)
-					continue;
-
-				if (meshes[*entity].Material != currentMaterialHandle)
+				for (auto entity : chunk)
 				{
-					const AssetMetadata* meta = AssetManager::GetAssetMetadata(meshes[*entity].Material);
-					if (!meta)
+					const Ref<Mesh>& mesh = meshes[entity].Mesh;
+					const TransformComponent& transform = transforms[entity];
+
+					if (!mesh)
 						continue;
 
-					if (meta->Type == AssetType::Material)
+					if (meshes[entity].Material != currentMaterialHandle)
 					{
-						currentMaterial = AssetManager::GetAsset<Material>(meshes[*entity].Material);
-						isMaterialTable = false;
-					}
-					else if (meta->Type == AssetType::MaterialsTable)
-					{
-						currentMaterialsTable = AssetManager::GetAsset<MaterialsTable>(meshes[*entity].Material);
-						isMaterialTable = true;
+						const AssetMetadata* meta = AssetManager::GetAssetMetadata(meshes[entity].Material);
+						if (!meta)
+							continue;
+
+						if (meta->Type == AssetType::Material)
+						{
+							currentMaterial = AssetManager::GetAsset<Material>(meshes[entity].Material);
+							isMaterialTable = false;
+						}
+						else if (meta->Type == AssetType::MaterialsTable)
+						{
+							currentMaterialsTable = AssetManager::GetAsset<MaterialsTable>(meshes[entity].Material);
+							isMaterialTable = true;
+						}
+
+						currentMaterialHandle = meshes[entity].Material;
 					}
 
-					currentMaterialHandle = meshes[*entity].Material;
+					if (!isMaterialTable)
+					{
+						submitionQueue.Submit(mesh,
+							currentMaterial,
+							Math::Compact3DTransform(transform.GetTransformationMatrix()),
+							meshes[entity].Flags);
+					}
+					else
+					{
+						submitionQueue.Submit(mesh,
+							Span<AssetHandle>::FromVector(currentMaterialsTable->Materials),
+							Math::Compact3DTransform(transform.GetTransformationMatrix()),
+							meshes[entity].Flags);
+					}
 				}
-
-				if (!isMaterialTable)
-				{
-					submitionQueue.Submit(mesh,
-						currentMaterial,
-						Math::Compact3DTransform(transform.GetTransformationMatrix()),
-						meshes[*entity].Flags);
-				}
-				else
-				{
-					submitionQueue.Submit(mesh,
-						Span<AssetHandle>::FromVector(currentMaterialsTable->Materials),
-						Math::Compact3DTransform(transform.GetTransformationMatrix()),
-						meshes[*entity].Flags);
-				}
-			}
-		}
+			});
 	}
 
 	//
@@ -500,6 +500,7 @@ namespace Flare
 	FLARE_IMPL_SYSTEM(DecalRendererSystem);
 	void DecalRendererSystem::OnConfig(World& world, SystemConfig& config)
 	{
+		FLARE_PROFILE_FUNCTION();
 		std::optional<uint32_t> groupId = world.GetSystemsManager().FindGroup("Rendering");
 		FLARE_CORE_ASSERT(groupId);
 		config.Group = *groupId;
@@ -509,6 +510,7 @@ namespace Flare
 
 	void DecalRendererSystem::OnUpdate(World& world, SystemExecutionContext& context)
 	{
+		FLARE_PROFILE_FUNCTION();
 		m_DecalsQuery.ForEachChunk([](QueryChunk chunk,
 			ComponentView<const TransformComponent> transforms,
 			ComponentView<const Decal> decals)
