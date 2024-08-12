@@ -73,7 +73,10 @@ namespace Flare
 		void OnConfig(World& world, SystemConfig& config) override;
 		void OnUpdate(World& world, SystemExecutionContext& context) override;
 	private:
-		Query m_DeletedEntities;
+		void DeleteEntitiesRecursively(World& world, Entity root) const;
+	private:
+		Query m_DeletedEntitiesWithParent;
+		Query m_DeletedEntitiesWithChildren;
 	};
 
 	//

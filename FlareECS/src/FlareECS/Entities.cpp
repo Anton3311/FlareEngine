@@ -184,7 +184,7 @@ namespace Flare
 		return record.Id;
 	}
 
-	void Entities::DeleteEntity(Entity entity)
+	void Entities::DeleteEntity(Entity entity, bool ignoreDeletionQueries)
 	{
 		FLARE_PROFILE_FUNCTION();
 		auto recordIterator = FindEntity(entity);
@@ -205,7 +205,7 @@ namespace Flare
 		}
 
 		const ArchetypeRecord& archetype = m_Archetypes.Records[record.Archetype];
-		if (archetype.IsUsedInDeletionQuery())
+		if (!ignoreDeletionQueries && archetype.IsUsedInDeletionQuery())
 		{
 			auto& deletedEntities = GetDeletedEntityStorage(archetype.Id);
 

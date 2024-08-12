@@ -29,7 +29,7 @@ namespace Flare
 
 	void World::DeleteEntity(Entity entity)
 	{
-		Entities.DeleteEntity(entity);
+		Entities.DeleteEntity(entity, false);
 	}
 
 	bool World::IsEntityAlive(Entity entity) const

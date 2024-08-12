@@ -63,7 +63,7 @@ namespace Flare
 		Entity CreateEntityFromArchetype(ArchetypeId archetype,
 			ComponentInitializationStrategy initStrategy = ComponentInitializationStrategy::DefaultConstructor);
 
-		void DeleteEntity(Entity entity);
+		void DeleteEntity(Entity entity, bool ignoreDeletionQueries);
 
 		bool AddEntityComponent(Entity entity, 
 			ComponentId componentId, 

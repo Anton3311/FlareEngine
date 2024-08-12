@@ -97,14 +97,15 @@ namespace Flare
 
 		config.ExecuteBefore<TransformPropagationSystem>();
 
-		m_DeletedEntities = world.NewQuery().Deleted().With<Parent>().Build();
+		m_DeletedEntitiesWithParent = world.NewQuery().Deleted().With<Parent>().Build();
+		m_DeletedEntitiesWithChildren = world.NewQuery().Deleted().With<Children>().Build();
 	}
 
 	void HierarchyProcessor::OnUpdate(World& world, SystemExecutionContext& context)
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		m_DeletedEntities.ForEachChunk([&world](QueryChunk chunk, ComponentView<const Parent> parents)
+		m_DeletedEntitiesWithParent.ForEachChunk([&world](QueryChunk chunk, ComponentView<const Parent> parents)
 			{
 				uint32_t entityIndex = 0;
 				for (auto entity : chunk)
@@ -127,6 +128,45 @@ namespace Flare
 					entityIndex++;
 				}
 			});
+
+		m_DeletedEntitiesWithChildren.ForEachChunk([this, &world](QueryChunk chunk, ComponentView<const Children> childrenComponents)
+			{
+				uint32_t entityIndex = 0;
+				for (auto entity : chunk)
+				{
+					const Children& children = childrenComponents[entity];
+
+					for (Entity child : children.ChildrenEntities)
+					{
+						if (!world.IsEntityAlive(child))
+							return;
+
+						DeleteEntitiesRecursively(world, child);
+
+						world.Entities.DeleteEntity(child, true);
+					}
+
+					entityIndex++;
+				}
+			});
+	}
+
+	void HierarchyProcessor::DeleteEntitiesRecursively(World& world, Entity root) const
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		const Children* children = world.TryGetEntityComponent<const Children>(root);
+		if (children == nullptr)
+			return;
+
+		for (Entity child : children->ChildrenEntities)
+		{
+			if (world.IsEntityAlive(child))
+			{
+				DeleteEntitiesRecursively(world, child);
+				world.DeleteEntity(child);
+			}
+		}
 	}
 
 	//
@@ -146,7 +186,6 @@ namespace Flare
 			.Without<Parent>()
 			.Build();
 	}
-
 
 	void TransformPropagationSystem::OnUpdate(World& world, SystemExecutionContext& context)
 	{

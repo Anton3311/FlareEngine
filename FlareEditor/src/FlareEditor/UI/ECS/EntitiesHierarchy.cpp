@@ -204,6 +204,8 @@ namespace Flare
 		else
 			opened = ImGui::TreeNodeEx((void*)std::hash<Entity>()(entity), flags, "Entity %d", entity.GetIndex());
 
+		result |= RenderEntityContextMenu(entity, selectedEntity);
+
 		ImGui::PopStyleVar(1); // Frame padding
 
 		if (ImGui::BeginDragDropSource())
@@ -232,7 +234,6 @@ namespace Flare
 		if (opened)
 			ImGui::TreePop();
 
-		result |= RenderEntityContextMenu(entity, selectedEntity);
 		return result;
 	}
 
