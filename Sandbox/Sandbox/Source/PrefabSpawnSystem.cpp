@@ -1,11 +1,13 @@
 #include "PrefabSpawnSystem.h"
 
-#include <FlareECS/World.h>
+#include <FlareCore/Log.h>
 
 #include <Flare/Core/Time.h>
 #include <Flare/Scene/Prefab.h>
 #include <Flare/Scene/Components.h>
 #include <Flare/Scene/Transform.h>
+
+#include <FlareECS/World.h>
 
 #include <random>
 

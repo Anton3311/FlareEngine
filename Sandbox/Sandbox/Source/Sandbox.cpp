@@ -1,9 +1,6 @@
 #include "Sandbox.h"
 
-#include <FlareECS/World.h>
-#include <FlareECS/System/System.h>
-
-#include <FlareECS/Commands/CommandBuffer.h>
+#include <FlareCore/Log.h>
 
 #include <Flare/Core/Time.h>
 
@@ -12,6 +9,11 @@
 #include <Flare/Scene/Prefab.h>
 
 #include <Flare/Input/InputManager.h>
+
+#include <FlareECS/World.h>
+#include <FlareECS/System/System.h>
+
+#include <FlareECS/Commands/CommandBuffer.h>
 
 #include <iostream>
 #include <random>
