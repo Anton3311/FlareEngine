@@ -12,7 +12,7 @@ namespace Flare
 		switch (m_QueryTarget)
 		{
 		case QueryTarget::AllEntities:
-			return EntityViewIterator(m_Entities.GetEntityStorage(m_Archetype).GetDataStorage(), 0);
+			return EntityViewIterator(m_Entities.GetEntityStorage(m_Archetype), 0);
 		case QueryTarget::DeletedEntities:
 			return EntityViewIterator(m_Entities.GetDeletedEntityStorage(m_Archetype).DataStorage, 0);
 		}
@@ -25,11 +25,11 @@ namespace Flare
 		case QueryTarget::AllEntities:
 		{
 			EntityStorage& storage = m_Entities.GetEntityStorage(m_Archetype);
-			return EntityViewIterator(storage.GetDataStorage(), storage.GetEntitiesCount());
+			return EntityViewIterator(storage, storage.GetEntityCount());
 		}
 		case QueryTarget::DeletedEntities:
 		{
-			EntityDataStorage& storage = m_Entities.GetDeletedEntityStorage(m_Archetype).DataStorage;
+			EntityStorage& storage = m_Entities.GetDeletedEntityStorage(m_Archetype).DataStorage;
 			return EntityViewIterator(storage, storage.GetEntityCount());
 		}
 		default:
@@ -44,7 +44,7 @@ namespace Flare
 		case QueryTarget::AllEntities:
 		{
 			const EntityStorage& storage = m_Entities.GetEntityStorage(m_Archetype);
-			if (index >= storage.GetEntitiesCount())
+			if (index >= storage.GetEntityCount())
 				return {};
 
 			return storage.GetEntityId(index);

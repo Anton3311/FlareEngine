@@ -13,7 +13,7 @@ namespace Flare
 			Ids.clear();
 		}
 
-		EntityDataStorage DataStorage;
+		EntityStorage DataStorage;
 		std::vector<Entity> Ids;
 	};
 }

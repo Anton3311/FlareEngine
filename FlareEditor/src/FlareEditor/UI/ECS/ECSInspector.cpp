@@ -190,11 +190,11 @@ namespace Flare
 			const EntityStorage& storage = world.Entities.GetEntityStorage(archetype);
 
 			ImGui::BeginDisabled(true);
-			uint32_t entitiesCount = (uint32_t)storage.GetEntitiesCount();
+			uint32_t entitiesCount = (uint32_t)storage.GetEntityCount();
 			EditorGUI::UIntPropertyField("Entities count", entitiesCount);
-			uint32_t chunksCount = (uint32_t)storage.GetChunksCount();
+			uint32_t chunksCount = (uint32_t)storage.GetChunkCount();
 			EditorGUI::UIntPropertyField("Chunks count", chunksCount);
-			uint32_t entitiesPerChunk = (uint32_t)storage.GetEntitiesPerChunkCount();
+			uint32_t entitiesPerChunk = (uint32_t)storage.GetEntitiesPerChunk();
 			EditorGUI::UIntPropertyField("Entities per chunk", entitiesPerChunk);
 			uint32_t entitySize = (uint32_t)storage.GetEntitySize();
 			EditorGUI::UIntPropertyField("Entity Size", entitySize);

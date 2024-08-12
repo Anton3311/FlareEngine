@@ -25,15 +25,15 @@ namespace Flare
 		size_t IdOffset = 0;
 	};
 
-	class FLAREECS_API EntityDataStorage
+	class FLAREECS_API EntityStorage
 	{
 	public:
-		EntityDataStorage() = default;
-		EntityDataStorage(const EntityDataStorage&) = delete;
-		EntityDataStorage(EntityDataStorage&& other) noexcept = default;
+		EntityStorage() = default;
+		EntityStorage(const EntityStorage&) = delete;
+		EntityStorage(EntityStorage&& other) noexcept = default;
 
-		EntityDataStorage& operator=(const EntityDataStorage&) = delete;
-		EntityDataStorage& operator=(EntityDataStorage&& other) noexcept = default;
+		EntityStorage& operator=(const EntityStorage&) = delete;
+		EntityStorage& operator=(EntityStorage&& other) noexcept = default;
 
 		size_t AddEntity(Entity entity);
 		uint8_t* GetEntityData(size_t index) const;
@@ -52,6 +52,8 @@ namespace Flare
 		inline size_t GetEntityCount() const { return m_EntityCount; }
 		inline size_t GetEntitiesPerChunk() const { return m_EntitiesPerChunk; }
 		inline const std::vector<EntityStorageChunk>& GetChunks() const { return m_Chunks; }
+
+		inline uint8_t* GetChunkBuffer(size_t chunkIndex) { return m_Chunks[chunkIndex].GetBuffer(); }
 
 		inline size_t GetChunkCount() const { return m_Chunks.size(); }
 		inline const EntityStorageChunk& GetChunk(size_t index) const { return m_Chunks[index]; }
@@ -82,40 +84,5 @@ namespace Flare
 
 		size_t m_EntityCount = 0;
 		size_t m_EntitiesPerChunk = 0;
-	};
-
-	class FLAREECS_API EntityStorage
-	{
-	public:
-		EntityStorage();
-		EntityStorage(const EntityStorage&) = delete;
-		EntityStorage(EntityStorage&& other) noexcept = default;
-
-		EntityStorage& operator=(const EntityStorage&) = delete;
-		EntityStorage& operator=(EntityStorage&& other) noexcept = default;
-		
-		size_t AddEntity(Entity entity);
-		uint8_t* GetEntityData(size_t entityIndex) const;
-
-		void RemoveEntityData(size_t entityIndex);
-
-		EntityDataStorage& GetDataStorage() { return m_DataStorage; }
-		
-		inline size_t GetEntitiesCount() const { return m_DataStorage.GetEntityCount(); }
-		inline size_t GetEntitySize() const { return m_DataStorage.GetEntitySize(); }
-
-		void Initialize(const EntityStorageRequirements& storageRequirements) { m_DataStorage.Initialize(storageRequirements); }
-
-		inline size_t GetChunksCount() const { return m_DataStorage.GetChunkCount(); }
-		inline size_t GetEntitiesPerChunkCount() const { return m_DataStorage.GetEntitiesPerChunk(); }
-
-		size_t GetEntitiesCountInChunk(size_t index) const { return m_DataStorage.GetEntitiesCountInChunk(index); }
-
-		uint8_t* GetChunkBuffer(size_t index);
-		const uint8_t* GetChunkBuffer(size_t index) const;
-
-		Entity GetEntityId(size_t entityIndex) const;
-	private:
-		EntityDataStorage m_DataStorage;
 	};
 }

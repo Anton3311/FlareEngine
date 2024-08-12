@@ -1,5 +1,7 @@
 #include "Query.h"
 
+#include "FlareCore/Profiler/Profiler.h"
+
 namespace Flare
 {
 	QueryIterator Query::begin() const
@@ -21,10 +23,11 @@ namespace Flare
 
 	std::optional<Entity> Query::TryGetFirstEntityId() const
 	{
+		FLARE_PROFILE_FUNCTION();
 		for (ArchetypeId archetype : GetMatchingArchetypes())
 		{
 			const EntityStorage& storage = m_Entities->GetEntityStorage(archetype);
-			if (storage.GetEntitiesCount() == 0)
+			if (storage.GetEntityCount() == 0)
 				continue;
 
 			return storage.GetEntityId(0);
@@ -35,9 +38,10 @@ namespace Flare
 
 	size_t Query::GetEntitiesCount() const
 	{
+		FLARE_PROFILE_FUNCTION();
 		size_t count = 0;
 		for (ArchetypeId archetype : GetMatchingArchetypes())
-			count += m_Entities->GetEntityStorage(archetype).GetEntitiesCount();
+			count += m_Entities->GetEntityStorage(archetype).GetEntityCount();
 		
 		return count;
 	}

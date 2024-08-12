@@ -187,7 +187,7 @@ namespace Flare
 
 			using FirstArgType = std::remove_const_t<std::remove_reference_t<FirstArg>>;
 
-			// QueryChynk + at least 1 component view
+			// QueryChunk + at least 1 component view
 			static_assert(std::is_same_v<FirstArgType, QueryChunk>);
 
 			size_t componentOffsets[IteratorTraits::ArgumentsCount];
@@ -198,7 +198,7 @@ namespace Flare
 				const ArchetypeRecord& archetype = archetypes[matchedArchetype];
 
 				IterationHelper::FillComponentOffsets(componentOffsets, archetype, archetypes);
-				for (size_t chunkIndex = 0; chunkIndex < storage.GetChunksCount(); chunkIndex++)
+				for (size_t chunkIndex = 0; chunkIndex < storage.GetChunkCount(); chunkIndex++)
 				{
 					uint8_t* entityData = storage.GetChunkBuffer(chunkIndex);
 					auto arguments = IterationHelper::Get(

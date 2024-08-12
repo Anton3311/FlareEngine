@@ -18,7 +18,7 @@ namespace Flare
 	class EntityViewIterator
 	{
 	public:
-		EntityViewIterator(EntityDataStorage& storage, size_t index)
+		EntityViewIterator(EntityStorage& storage, size_t index)
 			: m_Storage(storage), m_EntityIndex(index) {}
 
 		inline EntityViewIterator operator++()
@@ -45,7 +45,7 @@ namespace Flare
 		inline uint8_t* GetEntityData() const { return m_Storage.GetEntityData(m_EntityIndex); }
 		inline size_t GetEntityIndex() const { return m_EntityIndex; }
 	private:
-		EntityDataStorage& m_Storage;
+		EntityStorage& m_Storage;
 		size_t m_EntityIndex;
 	};
 }

@@ -6,7 +6,7 @@
 
 namespace Flare
 {
-	size_t EntityDataStorage::AddEntity(Entity entity)
+	size_t EntityStorage::AddEntity(Entity entity)
 	{
 		if (m_EntityCount % m_EntitiesPerChunk == 0)
 			m_Chunks.push_back(EntityChunksPool::GetInstance()->GetOrCreate());
@@ -19,7 +19,7 @@ namespace Flare
 		return entityIndex;
 	}
 
-	uint8_t* EntityDataStorage::GetEntityData(size_t index) const
+	uint8_t* EntityStorage::GetEntityData(size_t index) const
 	{
 		size_t bytesOffset = (index % m_EntitiesPerChunk * m_StorageRequirements.EntitySize);
 		size_t chunkIndex = index / m_EntitiesPerChunk;
@@ -30,7 +30,7 @@ namespace Flare
 		return m_Chunks[chunkIndex].GetBuffer() + bytesOffset;
 	}
 
-	void EntityDataStorage::RemoveEntity(size_t index)
+	void EntityStorage::RemoveEntity(size_t index)
 	{
 		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(index < m_EntityCount);
@@ -58,7 +58,7 @@ namespace Flare
 		}
 	}
 
-	size_t EntityDataStorage::GetEntitiesCountInChunk(size_t index) const
+	size_t EntityStorage::GetEntitiesCountInChunk(size_t index) const
 	{
 		FLARE_CORE_ASSERT(index < m_Chunks.size());
 		if (index == m_Chunks.size() - 1)
@@ -66,7 +66,7 @@ namespace Flare
 		return m_EntitiesPerChunk;
 	}
 
-	void EntityDataStorage::Initialize(const EntityStorageRequirements& storageRequirements)
+	void EntityStorage::Initialize(const EntityStorageRequirements& storageRequirements)
 	{
 		FLARE_PROFILE_FUNCTION();
 
@@ -83,7 +83,7 @@ namespace Flare
 		m_Layout.IdStride = PACKED_ENTITY_ID_SIZE;
 	}
 
-	void EntityDataStorage::Release()
+	void EntityStorage::Release()
 	{
 		FLARE_PROFILE_FUNCTION();
 
@@ -96,7 +96,7 @@ namespace Flare
 		m_EntityCount = 0;
 	}
 
-	Entity EntityDataStorage::GetEntityId(size_t entityIndex) const
+	Entity EntityStorage::GetEntityId(size_t entityIndex) const
 	{
 		FLARE_CORE_ASSERT(entityIndex < m_EntityCount);
 
@@ -106,12 +106,12 @@ namespace Flare
 		return ReadEntityIdEntry(m_Chunks[chunkIndex], indexInChunk);
 	}
 
-	void EntityDataStorage::InvalidateEntityIdEntry(EntityStorageChunk& chunk, size_t entityIndexInChunk)
+	void EntityStorage::InvalidateEntityIdEntry(EntityStorageChunk& chunk, size_t entityIndexInChunk)
 	{
 		std::memset(chunk.GetBuffer() + GetIdEntryOffset(entityIndexInChunk), 0xff, PACKED_ENTITY_ID_SIZE);
 	}
 
-	void EntityDataStorage::UpdateEntityIdEntry(EntityStorageChunk& chunk, Entity entityId, size_t entityIndexInChunk)
+	void EntityStorage::UpdateEntityIdEntry(EntityStorageChunk& chunk, Entity entityId, size_t entityIndexInChunk)
 	{
 		uint16_t packedId[3] = { UINT16_MAX };
 		PackEntityId(entityId, packedId);
@@ -119,60 +119,23 @@ namespace Flare
 		std::memcpy(chunk.GetBuffer() + GetIdEntryOffset(entityIndexInChunk), packedId, PACKED_ENTITY_ID_SIZE);
 	}
 
-	Entity EntityDataStorage::ReadEntityIdEntry(const EntityStorageChunk& chunk, size_t entityIndexInChunk) const
+	Entity EntityStorage::ReadEntityIdEntry(const EntityStorageChunk& chunk, size_t entityIndexInChunk) const
 	{
 		uint16_t packedId[3] = { UINT16_MAX };
 		std::memcpy(packedId, chunk.GetBuffer() + GetIdEntryOffset(entityIndexInChunk), PACKED_ENTITY_ID_SIZE);
 		return UnpackEntityId(packedId);
 	}
 
-	void EntityDataStorage::PackEntityId(Entity entity, uint16_t outPacked[3])
+	void EntityStorage::PackEntityId(Entity entity, uint16_t outPacked[3])
 	{
 		outPacked[0] = (uint16_t)(entity.GetIndex() & 0xffff);
 		outPacked[1] = (uint16_t)((entity.GetIndex() >> 16) & 0xffff);
 		outPacked[2] = entity.GetGeneration();
 	}
 
-	Entity EntityDataStorage::UnpackEntityId(uint16_t packed[3])
+	Entity EntityStorage::UnpackEntityId(uint16_t packed[3])
 	{
 		uint32_t index = (uint32_t)packed[0] | ((uint32_t)packed[1] << 16);
 		return Entity(index, packed[2]);
-	}
-
-
-
-	EntityStorage::EntityStorage() {}
-
-	size_t EntityStorage::AddEntity(Entity entity)
-	{
-		return m_DataStorage.AddEntity(entity);
-	}
-
-	uint8_t* EntityStorage::GetEntityData(size_t entityIndex) const
-	{
-		return m_DataStorage.GetEntityData(entityIndex);
-	}
-
-	void EntityStorage::RemoveEntityData(size_t entityIndex)
-	{
-		FLARE_CORE_ASSERT(entityIndex < m_DataStorage.GetEntityCount());
-		m_DataStorage.RemoveEntity(entityIndex);
-	}
-
-	uint8_t* EntityStorage::GetChunkBuffer(size_t index)
-	{
-		FLARE_CORE_ASSERT(index < m_DataStorage.GetChunkCount());
-		return m_DataStorage.GetChunk(index).GetBuffer();
-	}
-
-	const uint8_t* EntityStorage::GetChunkBuffer(size_t index) const
-	{
-		FLARE_CORE_ASSERT(index < m_DataStorage.GetChunkCount());
-		return m_DataStorage.GetChunk(index).GetBuffer();
-	}
-
-	Entity EntityStorage::GetEntityId(size_t entityIndex) const
-	{
-		return m_DataStorage.GetEntityId(entityIndex);
 	}
 }

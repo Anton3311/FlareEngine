@@ -41,7 +41,7 @@ namespace Flare
 				continue;
 
 			EntityStorage& storage = m_EntityStorages[archetype.Id];
-			for (size_t entityIndex = 0; entityIndex < storage.GetEntitiesCount(); entityIndex++)
+			for (size_t entityIndex = 0; entityIndex < storage.GetEntityCount(); entityIndex++)
 			{
 				uint8_t* entityData = storage.GetEntityData(entityIndex);
 				for (size_t i = 0; i < archetype.Components.size(); i++)
@@ -61,7 +61,7 @@ namespace Flare
 				break;
 
 			EntityStorage& storage = m_EntityStorages[archetype.Id];
-			for (size_t entityIndex = 0; entityIndex < storage.GetEntitiesCount(); entityIndex++)
+			for (size_t entityIndex = 0; entityIndex < storage.GetEntityCount(); entityIndex++)
 			{
 				uint8_t* entityData = storage.GetEntityData(entityIndex);
 				for (size_t i = 0; i < archetype.Components.size(); i++)
@@ -197,7 +197,7 @@ namespace Flare
 
 		EntityStorage& storage = GetEntityStorage(record.Archetype);
 
-		Entity lastEntityInBuffer = storage.GetEntityId(storage.GetEntitiesCount() - 1);
+		Entity lastEntityInBuffer = storage.GetEntityId(storage.GetEntityCount() - 1);
 		if (lastEntityInBuffer != entity)
 		{
 			auto it = m_EntityToRecord.find(lastEntityInBuffer);
@@ -225,7 +225,7 @@ namespace Flare
 				m_Components.GetComponentInfo(archetype.Components[i]).Deleter((void*)(entityData + archetype.ComponentOffsets[i]));
 		}
 
-		storage.RemoveEntityData(record.BufferIndex);
+		storage.RemoveEntity(record.BufferIndex);
 
 		m_EntityIndex.AddDeletedId(record.Id);
 		m_EntityToRecord.erase(record.Id);
@@ -598,7 +598,7 @@ namespace Flare
 		for (const auto& pair : archetypes)
 		{
 			const EntityStorage& storage = GetEntityStorage(pair.first);
-			if (storage.GetEntitiesCount() != 0)
+			if (storage.GetEntityCount() != 0)
 			{
 				if (archetype == INVALID_ARCHETYPE_ID)
 				{
@@ -622,7 +622,7 @@ namespace Flare
 		const ArchetypeRecord& record = m_Archetypes[archetype];
 		const EntityStorage& storage = GetEntityStorage(archetype);
 
-		if (storage.GetEntitiesCount() != 1)
+		if (storage.GetEntityCount() != 1)
 		{
 			FLARE_CORE_ERROR("Failed to get singleton component: World contains multiple entities with component '{0}'", m_Components.GetComponentInfo(id).Name);
 			return nullptr;
@@ -642,7 +642,7 @@ namespace Flare
 		for (const auto& pair : archetypes)
 		{
 			const EntityStorage& storage = GetEntityStorage(pair);
-			if (storage.GetEntitiesCount() != 0)
+			if (storage.GetEntityCount() != 0)
 			{
 				if (archetype == INVALID_ARCHETYPE_ID)
 					archetype = pair;
@@ -662,7 +662,7 @@ namespace Flare
 
 		const ArchetypeRecord& record = m_Archetypes[archetype];
 		const EntityStorage& storage = GetEntityStorage(archetype);
-		if (storage.GetEntitiesCount() != 1)
+		if (storage.GetEntityCount() != 1)
 		{
 			FLARE_CORE_ERROR("Failed to get singleton entity: Multiple entities matched the query");
 			return {};
@@ -920,16 +920,16 @@ namespace Flare
 		ArchetypeRecord& archetypeRecord = m_Archetypes.Records[archetype];
 
 		EntityStorage& storage = GetEntityStorage(archetype);
-		FLARE_CORE_ASSERT(storage.GetEntitiesCount() > 0);
+		FLARE_CORE_ASSERT(storage.GetEntityCount() > 0);
 
-		Entity lastEntity = storage.GetEntityId(storage.GetEntitiesCount() - 1);
+		Entity lastEntity = storage.GetEntityId(storage.GetEntityCount() - 1);
 
 		auto it = m_EntityToRecord.find(lastEntity);
 		FLARE_CORE_ASSERT(it != m_EntityToRecord.end());
 
 		EntityRecord& lastEntityRecord = m_EntityRecords[it->second];
 
-		storage.RemoveEntityData(entityBufferIndex);
+		storage.RemoveEntity(entityBufferIndex);
 		lastEntityRecord.BufferIndex = entityBufferIndex;
 	}
 
