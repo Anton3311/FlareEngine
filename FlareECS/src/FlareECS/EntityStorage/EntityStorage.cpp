@@ -125,17 +125,4 @@ namespace Flare
 		std::memcpy(packedId, chunk.GetBuffer() + GetIdEntryOffset(entityIndexInChunk), PACKED_ENTITY_ID_SIZE);
 		return UnpackEntityId(packedId);
 	}
-
-	void EntityStorage::PackEntityId(Entity entity, uint16_t outPacked[3])
-	{
-		outPacked[0] = (uint16_t)(entity.GetIndex() & 0xffff);
-		outPacked[1] = (uint16_t)((entity.GetIndex() >> 16) & 0xffff);
-		outPacked[2] = entity.GetGeneration();
-	}
-
-	Entity EntityStorage::UnpackEntityId(uint16_t packed[3])
-	{
-		uint32_t index = (uint32_t)packed[0] | ((uint32_t)packed[1] << 16);
-		return Entity(index, packed[2]);
-	}
 }
