@@ -27,7 +27,7 @@ namespace Flare
 			if (storage.GetEntitiesCount() == 0)
 				continue;
 
-			return storage.GetEntityIds()[0];
+			return storage.GetEntityId(0);
 		}
 
 		return {};

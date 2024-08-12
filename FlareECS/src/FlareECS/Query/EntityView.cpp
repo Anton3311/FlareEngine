@@ -43,11 +43,11 @@ namespace Flare
 		{
 		case QueryTarget::AllEntities:
 		{
-			const auto& indices = m_Entities.GetEntityStorage(m_Archetype).GetEntityIds();
-			if (index >= indices.size())
+			const EntityStorage& storage = m_Entities.GetEntityStorage(m_Archetype);
+			if (index >= storage.GetEntitiesCount())
 				return {};
 
-			return indices[index];
+			return storage.GetEntityId(index);
 		}
 		case QueryTarget::DeletedEntities:
 		{

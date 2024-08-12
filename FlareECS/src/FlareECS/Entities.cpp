@@ -197,7 +197,7 @@ namespace Flare
 
 		EntityStorage& storage = GetEntityStorage(record.Archetype);
 
-		Entity lastEntityInBuffer = storage.GetEntityIds().back();
+		Entity lastEntityInBuffer = storage.GetEntityId(storage.GetEntitiesCount() - 1);
 		if (lastEntityInBuffer != entity)
 		{
 			auto it = m_EntityToRecord.find(lastEntityInBuffer);
@@ -211,7 +211,7 @@ namespace Flare
 			auto& deletedEntities = GetDeletedEntityStorage(archetype.Id);
 			deletedEntities.Ids.push_back(record.Id);
 
-			size_t index = deletedEntities.DataStorage.AddEntity();
+			size_t index = deletedEntities.DataStorage.AddEntity(entity);
 			uint8_t* oldEntityData = storage.GetEntityData(record.BufferIndex);
 			uint8_t* newEntityData = deletedEntities.DataStorage.GetEntityData(index);
 
@@ -668,7 +668,7 @@ namespace Flare
 			return {};
 		}
 
-		return storage.GetEntityIds()[0];
+		return storage.GetEntityId(0);
 	}
 
 	EntitiesIterator Entities::begin()
@@ -922,7 +922,9 @@ namespace Flare
 		EntityStorage& storage = GetEntityStorage(archetype);
 		FLARE_CORE_ASSERT(storage.GetEntitiesCount() > 0);
 
-		auto it = m_EntityToRecord.find(storage.GetEntityIds().back());
+		Entity lastEntity = storage.GetEntityId(storage.GetEntitiesCount() - 1);
+
+		auto it = m_EntityToRecord.find(lastEntity);
 		FLARE_CORE_ASSERT(it != m_EntityToRecord.end());
 
 		EntityRecord& lastEntityRecord = m_EntityRecords[it->second];
