@@ -1,6 +1,8 @@
 #pragma once
 
 #include "FlareCore/FunctionTraits.h"
+#include "FlareCore/Log.h"
+#include "FlareCore/Profiler/Profiler.h"
 
 #include "FlareECS/Entity/Component.h"
 #include "FlareECS/Entity/Archetype.h"
@@ -137,6 +139,7 @@ namespace Flare
 	{
 		static std::tuple<QueryChunk, Args...> Get(QueryChunk chunk, const size_t* componentOffsets)
 		{
+			FLARE_PROFILE_FUNCTION();
 			size_t componentIndex = 0;
 
 			std::tuple<QueryChunk, Args...> tuple;
@@ -156,6 +159,7 @@ namespace Flare
 
 		static void FillComponentOffsets(size_t* offsets, const ArchetypeRecord& archetype, const Archetypes& archetypes)
 		{
+			FLARE_PROFILE_FUNCTION();
 			size_t index = 0;
 			([&]()
 				{
@@ -185,6 +189,7 @@ namespace Flare
 		template<typename IteratorFunction>
 		inline void ForEachChunk(const IteratorFunction& function)
 		{
+			FLARE_PROFILE_FUNCTION();
 			using IteratorTraits = FunctionTraits<IteratorFunction>;
 			static_assert(IteratorTraits::ArgumentsCount >= 2, "A query iterator function must accept a QueryChunk as the first argument and at least 1 component view");
 
@@ -228,7 +233,10 @@ namespace Flare
 							storage->GetEntitiesCountInChunk(chunkIndex)),
 						componentOffsets);
 
-					std::apply(function, arguments);
+					{
+						FLARE_PROFILE_SCOPE("IterateChunk");
+						std::apply(function, arguments);
+					}
 				}
 			}
 		}

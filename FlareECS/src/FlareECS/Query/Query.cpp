@@ -40,8 +40,20 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 		size_t count = 0;
-		for (ArchetypeId archetype : GetMatchingArchetypes())
-			count += m_Entities->GetEntityStorage(archetype).GetEntityCount();
+
+		switch (m_Queries->GetQueryData(m_Id).Target)
+		{
+		case QueryTarget::AllEntities:
+			for (ArchetypeId archetype : GetMatchingArchetypes())
+				count += m_Entities->GetEntityStorage(archetype).GetEntityCount();
+			break;
+		case QueryTarget::DeletedEntities:
+			for (ArchetypeId archetype : GetMatchingArchetypes())
+				count += m_Entities->GetDeletedEntityStorage(archetype).GetEntityCount();
+			break;
+		default:
+			FLARE_CORE_ASSERT(false);
+		}
 		
 		return count;
 	}

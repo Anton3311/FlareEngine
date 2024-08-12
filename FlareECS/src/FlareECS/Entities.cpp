@@ -34,7 +34,7 @@ namespace Flare
 			//
 			//       **The cause of the crash was an empty `m_EntityStorages`**
 			// 
-			//		 It was empty probably becase the prefab window was never used (throughout the lifetime of the application)
+			//		 It was empty probably because the prefab window was never used (throughout the lifetime of the application)
 			//       and the World stayed empty and thus `EnsureValidEntityStorages()` was never called
 			if (archetype.Id >= m_EntityStorages.size())
 				continue;
@@ -159,7 +159,7 @@ namespace Flare
 		{
 		case ComponentInitializationStrategy::Zero:
 		{
-			// Intialize entity data to 0
+			// Initialize entity data to 0
 			std::memset(entityData, 0, storage.GetEntitySize());
 			break;
 		}
