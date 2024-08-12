@@ -33,32 +33,19 @@ namespace Flare
 		if (!EditorLayer::GetInstance().GetSceneViewSettings().ShowCameraFrustum)
 			return;
 
-		glm::uvec2 viewportSize = Renderer::GetMainViewport().GetSize();
-		float viewportAspectRatio = (float)viewportSize.x / (float)viewportSize.y;
-
-		glm::vec3 offsetSigns[4] = {
-			glm::vec3( 1.0f,  1.0f,  1.0f),
-			glm::vec3(-1.0f,  1.0f,  1.0f),
-			glm::vec3(-1.0f, -1.0f,  1.0f),
-			glm::vec3( 1.0f, -1.0f,  1.0f),
-		};
-
-		for (EntityView chunk : m_Query)
-		{
-			auto transforms = chunk.View<TransformComponent>();
-			auto cameras = chunk.View<CameraComponent>();
-
-			for (EntityViewElement entity : chunk)
+		m_Query.ForEachChunk([](QueryChunk chunk, ComponentView<const TransformComponent> transforms, ComponentView<const CameraComponent> cameras)
 			{
-				TransformComponent& transform = transforms[entity];
-				CameraComponent& camera = cameras[entity];
+				for (EntityViewElement entity : chunk)
+				{
+					const TransformComponent& transform = transforms[entity];
+					const CameraComponent& camera = cameras[entity];
 
-				glm::mat4 transformaMatrix = transform.GetTransformationMatrix();
-				glm::mat4 projectionMatrix = camera.GetProjection();
+					glm::mat4 transformationMatrix = transform.GetTransformationMatrix();
+					glm::mat4 projectionMatrix = camera.GetProjection();
 
-				glm::mat4 viewProjection = projectionMatrix * glm::inverse(transformaMatrix);
-				DebugRenderer::DrawFrustum(glm::inverse(viewProjection), glm::vec4(1.0f));
-			}
-		}
+					glm::mat4 viewProjection = projectionMatrix * glm::inverse(transformationMatrix);
+					DebugRenderer::DrawFrustum(glm::inverse(viewProjection), glm::vec4(1.0f));
+				}
+			});
 	}
 }
