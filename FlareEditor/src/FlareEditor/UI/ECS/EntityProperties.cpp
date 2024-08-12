@@ -17,8 +17,10 @@ namespace Flare
 		if (!m_World.IsEntityAlive(entity))
 			return;
 
+		ArchetypeId archetype = m_World.Entities.GetEntityArchetype(entity);
+
 		ImGui::BeginDisabled();
-		ImGui::Text("Index %d Generation %d", entity.GetIndex(), entity.GetGeneration());
+		ImGui::Text("Index %d Generation %d Archetype %llu", entity.GetIndex(), entity.GetGeneration(), (uint64_t)archetype);
 		ImGui::EndDisabled();
 
 		std::string newNameString = "";
