@@ -8,12 +8,14 @@ namespace Flare
         DestructorFunction destructor,
         DefaultConstructorFunction constructor,
         MoveConstructorFunction moveConstructor,
-        CopyConstructorFunction copyConstructor)
+        CopyConstructorFunction copyConstructor,
+        TypeFlags flags)
         : TypeName(typeName), Size(size), Alignment(alignment),
           Destructor(destructor),
           DefaultConstructor(constructor),
           MoveConstructor(moveConstructor),
-          CopyConstructor(copyConstructor)
+          CopyConstructor(copyConstructor),
+          Flags(flags)
     {
         GetInitializers().push_back(this);
     }
