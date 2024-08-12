@@ -83,6 +83,7 @@ namespace Flare
 	// TransformPropagationSystem
 	//
 
+	struct TransformComponent;
 	class TransformPropagationSystem : public System
 	{
 	public:
@@ -90,6 +91,8 @@ namespace Flare
 
 		void OnConfig(World& world, SystemConfig& config) override;
 		void OnUpdate(World& world, SystemExecutionContext& context) override;
+	private:
+		void PropagateTransformRecursively(World& world, const Children& children, const TransformComponent& parentTransform) const;
 	private:
 		Query m_Query;
 	};

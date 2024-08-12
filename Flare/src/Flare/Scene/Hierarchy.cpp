@@ -191,7 +191,7 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		m_Query.ForEachChunk([&world](QueryChunk chunk,
+		m_Query.ForEachChunk([this, &world](QueryChunk chunk,
 			ComponentView<const TransformComponent> transforms,
 			ComponentView<const Children> childrenComponents)
 			{
@@ -207,17 +207,48 @@ namespace Flare
 						TransformComponent* globalTransform = world.TryGetEntityComponent<TransformComponent>(child);
 						const LocalTransform* localTransform = world.TryGetEntityComponent<const LocalTransform>(child);
 
-						if (!globalTransform || !localTransform)
-							continue;
+						if (globalTransform && localTransform)
+						{
+							glm::vec3 rotatedPosition = parentRotation * (localTransform->Position * parentTransform.Scale);
+							globalTransform->Position = rotatedPosition + parentTransform.Position;
+							globalTransform->Rotation = parentTransform.Rotation + localTransform->Rotation;
+							globalTransform->Scale = parentTransform.Scale * localTransform->Scale;
+						}
 
-						glm::vec3 rotatedPosition = parentRotation * (localTransform->Position * parentTransform.Scale);
-						globalTransform->Position = rotatedPosition + parentTransform.Position;
-						globalTransform->Rotation = parentTransform.Rotation + localTransform->Rotation;
-						globalTransform->Scale = parentTransform.Scale * localTransform->Scale;
-
-						// TODO: Visit entities deeper in the hierarchy
+						const Children* childrenEntities = world.TryGetEntityComponent<const Children>(child);
+						if (childrenEntities)
+						{
+							PropagateTransformRecursively(world, *childrenEntities, *globalTransform);
+						}
 					}
 				}
 			});
+	}
+
+	void TransformPropagationSystem::PropagateTransformRecursively(World& world, const Children& children, const TransformComponent& parentTransform) const
+	{
+		FLARE_PROFILE_FUNCTION();
+		
+		glm::quat parentRotation = glm::quat(glm::radians(parentTransform.Rotation));
+
+		for (Entity child : children.ChildrenEntities)
+		{
+			const LocalTransform* localTransform = world.TryGetEntityComponent<const LocalTransform>(child);
+			TransformComponent* globalTransform = world.TryGetEntityComponent<TransformComponent>(child);
+
+			if (!localTransform || !globalTransform)
+				continue;
+
+			glm::vec3 rotatedPosition = parentRotation * (localTransform->Position * parentTransform.Scale);
+			globalTransform->Position = rotatedPosition + parentTransform.Position;
+			globalTransform->Rotation = parentTransform.Rotation + localTransform->Rotation;
+			globalTransform->Scale = parentTransform.Scale * localTransform->Scale;
+
+			const Children* childrenEntities = world.TryGetEntityComponent<const Children>(child);
+			if (childrenEntities)
+			{
+				PropagateTransformRecursively(world, *childrenEntities, *globalTransform);
+			}
+		}
 	}
 }
