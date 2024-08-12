@@ -881,13 +881,12 @@ namespace Flare
 	void Entities::ClearQueuedForDeletion()
 	{
 		FLARE_PROFILE_FUNCTION();
-		for (const ArchetypeRecord& archetype : m_Archetypes.Records)
-		{
-			auto it = m_DeletedEntitiesStorages.find(archetype.Id);
-			if (it == m_DeletedEntitiesStorages.end())
-				continue;
 
-			EntityStorage& storage = it->second;
+		for (const auto& [archetypeId, storage] : m_DeletedEntitiesStorages)
+		{
+			FLARE_CORE_ASSERT(m_Archetypes.IsIdValid(archetypeId));
+
+			const ArchetypeRecord& archetype = m_Archetypes[archetypeId];
 			for (size_t entityIndex = 0; entityIndex < storage.GetEntityCount(); entityIndex++)
 			{
 				uint8_t* entityData = storage.GetEntityData(entityIndex);
@@ -896,8 +895,6 @@ namespace Flare
 					m_Components.GetComponentInfo(archetype.Components[i]).Deleter((void*)(entityData + archetype.ComponentOffsets[i]));
 				}
 			}
-
-			storage.Release();
 		}
 
 		m_DeletedEntitiesStorages.clear();
