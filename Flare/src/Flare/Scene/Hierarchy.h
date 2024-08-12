@@ -62,6 +62,21 @@ namespace Flare
 	};
 
 	//
+	// HierarchyProcessor
+	//
+
+	class HierarchyProcessor : public System
+	{
+	public:
+		FLARE_SYSTEM;
+
+		void OnConfig(World& world, SystemConfig& config) override;
+		void OnUpdate(World& world, SystemExecutionContext& context) override;
+	private:
+		Query m_DeletedEntities;
+	};
+
+	//
 	// TransformPropagationSystem
 	//
 

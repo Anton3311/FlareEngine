@@ -40,6 +40,8 @@ namespace Flare
 		m_OnRuntimeStartGroup = systemsManager.CreateGroup("On Runtime Start");
 		m_OnRuntimeEndGroup = systemsManager.CreateGroup("On Runtime End");
 
+		m_SceneHierarchyUpdate = systemsManager.CreateGroup("SceneHierarchyUpdate");
+
 		m_World.GetSystemsManager().SetDefaultSystemsGroup(m_ScriptingUpdateGroup);
 
 		m_OnFrameStart = systemsManager.CreateGroup("On Frame End");
@@ -87,7 +89,8 @@ namespace Flare
 
 	void Scene::OnUpdateEditor()
 	{
-		m_World.GetSystemsManager().ExecuteSystem<TransformPropagationSystem>();
+		m_World.GetSystemsManager().ExecuteGroup(m_SceneHierarchyUpdate);
+
 		m_World.Entities.ClearQueuedForDeletion();
 		m_World.Entities.ClearCreatedEntitiesQueryResult();
 

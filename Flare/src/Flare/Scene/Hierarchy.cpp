@@ -1,5 +1,6 @@
 #include "Hierarchy.h"
 
+#include "FlareCore/Log.h"
 #include "FlareCore/Profiler/Profiler.h"
 
 #include "Flare/Scene/Transform.h"
@@ -82,13 +83,60 @@ namespace Flare
 	}
 
 	//
+	// HierarchyProcessor
+	//
+
+	FLARE_IMPL_SYSTEM(HierarchyProcessor);
+	void HierarchyProcessor::OnConfig(World& world, SystemConfig& config)
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		std::optional<uint32_t> groupId = world.GetSystemsManager().FindGroup("SceneHierarchyUpdate");
+		FLARE_CORE_ASSERT(groupId.has_value());
+		config.Group = *groupId;
+
+		config.ExecuteBefore<TransformPropagationSystem>();
+
+		m_DeletedEntities = world.NewQuery().Deleted().With<Parent>().Build();
+	}
+
+	void HierarchyProcessor::OnUpdate(World& world, SystemExecutionContext& context)
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		m_DeletedEntities.ForEachChunk([&world](QueryChunk chunk, ComponentView<const Parent> parents)
+			{
+				uint32_t entityIndex = 0;
+				for (auto entity : chunk)
+				{
+					Entity parentEntity = parents[entity].ParentEntity;
+					Entity thisEntity = chunk.GetEntityId(entityIndex);
+
+					{
+						Children* children = world.TryGetEntityComponent<Children>(parentEntity);
+						if (children)
+						{
+							auto it = std::find(children->ChildrenEntities.begin(), children->ChildrenEntities.end(), thisEntity);
+							if (it != children->ChildrenEntities.end())
+							{
+								children->ChildrenEntities.erase(it);
+							}
+						}
+					}
+
+					entityIndex++;
+				}
+			});
+	}
+
+	//
 	// TransformPropagationSystem
 	//
 
 	FLARE_IMPL_SYSTEM(TransformPropagationSystem);
 	void TransformPropagationSystem::OnConfig(World& world, SystemConfig& config)
 	{
-		std::optional<uint32_t> groupId = world.GetSystemsManager().FindGroup("Late Update");
+		std::optional<uint32_t> groupId = world.GetSystemsManager().FindGroup("SceneHierarchyUpdate");
 		FLARE_CORE_ASSERT(groupId.has_value());
 		config.Group = *groupId;
 

@@ -51,6 +51,8 @@ namespace Flare
 		SystemGroupId m_OnRuntimeStartGroup;
 		SystemGroupId m_OnRuntimeEndGroup;
 
+		SystemGroupId m_SceneHierarchyUpdate;
+
 		SystemGroupId m_OnFrameStart;
 		SystemGroupId m_OnFrameEnd;
 
