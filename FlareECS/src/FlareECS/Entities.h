@@ -22,7 +22,6 @@ namespace Flare
 	class FLAREECS_API Query;
 
 	class EntityStorage;
-	struct DeletedEntitiesStorage;
 	class EntityView;
 	class EntitiesIterator;
 
@@ -88,8 +87,8 @@ namespace Flare
 		EntityStorage& GetEntityStorage(ArchetypeId archetype);
 		const EntityStorage& GetEntityStorage(ArchetypeId archetype) const;
 
-		DeletedEntitiesStorage& GetDeletedEntityStorage(ArchetypeId archetype);
-		const DeletedEntitiesStorage& GetDeletedEntityStorage(ArchetypeId archetype) const;
+		EntityStorage& GetDeletedEntityStorage(ArchetypeId archetype);
+		const EntityStorage& GetDeletedEntityStorage(ArchetypeId archetype) const;
 
 		Span<Entity> GetCreatedEntities(ArchetypeId archetype);
 
@@ -132,7 +131,7 @@ namespace Flare
 
 		// Moves entity components starting from `firstComponentIndex` into a destination buffer
 		//
-		// First component is moved into the buffer at offest 0
+		// First component is moved into the buffer at offset 0
 		void MoveEntityComponents(uint8_t* source, uint8_t* destination, const ArchetypeRecord& entityArchetype, size_t firstComponentIndex, size_t componentsCount);
 
 		void CreateEntity(const ComponentSet& components, EntityCreationResult& result);
@@ -149,7 +148,7 @@ namespace Flare
 		Components& m_Components;
 
 		std::vector<EntityStorage> m_EntityStorages;
-		std::unordered_map<ArchetypeId, DeletedEntitiesStorage> m_DeletedEntitiesStorages;
+		std::unordered_map<ArchetypeId, EntityStorage> m_DeletedEntitiesStorages;
 		std::unordered_map<ArchetypeId, std::vector<Entity>> m_CreatedEntitiesPerArchetype;
 
 		std::vector<EntityRecord> m_EntityRecords;

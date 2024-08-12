@@ -13,7 +13,6 @@
 
 #include "FlareECS/EntityStorage/EntityStorage.h"
 #include "FlareECS/EntityStorage/EntityStorageChunk.h"
-#include "FlareECS/EntityStorage/DeletedEntitiesStorage.h"
 
 #include <algorithm>
 
@@ -209,11 +208,10 @@ namespace Flare
 		if (archetype.IsUsedInDeletionQuery())
 		{
 			auto& deletedEntities = GetDeletedEntityStorage(archetype.Id);
-			deletedEntities.Ids.push_back(record.Id);
 
-			size_t index = deletedEntities.DataStorage.AddEntity(entity);
+			size_t index = deletedEntities.AddEntity(entity);
 			uint8_t* oldEntityData = storage.GetEntityData(record.BufferIndex);
-			uint8_t* newEntityData = deletedEntities.DataStorage.GetEntityData(index);
+			uint8_t* newEntityData = deletedEntities.GetEntityData(index);
 
 			InitializeEntityComponents(archetype, newEntityData, 0, archetype.Components.size(), ComponentInitializationStrategy::DefaultConstructor);
 			MoveEntityComponents(oldEntityData, newEntityData, archetype, 0, archetype.Components.size());
@@ -801,7 +799,7 @@ namespace Flare
 		{
 		case ComponentInitializationStrategy::Zero:
 		{
-			// Intialize entity data to 0
+			// Initialize entity data to 0
 			size_t componentsSize = 0;
 			if (count == archetype.Components.size())
 				componentsSize = GetEntityStorage(archetype.Id).GetEntitySize();
@@ -842,28 +840,27 @@ namespace Flare
 		return m_EntityStorages[archetype];
 	}
 
-	DeletedEntitiesStorage& Entities::GetDeletedEntityStorage(ArchetypeId archetype)
+	EntityStorage& Entities::GetDeletedEntityStorage(ArchetypeId archetype)
 	{
 		FLARE_CORE_ASSERT(m_Archetypes.IsIdValid(archetype));
 
 		auto it = m_DeletedEntitiesStorages.find(archetype);
 		if (it == m_DeletedEntitiesStorages.end())
 		{
-			DeletedEntitiesStorage& storage = m_DeletedEntitiesStorages.insert({ archetype, DeletedEntitiesStorage() }).first->second;
-
 			const ArchetypeRecord& archetypeRecord = m_Archetypes[archetype];
+			EntityStorage& storage = m_DeletedEntitiesStorages.insert({ archetype, EntityStorage() }).first->second;
 
 			EntityStorageRequirements storageRequirements{};
 			storageRequirements.EntitySize = archetypeRecord.EntitySize;
 			storageRequirements.EntityAlignment = archetypeRecord.EntityAlignment;
-			storage.DataStorage.Initialize(storageRequirements);
+			storage.Initialize(storageRequirements);
 			return storage;
 		}
 
 		return it->second;
 	}
 
-	const DeletedEntitiesStorage& Entities::GetDeletedEntityStorage(ArchetypeId archetype) const
+	const EntityStorage& Entities::GetDeletedEntityStorage(ArchetypeId archetype) const
 	{
 		FLARE_CORE_ASSERT(m_Archetypes.IsIdValid(archetype));
 		auto it = m_DeletedEntitiesStorages.find(archetype);
@@ -890,17 +887,17 @@ namespace Flare
 			if (it == m_DeletedEntitiesStorages.end())
 				continue;
 
-			DeletedEntitiesStorage& storage = it->second;
-			for (size_t entityIndex = 0; entityIndex < storage.DataStorage.GetEntityCount(); entityIndex++)
+			EntityStorage& storage = it->second;
+			for (size_t entityIndex = 0; entityIndex < storage.GetEntityCount(); entityIndex++)
 			{
-				uint8_t* entityData = storage.DataStorage.GetEntityData(entityIndex);
+				uint8_t* entityData = storage.GetEntityData(entityIndex);
 				for (size_t i = 0; i < archetype.Components.size(); i++)
 				{
 					m_Components.GetComponentInfo(archetype.Components[i]).Deleter((void*)(entityData + archetype.ComponentOffsets[i]));
 				}
 			}
 
-			storage.Clear();
+			storage.Release();
 		}
 
 		m_DeletedEntitiesStorages.clear();

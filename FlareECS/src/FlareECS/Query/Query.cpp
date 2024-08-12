@@ -50,6 +50,7 @@ namespace Flare
 
 	std::optional<Entity> CreatedEntitiesQuery::TryGetFirstEntityId() const
 	{
+		FLARE_PROFILE_FUNCTION();
 		const QueryData& queryData = (*m_Queries)[m_Id];
 		for (ArchetypeId archetype : queryData.MatchedArchetypes)
 		{
@@ -65,6 +66,8 @@ namespace Flare
 
 	size_t CreatedEntitiesQuery::GetEntitiesCount() const
 	{
+		FLARE_PROFILE_FUNCTION();
+
 		size_t count = 0;
 		for (ArchetypeId archetype : GetMatchingArchetypes())
 		{

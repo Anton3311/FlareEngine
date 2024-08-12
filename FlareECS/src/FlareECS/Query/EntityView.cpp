@@ -1,7 +1,5 @@
 #include "EntityView.h"
 
-#include "FlareECS/EntityStorage/DeletedEntitiesStorage.h"
-
 namespace Flare
 {
 	EntityView::EntityView(Entities& entities, QueryTarget target, ArchetypeId archetype)
@@ -14,7 +12,7 @@ namespace Flare
 		case QueryTarget::AllEntities:
 			return EntityViewIterator(m_Entities.GetEntityStorage(m_Archetype), 0);
 		case QueryTarget::DeletedEntities:
-			return EntityViewIterator(m_Entities.GetDeletedEntityStorage(m_Archetype).DataStorage, 0);
+			return EntityViewIterator(m_Entities.GetDeletedEntityStorage(m_Archetype), 0);
 		}
 	}
 
@@ -29,7 +27,7 @@ namespace Flare
 		}
 		case QueryTarget::DeletedEntities:
 		{
-			EntityStorage& storage = m_Entities.GetDeletedEntityStorage(m_Archetype).DataStorage;
+			EntityStorage& storage = m_Entities.GetDeletedEntityStorage(m_Archetype);
 			return EntityViewIterator(storage, storage.GetEntityCount());
 		}
 		default:
@@ -51,10 +49,10 @@ namespace Flare
 		}
 		case QueryTarget::DeletedEntities:
 		{
-			const DeletedEntitiesStorage& storage = m_Entities.GetDeletedEntityStorage(m_Archetype);
-			if (index >= storage.DataStorage.GetEntityCount())
+			const EntityStorage& storage = m_Entities.GetDeletedEntityStorage(m_Archetype);
+			if (index >= storage.GetEntityCount())
 				return {};
-			return storage.Ids[index];
+			return storage.GetEntityId(index);
 		}
 		}
 

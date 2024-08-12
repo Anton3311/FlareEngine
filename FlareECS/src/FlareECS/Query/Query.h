@@ -179,7 +179,7 @@ namespace Flare
 		inline void ForEachChunk(const IteratorFunction& function)
 		{
 			using IteratorTraits = FunctionTraits<IteratorFunction>;
-			static_assert(IteratorTraits::ArgumentsCount >= 2, "A query iterator function must accept a QueryChunk as the first agument and at least 1 component view");
+			static_assert(IteratorTraits::ArgumentsCount >= 2, "A query iterator function must accept a QueryChunk as the first argument and at least 1 component view");
 
 			using IteratorArguments = typename IteratorTraits::Arguments;
 			using IterationHelper = QueryIterationHelper<IteratorArguments>;

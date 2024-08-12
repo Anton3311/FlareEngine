@@ -2,7 +2,6 @@
 
 #include "FlareECS/World.h"
 #include "FlareECS/EntityStorage/EntityStorage.h"
-#include "FlareECS/EntityStorage/DeletedEntitiesStorage.h"
 
 #include "FlareEditor/EditorSelection.h"
 #include "FlareEditor/EditorLayer.h"
@@ -209,7 +208,7 @@ namespace Flare
 				EditorGUI::IntPropertyField("References in created entities queries", references);
 			}
 
-			uint32_t queuedForDeletion = (uint32_t)world.Entities.GetDeletedEntityStorage(archetype).DataStorage.GetEntityCount();
+			uint32_t queuedForDeletion = (uint32_t)world.Entities.GetDeletedEntityStorage(archetype).GetEntityCount();
 			EditorGUI::UIntPropertyField("Queued for deletion", queuedForDeletion);
 			ImGui::EndDisabled();
 
