@@ -5,6 +5,7 @@
 
 namespace Flare
 {
+	struct QueryData;
 	class ECSInspector
 	{
 	public:
@@ -16,6 +17,7 @@ namespace Flare
 		void RenderEntityInfo(Entity entity);
 		void RenderArchetypeInfo(ArchetypeId archetype);
 		void RenderSystem(uint32_t systemIndex);
+		void RenderQuery(const QueryData& query);
 	private:
 		bool m_Shown;
 	};

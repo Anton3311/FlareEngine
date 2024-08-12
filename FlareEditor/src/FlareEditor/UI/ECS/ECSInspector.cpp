@@ -1,7 +1,10 @@
 #include "ECSInspector.h"
 
+#include "FlareCore/Profiler/Profiler.h"
+
 #include "FlareECS/World.h"
 #include "FlareECS/EntityStorage/EntityStorage.h"
+#include "FlareECS/Query/QueryData.h"
 
 #include "FlareEditor/EditorSelection.h"
 #include "FlareEditor/EditorLayer.h"
@@ -18,6 +21,7 @@ namespace Flare
 
 	void ECSInspector::OnImGuiRender()
 	{
+		FLARE_PROFILE_FUNCTION();
 		if (m_Shown && ImGui::Begin("ECS Inspector", &m_Shown))
 		{
 			if (ImGui::BeginTabBar("ECS Inspector Tabs"))
@@ -157,6 +161,20 @@ namespace Flare
 					ImGui::EndTabItem();
 				}
 
+				if (ImGui::BeginTabItem("Queries"))
+				{
+					if (ImGui::BeginChild("Queries List"))
+					{
+						const QueryCache& queries = world.GetQueries();
+						for (const QueryData& query : queries.GetQueries())
+							RenderQuery(query);
+
+						ImGui::EndChild();
+					}
+
+					ImGui::EndTabItem();
+				}
+
 				ImGui::EndTabBar();
 			}
 			ImGui::End();
@@ -165,6 +183,7 @@ namespace Flare
 
 	void ECSInspector::RenderEntityInfo(Entity entity)
 	{
+		FLARE_PROFILE_FUNCTION();
 		if (EditorGUI::BeginPropertyGrid())
 		{
 			uint32_t index = entity.GetIndex();
@@ -181,6 +200,7 @@ namespace Flare
 
 	void ECSInspector::RenderArchetypeInfo(ArchetypeId archetype)
 	{
+		FLARE_PROFILE_FUNCTION();
 		World& world = World::GetCurrent();
 		const ArchetypeRecord& record = world.GetArchetypes()[archetype];
 
@@ -231,15 +251,76 @@ namespace Flare
 
 	void ECSInspector::RenderSystem(uint32_t systemIndex)
 	{
+		FLARE_PROFILE_FUNCTION();
 		World& world = World::GetCurrent();
-		const SystemsRegistry& systemsRegsitry = world.GetSystemsManager().GetSystemsRegistry();
+		const SystemsRegistry& systemsRegistry = world.GetSystemsManager().GetSystemsRegistry();
 
-		const SystemRecord& systemRecord = systemsRegsitry.GetRecord(systemIndex);
+		const SystemRecord& systemRecord = systemsRegistry.GetRecord(systemIndex);
 
 		ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_Leaf;
 		bool opened = ImGui::TreeNodeEx((void*)systemRecord.Descriptor->TypeName, flags, "System '%s'", systemRecord.Descriptor->TypeName);
 		if (opened)
 		{
+			ImGui::TreePop();
+		}
+	}
+
+	void ECSInspector::RenderQuery(const QueryData& query)
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_OpenOnArrow;
+		bool opened = ImGui::TreeNodeEx((void*)query.Id, flags, "Query %d", (int32_t)query.Id);
+		if (opened)
+		{
+			const ImGuiStyle& style = ImGui::GetStyle();
+			ImGui::SetCursorPosY(ImGui::GetCursorPosY() + style.FramePadding.y);
+
+			switch (query.Target)
+			{
+			case QueryTarget::AllEntities:
+				ImGui::TextUnformatted("AllEntities");
+				break;
+			case QueryTarget::DeletedEntities:
+				ImGui::TextUnformatted("DeletedEntities");
+				break;
+			case QueryTarget::CreatedEntities:
+				ImGui::TextUnformatted("CreatedEntities");
+				break;
+			}
+
+			ImGui::SetCursorPosY(ImGui::GetCursorPosY() + style.FramePadding.y);
+
+			if (ImGui::TreeNodeEx("Components", flags))
+			{
+				for (ComponentId id : query.Components)
+				{
+					ImGui::SetCursorPosY(ImGui::GetCursorPosY() + style.FramePadding.y);
+
+					ImGui::Text("%s %s",
+						HAS_BIT(id.GetIndex(), (uint32_t)QueryFilterType::Without)
+							? "Without"
+							: "With",
+						World::GetCurrent().Components.GetComponentInfo(id.Masked()).Initializer->Type.TypeName.data());
+
+					ImGui::SetCursorPosY(ImGui::GetCursorPosY() + style.FramePadding.y);
+				}
+
+				ImGui::TreePop();
+			}
+
+			if (ImGui::TreeNodeEx("Matching Archetypes", flags))
+			{
+				for (ArchetypeId archetype : query.MatchedArchetypes)
+				{
+					ImGui::SetCursorPosY(ImGui::GetCursorPosY() + style.FramePadding.y);
+					ImGui::Text("%llu", (uint64_t)archetype);
+					ImGui::SetCursorPosY(ImGui::GetCursorPosY() + style.FramePadding.y);
+				}
+
+				ImGui::TreePop();
+			}
+
 			ImGui::TreePop();
 		}
 	}
