@@ -51,44 +51,44 @@ namespace Flare
 	class QueryChunkIterator
 	{
 	public:
-		QueryChunkIterator(uint8_t* entityData, size_t entitySize)
-			: m_EntityData(entityData), m_EntitySize(entitySize) {}
+		constexpr QueryChunkIterator(EntityDataGetter& dataGetter, size_t entityIndex)
+			: m_DataGetter(dataGetter), m_EntityIndex(entityIndex) {}
 
-		inline EntityViewElement operator*() { return EntityViewElement(m_EntityData); }
+		inline EntityViewElement operator*() { return EntityViewElement(m_DataGetter.GetData(m_EntityIndex)); }
 
-		inline QueryChunkIterator& operator++()
+		constexpr QueryChunkIterator& operator++()
 		{
-			m_EntityData += m_EntitySize;
+			m_EntityIndex++;
 			return *this;
 		}
 
-		inline bool operator==(const QueryChunkIterator& other)
+		constexpr bool operator==(const QueryChunkIterator& other)
 		{
-			return m_EntityData == other.m_EntityData;
+			return &m_DataGetter == &other.m_DataGetter && m_EntityIndex == other.m_EntityIndex;
 		}
 
-		inline bool operator!=(const QueryChunkIterator& other)
+		constexpr bool operator!=(const QueryChunkIterator& other)
 		{
-			return m_EntityData != other.m_EntityData;
+			return &m_DataGetter != &other.m_DataGetter || m_EntityIndex != other.m_EntityIndex;
 		}
 	private:
-		uint8_t* m_EntityData;
-		size_t m_EntitySize;
+		EntityDataGetter& m_DataGetter;
+		size_t m_EntityIndex = 0;
 	};
 
 	class QueryChunk
 	{
 	public:
 		QueryChunk() = default;
-		QueryChunk(uint8_t* chunkData, size_t entitiesCount, size_t entitySize)
-			: m_ChunkData(chunkData), m_EntitiesCount(entitiesCount), m_EntitySize(entitySize) {}
+		QueryChunk(EntityDataGetter&& dataGetter)
+			: m_DataGetter(dataGetter) {}
 
-		inline QueryChunkIterator begin() const { return QueryChunkIterator(m_ChunkData, m_EntitySize); }
-		inline QueryChunkIterator end() const { return QueryChunkIterator(m_ChunkData + m_EntitySize * m_EntitiesCount, m_EntitySize); }
+		constexpr size_t GetEntityCount() const { return m_DataGetter.GetEntityCount(); }
+
+		constexpr QueryChunkIterator begin() { return QueryChunkIterator(m_DataGetter, 0); }
+		constexpr QueryChunkIterator end() { return QueryChunkIterator(m_DataGetter, m_DataGetter.GetEntityCount()); }
 	private:
-		uint8_t* m_ChunkData = nullptr;
-		size_t m_EntitiesCount = 0;
-		size_t m_EntitySize = 0;
+		EntityDataGetter m_DataGetter;
 	};
 
 	class FLAREECS_API EntitiesQuery
@@ -190,19 +190,33 @@ namespace Flare
 			// QueryChunk + at least 1 component view
 			static_assert(std::is_same_v<FirstArgType, QueryChunk>);
 
+			const QueryData& queryData = m_Queries->GetQueryData(m_Id);
+
 			size_t componentOffsets[IteratorTraits::ArgumentsCount];
 			const Archetypes& archetypes = m_Entities->GetArchetypes();
 			for (ArchetypeId matchedArchetype : GetMatchingArchetypes())
 			{
-				EntityStorage& storage = m_Entities->GetEntityStorage(matchedArchetype);
+				EntityStorage* storage = nullptr;
+				
+				switch (queryData.Target)
+				{
+				case QueryTarget::AllEntities:
+					storage = &m_Entities->GetEntityStorage(matchedArchetype);
+					break;
+				case QueryTarget::DeletedEntities:
+					storage = &m_Entities->GetDeletedEntityStorage(matchedArchetype);
+					break;
+				default:
+					FLARE_CORE_ASSERT(false);
+				}
+
 				const ArchetypeRecord& archetype = archetypes[matchedArchetype];
 
 				IterationHelper::FillComponentOffsets(componentOffsets, archetype, archetypes);
-				for (size_t chunkIndex = 0; chunkIndex < storage.GetChunkCount(); chunkIndex++)
+				for (size_t chunkIndex = 0; chunkIndex < storage->GetChunkCount(); chunkIndex++)
 				{
-					uint8_t* entityData = storage.GetChunkBuffer(chunkIndex);
 					auto arguments = IterationHelper::Get(
-						QueryChunk(entityData, storage.GetEntitiesCountInChunk(chunkIndex), storage.GetEntitySize()),
+						QueryChunk(storage->CreateEntityDataGetter(chunkIndex)),
 						componentOffsets);
 
 					std::apply(function, arguments);

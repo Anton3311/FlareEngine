@@ -25,6 +25,39 @@ namespace Flare
 		size_t IdOffset = 0;
 	};
 
+	class EntityDataGetter
+	{
+	public:
+		EntityDataGetter() = default;
+		EntityDataGetter(EntityStorageChunk& chunk, size_t stride, size_t entityCount)
+			: m_Chunk(&chunk), m_Stride(stride), m_EntityCount(entityCount) {}
+
+		constexpr uint8_t* GetData(size_t entityIndexInChunk)
+		{
+			return m_Chunk->GetBuffer() + entityIndexInChunk * m_Stride;
+		}
+
+		constexpr const uint8_t* GetData(size_t entityIndexInChunk) const
+		{
+			return m_Chunk->GetBuffer() + entityIndexInChunk * m_Stride;
+		}
+
+		constexpr size_t GetEntityCount() const { return m_EntityCount; }
+	private:
+		EntityStorageChunk* m_Chunk = nullptr;
+		size_t m_EntityCount = 0;
+		size_t m_Stride = 0;
+	};
+
+	class EntityIdGetter
+	{
+	public:
+	private:
+		EntityStorageChunk& m_Chunk;
+		size_t m_Offset = 0;
+		size_t m_Stride = 0;
+	};
+
 	class FLAREECS_API EntityStorage
 	{
 	public:
@@ -45,6 +78,11 @@ namespace Flare
 		void Release();
 
 		Entity GetEntityId(size_t entityIndex) const;
+
+		inline EntityDataGetter CreateEntityDataGetter(size_t chunkIndex)
+		{
+			return EntityDataGetter(m_Chunks[chunkIndex], m_Layout.EntityStride, GetEntitiesCountInChunk(chunkIndex));
+		}
 
 		inline const EntityStorageRequirements& GetStorageRequirements() const { return m_StorageRequirements; }
 		inline size_t GetEntitySize() const { return m_StorageRequirements.EntitySize; }
@@ -73,7 +111,7 @@ namespace Flare
 		void InvalidateEntityIdEntry(EntityStorageChunk& chunk, size_t entityIndexInChunk);
 		void UpdateEntityIdEntry(EntityStorageChunk& chunk, Entity entityId, size_t entityIndexInChunk);
 		Entity ReadEntityIdEntry(const EntityStorageChunk& chunk, size_t entityIndexInChunk) const;
-
+	public:
 		static void PackEntityId(Entity entity, uint16_t outPacked[3]);
 		static Entity UnpackEntityId(uint16_t packed[3]);
 	private:
