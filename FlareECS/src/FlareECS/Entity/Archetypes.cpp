@@ -72,6 +72,7 @@ namespace Flare
 	ArchetypeId Archetypes::CreateArchetype(Span<const ComponentId> sortedComponentIds)
 	{
 		FLARE_PROFILE_FUNCTION();
+		FLARE_CORE_ASSERT(sortedComponentIds.GetSize() > 0);
 		return CreateArchetype(std::vector<ComponentId>(sortedComponentIds.begin(), sortedComponentIds.end()));
 	}
 	
@@ -101,6 +102,9 @@ namespace Flare
 			ComponentId component = record.Components[i];
 			ComponentToArchetype[component].emplace(archetypeId, i);
 		}
+
+		FLARE_CORE_ASSERT(record.EntitySize > 0);
+		FLARE_CORE_ASSERT(record.EntityAlignment > 0);
 
 		{
 			FLARE_PROFILE_SCOPE("NotifyHandlers");

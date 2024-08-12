@@ -24,34 +24,10 @@ namespace Flare
 
 		ArchetypeRecord(const ArchetypeRecord&) = delete;
 
-		ArchetypeRecord(ArchetypeRecord&& other) noexcept
-			: Id(other.Id),
-			Components(std::move(other.Components)),
-			ComponentOffsets(std::move(other.ComponentOffsets)),
-			Edges(std::move(other.Edges)),
-			DeletionQueryReferences(other.DeletionQueryReferences),
-			CreatedEntitiesQueryReferences(other.CreatedEntitiesQueryReferences)
-		{
-			other.Id = INVALID_ARCHETYPE_ID;
-			other.DeletionQueryReferences = 0;
-			other.CreatedEntitiesQueryReferences = 0;
-		}
+		ArchetypeRecord(ArchetypeRecord&& other) noexcept = default;
 
 		ArchetypeRecord& operator=(const ArchetypeRecord&) = delete;
-		ArchetypeRecord& operator=(ArchetypeRecord&& other) noexcept
-		{
-			Id = other.Id;
-			Components = std::move(other.Components);
-			ComponentOffsets = std::move(other.ComponentOffsets);
-			Edges = std::move(other.Edges);
-			DeletionQueryReferences = other.DeletionQueryReferences;
-			CreatedEntitiesQueryReferences = other.CreatedEntitiesQueryReferences;
-
-			other.Id = INVALID_ARCHETYPE_ID;
-			other.DeletionQueryReferences = 0;
-			other.CreatedEntitiesQueryReferences = 0;
-			return *this;
-		}
+		ArchetypeRecord& operator=(ArchetypeRecord&& other) noexcept = default;
 
 		std::optional<size_t> TryGetComponentIndex(ComponentId component) const;
 
