@@ -139,7 +139,7 @@ namespace Flare
 		Flare::Components& Components;
 	private:
 		Archetypes& m_Archetypes;
-		QueryCache m_Queries;
+		QueryCache& m_Queries;
 		SystemsManager m_SystemsManager;
 	};
 }

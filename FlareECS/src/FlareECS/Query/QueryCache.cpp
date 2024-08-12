@@ -11,8 +11,8 @@
 
 namespace Flare
 {
-	QueryCache::QueryCache(Entities& entities, Archetypes& archetypes)
-			: m_Entities(entities), m_Archetypes(archetypes)
+	QueryCache::QueryCache(Archetypes& archetypes)
+			: m_Archetypes(archetypes)
 	{
 		m_Archetypes.AddUpdateHandler(this);
 	}
@@ -22,6 +22,12 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 		m_Archetypes.RemoveUpdateHandler(this);
 
+		Clear();
+	}
+
+	void QueryCache::Clear()
+	{
+		FLARE_PROFILE_FUNCTION();
 		for (const QueryData& query : m_Queries)
 		{
 			if (query.Target == QueryTarget::DeletedEntities)

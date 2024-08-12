@@ -9,9 +9,9 @@ namespace Flare
 	World::World(ECSContext& context)
 		: m_SystemsManager(*this, context.SystemsRegistry),
 		Components(context.Components),
+		m_Queries(context.Queries),
 		m_Archetypes(context.Archetypes),
-		Entities(context.Components, context.Archetypes),
-		m_Queries(Entities, context.Archetypes)
+		Entities(context.Components, context.Archetypes)
 	{
 		FLARE_PROFILE_FUNCTION();
 	}

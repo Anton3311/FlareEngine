@@ -3,6 +3,7 @@
 #include "FlareECS/Entity/Archetypes.h"
 #include "FlareECS/Entity/Components.h"
 #include "FlareECS/System/SystemsRegistry.h"
+#include "FlareECS/Query/QueryCache.h"
 
 namespace Flare
 {
@@ -12,6 +13,7 @@ namespace Flare
 
 		inline void Clear()
 		{
+			Queries.Clear();
 			Archetypes.Clear();
 			Components.Clear();
 			SystemsRegistry.Clear();
@@ -20,5 +22,6 @@ namespace Flare
 		Flare::Archetypes Archetypes;
 		Flare::Components Components;
 		Flare::SystemsRegistry SystemsRegistry;
+		QueryCache Queries;
 	};
 }

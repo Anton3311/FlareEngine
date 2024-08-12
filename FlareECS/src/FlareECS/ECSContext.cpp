@@ -3,7 +3,7 @@
 namespace Flare
 {
 	ECSContext::ECSContext()
-		: Archetypes(Components)
+		: Archetypes(Components), Queries(Archetypes)
 	{
 	}
 }
