@@ -35,10 +35,10 @@ namespace Flare
 		SystemData& m_Data;
 	};
 
-	class System
+	class FLAREECS_API System
 	{
 	public:
-		virtual ~System() {}
+		virtual ~System() = default;
 
 		virtual void OnConfig(World& world, SystemConfig& config) = 0;
 		virtual void OnUpdate(World& world, SystemExecutionContext& context) = 0;
