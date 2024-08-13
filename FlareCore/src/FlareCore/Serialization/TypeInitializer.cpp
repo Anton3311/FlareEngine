@@ -5,17 +5,9 @@
 namespace Flare
 {
     TypeInitializer::TypeInitializer(std::string_view typeName, size_t size, size_t alignment,
-        DestructorFunction destructor,
-        DefaultConstructorFunction constructor,
-        MoveConstructorFunction moveConstructor,
-        CopyConstructorFunction copyConstructor,
+        const TypeConstructorFunctions& constructorFunctions,
         TypeFlags flags)
-        : TypeName(typeName), Size(size), Alignment(alignment),
-          Destructor(destructor),
-          DefaultConstructor(constructor),
-          MoveConstructor(moveConstructor),
-          CopyConstructor(copyConstructor),
-          Flags(flags)
+        : TypeName(typeName), Size(size), Alignment(alignment), Functions(constructorFunctions), Flags(flags)
     {
         GetInitializers().push_back(this);
     }

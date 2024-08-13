@@ -1,5 +1,7 @@
 #pragma once
 
+#include "FlareCore/Serialization/TypeInitializer.h"
+
 #include "FlareECS/Entity/Component.h"
 
 #include <vector>
@@ -39,6 +41,8 @@ namespace Flare
 		size_t EntityAlignment = 0;
 		int32_t DeletionQueryReferences = 0;
 		int32_t CreatedEntitiesQueryReferences = 0;
+
+		TypeFlags CombinedComponentTypeFlags = TypeFlags::None;
 		
 		std::vector<ComponentId> Components; // Sorted
 		std::vector<size_t> ComponentOffsets;

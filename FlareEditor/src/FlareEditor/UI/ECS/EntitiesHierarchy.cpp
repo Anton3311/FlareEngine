@@ -172,7 +172,7 @@ namespace Flare
 			FLARE_CORE_ASSERT(m_World->Components.IsComponentIdValid(record.Components[i]));
 			const ComponentInfo& component = m_World->Components.GetComponentInfo(record.Components[i]);
 
-			component.Initializer->Type.CopyConstructor(componentDestination, componentSource);
+			component.Initializer->Type.Functions.CopyConstructor(componentDestination, componentSource);
 		}
 
 		return duplicated;

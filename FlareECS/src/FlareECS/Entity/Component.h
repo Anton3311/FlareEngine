@@ -72,8 +72,7 @@ namespace Flare
 			RegistryIndex(other.RegistryIndex),
 			Name(other.Name),
 			Size(other.Size),
-			Initializer(other.Initializer),
-			Deleter(other.Deleter)
+			Initializer(other.Initializer)
 		{
 		}
 
@@ -82,8 +81,7 @@ namespace Flare
 			RegistryIndex(other.RegistryIndex),
 			Name(std::move(other.Name)),
 			Size(other.Size),
-			Initializer(other.Initializer),
-			Deleter(std::move(other.Deleter))
+			Initializer(other.Initializer)
 		{
 			other.Id = ComponentId();
 			other.RegistryIndex = UINT32_MAX;
@@ -97,8 +95,6 @@ namespace Flare
 		size_t Size;
 
 		ComponentInitializer* Initializer;
-
-		std::function<void(void*)> Deleter;
 	};
 
 	class ComponentSet

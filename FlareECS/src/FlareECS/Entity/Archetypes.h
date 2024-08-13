@@ -52,8 +52,10 @@ namespace Flare
 
 		void AddUpdateHandler(ArchetypeUpdateHandler* handler);
 		void RemoveUpdateHandler(ArchetypeUpdateHandler* handler);
+
+		inline const Components& GetCompatibleComponents() const { return m_ComponentsRegistry; }
 	private:
-		void CalculateComponentOffsetsAndEntitySize(ArchetypeRecord& archetype);
+		void InitializeRecord(ArchetypeRecord& archetype);
 	public:
 		std::vector<ArchetypeRecord> Records;
 		std::unordered_map<ComponentSet, ArchetypeId> ComponentSetToArchetype;

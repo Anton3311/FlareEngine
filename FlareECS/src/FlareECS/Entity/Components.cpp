@@ -19,7 +19,6 @@ namespace Flare
 			info.RegistryIndex = registryIndex;
 			info.Name = initializer->Type.TypeName;
 			info.Size = initializer->Type.Size;
-			info.Deleter = initializer->Type.Destructor;
 			info.Initializer = initializer;
 
 			ComponentNameToIndex.emplace(info.Name, registryIndex);
@@ -66,7 +65,6 @@ namespace Flare
 				info->RegistryIndex = registryIndex;
 				info->Name = initializer->Type.TypeName;
 				info->Size = initializer->Type.Size;
-				info->Deleter = initializer->Type.Destructor;
 				info->Initializer = initializer;
 
 				newNameToIndex[info->Name] = registryIndex;

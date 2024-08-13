@@ -151,7 +151,7 @@ namespace Flare
 
 				uint8_t* componentData = entityData + archetype.ComponentOffsets[*archetypeComponentIndex];
 
-				component->Initializer->Type.DefaultConstructor(componentData);
+				component->Initializer->Type.Functions.DefaultConstructor(componentData);
 
 				YAMLDeserializer deserializer(node.ComponentNodes[componentIndex], nullptr);
 				deserializer.PropertyKey("Data");

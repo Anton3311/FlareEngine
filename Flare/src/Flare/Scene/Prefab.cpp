@@ -65,8 +65,7 @@ namespace Flare
 				FLARE_CORE_ASSERT(sceneEntityComponent);
 
 				const ComponentInfo& componentInfo = m_CompatibleComponentsRegistry.GetComponentInfo(archetypeRecord.Components[componentIndex]);
-				componentInfo.Initializer->Type.DefaultConstructor(componentData);
-				componentInfo.Initializer->Type.CopyConstructor(componentData, sceneEntityComponent);
+				componentInfo.Initializer->Type.Functions.CopyConstructor(componentData, sceneEntityComponent);
 			}
 		}
 
@@ -139,7 +138,7 @@ namespace Flare
 			for (size_t componentIndex = 0; componentIndex < archetypeRecord.Components.size(); componentIndex++)
 			{
 				const ComponentInfo& componentInfo = m_CompatibleComponentsRegistry.GetComponentInfo(archetypeRecord.Components[componentIndex]);
-				componentInfo.Initializer->Type.Destructor(m_Buffer + node.DataOffset + archetypeRecord.ComponentOffsets[componentIndex]);
+				componentInfo.Initializer->Type.Functions.Destructor(m_Buffer + node.DataOffset + archetypeRecord.ComponentOffsets[componentIndex]);
 			}
 		}
 
@@ -195,7 +194,7 @@ namespace Flare
 				size_t componentOffset = archetype.ComponentOffsets[componentIndex];
 				uint8_t* componentData = *worldEntityData + componentOffset;
 
-				component.Initializer->Type.CopyConstructor(componentData, hierarchyEntityData + componentOffset);
+				component.Initializer->Type.Functions.CopyConstructor(componentData, hierarchyEntityData + componentOffset);
 			}
 		}
 

@@ -49,6 +49,37 @@ namespace Flare
 		return flags;
 	}
 
+	struct TypeConstructorFunctions
+	{
+		using DefaultConstructorFunction = void(*)(void* instance);
+		using DestructorFunction = void(*)(void* instance);
+		using CopyConstructorFunction = void(*)(void* instance, const void* copySource);
+		using MoveConstructorFunction = void(*)(void* instance, void* moveSource);
+		using CopyAssignmentFunction = void(*)(void* instance, const void* copySource);
+		using MoveAssignmentFunction = void(*)(void* instance, void* moveSource);
+
+		DefaultConstructorFunction DefaultConstructor = nullptr;
+		DestructorFunction Destructor = nullptr;
+		CopyConstructorFunction CopyConstructor = nullptr;
+		MoveConstructorFunction MoveConstructor = nullptr;
+		CopyAssignmentFunction CopyAssignment = nullptr;
+		MoveAssignmentFunction MoveAssignment = nullptr;
+	};
+
+	template<typename T>
+	TypeConstructorFunctions GetTypeConstructorFunctions()
+	{
+		TypeConstructorFunctions functions{};
+		functions.DefaultConstructor = [](void* instance) { new(instance) T(); };
+		functions.Destructor = [](void* instance) { (*(T*)instance).~T(); };
+		functions.CopyConstructor = [](void* instance, const void* copySource) { new(instance) T(*(const T*)copySource); };
+		functions.MoveConstructor = [](void* instance, void* moveSource) { new (instance) T(std::move(*(T*)moveSource)); };
+		functions.CopyAssignment = [](void* instance, const void* copySource) { (*(T*)instance).operator=(*(const T*)copySource); };
+		functions.MoveAssignment = [](void* instance, void* copySource) { (*(T*)instance).operator=(std::move(*(const T*)copySource)); };
+
+		return functions;
+	}
+
 	class FLARECORE_API TypeInitializer
 	{
 	public:
@@ -59,20 +90,13 @@ namespace Flare
 		using MoveConstructorFunction = void(*)(void* instance, void* moveFrom);
 
 		TypeInitializer(std::string_view typeName, size_t size, size_t alignment,
-			DestructorFunction destructor, 
-			DefaultConstructorFunction constructor,
-			MoveConstructorFunction moveConstructor,
-			CopyConstructorFunction copyConstructor,
-			TypeFlags flags);
+			const TypeConstructorFunctions& constructorFunctions, TypeFlags flags);
 		~TypeInitializer();
 
 		static std::vector<TypeInitializer*>& GetInitializers();
 	public:
 		const std::string_view TypeName;
-		const DestructorFunction Destructor;
-		const DefaultConstructorFunction DefaultConstructor;
-		const CopyConstructorFunction CopyConstructor;
-		const MoveConstructorFunction MoveConstructor;
+		const TypeConstructorFunctions Functions;
 		const TypeFlags Flags;
 		const size_t Size;
 		const size_t Alignment;
@@ -81,10 +105,7 @@ namespace Flare
 
 #define FLARE_TYPE static Flare::TypeInitializer _Type;
 
-#define FLARE_IMPL_TYPE(typeName) Flare::TypeInitializer typeName::_Type =                            \
-	Flare::TypeInitializer(typeid(typeName).name(), sizeof(typeName), alignof(typeName),              \
-	[](void* instance) { ((typeName*)instance)->~typeName(); },                                       \
-	[](void* instance) { new(instance) typeName;},                                                    \
-	[](void* instance, void* moveFrom) { (*(typeName*)instance) = std::move(*(typeName*)moveFrom); }, \
-	[](void* instance, const void* copyFrom) { (*(typeName*)instance) = *(typeName*)copyFrom; },      \
+#define FLARE_IMPL_TYPE(typeName) Flare::TypeInitializer typeName::_Type =                  \
+	Flare::TypeInitializer(typeid(typeName).name(), sizeof(typeName), alignof(typeName),    \
+	Flare::GetTypeConstructorFunctions<typeName>(),                                         \
 	Flare::GetTypeFlags<typeName>());

@@ -54,7 +54,7 @@ namespace Flare
 			record.CreatedEntitiesQueryReferences = 0;
 			record.DeletionQueryReferences = 0;
 
-			CalculateComponentOffsetsAndEntitySize(record);
+			InitializeRecord(record);
 
 			{
 				FLARE_PROFILE_SCOPE("NotifyHandlers");
@@ -93,7 +93,7 @@ namespace Flare
 		record.DeletionQueryReferences = 0;
 		record.Components = sortedComponentIds;
 
-		CalculateComponentOffsetsAndEntitySize(record);
+		InitializeRecord(record);
 
 		ComponentSetToArchetype[ComponentSet(record.Components)] = archetypeId;
 
@@ -130,11 +130,12 @@ namespace Flare
 		m_UpdateHandlers.erase(it);
 	}
 
-	void Archetypes::CalculateComponentOffsetsAndEntitySize(ArchetypeRecord& archetype)
+	void Archetypes::InitializeRecord(ArchetypeRecord& archetype)
 	{
 		FLARE_PROFILE_FUNCTION();
 
 		archetype.ComponentOffsets.resize(archetype.Components.size(), 0);
+		archetype.CombinedComponentTypeFlags = m_ComponentsRegistry.GetComponentInfo(archetype.Components[0]).Initializer->Type.Flags;
 
 		size_t offset = 0;
 		for (size_t i = 0; i < archetype.Components.size(); i++)
@@ -144,6 +145,7 @@ namespace Flare
 
 			offset = Align(offset, info.Initializer->Type.Alignment);
 
+			archetype.CombinedComponentTypeFlags &= info.Initializer->Type.Flags;
 			archetype.ComponentOffsets[i] = offset;
 
 			offset += componentSize;

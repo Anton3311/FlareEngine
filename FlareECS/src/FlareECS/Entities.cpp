@@ -45,7 +45,8 @@ namespace Flare
 				uint8_t* entityData = storage.GetEntityData(entityIndex);
 				for (size_t i = 0; i < archetype.Components.size(); i++)
 				{
-					m_Components.GetComponentInfo(archetype.Components[i]).Deleter((void*)(entityData + archetype.ComponentOffsets[i]));
+					const ComponentInfo& component = m_Components.GetComponentInfo(archetype.Components[i]);
+					component.Initializer->Type.Functions.Destructor(entityData + archetype.ComponentOffsets[i]);
 				}
 			}
 		}
@@ -65,7 +66,8 @@ namespace Flare
 				uint8_t* entityData = storage.GetEntityData(entityIndex);
 				for (size_t i = 0; i < archetype.Components.size(); i++)
 				{
-					m_Components.GetComponentInfo(archetype.Components[i]).Deleter((void*)(entityData + archetype.ComponentOffsets[i]));
+					const ComponentInfo& component = m_Components.GetComponentInfo(archetype.Components[i]);
+					component.Initializer->Type.Functions.Destructor(entityData + archetype.ComponentOffsets[i]);
 				}
 			}
 		}
@@ -125,12 +127,11 @@ namespace Flare
 			uint8_t* componentLocation = result.Data + archetypeRecord.ComponentOffsets[i];
 
 			const ComponentInfo& info = m_Components.GetComponentInfo(components[i].first);
-			info.Initializer->Type.DefaultConstructor((void*)componentLocation);
 
 			if (copyComponents)
-				info.Initializer->Type.CopyConstructor(componentLocation, components[i].second);
+				info.Initializer->Type.Functions.CopyConstructor(componentLocation, components[i].second);
 			else
-				info.Initializer->Type.MoveConstructor(componentLocation, components[i].second);
+				info.Initializer->Type.Functions.MoveConstructor(componentLocation, components[i].second);
 		}
 
 		return result.Id;
@@ -171,7 +172,7 @@ namespace Flare
 				uint8_t* componentData = entityData + archetypeRecord.ComponentOffsets[i];
 
 				if (info.Initializer)
-					info.Initializer->Type.DefaultConstructor(componentData);
+					info.Initializer->Type.Functions.DefaultConstructor(componentData);
 				else
 					std::memset(componentData, 0, info.Size);
 			}
@@ -220,7 +221,10 @@ namespace Flare
 		{
 			uint8_t* entityData = storage.GetEntityData(record.BufferIndex);
 			for (size_t i = 0; i < archetype.Components.size(); i++)
-				m_Components.GetComponentInfo(archetype.Components[i]).Deleter((void*)(entityData + archetype.ComponentOffsets[i]));
+			{
+				const ComponentInfo& component = m_Components.GetComponentInfo(archetype.Components[i]);
+				component.Initializer->Type.Functions.Destructor(entityData + archetype.ComponentOffsets[i]);
+			}
 		}
 
 		storage.RemoveEntity(record.BufferIndex);
@@ -353,12 +357,11 @@ namespace Flare
 			if (initStrategy == ComponentInitializationStrategy::Zero || !componentInfo.Initializer)
 				std::memset(componentLocation, 0, componentInfo.Size);
 			else
-				componentInfo.Initializer->Type.DefaultConstructor(componentLocation);
+				componentInfo.Initializer->Type.Functions.DefaultConstructor(componentLocation);
 		}
 		else
 		{
-			componentInfo.Initializer->Type.DefaultConstructor(componentLocation);
-			componentInfo.Initializer->Type.MoveConstructor(componentLocation, componentData);
+			componentInfo.Initializer->Type.Functions.MoveConstructor(componentLocation, componentData);
 		}
 
 		RemoveEntityData(entityRecord.Archetype, entityRecord.BufferIndex);
@@ -453,7 +456,7 @@ namespace Flare
 		uint8_t* oldEntityData = oldStorage.GetEntityData(entityRecord.BufferIndex);
 
 		// Delete requested component
-		componentInfo.Deleter(oldEntityData + sizeBefore);
+		componentInfo.Initializer->Type.Functions.Destructor(oldEntityData + sizeBefore);
 
 		// Initialize components 
 		InitializeEntityComponents(newArchetype, newEntityData, 0, newArchetype.Components.size(), ComponentInitializationStrategy::DefaultConstructor);
@@ -735,7 +738,7 @@ namespace Flare
 		for (size_t i = firstComponentIndex; i < firstComponentIndex + componentsCount; i++)
 		{
 			const ComponentInfo& componentInfo = m_Components.GetComponentInfo(entityArchetype.Components[i]);
-			componentInfo.Initializer->Type.MoveConstructor(destination + destinationOffset, source + entityArchetype.ComponentOffsets[i]);
+			componentInfo.Initializer->Type.Functions.MoveConstructor(destination + destinationOffset, source + entityArchetype.ComponentOffsets[i]);
 			destinationOffset += componentInfo.Size;
 		}
 	}
@@ -817,7 +820,7 @@ namespace Flare
 				uint8_t* componentData = entityData + archetype.ComponentOffsets[i];
 
 				if (info.Initializer)
-					info.Initializer->Type.DefaultConstructor(componentData);
+					info.Initializer->Type.Functions.DefaultConstructor(componentData);
 				else
 					std::memset(componentData, 0, info.Size);
 			}
@@ -892,7 +895,8 @@ namespace Flare
 				uint8_t* entityData = storage.GetEntityData(entityIndex);
 				for (size_t i = 0; i < archetype.Components.size(); i++)
 				{
-					m_Components.GetComponentInfo(archetype.Components[i]).Deleter((void*)(entityData + archetype.ComponentOffsets[i]));
+					const ComponentInfo& component = m_Components.GetComponentInfo(archetype.Components[i]);
+					component.Initializer->Type.Functions.Destructor(entityData + archetype.ComponentOffsets[i]);
 				}
 			}
 		}
