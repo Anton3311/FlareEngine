@@ -139,6 +139,8 @@ namespace Flare
 
 		std::unordered_map<Entity, size_t>::iterator FindEntity(Entity entity);
 		std::unordered_map<Entity, size_t>::const_iterator FindEntity(Entity entity) const;
+
+		void ReleaseEntityData();
 	private:
 		std::vector<ComponentId> m_TemporaryComponentSet;
 
@@ -156,4 +158,15 @@ namespace Flare
 
 		friend class EntitiesIterator;
 	};
+
+	class FLAREECS_API EntityHelper
+	{
+	public:
+		static void DefaultConstruct(const ArchetypeRecord& archetype, const Components& compatibleComponents, void* entityData);
+		static void Destroy(const ArchetypeRecord& archetype, const Components& compatibleComponents, void* entityData);
+
+		static void CopyConstruct(const ArchetypeRecord& archetype, const Components& compatibleComponents, void* entityData, const void* copySource);
+		static void MoveConstruct(const ArchetypeRecord& archetype, const Components& compatibleComponents, void* entityData, void* moveSource);
+	};
+
 }

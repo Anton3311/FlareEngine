@@ -27,50 +27,13 @@ namespace Flare
 
 	Entities::~Entities()
 	{
-		FLARE_PROFILE_FUNCTION();
-		for (const ArchetypeRecord& archetype : m_Archetypes.Records)
-		{
-			// HACK: Used to cause a crash when destroying a world owned by prefab editor scene
-			//
-			//       **The cause of the crash was an empty `m_EntityStorages`**
-			// 
-			//		 It was empty probably because the prefab window was never used (throughout the lifetime of the application)
-			//       and the World stayed empty and thus `EnsureValidEntityStorages()` was never called
-			if (archetype.Id >= m_EntityStorages.size())
-				continue;
-
-			EntityStorage& storage = m_EntityStorages[archetype.Id];
-			for (size_t entityIndex = 0; entityIndex < storage.GetEntityCount(); entityIndex++)
-			{
-				uint8_t* entityData = storage.GetEntityData(entityIndex);
-				for (size_t i = 0; i < archetype.Components.size(); i++)
-				{
-					const ComponentInfo& component = m_Components.GetComponentInfo(archetype.Components[i]);
-					component.Initializer->Type.Functions.Destructor(entityData + archetype.ComponentOffsets[i]);
-				}
-			}
-		}
+		ReleaseEntityData();
 	}
 
 	void Entities::Clear()
 	{
 		FLARE_PROFILE_FUNCTION();
-		for (const ArchetypeRecord& archetype : m_Archetypes.Records)
-		{
-			if (archetype.Id >= m_EntityStorages.size())
-				break;
-
-			EntityStorage& storage = m_EntityStorages[archetype.Id];
-			for (size_t entityIndex = 0; entityIndex < storage.GetEntityCount(); entityIndex++)
-			{
-				uint8_t* entityData = storage.GetEntityData(entityIndex);
-				for (size_t i = 0; i < archetype.Components.size(); i++)
-				{
-					const ComponentInfo& component = m_Components.GetComponentInfo(archetype.Components[i]);
-					component.Initializer->Type.Functions.Destructor(entityData + archetype.ComponentOffsets[i]);
-				}
-			}
-		}
+		ReleaseEntityData();
 
 		for (const EntityRecord& record : m_EntityRecords)
 			m_EntityIndex.AddDeletedId(record.Id);
@@ -166,17 +129,7 @@ namespace Flare
 		}
 		case ComponentInitializationStrategy::DefaultConstructor:
 		{
-			for (size_t i = 0; i < archetypeRecord.Components.size(); i++)
-			{
-				const ComponentInfo& info = m_Components.GetComponentInfo(archetypeRecord.Components[i]);
-				uint8_t* componentData = entityData + archetypeRecord.ComponentOffsets[i];
-
-				if (info.Initializer)
-					info.Initializer->Type.Functions.DefaultConstructor(componentData);
-				else
-					std::memset(componentData, 0, info.Size);
-			}
-
+			EntityHelper::DefaultConstruct(archetypeRecord, m_Components, entityData);
 			break;
 		}
 		}
@@ -220,11 +173,7 @@ namespace Flare
 		else
 		{
 			uint8_t* entityData = storage.GetEntityData(record.BufferIndex);
-			for (size_t i = 0; i < archetype.Components.size(); i++)
-			{
-				const ComponentInfo& component = m_Components.GetComponentInfo(archetype.Components[i]);
-				component.Initializer->Type.Functions.Destructor(entityData + archetype.ComponentOffsets[i]);
-			}
+			EntityHelper::Destroy(archetype, m_Components, entityData);
 		}
 
 		storage.RemoveEntity(record.BufferIndex);
@@ -893,11 +842,7 @@ namespace Flare
 			for (size_t entityIndex = 0; entityIndex < storage.GetEntityCount(); entityIndex++)
 			{
 				uint8_t* entityData = storage.GetEntityData(entityIndex);
-				for (size_t i = 0; i < archetype.Components.size(); i++)
-				{
-					const ComponentInfo& component = m_Components.GetComponentInfo(archetype.Components[i]);
-					component.Initializer->Type.Functions.Destructor(entityData + archetype.ComponentOffsets[i]);
-				}
+				EntityHelper::Destroy(archetype, m_Components, entityData);
 			}
 		}
 
@@ -955,5 +900,95 @@ namespace Flare
 			return m_EntityToRecord.cend();
 
 		return it;
+	}
+
+	void Entities::ReleaseEntityData()
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		ClearQueuedForDeletion();
+
+		for (const ArchetypeRecord& archetype : m_Archetypes.Records)
+		{
+			// HACK: Used to cause a crash when destroying a world owned by prefab editor scene
+			//
+			//       **The cause of the crash was an empty `m_EntityStorages`**
+			// 
+			//		 It was empty probably because the prefab window was never used (throughout the lifetime of the application)
+			//       and the World stayed empty and thus `EnsureValidEntityStorages()` was never called
+			if (archetype.Id >= m_EntityStorages.size())
+				continue;
+
+			EntityStorage& storage = m_EntityStorages[archetype.Id];
+			for (size_t entityIndex = 0; entityIndex < storage.GetEntityCount(); entityIndex++)
+			{
+				uint8_t* entityData = storage.GetEntityData(entityIndex);
+				EntityHelper::Destroy(archetype, m_Components, entityData);
+			}
+		}
+	}
+
+	//
+	// EntityDataHelper
+	//
+
+	void EntityHelper::DefaultConstruct(const ArchetypeRecord& archetype, const Components& compatibleComponents, void* entityData)
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		FLARE_CORE_ASSERT(HAS_BIT(archetype.CombinedComponentTypeFlags, TypeFlags::DefaultConstructable));
+
+		for (size_t componentIndex = 0; componentIndex < archetype.Components.size(); componentIndex++)
+		{
+			const ComponentInfo& component = compatibleComponents.GetComponentInfo(archetype.Components[componentIndex]);
+			uint8_t* componentData = (uint8_t*)entityData + archetype.ComponentOffsets[componentIndex];
+
+			component.Initializer->Type.Functions.DefaultConstructor(componentData);
+		}
+	}
+
+	void EntityHelper::Destroy(const ArchetypeRecord& archetype, const Components& compatibleComponents, void* entityData)
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		for (size_t componentIndex = 0; componentIndex < archetype.Components.size(); componentIndex++)
+		{
+			const ComponentInfo& component = compatibleComponents.GetComponentInfo(archetype.Components[componentIndex]);
+			uint8_t* componentData = (uint8_t*)entityData + archetype.ComponentOffsets[componentIndex];
+
+			component.Initializer->Type.Functions.Destructor(componentData);
+		}
+	}
+
+	void EntityHelper::CopyConstruct(const ArchetypeRecord& archetype, const Components& compatibleComponents, void* entityData, const void* copySource)
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		if (HAS_BIT(archetype.CombinedComponentTypeFlags, TypeFlags::TriviallyCopyConstructable))
+		{
+			std::memcpy(entityData, copySource, archetype.EntitySize);
+			return;
+		}
+
+		for (size_t componentIndex = 0; componentIndex < archetype.Components.size(); componentIndex++)
+		{
+			const ComponentInfo& component = compatibleComponents.GetComponentInfo(archetype.Components[componentIndex]);
+			size_t componentOffset = archetype.ComponentOffsets[componentIndex];
+
+			component.Initializer->Type.Functions.CopyConstructor((uint8_t*)entityData + componentOffset, (const uint8_t*)copySource + componentOffset);
+		}
+	}
+
+	void EntityHelper::MoveConstruct(const ArchetypeRecord& archetype, const Components& compatibleComponents, void* entityData, void* moveSource)
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		for (size_t componentIndex = 0; componentIndex < archetype.Components.size(); componentIndex++)
+		{
+			const ComponentInfo& component = compatibleComponents.GetComponentInfo(archetype.Components[componentIndex]);
+			size_t componentOffset = archetype.ComponentOffsets[componentIndex];
+
+			component.Initializer->Type.Functions.MoveConstructor((uint8_t*)entityData + componentOffset, (uint8_t*)moveSource + componentOffset);
+		}
 	}
 }
