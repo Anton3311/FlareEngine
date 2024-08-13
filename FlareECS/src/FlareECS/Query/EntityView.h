@@ -4,6 +4,7 @@
 
 #include "FlareECS/Entities.h"
 
+#include "FlareECS/Query/QueryCache.h"
 #include "FlareECS/Query/ComponentView.h"
 #include "FlareECS/Query/EntityViewIterator.h"
 

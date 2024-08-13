@@ -11,8 +11,6 @@
 #include "FlareECS/Entity/Archetypes.h"
 #include "FlareECS/Entity/EntityIndex.h"
 
-#include "FlareECS/Query/QueryCache.h"
-
 #include <unordered_map>
 #include <vector>
 #include <optional>
@@ -157,6 +155,5 @@ namespace Flare
 		EntityIndex m_EntityIndex;
 
 		friend class EntitiesIterator;
-		friend class QueryCache;
 	};
 }
