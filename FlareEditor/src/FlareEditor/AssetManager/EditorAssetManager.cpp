@@ -309,7 +309,7 @@ namespace Flare
         FLARE_PROFILE_FUNCTION();
         for (const auto& [handle, asset] : m_Registry.GetEntries())
         {
-            if (asset.Metadata.Type == AssetType::Prefab && IsAssetLoaded(handle))
+            if (asset.Metadata.Type == AssetType::Prefab && asset.Metadata.Source == AssetSource::File && IsAssetLoaded(handle))
                 ReloadAsset(handle);
         }
     }

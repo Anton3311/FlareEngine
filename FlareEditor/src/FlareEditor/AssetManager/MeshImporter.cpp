@@ -11,13 +11,21 @@
 #include "Flare/Renderer/ShaderLibrary.h"
 #include "Flare/Renderer/Renderer.h"
 
+#include "Flare/Scene/Prefab.h"
+#include "Flare/Scene/Transform.h"
+#include "Flare/Scene/Hierarchy.h"
+
 #include "FlareEditor/AssetManager/StaticMeshImporter.h"
 #include "FlareEditor/AssetManager/EditorAssetManager.h"
+
+#include "FlareEditor/EditorLayer.h"
 
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 #include <assimp/material.h>
+
+#include <unordered_map>
 
 namespace Flare
 {
@@ -69,7 +77,7 @@ namespace Flare
 			{
 				if (subAssetMetadata->Type == AssetType::Material)
 					nameToHandle[subAssetMetadata->Name] = subAsset;
-				else
+				else if (subAssetMetadata->Type == AssetType::MaterialsTable)
 					materialsTableHandle = subAsset;
 			}
 		}
@@ -172,6 +180,101 @@ namespace Flare
 		}
 	}
 
+	class MeshHierarchyImporter
+	{
+	public:
+		MeshHierarchyImporter(const aiScene& scene, const AssetMetadata& metadata)
+			: m_Scene(scene), m_AssetMetadata(metadata) {}
+
+		void Import()
+		{
+			FLARE_PROFILE_FUNCTION();
+			AssetHandle prefabHandle = NULL_ASSET_HANDLE;
+
+			for (AssetHandle subAsset : m_AssetMetadata.SubAssets)
+			{
+				if (const auto* subAssetMetadata = AssetManager::GetAssetMetadata(subAsset))
+				{
+					if (subAssetMetadata->Type == AssetType::Prefab)
+						prefabHandle = subAsset;
+				}
+			}
+
+			Ref<EditorAssetManager> assetManager = As<EditorAssetManager>(AssetManager::GetInstance());
+
+			ECSContext& ecsContext = EditorLayer::GetInstance().GetECSContext();
+			m_Prefab = CreateRef<Prefab>(ecsContext.Components, ecsContext.Archetypes);
+
+			PrefabHierarchy& prefabHierarchy = m_Prefab->GetHierarchy();
+
+			{
+				std::vector<ComponentId> defaultArchetypeComponents =
+				{
+					COMPONENT_ID(TransformComponent),
+					COMPONENT_ID(LocalTransform),
+					COMPONENT_ID(Parent),
+					COMPONENT_ID(Children)
+				};
+
+				m_DefaultNodeArchetype = prefabHierarchy
+					.GetCompatibleArchetypes()
+					.FindOrCreateArchetype(Span<ComponentId>::FromVector(defaultArchetypeComponents))->Id;
+			}
+
+			{
+				std::vector<ComponentId> defaultArchetypeComponents =
+				{
+					COMPONENT_ID(TransformComponent),
+					COMPONENT_ID(LocalTransform),
+					COMPONENT_ID(Children)
+				};
+
+				m_DefaultRootArchetype = prefabHierarchy
+					.GetCompatibleArchetypes()
+					.FindOrCreateArchetype(Span<ComponentId>::FromVector(defaultArchetypeComponents))->Id;
+			}
+
+			VisitNode(*m_Scene.mRootNode, PrefabHierarchy::Node::INVALID_PARENT_NODE);
+
+			prefabHierarchy.EnsureAllocated();
+			prefabHierarchy.InitializeEntities();
+
+			if (assetManager->IsAssetHandleValid(prefabHandle))
+				assetManager->SetLoadedAsset(prefabHandle, m_Prefab);
+			else
+				assetManager->ImportMemoryOnlyAsset("Prefab", m_Prefab, m_AssetMetadata.Handle);
+		}
+	private:
+		void VisitNode(const aiNode& node, size_t parentIndex)
+		{
+			FLARE_PROFILE_FUNCTION();
+			auto& hierarchy = m_Prefab->GetHierarchy();
+
+			size_t nodeIndex = hierarchy.GetNodes().size();
+			nodeIndexMap[&node] = nodeIndex;
+
+			if (parentIndex == PrefabHierarchy::Node::INVALID_PARENT_NODE)
+				hierarchy.AddEntity(m_DefaultRootArchetype, parentIndex);
+			else
+				hierarchy.AddEntity(m_DefaultNodeArchetype, parentIndex);
+
+			for (uint32_t child = 0; child < node.mNumChildren; child++)
+			{
+				VisitNode(*node.mChildren[child], nodeIndex);
+			}
+		}
+	private:
+		const aiScene& m_Scene;
+
+		std::unordered_map<const aiNode*, size_t> nodeIndexMap;
+
+		ArchetypeId m_DefaultNodeArchetype = INVALID_ARCHETYPE_ID;
+		ArchetypeId m_DefaultRootArchetype = INVALID_ARCHETYPE_ID;
+
+		Ref<Prefab> m_Prefab = nullptr;
+		const AssetMetadata& m_AssetMetadata;
+	};
+
 	Ref<Mesh> MeshImporter::ImportMesh(const AssetMetadata& metadata)
 	{
 		FLARE_PROFILE_FUNCTION();
@@ -195,6 +298,11 @@ namespace Flare
 
 		StaticMeshImporter staticMeshImporter(scene);
 		staticMeshImporter.Import();
+
+		{
+			MeshHierarchyImporter hierarchyImporter(*scene, metadata);
+			hierarchyImporter.Import();
+		}
 
 		const SceneData& data = staticMeshImporter.GetSceneData();
 

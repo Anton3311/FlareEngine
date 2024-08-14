@@ -36,13 +36,32 @@ namespace Flare
 
 		void EnsureAllocated();
 
+		// Initializes all the components of each entity using a default constructor
+		//
+		// It is not save to call it multiple times or if any of the components were initialized externally
+		// by accessing and writing to directly entity data obtained from GetEntityData
+		void InitializeEntities();
+
 		inline const std::vector<Node>& GetNodes() const { return m_Nodes; }
 		inline bool IsEmpty() const { return m_Buffer == nullptr && m_BufferSize == 0; }
 
 		inline const Components& GetCompatibleComponents() const { return m_CompatibleComponentsRegistry; }
 		inline Archetypes& GetCompatibleArchetypes() const { return m_CompatibleArchetypes; }
-	private:
 
+		template<typename T>
+		T* TryGetNodeComponent(size_t nodeIndex)
+		{
+			uint8_t* nodeData = GetEntityData(nodeIndex);
+
+			std::optional<size_t> componentOffset = GetNodeComponentOffset(nodeIndex, COMPONENT_ID(T));
+			if (!componentOffset)
+				return nullptr;
+
+			return (T*)(nodeData + *componentOffset)
+		}
+	private:
+		std::optional<size_t> GetNodeComponentOffset(size_t nodeIndex, ComponentId component) const;
+	private:
 		void Release();
 		void ReleaseEntityData();
 	private:

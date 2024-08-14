@@ -145,6 +145,29 @@ namespace Flare
 		m_Buffer = new uint8_t[m_BufferSize];
 	}
 
+	void PrefabHierarchy::InitializeEntities()
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		for (size_t nodeIndex = 0; nodeIndex < m_Nodes.size(); nodeIndex++)
+		{
+			EntityHelper::DefaultConstruct(m_CompatibleArchetypes[m_Nodes[nodeIndex].Archetype], m_CompatibleComponentsRegistry, GetEntityData(nodeIndex));
+		}
+	}
+
+	std::optional<size_t> PrefabHierarchy::GetNodeComponentOffset(size_t nodeIndex, ComponentId component) const
+	{
+		const auto& node = m_Nodes[nodeIndex];
+
+		const ArchetypeRecord& archetype = m_CompatibleArchetypes[node.Archetype];
+		std::optional<size_t> componentIndex = archetype.TryGetComponentIndex(component);
+
+		if (!componentIndex)
+			return {};
+
+		return archetype.ComponentOffsets[*componentIndex];
+	}
+
 	void PrefabHierarchy::Release()
 	{
 		FLARE_PROFILE_FUNCTION();
