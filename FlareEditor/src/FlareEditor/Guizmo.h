@@ -9,4 +9,10 @@ namespace Flare
 		Rotate,
 		Scale,
 	};
+
+	enum class TransformationSpace
+	{
+		Local,
+		World,
+	};
 }

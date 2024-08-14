@@ -216,7 +216,7 @@ namespace Flare
 						}
 
 						const Children* childrenEntities = world.TryGetEntityComponent<const Children>(child);
-						if (childrenEntities)
+						if (childrenEntities && globalTransform)
 						{
 							PropagateTransformRecursively(world, *childrenEntities, *globalTransform);
 						}
@@ -225,7 +225,20 @@ namespace Flare
 			});
 	}
 
-	void TransformPropagationSystem::PropagateTransformRecursively(World& world, const Children& children, const TransformComponent& parentTransform) const
+	void TransformPropagationSystem::PropagateTransformToChildren(World& world, Entity entity)
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		const Children* children = world.TryGetEntityComponent<const Children>(entity);
+		const TransformComponent* globalTransform = world.TryGetEntityComponent<const TransformComponent>(entity);
+
+		if (children && globalTransform)
+		{
+			PropagateTransformRecursively(world, *children, *globalTransform);
+		}
+	}
+
+	void TransformPropagationSystem::PropagateTransformRecursively(World& world, const Children& children, const TransformComponent& parentTransform)
 	{
 		FLARE_PROFILE_FUNCTION();
 		

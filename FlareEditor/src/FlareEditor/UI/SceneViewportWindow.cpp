@@ -5,6 +5,7 @@
 #include "Flare/Math/Math.h"
 
 #include "Flare/Scene/Components.h"
+#include "Flare/Scene/Hierarchy.h"
 #include "Flare/Scene/Transform.h"
 #include "Flare/Scene/Scene.h"
 #include "Flare/Scene/Prefab.h"
@@ -106,7 +107,7 @@ namespace Flare
 						m_EditorCamera.SetRotationOrigin(transform->Position);
 				}
 			}
-				
+
 			m_Guizmo = guizmoMode;
 		}
 
@@ -156,7 +157,6 @@ namespace Flare
 			break;
 		}
 
-		World& world = GetScene()->GetECSWorld();
 		if (ImGui::BeginDragDropTarget())
 		{
 			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(ASSET_PAYLOAD_NAME))
@@ -171,68 +171,7 @@ namespace Flare
 
 		m_IsToolbarHovered = ImGui::IsAnyItemHovered();
 
-		ImGuiIO& io = ImGui::GetIO();
-
-		const EditorSelection& selection = EditorLayer::GetInstance().Selection;
-
-		bool showGuizmo = m_Guizmo != GuizmoMode::None;
-		bool hasSelection = selection.GetType() == EditorSelectionType::Entity && world.IsEntityAlive(selection.GetEntity());
-		if (showGuizmo && hasSelection)
-		{
-			Entity selectedEntity = selection.GetEntity();
-			ImGuizmo::SetOrthographic(false);
-			ImGuizmo::SetDrawlist();
-
-			ImVec2 windowPosition = ImGui::GetWindowPos();
-			ImGuizmo::SetRect(windowPosition.x + m_ViewportOffset.x,
-				windowPosition.y + m_ViewportOffset.y,
-				(float)m_Viewport.GetSize().x,
-				(float)m_Viewport.GetSize().y);
-
-			TransformComponent* transform = world.TryGetEntityComponent<TransformComponent>(selectedEntity);
-			if (transform)
-			{
-				glm::mat4 transformationMatrix = transform->GetTransformationMatrix();
-
-				// TODO: move snap values to editor settings
-				float snapValue = 0.5f;
-
-				ImGuizmo::OPERATION operation = (ImGuizmo::OPERATION)-1;
-				switch (m_Guizmo)
-				{
-				case GuizmoMode::Translate:
-					operation = ImGuizmo::TRANSLATE;
-					break;
-				case GuizmoMode::Rotate:
-					snapValue = 5.0f;
-					operation = ImGuizmo::ROTATE;
-					break;
-				case GuizmoMode::Scale:
-					operation = ImGuizmo::SCALE;
-					break;
-				default:
-					FLARE_CORE_ASSERT("Unhandled Gizmo type");
-				}
-
-				ImGuizmo::MODE mode = ImGuizmo::WORLD;
-
-				bool snappingEnabled =  ImGui::IsKeyDown(ImGuiKey_LeftCtrl) || ImGui::IsKeyDown(ImGuiKey_RightCtrl);
-				if (ImGuizmo::Manipulate(
-					glm::value_ptr(m_EditorCamera.GetViewMatrix()),
-					glm::value_ptr(m_EditorCamera.GetProjectionMatrix()),
-					operation, mode,
-					glm::value_ptr(transformationMatrix),
-					nullptr, snappingEnabled ? &snapValue : nullptr))
-				{
-					Math::DecomposeTransform(transformationMatrix,
-						transform->Position,
-						transform->Rotation,
-						transform->Scale);
-
-					transform->Rotation = glm::degrees(transform->Rotation);
-				}
-			}
-		}
+		HandleGuizmo();
 
 		if (m_RenderGraphInspector)
 		{
@@ -404,6 +343,39 @@ namespace Flare
 			ImGui::PopID();
 		}
 
+		// Transformation Space
+
+		ImGui::SameLine();
+
+		{
+			ImGui::PushID("TransformationSpace");
+
+			const char* spaceName = "";
+			switch (m_TransformationSpace)
+			{
+			case TransformationSpace::Local:
+				spaceName = "Local";
+				break;
+			case TransformationSpace::World:
+				spaceName = "World";
+				break;
+			default:
+				FLARE_CORE_ASSERT(false);
+			}
+
+			if (ImGui::BeginCombo("", spaceName))
+			{
+				if (ImGui::MenuItem("Local"))
+					m_TransformationSpace = TransformationSpace::Local;
+				if (ImGui::MenuItem("World"))
+					m_TransformationSpace = TransformationSpace::World;
+
+				ImGui::EndCombo();
+			}
+
+			ImGui::PopID();
+		}
+
 		ImGui::PopItemWidth();
 
 		ImGui::PopStyleVar(); // Window Padding
@@ -430,5 +402,134 @@ namespace Flare
 			}
 			}
 		}
+	}
+
+	void SceneViewportWindow::HandleGuizmo()
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		World& world = GetScene()->GetECSWorld();
+		const EditorSelection& selection = EditorLayer::GetInstance().Selection;
+
+		bool showGuizmo = m_Guizmo != GuizmoMode::None;
+		bool hasSelection = selection.GetType() == EditorSelectionType::Entity && world.IsEntityAlive(selection.GetEntity());
+
+		if (!showGuizmo || !hasSelection)
+			return;
+
+		Entity selectedEntity = selection.GetEntity();
+		ImGuizmo::SetOrthographic(false);
+		ImGuizmo::SetDrawlist();
+
+		ImVec2 windowPosition = ImGui::GetWindowPos();
+		ImGuizmo::SetRect(windowPosition.x + m_ViewportOffset.x,
+			windowPosition.y + m_ViewportOffset.y,
+			(float)m_Viewport.GetSize().x,
+			(float)m_Viewport.GetSize().y);
+
+		Math::AffineTransform* globalTransform = world.TryGetEntityComponent<TransformComponent>(selectedEntity);
+		Math::AffineTransform* localTransform = world.TryGetEntityComponent<LocalTransform>(selectedEntity);
+
+		const Parent* parent = world.TryGetEntityComponent<const Parent>(selectedEntity);
+
+		if (globalTransform && localTransform)
+		{
+			if (parent)
+			{
+				const TransformComponent* parentTransform = world.TryGetEntityComponent<const TransformComponent>(parent->ParentEntity);
+				if (parentTransform)
+				{
+					glm::mat4 parentTransformationMatrix = parentTransform->GetTransformationMatrix();
+					if (HandleTransformation(*localTransform, globalTransform, &parentTransformationMatrix))
+					{
+						*globalTransform = *localTransform;
+						globalTransform->ApplyTransform(*parentTransform);
+
+						TransformPropagationSystem::PropagateTransformToChildren(world, selectedEntity);
+					}
+				}
+			}
+		}
+		else if (globalTransform && !localTransform)
+		{
+			HandleTransformation(*globalTransform, nullptr, nullptr);
+		}
+		else if (!globalTransform && localTransform)
+		{
+			HandleTransformation(*localTransform, nullptr, nullptr);
+		}
+	}
+
+	bool SceneViewportWindow::HandleTransformation(Math::AffineTransform& localTransform,
+		const Math::AffineTransform* globalTransform,
+		const glm::mat4* parentTransform) const
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		glm::mat4 transformationMatrix;
+		glm::mat4 worldToLocalSpace;
+
+		if (globalTransform)
+			transformationMatrix = globalTransform->GetTransformationMatrix();
+		else
+			transformationMatrix = localTransform.GetTransformationMatrix();
+
+		if (parentTransform)
+			worldToLocalSpace = glm::inverse(*parentTransform);
+		else
+			worldToLocalSpace = glm::mat4(1.0f);
+
+
+		// TODO: move snap values to editor settings
+		float snapValue = 0.5f;
+
+		ImGuizmo::OPERATION operation = (ImGuizmo::OPERATION)-1;
+		switch (m_Guizmo)
+		{
+		case GuizmoMode::Translate:
+			operation = ImGuizmo::TRANSLATE;
+			break;
+		case GuizmoMode::Rotate:
+			snapValue = 5.0f;
+			operation = ImGuizmo::ROTATE;
+			break;
+		case GuizmoMode::Scale:
+			operation = ImGuizmo::SCALE;
+			break;
+		default:
+			FLARE_CORE_ASSERT(false);
+		}
+
+		ImGuizmo::MODE mode = ImGuizmo::WORLD;
+		switch (m_TransformationSpace)
+		{
+		case TransformationSpace::Local:
+			mode = ImGuizmo::LOCAL;
+			break;
+		case TransformationSpace::World:
+			mode = ImGuizmo::WORLD;
+			break;
+		default:
+			FLARE_CORE_ASSERT(false);
+		}
+
+		bool snappingEnabled = ImGui::IsKeyDown(ImGuiKey_LeftCtrl) || ImGui::IsKeyDown(ImGuiKey_RightCtrl);
+		if (ImGuizmo::Manipulate(
+			glm::value_ptr(m_EditorCamera.GetViewMatrix()),
+			glm::value_ptr(m_EditorCamera.GetProjectionMatrix()),
+			operation, mode,
+			glm::value_ptr(transformationMatrix),
+			nullptr, snappingEnabled ? &snapValue : nullptr))
+		{
+			Math::DecomposeTransform(worldToLocalSpace * transformationMatrix,
+				localTransform.Position,
+				localTransform.Rotation,
+				localTransform.Scale);
+
+			localTransform.Rotation = glm::degrees(localTransform.Rotation);
+			return true;
+		}
+
+		return false;
 	}
 }

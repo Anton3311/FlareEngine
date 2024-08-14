@@ -10,6 +10,11 @@
 
 namespace Flare
 {
+	namespace Math
+	{
+		struct AffineTransform;
+	}
+
 	class Scene;
 	class SceneViewportWindow : public ViewportWindow
 	{
@@ -40,10 +45,17 @@ namespace Flare
 		void RenderToolBar();
 
 		void HandleAssetDragAndDrop(AssetHandle handle);
+		void HandleGuizmo();
+
+		bool HandleTransformation(Math::AffineTransform& localTransform,
+			const Math::AffineTransform* globalTransform,
+			const glm::mat4* parentTransform) const;
 	private:
 		SceneViewSettings& m_SceneViewSettings;
 
 		GuizmoMode m_Guizmo = GuizmoMode::None;
+		TransformationSpace m_TransformationSpace = TransformationSpace::World;
+
 		EditorCamera m_EditorCamera;
 		EditorCameraController m_CameraController;
 		bool m_IsToolbarHovered = false;

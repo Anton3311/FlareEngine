@@ -55,6 +55,9 @@ namespace Flare::Math
 
 		AffineTransform(const glm::vec3& position, const glm::vec3& rotation, const glm::vec3& scale)
 			: Position(position), Rotation(rotation), Scale(scale) {}
+
+		// Transforms this transform by applying the given one
+		void ApplyTransform(const AffineTransform& transform);
         
 		glm::mat4 GetTransformationMatrix() const;
 		glm::vec3 TransformDirection(const glm::vec3& direction) const;
