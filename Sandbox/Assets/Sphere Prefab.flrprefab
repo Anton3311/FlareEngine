@@ -1,11 +1,38 @@
-Components:
-  - Name: struct Flare::TransformComponent
-    Data:
-      Position: [0, 0, 0]
-      Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
-  - Name: struct Flare::MeshComponent
-    Data:
-      Mesh: 10490832977963679498
-      Material: 13576769737354600278
-      Flags: 0
+- Parent: ~
+  Components:
+    - Name: struct Flare::MeshComponent
+      Data:
+        Mesh: 10490832977963679498
+        Material: 1806579514501821626
+        Flags: 0
+    - Name: struct Flare::Children
+      Data:
+        ChildrenEntities:
+          {}
+    - Name: struct Flare::TransformComponent
+      Data:
+        Position: [0, 0, 0]
+        Rotation: [0, 0, 0]
+        Scale: [0.00999999978, 0.00999999978, 0.00999999978]
+- Parent: 0
+  Components:
+    - Name: struct Flare::PointLight
+      Data:
+        Color: [0.850533843, 0, 0]
+        Intensity: 1108
+    - Name: struct Flare::Parent
+      Data:
+        ParentEntity
+    - Name: struct Flare::TransformComponent
+      Data:
+        Position: [5, 7, 0]
+        Rotation: [0, 0, 0]
+        Scale: [1, 1, 1]
+    - Name: struct Flare::LocalTransform
+      Data:
+        Position: [0, 0, 0]
+        Rotation: [0, 0, 0]
+        Scale: [0, 1, 1]
+    - Name: struct Flare::SerializationId
+      Data:
+        Id: 4691515898018660352

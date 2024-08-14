@@ -15,7 +15,7 @@ namespace Flare
 {
     PrefabEditor::PrefabEditor(ECSContext& context)
         : m_PreviewScene(CreateRef<Scene>(context)),
-        m_Entities(GetWorld(), EntitiesHierarchyFeatures::None),
+        m_Entities(GetWorld(), EntitiesHierarchyFeatures::CreateEntity | EntitiesHierarchyFeatures::DeleteEntity | EntitiesHierarchyFeatures::DuplicateEntity),
         m_Properties(GetWorld()), m_SelectedEntity(Entity()),
         m_ViewportWindow(m_SceneRenderer, m_SceneViewSettings, "Prefab Preview")
     {

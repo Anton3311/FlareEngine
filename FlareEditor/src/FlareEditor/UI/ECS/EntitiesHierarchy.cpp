@@ -36,7 +36,7 @@ namespace Flare
 
 		if (ImGui::BeginPopupContextWindow("Entity Hierarchy Context Menu"))
 		{
-			result |= RenderContextMenu(selectedEntity, nullptr);
+			result |= RenderContextMenu(selectedEntity, nullptr, true);
 			ImGui::EndMenu();
 		}
 
@@ -60,12 +60,17 @@ namespace Flare
 		return result;
 	}
 
-	bool EntitiesHierarchy::RenderContextMenu(Entity& selectedEntity, Entity* root)
+	bool EntitiesHierarchy::RenderContextMenu(Entity& selectedEntity, Entity* parent, bool isRoot)
 	{
 		FLARE_PROFILE_FUNCTION();
 
 		bool result = false;
-		if (HAS_BIT(m_Features, EntitiesHierarchyFeatures::CreateEntity))
+
+		bool isCreationSupported = HAS_BIT(m_Features, EntitiesHierarchyFeatures::CreateEntity);
+		if (isRoot && !HAS_BIT(m_Features, EntitiesHierarchyFeatures::MultipleRootEntities))
+			isCreationSupported = false;
+
+		if (isCreationSupported)
 		{
 			if (ImGui::BeginMenu("Create"))
 			{
@@ -123,9 +128,9 @@ namespace Flare
 					result = true;
 				}
 
-				if (result && root)
+				if (result && parent)
 				{
-					HierarchyHelper::AddParent(*m_World, selectedEntity, *root);
+					HierarchyHelper::AddParent(*m_World, selectedEntity, *parent);
 					m_World->AddEntityComponent(selectedEntity, LocalTransform());
 				}
 
@@ -243,7 +248,7 @@ namespace Flare
 		bool result = false;
 		if (ImGui::BeginPopupContextItem())
 		{
-			RenderContextMenu(selectedEntity, &entity);
+			RenderContextMenu(selectedEntity, &entity, false);
 
 			if (HAS_BIT(m_Features, EntitiesHierarchyFeatures::DeleteEntity) && ImGui::MenuItem("Delete"))
 				m_World->DeleteEntity(entity);

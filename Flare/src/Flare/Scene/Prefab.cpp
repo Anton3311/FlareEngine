@@ -3,6 +3,7 @@
 #include "FlareCore/Profiler/Profiler.h"
 
 #include "Flare/AssetManager/AssetManager.h"
+#include "Flare/Scene/Hierarchy.h"
 
 #include <yaml-cpp/yaml.h>
 
@@ -37,12 +38,16 @@ namespace Flare
 
 		m_Nodes.resize(entities.size());
 
+		std::unordered_map<Entity, size_t> entityToNode;
+
 		for (size_t entityIndex = 0; entityIndex < m_Nodes.size(); entityIndex++)
 		{
 			Node& node = m_Nodes[entityIndex];
 			node.Archetype = entities[entityIndex].Archetype;
 			node.DataOffset = m_BufferSize; // TODO: Consider alignment?
 			node.Size = m_CompatibleArchetypes[node.Archetype].EntitySize;
+
+			entityToNode[entities[entityIndex].Id] = entityIndex;
 
 			m_BufferSize += node.Size;
 		}
@@ -69,24 +74,51 @@ namespace Flare
 			}
 		}
 
-		// TODO: Patch entity references, because the ones copied are only valid inside the given world
+		// NOTE: Parent component is hardcoded, any other component that contains a reference to an entity will not be serialized
+		for (size_t nodeIndex = 0; nodeIndex < m_Nodes.size(); nodeIndex++)
+		{
+			const EntityRecord& entityRecord = entities[nodeIndex];
+
+			const Parent* parent = world.TryGetEntityComponent<const Parent>(entityRecord.Id);
+			if (parent && world.IsEntityAlive(parent->ParentEntity))
+			{
+				auto it = entityToNode.find(parent->ParentEntity);
+				if (it == entityToNode.end())
+				{
+					FLARE_CORE_WARN("PrefabHierarchy: Entity {} has invalid parent entity {}", entityRecord.Id.GetIndex(), parent->ParentEntity.GetIndex());
+					continue;
+				}
+				
+				m_Nodes[nodeIndex].ParentNode = it->second;
+			}
+		}
 	}
 
-	void PrefabHierarchy::AddEntity(ArchetypeId archetype)
+	void PrefabHierarchy::AddEntity(ArchetypeId archetype, size_t parentIndex)
 	{
+		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(m_CompatibleArchetypes.IsIdValid(archetype));
 		FLARE_CORE_ASSERT(IsEmpty());
 
 		const ArchetypeRecord& record = m_CompatibleArchetypes[archetype];
 
 		size_t offset = 0;
-		if (m_Nodes.size() > 0)
+		if (m_Nodes.size() == 0)
+		{
+			FLARE_CORE_ASSERT(parentIndex == Node::INVALID_PARENT_NODE, "Root node is not allowed to have a parent node");
+		}
+		else
+		{
+			FLARE_CORE_ASSERT(parentIndex != Node::INVALID_PARENT_NODE, "All nodes (except the root) must have a valid parent node");
+			FLARE_CORE_ASSERT(parentIndex < m_Nodes.size());
 			offset = m_Nodes.back().DataOffset + m_Nodes.back().Size;
+		}
 
 		Node& node = m_Nodes.emplace_back();
 		node.Archetype = archetype;
 		node.DataOffset = offset;
 		node.Size = record.EntitySize;
+		node.ParentNode = parentIndex;
 	}
 
 	uint8_t* PrefabHierarchy::GetEntityData(size_t nodeIndex) const
@@ -162,25 +194,25 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(&world.Components == &m_CompatibleComponentsRegistry);
-		return IntantiateHierarchy(world);
+		return InstantiateHierarchy(world);
 	}
 
-	Entity Prefab::IntantiateHierarchy(World& world) const
+	Entity Prefab::InstantiateHierarchy(World& world) const
 	{
 		FLARE_PROFILE_FUNCTION();
 
 		const auto& nodes = m_Hierarchy.GetNodes();
 		FLARE_CORE_ASSERT(nodes.size() > 0);
 
-		Entity rootEntity = Entity();
+		std::vector<Entity> createdEntities(m_Hierarchy.GetNodes().size(), Entity());
 
 		for (size_t i = 0; i < nodes.size(); i++)
 		{
 			const auto& node = nodes[i];
+			bool isRoot = i == 0;
 
 			Entity entity = world.Entities.CreateEntityFromArchetype(node.Archetype, ComponentInitializationStrategy::DefaultConstructor);
-			if (i == 0)
-				rootEntity = entity;
+			createdEntities[i] = entity;
 
 			const uint8_t* hierarchyEntityData = m_Hierarchy.GetEntityData(i);
 
@@ -194,11 +226,34 @@ namespace Flare
 				size_t componentOffset = archetype.ComponentOffsets[componentIndex];
 				uint8_t* componentData = *worldEntityData + componentOffset;
 
-				component.Initializer->Type.Functions.CopyConstructor(componentData, hierarchyEntityData + componentOffset);
+				if (component.Id == COMPONENT_ID(Children))
+				{
+					component.Initializer->Type.Functions.DefaultConstructor(componentData);
+				}
+				else
+				{
+					component.Initializer->Type.Functions.CopyConstructor(componentData, hierarchyEntityData + componentOffset);
+				}
+			}
+
+			if (!isRoot)
+			{
+				Parent* parent = world.TryGetEntityComponent<Parent>(entity);
+				FLARE_CORE_ASSERT(parent, "An entity that is not at the root of PrefabHierarchy must have a Parent component");
+
+				FLARE_CORE_ASSERT(node.ParentNode != PrefabHierarchy::Node::INVALID_PARENT_NODE);
+
+				parent->ParentEntity = createdEntities[node.ParentNode];
+
+				Children* children = world.TryGetEntityComponent<Children>(parent->ParentEntity);
+				FLARE_CORE_ASSERT(children);
+
+				children->ChildrenEntities.push_back(createdEntities[i]);
 			}
 		}
 
-		return rootEntity;
+		FLARE_CORE_ASSERT(createdEntities.size() > 0);
+		return createdEntities[0];
 	}
 
 	//

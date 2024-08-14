@@ -17,16 +17,20 @@ namespace Flare
 	public:
 		struct Node
 		{
+			static constexpr size_t INVALID_PARENT_NODE = SIZE_MAX;
+
 			size_t DataOffset = 0;
 			size_t Size = 0;
 			ArchetypeId Archetype = INVALID_ARCHETYPE_ID;
+
+			size_t ParentNode = INVALID_PARENT_NODE;
 		};
 
 		PrefabHierarchy(const Components& compatibleComponents, Archetypes& compatibleArchetypes);
 		~PrefabHierarchy();
 
 		void CopyFromWorld(const World& world);
-		void AddEntity(ArchetypeId archetype);
+		void AddEntity(ArchetypeId archetype, size_t parentIndex);
 
 		uint8_t* GetEntityData(size_t nodeIndex) const;
 
@@ -68,7 +72,7 @@ namespace Flare
 		inline PrefabHierarchy& GetHierarchy() { return m_Hierarchy; }
 		inline const PrefabHierarchy& GetHierarchy() const { return m_Hierarchy; }
 	private:
-		Entity IntantiateHierarchy(World& world) const;
+		Entity InstantiateHierarchy(World& world) const;
 	private:
 		PrefabHierarchy m_Hierarchy;
 

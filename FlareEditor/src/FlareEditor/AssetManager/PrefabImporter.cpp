@@ -43,19 +43,25 @@ namespace Flare
 
 	}
 
-	static void SerializePrefabHierarchy(YAML::Emitter& emitter, const PrefabHierarchy& hierarachy)
+	static void SerializePrefabHierarchy(YAML::Emitter& emitter, const PrefabHierarchy& hierarchy)
 	{
 		FLARE_PROFILE_FUNCTION();
 
 		emitter << YAML::BeginSeq;
 
-		const auto& nodes = hierarachy.GetNodes();
+		const auto& nodes = hierarchy.GetNodes();
 		for (size_t nodeIndex = 0; nodeIndex < nodes.size(); nodeIndex++)
 		{
 			emitter << YAML::BeginMap;
 
+			emitter << YAML::Key << "Parent" << YAML::Value;
+			if (nodes[nodeIndex].ParentNode == PrefabHierarchy::Node::INVALID_PARENT_NODE)
+				emitter << YAML::Null;
+			else
+				emitter << nodes[nodeIndex].ParentNode;
+
 			emitter << YAML::Key << "Components" << YAML::Value << YAML::BeginSeq;
-			SerializeNodeComponents(emitter, hierarachy, nodeIndex);
+			SerializeNodeComponents(emitter, hierarchy, nodeIndex);
 			emitter << YAML::EndSeq;
 
 			emitter << YAML::EndMap;
@@ -100,9 +106,15 @@ namespace Flare
 			YAML::Node components = entityNode["Components"];
 			if (!components)
 				continue;
-
 			EntityDataNode& dataNode = dataNodes.emplace_back();
 			std::vector<ComponentId> ids;
+
+			size_t parent = PrefabHierarchy::Node::INVALID_PARENT_NODE;
+			if (YAML::Node parentNode = entityNode["Parent"])
+			{
+				if (!parentNode.IsNull())
+					parent = parentNode.as<size_t>();
+			}
 
 			for (YAML::Node componentNode : components)
 			{
@@ -131,7 +143,7 @@ namespace Flare
 
 			dataNode.Archetype = archetype->Id;
 
-			hierarchy.AddEntity(archetype->Id);
+			hierarchy.AddEntity(archetype->Id, parent);
 		}
 
 		hierarchy.EnsureAllocated();

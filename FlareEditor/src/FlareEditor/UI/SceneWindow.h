@@ -7,6 +7,7 @@ namespace Flare
 	class SceneWindow
 	{
 	public:
+		SceneWindow();
 		void OnImGuiRender();
 	private:
 		EntitiesHierarchy m_Hierarchy;

@@ -12,8 +12,9 @@ namespace Flare
 		CreateEntity = 1,
 		DeleteEntity = 2,
 		DuplicateEntity = 4,
+		MultipleRootEntities = 8,
 
-		All = CreateEntity | DeleteEntity | DuplicateEntity,
+		All = CreateEntity | DeleteEntity | DuplicateEntity | MultipleRootEntities,
 	};
 	FLARE_IMPL_ENUM_BITFIELD(EntitiesHierarchyFeatures);
 
@@ -21,14 +22,14 @@ namespace Flare
 	class EntitiesHierarchy
 	{
 	public:
-		EntitiesHierarchy(EntitiesHierarchyFeatures features = EntitiesHierarchyFeatures::All);
-		EntitiesHierarchy(World& world, EntitiesHierarchyFeatures features = EntitiesHierarchyFeatures::All);
+		EntitiesHierarchy(EntitiesHierarchyFeatures features);
+		EntitiesHierarchy(World& world, EntitiesHierarchyFeatures features);
 
 		bool OnRenderImGui(Entity& selectedEntity);
 
 		inline void SetWorld(World& world) { m_World = &world; }
 	private:
-		bool RenderContextMenu(Entity& selectedEntity, Entity* root);
+		bool RenderContextMenu(Entity& selectedEntity, Entity* parent, bool isRoot);
 		
 		Entity DuplicateEntity(Entity entity);
 	private:

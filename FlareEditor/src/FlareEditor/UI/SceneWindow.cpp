@@ -9,6 +9,11 @@
 
 namespace Flare
 {
+	SceneWindow::SceneWindow()
+		: m_Hierarchy(EntitiesHierarchyFeatures::All)
+	{
+	}
+
 	void SceneWindow::OnImGuiRender()
 	{
 		ImGui::Begin("Scene");
