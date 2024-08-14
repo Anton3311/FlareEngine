@@ -253,10 +253,13 @@ namespace Flare
 
             Ref<Scene> activeScene = Scene::GetActive();
 
-            if (m_Mode == EditorMode::Play && !m_PlaymodePaused)
-                activeScene->OnUpdateRuntime();
-            else if (m_Mode == EditorMode::Edit && activeScene)
-                activeScene->OnUpdateEditor();
+            if (activeScene)
+            {
+				if (m_Mode == EditorMode::Play && !m_PlaymodePaused)
+					activeScene->OnUpdateRuntime();
+
+				activeScene->OnUpdate();
+            }
         }
 
         if (m_SceneRenderer)

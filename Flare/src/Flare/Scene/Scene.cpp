@@ -21,6 +21,7 @@ namespace Flare
 	Scene::Scene(ECSContext& context)
 		: Asset(AssetType::Scene), m_World(context)
 	{
+		FLARE_PROFILE_FUNCTION();
 		m_World.MakeCurrent();
 		Initialize();
 	}
@@ -31,6 +32,7 @@ namespace Flare
 
 	void Scene::Initialize()
 	{
+		FLARE_PROFILE_FUNCTION();
 		SystemsManager& systemsManager = m_World.GetSystemsManager();
 		systemsManager.CreateGroup("Debug Rendering");
 
@@ -57,38 +59,35 @@ namespace Flare
 
 	void Scene::InitializeRuntime()
 	{
+		FLARE_PROFILE_FUNCTION();
 		m_World.GetSystemsManager().RegisterSystems();
 		m_World.GetSystemsManager().RebuildExecutionGraphs();
 	}
 
 	void Scene::OnRuntimeStart()
 	{
+		FLARE_PROFILE_FUNCTION();
 		m_World.GetSystemsManager().ExecuteGroup(m_OnRuntimeStartGroup);
 	}
 
 	void Scene::OnRuntimeEnd()
 	{
+		FLARE_PROFILE_FUNCTION();
 		m_World.GetSystemsManager().ExecuteGroup(m_OnRuntimeEndGroup);
 	}
 
 	void Scene::OnUpdateRuntime()
 	{
+		FLARE_PROFILE_FUNCTION();
 		m_World.GetSystemsManager().ExecuteGroup(m_OnFrameStart);
 		m_World.GetSystemsManager().ExecuteGroup(m_ScriptingUpdateGroup);
 		m_World.GetSystemsManager().ExecuteGroup(m_LateUpdateGroup);
 		m_World.GetSystemsManager().ExecuteGroup(m_OnFrameEnd);
-
-		// TODO: should probably move out of here, because OnUpdateRuntime is called
-		//       only if the game isn't paused, however clearing deleted entites should
-		//       be done regardless of the pause state
-		m_World.Entities.ClearQueuedForDeletion();
-		m_World.Entities.ClearCreatedEntitiesQueryResult();
-
-		UpdateEnvironmentSettings();
 	}
 
-	void Scene::OnUpdateEditor()
+	void Scene::OnUpdate()
 	{
+		FLARE_PROFILE_FUNCTION();
 		m_World.GetSystemsManager().ExecuteGroup(m_SceneHierarchyUpdate);
 
 		m_World.Entities.ClearQueuedForDeletion();

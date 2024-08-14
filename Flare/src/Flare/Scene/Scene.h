@@ -31,7 +31,7 @@ namespace Flare
 		void OnRuntimeEnd();
 
 		void OnUpdateRuntime();
-		void OnUpdateEditor();
+		void OnUpdate();
 		void OnViewportResize(uint32_t width, uint32_t height);
 
 		World& GetECSWorld();

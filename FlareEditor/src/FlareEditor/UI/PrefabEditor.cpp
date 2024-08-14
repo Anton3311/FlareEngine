@@ -68,6 +68,8 @@ namespace Flare
     void PrefabEditor::OnRenderImGui(bool& show)
     {
         FLARE_PROFILE_FUNCTION();
+        m_PreviewScene->OnUpdate();
+
         m_SceneRenderer->CollectSceneData();
 
         m_ViewportWindow.OnRenderViewport();
