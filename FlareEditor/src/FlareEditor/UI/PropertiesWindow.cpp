@@ -14,6 +14,7 @@
 #include "FlareEditor/EditorLayer.h"
 #include "FlareEditor/AssetManager/EditorShaderCache.h"
 #include "FlareEditor/AssetManager/MaterialImporter.h"
+#include "FlareEditor/AssetManager/MeshImportSettings.h"
 #include "FlareEditor/AssetManager/SpriteImporter.h"
 
 #include <imgui.h>
@@ -21,6 +22,7 @@
 namespace Flare
 {
 	TextureImportSettings s_SelectedTextureImportSettings;
+	MeshImportSettings s_SelectedMeshImportSettings;
 
 	PropertiesWindow::PropertiesWindow(AssetManagerWindow& assetManagerWindow)
 		: m_AssetManagerWindow(assetManagerWindow) {}
@@ -38,6 +40,10 @@ namespace Flare
 			case AssetType::Texture:
 				s_SelectedTextureImportSettings = TextureImportSettings();
 				TextureImporter::DeserializeImportSettings(handle, s_SelectedTextureImportSettings);
+				break;
+			case AssetType::Mesh:
+				s_SelectedMeshImportSettings = MeshImportSettings();
+				MeshImportSettingsSerializer::Deserialize(handle, s_SelectedMeshImportSettings);
 				break;
 			}
 		});
@@ -136,6 +142,10 @@ namespace Flare
 		case AssetType::Mesh:
 		{
 			Ref<const Mesh> mesh = AssetManager::GetAsset<const Mesh>(handle);
+
+			RenderMeshImportSettingsEditor(handle, s_SelectedMeshImportSettings);
+
+			ImGui::SeparatorText("Mesh Info");
 
 			if (ImGui::BeginTable("MeshInfo", 2))
 			{
@@ -325,6 +335,46 @@ namespace Flare
 				ImGuiLayer::GetId(texture),
 				ImVec2(availiableContentSize.x, availiableContentSize.x / aspectRatio),
 				ImVec2(0, 1), ImVec2(1, 0), ImVec4(1.0f, 1.0f, 1.0f, 1.0f), style.Colors[ImGuiCol_Border]);
+
+			ImGui::EndChild();
+		}
+
+		return false;
+	}
+
+	bool PropertiesWindow::RenderMeshImportSettingsEditor(AssetHandle handle, MeshImportSettings& importSettings)
+	{
+		FLARE_PROFILE_FUNCTION();
+		FLARE_CORE_ASSERT(AssetManager::IsAssetHandleValid(handle));
+		FLARE_CORE_ASSERT(AssetManager::GetAssetMetadata(handle)->Type == AssetType::Mesh);
+
+		if (ImGui::Button("Save"))
+		{
+			MeshImportSettingsSerializer::Serialize(handle, importSettings);
+			As<EditorAssetManager>(AssetManager::GetInstance())->ReloadAsset(handle);
+		}
+
+		Ref<const Texture> texture = AssetManager::GetAsset<Texture>(handle);
+		FLARE_CORE_ASSERT(texture);
+
+		if (ImGui::BeginChild("Texture Settings"))
+		{
+			const ImGuiStyle& style = ImGui::GetStyle();
+			if (EditorGUI::BeginPropertyGrid())
+			{
+				EditorGUI::BoolPropertyField("Import Materials", importSettings.ImportMaterials);
+
+				if (!importSettings.ImportMaterials)
+				{
+					EditorGUI::AssetField("Default Material", importSettings.DefaultMaterial, &Material::_Asset);
+				}
+				else
+				{
+					importSettings.DefaultMaterial = NULL_ASSET_HANDLE;
+				}
+
+				EditorGUI::EndPropertyGrid();
+			}
 
 			ImGui::EndChild();
 		}

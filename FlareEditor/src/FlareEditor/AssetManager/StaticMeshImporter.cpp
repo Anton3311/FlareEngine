@@ -3,6 +3,8 @@
 #include "FlareCore/Log.h"
 #include "FlareCore/Profiler/Profiler.h"
 
+#include "FlareEditor/AssetManager/MeshImportSettings.h"
+
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
@@ -52,7 +54,9 @@ namespace Flare
 		for (uint32_t i = 0; i < node->mNumMeshes; i++)
 		{
 			aiMesh* nodeMesh = m_Scene->mMeshes[node->mMeshes[i]];
-			m_SceneData.UsedMaterials.push_back(nodeMesh->mMaterialIndex);
+
+			if (m_ImportSettings.ImportMaterials)
+				m_SceneData.UsedMaterials.push_back(nodeMesh->mMaterialIndex);
 
 			size_t subMeshStart = m_VertexOffset;
 			size_t subMeshEnd = m_VertexOffset + (size_t)nodeMesh->mNumVertices;

@@ -15,6 +15,7 @@
 #include "Flare/Scene/Transform.h"
 #include "Flare/Scene/Hierarchy.h"
 
+#include "FlareEditor/AssetManager/MeshImportSettings.h"
 #include "FlareEditor/AssetManager/StaticMeshImporter.h"
 #include "FlareEditor/AssetManager/EditorAssetManager.h"
 
@@ -282,6 +283,9 @@ namespace Flare
 		if (metadata.Path.extension() == ".fbx")
 			postProcessSteps |= aiProcess_FlipUVs;
 
+		MeshImportSettings importSettings{};
+		MeshImportSettingsSerializer::Deserialize(metadata.Handle, importSettings);
+
 		Assimp::Importer importer;
 		const aiScene* scene = nullptr;
 
@@ -296,7 +300,7 @@ namespace Flare
 			return nullptr;
 		}
 
-		StaticMeshImporter staticMeshImporter(scene);
+		StaticMeshImporter staticMeshImporter(scene, importSettings);
 		staticMeshImporter.Import();
 
 		{
@@ -329,7 +333,10 @@ namespace Flare
 			mesh->AddSubMesh(subMesh);
 		}
 
-		ImportMaterials(metadata, scene, data.UsedMaterials);
+		if (importSettings.ImportMaterials)
+		{
+			ImportMaterials(metadata, scene, data.UsedMaterials);
+		}
 
 		return mesh;
 	}

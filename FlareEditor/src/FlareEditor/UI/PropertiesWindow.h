@@ -8,6 +8,7 @@
 
 namespace Flare
 {
+	struct MeshImportSettings;
 	class PropertiesWindow
 	{
 	public:
@@ -19,6 +20,7 @@ namespace Flare
 		void RenderAssetProperties(AssetHandle handle);
 
 		bool RenderTextureSettingsEditor(AssetHandle handle, TextureImportSettings& importSettings);
+		bool RenderMeshImportSettingsEditor(AssetHandle handle, MeshImportSettings& importSettings);
 		bool RenderMaterialEditor(AssetHandle handle);
 	private:
 		AssetManagerWindow& m_AssetManagerWindow;

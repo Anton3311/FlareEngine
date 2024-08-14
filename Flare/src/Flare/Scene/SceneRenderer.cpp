@@ -484,10 +484,20 @@ namespace Flare
 					}
 					else
 					{
-						submitionQueue.Submit(mesh,
-							Span<AssetHandle>::FromVector(currentMaterialsTable->Materials),
-							Math::Compact3DTransform(transform.GetTransformationMatrix()),
-							meshes[entity].Flags);
+						if (currentMaterialsTable)
+						{
+							submitionQueue.Submit(mesh,
+								Span<AssetHandle>::FromVector(currentMaterialsTable->Materials),
+								Math::Compact3DTransform(transform.GetTransformationMatrix()),
+								meshes[entity].Flags);
+						}
+						else
+						{
+							submitionQueue.Submit(mesh,
+								Renderer::GetErrorMaterial(),
+								Math::Compact3DTransform(transform.GetTransformationMatrix()),
+								meshes[entity].Flags);
+						}
 					}
 				}
 			});

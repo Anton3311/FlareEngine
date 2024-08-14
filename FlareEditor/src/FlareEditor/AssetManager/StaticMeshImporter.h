@@ -12,6 +12,8 @@ struct aiMesh;
 
 namespace Flare
 {
+	struct MeshImportSettings;
+
 	struct SceneData
 	{
 		IndexBuffer::IndexFormat IndexFormat = IndexBuffer::IndexFormat::UInt32;
@@ -33,8 +35,8 @@ namespace Flare
 	class StaticMeshImporter
 	{
 	public:
-		StaticMeshImporter(const aiScene* scene)
-			: m_Scene(scene) {}
+		StaticMeshImporter(const aiScene* scene, const MeshImportSettings& importSettings)
+			: m_Scene(scene), m_ImportSettings(importSettings) {}
 
 		void Import();
 
@@ -50,6 +52,8 @@ namespace Flare
 		void CountVerticesAndIndicesRecursively(const aiNode* node, size_t& vertexCount, size_t& indexCount);
 		void CountVerticesAndIndices(const aiNode* node, size_t& vertexCount, size_t& indexCount);
 	private:
+		const MeshImportSettings& m_ImportSettings;
+
 		size_t m_VertexOffset = 0;
 		size_t m_IndexOffset = 0;
 
