@@ -181,6 +181,15 @@ namespace Flare
 		}
 	}
 
+	inline static glm::mat4 ConvertToColumnMajor(const aiMatrix4x4& matrix)
+	{
+		return glm::mat4(
+			matrix.a1, matrix.b1, matrix.c1, matrix.d1,
+			matrix.a2, matrix.b2, matrix.c2, matrix.d2,
+			matrix.a3, matrix.b3, matrix.c3, matrix.d3,
+			matrix.d4, matrix.b4, matrix.c4, matrix.d4);
+	}
+
 	class MeshHierarchyImporter
 	{
 	public:
@@ -240,6 +249,12 @@ namespace Flare
 			prefabHierarchy.EnsureAllocated();
 			prefabHierarchy.InitializeEntities();
 
+			{
+				const Math::AffineTransform identityTransform;
+
+				CopyTransforms(*m_Scene.mRootNode, identityTransform);
+			}
+
 			if (assetManager->IsAssetHandleValid(prefabHandle))
 				assetManager->SetLoadedAsset(prefabHandle, m_Prefab);
 			else
@@ -262,6 +277,29 @@ namespace Flare
 			for (uint32_t child = 0; child < node.mNumChildren; child++)
 			{
 				VisitNode(*node.mChildren[child], nodeIndex);
+			}
+		}
+
+		void CopyTransforms(const aiNode& node, const Math::AffineTransform& parentTransform)
+		{
+			FLARE_PROFILE_FUNCTION();
+			PrefabHierarchy& hierarchy = m_Prefab->GetHierarchy();
+
+			size_t nodeIndex = nodeIndexMap[&node];
+
+			Math::AffineTransform* globalTransform = hierarchy.TryGetNodeComponent<TransformComponent>(nodeIndex);
+			Math::AffineTransform* localTransform = hierarchy.TryGetNodeComponent<LocalTransform>(nodeIndex);
+
+			glm::mat4 transformRelativeToParent = ConvertToColumnMajor(node.mTransformation);
+			Math::DecomposeTransform(transformRelativeToParent, localTransform->Position, localTransform->Rotation, localTransform->Scale);
+
+			*globalTransform = *localTransform;
+			globalTransform->ApplyTransform(parentTransform);
+
+			for (uint32_t child = 0; child < node.mNumChildren; child++)
+			{
+				const aiNode* childNode = node.mChildren[child];
+				CopyTransforms(*childNode, *globalTransform);
 			}
 		}
 	private:
