@@ -204,6 +204,32 @@ namespace Flare
         }
     };
 
+    //
+    // MeshRenderer
+    //
+
+    struct FLARE_API MeshRenderer
+    {
+        FLARE_COMPONENT;
+
+        Ref<Mesh> Mesh = nullptr;
+        std::vector<Ref<Material>> Materials;
+        MeshRenderFlags Flags = MeshRenderFlags::None;
+    };
+
+    template<>
+    struct TypeSerializer<MeshRenderer>
+    {
+        void OnSerialize(MeshRenderer& meshRenderer, SerializationStream& stream)
+        {
+            stream.Serialize("Mesh", SerializationValue(meshRenderer.Mesh));
+            stream.Serialize("Materials", SerializationValue(meshRenderer.Materials));
+
+            using FlagsUnderlyingType = std::underlying_type_t<decltype(meshRenderer.Flags)>;
+            stream.Serialize("Flags", SerializationValue(reinterpret_cast<FlagsUnderlyingType&>(meshRenderer.Flags)));
+        }
+    };
+
 
 
     struct FLARE_API Decal

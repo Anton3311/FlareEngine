@@ -430,6 +430,7 @@ namespace Flare
 		config.Group = *groupId;
 
 		m_Query = world.NewQuery().All().With<TransformComponent, MeshComponent>().Build();
+		m_Query2 = world.NewQuery().All().With<TransformComponent, MeshRenderer>().Build();
 	}
 
 	void MeshRendererSystem::OnUpdate(World& world, SystemExecutionContext& context)
@@ -499,6 +500,21 @@ namespace Flare
 								meshes[entity].Flags);
 						}
 					}
+				}
+			});
+
+		m_Query2.ForEachChunk([&](QueryChunk chunk, ComponentView<const TransformComponent> transforms, ComponentView<MeshRenderer> meshRenderers)
+			{
+				for (auto entity : chunk)
+				{
+					MeshRenderer& meshRenderer = meshRenderers[entity];
+					if (meshRenderer.Mesh == nullptr)
+						continue;
+
+					submitionQueue.Submit(meshRenderer.Mesh,
+						Span<Ref<Material>>::FromVector(meshRenderer.Materials),
+						Math::Compact3DTransform(transforms[entity].GetTransformationMatrix()),
+						meshRenderer.Flags);
 				}
 			});
 	}

@@ -26,6 +26,34 @@ namespace Flare
 
 	FLARE_IMPL_ENUM_BITFIELD(MeshRenderFlags);
 
+	class FLARE_API SharedMesh
+	{
+	public:
+		struct MeshOffset
+		{
+			size_t VertexOffset = 0;
+			size_t IndexOffset = 0;
+		};
+
+		SharedMesh(size_t vertexCount, IndexBuffer::IndexFormat indexFormat, size_t indexCount);
+
+		MeshOffset AllocateMesh(size_t vertexCount, size_t indexCount);
+
+		inline IndexBuffer::IndexFormat GetIndexFormat() const { return IndexBuffer->GetIndexFormat(); }
+	public:
+		Ref<IndexBuffer> IndexBuffer = nullptr;
+		Ref<VertexBuffer> Vertices = nullptr;
+		Ref<VertexBuffer> Normals = nullptr;
+		Ref<VertexBuffer> Tangents = nullptr;
+		Ref<VertexBuffer> UVs = nullptr;
+	private:
+		size_t m_VertexCount = 0;
+		size_t m_IndexCount = 0;
+
+		size_t m_VertexOffset = 0;
+		size_t m_IndexOffset = 0;
+	};
+
 	class FLARE_API Mesh : public Asset
 	{
 	public:
@@ -43,13 +71,16 @@ namespace Flare
 			Span<const glm::vec3> tangents,
 			Span<const glm::vec2> uvs);
 
-		~Mesh();
+		Mesh(Ref<SharedMesh> sharedMesh,
+			MemorySpan indices,
+			Span<const glm::vec3> vertices,
+			Span<const glm::vec3> normals,
+			Span<const glm::vec3> tangents,
+			Span<const glm::vec2> uvs);
 
-		virtual void AddSubMesh(const Span<glm::vec3>& vertices,
-			const MemorySpan& indices,
-			const Span<const glm::vec3>& normals,
-			const Span<const glm::vec3>& tangents,
-			const Span<const glm::vec2>& uvs);
+		Mesh(Ref<SharedMesh> sharedMesh, std::vector<SubMesh>&& subMeshes);
+
+		~Mesh();
 
 		void AddSubMesh(const SubMesh& subMesh);
 
@@ -86,6 +117,8 @@ namespace Flare
 		std::string m_DebugName;
 		IndexBuffer::IndexFormat m_IndexFormat;
 
+		Ref<SharedMesh> m_SharedMesh = nullptr;
+
 		Math::AABB m_Bounds;
 
 		size_t m_VertexBufferSize = 0;
@@ -101,5 +134,7 @@ namespace Flare
 		Ref<VertexBuffer> m_UVs = nullptr;
 
 		std::vector<SubMesh> m_SubMeshes;
+
+		friend class SharedMesh;
 	};
 }

@@ -77,6 +77,7 @@ namespace Flare
 		void OnUpdate(World& world, SystemExecutionContext& context) override;
 	private:
 		Query m_Query;
+		Query m_Query2;
 	};
 
 	struct DecalRendererSystem : public System

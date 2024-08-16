@@ -5,6 +5,8 @@
 
 #include <glm/glm.hpp>
 #include <vector>
+#include <unordered_map>
+#include <unordered_set>
 
 struct aiScene;
 struct aiNode;
@@ -12,7 +14,14 @@ struct aiMesh;
 
 namespace Flare
 {
+	class Prefab;
 	struct MeshImportSettings;
+
+	struct NodeMesh
+	{
+		Ref<Mesh> Mesh = nullptr;
+		std::vector<uint32_t> MaterialIndices;
+	};
 
 	struct SceneData
 	{
@@ -29,7 +38,15 @@ namespace Flare
 		size_t MaxSubMeshIndexCount = 0;
 
 		std::vector<SubMesh> SubMeshes;
-		std::vector<uint32_t> UsedMaterials;
+		std::unordered_set<uint32_t> UsedMaterials;
+
+		Ref<SharedMesh> SharedMesh = nullptr;
+		std::vector<Ref<Mesh>> Meshes;
+
+		std::unordered_map<const aiMesh*, SubMesh> MeshData;
+		std::unordered_map<const aiNode*, NodeMesh> NodeToMesh;
+
+		Ref<Prefab> GeneratedPrefab = nullptr;
 	};
 
 	class StaticMeshImporter
@@ -42,13 +59,17 @@ namespace Flare
 
 		inline const SceneData& GetSceneData() const { return m_SceneData; }
 	private:
+		void CreateSubMeshes();
+
 		void WalkHierarchy(const aiNode* node, const glm::mat4& parentTransform);
 		void VisitNode(const aiNode* node, const glm::mat4& parentTransform);
 
-		void CopySubMeshData(const aiMesh* node);
+		SubMesh CopySubMeshData(const aiMesh* node);
 		void FlattenHierarchy(const aiNode* node, const glm::mat4& transform, size_t subMeshStart, size_t subMeshEnd);
 
 		void ReserveBuffers();
+		void CountMeshVerticesAndIndices(size_t& outVertexCount, size_t& outIndexCount);
+
 		void CountVerticesAndIndicesRecursively(const aiNode* node, size_t& vertexCount, size_t& indexCount);
 		void CountVerticesAndIndices(const aiNode* node, size_t& vertexCount, size_t& indexCount);
 	private:

@@ -12,6 +12,7 @@
 #include "Flare/Renderer/Renderer.h"
 
 #include "Flare/Scene/Prefab.h"
+#include "Flare/Scene/Components.h"
 #include "Flare/Scene/Transform.h"
 #include "Flare/Scene/Hierarchy.h"
 
@@ -62,7 +63,10 @@ namespace Flare
 		}
 	}
 
-	static void ImportMaterials(const AssetMetadata& metadata, const aiScene* scene, const std::vector<uint32_t>& usedMaterials)
+	static void ImportMaterials(const AssetMetadata& metadata,
+		const aiScene* scene,
+		const std::unordered_set<uint32_t>& usedMaterials,
+		std::unordered_map<uint32_t, Ref<Material>>& outMaterials)
 	{
 		FLARE_PROFILE_FUNCTION();
 
@@ -178,6 +182,7 @@ namespace Flare
 				materialsTable->Materials.push_back(handle);
 			}
 
+			outMaterials[i] = materialAsset;
 		}
 	}
 
@@ -187,14 +192,17 @@ namespace Flare
 			matrix.a1, matrix.b1, matrix.c1, matrix.d1,
 			matrix.a2, matrix.b2, matrix.c2, matrix.d2,
 			matrix.a3, matrix.b3, matrix.c3, matrix.d3,
-			matrix.d4, matrix.b4, matrix.c4, matrix.d4);
+			matrix.a4, matrix.b4, matrix.c4, matrix.d4);
 	}
 
 	class MeshHierarchyImporter
 	{
 	public:
-		MeshHierarchyImporter(const aiScene& scene, const AssetMetadata& metadata)
-			: m_Scene(scene), m_AssetMetadata(metadata) {}
+		MeshHierarchyImporter(const aiScene& scene,
+			const AssetMetadata& metadata,
+			const SceneData& sceneData,
+			const std::unordered_map<uint32_t, Ref<Material>>& materials)
+			: m_Scene(scene), m_AssetMetadata(metadata), m_SceneData(sceneData), m_Materials(materials) {}
 
 		void Import()
 		{
@@ -223,7 +231,8 @@ namespace Flare
 					COMPONENT_ID(TransformComponent),
 					COMPONENT_ID(LocalTransform),
 					COMPONENT_ID(Parent),
-					COMPONENT_ID(Children)
+					COMPONENT_ID(Children),
+					COMPONENT_ID(MeshRenderer)
 				};
 
 				m_DefaultNodeArchetype = prefabHierarchy
@@ -236,7 +245,8 @@ namespace Flare
 				{
 					COMPONENT_ID(TransformComponent),
 					COMPONENT_ID(LocalTransform),
-					COMPONENT_ID(Children)
+					COMPONENT_ID(Children),
+					COMPONENT_ID(MeshRenderer)
 				};
 
 				m_DefaultRootArchetype = prefabHierarchy
@@ -283,8 +293,7 @@ namespace Flare
 		void CopyTransforms(const aiNode& node, const Math::AffineTransform& parentTransform)
 		{
 			FLARE_PROFILE_FUNCTION();
-			PrefabHierarchy& hierarchy = m_Prefab->GetHierarchy();
-
+			PrefabHierarchy& hierarchy = m_Prefab->GetHierarchy(); 
 			size_t nodeIndex = nodeIndexMap[&node];
 
 			Math::AffineTransform* globalTransform = hierarchy.TryGetNodeComponent<TransformComponent>(nodeIndex);
@@ -296,6 +305,20 @@ namespace Flare
 			*globalTransform = *localTransform;
 			globalTransform->ApplyTransform(parentTransform);
 
+			if (node.mNumMeshes > 0)
+			{
+				MeshRenderer* meshRenderer = hierarchy.TryGetNodeComponent<MeshRenderer>(nodeIndex);
+				FLARE_CORE_ASSERT(meshRenderer);
+
+				const NodeMesh& meshData = m_SceneData.NodeToMesh.at(&node);
+				meshRenderer->Mesh = meshData.Mesh;
+
+				for (uint32_t index : meshData.MaterialIndices)
+				{
+					meshRenderer->Materials.push_back(m_Materials.at(index));
+				}
+			}
+
 			for (uint32_t child = 0; child < node.mNumChildren; child++)
 			{
 				const aiNode* childNode = node.mChildren[child];
@@ -304,6 +327,8 @@ namespace Flare
 		}
 	private:
 		const aiScene& m_Scene;
+		const SceneData& m_SceneData;
+		const std::unordered_map<uint32_t, Ref<Material>>& m_Materials;
 
 		std::unordered_map<const aiNode*, size_t> nodeIndexMap;
 
@@ -341,12 +366,22 @@ namespace Flare
 		StaticMeshImporter staticMeshImporter(scene, importSettings);
 		staticMeshImporter.Import();
 
+		const SceneData& data = staticMeshImporter.GetSceneData();
+
+		std::unordered_map<uint32_t, Ref<Material>> importedMaterials;
+
+		if (importSettings.ImportMaterials)
 		{
-			MeshHierarchyImporter hierarchyImporter(*scene, metadata);
+			ImportMaterials(metadata, scene, data.UsedMaterials, importedMaterials);
+		}
+
+		{
+			MeshHierarchyImporter hierarchyImporter(*scene, metadata, staticMeshImporter.GetSceneData(), importedMaterials);
 			hierarchyImporter.Import();
 		}
 
-		const SceneData& data = staticMeshImporter.GetSceneData();
+#if 0
+
 
 		MemorySpan indices = MemorySpan();
 		if (data.IndexFormat == IndexBuffer::IndexFormat::UInt16)
@@ -358,7 +393,8 @@ namespace Flare
 			indices = MemorySpan::FromVector(data.Indices32);
 		}
 
-		Ref<Mesh> mesh = Mesh::Create(indices, data.IndexFormat,
+		Ref<Mesh> mesh = CreateRef<Mesh>(indices,
+			data.IndexFormat,
 			Span(data.Vertices.data(), data.Vertices.size()),
 			Span(data.Normals.data(), data.Normals.size()),
 			Span(data.Tangents.data(), data.Tangents.size()),
@@ -370,12 +406,8 @@ namespace Flare
 		{
 			mesh->AddSubMesh(subMesh);
 		}
+#endif
 
-		if (importSettings.ImportMaterials)
-		{
-			ImportMaterials(metadata, scene, data.UsedMaterials);
-		}
-
-		return mesh;
+		return nullptr;
 	}
 }

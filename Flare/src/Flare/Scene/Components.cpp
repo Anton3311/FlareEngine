@@ -115,6 +115,7 @@ namespace Flare
 
 
 
+	FLARE_IMPL_COMPONENT(MeshRenderer);
 	FLARE_IMPL_COMPONENT(Decal);
 
 

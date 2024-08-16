@@ -41,6 +41,7 @@ namespace Flare
 		};
 
 		void Submit(Ref<const Mesh> mesh, Span<AssetHandle> materialHandles, const Math::Compact3DTransform& transform, MeshRenderFlags flags);
+		void Submit(Ref<const Mesh> mesh, Span<Ref<Material>> materials, const Math::Compact3DTransform& transform, MeshRenderFlags flags);
 		void Submit(Ref<const Mesh> mesh, Ref<const Material> material, const Math::Compact3DTransform& transform, MeshRenderFlags flags);
 
 		void SubmitForShadowPass(const Ref<const Mesh>& mesh, const Math::Compact3DTransform& transform);

@@ -10,14 +10,25 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 		
-		const auto& subMeshes = mesh->GetSubMeshes();
-
 		if (!HAS_BIT(flags, MeshRenderFlags::DontCastShadows))
 			SubmitForShadowPass(mesh, transform);
 
-		for (size_t subMeshIndex = 0; subMeshIndex < subMeshes.size(); subMeshIndex++)
+		for (size_t subMeshIndex = 0; subMeshIndex < mesh->GetSubMeshes().size(); subMeshIndex++)
 		{
 			Submit(mesh, (uint32_t)subMeshIndex, AssetManager::GetAsset<Material>(materialHandles[subMeshIndex]), transform, flags);
+		}
+	}
+
+	void RendererSubmitionQueue::Submit(Ref<const Mesh> mesh, Span<Ref<Material>> materials, const Math::Compact3DTransform& transform, MeshRenderFlags flags)
+	{
+		FLARE_PROFILE_FUNCTION();
+		
+		if (!HAS_BIT(flags, MeshRenderFlags::DontCastShadows))
+			SubmitForShadowPass(mesh, transform);
+
+		for (size_t subMeshIndex = 0; subMeshIndex < mesh->GetSubMeshes().size(); subMeshIndex++)
+		{
+			Submit(mesh, (uint32_t)subMeshIndex, materials[subMeshIndex], transform, flags);
 		}
 	}
 

@@ -57,7 +57,7 @@ namespace Flare
 			if (!componentOffset)
 				return nullptr;
 
-			return (T*)(nodeData + *componentOffset)
+			return (T*)(nodeData + *componentOffset);
 		}
 	private:
 		std::optional<size_t> GetNodeComponentOffset(size_t nodeIndex, ComponentId component) const;

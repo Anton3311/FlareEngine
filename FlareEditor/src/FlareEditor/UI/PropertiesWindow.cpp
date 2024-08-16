@@ -145,6 +145,9 @@ namespace Flare
 
 			RenderMeshImportSettingsEditor(handle, s_SelectedMeshImportSettings);
 
+			if (!mesh)
+				break;
+
 			ImGui::SeparatorText("Mesh Info");
 
 			if (ImGui::BeginTable("MeshInfo", 2))
@@ -354,10 +357,7 @@ namespace Flare
 			As<EditorAssetManager>(AssetManager::GetInstance())->ReloadAsset(handle);
 		}
 
-		Ref<const Texture> texture = AssetManager::GetAsset<Texture>(handle);
-		FLARE_CORE_ASSERT(texture);
-
-		if (ImGui::BeginChild("Texture Settings"))
+		if (ImGui::BeginChild("MeshImportSettings"))
 		{
 			const ImGuiStyle& style = ImGui::GetStyle();
 			if (EditorGUI::BeginPropertyGrid())

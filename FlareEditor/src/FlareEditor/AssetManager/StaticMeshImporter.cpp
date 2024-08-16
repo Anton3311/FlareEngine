@@ -3,6 +3,11 @@
 #include "FlareCore/Log.h"
 #include "FlareCore/Profiler/Profiler.h"
 
+#include "Flare/Renderer/CommandBuffer.h"
+
+#include "Flare/Platform/Vulkan/VulkanCommandBuffer.h"
+#include "Flare/Platform/Vulkan/VulkanContext.h"
+
 #include "FlareEditor/AssetManager/MeshImportSettings.h"
 
 #include <assimp/Importer.hpp>
@@ -16,8 +21,36 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		ReserveBuffers();
+		if (m_ImportSettings.PreserveHierarchy && false)
+		{
+			ReserveBuffers();
+		}
+		else
+		{
+			CreateSubMeshes();
+		}
+
+		VisitNode(m_Scene->mRootNode, glm::mat4(1.0f));
 		WalkHierarchy(m_Scene->mRootNode, glm::mat4(1.0f));
+	}
+
+	inline static Math::AABB ComputeBounds(Span<const glm::vec3> vertices)
+	{
+		Math::AABB bounds{};
+	
+		if (vertices.GetSize() == 0)
+			return bounds;
+
+		bounds.Min = vertices[0];
+		bounds.Max = vertices[0];
+
+		for (size_t i = 0; i < vertices.GetSize(); i++)
+		{
+			bounds.Min = glm::min(bounds.Min, vertices[i]);
+			bounds.Max = glm::max(bounds.Max, vertices[i]);
+		}
+
+		return bounds;
 	}
 
 	inline static glm::mat4 ConvertToColumnMajor(const aiMatrix4x4& matrix)
@@ -26,7 +59,61 @@ namespace Flare
 			matrix.a1, matrix.b1, matrix.c1, matrix.d1,
 			matrix.a2, matrix.b2, matrix.c2, matrix.d2,
 			matrix.a3, matrix.b3, matrix.c3, matrix.d3,
-			matrix.d4, matrix.b4, matrix.c4, matrix.d4);
+			matrix.a4, matrix.b4, matrix.c4, matrix.d4);
+	}
+
+	void StaticMeshImporter::CreateSubMeshes()
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		size_t vertexCount = 0;
+		size_t indexCount = 0;
+
+		CountMeshVerticesAndIndices(vertexCount, indexCount);
+		
+		m_SceneData.Vertices.resize(vertexCount);
+		m_SceneData.Normals.resize(vertexCount);
+		m_SceneData.Tangents.resize(vertexCount);
+		m_SceneData.UVs.resize(vertexCount);
+
+		if (indexCount <= (size_t)std::numeric_limits<uint16_t>::max())
+		{
+			m_SceneData.IndexFormat = IndexBuffer::IndexFormat::UInt16;
+			m_SceneData.Indices16.reserve(indexCount);
+		}
+		else
+		{
+			m_SceneData.IndexFormat = IndexBuffer::IndexFormat::UInt32;
+			m_SceneData.Indices32.reserve(indexCount);
+		}
+
+		for (uint32_t meshIndex = 0; meshIndex < m_Scene->mNumMeshes; meshIndex++)
+		{
+			const aiMesh* mesh = m_Scene->mMeshes[meshIndex];
+			SubMesh subMesh = CopySubMeshData(mesh);
+
+#if 0
+			subMesh.Bounds.Min = glm::vec3(mesh->mAABB.mMin.x, mesh->mAABB.mMin.y, mesh->mAABB.mMin.z);
+			subMesh.Bounds.Max = glm::vec3(mesh->mAABB.mMax.x, mesh->mAABB.mMax.y, mesh->mAABB.mMax.z);
+#else
+#endif
+
+			m_SceneData.MeshData[mesh] = subMesh;
+		}
+
+		m_SceneData.SharedMesh = CreateRef<SharedMesh>(vertexCount, m_SceneData.IndexFormat, indexCount);
+
+		Ref<CommandBuffer> commandBuffer = VulkanContext::GetInstance().GetUploadCommandBuffer();
+		
+		m_SceneData.SharedMesh->Vertices->SetData(MemorySpan::FromVector(m_SceneData.Vertices), 0, commandBuffer);
+		m_SceneData.SharedMesh->Normals->SetData(MemorySpan::FromVector(m_SceneData.Normals), 0, commandBuffer);
+		m_SceneData.SharedMesh->Tangents->SetData(MemorySpan::FromVector(m_SceneData.Tangents), 0, commandBuffer);
+		m_SceneData.SharedMesh->UVs->SetData(MemorySpan::FromVector(m_SceneData.UVs), 0, commandBuffer);
+
+		if (m_SceneData.IndexFormat == IndexBuffer::IndexFormat::UInt16)
+			m_SceneData.SharedMesh->IndexBuffer->SetData(MemorySpan::FromVector(m_SceneData.Indices16), 0, commandBuffer);
+		else
+			m_SceneData.SharedMesh->IndexBuffer->SetData(MemorySpan::FromVector(m_SceneData.Indices32), 0, commandBuffer);
 	}
 
 	void StaticMeshImporter::WalkHierarchy(const aiNode* node, const glm::mat4& parentTransform)
@@ -49,36 +136,46 @@ namespace Flare
 		if (node->mNumMeshes == 0)
 			return;
 
-		glm::mat4 nodeTransform = parentTransform * ConvertToColumnMajor(node->mTransformation);
-
-		for (uint32_t i = 0; i < node->mNumMeshes; i++)
+		if (!m_ImportSettings.PreserveHierarchy)
 		{
-			aiMesh* nodeMesh = m_Scene->mMeshes[node->mMeshes[i]];
-
-			if (m_ImportSettings.ImportMaterials)
-				m_SceneData.UsedMaterials.push_back(nodeMesh->mMaterialIndex);
-
-			size_t subMeshStart = m_VertexOffset;
-			size_t subMeshEnd = m_VertexOffset + (size_t)nodeMesh->mNumVertices;
-
-			CopySubMeshData(nodeMesh);
-			FlattenHierarchy(node, nodeTransform, subMeshStart, subMeshEnd);
-
+			glm::mat4 nodeTransform = parentTransform * ConvertToColumnMajor(node->mTransformation);
+			for (uint32_t i = 0; i < node->mNumMeshes; i++)
 			{
-				FLARE_PROFILE_SCOPE("CalculateBounds");
-				SubMesh& subMesh = m_SceneData.SubMeshes.back();
-				subMesh.Bounds.Min = m_SceneData.Vertices[subMeshStart];
-				subMesh.Bounds.Max = m_SceneData.Vertices[subMeshStart];
-				for (size_t i = subMeshStart + 1; i < subMeshEnd; i++)
-				{
-					subMesh.Bounds.Min = glm::min(m_SceneData.Vertices[i], subMesh.Bounds.Min);
-					subMesh.Bounds.Max = glm::max(m_SceneData.Vertices[i], subMesh.Bounds.Max);
-				}
+				aiMesh* nodeMesh = m_Scene->mMeshes[node->mMeshes[i]];
+
+				if (m_ImportSettings.ImportMaterials)
+					m_SceneData.UsedMaterials.insert(nodeMesh->mMaterialIndex);
+
+				size_t subMeshStart = m_VertexOffset;
+				size_t subMeshEnd = m_VertexOffset + (size_t)nodeMesh->mNumVertices;
+
+				SubMesh subMesh = CopySubMeshData(nodeMesh);
+				FlattenHierarchy(node, nodeTransform, subMeshStart, subMeshEnd);
+
+				m_SceneData.SubMeshes.push_back(subMesh);
 			}
+		}
+
+		if (m_ImportSettings.PreserveHierarchy)
+		{
+			std::vector<SubMesh> subMeshes;
+
+			NodeMesh& nodeMeshData = m_SceneData.NodeToMesh[node];
+			for (uint32_t i = 0; i < node->mNumMeshes; i++)
+			{
+				aiMesh* nodeMesh = m_Scene->mMeshes[node->mMeshes[i]];
+
+				nodeMeshData.MaterialIndices.push_back(nodeMesh->mMaterialIndex);
+				m_SceneData.UsedMaterials.insert(nodeMesh->mMaterialIndex);
+				subMeshes.push_back(m_SceneData.MeshData[nodeMesh]);
+			}
+
+			nodeMeshData.Mesh = CreateRef<Mesh>(m_SceneData.SharedMesh, std::move(subMeshes));
+			nodeMeshData.Mesh->SetDebugName(node->mName.C_Str());
 		}
 	}
 
-	void StaticMeshImporter::CopySubMeshData(const aiMesh* mesh)
+	SubMesh StaticMeshImporter::CopySubMeshData(const aiMesh* mesh)
 	{
 		FLARE_PROFILE_FUNCTION();
 
@@ -125,13 +222,16 @@ namespace Flare
 			}
 		}
 
-		auto& subMesh = m_SceneData.SubMeshes.emplace_back();
+		SubMesh subMesh{};
 		subMesh.BaseVertex = 0;
 		subMesh.BaseIndex = (uint32_t)m_IndexOffset;
 		subMesh.IndicesCount = (uint32_t)subMeshIndexCount;
+		subMesh.Bounds = ComputeBounds(Span(m_SceneData.Vertices.data() + m_VertexOffset, (size_t)mesh->mNumVertices));
 
 		m_VertexOffset += mesh->mNumVertices;
 		m_IndexOffset += subMeshIndexCount;
+
+		return subMesh;
 	}
 
 	void StaticMeshImporter::FlattenHierarchy(const aiNode* node, const glm::mat4& transform, size_t subMeshStart, size_t subMeshEnd)
@@ -191,6 +291,22 @@ namespace Flare
 		}
 	}
 
+	void StaticMeshImporter::CountMeshVerticesAndIndices(size_t& outVertexCount, size_t& outIndexCount)
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		for (size_t i = 0; i < m_Scene->mNumMeshes; i++)
+		{
+			const aiMesh* mesh = m_Scene->mMeshes[i];
+
+			outVertexCount += (size_t)mesh->mNumVertices;
+			for (uint32_t face = 0; face < mesh->mNumFaces; face++)
+			{
+				outIndexCount += (size_t)mesh->mFaces[face].mNumIndices;
+			}
+		}
+	}
+
 	void StaticMeshImporter::CountVerticesAndIndices(const aiNode* node, size_t& vertexCount, size_t& indexCount)
 	{
 		FLARE_PROFILE_FUNCTION();
@@ -206,5 +322,4 @@ namespace Flare
 			}
 		}
 	}
-
 }

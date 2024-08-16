@@ -9,6 +9,7 @@ namespace Flare
 	struct MeshImportSettings
 	{
 		bool ImportMaterials = true;
+		bool PreserveHierarchy = true;
 
 		AssetHandle DefaultMaterial = NULL_ASSET_HANDLE;
 	};
