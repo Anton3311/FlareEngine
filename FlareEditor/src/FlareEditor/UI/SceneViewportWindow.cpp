@@ -450,6 +450,14 @@ namespace Flare
 					}
 				}
 			}
+			else
+			{
+				if (HandleTransformation(*localTransform, globalTransform, nullptr))
+				{
+					*globalTransform = *localTransform;
+					TransformPropagationSystem::PropagateTransformToChildren(world, selectedEntity);
+				}
+			}
 		}
 		else if (globalTransform && !localTransform)
 		{
