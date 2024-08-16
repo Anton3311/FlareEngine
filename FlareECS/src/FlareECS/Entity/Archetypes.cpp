@@ -54,6 +54,14 @@ namespace Flare
 			record.CreatedEntitiesQueryReferences = 0;
 			record.DeletionQueryReferences = 0;
 
+			ComponentSetToArchetype.emplace(ComponentSet(record.Components), archetypeId);
+
+			for (size_t i = 0; i < record.Components.size(); i++)
+			{
+				ComponentId component = record.Components[i];
+				ComponentToArchetype[component].emplace(archetypeId, i);
+			}
+
 			InitializeRecord(record);
 
 			{
