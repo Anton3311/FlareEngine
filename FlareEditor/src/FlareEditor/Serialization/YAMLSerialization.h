@@ -26,6 +26,7 @@ namespace Flare
         void SerializeIntVector(SerializationValue<int32_t> value, uint32_t componentsCount) override;
         void SerializeString(SerializationValue<std::string> value) override;
         void SerializeObject(const SerializableObjectDescriptor& descriptor, void* objectData, bool isArray, size_t arraySize) override;
+        void SerializeArrayOfReferences(const SerializableObjectDescriptor& valueDescriptor, void* references, size_t arraySize) override;
 
         void SerializeReference(const SerializableObjectDescriptor& valueDescriptor,
             void* referenceData,
@@ -52,6 +53,7 @@ namespace Flare
         void SerializeIntVector(SerializationValue<int32_t> value, uint32_t componentsCount) override;
         void SerializeString(SerializationValue<std::string> value) override;
         void SerializeObject(const SerializableObjectDescriptor& descriptor, void* objectData, bool isArray, size_t arraySize) override;
+        void SerializeArrayOfReferences(const SerializableObjectDescriptor& valueDescriptor, void* references, size_t arraySize) override;
 
         void SerializeReference(const SerializableObjectDescriptor& valueDescriptor,
             void* referenceData,

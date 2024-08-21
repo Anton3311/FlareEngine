@@ -6,6 +6,8 @@
 #include "Flare/AssetManager/AssetManager.h"
 #include "Flare/Serialization/Serialization.h"
 
+#include "Flare/Renderer/Material.h"
+
 #include "FlareEditor/Serialization/SerializationId.h"
 
 namespace Flare
@@ -270,6 +272,31 @@ namespace Flare
         {
             serializeSingleObject(objectData);
         }
+    }
+
+    void YAMLSerializer::SerializeArrayOfReferences(const SerializableObjectDescriptor& valueDescriptor, void* references, size_t arraySize)
+    {
+        FLARE_PROFILE_FUNCTION();
+
+        m_Emitter << YAML::Value << YAML::BeginSeq;
+        m_Emitter << YAML::EndSeq;
+        return;
+
+        if (&valueDescriptor == &FLARE_SERIALIZATION_DESCRIPTOR_OF(Material))
+        {
+            Ref<Material>* materials = (Ref<Material>*)references;
+
+            for (size_t i = 0; i < arraySize; i++)
+            {
+                m_Emitter << YAML::Value << materials[i]->Handle;
+            }
+        }
+        else
+        {
+            FLARE_CORE_WARN("Serialization of this Ref<T> is not supported");
+        }
+
+        m_Emitter << YAML::EndSeq;
     }
 
     void YAMLSerializer::SerializeReference(const SerializableObjectDescriptor& valueDescriptor, void* referenceData, void* valueData)
@@ -556,6 +583,30 @@ namespace Flare
         catch (std::exception& e)
         {
             FLARE_CORE_ERROR("Failed to deserialize object: {}", e.what());
+        }
+    }
+
+    void YAMLDeserializer::SerializeArrayOfReferences(const SerializableObjectDescriptor& valueDescriptor, void* references, size_t arraySize)
+    {
+        FLARE_PROFILE_FUNCTION();
+
+        if (&valueDescriptor == &FLARE_SERIALIZATION_DESCRIPTOR_OF(Material))
+        {
+            Ref<Material>* materials = (Ref<Material>*)references;
+
+            size_t i = 0;
+
+            for (YAML::Node item : CurrentNode())
+            {
+                if (i >= arraySize)
+                {
+                    materials[i] = AssetManager::GetAsset<Material>(item.as<AssetHandle>());
+                }
+            }
+        }
+        else
+        {
+            FLARE_CORE_WARN("Serialization of this Ref<T> is not supported");
         }
     }
 

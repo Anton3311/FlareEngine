@@ -102,6 +102,44 @@ namespace Flare
 		}
 	}
 
+	Mesh::Mesh(MemorySpan indices,
+		IndexBuffer::IndexFormat indexFormat,
+		Span<const glm::vec3> vertices,
+		Span<const glm::vec3> normals,
+		Span<const glm::vec3> tangents,
+		Span<const glm::vec2> uvs,
+		Span<const SubMesh>& subMeshes)
+		: Asset(AssetType::Mesh),
+		m_IndexFormat(indexFormat),
+		m_VertexBufferSize(vertices.GetSize()),
+		m_VertexBufferOffset(0),
+		m_IndexBufferSize(indices.GetSize()),
+		m_IndexBufferOffset(0),
+		m_SubMeshes(subMeshes.begin(), subMeshes.end())
+	{
+		FLARE_PROFILE_FUNCTION();
+		FLARE_CORE_ASSERT(vertices.GetSize() == normals.GetSize());
+		FLARE_CORE_ASSERT(vertices.GetSize() == tangents.GetSize());
+		FLARE_CORE_ASSERT(vertices.GetSize() == uvs.GetSize());
+
+		Ref<CommandBuffer> commandBuffer = VulkanContext::GetInstance().GetUploadCommandBuffer();
+
+		m_Vertices = VertexBuffer::Create(sizeof(glm::vec3) * vertices.GetSize(), vertices.GetData(), commandBuffer);
+		m_Normals = VertexBuffer::Create(sizeof(glm::vec3) * normals.GetSize(), normals.GetData(), commandBuffer);
+		m_Tangents = VertexBuffer::Create(sizeof(glm::vec3) * tangents.GetSize(), tangents.GetData(), commandBuffer);
+		m_UVs = VertexBuffer::Create(sizeof(glm::vec2) * uvs.GetSize(), uvs.GetData(), commandBuffer);
+
+		m_IndexBuffer = IndexBuffer::Create(m_IndexFormat, indices, commandBuffer);
+
+		m_Bounds = m_SubMeshes[0].Bounds;
+
+		for (const SubMesh& subMesh : m_SubMeshes)
+		{
+			m_Bounds.Min = glm::min(m_Bounds.Min, subMesh.Bounds.Min);
+			m_Bounds.Max = glm::min(m_Bounds.Max, subMesh.Bounds.Max);
+		}
+	}
+
 	Mesh::Mesh(Ref<SharedMesh> sharedMesh,
 		MemorySpan indices,
 		Span<const glm::vec3> vertices,

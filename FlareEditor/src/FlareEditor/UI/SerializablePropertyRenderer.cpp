@@ -344,6 +344,32 @@ namespace Flare
         }
     }
 
+    void SerializablePropertyRenderer::SerializeArrayOfReferences(const SerializableObjectDescriptor& valueDescriptor, void* references, size_t arraySize)
+    {
+        FLARE_PROFILE_FUNCTION();
+
+        if (&valueDescriptor == &FLARE_SERIALIZATION_DESCRIPTOR_OF(Material))
+        {
+            Ref<Material>* materials = (Ref<Material>*)references;
+
+            for (size_t i = 0; i < arraySize; i++)
+            {
+				BeginPropertiesGridIfNeeded();
+
+                Ref<Asset> asset = materials[i];
+
+                EditorGUI::PropertyIndex(i);
+				EditorGUI::AssetField(asset, Material::_Asset);
+
+                materials[i] = As<Material>(asset);
+            }
+        }
+        else
+        {
+            FLARE_CORE_WARN("Serialization of this Ref<T> is not supported");
+        }
+    }
+
     void SerializablePropertyRenderer::BeginPropertiesGridIfNeeded()
     {
         if (!m_CurrentState.GridStarted)

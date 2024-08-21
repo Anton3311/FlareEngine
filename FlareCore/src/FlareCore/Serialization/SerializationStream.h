@@ -142,15 +142,26 @@ namespace Flare
             void* referenceData,
             void* valueData) = 0;
 
+        virtual void SerializeArrayOfReferences(const SerializableObjectDescriptor& valueDescriptor, void* references, size_t arraySize) = 0;
+
         template<typename T>
         inline void Serialize(SerializationValue<T> value)
         {
             if constexpr (IsReferenceCounted<T>)
             {
-                SerializeReference(
-                    *SerializationDescriptorOf<ReferenceCountUnderlyingType<T>::Type>().Descriptor(),
-                    &value.Values[0],
-                    ReferenceCountValuePointer<T>().Get(value.Values[0]));
+                if (value.IsArray)
+                {
+					SerializeArrayOfReferences(
+						*SerializationDescriptorOf<ReferenceCountUnderlyingType<T>::Type>().Descriptor(),
+                        value.Values.GetData(), value.Values.GetSize());
+                }
+                else
+                {
+					SerializeReference(
+						*SerializationDescriptorOf<ReferenceCountUnderlyingType<T>::Type>().Descriptor(),
+						&value.Values[0],
+						ReferenceCountValuePointer<T>().Get(value.Values[0]));
+                }
                 return;
             }
 

@@ -398,7 +398,8 @@ namespace Flare
 				Span<const glm::vec3>(data.Vertices.data(), data.Vertices.size()),
 				Span<const glm::vec3>(data.Normals.data(), data.Normals.size()),
 				Span<const glm::vec3>(data.Tangents.data(), data.Tangents.size()),
-				Span<const glm::vec2>(data.UVs.data(), data.UVs.size()));
+				Span<const glm::vec2>(data.UVs.data(), data.UVs.size()),
+				Span<const SubMesh>(data.SubMeshes.data(), data.SubMeshes.size()));
 		}
 		else
 		{
@@ -407,22 +408,9 @@ namespace Flare
 				Span<const glm::vec3>(data.Vertices.data(), data.Vertices.size()),
 				Span<const glm::vec3>(data.Normals.data(), data.Normals.size()),
 				Span<const glm::vec3>(data.Tangents.data(), data.Tangents.size()),
-				Span<const glm::vec2>(data.UVs.data(), data.UVs.size()));
+				Span<const glm::vec2>(data.UVs.data(), data.UVs.size()),
+				Span<const SubMesh>(data.SubMeshes.data(), data.SubMeshes.size()));
 		}
-
-		for (const SubMesh& subMesh : data.SubMeshes)
-		{
-			mesh->AddSubMesh(subMesh);
-		}
-
-#if 0
-		if (importSettings.ImportMaterials)
-		{
-			ImportMaterials(metadata, scene, data.UsedMaterials, importedMaterials);
-		}
-#endif
-
-		//MeshImportSettingsSerializer::Serialize(metadata.Handle, importSettings);
 
 		return mesh;
 	}
@@ -509,7 +497,7 @@ namespace Flare
 		}
 		catch (std::exception& exception)
 		{
-			FLARE_CORE_ERROR("Failed to deserialize mesh source: {}", exception.what());
+			FLARE_CORE_ERROR("Failed to deserialize mesh source {}: {}", path.string(), exception.what());
 			return false;
 		}
 

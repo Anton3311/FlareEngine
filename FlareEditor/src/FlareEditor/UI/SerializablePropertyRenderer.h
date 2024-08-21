@@ -31,6 +31,8 @@ namespace Flare
         void SerializeReference(const SerializableObjectDescriptor& valueDescriptor,
             void* referenceData,
             void* valueData) override;
+        
+        void SerializeArrayOfReferences(const SerializableObjectDescriptor& valueDescriptor, void* references, size_t arraySize) override;
 
         inline bool PropertiesGridStarted() const { return m_CurrentState.GridStarted; }
     private:
