@@ -128,7 +128,8 @@ namespace Flare
 				AssetHandle handle = shaderNode.as<AssetHandle>();
 				if (!AssetManager::IsAssetHandleValid(handle))
 				{
-					FLARE_CORE_ERROR("Material asset has invalid shader handle");
+					// No valid shader, return an empty material
+					return material;
 				}
 				else
 				{
@@ -190,8 +191,6 @@ namespace Flare
 								AssetHandle handle = valueNode.as<AssetHandle>();
 								if (AssetManager::IsAssetHandleValid(handle))
 									material->SetTextureProperty(*index, AssetManager::GetAsset<Texture>(handle));
-								else
-									material->SetTextureProperty(*index, nullptr);
 
 								break;
 							}

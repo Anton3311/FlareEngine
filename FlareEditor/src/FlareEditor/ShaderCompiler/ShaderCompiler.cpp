@@ -320,6 +320,22 @@ namespace Flare
 							}
 						}
 
+						if (element.Name.Value == "Default")
+						{
+							std::optional<size_t> index = metadata->FindDescriptorProperty(property.Name.Value);
+
+							if (index)
+							{
+								switch (metadata->DescriptorProperties[*index].Type)
+								{
+								case ShaderDescriptorType::SampledImage:
+								case ShaderDescriptorType::StorageImage:
+									metadata->DefaultTextureValues.emplace(*index, DefaultTextureValueFromString(element.Value.Value));
+									break;
+								}
+							}
+						}
+
 						if (element.Name.Value == "DisplayName")
 						{
 							if (element.Type == BlockElementType::Value)

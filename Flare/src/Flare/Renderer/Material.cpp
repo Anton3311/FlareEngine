@@ -1,5 +1,7 @@
 #include "Material.h"
 
+#include "FlareCore/Profiler/Profiler.h"
+
 #include "Flare/AssetManager/AssetManager.h"
 
 #include "Flare/Renderer/Shader.h"
@@ -86,6 +88,8 @@ namespace Flare
 
 	void Material::Initialize()
 	{
+		FLARE_PROFILE_FUNCTION();
+
 		if (m_Shader == nullptr)
 			return;
 
@@ -100,6 +104,41 @@ namespace Flare
 
 		m_Textures.resize(samplers, nullptr);
 		m_ConstantBuffer.SetShader(m_Shader);
+
+		Ref<const ShaderMetadata> metadata = m_Shader->GetMetadata();
+
+		{
+			FLARE_PROFILE_SCOPE("SetDefaultTextureValues");
+
+			for (const auto& property : properties)
+			{
+				if (property.Type != ShaderDataType::Sampler)
+					continue;
+
+				std::optional<size_t> descriptorIndex = metadata->FindDescriptorProperty(property.Name);
+				if (!descriptorIndex)
+					continue;
+
+				auto it = metadata->DefaultTextureValues.find(*descriptorIndex);
+				if (it == metadata->DefaultTextureValues.end())
+					continue;
+
+				Ref<Texture> defaultValue = nullptr;
+				switch (it->second)
+				{
+				case DefaultTextureValue::None:
+					break;
+				case DefaultTextureValue::White:
+					defaultValue = Renderer::GetWhiteTexture();
+					break;
+				case DefaultTextureValue::DefaultNormals:
+					defaultValue = Renderer::GetDefaultNormalMap();
+					break;
+				}
+
+				m_Textures[property.SamplerIndex] = defaultValue;
+			}
+		}
 	}
 
 	Material::~Material()
@@ -133,7 +172,7 @@ namespace Flare
 		// TODO: Avoid updating if texture are the same
 		// TODO: Handle the case when texture objects are the same,
 		//       but the texture was resized and has a different VkImage & VkImageView.
-		//       This would require updating the descrptor set.
+		//       This would require updating the descriptor set.
 
 		//if (oldTexture.get() == texture.get())
 			//return;

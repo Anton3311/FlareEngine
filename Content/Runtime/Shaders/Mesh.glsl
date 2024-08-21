@@ -3,9 +3,9 @@ Properties =
 {
 	u_Material.Color = { Type = Color }
 	u_Material.Roughness = {}
-	u_Texture = {}
-	u_NormalMap = {}
-	u_RoughnessMap = {}
+	u_Texture = { Default = White }
+	u_NormalMap = { Default = DefaultNormals }
+	u_RoughnessMap = { Default = White }
 }
 
 #begin vertex

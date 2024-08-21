@@ -6,6 +6,7 @@
 #include "FlareCore/Serialization/SerializationStream.h"
 
 #include <optional>
+#include <unordered_map>
 #include <stdint.h>
 
 namespace Flare
@@ -94,6 +95,15 @@ namespace Flare
 		SampledImage,
 		StorageImage,
 	};
+
+	enum class DefaultTextureValue
+	{
+		None,
+		White,
+		DefaultNormals,
+	};
+
+	FLARE_API DefaultTextureValue DefaultTextureValueFromString(std::string_view string);
 
 	struct ShaderDescriptorProperty
 	{
@@ -214,6 +224,8 @@ namespace Flare
 		std::vector<ShaderProperty> Properties;
 		std::vector<ShaderDescriptorProperty> DescriptorProperties;
 		std::vector<ShaderPushConstantsRange> PushConstantsRanges;
+
+		std::unordered_map<size_t, DefaultTextureValue> DefaultTextureValues;
 	};
 
 	struct GraphicsShaderMetadata : public ShaderMetadata

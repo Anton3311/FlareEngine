@@ -163,6 +163,19 @@ namespace Flare
 		return 0;
 	}
 
+	DefaultTextureValue DefaultTextureValueFromString(std::string_view string)
+	{
+		if (string == "None")
+			return DefaultTextureValue::None;
+		if (string == "White")
+			return DefaultTextureValue::White;
+		if (string == "DefaultNormals")
+			return DefaultTextureValue::DefaultNormals;
+
+		FLARE_CORE_ASSERT(false);
+		return DefaultTextureValue::None;
+	}
+
 	const char* ShaderStageTypeToString(ShaderStageType stage)
 	{
 		switch (stage)
