@@ -88,14 +88,6 @@ AssetRegistry:
     SubAssets:
       - 7922235498107244779
       - 7418829293977948505
-  - Handle: 3678465252855055468
-    Type: Shader
-    BuiltIn: true
-    Path: ../../Content/Runtime/Shaders/SSAO.glsl
-    Source: File
-    Parent: 0
-    SubAssets:
-      []
   - Handle: 4281963350691683183
     Type: Shader
     BuiltIn: true
@@ -198,14 +190,6 @@ AssetRegistry:
     Name: DefaultMaterialsTable
     Source: Memory
     Parent: 3478378963703612906
-    SubAssets:
-      []
-  - Handle: 7838026630944631535
-    Type: Shader
-    BuiltIn: true
-    Path: ../../Content/Runtime/Shaders/SSAOBlur.glsl
-    Source: File
-    Parent: 0
     SubAssets:
       []
   - Handle: 7922235498107244779
