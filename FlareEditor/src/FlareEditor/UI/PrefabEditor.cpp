@@ -30,6 +30,7 @@ namespace Flare
         m_SceneViewSettings.ShowGrid = true;
 
         m_ViewportWindow.SetScene(m_PreviewScene);
+        m_ViewportWindow.GetViewport().SetShadowMappingEnabled(false);
 
         m_PreviewScene->InitializeRuntime();
 
@@ -51,15 +52,15 @@ namespace Flare
     void PrefabEditor::OnClose()
     {
         FLARE_PROFILE_FUNCTION();
-        AssetHandle prefabHandle = m_Prefab->Handle;
-        Entity entity = Entity();
-        World& world = GetWorld();
-        if (world.Entities.GetEntityRecords().size() > 0)
-            entity = world.Entities.GetEntityRecords()[0].Id;
 
-        m_Prefab->GetHierarchy().CopyFromWorld(world);
+		World& world = GetWorld();
+        if (!HAS_BIT(m_Prefab->GetFlags(), PrefabFlags::Generated))
+        {
+			AssetHandle prefabHandle = m_Prefab->Handle;
+			m_Prefab->GetHierarchy().CopyFromWorld(world);
 
-        PrefabImporter::SerializePrefab(prefabHandle, world, entity);
+			PrefabImporter::SerializePrefab(prefabHandle);
+        }
 
         m_Prefab = nullptr;
         world.Entities.Clear();

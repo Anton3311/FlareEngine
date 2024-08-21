@@ -8,6 +8,7 @@
 #include "Flare/Project/Project.h"
 
 #include "Flare/Scene/Scene.h"
+#include "Flare/Scene/Prefab.h"
 
 #include "Flare/Renderer/Texture.h"
 #include "Flare/Renderer/Font.h"
@@ -310,7 +311,14 @@ namespace Flare
         for (const auto& [handle, asset] : m_Registry.GetEntries())
         {
             if (asset.Metadata.Type == AssetType::Prefab && asset.Metadata.Source == AssetSource::File && IsAssetLoaded(handle))
-                ReloadAsset(handle);
+            {
+                Ref<Prefab> prefab = AssetManager::GetAsset<Prefab>(handle);
+
+                if (HAS_BIT(prefab->GetFlags(), PrefabFlags::Generated))
+                    continue;
+
+				ReloadAsset(handle);
+            }
         }
     }
 
@@ -408,7 +416,7 @@ namespace Flare
         auto importerIterator = m_AssetImporters.find(metadata.Type);
         if (importerIterator == m_AssetImporters.end())
         {
-            FLARE_CORE_ASSERT("Cannot import '{0}', because an imported for that asset type is not provided");
+            FLARE_CORE_ASSERT("Cannot import '{}', because an importer for that asset type is not provided");
             return nullptr;
         }
 

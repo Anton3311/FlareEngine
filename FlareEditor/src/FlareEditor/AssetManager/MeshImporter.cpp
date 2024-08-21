@@ -16,6 +16,7 @@
 #include "Flare/Scene/Transform.h"
 #include "Flare/Scene/Hierarchy.h"
 
+#include "FlareEditor/AssetManager/PrefabImporter.h"
 #include "FlareEditor/AssetManager/MeshImportSettings.h"
 #include "FlareEditor/AssetManager/StaticMeshImporter.h"
 #include "FlareEditor/AssetManager/EditorAssetManager.h"
@@ -199,29 +200,19 @@ namespace Flare
 	{
 	public:
 		MeshHierarchyImporter(const aiScene& scene,
-			const AssetMetadata& metadata,
 			const SceneData& sceneData,
-			const std::unordered_map<uint32_t, Ref<Material>>& materials)
-			: m_Scene(scene), m_AssetMetadata(metadata), m_SceneData(sceneData), m_Materials(materials) {}
+			const AssetMetadata& assetMetadata,
+			const std::unordered_map<uint32_t, Ref<Material>>& materials,
+			MeshImportSettings& importSettings)
+			: m_Scene(scene), m_AssetMetadata(assetMetadata), m_SceneData(sceneData), m_Materials(materials), m_ImportSettings(importSettings) {}
 
 		void Import()
 		{
 			FLARE_PROFILE_FUNCTION();
-			AssetHandle prefabHandle = NULL_ASSET_HANDLE;
-
-			for (AssetHandle subAsset : m_AssetMetadata.SubAssets)
-			{
-				if (const auto* subAssetMetadata = AssetManager::GetAssetMetadata(subAsset))
-				{
-					if (subAssetMetadata->Type == AssetType::Prefab)
-						prefabHandle = subAsset;
-				}
-			}
-
 			Ref<EditorAssetManager> assetManager = As<EditorAssetManager>(AssetManager::GetInstance());
 
 			ECSContext& ecsContext = EditorLayer::GetInstance().GetECSContext();
-			m_Prefab = CreateRef<Prefab>(ecsContext.Components, ecsContext.Archetypes);
+			m_Prefab = CreateRef<Prefab>(ecsContext.Components, ecsContext.Archetypes, PrefabFlags::Generated, m_AssetMetadata.Handle);
 
 			PrefabHierarchy& prefabHierarchy = m_Prefab->GetHierarchy();
 
@@ -262,14 +253,11 @@ namespace Flare
 			{
 				const Math::AffineTransform identityTransform;
 
-				CopyTransforms(*m_Scene.mRootNode, identityTransform);
+				CopyTransformAndMesh(*m_Scene.mRootNode, identityTransform);
 			}
-
-			if (assetManager->IsAssetHandleValid(prefabHandle))
-				assetManager->SetLoadedAsset(prefabHandle, m_Prefab);
-			else
-				assetManager->ImportMemoryOnlyAsset("Prefab", m_Prefab, m_AssetMetadata.Handle);
 		}
+
+		inline Ref<Prefab> GetImportedPrefab() const { return m_Prefab; }
 	private:
 		void VisitNode(const aiNode& node, size_t parentIndex)
 		{
@@ -290,7 +278,7 @@ namespace Flare
 			}
 		}
 
-		void CopyTransforms(const aiNode& node, const Math::AffineTransform& parentTransform)
+		void CopyTransformAndMesh(const aiNode& node, const Math::AffineTransform& parentTransform)
 		{
 			FLARE_PROFILE_FUNCTION();
 			PrefabHierarchy& hierarchy = m_Prefab->GetHierarchy(); 
@@ -315,20 +303,25 @@ namespace Flare
 
 				for (uint32_t index : meshData.MaterialIndices)
 				{
-					meshRenderer->Materials.push_back(m_Materials.at(index));
+					auto it = m_Materials.find(index);
+					if (it != m_Materials.end())
+					{
+						meshRenderer->Materials.push_back(it->second);
+					}
 				}
 			}
 
 			for (uint32_t child = 0; child < node.mNumChildren; child++)
 			{
 				const aiNode* childNode = node.mChildren[child];
-				CopyTransforms(*childNode, *globalTransform);
+				CopyTransformAndMesh(*childNode, *globalTransform);
 			}
 		}
 	private:
 		const aiScene& m_Scene;
 		const SceneData& m_SceneData;
 		const std::unordered_map<uint32_t, Ref<Material>>& m_Materials;
+		MeshImportSettings& m_ImportSettings;
 
 		std::unordered_map<const aiNode*, size_t> nodeIndexMap;
 
@@ -339,12 +332,31 @@ namespace Flare
 		const AssetMetadata& m_AssetMetadata;
 	};
 
+	static const aiScene* ImportScene(Assimp::Importer& importer, const std::filesystem::path& path)
+	{
+		std::underlying_type_t<aiPostProcessSteps> postProcessSteps = aiProcess_Triangulate | aiProcess_CalcTangentSpace | aiProcess_FlipWindingOrder;
+		if (path.extension() == ".fbx")
+			postProcessSteps |= aiProcess_FlipUVs;
+
+		const aiScene* scene = nullptr;
+
+		{
+			FLARE_PROFILE_SCOPE("ReadFile");
+			scene = importer.ReadFile(path.string(), postProcessSteps);
+		}
+
+		if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
+		{
+			FLARE_CORE_ERROR("Failed to load mesh {}: {}", path.generic_string(), importer.GetErrorString());
+			return nullptr;
+		}
+
+		return scene;
+	}
+
 	Ref<Mesh> MeshImporter::ImportMesh(const AssetMetadata& metadata)
 	{
 		FLARE_PROFILE_FUNCTION();
-		std::underlying_type_t<aiPostProcessSteps> postProcessSteps = aiProcess_Triangulate | aiProcess_CalcTangentSpace | aiProcess_FlipWindingOrder;
-		if (metadata.Path.extension() == ".fbx")
-			postProcessSteps |= aiProcess_FlipUVs;
 
 		MeshImportSettings importSettings{};
 		MeshImportSettingsSerializer::Deserialize(metadata.Handle, importSettings);
@@ -352,12 +364,7 @@ namespace Flare
 		Assimp::Importer importer;
 		const aiScene* scene = nullptr;
 
-		{
-			FLARE_PROFILE_SCOPE("ReadFile");
-			scene = importer.ReadFile(metadata.Path.string(), postProcessSteps);
-		}
-
-		if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
+		if (!scene)
 		{
 			FLARE_CORE_ERROR("Failed to load mesh {}: {}", metadata.Path.generic_string(), importer.GetErrorString());
 			return nullptr;
@@ -376,9 +383,11 @@ namespace Flare
 		}
 
 		{
-			MeshHierarchyImporter hierarchyImporter(*scene, metadata, staticMeshImporter.GetSceneData(), importedMaterials);
+			MeshHierarchyImporter hierarchyImporter(*scene, staticMeshImporter.GetSceneData(), metadata, importedMaterials, importSettings);
 			hierarchyImporter.Import();
 		}
+
+		MeshImportSettingsSerializer::Serialize(metadata.Handle, importSettings);
 
 #if 0
 
@@ -409,5 +418,42 @@ namespace Flare
 #endif
 
 		return nullptr;
+	}
+
+	Ref<Prefab> MeshImporter::ImportAsPrefab(const AssetMetadata& metadata)
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		Assimp::Importer importer;
+		const aiScene* scene = ImportScene(importer, metadata.Path);
+
+		if (!scene)
+		{
+			FLARE_CORE_ERROR("Failed to import mesh");
+			return nullptr;
+		}
+
+		MeshImportSettings importSettings{};
+		importSettings.ImportMaterials = true;
+
+		StaticMeshImporter staticMeshImporter(scene, importSettings);
+		staticMeshImporter.Import();
+
+		std::unordered_map<uint32_t, Ref<Material>> importedMaterials;
+
+		if (importSettings.ImportMaterials)
+		{
+			ImportMaterials(metadata, scene, staticMeshImporter.GetSceneData().UsedMaterials, importedMaterials);
+		}
+
+		MeshHierarchyImporter hierarchyImporter(*scene,
+			staticMeshImporter.GetSceneData(),
+			metadata,
+			importedMaterials,
+			importSettings);
+
+		hierarchyImporter.Import();
+
+		return hierarchyImporter.GetImportedPrefab();
 	}
 }

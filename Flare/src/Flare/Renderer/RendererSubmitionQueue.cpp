@@ -2,6 +2,8 @@
 
 #include "FlareCore/Profiler/Profiler.h"
 
+#include "Flare/Renderer/Renderer.h"
+
 #include "Flare/AssetManager/AssetManager.h"
 
 namespace Flare
@@ -26,9 +28,18 @@ namespace Flare
 		if (!HAS_BIT(flags, MeshRenderFlags::DontCastShadows))
 			SubmitForShadowPass(mesh, transform);
 
-		for (size_t subMeshIndex = 0; subMeshIndex < mesh->GetSubMeshes().size(); subMeshIndex++)
+		size_t materialCount = materials.GetSize();
+		size_t subMeshCount = mesh->GetSubMeshes().size();
+
+		for (size_t index = 0; index < glm::min(materialCount, subMeshCount); index++)
 		{
-			Submit(mesh, (uint32_t)subMeshIndex, materials[subMeshIndex], transform, flags);
+			Submit(mesh, (uint32_t)index, materials[index], transform, flags);
+		}
+
+		Ref<Material> errorMaterial = Renderer::GetErrorMaterial();
+		for (size_t index = glm::min(materialCount, subMeshCount); index < subMeshCount; index++)
+		{
+			Submit(mesh, (uint32_t)index, errorMaterial, transform, flags);
 		}
 	}
 

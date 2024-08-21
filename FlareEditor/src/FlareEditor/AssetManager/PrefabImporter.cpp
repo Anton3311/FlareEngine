@@ -4,15 +4,17 @@
 #include "FlareCore/Profiler/Profiler.h"
 
 #include "Flare/Scene/Prefab.h"
+#include "Flare/Serialization/Serialization.h"
 
 #include "FlareECS/World.h"
+
+#include "FlareEditor/AssetManager/EditorAssetManager.h"
+#include "FlareEditor/AssetManager/MeshImporter.h"
 
 #include "FlareEditor/EditorLayer.h"
 
 #include "FlareEditor/Serialization/SceneSerializer.h"
 #include "FlareEditor/Serialization/YAMLSerialization.h"
-
-#include "FlareEditor/AssetManager/EditorAssetManager.h"
 
 #include <exception>
 #include <fstream>
@@ -70,7 +72,17 @@ namespace Flare
 		emitter << YAML::EndSeq;
 	}
 
-	void PrefabImporter::SerializePrefab(AssetHandle prefab, World& world, Entity entity)
+	static void SerializePrefabFlags(YAML::Emitter& emitter, PrefabFlags flags)
+	{
+		FLARE_PROFILE_FUNCTION();
+		if (flags == PrefabFlags::None)
+			return;
+
+		if (HAS_BIT(flags, PrefabFlags::Generated))
+			emitter << YAML::Value << "Generated";
+	}
+
+	void PrefabImporter::SerializePrefab(AssetHandle prefab)
 	{
 		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(AssetManager::IsAssetHandleValid(prefab));
@@ -79,11 +91,51 @@ namespace Flare
 		const AssetMetadata* metadata = AssetManager::GetAssetMetadata(prefab);
 		Ref<Prefab> prefabAsset = AssetManager::GetAsset<Prefab>(prefab);
 
-		SerializePrefabHierarchy(emitter, prefabAsset->GetHierarchy());
+		emitter << YAML::BeginMap;
+
+		emitter << YAML::Key << "Flags" << YAML::Value << YAML::BeginSeq;
+		SerializePrefabFlags(emitter, prefabAsset->GetFlags());
+		emitter << YAML::EndSeq;
+
+		emitter << YAML::Key << "Hierarchy" << YAML::Value;
+
+		if (!HAS_BIT(prefabAsset->GetFlags(), PrefabFlags::Generated))
+			SerializePrefabHierarchy(emitter, prefabAsset->GetHierarchy());
+		else
+			emitter << YAML::Null;
+
+		emitter << YAML::EndMap;
 
 		std::ofstream output(metadata->Path);
 		output << emitter.c_str();
 		output.close();
+	}
+
+	void PrefabImporter::SerializeGeneratedPrefab(Ref<Prefab> prefab, AssetHandle generatorHandle)
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		FLARE_CORE_ASSERT(AssetManager::IsAssetHandleValid(prefab->Handle));
+		FLARE_CORE_ASSERT(AssetManager::IsAssetHandleValid(generatorHandle));
+
+		FLARE_CORE_ASSERT(HAS_BIT(prefab->GetFlags(), PrefabFlags::Generated));
+
+		YAML::Emitter emitter;
+
+		emitter << YAML::BeginMap;
+
+		emitter << YAML::Key << "Flags" << YAML::Value << YAML::BeginSeq;
+		SerializePrefabFlags(emitter, prefab->GetFlags());
+		emitter << YAML::EndSeq;
+
+		emitter << YAML::Key << "SourceAsset" << YAML::Value << generatorHandle;
+
+		emitter << YAML::EndMap;
+
+		const AssetMetadata* metadata = AssetManager::GetAssetMetadata(prefab->Handle);
+
+		std::ofstream file(metadata->Path);
+		file << emitter.c_str();
 	}
 
 	static void DeserializePrefabHierarchy(const YAML::Node& root, PrefabHierarchy& hierarchy)
@@ -177,10 +229,44 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 
 		ECSContext& context = EditorLayer::GetInstance().GetECSContext();
-		Ref<Prefab> prefab = CreateRef<Prefab>(context.Components, context.Archetypes);
 
 		YAML::Node node = YAML::LoadFile(metadata.Path.generic_string());
-		DeserializePrefabHierarchy(node, prefab->GetHierarchy());
+
+		PrefabFlags flags = PrefabFlags::None;
+		if (YAML::Node flagsNode = node["Flags"])
+		{
+			for (YAML::Node flagNode : flagsNode)
+			{
+				std::string flagString = flagNode.as<std::string>();
+				if (flagString == "Generated")
+					flags |= PrefabFlags::Generated;
+			}
+		}
+
+		if (HAS_BIT(flags, PrefabFlags::Generated))
+		{
+			AssetHandle sourceAsset = NULL_ASSET_HANDLE;
+			if (YAML::Node sourceAssetNode = node["SourceAsset"])
+				sourceAsset = sourceAssetNode.as<AssetHandle>();
+
+			if (sourceAsset == NULL_ASSET_HANDLE)
+			{
+				FLARE_CORE_ERROR("Failed to import prefab '{}' because it has a 'Generated' flag, but 'SourceAsset' is null", metadata.Name);
+				return nullptr;
+			}
+
+			if (!AssetManager::IsAssetHandleValid(sourceAsset))
+			{
+				FLARE_CORE_ERROR("Failed to import prefab '{}' because it has a 'Generated' flag but 'SourceAsset' is invalid", metadata.Name);
+				return nullptr;
+			}
+
+			return MeshImporter::ImportAsPrefab(*AssetManager::GetAssetMetadata(sourceAsset));
+		}
+
+		Ref<Prefab> prefab = CreateRef<Prefab>(context.Components, context.Archetypes, PrefabFlags::None);
+		if (YAML::Node hierarchyNode = node["Hierarchy"])
+			DeserializePrefabHierarchy(hierarchyNode, prefab->GetHierarchy());
 
 		return prefab;
 	}

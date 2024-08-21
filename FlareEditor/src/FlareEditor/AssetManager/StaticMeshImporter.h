@@ -45,8 +45,6 @@ namespace Flare
 
 		std::unordered_map<const aiMesh*, SubMesh> MeshData;
 		std::unordered_map<const aiNode*, NodeMesh> NodeToMesh;
-
-		Ref<Prefab> GeneratedPrefab = nullptr;
 	};
 
 	class StaticMeshImporter

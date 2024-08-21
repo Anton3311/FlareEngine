@@ -10,7 +10,9 @@ namespace Flare
 	{
 		bool ImportMaterials = true;
 		bool PreserveHierarchy = true;
+		bool GeneratePrefab = true;
 
+		AssetHandle GeneratedPrefabHandle = NULL_ASSET_HANDLE;
 		AssetHandle DefaultMaterial = NULL_ASSET_HANDLE;
 	};
 

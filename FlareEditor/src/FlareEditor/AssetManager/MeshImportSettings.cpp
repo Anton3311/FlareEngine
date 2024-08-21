@@ -38,6 +38,9 @@ namespace Flare
 
 		emitter << YAML::Key << "ImportMaterials" << settings.ImportMaterials;
 		emitter << YAML::Key << "DefaultMaterial" << settings.DefaultMaterial;
+		emitter << YAML::Key << "PreserveHierarchy" << settings.PreserveHierarchy;
+		emitter << YAML::Key << "GeneratePrefab" << settings.GeneratePrefab;
+		emitter << YAML::Key << "GeneratedPrefabHandle" << settings.GeneratedPrefabHandle;
 
 		emitter << YAML::EndMap;
 
@@ -52,6 +55,9 @@ namespace Flare
 
 		std::filesystem::path path = GetImportSettingsPath(handle);
 
+		if (!std::filesystem::exists(path))
+			return false;
+
 		try
 		{
 			YAML::Node root = YAML::LoadFile(path.generic_string());
@@ -60,6 +66,12 @@ namespace Flare
 				outSettings.ImportMaterials = importMaterials.as<bool>();
 			if (YAML::Node defaultMaterial = root["DefaultMaterial"])
 				outSettings.DefaultMaterial = defaultMaterial.as<AssetHandle>();
+			if (YAML::Node node= root["PreserveHierachy"])
+				outSettings.PreserveHierarchy = node.as<bool>();
+			if (YAML::Node node= root["GeneratePrefab"])
+				outSettings.GeneratePrefab = node.as<bool>();
+			if (YAML::Node node= root["GeneratedPrefabHandle"])
+				outSettings.GeneratedPrefabHandle = node.as<AssetHandle>();
 
 			return true;
 		}

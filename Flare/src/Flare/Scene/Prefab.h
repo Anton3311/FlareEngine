@@ -38,8 +38,8 @@ namespace Flare
 
 		// Initializes all the components of each entity using a default constructor
 		//
-		// It is not save to call it multiple times or if any of the components were initialized externally
-		// by accessing and writing to directly entity data obtained from GetEntityData
+		// It is not safe to call it multiple times or if any of the components were initialized externally
+		// by accessing and writing directly to entity data obtained from GetEntityData
 		void InitializeEntities();
 
 		inline const std::vector<Node>& GetNodes() const { return m_Nodes; }
@@ -78,22 +78,37 @@ namespace Flare
 	// Prefab
 	//
 
+	enum class PrefabFlags
+	{
+		None = 0,
+		Generated = 1,
+	};
+
+	FLARE_IMPL_ENUM_BITFIELD(PrefabFlags);
+
 	class FLARE_API Prefab : public Asset
 	{
 	public:
 		FLARE_ASSET;
 		FLARE_SERIALIZABLE;
 
-		Prefab(const Components& compatibleComponentsRegistry, Archetypes& compatibleArchetypes);
+		Prefab(const Components& compatibleComponentsRegistry, Archetypes& compatibleArchetypes, PrefabFlags flags);
+		Prefab(const Components& compatibleComponentsRegistry, Archetypes& compatibleArchetypes, PrefabFlags flags, AssetHandle sourceMesh);
 	
 		Entity CreateInstance(World& world);
 
 		inline PrefabHierarchy& GetHierarchy() { return m_Hierarchy; }
 		inline const PrefabHierarchy& GetHierarchy() const { return m_Hierarchy; }
+
+		constexpr PrefabFlags GetFlags() const { return m_Flags; }
+		constexpr AssetHandle GetSourceMesh() const { return m_SourceMesh; }
 	private:
 		Entity InstantiateHierarchy(World& world) const;
 	private:
+		PrefabFlags m_Flags;
 		PrefabHierarchy m_Hierarchy;
+
+		AssetHandle m_SourceMesh = NULL_ASSET_HANDLE;
 
 		const Components& m_CompatibleComponentsRegistry;
 		const Archetypes& m_CompatibleArchetypes;

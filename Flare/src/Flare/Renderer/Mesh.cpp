@@ -108,7 +108,7 @@ namespace Flare
 		Span<const glm::vec3> normals,
 		Span<const glm::vec3> tangents,
 		Span<const glm::vec2> uvs)
-		: Asset(AssetType::Mesh), m_IndexFormat(sharedMesh->GetIndexFormat())
+		: Asset(AssetType::Mesh), m_IndexFormat(sharedMesh->GetIndexFormat()), m_SharedMesh(sharedMesh)
 	{
 		FLARE_CORE_ASSERT(vertices.GetSize() == normals.GetSize());
 		FLARE_CORE_ASSERT(vertices.GetSize() == tangents.GetSize());
@@ -140,7 +140,7 @@ namespace Flare
 	}
 
 	Mesh::Mesh(Ref<SharedMesh> sharedMesh, std::vector<SubMesh>&& subMeshes)
-		: Asset(AssetType::Mesh), m_IndexFormat(sharedMesh->GetIndexFormat()), m_SubMeshes(subMeshes)
+		: Asset(AssetType::Mesh), m_IndexFormat(sharedMesh->GetIndexFormat()), m_SubMeshes(subMeshes), m_SharedMesh(sharedMesh)
 	{
 		m_IndexBuffer = sharedMesh->IndexBuffer;
 		m_Vertices = sharedMesh->Vertices;

@@ -11,11 +11,15 @@
 #include "Flare/Renderer/Material.h"
 #include "Flare/Renderer/ShaderLibrary.h"
 
+#include "Flare/Scene/Prefab.h"
+
 #include "FlareEditor/EditorLayer.h"
 #include "FlareEditor/UI/EditorGUI.h"
 
 #include "FlareEditor/AssetManager/MaterialImporter.h"
 #include "FlareEditor/AssetManager/SpriteImporter.h"
+#include "FlareEditor/AssetManager/PrefabImporter.h"
+#include "FlareEditor/AssetManager/MeshImporter.h"
 
 #include "FlarePlatform/Platform.h"
 
@@ -261,6 +265,30 @@ namespace Flare
             {
                 if (AssetManager::IsAssetLoaded(handle))
                     m_AssetManager->ReloadAsset(handle);
+            }
+
+            const AssetMetadata* metadata = AssetManager::GetAssetMetadata(handle);
+            FLARE_CORE_ASSERT(metadata);
+
+            if (metadata->Type == AssetType::Mesh)
+            {
+                if (ImGui::MenuItem("Create Prefab From Mesh"))
+                {
+                    std::optional<std::filesystem::path> path = Platform::ShowSaveFileDialog(
+						L"Flare Prefab (*.flrprefab)\0*.flrprefab\0",
+                        Application::GetInstance().GetWindow());
+
+                    if (path)
+                    {
+						ECSContext& context = EditorLayer::GetInstance().GetECSContext();
+						
+                        Ref<Prefab> prefab = MeshImporter::ImportAsPrefab(*metadata);
+
+                        m_AssetManager->ImportAsset(*path, prefab);
+
+                        PrefabImporter::SerializeGeneratedPrefab(prefab, handle);
+                    }
+                }
             }
 
             if (node)

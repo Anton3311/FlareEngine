@@ -207,11 +207,19 @@ namespace Flare
 	FLARE_IMPL_ASSET(Prefab);
 	FLARE_SERIALIZABLE_IMPL(Prefab);
 
-	Prefab::Prefab(const Components& compatibleComponentsRegistry, Archetypes& compatibleArchetypes)
+	Prefab::Prefab(const Components& compatibleComponentsRegistry, Archetypes& compatibleArchetypes, PrefabFlags flags)
 		: Asset(AssetType::Prefab),
 		m_CompatibleComponentsRegistry(compatibleComponentsRegistry),
 		m_CompatibleArchetypes(compatibleArchetypes),
-		m_Hierarchy(compatibleComponentsRegistry, compatibleArchetypes)	{}
+		m_Hierarchy(compatibleComponentsRegistry, compatibleArchetypes),
+		m_Flags(flags) {}
+
+	Prefab::Prefab(const Components& compatibleComponentsRegistry, Archetypes& compatibleArchetypes, PrefabFlags flags, AssetHandle sourceMesh)
+		: Asset(AssetType::Prefab),
+		m_CompatibleComponentsRegistry(compatibleComponentsRegistry),
+		m_CompatibleArchetypes(compatibleArchetypes),
+		m_Hierarchy(compatibleComponentsRegistry, compatibleArchetypes),
+		m_Flags(flags), m_SourceMesh(sourceMesh) {}
 
 	Entity Prefab::CreateInstance(World& world)
 	{

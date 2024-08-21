@@ -896,7 +896,16 @@ namespace Flare
 	void VulkanCommandBuffer::BindMesh(const Ref<const Mesh>& mesh)
 	{
 		FLARE_PROFILE_FUNCTION();
-		if (m_CurrentMesh.get() != mesh.get())
+		bool rebind = false;
+
+		if (m_CurrentMesh == nullptr)
+			rebind = true;
+		else if (m_CurrentMesh->GetSharedMesh() != nullptr && m_CurrentMesh->GetSharedMesh().get() == mesh->GetSharedMesh().get())
+			return;
+		else
+			rebind = m_CurrentMesh.get() != mesh.get();
+
+		if (rebind)
 		{
 			Ref<const VertexBuffer> vertexBuffers[] =
 			{

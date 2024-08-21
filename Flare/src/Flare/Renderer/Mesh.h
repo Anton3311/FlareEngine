@@ -102,6 +102,8 @@ namespace Flare
 
 		inline const std::vector<SubMesh>& GetSubMeshes() const { return m_SubMeshes; }
 		inline IndexBuffer::IndexFormat GetIndexFormat() const { return m_IndexFormat; }
+
+		inline Ref<SharedMesh> GetSharedMesh() const { return m_SharedMesh; }
 	private:
 		void UpdateBufferDebugNames();
 	public:
