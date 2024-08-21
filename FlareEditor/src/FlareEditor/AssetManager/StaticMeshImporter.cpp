@@ -152,6 +152,8 @@ namespace Flare
 				SubMesh subMesh = CopySubMeshData(nodeMesh);
 				FlattenHierarchy(node, nodeTransform, subMeshStart, subMeshEnd);
 
+				subMesh.Bounds = ComputeBounds(Span(m_SceneData.Vertices.data() + subMeshStart, subMeshEnd - subMeshStart));
+
 				m_SceneData.SubMeshes.push_back(subMesh);
 			}
 		}
