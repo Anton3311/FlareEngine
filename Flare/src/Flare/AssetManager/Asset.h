@@ -48,6 +48,7 @@ namespace Flare
 		Material,
 		Font,
 		Mesh,
+		MeshSource,
 		MaterialsTable,
 	};
 

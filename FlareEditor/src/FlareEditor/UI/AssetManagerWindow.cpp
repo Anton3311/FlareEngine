@@ -270,9 +270,9 @@ namespace Flare
             const AssetMetadata* metadata = AssetManager::GetAssetMetadata(handle);
             FLARE_CORE_ASSERT(metadata);
 
-            if (metadata->Type == AssetType::Mesh)
+            if (metadata->Type == AssetType::MeshSource)
             {
-                if (ImGui::MenuItem("Create Prefab From Mesh"))
+                if (ImGui::MenuItem("Create Prefab"))
                 {
                     std::optional<std::filesystem::path> path = Platform::ShowSaveFileDialog(
 						L"Flare Prefab (*.flrprefab)\0*.flrprefab\0",
@@ -280,6 +280,8 @@ namespace Flare
 
                     if (path)
                     {
+                        path->replace_extension(".flrprefab");
+
 						ECSContext& context = EditorLayer::GetInstance().GetECSContext();
 						
                         Ref<Prefab> prefab = MeshImporter::ImportAsPrefab(*metadata);
@@ -287,6 +289,21 @@ namespace Flare
                         m_AssetManager->ImportAsset(*path, prefab);
 
                         PrefabImporter::SerializeGeneratedPrefab(prefab, handle);
+                    }
+                }
+
+                if (ImGui::MenuItem("Create Mesh"))
+                {
+                    std::optional<std::filesystem::path> path = Platform::ShowSaveFileDialog(
+						L"Flare Prefab (*.flrmesh)\0*.flrmesh\0",
+                        Application::GetInstance().GetWindow());
+
+                    if (path)
+                    {
+                        path->replace_extension(".flrmesh");
+
+                        MeshImporter::SerializeMesh(*path, handle);
+                        m_AssetManager->ImportAsset(*path);
                     }
                 }
             }

@@ -12,6 +12,7 @@
 
 #include "Flare/Renderer/Texture.h"
 #include "Flare/Renderer/Font.h"
+#include "Flare/Renderer/MeshSource.h"
 #include "Flare/Renderer/ShaderLibrary.h"
 
 #include "FlareEditor/EditorLayer.h"
@@ -40,6 +41,7 @@ namespace Flare
         m_AssetImporters.emplace(AssetType::Prefab, PrefabImporter::ImportPrefab);
         m_AssetImporters.emplace(AssetType::Material, MaterialImporter::ImportMaterial);
         m_AssetImporters.emplace(AssetType::Mesh, MeshImporter::ImportMesh);
+        m_AssetImporters.emplace(AssetType::MeshSource, MeshImporter::ImportMeshSource);
         m_AssetImporters.emplace(AssetType::Sprite, SpriteImporter::ImportSprite);
         m_AssetImporters.emplace(AssetType::Scene, [](const AssetMetadata& metadata) -> Ref<Asset>
         {
@@ -183,6 +185,8 @@ namespace Flare
         else if (extension == ".ttf")
             type = AssetType::Font;
         else if (extension == ".fbx" || extension == ".gltf")
+            type = AssetType::MeshSource;
+        else if (extension == ".flrmesh")
             type = AssetType::Mesh;
         else
             return NULL_ASSET_HANDLE;

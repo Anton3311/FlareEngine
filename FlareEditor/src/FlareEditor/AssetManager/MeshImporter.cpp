@@ -7,6 +7,7 @@
 #include "Flare/Renderer/Material.h"
 #include "Flare/Renderer/MaterialsTable.h"
 #include "Flare/Renderer/Mesh.h"
+#include "Flare/Renderer/MeshSource.h"
 #include "Flare/Renderer/Texture.h"
 #include "Flare/Renderer/ShaderLibrary.h"
 #include "Flare/Renderer/Renderer.h"
@@ -15,6 +16,8 @@
 #include "Flare/Scene/Components.h"
 #include "Flare/Scene/Transform.h"
 #include "Flare/Scene/Hierarchy.h"
+
+#include "Flare/Serialization/Serialization.h"
 
 #include "FlareEditor/AssetManager/PrefabImporter.h"
 #include "FlareEditor/AssetManager/MeshImportSettings.h"
@@ -29,6 +32,9 @@
 #include <assimp/material.h>
 
 #include <unordered_map>
+#include <fstream>
+
+#include <yaml-cpp/yaml.h>
 
 namespace Flare
 {
@@ -358,15 +364,21 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
+		AssetHandle meshSource = NULL_ASSET_HANDLE;
+		if (!DeserializeMeshSource(metadata.Path, meshSource))
+			return false;
+
+		const AssetMetadata& sourceMetadata = *AssetManager::GetAssetMetadata(meshSource);
+
 		MeshImportSettings importSettings{};
-		MeshImportSettingsSerializer::Deserialize(metadata.Handle, importSettings);
+		importSettings.PreserveHierarchy = false;
 
 		Assimp::Importer importer;
-		const aiScene* scene = nullptr;
+		const aiScene* scene = ImportScene(importer, sourceMetadata.Path);
 
 		if (!scene)
 		{
-			FLARE_CORE_ERROR("Failed to load mesh {}: {}", metadata.Path.generic_string(), importer.GetErrorString());
+			FLARE_CORE_ERROR("Failed to load mesh {}: {}", sourceMetadata.Path.generic_string(), importer.GetErrorString());
 			return nullptr;
 		}
 
@@ -377,47 +389,42 @@ namespace Flare
 
 		std::unordered_map<uint32_t, Ref<Material>> importedMaterials;
 
+		Ref<Mesh> mesh = nullptr;
+		
+		if (data.IndexFormat == IndexBuffer::IndexFormat::UInt16)
+		{
+		 	mesh = CreateRef<Mesh>(MemorySpan::FromVector(data.Indices16),
+				data.IndexFormat,
+				Span<const glm::vec3>(data.Vertices.data(), data.Vertices.size()),
+				Span<const glm::vec3>(data.Normals.data(), data.Normals.size()),
+				Span<const glm::vec3>(data.Tangents.data(), data.Tangents.size()),
+				Span<const glm::vec2>(data.UVs.data(), data.UVs.size()));
+		}
+		else
+		{
+		 	mesh = CreateRef<Mesh>(MemorySpan::FromVector(data.Indices32),
+				data.IndexFormat,
+				Span<const glm::vec3>(data.Vertices.data(), data.Vertices.size()),
+				Span<const glm::vec3>(data.Normals.data(), data.Normals.size()),
+				Span<const glm::vec3>(data.Tangents.data(), data.Tangents.size()),
+				Span<const glm::vec2>(data.UVs.data(), data.UVs.size()));
+		}
+
+		for (const SubMesh& subMesh : data.SubMeshes)
+		{
+			mesh->AddSubMesh(subMesh);
+		}
+
+#if 0
 		if (importSettings.ImportMaterials)
 		{
 			ImportMaterials(metadata, scene, data.UsedMaterials, importedMaterials);
 		}
-
-		{
-			MeshHierarchyImporter hierarchyImporter(*scene, staticMeshImporter.GetSceneData(), metadata, importedMaterials, importSettings);
-			hierarchyImporter.Import();
-		}
-
-		MeshImportSettingsSerializer::Serialize(metadata.Handle, importSettings);
-
-#if 0
-
-
-		MemorySpan indices = MemorySpan();
-		if (data.IndexFormat == IndexBuffer::IndexFormat::UInt16)
-		{
-			indices = MemorySpan::FromVector(data.Indices16);
-		}
-		else
-		{
-			indices = MemorySpan::FromVector(data.Indices32);
-		}
-
-		Ref<Mesh> mesh = CreateRef<Mesh>(indices,
-			data.IndexFormat,
-			Span(data.Vertices.data(), data.Vertices.size()),
-			Span(data.Normals.data(), data.Normals.size()),
-			Span(data.Tangents.data(), data.Tangents.size()),
-			Span(data.UVs.data(), data.UVs.size()));
-
-		mesh->SetDebugName(metadata.Name);
-
-		for (const auto& subMesh : data.SubMeshes)
-		{
-			mesh->AddSubMesh(subMesh);
-		}
 #endif
 
-		return nullptr;
+		//MeshImportSettingsSerializer::Serialize(metadata.Handle, importSettings);
+
+		return mesh;
 	}
 
 	Ref<Prefab> MeshImporter::ImportAsPrefab(const AssetMetadata& metadata)
@@ -455,5 +462,57 @@ namespace Flare
 		hierarchyImporter.Import();
 
 		return hierarchyImporter.GetImportedPrefab();
+	}
+
+	Ref<MeshSource> MeshImporter::ImportMeshSource(const AssetMetadata& metadata)
+	{
+		FLARE_PROFILE_FUNCTION();
+		return CreateRef<MeshSource>();
+	}
+
+	void MeshImporter::SerializeMesh(AssetHandle meshHandle, AssetHandle meshSourceHandle)
+	{
+		SerializeMesh(AssetManager::GetAssetMetadata(meshHandle)->Path, meshSourceHandle);
+	}
+
+	void MeshImporter::SerializeMesh(const std::filesystem::path& path, AssetHandle meshSourceHandle)
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		FLARE_CORE_ASSERT(AssetManager::IsAssetHandleValid(meshSourceHandle));
+
+		YAML::Emitter emitter;
+
+		emitter << YAML::BeginMap;
+		emitter << YAML::Key << "Source" << YAML::Value << meshSourceHandle;
+		emitter << YAML::EndMap;
+
+		std::ofstream output(path);
+		output << emitter.c_str();
+	}
+
+	bool MeshImporter::DeserializeMeshSource(const std::filesystem::path& path, AssetHandle& outMeshSourceHandle)
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		if (!std::filesystem::exists(path))
+			return false;
+
+		try
+		{
+			YAML::Node root = YAML::LoadFile(path.string());
+
+			if (YAML::Node sourceNode = root["Source"])
+			{
+				outMeshSourceHandle = sourceNode.as<AssetHandle>(outMeshSourceHandle);
+			}
+		}
+		catch (std::exception& exception)
+		{
+			FLARE_CORE_ERROR("Failed to deserialize mesh source: {}", exception.what());
+			return false;
+		}
+
+		return true;
 	}
 }

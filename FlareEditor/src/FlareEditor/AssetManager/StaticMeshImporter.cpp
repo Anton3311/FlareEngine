@@ -21,7 +21,7 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		if (m_ImportSettings.PreserveHierarchy && false)
+		if (!m_ImportSettings.PreserveHierarchy)
 		{
 			ReserveBuffers();
 		}
