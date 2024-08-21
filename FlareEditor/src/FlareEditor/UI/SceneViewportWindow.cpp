@@ -120,7 +120,8 @@ namespace Flare
 
 	void SceneViewportWindow::OnAddRenderPasses()
 	{
-		if (EditorLayer::GetInstance().GetSceneViewSettings().ShowGrid)
+		FLARE_PROFILE_FUNCTION();
+		if (m_SceneViewSettings.ShowGrid)
 		{
 			RenderGraphPassSpecifications gridPass{};
 			gridPass.AddOutput(m_Viewport.ColorTextureId, 0);
