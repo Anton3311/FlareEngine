@@ -139,19 +139,21 @@ namespace Flare
 		style.WindowBorderSize = 1.0f;
 		style.WindowMenuButtonPosition = ImGuiDir_None;
 
-		style.FrameRounding = 4.0f;
+		style.FrameRounding = 3.0f;
 		style.FrameBorderSize = 0.0f;
-		style.FramePadding = ImVec2(6.0f, 6.0f);
+		style.FramePadding = ImVec2(3.0f, 3.0f);
 
-		style.GrabRounding = 4.0f;
+		style.GrabRounding = 3.0f;
 
-		style.TabRounding = 4.0f;
+		style.TabRounding = 3.0f;
 		style.TabBorderSize = 0.0f;
 		style.TabBorderSize = 0.0f;
 
 		style.PopupRounding = 0.0f;
 		style.PopupBorderSize = 1.0f;
 		style.ChildBorderSize = 1.0f;
+
+		style.ScrollbarSize = 10.0f;
 
 		auto& colors = style.Colors;
 
