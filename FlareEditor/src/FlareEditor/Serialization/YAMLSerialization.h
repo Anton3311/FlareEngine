@@ -35,7 +35,7 @@ namespace Flare
         YAML::Emitter& m_Emitter;
         const World* m_World;
         bool m_ObjectSerializationStarted;
-        bool m_MapStarted;
+        bool m_HasSerializedProperties;
     };
 
     class YAMLDeserializer : public SerializationStream

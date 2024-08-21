@@ -317,7 +317,9 @@ namespace Flare
     {
         static void OnSerialize(std::vector<T>& vector, SerializationStream& stream)
         {
-            // TODO: should probably assert that T is default constructable
+            // TODO: should probably assert that T is default constructible
+
+            stream.PropertyKey("Elements");
 
             size_t size = vector.size();
             switch (stream.SerializeDynamicArraySize(size))

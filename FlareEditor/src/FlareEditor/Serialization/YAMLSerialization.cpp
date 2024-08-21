@@ -13,14 +13,14 @@
 namespace Flare
 {
     YAMLSerializer::YAMLSerializer(YAML::Emitter& emitter, const World* world)
-        : m_Emitter(emitter), m_MapStarted(false), m_ObjectSerializationStarted(false), m_World(world) {}
+        : m_Emitter(emitter), m_HasSerializedProperties(false), m_ObjectSerializationStarted(false), m_World(world) {}
 
     void YAMLSerializer::PropertyKey(std::string_view key)
     {
-        if (!m_MapStarted && m_ObjectSerializationStarted)
+        if (!m_HasSerializedProperties && m_ObjectSerializationStarted)
         {
             m_Emitter << YAML::BeginMap;
-            m_MapStarted = true;
+            m_HasSerializedProperties = true;
         }
 
         m_Emitter << YAML::Key << std::string(key);
@@ -175,7 +175,7 @@ namespace Flare
     {
         if (isArray)
         {
-            emitter << YAML::BeginSeq;
+            emitter << YAML::Block << YAML::BeginSeq;
 
             for (size_t i = 0; i < arraySize; i++)
                 emitter << YAML::Value << values[i];
@@ -209,6 +209,7 @@ namespace Flare
         if (&descriptor == &FLARE_SERIALIZATION_DESCRIPTOR_OF(AssetHandle))
         {
             SerializeObjects<AssetHandle>(m_Emitter, isArray, (AssetHandle*)objectData, arraySize);
+            m_HasSerializedProperties = true;
             return;
         }
 
@@ -220,7 +221,7 @@ namespace Flare
             Entity* entityIds = (Entity*)objectData;
             if (isArray)
             {
-                m_Emitter << YAML::BeginSeq;
+                m_Emitter << YAML::Value << YAML::BeginSeq;
                 for (size_t i = 0; i < arraySize; i++)
                     SerializeEntityId(m_Emitter, *m_World, entityIds[i]);
                 m_Emitter << YAML::EndSeq;
@@ -230,33 +231,36 @@ namespace Flare
                 SerializeEntityId(m_Emitter, *m_World, entityIds[0]);
             }
 
+            m_HasSerializedProperties = true;
             return;
         }
 
         bool previousObjectSerializationState = m_ObjectSerializationStarted;
-        bool previousState = m_MapStarted;
+        bool previousState = m_HasSerializedProperties;
 
         auto serializeSingleObject = [=](void* object)
         {
             m_ObjectSerializationStarted = true;
-            m_MapStarted = false;
+            m_HasSerializedProperties = false;
 
-            // NOTE: Map starts when the serializer recieves a property with a key,
+            // NOTE: Map starts when the serializer receives a property with a key,
             //       this prevents YAML-cpp from generating an invalid one when an
             //       object serializes it's properties without any keys
             descriptor.Callback(object, *this);
 
-            // NOTE: 'm_MapStarted' whether YAML::BeginMap was emited which only happens when the first property of the object is being serialized
-            //       if 'm_MapStarted' is false, it means that the object doens't have any serializable properties
-            if (!m_MapStarted)
+            // NOTE: 'm_MapStarted' whether YAML::BeginMap was emitted which only happens when the first property of the object is being serialized
+            //       if 'm_MapStarted' is false, it means that the object doesn't have any serializable properties
+            if (!m_HasSerializedProperties)
+            {
                 m_Emitter << YAML::Block << YAML::BeginMap << YAML::EndMap;
+            }
 
-            if (m_MapStarted)
+            if (m_HasSerializedProperties)
             {
                 m_Emitter << YAML::EndMap;
             }
 
-            m_MapStarted = previousState;
+            m_HasSerializedProperties = previousState;
             m_ObjectSerializationStarted = previousObjectSerializationState;
         };
 
@@ -336,7 +340,7 @@ namespace Flare
 
     SerializationStream::DynamicArrayAction YAMLDeserializer::SerializeDynamicArraySize(size_t& size)
     {
-        size = CurrentNode().size();
+        size = CurrentNode()[m_CurrentPropertyKey].size();
         return DynamicArrayAction::Resize;
     }
 
@@ -513,8 +517,10 @@ namespace Flare
                 Entity* entities = (Entity*)objectData;
                 if (isArray)
                 {
-                    YAML::Node node = CurrentNode();
+                    YAML::Node node = CurrentNode()[m_CurrentPropertyKey];
                     size_t index = 0;
+
+                    FLARE_CORE_ASSERT(node.IsSequence());
 
                     for (YAML::Node itemNode : node)
                     {
@@ -576,9 +582,9 @@ namespace Flare
                 }
             }
         }
-        catch (YAML::BadConversion& e)
+        catch (YAML::RepresentationException& e)
         {
-            FLARE_CORE_ERROR("Failed to deserialize object Line: {} Col: {} Erorr: {}", e.mark.line, e.mark.column, e.what());
+            FLARE_CORE_ERROR("Failed to deserialize object. Line: {} Col: {} Error: {}", e.mark.line, e.mark.column, e.what());
         }
         catch (std::exception& e)
         {
