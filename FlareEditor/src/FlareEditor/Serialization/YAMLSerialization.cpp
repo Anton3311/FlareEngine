@@ -283,8 +283,6 @@ namespace Flare
         FLARE_PROFILE_FUNCTION();
 
         m_Emitter << YAML::Value << YAML::BeginSeq;
-        m_Emitter << YAML::EndSeq;
-        return;
 
         if (&valueDescriptor == &FLARE_SERIALIZATION_DESCRIPTOR_OF(Material))
         {
@@ -602,12 +600,13 @@ namespace Flare
 
             size_t i = 0;
 
-            for (YAML::Node item : CurrentNode())
+            for (YAML::Node item : CurrentNode()[m_CurrentPropertyKey])
             {
                 if (i >= arraySize)
-                {
-                    materials[i] = AssetManager::GetAsset<Material>(item.as<AssetHandle>());
-                }
+                    break;
+
+				materials[i] = AssetManager::GetAsset<Material>(item.as<AssetHandle>());
+                i++;
             }
         }
         else
