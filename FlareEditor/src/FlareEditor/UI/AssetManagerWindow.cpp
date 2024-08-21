@@ -237,6 +237,8 @@ namespace Flare
 
         // Context menu
 
+        bool removeFromRegistry = false;
+
         if (ImGui::BeginPopupContextItem(metadata->Name.c_str()))
         {
             ImGui::Text("Handle: %llu", (uint64_t)handle);
@@ -256,8 +258,7 @@ namespace Flare
             {
                 if (node)
                 {
-                    node->Handle = NULL_ASSET_HANDLE;
-					m_AssetManager->RemoveFromRegistry(handle);
+                    removeFromRegistry = true;
                 }
             }
 
@@ -312,6 +313,12 @@ namespace Flare
                 RenderFileOrDirectoryMenuItems(*node);
 
             ImGui::EndMenu();
+        }
+
+        if (removeFromRegistry)
+        {
+			node->Handle = NULL_ASSET_HANDLE;
+			m_AssetManager->RemoveFromRegistry(handle);
         }
 
         if (opened)
