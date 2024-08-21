@@ -1,12 +1,4 @@
 AssetRegistry:
-  - Handle: 58408753792518442
-    Type: Material
-    BuiltIn: false
-    Name: DefaultMaterial
-    Source: Memory
-    Parent: 10342322337781790464
-    SubAssets:
-      []
   - Handle: 189433620407732915
     Type: Material
     BuiltIn: false
@@ -45,14 +37,6 @@ AssetRegistry:
     Path: White.png
     Source: File
     Parent: 0
-    SubAssets:
-      []
-  - Handle: 2768644555319864744
-    Type: MaterialsTable
-    BuiltIn: false
-    Name: DefaultMaterialsTable
-    Source: Memory
-    Parent: 10342322337781790464
     SubAssets:
       []
   - Handle: 2840866884888145189
@@ -208,18 +192,10 @@ AssetRegistry:
     Parent: 0
     SubAssets:
       []
-  - Handle: 8591874641572217228
-    Type: Material
-    BuiltIn: false
-    Name: Material
-    Source: Memory
-    Parent: 15517588840512804130
-    SubAssets:
-      []
-  - Handle: 9310982406467906395
-    Type: Scene
-    BuiltIn: false
-    Path: AtmosphereScene.flare
+  - Handle: 8423132556403844735
+    Type: ComputeShader
+    BuiltIn: true
+    Path: ../../Content/Runtime/Shaders/SSAO/SSAO.compute.glsl
     Source: File
     Parent: 0
     SubAssets:
@@ -230,14 +206,6 @@ AssetRegistry:
     Name: DefaultMaterial
     Source: Memory
     Parent: 10490832977963679498
-    SubAssets:
-      []
-  - Handle: 9410272321376708478
-    Type: MaterialsTable
-    BuiltIn: false
-    Name: DefaultMaterialsTable
-    Source: Memory
-    Parent: 15517588840512804130
     SubAssets:
       []
   - Handle: 9524196172539617218
@@ -256,15 +224,6 @@ AssetRegistry:
     Parent: 0
     SubAssets:
       []
-  - Handle: 10342322337781790464
-    Type: Mesh
-    BuiltIn: false
-    Path: Cube.fbx
-    Source: File
-    Parent: 0
-    SubAssets:
-      - 58408753792518442
-      - 2768644555319864744
   - Handle: 10490832977963679498
     Type: Mesh
     BuiltIn: false
@@ -278,6 +237,14 @@ AssetRegistry:
     Type: Scene
     BuiltIn: false
     Path: Test.flare
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
+  - Handle: 11756600954847717104
+    Type: ComputeShader
+    BuiltIn: true
+    Path: ../../Content/Runtime/Shaders/SSAO/SSAOCompose.compute.glsl
     Source: File
     Parent: 0
     SubAssets:
@@ -346,15 +313,6 @@ AssetRegistry:
     Parent: 0
     SubAssets:
       []
-  - Handle: 15517588840512804130
-    Type: Mesh
-    BuiltIn: false
-    Path: Cone.fbx
-    Source: File
-    Parent: 0
-    SubAssets:
-      - 8591874641572217228
-      - 9410272321376708478
   - Handle: 16145234905884150251
     Type: Shader
     BuiltIn: true

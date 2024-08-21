@@ -185,31 +185,6 @@ Entities:
           Position: [-12.316617, 0, -9.77812767]
           Rotation: [0, -0, 0]
           Scale: [0.0412600003, 0.219999999, 0.00999999978]
-  - SerializationId: 237578393376260096
-    Components:
-      - Name: struct Flare::NameComponent
-        Data:
-          Value: Spotlight 2
-      - Name: struct Flare::SpotLight
-        Data:
-          Color: [0.754448414, 0.464482516, 0.668800175]
-          Intensity: 102
-          InnerAngle: 7
-          OuterAngle: 31
-      - Name: struct Flare::Parent
-        Data:
-          ParentEntity: 3578117572941315248
-          IndexInParent: 0
-      - Name: struct Flare::TransformComponent
-        Data:
-          Position: [-8.72099972, 4.80785513, -8.2634058]
-          Rotation: [90, -0, 0]
-          Scale: [1, 0.999947965, 0.999947965]
-      - Name: struct Flare::GlobalTransform
-        Data:
-          Position: [-9.11040115, -7.72627306, -10.7680902]
-          Rotation: [-5.34057617e-05, 8.53773656e-07, -26.1180172]
-          Scale: [2.15280008, 0.423997372, 2.15266728]
   - SerializationId: 17634377074356498417
     Components:
       - Name: struct Flare::MeshComponent
@@ -227,11 +202,6 @@ Entities:
       - Name: struct Flare::Decal
         Data:
           Material: 8007099998881589886
-      - Name: struct Flare::Children
-        Data:
-          ChildrenEntities:
-            - 237578393376260096
-          ? {}
       - Name: struct Flare::TransformComponent
         Data:
           Position: [15.57831, -0.018430233, -8.72948074]
