@@ -283,6 +283,8 @@ namespace Flare
         FLARE_PROFILE_FUNCTION();
         FLARE_CORE_ASSERT(std::filesystem::is_directory(path));
 
+        std::vector<std::filesystem::path> files;
+
         for (std::filesystem::path child : std::filesystem::directory_iterator(path))
         {
             if (std::filesystem::is_directory(child))
@@ -292,11 +294,20 @@ namespace Flare
             }
             else
             {
-                std::optional<AssetHandle> handle = m_AssetManager->FindAssetByPath(child);
-
-                AssetTreeNode& node = m_AssetTree.emplace_back(child.filename().generic_string(), child, handle.value_or(AssetHandle()));
-                node.Handle = handle.value_or(NULL_ASSET_HANDLE);
+                files.push_back(child);
+                continue;
             }
+
+            m_AssetTree[parentIndex].LastChildIndex = (uint32_t)(m_AssetTree.size() - 1);
+            m_AssetTree[parentIndex].ChildrenCount++;
+        }
+
+        for (const auto& file : files)
+        {
+			std::optional<AssetHandle> handle = m_AssetManager->FindAssetByPath(file);
+
+			AssetTreeNode& node = m_AssetTree.emplace_back(file.filename().generic_string(), file, handle.value_or(AssetHandle()));
+			node.Handle = handle.value_or(NULL_ASSET_HANDLE);
 
             m_AssetTree[parentIndex].LastChildIndex = (uint32_t)(m_AssetTree.size() - 1);
             m_AssetTree[parentIndex].ChildrenCount++;
