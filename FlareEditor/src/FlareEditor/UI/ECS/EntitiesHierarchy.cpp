@@ -30,9 +30,14 @@ namespace Flare
 		bool result = false;
 		const std::vector<EntityRecord>& records = m_World->Entities.GetEntityRecords();
 
+#define USE_CLIPPER 0
+
 		ImGui::BeginChild("Scene Entities");
+
+#if USE_CLIPPER
 		ImGuiListClipper clipper;
 		clipper.Begin((int32_t)records.size());
+#endif
 
 		if (ImGui::BeginPopupContextWindow("Entity Hierarchy Context Menu"))
 		{
@@ -41,6 +46,7 @@ namespace Flare
 		}
 
 		std::optional<Entity> deletedEntity;
+#if USE_CLIPPER
 		while (clipper.Step())
 		{
 			for (int32_t i = clipper.DisplayStart; i < clipper.DisplayEnd; i++)
@@ -55,6 +61,14 @@ namespace Flare
 		}
 
 		clipper.End();
+#else
+		for (const EntityRecord& entityRecord : records)
+		{
+			if (!m_World->HasComponent<Parent>(entityRecord.Id))
+				result |= RenderEntityItem(entityRecord.Id, selectedEntity);
+		}
+#endif
+
 		ImGui::EndChild();
 
 		return result;
