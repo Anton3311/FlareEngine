@@ -180,11 +180,20 @@ namespace Flare
 	Mesh::Mesh(Ref<SharedMesh> sharedMesh, std::vector<SubMesh>&& subMeshes)
 		: Asset(AssetType::Mesh), m_IndexFormat(sharedMesh->GetIndexFormat()), m_SubMeshes(subMeshes), m_SharedMesh(sharedMesh)
 	{
+		FLARE_CORE_ASSERT(m_SubMeshes.size() > 0);
+
 		m_IndexBuffer = sharedMesh->IndexBuffer;
 		m_Vertices = sharedMesh->Vertices;
 		m_Normals = sharedMesh->Normals;
 		m_Tangents = sharedMesh->Tangents;
 		m_UVs = sharedMesh->UVs;
+
+		m_Bounds = m_SubMeshes[0].Bounds;
+		for (const SubMesh& subMesh : m_SubMeshes)
+		{
+			m_Bounds.Min = glm::min(m_Bounds.Min, subMesh.Bounds.Min);
+			m_Bounds.Max = glm::max(m_Bounds.Max, subMesh.Bounds.Max);
+		}
 	}
 
 	Mesh::~Mesh()
