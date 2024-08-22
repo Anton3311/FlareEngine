@@ -69,8 +69,8 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(!m_IsValid);
 
-		m_DependecyGraph = DependecyGraph(Span<const RenderPassNode>(m_Nodes.data(), m_Nodes.size()));
-		m_DependecyGraph.Build();
+		m_DependencyGraph = DependecyGraph(Span<const RenderPassNode>(m_Nodes.data(), m_Nodes.size()));
+		m_DependencyGraph.Build();
 
 		OnBuild();
 		

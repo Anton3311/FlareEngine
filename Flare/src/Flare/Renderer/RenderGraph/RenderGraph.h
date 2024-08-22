@@ -16,7 +16,7 @@ namespace Flare
 	struct RenderView;
 	struct SceneSubmition;
 
-	class Commanduffer;
+	class CommandBuffer;
 	class Viewport;
 
 	class FLARE_API RenderGraph
@@ -61,7 +61,7 @@ namespace Flare
 
 		inline const std::vector<RenderPassNode>& GetNodes() const { return m_Nodes; }
 		inline const std::vector<ExternalRenderGraphResource>& GetExternalResources() const { return m_ExternalResources; }
-		inline const DependecyGraph& GetDependecyGraph() const { return m_DependecyGraph; }
+		inline const DependecyGraph& GetDependencyGraph() const { return m_DependencyGraph; }
 		inline const Viewport& GetViewport() const { return m_Viewport; }
 
 		static Scope<RenderGraph> Create(const Viewport& viewport);
@@ -78,7 +78,7 @@ namespace Flare
 		std::vector<ExternalRenderGraphResource> m_ExternalResources;
 
 		RenderGraphResourceManager m_ResourceManager;
-		DependecyGraph m_DependecyGraph;
+		DependecyGraph m_DependencyGraph;
 
 		bool m_NeedsRebuilding = false;
 	protected:

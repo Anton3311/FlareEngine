@@ -268,7 +268,7 @@ namespace Flare
 		m_NodeData.resize(nodes.size(), NodeData{});
 
 		LayoutTransitionsGenerator builder(m_CompiledRenderGraph,
-			GetDependecyGraph(),
+			GetDependencyGraph(),
 			Span<const RenderPassNode>(nodes.data(), nodes.size()),
 			GetResourceManager(),
 			Span<const ExternalRenderGraphResource>(externalResources.data(), externalResources.size()));

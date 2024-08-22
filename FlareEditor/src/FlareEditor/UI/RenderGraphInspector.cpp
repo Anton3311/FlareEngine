@@ -19,7 +19,7 @@ namespace Flare
 		if (!m_IsVisible)
 			return;
 
-		const DependecyGraph& dependecyGraph = m_RenderGraph.GetDependecyGraph();
+		const DependecyGraph& dependecyGraph = m_RenderGraph.GetDependencyGraph();
 		if (dependecyGraph.GetMaxDependencyLayer() == 0)
 			return;
 
