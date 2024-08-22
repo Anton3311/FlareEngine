@@ -1,5 +1,7 @@
 #include "SceneSerializer.h"
 
+#include "FlareCore/Profiler/Profiler.h"
+
 #include "Flare/Scene/Scene.h"
 #include "Flare/Scene/Components.h"
 #include "Flare/AssetManager/AssetManager.h"
@@ -22,6 +24,8 @@ namespace Flare
 {
 	void SceneSerializer::SerializeComponent(YAML::Emitter& emitter, const World& world, Entity entity, ComponentId component)
 	{
+		FLARE_PROFILE_FUNCTION();
+
 		std::optional<const void*> entityData = world.Entities.GetEntityComponent(entity, component);
 		const ComponentInfo& info = world.Components.GetComponentInfo(component);
 
@@ -40,6 +44,7 @@ namespace Flare
 	template<typename T>
 	static void AddDeserializedComponent(World& world, Entity& entity, const T& componentData)
 	{
+		FLARE_PROFILE_FUNCTION();
 		if (world.IsEntityAlive(entity))
 			world.AddEntityComponent<T>(entity, componentData);
 		else
@@ -52,6 +57,7 @@ namespace Flare
 
 	static uint8_t* AddDeserializedComponent(World& world, Entity& entity, ComponentId id)
 	{
+		FLARE_PROFILE_FUNCTION();
 		if (world.IsEntityAlive(entity))
 		{
 			bool result = world.Entities.AddEntityComponent(entity, id, nullptr);
@@ -68,6 +74,7 @@ namespace Flare
 
 	void SceneSerializer::SerializeEntity(YAML::Emitter& emitter, World& world, Entity entity)
 	{
+		FLARE_PROFILE_FUNCTION();
 		emitter << YAML::BeginMap;
 
 		{
@@ -96,6 +103,7 @@ namespace Flare
 
 	static void DeserializeEntitySerializationId(const YAML::Node& node, World& world, Entity& outEntity, UUID& outSerializationId)
 	{
+		FLARE_PROFILE_FUNCTION();
 		UUID id;
 		const SerializableObjectDescriptor& idComponentDescriptor = FLARE_SERIALIZATION_DESCRIPTOR_OF(SerializationId);
 		if (YAML::Node idNode = node["SerializationId"])
@@ -109,6 +117,7 @@ namespace Flare
 
 	void SceneSerializer::DeserializeEntity(Entity entity, const YAML::Node& node, World& world, std::unordered_map<UUID, Entity>& serializationIdToECSId)
 	{
+		FLARE_PROFILE_FUNCTION();
 		YAML::Node componentsNode = node["Components"];
 		if (!componentsNode)
 			return;
@@ -151,12 +160,14 @@ namespace Flare
 
 	void SceneSerializer::Serialize(const Ref<Scene>& scene, const EditorCamera& editorCamera, const SceneViewSettings& sceneViewSettings)
 	{
+		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(AssetManager::IsAssetHandleValid(scene->Handle));
 		Serialize(scene, AssetManager::GetAssetMetadata(scene->Handle)->Path, editorCamera, sceneViewSettings);
 	}
 
 	void SerializePostProcessing(YAML::Emitter& emitter, Ref<Scene> scene)
 	{
+		FLARE_PROFILE_FUNCTION();
 		const auto& postProcessingManager = scene->GetPostProcessingManager();
 
 		emitter << YAML::Key << "PostProcessing" << YAML::BeginSeq;
@@ -181,6 +192,7 @@ namespace Flare
 
 	void SceneSerializer::Serialize(const Ref<Scene>& scene, const std::filesystem::path& path, const EditorCamera& editorCamera, const SceneViewSettings& sceneViewSettings)
 	{
+		FLARE_PROFILE_FUNCTION();
 		YAML::Emitter emitter;
 		emitter << YAML::BeginMap;
 		emitter << YAML::Key << "Entities";
@@ -227,6 +239,7 @@ namespace Flare
 
 	bool DeserializePostProcessing(Ref<Scene> scene, const YAML::Node& node)
 	{
+		FLARE_PROFILE_FUNCTION();
 		YAML::Node postProcessingList = node["PostProcessing"];
 
 		if (!postProcessingList)
@@ -274,6 +287,7 @@ namespace Flare
 
 	void SceneSerializer::Deserialize(const Ref<Scene>& scene, const std::filesystem::path& path, EditorCamera& editorCamera, SceneViewSettings& sceneViewSettings)
 	{
+		FLARE_PROFILE_FUNCTION();
 		std::ifstream inputFile(path);
 		if (!inputFile)
 		{

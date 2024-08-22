@@ -17,6 +17,7 @@ namespace Flare
 
     void YAMLSerializer::PropertyKey(std::string_view key)
     {
+        FLARE_PROFILE_FUNCTION();
         if (!m_HasSerializedProperties && m_ObjectSerializationStarted)
         {
             m_Emitter << YAML::BeginMap;
@@ -28,11 +29,13 @@ namespace Flare
 
     SerializationStream::DynamicArrayAction YAMLSerializer::SerializeDynamicArraySize(size_t& size)
     {
+        FLARE_PROFILE_FUNCTION();
         return DynamicArrayAction::None;
     }
 
     void YAMLSerializer::SerializeInt(SerializationValue<uint8_t> intValues, SerializableIntType type)
     {
+        FLARE_PROFILE_FUNCTION();
         if (intValues.IsArray)
             m_Emitter << YAML::BeginSeq;
 
@@ -73,6 +76,7 @@ namespace Flare
     template<typename T>
     static void SerializeValue(YAML::Emitter& emitter, SerializationValue<T>& value)
     {
+        FLARE_PROFILE_FUNCTION();
         if (value.IsArray)
             emitter << YAML::BeginSeq;
 
@@ -85,21 +89,25 @@ namespace Flare
 
     void YAMLSerializer::SerializeBool(SerializationValue<bool> value)
     {
+        FLARE_PROFILE_FUNCTION();
         SerializeValue(m_Emitter, value);
     }
 
     void YAMLSerializer::SerializeFloat(SerializationValue<float> value)
     {
+        FLARE_PROFILE_FUNCTION();
         SerializeValue(m_Emitter, value);
     }
 
     void YAMLSerializer::SerializeUUID(SerializationValue<UUID> uuids)
     {
+        FLARE_PROFILE_FUNCTION();
         SerializeValue(m_Emitter, uuids);
     }
 
     void YAMLSerializer::SerializeFloatVector(SerializationValue<float> value, uint32_t componentsCount)
     {
+        FLARE_PROFILE_FUNCTION();
         if (value.IsArray)
             m_Emitter << YAML::BeginSeq;
 
@@ -130,6 +138,7 @@ namespace Flare
 
     void YAMLSerializer::SerializeIntVector(SerializationValue<int32_t> value, uint32_t componentsCount)
     {
+        FLARE_PROFILE_FUNCTION();
         if (value.IsArray)
             m_Emitter << YAML::BeginSeq;
 
@@ -160,6 +169,7 @@ namespace Flare
 
     void YAMLSerializer::SerializeString(SerializationValue<std::string> value)
     {
+        FLARE_PROFILE_FUNCTION();
         if (value.IsArray)
             m_Emitter << YAML::BeginSeq;
 
@@ -173,6 +183,7 @@ namespace Flare
     template<typename T>
     static void SerializeObjects(YAML::Emitter& emitter, bool isArray, T* values, size_t arraySize)
     {
+        FLARE_PROFILE_FUNCTION();
         if (isArray)
         {
             emitter << YAML::Block << YAML::BeginSeq;
@@ -190,6 +201,7 @@ namespace Flare
 
     static void SerializeEntityId(YAML::Emitter& emitter, const World& world, Entity id)
     {
+        FLARE_PROFILE_FUNCTION();
         if (world.IsEntityAlive(id))
         {
             const SerializationId* serializationId = world.TryGetEntityComponent<const SerializationId>(id);
@@ -206,6 +218,7 @@ namespace Flare
 
     void YAMLSerializer::SerializeObject(const SerializableObjectDescriptor& descriptor, void* objectData, bool isArray, size_t arraySize)
     {
+        FLARE_PROFILE_FUNCTION();
         if (&descriptor == &FLARE_SERIALIZATION_DESCRIPTOR_OF(AssetHandle))
         {
             SerializeObjects<AssetHandle>(m_Emitter, isArray, (AssetHandle*)objectData, arraySize);
@@ -303,6 +316,7 @@ namespace Flare
 
     void YAMLSerializer::SerializeReference(const SerializableObjectDescriptor& valueDescriptor, void* referenceData, void* valueData)
     {
+        FLARE_PROFILE_FUNCTION();
         const AssetDescriptor* assetDescriptor = AssetDescriptor::FindBySerializationDescriptor(valueDescriptor);
         if (assetDescriptor)
         {
@@ -328,22 +342,26 @@ namespace Flare
     YAMLDeserializer::YAMLDeserializer(const YAML::Node& root, std::unordered_map<UUID, Entity>* serializationIdToECSId)
         : m_Root(root), m_SerializationIdToECSId(serializationIdToECSId)
     {
+        FLARE_PROFILE_FUNCTION();
         m_NodesStack.push_back(m_Root);
     }
 
     void YAMLDeserializer::PropertyKey(std::string_view key)
     {
+        FLARE_PROFILE_FUNCTION();
         m_CurrentPropertyKey = key;
     }
 
     SerializationStream::DynamicArrayAction YAMLDeserializer::SerializeDynamicArraySize(size_t& size)
     {
+        FLARE_PROFILE_FUNCTION();
         size = CurrentNode()[m_CurrentPropertyKey].size();
         return DynamicArrayAction::Resize;
     }
 
     static void DeserializeIntValue(uint8_t* outValue, const YAML::Node& node, SerializableIntType type)
     {
+        FLARE_PROFILE_FUNCTION();
 #define DESERIALIZE_INT(intType, serializableIntType)       \
             case SerializableIntType::serializableIntType:  \
                 *(intType*)(outValue) = node.as<intType>(); \
@@ -371,6 +389,7 @@ namespace Flare
 
     void YAMLDeserializer::SerializeInt(SerializationValue<uint8_t> intValues, SerializableIntType type)
     {
+        FLARE_PROFILE_FUNCTION();
         size_t intSize = SizeOfSerializableIntType(type);
         if (intValues.IsArray)
         {
@@ -394,6 +413,7 @@ namespace Flare
     template<typename T>
     void DeserializeValue(SerializationValue<T>& value, const YAML::Node& currentNode, const std::string& currentPropertyName)
     {
+        FLARE_PROFILE_FUNCTION();
         if (value.IsArray)
         {
             size_t index = 0;
@@ -415,22 +435,26 @@ namespace Flare
 
     void YAMLDeserializer::SerializeBool(SerializationValue<bool> value)
     {
+        FLARE_PROFILE_FUNCTION();
         DeserializeValue(value, CurrentNode(), m_CurrentPropertyKey);
     }
 
     void YAMLDeserializer::SerializeFloat(SerializationValue<float> value)
     {
+        FLARE_PROFILE_FUNCTION();
         DeserializeValue(value, CurrentNode(), m_CurrentPropertyKey);
     }
 
     void YAMLDeserializer::SerializeUUID(SerializationValue<UUID> uuids)
     {
+        FLARE_PROFILE_FUNCTION();
         DeserializeValue(uuids, CurrentNode(), m_CurrentPropertyKey);
     }
 
     template<typename T>
     static void DeserializeSingleVector(T* destination, const YAML::Node& node, size_t componentsCount)
     {
+        FLARE_PROFILE_FUNCTION();
         switch (componentsCount)
         {
         case 1:
@@ -460,6 +484,7 @@ namespace Flare
     template<typename T>
     static void DeserializeVector(SerializationValue<T>& value, uint32_t componentsCount, YAML::Node& currentNode, const std::string& currentKey)
     {
+        FLARE_PROFILE_FUNCTION();
         if (!value.IsArray)
         {
             const auto& node = currentNode[currentKey];
@@ -480,16 +505,19 @@ namespace Flare
 
     void YAMLDeserializer::SerializeFloatVector(SerializationValue<float> value, uint32_t componentsCount)
     {
+        FLARE_PROFILE_FUNCTION();
         DeserializeVector<float>(value, componentsCount, CurrentNode(), m_CurrentPropertyKey);
     }
 
     void YAMLDeserializer::SerializeIntVector(SerializationValue<int32_t> value, uint32_t componentsCount)
     {
+        FLARE_PROFILE_FUNCTION();
         DeserializeVector<int32_t>(value, componentsCount, CurrentNode(), m_CurrentPropertyKey);
     }
 
     void YAMLDeserializer::SerializeString(SerializationValue<std::string> value)
     {
+        FLARE_PROFILE_FUNCTION();
         DeserializeValue<std::string>(value, CurrentNode(), m_CurrentPropertyKey);
     }
 
