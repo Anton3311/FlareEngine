@@ -136,7 +136,7 @@ namespace Flare
 		for (const SubMesh& subMesh : m_SubMeshes)
 		{
 			m_Bounds.Min = glm::min(m_Bounds.Min, subMesh.Bounds.Min);
-			m_Bounds.Max = glm::min(m_Bounds.Max, subMesh.Bounds.Max);
+			m_Bounds.Max = glm::max(m_Bounds.Max, subMesh.Bounds.Max);
 		}
 	}
 
