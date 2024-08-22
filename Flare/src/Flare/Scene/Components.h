@@ -212,6 +212,10 @@ namespace Flare
     {
         FLARE_COMPONENT;
 
+        MeshRenderer() = default;
+        MeshRenderer(Ref<Mesh> mesh)
+            : Mesh(mesh) {}
+
         Ref<Mesh> Mesh = nullptr;
         std::vector<Ref<Material>> Materials;
         MeshRenderFlags Flags = MeshRenderFlags::None;

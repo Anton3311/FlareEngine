@@ -386,6 +386,7 @@ namespace Flare
 
 	void SceneViewportWindow::HandleAssetDragAndDrop(AssetHandle handle)
 	{
+		FLARE_PROFILE_FUNCTION();
 		World& world = GetScene()->GetECSWorld();
 		const AssetMetadata* metadata = AssetManager::GetAssetMetadata(handle);
 		if (metadata != nullptr)
@@ -399,6 +400,21 @@ namespace Flare
 			{
 				Ref<Prefab> prefab = AssetManager::GetAsset<Prefab>(handle);
 				prefab->CreateInstance(GetScene()->GetECSWorld());
+				break;
+			}
+			case AssetType::Mesh:
+			{
+				Ref<Mesh> mesh = AssetManager::GetAsset<Mesh>(handle);
+				if (mesh)
+				{
+					Entity entity = world.CreateEntity(
+						TransformComponent(),
+						LocalTransform(),
+						MeshRenderer(mesh));
+
+					EditorLayer::GetInstance().Selection.SetEntity(entity);
+				}
+
 				break;
 			}
 			}
