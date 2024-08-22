@@ -313,7 +313,33 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 		BindMesh(mesh);
-		vkCmdDrawIndexed(m_CommandBuffer, (uint32_t)mesh->GetIndexCount(), instanceCount, 0, 0, baseInstance);
+
+		if (mesh->GetSharedMesh() == nullptr)
+		{
+			// A mesh doesn't have a SharedMesh,
+			// so the Mesh owns all the buffers & sub meshes are laid out sequentially in memory,
+			// so it is possible to draw the mesh in a single draw call
+
+			SubMesh fullMeshRange = mesh->GetFullMeshRange();
+			vkCmdDrawIndexed(m_CommandBuffer,
+				fullMeshRange.IndicesCount,
+				instanceCount,
+				fullMeshRange.BaseIndex,
+				fullMeshRange.BaseVertex,
+				baseInstance);
+		}
+		else
+		{
+			for (const SubMesh& subMesh : mesh->GetSubMeshes())
+			{
+				vkCmdDrawIndexed(m_CommandBuffer,
+					subMesh.IndicesCount,
+					instanceCount,
+					subMesh.BaseIndex,
+					subMesh.BaseVertex,
+					baseInstance);
+			}
+		}
 	}
 
 	void VulkanCommandBuffer::DrawMeshIndexed(const Ref<const Mesh>& mesh, uint32_t subMeshIndex, uint32_t baseInstance, uint32_t instanceCount)
@@ -334,19 +360,30 @@ namespace Flare
 
 		const auto& subMeshes = mesh->GetSubMeshes();
 
-		uint32_t lastSubMeshIndex = firstSubMesh + subMeshCount;
-		uint32_t indexCount = 0;
-
-		if (lastSubMeshIndex == (uint32_t)subMeshes.size())
+		if (mesh->GetSharedMesh() == nullptr)
 		{
-			indexCount = (uint32_t)mesh->GetIndexCount() - subMeshes[firstSubMesh].BaseIndex;
+			uint32_t lastSubMeshIndex = firstSubMesh + subMeshCount;
+			uint32_t indexCount = 0;
+
+			if (lastSubMeshIndex == (uint32_t)subMeshes.size())
+			{
+				indexCount = (uint32_t)mesh->GetIndexCount() - subMeshes[firstSubMesh].BaseIndex;
+			}
+			else
+			{
+				indexCount = subMeshes[lastSubMeshIndex].BaseIndex - subMeshes[firstSubMesh].BaseIndex;
+			}
+
+			vkCmdDrawIndexed(m_CommandBuffer, indexCount, instanceCount, subMeshes[firstSubMesh].BaseIndex, 0, baseInstance);
 		}
 		else
 		{
-			indexCount = subMeshes[lastSubMeshIndex].BaseIndex - subMeshes[firstSubMesh].BaseIndex;
+			for (uint32_t i = firstSubMesh; i < subMeshCount; i++)
+			{
+				const SubMesh& subMesh = subMeshes[i];
+				vkCmdDrawIndexed(m_CommandBuffer, subMesh.IndicesCount, instanceCount, subMesh.BaseIndex, subMesh.BaseVertex, baseInstance);
+			}
 		}
-
-		vkCmdDrawIndexed(m_CommandBuffer, indexCount, instanceCount, subMeshes[firstSubMesh].BaseIndex, 0, baseInstance);
 	}
 
 	void VulkanCommandBuffer::DrawIndexed(uint32_t baseIndex, uint32_t indexCount, uint32_t vertexOffset, uint32_t baseInstance, uint32_t instanceCount)

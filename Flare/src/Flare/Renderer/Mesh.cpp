@@ -55,9 +55,9 @@ namespace Flare
 
 	Mesh::Mesh(size_t vertexBufferSize, IndexBuffer::IndexFormat indexFormat, size_t indexBufferSize)
 		: Asset(AssetType::Mesh),
-		m_VertexBufferSize(vertexBufferSize),
+		m_VertexCount(vertexBufferSize),
 		m_IndexFormat(indexFormat),
-		m_IndexBufferSize(indexBufferSize)
+		m_IndexCount(indexBufferSize)
 	{
 	}
 
@@ -69,9 +69,9 @@ namespace Flare
 		Span<const glm::vec2> uvs)
 		: Asset(AssetType::Mesh),
 		m_IndexFormat(indexFormat),
-		m_VertexBufferSize(vertices.GetSize()),
+		m_VertexCount(vertices.GetSize()),
 		m_VertexBufferOffset(0),
-		m_IndexBufferSize(indices.GetSize()),
+		m_IndexCount(indices.GetSize()),
 		m_IndexBufferOffset(0)
 	{
 		FLARE_PROFILE_FUNCTION();
@@ -91,7 +91,7 @@ namespace Flare
 		SubMesh& subMesh = m_SubMeshes.emplace_back();
 		subMesh.BaseIndex = 0;
 		subMesh.BaseVertex = 0;
-		subMesh.IndicesCount = m_IndexBuffer->GetCount();
+		subMesh.IndicesCount = (uint32_t)m_IndexBuffer->GetCount();
 		subMesh.Bounds.Min = vertices[0];
 		subMesh.Bounds.Max = vertices[1];
 
@@ -111,9 +111,8 @@ namespace Flare
 		Span<const SubMesh>& subMeshes)
 		: Asset(AssetType::Mesh),
 		m_IndexFormat(indexFormat),
-		m_VertexBufferSize(vertices.GetSize()),
+		m_VertexCount(vertices.GetSize()),
 		m_VertexBufferOffset(0),
-		m_IndexBufferSize(indices.GetSize()),
 		m_IndexBufferOffset(0),
 		m_SubMeshes(subMeshes.begin(), subMeshes.end())
 	{
@@ -121,6 +120,8 @@ namespace Flare
 		FLARE_CORE_ASSERT(vertices.GetSize() == normals.GetSize());
 		FLARE_CORE_ASSERT(vertices.GetSize() == tangents.GetSize());
 		FLARE_CORE_ASSERT(vertices.GetSize() == uvs.GetSize());
+
+		m_IndexCount = indices.GetSize() / IndexBuffer::GetIndexFormatSize(m_IndexFormat);
 
 		Ref<CommandBuffer> commandBuffer = VulkanContext::GetInstance().GetUploadCommandBuffer();
 
@@ -154,9 +155,9 @@ namespace Flare
 
 		FLARE_PROFILE_FUNCTION();
 
-		m_VertexBufferSize = vertices.GetSize();
-		m_IndexBufferSize = indices.GetSize() / IndexBuffer::GetIndexFormatSize(sharedMesh->GetIndexFormat());
-		SharedMesh::MeshOffset subAllocation = sharedMesh->AllocateMesh(m_VertexBufferSize, m_IndexBufferSize);
+		m_VertexCount = vertices.GetSize();
+		m_IndexCount = indices.GetSize() / IndexBuffer::GetIndexFormatSize(sharedMesh->GetIndexFormat());
+		SharedMesh::MeshOffset subAllocation = sharedMesh->AllocateMesh(m_VertexCount, m_IndexCount);
 
 		m_VertexBufferOffset = subAllocation.VertexOffset;
 		m_IndexBufferOffset = subAllocation.IndexOffset;
@@ -189,30 +190,22 @@ namespace Flare
 		m_UVs = sharedMesh->UVs;
 
 		m_Bounds = m_SubMeshes[0].Bounds;
+
+		m_IndexBufferOffset = 0;
+		m_VertexBufferOffset = 0;
+
 		for (const SubMesh& subMesh : m_SubMeshes)
 		{
 			m_Bounds.Min = glm::min(m_Bounds.Min, subMesh.Bounds.Min);
 			m_Bounds.Max = glm::max(m_Bounds.Max, subMesh.Bounds.Max);
+
+			m_IndexBufferOffset = glm::min(m_IndexBufferOffset, (size_t)subMesh.BaseIndex);
+			m_VertexBufferOffset = glm::min(m_VertexBufferOffset, (size_t)subMesh.BaseVertex);
 		}
 	}
 
 	Mesh::~Mesh()
 	{
-	}
-
-	void Mesh::AddSubMesh(const SubMesh& subMesh)
-	{
-		if (m_SubMeshes.size() == 0)
-		{
-			m_Bounds = subMesh.Bounds;
-		}
-		else
-		{
-			m_Bounds.Min = glm::min(subMesh.Bounds.Min, m_Bounds.Min);
-			m_Bounds.Max = glm::max(subMesh.Bounds.Max, m_Bounds.Max);
-		}
-
-		m_SubMeshes.push_back(subMesh);
 	}
 
 	void Mesh::SetDebugName(std::string_view debugName)

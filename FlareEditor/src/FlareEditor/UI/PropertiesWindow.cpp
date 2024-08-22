@@ -157,8 +157,8 @@ namespace Flare
 				ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthFixed, windowSize.x / 2.0f);
 
 				RenderTableRow("Submeshes", (int32_t)mesh->GetSubMeshes().size());
-				RenderTableRow("Total Vertices", (int32_t)mesh->GetVertexBufferSize());
-				RenderTableRow("Total Indices", (int32_t)mesh->GetIndexBufferSize());
+				RenderTableRow("Total Vertices", (int32_t)mesh->GetVertexCount());
+				RenderTableRow("Total Indices", (int32_t)mesh->GetIndexCount());
 
 				const char* indexFormatText = "";
 				switch (mesh->GetIndexFormat())

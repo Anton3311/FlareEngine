@@ -90,15 +90,11 @@ namespace Flare
 
 		~Mesh();
 
-		void AddSubMesh(const SubMesh& subMesh);
-
 		void SetDebugName(std::string_view debugName);
 		inline const std::string& GetDebugName() const { return m_DebugName; }
 
-		constexpr size_t GetVertexBufferSize() const { return m_VertexBufferSize; }
-		constexpr size_t GetIndexBufferSize() const { return m_IndexBufferSize; }
-
-		inline size_t GetIndexCount() const { return m_IndexBuffer->GetCount(); }
+		constexpr size_t GetVertexCount() const { return m_VertexCount; }
+		constexpr size_t GetIndexCount() const { return m_IndexCount; }
 
 		inline Ref<IndexBuffer> GetIndexBuffer() const { return m_IndexBuffer; }
 		inline Ref<VertexBuffer> GetVertices() const { return m_Vertices; }
@@ -112,6 +108,16 @@ namespace Flare
 		inline IndexBuffer::IndexFormat GetIndexFormat() const { return m_IndexFormat; }
 
 		inline Ref<SharedMesh> GetSharedMesh() const { return m_SharedMesh; }
+
+		inline SubMesh GetFullMeshRange() const
+		{
+			SubMesh fullMesh{};
+			fullMesh.BaseIndex = (uint32_t)m_IndexBufferOffset;
+			fullMesh.BaseVertex = (uint32_t)m_VertexBufferOffset;
+			fullMesh.Bounds = m_Bounds;
+			fullMesh.IndicesCount = (uint32_t)m_IndexCount;
+			return fullMesh;
+		}
 	private:
 		void UpdateBufferDebugNames();
 	public:
@@ -131,8 +137,8 @@ namespace Flare
 
 		Math::AABB m_Bounds;
 
-		size_t m_VertexBufferSize = 0;
-		size_t m_IndexBufferSize = 0;
+		size_t m_VertexCount = 0;
+		size_t m_IndexCount = 0;
 
 		size_t m_VertexBufferOffset = 0;
 		size_t m_IndexBufferOffset = 0;
