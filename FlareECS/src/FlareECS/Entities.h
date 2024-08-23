@@ -38,7 +38,7 @@ namespace Flare
 		size_t BufferIndex;
 	};
 
-	class FLAREECS_API Entities
+	class FLAREECS_API Entities : public ArchetypeUpdateHandler
 	{
 	public:
 		Entities(Components& components, Archetypes& archetypes);
@@ -116,6 +116,8 @@ namespace Flare
 	public:
 		EntityRecord& operator[](size_t index);
 		const EntityRecord& operator[](size_t index) const;
+
+		void OnArchetypeCreated(ArchetypeId id) override;
 	private:
 		struct EntityCreationResult
 		{
@@ -141,6 +143,20 @@ namespace Flare
 		std::unordered_map<Entity, size_t>::const_iterator FindEntity(Entity entity) const;
 
 		void ReleaseEntityData();
+
+		inline EntityStorage* TryGetEntityStorage(ArchetypeId archetype)
+		{
+			if ((size_t)archetype < m_EntityStorages.size())
+				return &m_EntityStorages[archetype];
+			return nullptr;
+		}
+
+		inline const EntityStorage* TryGetEntityStorage(ArchetypeId archetype) const
+		{
+			if ((size_t)archetype < m_EntityStorages.size())
+				return &m_EntityStorages[archetype];
+			return nullptr;
+		}
 	private:
 		std::vector<ComponentId> m_TemporaryComponentSet;
 
@@ -157,7 +173,7 @@ namespace Flare
 		EntityIndex m_EntityIndex;
 
 		friend class EntitiesIterator;
-	};
+};
 
 	class FLAREECS_API EntityHelper
 	{

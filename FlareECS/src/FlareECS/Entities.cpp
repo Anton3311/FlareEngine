@@ -23,10 +23,15 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 		EntityChunksPool::Initialize(16);
+
+		m_Archetypes.AddUpdateHandler(this);
+
+		EnsureValidEntityStorages();
 	}
 
 	Entities::~Entities()
 	{
+		m_Archetypes.RemoveUpdateHandler(this);
 		ReleaseEntityData();
 	}
 
@@ -500,11 +505,11 @@ namespace Flare
 
 		const EntityRecord& entityRecord = m_EntityRecords[it->second];
 		const ArchetypeRecord& archetype = m_Archetypes.Records[entityRecord.Archetype];
-		const EntityStorage& storage = GetEntityStorage(entityRecord.Archetype);
+		const EntityStorage& storage = m_EntityStorages[archetype.Id];
 
 		std::optional<size_t> componentIndex = archetype.TryGetComponentIndex(component);
 		if (!componentIndex.has_value())
-			return {};
+			return nullptr;
 
 		uint8_t* entityData = storage.GetEntityData(entityRecord.BufferIndex);
 		return entityData + archetype.ComponentOffsets[componentIndex.value()];
@@ -519,7 +524,7 @@ namespace Flare
 
 		const EntityRecord& entityRecord = m_EntityRecords[it->second];
 		const ArchetypeRecord& archetype = m_Archetypes.Records[entityRecord.Archetype];
-		const EntityStorage& storage = GetEntityStorage(entityRecord.Archetype);
+		const EntityStorage& storage = m_EntityStorages[archetype.Id];
 
 		std::optional<size_t> componentIndex = archetype.TryGetComponentIndex(component);
 		if (!componentIndex.has_value())
@@ -782,7 +787,6 @@ namespace Flare
 	EntityStorage& Entities::GetEntityStorage(ArchetypeId archetype)
 	{
 		FLARE_CORE_ASSERT(m_Archetypes.IsIdValid(archetype));
-		EnsureValidEntityStorages();
 		return m_EntityStorages[archetype];
 	}
 
@@ -926,6 +930,13 @@ namespace Flare
 				EntityHelper::Destroy(archetype, m_Components, entityData);
 			}
 		}
+	}
+
+	void Entities::OnArchetypeCreated(ArchetypeId id)
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		EnsureValidEntityStorages();
 	}
 
 	//
