@@ -784,18 +784,6 @@ namespace Flare
 		}
 	}
 
-	EntityStorage& Entities::GetEntityStorage(ArchetypeId archetype)
-	{
-		FLARE_CORE_ASSERT(m_Archetypes.IsIdValid(archetype));
-		return m_EntityStorages[archetype];
-	}
-
-	const EntityStorage& Entities::GetEntityStorage(ArchetypeId archetype) const
-	{
-		FLARE_CORE_ASSERT(m_Archetypes.IsIdValid(archetype));
-		return m_EntityStorages[archetype];
-	}
-
 	EntityStorage& Entities::GetDeletedEntityStorage(ArchetypeId archetype)
 	{
 		FLARE_CORE_ASSERT(m_Archetypes.IsIdValid(archetype));

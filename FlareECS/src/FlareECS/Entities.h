@@ -82,8 +82,8 @@ namespace Flare
 		std::optional<const uint8_t*> GetEntityData(Entity entity) const;
 		std::optional<size_t> GetEntityDataSize(Entity entity) const;
 
-		EntityStorage& GetEntityStorage(ArchetypeId archetype);
-		const EntityStorage& GetEntityStorage(ArchetypeId archetype) const;
+		inline EntityStorage& GetEntityStorage(ArchetypeId archetype) { return m_EntityStorages[archetype]; }
+		inline const EntityStorage& GetEntityStorage(ArchetypeId archetype) const { return m_EntityStorages[archetype]; }
 
 		EntityStorage& GetDeletedEntityStorage(ArchetypeId archetype);
 		const EntityStorage& GetDeletedEntityStorage(ArchetypeId archetype) const;
@@ -173,7 +173,7 @@ namespace Flare
 		EntityIndex m_EntityIndex;
 
 		friend class EntitiesIterator;
-};
+	};
 
 	class FLAREECS_API EntityHelper
 	{
