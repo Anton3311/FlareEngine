@@ -60,17 +60,17 @@ namespace Flare
 		template<typename T>
 		constexpr T& GetEntityComponent(Entity entity)
 		{
-			std::optional<void*> componentData = Entities.GetEntityComponent(entity, COMPONENT_ID(T));
-			FLARE_CORE_ASSERT(componentData.has_value(), "Failed to get entity component");
-			return *(T*)componentData.value();
+			void* componentData = Entities.GetEntityComponent(entity, COMPONENT_ID(T));
+			FLARE_CORE_ASSERT(componentData, "Failed to get entity component");
+			return *(T*)componentData;
 		}
 
 		template<typename T>
 		constexpr const T& GetEntityComponent(Entity entity) const
 		{
-			std::optional<const void*> componentData = Entities.GetEntityComponent(entity, COMPONENT_ID(T));
-			FLARE_CORE_ASSERT(componentData.has_value(), "Failed to get entity component");
-			return *(const T*)componentData.value();
+			const void* componentData = Entities.GetEntityComponent(entity, COMPONENT_ID(T));
+			FLARE_CORE_ASSERT(componentData, "Failed to get entity component");
+			return *(const T*)componentData;
 		}
 
 		template<typename T>
