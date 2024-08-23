@@ -221,7 +221,7 @@ namespace Flare
 			float currentNearPlane = LIGHT_NEAR;
 			for (size_t i = 0; i < shadowSettings.Cascades; i++)
 			{
-				// 1. Calculate a fit frustum around camera's furstum
+				// 1. Calculate a fit frustum around camera's frustum
 				CalculateShadowFrustumParamsAroundCamera(m_CascadeData[i],
 					context.GetRenderView(),
 					directionalLight.Direction,
@@ -236,7 +236,7 @@ namespace Flare
 
 				currentNearPlane = shadowSettings.CascadeSplits[i];
 
-				m_ShadowData.FrustumWidth[i] = m_CascadeData->BoundingSphereRadius * 2.0f;
+				m_ShadowData.FrustumWidth[i] = m_CascadeData[i].BoundingSphereRadius * 2.0f;
 			}
 		}
 
@@ -282,7 +282,7 @@ namespace Flare
 
 				ShadowCascadeData& cascadeData = m_CascadeData[cascadeIndex];
 
-				// Move shadow map in texel size increaments. in order to avoid shadow edge swimming
+				// Move shadow map in texel size increments. in order to avoid shadow edge swimming
 				// https://alextardif.com/shadowmapping.html
 				float texelsPerUnit = (float)GetShadowMapResolution(Renderer::GetShadowSettings().Quality) / (cascadeData.BoundingSphereRadius * 2.0f);
 
