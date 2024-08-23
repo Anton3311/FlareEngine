@@ -8,6 +8,8 @@
 #include <unordered_map>
 #include <unordered_set>
 
+#include <assimp/matrix4x4.h>
+
 struct aiScene;
 struct aiNode;
 struct aiMesh;
@@ -22,6 +24,8 @@ namespace Flare
 		Ref<Mesh> Mesh = nullptr;
 		std::vector<uint32_t> MaterialIndices;
 	};
+
+	glm::mat4 ConvertToColumnMajor(const aiMatrix4x4& matrix);
 
 	struct SceneData
 	{

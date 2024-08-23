@@ -314,7 +314,10 @@ namespace Flare
         glm::vec3 Color;
         float Intensity;
 
+        // Inner angle in degrees
         float InnerAngle;
+
+        // Outer angle in degrees
         float OuterAngle;
     };
 
