@@ -174,7 +174,7 @@ namespace Flare
 					cascadeBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 				}
 
-				s_RendererData.GlobalDescriptorSetPool = CreateRef<VulkanDescriptorSetPool>(Span(bindings, 12));
+				s_RendererData.GlobalDescriptorSetPool = Ref<VulkanDescriptorSetPool>::New(Span(bindings, 12));
 			}
 
 			{
@@ -185,7 +185,7 @@ namespace Flare
 				cameraBinding.pImmutableSamplers = nullptr;
 				cameraBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_COMPUTE_BIT;
 
-				s_RendererData.CameraDescriptorSetPool = CreateRef<VulkanDescriptorSetPool>(Span(&cameraBinding, 1));
+				s_RendererData.CameraDescriptorSetPool = Ref<VulkanDescriptorSetPool>::New(Span(&cameraBinding, 1));
 			}
 
 			{
@@ -196,7 +196,7 @@ namespace Flare
 				instanceDataBinding.pImmutableSamplers = nullptr;
 				instanceDataBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
 
-				s_RendererData.InstanceDataDescriptorSetPool = CreateRef<VulkanDescriptorSetPool>(Span(&instanceDataBinding, 1));
+				s_RendererData.InstanceDataDescriptorSetPool = Ref<VulkanDescriptorSetPool>::New(Span(&instanceDataBinding, 1));
 			}
 
 			// Decals descriptor set
@@ -206,7 +206,7 @@ namespace Flare
 			decalDepthBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 			decalDepthBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
-			s_RendererData.DecalsDescriptorSetPool = CreateRef<VulkanDescriptorSetPool>(Span(&decalDepthBinding, 1));
+			s_RendererData.DecalsDescriptorSetPool = Ref<VulkanDescriptorSetPool>::New(Span(&decalDepthBinding, 1));
 		}
 
 		SamplerSpecifications samplerSpecifications{};
@@ -406,7 +406,7 @@ namespace Flare
 		RenderGraphPassSpecifications shadowPassSpec{};
 		shadowPassSpec.SetDebugName("ShadowPass");
 
-		Ref<ShadowPass> shadowPass = CreateRef<ShadowPass>();
+		Ref<ShadowPass> shadowPass = Ref<ShadowPass>::New();
 
 		viewport.GetRenderGraph()->AddPass(shadowPassSpec, shadowPass);
 
@@ -427,7 +427,7 @@ namespace Flare
 			cascadePassSpec.SetDebugName(fmt::format("ShadowCascadePass{}", cascadeIndex));
 			cascadePassSpec.AddOutput(cascadeTextures[cascadeIndex], 0, 1.0f);
 
-			Ref<ShadowCascadePass> cascadePass = CreateRef<ShadowCascadePass>(
+			Ref<ShadowCascadePass> cascadePass = Ref<ShadowCascadePass>::New(
 				s_RendererData.Statistics,
 				shadowPass->GetCascadeData((size_t)cascadeIndex),
 				shadowPass->GetFilteredTransforms(),
@@ -486,7 +486,7 @@ namespace Flare
 			}
 		}
 
-		viewport.GetRenderGraph()->AddPass(geometryPass, CreateRef<GeometryPass>(s_RendererData.Statistics));
+		viewport.GetRenderGraph()->AddPass(geometryPass, Ref<GeometryPass>::New(s_RendererData.Statistics));
 
 		// Decal pass
 		RenderGraphPassSpecifications decalPass{};
@@ -494,7 +494,7 @@ namespace Flare
 		decalPass.AddOutput(viewport.ColorTextureId, 0);
 		decalPass.SetDebugName("DecalsPass");
 
-		viewport.GetRenderGraph()->AddPass(decalPass, CreateRef<DecalsPass>(
+		viewport.GetRenderGraph()->AddPass(decalPass, Ref<DecalsPass>::New(
 			s_RendererData.DecalsDescriptorSetPool,
 			viewport.DepthTextureId));
 	}

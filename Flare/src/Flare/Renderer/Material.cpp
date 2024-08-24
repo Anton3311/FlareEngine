@@ -44,7 +44,7 @@ namespace Flare
 		switch (RendererAPI::GetAPI())
 		{
 		case RendererAPI::API::Vulkan:
-			return CreateRef<VulkanMaterial>();
+			return Ref<VulkanMaterial>::New();
 		}
 
 		FLARE_CORE_ASSERT(false);
@@ -57,7 +57,7 @@ namespace Flare
 		switch (RendererAPI::GetAPI())
 		{
 		case RendererAPI::API::Vulkan:
-			material = CreateRef<VulkanMaterial>();
+			material = Ref<VulkanMaterial>::New();
 			break;
 		}
 
@@ -74,7 +74,7 @@ namespace Flare
 		switch (RendererAPI::GetAPI())
 		{
 		case RendererAPI::API::Vulkan:
-			material = CreateRef<VulkanMaterial>();
+			material = Ref<VulkanMaterial>::New();
 			break;
 		}
 

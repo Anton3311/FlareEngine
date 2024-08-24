@@ -11,7 +11,7 @@ namespace Flare
         switch (RendererAPI::GetAPI())
         {
         case RendererAPI::API::Vulkan:
-            return CreateRef<VulkanUniformBuffer>(size);
+            return Ref<VulkanUniformBuffer>::New(size);
         }
 
         return nullptr;

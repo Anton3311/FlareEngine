@@ -38,7 +38,7 @@ namespace Flare
 		specifications.SetDebugName("VignettePass");
 		specifications.AddOutput(viewport.ColorTextureId, 0);
 
-		renderGraph.AddPass(specifications, CreateRef<VignettePass>());
+		renderGraph.AddPass(specifications, Ref<VignettePass>::New());
 	}
 
 	const SerializableObjectDescriptor& Vignette::GetSerializationDescriptor() const

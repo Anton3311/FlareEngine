@@ -132,7 +132,7 @@ namespace Flare
 			PipelineInputLayoutElement(0, 0, ShaderDataType::Float2)
 		});
 
-		m_Pipeline = CreateRef<VulkanPipeline>(specifications);
+		m_Pipeline = Ref<VulkanPipeline>::New(specifications);
 	}
 
 	void SceneViewGridPass::DrawGridLevel(Ref<CommandBuffer> commandBuffer, int32_t level, glm::vec3 color)

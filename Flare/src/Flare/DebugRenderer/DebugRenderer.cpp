@@ -258,7 +258,7 @@ namespace Flare
 		linesPass.SetType(RenderGraphPassType::Graphics);
 		linesPass.SetDebugName("DebugLinesPass");
 
-		viewport.GetRenderGraph()->AddPass(linesPass, CreateRef<DebugLinesPass>(
+		viewport.GetRenderGraph()->AddPass(linesPass, Ref<DebugLinesPass>::New(
 			s_DebugRendererData.DebugShader,
 			s_DebugRendererData.Settings));
 
@@ -268,7 +268,7 @@ namespace Flare
 		raysPass.SetType(RenderGraphPassType::Graphics);
 		raysPass.SetDebugName("DebugRaysPass");
 
-		viewport.GetRenderGraph()->AddPass(raysPass, CreateRef<DebugRaysPass>(
+		viewport.GetRenderGraph()->AddPass(raysPass, Ref<DebugRaysPass>::New(
 			s_DebugRendererData.RaysIndexBuffer,
 			s_DebugRendererData.DebugShader,
 			s_DebugRendererData.Settings));

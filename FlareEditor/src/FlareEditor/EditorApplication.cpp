@@ -15,7 +15,7 @@ namespace Flare
 		: Application(arguments)
 	{
 		Application::GetInstance().GetWindow()->SetTitle("Flare Editor");
-		PushLayer(CreateRef<EditorLayer>());
+		PushLayer(Ref<EditorLayer>::New());
 	}
 
 	EditorApplication::~EditorApplication()

@@ -264,7 +264,7 @@ namespace Flare
 			return MeshImporter::ImportAsPrefab(*AssetManager::GetAssetMetadata(sourceAsset));
 		}
 
-		Ref<Prefab> prefab = CreateRef<Prefab>(context.Components, context.Archetypes, PrefabFlags::None);
+		Ref<Prefab> prefab = Ref<Prefab>::New(context.Components, context.Archetypes, PrefabFlags::None);
 		if (YAML::Node hierarchyNode = node["Hierarchy"])
 			DeserializePrefabHierarchy(hierarchyNode, prefab->GetHierarchy());
 

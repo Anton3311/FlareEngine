@@ -172,7 +172,7 @@ namespace Flare
 				subMeshes.push_back(m_SceneData.MeshData[nodeMesh]);
 			}
 
-			nodeMeshData.Mesh = CreateRef<Mesh>(m_SceneData.SharedMesh, std::move(subMeshes));
+			nodeMeshData.Mesh = Ref<Mesh>::New(m_SceneData.SharedMesh, std::move(subMeshes));
 			nodeMeshData.Mesh->SetDebugName(node->mName.C_Str());
 		}
 	}

@@ -194,7 +194,7 @@ namespace Flare
 			attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 			attachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
-			m_ColorOnlyPass = CreateRef<VulkanRenderPass>(Span<VkAttachmentDescription>(attachment));
+			m_ColorOnlyPass = Ref<VulkanRenderPass>::New(Span<VkAttachmentDescription>(attachment));
 			
 			VkClearValue clearValue{};
 			clearValue.color.float32[0] = 0.0f;
@@ -219,9 +219,9 @@ namespace Flare
 		emptyBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 		emptyBinding.stageFlags = VK_SHADER_STAGE_ALL_GRAPHICS;
 
-		m_EmptyDescriptorSetPool = CreateRef<VulkanDescriptorSetPool>(Span(&emptyBinding, 1));
-		m_EmptyDescriptorSetLayout = CreateRef<VulkanDescriptorSetLayout>(Span<VkDescriptorSetLayoutBinding>());
-		m_EmptyDescriptorSet = As<VulkanDescriptorSetPool>(m_EmptyDescriptorSetPool)->AllocateSet(m_EmptyDescriptorSetLayout);
+		m_EmptyDescriptorSetPool = Ref<VulkanDescriptorSetPool>::New(Span(&emptyBinding, 1));
+		m_EmptyDescriptorSetLayout = Ref<VulkanDescriptorSetLayout>::New(Span<VkDescriptorSetLayoutBinding>());
+		m_EmptyDescriptorSet = m_EmptyDescriptorSetPool.As<VulkanDescriptorSetPool>()->AllocateSet(m_EmptyDescriptorSetLayout);
 	}
 
 	static void ReleaseSemaphores(VkDevice device, std::vector<VkSemaphore>& semaphores)
@@ -597,7 +597,7 @@ namespace Flare
 		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
 		VK_CHECK_RESULT(vkBeginCommandBuffer(commandBuffer, &beginInfo));
-		return CreateRef<VulkanCommandBuffer>(commandBuffer);
+		return Ref<VulkanCommandBuffer>::New(commandBuffer);
 	}
 
 	void VulkanContext::EndTemporaryCommandBuffer(Ref<VulkanCommandBuffer> commandBuffer)
@@ -668,7 +668,7 @@ namespace Flare
 				}
 			}
 
-			Ref<VulkanRenderPass> renderPass = CreateRef<VulkanRenderPass>(Span<VkAttachmentDescription>::FromVector(descriptions), depthAttachmentIndex);
+			Ref<VulkanRenderPass> renderPass = Ref<VulkanRenderPass>::New(Span<VkAttachmentDescription>::FromVector(descriptions), depthAttachmentIndex);
 			m_RenderPasses.emplace(key, renderPass);
 
 			return renderPass;
@@ -784,7 +784,7 @@ namespace Flare
 			FLARE_CORE_ASSERT(false);
 		}
 
-		Ref<Pipeline> pipeline = As<Pipeline>(CreateRef<VulkanPipeline>(specifications, renderPass));
+		Ref<Pipeline> pipeline = As<Pipeline>(Ref<VulkanPipeline>::New(specifications, renderPass));
 		m_DefaultPipelines.emplace(key, pipeline);
 		return pipeline;
 	}
@@ -1140,7 +1140,7 @@ namespace Flare
 			std::string name = fmt::format("Primary.#{}", frameIndex);
 			SetDebugName(VK_OBJECT_TYPE_COMMAND_BUFFER, (uint64_t)commandBufferHandle, name.c_str());
 
-			m_FrameResouces[frameIndex].CommandBuffer = CreateRef<VulkanCommandBuffer>(commandBufferHandle);
+			m_FrameResouces[frameIndex].CommandBuffer = Ref<VulkanCommandBuffer>::New(commandBufferHandle);
 		}
 	}
 

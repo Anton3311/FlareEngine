@@ -53,7 +53,7 @@ namespace Flare
 		specifications.SetType(RenderGraphPassType::Graphics);
 		specifications.SetDebugName("AtmospherePass");
 
-		renderGraph.AddPass(specifications, CreateRef<AtmospherePass>());
+		renderGraph.AddPass(specifications, Ref<AtmospherePass>::New());
 	}
 
 	const SerializableObjectDescriptor& Atmosphere::GetSerializationDescriptor() const

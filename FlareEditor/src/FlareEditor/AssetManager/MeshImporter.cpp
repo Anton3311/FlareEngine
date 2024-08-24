@@ -117,7 +117,7 @@ namespace Flare
 			roughnessMapProperty = shader->GetPropertyIndex("u_RoughnessMap");
 		}
 
-		Ref<MaterialsTable> materialsTable = CreateRef<MaterialsTable>();
+		Ref<MaterialsTable> materialsTable = Ref<MaterialsTable>::New();
 		if (AssetManager::IsAssetHandleValid(materialsTableHandle))
 			assetManager->SetLoadedAsset(materialsTableHandle, materialsTable);
 		else
@@ -249,7 +249,7 @@ namespace Flare
 		
 		if (data.IndexFormat == IndexBuffer::IndexFormat::UInt16)
 		{
-		 	mesh = CreateRef<Mesh>(MemorySpan::FromVector(data.Indices16),
+		 	mesh = Ref<Mesh>::New(MemorySpan::FromVector(data.Indices16),
 				data.IndexFormat,
 				Span<const glm::vec3>(data.Vertices.data(), data.Vertices.size()),
 				Span<const glm::vec3>(data.Normals.data(), data.Normals.size()),
@@ -259,7 +259,7 @@ namespace Flare
 		}
 		else
 		{
-		 	mesh = CreateRef<Mesh>(MemorySpan::FromVector(data.Indices32),
+		 	mesh = Ref<Mesh>::New(MemorySpan::FromVector(data.Indices32),
 				data.IndexFormat,
 				Span<const glm::vec3>(data.Vertices.data(), data.Vertices.size()),
 				Span<const glm::vec3>(data.Normals.data(), data.Normals.size()),
@@ -311,7 +311,7 @@ namespace Flare
 	Ref<MeshSource> MeshImporter::ImportMeshSource(const AssetMetadata& metadata)
 	{
 		FLARE_PROFILE_FUNCTION();
-		return CreateRef<MeshSource>();
+		return Ref<MeshSource>::New();
 	}
 
 	void MeshImporter::SerializeMesh(AssetHandle meshHandle, AssetHandle meshSourceHandle)

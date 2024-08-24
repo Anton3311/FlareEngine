@@ -274,7 +274,7 @@ namespace Flare
 			m_PoolSizes[i].type = bindings[i].descriptorType;
 		}
 
-		m_Layout = CreateRef<VulkanDescriptorSetLayout>(bindings);
+		m_Layout = Ref<VulkanDescriptorSetLayout>::New(bindings);
 	}
 
 	VulkanDescriptorSetPool::~VulkanDescriptorSetPool()
@@ -351,7 +351,7 @@ namespace Flare
 
 		it->AllocatedSets++;
 
-		return CreateRef<VulkanDescriptorSet>(this, it->Pool, set);
+		return Ref<VulkanDescriptorSet>::New(this, it->Pool, set);
 	}
 
 	Ref<const DescriptorSetLayout> VulkanDescriptorSetPool::GetLayout() const

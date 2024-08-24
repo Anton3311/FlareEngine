@@ -31,7 +31,7 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 		ECSContext& ecsContext = EditorLayer::GetInstance().GetECSContext();
-		m_Prefab = CreateRef<Prefab>(ecsContext.Components, ecsContext.Archetypes, PrefabFlags::Generated, m_AssetMetadata.Handle);
+		m_Prefab = Ref<Prefab>::New(ecsContext.Components, ecsContext.Archetypes, PrefabFlags::Generated, m_AssetMetadata.Handle);
 
 		PrefabHierarchy& prefabHierarchy = m_Prefab->GetHierarchy();
 

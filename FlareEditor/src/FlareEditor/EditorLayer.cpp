@@ -104,18 +104,18 @@ namespace Flare
 
         m_ImGuiLayer->OnAttach();
 
-        Ref<Font> defaultFont = CreateRef<Font>("assets/Fonts/Roboto/Roboto-Regular.ttf");
+        Ref<Font> defaultFont = Ref<Font>::New("assets/Fonts/Roboto/Roboto-Regular.ttf");
         Font::SetDefault(defaultFont);
 
-        AssetManager::Intialize(CreateRef<EditorAssetManager>());
+        AssetManager::Intialize(Ref<EditorAssetManager>::New());
 
         m_AssetManagerWindow.SetOpenAction(AssetType::Scene, [this](AssetHandle handle)
         {
             OpenScene(handle);
         });
 
-        m_GameWindow = CreateRef<ViewportWindow>(m_SceneRenderer, "Game");
-        m_SceneViewport = CreateRef<SceneViewportWindow>(m_SceneRenderer, m_SceneViewSettings);
+        m_GameWindow = Ref<ViewportWindow>::New(m_SceneRenderer, "Game");
+        m_SceneViewport = Ref<SceneViewportWindow>::New(m_SceneRenderer, m_SceneViewSettings);
 
         m_ViewportWindows.emplace_back(m_SceneViewport);
         m_ViewportWindows.emplace_back(m_GameWindow);
@@ -162,7 +162,7 @@ namespace Flare
         {
 			if (m_PrefabEditor == nullptr)
 			{
-				m_PrefabEditor = CreateRef<PrefabEditor>(m_ECSContext);
+				m_PrefabEditor = Ref<PrefabEditor>::New(m_ECSContext);
 				m_PrefabEditor->OnAttach();
 
                 m_AssetEditorWindows.push_back(m_PrefabEditor);
@@ -653,7 +653,7 @@ namespace Flare
 
 			active = nullptr;
 
-			active = CreateRef<Scene>(m_ECSContext);
+			active = Ref<Scene>::New(m_ECSContext);
 			active->Initialize();
 			active->InitializeRuntime();
 			Scene::SetActive(active);
@@ -693,7 +693,7 @@ namespace Flare
 			assetManager->UnloadAsset(active->Handle);
 			active = nullptr;
 
-			Ref<Scene> playModeScene = CreateRef<Scene>(m_ECSContext);
+			Ref<Scene> playModeScene = Ref<Scene>::New(m_ECSContext);
 			SceneSerializer::Deserialize(playModeScene, activeScenePath, m_SceneViewport->GetEditorCamera(), m_SceneViewSettings);
 
 			Scene::SetActive(playModeScene);
@@ -768,7 +768,7 @@ namespace Flare
         m_ECSContext.Components.ReregisterComponents();
         m_ECSContext.SystemsRegistry.ReregisterSystems();
 
-        active = CreateRef<Scene>(m_ECSContext);
+        active = Ref<Scene>::New(m_ECSContext);
         active->Handle = activeSceneHandle;
         SceneSerializer::Deserialize(active, activeScenePath, m_SceneViewport->GetEditorCamera(), m_SceneViewSettings);
         

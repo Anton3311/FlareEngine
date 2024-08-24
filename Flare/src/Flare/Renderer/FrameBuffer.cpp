@@ -10,7 +10,7 @@ namespace Flare
 		switch (RendererAPI::GetAPI())
 		{
 		case RendererAPI::API::Vulkan:
-			return CreateRef<VulkanFrameBuffer>(attachmentTextures);
+			return Ref<VulkanFrameBuffer>::New(attachmentTextures);
 		}
 
 		FLARE_CORE_ASSERT(false);
@@ -22,7 +22,7 @@ namespace Flare
 		switch (RendererAPI::GetAPI())
 		{
 		case RendererAPI::API::Vulkan:
-			return CreateRef<VulkanFrameBuffer>(specifications);
+			return Ref<VulkanFrameBuffer>::New(specifications);
 		}
 
 		return nullptr;

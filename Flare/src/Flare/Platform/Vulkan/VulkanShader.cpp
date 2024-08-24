@@ -179,7 +179,7 @@ namespace Flare
 
 			if (bindings.size() > 0)
 			{
-				m_SetPool = CreateRef<VulkanDescriptorSetPool>(Span<VkDescriptorSetLayoutBinding>::FromVector(bindings));
+				m_SetPool = Ref<VulkanDescriptorSetPool>::New(Span<VkDescriptorSetLayoutBinding>::FromVector(bindings));
 			}
 		}
 

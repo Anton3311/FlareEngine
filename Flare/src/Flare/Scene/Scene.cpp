@@ -51,10 +51,10 @@ namespace Flare
 
 		m_EnvironmentQuery = m_World.NewQuery().All().With<Environment>().Build();
 
-		m_PostProcessingManager.AddEffect(CreateRef<SSAO>());
-		m_PostProcessingManager.AddEffect(CreateRef<Atmosphere>());
-		m_PostProcessingManager.AddEffect(CreateRef<Vignette>());
-		m_PostProcessingManager.AddEffect(CreateRef<ToneMapping>());
+		m_PostProcessingManager.AddEffect(Ref<SSAO>::New());
+		m_PostProcessingManager.AddEffect(Ref<Atmosphere>::New());
+		m_PostProcessingManager.AddEffect(Ref<Vignette>::New());
+		m_PostProcessingManager.AddEffect(Ref<ToneMapping>::New());
 	}
 
 	void Scene::InitializeRuntime()

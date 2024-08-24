@@ -82,7 +82,7 @@ namespace Flare
 
 			VK_CHECK_RESULT(vkAllocateCommandBuffers(device, &allocationInfo, &commandBuffer));
 
-			m_FrameData[i].CommandBuffer = CreateRef<VulkanCommandBuffer>(commandBuffer);
+			m_FrameData[i].CommandBuffer = Ref<VulkanCommandBuffer>::New(commandBuffer);
 		}
 	}
 
@@ -252,16 +252,16 @@ namespace Flare
 
 			if (resources.VertexBuffer == nullptr)
 			{
-				resources.VertexBuffer = CreateRef<VulkanVertexBuffer>(vertexBufferSize, GPUBufferUsage::Dynamic);
+				resources.VertexBuffer = Ref<VulkanVertexBuffer>::New(vertexBufferSize, GPUBufferUsage::Dynamic);
 				resources.VertexBuffer->GetBuffer().EnsureAllocated();
 			}
 
 			if (resources.IndexBuffer == nullptr)
 			{
 				if (sizeof(ImDrawIdx) == 2)
-					resources.IndexBuffer = CreateRef<VulkanIndexBuffer>(IndexBuffer::IndexFormat::UInt32, indexBufferSize / 2, GPUBufferUsage::Dynamic);
+					resources.IndexBuffer = Ref<VulkanIndexBuffer>::New(IndexBuffer::IndexFormat::UInt32, indexBufferSize / 2, GPUBufferUsage::Dynamic);
 				else
-					resources.IndexBuffer = CreateRef<VulkanIndexBuffer>(IndexBuffer::IndexFormat::UInt16, indexBufferSize, GPUBufferUsage::Dynamic);
+					resources.IndexBuffer = Ref<VulkanIndexBuffer>::New(IndexBuffer::IndexFormat::UInt16, indexBufferSize, GPUBufferUsage::Dynamic);
 
 				resources.IndexBuffer->GetBuffer().EnsureAllocated();
 			}

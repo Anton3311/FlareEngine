@@ -138,7 +138,7 @@ namespace Flare
 
 			FLARE_CORE_ASSERT(m_NodeData[nodeIndex].VulkanRenderPassHandle);
 
-			m_RenderTargets[renderTargetIndex] = CreateRef<VulkanFrameBuffer>(attachmentTextures[0]->GetWidth(),
+			m_RenderTargets[renderTargetIndex] = Ref<VulkanFrameBuffer>::New(attachmentTextures[0]->GetWidth(),
 				attachmentTextures[0]->GetHeight(),
 				m_NodeData[nodeIndex].VulkanRenderPassHandle,
 				Span<Ref<Texture>>::FromVector(attachmentTextures),

@@ -23,7 +23,7 @@ namespace Flare
 {
 	EditorTitleBar::EditorTitleBar()
 	{
-		m_WindowControls = CreateRef<WindowsWindowControls>();
+		m_WindowControls = Ref<WindowsWindowControls>::New();
 
 		Application::GetInstance().GetWindow()->SetWindowControls(m_WindowControls);
 	}

@@ -47,7 +47,7 @@ namespace Flare
 	Ref<Asset> SpriteImporter::ImportSprite(const AssetMetadata& metadata)
 	{
 		FLARE_PROFILE_FUNCTION();
-		Ref<Sprite> sprite = CreateRef<Sprite>();
+		Ref<Sprite> sprite = Ref<Sprite>::New();
 		if (!DeserializeSprite(sprite, metadata.Path))
 			return nullptr;
 

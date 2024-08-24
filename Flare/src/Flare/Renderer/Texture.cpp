@@ -21,7 +21,7 @@ namespace Flare
 		switch (RendererAPI::GetAPI())
 		{
 		case RendererAPI::API::Vulkan:
-			return CreateRef<VulkanTexture>(specifications);
+			return Ref<VulkanTexture>::New(specifications);
 		}
 
 		FLARE_CORE_ASSERT(false);
@@ -33,7 +33,7 @@ namespace Flare
 		switch (RendererAPI::GetAPI())
 		{
 		case RendererAPI::API::Vulkan:
-			return CreateRef<VulkanTexture>(specifications, pixelData);
+			return Ref<VulkanTexture>::New(specifications, pixelData);
 		}
 
 		FLARE_CORE_ASSERT(false);
@@ -53,7 +53,7 @@ namespace Flare
 		switch (RendererAPI::GetAPI())
 		{
 		case RendererAPI::API::Vulkan:
-			return CreateRef<VulkanTexture>(newSpecifications, data);
+			return Ref<VulkanTexture>::New(newSpecifications, data);
 		}
 
 		return nullptr;
@@ -64,7 +64,7 @@ namespace Flare
 		switch (RendererAPI::GetAPI())
 		{
 		case RendererAPI::API::Vulkan:
-			return CreateRef<VulkanTexture>(width, height, data, format, filtering);
+			return Ref<VulkanTexture>::New(width, height, data, format, filtering);
 		}
 
 		return nullptr;
@@ -75,7 +75,7 @@ namespace Flare
 		switch (RendererAPI::GetAPI())
 		{
 		case RendererAPI::API::Vulkan:
-			return CreateRef<VulkanTexture>(specifications, data);
+			return Ref<VulkanTexture>::New(specifications, data);
 		}
 
 		FLARE_CORE_ASSERT(false);

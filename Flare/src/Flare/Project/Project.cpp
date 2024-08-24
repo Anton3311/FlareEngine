@@ -29,7 +29,7 @@ namespace Flare
 
 		std::filesystem::create_directories(path);
 
-		Ref<Project> newProject = CreateRef<Project>(path);
+		Ref<Project> newProject = Ref<Project>::New(path);
 		newProject->Name = name;
 		newProject->StartScene = NULL_ASSET_HANDLE;
 
@@ -54,7 +54,7 @@ namespace Flare
 
 			ScriptingEngine::UnloadAllModules();
 
-			Ref<Project> project = CreateRef<Project>(path.parent_path());
+			Ref<Project> project = Ref<Project>::New(path.parent_path());
 			ProjectSerializer::Deserialize(project, path);
 
 			s_Active = project;

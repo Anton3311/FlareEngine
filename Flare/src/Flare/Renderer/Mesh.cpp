@@ -237,7 +237,7 @@ namespace Flare
 		switch (RendererAPI::GetAPI())
 		{
 		case RendererAPI::API::Vulkan:
-			return CreateRef<Mesh>(vertexBufferSize, indexFormat, indexBufferSize);
+			return Ref<Mesh>::New(vertexBufferSize, indexFormat, indexBufferSize);
 		}
 
 		FLARE_CORE_ASSERT(false);
@@ -256,7 +256,7 @@ namespace Flare
 		switch (RendererAPI::GetAPI())
 		{
 		case RendererAPI::API::Vulkan:
-			return CreateRef<Mesh>(indices, indexFormat, vertices, normals, tangents, uvs);
+			return Ref<Mesh>::New(indices, indexFormat, vertices, normals, tangents, uvs);
 		}
 
 		FLARE_CORE_ASSERT(false);

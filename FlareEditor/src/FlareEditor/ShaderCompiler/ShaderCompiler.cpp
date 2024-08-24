@@ -734,7 +734,7 @@ namespace Flare
 			program.Stage = sourceBlock.Stage;
 		}
 
-		Ref<GraphicsShaderMetadata> metadata = CreateRef<GraphicsShaderMetadata>();
+		Ref<GraphicsShaderMetadata> metadata = Ref<GraphicsShaderMetadata>::New();
 		metadata->Type = ShaderType::Surface;
 		metadata->Name = shaderPath.filename().replace_extension().generic_string();
 
@@ -843,7 +843,7 @@ namespace Flare
 			program.Stage = sourceBlock.Stage;
 		}
 		
-		Ref<ComputeShaderMetadata> metadata = CreateRef<ComputeShaderMetadata>();
+		Ref<ComputeShaderMetadata> metadata = Ref<ComputeShaderMetadata>::New();
 		metadata->Name = shaderPath.filename().replace_extension().generic_string();
 
 		shaderc_shader_kind shaderKind = ShaderStageTypeToShaderCStageType(program.Stage);

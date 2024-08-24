@@ -102,7 +102,7 @@ namespace Flare
 				bindings[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 				bindings[0].pImmutableSamplers = nullptr;
 
-				s_Renderer2DData.QuadsDescriptorSetPool = CreateRef<VulkanDescriptorSetPool>(Span(bindings, 1));
+				s_Renderer2DData.QuadsDescriptorSetPool = Ref<VulkanDescriptorSetPool>::New(Span(bindings, 1));
 			}
 
 			{
@@ -113,7 +113,7 @@ namespace Flare
 				bindings[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 				bindings[0].pImmutableSamplers = nullptr;
 
-				s_Renderer2DData.TextDescriptorSetPool = CreateRef<VulkanDescriptorSetPool>(Span(bindings, 1));
+				s_Renderer2DData.TextDescriptorSetPool = Ref<VulkanDescriptorSetPool>::New(Span(bindings, 1));
 			}
 		}
 	}
@@ -206,7 +206,7 @@ namespace Flare
 		geometryPass.SetType(RenderGraphPassType::Graphics);
 		geometryPass.AddOutput(viewport.ColorTextureId, 0);
 		
-		viewport.GetRenderGraph()->AddPass(geometryPass, CreateRef<Geometry2DPass>(
+		viewport.GetRenderGraph()->AddPass(geometryPass, Ref<Geometry2DPass>::New(
 			s_Renderer2DData.Limits,
 			s_Renderer2DData.IndexBuffer,
 			s_Renderer2DData.DefaultMaterial,
@@ -217,7 +217,7 @@ namespace Flare
 		textPass.SetType(RenderGraphPassType::Graphics);
 		textPass.AddOutput(viewport.ColorTextureId, 0);
 
-		viewport.GetRenderGraph()->AddPass(textPass, CreateRef<TextPass>(
+		viewport.GetRenderGraph()->AddPass(textPass, Ref<TextPass>::New(
 			s_Renderer2DData.Limits,
 			s_Renderer2DData.IndexBuffer,
 			s_Renderer2DData.TextShader,

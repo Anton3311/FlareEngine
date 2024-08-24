@@ -72,7 +72,7 @@ namespace Flare
 				m_DescriptorSetPool->GetLayout()
 			};
 
-			m_TextPipeline = CreateRef<VulkanPipeline>(specificaionts,
+			m_TextPipeline = Ref<VulkanPipeline>::New(specificaionts,
 				Span<Ref<const DescriptorSetLayout>>(layouts, 2),
 				Span<ShaderPushConstantsRange>());
 		}

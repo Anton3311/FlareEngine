@@ -212,7 +212,7 @@ namespace Flare
 		switch (RendererAPI::GetAPI())
 		{
 		case RendererAPI::API::Vulkan:
-			s_Instance = CreateRef<ImGuiLayerVulkan>();
+			s_Instance = Ref<ImGuiLayerVulkan>::New();
 			break;
 		}
 

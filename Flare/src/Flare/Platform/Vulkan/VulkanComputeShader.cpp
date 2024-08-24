@@ -110,7 +110,7 @@ namespace Flare
 
 		if (bindings.size() > 0)
 		{
-			m_SetPool = CreateRef<VulkanDescriptorSetPool>(Span(bindings.data(), bindings.size()));
+			m_SetPool = Ref<VulkanDescriptorSetPool>::New(Span(bindings.data(), bindings.size()));
 		}
 
 		Ref<const VulkanDescriptorSetLayout> emptyDescriptorSetLayout = As<const VulkanDescriptorSetLayout>(VulkanContext::GetInstance().GetEmptyDescriptorSetLayout());

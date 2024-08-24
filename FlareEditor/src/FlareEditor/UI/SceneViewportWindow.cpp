@@ -129,7 +129,7 @@ namespace Flare
 			gridPass.SetDebugName("SceneViewGridPass");
 			gridPass.SetType(RenderGraphPassType::Graphics);
 
-			m_Viewport.GetRenderGraph()->AddPass(gridPass, CreateRef<SceneViewGridPass>());
+			m_Viewport.GetRenderGraph()->AddPass(gridPass, Ref<SceneViewGridPass>::New());
 		}
 	}
 

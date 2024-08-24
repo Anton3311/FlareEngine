@@ -11,7 +11,7 @@ namespace Flare
 		switch (RendererAPI::GetAPI())
 		{
 		case RendererAPI::API::Vulkan:
-			return CreateRef<VulkanVertexBuffer>(size);
+			return Ref<VulkanVertexBuffer>::New(size);
 		}
 
 		FLARE_CORE_ASSERT(false);
@@ -23,7 +23,7 @@ namespace Flare
 		switch (RendererAPI::GetAPI())
 		{
 		case RendererAPI::API::Vulkan:
-			return CreateRef<VulkanVertexBuffer>(size, usage);
+			return Ref<VulkanVertexBuffer>::New(size, usage);
 		}
 
 		FLARE_CORE_ASSERT(false);
@@ -35,7 +35,7 @@ namespace Flare
 		switch (RendererAPI::GetAPI())
 		{
 		case RendererAPI::API::Vulkan:
-			return CreateRef<VulkanVertexBuffer>(data, size);
+			return Ref<VulkanVertexBuffer>::New(data, size);
 		}
 
 		FLARE_CORE_ASSERT(false);
@@ -47,7 +47,7 @@ namespace Flare
 		switch (RendererAPI::GetAPI())
 		{
 		case RendererAPI::API::Vulkan:
-			return CreateRef<VulkanVertexBuffer>(data, size, commandBuffer);
+			return Ref<VulkanVertexBuffer>::New(data, size, commandBuffer);
 		}
 
 		FLARE_CORE_ASSERT(false);
@@ -73,7 +73,7 @@ namespace Flare
 		switch (RendererAPI::GetAPI())
 		{
 		case RendererAPI::API::Vulkan:
-			return CreateRef<VulkanIndexBuffer>(format, size);
+			return Ref<VulkanIndexBuffer>::New(format, size);
 		}
 
 		FLARE_CORE_ASSERT(false);
@@ -85,7 +85,7 @@ namespace Flare
 		switch (RendererAPI::GetAPI())
 		{
 		case RendererAPI::API::Vulkan:
-			return CreateRef<VulkanIndexBuffer>(format, size, usage);
+			return Ref<VulkanIndexBuffer>::New(format, size, usage);
 		}
 
 		FLARE_CORE_ASSERT(false);
@@ -97,7 +97,7 @@ namespace Flare
 		switch (RendererAPI::GetAPI())
 		{
 		case RendererAPI::API::Vulkan:
-			return CreateRef<VulkanIndexBuffer>(format, indices);
+			return Ref<VulkanIndexBuffer>::New(format, indices);
 		}
 
 		FLARE_CORE_ASSERT(false);
@@ -109,7 +109,7 @@ namespace Flare
 		switch (RendererAPI::GetAPI())
 		{
 		case RendererAPI::API::Vulkan:
-			return CreateRef<VulkanIndexBuffer>(format, indices, commandBuffer);
+			return Ref<VulkanIndexBuffer>::New(format, indices, commandBuffer);
 		}
 
 		FLARE_CORE_ASSERT(false);

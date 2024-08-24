@@ -488,7 +488,7 @@ namespace Flare
                 std::filesystem::path path = m_AssetTree[nodeIndex].Path / name;
                 path.replace_extension(".flrsprite");
 
-                Ref<Sprite> sprite = CreateRef<Sprite>();
+                Ref<Sprite> sprite = Ref<Sprite>::New();
                 Ref<EditorAssetManager> editorAssetManager = EditorAssetManager::GetInstance();
 
                 SpriteImporter::SerializeSprite(sprite, path);

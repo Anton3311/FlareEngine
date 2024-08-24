@@ -259,8 +259,8 @@ namespace Flare
 			specifications.Usage = TextureUsage::RenderTarget;
 			specifications.Format = TextureFormat::RGBA8;
 
-			Ref<Texture> attachmentTexture = CreateRef<VulkanTexture>(specifications, m_FrameData[i].Image, m_FrameData[i].ImageView);
-			m_FrameData[i].FrameBuffer = CreateRef<VulkanFrameBuffer>(
+			Ref<Texture> attachmentTexture = Ref<VulkanTexture>::New(specifications, m_FrameData[i].Image, m_FrameData[i].ImageView);
+			m_FrameData[i].FrameBuffer = Ref<VulkanFrameBuffer>::New(
 				m_Size.x,
 				m_Size.y,
 				VulkanContext::GetInstance().GetColorOnlyPass(),

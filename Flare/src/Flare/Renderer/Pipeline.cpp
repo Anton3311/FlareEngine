@@ -10,7 +10,7 @@ namespace Flare
 		switch (RendererAPI::GetAPI())
 		{
 		case RendererAPI::API::Vulkan:
-			return CreateRef<VulkanPipeline>(specifications);
+			return Ref<VulkanPipeline>::New(specifications);
 		}
 
 		return nullptr;
