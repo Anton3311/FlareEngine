@@ -40,7 +40,7 @@ namespace Flare
 		if (m_Pipeline != nullptr && m_Pipeline->GetCompatibleRenderPass() == renderPass)
 			return m_Pipeline;
 
-		m_Pipeline = As<VulkanPipeline>(VulkanContext::GetInstance().GetDefaultPipelineForShader(m_Shader, renderPass));
+		m_Pipeline = VulkanContext::GetInstance().GetDefaultPipelineForShader(m_Shader, renderPass).As<VulkanPipeline>();
 		return m_Pipeline;
 	}
 
@@ -59,7 +59,7 @@ namespace Flare
 		if (m_Set != nullptr)
 		{
 			// Delete the current descriptor set when it's no longer used.
-			VulkanContext::GetInstance().EnqueueDescriptorRelease(m_Set, As<VulkanShader>(m_Shader)->GetDescriptorSetPool());
+			VulkanContext::GetInstance().EnqueueDescriptorRelease(m_Set, m_Shader.As<VulkanShader>()->GetDescriptorSetPool());
 		}
 
 		// Allocate a new descriptor set, because the current one is used in rendering and cannot be updated.
@@ -97,7 +97,7 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(m_Shader);
 
-		Ref<VulkanShader> vulkanShader = As<VulkanShader>(m_Shader);
+		Ref<VulkanShader> vulkanShader = m_Shader.As<VulkanShader>();
 		auto pool = vulkanShader->GetDescriptorSetPool();
 
 		if (pool == nullptr)
@@ -107,12 +107,12 @@ namespace Flare
 
 		const AssetMetadata* metadata = AssetManager::GetAssetMetadata(Handle);
 
-		set = As<VulkanDescriptorSet>(pool->AllocateSet());
+		set = pool->AllocateSet().As<VulkanDescriptorSet>();
 
 		if (metadata != nullptr)
 			set->SetDebugName(metadata->Name);
 		else
-			set->SetDebugName(As<VulkanShader>(m_Shader)->GetDebugName());
+			set->SetDebugName(m_Shader.As<VulkanShader>()->GetDebugName());
 
 		return set;
 	}
@@ -123,7 +123,7 @@ namespace Flare
 		if (!m_Shader || !m_Set)
 			return;
 
-		const auto& pool = As<VulkanShader>(m_Shader)->GetDescriptorSetPool();
+		const auto& pool = m_Shader.As<VulkanShader>()->GetDescriptorSetPool();
 		if (pool)
 		{
 			pool->ReleaseSet(m_Set);

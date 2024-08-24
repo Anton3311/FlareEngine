@@ -244,7 +244,7 @@ namespace Flare
 		if (ImGui::Button("Save"))
 		{
 			TextureImporter::SerialiazeImportSettings(handle, importSettings);
-			As<EditorAssetManager>(AssetManager::GetInstance())->ReloadAsset(handle);
+			AssetManager::GetInstance().As<EditorAssetManager>()->ReloadAsset(handle);
 		}
 
 		Ref<const Texture> texture = AssetManager::GetAsset<Texture>(handle);
@@ -354,7 +354,7 @@ namespace Flare
 		if (ImGui::Button("Save"))
 		{
 			MeshImportSettingsSerializer::Serialize(handle, importSettings);
-			As<EditorAssetManager>(AssetManager::GetInstance())->ReloadAsset(handle);
+			AssetManager::GetInstance().As<EditorAssetManager>()->ReloadAsset(handle);
 		}
 
 		if (ImGui::BeginChild("MeshImportSettings"))

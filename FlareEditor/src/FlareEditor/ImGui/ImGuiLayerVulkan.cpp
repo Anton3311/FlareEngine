@@ -215,7 +215,7 @@ namespace Flare
 	{
 		FLARE_CORE_ASSERT(texture);
 
-		Ref<const VulkanTexture> vulkanTexture = As<const VulkanTexture>(texture);
+		Ref<const VulkanTexture> vulkanTexture = texture.As<const VulkanTexture>();
 		return GetImageId(vulkanTexture->GetImageViewHandle(), vulkanTexture->GetDefaultSampler());
 	}
 
@@ -224,7 +224,7 @@ namespace Flare
 		FLARE_CORE_ASSERT(frameBuffer);
 		FLARE_CORE_ASSERT(attachment < frameBuffer->GetAttachmentsCount());
 
-		Ref<const VulkanFrameBuffer> vulkanFrameBuffer = As<const VulkanFrameBuffer>(frameBuffer);
+		Ref<const VulkanFrameBuffer> vulkanFrameBuffer = frameBuffer.As<const VulkanFrameBuffer>();
 		return GetImageId(vulkanFrameBuffer->GetAttachmentImageView(attachment), vulkanFrameBuffer->GetDefaultAttachmentSampler(attachment));
 	}
 

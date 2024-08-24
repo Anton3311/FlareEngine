@@ -23,7 +23,7 @@ namespace Flare
 		{
 			FrameResources& resources = m_FrameResources.emplace_back();
 			resources.VertexBuffer = VertexBuffer::Create(sizeof(DebugRendererFrameData::Vertex) * 2 * m_Settings.MaxLines, GPUBufferUsage::Static);
-			As<VulkanVertexBuffer>(resources.VertexBuffer)->GetBuffer().EnsureAllocated(); // HACk: To avoid binding NULL buffer
+			resources.VertexBuffer.As<VulkanVertexBuffer>()->GetBuffer().EnsureAllocated(); // HACk: To avoid binding NULL buffer
 		}
 	}
 
@@ -53,7 +53,7 @@ namespace Flare
 		if (m_Pipeline == nullptr)
 			CreatePipeline(context);
 
-		Ref<VulkanCommandBuffer> vulkanCommandBuffer = As<VulkanCommandBuffer>(commandBuffer);
+		Ref<VulkanCommandBuffer> vulkanCommandBuffer = commandBuffer.As<VulkanCommandBuffer>();
 
 		vulkanCommandBuffer->BindPipeline(m_Pipeline);
 		vulkanCommandBuffer->BindVertexBuffers(Span((Ref<const VertexBuffer>*)&frameResources.VertexBuffer, 1), 0);

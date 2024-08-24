@@ -112,7 +112,7 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 		if (metadata.Source == AssetSource::Memory)
 		{
-			As<EditorAssetManager>(AssetManager::GetInstance())->LoadAsset(metadata.Parent);
+			AssetManager::GetInstance().As<EditorAssetManager>()->LoadAsset(metadata.Parent);
 			return AssetManager::GetAsset<Material>(metadata.Handle);
 		}
 

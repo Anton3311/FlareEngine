@@ -16,7 +16,7 @@ namespace Flare
 		template<typename T>
 		static Ref<T> GetAsset(AssetHandle handle)
 		{
-			return As<T>(GetRawAsset(handle));
+			return GetRawAsset(handle).As<T>();
 		}
 
 		static const AssetMetadata* GetAssetMetadata(AssetHandle handle);

@@ -24,11 +24,11 @@ namespace Flare
 
 		IndexBuffer = IndexBuffer::Create(indexFormat, indexCount, GPUBufferUsage::Static);
 
-		As<VulkanVertexBuffer>(Vertices)->GetBuffer().EnsureAllocated();
-		As<VulkanVertexBuffer>(Normals)->GetBuffer().EnsureAllocated();
-		As<VulkanVertexBuffer>(Tangents)->GetBuffer().EnsureAllocated();
-		As<VulkanVertexBuffer>(UVs)->GetBuffer().EnsureAllocated();
-		As<VulkanIndexBuffer>(IndexBuffer)->GetBuffer().EnsureAllocated();
+		Vertices.As<VulkanVertexBuffer>()->GetBuffer().EnsureAllocated();
+		Normals.As<VulkanVertexBuffer>()->GetBuffer().EnsureAllocated();
+		Tangents.As<VulkanVertexBuffer>()->GetBuffer().EnsureAllocated();
+		UVs.As<VulkanVertexBuffer>()->GetBuffer().EnsureAllocated();
+		IndexBuffer.As<VulkanIndexBuffer>()->GetBuffer().EnsureAllocated();
 	}
 
 	SharedMesh::MeshOffset SharedMesh::AllocateMesh(size_t vertexCount, size_t indexCount)

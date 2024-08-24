@@ -180,12 +180,12 @@ namespace Flare
         {
             if (m_AssetDescriptor == &Texture::_Asset)
             {
-                previewTexture = As<Texture>(*m_Asset);
+                previewTexture = m_Asset->As<Texture>();
                 valid = true;
             }
             else if (m_AssetDescriptor == &Sprite::_Asset)
             {
-                Ref<Sprite> sprite = As<Sprite>(*m_Asset);
+                Ref<Sprite> sprite = m_Asset->As<Sprite>();
                 previewTexture = sprite->GetTexture();
 
                 uvMin = ImVec2(sprite->UVMin.x, sprite->UVMin.y);

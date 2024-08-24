@@ -66,7 +66,7 @@ namespace Flare
     {
         FLARE_PROFILE_FUNCTION();
         if (m_AssetManager == nullptr)
-            m_AssetManager = As<EditorAssetManager>(AssetManager::GetInstance());
+            m_AssetManager = AssetManager::GetInstance().As<EditorAssetManager>();
 
         m_AssetTree.clear();
 

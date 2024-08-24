@@ -56,7 +56,7 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		Ref<VulkanCommandBuffer> vulkanCommandBuffer = As<VulkanCommandBuffer>(commandBuffer);
+		Ref<VulkanCommandBuffer> vulkanCommandBuffer = commandBuffer.As<VulkanCommandBuffer>();
 
 		// Scale the grid based on camera's Y position
 		float y = glm::abs(context.GetRenderView().Position.y);
@@ -148,7 +148,7 @@ namespace Flare
 		m_ConstantBuffer.SetProperty<float>(m_FadeDistancePropertyIndex, glm::min(m_Settings.MaxVisibleDistance, fadeDistance * scale));
 		m_ConstantBuffer.SetProperty<glm::vec3>(m_ColorPropertyIndex, color);
 
-		Ref<VulkanCommandBuffer> vulkanCommandBuffer = As<VulkanCommandBuffer>(commandBuffer);
+		Ref<VulkanCommandBuffer> vulkanCommandBuffer = commandBuffer.As<VulkanCommandBuffer>();
 
 		vulkanCommandBuffer->PushConstants(m_ConstantBuffer);
 		vulkanCommandBuffer->Draw(0, m_VertexCount, 0, 1);

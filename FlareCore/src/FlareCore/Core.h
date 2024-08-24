@@ -51,23 +51,8 @@
 
 namespace Flare
 {
-#if !FLARE_USE_CUSTOM_REF
-	template<typename T>
-	using Ref = std::shared_ptr<T>;
-#endif
-
 	template<typename T>
 	using Scope = std::unique_ptr<T>;
-
-	template<typename T, typename F>
-	constexpr Ref<T> As(const Ref<F>& ref)
-	{
-#if FLARE_USE_CUSTOM_REF
-		return ref.As<T>();
-#else
-		return std::static_pointer_cast<T>(ref);
-#endif
-	}
 
 	template<typename T, typename ...Args>
 	constexpr Scope<T> CreateScope(Args&&... args)

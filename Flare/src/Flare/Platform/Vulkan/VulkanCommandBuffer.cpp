@@ -20,7 +20,7 @@ namespace Flare
 
 	void VulkanCommandBuffer::BeginRenderTarget(const Ref<FrameBuffer> frameBuffer)
 	{
-		Ref<VulkanFrameBuffer> vulkanFrameBuffer = As<VulkanFrameBuffer>(frameBuffer);
+		Ref<VulkanFrameBuffer> vulkanFrameBuffer = frameBuffer.As<VulkanFrameBuffer>();
 		BeginRenderPass(vulkanFrameBuffer->GetCompatibleRenderPass(), vulkanFrameBuffer);
 	}
 
@@ -78,7 +78,7 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		Ref<VulkanTexture> vulkanTexture = As<VulkanTexture>(texture);
+		Ref<VulkanTexture> vulkanTexture = texture.As<VulkanTexture>();
 		ClearImage(vulkanTexture->GetImageHandle(), clearColor, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 	}
 
@@ -87,7 +87,7 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(IsDepthTextureFormat(texture->GetFormat()));
 
-		Ref<VulkanTexture> vulkanTexture = As<VulkanTexture>(texture);
+		Ref<VulkanTexture> vulkanTexture = texture.As<VulkanTexture>();
 
 		bool hasStencil = HasStencilComponent(vulkanTexture->GetSpecifications().Format);
 		VkImageLayout layout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
@@ -108,7 +108,7 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(material->GetShader());
 		VulkanMaterial* vulkanMaterial = const_cast<VulkanMaterial*>(static_cast<const VulkanMaterial*>(material.GetRawPointer()));
-		Ref<VulkanPipeline> pipeline = As<VulkanPipeline>(vulkanMaterial->GetPipeline(m_CurrentRenderPass));
+		Ref<VulkanPipeline> pipeline = vulkanMaterial->GetPipeline(m_CurrentRenderPass).As<VulkanPipeline>();
 		VkPipelineLayout pipelineLayout = pipeline->GetLayoutHandle();
 		Ref<const GraphicsShaderMetadata> metadata = material->GetShader()->GetMetadata();
 
@@ -144,7 +144,7 @@ namespace Flare
 		Ref<DescriptorSet> materialDescriptorSet = vulkanMaterial->GetDescriptorSet();
 		if (materialDescriptorSet)
 		{
-			BindDescriptorSet(As<VulkanDescriptorSet>(materialDescriptorSet), pipelineLayout, VK_PIPELINE_BIND_POINT_GRAPHICS, 3);
+			BindDescriptorSet(materialDescriptorSet.As<VulkanDescriptorSet>(), pipelineLayout, VK_PIPELINE_BIND_POINT_GRAPHICS, 3);
 		}
 	}
 
@@ -157,7 +157,7 @@ namespace Flare
 
 		FLARE_CORE_ASSERT(m_BoundPipeline.LayoutHandle);
 
-		BindDescriptorSet(As<const VulkanDescriptorSet>(descriptorProperties.GetDescriptorSet()),
+		BindDescriptorSet(descriptorProperties.GetDescriptorSet().As<VulkanDescriptorSet>(),
 			m_BoundPipeline.LayoutHandle,
 			m_BoundPipeline.BindPoint, 3);
 	}
@@ -252,7 +252,7 @@ namespace Flare
 
 		if (m_BoundPipeline.GraphicsPipeline != pipeline)
 		{
-			auto vulkanPipeline = As<VulkanPipeline>(pipeline);
+			auto vulkanPipeline = pipeline.As<VulkanPipeline>();
 			VkPipelineLayout pipelineLayout = vulkanPipeline->GetLayoutHandle();
 
 			ResetCurrentDescriptorSets();
@@ -277,7 +277,7 @@ namespace Flare
 	{
 		m_CurrentMesh = nullptr;
 		VkDeviceSize offset = 0;
-		VkBuffer bufferHandle = As<const VulkanVertexBuffer>(buffer)->GetHandle();
+		VkBuffer bufferHandle = buffer.As<VulkanVertexBuffer>()->GetHandle();
 
 		vkCmdBindVertexBuffers(m_CommandBuffer, index, 1, &bufferHandle, &offset);
 	}
@@ -293,7 +293,7 @@ namespace Flare
 		for (size_t i = 0; i < vertexBuffers.GetSize(); i++)
 		{
 			offsets[i] = 0;
-			buffers[i] = As<const VulkanVertexBuffer>(vertexBuffers[i])->GetHandle();
+			buffers[i] = vertexBuffers[i].As<const VulkanVertexBuffer>()->GetHandle();
 		}
 
 		vkCmdBindVertexBuffers(m_CommandBuffer, baseBindingIndex, (uint32_t)vertexBuffers.GetSize(), buffers.data(), offsets.data());
@@ -303,7 +303,7 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 		vkCmdBindIndexBuffer(m_CommandBuffer,
-			As<const VulkanIndexBuffer>(indexBuffer)->GetHandle(), 0,
+			indexBuffer.As<VulkanIndexBuffer>()->GetHandle(), 0,
 			indexBuffer->GetIndexFormat() == IndexBuffer::IndexFormat::UInt16
 				? VK_INDEX_TYPE_UINT16
 				: VK_INDEX_TYPE_UINT32);
@@ -399,8 +399,8 @@ namespace Flare
 	void VulkanCommandBuffer::Blit(Ref<const Texture> source, Ref<const Texture> destination, TextureFiltering filter)
 	{
 		FLARE_PROFILE_FUNCTION();
-		VkImage sourceImage = As<const VulkanTexture>(source)->GetImageHandle();
-		VkImage destinationImage = As<const VulkanTexture>(destination)->GetImageHandle();
+		VkImage sourceImage = source.As<const VulkanTexture>()->GetImageHandle();
+		VkImage destinationImage = destination.As<const VulkanTexture>()->GetImageHandle();
 
 		TextureFormat sourceFormat = source->GetSpecifications().Format;
 		TextureFormat destinationFormat = destination->GetSpecifications().Format;
@@ -470,7 +470,7 @@ namespace Flare
 	void VulkanCommandBuffer::SetGlobalDescriptorSet(Ref<const DescriptorSet> set, uint32_t index)
 	{
 		FLARE_CORE_ASSERT(index < 3);
-		m_GlobalDescriptorSets[index] = As<const VulkanDescriptorSet>(set);
+		m_GlobalDescriptorSets[index] = set.As<const VulkanDescriptorSet>();
 		m_GlobalDescriptorSetsRequireBinding = true;
 	}
 
@@ -486,8 +486,8 @@ namespace Flare
 		m_BoundPipeline.BindPoint = VK_PIPELINE_BIND_POINT_COMPUTE;
 		m_BoundPipeline.ComputeShader = computeShader;
 		m_BoundPipeline.GraphicsPipeline = nullptr;
-		m_BoundPipeline.LayoutHandle = As<const VulkanComputeShader>(computeShader)->GetPipelineLayoutHandle();
-		m_BoundPipeline.PipelineHandle = As<VulkanComputeShader>(computeShader)->GetPipeline();
+		m_BoundPipeline.LayoutHandle = computeShader.As<const VulkanComputeShader>()->GetPipelineLayoutHandle();
+		m_BoundPipeline.PipelineHandle = computeShader.As<VulkanComputeShader>()->GetPipeline();
 
 		vkCmdBindPipeline(m_CommandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_BoundPipeline.PipelineHandle);
 
@@ -504,14 +504,14 @@ namespace Flare
 
 	void VulkanCommandBuffer::StartTimer(Ref<GPUTimer> timer)
 	{
-		Ref<VulkanGPUTimer> vulkanTimer = As<VulkanGPUTimer>(timer);
+		Ref<VulkanGPUTimer> vulkanTimer = timer.As<VulkanGPUTimer>();
 		vkCmdResetQueryPool(m_CommandBuffer, vulkanTimer->GetPoolHandle(), 0, 2);
 		vkCmdWriteTimestamp(m_CommandBuffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, vulkanTimer->GetPoolHandle(), 0);
 	}
 
 	void VulkanCommandBuffer::StopTimer(Ref<GPUTimer> timer)
 	{
-		Ref<VulkanGPUTimer> vulkanTimer = As<VulkanGPUTimer>(timer);
+		Ref<VulkanGPUTimer> vulkanTimer = timer.As<VulkanGPUTimer>();
 		vkCmdWriteTimestamp(m_CommandBuffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, vulkanTimer->GetPoolHandle(), 1);
 	}
 
@@ -578,7 +578,7 @@ namespace Flare
 			FLARE_CORE_ASSERT(false);
 		}
 
-		Ref<VulkanDescriptorSet> emptyDescriptorSet = As<VulkanDescriptorSet>(VulkanContext::GetInstance().GetEmptyDescriptorSet());
+		Ref<VulkanDescriptorSet> emptyDescriptorSet = VulkanContext::GetInstance().GetEmptyDescriptorSet().As<VulkanDescriptorSet>();
 
 		for (size_t i = 0; i < GLOBAL_DESCRIPTOR_SET_COUNT; i++)
 		{
@@ -909,7 +909,7 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		BindDescriptorSet(As<const VulkanDescriptorSet>(descriptorSet), m_BoundPipeline.LayoutHandle, m_BoundPipeline.BindPoint, index);
+		BindDescriptorSet(descriptorSet.As<const VulkanDescriptorSet>(), m_BoundPipeline.LayoutHandle, m_BoundPipeline.BindPoint, index);
 	}
 
 	void VulkanCommandBuffer::BindDescriptorSet(const Ref<const VulkanDescriptorSet>& descriptorSet,

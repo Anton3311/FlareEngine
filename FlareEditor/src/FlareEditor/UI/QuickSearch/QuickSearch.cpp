@@ -133,7 +133,7 @@ namespace Flare
 
 	void QuickSearch::CollectMatchedAssets()
 	{
-		Ref<EditorAssetManager> assetManager = As<EditorAssetManager>(AssetManager::GetInstance());
+		Ref<EditorAssetManager> assetManager = AssetManager::GetInstance().As<EditorAssetManager>();
 		const auto& assetRegistry = assetManager->GetRegistry();
 
 		m_AssetSearchResult.clear();

@@ -166,7 +166,7 @@ namespace Flare
 		{
 			FLARE_PROFILE_SCOPE("DrawPartiallyVisible");
 
-			Ref<VulkanCommandBuffer> vulkanCommandBuffer = As<VulkanCommandBuffer>(commandBuffer);
+			Ref<VulkanCommandBuffer> vulkanCommandBuffer = commandBuffer.As<VulkanCommandBuffer>();
 			for (const auto& visibleMesh : m_CascadeData.PartiallyVisible)
 			{
 				for (uint32_t i = 0; i < visibleMesh.SubMeshRangeCount; i++)

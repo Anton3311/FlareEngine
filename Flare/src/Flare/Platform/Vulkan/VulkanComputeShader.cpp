@@ -113,7 +113,7 @@ namespace Flare
 			m_SetPool = Ref<VulkanDescriptorSetPool>::New(Span(bindings.data(), bindings.size()));
 		}
 
-		Ref<const VulkanDescriptorSetLayout> emptyDescriptorSetLayout = As<const VulkanDescriptorSetLayout>(VulkanContext::GetInstance().GetEmptyDescriptorSetLayout());
+		Ref<const VulkanDescriptorSetLayout> emptyDescriptorSetLayout = VulkanContext::GetInstance().GetEmptyDescriptorSetLayout().As<const VulkanDescriptorSetLayout>();
 
 		uint32_t usedDescriptorSetCount = 0;
 
@@ -134,13 +134,13 @@ namespace Flare
 
 		if (m_Metadata->DescriptorSetUsage[0].Usage == ShaderDescriptorSetUsage::UsageType::Used)
 		{
-			Ref<const VulkanDescriptorSetLayout> cameraDescriptorLayout = As<const VulkanDescriptorSetLayout>(Renderer::GetCameraDescriptorSetPool()->GetLayout());
+			Ref<const VulkanDescriptorSetLayout> cameraDescriptorLayout = Renderer::GetCameraDescriptorSetPool()->GetLayout().As<const VulkanDescriptorSetLayout>();
 			layoutHandles[0] = cameraDescriptorLayout->GetHandle();
 		}
 		
 		if (m_Metadata->DescriptorSetUsage[1].Usage == ShaderDescriptorSetUsage::UsageType::Used)
 		{
-			Ref<const VulkanDescriptorSetLayout> globalDescriptorSetLayout = As<const VulkanDescriptorSetLayout>(Renderer::GetGlobalDescriptorSetPool()->GetLayout());
+			Ref<const VulkanDescriptorSetLayout> globalDescriptorSetLayout = Renderer::GetGlobalDescriptorSetPool()->GetLayout().As<const VulkanDescriptorSetLayout>();
 			layoutHandles[1] = globalDescriptorSetLayout->GetHandle();
 		}
 
@@ -148,7 +148,7 @@ namespace Flare
 
 		if (m_SetPool != nullptr)
 		{
-			layoutHandles[3] = As<const VulkanDescriptorSetLayout>(m_SetPool->GetLayout())->GetHandle();
+			layoutHandles[3] = m_SetPool->GetLayout().As<const VulkanDescriptorSetLayout>()->GetHandle();
 		}
 
 		VkPipelineLayoutCreateInfo createInfo{};

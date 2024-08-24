@@ -77,7 +77,7 @@ namespace Flare
 
 		VulkanStagingBuffer stagingBuffer = FillStagingBuffer(data);
 
-		Ref<VulkanCommandBuffer> vulkanCommandBuffer = As<VulkanCommandBuffer>(commandBuffer);
+		Ref<VulkanCommandBuffer> vulkanCommandBuffer = commandBuffer.As<VulkanCommandBuffer>();
 
 		VkBufferMemoryBarrier barriers[2] = {};
 		barriers[0].sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;

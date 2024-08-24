@@ -24,7 +24,7 @@ namespace Flare
 		Reset();
 
 		m_Metadata = shader->GetMetadata();
-		m_DescriptorPool = As<VulkanComputeShader>(shader)->GetSetPool();
+		m_DescriptorPool = shader.As<VulkanComputeShader>()->GetSetPool();
 
 		m_TextureDescriptors.resize(m_Metadata->DescriptorSetUsage[3].PropertyCount);
 	}

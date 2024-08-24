@@ -46,7 +46,7 @@ namespace Flare
 			attachmentSpecifications.Format = attachment->GetFormat();
 			attachmentSpecifications.Wrap = attachment->GetSpecifications().Wrap;
 
-			m_Attachments.push_back(As<VulkanTexture>(attachment));
+			m_Attachments.push_back(attachment.As<VulkanTexture>());
 		}
 
 		Create();
@@ -76,7 +76,7 @@ namespace Flare
 			attachmentSpecifications.Format = attachment->GetFormat();
 			attachmentSpecifications.Wrap = attachment->GetSpecifications().Wrap;
 
-			m_Attachments.push_back(As<VulkanTexture>(attachment));
+			m_Attachments.push_back(attachment.As<VulkanTexture>());
 		}
 
 		Create();
@@ -127,7 +127,7 @@ namespace Flare
 	Ref<Texture> VulkanFrameBuffer::GetAttachment(uint32_t index) const
 	{
 		FLARE_CORE_ASSERT((size_t)index < m_Attachments.size());
-		return As<Texture>(m_Attachments[index]);
+		return m_Attachments[index].As<Texture>();
 	}
 
 	const FrameBufferSpecifications& VulkanFrameBuffer::GetSpecifications() const
@@ -215,7 +215,7 @@ namespace Flare
 			specifications.Wrap = attachmentSpecifications.Wrap;
 			specifications.Usage = TextureUsage::Sampling | TextureUsage::RenderTarget;
 
-			m_Attachments.push_back(As<VulkanTexture>(Texture::Create(specifications)));
+			m_Attachments.push_back(Texture::Create(specifications).As<VulkanTexture>());
 		}
 	}
 

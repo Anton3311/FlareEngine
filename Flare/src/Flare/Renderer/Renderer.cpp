@@ -113,7 +113,7 @@ namespace Flare
 			s_RendererData.DummyDepthTexture = Texture::Create(specifications);
 			s_RendererData.DummyDepthTexture->SetDebugName("DummyDepthTexture");
 
-			Ref<VulkanTexture> dummyDepthTexture = As<VulkanTexture>(s_RendererData.DummyDepthTexture);
+			Ref<VulkanTexture> dummyDepthTexture = s_RendererData.DummyDepthTexture.As<VulkanTexture>();
 
 			Ref<VulkanCommandBuffer> commandBuffer = VulkanContext::GetInstance().BeginTemporaryCommandBuffer();
 			commandBuffer->ClearDepth(s_RendererData.DummyDepthTexture, 1.0f);

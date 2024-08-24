@@ -60,7 +60,7 @@ namespace Flare
 		switch (RendererAPI::GetAPI())
 		{
 		case RendererAPI::API::Vulkan:
-			As<WindowsWindow>(m_Window)->SetUsesVulkan();
+			m_Window.As<WindowsWindow>()->SetUsesVulkan();
 			break;
 		}
 

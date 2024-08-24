@@ -155,7 +155,7 @@ namespace Flare
 
 		SetupFrameResources(drawData, frameResources);
 
-		Ref<ImGuiLayerVulkan> imGuiLayer = As<ImGuiLayerVulkan>(ImGuiLayer::GetInstance());
+		Ref<ImGuiLayerVulkan> imGuiLayer = ImGuiLayer::GetInstance().As<ImGuiLayerVulkan>();
 		VkPipeline pipeline = imGuiLayer->GetPipeline();
 		VkPipelineLayout pipelineLayout = imGuiLayer->GetPipelineLayout();
 		VkDescriptorSet fontsDescriptor = imGuiLayer->GetFontsTextureDescrptor();

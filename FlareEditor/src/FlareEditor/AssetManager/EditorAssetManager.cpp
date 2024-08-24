@@ -291,7 +291,7 @@ namespace Flare
         {
             ShaderCompiler::Compile(handle, true);
 
-            Ref<Shader> shader = As<Shader>(m_LoadedAssets[handle]);
+            Ref<Shader> shader = m_LoadedAssets[handle].As<Shader>();
             shader->Load();
             return;
         }

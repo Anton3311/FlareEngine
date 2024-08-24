@@ -434,7 +434,7 @@ namespace Flare
 				submitInfo.signalSemaphoreCount = submition.SignalSemaphoreCount;
 				submitInfo.pSignalSemaphores = m_UsedSemaphores.data() + submition.FirstSignalSemaphore;
 
-				commandBuffers.push_back(As<const VulkanCommandBuffer>(submition.CommandBuffer)->GetHandle());
+				commandBuffers.push_back(submition.CommandBuffer.As<const VulkanCommandBuffer>()->GetHandle());
 			}
 
 			for (size_t i = 0; i < submitInfos.size(); i++)
@@ -717,7 +717,7 @@ namespace Flare
 
 		if (it != m_DefaultPipelines.end())
 		{
-			Ref<VulkanPipeline> pipeline = As<VulkanPipeline>(it->second);
+			Ref<VulkanPipeline> pipeline = it->second.As<VulkanPipeline>();
 			if (pipeline->GetCompatibleRenderPass().GetRawPointer() == renderPass.GetRawPointer())
 			{
 				return it->second;
@@ -784,7 +784,7 @@ namespace Flare
 			FLARE_CORE_ASSERT(false);
 		}
 
-		Ref<Pipeline> pipeline = As<Pipeline>(Ref<VulkanPipeline>::New(specifications, renderPass));
+		Ref<Pipeline> pipeline = Ref<VulkanPipeline>::New(specifications, renderPass);
 		m_DefaultPipelines.emplace(key, pipeline);
 		return pipeline;
 	}

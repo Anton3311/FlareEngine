@@ -87,14 +87,14 @@ namespace Flare
 	void VulkanRenderGraph::ExecuteLayoutTransitions(Ref<CommandBuffer> commandBuffer, LayoutTransitionsRange range)
 	{
 		FLARE_PROFILE_FUNCTION();
-		Ref<VulkanCommandBuffer> vulkanCommandBuffer = As<VulkanCommandBuffer>(commandBuffer);
+		Ref<VulkanCommandBuffer> vulkanCommandBuffer = commandBuffer.As<VulkanCommandBuffer>();
 
 		for (uint32_t i = range.Start; i < range.End; i++)
 		{
 			const LayoutTransition& transition = m_CompiledRenderGraph.LayoutTransitions[i];
 
 			Ref<Texture> texture = GetResourceManager().GetTexture(transition.Texture);
-			VkImage image = As<VulkanTexture>(texture)->GetImageHandle();
+			VkImage image = texture.As<VulkanTexture>()->GetImageHandle();
 
 			TextureFormat format = texture->GetFormat();
 			VkImageLayout initialLayout = ImageLayoutToVulkanImageLayout(transition.InitialLayout, format);

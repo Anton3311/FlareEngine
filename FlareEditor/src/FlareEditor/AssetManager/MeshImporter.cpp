@@ -78,7 +78,7 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		Ref<EditorAssetManager> assetManager = As<EditorAssetManager>(AssetManager::GetInstance());
+		Ref<EditorAssetManager> assetManager = AssetManager::GetInstance().As<EditorAssetManager>();
 		std::optional<AssetHandle> defaultShader = ShaderLibrary::FindShader("Mesh");
 
 		std::unordered_map<std::string, AssetHandle> nameToHandle;

@@ -361,7 +361,7 @@ namespace Flare
                 EditorGUI::PropertyIndex(i);
 				EditorGUI::AssetField(asset, Material::_Asset);
 
-                materials[i] = As<Material>(asset);
+                materials[i] = asset.As<Material>();
             }
         }
         else

@@ -74,7 +74,7 @@ namespace Flare
             if (Scene::GetActive() == nullptr)
                 return;
 
-            Ref<EditorAssetManager> assetManager = As<EditorAssetManager>(AssetManager::GetInstance());
+			Ref<EditorAssetManager> assetManager = AssetManager::GetInstance().As<EditorAssetManager>();
 
             ResetViewportRenderGraphs();
 
@@ -196,7 +196,7 @@ namespace Flare
             ExitPlayMode();
 
         if (Scene::GetActive() != nullptr && AssetManager::IsAssetHandleValid(Scene::GetActive()->Handle))
-            As<EditorAssetManager>(AssetManager::GetInstance())->UnloadAsset(Scene::GetActive()->Handle);
+            AssetManager::GetInstance().As<EditorAssetManager>()->UnloadAsset(Scene::GetActive()->Handle);
 
         if (m_PrefabEditor)
 			m_PrefabEditor->OnDetach();
@@ -281,7 +281,7 @@ namespace Flare
             m_ProjectFilesWacher->Update();
             FileChangeEvent changes;
 
-            Ref<EditorAssetManager> editorAssetManager = As<EditorAssetManager>(AssetManager::GetInstance());
+            Ref<EditorAssetManager> editorAssetManager = AssetManager::GetInstance().As<EditorAssetManager>();
 
             bool shouldRebuildAssetTree = false;
             while (true)
@@ -357,7 +357,7 @@ namespace Flare
         {
             if (e.IsFocused())
             {
-                Ref<EditorAssetManager> assetManager = As<EditorAssetManager>(AssetManager::GetInstance());
+				Ref<EditorAssetManager> assetManager = AssetManager::GetInstance().As<EditorAssetManager>();
                 for (AssetHandle handle : m_AssetReloadQueue)
                     assetManager->ReloadAsset(handle);
 
@@ -488,7 +488,7 @@ namespace Flare
     void EditorLayer::OnOpenProject()
     {
 		FLARE_PROFILE_FUNCTION();
-        Ref<EditorAssetManager> assetManager = As<EditorAssetManager>(AssetManager::GetInstance());
+		Ref<EditorAssetManager> assetManager = AssetManager::GetInstance().As<EditorAssetManager>();
 
         assetManager->Reinitialize();
 
@@ -519,7 +519,7 @@ namespace Flare
 
 		Ref<Scene> active = Scene::GetActive();
 
-		Ref<EditorAssetManager> editorAssetManager = As<EditorAssetManager>(AssetManager::GetInstance());
+		Ref<EditorAssetManager> editorAssetManager = AssetManager::GetInstance().As<EditorAssetManager>();
 
 		if (active != nullptr && AssetManager::IsAssetHandleValid(active->Handle))
 			editorAssetManager->UnloadAsset(active->Handle);
@@ -613,7 +613,7 @@ namespace Flare
 					path.replace_extension(".flare");
 
 				SceneSerializer::Serialize(Scene::GetActive(), path, m_SceneViewport->GetEditorCamera(), m_SceneViewSettings);
-				AssetHandle handle = As<EditorAssetManager>(AssetManager::GetInstance())->ImportAsset(path);
+				AssetHandle handle = AssetManager::GetInstance().As<EditorAssetManager>()->ImportAsset(path);
 				OpenSceneImmediately(handle);
 			}
 		});
@@ -645,7 +645,7 @@ namespace Flare
 
 			if (active != nullptr)
 			{
-				Ref<EditorAssetManager> editorAssetManager = As<EditorAssetManager>(AssetManager::GetInstance());
+				Ref<EditorAssetManager> editorAssetManager = AssetManager::GetInstance().As<EditorAssetManager>();
 
 				if (active != nullptr && AssetManager::IsAssetHandleValid(active->Handle))
 					editorAssetManager->UnloadAsset(active->Handle);
@@ -682,7 +682,7 @@ namespace Flare
 
 			Ref<Scene> active = Scene::GetActive();
 
-			Ref<EditorAssetManager> assetManager = As<EditorAssetManager>(AssetManager::GetInstance());
+			Ref<EditorAssetManager> assetManager = AssetManager::GetInstance().As<EditorAssetManager>();
 			std::filesystem::path activeScenePath = assetManager->GetAssetMetadata(active->Handle)->Path;
 
 			SaveActiveScene();
@@ -719,7 +719,7 @@ namespace Flare
         Application::GetInstance().ExecuteAfterEndOfFrame([this]()
 		{
 			GraphicsContext::GetInstance().WaitForDevice();
-			Ref<EditorAssetManager> assetManager = As<EditorAssetManager>(AssetManager::GetInstance());
+			Ref<EditorAssetManager> assetManager = AssetManager::GetInstance().As<EditorAssetManager>();
 
 			Scene::GetActive()->OnRuntimeEnd();
 
@@ -747,7 +747,7 @@ namespace Flare
         Ref<Scene> active = Scene::GetActive();
         AssetHandle activeSceneHandle = active->Handle;
 
-        Ref<EditorAssetManager> assetManager = As<EditorAssetManager>(AssetManager::GetInstance());
+        Ref<EditorAssetManager> assetManager = AssetManager::GetInstance().As<EditorAssetManager>();
         std::filesystem::path activeScenePath = assetManager->GetAssetMetadata(active->Handle)->Path;
         SaveActiveScene();
 

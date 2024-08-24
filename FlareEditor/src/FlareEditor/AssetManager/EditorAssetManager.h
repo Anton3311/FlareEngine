@@ -50,7 +50,7 @@ namespace Flare
 
 		Ref<Asset> LoadAsset(AssetHandle handle);
 
-		inline static Ref<EditorAssetManager> GetInstance() { return As<EditorAssetManager>(AssetManager::GetInstance()); }
+		inline static Ref<EditorAssetManager> GetInstance() { return AssetManager::GetInstance().As<EditorAssetManager>(); }
 
 		void SerializeRegistry();
 

@@ -26,7 +26,7 @@ namespace Flare
 		{
 			std::optional<Ref<PostProcessingEffect>> effect = FindEffect(FLARE_SERIALIZATION_DESCRIPTOR_OF(T));
 			if (effect)
-				return As<T>(*effect);
+				return effect->As<T>();
 
 			return {};
 		}

@@ -191,8 +191,8 @@ namespace Flare
 		m_SunTransmittanceMaterial->WritePropertyValue<float>(*rayleighHeight, m_Parameters->ScatteringParameters.RayleighHeight);
 		m_SunTransmittanceMaterial->WritePropertyValue<int32_t>(*sunTransmittanceSteps, (int32_t)m_Parameters->SunTransmittanceLUTSteps);
 
-		Ref<VulkanCommandBuffer> vulkanCommandBuffer = As<VulkanCommandBuffer>(commandBuffer);
-		Ref<VulkanFrameBuffer> lut = As<VulkanFrameBuffer>(m_SunTransmittanceLUT);
+		Ref<VulkanCommandBuffer> vulkanCommandBuffer = commandBuffer.As<VulkanCommandBuffer>();
+		Ref<VulkanFrameBuffer> lut = m_SunTransmittanceLUT.As<VulkanFrameBuffer>();
 		VkImage lutImage = lut->GetAttachmentImage(0);
 
 		vulkanCommandBuffer->TransitionImageLayout(lutImage, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);

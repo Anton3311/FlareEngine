@@ -31,7 +31,7 @@ namespace Flare
 		FLARE_CORE_ASSERT(m_Specifications.Shader);
 		FLARE_CORE_ASSERT(m_Specifications.Shader->IsLoaded());
 
-		m_PipelineLayout = As<const VulkanShader>(m_Specifications.Shader)->GetPipelineLayout();
+		m_PipelineLayout = m_Specifications.Shader.As<const VulkanShader>()->GetPipelineLayout();
 
 		Create();
 	}
@@ -42,7 +42,7 @@ namespace Flare
 		FLARE_CORE_ASSERT(specifications.Shader);
 		FLARE_CORE_ASSERT(m_Specifications.Shader->IsLoaded());
 
-		m_PipelineLayout = As<const VulkanShader>(m_Specifications.Shader)->GetPipelineLayout();
+		m_PipelineLayout = m_Specifications.Shader.As<const VulkanShader>()->GetPipelineLayout();
 	}
 
 	VulkanPipeline::~VulkanPipeline()
@@ -85,7 +85,7 @@ namespace Flare
 		std::vector<VkDescriptorSetLayout> descriptorSetLayouts(layouts.GetSize());
 		for (size_t i = 0; i < layouts.GetSize(); i++)
 		{
-			descriptorSetLayouts[i] = As<const VulkanDescriptorSetLayout>(layouts[i])->GetHandle();
+			descriptorSetLayouts[i] = layouts[i].As<const VulkanDescriptorSetLayout>()->GetHandle();
 		}
 
 		layoutInfo.setLayoutCount = (uint32_t)descriptorSetLayouts.size();
@@ -231,14 +231,14 @@ namespace Flare
 
 		VkPipelineShaderStageCreateInfo stages[2] = {};
 		stages[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-		stages[0].module = As<VulkanShader>(m_Specifications.Shader)->GetModuleForStage(ShaderStageType::Vertex);
+		stages[0].module = m_Specifications.Shader.As<VulkanShader>()->GetModuleForStage(ShaderStageType::Vertex);
 		stages[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
 		stages[0].pName = "main";
 		stages[0].pSpecializationInfo = nullptr;
 		stages[0].flags = 0;
 
 		stages[1].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-		stages[1].module = As<VulkanShader>(m_Specifications.Shader)->GetModuleForStage(ShaderStageType::Pixel);
+		stages[1].module = m_Specifications.Shader.As<VulkanShader>()->GetModuleForStage(ShaderStageType::Pixel);
 		stages[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
 		stages[1].pName = "main";
 		stages[1].pSpecializationInfo = nullptr;

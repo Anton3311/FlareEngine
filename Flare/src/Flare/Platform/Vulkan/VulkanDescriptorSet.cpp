@@ -53,7 +53,7 @@ namespace Flare
 	VulkanDescriptorSet::VulkanDescriptorSet(VulkanDescriptorSetPool* pool, VkDescriptorPool subPool, VkDescriptorSet set)
 		: m_OwnerPool(pool), m_SubPoolHandle(subPool), m_Set(set)
 	{
-		Ref<const VulkanDescriptorSetLayout> layout = As<const VulkanDescriptorSetLayout>(pool->GetLayout());
+		Ref<const VulkanDescriptorSetLayout> layout = pool->GetLayout().As<const VulkanDescriptorSetLayout>();
 		m_Buffers.reserve(layout->GetBufferBindingsCount());
 		m_Images.reserve(layout->GetImageBindingsCount());
 	}
@@ -71,11 +71,11 @@ namespace Flare
 	{
 		FLARE_CORE_ASSERT(texture && sampler);
 
-		auto vulkanTexture = As<const VulkanTexture>(texture);
+		auto vulkanTexture = texture.As<const VulkanTexture>();
 		auto& image = m_Images.emplace_back();
 		image.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 		image.imageView = vulkanTexture->GetImageViewHandle();
-		image.sampler = As<const VulkanSampler>(sampler)->GetHandle();
+		image.sampler = sampler.As<const VulkanSampler>()->GetHandle();
 
 		auto& write = m_Writes.emplace_back();
 		write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -95,7 +95,7 @@ namespace Flare
 		FLARE_CORE_ASSERT(frameBuffer);
 		FLARE_CORE_ASSERT(attachmentIndex < frameBuffer->GetAttachmentsCount());
 
-		auto vulkanFrameBuffer = As<const VulkanFrameBuffer>(frameBuffer);
+		auto vulkanFrameBuffer = frameBuffer.As<const VulkanFrameBuffer>();
 		auto& image = m_Images.emplace_back();
 		image.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 		image.imageView = vulkanFrameBuffer->GetAttachmentImageView(attachmentIndex);
@@ -119,7 +119,7 @@ namespace Flare
 		size_t firstBindingIndex = m_Images.size();
 		for (size_t i = 0; i < textures.GetSize(); i++)
 		{
-			auto vulkanTexture = As<const VulkanTexture>(textures[i]);
+			auto vulkanTexture = textures[i].As<const VulkanTexture>();
 			auto& image = m_Images.emplace_back();
 			image.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 			image.imageView = vulkanTexture->GetImageViewHandle();
@@ -146,7 +146,7 @@ namespace Flare
 		FLARE_CORE_ASSERT(m_Images.size() < m_Images.capacity());
 		FLARE_CORE_ASSERT(texture);
 
-		auto vulkanTexture = As<const VulkanTexture>(texture);
+		auto vulkanTexture = texture.As<const VulkanTexture>();
 		auto& image = m_Images.emplace_back();
 		image.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
 		image.imageView = vulkanTexture->GetImageViewHandle();
@@ -170,7 +170,7 @@ namespace Flare
 		FLARE_CORE_ASSERT(frameBuffer);
 		FLARE_CORE_ASSERT(attachmentIndex < frameBuffer->GetAttachmentsCount());
 
-		auto vulkanFrameBuffer = As<const VulkanFrameBuffer>(frameBuffer);
+		auto vulkanFrameBuffer = frameBuffer.As<const VulkanFrameBuffer>();
 		auto& image = m_Images.emplace_back();
 		image.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
 		image.imageView = vulkanFrameBuffer->GetAttachmentImageView(attachmentIndex);
@@ -192,7 +192,7 @@ namespace Flare
 	{
 		FLARE_CORE_ASSERT(m_Buffers.size() < m_Buffers.capacity());
 		auto& bufferWrite = m_Buffers.emplace_back();
-		bufferWrite.buffer = As<const VulkanUniformBuffer>(buffer)->GetBufferHandle();
+		bufferWrite.buffer = buffer.As<const VulkanUniformBuffer>()->GetBufferHandle();
 		bufferWrite.offset = 0;
 		bufferWrite.range = buffer->GetSize();
 
@@ -212,7 +212,7 @@ namespace Flare
 	{
 		FLARE_CORE_ASSERT(m_Buffers.size() < m_Buffers.capacity());
 		auto& bufferWrite = m_Buffers.emplace_back();
-		bufferWrite.buffer = As<const VulkanShaderStorageBuffer>(buffer)->GetBufferHandle();
+		bufferWrite.buffer = buffer.As<const VulkanShaderStorageBuffer>()->GetBufferHandle();
 		bufferWrite.offset = 0;
 		bufferWrite.range = buffer->GetSize();
 
@@ -297,7 +297,7 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		Ref<VulkanDescriptorSet> descriptorSet = As<VulkanDescriptorSet>(set);
+		Ref<VulkanDescriptorSet> descriptorSet = set.As<VulkanDescriptorSet>();
 
 		FLARE_CORE_ASSERT(descriptorSet->GetOwnerPool() == this, "A given descriptor set was allocated from a different descriptor set pool");
 
@@ -337,7 +337,7 @@ namespace Flare
 			it = m_SubPools.end() - 1;
 		}
 
-		VkDescriptorSetLayout layoutHandle = As<const VulkanDescriptorSetLayout>(layout)->GetHandle();
+		VkDescriptorSetLayout layoutHandle = layout.As<const VulkanDescriptorSetLayout>()->GetHandle();
 		VkDescriptorSetAllocateInfo info{};
 		info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 		info.descriptorPool = it->Pool;

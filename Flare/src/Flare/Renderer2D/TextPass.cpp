@@ -26,7 +26,7 @@ namespace Flare
 			FrameResources& resources = m_FrameResources.emplace_back();
 
 			resources.VertexBuffer = VertexBuffer::Create(sizeof(TextVertex) * 4 * m_RendererLimits.MaxQuadCount, GPUBufferUsage::Static);
-			As<VulkanVertexBuffer>(resources.VertexBuffer)->GetBuffer().EnsureAllocated(); // HACk: To avoid binding NULL buffer
+			resources.VertexBuffer.As<VulkanVertexBuffer>()->GetBuffer().EnsureAllocated(); // HACk: To avoid binding NULL buffer
 		}
 	}
 
