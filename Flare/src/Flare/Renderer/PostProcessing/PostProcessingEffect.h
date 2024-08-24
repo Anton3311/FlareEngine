@@ -9,7 +9,7 @@ namespace Flare
 	class SerializableObjectDescriptor;
 	class PostProcessingManager;
 
-	class FLARE_API PostProcessingEffect
+	class FLARE_API PostProcessingEffect : public RefCounted<PostProcessingEffect>
 	{
 	public:
 		virtual ~PostProcessingEffect() = default;

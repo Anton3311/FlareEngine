@@ -2,6 +2,8 @@
 #include "Flare/Core/CommandLineArguments.h"
 #include "FlareCore/Log.h"
 
+#include "FlareCore/Ref.h"
+
 #include <stdint.h>
 
 namespace Flare

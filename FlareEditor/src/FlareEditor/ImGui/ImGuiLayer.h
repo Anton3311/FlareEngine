@@ -34,7 +34,7 @@ namespace Flare
 
 	class Texture;
 	class FrameBuffer;
-	class ImGuiLayer
+	class ImGuiLayer : public RefCounted<ImGuiLayer>
 	{
 	public:
 		virtual void InitializeRenderer() = 0;

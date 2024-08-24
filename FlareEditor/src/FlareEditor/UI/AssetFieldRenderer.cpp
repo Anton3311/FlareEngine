@@ -49,7 +49,7 @@ namespace Flare
             if (m_Handle != nullptr)
 				EditorLayer::GetInstance().Selection.SetAsset(*m_Handle);
             else if (m_Asset != nullptr)
-                EditorLayer::GetInstance().Selection.SetAsset(m_Asset->get()->Handle);
+                EditorLayer::GetInstance().Selection.SetAsset(m_Asset->GetRawPointer()->Handle);
         }
         ImGui::PopID();
 
@@ -57,7 +57,7 @@ namespace Flare
         {
             bool isNullHandle = false;
             if (m_Asset && *m_Asset)
-                isNullHandle = m_Asset->get()->Handle == NULL_ASSET_HANDLE;
+                isNullHandle = m_Asset->GetRawPointer()->Handle == NULL_ASSET_HANDLE;
             else if (m_ValidHandle)
                 isNullHandle = *m_ValidHandle == NULL_ASSET_HANDLE;
 
@@ -254,7 +254,7 @@ namespace Flare
         }
         else if (m_Asset != nullptr && *m_Asset)
         {
-			AssetHandle handle = m_Asset->get()->Handle;
+			AssetHandle handle = m_Asset->GetRawPointer()->Handle;
 			if (AssetManager::IsAssetHandleValid(handle))
 				m_ValidHandle = handle;
         }

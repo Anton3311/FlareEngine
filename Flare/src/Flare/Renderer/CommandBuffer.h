@@ -21,7 +21,7 @@ namespace Flare
 	class ShaderConstantBuffer;
 	class ShaderDescriptorBuffer;
 
-	class CommandBuffer
+	class FLARE_API CommandBuffer : public RefCounted<CommandBuffer>
 	{
 	public:
 		virtual void BeginRenderTarget(const Ref<FrameBuffer> frameBuffer) = 0;

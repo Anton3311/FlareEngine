@@ -41,7 +41,7 @@ namespace Flare
 		Disabled,
 	};
 
-	class FLAREPLATFORM_API Window
+	class FLAREPLATFORM_API Window : public RefCounted<Window>
 	{
 	public:
 		virtual ~Window() {}
@@ -68,6 +68,6 @@ namespace Flare
 		
 		virtual void SetCursorMode(CursorMode mode) = 0;
 	public:
-		static Scope<Window> Create(WindowProperties& properties);
+		static Ref<Window> Create(WindowProperties& properties);
 	};
 }

@@ -102,7 +102,7 @@ namespace Flare
 	Flare::AssetDescriptor assetType::_Asset(FLARE_SERIALIZATION_DESCRIPTOR_OF(assetType));              \
 	const Flare::AssetDescriptor& assetType::GetDescriptor() const { return assetType::_Asset; }
 
-	class FLARE_API Asset
+	class FLARE_API Asset : public RefCounted<Asset>
 	{
 	public:
 		Asset(AssetType type)

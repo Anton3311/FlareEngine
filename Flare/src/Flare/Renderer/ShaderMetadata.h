@@ -208,7 +208,7 @@ namespace Flare
 		uint32_t PropertyCount = 0;
 	};
 
-	struct FLARE_API ShaderMetadata
+	struct FLARE_API ShaderMetadata : public RefCounted<ShaderMetadata>
 	{
 		ShaderMetadata()
 		{

@@ -5,6 +5,8 @@
 #include "FlareECS/Entity/Components.h"
 #include "FlareECS/Entity/ComponentInitializer.h"
 
+#include <algorithm>
+
 namespace Flare
 {
 	Archetypes::Archetypes(const Components& componentsRegistry)

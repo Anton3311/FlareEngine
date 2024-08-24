@@ -14,8 +14,8 @@ namespace Flare
     public:
         static void Initialize();
 
-        static Ref<spdlog::logger> GetCoreLogger();
-        static Ref<spdlog::logger> GetClientLogger();
+        static std::shared_ptr<spdlog::logger> GetCoreLogger();
+        static std::shared_ptr<spdlog::logger> GetClientLogger();
     };
 }
 

@@ -74,7 +74,7 @@ namespace Flare
 			FLARE_CORE_ASSERT(description.finalLayout != VK_IMAGE_LAYOUT_UNDEFINED);
 		}
 
-		return CreateRef<VulkanRenderPass>(
+		return Ref<VulkanRenderPass>::New(
 			Span<VkAttachmentDescription>::FromVector(m_AttachmentDescriptions),
 			depthAttachmentIndex);
 	}

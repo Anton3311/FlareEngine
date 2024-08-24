@@ -7,7 +7,7 @@
 
 namespace Flare
 {
-	class FLARE_API UniformBuffer
+	class FLARE_API UniformBuffer : public RefCounted<UniformBuffer>
 	{
 	public:
 		virtual ~UniformBuffer() = default;

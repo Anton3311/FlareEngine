@@ -13,7 +13,7 @@ namespace Flare
 	class Event;
 	class Scene;
 	class SceneRenderer;
-	class ViewportWindow
+	class ViewportWindow : public RefCounted<ViewportWindow>
 	{
 	public:
 		ViewportWindow(const Scope<SceneRenderer>& sceneRenderer, std::string_view name);

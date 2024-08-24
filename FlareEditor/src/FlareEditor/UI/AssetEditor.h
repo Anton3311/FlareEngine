@@ -5,7 +5,7 @@
 
 namespace Flare
 {
-	class AssetEditor
+	class AssetEditor : public RefCounted<AssetEditor>
 	{
 	public:
 		AssetEditor()

@@ -121,7 +121,7 @@ namespace Flare
 			uint32_t objectIndex = m_VisibleObjects[currentInstance];
 			const auto& object = opaqueGeometry[objectIndex];
 
-			if (batch.Mesh.get() != object.Mesh.get()
+			if (batch.Mesh != object.Mesh
 				|| batch.SubMesh != object.SubMeshIndex)
 			{
 				batch.InstanceCount = currentInstance - batch.BaseInstance;
@@ -134,7 +134,7 @@ namespace Flare
 				batch.SubMesh = object.SubMeshIndex;
 			}
 
-			if (object.Material.get() != batch.Material.get())
+			if (object.Material != batch.Material)
 			{
 				batch.InstanceCount = currentInstance - batch.BaseInstance;
 

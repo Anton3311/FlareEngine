@@ -154,7 +154,7 @@ namespace Flare
                 Project::OpenProject(projectPath.value());
         }
 
-        m_SpriteEditor = CreateRef<SpriteEditor>();
+        m_SpriteEditor = Ref<SpriteEditor>::New();
 
         m_AssetEditorWindows.push_back(m_SpriteEditor);
 

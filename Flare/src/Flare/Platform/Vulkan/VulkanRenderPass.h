@@ -8,7 +8,7 @@
 
 namespace Flare
 {
-	class VulkanRenderPass
+	class VulkanRenderPass : public RefCounted<VulkanRenderPass>
 	{
 	public:
 		VulkanRenderPass(const Span<VkAttachmentDescription>& attachments, std::optional<uint32_t> depthAttachmentIndex = {});

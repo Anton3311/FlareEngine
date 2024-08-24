@@ -67,7 +67,7 @@ namespace Flare
 			m_ShadowPassBatches.end(),
 			[&mesh](const ShadowPassBatch& batch)
 			{
-				return mesh.get() == batch.Mesh.get();
+				return mesh == batch.Mesh;
 			});
 
 		ShadowPassBatch* batch = nullptr;

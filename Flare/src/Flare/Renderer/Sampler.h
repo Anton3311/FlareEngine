@@ -14,7 +14,7 @@ namespace Flare
 		DepthComparisonFunction ComparisonFunction = DepthComparisonFunction::Never;
 	};
 
-	class Sampler
+	class Sampler : public RefCounted<Sampler>
 	{
 	public:
 		virtual ~Sampler() = default;

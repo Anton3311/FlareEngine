@@ -51,6 +51,7 @@ namespace Flare
 		template<typename T>
 		T* TryGetNodeComponent(size_t nodeIndex)
 		{
+			FLARE_PROFILE_FUNCTION();
 			uint8_t* nodeData = GetEntityData(nodeIndex);
 
 			std::optional<size_t> componentOffset = GetNodeComponentOffset(nodeIndex, COMPONENT_ID(T));

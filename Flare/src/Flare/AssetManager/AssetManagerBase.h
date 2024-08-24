@@ -7,7 +7,7 @@
 
 namespace Flare
 {
-	class AssetManagerBase
+	class AssetManagerBase : public RefCounted<AssetManagerBase>
 	{
 	public:
 		virtual Ref<Asset> GetAsset(AssetHandle handle) = 0;

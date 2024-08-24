@@ -80,7 +80,7 @@ namespace Flare
 			auto& layer = m_LayersStack.GetLayers();
 			for (auto it = layer.end(); it != layer.begin();)
 			{
-				(--it)->get()->OnEvent(event);
+				(--it)->GetRawPointer()->OnEvent(event);
 				if (event.Handled)
 					return;
 			}

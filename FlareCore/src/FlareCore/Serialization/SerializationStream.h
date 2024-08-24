@@ -106,7 +106,7 @@ namespace Flare
     {
         inline void* Get(Ref<T>& ref)
         {
-            return ref.get();
+            return ref.GetRawPointer();
         }
     };
 
@@ -365,7 +365,7 @@ namespace Flare
             const auto* descriptor = SerializationDescriptorOf<T>().Descriptor();
             FLARE_CORE_ASSERT(descriptor);
 
-            stream.SerializeReference(*descriptor, &ref, ref.get());
+            stream.SerializeReference(*descriptor, &ref, ref.GetRawPointer());
         }
     };
 

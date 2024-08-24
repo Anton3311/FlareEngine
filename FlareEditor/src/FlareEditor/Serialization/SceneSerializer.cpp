@@ -182,7 +182,7 @@ namespace Flare
 
 			YAMLSerializer serializer(emitter, &scene->GetECSWorld());
 			serializer.PropertyKey("Data");
-			serializer.SerializeObject(descriptor, entry.Effect.get(), false, 0);
+			serializer.SerializeObject(descriptor, entry.Effect.GetRawPointer(), false, 0);
 
 			emitter << YAML::EndMap;
 		}
@@ -277,7 +277,7 @@ namespace Flare
 			
 			YAMLDeserializer deserializer(postProcessingNode);
 			deserializer.PropertyKey("Data");
-			deserializer.SerializeObject(*entryIterator->Descriptor, entryIterator->Effect.get(), false, 0);
+			deserializer.SerializeObject(*entryIterator->Descriptor, entryIterator->Effect.GetRawPointer(), false, 0);
 
 			entryIterator->Effect->SetEnabled(enabled);
 		}

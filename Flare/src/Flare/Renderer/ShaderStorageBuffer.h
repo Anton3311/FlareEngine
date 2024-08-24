@@ -8,7 +8,7 @@
 namespace Flare
 {
     class CommandBuffer;
-    class FLARE_API ShaderStorageBuffer
+    class FLARE_API ShaderStorageBuffer : public RefCounted<ShaderStorageBuffer>
     {
     public:
         virtual ~ShaderStorageBuffer() {}

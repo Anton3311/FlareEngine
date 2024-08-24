@@ -29,7 +29,7 @@ namespace Flare
 		std::vector<FrameBufferAttachmentSpecifications> Attachments;
 	};
 
-	class FLARE_API FrameBuffer
+	class FLARE_API FrameBuffer : public RefCounted<FrameBuffer>
 	{
 	public:
 		virtual ~FrameBuffer() = default;

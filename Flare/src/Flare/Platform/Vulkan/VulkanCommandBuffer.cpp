@@ -107,7 +107,7 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(material->GetShader());
-		Ref<VulkanMaterial> vulkanMaterial = As<VulkanMaterial>(std::const_pointer_cast<Material>(material));
+		VulkanMaterial* vulkanMaterial = const_cast<VulkanMaterial*>(static_cast<const VulkanMaterial*>(material.GetRawPointer()));
 		Ref<VulkanPipeline> pipeline = As<VulkanPipeline>(vulkanMaterial->GetPipeline(m_CurrentRenderPass));
 		VkPipelineLayout pipelineLayout = pipeline->GetLayoutHandle();
 		Ref<const GraphicsShaderMetadata> metadata = material->GetShader()->GetMetadata();
@@ -135,7 +135,7 @@ namespace Flare
 			}
 		}
 
-		if (m_GlobalDescriptorSetsRequireBinding || pipeline.get() != m_BoundPipeline.GraphicsPipeline.get())
+		if (m_GlobalDescriptorSetsRequireBinding || pipeline.GetRawPointer() != m_BoundPipeline.GraphicsPipeline.GetRawPointer())
 		{
 			BindPipeline(pipeline);
 		}
@@ -250,7 +250,7 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(m_CurrentRenderPass);
 
-		if (m_BoundPipeline.GraphicsPipeline.get() != pipeline.get())
+		if (m_BoundPipeline.GraphicsPipeline != pipeline)
 		{
 			auto vulkanPipeline = As<VulkanPipeline>(pipeline);
 			VkPipelineLayout pipelineLayout = vulkanPipeline->GetLayoutHandle();
@@ -920,7 +920,7 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(index < 4);
 
-		if (m_CurrentDescriptorSets[index].PipelineLayout == pipelineLayout && m_CurrentDescriptorSets[index].Set.get() == descriptorSet.get())
+		if (m_CurrentDescriptorSets[index].PipelineLayout == pipelineLayout && m_CurrentDescriptorSets[index].Set == descriptorSet)
 			return;
 
 		VkDescriptorSet setHandle = descriptorSet->GetHandle();
@@ -937,10 +937,10 @@ namespace Flare
 
 		if (m_CurrentMesh == nullptr)
 			rebind = true;
-		else if (m_CurrentMesh->GetSharedMesh() != nullptr && m_CurrentMesh->GetSharedMesh().get() == mesh->GetSharedMesh().get())
+		else if (m_CurrentMesh->GetSharedMesh() != nullptr && m_CurrentMesh->GetSharedMesh() == mesh->GetSharedMesh())
 			return;
 		else
-			rebind = m_CurrentMesh.get() != mesh.get();
+			rebind = m_CurrentMesh != mesh;
 
 		if (rebind)
 		{

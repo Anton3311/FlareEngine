@@ -4,8 +4,8 @@
 
 namespace Flare
 {
-	Ref<spdlog::logger> s_CoreLogger;
-	Ref<spdlog::logger> s_ClientLogger;
+	std::shared_ptr<spdlog::logger> s_CoreLogger;
+	std::shared_ptr<spdlog::logger> s_ClientLogger;
 
 	void Log::Initialize()
 	{
@@ -18,12 +18,12 @@ namespace Flare
 		s_ClientLogger->set_level(spdlog::level::level_enum::trace);
 	}
 
-	Ref<spdlog::logger> Log::GetCoreLogger()
+	std::shared_ptr<spdlog::logger> Log::GetCoreLogger()
 	{
 		return s_CoreLogger;
 	}
 
-	Ref<spdlog::logger> Log::GetClientLogger()
+	std::shared_ptr<spdlog::logger> Log::GetClientLogger()
 	{
 		return s_ClientLogger;
 	}

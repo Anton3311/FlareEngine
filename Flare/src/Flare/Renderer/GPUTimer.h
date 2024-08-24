@@ -6,7 +6,7 @@
 
 namespace Flare
 {
-	class GPUTimer
+	class GPUTimer : public RefCounted<GPUTimer>
 	{
 	public:
 		virtual ~GPUTimer() {}

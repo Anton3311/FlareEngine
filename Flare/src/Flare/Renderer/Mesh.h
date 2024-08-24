@@ -26,7 +26,7 @@ namespace Flare
 
 	FLARE_IMPL_ENUM_BITFIELD(MeshRenderFlags);
 
-	class FLARE_API SharedMesh
+	class FLARE_API SharedMesh : public RefCounted<SharedMesh>
 	{
 	public:
 		struct MeshOffset

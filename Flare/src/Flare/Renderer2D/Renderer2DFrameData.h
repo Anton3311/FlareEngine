@@ -41,7 +41,7 @@ namespace Flare
 
 			for (uint32_t i = 0; i < TexturesCount; i++)
 			{
-				if (texture.get() == Textures[i].get())
+				if (texture == Textures[i])
 				{
 					return i;
 				}

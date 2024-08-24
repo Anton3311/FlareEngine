@@ -5,10 +5,10 @@
 
 namespace Flare
 {
-	Scope<Window> Window::Create(WindowProperties& properties)
+	Ref<Window> Window::Create(WindowProperties& properties)
 	{
 #ifdef FLARE_PLATFORM_WINDOWS
-		return CreateScope<WindowsWindow>(properties);
+		return Ref<WindowsWindow>::New(properties);
 #endif
 		return nullptr;
 	}

@@ -6,7 +6,7 @@ namespace Flare
 {
 	class Window;
 	class CommandBuffer;
-	class FLARE_API GraphicsContext
+	class FLARE_API GraphicsContext : public RefCounted<GraphicsContext>
 	{
 	public:
 		virtual ~GraphicsContext() = default;

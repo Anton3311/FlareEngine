@@ -101,7 +101,7 @@ namespace Flare
 			m_SceneData.MeshData[mesh] = subMesh;
 		}
 
-		m_SceneData.SharedMesh = CreateRef<SharedMesh>(vertexCount, m_SceneData.IndexFormat, indexCount);
+		m_SceneData.SharedMesh = Ref<SharedMesh>::New(vertexCount, m_SceneData.IndexFormat, indexCount);
 
 		Ref<CommandBuffer> commandBuffer = VulkanContext::GetInstance().GetUploadCommandBuffer();
 		

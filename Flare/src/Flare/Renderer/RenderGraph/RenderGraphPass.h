@@ -12,7 +12,7 @@
 
 namespace Flare
 {
-	class FLARE_API RenderGraphPass
+	class FLARE_API RenderGraphPass : public RefCounted<RenderGraphPass>
 	{
 	public:
 		virtual ~RenderGraphPass() = default;

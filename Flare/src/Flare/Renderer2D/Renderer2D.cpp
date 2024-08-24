@@ -414,7 +414,7 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		if (s_Renderer2DData.Submition->TextBatches.empty() || s_Renderer2DData.Submition->TextBatches.back().Font.get() != font.get())
+		if (s_Renderer2DData.Submition->TextBatches.empty() || s_Renderer2DData.Submition->TextBatches.back().Font != font)
 		{
 			TextBatch& batch = s_Renderer2DData.Submition->TextBatches.emplace_back();
 			batch.Start = (uint32_t)s_Renderer2DData.Submition->TextQuadCount;

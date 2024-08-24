@@ -14,7 +14,7 @@ namespace Flare
 	class UniformBuffer;
 	class ShaderStorageBuffer;
 
-	class FLARE_API DescriptorSet
+	class FLARE_API DescriptorSet : public RefCounted<DescriptorSet>
 	{
 	public:
 		virtual ~DescriptorSet();
@@ -37,13 +37,13 @@ namespace Flare
 		virtual const std::string& GetDebugName() const = 0;
 	};
 
-	class FLARE_API DescriptorSetLayout
+	class FLARE_API DescriptorSetLayout : public RefCounted<DescriptorSetLayout>
 	{
 	public:
 		virtual ~DescriptorSetLayout();
 	};
 
-	class FLARE_API DescriptorSetPool
+	class FLARE_API DescriptorSetPool : public RefCounted<DescriptorSetPool>
 	{
 	public:
 		virtual ~DescriptorSetPool();

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "FlareCore/Ref.h"
+
 #include <memory>
 #include <xhash>
 
@@ -45,10 +47,14 @@
 
 #define HAS_BIT(value, bit) (((value) & (bit)) == (bit))
 
+#define FLARE_USE_CUSTOM_REF 1
+
 namespace Flare
 {
+#if !FLARE_USE_CUSTOM_REF
 	template<typename T>
 	using Ref = std::shared_ptr<T>;
+#endif
 
 	template<typename T>
 	using Scope = std::unique_ptr<T>;
@@ -56,13 +62,21 @@ namespace Flare
 	template<typename T, typename ...Args>
 	constexpr Ref<T> CreateRef(Args&&... args)
 	{
+#if FLARE_USE_CUSTOM_REF
+		return Ref<T>::New(std::forward<Args>(args)...);
+#else
 		return std::make_shared<T>(std::forward<Args>(args)...);
+#endif
 	}
 
 	template<typename T, typename F>
 	constexpr Ref<T> As(const Ref<F>& ref)
 	{
+#if FLARE_USE_CUSTOM_REF
+		return ref.As<T>();
+#else
 		return std::static_pointer_cast<T>(ref);
+#endif
 	}
 
 	template<typename T, typename ...Args>

@@ -712,13 +712,13 @@ namespace Flare
 
 	Ref<Pipeline> VulkanContext::GetDefaultPipelineForShader(Ref<Shader> shader, Ref<VulkanRenderPass> renderPass)
 	{
-		uint64_t key = (uint64_t)shader.get();
+		uint64_t key = (uint64_t)shader.GetRawPointer();
 		auto it = m_DefaultPipelines.find(key);
 
 		if (it != m_DefaultPipelines.end())
 		{
 			Ref<VulkanPipeline> pipeline = As<VulkanPipeline>(it->second);
-			if (pipeline->GetCompatibleRenderPass().get() == renderPass.get())
+			if (pipeline->GetCompatibleRenderPass().GetRawPointer() == renderPass.GetRawPointer())
 			{
 				return it->second;
 			}
@@ -736,7 +736,7 @@ namespace Flare
 		specifications.DepthFunction = metadata->Features.DepthFunction;
 		specifications.Blending = metadata->Features.Blending;
 
-		// TODO: Sould be extracted by the ShaderCompiler from shader metadata
+		// TODO: Should be extracted by the ShaderCompiler from shader metadata
 		specifications.DepthBiasSlopeFactor = 1.0f;
 		specifications.DepthBiasConstantFactor = 0.5f;
 

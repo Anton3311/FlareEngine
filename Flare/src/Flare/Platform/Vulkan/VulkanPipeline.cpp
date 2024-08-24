@@ -64,7 +64,7 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		if (m_CompatibleRenderPass.get() == renderPass.get())
+		if (m_CompatibleRenderPass == renderPass)
 			return m_Pipeline;
 
 		m_CompatibleRenderPass = renderPass;

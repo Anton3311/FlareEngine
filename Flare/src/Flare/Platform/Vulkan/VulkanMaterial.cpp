@@ -37,7 +37,7 @@ namespace Flare
 	Ref<VulkanPipeline> VulkanMaterial::GetPipeline(const Ref<VulkanRenderPass>& renderPass)
 	{
 		FLARE_PROFILE_FUNCTION();
-		if (m_Pipeline != nullptr && m_Pipeline->GetCompatibleRenderPass().get() == renderPass.get())
+		if (m_Pipeline != nullptr && m_Pipeline->GetCompatibleRenderPass() == renderPass)
 			return m_Pipeline;
 
 		m_Pipeline = As<VulkanPipeline>(VulkanContext::GetInstance().GetDefaultPipelineForShader(m_Shader, renderPass));

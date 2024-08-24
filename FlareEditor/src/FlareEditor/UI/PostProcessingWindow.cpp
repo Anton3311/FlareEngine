@@ -54,7 +54,7 @@ namespace Flare
 			ImVec2 itemSize = ImGui::GetItemRectSize();
 
 			bool enabled = entry.Effect->IsEnabled();
-			if (RenderCheckBoxAndLabel(entry.Effect.get(), initialCursorPosition, itemSize, &enabled, effectName))
+			if (RenderCheckBoxAndLabel(entry.Effect.GetRawPointer(), initialCursorPosition, itemSize, &enabled, effectName))
 				entry.Effect->SetEnabled(enabled);
 
 			ImGui::SetCursorPos(cursorPosition);
@@ -62,7 +62,7 @@ namespace Flare
 			if (expanded)
 			{
 				SerializablePropertyRenderer propertyRenderer(&m_Scene->GetECSWorld());
-				entry.Descriptor->Callback(entry.Effect.get(), propertyRenderer);
+				entry.Descriptor->Callback(entry.Effect.GetRawPointer(), propertyRenderer);
 
 				if (propertyRenderer.PropertiesGridStarted())
 				{

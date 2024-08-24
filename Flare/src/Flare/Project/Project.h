@@ -10,7 +10,7 @@
 
 namespace Flare
 {
-	class FLARE_API Project
+	class FLARE_API Project : public RefCounted<Project>
 	{
 	public:
 		Project(const std::filesystem::path& location)

@@ -17,7 +17,7 @@ namespace Flare
 		Dynamic = 1,
 	};
 
-	class FLARE_API VertexBuffer
+	class FLARE_API VertexBuffer : public RefCounted<VertexBuffer>
 	{
 	public:
 		virtual void SetData(const void* data, size_t size, size_t offset = 0) = 0;
@@ -34,7 +34,7 @@ namespace Flare
 		static Ref<VertexBuffer> Create(size_t size, const void* data, Ref<CommandBuffer> commandBuffer);
 	};
 
-	class FLARE_API IndexBuffer
+	class FLARE_API IndexBuffer : public RefCounted<IndexBuffer>
 	{
 	public:
 		enum class IndexFormat

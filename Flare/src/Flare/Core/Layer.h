@@ -6,7 +6,7 @@
 
 namespace Flare
 {
-	class FLARE_API Layer
+	class FLARE_API Layer : public RefCounted<Layer>
 	{
 	public:
 		Layer(std::string_view debugName)
