@@ -149,6 +149,13 @@ namespace Flare
 			return Ref<U>((U*)m_Instance);
 		}
 
+		template<typename U>
+		U& DerefAs() const
+		{
+			static_assert(std::is_base_of_v<RefCountedTag, U>, "U is not a RefCounted");
+			return *(U*)m_Instance;
+		}
+
 		constexpr T* GetRawPointer() const { return (T*)m_Instance; }
 		constexpr T& operator*() const { return *(T*)m_Instance; }
 		constexpr T* operator->() const { return (T*)m_Instance; }
