@@ -51,7 +51,7 @@ namespace Flare
 		virtual void SetViewportAndScisors(Math::Rect viewportRect) = 0;
 		virtual void SetDefaltViewportAndScissors() = 0;
 
-		virtual void BindPipeline(Ref<Pipeline> pipeline) = 0;
+		virtual void BindPipeline(const Ref<Pipeline>& pipeline) = 0;
 		virtual void BindVertexBuffer(Ref<const VertexBuffer> buffer, uint32_t index) = 0;
 		virtual void BindVertexBuffers(Span<Ref<const VertexBuffer>> buffers, uint32_t baseBindingIndex) = 0;
 		virtual void BindIndexBuffer(Ref<const IndexBuffer> buffer) = 0;

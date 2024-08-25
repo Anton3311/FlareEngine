@@ -20,7 +20,7 @@ namespace Flare
 		Release();
 	}
 
-	Ref<const ComputeShaderMetadata> VulkanComputeShader::GetMetadata() const
+	const Ref<const ComputeShaderMetadata>& VulkanComputeShader::GetMetadata() const
 	{
 		return m_Metadata;
 	}

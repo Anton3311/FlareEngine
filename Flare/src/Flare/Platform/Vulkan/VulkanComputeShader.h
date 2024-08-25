@@ -15,7 +15,7 @@ namespace Flare
 		VulkanComputeShader();
 		~VulkanComputeShader();
 
-		Ref<const ComputeShaderMetadata> GetMetadata() const override;
+		const Ref<const ComputeShaderMetadata>& GetMetadata() const override;
 		void Load() override;
 		bool IsLoaded() const override;
 

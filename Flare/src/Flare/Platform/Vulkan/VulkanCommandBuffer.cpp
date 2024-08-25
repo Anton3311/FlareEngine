@@ -107,32 +107,29 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(material->GetShader());
-		VulkanMaterial* vulkanMaterial = const_cast<VulkanMaterial*>(static_cast<const VulkanMaterial*>(material.GetRawPointer()));
-		Ref<VulkanPipeline> pipeline = vulkanMaterial->GetPipeline(m_CurrentRenderPass).As<VulkanPipeline>();
+		VulkanMaterial& vulkanMaterial = const_cast<VulkanMaterial&>(material.DerefAs<const VulkanMaterial>());
+		Ref<VulkanPipeline> pipeline = vulkanMaterial.GetPipeline(m_CurrentRenderPass).As<VulkanPipeline>();
 		VkPipelineLayout pipelineLayout = pipeline->GetLayoutHandle();
-		Ref<const GraphicsShaderMetadata> metadata = material->GetShader()->GetMetadata();
+		const Ref<const GraphicsShaderMetadata>& metadata = material->GetShader()->GetMetadata();
 
+		for (size_t i = 0; i < metadata->PushConstantsRanges.size(); i++)
 		{
-			FLARE_PROFILE_SCOPE("PushConstants");
-			for (size_t i = 0; i < metadata->PushConstantsRanges.size(); i++)
+			const ShaderPushConstantsRange& range = metadata->PushConstantsRanges[i];
+			if (range.Size == 0)
+				continue;
+
+			VkShaderStageFlags stage = 0;
+			switch (range.Stage)
 			{
-				const ShaderPushConstantsRange& range = metadata->PushConstantsRanges[i];
-				if (range.Size == 0)
-					continue;
-
-				VkShaderStageFlags stage = 0;
-				switch (range.Stage)
-				{
-				case ShaderStageType::Vertex:
-					stage = VK_SHADER_STAGE_VERTEX_BIT;
-					break;
-				case ShaderStageType::Pixel:
-					stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-					break;
-				}
-
-				vkCmdPushConstants(m_CommandBuffer, pipelineLayout, stage, (uint32_t)range.Offset, (uint32_t)range.Size, material->GetPropertiesBuffer() + range.Offset);
+			case ShaderStageType::Vertex:
+				stage = VK_SHADER_STAGE_VERTEX_BIT;
+				break;
+			case ShaderStageType::Pixel:
+				stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+				break;
 			}
+
+			vkCmdPushConstants(m_CommandBuffer, pipelineLayout, stage, (uint32_t)range.Offset, (uint32_t)range.Size, material->GetPropertiesBuffer() + range.Offset);
 		}
 
 		if (m_GlobalDescriptorSetsRequireBinding || pipeline.GetRawPointer() != m_BoundPipeline.GraphicsPipeline.GetRawPointer())
@@ -140,11 +137,11 @@ namespace Flare
 			BindPipeline(pipeline);
 		}
 
-		vulkanMaterial->UpdateDescriptorSet();
-		Ref<DescriptorSet> materialDescriptorSet = vulkanMaterial->GetDescriptorSet();
+		vulkanMaterial.UpdateDescriptorSet();
+		const Ref<VulkanDescriptorSet>& materialDescriptorSet = vulkanMaterial.GetDescriptorSet();
 		if (materialDescriptorSet)
 		{
-			BindDescriptorSet(materialDescriptorSet.As<VulkanDescriptorSet>(), pipelineLayout, VK_PIPELINE_BIND_POINT_GRAPHICS, 3);
+			BindDescriptorSet(materialDescriptorSet, pipelineLayout, VK_PIPELINE_BIND_POINT_GRAPHICS, 3);
 		}
 	}
 
@@ -245,15 +242,14 @@ namespace Flare
 		vkCmdSetScissor(m_CommandBuffer, 0, 1, &scissors);
 	}
 
-	void VulkanCommandBuffer::BindPipeline(Ref<Pipeline> pipeline)
+	void VulkanCommandBuffer::BindPipeline(const Ref<Pipeline>& pipeline)
 	{
 		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(m_CurrentRenderPass);
 
 		if (m_BoundPipeline.GraphicsPipeline != pipeline)
 		{
-			auto vulkanPipeline = pipeline.As<VulkanPipeline>();
-			VkPipelineLayout pipelineLayout = vulkanPipeline->GetLayoutHandle();
+		 	VulkanPipeline& vulkanPipeline = pipeline.DerefAs<VulkanPipeline>();
 
 			ResetCurrentDescriptorSets();
 			ResetBoundPipelineState();
@@ -262,8 +258,8 @@ namespace Flare
 
 			m_BoundPipeline.GraphicsPipeline = pipeline;
 			m_BoundPipeline.BindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-			m_BoundPipeline.LayoutHandle = pipelineLayout;
-			m_BoundPipeline.PipelineHandle = vulkanPipeline->GetHandle(m_CurrentRenderPass);
+			m_BoundPipeline.LayoutHandle = vulkanPipeline.GetLayoutHandle();
+			m_BoundPipeline.PipelineHandle = vulkanPipeline.GetHandle(m_CurrentRenderPass);
 
 			vkCmdBindPipeline(m_CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_BoundPipeline.PipelineHandle);
 

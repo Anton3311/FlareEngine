@@ -281,7 +281,7 @@ namespace Flare
 		return m_Valid;
 	}
 
-	Ref<const GraphicsShaderMetadata> VulkanShader::GetMetadata() const
+	const Ref<const GraphicsShaderMetadata>& VulkanShader::GetMetadata() const
 	{
 		return m_Metadata;
 	}

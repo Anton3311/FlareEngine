@@ -23,7 +23,7 @@ namespace Flare
 		ComputeShader();
 		virtual ~ComputeShader();
 
-		virtual Ref<const ComputeShaderMetadata> GetMetadata() const = 0;
+		virtual const Ref<const ComputeShaderMetadata>& GetMetadata() const = 0;
 		virtual void Load() = 0;
 		virtual bool IsLoaded() const = 0;
 	public:

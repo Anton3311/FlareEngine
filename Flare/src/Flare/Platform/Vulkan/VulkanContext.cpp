@@ -712,6 +712,7 @@ namespace Flare
 
 	Ref<Pipeline> VulkanContext::GetDefaultPipelineForShader(Ref<Shader> shader, Ref<VulkanRenderPass> renderPass)
 	{
+		FLARE_PROFILE_FUNCTION();
 		uint64_t key = (uint64_t)shader.GetRawPointer();
 		auto it = m_DefaultPipelines.find(key);
 

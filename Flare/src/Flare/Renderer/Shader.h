@@ -27,7 +27,7 @@ namespace Flare
 		virtual void Load() = 0;
 		virtual bool IsLoaded() const = 0;
 
-		virtual Ref<const GraphicsShaderMetadata> GetMetadata() const = 0;
+		virtual const Ref<const GraphicsShaderMetadata>& GetMetadata() const = 0;
 		virtual const ShaderProperties& GetProperties() const = 0;
 		virtual std::optional<uint32_t> GetPropertyIndex(std::string_view name) const = 0;
 	public:

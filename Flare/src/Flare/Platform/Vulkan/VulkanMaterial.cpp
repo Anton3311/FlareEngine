@@ -44,11 +44,6 @@ namespace Flare
 		return m_Pipeline;
 	}
 
-	Ref<DescriptorSet> VulkanMaterial::GetDescriptorSet() const
-	{
-		return m_Set;
-	}
-
 	void VulkanMaterial::UpdateDescriptorSet()
 	{
 		FLARE_PROFILE_FUNCTION();

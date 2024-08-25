@@ -24,7 +24,7 @@ namespace Flare
 		void Load() override;
 		bool IsLoaded() const override;
 
-		Ref<const GraphicsShaderMetadata> GetMetadata() const override;
+		const Ref<const GraphicsShaderMetadata>& GetMetadata() const override;
 		const ShaderProperties& GetProperties() const override;
 		std::optional<uint32_t> GetPropertyIndex(std::string_view name) const override;
 

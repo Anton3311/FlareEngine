@@ -23,7 +23,7 @@ namespace Flare
 		Material(AssetHandle shaderHandle);
 		virtual ~Material();
 
-		inline Ref<Shader> GetShader() const { return m_Shader; }
+		inline const Ref<Shader>& GetShader() const { return m_Shader; }
 		virtual void SetShader(const Ref<Shader>& shader);
 
 		template<typename T>

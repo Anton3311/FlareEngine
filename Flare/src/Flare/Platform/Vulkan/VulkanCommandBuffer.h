@@ -44,7 +44,7 @@ namespace Flare
 		void SetViewportAndScisors(Math::Rect viewportRect) override;
 		void SetDefaltViewportAndScissors() override;
 
-		void BindPipeline(Ref<Pipeline> pipeline) override;
+		void BindPipeline(const Ref<Pipeline>& pipeline) override;
 		void BindVertexBuffer(Ref<const VertexBuffer> buffer, uint32_t index) override;
 		void BindVertexBuffers(Span<Ref<const VertexBuffer>> vertexBuffers, uint32_t baseBindingIndex) override;
 		void BindIndexBuffer(Ref<const IndexBuffer> buffer) override;
