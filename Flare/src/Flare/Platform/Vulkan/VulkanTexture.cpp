@@ -437,7 +437,9 @@ namespace Flare
 
 		if (IsCompressedTextureFormat(m_Specifications.Format))
 		{
-			stagingBuffer = stagingBufferPool.AllocateStagingBuffer(imageSize);
+			// NOTE: A buffer is required to be aligned to texel size boundary
+			// TODO: Need a way to figure out the size of a single texel in bytes when a compressed texture format is used.
+			stagingBuffer = stagingBufferPool.AllocateAlignedStagingBuffer(imageSize, 16);
 		}
 		else
 		{
