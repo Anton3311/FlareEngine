@@ -89,6 +89,10 @@ namespace Flare
 
 	struct FLARE_API SceneSubmition
 	{
+		FLARE_NONCOPYABLE(SceneSubmition);
+
+		SceneSubmition() = default;
+
 		void Clear();
 
 		CameraSubmition Camera;

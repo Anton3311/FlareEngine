@@ -470,13 +470,21 @@ namespace Flare
 	void DecalRendererSystem::OnUpdate(World& world, SystemExecutionContext& context)
 	{
 		FLARE_PROFILE_FUNCTION();
-		m_DecalsQuery.ForEachChunk([](QueryChunk chunk,
+
+		SceneSubmition& sceneSubmition = Renderer::GetCurrentSceneSubmition();
+
+		m_DecalsQuery.ForEachChunk([&](QueryChunk chunk,
 			ComponentView<const TransformComponent> transforms,
 			ComponentView<const Decal> decals)
 			{
 				for (auto entity : chunk)
 				{
-					Renderer::SubmitDecal(decals[entity].Material, transforms[entity].GetTransformationMatrix());
+					if (decals[entity].Material == nullptr || decals[entity].Material->GetShader() == nullptr)
+						continue;
+
+					auto& decal = sceneSubmition.DecalSubmitions.emplace_back();
+					decal.Material = decals[entity].Material;
+					decal.Transform = Math::Compact3DTransform(transforms[entity].GetTransformationMatrix());
 				}
 			});
 	}

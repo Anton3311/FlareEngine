@@ -286,23 +286,6 @@ namespace Flare
 		s_RendererData.Submition = nullptr;
 	}
 
-	void Renderer::DrawMesh(const Ref<Mesh>& mesh, uint32_t subMesh, const Ref<Material>& material, const glm::mat4& transform, MeshRenderFlags flags)
-	{
-		s_RendererData.Submition->OpaqueGeometrySubmitions.Submit(mesh, subMesh, material, Math::Compact3DTransform(transform), flags);
-	}
-
-	void Renderer::SubmitDecal(const Ref<const Material>& material, const glm::mat4& transform)
-	{
-		if (material == nullptr || material->GetShader() == nullptr)
-			return;
-
-		Math::Compact3DTransform compactTransform(transform);
-
-		auto& decal = s_RendererData.Submition->DecalSubmitions.emplace_back();
-		decal.Material = material;
-		decal.Transform = Math::Compact3DTransform(transform);
-	}
-
 	RendererSubmitionQueue& Renderer::GetOpaqueSubmitionQueue()
 	{
 		FLARE_CORE_ASSERT(s_RendererData.Submition);
