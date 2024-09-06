@@ -246,16 +246,12 @@ namespace Flare
 			createdEntities[i] = entity;
 
 			const uint8_t* hierarchyEntityData = m_Hierarchy.GetEntityData(i);
-
-			std::optional<uint8_t*> worldEntityData = world.Entities.GetEntityData(entity);
-			FLARE_CORE_ASSERT(worldEntityData);
-
 			const ArchetypeRecord& archetype = m_Hierarchy.GetCompatibleArchetypes()[node.Archetype];
 			for (size_t componentIndex = 0; componentIndex < archetype.Components.size(); componentIndex++)
 			{
 				const ComponentInfo& component = m_Hierarchy.GetCompatibleComponents().GetComponentInfo(archetype.Components[componentIndex]);
 				size_t componentOffset = archetype.ComponentOffsets[componentIndex];
-				uint8_t* componentData = *worldEntityData + componentOffset;
+				uint8_t* componentData = (uint8_t*)world.Entities.GetEntityComponent(entity, component.Id);
 
 				if (component.Id == COMPONENT_ID(Children))
 				{

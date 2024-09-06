@@ -78,8 +78,6 @@ namespace Flare
 		std::optional<Entity> FindEntityByIndex(uint32_t entityIndex);
 		std::optional<Entity> FindEntityByRegistryIndex(uint32_t registryIndex);
 
-		std::optional<uint8_t*> GetEntityData(Entity entity);
-		std::optional<const uint8_t*> GetEntityData(Entity entity) const;
 		std::optional<size_t> GetEntityDataSize(Entity entity) const;
 
 		inline EntityStorage& GetEntityStorage(ArchetypeId archetype) { return m_EntityStorages[archetype]; }

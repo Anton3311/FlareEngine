@@ -160,24 +160,20 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(HAS_BIT(m_Features, EntitiesHierarchyFeatures::DuplicateEntity));
 
+		// TODO: Duplicate the whole hierarchy
+
 		Entities& entities = m_World->Entities;
-		ArchetypeId archetype = entities.GetEntityArchetype(entity);
-		Entity duplicated = entities.CreateEntityFromArchetype(archetype, ComponentInitializationStrategy::DefaultConstructor);
+		ArchetypeId archetypeId = entities.GetEntityArchetype(entity);
+		Entity duplicated = entities.CreateEntityFromArchetype(archetypeId, ComponentInitializationStrategy::DefaultConstructor);
 
-		const ArchetypeRecord& record = m_World->GetArchetypes()[archetype];
-
-		uint8_t* source = entities.GetEntityData(entity).value_or(nullptr);
-		uint8_t* destination = entities.GetEntityData(duplicated).value_or(nullptr);
-
-		FLARE_CORE_ASSERT(source && destination);
-
-		for (size_t i = 0; i < record.Components.size(); i++)
+		const ArchetypeRecord& archetype = m_World->GetArchetypes()[archetypeId];
+		for (size_t i = 0; i < archetype.Components.size(); i++)
 		{
-			if (record.Components[i] == COMPONENT_ID(SerializationId))
+			if (archetype.Components[i] == COMPONENT_ID(SerializationId))
 			{
 				// NOTE: Skip SerializationId component, because each entity must have a unique serialization id.
 				//
-				//       Copying the id will result in problems when deserialing entity references,
+				//       Copying the id will result in problems when deserializing entity references,
 				//       SceneSerializer might deserialize the wrong entity reference because there will
 				//       be multiple entities with the same id
 				//
@@ -185,12 +181,12 @@ namespace Flare
 				continue;
 			}
 
-			uint8_t* componentSource = source + record.ComponentOffsets[i];
-			uint8_t* componentDestination = destination + record.ComponentOffsets[i];
+			void* componentSource = entities.GetEntityComponent(entity, archetype.Components[i]);
+			void* componentDestination = entities.GetEntityComponent(duplicated, archetype.Components[i]);
 
-			FLARE_CORE_ASSERT(m_World->Components.IsComponentIdValid(record.Components[i]));
-			const ComponentInfo& component = m_World->Components.GetComponentInfo(record.Components[i]);
+			FLARE_CORE_ASSERT(componentSource && componentDestination);
 
+			const ComponentInfo& component = m_World->Components.GetComponentInfo(archetype.Components[i]);
 			component.Initializer->Type.Functions.CopyConstructor(componentDestination, componentSource);
 		}
 

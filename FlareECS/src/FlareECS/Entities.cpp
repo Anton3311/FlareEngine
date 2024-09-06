@@ -465,27 +465,6 @@ namespace Flare
 		return {};
 	}
 
-	std::optional<uint8_t*> Entities::GetEntityData(Entity entity)
-	{
-		auto it = FindEntity(entity);
-		if (it == m_EntityToRecord.end())
-			return {};
-
-		EntityRecord& record = m_EntityRecords[it->second];
-		return GetEntityStorage(record.Archetype).GetEntityData(record.BufferIndex);
-	}
-
-	std::optional<const uint8_t*> Entities::GetEntityData(Entity entity) const
-	{
-		auto it = FindEntity(entity);
-		if (it == m_EntityToRecord.end())
-			return {};
-
-		const EntityRecord& record = m_EntityRecords[it->second];
-		const EntityStorage& storage = GetEntityStorage(record.Archetype);
-		return storage.GetEntityData(record.BufferIndex);
-	}
-
 	std::optional<size_t> Entities::GetEntityDataSize(Entity entity) const
 	{
 		auto it = FindEntity(entity);
