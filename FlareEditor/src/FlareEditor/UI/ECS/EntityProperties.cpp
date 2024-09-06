@@ -2,6 +2,9 @@
 
 #include "Flare/AssetManager/AssetManager.h"
 #include "Flare/Renderer/Renderer.h"
+#include "Flare/Scene/Components.h"
+
+#include "FlareECS/World.h"
 
 #include "FlareEditor/UI/EditorGUI.h"
 
@@ -54,8 +57,6 @@ namespace Flare
 					RenderCameraComponent(m_World.GetEntityComponent<CameraComponent>(entity));
 				else if (component == COMPONENT_ID(SpriteComponent))
 					RenderSpriteComponent(m_World.GetEntityComponent<SpriteComponent>(entity));
-				else if (component == COMPONENT_ID(MeshComponent))
-					RenderMeshComponent(m_World.GetEntityComponent<MeshComponent>(entity));
 				else if (component == COMPONENT_ID(Environment))
 					RenderEnvironmentComponent(m_World.GetEntityComponent<Environment>(entity));
 				else
@@ -144,43 +145,6 @@ namespace Flare
 						sprite.Flags |= SpriteRenderFlags::FlipX;
 					if (flipY)
 						sprite.Flags |= SpriteRenderFlags::FlipY;
-				}
-
-				EditorGUI::EndPropertyGrid();
-			}
-
-			ImGui::TreePop();
-		}
-	}
-
-	void EntityProperties::RenderMeshComponent(MeshComponent& mesh)
-	{
-		ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_FramePadding;
-		if (ImGui::TreeNodeEx((void*)std::hash<ComponentId>()(COMPONENT_ID(MeshComponent)), flags, "Mesh"))
-		{
-			if (EditorGUI::BeginPropertyGrid())
-			{
-				AssetHandle meshHandle = NULL_ASSET_HANDLE;
-				if (mesh.Mesh)
-					meshHandle = mesh.Mesh->Handle;
-				if (EditorGUI::AssetField("Mesh", meshHandle, &Mesh::_Asset))
-					mesh.Mesh = AssetManager::GetAsset<Mesh>(meshHandle);
-
-				EditorGUI::AssetField("Material", mesh.Material, nullptr);
-
-				const char* propertyName = "Don't cast shadows";
-				EditorGUI::PropertyName(propertyName);
-				{
-					bool value = HAS_BIT(mesh.Flags, MeshRenderFlags::DontCastShadows);
-
-					ImGui::PushID(propertyName);
-					ImGui::Checkbox("", &value);
-					ImGui::PopID();
-
-					if (value)
-						mesh.Flags |= MeshRenderFlags::DontCastShadows;
-					else
-						mesh.Flags &= ~MeshRenderFlags::DontCastShadows;
 				}
 
 				EditorGUI::EndPropertyGrid();

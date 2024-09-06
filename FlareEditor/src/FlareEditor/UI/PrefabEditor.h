@@ -11,6 +11,7 @@
 
 namespace Flare
 {
+	struct ECSContext;
 	class Prefab;
 	class Scene;
 	class SceneRenderer;

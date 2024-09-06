@@ -1,12 +1,15 @@
 #pragma once
 
-#include "Flare/Scene/Components.h"
-#include "Flare/Scene/Transform.h"
-
-#include "FlareECS/World.h"
+#include "FlareECS/Entity/Entity.h"
 
 namespace Flare
 {
+	struct CameraComponent;
+	struct Environment;
+	struct SpriteComponent;
+	struct TransformComponent;
+	class World;
+
 	class EntityProperties
 	{
 	public:
@@ -17,7 +20,6 @@ namespace Flare
 		void RenderCameraComponent(CameraComponent& cameraComponent);
 		void RenderTransformComponent(TransformComponent& transform);
 		void RenderSpriteComponent(SpriteComponent& sprite);
-		void RenderMeshComponent(MeshComponent& mesh);
 		void RenderEnvironmentComponent(Environment& environment);
 
 		void EntityProperties::RenderAddComponentMenu(Entity entity);

@@ -16,7 +16,6 @@ namespace Flare
 		void OnConfig(World& world, SystemConfig& config) override;
 		void OnUpdate(World& world, SystemExecutionContext& context) override;
 	private:
-		Query m_Query;
 		Query m_MeshRendererQuery;
 		Query m_DecalsQuery;
 	};

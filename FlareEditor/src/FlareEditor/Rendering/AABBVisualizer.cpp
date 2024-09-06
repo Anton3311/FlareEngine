@@ -19,11 +19,6 @@ namespace Flare
 	void AABBVisualizer::OnConfig(World& world, SystemConfig& config)
 	{
 		FLARE_PROFILE_FUNCTION();
-		m_Query = world.NewQuery()
-			.All()
-			.With<TransformComponent>()
-			.With<MeshComponent>()
-			.Build();
 		m_MeshRendererQuery = world.NewQuery()
 			.All()
 			.With<TransformComponent>()
@@ -45,22 +40,6 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 		if (!EditorLayer::GetInstance().GetSceneViewSettings().ShowAABBs)
 			return;
-
-		m_Query.ForEachChunk([](QueryChunk chunk,
-			ComponentView<const MeshComponent> meshes,
-			ComponentView<const TransformComponent> transforms)
-			{
-				for (auto entity : chunk)
-				{
-					glm::mat4 transform = transforms[entity].GetTransformationMatrix();
-
-					if (meshes[entity].Mesh == nullptr)
-						continue;
-
-					Math::AABB meshBounds = meshes[entity].Mesh->GetBounds();
-					DebugRenderer::DrawAABB(meshBounds.Transformed(transform));
-				}
-			});
 
 		m_MeshRendererQuery.ForEachChunk([](QueryChunk chunk,
 			ComponentView<const MeshRenderer> meshes,

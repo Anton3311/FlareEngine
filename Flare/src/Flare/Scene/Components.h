@@ -177,33 +177,6 @@ namespace Flare
         }
     };
 
-
-
-    struct FLARE_API MeshComponent
-    {
-        FLARE_COMPONENT;
-
-        MeshComponent(MeshRenderFlags flags = MeshRenderFlags::None);
-        MeshComponent(const Ref<Mesh>& mesh, AssetHandle material, MeshRenderFlags flags = MeshRenderFlags::None);
-
-        Ref<Mesh> Mesh;
-        AssetHandle Material;
-        MeshRenderFlags Flags;
-    };
-
-    template<>
-    struct TypeSerializer<MeshComponent>
-    {
-        void OnSerialize(MeshComponent& mesh, SerializationStream& stream)
-        {
-            stream.Serialize("Mesh", SerializationValue(mesh.Mesh));
-            stream.Serialize("Material", SerializationValue(mesh.Material));
-
-            using FlagsUnderlyingType = std::underlying_type_t<decltype(mesh.Flags)>;
-            stream.Serialize("Flags", SerializationValue(reinterpret_cast<FlagsUnderlyingType&>(mesh.Flags)));
-        }
-    };
-
     //
     // MeshRenderer
     //

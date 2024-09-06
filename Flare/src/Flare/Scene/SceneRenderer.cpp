@@ -429,81 +429,15 @@ namespace Flare
 		FLARE_CORE_ASSERT(groupId);
 		config.Group = *groupId;
 
-		m_Query = world.NewQuery().All().With<TransformComponent, MeshComponent>().Build();
-		m_Query2 = world.NewQuery().All().With<TransformComponent, MeshRenderer>().Build();
+		m_Query = world.NewQuery().All().With<TransformComponent, MeshRenderer>().Build();
 	}
 
 	void MeshRendererSystem::OnUpdate(World& world, SystemExecutionContext& context)
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		AssetHandle currentMaterialHandle = NULL_ASSET_HANDLE;
-		Ref<Material> currentMaterial = nullptr;
-		Ref<MaterialsTable> currentMaterialsTable = nullptr;
-		Ref<Material> errorMaterial = Renderer::GetErrorMaterial();
-
 		RendererSubmitionQueue& submitionQueue = Renderer::GetOpaqueSubmitionQueue();
-
-		bool isMaterialTable = false;
-
-		m_Query.ForEachChunk([&](QueryChunk chunk, ComponentView<const TransformComponent> transforms, ComponentView<const MeshComponent> meshes)
-			{
-				for (auto entity : chunk)
-				{
-					const Ref<Mesh>& mesh = meshes[entity].Mesh;
-					const TransformComponent& transform = transforms[entity];
-
-					if (!mesh)
-						continue;
-
-					if (meshes[entity].Material != currentMaterialHandle)
-					{
-						const AssetMetadata* meta = AssetManager::GetAssetMetadata(meshes[entity].Material);
-						if (!meta)
-							continue;
-
-						if (meta->Type == AssetType::Material)
-						{
-							currentMaterial = AssetManager::GetAsset<Material>(meshes[entity].Material);
-							isMaterialTable = false;
-						}
-						else if (meta->Type == AssetType::MaterialsTable)
-						{
-							currentMaterialsTable = AssetManager::GetAsset<MaterialsTable>(meshes[entity].Material);
-							isMaterialTable = true;
-						}
-
-						currentMaterialHandle = meshes[entity].Material;
-					}
-
-					if (!isMaterialTable)
-					{
-						submitionQueue.Submit(mesh,
-							currentMaterial,
-							Math::Compact3DTransform(transform.GetTransformationMatrix()),
-							meshes[entity].Flags);
-					}
-					else
-					{
-						if (currentMaterialsTable)
-						{
-							submitionQueue.Submit(mesh,
-								Span<AssetHandle>::FromVector(currentMaterialsTable->Materials),
-								Math::Compact3DTransform(transform.GetTransformationMatrix()),
-								meshes[entity].Flags);
-						}
-						else
-						{
-							submitionQueue.Submit(mesh,
-								Renderer::GetErrorMaterial(),
-								Math::Compact3DTransform(transform.GetTransformationMatrix()),
-								meshes[entity].Flags);
-						}
-					}
-				}
-			});
-
-		m_Query2.ForEachChunk([&](QueryChunk chunk, ComponentView<const TransformComponent> transforms, ComponentView<MeshRenderer> meshRenderers)
+		m_Query.ForEachChunk([&](QueryChunk chunk, ComponentView<const TransformComponent> transforms, ComponentView<MeshRenderer> meshRenderers)
 			{
 				for (auto entity : chunk)
 				{
