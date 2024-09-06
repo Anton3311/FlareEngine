@@ -58,8 +58,6 @@ namespace Flare
 			return "Mesh";
 		case AssetType::MeshSource:
 			return "MeshSource";
-		case AssetType::MaterialsTable:
-			return "MaterialsTable";
 		}
 
 		FLARE_CORE_ASSERT(false, "Unhandled asset type");
@@ -88,8 +86,6 @@ namespace Flare
 			return AssetType::Mesh;
 		else if (string == "MeshSource")
 			return AssetType::MeshSource;
-		else if (string == "MaterialsTable")
-			return AssetType::MaterialsTable;
 
 		FLARE_CORE_ASSERT(false, "Unknown asset type string");
 		return AssetType::None;

@@ -5,7 +5,6 @@
 
 #include "Flare/Renderer/ComputeShader.h"
 #include "Flare/Renderer/Material.h"
-#include "Flare/Renderer/MaterialsTable.h"
 
 #include "FlareEditor/UI/EditorGUI.h"
 #include "FlareEditor/UI/ECS/EntityProperties.h"
@@ -175,24 +174,6 @@ namespace Flare
 
 				ImGui::EndTable();
 			}
-			break;
-		}
-		case AssetType::MaterialsTable:
-		{
-			Ref<MaterialsTable> table = AssetManager::GetAsset<MaterialsTable>(handle);
-			FLARE_CORE_ASSERT(table);
-
-			if (EditorGUI::BeginPropertyGrid())
-			{
-				for (size_t i = 0; i < table->Materials.size(); i++)
-				{
-					EditorGUI::PropertyIndex(i);
-					EditorGUI::AssetField(table->Materials[i]);
-				}
-
-				EditorGUI::EndPropertyGrid();
-			}
-
 			break;
 		}
 		case AssetType::ComputeShader:

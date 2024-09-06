@@ -49,7 +49,6 @@ namespace Flare
 		Font,
 		Mesh,
 		MeshSource,
-		MaterialsTable,
 	};
 
 	enum class AssetSource

@@ -11,7 +11,6 @@
 
 #include "Flare/Renderer/GraphicsContext.h"
 #include "Flare/Renderer/Renderer.h"
-#include "Flare/Renderer/MaterialsTable.h"
 #include "Flare/Renderer/ShaderStorageBuffer.h"
 #include "Flare/Renderer/UniformBuffer.h"
 

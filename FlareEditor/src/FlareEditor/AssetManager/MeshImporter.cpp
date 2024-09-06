@@ -5,7 +5,6 @@
 
 #include "Flare/AssetManager/AssetManager.h"
 #include "Flare/Renderer/Material.h"
-#include "Flare/Renderer/MaterialsTable.h"
 #include "Flare/Renderer/Mesh.h"
 #include "Flare/Renderer/MeshSource.h"
 #include "Flare/Renderer/Texture.h"
@@ -82,7 +81,6 @@ namespace Flare
 		std::optional<AssetHandle> defaultShader = ShaderLibrary::FindShader("Surface");
 
 		std::unordered_map<std::string, AssetHandle> nameToHandle;
-		AssetHandle materialsTableHandle;
 
 		for (AssetHandle subAsset : metadata.SubAssets)
 		{
@@ -90,8 +88,6 @@ namespace Flare
 			{
 				if (subAssetMetadata->Type == AssetType::Material)
 					nameToHandle[subAssetMetadata->Name] = subAsset;
-				else if (subAssetMetadata->Type == AssetType::MaterialsTable)
-					materialsTableHandle = subAsset;
 			}
 		}
 
@@ -118,14 +114,6 @@ namespace Flare
 			roughnessMapProperty = shader->GetPropertyIndex("u_RoughnessMap");
 			metallicProperty = shader->GetPropertyIndex("u_Material.Metallic");
 		}
-
-		Ref<MaterialsTable> materialsTable = Ref<MaterialsTable>::New();
-		if (AssetManager::IsAssetHandleValid(materialsTableHandle))
-			assetManager->SetLoadedAsset(materialsTableHandle, materialsTable);
-		else
-			assetManager->ImportMemoryOnlyAsset("DefaultMaterialsTable", materialsTable, metadata.Handle);
-
-		materialsTable->Materials.reserve(usedMaterials.size());
 
 		auto getMaterialTexture = [&](const aiMaterial& material, aiTextureType type) -> AssetHandle
 		{
@@ -188,12 +176,10 @@ namespace Flare
 			if (it != nameToHandle.end())
 			{
 				assetManager->SetLoadedAsset(it->second, materialAsset);
-				materialsTable->Materials.push_back(it->second);
 			}
 			else
 			{
-				AssetHandle handle = assetManager->ImportMemoryOnlyAsset(name, materialAsset, metadata.Handle);
-				materialsTable->Materials.push_back(handle);
+				assetManager->ImportMemoryOnlyAsset(name, materialAsset, metadata.Handle);
 			}
 
 			outMaterials[i] = materialAsset;
