@@ -3,6 +3,7 @@ Properties =
 {
 	u_Material.Color = { Type = Color }
 	u_Material.Roughness = {}
+	u_Material.Metallic = {}
 	u_Texture = { Default = White }
 	u_NormalMap = { Default = DefaultNormals }
 	u_RoughnessMap = { Default = White }
@@ -60,8 +61,8 @@ layout(std140, push_constant) uniform InstanceData
 {
 	vec4 Color;
 	float Roughness;
+	float Metallic;
 } u_Material;
-
 
 struct VertexData
 {
@@ -130,10 +131,10 @@ void main()
 
 	vec3 finalColor = CalculateLight(N, V, H, color.rgb,
 		u_LightColor.rgb * u_LightColor.w, -u_LightDirection,
-		roughness) * shadow;
+		roughness, u_Material.Metallic) * shadow;
 
-	finalColor += CalculatePointLightsContribution(N, V, color.rgb, i_Vertex.Position, roughness);
-	finalColor += CalculateSpotLightsContribution(N, V, color.rgb, i_Vertex.Position, roughness);
+	finalColor += CalculatePointLightsContribution(N, V, color.rgb, i_Vertex.Position, roughness, u_Material.Metallic);
+	finalColor += CalculateSpotLightsContribution(N, V, color.rgb, i_Vertex.Position, roughness, u_Material.Metallic);
 
 	finalColor += u_EnvironmentLight.rgb * u_EnvironmentLight.w * color.rgb;
 

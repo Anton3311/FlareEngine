@@ -40,11 +40,13 @@ layout(std140, set = 1, binding = 3) buffer SpotLightsData
 	SpotLightData[] Lights;
 } u_SpotLights;
 
-vec3 CalculateLight(vec3 N, vec3 V, vec3 H, vec3 color, vec3 incomingLight, vec3 lightDirection, float roughness)
+vec3 CalculateLight(vec3 N, vec3 V, vec3 H, vec3 color, vec3 incomingLight, vec3 lightDirection, float roughness, float metallic)
 {
 	float alpha = max(0.04, roughness * roughness);
 
-	vec3 kS = Fresnel_Shlick(BASE_REFLECTIVITY, V, H);
+	vec3 F0 = mix(BASE_REFLECTIVITY, color, metallic);
+
+	vec3 kS = Fresnel_Shlick(F0, V, H);
 	vec3 kD = vec3(1.0) - kS;
 
 	vec3 diffuse = Diffuse_Lambertian(color);
@@ -54,7 +56,7 @@ vec3 CalculateLight(vec3 N, vec3 V, vec3 H, vec3 color, vec3 incomingLight, vec3
 	return brdf * incomingLight * max(0.0, dot(lightDirection, N));
 }
 
-vec3 CalculatePointLightsContribution(vec3 N, vec3 V, vec3 color, vec3 position, float roughness)
+vec3 CalculatePointLightsContribution(vec3 N, vec3 V, vec3 color, vec3 position, float roughness, float metallic)
 {
 	vec3 finalColor = vec3(0.0);
 	for (uint i = 0; i < u_PointLightsCount; i++)
@@ -70,13 +72,14 @@ vec3 CalculatePointLightsContribution(vec3 N, vec3 V, vec3 color, vec3 position,
 
 		finalColor += CalculateLight(N, V, halfWayVector, color,
 			incomingLight * attenuation,
-			direction / distance, roughness);
+			direction / distance, roughness,
+			metallic);
 	}
 
 	return finalColor;
 }
 
-vec3 CalculateSpotLightsContribution(vec3 N, vec3 V, vec3 color, vec3 position, float roughness)
+vec3 CalculateSpotLightsContribution(vec3 N, vec3 V, vec3 color, vec3 position, float roughness, float metallic)
 {
 	vec3 finalColor = vec3(0.0);
 	for (uint i = 0; i < u_SpotLightsCount; i++)
@@ -98,7 +101,8 @@ vec3 CalculateSpotLightsContribution(vec3 N, vec3 V, vec3 color, vec3 position, 
 
 		finalColor += CalculateLight(N, V, halfWayVector, color,
 			incomingLight * attenuation,
-			direction, roughness);
+			direction, roughness,
+			metallic);
 	}
 
 	return finalColor;
