@@ -303,7 +303,10 @@ namespace Flare
 
             for (size_t i = 0; i < arraySize; i++)
             {
-                m_Emitter << YAML::Value << materials[i]->Handle;
+                if (materials[i] == nullptr)
+                    m_Emitter << YAML::Value << NULL_ASSET_HANDLE;
+                else
+					m_Emitter << YAML::Value << materials[i]->Handle;
             }
         }
         else

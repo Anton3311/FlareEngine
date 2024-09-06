@@ -1,11 +1,14 @@
-Shader: 5454023769249736678
+Shader: 17438643766101068745
 Properties:
   - Name: u_Material.Color
     Type: 7
-    Value: [1, 1, 1, 1]
+    Value: [0.920930207, 0.882379651, 0.882379651, 1]
   - Name: u_Material.Roughness
     Type: 4
-    Value: 1
+    Value: 0.899999976
+  - Name: u_Material.Metallic
+    Type: 4
+    Value: 0.300000012
   - Name: u_Texture
     Type: 8
     Value: 0
