@@ -1,7 +1,8 @@
 #pragma once
 
 #include "FlareECS/Entities.h"
-#include "FlareECS/Query/EntityViewIterator.h"
+
+#include "FlareECS/Query/QueryChunkEntity.h"
 
 namespace Flare
 {
@@ -13,7 +14,7 @@ namespace Flare
 		constexpr ComponentView(size_t offset)
 			: m_ComponentOffset(offset) {}
 
-		constexpr ComponentT& operator[](EntityViewElement entity) const
+		constexpr ComponentT& operator[](QueryChunkEntity entity) const
 		{
 			return *(ComponentT*)(entity.GetEntityData() + m_ComponentOffset);
 		}
@@ -48,7 +49,7 @@ namespace Flare
 		constexpr OptionalComponentView(size_t offset)
 			: m_HasComponent(true), m_Offset(offset) {}
 
-		constexpr std::optional<T*> operator[](EntityViewElement& entity) const
+		constexpr std::optional<T*> operator[](QueryChunkEntity & entity) const
 		{
 			if (m_HasComponent)
 				return (T*)(entity.GetEntityData() + m_Offset);
@@ -57,7 +58,7 @@ namespace Flare
 
 		constexpr bool HasComponent() const { return m_HasComponent; }
 
-		constexpr T& GetOrDefault(EntityViewElement& entity, T& defaultValue) const
+		constexpr T& GetOrDefault(QueryChunkEntity & entity, T& defaultValue) const
 		{
 			if (m_HasComponent)
 				return *(T*)(entity.GetEntityData() + m_Offset);

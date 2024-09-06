@@ -121,7 +121,7 @@ namespace Flare
 
 		m_EnvironmentQuery.ForEachChunk([](QueryChunk chunk, ComponentView<const Environment> environments)
 			{
-				for (EntityViewElement entity : chunk)
+				for (QueryChunkEntity entity : chunk)
 				{
 					Renderer::SetShadowSettings(environments[entity].ShadowSettings);
 					return;

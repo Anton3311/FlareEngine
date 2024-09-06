@@ -42,7 +42,7 @@ namespace Flare
 
 		m_DirectionalLightQuery.ForEachChunk([](QueryChunk chunk, ComponentView<const TransformComponent> transforms, ComponentView<const DirectionalLight> lights)
 			{
-				for (EntityViewElement entity : chunk)
+				for (QueryChunkEntity entity : chunk)
 					DebugRenderer::DrawRay(transforms[entity].Position, transforms[entity].TransformDirection(glm::vec3(0.0f, 0.0f, -1.0f)));
 			});
 
@@ -56,7 +56,7 @@ namespace Flare
 
 		m_PointLightsQuery.ForEachChunk([](QueryChunk chunk, ComponentView<const TransformComponent> transforms, ComponentView<const PointLight> lights)
 			{
-				for (EntityViewElement entity : chunk)
+				for (QueryChunkEntity entity : chunk)
 				{
 					glm::vec3 position = transforms[entity].Position;
 
@@ -69,7 +69,7 @@ namespace Flare
 
 		m_SpotlightsQuery.ForEachChunk([](QueryChunk chunk, ComponentView<const TransformComponent> transforms, ComponentView<const SpotLight> lights)
 			{
-				for (EntityViewElement entity : chunk)
+				for (QueryChunkEntity entity : chunk)
 				{
 					glm::vec3 iconPosition = transforms[entity].Position;
 

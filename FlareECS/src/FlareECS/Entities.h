@@ -20,7 +20,6 @@ namespace Flare
 	class FLAREECS_API Query;
 
 	class EntityStorage;
-	class EntityView;
 	class EntitiesIterator;
 
 	enum class ComponentInitializationStrategy : uint8_t

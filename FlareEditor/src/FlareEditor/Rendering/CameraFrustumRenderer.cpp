@@ -35,7 +35,7 @@ namespace Flare
 
 		m_Query.ForEachChunk([](QueryChunk chunk, ComponentView<const TransformComponent> transforms, ComponentView<const CameraComponent> cameras)
 			{
-				for (EntityViewElement entity : chunk)
+				for (QueryChunkEntity entity : chunk)
 				{
 					const TransformComponent& transform = transforms[entity];
 					const CameraComponent& camera = cameras[entity];

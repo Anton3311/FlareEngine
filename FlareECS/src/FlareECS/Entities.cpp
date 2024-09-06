@@ -4,7 +4,6 @@
 #include "FlareCore/Log.h"
 #include "FlareCore/Profiler/Profiler.h"
 
-#include "FlareECS/Query/EntityView.h"
 #include "FlareECS/Query/EntitiesIterator.h"
 
 #include "FlareECS/Query/Query.h"

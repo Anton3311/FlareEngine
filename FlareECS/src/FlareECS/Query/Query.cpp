@@ -4,23 +4,6 @@
 
 namespace Flare
 {
-	QueryIterator Query::begin() const
-	{
-		FLARE_CORE_ASSERT(m_Entities);
-		FLARE_CORE_ASSERT(m_Queries);
-
-		const auto& data = (*m_Queries)[m_Id];
-		return QueryIterator(*m_Entities, data.Target, data.MatchedArchetypes.begin());
-	}
-
-	QueryIterator Query::end() const
-	{
-		FLARE_CORE_ASSERT(m_Entities);
-		FLARE_CORE_ASSERT(m_Queries);
-		const auto& data = (*m_Queries)[m_Id];
-		return QueryIterator(*m_Entities, data.Target, data.MatchedArchetypes.end());
-	}
-
 	std::optional<Entity> Query::TryGetFirstEntityId() const
 	{
 		FLARE_PROFILE_FUNCTION();

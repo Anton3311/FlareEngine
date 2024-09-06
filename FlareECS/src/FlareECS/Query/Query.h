@@ -7,9 +7,12 @@
 #include "FlareECS/Entity/Component.h"
 #include "FlareECS/Entity/Archetype.h"
 
+#include "FlareECS/EntityStorage/EntityStorage.h"
+
+#include "FlareECS/Query/ComponentView.h"
 #include "FlareECS/Query/QueryCache.h"
 #include "FlareECS/Query/QueryData.h"
-#include "FlareECS/Query/EntityView.h"
+#include "FlareECS/Query/QueryChunkEntity.h"
 
 #include "FlareECS/Entities.h"
 
@@ -18,45 +21,13 @@
 
 namespace Flare
 {
-	class QueryIterator
-	{
-	public:
-		QueryIterator(Entities& entities, QueryTarget target, const std::unordered_set<ArchetypeId>::const_iterator& archetype)
-			: m_Entities(entities), m_Target(target), m_Archetype(archetype) {}
-
-		inline EntityView operator*()
-		{
-			return EntityView(m_Entities, m_Target, *m_Archetype);
-		}
-
-		inline QueryIterator operator++()
-		{
-			m_Archetype++;
-			return *this;
-		}
-
-		inline bool operator==(const QueryIterator& other)
-		{
-			return &m_Entities == &other.m_Entities && m_Archetype == other.m_Archetype;
-		}
-
-		inline bool operator!=(const QueryIterator& other)
-		{
-			return &m_Entities != &other.m_Entities || m_Archetype != other.m_Archetype;
-		}
-	private:
-		Entities& m_Entities;
-		QueryTarget m_Target;
-		std::unordered_set<ArchetypeId>::const_iterator m_Archetype;
-	};
-
 	class QueryChunkIterator
 	{
 	public:
 		constexpr QueryChunkIterator(EntityDataGetter& dataGetter, size_t entityIndex)
 			: m_DataGetter(dataGetter), m_EntityIndex(entityIndex) {}
 
-		inline EntityViewElement operator*() { return EntityViewElement(m_DataGetter.GetData(m_EntityIndex)); }
+		constexpr QueryChunkEntity operator*() { return QueryChunkEntity(m_DataGetter.GetData(m_EntityIndex)); }
 
 		constexpr QueryChunkIterator& operator++()
 		{
@@ -180,9 +151,6 @@ namespace Flare
 		constexpr Query(QueryId id, Entities& entities, const QueryCache& queries)
 			: EntitiesQuery(id, queries, entities) {}
 	public:
-		QueryIterator begin() const;
-		QueryIterator end() const;
-
 		virtual std::optional<Entity> TryGetFirstEntityId() const override;
 		virtual size_t GetEntitiesCount() const override;
 
