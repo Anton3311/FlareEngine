@@ -79,7 +79,7 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 
 		Ref<EditorAssetManager> assetManager = AssetManager::GetInstance().As<EditorAssetManager>();
-		std::optional<AssetHandle> defaultShader = ShaderLibrary::FindShader("Mesh");
+		std::optional<AssetHandle> defaultShader = ShaderLibrary::FindShader("Surface");
 
 		std::unordered_map<std::string, AssetHandle> nameToHandle;
 		AssetHandle materialsTableHandle;
@@ -106,6 +106,7 @@ namespace Flare
 		std::optional<uint32_t> textureProperty;
 		std::optional<uint32_t> normalMapProperty;
 		std::optional<uint32_t> roughnessMapProperty;
+		std::optional<uint32_t> metallicProperty;
 
 		Ref<Shader> shader = AssetManager::GetAsset<Shader>(defaultShader.value());
 		if (shader != nullptr && shader->IsLoaded())
@@ -115,6 +116,7 @@ namespace Flare
 			textureProperty = shader->GetPropertyIndex("u_Texture");
 			normalMapProperty = shader->GetPropertyIndex("u_NormalMap");
 			roughnessMapProperty = shader->GetPropertyIndex("u_RoughnessMap");
+			metallicProperty = shader->GetPropertyIndex("u_Material.Metallic");
 		}
 
 		Ref<MaterialsTable> materialsTable = Ref<MaterialsTable>::New();
@@ -166,6 +168,8 @@ namespace Flare
 			material->Get(AI_MATKEY_COLOR_DIFFUSE, color);
 			float roughness = 1.0f;
 			material->Get(AI_MATKEY_ROUGHNESS_FACTOR, roughness);
+			float metallic = 0.0f;
+			material->Get(AI_MATKEY_METALLIC_FACTOR, metallic);
 
 			Ref<Material> materialAsset = Material::Create(defaultShader.value());
 
@@ -173,6 +177,8 @@ namespace Flare
 				materialAsset->WritePropertyValue(*colorProperty, glm::vec4(color.r, color.g, color.b, color.a));
 			if (roughnessProperty)
 				materialAsset->WritePropertyValue(*roughnessProperty, roughness);
+			if (metallicProperty)
+				materialAsset->WritePropertyValue(*metallicProperty, metallic);
 
 			TrySetMaterialTexture(textureProperty, materialAsset, baseColorTextureHandle, Renderer::GetWhiteTexture());
 			TrySetMaterialTexture(normalMapProperty, materialAsset, normalMapHandle, Renderer::GetDefaultNormalMap());
