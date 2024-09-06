@@ -36,6 +36,9 @@
 #define FLARE_EXPEND_MACRO(a) a
 #define FALRE_STRINGIFY_MACRO(a) #a
 
+#define FLARE_NONCOPYABLE(typeName) typeName(const typeName&) = delete; typeName& operator=(const typeName&) = delete;
+#define FLARE_NONMOVABLE(typeName) typeName(typeName&&) = delete; typeName& operator=(typeName&&) = delete;
+
 #define FLARE_IMPL_ENUM_BITFIELD(enumName) \
 	constexpr enumName operator&(enumName a, enumName b) { return (enumName) ((uint64_t)a & (uint64_t)b); } \
 	constexpr enumName operator|(enumName a, enumName b) { return (enumName) ((uint64_t)a | (uint64_t)b); } \
@@ -46,8 +49,6 @@
 	constexpr bool operator!=(enumName a, int32_t b) { return (int32_t)a != b; }
 
 #define HAS_BIT(value, bit) (((value) & (bit)) == (bit))
-
-#define FLARE_USE_CUSTOM_REF 1
 
 namespace Flare
 {
