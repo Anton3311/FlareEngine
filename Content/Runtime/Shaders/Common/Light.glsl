@@ -32,61 +32,66 @@ struct SpotLightData
 
 layout(std140, set = 1, binding = 2) buffer PointLightsData
 {
-	PointLightData[] Lights;
-} u_PointLights;
+	PointLightData[] u_PointLights;
+};
 
 layout(std140, set = 1, binding = 3) buffer SpotLightsData
 {
-	SpotLightData[] Lights;
-} u_SpotLights;
+	SpotLightData[] u_SpotLights;
+};
 
-vec3 CalculateLight(vec3 N, vec3 V, vec3 H, vec3 color, vec3 incomingLight, vec3 lightDirection, float roughness, float metallic)
+struct SurfaceProperties
 {
-	float alpha = max(0.04, roughness * roughness);
+	vec3 Position;
+	vec3 Color;
+	float Roughness;
+	vec3 Normal;
+	float Metallic;
+};
 
-	vec3 F0 = mix(BASE_REFLECTIVITY, color, metallic);
+vec3 CalculateLight(vec3 V, vec3 H, vec3 incomingLight, vec3 lightDirection, in SurfaceProperties surface)
+{
+	float alpha = max(0.04, surface.Roughness * surface.Roughness);
+	vec3 F0 = mix(BASE_REFLECTIVITY, surface.Color, surface.Metallic);
 
 	vec3 kS = Fresnel_Shlick(F0, V, H);
 	vec3 kD = vec3(1.0) - kS;
 
-	vec3 diffuse = Diffuse_Lambertian(color);
-	vec3 specular = Specular_CookTorence(alpha, N, V, lightDirection);
+	vec3 diffuse = Diffuse_Lambertian(surface.Color);
+	vec3 specular = Specular_CookTorence(alpha, surface.Normal, V, lightDirection);
 	vec3 brdf = kD * diffuse + specular;
 
-	return brdf * incomingLight * max(0.0, dot(lightDirection, N));
+	return brdf * incomingLight * max(0.0, dot(lightDirection, surface.Normal));
 }
 
-vec3 CalculatePointLightsContribution(vec3 N, vec3 V, vec3 color, vec3 position, float roughness, float metallic)
+vec3 CalculatePointLightsContribution(vec3 V, in SurfaceProperties surface)
 {
 	vec3 finalColor = vec3(0.0);
 	for (uint i = 0; i < u_PointLightsCount; i++)
 	{
-		vec3 direction = u_PointLights.Lights[i].Position - position;
+		vec3 direction = u_PointLights[i].Position - surface.Position;
 		float distance = length(direction);
 		float attenuation = 1.0f / (distance * distance);
 
 		direction /= distance;
 
 		vec3 halfWayVector = normalize(V + direction);
-		vec3 incomingLight = u_PointLights.Lights[i].Color.rgb * u_PointLights.Lights[i].Color.w;
+		vec3 incomingLight = u_PointLights[i].Color.rgb * u_PointLights[i].Color.w;
 
-		finalColor += CalculateLight(N, V, halfWayVector, color,
-			incomingLight * attenuation,
-			direction / distance, roughness,
-			metallic);
+		finalColor += CalculateLight(V, halfWayVector, incomingLight * attenuation, direction, surface);
 	}
 
 	return finalColor;
 }
 
-vec3 CalculateSpotLightsContribution(vec3 N, vec3 V, vec3 color, vec3 position, float roughness, float metallic)
+vec3 CalculateSpotLightsContribution(vec3 V, in SurfaceProperties surface)
 {
 	vec3 finalColor = vec3(0.0);
 	for (uint i = 0; i < u_SpotLightsCount; i++)
 	{
-		SpotLightData spotLight = u_SpotLights.Lights[i];
+		SpotLightData spotLight = u_SpotLights[i];
 
-		vec3 direction = u_SpotLights.Lights[i].Position - position;
+		vec3 direction = u_SpotLights[i].Position - surface.Position;
 		float distance = length(direction);
 		float attenuation = 1.0f / (distance * distance);
 
@@ -99,10 +104,7 @@ vec3 CalculateSpotLightsContribution(vec3 N, vec3 V, vec3 color, vec3 position, 
 
 		vec3 incomingLight = spotLight.Color.rgb * spotLight.Color.w * fade;
 
-		finalColor += CalculateLight(N, V, halfWayVector, color,
-			incomingLight * attenuation,
-			direction, roughness,
-			metallic);
+		finalColor += CalculateLight(V, halfWayVector, incomingLight * attenuation, direction, surface);
 	}
 
 	return finalColor;

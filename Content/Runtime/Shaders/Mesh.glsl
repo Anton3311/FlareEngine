@@ -126,15 +126,21 @@ void main()
 
 	N = normalize(tbn * sampledNormal);
 
-	float roughness = u_Material.Roughness * texture(u_RoughnessMap, uv).r;
+	SurfaceProperties surface;
+	surface.Position = i_Vertex.Position;
+	surface.Normal = N;
+	surface.Color = color.rgb;
+	surface.Roughness = u_Material.Roughness * texture(u_RoughnessMap, uv).r;;
+	surface.Metallic = u_Material.Metallic;
+
 	float shadow = CalculateShadow(vertexNormal, i_Vertex.Position);
 
-	vec3 finalColor = CalculateLight(N, V, H, color.rgb,
-		u_LightColor.rgb * u_LightColor.w, -u_LightDirection,
-		roughness, u_Material.Metallic) * shadow;
+	vec3 finalColor = CalculateLight(V, H, u_LightColor.rgb * u_LightColor.w, -u_LightDirection, surface);
 
-	finalColor += CalculatePointLightsContribution(N, V, color.rgb, i_Vertex.Position, roughness, u_Material.Metallic);
-	finalColor += CalculateSpotLightsContribution(N, V, color.rgb, i_Vertex.Position, roughness, u_Material.Metallic);
+	finalColor *= shadow;
+
+	finalColor += CalculatePointLightsContribution(V, surface);
+	finalColor += CalculateSpotLightsContribution(V, surface);
 
 	finalColor += u_EnvironmentLight.rgb * u_EnvironmentLight.w * color.rgb;
 
