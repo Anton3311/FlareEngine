@@ -79,7 +79,7 @@ namespace Flare
 	VulkanBuffer::VulkanBuffer(const GPUBufferSpecifications& specifications)
 		: m_Specifications(specifications)
 	{
-		EnsureAllocated();
+		Create();
 	}
 
 	VulkanBuffer::~VulkanBuffer()
@@ -93,12 +93,7 @@ namespace Flare
 		if (data.GetSize() == 0)
 			return;
 
-		if (m_Specifications.Size == 0)
-			m_Specifications.Size = data.GetSize();
-
 		FLARE_CORE_ASSERT(data.GetSize() <= m_Specifications.Size);
-
-		EnsureAllocated();
 
 		if (m_Specifications.MemoryType == GPUBufferMemoryType::Dynamic)
 		{
@@ -128,13 +123,8 @@ namespace Flare
 		if (data.GetSize() == 0)
 			return;
 
-		if (m_Specifications.Size == 0)
-			m_Specifications.Size = data.GetSize();
-
 		FLARE_CORE_ASSERT(data.GetSize() + offset <= m_Specifications.Size);
 		FLARE_CORE_ASSERT(data.GetSize() <= m_Specifications.Size);
-
-		EnsureAllocated();
 
 		VulkanStagingBuffer stagingBuffer = FillStagingBuffer(data);
 
@@ -190,14 +180,6 @@ namespace Flare
 		return m_Specifications;
 	}
 
-	void VulkanBuffer::EnsureAllocated()
-	{
-		if (m_Buffer)
-			return;
-		
-		Create();
-	}
-
 	void VulkanBuffer::SetDebugName(std::string_view name)
 	{
 		m_DebugName = name;
@@ -244,6 +226,8 @@ namespace Flare
 		{
 			VK_CHECK_RESULT(vmaMapMemory(VulkanContext::GetInstance().GetMemoryAllocator(), m_Allocation.Handle, &m_Mapped));
 		}
+
+		UpdateDebugName();
 	}
 
 	void VulkanBuffer::Release()

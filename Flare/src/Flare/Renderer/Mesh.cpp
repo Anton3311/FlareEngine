@@ -22,12 +22,6 @@ namespace Flare
 		UVs = GPUBuffer::CreateVertexBuffer(sizeof(glm::vec2) * m_VertexCount, GPUBufferMemoryType::Static);
 
 		IndexBuffer = GPUBuffer::CreateIndexBuffer(indexCount, indexFormat, GPUBufferMemoryType::Static);
-
-		Vertices.As<VulkanBuffer>()->EnsureAllocated();
-		Normals.As<VulkanBuffer>()->EnsureAllocated();
-		Tangents.As<VulkanBuffer>()->EnsureAllocated();
-		UVs.As<VulkanBuffer>()->EnsureAllocated();
-		IndexBuffer.As<VulkanBuffer>()->EnsureAllocated();
 	}
 
 	SharedMesh::MeshOffset SharedMesh::AllocateMesh(size_t vertexCount, size_t indexCount)

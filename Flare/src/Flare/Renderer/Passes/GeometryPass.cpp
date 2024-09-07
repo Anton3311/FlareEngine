@@ -1,5 +1,6 @@
 #include "GeometryPass.h"
 
+#include "Flare/Renderer/CommandBuffer.h"
 #include "Flare/Renderer/DescriptorSet.h"
 #include "Flare/Renderer/FrameBuffer.h"
 #include "Flare/Renderer/GraphicsContext.h"
@@ -12,9 +13,6 @@
 #include "Flare/Renderer2D/Renderer2D.h"
 
 #include "Flare/Math/SIMD.h"
-
-#include "Flare/Platform/Vulkan/VulkanCommandBuffer.h"
-#include "Flare/Platform/Vulkan/VulkanContext.h"
 
 namespace Flare
 {

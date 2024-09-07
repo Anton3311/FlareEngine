@@ -252,7 +252,6 @@ namespace Flare
 			if (resources.VertexBuffer == nullptr)
 			{
 				resources.VertexBuffer = GPUBuffer::CreateVertexBuffer(vertexBufferSize, GPUBufferMemoryType::Dynamic);
-				resources.VertexBuffer.As<VulkanBuffer>()->EnsureAllocated();
 			}
 
 			if (resources.IndexBuffer == nullptr)
@@ -261,8 +260,6 @@ namespace Flare
 					resources.IndexBuffer = GPUBuffer::CreateIndexBuffer(indexBufferSize / 2, IndexFormat::UInt32, GPUBufferMemoryType::Dynamic);
 				else
 					resources.IndexBuffer = GPUBuffer::CreateIndexBuffer(indexBufferSize, IndexFormat::UInt16, GPUBufferMemoryType::Dynamic);
-
-				resources.IndexBuffer.DerefAs<VulkanBuffer>().EnsureAllocated();
 			}
 
 			if (resources.VertexBuffer->GetSize() < vertexBufferSize)

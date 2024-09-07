@@ -9,7 +9,6 @@
 #include "Flare/Platform/Vulkan/VulkanPipeline.h"
 #include "Flare/Platform/Vulkan/VulkanFrameBuffer.h"
 #include "Flare/Platform/Vulkan/VulkanCommandBuffer.h"
-#include "Flare/Platform/Vulkan/VulkanBuffer.h"
 
 namespace Flare
 {
@@ -23,7 +22,6 @@ namespace Flare
 		{
 			FrameResources& resources = m_FrameResources.emplace_back();
 			resources.VertexBuffer = GPUBuffer::CreateVertexBuffer(sizeof(DebugRendererFrameData::Vertex) * 2 * m_Settings.MaxLines, GPUBufferMemoryType::Static);
-			resources.VertexBuffer.As<VulkanBuffer>()->EnsureAllocated(); // HACk: To avoid binding NULL buffer
 		}
 	}
 

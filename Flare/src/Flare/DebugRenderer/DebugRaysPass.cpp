@@ -10,7 +10,6 @@
 
 #include "Flare/Platform/Vulkan/VulkanFrameBuffer.h"
 #include "Flare/Platform/Vulkan/VulkanPipeline.h"
-#include "Flare/Platform/Vulkan/VulkanBuffer.h"
 #include "Flare/Platform/Vulkan/VulkanCommandBuffer.h"
 
 namespace Flare
@@ -27,7 +26,6 @@ namespace Flare
 
 			size_t bufferSize = sizeof(DebugRendererFrameData::Vertex) * DebugRendererSettings::VerticesPerRay * m_Settings.MaxRays;
 			resources.VertexBuffer = GPUBuffer::CreateVertexBuffer(bufferSize, GPUBufferMemoryType::Static);
-			resources.VertexBuffer.As<VulkanBuffer>()->EnsureAllocated(); // HACk: To avoid binding NULL buffer
 		}
 	}
 

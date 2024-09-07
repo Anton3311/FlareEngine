@@ -36,8 +36,6 @@ namespace Flare
 		void SetDebugName(std::string_view debugName) override;
 		const std::string& GetDebugName() const override;
 
-		void EnsureAllocated();
-
 		inline VkBuffer GetBufferHandle() const { return m_Buffer; }
 	private:
 		void Create();

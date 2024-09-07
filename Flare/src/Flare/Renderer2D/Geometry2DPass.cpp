@@ -15,9 +15,6 @@
 
 #include "Flare/Renderer2D/Renderer2DFrameData.h"
 
-#include "Flare/Platform/Vulkan/VulkanBuffer.h"
-#include "Flare/Platform/Vulkan/VulkanCommandBuffer.h"
-
 namespace Flare
 {
 	Geometry2DPass::Geometry2DPass(const Renderer2DLimits& limits,
@@ -33,7 +30,6 @@ namespace Flare
 		{
 			FrameResources& resources = m_FrameResources.emplace_back();
 			resources.VertexBuffer = GPUBuffer::CreateVertexBuffer(sizeof(QuadVertex) * 4 * m_RendererLimits.MaxQuadCount, GPUBufferMemoryType::Static);
-			resources.VertexBuffer.As<VulkanBuffer>()->EnsureAllocated(); // HACk: To avoid binding NULL buffer
 		}
 	}
 
