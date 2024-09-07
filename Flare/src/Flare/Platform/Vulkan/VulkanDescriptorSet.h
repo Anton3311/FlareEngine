@@ -40,8 +40,8 @@ namespace Flare
 
 		void WriteStorageImage(Ref<const FrameBuffer> frameBuffer, uint32_t attachmentIndex, uint32_t binding) override;
 
-		void WriteUniformBuffer(Ref<const UniformBuffer> buffer, uint32_t binding) override;
-		void WriteStorageBuffer(Ref<const ShaderStorageBuffer> buffer, uint32_t binding) override;
+		void WriteUniformBuffer(Ref<const GPUBuffer> buffer, uint32_t binding) override;
+		void WriteStorageBuffer(Ref<const GPUBuffer> buffer, uint32_t binding) override;
 
 		void FlushWrites() override;
 

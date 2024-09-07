@@ -9,15 +9,14 @@ namespace Flare
 
 	class DescriptorSet;
 	class DescriptorSetPool;
-	class IndexBuffer;
-	class VertexBuffer;
+	class GPUBuffer;
 	class Material;
 
 	class Geometry2DPass : public RenderGraphPass
 	{
 	public:
 		Geometry2DPass(const Renderer2DLimits& limits,
-			Ref<IndexBuffer> indexBuffer,
+			Ref<GPUBuffer> indexBuffer,
 			Ref<Material> defaultMaterial,
 			Ref<DescriptorSetPool> quadsDescriptorSetPool);
 		~Geometry2DPass();
@@ -32,7 +31,7 @@ namespace Flare
 		{
 			std::vector<Ref<DescriptorSet>> UsedSets;
 
-			Ref<VertexBuffer> VertexBuffer = nullptr;
+			Ref<GPUBuffer> VertexBuffer = nullptr;
 		};
 
 		const Renderer2DLimits& m_RendererLimits;
@@ -41,6 +40,6 @@ namespace Flare
 
 		Ref<DescriptorSetPool> m_QuadsDescriptorSetPool = nullptr;
 		Ref<Material> m_DefaultMaterial = nullptr;
-		Ref<IndexBuffer> m_IndexBuffer = nullptr;
+		Ref<GPUBuffer> m_IndexBuffer = nullptr;
 	};
 }

@@ -1,118 +1,20 @@
 #include "Buffer.h"
 
 #include "Flare/Renderer/RendererAPI.h"
-#include "Flare/Platform/Vulkan/VulkanVertexBuffer.h"
-#include "Flare/Platform/Vulkan/VulkanIndexBuffer.h"
+
+#include "Flare/Platform/Vulkan/VulkanBuffer.h"
 
 namespace Flare
 {
-	Ref<VertexBuffer> VertexBuffer::Create(size_t size)
+	Ref<GPUBuffer> GPUBuffer::Create(const GPUBufferSpecifications& specifications)
 	{
 		switch (RendererAPI::GetAPI())
 		{
 		case RendererAPI::API::Vulkan:
-			return Ref<VulkanVertexBuffer>::New(size);
+			return Ref<VulkanBuffer>::New(specifications);
 		}
 
-		FLARE_CORE_ASSERT(false);
-		return nullptr;
-	}
-
-	Ref<VertexBuffer> VertexBuffer::Create(size_t size, GPUBufferUsage usage)
-	{
-		switch (RendererAPI::GetAPI())
-		{
-		case RendererAPI::API::Vulkan:
-			return Ref<VulkanVertexBuffer>::New(size, usage);
-		}
-
-		FLARE_CORE_ASSERT(false);
-		return nullptr;
-	}
-
-	Ref<VertexBuffer> VertexBuffer::Create(size_t size, const void* data)
-	{
-		switch (RendererAPI::GetAPI())
-		{
-		case RendererAPI::API::Vulkan:
-			return Ref<VulkanVertexBuffer>::New(data, size);
-		}
-
-		FLARE_CORE_ASSERT(false);
-		return nullptr;
-	}
-
-	Ref<VertexBuffer> VertexBuffer::Create(size_t size, const void* data, Ref<CommandBuffer> commandBuffer)
-	{
-		switch (RendererAPI::GetAPI())
-		{
-		case RendererAPI::API::Vulkan:
-			return Ref<VulkanVertexBuffer>::New(data, size, commandBuffer);
-		}
-
-		FLARE_CORE_ASSERT(false);
-		return nullptr;
-	}
-
-	size_t IndexBuffer::GetIndexFormatSize(IndexFormat format)
-	{
-		switch (format)
-		{
-		case IndexFormat::UInt16:
-			return sizeof(uint16_t);
-		case IndexFormat::UInt32:
-			return sizeof(uint32_t);
-		}
-
-		FLARE_CORE_ASSERT(false);
-		return 0;
-	}
-
-	Ref<IndexBuffer> IndexBuffer::Create(IndexFormat format, size_t size)
-	{
-		switch (RendererAPI::GetAPI())
-		{
-		case RendererAPI::API::Vulkan:
-			return Ref<VulkanIndexBuffer>::New(format, size);
-		}
-
-		FLARE_CORE_ASSERT(false);
-		return nullptr;
-	}
-
-	Ref<IndexBuffer> IndexBuffer::Create(IndexFormat format, size_t size, GPUBufferUsage usage)
-	{
-		switch (RendererAPI::GetAPI())
-		{
-		case RendererAPI::API::Vulkan:
-			return Ref<VulkanIndexBuffer>::New(format, size, usage);
-		}
-
-		FLARE_CORE_ASSERT(false);
-		return nullptr;
-	}
-	
-	Ref<IndexBuffer> IndexBuffer::Create(IndexBuffer::IndexFormat format, const MemorySpan& indices)
-	{
-		switch (RendererAPI::GetAPI())
-		{
-		case RendererAPI::API::Vulkan:
-			return Ref<VulkanIndexBuffer>::New(format, indices);
-		}
-
-		FLARE_CORE_ASSERT(false);
-		return nullptr;
-	}
-
-	Ref<IndexBuffer> IndexBuffer::Create(IndexFormat format, const MemorySpan& indices, Ref<CommandBuffer> commandBuffer)
-	{
-		switch (RendererAPI::GetAPI())
-		{
-		case RendererAPI::API::Vulkan:
-			return Ref<VulkanIndexBuffer>::New(format, indices, commandBuffer);
-		}
-
-		FLARE_CORE_ASSERT(false);
+		FLARE_CORE_VERIFY_UNREACHABLE();
 		return nullptr;
 	}
 }

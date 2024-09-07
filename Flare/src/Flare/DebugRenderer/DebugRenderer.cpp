@@ -26,7 +26,7 @@ namespace Flare
 		DebugRendererFrameData* Submition = nullptr;
 
 		Ref<Shader> DebugShader = nullptr;
-		Ref<IndexBuffer> RaysIndexBuffer = nullptr;
+		Ref<GPUBuffer> RaysIndexBuffer = nullptr;
 
 		DebugRendererSettings Settings;
 	};
@@ -72,7 +72,8 @@ namespace Flare
 			vertexIndex += DebugRendererSettings::VerticesPerRay;
 		}
 
-		s_DebugRendererData.RaysIndexBuffer = IndexBuffer::Create(IndexBuffer::IndexFormat::UInt32, MemorySpan(indices, indexBufferSize));
+		s_DebugRendererData.RaysIndexBuffer = GPUBuffer::CreateIndexBuffer(indexBufferSize, IndexFormat::UInt32, GPUBufferMemoryType::Static);
+		s_DebugRendererData.RaysIndexBuffer->SetData(MemorySpan(indices, indexBufferSize), 0);
 
 		delete[] indices;
 

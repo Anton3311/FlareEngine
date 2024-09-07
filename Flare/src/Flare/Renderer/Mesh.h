@@ -35,18 +35,20 @@ namespace Flare
 			size_t IndexOffset = 0;
 		};
 
-		SharedMesh(size_t vertexCount, IndexBuffer::IndexFormat indexFormat, size_t indexCount);
+		SharedMesh(size_t vertexCount, IndexFormat indexFormat, size_t indexCount);
 
 		MeshOffset AllocateMesh(size_t vertexCount, size_t indexCount);
 
-		inline IndexBuffer::IndexFormat GetIndexFormat() const { return IndexBuffer->GetIndexFormat(); }
+		inline IndexFormat GetIndexFormat() const { return m_IndexFormat; }
 	public:
-		Ref<IndexBuffer> IndexBuffer = nullptr;
-		Ref<VertexBuffer> Vertices = nullptr;
-		Ref<VertexBuffer> Normals = nullptr;
-		Ref<VertexBuffer> Tangents = nullptr;
-		Ref<VertexBuffer> UVs = nullptr;
+		Ref<GPUBuffer> IndexBuffer = nullptr;
+		Ref<GPUBuffer> Vertices = nullptr;
+		Ref<GPUBuffer> Normals = nullptr;
+		Ref<GPUBuffer> Tangents = nullptr;
+		Ref<GPUBuffer> UVs = nullptr;
 	private:
+		IndexFormat m_IndexFormat;
+
 		size_t m_VertexCount = 0;
 		size_t m_IndexCount = 0;
 
@@ -61,18 +63,18 @@ namespace Flare
 		FLARE_ASSET;
 
 		Mesh(size_t vertexBufferSize,
-			IndexBuffer::IndexFormat indexFormat,
+			IndexFormat indexFormat,
 			size_t indexBufferSize);
 
 		Mesh(MemorySpan indices,
-			IndexBuffer::IndexFormat indexFormat,
+			IndexFormat indexFormat,
 			Span<const glm::vec3> vertices,
 			Span<const glm::vec3> normals,
 			Span<const glm::vec3> tangents,
 			Span<const glm::vec2> uvs);
 
 		Mesh(MemorySpan indices,
-			IndexBuffer::IndexFormat indexFormat,
+			IndexFormat indexFormat,
 			Span<const glm::vec3> vertices,
 			Span<const glm::vec3> normals,
 			Span<const glm::vec3> tangents,
@@ -96,42 +98,48 @@ namespace Flare
 		constexpr size_t GetVertexCount() const { return m_VertexCount; }
 		constexpr size_t GetIndexCount() const { return m_IndexCount; }
 
-		inline Ref<IndexBuffer> GetIndexBuffer() const { return m_IndexBuffer; }
-		inline Ref<VertexBuffer> GetVertices() const { return m_Vertices; }
-		inline Ref<VertexBuffer> GetNormals() const { return m_Normals; }
-		inline Ref<VertexBuffer> GetTangents() const { return m_Tangents; }
-		inline Ref<VertexBuffer> GetUVs() const { return m_UVs; }
+		inline Ref<GPUBuffer> GetIndexBuffer() const { return m_IndexBuffer; }
+		inline Ref<GPUBuffer> GetVertices() const { return m_Vertices; }
+		inline Ref<GPUBuffer> GetNormals() const { return m_Normals; }
+		inline Ref<GPUBuffer> GetTangents() const { return m_Tangents; }
+		inline Ref<GPUBuffer> GetUVs() const { return m_UVs; }
 
 		inline const Math::AABB& GetBounds() const { return m_Bounds; }
 
 		inline const std::vector<SubMesh>& GetSubMeshes() const { return m_SubMeshes; }
-		inline IndexBuffer::IndexFormat GetIndexFormat() const { return m_IndexFormat; }
+		inline IndexFormat GetIndexFormat() const { return m_IndexFormat; }
 
 		inline Ref<SharedMesh> GetSharedMesh() const { return m_SharedMesh; }
 
 		inline SubMesh GetFullMeshRange() const
 		{
 			SubMesh fullMesh{};
-			fullMesh.BaseIndex = (uint32_t)m_IndexBufferOffset;
-			fullMesh.BaseVertex = (uint32_t)m_VertexBufferOffset;
+			fullMesh.BaseIndex = (uint32_t)m_VertexBufferOffset;
+			fullMesh.BaseVertex = (uint32_t)m_IndexBufferOffset;
 			fullMesh.Bounds = m_Bounds;
 			fullMesh.IndicesCount = (uint32_t)m_IndexCount;
 			return fullMesh;
 		}
 	private:
 		void UpdateBufferDebugNames();
+		void CreateBuffers(MemorySpan indices,
+			IndexFormat indexFormat,
+			Span<const glm::vec3> vertices,
+			Span<const glm::vec3> normals,
+			Span<const glm::vec3> tangents,
+			Span<const glm::vec2> uvs);
 	public:
-		static Ref<Mesh> Create( size_t vertexBufferSize, IndexBuffer::IndexFormat indexFormat, size_t indexBufferSize);
+		static Ref<Mesh> Create( size_t vertexBufferSize, IndexFormat indexFormat, size_t indexBufferSize);
 
 		static Ref<Mesh> Create(MemorySpan indices,
-			IndexBuffer::IndexFormat indexFormat,
+			IndexFormat indexFormat,
 			Span<const glm::vec3> vertices,
 			Span<const glm::vec3> normals,
 			Span<const glm::vec3> tangents,
 			Span<const glm::vec2> uvs);
 	protected:
 		std::string m_DebugName;
-		IndexBuffer::IndexFormat m_IndexFormat;
+		IndexFormat m_IndexFormat;
 
 		Ref<SharedMesh> m_SharedMesh = nullptr;
 
@@ -143,11 +151,11 @@ namespace Flare
 		size_t m_VertexBufferOffset = 0;
 		size_t m_IndexBufferOffset = 0;
 
-		Ref<IndexBuffer> m_IndexBuffer = nullptr;
-		Ref<VertexBuffer> m_Vertices = nullptr;
-		Ref<VertexBuffer> m_Normals = nullptr;
-		Ref<VertexBuffer> m_Tangents = nullptr;
-		Ref<VertexBuffer> m_UVs = nullptr;
+		Ref<GPUBuffer> m_IndexBuffer = nullptr;
+		Ref<GPUBuffer> m_Vertices = nullptr;
+		Ref<GPUBuffer> m_Normals = nullptr;
+		Ref<GPUBuffer> m_Tangents = nullptr;
+		Ref<GPUBuffer> m_UVs = nullptr;
 
 		std::vector<SubMesh> m_SubMeshes;
 

@@ -239,7 +239,7 @@ namespace Flare
 
 		Ref<Mesh> mesh = nullptr;
 		
-		if (data.IndexFormat == IndexBuffer::IndexFormat::UInt16)
+		if (data.IndexFormat == IndexFormat::UInt16)
 		{
 		 	mesh = Ref<Mesh>::New(MemorySpan::FromVector(data.Indices16),
 				data.IndexFormat,

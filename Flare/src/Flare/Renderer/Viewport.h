@@ -9,19 +9,18 @@
 
 namespace Flare
 {
-	class Texture;
-	class UniformBuffer;
 	class DescriptorSet;
 	class FrameBuffer;
-	class ShaderStorageBuffer;
+	class GPUBuffer;
+	class Texture;
 
 	struct ViewportFrameResources
 	{
-		Ref<UniformBuffer> CameraBuffer = nullptr;
-		Ref<UniformBuffer> LightBuffer = nullptr;
-		Ref<ShaderStorageBuffer> PointLightsBuffer = nullptr;
-		Ref<ShaderStorageBuffer> SpotLightsBuffer = nullptr;
-		Ref<UniformBuffer> ShadowDataBuffer = nullptr;
+		Ref<GPUBuffer> CameraBuffer = nullptr;
+		Ref<GPUBuffer> LightBuffer = nullptr;
+		Ref<GPUBuffer> PointLightsBuffer = nullptr;
+		Ref<GPUBuffer> SpotLightsBuffer = nullptr;
+		Ref<GPUBuffer> ShadowDataBuffer = nullptr;
 
 		Ref<DescriptorSet> CameraDescriptorSet = nullptr; // Set 0
 		Ref<DescriptorSet> GlobalDescriptorSet = nullptr; // Set 1

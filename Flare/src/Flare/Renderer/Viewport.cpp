@@ -4,8 +4,6 @@
 
 #include "Flare/Renderer/CommandBuffer.h"
 #include "Flare/Renderer/Renderer.h"
-#include "Flare/Renderer/UniformBuffer.h"
-#include "Flare/Renderer/ShaderStorageBuffer.h"
 #include "Flare/Renderer/DescriptorSet.h"
 #include "Flare/Renderer/GraphicsContext.h"
 
@@ -25,11 +23,11 @@ namespace Flare
 		{
 			ViewportFrameResources& frameResources = m_GlobalResources.FrameResources[frameIndex];
 
-			frameResources.CameraBuffer = UniformBuffer::Create(sizeof(RenderView));
-			frameResources.LightBuffer = UniformBuffer::Create(sizeof(LightData));
-			frameResources.ShadowDataBuffer = UniformBuffer::Create(sizeof(ShadowPass::ShadowData));
-			frameResources.PointLightsBuffer = ShaderStorageBuffer::Create(16 * sizeof(PointLightData));
-			frameResources.SpotLightsBuffer = ShaderStorageBuffer::Create(16 * sizeof(SpotLightData));
+			frameResources.CameraBuffer = GPUBuffer::CreateUniformBuffer(sizeof(RenderView));
+			frameResources.LightBuffer = GPUBuffer::CreateUniformBuffer(sizeof(LightData));
+			frameResources.ShadowDataBuffer = GPUBuffer::CreateUniformBuffer(sizeof(ShadowPass::ShadowData));
+			frameResources.PointLightsBuffer = GPUBuffer::CreateStorageBuffer(16 * sizeof(PointLightData), GPUBufferMemoryType::Static);
+			frameResources.SpotLightsBuffer = GPUBuffer::CreateStorageBuffer(16 * sizeof(SpotLightData), GPUBufferMemoryType::Static);
 
 			frameResources.CameraDescriptorSet = Renderer::GetCameraDescriptorSetPool()->AllocateSet();
 			frameResources.CameraDescriptorSet->WriteUniformBuffer(frameResources.CameraBuffer, 0);

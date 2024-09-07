@@ -10,12 +10,12 @@
 
 #include "Flare/Platform/Vulkan/VulkanFrameBuffer.h"
 #include "Flare/Platform/Vulkan/VulkanPipeline.h"
+#include "Flare/Platform/Vulkan/VulkanBuffer.h"
 #include "Flare/Platform/Vulkan/VulkanCommandBuffer.h"
-#include "Flare/Platform/Vulkan/VulkanVertexBuffer.h"
 
 namespace Flare
 {
-	DebugRaysPass::DebugRaysPass(Ref<IndexBuffer> indexBuffer, Ref<Shader> debugShader, const DebugRendererSettings& settings)
+	DebugRaysPass::DebugRaysPass(Ref<GPUBuffer> indexBuffer, Ref<Shader> debugShader, const DebugRendererSettings& settings)
 		: m_Shader(debugShader), m_Settings(settings), m_IndexBuffer(indexBuffer)
 	{
 		FLARE_PROFILE_FUNCTION();
@@ -26,8 +26,8 @@ namespace Flare
 			FrameResources& resources = m_FrameResources.emplace_back();
 
 			size_t bufferSize = sizeof(DebugRendererFrameData::Vertex) * DebugRendererSettings::VerticesPerRay * m_Settings.MaxRays;
-			resources.VertexBuffer = VertexBuffer::Create(bufferSize, GPUBufferUsage::Static);
-			resources.VertexBuffer.As<VulkanVertexBuffer>()->GetBuffer().EnsureAllocated(); // HACk: To avoid binding NULL buffer
+			resources.VertexBuffer = GPUBuffer::CreateVertexBuffer(bufferSize, GPUBufferMemoryType::Static);
+			resources.VertexBuffer.As<VulkanBuffer>()->EnsureAllocated(); // HACk: To avoid binding NULL buffer
 		}
 	}
 
@@ -58,8 +58,8 @@ namespace Flare
 
 		Ref<VulkanCommandBuffer> vulkanCommandBuffer = commandBuffer.As<VulkanCommandBuffer>();
 		vulkanCommandBuffer->BindPipeline(m_Pipeline);
-		vulkanCommandBuffer->BindVertexBuffers(Span((Ref<const VertexBuffer>*)&frameResources.VertexBuffer, 1), 0);
-		vulkanCommandBuffer->BindIndexBuffer(m_IndexBuffer);
+		vulkanCommandBuffer->BindVertexBuffers(Span((Ref<const GPUBuffer>*)&frameResources.VertexBuffer, 1), 0);
+		vulkanCommandBuffer->BindIndexBuffer(m_IndexBuffer, IndexFormat::UInt32);
 		vulkanCommandBuffer->BindDescriptorSet(context.GetViewport().GetFrameResources().CameraDescriptorSet, 0);
 
 		vulkanCommandBuffer->DrawIndexed(0, (uint32_t)submition.RayCount * DebugRendererSettings::IndicesPerRay, 0, 0, 1);

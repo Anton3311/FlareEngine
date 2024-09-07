@@ -11,36 +11,34 @@
 namespace Flare
 {
 	class CommandBuffer;
-	class FLARE_API VulkanBuffer
+	class FLARE_API VulkanBuffer : public GPUBuffer
 	{
 	public:
-		struct PipelineDependecy
+		struct PipelineDependency
 		{
-			PipelineDependecy(VkPipelineStageFlags stages, VkAccessFlags accessFlags)
+			PipelineDependency() = default;
+			PipelineDependency(VkPipelineStageFlags stages, VkAccessFlags accessFlags)
 				: DependentStages(stages), AccessFlags(accessFlags) {}
 
 			VkPipelineStageFlags DependentStages = VK_PIPELINE_STAGE_NONE;
 			VkAccessFlags AccessFlags = VK_ACCESS_NONE;
 		};
 
-		VulkanBuffer(GPUBufferUsage usage, VkBufferUsageFlags bufferUsage, PipelineDependecy dependecy, size_t size);
-		VulkanBuffer(GPUBufferUsage usage, VkBufferUsageFlags bufferUsage, PipelineDependecy dependeny);
+		VulkanBuffer(const GPUBufferSpecifications& specifications);
 		~VulkanBuffer();
 
-		void SetData(const void* data, size_t size, size_t offset);
-		void SetData(MemorySpan data, size_t offset, Ref<CommandBuffer> commandBuffer);
+		void SetData(MemorySpan data, size_t offset) override;
+		void SetData(MemorySpan data, size_t offset, Ref<CommandBuffer> commandBuffer) override;
+		void ReadData(size_t readOffset, void* outBuffer) override;
+		void Resize(size_t newSize) override;
+		const GPUBufferSpecifications& GetSpecifications() const override;
+
+		void SetDebugName(std::string_view debugName) override;
+		const std::string& GetDebugName() const override;
+
 		void EnsureAllocated();
 
-		// Resizes a buffer to a new size.
-		//
-		// NOTE: Contents of the buffer are not presserved
-		void Resize(size_t newSize);
-
-		inline size_t GetSize() const { return m_Size; }
-		inline VkBuffer GetBuffer() const { return m_Buffer; }
-
-		void SetDebugName(std::string_view name);
-		inline const std::string& GetDebugName() const { return m_DebugName; }
+		inline VkBuffer GetBufferHandle() const { return m_Buffer; }
 	private:
 		void Create();
 		void Release();
@@ -49,16 +47,13 @@ namespace Flare
 	protected:
 		std::string m_DebugName;
 
-		PipelineDependecy m_PipelineDepency;
+		GPUBufferSpecifications m_Specifications;
 
-		GPUBufferUsage m_Usage = GPUBufferUsage::Static;
+		PipelineDependency m_PipelineDependency;
+
 		void* m_Mapped = nullptr;
 
 		VkBuffer m_Buffer = VK_NULL_HANDLE;
 		VulkanAllocation m_Allocation;
-
-		size_t m_Size = 0;
-
-		VkBufferUsageFlags m_UsageFlags = 0;
 	};
 }

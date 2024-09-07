@@ -12,7 +12,7 @@ namespace Flare
 		glm::vec3 SecondaryColor = glm::vec3(0.6f);
 	};
 
-	class VertexBuffer;
+	class GPUBuffer;
 	class Shader;
 	class Pipeline;
 	class SceneViewGridPass : public RenderGraphPass
@@ -29,7 +29,7 @@ namespace Flare
 	private:
 		Ref<Shader> m_Shader = nullptr;
 		Ref<Pipeline> m_Pipeline = nullptr;
-		Ref<VertexBuffer> m_VertexBuffer = nullptr;
+		Ref<GPUBuffer> m_VertexBuffer = nullptr;
 
 		SceneViewGridSettings m_Settings;
 

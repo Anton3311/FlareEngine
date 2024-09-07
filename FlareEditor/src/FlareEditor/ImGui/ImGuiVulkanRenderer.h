@@ -9,8 +9,7 @@
 
 namespace Flare
 {
-	class VulkanVertexBuffer;
-	class VulkanIndexBuffer;
+	class GPUBuffer;
 	class VulkanRenderPass;
 	class VulkanCommandBuffer;
 	class ImGuiVulkanRenderer
@@ -18,8 +17,8 @@ namespace Flare
 	public:
 		struct Resources
 		{
-			Ref<VulkanVertexBuffer> VertexBuffer = nullptr;
-			Ref<VulkanIndexBuffer> IndexBuffer = nullptr;
+			Ref<GPUBuffer> VertexBuffer = nullptr;
+			Ref<GPUBuffer> IndexBuffer = nullptr;
 		};
 
 		struct FrameData

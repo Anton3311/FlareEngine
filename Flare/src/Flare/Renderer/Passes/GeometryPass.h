@@ -10,8 +10,8 @@ namespace Flare
 {
 	class DescriptorSet;
 	class DescriptorSetPool;
+	class GPUBuffer;
 	class GPUTimer;
-	class ShaderStorageBuffer;
 	class Material;
 	class Mesh;
 
@@ -45,7 +45,7 @@ namespace Flare
 	private:
 		struct FrameResources
 		{
-			Ref<ShaderStorageBuffer> InstanceBuffer = nullptr;
+			Ref<GPUBuffer> InstanceBuffer = nullptr;
 			Ref<DescriptorSet> InstanceBufferDescriptor = nullptr;
 		};
 

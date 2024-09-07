@@ -7,7 +7,6 @@
 #include "Flare/Renderer/RendererPrimitives.h"
 #include "Flare/Renderer/CommandBuffer.h"
 #include "Flare/Renderer/DescriptorSet.h"
-#include "Flare/Renderer/ShaderStorageBuffer.h"
 #include "Flare/Renderer/SceneSubmition.h"
 
 #include "Flare/Platform/Vulkan/VulkanCommandBuffer.h"
@@ -24,7 +23,7 @@ namespace Flare
 		{
 			FrameResources& frameResources = m_FrameResources.emplace_back();
 
-			frameResources.InstanceBuffer = ShaderStorageBuffer::Create(maxDecals * sizeof(InstanceData));
+			frameResources.InstanceBuffer = GPUBuffer::CreateStorageBuffer(maxDecals * sizeof(InstanceData), GPUBufferMemoryType::Static);
 
 			frameResources.DecalSet = m_DecalDescriptorPool->AllocateSet();
 			m_ShouldUpdateDescriptorSet = true;

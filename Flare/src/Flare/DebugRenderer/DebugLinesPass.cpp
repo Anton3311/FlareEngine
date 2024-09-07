@@ -9,7 +9,7 @@
 #include "Flare/Platform/Vulkan/VulkanPipeline.h"
 #include "Flare/Platform/Vulkan/VulkanFrameBuffer.h"
 #include "Flare/Platform/Vulkan/VulkanCommandBuffer.h"
-#include "Flare/Platform/Vulkan/VulkanVertexBuffer.h"
+#include "Flare/Platform/Vulkan/VulkanBuffer.h"
 
 namespace Flare
 {
@@ -22,8 +22,8 @@ namespace Flare
 		for (uint32_t i = 0; i < frameInFlightCount; i++)
 		{
 			FrameResources& resources = m_FrameResources.emplace_back();
-			resources.VertexBuffer = VertexBuffer::Create(sizeof(DebugRendererFrameData::Vertex) * 2 * m_Settings.MaxLines, GPUBufferUsage::Static);
-			resources.VertexBuffer.As<VulkanVertexBuffer>()->GetBuffer().EnsureAllocated(); // HACk: To avoid binding NULL buffer
+			resources.VertexBuffer = GPUBuffer::CreateVertexBuffer(sizeof(DebugRendererFrameData::Vertex) * 2 * m_Settings.MaxLines, GPUBufferMemoryType::Static);
+			resources.VertexBuffer.As<VulkanBuffer>()->EnsureAllocated(); // HACk: To avoid binding NULL buffer
 		}
 	}
 
@@ -56,7 +56,7 @@ namespace Flare
 		Ref<VulkanCommandBuffer> vulkanCommandBuffer = commandBuffer.As<VulkanCommandBuffer>();
 
 		vulkanCommandBuffer->BindPipeline(m_Pipeline);
-		vulkanCommandBuffer->BindVertexBuffers(Span((Ref<const VertexBuffer>*)&frameResources.VertexBuffer, 1), 0);
+		vulkanCommandBuffer->BindVertexBuffers(Span((Ref<const GPUBuffer>*)&frameResources.VertexBuffer, 1), 0);
 		vulkanCommandBuffer->BindDescriptorSet(context.GetViewport().GetFrameResources().CameraDescriptorSet, 0);
 
 		vulkanCommandBuffer->Draw(0, (uint32_t)submition.LineCount * 2, 0, 1);

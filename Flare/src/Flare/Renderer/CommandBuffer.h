@@ -3,6 +3,8 @@
 #include "FlareCore/Core.h"
 #include "FlareCore/Collections/Span.h"
 
+#include "Flare/Renderer/Buffer.h"
+
 #include "Flare/Math/Math.h"
 
 #include "Flare/Renderer/Texture.h"
@@ -12,12 +14,11 @@ namespace Flare
 	class FrameBuffer;
 	class Material;
 	class Mesh;
+	class GPUBuffer;
 	class GPUTimer;
 	class ComputeShader;
 	class Pipeline;
 	class DescriptorSet;
-	class VertexBuffer;
-	class IndexBuffer;
 	class ShaderConstantBuffer;
 	class ShaderDescriptorBuffer;
 
@@ -52,9 +53,9 @@ namespace Flare
 		virtual void SetDefaltViewportAndScissors() = 0;
 
 		virtual void BindPipeline(const Ref<Pipeline>& pipeline) = 0;
-		virtual void BindVertexBuffer(Ref<const VertexBuffer> buffer, uint32_t index) = 0;
-		virtual void BindVertexBuffers(Span<Ref<const VertexBuffer>> buffers, uint32_t baseBindingIndex) = 0;
-		virtual void BindIndexBuffer(Ref<const IndexBuffer> buffer) = 0;
+		virtual void BindVertexBuffer(Ref<const GPUBuffer> buffer, uint32_t index) = 0;
+		virtual void BindVertexBuffers(Span<Ref<const GPUBuffer>> buffers, uint32_t baseBindingIndex) = 0;
+		virtual void BindIndexBuffer(Ref<const GPUBuffer> buffe, IndexFormat formatr) = 0;
 
 		virtual void DrawMeshIndexed(const Ref<const Mesh>& mesh, uint32_t baseInstance, uint32_t instanceCount) = 0;
 		virtual void DrawMeshIndexed(const Ref<const Mesh>& mesh,

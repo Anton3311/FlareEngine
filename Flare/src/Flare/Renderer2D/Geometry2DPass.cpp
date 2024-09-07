@@ -15,24 +15,25 @@
 
 #include "Flare/Renderer2D/Renderer2DFrameData.h"
 
-#include "Flare/Platform/Vulkan/VulkanVertexBuffer.h"
+#include "Flare/Platform/Vulkan/VulkanBuffer.h"
 #include "Flare/Platform/Vulkan/VulkanCommandBuffer.h"
 
 namespace Flare
 {
 	Geometry2DPass::Geometry2DPass(const Renderer2DLimits& limits,
-		Ref<IndexBuffer> indexBuffer,
+		Ref<GPUBuffer> indexBuffer,
 		Ref<Material> defaultMaterial,
 		Ref<DescriptorSetPool> quadsDescriptorSetPool)
 		: m_RendererLimits(limits), m_IndexBuffer(indexBuffer), m_DefaultMaterial(defaultMaterial), m_QuadsDescriptorSetPool(quadsDescriptorSetPool)
 	{
+		FLARE_PROFILE_FUNCTION();
 		uint32_t frameInFlightCount = GraphicsContext::GetInstance().GetFrameInFlightCount();
 
 		for (uint32_t i = 0; i < frameInFlightCount; i++)
 		{
 			FrameResources& resources = m_FrameResources.emplace_back();
-			resources.VertexBuffer = VertexBuffer::Create(sizeof(QuadVertex) * 4 * m_RendererLimits.MaxQuadCount, GPUBufferUsage::Static);
-			resources.VertexBuffer.As<VulkanVertexBuffer>()->GetBuffer().EnsureAllocated(); // HACk: To avoid binding NULL buffer
+			resources.VertexBuffer = GPUBuffer::CreateVertexBuffer(sizeof(QuadVertex) * 4 * m_RendererLimits.MaxQuadCount, GPUBufferMemoryType::Static);
+			resources.VertexBuffer.As<VulkanBuffer>()->EnsureAllocated(); // HACk: To avoid binding NULL buffer
 		}
 	}
 
@@ -65,8 +66,8 @@ namespace Flare
 		const FrameResources& frameResources = m_FrameResources[GraphicsContext::GetInstance().GetCurrentFrameInFlight()];
 
 		commandBuffer->SetGlobalDescriptorSet(context.GetViewport().GetFrameResources().CameraDescriptorSet, 0);
-		commandBuffer->BindVertexBuffers(Span((Ref<const VertexBuffer>*)&frameResources.VertexBuffer, 1), 0);
-		commandBuffer->BindIndexBuffer(m_IndexBuffer);
+		commandBuffer->BindVertexBuffers(Span((Ref<const GPUBuffer>*)&frameResources.VertexBuffer, 1), 0);
+		commandBuffer->BindIndexBuffer(m_IndexBuffer, IndexFormat::UInt32);
 
 		for (const auto& batch : submition.QuadBatches)
 		{

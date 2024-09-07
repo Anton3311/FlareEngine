@@ -95,7 +95,7 @@ namespace Flare
 		};
 
 		s_Primitives.Cube = Mesh::Create(MemorySpan(cubeIndices, sizeof(cubeIndices) / sizeof(cubeIndices[0])),
-			IndexBuffer::IndexFormat::UInt16,
+			IndexFormat::UInt16,
 			Span(cubeVertices, 8),
 			Span(cubeNormals, 8),
 			Span(cubeNormals, 8),
@@ -141,7 +141,7 @@ namespace Flare
 		};
 
 		s_Primitives.FullscreenQuadMesh = Mesh::Create(MemorySpan(indices, 6),
-			IndexBuffer::IndexFormat::UInt16,
+			IndexFormat::UInt16,
 			Span(vertices, 4),
 			Span(normals, 4),
 			Span(normals, 4),

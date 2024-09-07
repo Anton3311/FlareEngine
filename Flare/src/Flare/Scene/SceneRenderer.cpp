@@ -11,8 +11,6 @@
 
 #include "Flare/Renderer/GraphicsContext.h"
 #include "Flare/Renderer/Renderer.h"
-#include "Flare/Renderer/ShaderStorageBuffer.h"
-#include "Flare/Renderer/UniformBuffer.h"
 
 #include "Flare/DebugRenderer/DebugRenderer.h"
 
@@ -267,12 +265,12 @@ namespace Flare
 
 		{
 			FLARE_PROFILE_SCOPE("UpdateLightUniformBuffer");
-			viewportFrameResources.LightBuffer->SetData(&lightData, sizeof(lightData), 0);
+			viewportFrameResources.LightBuffer->SetData(MemorySpan(&lightData, 1), 0);
 		}
 
 		{
 			FLARE_PROFILE_SCOPE("UpdateCameraUniformBuffer");
-			viewportFrameResources.CameraBuffer->SetData(&view, sizeof(view), 0);
+			viewportFrameResources.CameraBuffer->SetData(MemorySpan(&view, 1), 0);
 		}
 
 		bool updateViewportDescriptorSets = false;

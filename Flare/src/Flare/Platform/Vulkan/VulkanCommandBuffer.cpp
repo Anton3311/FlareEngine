@@ -4,11 +4,10 @@
 #include "Flare/Renderer/Renderer.h"
 #include "Flare/Renderer/ShaderDescriptorBuffer.h"
 
+#include "Flare/Platform/Vulkan/VulkanBuffer.h"
 #include "Flare/Platform/Vulkan/VulkanContext.h"
 #include "Flare/Platform/Vulkan/VulkanFrameBuffer.h"
 #include "Flare/Platform/Vulkan/VulkanPipeline.h"
-#include "Flare/Platform/Vulkan/VulkanVertexBuffer.h"
-#include "Flare/Platform/Vulkan/VulkanIndexBuffer.h"
 #include "Flare/Platform/Vulkan/VulkanMaterial.h"
 #include "Flare/Platform/Vulkan/VulkanGPUTimer.h"
 #include "Flare/Platform/Vulkan/VulkanComputeShader.h"
@@ -269,16 +268,16 @@ namespace Flare
 		RebindGlobalDescriptorSets();
 	}
 
-	void VulkanCommandBuffer::BindVertexBuffer(Ref<const VertexBuffer> buffer, uint32_t index)
+	void VulkanCommandBuffer::BindVertexBuffer(Ref<const GPUBuffer> buffer, uint32_t index)
 	{
 		m_CurrentMesh = nullptr;
 		VkDeviceSize offset = 0;
-		VkBuffer bufferHandle = buffer.As<VulkanVertexBuffer>()->GetHandle();
+		VkBuffer bufferHandle = buffer.As<VulkanBuffer>()->GetBufferHandle();
 
 		vkCmdBindVertexBuffers(m_CommandBuffer, index, 1, &bufferHandle, &offset);
 	}
 
-	void VulkanCommandBuffer::BindVertexBuffers(Span<Ref<const VertexBuffer>> vertexBuffers, uint32_t baseBindingIndex)
+	void VulkanCommandBuffer::BindVertexBuffers(Span<Ref<const GPUBuffer>> vertexBuffers, uint32_t baseBindingIndex)
 	{
 		FLARE_PROFILE_FUNCTION();
 
@@ -289,18 +288,18 @@ namespace Flare
 		for (size_t i = 0; i < vertexBuffers.GetSize(); i++)
 		{
 			offsets[i] = 0;
-			buffers[i] = vertexBuffers[i].As<const VulkanVertexBuffer>()->GetHandle();
+			buffers[i] = vertexBuffers[i].As<const VulkanBuffer>()->GetBufferHandle();
 		}
 
 		vkCmdBindVertexBuffers(m_CommandBuffer, baseBindingIndex, (uint32_t)vertexBuffers.GetSize(), buffers.data(), offsets.data());
 	}
 
-	void VulkanCommandBuffer::BindIndexBuffer(Ref<const IndexBuffer> indexBuffer)
+	void VulkanCommandBuffer::BindIndexBuffer(Ref<const GPUBuffer> indexBuffer, IndexFormat format)
 	{
 		FLARE_PROFILE_FUNCTION();
 		vkCmdBindIndexBuffer(m_CommandBuffer,
-			indexBuffer.As<VulkanIndexBuffer>()->GetHandle(), 0,
-			indexBuffer->GetIndexFormat() == IndexBuffer::IndexFormat::UInt16
+			indexBuffer.As<VulkanBuffer>()->GetBufferHandle(), 0,
+			format == IndexFormat::UInt16
 				? VK_INDEX_TYPE_UINT16
 				: VK_INDEX_TYPE_UINT32);
 	}
@@ -940,7 +939,7 @@ namespace Flare
 
 		if (rebind)
 		{
-			Ref<const VertexBuffer> vertexBuffers[] =
+			Ref<const GPUBuffer> vertexBuffers[] =
 			{
 				mesh->GetVertices(),
 				mesh->GetNormals(),
@@ -949,7 +948,7 @@ namespace Flare
 			};
 
 			BindVertexBuffers(Span(vertexBuffers, 4), 0);
-			BindIndexBuffer(mesh->GetIndexBuffer());
+			BindIndexBuffer(mesh->GetIndexBuffer(), mesh->GetIndexFormat());
 
 			m_CurrentMesh = mesh;
 		}

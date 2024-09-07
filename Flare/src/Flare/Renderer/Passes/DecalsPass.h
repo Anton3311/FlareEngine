@@ -6,8 +6,8 @@ namespace Flare
 {
 	class DescriptorSet;
 	class DescriptorSetPool;
+	class GPUBuffer;
 	class Material;
-	class ShaderStorageBuffer;
 	class Texture;
 
 	class DecalsPass : public RenderGraphPass
@@ -27,7 +27,7 @@ namespace Flare
 
 		struct FrameResources
 		{
-			Ref<ShaderStorageBuffer> InstanceBuffer = nullptr;
+			Ref<GPUBuffer> InstanceBuffer = nullptr;
 			Ref<DescriptorSet> InstanceBufferDescriptor = nullptr;
 			Ref<DescriptorSet> DecalSet = nullptr;
 		};

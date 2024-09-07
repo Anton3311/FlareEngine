@@ -7,7 +7,6 @@
 #include "Flare/Renderer/RenderData.h"
 #include "Flare/Renderer/Renderer.h"
 #include "Flare/Renderer/SceneSubmition.h"
-#include "Flare/Renderer/ShaderStorageBuffer.h"
 #include "Flare/Renderer/Viewport.h"
 
 #include "Flare/Renderer2D/Renderer2D.h"
@@ -28,12 +27,12 @@ namespace Flare
 		uint32_t frameInFlightCount = GraphicsContext::GetInstance().GetFrameInFlightCount();
 		for (uint32_t i = 0; i < frameInFlightCount; i++)
 		{
-			FrameResources& resouces = m_FrameResources.emplace_back();
-			resouces.InstanceBuffer = ShaderStorageBuffer::Create(maxInstances * sizeof(InstanceData));
+			FrameResources& resources = m_FrameResources.emplace_back();
+			resources.InstanceBuffer = GPUBuffer::CreateStorageBuffer(maxInstances * sizeof(InstanceData), GPUBufferMemoryType::Static);
 
-			resouces.InstanceBufferDescriptor = Renderer::GetInstanceDataDescriptorSetPool()->AllocateSet();
-			resouces.InstanceBufferDescriptor->WriteStorageBuffer(resouces.InstanceBuffer, 0);
-			resouces.InstanceBufferDescriptor->FlushWrites();
+			resources.InstanceBufferDescriptor = Renderer::GetInstanceDataDescriptorSetPool()->AllocateSet();
+			resources.InstanceBufferDescriptor->WriteStorageBuffer(resources.InstanceBuffer, 0);
+			resources.InstanceBufferDescriptor->FlushWrites();
 		}
 
 		m_Timer = GPUTimer::Create();
@@ -41,9 +40,9 @@ namespace Flare
 
 	GeometryPass::~GeometryPass()
 	{
-		for (const FrameResources& frameResouces : m_FrameResources)
+		for (const FrameResources& frameResources : m_FrameResources)
 		{
-			Renderer::GetInstanceDataDescriptorSetPool()->ReleaseSet(frameResouces.InstanceBufferDescriptor);
+			Renderer::GetInstanceDataDescriptorSetPool()->ReleaseSet(frameResources.InstanceBufferDescriptor);
 		}
 	}
 
@@ -83,7 +82,7 @@ namespace Flare
 		m_InstanceData.clear();
 
 		{
-			FLARE_PROFILE_SCOPE("FillInstacesData");
+			FLARE_PROFILE_SCOPE("FillInstanceData");
 			for (uint32_t objectIndex : m_VisibleObjects)
 			{
 				auto& instanceData = m_InstanceData.emplace_back();

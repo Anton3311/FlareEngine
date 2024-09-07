@@ -9,15 +9,14 @@ namespace Flare
 
 	class DescriptorSet;
 	class DescriptorSetPool;
-	class IndexBuffer;
+	class GPUBuffer;
 	class Pipeline;
 	class Shader;
-	class VertexBuffer;
 
 	class TextPass : public RenderGraphPass
 	{
 	public:
-		TextPass(const Renderer2DLimits& limits, Ref<IndexBuffer> indexBuffer, Ref<Shader> textShader, Ref<DescriptorSetPool> descriptorSetPool);
+		TextPass(const Renderer2DLimits& limits, Ref<GPUBuffer> indexBuffer, Ref<Shader> textShader, Ref<DescriptorSetPool> descriptorSetPool);
 		~TextPass();
 
 		void OnPrepare(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer) override;
@@ -28,7 +27,7 @@ namespace Flare
 	private:
 		struct FrameResources
 		{
-			Ref<VertexBuffer> VertexBuffer = nullptr;
+			Ref<GPUBuffer> VertexBuffer = nullptr;
 			std::vector<Ref<DescriptorSet>> UsedSets;
 		};
 
@@ -36,7 +35,7 @@ namespace Flare
 
 		Ref<Shader> m_TextShader = nullptr;
 		Ref<Pipeline> m_TextPipeline = nullptr;
-		Ref<IndexBuffer> m_IndexBuffer = nullptr;
+		Ref<GPUBuffer> m_IndexBuffer = nullptr;
 		Ref<DescriptorSetPool> m_DescriptorSetPool = nullptr;
 
 		std::vector<FrameResources> m_FrameResources;

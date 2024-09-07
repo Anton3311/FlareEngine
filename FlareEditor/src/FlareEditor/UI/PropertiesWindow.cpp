@@ -162,10 +162,10 @@ namespace Flare
 				const char* indexFormatText = "";
 				switch (mesh->GetIndexFormat())
 				{
-				case IndexBuffer::IndexFormat::UInt16:
+				case IndexFormat::UInt16:
 					indexFormatText = "UInt16";
 					break;
-				case IndexBuffer::IndexFormat::UInt32:
+				case IndexFormat::UInt32:
 					indexFormatText = "UInt32";
 					break;
 				}

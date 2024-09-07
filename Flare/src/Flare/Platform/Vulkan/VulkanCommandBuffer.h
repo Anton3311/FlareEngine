@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Flare/Renderer/Buffer.h"
 #include "Flare/Renderer/CommandBuffer.h"
 
 #include <vulkan/vulkan.h>
@@ -45,9 +46,9 @@ namespace Flare
 		void SetDefaltViewportAndScissors() override;
 
 		void BindPipeline(const Ref<Pipeline>& pipeline) override;
-		void BindVertexBuffer(Ref<const VertexBuffer> buffer, uint32_t index) override;
-		void BindVertexBuffers(Span<Ref<const VertexBuffer>> vertexBuffers, uint32_t baseBindingIndex) override;
-		void BindIndexBuffer(Ref<const IndexBuffer> buffer) override;
+		void BindVertexBuffer(Ref<const GPUBuffer> buffer, uint32_t index) override;
+		void BindVertexBuffers(Span<Ref<const GPUBuffer>> vertexBuffers, uint32_t baseBindingIndex) override;
+		void BindIndexBuffer(Ref<const GPUBuffer> buffer, IndexFormat format) override;
 
 		void DrawMeshIndexed(const Ref<const Mesh>& mesh, uint32_t baseInstance, uint32_t instanceCount) override;
 		void DrawMeshIndexed(const Ref<const Mesh>& mesh, uint32_t subMeshIndex, uint32_t baseInstance, uint32_t instanceCount) override;

@@ -29,7 +29,7 @@ namespace Flare
 
 	struct SceneData
 	{
-		IndexBuffer::IndexFormat IndexFormat = IndexBuffer::IndexFormat::UInt32;
+		IndexFormat IndexFormat = IndexFormat::UInt32;
 
 		std::vector<uint16_t> Indices16;
 		std::vector<uint32_t> Indices32;

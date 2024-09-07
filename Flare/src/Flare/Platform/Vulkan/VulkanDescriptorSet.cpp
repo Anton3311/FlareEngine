@@ -2,9 +2,8 @@
 
 #include "FlareCore/Profiler/Profiler.h"
 
+#include "Flare/Platform/Vulkan/VulkanBuffer.h"
 #include "Flare/Platform/Vulkan/VulkanContext.h"
-#include "Flare/Platform/Vulkan/VulkanUniformBuffer.h"
-#include "Flare/Platform/Vulkan/VulkanShaderStorageBuffer.h"
 #include "Flare/Platform/Vulkan/VulkanFrameBuffer.h"
 #include "Flare/Platform/Vulkan/VulkanTexture.h"
 #include "Flare/Platform/Vulkan/VulkanSampler.h"
@@ -188,11 +187,11 @@ namespace Flare
 		write.pTexelBufferView = nullptr;
 	}
 
-	void VulkanDescriptorSet::WriteUniformBuffer(Ref<const UniformBuffer> buffer, uint32_t binding)
+	void VulkanDescriptorSet::WriteUniformBuffer(Ref<const GPUBuffer> buffer, uint32_t binding)
 	{
 		FLARE_CORE_ASSERT(m_Buffers.size() < m_Buffers.capacity());
 		auto& bufferWrite = m_Buffers.emplace_back();
-		bufferWrite.buffer = buffer.As<const VulkanUniformBuffer>()->GetBufferHandle();
+		bufferWrite.buffer = buffer.As<const VulkanBuffer>()->GetBufferHandle();
 		bufferWrite.offset = 0;
 		bufferWrite.range = buffer->GetSize();
 
@@ -208,11 +207,11 @@ namespace Flare
 		write.pTexelBufferView = nullptr;
 	}
 
-	void VulkanDescriptorSet::WriteStorageBuffer(Ref<const ShaderStorageBuffer> buffer, uint32_t binding)
+	void VulkanDescriptorSet::WriteStorageBuffer(Ref<const GPUBuffer> buffer, uint32_t binding)
 	{
 		FLARE_CORE_ASSERT(m_Buffers.size() < m_Buffers.capacity());
 		auto& bufferWrite = m_Buffers.emplace_back();
-		bufferWrite.buffer = buffer.As<const VulkanShaderStorageBuffer>()->GetBufferHandle();
+		bufferWrite.buffer = buffer.As<const VulkanBuffer>()->GetBufferHandle();
 		bufferWrite.offset = 0;
 		bufferWrite.range = buffer->GetSize();
 

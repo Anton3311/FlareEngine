@@ -13,10 +13,9 @@ namespace Flare
 
 	class DescriptorSet;
 	class DescriptorSetPool;
+	class GPUBuffer;
 	class GPUTimer;
 	class Mesh;
-	class ShaderStorageBuffer;
-	class UniformBuffer;
 
 	class ShadowCascadePass : public RenderGraphPass
 	{
@@ -50,10 +49,10 @@ namespace Flare
 	private:
 		struct FrameResources
 		{
-			Ref<UniformBuffer> CameraBuffer = nullptr;
+			Ref<GPUBuffer> CameraBuffer = nullptr;
 			Ref<DescriptorSet> CameraDescriptor = nullptr;
 
-			Ref<ShaderStorageBuffer> InstanceBuffer = nullptr;
+			Ref<GPUBuffer> InstanceBuffer = nullptr;
 			Ref<DescriptorSet> InstanceBufferDescriptor = nullptr;
 		};
 

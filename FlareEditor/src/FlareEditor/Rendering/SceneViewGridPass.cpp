@@ -66,11 +66,11 @@ namespace Flare
 
 		vulkanCommandBuffer->BindPipeline(m_Pipeline);
 		vulkanCommandBuffer->BindDescriptorSet(context.GetViewport().GetFrameResources().CameraDescriptorSet, 0);
-		vulkanCommandBuffer->BindVertexBuffers(Span((Ref<const VertexBuffer>*)&m_VertexBuffer, 1), 0);
+		vulkanCommandBuffer->BindVertexBuffers(Span((Ref<const GPUBuffer>*)&m_VertexBuffer, 1), 0);
 
 		// First draw the secondary grid and only than the primary one.
-		// This ovoids secondary grid completely converting a primary one,
-		// becuase is has smaller cells and the grid lines overlap.
+		// This avoids secondary grid completely converting a primary one,
+		// because is has smaller cells and the grid lines overlap.
 		DrawGridLevel(commandBuffer, scaleLevel, m_Settings.SecondaryColor);
 		DrawGridLevel(commandBuffer, scaleLevel + 1, m_Settings.PrimaryColor);
 	}
@@ -110,7 +110,8 @@ namespace Flare
 			vertices.push_back(end);
 		}
 
-		m_VertexBuffer = VertexBuffer::Create(sizeof(glm::vec2) * vertices.size(), vertices.data());
+		m_VertexBuffer = GPUBuffer::CreateVertexBuffer(sizeof(glm::vec2) * vertices.size(), GPUBufferMemoryType::Static);
+		m_VertexBuffer->SetData(MemorySpan::FromVector(vertices), 0);
 		m_VertexCount = (uint32_t)vertices.size();
 	}
 

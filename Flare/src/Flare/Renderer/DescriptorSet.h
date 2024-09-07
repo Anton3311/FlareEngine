@@ -8,11 +8,10 @@
 
 namespace Flare
 {
-	class Texture;
-	class Sampler;
 	class FrameBuffer;
-	class UniformBuffer;
-	class ShaderStorageBuffer;
+	class GPUBuffer;
+	class Sampler;
+	class Texture;
 
 	class FLARE_API DescriptorSet : public RefCounted<DescriptorSet>
 	{
@@ -28,8 +27,8 @@ namespace Flare
 
 		virtual void WriteStorageImage(Ref<const FrameBuffer> frameBuffer, uint32_t attachmentIndex, uint32_t binding) = 0;
 
-		virtual void WriteUniformBuffer(Ref<const UniformBuffer> buffer, uint32_t binding) = 0;
-		virtual void WriteStorageBuffer(Ref<const ShaderStorageBuffer> buffer, uint32_t binding) = 0;
+		virtual void WriteUniformBuffer(Ref<const GPUBuffer> buffer, uint32_t binding) = 0;
+		virtual void WriteStorageBuffer(Ref<const GPUBuffer> buffer, uint32_t binding) = 0;
 
 		virtual void FlushWrites() = 0;
 

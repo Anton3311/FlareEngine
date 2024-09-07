@@ -78,12 +78,12 @@ namespace Flare
 
 		if (indexCount <= (size_t)std::numeric_limits<uint16_t>::max())
 		{
-			m_SceneData.IndexFormat = IndexBuffer::IndexFormat::UInt16;
+			m_SceneData.IndexFormat = IndexFormat::UInt16;
 			m_SceneData.Indices16.reserve(indexCount);
 		}
 		else
 		{
-			m_SceneData.IndexFormat = IndexBuffer::IndexFormat::UInt32;
+			m_SceneData.IndexFormat = IndexFormat::UInt32;
 			m_SceneData.Indices32.reserve(indexCount);
 		}
 
@@ -110,7 +110,7 @@ namespace Flare
 		m_SceneData.SharedMesh->Tangents->SetData(MemorySpan::FromVector(m_SceneData.Tangents), 0, commandBuffer);
 		m_SceneData.SharedMesh->UVs->SetData(MemorySpan::FromVector(m_SceneData.UVs), 0, commandBuffer);
 
-		if (m_SceneData.IndexFormat == IndexBuffer::IndexFormat::UInt16)
+		if (m_SceneData.IndexFormat == IndexFormat::UInt16)
 			m_SceneData.SharedMesh->IndexBuffer->SetData(MemorySpan::FromVector(m_SceneData.Indices16), 0, commandBuffer);
 		else
 			m_SceneData.SharedMesh->IndexBuffer->SetData(MemorySpan::FromVector(m_SceneData.Indices32), 0, commandBuffer);
@@ -201,7 +201,7 @@ namespace Flare
 		}
 
 		size_t subMeshIndexCount = 0;
-		if (m_SceneData.IndexFormat == IndexBuffer::IndexFormat::UInt16)
+		if (m_SceneData.IndexFormat == IndexFormat::UInt16)
 		{
 			for (uint32_t face = 0; face < mesh->mNumFaces; face++)
 			{
@@ -271,12 +271,12 @@ namespace Flare
 
 		if (indexCount <= (size_t)std::numeric_limits<uint16_t>::max())
 		{
-			m_SceneData.IndexFormat = IndexBuffer::IndexFormat::UInt16;
+			m_SceneData.IndexFormat = IndexFormat::UInt16;
 			m_SceneData.Indices16.reserve(indexCount);
 		}
 		else
 		{
-			m_SceneData.IndexFormat = IndexBuffer::IndexFormat::UInt32;
+			m_SceneData.IndexFormat = IndexFormat::UInt32;
 			m_SceneData.Indices32.reserve(indexCount);
 		}
 	}

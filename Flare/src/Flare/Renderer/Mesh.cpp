@@ -6,29 +6,28 @@
 #include "Flare/Renderer/RendererAPI.h"
 #include "Flare/Renderer/GraphicsContext.h"
 
+#include "Flare/Platform/Vulkan/VulkanBuffer.h"
 #include "Flare/Platform/Vulkan/VulkanContext.h"
 #include "Flare/Platform/Vulkan/VulkanCommandBuffer.h"
-#include "Flare/Platform/Vulkan/VulkanVertexBuffer.h"
-#include "Flare/Platform/Vulkan/VulkanIndexBuffer.h"
 
 namespace Flare
 {
-	SharedMesh::SharedMesh(size_t vertexCount, IndexBuffer::IndexFormat indexFormat, size_t indexCount)
-		: m_VertexCount(vertexCount), m_IndexCount(indexCount)
+	SharedMesh::SharedMesh(size_t vertexCount, IndexFormat indexFormat, size_t indexCount)
+		: m_VertexCount(vertexCount), m_IndexCount(indexCount), m_IndexFormat(indexFormat)
 	{
 		FLARE_PROFILE_FUNCTION();
-		Vertices = VertexBuffer::Create(sizeof(glm::vec3) * m_VertexCount, GPUBufferUsage::Static);
-		Normals = VertexBuffer::Create(sizeof(glm::vec3) * m_VertexCount, GPUBufferUsage::Static);
-		Tangents = VertexBuffer::Create(sizeof(glm::vec3) * m_VertexCount, GPUBufferUsage::Static);
-		UVs = VertexBuffer::Create(sizeof(glm::vec2) * m_VertexCount, GPUBufferUsage::Static);
+		Vertices = GPUBuffer::CreateVertexBuffer(sizeof(glm::vec3) * m_VertexCount, GPUBufferMemoryType::Static);
+		Normals = GPUBuffer::CreateVertexBuffer(sizeof(glm::vec3) * m_VertexCount, GPUBufferMemoryType::Static);
+		Tangents = GPUBuffer::CreateVertexBuffer(sizeof(glm::vec3) * m_VertexCount, GPUBufferMemoryType::Static);
+		UVs = GPUBuffer::CreateVertexBuffer(sizeof(glm::vec2) * m_VertexCount, GPUBufferMemoryType::Static);
 
-		IndexBuffer = IndexBuffer::Create(indexFormat, indexCount, GPUBufferUsage::Static);
+		IndexBuffer = GPUBuffer::CreateIndexBuffer(indexCount, indexFormat, GPUBufferMemoryType::Static);
 
-		Vertices.As<VulkanVertexBuffer>()->GetBuffer().EnsureAllocated();
-		Normals.As<VulkanVertexBuffer>()->GetBuffer().EnsureAllocated();
-		Tangents.As<VulkanVertexBuffer>()->GetBuffer().EnsureAllocated();
-		UVs.As<VulkanVertexBuffer>()->GetBuffer().EnsureAllocated();
-		IndexBuffer.As<VulkanIndexBuffer>()->GetBuffer().EnsureAllocated();
+		Vertices.As<VulkanBuffer>()->EnsureAllocated();
+		Normals.As<VulkanBuffer>()->EnsureAllocated();
+		Tangents.As<VulkanBuffer>()->EnsureAllocated();
+		UVs.As<VulkanBuffer>()->EnsureAllocated();
+		IndexBuffer.As<VulkanBuffer>()->EnsureAllocated();
 	}
 
 	SharedMesh::MeshOffset SharedMesh::AllocateMesh(size_t vertexCount, size_t indexCount)
@@ -53,25 +52,24 @@ namespace Flare
 	FLARE_SERIALIZABLE_IMPL(Mesh);
 	FLARE_IMPL_ASSET(Mesh);
 
-	Mesh::Mesh(size_t vertexBufferSize, IndexBuffer::IndexFormat indexFormat, size_t indexBufferSize)
+	Mesh::Mesh(size_t vertexBufferSize, IndexFormat indexFormat, size_t indexBufferSize)
 		: Asset(AssetType::Mesh),
 		m_VertexCount(vertexBufferSize),
 		m_IndexFormat(indexFormat),
 		m_IndexCount(indexBufferSize)
 	{
+		// TODO: Remove this constructor
 	}
 
 	Mesh::Mesh(MemorySpan indices,
-		IndexBuffer::IndexFormat indexFormat,
+		IndexFormat indexFormat,
 		Span<const glm::vec3> vertices,
 		Span<const glm::vec3> normals,
 		Span<const glm::vec3> tangents,
 		Span<const glm::vec2> uvs)
 		: Asset(AssetType::Mesh),
 		m_IndexFormat(indexFormat),
-		m_VertexCount(vertices.GetSize()),
 		m_VertexBufferOffset(0),
-		m_IndexCount(indices.GetSize()),
 		m_IndexBufferOffset(0)
 	{
 		FLARE_PROFILE_FUNCTION();
@@ -79,19 +77,12 @@ namespace Flare
 		FLARE_CORE_ASSERT(vertices.GetSize() == tangents.GetSize());
 		FLARE_CORE_ASSERT(vertices.GetSize() == uvs.GetSize());
 
-		Ref<CommandBuffer> commandBuffer = VulkanContext::GetInstance().GetUploadCommandBuffer();
-
-		m_Vertices = VertexBuffer::Create(sizeof(glm::vec3) * vertices.GetSize(), vertices.GetData(), commandBuffer);
-		m_Normals = VertexBuffer::Create(sizeof(glm::vec3) * normals.GetSize(), normals.GetData(), commandBuffer);
-		m_Tangents = VertexBuffer::Create(sizeof(glm::vec3) * tangents.GetSize(), tangents.GetData(), commandBuffer);
-		m_UVs = VertexBuffer::Create(sizeof(glm::vec2) * uvs.GetSize(), uvs.GetData(), commandBuffer);
-
-		m_IndexBuffer = IndexBuffer::Create(m_IndexFormat, indices, commandBuffer);
+		CreateBuffers(indices, indexFormat, vertices, normals, tangents, uvs);
 
 		SubMesh& subMesh = m_SubMeshes.emplace_back();
 		subMesh.BaseIndex = 0;
 		subMesh.BaseVertex = 0;
-		subMesh.IndicesCount = (uint32_t)m_IndexBuffer->GetCount();
+		subMesh.IndicesCount = (uint32_t)m_IndexCount;
 		subMesh.Bounds.Min = vertices[0];
 		subMesh.Bounds.Max = vertices[1];
 
@@ -103,7 +94,7 @@ namespace Flare
 	}
 
 	Mesh::Mesh(MemorySpan indices,
-		IndexBuffer::IndexFormat indexFormat,
+		IndexFormat indexFormat,
 		Span<const glm::vec3> vertices,
 		Span<const glm::vec3> normals,
 		Span<const glm::vec3> tangents,
@@ -121,16 +112,7 @@ namespace Flare
 		FLARE_CORE_ASSERT(vertices.GetSize() == tangents.GetSize());
 		FLARE_CORE_ASSERT(vertices.GetSize() == uvs.GetSize());
 
-		m_IndexCount = indices.GetSize() / IndexBuffer::GetIndexFormatSize(m_IndexFormat);
-
-		Ref<CommandBuffer> commandBuffer = VulkanContext::GetInstance().GetUploadCommandBuffer();
-
-		m_Vertices = VertexBuffer::Create(sizeof(glm::vec3) * vertices.GetSize(), vertices.GetData(), commandBuffer);
-		m_Normals = VertexBuffer::Create(sizeof(glm::vec3) * normals.GetSize(), normals.GetData(), commandBuffer);
-		m_Tangents = VertexBuffer::Create(sizeof(glm::vec3) * tangents.GetSize(), tangents.GetData(), commandBuffer);
-		m_UVs = VertexBuffer::Create(sizeof(glm::vec2) * uvs.GetSize(), uvs.GetData(), commandBuffer);
-
-		m_IndexBuffer = IndexBuffer::Create(m_IndexFormat, indices, commandBuffer);
+		CreateBuffers(indices, indexFormat, vertices, normals, tangents, uvs);
 
 		m_Bounds = m_SubMeshes[0].Bounds;
 
@@ -156,7 +138,7 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 
 		m_VertexCount = vertices.GetSize();
-		m_IndexCount = indices.GetSize() / IndexBuffer::GetIndexFormatSize(sharedMesh->GetIndexFormat());
+		m_IndexCount = indices.GetSize() / GetIndexFormatSize(sharedMesh->GetIndexFormat());
 		SharedMesh::MeshOffset subAllocation = sharedMesh->AllocateMesh(m_VertexCount, m_IndexCount);
 
 		m_VertexBufferOffset = subAllocation.VertexOffset;
@@ -230,7 +212,45 @@ namespace Flare
 		m_UVs->SetDebugName(fmt::format("{}.UVs", m_DebugName));
 	}
 
-	Ref<Mesh> Mesh::Create(size_t vertexBufferSize, IndexBuffer::IndexFormat indexFormat, size_t indexBufferSize)
+	void Mesh::CreateBuffers(MemorySpan indices,
+		IndexFormat indexFormat,
+		Span<const glm::vec3> vertices,
+		Span<const glm::vec3> normals,
+		Span<const glm::vec3> tangents,
+		Span<const glm::vec2> uvs)
+	{
+		FLARE_PROFILE_FUNCTION();
+		Ref<CommandBuffer> commandBuffer = VulkanContext::GetInstance().GetUploadCommandBuffer();
+
+		m_VertexCount = vertices.GetSize();
+		m_IndexCount = indices.GetSize() / GetIndexFormatSize(indexFormat);
+
+		GPUBufferSpecifications vertexBufferSpecifications{};
+		vertexBufferSpecifications.MemoryType = GPUBufferMemoryType::Static;
+		vertexBufferSpecifications.Size = sizeof(glm::vec3) * m_VertexCount;
+		vertexBufferSpecifications.Usage = GPUBufferUsage::VertexBuffer;
+
+		GPUBufferSpecifications uvBufferSpecifications{};
+		uvBufferSpecifications.MemoryType = GPUBufferMemoryType::Static;
+		uvBufferSpecifications.Size = sizeof(glm::vec2) * m_VertexCount;
+		uvBufferSpecifications.Usage = GPUBufferUsage::VertexBuffer;
+
+		m_Vertices = GPUBuffer::Create(vertexBufferSpecifications);
+		m_Normals = GPUBuffer::Create(vertexBufferSpecifications);
+		m_Tangents = GPUBuffer::Create(vertexBufferSpecifications);
+		m_UVs = GPUBuffer::Create(uvBufferSpecifications);
+
+		m_IndexBuffer = GPUBuffer::CreateIndexBuffer(m_IndexCount, m_IndexFormat, GPUBufferMemoryType::Static);
+
+		m_Vertices->SetData(MemorySpan(vertices.GetData(), m_VertexCount), 0, commandBuffer);
+		m_Normals->SetData(MemorySpan(normals.GetData(), m_VertexCount), 0, commandBuffer);
+		m_Tangents->SetData(MemorySpan(tangents.GetData(), m_VertexCount), 0, commandBuffer);
+		m_UVs->SetData(MemorySpan(uvs.GetData(), m_VertexCount), 0, commandBuffer);
+
+		m_IndexBuffer->SetData(indices, 0, commandBuffer);
+	}
+
+	Ref<Mesh> Mesh::Create(size_t vertexBufferSize, IndexFormat indexFormat, size_t indexBufferSize)
 	{
 		FLARE_PROFILE_FUNCTION();
 
@@ -245,7 +265,7 @@ namespace Flare
 	}
 
 	Ref<Mesh> Mesh::Create(MemorySpan indices,
-		IndexBuffer::IndexFormat indexFormat,
+		IndexFormat indexFormat,
 		Span<const glm::vec3> vertices,
 		Span<const glm::vec3> normals,
 		Span<const glm::vec3> tangents,

@@ -8,13 +8,12 @@
 
 namespace Flare
 {
-	class IndexBuffer;
-	class VertexBuffer;
+	class GPUBuffer;
 	class Shader;
 	class DebugRaysPass : public RenderGraphPass
 	{
 	public:
-		DebugRaysPass(Ref<IndexBuffer> indexBuffer, Ref<Shader> debugShader, const DebugRendererSettings& settings);
+		DebugRaysPass(Ref<GPUBuffer> indexBuffer, Ref<Shader> debugShader, const DebugRendererSettings& settings);
 
 		void OnPrepare(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer) override;
 		void OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer) override;
@@ -24,7 +23,7 @@ namespace Flare
 	private:
 		struct FrameResources
 		{
-			Ref<VertexBuffer> VertexBuffer = nullptr;
+			Ref<GPUBuffer> VertexBuffer = nullptr;
 		};
 
 		const DebugRendererSettings& m_Settings;
@@ -32,7 +31,7 @@ namespace Flare
 		Ref<Shader> m_Shader = nullptr;
 		Ref<Pipeline> m_Pipeline = nullptr;
 
-		Ref<IndexBuffer> m_IndexBuffer = nullptr;
+		Ref<GPUBuffer> m_IndexBuffer = nullptr;
 
 		std::vector<FrameResources> m_FrameResources;
 		std::vector<DebugRendererFrameData::Vertex> m_Vertices;

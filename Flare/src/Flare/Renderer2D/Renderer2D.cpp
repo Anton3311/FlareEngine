@@ -41,7 +41,7 @@ namespace Flare
 
 		Renderer2DLimits Limits;
 
-		Ref<IndexBuffer> IndexBuffer = nullptr;
+		Ref<GPUBuffer> IndexBuffer = nullptr;
 
 		Ref<Material> DefaultMaterial = nullptr;
 		Ref<Material> CurrentMaterial = nullptr;
@@ -75,7 +75,8 @@ namespace Flare
 			indices[quadIndex * 6 + 5] = (uint32_t)(quadIndex * 4 + 3);
 		}
 
-		s_Renderer2DData.IndexBuffer = IndexBuffer::Create(IndexBuffer::IndexFormat::UInt32, MemorySpan::FromVector(indices));
+		s_Renderer2DData.IndexBuffer = GPUBuffer::CreateIndexBuffer(indices.size(), IndexFormat::UInt32, GPUBufferMemoryType::Static);
+		s_Renderer2DData.IndexBuffer->SetData(MemorySpan::FromVector(indices), 0);
 
 		s_Renderer2DData.QuadVertices[0] = glm::vec3(-0.5f, -0.5f, 0.0f);
 		s_Renderer2DData.QuadVertices[1] = glm::vec3(-0.5f, 0.5f, 0.0f);

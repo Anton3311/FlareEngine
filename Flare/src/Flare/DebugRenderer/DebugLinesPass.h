@@ -8,8 +8,8 @@ namespace Flare
 
 	class Shader;
 	class Pipeline;
-	class VertexBuffer;
-
+	class GPUBuffer;
+	
 	class DebugLinesPass : public RenderGraphPass
 	{
 	public:
@@ -23,7 +23,7 @@ namespace Flare
 	private:
 		struct FrameResources
 		{
-			Ref<VertexBuffer> VertexBuffer = nullptr;
+			Ref<GPUBuffer> VertexBuffer = nullptr;
 		};
 
 		const DebugRendererSettings& m_Settings;

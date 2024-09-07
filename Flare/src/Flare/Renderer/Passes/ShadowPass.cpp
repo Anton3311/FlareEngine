@@ -4,8 +4,6 @@
 #include "Flare/Renderer/CommandBuffer.h"
 #include "Flare/Renderer/GraphicsContext.h"
 #include "Flare/Renderer/FrameBuffer.h"
-#include "Flare/Renderer/UniformBuffer.h"
-#include "Flare/Renderer/ShaderStorageBuffer.h"
 #include "Flare/Renderer/Sampler.h"
 #include "Flare/Renderer/GPUTimer.h"
 #include "Flare/Renderer/SceneSubmition.h"
@@ -160,7 +158,7 @@ namespace Flare
 		m_ShadowData.MaxShadowDistance = settings.CascadeSplits[settings.Cascades - 1];
 		m_ShadowData.ShadowFadeStartDistance = m_ShadowData.MaxShadowDistance - settings.FadeDistance;
 
-		context.GetViewport().GetFrameResources().ShadowDataBuffer->SetData(&m_ShadowData, sizeof(m_ShadowData), 0);
+		context.GetViewport().GetFrameResources().ShadowDataBuffer->SetData(MemorySpan(&m_ShadowData, 1), 0);
 	}
 
 	enum class CullResult

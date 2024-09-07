@@ -6,8 +6,6 @@
 #include "Flare/Renderer/RenderData.h"
 #include "Flare/Renderer/Renderer.h"
 #include "Flare/Renderer/RendererSubmitionQueue.h"
-#include "Flare/Renderer/ShaderStorageBuffer.h"
-#include "Flare/Renderer/UniformBuffer.h"
 #include "Flare/Renderer/Viewport.h"
 
 #include "Flare/Renderer/Passes/ShadowPass.h"
@@ -40,12 +38,12 @@ namespace Flare
 		{
 			FrameResources& resources = m_FrameResources.emplace_back();
 
-			resources.CameraBuffer = UniformBuffer::Create(sizeof(RenderView));
+			resources.CameraBuffer = GPUBuffer::CreateUniformBuffer(sizeof(RenderView));
 			resources.CameraDescriptor = Renderer::GetCameraDescriptorSetPool()->AllocateSet();
 			resources.CameraDescriptor->WriteUniformBuffer(resources.CameraBuffer, 0);
 			resources.CameraDescriptor->FlushWrites();
 
-			resources.InstanceBuffer = ShaderStorageBuffer::Create(maxInstanceCount * sizeof(InstanceData));
+			resources.InstanceBuffer = GPUBuffer::CreateStorageBuffer(maxInstanceCount * sizeof(InstanceData), GPUBufferMemoryType::Static);
 			resources.InstanceBufferDescriptor = Renderer::GetInstanceDataDescriptorSetPool()->AllocateSet();
 			resources.InstanceBufferDescriptor->WriteStorageBuffer(resources.InstanceBuffer, 0);
 			resources.InstanceBufferDescriptor->FlushWrites();
@@ -73,7 +71,7 @@ namespace Flare
 		if (m_CascadeData.Batches.size() == 0 && m_CascadeData.PartiallyVisible.size() == 0)
 			return;
 
-		resources.CameraBuffer->SetData(&m_CascadeData.View, sizeof(m_CascadeData.View), 0);
+		resources.CameraBuffer->SetData(MemorySpan(&m_CascadeData.View, 1), 0);
 
 		m_Statistics.ShadowPassTime += m_Timer->GetElapsedTime().value_or(0.0f);
 

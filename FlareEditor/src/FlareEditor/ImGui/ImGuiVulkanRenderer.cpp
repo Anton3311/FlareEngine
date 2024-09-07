@@ -1,9 +1,8 @@
 #include "ImGuiVulkanRenderer.h"
 
+#include "Flare/Platform/Vulkan/VulkanBuffer.h"
 #include "Flare/Platform/Vulkan/VulkanContext.h"
 #include "Flare/Platform/Vulkan/VulkanCommandBuffer.h"
-#include "Flare/Platform/Vulkan/VulkanVertexBuffer.h"
-#include "Flare/Platform/Vulkan/VulkanIndexBuffer.h"
 
 #include "FlareEditor/ImGui/ImGuiLayerVulkan.h"
 
@@ -252,25 +251,25 @@ namespace Flare
 
 			if (resources.VertexBuffer == nullptr)
 			{
-				resources.VertexBuffer = Ref<VulkanVertexBuffer>::New(vertexBufferSize, GPUBufferUsage::Dynamic);
-				resources.VertexBuffer->GetBuffer().EnsureAllocated();
+				resources.VertexBuffer = GPUBuffer::CreateVertexBuffer(vertexBufferSize, GPUBufferMemoryType::Dynamic);
+				resources.VertexBuffer.As<VulkanBuffer>()->EnsureAllocated();
 			}
 
 			if (resources.IndexBuffer == nullptr)
 			{
 				if (sizeof(ImDrawIdx) == 2)
-					resources.IndexBuffer = Ref<VulkanIndexBuffer>::New(IndexBuffer::IndexFormat::UInt32, indexBufferSize / 2, GPUBufferUsage::Dynamic);
+					resources.IndexBuffer = GPUBuffer::CreateIndexBuffer(indexBufferSize / 2, IndexFormat::UInt32, GPUBufferMemoryType::Dynamic);
 				else
-					resources.IndexBuffer = Ref<VulkanIndexBuffer>::New(IndexBuffer::IndexFormat::UInt16, indexBufferSize, GPUBufferUsage::Dynamic);
+					resources.IndexBuffer = GPUBuffer::CreateIndexBuffer(indexBufferSize, IndexFormat::UInt16, GPUBufferMemoryType::Dynamic);
 
-				resources.IndexBuffer->GetBuffer().EnsureAllocated();
+				resources.IndexBuffer.DerefAs<VulkanBuffer>().EnsureAllocated();
 			}
 
-			if (resources.VertexBuffer->GetBuffer().GetSize() < vertexBufferSize)
-				resources.VertexBuffer->GetBuffer().Resize(vertexBufferSize);
+			if (resources.VertexBuffer->GetSize() < vertexBufferSize)
+				resources.VertexBuffer->Resize(vertexBufferSize);
 
-			if (resources.IndexBuffer->GetBuffer().GetSize() < indexBufferSize)
-				resources.IndexBuffer->GetBuffer().Resize(indexBufferSize);
+			if (resources.IndexBuffer->GetSize() < indexBufferSize)
+				resources.IndexBuffer->Resize(indexBufferSize);
 
 			size_t vertexOffset = 0;
 			size_t indexOffset = 0;
@@ -281,7 +280,7 @@ namespace Flare
 				size_t vertexDataSize = cmd_list->VtxBuffer.Size * sizeof(ImDrawVert);
 				size_t indexDataSize = cmd_list->IdxBuffer.Size * sizeof(ImDrawIdx);
 
-				resources.VertexBuffer->SetData(cmd_list->VtxBuffer.Data, vertexDataSize, vertexOffset);
+				resources.VertexBuffer->SetData(MemorySpan::FromRawBytes(cmd_list->VtxBuffer.Data, vertexDataSize), vertexOffset);
 				resources.IndexBuffer->SetData(MemorySpan::FromRawBytes(cmd_list->IdxBuffer.Data, indexDataSize), indexOffset);
 				
 				vertexOffset += vertexDataSize;
@@ -307,10 +306,10 @@ namespace Flare
 		// Bind Vertex And Index Buffer:
 		if (drawData->TotalVtxCount > 0)
 		{
-			VkBuffer vertex_buffers[1] = { frameResources.VertexBuffer->GetHandle() };
+			VkBuffer vertex_buffers[1] = { frameResources.VertexBuffer.DerefAs<VulkanBuffer>().GetBufferHandle() };
 			VkDeviceSize vertex_offset[1] = { 0 };
 			vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertex_buffers, vertex_offset);
-			vkCmdBindIndexBuffer(commandBuffer, frameResources.IndexBuffer->GetHandle(), 0, sizeof(ImDrawIdx) == 2 ? VK_INDEX_TYPE_UINT16 : VK_INDEX_TYPE_UINT32);
+			vkCmdBindIndexBuffer(commandBuffer, frameResources.IndexBuffer.DerefAs<VulkanBuffer>().GetBufferHandle(), 0, sizeof(ImDrawIdx) == 2 ? VK_INDEX_TYPE_UINT16 : VK_INDEX_TYPE_UINT32);
 		}
 
 		// Setup viewport:
