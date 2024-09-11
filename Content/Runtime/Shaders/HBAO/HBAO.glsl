@@ -35,7 +35,7 @@ layout(location = 0) out float o_AO;
 
 const int DIRECTION_COUNT = 8;
 const float DIRECTION_ANGLE_STEP = TWO_PI / float(DIRECTION_COUNT);
-const int SAMPLE_COUNT = 4;
+const int SAMPLE_COUNT = 16;
 
 float Attenuate(float distance)
 {
@@ -49,7 +49,9 @@ vec2 SnapToTexelCenter(vec2 uv)
 
 float ComputeProjectedSphereSize(float linearDepth)
 {
-	vec4 clipSpace = vec4(u_Radius, 0.0f, LinearDepthToNonLinear(linearDepth), 1.0f);
+	// NOTE: -linearDetph because camera's view direction in view space is -Z axis
+
+	vec4 clipSpace = vec4(u_Radius, 0.0f, -linearDepth, 1.0f);
 	vec4 projected = u_Camera.Projection * clipSpace;
 	
 	return projected.x / projected.w;
@@ -68,13 +70,13 @@ void main()
 	}
 
 	vec3 viewSpaceNormal = (u_Camera.View * vec4(sampledNormal * 2.0f - vec3(1.0f), 0.0f)).xyz;
+	vec2 texelSize = vec2(1.0f) / u_DepthTextureSize;
 
 	float aoSum = 0.0f;
 
-	float projectedRadius = ComputeProjectedSphereSize(linearDepth);
-	float radiusInPixels = projectedRadius / max(u_DepthTextureSize.x, u_DepthTextureSize.y);
+	float radiusInPixels = ComputeProjectedSphereSize(linearDepth);
+	vec2 sampleStep = radiusInPixels / float(SAMPLE_COUNT) * texelSize;
 
-	const float sampleStep = radiusInPixels / float(SAMPLE_COUNT);
 	float rotationOffset = InterleavedGradientNoise(gl_FragCoord.xy) * TWO_PI;
 
 	for (int directionIndex = 0; directionIndex < DIRECTION_COUNT; directionIndex++)
@@ -90,11 +92,8 @@ void main()
 
 		for (int sampleIndex = 0; sampleIndex < SAMPLE_COUNT; sampleIndex++)
 		{
-			vec2 sampleUV = i_UV + direction * (sampleStep * float(sampleIndex));
-			sampleUV = SnapToTexelCenter(sampleUV);
-
+			vec2 sampleUV = SnapToTexelCenter(i_UV + direction * sampleStep * float(sampleIndex));
 			float sampleLinearDepth = texture(u_DepthTexture, sampleUV).r;
-
 			vec3 sampleViewSpacePosition = ReconstructViewSpacePositionFromDepth(
 					sampleUV,
 					LinearDepthToNonLinear(sampleLinearDepth));
