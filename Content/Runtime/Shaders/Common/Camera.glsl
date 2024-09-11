@@ -40,4 +40,9 @@ float CalculateDistanceToCameraPlane(vec3 position)
 	return dot(u_Camera.ViewDirection, position) + offset;
 }
 
+float LinearizeDepth(float depth, float near, float far)
+{
+	return near * far / (far + depth * (near - far));
+}
+
 #endif

@@ -14,6 +14,12 @@ namespace Flare
 	class ComputeShader;
 	class Material;
 
+	enum class SSAOImplementation
+	{
+		SSAO,
+		HBAO,
+	};
+
 	class FLARE_API SSAO : public PostProcessingEffect
 	{
 	public:
@@ -24,10 +30,14 @@ namespace Flare
 
 		void RegisterRenderPasses(RenderGraph& renderGraph, const Viewport& viewport) override;
 		const SerializableObjectDescriptor& GetSerializationDescriptor() const override;
+	private:
+		void RegisterSSAORenderPasses(RenderGraph& renderGraph, const Viewport& viewport);
+		void RegisterHBAORenderPasses(RenderGraph& renderGraph, const Viewport& viewport);
 	public:
 		float Bias;
 		float Radius;
 		float BlurSize;
+		SSAOImplementation Implementation;
 	};
 
 	template<>
@@ -38,6 +48,10 @@ namespace Flare
 			stream.Serialize("Radius", SerializationValue(ssao.Radius));
 			stream.Serialize("Bias", SerializationValue(ssao.Bias));
 			stream.Serialize("BlurSize", SerializationValue(ssao.BlurSize));
+
+			auto implementationType = (std::underlying_type_t<SSAOImplementation>)(ssao.Implementation);
+			stream.Serialize("Implementation", SerializationValue(implementationType));
+			ssao.Implementation = (SSAOImplementation)implementationType;
 		}
 	};
 

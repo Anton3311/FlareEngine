@@ -11,6 +11,8 @@
 #include "Flare/Renderer/GraphicsContext.h"
 #include "Flare/Renderer/Material.h"
 
+#include "Flare/Renderer/PostProcessing/HBAO/HBAODownsamplePass.h"
+
 #include "Flare/AssetManager/AssetManager.h"
 
 #include "FlareCore/Profiler/Profiler.h"
@@ -23,7 +25,7 @@ namespace Flare
 	FLARE_SERIALIZABLE_IMPL(SSAO);
 
 	SSAO::SSAO()
-		: Bias(0.1f), Radius(0.5f), BlurSize(2.0f)
+		: Bias(0.1f), Radius(0.5f), BlurSize(2.0f), Implementation(SSAOImplementation::SSAO)
 	{
 	}
 
@@ -33,6 +35,29 @@ namespace Flare
 
 		if (!IsEnabled())
 			return;
+
+		switch (Implementation)
+		{
+		case SSAOImplementation::SSAO:
+			RegisterSSAORenderPasses(renderGraph, viewport);
+			break;
+		case SSAOImplementation::HBAO:
+			RegisterHBAORenderPasses(renderGraph, viewport);
+			break;
+		default:
+			RegisterSSAORenderPasses(renderGraph, viewport);
+			break;
+		}
+	}
+
+	const SerializableObjectDescriptor& SSAO::GetSerializationDescriptor() const
+	{
+		return FLARE_SERIALIZATION_DESCRIPTOR_OF(SSAO);
+	}
+
+	void SSAO::RegisterSSAORenderPasses(RenderGraph& renderGraph, const Viewport& viewport)
+	{
+		FLARE_PROFILE_FUNCTION();
 
 		RenderGraphTextureId aoTexture = renderGraph.CreateTexture(TextureFormat::RF32, "SSAO.AOTexture", 0.5f);
 
@@ -53,9 +78,20 @@ namespace Flare
 		renderGraph.AddPass(ssaoComposingPass, Ref<SSAOComposingPass>::New(viewport.ColorTextureId, aoTexture));
 	}
 
-	const SerializableObjectDescriptor& SSAO::GetSerializationDescriptor() const
+	void SSAO::RegisterHBAORenderPasses(RenderGraph& renderGraph, const Viewport& viewport)
 	{
-		return FLARE_SERIALIZATION_DESCRIPTOR_OF(SSAO);
+		FLARE_PROFILE_FUNCTION();
+
+		RenderGraphTextureId downsampledDepth = renderGraph.CreateTexture(TextureFormat::RF32, "HBAO.DownsampledDepth", 0.5f);
+
+		RenderGraphPassSpecifications downsamplePass{};
+		downsamplePass.SetDebugName("HBAODownsamplePass");
+		downsamplePass.SetType(RenderGraphPassType::Graphics);
+		downsamplePass.AddInput(viewport.NormalsTextureId);
+		downsamplePass.AddInput(viewport.DepthTextureId);
+		downsamplePass.AddOutput(downsampledDepth, 0);
+
+		renderGraph.AddPass(downsamplePass, Ref<HBAODownsamplePass>::New(viewport.DepthTextureId));
 	}
 
 
