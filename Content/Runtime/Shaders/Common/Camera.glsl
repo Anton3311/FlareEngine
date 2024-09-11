@@ -22,14 +22,14 @@ layout(std140, set = 0, binding = 0) uniform Camera
 
 vec3 ReconstructWorldSpacePositionFromDepth(vec2 screenPosition, float depth)
 {
-	vec4 clipSpacePosition = vec4(screenPosition, depth * 2.0f - 1.0f, 1.0f);
+	vec4 clipSpacePosition = vec4(screenPosition, depth, 1.0f);
 	vec4 worldSpacePosition = u_Camera.InverseViewProjection * clipSpacePosition;
 	return worldSpacePosition.xyz / worldSpacePosition.w;
 }
 
 vec3 ReconstructViewSpacePositionFromDepth(vec2 screenPosition, float depth)
 {
-	vec4 clipSpacePosition = vec4(screenPosition, depth * 2.0f - 1.0f, 1.0f);
+	vec4 clipSpacePosition = vec4(screenPosition, depth, 1.0f);
 	vec4 viewSpacePosition = u_Camera.InverseProjection * clipSpacePosition;
 	return viewSpacePosition.xyz / viewSpacePosition.w;
 }
@@ -43,6 +43,16 @@ float CalculateDistanceToCameraPlane(vec3 position)
 float LinearizeDepth(float depth, float near, float far)
 {
 	return near * far / (far + depth * (near - far));
+}
+
+float LinearDepthToNonLinear(float linearDepth, float near, float far)
+{
+	return (near * far - linearDepth * far) / (linearDepth * (near - far));
+}
+
+float LinearDepthToNonLinear(float linearDepth)
+{
+	return LinearDepthToNonLinear(linearDepth, u_Camera.Near, u_Camera.Far);
 }
 
 #endif

@@ -11,7 +11,10 @@
 #include "Flare/Renderer/GraphicsContext.h"
 #include "Flare/Renderer/Material.h"
 
+#include "Flare/Renderer/Passes/BlitPass.h"
+
 #include "Flare/Renderer/PostProcessing/HBAO/HBAODownsamplePass.h"
+#include "Flare/Renderer/PostProcessing/HBAO/HBAOPass.h"
 
 #include "Flare/AssetManager/AssetManager.h"
 
@@ -25,7 +28,7 @@ namespace Flare
 	FLARE_SERIALIZABLE_IMPL(SSAO);
 
 	SSAO::SSAO()
-		: Bias(0.1f), Radius(0.5f), BlurSize(2.0f), Implementation(SSAOImplementation::SSAO)
+		: Bias(0.1f), Radius(0.5f), BlurSize(2.0f), Implementation(SSAOImplementation::HBAO)
 	{
 	}
 
@@ -83,15 +86,29 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 
 		RenderGraphTextureId downsampledDepth = renderGraph.CreateTexture(TextureFormat::RF32, "HBAO.DownsampledDepth", 0.5f);
+		RenderGraphTextureId aoTexture = renderGraph.CreateTexture(TextureFormat::RF32, "HBAO.AO", 0.5f);
 
 		RenderGraphPassSpecifications downsamplePass{};
 		downsamplePass.SetDebugName("HBAODownsamplePass");
 		downsamplePass.SetType(RenderGraphPassType::Graphics);
-		downsamplePass.AddInput(viewport.NormalsTextureId);
 		downsamplePass.AddInput(viewport.DepthTextureId);
 		downsamplePass.AddOutput(downsampledDepth, 0);
 
 		renderGraph.AddPass(downsamplePass, Ref<HBAODownsamplePass>::New(viewport.DepthTextureId));
+
+		RenderGraphPassSpecifications aoPass{};
+		aoPass.SetDebugName("HBAOPass");
+		aoPass.SetType(RenderGraphPassType::Graphics);
+		aoPass.AddInput(viewport.NormalsTextureId);
+		aoPass.AddInput(downsampledDepth);
+		aoPass.AddOutput(aoTexture, 0);
+	
+		renderGraph.AddPass(aoPass, Ref<HBAOPass>::New(Ref<SSAO>(this), viewport.NormalsTextureId, downsampledDepth));
+
+		RenderGraphPassSpecifications aoBlitPass{};
+		BlitPass::ConfigureSpecifications(aoBlitPass, aoTexture, viewport.ColorTextureId);
+
+		renderGraph.AddPass(aoBlitPass, Ref<BlitPass>::New(aoTexture, viewport.ColorTextureId, TextureFiltering::Closest));
 	}
 
 
