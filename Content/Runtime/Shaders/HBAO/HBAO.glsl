@@ -54,7 +54,7 @@ float ComputeProjectedSphereSize(float linearDepth)
 	vec4 clipSpace = vec4(u_Radius, 0.0f, -linearDepth, 1.0f);
 	vec4 projected = u_Camera.Projection * clipSpace;
 	
-	return projected.x / projected.w;
+	return min(1.0f, projected.x / projected.w);
 }
 
 void main()
@@ -69,13 +69,15 @@ void main()
 		return;
 	}
 
-	vec3 viewSpaceNormal = (u_Camera.View * vec4(sampledNormal * 2.0f - vec3(1.0f), 0.0f)).xyz;
+	sampledNormal = sampledNormal * 2.0f - vec3(1.0f);
+
+	vec3 viewSpaceNormal = (u_Camera.View * vec4(sampledNormal, 0.0f)).xyz;
 	vec2 texelSize = vec2(1.0f) / u_DepthTextureSize;
 
 	float aoSum = 0.0f;
 
 	float radiusInPixels = ComputeProjectedSphereSize(linearDepth);
-	vec2 sampleStep = radiusInPixels / float(SAMPLE_COUNT) * texelSize;
+	vec2 sampleStep = vec2(radiusInPixels / float(SAMPLE_COUNT));
 
 	float rotationOffset = InterleavedGradientNoise(gl_FragCoord.xy) * TWO_PI;
 
@@ -100,9 +102,6 @@ void main()
 
 			// D = S_i - P
 			vec3 D = sampleViewSpacePosition - viewSpacePosition;
-
-			if (length(D) > u_Radius)
-				continue;
 
 			float elevationAngle = atan(D.z, length(D.xy));
 
