@@ -106,6 +106,9 @@ void main()
 			// D = S_i - P
 			vec3 D = sampleViewSpacePosition - viewSpacePosition;
 
+			if (dot(D, D) > u_Radius * u_Radius)
+				continue;
+
 			float elevationAngle = atan(D.z, length(D.xy));
 
 			horizonAngle = max(horizonAngle, elevationAngle);
