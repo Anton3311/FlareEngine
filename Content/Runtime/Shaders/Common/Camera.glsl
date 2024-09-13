@@ -20,6 +20,7 @@ layout(std140, set = 0, binding = 0) uniform Camera
 	float FOV;
 } u_Camera;
 
+// screenPosition in range [-1.0f; 1.0f]
 vec3 ReconstructWorldSpacePositionFromDepth(vec2 screenPosition, float depth)
 {
 	vec4 clipSpacePosition = vec4(screenPosition, depth, 1.0f);
@@ -27,6 +28,7 @@ vec3 ReconstructWorldSpacePositionFromDepth(vec2 screenPosition, float depth)
 	return worldSpacePosition.xyz / worldSpacePosition.w;
 }
 
+// screenPosition in range [-1.0f; 1.0f]
 vec3 ReconstructViewSpacePositionFromDepth(vec2 screenPosition, float depth)
 {
 	vec4 clipSpacePosition = vec4(screenPosition, depth, 1.0f);

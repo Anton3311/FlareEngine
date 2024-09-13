@@ -60,7 +60,8 @@ float ComputeProjectedSphereSize(float linearDepth)
 void main()
 {
 	float linearDepth = texture(u_DepthTexture, i_UV).r;
-	vec3 viewSpacePosition = ReconstructViewSpacePositionFromDepth(i_UV, LinearDepthToNonLinear(linearDepth));
+	vec3 viewSpacePosition = ReconstructViewSpacePositionFromDepth(i_UV * 2.0f - vec2(1.0f),
+			LinearDepthToNonLinear(linearDepth));
 
 	vec3 sampledNormal = texture(u_NormalTexture, i_UV).xyz;
 	if (all(lessThan(abs(sampledNormal), vec3(0.1f))))
@@ -78,6 +79,7 @@ void main()
 
 	float radiusInPixels = ComputeProjectedSphereSize(linearDepth);
 	vec2 sampleStep = vec2(radiusInPixels / float(SAMPLE_COUNT));
+	sampleStep.x /= u_DepthTextureSize.x / u_DepthTextureSize.y;
 
 	float rotationOffset = InterleavedGradientNoise(gl_FragCoord.xy) * TWO_PI;
 
@@ -86,18 +88,18 @@ void main()
 		float angle = DIRECTION_ANGLE_STEP * float(directionIndex) + rotationOffset;
 		vec2 direction = vec2(cos(angle), sin(angle));
 
-		vec3 directionInSpace = vec3(direction, 0.0f);
-		vec3 tangentVector = directionInSpace - viewSpaceNormal * dot(viewSpaceNormal, directionInSpace);
+		vec3 tangentVector = vec3(direction, 0.0f) - viewSpaceNormal * dot(direction, viewSpaceNormal.xy);
+		tangentVector = normalize(tangentVector);
 
 		float tangentAngle = atan(tangentVector.z, length(tangentVector.xy)) + u_TangentBias;
 		float horizonAngle = tangentAngle;
 
-		for (int sampleIndex = 0; sampleIndex < SAMPLE_COUNT; sampleIndex++)
+		for (int sampleIndex = 1; sampleIndex <= SAMPLE_COUNT; sampleIndex++)
 		{
 			vec2 sampleUV = SnapToTexelCenter(i_UV + direction * sampleStep * float(sampleIndex));
 			float sampleLinearDepth = texture(u_DepthTexture, sampleUV).r;
 			vec3 sampleViewSpacePosition = ReconstructViewSpacePositionFromDepth(
-					sampleUV,
+					sampleUV * 2.0f - vec2(1.0f),
 					LinearDepthToNonLinear(sampleLinearDepth));
 
 			// D = S_i - P
@@ -112,7 +114,7 @@ void main()
 		aoSum += ao;// * Attenuate(distance(viewSpacePosition, D));
 	}
 
-	o_AO = 1.0 - aoSum / float(DIRECTION_COUNT);
+	o_AO = 1.0 - aoSum / (TWO_PI);
 }
 
 #end
