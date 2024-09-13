@@ -105,10 +105,22 @@ namespace Flare
 	
 		renderGraph.AddPass(aoPass, Ref<HBAOPass>::New(Ref<SSAO>(this), viewport.NormalsTextureId, downsampledDepth));
 
+#define SHOW_AO 0
+
+#if SHOW_AO
 		RenderGraphPassSpecifications aoBlitPass{};
 		BlitPass::ConfigureSpecifications(aoBlitPass, aoTexture, viewport.ColorTextureId);
 
 		renderGraph.AddPass(aoBlitPass, Ref<BlitPass>::New(aoTexture, viewport.ColorTextureId, TextureFiltering::Closest));
+#else
+		RenderGraphPassSpecifications ssaoComposingPass{};
+		ssaoComposingPass.SetDebugName("SSAOComposingPass");
+		ssaoComposingPass.SetType(RenderGraphPassType::Compute);
+		ssaoComposingPass.AddInput(aoTexture);
+		ssaoComposingPass.AddResource(viewport.ColorTextureId, ResourceAccess::ReadWrite);
+
+		renderGraph.AddPass(ssaoComposingPass, Ref<SSAOComposingPass>::New(viewport.ColorTextureId, aoTexture));
+#endif
 	}
 
 

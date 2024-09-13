@@ -24,6 +24,7 @@ layout(push_constant) uniform Constants
 	float u_Radius;
 	float u_TangentBias;
 	vec2 u_DepthTextureSize;
+	float u_Intensity;
 };
 
 layout(set = 3, binding = 0) uniform sampler2D u_NormalTexture;
@@ -114,7 +115,7 @@ void main()
 		aoSum += ao;// * Attenuate(distance(viewSpacePosition, D));
 	}
 
-	o_AO = 1.0 - aoSum / (TWO_PI);
+	o_AO = max(0.0f, 1.0 - aoSum / (TWO_PI) * u_Intensity);
 }
 
 #end
