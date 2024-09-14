@@ -44,6 +44,7 @@ namespace Flare
 		std::optional<uint32_t> tangentBiasProperty = m_Material->GetShader()->GetPropertyIndex("u_TangentBias");
 		std::optional<uint32_t> depthTextureSizeProperty = m_Material->GetShader()->GetPropertyIndex("u_DepthTextureSize");
 		std::optional<uint32_t> intensityProperty = m_Material->GetShader()->GetPropertyIndex("u_Intensity");
+		std::optional<uint32_t> rotationOffsetProperty = m_Material->GetShader()->GetPropertyIndex("u_RotationOffset");
 		std::optional<uint32_t> debugProperty = m_Material->GetShader()->GetPropertyIndex("u_Debug");
 
 		Ref<Texture> depthTexture = context.GetRenderGraph().GetTexture(m_DownsampledDepth);
@@ -68,6 +69,9 @@ namespace Flare
 
 		if (debugProperty)
 			m_Material->WritePropertyValue<int>(*debugProperty, m_Parameters->Debug);
+
+		if (rotationOffsetProperty)
+			m_Material->WritePropertyValue<float>(*rotationOffsetProperty, m_Parameters->RotationOffset);
 
 		if (intensityProperty)
 			m_Material->WritePropertyValue<float>(*intensityProperty, m_Parameters->Intensity);

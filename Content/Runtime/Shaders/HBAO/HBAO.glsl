@@ -25,6 +25,7 @@ layout(push_constant) uniform Constants
 	float u_TangentBias;
 	vec2 u_DepthTextureSize;
 	float u_Intensity;
+	float u_RotationOffset;
 
 	int u_Debug;
 };
@@ -55,15 +56,15 @@ float ComputeProjectedSphereSize(float linearDepth)
 	return u_Radius / linearDepth;
 }
 
-vec3 MinByDifference(vec3 position, vec3 left, vec3 right)
+vec3 MinDifference(vec3 position, vec3 left, vec3 right)
 {
-	vec3 leftDirection = left - position;
+	vec3 leftDirection = position - left;
 	vec3 rightDirection = right - position;
 
 	float leftDistance = dot(leftDirection, leftDirection);
 	float rightDistance = dot(rightDirection, rightDirection);
 
-	return (leftDistance < rightDistance) ? left : right;
+	return (leftDistance < rightDistance) ? leftDirection : rightDirection;
 }
 
 vec3 GetVSPosition(vec2 uv)
@@ -73,7 +74,7 @@ vec3 GetVSPosition(vec2 uv)
 			LinearDepthToNonLinear(linearDepth));
 }
 
-void ComputeDerrivetives(vec3 VSPosition, out vec3 du, out vec3 dv)
+void ComputeDerrivatives(vec3 VSPosition, out vec3 du, out vec3 dv)
 {
 	vec2 texelSize = vec2(1.0f) / u_DepthTextureSize;
 
@@ -83,28 +84,24 @@ void ComputeDerrivetives(vec3 VSPosition, out vec3 du, out vec3 dv)
 	vec3 top = GetVSPosition(i_UV + vec2(0.0f, +texelSize.y));
 	vec3 bottom = GetVSPosition(i_UV + vec2(0.0f, -texelSize.y));
 
-	du = normalize(right - left);
-	dv = normalize(top - bottom);
+	du = MinDifference(VSPosition, left, right);
+	dv = MinDifference(VSPosition, bottom, top);
 }
 
 #define PER_SAMPLE_AO 1
-#define RANDOM_ROTATION 1
 #define TANGENT_USING_DU_DV 1
-#define DEBUG 0
+#define DEBUG 1
 
 void main()
 {
 	vec2 texelSize = vec2(1.0f) / u_DepthTextureSize;
 	float depthTextureAspectRatio = u_DepthTextureSize.x / u_DepthTextureSize.y;
 
-	float linearDepth = texture(u_DepthTexture, i_UV).r;
-	vec3 viewSpacePosition = ReconstructViewSpacePositionFromDepth(i_UV * 2.0f - vec2(1.0f),
-			LinearDepthToNonLinear(linearDepth));
+	vec3 viewSpacePosition = GetVSPosition(i_UV);
 
 #if TANGENT_USING_DU_DV
 	vec3 du, dv;
-	ComputeDerrivetives(viewSpacePosition, du, dv);
-	dv *= depthTextureAspectRatio;
+	ComputeDerrivatives(viewSpacePosition, du, dv);
 
 #if DEBUG
 	if (u_Debug == 8)
@@ -134,7 +131,7 @@ void main()
 
 	float aoSum = 0.0f;
 
-	float radiusInPixels = ComputeProjectedSphereSize(linearDepth);
+	float radiusInPixels = abs(u_Radius / viewSpacePosition.z);
 	vec2 sampleStep = vec2(radiusInPixels / float(SAMPLE_COUNT));
 	sampleStep.x *= depthTextureAspectRatio;
 
@@ -152,11 +149,9 @@ void main()
 	}
 #endif
 
-#if RANDOM_ROTATION
-	float rotationOffset = InterleavedGradientNoise(gl_FragCoord.xy) * TWO_PI;
-#else
-	float rotationOffset = HALF_PI * u_Intensity;
-#endif
+	float rotationOffset = (u_RotationOffset == -1.0f)
+		? InterleavedGradientNoise(gl_FragCoord.xy) * TWO_PI
+		: u_RotationOffset * HALF_PI;
 
 	for (int directionIndex = 0; directionIndex < DIRECTION_COUNT; directionIndex++)
 	{
@@ -165,7 +160,7 @@ void main()
 		vec2 uvStep = direction * sampleStep;
 
 #if TANGENT_USING_DU_DV
-		vec3 tangentVector = uvStep.x * du + uvStep.y * dv;
+		vec3 tangentVector = direction.x * du + direction.y * dv;
 #else
 		vec3 tangentVector = vec3(direction, 0.0f) - viewSpaceNormal * dot(direction, viewSpaceNormal.xy);
 #endif
@@ -174,6 +169,12 @@ void main()
 		if (u_Debug == 2)
 		{
 			o_AO = normalize(tangentVector);
+			return;
+		}
+
+		if (u_Debug == 12)
+		{
+			o_AO = vec3(dot(viewSpaceNormal, normalize(tangentVector)));
 			return;
 		}
 #endif
@@ -186,10 +187,7 @@ void main()
 		{
 			vec2 sampleUV = SnapToTexelCenter(i_UV + direction * sampleStep * float(sampleIndex));
 			float sampleLinearDepth = texture(u_DepthTexture, sampleUV).r;
-			vec3 sampleViewSpacePosition = ReconstructViewSpacePositionFromDepth(
-					sampleUV * 2.0f - vec2(1.0f),
-					LinearDepthToNonLinear(sampleLinearDepth));
-
+			vec3 sampleViewSpacePosition = GetVSPosition(sampleUV);
 			// D = S_i - P
 			vec3 D = sampleViewSpacePosition - viewSpacePosition;
 
@@ -226,12 +224,6 @@ void main()
 				return;
 			}
 #endif
-
-#if 0 && DEBUG
-			o_AO = vec3(1000.0f);
-			return;
-#endif
-
 			if (dot(D, D) > u_Radius * u_Radius)
 				continue;
 
@@ -249,6 +241,13 @@ void main()
 #endif
 		}
 
+#if DEBUG
+		if (u_Debug == 11)
+		{
+			o_AO = vec3(sin(horizonAngle) - sin(tangentAngle));
+			return;
+		}
+#endif
 
 #if !PER_SAMPLE_AO
 		float ao = sin(horizonAngle) - sin(tangentAngle);
