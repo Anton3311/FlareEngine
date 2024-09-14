@@ -38,6 +38,7 @@ namespace Flare
 		float Radius;
 		float BlurSize;
 		float Intensity = 1.0f;
+		int32_t Debug = 0;
 		SSAOImplementation Implementation;
 	};
 
@@ -50,6 +51,7 @@ namespace Flare
 			stream.Serialize("Bias", SerializationValue(ssao.Bias));
 			stream.Serialize("BlurSize", SerializationValue(ssao.BlurSize));
 			stream.Serialize("Intensity", SerializationValue(ssao.Intensity));
+			stream.Serialize("Debug", SerializationValue(ssao.Debug));
 
 			auto implementationType = (std::underlying_type_t<SSAOImplementation>)(ssao.Implementation);
 			stream.Serialize("Implementation", SerializationValue(implementationType));
