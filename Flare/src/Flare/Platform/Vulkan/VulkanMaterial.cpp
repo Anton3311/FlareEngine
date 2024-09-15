@@ -70,10 +70,13 @@ namespace Flare
 			if (property.Type != ShaderDataType::Sampler)
 				continue;
 
-			const auto& texture = GetTextureProperty((uint32_t)i);
-			if (texture)
+			const auto& texture = GetFullTextureProperty((uint32_t)i);
+			if (texture.Texture)
 			{
-				m_Set->WriteImage(texture, property.Binding);
+				if (texture.Sampler)
+					m_Set->WriteImage(texture.Texture, texture.Sampler, property.Binding);
+				else
+					m_Set->WriteImage(texture.Texture, property.Binding);
 			}
 			else
 			{

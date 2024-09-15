@@ -102,7 +102,7 @@ namespace Flare
 				samplers++;
 		}
 
-		m_Textures.resize(samplers, nullptr);
+		m_Textures.resize(samplers, TextureProperty{});
 		m_ConstantBuffer.SetShader(m_Shader);
 
 		Ref<const ShaderMetadata> metadata = m_Shader->GetMetadata();
@@ -136,9 +136,18 @@ namespace Flare
 					break;
 				}
 
-				m_Textures[property.SamplerIndex] = defaultValue;
+				m_Textures[property.SamplerIndex].Texture = defaultValue;
 			}
 		}
+	}
+
+	const Material::TextureProperty& Material::GetFullTextureProperty(uint32_t propertyIndex)
+	{
+		const ShaderProperties& properties = m_Shader->GetProperties();
+		FLARE_CORE_ASSERT((size_t)propertyIndex < properties.size());
+		FLARE_CORE_ASSERT(properties[propertyIndex].Type == ShaderDataType::Sampler);
+		
+		return m_Textures[properties[propertyIndex].SamplerIndex];
 	}
 
 	Material::~Material()
@@ -158,7 +167,7 @@ namespace Flare
 		FLARE_CORE_ASSERT((size_t)propertyIndex < properties.size());
 		FLARE_CORE_ASSERT(properties[propertyIndex].Type == ShaderDataType::Sampler);
 		
-		return m_Textures[properties[propertyIndex].SamplerIndex];
+		return m_Textures[properties[propertyIndex].SamplerIndex].Texture;
 	}
 
 	void Material::SetTextureProperty(uint32_t propertyIndex, Ref<Texture> texture)
@@ -167,8 +176,6 @@ namespace Flare
 		FLARE_CORE_ASSERT((size_t)propertyIndex < properties.size());
 		FLARE_CORE_ASSERT(properties[propertyIndex].Type == ShaderDataType::Sampler);
 		
-		const Ref<Texture>& oldTexture = m_Textures[properties[propertyIndex].SamplerIndex];
-
 		// TODO: Avoid updating if texture are the same
 		// TODO: Handle the case when texture objects are the same,
 		//       but the texture was resized and has a different VkImage & VkImageView.
@@ -177,7 +184,26 @@ namespace Flare
 		//if (oldTexture.get() == texture.get())
 			//return;
 
-		m_Textures[properties[propertyIndex].SamplerIndex] = texture;
+		m_Textures[properties[propertyIndex].SamplerIndex].Texture = texture;
+		m_IsDirty = true;
+	}
+
+	void Material::SetTextureProperty(uint32_t propertyIndex, Ref<Texture> texture, Ref<Sampler> sampler)
+	{
+		const ShaderProperties& properties = m_Shader->GetProperties();
+		FLARE_CORE_ASSERT((size_t)propertyIndex < properties.size());
+		FLARE_CORE_ASSERT(properties[propertyIndex].Type == ShaderDataType::Sampler);
+		
+		// TODO: Avoid updating if texture are the same
+		// TODO: Handle the case when texture objects are the same,
+		//       but the texture was resized and has a different VkImage & VkImageView.
+		//       This would require updating the descriptor set.
+
+		//if (oldTexture.get() == texture.get())
+			//return;
+
+		m_Textures[properties[propertyIndex].SamplerIndex].Texture = texture;
+		m_Textures[properties[propertyIndex].SamplerIndex].Sampler = sampler;
 		m_IsDirty = true;
 	}
 }

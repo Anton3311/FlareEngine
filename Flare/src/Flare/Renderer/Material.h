@@ -10,6 +10,7 @@
 
 namespace Flare
 {
+	class Sampler;
 	class Texture;
 	class FrameBuffer;
 	class FLARE_API Material : public Asset
@@ -46,6 +47,7 @@ namespace Flare
 
 		const Ref<Texture>& GetTextureProperty(uint32_t propertyIndex) const;
 		void SetTextureProperty(uint32_t propertyIndex, Ref<Texture> texture);
+		void SetTextureProperty(uint32_t propertyIndex, Ref<Texture> texture, Ref<Sampler> sampler);
 
 		inline uint8_t* GetPropertiesBuffer() { return m_ConstantBuffer.GetBuffer(); }
 		inline const uint8_t* GetPropertiesBuffer() const { return m_ConstantBuffer.GetBuffer(); }
@@ -59,10 +61,18 @@ namespace Flare
 	private:
 		void Initialize();
 	protected:
+		struct TextureProperty
+		{
+			Ref<Texture> Texture = nullptr;
+			Ref<Sampler> Sampler = nullptr;
+		};
+
+		const TextureProperty& GetFullTextureProperty(uint32_t propertyIndex);
+	protected:
 		Ref<Shader> m_Shader;
 
 		ShaderConstantBuffer m_ConstantBuffer;
-		std::vector<Ref<Texture>> m_Textures;
+		std::vector<TextureProperty> m_Textures;
 
 		bool m_IsDirty = false;
 	};
