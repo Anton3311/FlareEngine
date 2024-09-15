@@ -40,6 +40,7 @@ namespace Flare
 		float RotationOffset = -1.0f;
 		float Intensity = 1.0f;
 		int32_t Debug = 0;
+		int32_t SampleCount = 10;
 		SSAOImplementation Implementation;
 	};
 
@@ -54,6 +55,7 @@ namespace Flare
 			stream.Serialize("Intensity", SerializationValue(ssao.Intensity));
 			stream.Serialize("Debug", SerializationValue(ssao.Debug));
 			stream.Serialize("RotationOffset", SerializationValue(ssao.RotationOffset));
+			stream.Serialize("SampleCount", SerializationValue(ssao.SampleCount));
 
 			auto implementationType = (std::underlying_type_t<SSAOImplementation>)(ssao.Implementation);
 			stream.Serialize("Implementation", SerializationValue(implementationType));

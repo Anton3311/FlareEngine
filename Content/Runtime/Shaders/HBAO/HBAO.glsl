@@ -26,7 +26,8 @@ layout(push_constant) uniform Constants
 	vec2 u_DepthTextureSize;
 	float u_Intensity;
 	float u_RotationOffset;
-
+	
+	int u_SampleCount;
 	int u_Debug;
 };
 
@@ -43,7 +44,7 @@ const int SAMPLE_COUNT = 4;
 
 float Attenuate(float distance)
 {
-	return max(0.0f, 1.0f - distance / (u_Radius * u_Radius));
+	return max(0.0f, 1.0f - distance / u_Radius);
 }
 
 vec2 SnapToTexelCenter(vec2 uv)
@@ -133,7 +134,7 @@ void main()
 
 	float radiusInPixels = abs(u_Radius / viewSpacePosition.z);
 	vec2 sampleStep = vec2(radiusInPixels / float(SAMPLE_COUNT));
-	sampleStep.x *= depthTextureAspectRatio;
+	sampleStep.x /= depthTextureAspectRatio;
 
 #if DEBUG
 	if (u_Debug == 1)
@@ -183,7 +184,7 @@ void main()
 		float horizonAngle = tangentAngle;
 		float previousAO = 0.0f;
 
-		for (int sampleIndex = 1; sampleIndex <= SAMPLE_COUNT; sampleIndex++)
+		for (int sampleIndex = 1; sampleIndex <= min(SAMPLE_COUNT, u_SampleCount); sampleIndex++)
 		{
 			vec2 sampleUV = SnapToTexelCenter(i_UV + direction * sampleStep * float(sampleIndex));
 			float sampleLinearDepth = texture(u_DepthTexture, sampleUV).r;
@@ -230,11 +231,17 @@ void main()
 #if PER_SAMPLE_AO
 			if (elevationAngle > horizonAngle)
 			{
-				float ao = sin(horizonAngle) - sin(tangentAngle);
-				aoSum += (ao - previousAO) * Attenuate(dot(D, D));
+				float ao = sin(elevationAngle) - sin(tangentAngle);
+				aoSum += (ao - previousAO) * Attenuate(length(D));
 
 				previousAO = ao;
 				horizonAngle = elevationAngle;
+			}
+
+			if (u_Debug == 15 && sampleIndex == u_SampleCount)
+			{
+				o_AO = vec3(aoSum);
+				return;
 			}
 #else
 			horizonAngle = max(horizonAngle, elevationAngle);
