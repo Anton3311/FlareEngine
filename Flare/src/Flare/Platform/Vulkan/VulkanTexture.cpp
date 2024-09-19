@@ -35,7 +35,7 @@ namespace Flare
 		case TextureFormat::RG16:
 			return VK_FORMAT_R16G16_UNORM;
 		case TextureFormat::RF32:
-			return VK_FORMAT_R16_SFLOAT;
+			return VK_FORMAT_R32_SFLOAT;
 		case TextureFormat::R8:
 			return VK_FORMAT_R8_UNORM;
 
