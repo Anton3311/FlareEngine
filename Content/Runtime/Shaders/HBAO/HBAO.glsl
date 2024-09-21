@@ -89,9 +89,7 @@ void ComputeDerrivatives(vec3 VSPosition, out vec3 du, out vec3 dv)
 	dv = MinDifference(VSPosition, bottom, top);
 }
 
-#define PER_SAMPLE_AO 1
-#define TANGENT_USING_DU_DV 1
-#define DEBUG 1
+#define DEBUG 0
 
 void main()
 {
@@ -100,7 +98,6 @@ void main()
 
 	vec3 viewSpacePosition = GetVSPosition(i_UV);
 
-#if TANGENT_USING_DU_DV
 	vec3 du, dv;
 	ComputeDerrivatives(viewSpacePosition, du, dv);
 
@@ -117,12 +114,11 @@ void main()
 		return;
 	}
 #endif
-#endif
 
 	vec3 sampledNormal = texture(u_NormalTexture, i_UV).xyz;
 	if (all(lessThan(abs(sampledNormal), vec3(0.1f))))
 	{
-		o_AO = vec3(0.0f);
+		o_AO = vec3(1.0f);
 		return;
 	}
 
@@ -158,13 +154,8 @@ void main()
 	{
 		float angle = DIRECTION_ANGLE_STEP * float(directionIndex) + rotationOffset;
 		vec2 direction = vec2(cos(angle), sin(angle));
-		vec2 uvStep = direction * sampleStep;
 
-#if TANGENT_USING_DU_DV
 		vec3 tangentVector = direction.x * du + direction.y * dv;
-#else
-		vec3 tangentVector = vec3(direction, 0.0f) - viewSpaceNormal * dot(direction, viewSpaceNormal.xy);
-#endif
 
 #if DEBUG
 		if (u_Debug == 2)
@@ -187,8 +178,8 @@ void main()
 		for (int sampleIndex = 1; sampleIndex <= min(SAMPLE_COUNT, u_SampleCount); sampleIndex++)
 		{
 			vec2 sampleUV = SnapToTexelCenter(i_UV + direction * sampleStep * float(sampleIndex));
-			float sampleLinearDepth = texture(u_DepthTexture, sampleUV).r;
 			vec3 sampleViewSpacePosition = GetVSPosition(sampleUV);
+
 			// D = S_i - P
 			vec3 D = sampleViewSpacePosition - viewSpacePosition;
 
@@ -228,7 +219,6 @@ void main()
 			if (dot(D, D) > u_Radius * u_Radius)
 				continue;
 
-#if PER_SAMPLE_AO
 			if (elevationAngle > horizonAngle)
 			{
 				float ao = sin(elevationAngle) - sin(tangentAngle);
@@ -240,12 +230,9 @@ void main()
 
 			if (u_Debug == 15 && sampleIndex == u_SampleCount)
 			{
-				o_AO = vec3(aoSum);
+				o_AO = vec3(max(0.0f, 1.0 - aoSum / (TWO_PI) * u_Intensity));
 				return;
 			}
-#else
-			horizonAngle = max(horizonAngle, elevationAngle);
-#endif
 		}
 
 #if DEBUG
@@ -254,11 +241,6 @@ void main()
 			o_AO = vec3(sin(horizonAngle) - sin(tangentAngle));
 			return;
 		}
-#endif
-
-#if !PER_SAMPLE_AO
-		float ao = sin(horizonAngle) - sin(tangentAngle);
-		aoSum += ao;
 #endif
 	}
 
