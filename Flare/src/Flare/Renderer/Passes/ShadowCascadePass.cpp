@@ -128,7 +128,7 @@ namespace Flare
 		//commandBuffer->StartTimer(m_Timer);
 
 		uint32_t shadowMapResolution = GetShadowMapResolution(shadowSettings.Quality);
-		commandBuffer->SetViewportAndScisors(Math::Rect(0.0f, 0.0f, (float)shadowMapResolution, (float)shadowMapResolution));
+		commandBuffer->SetViewportAndScissors(Math::Rect(0.0f, 0.0f, (float)shadowMapResolution, (float)shadowMapResolution));
 
 		DrawCascade(context, commandBuffer);
 

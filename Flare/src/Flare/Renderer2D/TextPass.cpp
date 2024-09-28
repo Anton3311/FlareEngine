@@ -83,7 +83,7 @@ namespace Flare
 		const FrameResources& frameResources = m_FrameResources[GraphicsContext::GetInstance().GetCurrentFrameInFlight()];
 		const Renderer2DFrameData& submition = context.GetSceneSubmition().Renderer2DSubmition;
 
-		commandBuffer->SetDefaltViewportAndScissors();
+		commandBuffer->SetDefaultViewportAndScissors();
 		commandBuffer->SetGlobalDescriptorSet(context.GetViewport().GetFrameResources().CameraDescriptorSet, 0);
 		
 		for (const auto& batch : submition.TextBatches)

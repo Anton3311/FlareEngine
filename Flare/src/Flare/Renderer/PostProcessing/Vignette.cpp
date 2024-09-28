@@ -95,7 +95,7 @@ namespace Flare
 		if (smoothnessPropertyIndex)
 			m_Material->WritePropertyValue(*smoothnessPropertyIndex, m_Parameters->Smoothness);
 
-		commandBuffer->SetDefaltViewportAndScissors();
+		commandBuffer->SetDefaultViewportAndScissors();
 		commandBuffer->ApplyMaterial(m_Material);
 		commandBuffer->DrawMeshIndexed(RendererPrimitives::GetFullscreenQuadMesh(), 0, 0, 1);
 	}

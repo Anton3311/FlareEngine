@@ -107,7 +107,7 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(material->GetShader());
 		VulkanMaterial& vulkanMaterial = const_cast<VulkanMaterial&>(material.DerefAs<const VulkanMaterial>());
-		Ref<VulkanPipeline> pipeline = vulkanMaterial.GetPipeline(m_CurrentRenderPass).As<VulkanPipeline>();
+		Ref<VulkanPipeline> pipeline = vulkanMaterial.GetPipeline(m_RenderTargetState.RenderPass).As<VulkanPipeline>();
 		VkPipelineLayout pipelineLayout = pipeline->GetLayoutHandle();
 		const Ref<const GraphicsShaderMetadata>& metadata = material->GetShader()->GetMetadata();
 
@@ -196,7 +196,7 @@ namespace Flare
 		}
 	}
 
-	void VulkanCommandBuffer::SetViewportAndScisors(Math::Rect viewportRect)
+	void VulkanCommandBuffer::SetViewportAndScissors(Math::Rect viewportRect)
 	{
 		FLARE_PROFILE_FUNCTION();
 		VkRect2D scissors{};
@@ -217,21 +217,19 @@ namespace Flare
 		vkCmdSetScissor(m_CommandBuffer, 0, 1, &scissors);
 	}
 
-	void VulkanCommandBuffer::SetDefaltViewportAndScissors()
+	void VulkanCommandBuffer::SetDefaultViewportAndScissors()
 	{
 		FLARE_PROFILE_FUNCTION();
-
-		const auto& spec = m_CurrentRenderTarget->GetSpecifications();
 
 		VkRect2D scissors{};
 		scissors.offset.x = 0;
 		scissors.offset.y = 0;
-		scissors.extent.width = (int32_t)spec.Width;
-		scissors.extent.height = (int32_t)spec.Height;
+		scissors.extent.width = (int32_t)m_RenderTargetState.RenderAreaSize.x;
+		scissors.extent.height = (int32_t)m_RenderTargetState.RenderAreaSize.y;
 
 		VkViewport viewport{};
-		viewport.width = (float)spec.Width;
-		viewport.height = (float)spec.Height;
+		viewport.width = (float)m_RenderTargetState.RenderAreaSize.x;
+		viewport.height = (float)m_RenderTargetState.RenderAreaSize.y;
 		viewport.minDepth = 0.0f;
 		viewport.maxDepth = 1.0f;
 		viewport.x = 0.0f;
@@ -244,7 +242,7 @@ namespace Flare
 	void VulkanCommandBuffer::BindPipeline(const Ref<Pipeline>& pipeline)
 	{
 		FLARE_PROFILE_FUNCTION();
-		FLARE_CORE_ASSERT(m_CurrentRenderPass);
+		FLARE_CORE_ASSERT(m_RenderTargetState.IsValid());
 
 		if (m_BoundPipeline.GraphicsPipeline != pipeline)
 		{
@@ -258,7 +256,7 @@ namespace Flare
 			m_BoundPipeline.GraphicsPipeline = pipeline;
 			m_BoundPipeline.BindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
 			m_BoundPipeline.LayoutHandle = vulkanPipeline.GetLayoutHandle();
-			m_BoundPipeline.PipelineHandle = vulkanPipeline.GetHandle(m_CurrentRenderPass);
+			m_BoundPipeline.PipelineHandle = vulkanPipeline.GetHandle(m_RenderTargetState.RenderPass);
 
 			vkCmdBindPipeline(m_CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_BoundPipeline.PipelineHandle);
 
@@ -514,7 +512,7 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		FLARE_CORE_ASSERT(m_CurrentRenderPass == nullptr);
+		FLARE_CORE_ASSERT(!m_RenderTargetState.IsValid());
 		VK_CHECK_RESULT(vkResetCommandBuffer(m_CommandBuffer, 0));
 
 		for (size_t i = 0; i < 4; i++)
@@ -610,7 +608,7 @@ namespace Flare
 	void VulkanCommandBuffer::BeginRenderPass(const Ref<VulkanRenderPass>& renderPass, const Ref<VulkanFrameBuffer>& frameBuffer)
 	{
 		FLARE_PROFILE_FUNCTION();
-		FLARE_CORE_ASSERT(m_CurrentRenderPass == nullptr);
+		FLARE_CORE_ASSERT(!m_RenderTargetState.IsValid());
 
 		const auto& defaultClearValues = renderPass->GetDefaultClearValues();
 
@@ -624,22 +622,45 @@ namespace Flare
 		info.clearValueCount = (uint32_t)defaultClearValues.size();
 		info.pClearValues = defaultClearValues.data();
 
-		const FrameBufferSpecifications& specifications = frameBuffer->GetSpecifications();
+		vkCmdBeginRenderPass(m_CommandBuffer, &info, VK_SUBPASS_CONTENTS_INLINE);
+
+		m_RenderTargetState.FrameBufferHandle = frameBuffer->GetHandle();
+		m_RenderTargetState.RenderAreaSize = frameBuffer->GetSize();
+		m_RenderTargetState.RenderPass = frameBuffer->GetCompatibleRenderPass();
+	}
+
+	void VulkanCommandBuffer::BeginRenderPass(VkFramebuffer frameBuffer, const Ref<VulkanRenderPass>& renderPass, glm::uvec2 renderAreaSize)
+	{
+		FLARE_PROFILE_FUNCTION();
+		FLARE_CORE_ASSERT(!m_RenderTargetState.IsValid());
+
+		const auto& defaultClearValues = renderPass->GetDefaultClearValues();
+
+		VkRenderPassBeginInfo info{};
+		info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+		info.framebuffer = frameBuffer;
+		info.renderPass = renderPass->GetHandle();
+		info.renderArea.offset = { 0, 0 };
+		info.renderArea.extent.width = renderAreaSize.x;
+		info.renderArea.extent.height = renderAreaSize.y;
+		info.clearValueCount = (uint32_t)defaultClearValues.size();
+		info.pClearValues = defaultClearValues.data();
 
 		vkCmdBeginRenderPass(m_CommandBuffer, &info, VK_SUBPASS_CONTENTS_INLINE);
 
-		m_CurrentRenderPass = renderPass;
-		m_CurrentRenderTarget = frameBuffer;
+		m_RenderTargetState.FrameBufferHandle = frameBuffer;
+		m_RenderTargetState.RenderAreaSize = renderAreaSize;
+		m_RenderTargetState.RenderPass = renderPass;
 	}
 
 	void VulkanCommandBuffer::EndRenderPass()
 	{
 		FLARE_PROFILE_FUNCTION();
-		FLARE_CORE_ASSERT(m_CurrentRenderPass);
+		FLARE_CORE_ASSERT(m_RenderTargetState.IsValid());
 
 		vkCmdEndRenderPass(m_CommandBuffer);
-		m_CurrentRenderPass = nullptr;
-		m_CurrentRenderTarget = nullptr;
+
+		m_RenderTargetState = {};
 	}
 
 	void VulkanCommandBuffer::TransitionImageLayout(VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout)

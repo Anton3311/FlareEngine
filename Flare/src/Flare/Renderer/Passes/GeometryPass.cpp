@@ -109,7 +109,7 @@ namespace Flare
 		const RendererSubmitionQueue& opaqueGeometry = context.GetSceneSubmition().OpaqueGeometrySubmitions;
 
 		//commandBuffer->StartTimer(m_Timer);
-		commandBuffer->SetDefaltViewportAndScissors();
+		commandBuffer->SetDefaultViewportAndScissors();
 
 		Batch batch{};
 

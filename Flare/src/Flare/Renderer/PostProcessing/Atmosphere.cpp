@@ -139,7 +139,7 @@ namespace Flare
 		commandBuffer->SetGlobalDescriptorSet(context.GetViewport().GetFrameResources().GlobalDescriptorSet, 1);
 		commandBuffer->ApplyMaterial(m_AtmosphereMaterial);
 
-		commandBuffer->SetDefaltViewportAndScissors();
+		commandBuffer->SetDefaultViewportAndScissors();
 		commandBuffer->DrawMeshIndexed(RendererPrimitives::GetFullscreenQuadMesh(), 0, 0, 1);
 	}
 
@@ -200,7 +200,7 @@ namespace Flare
 		vulkanCommandBuffer->BeginRenderTarget(m_SunTransmittanceLUT);
 		vulkanCommandBuffer->ApplyMaterial(m_SunTransmittanceMaterial);
 
-		vulkanCommandBuffer->SetViewportAndScisors(Math::Rect(0, 0,
+		vulkanCommandBuffer->SetViewportAndScissors(Math::Rect(0, 0,
 			(float)m_Parameters->SunTransmittanceLUTSize,
 			(float)m_Parameters->SunTransmittanceLUTSize));
 

@@ -102,7 +102,7 @@ namespace Flare
 		commandBuffer->SetGlobalDescriptorSet(descriptorSet, 1);
 		commandBuffer->ApplyMaterial(batch.Material);
 
-		commandBuffer->SetDefaltViewportAndScissors();
+		commandBuffer->SetDefaultViewportAndScissors();
 		commandBuffer->DrawIndexed(batch.Start * 6, batch.Count * 6, 0, 0, 1);
 	}
 }

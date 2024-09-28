@@ -26,8 +26,6 @@ namespace Flare
 		void BeginRenderTarget(const Ref<FrameBuffer> frameBuffer) override;
 		void EndRenderTarget() override;
 
-		inline Ref<VulkanRenderPass> GetCurrentRenderPass() const { return m_CurrentRenderPass; }
-
 		void BeginLabel(const glm::vec4& color, const std::string& label) override;
 		void EndLabel() override;
 
@@ -42,8 +40,8 @@ namespace Flare
 		void PushDescriptorProperties(ShaderDescriptorBuffer& descriptorProperties) override;
 		void PushConstants(const ShaderConstantBuffer& constantBuffer) override;
 
-		void SetViewportAndScisors(Math::Rect viewportRect) override;
-		void SetDefaltViewportAndScissors() override;
+		void SetViewportAndScissors(Math::Rect viewportRect) override;
+		void SetDefaultViewportAndScissors() override;
 
 		void BindPipeline(const Ref<Pipeline>& pipeline) override;
 		void BindVertexBuffer(Ref<const GPUBuffer> buffer, uint32_t index) override;
@@ -88,6 +86,7 @@ namespace Flare
 		void End();
 
 		void BeginRenderPass(const Ref<VulkanRenderPass>& renderPass, const Ref<VulkanFrameBuffer>& frameBuffer);
+		void BeginRenderPass(VkFramebuffer frameBuffer, const Ref<VulkanRenderPass>& renderPass, glm::uvec2 renderAreaSize);
 		void EndRenderPass();
 
 		void TransitionImageLayout(VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout);
@@ -146,13 +145,24 @@ namespace Flare
 			VkPipelineLayout PipelineLayout = VK_NULL_HANDLE;
 		};
 
+		struct RenderTargetState
+		{
+			inline bool IsValid() const
+			{
+				return FrameBufferHandle != VK_NULL_HANDLE && RenderPass != nullptr;
+			}
+
+			VkFramebuffer FrameBufferHandle = VK_NULL_HANDLE;
+			glm::uvec2 RenderAreaSize = glm::uvec2(0, 0);
+			Ref<VulkanRenderPass> RenderPass = nullptr;
+		};
+
 		BoundDescriptorSet m_CurrentDescriptorSets[4] = { nullptr };
 		BoundPipelineState m_BoundPipeline;
 
 		VkCommandBuffer m_CommandBuffer = VK_NULL_HANDLE;
 
-		Ref<VulkanFrameBuffer> m_CurrentRenderTarget = nullptr;
-		Ref<VulkanRenderPass> m_CurrentRenderPass = nullptr;
+		RenderTargetState m_RenderTargetState;
 
 		std::vector<Ref<const ComputeShader>> m_UsedComputeShader;
 		std::vector<Ref<const Pipeline>> m_UsedPipelines;
