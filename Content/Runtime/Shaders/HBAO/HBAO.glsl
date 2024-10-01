@@ -42,9 +42,9 @@ const int DIRECTION_COUNT = 8;
 const float DIRECTION_ANGLE_STEP = TWO_PI / float(DIRECTION_COUNT);
 const int SAMPLE_COUNT = 4;
 
-float Attenuate(float distance)
+float Attenuate(float distanceSquared)
 {
-	return max(0.0f, 1.0f - distance / u_Radius);
+	return max(0.0f, 1.0f - distanceSquared / (u_Radius * u_Radius));
 }
 
 vec2 SnapToTexelCenter(vec2 uv)
@@ -89,6 +89,17 @@ void ComputeDerrivatives(vec3 VSPosition, out vec3 du, out vec3 dv)
 	dv = MinDifference(VSPosition, bottom, top);
 }
 
+float ComputeScreenSpaceRadius(vec3 positionVS)
+{
+	vec4 projectedCenter = u_Camera.Projection * vec4(positionVS, 1.0f);
+	projectedCenter /= projectedCenter.w;
+
+	vec4 projectedPoint = u_Camera.Projection * vec4(positionVS + vec3(u_Radius, 0.0f, 0.0f), 1.0f);
+	projectedPoint /= projectedPoint.w;
+
+	return (projectedPoint.x - projectedCenter.x) * 0.5f;
+}
+
 #define DEBUG 0
 
 void main()
@@ -128,7 +139,7 @@ void main()
 
 	float aoSum = 0.0f;
 
-	float radiusInPixels = abs(u_Radius / viewSpacePosition.z);
+	float radiusInPixels = ComputeScreenSpaceRadius(viewSpacePosition);
 	vec2 sampleStep = vec2(radiusInPixels / float(SAMPLE_COUNT));
 	sampleStep.x /= depthTextureAspectRatio;
 
@@ -216,13 +227,14 @@ void main()
 				return;
 			}
 #endif
+
 			if (dot(D, D) > u_Radius * u_Radius)
 				continue;
 
 			if (elevationAngle > horizonAngle)
 			{
 				float ao = sin(elevationAngle) - sin(tangentAngle);
-				aoSum += (ao - previousAO) * Attenuate(length(D));
+				aoSum += (ao - previousAO) * Attenuate(dot(D, D));
 
 				previousAO = ao;
 				horizonAngle = elevationAngle;
