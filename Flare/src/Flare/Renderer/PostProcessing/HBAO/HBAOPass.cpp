@@ -44,9 +44,6 @@ namespace Flare
 		std::optional<uint32_t> tangentBiasProperty = m_Material->GetShader()->GetPropertyIndex("u_TangentBias");
 		std::optional<uint32_t> depthTextureSizeProperty = m_Material->GetShader()->GetPropertyIndex("u_DepthTextureSize");
 		std::optional<uint32_t> intensityProperty = m_Material->GetShader()->GetPropertyIndex("u_Intensity");
-		std::optional<uint32_t> rotationOffsetProperty = m_Material->GetShader()->GetPropertyIndex("u_RotationOffset");
-		std::optional<uint32_t> debugProperty = m_Material->GetShader()->GetPropertyIndex("u_Debug");
-		std::optional<uint32_t> sampleCountProperty = m_Material->GetShader()->GetPropertyIndex("u_SampleCount");
 
 		Ref<Texture> depthTexture = context.GetRenderGraph().GetTexture(m_DownsampledDepth);
 
@@ -68,17 +65,8 @@ namespace Flare
 			m_Material->WritePropertyValue<glm::vec2>(*depthTextureSizeProperty, (glm::vec2)glm::uvec2(specifications.Width, specifications.Height));
 		}
 
-		if (debugProperty)
-			m_Material->WritePropertyValue<int>(*debugProperty, m_Parameters->Debug);
-
-		if (rotationOffsetProperty)
-			m_Material->WritePropertyValue<float>(*rotationOffsetProperty, m_Parameters->RotationOffset);
-
 		if (intensityProperty)
 			m_Material->WritePropertyValue<float>(*intensityProperty, m_Parameters->Intensity);
-
-		if (sampleCountProperty)
-			m_Material->WritePropertyValue<int32_t>(*sampleCountProperty, m_Parameters->SampleCount);
 
 		commandBuffer->ApplyMaterial(m_Material);
 		commandBuffer->DrawMeshIndexed(RendererPrimitives::GetFullscreenQuadMesh(), 0, 1);

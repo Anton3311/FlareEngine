@@ -25,10 +25,6 @@ layout(push_constant) uniform Constants
 	float u_TangentBias;
 	vec2 u_DepthTextureSize;
 	float u_Intensity;
-	float u_RotationOffset;
-	
-	int u_SampleCount;
-	int u_Debug;
 };
 
 layout(set = 3, binding = 0) uniform sampler2D u_NormalTexture;
@@ -100,8 +96,6 @@ float ComputeScreenSpaceRadius(vec3 positionVS)
 	return (projectedPoint.x - projectedCenter.x) * 0.5f;
 }
 
-#define DEBUG 0
-
 void main()
 {
 	vec2 texelSize = vec2(1.0f) / u_DepthTextureSize;
@@ -111,20 +105,6 @@ void main()
 
 	vec3 du, dv;
 	ComputeDerrivatives(viewSpacePosition, du, dv);
-
-#if DEBUG
-	if (u_Debug == 8)
-	{
-		o_AO = du;
-		return;
-	}
-
-	if (u_Debug == 9)
-	{
-		o_AO = dv;
-		return;
-	}
-#endif
 
 	vec3 sampledNormal = texture(u_NormalTexture, i_UV).xyz;
 	if (all(lessThan(abs(sampledNormal), vec3(0.1f))))
@@ -143,23 +123,7 @@ void main()
 	vec2 sampleStep = vec2(radiusInPixels / float(SAMPLE_COUNT));
 	sampleStep.x /= depthTextureAspectRatio;
 
-#if DEBUG
-	if (u_Debug == 1)
-	{
-		o_AO = viewSpaceNormal;
-		return;
-	}
-
-	if (u_Debug == 10)
-	{
-		o_AO = vec3(sampleStep, 0.0f);
-		return;
-	}
-#endif
-
-	float rotationOffset = (u_RotationOffset == -1.0f)
-		? InterleavedGradientNoise(gl_FragCoord.xy) * TWO_PI
-		: u_RotationOffset * HALF_PI;
+	float rotationOffset = InterleavedGradientNoise(gl_FragCoord.xy) * TWO_PI;
 
 	for (int directionIndex = 0; directionIndex < DIRECTION_COUNT; directionIndex++)
 	{
@@ -168,25 +132,11 @@ void main()
 
 		vec3 tangentVector = direction.x * du + direction.y * dv;
 
-#if DEBUG
-		if (u_Debug == 2)
-		{
-			o_AO = normalize(tangentVector);
-			return;
-		}
-
-		if (u_Debug == 12)
-		{
-			o_AO = vec3(dot(viewSpaceNormal, normalize(tangentVector)));
-			return;
-		}
-#endif
-
 		float tangentAngle = atan(tangentVector.z, length(tangentVector.xy)) + u_TangentBias;
 		float horizonAngle = tangentAngle;
 		float previousAO = 0.0f;
 
-		for (int sampleIndex = 1; sampleIndex <= min(SAMPLE_COUNT, u_SampleCount); sampleIndex++)
+		for (int sampleIndex = 1; sampleIndex <= SAMPLE_COUNT; sampleIndex++)
 		{
 			vec2 sampleUV = SnapToTexelCenter(i_UV + direction * sampleStep * float(sampleIndex));
 			vec3 sampleViewSpacePosition = GetVSPosition(sampleUV);
@@ -195,38 +145,6 @@ void main()
 			vec3 D = sampleViewSpacePosition - viewSpacePosition;
 
 			float elevationAngle = atan(D.z, length(D.xy));
-
-#if DEBUG
-			if (u_Debug == 3)
-			{
-				o_AO = (elevationAngle > tangentAngle) ? vec3(1.0f) : vec3(0.0f);
-				return;
-			}
-
-			if (u_Debug == 4)
-			{
-				o_AO = vec3(elevationAngle - tangentAngle);
-				return;
-			}
-
-			if (u_Debug == 5)
-			{
-				o_AO = vec3(elevationAngle);
-				return;
-			}
-
-			if (u_Debug == 6)
-			{
-				o_AO = vec3(tangentAngle);
-				return;
-			}
-
-			if (u_Debug == 7)
-			{
-				o_AO = vec3(sin(elevationAngle) - sin(tangentAngle));
-				return;
-			}
-#endif
 
 			if (dot(D, D) > u_Radius * u_Radius)
 				continue;
@@ -239,21 +157,7 @@ void main()
 				previousAO = ao;
 				horizonAngle = elevationAngle;
 			}
-
-			if (u_Debug == 15 && sampleIndex == u_SampleCount)
-			{
-				o_AO = vec3(max(0.0f, 1.0 - aoSum / (TWO_PI) * u_Intensity));
-				return;
-			}
 		}
-
-#if DEBUG
-		if (u_Debug == 11)
-		{
-			o_AO = vec3(sin(horizonAngle) - sin(tangentAngle));
-			return;
-		}
-#endif
 	}
 
 	o_AO = vec3(max(0.0f, 1.0 - aoSum / (TWO_PI) * u_Intensity));
