@@ -36,9 +36,9 @@ namespace Flare
 	public:
 		float Bias;
 		float Radius;
-		float BlurSize;
 		float RotationOffset = -1.0f;
 		float Intensity = 1.0f;
+		float Sharpness = 1.0f;
 		int32_t Debug = 0;
 		int32_t SampleCount = 10;
 		SSAOImplementation Implementation;
@@ -51,11 +51,11 @@ namespace Flare
 		{
 			stream.Serialize("Radius", SerializationValue(ssao.Radius));
 			stream.Serialize("Bias", SerializationValue(ssao.Bias));
-			stream.Serialize("BlurSize", SerializationValue(ssao.BlurSize));
 			stream.Serialize("Intensity", SerializationValue(ssao.Intensity));
 			stream.Serialize("Debug", SerializationValue(ssao.Debug));
 			stream.Serialize("RotationOffset", SerializationValue(ssao.RotationOffset));
 			stream.Serialize("SampleCount", SerializationValue(ssao.SampleCount));
+			stream.Serialize("Sharpness", SerializationValue(ssao.Sharpness));
 
 			auto implementationType = (std::underlying_type_t<SSAOImplementation>)(ssao.Implementation);
 			stream.Serialize("Implementation", SerializationValue(implementationType));
@@ -110,7 +110,6 @@ namespace Flare
 		std::optional<size_t> m_ColorImageProperty;
 		std::optional<size_t> m_AOImageProperty;
 		std::optional<size_t> m_ImageSizeProperty;
-		std::optional<size_t> m_BlurSizeProperty;
 
 		Ref<SSAO> m_Parameters = nullptr;
 	};

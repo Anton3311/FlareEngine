@@ -13,6 +13,7 @@
 
 #include "Flare/Renderer/Passes/BlitPass.h"
 
+#include "Flare/Renderer/PostProcessing/HBAO/HBAOBilateralBlurPass.h"
 #include "Flare/Renderer/PostProcessing/HBAO/HBAODownsamplePass.h"
 #include "Flare/Renderer/PostProcessing/HBAO/HBAOPass.h"
 
@@ -28,7 +29,7 @@ namespace Flare
 	FLARE_SERIALIZABLE_IMPL(SSAO);
 
 	SSAO::SSAO()
-		: Bias(0.1f), Radius(0.5f), BlurSize(2.0f), Implementation(SSAOImplementation::HBAO)
+		: Bias(0.1f), Radius(0.5f), Implementation(SSAOImplementation::HBAO)
 	{
 	}
 
@@ -85,14 +86,15 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		RenderGraphTextureId downsampledDepth = renderGraph.CreateTexture(TextureFormat::RF32, "HBAO.DownsampledDepth");
-		RenderGraphTextureId aoTexture = renderGraph.CreateTexture(TextureFormat::R32G32B32A32, "HBAO.AO");
+		RenderGraphTextureId linearDepthDepth = renderGraph.CreateTexture(TextureFormat::RF32, "HBAO.DownsampledDepth");
+		RenderGraphTextureId aoTexture = renderGraph.CreateTexture(TextureFormat::RF32, "HBAO.AO");
+		RenderGraphTextureId aoBlurIntermediateTexture = renderGraph.CreateTexture(TextureFormat::RF32, "HBAO.AOBlurIntermediate");
 
 		RenderGraphPassSpecifications downsamplePass{};
 		downsamplePass.SetDebugName("HBAODownsamplePass");
 		downsamplePass.SetType(RenderGraphPassType::Graphics);
 		downsamplePass.AddInput(viewport.DepthTextureId);
-		downsamplePass.AddOutput(downsampledDepth, 0);
+		downsamplePass.AddOutput(linearDepthDepth, 0);
 
 		renderGraph.AddPass(downsamplePass, Ref<HBAODownsamplePass>::New(viewport.DepthTextureId));
 
@@ -100,19 +102,31 @@ namespace Flare
 		aoPass.SetDebugName("HBAOPass");
 		aoPass.SetType(RenderGraphPassType::Graphics);
 		aoPass.AddInput(viewport.NormalsTextureId);
-		aoPass.AddInput(downsampledDepth);
+		aoPass.AddInput(linearDepthDepth);
 		aoPass.AddOutput(aoTexture, 0);
 	
-		renderGraph.AddPass(aoPass, Ref<HBAOPass>::New(Ref<SSAO>(this), viewport.NormalsTextureId, downsampledDepth));
+		renderGraph.AddPass(aoPass, Ref<HBAOPass>::New(Ref<SSAO>(this), viewport.NormalsTextureId, linearDepthDepth));
 
-#define SHOW_AO 0
+		{
+			RenderGraphPassSpecifications verticalBlurPass{};
+			verticalBlurPass.AddInput(aoTexture);
+			verticalBlurPass.AddOutput(aoBlurIntermediateTexture, 0, glm::vec4(0.0f));
+			verticalBlurPass.SetType(RenderGraphPassType::Graphics);
+			verticalBlurPass.SetDebugName("HBAO Vertical Bilateral Blur");
 
-#if SHOW_AO
-		RenderGraphPassSpecifications aoBlitPass{};
-		BlitPass::ConfigureSpecifications(aoBlitPass, aoTexture, viewport.ColorTextureId);
+			renderGraph.AddPass(verticalBlurPass, Ref<HBAOBilateralBlurPass>::New(Ref<SSAO>(this), true, linearDepthDepth, aoTexture));
+		}
 
-		renderGraph.AddPass(aoBlitPass, Ref<BlitPass>::New(aoTexture, viewport.ColorTextureId, TextureFiltering::Closest));
-#else
+		{
+			RenderGraphPassSpecifications horizontalBlurPass{};
+			horizontalBlurPass.AddInput(aoBlurIntermediateTexture);
+			horizontalBlurPass.AddOutput(aoTexture, 0, glm::vec4(0.0f));
+			horizontalBlurPass.SetType(RenderGraphPassType::Graphics);
+			horizontalBlurPass.SetDebugName("HBAO Horizontal Bilateral Blur");
+
+			renderGraph.AddPass(horizontalBlurPass, Ref<HBAOBilateralBlurPass>::New(Ref<SSAO>(this), false, linearDepthDepth, aoBlurIntermediateTexture));
+		}
+
 		RenderGraphPassSpecifications ssaoComposingPass{};
 		ssaoComposingPass.SetDebugName("SSAOComposingPass");
 		ssaoComposingPass.SetType(RenderGraphPassType::Compute);
@@ -120,7 +134,6 @@ namespace Flare
 		ssaoComposingPass.AddResource(viewport.ColorTextureId, ResourceAccess::ReadWrite);
 
 		renderGraph.AddPass(ssaoComposingPass, Ref<SSAOComposingPass>::New(viewport.ColorTextureId, aoTexture));
-#endif
 	}
 
 
@@ -206,7 +219,6 @@ namespace Flare
 			m_ColorImageProperty = metadata->FindDescriptorProperty("u_Color");
 			m_AOImageProperty = metadata->FindDescriptorProperty("u_AO");
 			m_ImageSizeProperty = metadata->FindConstantProperty("u_ImageSize");
-			m_BlurSizeProperty = metadata->FindConstantProperty("u_BlurSize");
 
 			m_ConstantBuffer.SetShader(m_Shader);
 			m_DescriptorBuffer.SetShader(m_Shader);
@@ -227,7 +239,6 @@ namespace Flare
 
 		const TextureSpecifications& colorTextureSpec = context.GetRenderGraphResourceManager().GetTexture(m_ColorTexture)->GetSpecifications();
 		m_ConstantBuffer.SetProperty(*m_ImageSizeProperty, glm::ivec2((int32_t)colorTextureSpec.Width, (int32_t)colorTextureSpec.Height));
-		m_ConstantBuffer.SetProperty(*m_BlurSizeProperty, m_Parameters->BlurSize);
 
 		m_DescriptorBuffer.SetTexture(*m_AOImageProperty, context.GetRenderGraphResourceManager().GetTexture(m_AOTexture));
 		m_DescriptorBuffer.SetTexture(*m_ColorImageProperty, context.GetRenderGraphResourceManager().GetTexture(m_ColorTexture));

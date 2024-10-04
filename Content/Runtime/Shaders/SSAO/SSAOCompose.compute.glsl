@@ -9,7 +9,6 @@ layout(set = 3, binding = 1) uniform sampler2D u_AO;
 layout(std140, push_constant) uniform Constants
 {
 	ivec2 u_ImageSize;
-	float u_BlurSize;
 };
 
 void main()
@@ -20,18 +19,10 @@ void main()
 
 	vec4 color = imageLoad(u_Color, pixelCoordinates);
 
-	float ao = 0.0f;
-	float blurHalfSize = u_BlurSize / 2.0f;
-	for (float y = -blurHalfSize; y < blurHalfSize; y++)
-	{
-		for (float x = -blurHalfSize; x < blurHalfSize; x++)
-		{
-			vec2 uv = vec2(float(pixelCoordinates.x) + x + 0.5f, float(pixelCoordinates.y) + y + 0.5f) / vec2(u_ImageSize);
-			ao += texture(u_AO, uv).r;
-		}
-	}
+	vec2 uv = vec2(float(pixelCoordinates.x) + 0.5f, float(pixelCoordinates.y) + 0.5f) / vec2(u_ImageSize);
+	float ao = texture(u_AO, uv).r;
 
-	color.rgb *= ao / (u_BlurSize * u_BlurSize);
+	color.rgb *= ao;
 
 	imageStore(u_Color, pixelCoordinates, color);
 }
