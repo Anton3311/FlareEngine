@@ -60,7 +60,7 @@ namespace Flare
 			m_Material->SetTextureProperty(*linearDepthProperty, context.GetRenderGraphResourceManager().GetTexture(m_LinearDepthTexture));
 		}
 
-		commandBuffer->SetDefaltViewportAndScissors();
+		commandBuffer->SetDefaultViewportAndScissors();
 		commandBuffer->ApplyMaterial(m_Material);
 		commandBuffer->DrawMeshIndexed(RendererPrimitives::GetFullscreenQuadMesh(), 0, 1);
 	}

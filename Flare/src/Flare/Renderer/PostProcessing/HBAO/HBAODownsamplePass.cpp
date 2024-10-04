@@ -34,11 +34,11 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		commandBuffer->SetDefaltViewportAndScissors();
+		commandBuffer->SetDefaultViewportAndScissors();
 
 		commandBuffer->SetGlobalDescriptorSet(context.GetViewport().GetFrameResources().CameraDescriptorSet, 0);
 
-		std::optional<size_t> depthTextureProperty = m_Material->GetShader()->GetPropertyIndex("u_DepthTexture");
+		std::optional<uint32_t> depthTextureProperty = m_Material->GetShader()->GetPropertyIndex("u_DepthTexture");
 
 		if (!depthTextureProperty)
 			return;

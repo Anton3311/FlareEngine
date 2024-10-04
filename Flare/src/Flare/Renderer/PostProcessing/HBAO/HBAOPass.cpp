@@ -35,7 +35,7 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		commandBuffer->SetDefaltViewportAndScissors();
+		commandBuffer->SetDefaultViewportAndScissors();
 
 		commandBuffer->SetGlobalDescriptorSet(context.GetViewport().GetFrameResources().CameraDescriptorSet, 0);
 
