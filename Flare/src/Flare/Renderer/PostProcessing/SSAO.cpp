@@ -28,11 +28,6 @@ namespace Flare
 	FLARE_IMPL_TYPE(SSAO);
 	FLARE_SERIALIZABLE_IMPL(SSAO);
 
-	SSAO::SSAO()
-		: Bias(0.1f), Radius(0.5f), Implementation(SSAOImplementation::HBAO)
-	{
-	}
-
 	void SSAO::RegisterRenderPasses(RenderGraph& renderGraph, const Viewport& viewport)
 	{
 		FLARE_PROFILE_FUNCTION();
@@ -40,46 +35,12 @@ namespace Flare
 		if (!IsEnabled())
 			return;
 
-		switch (Implementation)
-		{
-		case SSAOImplementation::SSAO:
-			RegisterSSAORenderPasses(renderGraph, viewport);
-			break;
-		case SSAOImplementation::HBAO:
-			RegisterHBAORenderPasses(renderGraph, viewport);
-			break;
-		default:
-			RegisterSSAORenderPasses(renderGraph, viewport);
-			break;
-		}
+		RegisterHBAORenderPasses(renderGraph, viewport);
 	}
 
 	const SerializableObjectDescriptor& SSAO::GetSerializationDescriptor() const
 	{
 		return FLARE_SERIALIZATION_DESCRIPTOR_OF(SSAO);
-	}
-
-	void SSAO::RegisterSSAORenderPasses(RenderGraph& renderGraph, const Viewport& viewport)
-	{
-		FLARE_PROFILE_FUNCTION();
-
-		RenderGraphTextureId aoTexture = renderGraph.CreateTexture(TextureFormat::RF32, "SSAO.AOTexture", 0.5f);
-
-		RenderGraphPassSpecifications ssaoMainPass{};
-		ssaoMainPass.SetDebugName("SSAOMainPass");
-		ssaoMainPass.SetType(RenderGraphPassType::Compute);
-		ssaoMainPass.AddInput(viewport.NormalsTextureId);
-		ssaoMainPass.AddInput(viewport.DepthTextureId);
-		ssaoMainPass.AddResource(aoTexture, ResourceAccess::Write);
-
-		RenderGraphPassSpecifications ssaoComposingPass{};
-		ssaoComposingPass.SetDebugName("SSAOComposingPass");
-		ssaoComposingPass.SetType(RenderGraphPassType::Compute);
-		ssaoComposingPass.AddInput(aoTexture);
-		ssaoComposingPass.AddResource(viewport.ColorTextureId, ResourceAccess::ReadWrite);
-
-		renderGraph.AddPass(ssaoMainPass, Ref<SSAOMainPass>::New(viewport.NormalsTextureId, viewport.DepthTextureId, aoTexture));
-		renderGraph.AddPass(ssaoComposingPass, Ref<SSAOComposingPass>::New(viewport.ColorTextureId, aoTexture));
 	}
 
 	void SSAO::RegisterHBAORenderPasses(RenderGraph& renderGraph, const Viewport& viewport)
@@ -133,73 +94,6 @@ namespace Flare
 		ssaoComposingPass.AddResource(viewport.ColorTextureId, ResourceAccess::ReadWrite);
 
 		renderGraph.AddPass(ssaoComposingPass, Ref<SSAOComposingPass>::New(viewport.ColorTextureId, aoTexture));
-	}
-
-
-
-	SSAOMainPass::SSAOMainPass(RenderGraphTextureId normalsTexture, RenderGraphTextureId depthTexture, RenderGraphTextureId aoTexture)
-		: m_NormalsTexture(normalsTexture), m_DepthTexture(depthTexture), m_AOTexture(aoTexture)
-	{
-		FLARE_PROFILE_FUNCTION();
-		std::optional<AssetHandle> shaderHandle = ShaderLibrary::FindShader("SSAO");
-		if (shaderHandle && AssetManager::IsAssetHandleValid(shaderHandle.value()))
-		{
-			m_Shader = AssetManager::GetAsset<ComputeShader>(*shaderHandle);
-			m_ConstantBuffer.SetShader(m_Shader);
-			m_DescriptorBuffer.SetShader(m_Shader);
-
-			Ref<const ComputeShaderMetadata> metadata = m_Shader->GetMetadata();
-
-			m_ImageSizeProperty = metadata->FindConstantProperty("u_AOImageSize");
-			m_BiasProperty = metadata->FindConstantProperty("u_Bias");
-			m_RadiusProperty = metadata->FindConstantProperty("u_SampleRadius");
-			
-			m_NormalsTextureProperty = metadata->FindDescriptorProperty("u_Normals");
-			m_DepthTextureProperty = metadata->FindDescriptorProperty("u_Depth");
-			m_AOImageProperty = metadata->FindDescriptorProperty("u_AO");
-		}
-		else
-		{
-			FLARE_CORE_ERROR("SSAO: Failed to find SSAO shader");
-		}
-
-		auto result = Scene::GetActive()->GetPostProcessingManager().GetEffect<SSAO>();
-		FLARE_CORE_ASSERT(result.has_value());
-		m_Parameters = *result;
-	}
-
-	void SSAOMainPass::OnPrepare(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
-	{
-		FLARE_PROFILE_FUNCTION();
-
-		const TextureSpecifications& aoTextureSpec = context.GetRenderGraphResourceManager().GetTexture(m_AOTexture)->GetSpecifications();
-
-		m_ConstantBuffer.SetProperty(*m_ImageSizeProperty, glm::ivec2((int32_t)aoTextureSpec.Width, (int32_t)aoTextureSpec.Height));
-		m_ConstantBuffer.SetProperty(*m_BiasProperty, m_Parameters->Bias);
-		m_ConstantBuffer.SetProperty(*m_RadiusProperty, m_Parameters->Radius);
-
-		m_DescriptorBuffer.SetTexture(*m_NormalsTextureProperty, context.GetRenderGraphResourceManager().GetTexture(m_NormalsTexture));
-		m_DescriptorBuffer.SetTexture(*m_DepthTextureProperty, context.GetRenderGraphResourceManager().GetTexture(m_DepthTexture));
-		m_DescriptorBuffer.SetTexture(*m_AOImageProperty, context.GetRenderGraphResourceManager().GetTexture(m_AOTexture));
-	}
-
-	void SSAOMainPass::OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
-	{
-		FLARE_PROFILE_FUNCTION();
-
-		commandBuffer->SetGlobalDescriptorSet(context.GetViewport().GetFrameResources().CameraDescriptorSet, 0);
-
-		commandBuffer->BindComputeShader(m_Shader);
-		commandBuffer->PushConstants(m_ConstantBuffer);
-		commandBuffer->PushDescriptorProperties(m_DescriptorBuffer);
-
-		const TextureSpecifications& aoTextureSpec = context.GetRenderGraphResourceManager().GetTexture(m_AOTexture)->GetSpecifications();
-		glm::uvec2 renderAreaSize = glm::ivec2((int32_t)aoTextureSpec.Width, (int32_t)aoTextureSpec.Height);
-		glm::uvec2 localGroupSize = m_Shader->GetMetadata()->LocalGroupSize;
-
-		glm::uvec2 groupCount = (renderAreaSize + localGroupSize - glm::uvec2(1)) / localGroupSize;
-
-		commandBuffer->DispatchCompute(glm::uvec3(groupCount, 1));
 	}
 
 
