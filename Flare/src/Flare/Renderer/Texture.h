@@ -33,6 +33,7 @@ namespace Flare
 		RG8,
 		RG16,
 
+		RF16,
 		RF32,
 
 		R8,
