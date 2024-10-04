@@ -6,6 +6,7 @@
 
 #include "Flare/Renderer/CommandBuffer.h"
 #include "Flare/Renderer/Material.h"
+#include "Flare/Renderer/RenderData.h"
 #include "Flare/Renderer/RendererPrimitives.h"
 #include "Flare/Renderer/ShaderLibrary.h"
 #include "Flare/Renderer/Viewport.h"
@@ -43,6 +44,7 @@ namespace Flare
 		std::optional<uint32_t> tangentBiasProperty = m_Material->GetShader()->GetPropertyIndex("u_TangentBias");
 		std::optional<uint32_t> depthTextureSizeProperty = m_Material->GetShader()->GetPropertyIndex("u_DepthTextureSize");
 		std::optional<uint32_t> intensityProperty = m_Material->GetShader()->GetPropertyIndex("u_Intensity");
+		std::optional<uint32_t> projectionParams = m_Material->GetShader()->GetPropertyIndex("u_InverseProjectionParams");
 
 		Ref<Texture> depthTexture = context.GetRenderGraph().GetTexture(m_DownsampledDepth);
 
@@ -59,6 +61,12 @@ namespace Flare
 		{
 			const TextureSpecifications& specifications = depthTexture->GetSpecifications();
 			m_Material->WritePropertyValue<glm::vec2>(*depthTextureSizeProperty, (glm::vec2)glm::uvec2(specifications.Width, specifications.Height));
+		}
+
+		if (projectionParams)
+		{
+			const glm::mat4& inverseProjection = context.GetRenderView().InverseProjection;
+			m_Material->WritePropertyValue<glm::vec2>(*projectionParams, glm::vec2(inverseProjection[0][0], inverseProjection[1][1]));
 		}
 
 		if (intensityProperty)

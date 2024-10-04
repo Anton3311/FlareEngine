@@ -24,7 +24,10 @@ layout(push_constant) uniform Constants
 	float u_Radius;
 	float u_TangentBias;
 	vec2 u_DepthTextureSize;
+
 	float u_Intensity;
+
+	vec2 u_InverseProjectionParams;
 };
 
 layout(set = 3, binding = 0) uniform sampler2D u_DepthTexture; // NOTE: Downsampled linear depth
@@ -66,8 +69,9 @@ vec3 MinDifference(vec3 position, vec3 left, vec3 right)
 vec3 GetVSPosition(vec2 uv)
 {
 	float linearDepth = texture(u_DepthTexture, uv).r;
-	return ReconstructViewSpacePositionFromDepth(uv * 2.0f - vec2(1.0f),
-			LinearDepthToNonLinear(linearDepth));
+
+	uv = uv * 2.0f - vec2(1.0f);
+	return vec3(uv * u_InverseProjectionParams * linearDepth, -linearDepth);
 }
 
 void ComputeDerrivatives(vec3 VSPosition, out vec3 du, out vec3 dv)
