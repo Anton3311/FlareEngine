@@ -27,8 +27,7 @@ layout(push_constant) uniform Constants
 	float u_Intensity;
 };
 
-layout(set = 3, binding = 0) uniform sampler2D u_NormalTexture;
-layout(set = 3, binding = 1) uniform sampler2D u_DepthTexture; // NOTE: Downsampled linear depth
+layout(set = 3, binding = 0) uniform sampler2D u_DepthTexture; // NOTE: Downsampled linear depth
 
 layout(location = 0) in vec2 i_UV;
 
@@ -96,33 +95,60 @@ float ComputeScreenSpaceRadius(vec3 positionVS)
 	return (projectedPoint.x - projectedCenter.x) * 0.5f;
 }
 
-void main()
+float ComputeAO(vec3 positionVS, float tangentAngle, vec2 sampleStep)
 {
-	vec2 texelSize = vec2(1.0f) / u_DepthTextureSize;
-	float depthTextureAspectRatio = u_DepthTextureSize.x / u_DepthTextureSize.y;
+	float horizonAngle = tangentAngle;
+	float previousAO = 0.0f;
 
-	vec3 viewSpacePosition = GetVSPosition(i_UV);
+	float totalAO = 0.0f;
 
-	vec3 du, dv;
-	ComputeDerrivatives(viewSpacePosition, du, dv);
-
-	vec3 sampledNormal = texture(u_NormalTexture, i_UV).xyz;
-	if (all(lessThan(abs(sampledNormal), vec3(0.1f))))
+	for (int sampleIndex = 1; sampleIndex <= SAMPLE_COUNT; sampleIndex++)
 	{
-		o_AO = vec3(1.0f);
-		return;
+		vec2 sampleUV = SnapToTexelCenter(i_UV + sampleStep * float(sampleIndex));
+		vec3 sampleViewSpacePosition = GetVSPosition(sampleUV);
+
+		// D = S_i - P
+		vec3 D = sampleViewSpacePosition - positionVS;
+
+		float elevationAngle = atan(D.z, length(D.xy));
+
+		if (dot(D, D) > u_Radius * u_Radius)
+			continue;
+
+		if (elevationAngle > horizonAngle)
+		{
+			float ao = sin(elevationAngle) - sin(tangentAngle);
+			totalAO += (ao - previousAO) * Attenuate(dot(D, D));
+
+			previousAO = ao;
+			horizonAngle = elevationAngle;
+		}
 	}
 
-	sampledNormal = sampledNormal * 2.0f - vec3(1.0f);
+	return totalAO;
+}
 
-	vec3 viewSpaceNormal = (u_Camera.View * vec4(sampledNormal, 0.0f)).xyz;
+vec2 ComputeSampleStep(vec3 positionVS)
+{
+	float depthTextureAspectRatio = u_DepthTextureSize.x / u_DepthTextureSize.y;
 
-	float aoSum = 0.0f;
-
-	float radiusInPixels = ComputeScreenSpaceRadius(viewSpacePosition);
+	float radiusInPixels = ComputeScreenSpaceRadius(positionVS);
 	vec2 sampleStep = vec2(radiusInPixels / float(SAMPLE_COUNT));
 	sampleStep.x /= depthTextureAspectRatio;
 
+	return sampleStep;
+}
+
+void main()
+{
+	vec3 positionVS = GetVSPosition(i_UV);
+
+	vec3 du, dv;
+	ComputeDerrivatives(positionVS, du, dv);
+
+	vec2 sampleStep = ComputeSampleStep(positionVS);
+
+	float aoSum = 0.0f;
 	float rotationOffset = InterleavedGradientNoise(gl_FragCoord.xy) * TWO_PI;
 
 	for (int directionIndex = 0; directionIndex < DIRECTION_COUNT; directionIndex++)
@@ -131,33 +157,9 @@ void main()
 		vec2 direction = vec2(cos(angle), sin(angle));
 
 		vec3 tangentVector = direction.x * du + direction.y * dv;
-
 		float tangentAngle = atan(tangentVector.z, length(tangentVector.xy)) + u_TangentBias;
-		float horizonAngle = tangentAngle;
-		float previousAO = 0.0f;
 
-		for (int sampleIndex = 1; sampleIndex <= SAMPLE_COUNT; sampleIndex++)
-		{
-			vec2 sampleUV = SnapToTexelCenter(i_UV + direction * sampleStep * float(sampleIndex));
-			vec3 sampleViewSpacePosition = GetVSPosition(sampleUV);
-
-			// D = S_i - P
-			vec3 D = sampleViewSpacePosition - viewSpacePosition;
-
-			float elevationAngle = atan(D.z, length(D.xy));
-
-			if (dot(D, D) > u_Radius * u_Radius)
-				continue;
-
-			if (elevationAngle > horizonAngle)
-			{
-				float ao = sin(elevationAngle) - sin(tangentAngle);
-				aoSum += (ao - previousAO) * Attenuate(dot(D, D));
-
-				previousAO = ao;
-				horizonAngle = elevationAngle;
-			}
-		}
+		aoSum += ComputeAO(positionVS, tangentAngle, direction * sampleStep);
 	}
 
 	o_AO = vec3(max(0.0f, 1.0 - aoSum / (TWO_PI) * u_Intensity));

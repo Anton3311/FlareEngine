@@ -101,11 +101,10 @@ namespace Flare
 		RenderGraphPassSpecifications aoPass{};
 		aoPass.SetDebugName("HBAOPass");
 		aoPass.SetType(RenderGraphPassType::Graphics);
-		aoPass.AddInput(viewport.NormalsTextureId);
 		aoPass.AddInput(linearDepthDepth);
 		aoPass.AddOutput(aoTexture, 0);
 	
-		renderGraph.AddPass(aoPass, Ref<HBAOPass>::New(Ref<SSAO>(this), viewport.NormalsTextureId, linearDepthDepth));
+		renderGraph.AddPass(aoPass, Ref<HBAOPass>::New(Ref<SSAO>(this), linearDepthDepth));
 
 		{
 			RenderGraphPassSpecifications verticalBlurPass{};

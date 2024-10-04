@@ -14,8 +14,8 @@
 
 namespace Flare
 {
-	HBAOPass::HBAOPass(Ref<SSAO> parameters, RenderGraphTextureId normalTexture, RenderGraphTextureId downsampledDepth)
-		: m_Parameters(parameters), m_DownsampledDepth(downsampledDepth), m_NormalTexture(normalTexture)
+	HBAOPass::HBAOPass(Ref<SSAO> parameters, RenderGraphTextureId downsampledDepth)
+		: m_Parameters(parameters), m_DownsampledDepth(downsampledDepth)
 	{
 		FLARE_PROFILE_FUNCTION();
 
@@ -39,7 +39,6 @@ namespace Flare
 		commandBuffer->SetGlobalDescriptorSet(context.GetViewport().GetFrameResources().CameraDescriptorSet, 0);
 
 		std::optional<uint32_t> depthTextureProperty = m_Material->GetShader()->GetPropertyIndex("u_DepthTexture");
-		std::optional<uint32_t> normalTextureProperty = m_Material->GetShader()->GetPropertyIndex("u_NormalTexture");
 		std::optional<uint32_t> radiusProperty = m_Material->GetShader()->GetPropertyIndex("u_Radius");
 		std::optional<uint32_t> tangentBiasProperty = m_Material->GetShader()->GetPropertyIndex("u_TangentBias");
 		std::optional<uint32_t> depthTextureSizeProperty = m_Material->GetShader()->GetPropertyIndex("u_DepthTextureSize");
@@ -49,9 +48,6 @@ namespace Flare
 
 		if (depthTextureProperty)
 			m_Material->SetTextureProperty(*depthTextureProperty, depthTexture);
-
-		if (normalTextureProperty)
-			m_Material->SetTextureProperty(*normalTextureProperty, context.GetRenderGraphResourceManager().GetTexture(m_NormalTexture));
 
 		if (radiusProperty)
 			m_Material->WritePropertyValue<float>(*radiusProperty, m_Parameters->Radius);
