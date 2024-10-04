@@ -40,9 +40,16 @@ namespace Flare
 		commandBuffer->SetGlobalDescriptorSet(context.GetViewport().GetFrameResources().CameraDescriptorSet, 0);
 
 		std::optional<uint32_t> depthTextureProperty = m_Material->GetShader()->GetPropertyIndex("u_DepthTexture");
+
 		std::optional<uint32_t> radiusProperty = m_Material->GetShader()->GetPropertyIndex("u_Radius");
+		std::optional<uint32_t> radiusSquaredProperty = m_Material->GetShader()->GetPropertyIndex("u_RadiusSquared");
+		std::optional<uint32_t> negativeInverseSquaredRadiusProperty = m_Material->GetShader()->GetPropertyIndex("u_NegativeInverseSquaredRadius");
+
 		std::optional<uint32_t> tangentBiasProperty = m_Material->GetShader()->GetPropertyIndex("u_TangentBias");
+
 		std::optional<uint32_t> depthTextureSizeProperty = m_Material->GetShader()->GetPropertyIndex("u_DepthTextureSize");
+		std::optional<uint32_t> inverseDepthTextureSize = m_Material->GetShader()->GetPropertyIndex("u_InverseDepthTextureSize");
+
 		std::optional<uint32_t> intensityProperty = m_Material->GetShader()->GetPropertyIndex("u_Intensity");
 		std::optional<uint32_t> projectionParams = m_Material->GetShader()->GetPropertyIndex("u_InverseProjectionParams");
 
@@ -54,14 +61,23 @@ namespace Flare
 		if (radiusProperty)
 			m_Material->WritePropertyValue<float>(*radiusProperty, m_Parameters->Radius);
 
+		float radiusSquared = m_Parameters->Radius * m_Parameters->Radius;
+		if (radiusSquaredProperty)
+			m_Material->WritePropertyValue<float>(*radiusSquaredProperty, radiusSquared);
+
+		if (negativeInverseSquaredRadiusProperty)
+			m_Material->WritePropertyValue<float>(*negativeInverseSquaredRadiusProperty, -1.0f / radiusSquared);
+
 		if (tangentBiasProperty)
 			m_Material->WritePropertyValue<float>(*tangentBiasProperty, glm::radians(m_Parameters->Bias));
 
+		const TextureSpecifications& specifications = depthTexture->GetSpecifications();
+		glm::vec2 depthTextureSize = (glm::vec2)glm::uvec2(specifications.Width, specifications.Height);
+		
 		if (depthTextureSizeProperty)
-		{
-			const TextureSpecifications& specifications = depthTexture->GetSpecifications();
-			m_Material->WritePropertyValue<glm::vec2>(*depthTextureSizeProperty, (glm::vec2)glm::uvec2(specifications.Width, specifications.Height));
-		}
+			m_Material->WritePropertyValue<glm::vec2>(*depthTextureSizeProperty, depthTextureSize);
+		if (inverseDepthTextureSize)
+			m_Material->WritePropertyValue<glm::vec2>(*inverseDepthTextureSize, glm::vec2(1.0f) / depthTextureSize);
 
 		if (projectionParams)
 		{

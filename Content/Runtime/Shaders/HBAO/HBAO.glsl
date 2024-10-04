@@ -22,10 +22,13 @@ void main()
 layout(push_constant) uniform Constants
 {
 	float u_Radius;
+	float u_RadiusSquared;
+	float u_NegativeInverseSquaredRadius;
 	float u_TangentBias;
-	vec2 u_DepthTextureSize;
-
 	float u_Intensity;
+
+	vec2 u_DepthTextureSize;
+	vec2 u_InverseDepthTextureSize;
 
 	vec2 u_InverseProjectionParams;
 };
@@ -42,17 +45,12 @@ const int SAMPLE_COUNT = 4;
 
 float Attenuate(float distanceSquared)
 {
-	return max(0.0f, 1.0f - distanceSquared / (u_Radius * u_Radius));
+	return max(0.0f, 1.0f + distanceSquared * u_NegativeInverseSquaredRadius);
 }
 
 vec2 SnapToTexelCenter(vec2 uv)
 {
-	return (floor(uv * u_DepthTextureSize) + 0.5f) / u_DepthTextureSize;
-}
-
-float ComputeProjectedSphereSize(float linearDepth)
-{
-	return u_Radius / linearDepth;
+	return (floor(uv * u_DepthTextureSize) + 0.5f) * u_InverseDepthTextureSize;
 }
 
 vec3 MinDifference(vec3 position, vec3 left, vec3 right)
@@ -71,12 +69,14 @@ vec3 GetVSPosition(vec2 uv)
 	float linearDepth = texture(u_DepthTexture, uv).r;
 
 	uv = uv * 2.0f - vec2(1.0f);
+
+	// -linearDepth because -Z is forward
 	return vec3(uv * u_InverseProjectionParams * linearDepth, -linearDepth);
 }
 
 void ComputeDerrivatives(vec3 VSPosition, out vec3 du, out vec3 dv)
 {
-	vec2 texelSize = vec2(1.0f) / u_DepthTextureSize;
+	vec2 texelSize = u_InverseDepthTextureSize;
 
 	vec3 left = GetVSPosition(i_UV + vec2(-texelSize.x, 0.0f));
 	vec3 right = GetVSPosition(i_UV + vec2(+texelSize.x, 0.0f));
@@ -116,13 +116,14 @@ float ComputeAO(vec3 positionVS, float tangentAngle, vec2 sampleStep)
 
 		float elevationAngle = atan(D.z, length(D.xy));
 
-		if (dot(D, D) > u_Radius * u_Radius)
+		float lengthSqaured = dot(D, D);
+		if (lengthSqaured > u_RadiusSquared)
 			continue;
 
 		if (elevationAngle > horizonAngle)
 		{
 			float ao = sin(elevationAngle) - sin(tangentAngle);
-			totalAO += (ao - previousAO) * Attenuate(dot(D, D));
+			totalAO += (ao - previousAO) * Attenuate(lengthSqaured);
 
 			previousAO = ao;
 			horizonAngle = elevationAngle;
