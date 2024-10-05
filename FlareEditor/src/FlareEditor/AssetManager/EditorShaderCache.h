@@ -11,6 +11,7 @@ namespace Flare
 	public:
 		void SetCache(AssetHandle shaderHandle, ShaderStageType stageType, const std::vector<uint32_t>& compiledShader) override;
 
+		std::filesystem::path GetCacheFilePath(AssetHandle shaderHandle, ShaderStageType stageType) const;
 		std::optional<std::vector<uint32_t>> FindCache(AssetHandle shaderHandle, ShaderStageType stageType) override;
 
 		Ref<const GraphicsShaderMetadata> FindShaderMetadata(AssetHandle shaderHandle) override;
@@ -21,8 +22,8 @@ namespace Flare
 		void SetShaderEntry(AssetHandle shaderHandle, Ref<const GraphicsShaderMetadata> metadata);
 		void SetComputeShaderEntry(AssetHandle shaderHandle, Ref<const ComputeShaderMetadata> metadata);
 
-		std::filesystem::path GetCacheDirectoryPath();
-		std::string GetCacheFileName(AssetHandle shaderHandle, ShaderStageType stageType);
+		std::filesystem::path GetCacheDirectoryPath() const;
+		std::string GetCacheFileName(AssetHandle shaderHandle, ShaderStageType stageType) const;
 	public:
 		static EditorShaderCache& GetInstance();
 	private:

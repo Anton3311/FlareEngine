@@ -695,6 +695,18 @@ namespace Flare
 		return (shaderc_shader_kind)0;
 	}
 
+	static bool IsShaderCacheOutdated(const std::filesystem::path& sourcePath, const std::filesystem::path& cachePath)
+	{
+		FLARE_PROFILE_FUNCTION();
+		FLARE_CORE_ASSERT(std::filesystem::exists(sourcePath));
+		FLARE_CORE_ASSERT(std::filesystem::exists(cachePath));
+
+		std::filesystem::file_time_type sourceWriteTime = std::filesystem::last_write_time(sourcePath);
+		std::filesystem::file_time_type cacheWriteTime = std::filesystem::last_write_time(cachePath);
+
+		return cacheWriteTime < sourceWriteTime;
+	}
+
 	static bool CompileGraphicsShader(AssetHandle shaderHandle, bool forceRecompile, const ShaderSourceParser& parser, std::vector<ShaderError>& errors)
 	{
 		FLARE_PROFILE_FUNCTION();
@@ -741,6 +753,19 @@ namespace Flare
 		for (const auto& program : programs)
 			metadata->Stages.push_back(program.Stage);
 
+		// Check for outdated shader cache
+		for (const PreprocessedShaderProgram& program : programs)
+		{
+			std::filesystem::path cacheFilePath = EditorShaderCache::GetInstance().GetCacheFilePath(shaderHandle, program.Stage);
+
+			if (std::filesystem::exists(cacheFilePath) && IsShaderCacheOutdated(shaderPath, cacheFilePath))
+			{
+				forceRecompile = true;
+				break;
+			}
+		}
+
+		// Compile
 		for (const PreprocessedShaderProgram& program : programs)
 		{
 			shaderc_shader_kind shaderKind = ShaderStageTypeToShaderCStageType(program.Stage);
@@ -842,6 +867,15 @@ namespace Flare
 			program.Source = sourceBlock.Source;
 			program.Stage = sourceBlock.Stage;
 		}
+
+		// Check for outdated cache
+		{
+			std::filesystem::path cachePath = EditorShaderCache::GetInstance().GetCacheFilePath(shaderHandle, program.Stage);
+			if (std::filesystem::exists(cachePath) && IsShaderCacheOutdated(shaderPath, cachePath))
+			{
+				forceRecompile = true;
+			}
+		}
 		
 		Ref<ComputeShaderMetadata> metadata = Ref<ComputeShaderMetadata>::New();
 		metadata->Name = shaderPath.filename().replace_extension().generic_string();
@@ -871,6 +905,7 @@ namespace Flare
 		catch (spirv_cross::CompilerError& error)
 		{
 			FLARE_CORE_ERROR("Shader reflection failed: {}", error.what());
+			return false;
 		}
 
 		EditorShaderCache::GetInstance().SetComputeShaderEntry(shaderHandle, metadata);

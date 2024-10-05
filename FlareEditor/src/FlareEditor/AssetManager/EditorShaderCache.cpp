@@ -33,7 +33,7 @@ namespace Flare
 		output.close();
 	}
 
-	std::optional<std::vector<uint32_t>> EditorShaderCache::FindCache(AssetHandle shaderHandle, ShaderStageType stageType)
+	std::filesystem::path EditorShaderCache::GetCacheFilePath(AssetHandle shaderHandle, ShaderStageType stageType) const
 	{
 		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(AssetManager::IsAssetHandleValid(shaderHandle));
@@ -43,6 +43,15 @@ namespace Flare
 
 		std::filesystem::path cacheDirectory = GetCacheDirectoryPath();
 		std::filesystem::path cacheFilePath = cacheDirectory / GetCacheFileName(shaderHandle, stageType);
+
+		return cacheFilePath;
+	}
+
+	std::optional<std::vector<uint32_t>> EditorShaderCache::FindCache(AssetHandle shaderHandle, ShaderStageType stageType)
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		std::filesystem::path cacheFilePath = GetCacheFilePath(shaderHandle, stageType);
 
 		std::vector<uint32_t> compiledShader;
 		std::ifstream inputStream(cacheFilePath, std::ios::in | std::ios::binary);
@@ -99,7 +108,7 @@ namespace Flare
 		m_ComputeShaderEntries[shaderHandle] = metadata;
 	}
 
-	std::filesystem::path EditorShaderCache::GetCacheDirectoryPath()
+	std::filesystem::path EditorShaderCache::GetCacheDirectoryPath() const
 	{
 		FLARE_PROFILE_FUNCTION();
 
@@ -114,8 +123,9 @@ namespace Flare
 		return Project::GetActive()->Location / "Cache/Shaders/" / apiName;
 	}
 
-	std::string EditorShaderCache::GetCacheFileName(AssetHandle shaderHandle, ShaderStageType stageType)
+	std::string EditorShaderCache::GetCacheFileName(AssetHandle shaderHandle, ShaderStageType stageType) const
 	{
+		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(AssetManager::IsAssetHandleValid(shaderHandle));
 		std::string_view shaderName = AssetManager::GetAssetMetadata(shaderHandle)->Name;
 		std::string_view stageName = ShaderStageTypeToString(stageType);
