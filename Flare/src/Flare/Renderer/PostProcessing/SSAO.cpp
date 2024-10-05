@@ -47,9 +47,9 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		RenderGraphTextureId linearDepthDepth = renderGraph.CreateTexture(TextureFormat::RF32, "HBAO.DownsampledDepth");
-		RenderGraphTextureId aoTexture = renderGraph.CreateTexture(TextureFormat::R8, "HBAO.AO");
-		RenderGraphTextureId aoBlurIntermediateTexture = renderGraph.CreateTexture(TextureFormat::R8, "HBAO.AOBlurIntermediate");
+		RenderGraphTextureId linearDepthDepth = renderGraph.CreateTexture(TextureFormat::RF32, "HBAO.DownsampledDepth", 0.5f);
+		RenderGraphTextureId aoTexture = renderGraph.CreateTexture(TextureFormat::R8, "HBAO.AO", 0.5f);
+		RenderGraphTextureId aoBlurIntermediateTexture = renderGraph.CreateTexture(TextureFormat::R8, "HBAO.AOBlurIntermediate", 0.5f);
 
 		RenderGraphPassSpecifications downsamplePass{};
 		downsamplePass.SetDebugName("HBAODownsamplePass");
