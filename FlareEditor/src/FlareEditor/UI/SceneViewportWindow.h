@@ -22,7 +22,6 @@ namespace Flare
 		enum class ViewportOverlay
 		{
 			Default,
-			Normal,
 			Depth,
 		};
 

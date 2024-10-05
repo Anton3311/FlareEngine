@@ -80,7 +80,6 @@ layout(set = 3, binding = 2) uniform sampler2D u_RoughnessMap;
 layout(location = 0) in VertexData i_Vertex;
 
 layout(location = 0) out vec4 o_Color;
-layout(location = 1) out vec4 o_Normal;
 
 vec3 UnpackNormalXYZ(vec3 packedNormal)
 {
@@ -152,7 +151,6 @@ void main()
 #endif
 
 	o_Color = vec4(finalColor, color.a);
-	o_Normal = vec4(N * 0.5f + vec3(0.5f), 1.0f);
 }
 
 #end

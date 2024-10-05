@@ -150,9 +150,6 @@ namespace Flare
 		case ViewportOverlay::Default:
 			RenderViewportBuffer(m_Viewport.GetRenderGraph()->GetTexture(m_Viewport.ColorTextureId));
 			break;
-		case ViewportOverlay::Normal:
-			RenderViewportBuffer(m_Viewport.GetRenderGraph()->GetTexture(m_Viewport.NormalsTextureId));
-			break;
 		case ViewportOverlay::Depth:
 			RenderViewportBuffer(m_Viewport.GetRenderGraph()->GetTexture(m_Viewport.DepthTextureId));
 			break;
@@ -229,9 +226,6 @@ namespace Flare
 		case ViewportOverlay::Default:
 			overlayName = "Default";
 			break;
-		case ViewportOverlay::Normal:
-			overlayName = "Normal";
-			break;
 		case ViewportOverlay::Depth:
 			overlayName = "Depth";
 			break;
@@ -241,8 +235,6 @@ namespace Flare
 		{
 			if (ImGui::MenuItem("Default"))
 				m_Overlay = ViewportOverlay::Default;
-			if (ImGui::MenuItem("Normal"))
-				m_Overlay = ViewportOverlay::Normal;
 			if (ImGui::MenuItem("Depth"))
 				m_Overlay = ViewportOverlay::Depth;
 

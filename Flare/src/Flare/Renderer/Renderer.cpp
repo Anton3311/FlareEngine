@@ -437,7 +437,6 @@ namespace Flare
 		RenderGraphPassSpecifications geometryPass{};
 		geometryPass.SetDebugName("GeometryPass");
 		geometryPass.AddOutput(viewport.ColorTextureId, 0);
-		geometryPass.AddOutput(viewport.NormalsTextureId, 1);
 		geometryPass.AddOutput(viewport.DepthTextureId, 2);
 
 		if (viewport.IsShadowMappingEnabled())

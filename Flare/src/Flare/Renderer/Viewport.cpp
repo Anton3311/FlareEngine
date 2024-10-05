@@ -77,7 +77,6 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 
 		ColorTextureId = m_RenderGraph->CreateTexture(m_ColorTextureFormat, "Color");
-		NormalsTextureId = m_RenderGraph->CreateTexture(m_NormalsTextureFormat, "Normals");
 		DepthTextureId = m_RenderGraph->CreateTexture(m_DepthTextureFormat, "Depth");
 
 		ExternalRenderGraphResource colorTextureResource{};
@@ -85,18 +84,12 @@ namespace Flare
 		colorTextureResource.FinalLayout = ImageLayout::ReadOnly;
 		colorTextureResource.Texture = ColorTextureId;
 
-		ExternalRenderGraphResource normalsTextureResource{};
-		normalsTextureResource.InitialLayout = ImageLayout::AttachmentOutput;
-		normalsTextureResource.FinalLayout = ImageLayout::ReadOnly;
-		normalsTextureResource.Texture = NormalsTextureId;
-
 		ExternalRenderGraphResource depthTextureResource{};
 		depthTextureResource.InitialLayout = ImageLayout::AttachmentOutput;
 		depthTextureResource.FinalLayout = ImageLayout::ReadOnly;
 		depthTextureResource.Texture = DepthTextureId;
 
 		m_RenderGraph->AddExternalResource(colorTextureResource);
-		m_RenderGraph->AddExternalResource(normalsTextureResource);
 		m_RenderGraph->AddExternalResource(depthTextureResource);
 	}
 
@@ -113,7 +106,6 @@ namespace Flare
 		const auto& resourceManager = m_RenderGraph->GetResourceManager();
 
 		commandBuffer->ClearColor(resourceManager.GetTexture(ColorTextureId), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
-		commandBuffer->ClearColor(resourceManager.GetTexture(NormalsTextureId), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
 		commandBuffer->ClearDepth(resourceManager.GetTexture(DepthTextureId), 1.0f);
 	}
 

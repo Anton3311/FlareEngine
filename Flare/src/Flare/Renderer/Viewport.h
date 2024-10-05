@@ -67,7 +67,6 @@ namespace Flare
 		inline const ViewportFrameResources& GetFrameResources(uint32_t frameIndex) const { return m_GlobalResources.FrameResources[frameIndex]; }
 	public:
 		RenderGraphTextureId ColorTextureId;
-		RenderGraphTextureId NormalsTextureId;
 		RenderGraphTextureId DepthTextureId;
 	private:
 		void SetupGlobalDescriptorSet(const ViewportFrameResources& frameResources, Ref<DescriptorSet> set);
@@ -81,7 +80,6 @@ namespace Flare
 		Scope<RenderGraph> m_RenderGraph;
 
 		TextureFormat m_ColorTextureFormat = TextureFormat::R11G11B10;
-		TextureFormat m_NormalsTextureFormat = TextureFormat::RGB8;
 		TextureFormat m_DepthTextureFormat = TextureFormat::Depth32;
 
 		ViewportGlobalResources m_GlobalResources;
