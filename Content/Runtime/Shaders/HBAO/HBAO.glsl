@@ -138,7 +138,9 @@ vec2 ComputeSampleStep(vec3 positionVS)
 	float depthTextureAspectRatio = u_DepthTextureSize.x / u_DepthTextureSize.y;
 
 	float radiusInPixels = ComputeScreenSpaceRadius(positionVS);
-	vec2 sampleStep = vec2(radiusInPixels / float(SAMPLE_COUNT));
+	radiusInPixels /= 4.0f;
+
+	vec2 sampleStep = vec2(radiusInPixels / float(SAMPLE_COUNT + 1));
 	sampleStep.x /= depthTextureAspectRatio;
 
 	return sampleStep;
