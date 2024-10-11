@@ -138,21 +138,23 @@ namespace Flare
 		}
 
 		void DefaultConstructEntityComponentsRange(size_t entityIndex, size_t startComponent, size_t componentCount);
+
 		void CopyConstructEntity(size_t entityIndex, Span<const void*> componentData);
+		void MoveConstructEntity(size_t entityIndex, Span<void*> componentData);
 
 		// Uses components' move assignment operator to move entity components from source storage
 		void MoveEntityData(size_t sourceEntityIndex, EntityStorage& sourceStorage, size_t destinationEntityIndex);
-	private:
-		static constexpr size_t PACKED_ENTITY_ID_SIZE = sizeof(uint16_t) * 3;
-
-		void ReleaseEntityComponents(size_t entityIndex);
-		void ReleaseAllEntities();
 
 		void* GetComponentArray(size_t chunkIndex, size_t componentIndex) const
 		{
 			size_t arrayOffset = m_ArchetypesRegistry->operator[](m_Archetype).ComponentArrayOffsets[componentIndex];
 			return m_Chunks[chunkIndex].GetBuffer() + arrayOffset;
 		}
+	private:
+		static constexpr size_t PACKED_ENTITY_ID_SIZE = sizeof(uint16_t) * 3;
+
+		void ReleaseEntityComponents(size_t entityIndex);
+		void ReleaseAllEntities();
 
 		inline size_t GetIdEntryOffset(size_t entityIndexInChunk) const
 		{

@@ -85,18 +85,30 @@ namespace Flare
 		EntityCreationResult result;
 		CreateEntity(ComponentSet(m_TemporaryComponentSet.data(), count), result);
 
-		FLARE_CORE_ASSERT(copyComponents);
-
 		const auto& archetype = m_Archetypes[result.Archetype];
 		const EntityRecord& entityRecord = m_EntityRecords[FindEntity(result.Id)->second];
 
-		std::vector<const void*> componentData;
-		componentData.resize(count);
+		if (copyComponents)
+		{
+			std::vector<const void*> componentData;
+			componentData.resize(count);
 
-		for (size_t i = 0; i < count; i++)
-			componentData[i] = components[i].second;
+			for (size_t i = 0; i < count; i++)
+				componentData[i] = components[i].second;
 
-		GetEntityStorage(result.Archetype).CopyConstructEntity(entityRecord.BufferIndex, Span<const void*>::FromVector(componentData));
+			GetEntityStorage(result.Archetype).CopyConstructEntity(entityRecord.BufferIndex, Span<const void*>::FromVector(componentData));
+		}
+		else
+		{
+			std::vector<void*> componentData;
+			componentData.resize(count);
+
+			for (size_t i = 0; i < count; i++)
+				componentData[i] = components[i].second;
+
+			GetEntityStorage(result.Archetype).MoveConstructEntity(entityRecord.BufferIndex, Span<void*>::FromVector(componentData));
+		}
+
 		return result.Id;
 	}
 
@@ -287,7 +299,15 @@ namespace Flare
 			void* destination = newStorage.GetEntityComponentData(newEntityIndex, insertedComponentIndex);
 
 			const ComponentInfo& componentInfo = m_Components.GetComponentInfo(componentId);
-			componentInfo.Initializer->Type.Functions.CopyConstructor(destination, componentData);
+
+			if (componentData == nullptr)
+			{
+				componentInfo.Initializer->Type.Functions.DefaultConstructor(destination);
+			}
+			else
+			{
+				componentInfo.Initializer->Type.Functions.CopyConstructor(destination, componentData);
+			}
 		}
 
 		{

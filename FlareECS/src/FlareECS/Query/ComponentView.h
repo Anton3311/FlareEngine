@@ -11,15 +11,20 @@ namespace Flare
 	{
 	public:
 		ComponentView() = default;
-		constexpr ComponentView(size_t offset)
-			: m_ComponentOffset(offset) {}
+		constexpr ComponentView(ComponentT* componentArray)
+			: m_ComponentArray(componentArray) {}
 
-		constexpr ComponentT& operator[](QueryChunkEntity entity) const
+		constexpr ComponentT& operator[](const QueryChunkEntity& chunkEntity) const
 		{
-			return *(ComponentT*)(entity.GetEntityData() + m_ComponentOffset);
+			return m_ComponentArray[chunkEntity.GetEntityIndex()];
+		}
+
+		constexpr ComponentT& operator[](size_t index) const
+		{
+			return m_ComponentArray[index];
 		}
 	private:
-		size_t m_ComponentOffset = 0;
+		ComponentT* m_ComponentArray = nullptr;
 	};
 
 	template<typename T>

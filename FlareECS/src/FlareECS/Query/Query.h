@@ -27,7 +27,7 @@ namespace Flare
 		constexpr QueryChunkIterator(EntityDataGetter& dataGetter, size_t entityIndex)
 			: m_DataGetter(dataGetter), m_EntityIndex(entityIndex) {}
 
-		constexpr QueryChunkEntity operator*() { return QueryChunkEntity(m_DataGetter.GetData(m_EntityIndex)); }
+		constexpr QueryChunkEntity operator*() { return QueryChunkEntity(m_DataGetter.GetData(m_EntityIndex), m_EntityIndex); }
 
 		constexpr QueryChunkIterator& operator++()
 		{
@@ -94,7 +94,7 @@ namespace Flare
 	template<typename T>
 	struct QueryIterationHelper
 	{
-		static std::tuple<QueryChunk> Get(QueryChunk chunk, const size_t* componentOffset)
+		static std::tuple<QueryChunk> Get(QueryChunk chunk, const ArchetypeRecord& archetype, size_t chunkIndex, EntityStorage& storage)
 		{
 			return std::make_tuple(chunk);
 		}
@@ -108,7 +108,7 @@ namespace Flare
 	template<typename FirstArg, typename... Args>
 	struct QueryIterationHelper<ArgumentsList<FirstArg, Args...>>
 	{
-		static std::tuple<QueryChunk, Args...> Get(QueryChunk chunk, const size_t* componentOffsets)
+		static std::tuple<QueryChunk, Args...> Get(QueryChunk chunk, const ArchetypeRecord& archetype, size_t chunkIndex, EntityStorage& storage)
 		{
 			FLARE_PROFILE_FUNCTION();
 			size_t componentIndex = 0;
@@ -122,7 +122,15 @@ namespace Flare
 			([&]()
 				{
 					static_assert(IsComponentView<Args>);
-					std::get<Args>(tuple) = Args(componentOffsets[componentIndex++]);
+
+					using ComponentType = typename ComponentViewUnderlyingType<Args>::Type;
+					ComponentId componentId = COMPONENT_ID(std::remove_reference_t<typename ComponentViewUnderlyingType<Args>::Type>);
+
+					auto componentIndex = archetype.TryGetComponentIndex(componentId);
+					FLARE_CORE_ASSERT(componentIndex.has_value());
+
+					ComponentType* componentArray = (ComponentType*)storage.GetComponentArray(chunkIndex, *componentIndex);
+					std::get<Args>(tuple) = Args(componentArray);
 				} (), ...);
 
 			return tuple;
@@ -199,7 +207,9 @@ namespace Flare
 						QueryChunk(storage->CreateEntityDataGetter(chunkIndex),
 							storage->CreateEntityIdGetter(chunkIndex),
 							storage->GetEntitiesCountInChunk(chunkIndex)),
-						componentOffsets);
+						archetype,
+						chunkIndex,
+						*storage);
 
 					{
 						FLARE_PROFILE_SCOPE("IterateChunk");

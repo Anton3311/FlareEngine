@@ -114,7 +114,7 @@ namespace Flare
 		const ArchetypeRecord& archetype = m_ArchetypesRegistry->operator[](m_Archetype);
 
 		uint8_t* componentArray = (uint8_t*)GetComponentArray(chunkIndex, componentIndex);
-		size_t componentOffset = componentIndex * m_ArchetypesRegistry->GetCompatibleComponents()
+		size_t componentOffset = entityIndex * m_ArchetypesRegistry->GetCompatibleComponents()
 			.GetComponentInfo(archetype.Components[componentIndex]).Size;
 
 		return componentArray + componentOffset;
@@ -151,6 +151,22 @@ namespace Flare
 				.GetComponentInfo(archetypeRecord.Components[componentIndex]);
 
 			componentInfo.Initializer->Type.Functions.CopyConstructor(GetEntityComponentData(entityIndex, componentIndex), componentData[componentIndex]);
+		}
+	}
+
+	void EntityStorage::MoveConstructEntity(size_t entityIndex, Span<void*> componentData)
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		const ArchetypeRecord& archetypeRecord = m_ArchetypesRegistry->operator[](m_Archetype);
+		FLARE_CORE_ASSERT(componentData.GetSize() == archetypeRecord.Components.size());
+
+		for (size_t componentIndex = 0; componentIndex < archetypeRecord.Components.size(); componentIndex++)
+		{
+			const ComponentInfo& componentInfo = m_ArchetypesRegistry->GetCompatibleComponents()
+				.GetComponentInfo(archetypeRecord.Components[componentIndex]);
+
+			componentInfo.Initializer->Type.Functions.MoveConstructor(GetEntityComponentData(entityIndex, componentIndex), componentData[componentIndex]);
 		}
 	}
 
