@@ -120,7 +120,6 @@ namespace Flare
 		{
 			Entity Id;
 			ArchetypeId Archetype = INVALID_ARCHETYPE_ID;
-			uint8_t* Data = nullptr;
 		};
 
 		// Ensures that each archetype has a valid entity storage

@@ -2,6 +2,9 @@
 
 #include "FlareCore/Assert.h"
 
+#include "FlareECS/Entity/Archetype.h"
+#include "FlareECS/Entity/Archetypes.h"
+
 #include "FlareECS/Entity/Entity.h"
 #include "FlareECS/EntityStorage/EntityStorageChunk.h"
 
@@ -9,6 +12,8 @@
 
 namespace Flare	
 {
+	struct Components;
+
 	inline void PackEntityId(Entity entity, uint16_t outPacked[3])
 	{
 		outPacked[0] = (uint16_t)(entity.GetIndex() & 0xffff);
@@ -92,12 +97,11 @@ namespace Flare
 		EntityStorage& operator=(EntityStorage&& other) noexcept = default;
 
 		size_t AddEntity(Entity entity);
-		uint8_t* GetEntityData(size_t index) const;
 		void RemoveEntity(size_t index);
 
 		size_t GetEntitiesCountInChunk(size_t index) const;
 
-		void Initialize(const EntityStorageRequirements& storageRequirements);
+		void Initialize(const EntityStorageRequirements& storageRequirements, const Archetypes& archetypes, ArchetypeId archetype);
 		void Release();
 
 		Entity GetEntityId(size_t entityIndex) const;
@@ -107,10 +111,12 @@ namespace Flare
 			return EntityDataGetter(m_Chunks[chunkIndex], m_Layout.EntityStride);
 		}
 
-		inline EntityIdGetter GcreateEntityIdGetter(size_t chunkIndex)
+		inline EntityIdGetter CreateEntityIdGetter(size_t chunkIndex)
 		{
 			return EntityIdGetter(m_Chunks[chunkIndex], m_Layout.IdOffset, m_Layout.IdStride);
 		}
+
+		void* GetEntityComponentData(size_t entityIndex, size_t componentIndex) const;
 
 		inline const EntityStorageRequirements& GetStorageRequirements() const { return m_StorageRequirements; }
 		inline size_t GetEntitySize() const { return m_StorageRequirements.EntitySize; }
@@ -123,8 +129,30 @@ namespace Flare
 
 		inline size_t GetChunkCount() const { return m_Chunks.size(); }
 		inline const EntityStorageChunk& GetChunk(size_t index) const { return m_Chunks[index]; }
+
+		// Entity data operations
+		inline void DefaultConstructEntity(size_t entityIndex)
+		{
+			const ArchetypeRecord& archetypeRecord = m_ArchetypesRegistry->operator[](m_Archetype);
+			DefaultConstructEntityComponentsRange(entityIndex, 0, archetypeRecord.Components.size());
+		}
+
+		void DefaultConstructEntityComponentsRange(size_t entityIndex, size_t startComponent, size_t componentCount);
+		void CopyConstructEntity(size_t entityIndex, Span<const void*> componentData);
+
+		// Uses components' move assignment operator to move entity components from source storage
+		void MoveEntityData(size_t sourceEntityIndex, EntityStorage& sourceStorage, size_t destinationEntityIndex);
 	private:
 		static constexpr size_t PACKED_ENTITY_ID_SIZE = sizeof(uint16_t) * 3;
+
+		void ReleaseEntityComponents(size_t entityIndex);
+		void ReleaseAllEntities();
+
+		void* GetComponentArray(size_t chunkIndex, size_t componentIndex) const
+		{
+			size_t arrayOffset = m_ArchetypesRegistry->operator[](m_Archetype).ComponentArrayOffsets[componentIndex];
+			return m_Chunks[chunkIndex].GetBuffer() + arrayOffset;
+		}
 
 		inline size_t GetIdEntryOffset(size_t entityIndexInChunk) const
 		{
@@ -140,6 +168,9 @@ namespace Flare
 		void UpdateEntityIdEntry(EntityStorageChunk& chunk, Entity entityId, size_t entityIndexInChunk);
 		Entity ReadEntityIdEntry(const EntityStorageChunk& chunk, size_t entityIndexInChunk) const;
 	private:
+		const Archetypes* m_ArchetypesRegistry = nullptr;
+		ArchetypeId m_Archetype = INVALID_ARCHETYPE_ID;
+
 		std::vector<EntityStorageChunk> m_Chunks;
 
 		EntityStorageRequirements m_StorageRequirements;

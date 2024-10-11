@@ -47,6 +47,8 @@ namespace Flare
 		std::vector<ComponentId> Components; // Sorted
 		std::vector<size_t> ComponentOffsets;
 
+		std::vector<size_t> ComponentArrayOffsets;
+
 		std::unordered_map<ComponentId, ArchetypeEdge> Edges;
 	};
 }

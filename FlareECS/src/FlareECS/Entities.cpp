@@ -66,7 +66,9 @@ namespace Flare
 		CreateEntity(components, result);
 
 		const auto& archetype = m_Archetypes[result.Archetype];
-		InitializeEntityComponents(archetype, result.Data, 0, archetype.Components.size(), initStrategy);
+		const EntityRecord& entityRecord = m_EntityRecords[FindEntity(result.Id)->second];
+
+		GetEntityStorage(result.Archetype).DefaultConstructEntity(entityRecord.BufferIndex);
 
 		return result.Id;
 	}
@@ -83,24 +85,18 @@ namespace Flare
 		EntityCreationResult result;
 		CreateEntity(ComponentSet(m_TemporaryComponentSet.data(), count), result);
 
-		FLARE_CORE_ASSERT(result.Data);
+		FLARE_CORE_ASSERT(copyComponents);
 
-		const ArchetypeRecord& archetypeRecord = m_Archetypes[result.Archetype];
+		const auto& archetype = m_Archetypes[result.Archetype];
+		const EntityRecord& entityRecord = m_EntityRecords[FindEntity(result.Id)->second];
+
+		std::vector<const void*> componentData;
+		componentData.resize(count);
+
 		for (size_t i = 0; i < count; i++)
-		{
-			if (components[i].second == nullptr)
-				continue;
+			componentData[i] = components[i].second;
 
-			uint8_t* componentLocation = result.Data + archetypeRecord.ComponentOffsets[i];
-
-			const ComponentInfo& info = m_Components.GetComponentInfo(components[i].first);
-
-			if (copyComponents)
-				info.Initializer->Type.Functions.CopyConstructor(componentLocation, components[i].second);
-			else
-				info.Initializer->Type.Functions.MoveConstructor(componentLocation, components[i].second);
-		}
-
+		GetEntityStorage(result.Archetype).CopyConstructEntity(entityRecord.BufferIndex, Span<const void*>::FromVector(componentData));
 		return result.Id;
 	}
 
@@ -122,18 +118,28 @@ namespace Flare
 
 		record.BufferIndex = storage.AddEntity(record.Id);
 
-		uint8_t* entityData = storage.GetEntityData(record.BufferIndex);
 		switch (initStrategy)
 		{
 		case ComponentInitializationStrategy::Zero:
 		{
-			// Initialize entity data to 0
-			std::memset(entityData, 0, storage.GetEntitySize());
+			for (size_t componentIndex = 0; componentIndex < archetypeRecord.Components.size(); componentIndex++)
+			{
+				void* componentData = storage.GetEntityComponentData(record.BufferIndex, componentIndex);
+				size_t componentSize = m_Components.GetComponentInfo(archetypeRecord.Components[componentIndex]).Size;
+
+				std::memset(componentData, 0, componentSize);
+			}
+
 			break;
 		}
 		case ComponentInitializationStrategy::DefaultConstructor:
 		{
-			EntityHelper::DefaultConstruct(archetypeRecord, m_Components, entityData);
+			for (size_t componentIndex = 0; componentIndex < archetypeRecord.Components.size(); componentIndex++)
+			{
+				void* componentData = storage.GetEntityComponentData(record.BufferIndex, componentIndex);
+				m_Components.GetComponentInfo(archetypeRecord.Components[componentIndex]).Initializer->Type.Functions.DefaultConstructor(componentData);
+			}
+
 			break;
 		}
 		}
@@ -168,16 +174,8 @@ namespace Flare
 			auto& deletedEntities = GetDeletedEntityStorage(archetype.Id);
 
 			size_t index = deletedEntities.AddEntity(entity);
-			uint8_t* oldEntityData = storage.GetEntityData(record.BufferIndex);
-			uint8_t* newEntityData = deletedEntities.GetEntityData(index);
 
-			InitializeEntityComponents(archetype, newEntityData, 0, archetype.Components.size(), ComponentInitializationStrategy::DefaultConstructor);
-			MoveEntityComponents(oldEntityData, newEntityData, archetype, 0, archetype.Components.size());
-		}
-		else
-		{
-			uint8_t* entityData = storage.GetEntityData(record.BufferIndex);
-			EntityHelper::Destroy(archetype, m_Components, entityData);
+			deletedEntities.MoveEntityData(record.BufferIndex, storage, index);
 		}
 
 		storage.RemoveEntity(record.BufferIndex);
@@ -266,7 +264,7 @@ namespace Flare
 				EntityStorageRequirements storageRequirements{};
 				storageRequirements.EntitySize = archetype.EntitySize;
 				storageRequirements.EntityAlignment = archetype.EntityAlignment;
-				storage.Initialize(storageRequirements);
+				storage.Initialize(storageRequirements, m_Archetypes, archetype.Id);
 			}
 
 			m_Archetypes.Records[entityRecord.Archetype].Edges.emplace(componentId, ArchetypeEdge{newArchetypeId, INVALID_ARCHETYPE_ID});
@@ -281,42 +279,44 @@ namespace Flare
 		EntityStorage& oldStorage = GetEntityStorage(oldArchetype.Id);
 		EntityStorage& newStorage = GetEntityStorage(newArchetypeId);
 
+		size_t oldEntityIndex = entityRecord.BufferIndex;
 		size_t newEntityIndex = newStorage.AddEntity(entityRecord.Id);
-		uint8_t* newEntityData = newStorage.GetEntityData(newEntityIndex);
-		uint8_t* oldEntityData = oldStorage.GetEntityData(entityRecord.BufferIndex);
 
-		size_t sizeBefore = oldStorage.GetEntitySize();
-		if (insertedComponentIndex < oldArchetype.Components.size())
-			sizeBefore = oldArchetype.ComponentOffsets[insertedComponentIndex];
-
-		// Initialize component before the inserted one using a default constructor
-		InitializeEntityComponents(newArchetype,
-			newEntityData, 0, insertedComponentIndex,
-			ComponentInitializationStrategy::DefaultConstructor);
-
-		// Initialize component after the inserted one using a default constructor
-		InitializeEntityComponents(newArchetype,
-			newEntityData, insertedComponentIndex + 1,
-			newArchetype.Components.size() - insertedComponentIndex - 1,
-			ComponentInitializationStrategy::DefaultConstructor);
-
-		MoveEntityComponents(oldEntityData, newEntityData, oldArchetype, 0, insertedComponentIndex);
-		MoveEntityComponents(oldEntityData, newEntityData + sizeBefore + componentInfo.Size,
-			oldArchetype, insertedComponentIndex, oldArchetype.Components.size() - insertedComponentIndex);
-
-		uint8_t* componentLocation = newEntityData + sizeBefore;
-		if (componentData == nullptr)
 		{
-			if (initStrategy == ComponentInitializationStrategy::Zero || !componentInfo.Initializer)
-				std::memset(componentLocation, 0, componentInfo.Size);
-			else
-				componentInfo.Initializer->Type.Functions.DefaultConstructor(componentLocation);
-		}
-		else
-		{
-			componentInfo.Initializer->Type.Functions.MoveConstructor(componentLocation, componentData);
+			// Copy construct an added component
+			void* destination = newStorage.GetEntityComponentData(newEntityIndex, insertedComponentIndex);
+
+			const ComponentInfo& componentInfo = m_Components.GetComponentInfo(componentId);
+			componentInfo.Initializer->Type.Functions.CopyConstructor(destination, componentData);
 		}
 
+		{
+			// Move construct components before the inserted one
+			for (size_t componentIndex = 0; componentIndex < insertedComponentIndex; componentIndex++)
+			{
+				const ComponentInfo& componentInfo = m_Components.GetComponentInfo(newArchetype.Components[componentIndex]);
+
+				componentInfo.Initializer->Type.Functions.MoveConstructor(
+					newStorage.GetEntityComponentData(newEntityIndex, componentIndex),
+					oldStorage.GetEntityComponentData(oldEntityIndex, componentIndex));
+			}
+		}
+
+		{
+			// Move construct components after the inserted one
+
+			size_t sourceIndex = insertedComponentIndex;
+			for (size_t destinationIndex = insertedComponentIndex + 1; destinationIndex < newArchetype.Components.size(); destinationIndex++, sourceIndex++)
+			{
+				const ComponentInfo& componentInfo = m_Components.GetComponentInfo(newArchetype.Components[destinationIndex]);
+
+				componentInfo.Initializer->Type.Functions.MoveConstructor(
+					newStorage.GetEntityComponentData(newEntityIndex, destinationIndex),
+					oldStorage.GetEntityComponentData(oldEntityIndex, sourceIndex));
+			}
+		}
+
+		// Remove old entity data
 		RemoveEntityData(entityRecord.Archetype, entityRecord.BufferIndex);
 
 		entityRecord.Archetype = newArchetypeId;
@@ -387,7 +387,7 @@ namespace Flare
 				EntityStorageRequirements storageRequirements{};
 				storageRequirements.EntitySize = archetype.EntitySize;
 				storageRequirements.EntityAlignment = archetype.EntityAlignment;
-				storage.Initialize(storageRequirements);
+				storage.Initialize(storageRequirements, m_Archetypes, archetype.Id);
 			}
 
 			m_Archetypes.Records[entityRecord.Archetype].Edges.emplace(componentId, ArchetypeEdge{ INVALID_ARCHETYPE_ID, newArchetypeId });
@@ -403,25 +403,34 @@ namespace Flare
 		size_t sizeBefore = oldArchetype.ComponentOffsets[removedComponentIndex];
 		size_t sizeAfter = oldStorage.GetEntitySize() - (sizeBefore + componentInfo.Size);
 
+		size_t oldEntityIndex = entityRecord.BufferIndex;
 		size_t newEntityIndex = newStorage.AddEntity(entityRecord.Id);
 
-		uint8_t* newEntityData = newStorage.GetEntityData(newEntityIndex);
-		uint8_t* oldEntityData = oldStorage.GetEntityData(entityRecord.BufferIndex);
+		{
+			// Move construct components before the removed one
+			for (size_t componentIndex = 0; componentIndex < removedComponentIndex; componentIndex++)
+			{
+				const ComponentInfo& componentInfo = m_Components.GetComponentInfo(newArchetype.Components[componentIndex]);
 
-		// Delete requested component
-		componentInfo.Initializer->Type.Functions.Destructor(oldEntityData + sizeBefore);
+				componentInfo.Initializer->Type.Functions.MoveConstructor(
+					newStorage.GetEntityComponentData(newEntityIndex, componentIndex),
+					oldStorage.GetEntityComponentData(oldEntityIndex, componentIndex));
+			}
+		}
 
-		// Initialize components 
-		InitializeEntityComponents(newArchetype, newEntityData, 0, newArchetype.Components.size(), ComponentInitializationStrategy::DefaultConstructor);
-		// Move components before deleted
-		MoveEntityComponents(oldEntityData, newEntityData, oldArchetype, 0, removedComponentIndex);
-		// Move components after deleted
-		MoveEntityComponents(oldEntityData, newEntityData + sizeBefore, oldArchetype, removedComponentIndex + 1, oldArchetype.Components.size() - removedComponentIndex - 1);
+		{
+			// Move construct components after the removed one
 
-#if 0
-		std::memcpy(newEntityData, oldEntityData, sizeBefore);
-		std::memcpy(newEntityData + sizeBefore, oldEntityData + sizeBefore + componentInfo.Size, sizeAfter);
-#endif
+			size_t sourceIndex = removedComponentIndex + 1;
+			for (size_t destinationIndex = removedComponentIndex; destinationIndex < newArchetype.Components.size(); destinationIndex++, sourceIndex++)
+			{
+				const ComponentInfo& componentInfo = m_Components.GetComponentInfo(newArchetype.Components[destinationIndex]);
+
+				componentInfo.Initializer->Type.Functions.MoveConstructor(
+					newStorage.GetEntityComponentData(newEntityIndex, destinationIndex),
+					oldStorage.GetEntityComponentData(oldEntityIndex, sourceIndex));
+			}
+		}
 
 		RemoveEntityData(entityRecord.Archetype, entityRecord.BufferIndex);
 
@@ -489,8 +498,7 @@ namespace Flare
 		if (!componentIndex.has_value())
 			return nullptr;
 
-		uint8_t* entityData = storage.GetEntityData(entityRecord.BufferIndex);
-		return entityData + archetype.ComponentOffsets[componentIndex.value()];
+		return storage.GetEntityComponentData(entityRecord.BufferIndex, *componentIndex);
 	}
 
 	const void* Entities::GetEntityComponent(Entity entity, ComponentId component) const
@@ -508,8 +516,7 @@ namespace Flare
 		if (!componentIndex.has_value())
 			return nullptr;
 
-		const uint8_t* entityData = storage.GetEntityData(entityRecord.BufferIndex);
-		return entityData + archetype.ComponentOffsets[componentIndex.value()];
+		return storage.GetEntityComponentData(entityRecord.BufferIndex, *componentIndex);
 	}
 
 	void* Entities::GetSingletonComponent(ComponentId id) const
@@ -561,8 +568,7 @@ namespace Flare
 			return nullptr;
 		}
 
-		uint8_t* entityData = storage.GetEntityData(0);
-		return entityData + record.ComponentOffsets[componentIndex];
+		return storage.GetEntityComponentData(0, componentIndex);
 	}
 
 	std::optional<Entity> Entities::GetSingletonEntity(const Query& query) const
@@ -657,7 +663,7 @@ namespace Flare
 				EntityStorageRequirements storageRequirements{};
 				storageRequirements.EntitySize = m_Archetypes[i].EntitySize;
 				storageRequirements.EntityAlignment = m_Archetypes[i].EntityAlignment;
-				m_EntityStorages[i].Initialize(storageRequirements);
+				m_EntityStorages[i].Initialize(storageRequirements, m_Archetypes, m_Archetypes[i].Id);
 			}
 		}
 
@@ -695,7 +701,7 @@ namespace Flare
 			EntityStorageRequirements storageRequirements{};
 			storageRequirements.EntitySize = archetype.EntitySize;
 			storageRequirements.EntityAlignment = archetype.EntityAlignment;
-			GetEntityStorage(record.Archetype).Initialize(storageRequirements);
+			GetEntityStorage(record.Archetype).Initialize(storageRequirements, m_Archetypes, archetype.Id);
 		}
 
 		ArchetypeRecord& archetypeRecord = m_Archetypes.Records[record.Archetype];
@@ -706,7 +712,6 @@ namespace Flare
 
 		result.Id = record.Id;
 		result.Archetype = record.Archetype;
-		result.Data = storage.GetEntityData(record.BufferIndex);
 
 		if (archetypeRecord.IsUsedInCreatedEntitiesQuery())
 		{
@@ -775,7 +780,7 @@ namespace Flare
 			EntityStorageRequirements storageRequirements{};
 			storageRequirements.EntitySize = archetypeRecord.EntitySize;
 			storageRequirements.EntityAlignment = archetypeRecord.EntityAlignment;
-			storage.Initialize(storageRequirements);
+			storage.Initialize(storageRequirements, m_Archetypes, archetypeRecord.Id);
 			return storage;
 		}
 
@@ -804,16 +809,9 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		for (const auto& [archetypeId, storage] : m_DeletedEntitiesStorages)
+		for (auto& [archetypeId, storage] : m_DeletedEntitiesStorages)
 		{
-			FLARE_CORE_ASSERT(m_Archetypes.IsIdValid(archetypeId));
-
-			const ArchetypeRecord& archetype = m_Archetypes[archetypeId];
-			for (size_t entityIndex = 0; entityIndex < storage.GetEntityCount(); entityIndex++)
-			{
-				uint8_t* entityData = storage.GetEntityData(entityIndex);
-				EntityHelper::Destroy(archetype, m_Components, entityData);
-			}
+			storage.Release();
 		}
 
 		m_DeletedEntitiesStorages.clear();
@@ -890,11 +888,7 @@ namespace Flare
 				continue;
 
 			EntityStorage& storage = m_EntityStorages[archetype.Id];
-			for (size_t entityIndex = 0; entityIndex < storage.GetEntityCount(); entityIndex++)
-			{
-				uint8_t* entityData = storage.GetEntityData(entityIndex);
-				EntityHelper::Destroy(archetype, m_Components, entityData);
-			}
+			storage.Release();
 		}
 	}
 

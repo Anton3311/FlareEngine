@@ -197,7 +197,7 @@ namespace Flare
 				{
 					auto arguments = IterationHelper::Get(
 						QueryChunk(storage->CreateEntityDataGetter(chunkIndex),
-							storage->GcreateEntityIdGetter(chunkIndex),
+							storage->CreateEntityIdGetter(chunkIndex),
 							storage->GetEntitiesCountInChunk(chunkIndex)),
 						componentOffsets);
 

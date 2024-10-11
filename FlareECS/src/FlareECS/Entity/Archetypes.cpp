@@ -4,6 +4,7 @@
 
 #include "FlareECS/Entity/Components.h"
 #include "FlareECS/Entity/ComponentInitializer.h"
+#include "FlareECS/EntityStorage/EntityStorageChunk.h"
 
 #include <algorithm>
 
@@ -161,6 +162,21 @@ namespace Flare
 			offset += componentSize;
 			archetype.EntitySize += componentSize;
 			archetype.EntityAlignment = std::max(archetype.EntityAlignment, info.Initializer->Type.Alignment);
+		}
+		
+		{
+			archetype.ComponentArrayOffsets.resize(archetype.Components.size(), 0);
+
+			size_t offset = 0;
+			size_t entityCount = EntityStorageChunk::CHUNK_SIZE / (archetype.EntitySize + 6); // 6 bytes of packed entity id
+
+			for (size_t componentIndex = 0; componentIndex < archetype.Components.size(); componentIndex++)
+			{
+				archetype.ComponentArrayOffsets[componentIndex] = offset;
+
+				const ComponentInfo& info = m_ComponentsRegistry.GetComponentInfo(archetype.Components[componentIndex]);
+				offset += info.Size * entityCount;
+			}
 		}
 
 		archetype.EntitySize = Align(archetype.EntitySize, m_ComponentsRegistry.GetComponentInfo(archetype.Components[0]).Initializer->Type.Alignment);
