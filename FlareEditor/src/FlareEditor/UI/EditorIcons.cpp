@@ -1,3 +1,5 @@
+#include "PCH.h"
+
 #include "EditorIcons.h"
 
 namespace Flare

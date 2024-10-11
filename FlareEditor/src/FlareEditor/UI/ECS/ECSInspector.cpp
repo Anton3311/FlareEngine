@@ -1,3 +1,5 @@
+#include "PCH.h"
+
 #include "ECSInspector.h"
 
 #include "FlareCore/Profiler/Profiler.h"

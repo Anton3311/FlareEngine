@@ -1,3 +1,5 @@
+#include "PCH.h"
+
 #include "ImGuiLayer.h"
 
 #include "FlareCore/Profiler/Profiler.h"

@@ -1,3 +1,5 @@
+#include "PCH.h"
+
 #include "ProjectSettingsWindow.h"
 
 #include "Flare/Project/Project.h"

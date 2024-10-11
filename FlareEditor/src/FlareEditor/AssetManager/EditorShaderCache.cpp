@@ -1,3 +1,5 @@
+#include "PCH.h"
+
 #include "EditorShaderCache.h"
 
 #include "FlareCore/Core.h"

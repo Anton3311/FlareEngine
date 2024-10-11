@@ -1,3 +1,5 @@
+#include "PCH.h"
+
 #include "SceneSerializer.h"
 
 #include "FlareCore/Profiler/Profiler.h"

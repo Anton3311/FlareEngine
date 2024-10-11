@@ -1,3 +1,5 @@
+#include "PCH.h"
+
 #include "SpriteEditor.h"
 
 #include "Flare/AssetManager/AssetManager.h"

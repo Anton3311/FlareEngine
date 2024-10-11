@@ -1,3 +1,5 @@
+#include "PCH.h"
+
 #include "SpriteImporter.h"
 
 #include "FlareCore/Log.h"

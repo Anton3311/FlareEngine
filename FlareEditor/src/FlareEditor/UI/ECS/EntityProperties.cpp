@@ -1,3 +1,5 @@
+#include "PCH.h"
+
 #include "EntityProperties.h"
 
 #include "Flare/AssetManager/AssetManager.h"

@@ -1,3 +1,5 @@
+#include "PCH.h"
+
 #include "ShaderCompiler.h"
 
 #include "FlareCore/Log.h"

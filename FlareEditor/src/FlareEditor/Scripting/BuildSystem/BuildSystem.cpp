@@ -1,3 +1,5 @@
+#include "PCH.h"
+
 #include "BuildSystem.h"
 
 #include "FlareCore/Log.h"

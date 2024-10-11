@@ -1,3 +1,5 @@
+#include "PCH.h"
+
 #include "EditorCamera.h"
 
 #include "FlareCore/Log.h"

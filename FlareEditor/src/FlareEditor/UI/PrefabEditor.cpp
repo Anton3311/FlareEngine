@@ -1,3 +1,5 @@
+#include "PCH.h"
+
 #include "PrefabEditor.h"
 
 #include "Flare/Scene/Prefab.h"

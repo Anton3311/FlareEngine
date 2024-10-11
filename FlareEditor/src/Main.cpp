@@ -1,3 +1,5 @@
+#include "PCH.h"
+
 #include "Flare/Core/EntryPoint.h"
 
 #include "FlareEditor/EditorApplication.h"

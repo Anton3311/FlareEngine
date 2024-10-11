@@ -1,3 +1,5 @@
+#include "PCH.h"
+
 #include "SerializablePropertyRenderer.h"
 
 #include "Flare/Renderer/Material.h"

@@ -1,3 +1,5 @@
+#include "PCH.h"
+
 #include "EditorGUI.h"
 
 #include "FlareCore/Serialization/SerializationStream.h"

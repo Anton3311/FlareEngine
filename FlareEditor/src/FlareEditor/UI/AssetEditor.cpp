@@ -1,3 +1,5 @@
+#include "PCH.h"
+
 #include "AssetEditor.h"
 
 namespace Flare

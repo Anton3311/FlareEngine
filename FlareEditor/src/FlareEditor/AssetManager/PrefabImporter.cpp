@@ -1,3 +1,5 @@
+#include "PCH.h"
+
 #include "PrefabImporter.h"
 
 #include "FlareCore/Log.h"

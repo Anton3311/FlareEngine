@@ -1,3 +1,5 @@
+#include "PCH.h"
+
 #include "WindowsWindowControls.h"
 
 #include "Flare/Core/Application.h"

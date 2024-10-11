@@ -1,3 +1,5 @@
+#include "PCH.h"
+
 #include "EntitiesHierarchy.h"
 
 #include "FlareCore/Profiler/Profiler.h"

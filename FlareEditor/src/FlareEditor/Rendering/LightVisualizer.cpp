@@ -1,3 +1,5 @@
+#include "PCH.h"
+
 #include "LightVisualizer.h"
 
 #include "FlareCore/Log.h"

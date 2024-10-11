@@ -1,3 +1,5 @@
+#include "PCH.h"
+
 #include "TextureImporter.h"
 
 #include "FlareCore/Log.h"

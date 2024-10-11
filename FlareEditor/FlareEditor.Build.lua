@@ -13,6 +13,9 @@ project "FlareEditor"
 
     files
     {
+		"PCH.h",
+		"PCH.cpp",
+
         "src/**.h",
         "src/**.cpp",
 
@@ -22,6 +25,7 @@ project "FlareEditor"
 
     includedirs
     {
+		".",
         "src",
 		"%{wks.location}/Flare/src",
 		"%{wks.location}/FlareCore/src",
@@ -44,6 +48,13 @@ project "FlareEditor"
 		INCLUDE_DIRS.vma,
 		INCLUDE_DIRS.tracy,
     }
+
+	pchheader "PCH.h"
+	pchsource "PCH.cpp"
+
+	filter "files:%{wks.location}/Flare/vendor/**.cpp"
+		flags "NoPCH"
+	filter {}
 
 	links
 	{

@@ -1,3 +1,5 @@
+#include "PCH.h"
+
 #include "PropertiesWindow.h"
 
 #include "Flare/Scene/Scene.h"

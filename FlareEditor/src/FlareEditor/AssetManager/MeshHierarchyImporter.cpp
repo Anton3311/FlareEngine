@@ -1,3 +1,5 @@
+#include "PCH.h"
+
 #include "MeshHierarchyImporter.h"
 
 #include "FlareCore/Profiler/Profiler.h"

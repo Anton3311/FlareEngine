@@ -1,3 +1,5 @@
+#include "PCH.h"
+
 #include "QuickSearch.h"
 
 #include "Flare/Core/Application.h"

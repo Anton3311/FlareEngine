@@ -1,3 +1,5 @@
+#include "PCH.h"
+
 #include "EditorTitleBar.h"
 
 #include "FlareCore/Profiler/Profiler.h"
