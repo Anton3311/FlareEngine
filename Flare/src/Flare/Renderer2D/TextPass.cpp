@@ -1,3 +1,5 @@
+#include "PCH.h"
+
 #include "TextPass.h"
 
 #include "Flare/Renderer/Buffer.h"

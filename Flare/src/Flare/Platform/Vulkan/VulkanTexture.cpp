@@ -1,3 +1,5 @@
+#include "PCH.h"
+
 #include "VulkanTexture.h"
 
 #include "FlareCore/Profiler/Profiler.h"

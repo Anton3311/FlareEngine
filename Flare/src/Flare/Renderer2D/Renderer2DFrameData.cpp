@@ -1,3 +1,5 @@
+#include "PCH.h"
+
 #include "Renderer2DFrameData.h"
 
 namespace Flare

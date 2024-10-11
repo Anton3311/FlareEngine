@@ -1,3 +1,5 @@
+#include "PCH.h"
+
 #include "VulkanGPUTimer.h"
 
 #include "Flare/Platform/Vulkan/VulkanContext.h"

@@ -1,3 +1,5 @@
+#include "PCH.h"
+
 #include "Transform.h"
 
 namespace Flare

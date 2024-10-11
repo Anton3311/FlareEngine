@@ -1,3 +1,5 @@
+#include "PCH.h"
+
 #include "GeometryPass.h"
 
 #include "Flare/Renderer/CommandBuffer.h"

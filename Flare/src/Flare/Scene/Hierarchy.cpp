@@ -1,3 +1,5 @@
+#include "PCH.h"
+
 #include "Hierarchy.h"
 
 #include "FlareCore/Log.h"

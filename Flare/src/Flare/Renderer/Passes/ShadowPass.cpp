@@ -1,3 +1,5 @@
+#include "PCH.h"
+
 #include "ShadowPass.h"
 
 #include "Flare/Renderer/Renderer.h"

@@ -1,3 +1,5 @@
+#include "PCH.h"
+
 #include "Renderer2D.h"
 
 #include "FlareCore/Core.h"

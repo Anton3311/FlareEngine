@@ -1,3 +1,5 @@
+#include "PCH.h"
+
 #include "Texture.h"
 
 #include "FlareCore/Core.h"

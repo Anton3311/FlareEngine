@@ -1,3 +1,5 @@
+#include "PCH.h"
+
 #include "DebugRendererFrameData.h"
 
 namespace Flare

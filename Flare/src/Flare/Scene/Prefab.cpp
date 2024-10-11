@@ -1,3 +1,5 @@
+#include "PCH.h"
+
 #include "Prefab.h"
 
 #include "FlareCore/Profiler/Profiler.h"

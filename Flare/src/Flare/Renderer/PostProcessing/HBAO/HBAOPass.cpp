@@ -1,3 +1,5 @@
+#include "PCH.h"
+
 #include "HBAOPass.h"
 
 #include "FlareCore/Profiler/Profiler.h"

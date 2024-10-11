@@ -1,3 +1,5 @@
+#include "PCH.h"
+
 #include "Atmosphere.h"
 
 #include "Flare/AssetManager/AssetManager.h"

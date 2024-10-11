@@ -1,3 +1,5 @@
+#include "PCH.h"
+
 #include "GPUTimer.h"
 
 #include "Flare/Renderer/RendererAPI.h"

@@ -1,3 +1,5 @@
+#include "PCH.h"
+
 #include "Geometry2DPass.h"
 
 #include "FlareCore/Profiler/Profiler.h"

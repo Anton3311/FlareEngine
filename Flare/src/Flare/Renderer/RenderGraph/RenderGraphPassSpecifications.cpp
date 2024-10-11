@@ -1,3 +1,5 @@
+#include "PCH.h"
+
 #include "RenderGraphPassSpecifications.h"
 
 namespace Flare

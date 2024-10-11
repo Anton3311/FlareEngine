@@ -1,3 +1,5 @@
+#include "PCH.h"
+
 #include "RendererPrimitives.h"
 
 #include "FlareCore/Profiler/Profiler.h"

@@ -1,3 +1,5 @@
+#include "PCH.h"
+
 #include "ShaderCacheManager.h"
 
 namespace Flare

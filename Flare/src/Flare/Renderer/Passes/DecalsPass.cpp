@@ -1,3 +1,5 @@
+#include "PCH.h"
+
 #include "DecalsPass.h"
 
 #include "FlareCore/Profiler/Profiler.h"

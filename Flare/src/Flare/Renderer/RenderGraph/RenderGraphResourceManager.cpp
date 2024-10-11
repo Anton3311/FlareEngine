@@ -1,3 +1,5 @@
+#include "PCH.h"
+
 #include "RenderGraphResourceManager.h"
 
 #include "FlareCore/Log.h"

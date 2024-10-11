@@ -1,3 +1,5 @@
+#include "PCH.h"
+
 #include "HBAOBilateralBlurPass.h"
 
 #include "Flare/Renderer/CommandBuffer.h"

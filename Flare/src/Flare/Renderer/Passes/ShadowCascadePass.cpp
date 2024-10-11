@@ -1,3 +1,5 @@
+#include "PCH.h"
+
 #include "ShadowCascadePass.h"
 
 #include "Flare/Renderer/CommandBuffer.h"

@@ -1,3 +1,5 @@
+#include "PCH.h"
+
 #include "Sampler.h"
 
 #include "Flare/Renderer/RendererAPI.h"

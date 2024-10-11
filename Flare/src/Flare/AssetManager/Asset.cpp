@@ -1,3 +1,5 @@
+#include "PCH.h"
+
 #include "Asset.h"
 
 #include "FlareCore/Log.h"

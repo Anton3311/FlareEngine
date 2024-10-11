@@ -1,3 +1,5 @@
+#include "PCH.h"
+
 #include "Time.h"
 
 #include "FlarePlatform/Platform.h"

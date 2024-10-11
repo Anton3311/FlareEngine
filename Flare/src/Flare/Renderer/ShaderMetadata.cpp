@@ -1,3 +1,5 @@
+#include "PCH.h"
+
 #include "ShaderMetadata.h"
 
 #include "FlareCore/Profiler/Profiler.h"

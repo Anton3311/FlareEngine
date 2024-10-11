@@ -1,3 +1,5 @@
+#include "PCH.h"
+
 #include "Application.h"
 
 #include "Flare/Core/Time.h"

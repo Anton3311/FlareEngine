@@ -1,3 +1,5 @@
+#include "PCH.h"
+
 #include "PostProcessingEffect.h"
 
 #include "Flare/Renderer/PostProcessing/PostProcessingManager.h"

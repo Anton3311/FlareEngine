@@ -1,3 +1,5 @@
+#include "PCH.h"
+
 #include "Vignette.h"
 
 #include "Flare/AssetManager/AssetManager.h"

@@ -12,6 +12,9 @@ project "Flare"
 
     files
     {
+		"PCH.h",
+		"PCH.cpp",
+
         "src/**.h",
         "src/**.cpp",
 
@@ -27,6 +30,7 @@ project "Flare"
 
     includedirs
 	{
+		".",
 		"src/",
 		"%{wks.location}/FlareCore/src/",
 		"%{wks.location}/FlarePlatform/src/",
@@ -49,6 +53,13 @@ project "Flare"
 		INCLUDE_DIRS.assimp,
 		INCLUDE_DIRS.tracy,
 	}
+
+	pchheader "PCH.h"
+	pchsource "PCH.cpp"
+
+	filter "files:vendor/**.cpp"
+		flags "NoPCH"
+	filter {}
 
 	links
 	{

@@ -1,3 +1,5 @@
+#include "PCH.h"
+
 #include "SSAO.h"
 
 #include "Flare/Scene/Scene.h"
