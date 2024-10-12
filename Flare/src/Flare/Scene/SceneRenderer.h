@@ -3,6 +3,8 @@
 #include "Flare/Renderer/SceneSubmition.h"
 
 #include "FlareECS/World.h"
+#include "FlareECS/Query/Query.h"
+#include "FlareECS/System/System.h"
 #include "FlareECS/System/SystemInitializer.h"
 
 namespace Flare

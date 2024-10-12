@@ -47,14 +47,14 @@ namespace Flare
 			ComponentView<const MeshRenderer> meshes,
 			ComponentView<const TransformComponent> transforms)
 			{
-				for (auto entity : chunk)
+				for (size_t entityIndex = 0; entityIndex < chunk.GetEntityCount(); entityIndex++)
 				{
-					glm::mat4 transform = transforms[entity].GetTransformationMatrix();
+					glm::mat4 transform = transforms[entityIndex].GetTransformationMatrix();
 
-					if (meshes[entity].Mesh == nullptr)
+					if (meshes[entityIndex].Mesh == nullptr)
 						continue;
 
-					Math::AABB meshBounds = meshes[entity].Mesh->GetBounds();
+					Math::AABB meshBounds = meshes[entityIndex].Mesh->GetBounds();
 					DebugRenderer::DrawAABB(meshBounds.Transformed(transform));
 				}
 			});
@@ -64,9 +64,9 @@ namespace Flare
 			ComponentView<const TransformComponent> transforms,
 			ComponentView<const Decal> decals)
 			{
-				for (auto entity : chunk)
+				for (size_t entityIndex = 0; entityIndex < chunk.GetEntityCount(); entityIndex++)
 				{
-					DebugRenderer::DrawAABB(cubeAABB.Transformed(transforms[entity].GetTransformationMatrix()));
+					DebugRenderer::DrawAABB(cubeAABB.Transformed(transforms[entityIndex].GetTransformationMatrix()));
 				}
 			});
 	}

@@ -12,7 +12,6 @@
 #include "FlareECS/Query/ComponentView.h"
 #include "FlareECS/Query/QueryCache.h"
 #include "FlareECS/Query/QueryData.h"
-#include "FlareECS/Query/QueryChunkEntity.h"
 
 #include "FlareECS/Entities.h"
 
@@ -21,40 +20,12 @@
 
 namespace Flare
 {
-	class QueryChunkIterator
-	{
-	public:
-		constexpr QueryChunkIterator(EntityDataGetter& dataGetter, size_t entityIndex)
-			: m_DataGetter(dataGetter), m_EntityIndex(entityIndex) {}
-
-		constexpr QueryChunkEntity operator*() { return QueryChunkEntity(m_DataGetter.GetData(m_EntityIndex), m_EntityIndex); }
-
-		constexpr QueryChunkIterator& operator++()
-		{
-			m_EntityIndex++;
-			return *this;
-		}
-
-		constexpr bool operator==(const QueryChunkIterator& other)
-		{
-			return &m_DataGetter == &other.m_DataGetter && m_EntityIndex == other.m_EntityIndex;
-		}
-
-		constexpr bool operator!=(const QueryChunkIterator& other)
-		{
-			return &m_DataGetter != &other.m_DataGetter || m_EntityIndex != other.m_EntityIndex;
-		}
-	private:
-		EntityDataGetter& m_DataGetter;
-		size_t m_EntityIndex = 0;
-	};
-
 	class QueryChunk
 	{
 	public:
 		QueryChunk() = default;
-		QueryChunk(EntityDataGetter&& dataGetter, EntityIdGetter&& idGetter, size_t entityCount)
-			: m_DataGetter(dataGetter), m_IdGetter(idGetter), m_EntityCount(entityCount) {}
+		QueryChunk(EntityIdGetter&& idGetter, size_t entityCount)
+			: m_IdGetter(idGetter), m_EntityCount(entityCount) {}
 
 		inline Entity GetEntityId(size_t entityIndex) const
 		{
@@ -63,11 +34,8 @@ namespace Flare
 		}
 
 		constexpr size_t GetEntityCount() const { return m_EntityCount; }
-		constexpr QueryChunkIterator begin() { return QueryChunkIterator(m_DataGetter, 0); }
-		constexpr QueryChunkIterator end() { return QueryChunkIterator(m_DataGetter, m_EntityCount); }
 	private:
 		size_t m_EntityCount = 0;
-		EntityDataGetter m_DataGetter;
 		EntityIdGetter m_IdGetter;
 	};
 
@@ -97,11 +65,6 @@ namespace Flare
 		static std::tuple<QueryChunk> Get(QueryChunk chunk, const ArchetypeRecord& archetype, size_t chunkIndex, EntityStorage& storage)
 		{
 			return std::make_tuple(chunk);
-		}
-
-		static void FillComponentOffsets(size_t* offsets, const ArchetypeRecord& archetype, const Archetypes& archetypes)
-		{
-		
 		}
 	};
 
@@ -135,21 +98,6 @@ namespace Flare
 
 			return tuple;
 		}
-
-		static void FillComponentOffsets(size_t* offsets, const ArchetypeRecord& archetype, const Archetypes& archetypes)
-		{
-			FLARE_PROFILE_FUNCTION();
-			size_t index = 0;
-			([&]()
-				{
-					static_assert(IsComponentView<Args>);
-					ComponentId componentId = COMPONENT_ID(std::remove_reference_t<typename ComponentViewUnderlyingType<Args>::Type>);
-					std::optional<size_t> componentIndex = archetype.TryGetComponentIndex(componentId);
-					if (componentIndex)
-						offsets[index] = archetype.ComponentOffsets[*componentIndex];
-					index++;
-				} (), ...);
-		}
 	};
 
 	class FLAREECS_API Query : public EntitiesQuery
@@ -180,7 +128,6 @@ namespace Flare
 
 			const QueryData& queryData = m_Queries->GetQueryData(m_Id);
 
-			size_t componentOffsets[IteratorTraits::ArgumentsCount];
 			const Archetypes& archetypes = m_Entities->GetArchetypes();
 			for (ArchetypeId matchedArchetype : GetMatchingArchetypes())
 			{
@@ -199,14 +146,10 @@ namespace Flare
 				}
 
 				const ArchetypeRecord& archetype = archetypes[matchedArchetype];
-
-				IterationHelper::FillComponentOffsets(componentOffsets, archetype, archetypes);
 				for (size_t chunkIndex = 0; chunkIndex < storage->GetChunkCount(); chunkIndex++)
 				{
 					auto arguments = IterationHelper::Get(
-						QueryChunk(storage->CreateEntityDataGetter(chunkIndex),
-							storage->CreateEntityIdGetter(chunkIndex),
-							storage->GetEntitiesCountInChunk(chunkIndex)),
+						QueryChunk(storage->CreateEntityIdGetter(chunkIndex), storage->GetEntitiesCountInChunk(chunkIndex)),
 						archetype,
 						chunkIndex,
 						*storage);

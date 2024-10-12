@@ -37,10 +37,10 @@ namespace Flare
 
 		m_Query.ForEachChunk([](QueryChunk chunk, ComponentView<const TransformComponent> transforms, ComponentView<const CameraComponent> cameras)
 			{
-				for (QueryChunkEntity entity : chunk)
+				for (size_t entityIndex = 0; entityIndex < chunk.GetEntityCount(); entityIndex++)
 				{
-					const TransformComponent& transform = transforms[entity];
-					const CameraComponent& camera = cameras[entity];
+					const TransformComponent& transform = transforms[entityIndex];
+					const CameraComponent& camera = cameras[entityIndex];
 
 					glm::mat4 transformationMatrix = transform.GetTransformationMatrix();
 					glm::mat4 projectionMatrix = camera.GetProjection();

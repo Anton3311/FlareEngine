@@ -31,9 +31,9 @@ void PrefabSpawnSystem::OnUpdate(Flare::World& world, SystemExecutionContext& co
 
 	m_Query.ForEachChunk([&](QueryChunk chunk, ComponentView<PrefabSpawner> prefabSpawners)
 		{
-			for (auto entity : chunk)
+			for (size_t entityIndex = 0; entityIndex < chunk.GetEntityCount(); entityIndex++)
 			{
-				PrefabSpawner& spawner = prefabSpawners[entity];
+				PrefabSpawner& spawner = prefabSpawners[entityIndex];
 
 				if (!spawner.Enabled || spawner.PrefabHandle == NULL_ASSET_HANDLE)
 					continue;

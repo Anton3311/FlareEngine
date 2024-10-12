@@ -4,6 +4,9 @@
 
 #include "FlareCore/Profiler/Profiler.h"
 
+#include "FlareECS/System/System.h"
+#include "FlareECS/System/SystemsManager.h"
+
 #include "Flare/Scene/Components.h"
 #include "Flare/Scene/Scene.h"
 #include "Flare/Scene/Transform.h"
@@ -97,12 +100,12 @@ namespace Flare
 			ComponentView<const TransformComponent> transforms,
 			ComponentView<const PointLight> lights)
 			{
-				for (auto entity : chunk)
+				for (size_t entityIndex = 0; entityIndex < chunk.GetEntityCount(); entityIndex++)
 				{
 					PointLightSubmition& submition = submitions->emplace_back();
-					submition.Color = lights[entity].Color;
-					submition.Intensity = lights[entity].Intensity;
-					submition.Position = transforms[entity].Position;
+					submition.Color = lights[entityIndex].Color;
+					submition.Intensity = lights[entityIndex].Intensity;
+					submition.Position = transforms[entityIndex].Position;
 				}
 			});
 
@@ -110,21 +113,21 @@ namespace Flare
 			ComponentView<const TransformComponent> transforms,
 			ComponentView<const SpotLight> lights)
 			{
-				for (auto entity : chunk)
+				for (size_t entityIndex = 0; entityIndex < chunk.GetEntityCount(); entityIndex++)
 				{
-					if (lights[entity].OuterAngle - lights[entity].InnerAngle <= 0.0f)
+					if (lights[entityIndex].OuterAngle - lights[entityIndex].InnerAngle <= 0.0f)
 						continue;
 
-					glm::vec3 position = transforms[entity].Position;
-					glm::vec3 direction = transforms[entity].TransformDirection(glm::vec3(0.0f, 0.0f, -1.0f));
+					glm::vec3 position = transforms[entityIndex].Position;
+					glm::vec3 direction = transforms[entityIndex].TransformDirection(glm::vec3(0.0f, 0.0f, -1.0f));
 
 					SpotLightSubmition& submition = submitions->emplace_back();
-					submition.Color = lights[entity].Color;
-					submition.Intensity = lights[entity].Intensity;
+					submition.Color = lights[entityIndex].Color;
+					submition.Intensity = lights[entityIndex].Intensity;
 					submition.Direction = direction;
 					submition.Position = position;
-					submition.InnerAngleCos = glm::cos(glm::radians(lights[entity].InnerAngle));
-					submition.OuterAngleCos = glm::cos(glm::radians(lights[entity].OuterAngle));
+					submition.InnerAngleCos = glm::cos(glm::radians(lights[entityIndex].InnerAngle));
+					submition.OuterAngleCos = glm::cos(glm::radians(lights[entityIndex].OuterAngle));
 				}
 			});
 
@@ -339,10 +342,10 @@ namespace Flare
 
 		m_SpritesQuery.ForEachChunk([](QueryChunk chunk, ComponentView<const TransformComponent> transforms, ComponentView<const SpriteComponent> sprites)
 			{
-				for (auto entity : chunk)
+				for (size_t entityIndex = 0; entityIndex < chunk.GetEntityCount(); entityIndex++)
 				{
-					const auto& sprite = sprites[entity];
-					const auto& transform = transforms[entity];
+					const auto& sprite = sprites[entityIndex];
+					const auto& transform = transforms[entityIndex];
 
 					Renderer2D::DrawSprite(sprite.Sprite,
 						transform.GetTransformationMatrix(),
@@ -362,10 +365,10 @@ namespace Flare
 
 		m_TextQuery.ForEachChunk([](QueryChunk chunk, ComponentView<const TransformComponent> transforms, ComponentView<const TextComponent> textComponents)
 			{
-				for (auto entity : chunk)
+				for (size_t entityIndex = 0; entityIndex < chunk.GetEntityCount(); entityIndex++)
 				{
-					glm::mat4 transform = transforms[entity].GetTransformationMatrix();
-					const TextComponent& text = textComponents[entity];
+					glm::mat4 transform = transforms[entityIndex].GetTransformationMatrix();
+					const TextComponent& text = textComponents[entityIndex];
 
 					Renderer2D::DrawString(
 						text.Text, transform,
@@ -397,15 +400,15 @@ namespace Flare
 		RendererSubmitionQueue& submitionQueue = Renderer::GetOpaqueSubmitionQueue();
 		m_Query.ForEachChunk([&](QueryChunk chunk, ComponentView<const TransformComponent> transforms, ComponentView<MeshRenderer> meshRenderers)
 			{
-				for (auto entity : chunk)
+				for (uint32_t entityIndex = 0; entityIndex < chunk.GetEntityCount(); entityIndex++)
 				{
-					MeshRenderer& meshRenderer = meshRenderers[entity];
+					MeshRenderer& meshRenderer = meshRenderers[entityIndex];
 					if (meshRenderer.Mesh == nullptr)
 						continue;
 
 					submitionQueue.Submit(meshRenderer.Mesh,
 						Span<Ref<Material>>::FromVector(meshRenderer.Materials),
-						Math::Compact3DTransform(transforms[entity].GetTransformationMatrix()),
+						Math::Compact3DTransform(transforms[entityIndex].GetTransformationMatrix()),
 						meshRenderer.Flags);
 				}
 			});
@@ -436,14 +439,14 @@ namespace Flare
 			ComponentView<const TransformComponent> transforms,
 			ComponentView<const Decal> decals)
 			{
-				for (auto entity : chunk)
+				for (size_t entityIndex = 0; entityIndex < chunk.GetEntityCount(); entityIndex++)
 				{
-					if (decals[entity].Material == nullptr || decals[entity].Material->GetShader() == nullptr)
+					if (decals[entityIndex].Material == nullptr || decals[entityIndex].Material->GetShader() == nullptr)
 						continue;
 
 					auto& decal = sceneSubmition.DecalSubmitions.emplace_back();
-					decal.Material = decals[entity].Material;
-					decal.Transform = Math::Compact3DTransform(transforms[entity].GetTransformationMatrix());
+					decal.Material = decals[entityIndex].Material;
+					decal.Transform = Math::Compact3DTransform(transforms[entityIndex].GetTransformationMatrix());
 				}
 			});
 	}
