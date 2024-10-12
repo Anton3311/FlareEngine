@@ -701,6 +701,10 @@ namespace Flare
 			Scene::SetActive(playModeScene);
 			m_Mode = EditorMode::Play;
 
+            m_SceneRenderer = CreateScope<SceneRenderer>(playModeScene);
+
+            FLARE_CORE_INFO("Entered play mode. World: {}", (void*)&playModeScene->GetECSWorld());
+
 			playModeScene->InitializeRuntime();
 			Scene::GetActive()->OnRuntimeStart();
 
@@ -734,6 +738,8 @@ namespace Flare
 
 			Scene::SetActive(editorScene);
 			m_Mode = EditorMode::Edit;
+
+            m_SceneRenderer = CreateScope<SceneRenderer>(editorScene);
 
 			InputManager::SetCursorMode(CursorMode::Normal);
             m_ExitPlayModeScheduled = false;
