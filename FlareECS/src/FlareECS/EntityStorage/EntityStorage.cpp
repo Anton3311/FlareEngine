@@ -17,7 +17,7 @@ namespace Flare
 		m_EntityCount++;
 		size_t entityIndex = m_EntityCount - 1;
 
-		UpdateEntityIdEntry(m_Chunks.back(), entity, entityIndex % m_EntitiesPerChunk);
+		UpdateEntityIdEntry(m_Chunks.size() - 1, entity, entityIndex % m_EntitiesPerChunk);
 
 		return entityIndex;
 	}
@@ -45,8 +45,8 @@ namespace Flare
 			size_t chunkIndex = index / m_EntitiesPerChunk;
 			size_t indexInChunk = index % m_EntitiesPerChunk;
 
-			UpdateEntityIdEntry(m_Chunks[chunkIndex], lastEntityId, indexInChunk);
-			InvalidateEntityIdEntry(m_Chunks.back(), (m_EntityCount - 1) % m_EntitiesPerChunk);
+			UpdateEntityIdEntry(chunkIndex, lastEntityId, indexInChunk);
+			InvalidateEntityIdEntry(m_Chunks.size() - 1, (m_EntityCount - 1) % m_EntitiesPerChunk);
 		}
 
 		// Destroy the last entity, because
@@ -86,14 +86,7 @@ namespace Flare
 		FLARE_CORE_ASSERT(storageRequirements.IsValid());
 		m_StorageRequirements = storageRequirements;
 
-		// TODO: Account for 2 byte alignment of packed entity id
-		size_t entityAndIdSize = m_StorageRequirements.EntitySize + PACKED_ENTITY_ID_SIZE;
-
-		m_EntitiesPerChunk = (size_t)floor((float)EntityStorageChunk::CHUNK_SIZE / (float)entityAndIdSize);
-		m_Layout.ChunkSize = m_EntitiesPerChunk * m_StorageRequirements.EntitySize;
-		m_Layout.EntityStride = m_StorageRequirements.EntitySize;
-		m_Layout.IdOffset = archetypes[archetype].IdsBufferOffset;
-		m_Layout.IdStride = PACKED_ENTITY_ID_SIZE;
+		m_EntitiesPerChunk = archetypes[archetype].EntityCountPerChunk;
 	}
 
 	void EntityStorage::Release()
@@ -242,26 +235,6 @@ namespace Flare
 		size_t chunkIndex = entityIndex / m_EntitiesPerChunk;
 		size_t indexInChunk = (entityIndex % m_EntitiesPerChunk);
 	
-		return ReadEntityIdEntry(m_Chunks[chunkIndex], indexInChunk);
-	}
-
-	void EntityStorage::InvalidateEntityIdEntry(EntityStorageChunk& chunk, size_t entityIndexInChunk)
-	{
-		std::memset(chunk.GetBuffer() + GetIdEntryOffset(entityIndexInChunk), 0xff, PACKED_ENTITY_ID_SIZE);
-	}
-
-	void EntityStorage::UpdateEntityIdEntry(EntityStorageChunk& chunk, Entity entityId, size_t entityIndexInChunk)
-	{
-		uint16_t packedId[3] = { UINT16_MAX };
-		PackEntityId(entityId, packedId);
-
-		std::memcpy(chunk.GetBuffer() + GetIdEntryOffset(entityIndexInChunk), packedId, PACKED_ENTITY_ID_SIZE);
-	}
-
-	Entity EntityStorage::ReadEntityIdEntry(const EntityStorageChunk& chunk, size_t entityIndexInChunk) const
-	{
-		uint16_t packedId[3] = { UINT16_MAX };
-		std::memcpy(packedId, chunk.GetBuffer() + GetIdEntryOffset(entityIndexInChunk), PACKED_ENTITY_ID_SIZE);
-		return UnpackEntityId(packedId);
+		return ReadEntityIdEntry(chunkIndex, indexInChunk);
 	}
 }

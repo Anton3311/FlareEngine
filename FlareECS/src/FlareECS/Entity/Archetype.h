@@ -39,6 +39,8 @@ namespace Flare
 		ArchetypeId Id;
 		size_t EntitySize = 0;
 		size_t EntityAlignment = 0;
+		size_t EntityCountPerChunk = 0;
+
 		int32_t DeletionQueryReferences = 0;
 		int32_t CreatedEntitiesQueryReferences = 0;
 

@@ -168,14 +168,16 @@ namespace Flare
 			archetype.ComponentArrayOffsets.resize(archetype.Components.size(), 0);
 
 			size_t offset = 0;
-			size_t entityCount = EntityStorageChunk::CHUNK_SIZE / (archetype.EntitySize + 6); // 6 bytes of packed entity id
+
+			// There is also an array of Entity ids at the of the chunk, so to this into account
+			archetype.EntityCountPerChunk = EntityStorageChunk::CHUNK_SIZE / (archetype.EntitySize + sizeof(Entity));
 
 			for (size_t componentIndex = 0; componentIndex < archetype.Components.size(); componentIndex++)
 			{
 				archetype.ComponentArrayOffsets[componentIndex] = offset;
 
 				const ComponentInfo& info = m_ComponentsRegistry.GetComponentInfo(archetype.Components[componentIndex]);
-				offset += info.Size * entityCount;
+				offset += info.Size * archetype.EntityCountPerChunk;
 			}
 
 			archetype.IdsBufferOffset = offset;

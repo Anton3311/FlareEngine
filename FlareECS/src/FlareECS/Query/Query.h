@@ -24,19 +24,19 @@ namespace Flare
 	{
 	public:
 		QueryChunk() = default;
-		QueryChunk(EntityIdGetter&& idGetter, size_t entityCount)
-			: m_IdGetter(idGetter), m_EntityCount(entityCount) {}
+		constexpr QueryChunk(const Entity* idArray, size_t entityCount)
+			: m_IdArray(idArray), m_EntityCount(entityCount) {}
 
 		inline Entity GetEntityId(size_t entityIndex) const
 		{
 			FLARE_CORE_ASSERT(entityIndex < m_EntityCount);
-			return m_IdGetter.GetEntityId(entityIndex);
+			return m_IdArray[entityIndex];
 		}
 
 		constexpr size_t GetEntityCount() const { return m_EntityCount; }
 	private:
 		size_t m_EntityCount = 0;
-		EntityIdGetter m_IdGetter;
+		const Entity* m_IdArray;
 	};
 
 	class FLAREECS_API EntitiesQuery
@@ -193,7 +193,7 @@ namespace Flare
 				for (size_t chunkIndex = 0; chunkIndex < storage->GetChunkCount(); chunkIndex++)
 				{
 					auto arguments = IterationHelper::CreateIteratorArguments(
-						QueryChunk(storage->CreateEntityIdGetter(chunkIndex), storage->GetEntitiesCountInChunk(chunkIndex)),
+						QueryChunk(storage->GetReadonlyEntityIdsArray(chunkIndex), storage->GetEntitiesCountInChunk(chunkIndex)),
 						archetype,
 						chunkIndex,
 						*storage);

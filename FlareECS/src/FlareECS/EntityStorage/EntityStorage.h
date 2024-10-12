@@ -14,76 +14,12 @@ namespace Flare
 {
 	struct Components;
 
-	inline void PackEntityId(Entity entity, uint16_t outPacked[3])
-	{
-		outPacked[0] = (uint16_t)(entity.GetIndex() & 0xffff);
-		outPacked[1] = (uint16_t)((entity.GetIndex() >> 16) & 0xffff);
-		outPacked[2] = entity.GetGeneration();
-	}
-
-	inline Entity UnpackEntityId(uint16_t packed[3])
-	{
-		uint32_t index = (uint32_t)packed[0] | ((uint32_t)packed[1] << 16);
-		return Entity(index, packed[2]);
-	}
-
 	struct EntityStorageRequirements
 	{
 		constexpr bool IsValid() const { return EntitySize > 0 && EntityAlignment > 0; }
 
 		size_t EntitySize = 0;
 		size_t EntityAlignment = 0;
-	};
-
-	struct EntityStorageLayout
-	{
-		size_t ChunkSize = 0;
-		size_t EntityStride = 0;
-		size_t IdStride = 0;
-		size_t IdOffset = 0;
-	};
-
-	class EntityDataGetter
-	{
-	public:
-		EntityDataGetter() = default;
-		EntityDataGetter(EntityStorageChunk& chunk, size_t stride)
-			: m_Chunk(&chunk), m_Stride(stride) {}
-
-		constexpr uint8_t* GetData(size_t entityIndexInChunk)
-		{
-			return m_Chunk->GetBuffer() + entityIndexInChunk * m_Stride;
-		}
-
-		constexpr const uint8_t* GetData(size_t entityIndexInChunk) const
-		{
-			return m_Chunk->GetBuffer() + entityIndexInChunk * m_Stride;
-		}
-	private:
-		EntityStorageChunk* m_Chunk = nullptr;
-		size_t m_Stride = 0;
-	};
-
-	class EntityIdGetter
-	{
-	public:
-		EntityIdGetter() = default;
-		EntityIdGetter(const EntityStorageChunk& chunk, size_t offset, size_t stride)
-			: m_Chunk(&chunk), m_Offset(offset), m_Stride(stride) {}
-
-		Entity GetEntityId(size_t entityIndexInChunk) const
-		{
-			const uint8_t* idData = m_Chunk->GetBuffer() + m_Offset + entityIndexInChunk * m_Stride;
-
-			uint16_t packedId[3] = { UINT16_MAX };
-			std::memcpy(packedId, idData, sizeof(packedId));
-
-			return UnpackEntityId(packedId);
-		}
-	private:
-		const EntityStorageChunk* m_Chunk;
-		size_t m_Offset = 0;
-		size_t m_Stride = 0;
 	};
 
 	class FLAREECS_API EntityStorage
@@ -105,16 +41,6 @@ namespace Flare
 		void Release();
 
 		Entity GetEntityId(size_t entityIndex) const;
-
-		inline EntityDataGetter CreateEntityDataGetter(size_t chunkIndex)
-		{
-			return EntityDataGetter(m_Chunks[chunkIndex], m_Layout.EntityStride);
-		}
-
-		inline EntityIdGetter CreateEntityIdGetter(size_t chunkIndex)
-		{
-			return EntityIdGetter(m_Chunks[chunkIndex], m_Layout.IdOffset, m_Layout.IdStride);
-		}
 
 		void* GetEntityComponentData(size_t entityIndex, size_t componentIndex) const;
 
@@ -150,25 +76,44 @@ namespace Flare
 			size_t arrayOffset = m_ArchetypesRegistry->operator[](m_Archetype).ComponentArrayOffsets[componentIndex];
 			return m_Chunks[chunkIndex].GetBuffer() + arrayOffset;
 		}
+
+		inline const Entity* GetReadonlyEntityIdsArray(size_t chunkIndex) const
+		{
+			FLARE_CORE_ASSERT(chunkIndex < m_Chunks.size());
+
+			size_t arrayOffset = m_ArchetypesRegistry->operator[](m_Archetype).IdsBufferOffset;
+			const void* array = m_Chunks[chunkIndex].GetBuffer() + arrayOffset;
+
+			return (const Entity*)array;
+		}
 	private:
-		static constexpr size_t PACKED_ENTITY_ID_SIZE = sizeof(uint16_t) * 3;
+		inline Entity* GetEntityIdsArray(size_t chunkIndex)
+		{
+			FLARE_CORE_ASSERT(chunkIndex < m_Chunks.size());
+
+			size_t arrayOffset = m_ArchetypesRegistry->operator[](m_Archetype).IdsBufferOffset;
+			void* array = m_Chunks[chunkIndex].GetBuffer() + arrayOffset;
+
+			return (Entity*)array;
+		}
 
 		void ReleaseEntityComponents(size_t entityIndex);
 		void ReleaseAllEntities();
 
-		inline size_t GetIdEntryOffset(size_t entityIndexInChunk) const
+		inline void InvalidateEntityIdEntry(size_t chunkIndex, size_t entityIndexInChunk)
 		{
-			return m_Layout.IdOffset + entityIndexInChunk * m_Layout.IdStride;
+			GetEntityIdsArray(chunkIndex)[entityIndexInChunk] = Entity();
 		}
 
-		inline size_t GetEntityDataOffset(size_t entityIndexInChunk) const
+		inline void UpdateEntityIdEntry(size_t chunkIndex, Entity entityId, size_t entityIndexInChunk)
 		{
-			return m_Layout.EntityStride * entityIndexInChunk;
+			GetEntityIdsArray(chunkIndex)[entityIndexInChunk] = entityId;
 		}
 
-		void InvalidateEntityIdEntry(EntityStorageChunk& chunk, size_t entityIndexInChunk);
-		void UpdateEntityIdEntry(EntityStorageChunk& chunk, Entity entityId, size_t entityIndexInChunk);
-		Entity ReadEntityIdEntry(const EntityStorageChunk& chunk, size_t entityIndexInChunk) const;
+		inline Entity ReadEntityIdEntry(size_t chunkIndex, size_t entityIndexInChunk) const
+		{
+			return GetReadonlyEntityIdsArray(chunkIndex)[entityIndexInChunk];
+		}
 	private:
 		std::vector<EntityStorageChunk> m_Chunks;
 
@@ -176,7 +121,6 @@ namespace Flare
 		ArchetypeId m_Archetype = INVALID_ARCHETYPE_ID;
 
 		EntityStorageRequirements m_StorageRequirements;
-		EntityStorageLayout m_Layout;
 
 		size_t m_EntityCount = 0;
 		size_t m_EntitiesPerChunk = 0;
