@@ -24,7 +24,7 @@ namespace Flare
 
 	enum class ComponentInitializationStrategy : uint8_t
 	{
-		Zero,
+		NoInitialization,
 		DefaultConstructor,
 	};
 
@@ -131,7 +131,6 @@ namespace Flare
 		void MoveEntityComponents(uint8_t* source, uint8_t* destination, const ArchetypeRecord& entityArchetype, size_t firstComponentIndex, size_t componentsCount);
 
 		void CreateEntity(const ComponentSet& components, EntityCreationResult& result);
-		void InitializeEntityComponents(const ArchetypeRecord& archetype, uint8_t* entityData, size_t firstComponent, size_t count, ComponentInitializationStrategy initStrategy);
 
 		void RemoveEntityData(ArchetypeId archetype, size_t entityBufferIndex);
 

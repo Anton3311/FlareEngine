@@ -170,10 +170,10 @@ namespace Flare
 		void UpdateEntityIdEntry(EntityStorageChunk& chunk, Entity entityId, size_t entityIndexInChunk);
 		Entity ReadEntityIdEntry(const EntityStorageChunk& chunk, size_t entityIndexInChunk) const;
 	private:
+		std::vector<EntityStorageChunk> m_Chunks;
+
 		const Archetypes* m_ArchetypesRegistry = nullptr;
 		ArchetypeId m_Archetype = INVALID_ARCHETYPE_ID;
-
-		std::vector<EntityStorageChunk> m_Chunks;
 
 		EntityStorageRequirements m_StorageRequirements;
 		EntityStorageLayout m_Layout;

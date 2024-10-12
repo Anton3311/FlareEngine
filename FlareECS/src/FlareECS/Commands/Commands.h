@@ -10,7 +10,7 @@ namespace Flare
 	{
 	public:
 		AddComponentCommand()
-			: m_InitStrategy(ComponentInitializationStrategy::Zero) {}
+			: m_InitStrategy(ComponentInitializationStrategy::DefaultConstructor) {}
 
 		AddComponentCommand(FutureEntity entity,
 			ComponentId component,
