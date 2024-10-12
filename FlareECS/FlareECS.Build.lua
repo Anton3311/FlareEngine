@@ -1,10 +1,6 @@
 local build_tool = require("BuildTool")
 
 project "FlareECS"
-	language "C++"
-	cppdialect "C++17"
-	staticruntime "off"
-
 	build_tool.define_module("FlareECS")
 	build_tool.add_module_ref("FlareCore")
 	build_tool.add_module_ref("FlarePlatform")

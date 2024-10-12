@@ -1,6 +1,7 @@
 local M = {}
 
 OUTPUT_DIRECTORY = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}/"
+CPP_DIALECT = "C++20"
 
 newoption
 {
@@ -91,8 +92,20 @@ M.setup_project = function(name)
 	M.define_module(name)
 end
 
+local function setup_language()
+	language "C++"
+	cppdialect(CPP_DIALECT)
+	staticruntime "off"
+end
+
+M.define_application = function()
+	setup_language()
+end
+
 M.define_module = function(name)
+	setup_language()
 	set_module_defines(name, true)
+
 	M.set_module_kind()
 end
 

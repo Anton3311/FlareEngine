@@ -2,9 +2,8 @@ local build_tool = require("BuildTool")
 
 project "FlareEditor"
     kind "ConsoleApp"
-	language "C++"
-	cppdialect "C++17"
-	staticruntime "off"
+
+	build_tool.define_application()
 
 	build_tool.add_module_ref("Flare")
 	build_tool.add_module_ref("FlarePlatform")

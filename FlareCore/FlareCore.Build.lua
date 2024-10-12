@@ -1,10 +1,6 @@
 local build_tool = require("BuildTool")
 
 project "FlareCore"
-	language "C++"
-	cppdialect "C++17"
-	staticruntime "off"
-
 	build_tool.define_module("FlareCore")
 
     files
