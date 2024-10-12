@@ -48,6 +48,7 @@ namespace Flare
 		std::vector<size_t> ComponentOffsets;
 
 		std::vector<size_t> ComponentArrayOffsets;
+		size_t IdsBufferOffset = 0;
 
 		std::unordered_map<ComponentId, ArchetypeEdge> Edges;
 	};

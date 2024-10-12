@@ -68,8 +68,9 @@ namespace Flare
 	size_t EntityStorage::GetEntitiesCountInChunk(size_t index) const
 	{
 		FLARE_CORE_ASSERT(index < m_Chunks.size());
+
 		if (index == m_Chunks.size() - 1)
-			return m_EntityCount % m_EntitiesPerChunk;
+			return m_EntityCount - (index * m_EntitiesPerChunk);
 		return m_EntitiesPerChunk;
 	}
 
@@ -91,7 +92,7 @@ namespace Flare
 		m_EntitiesPerChunk = (size_t)floor((float)EntityStorageChunk::CHUNK_SIZE / (float)entityAndIdSize);
 		m_Layout.ChunkSize = m_EntitiesPerChunk * m_StorageRequirements.EntitySize;
 		m_Layout.EntityStride = m_StorageRequirements.EntitySize;
-		m_Layout.IdOffset = m_Layout.ChunkSize;
+		m_Layout.IdOffset = archetypes[archetype].IdsBufferOffset;
 		m_Layout.IdStride = PACKED_ENTITY_ID_SIZE;
 	}
 
@@ -107,14 +108,17 @@ namespace Flare
 	void* EntityStorage::GetEntityComponentData(size_t entityIndex, size_t componentIndex) const
 	{
 		FLARE_PROFILE_FUNCTION();
+		FLARE_CORE_ASSERT(entityIndex < m_EntityCount);
 
 		size_t chunkIndex = entityIndex / m_EntitiesPerChunk;
 		size_t indexInChunk = entityIndex % m_EntitiesPerChunk;
 
+		FLARE_CORE_ASSERT(indexInChunk < GetEntitiesCountInChunk(chunkIndex));
+
 		const ArchetypeRecord& archetype = m_ArchetypesRegistry->operator[](m_Archetype);
 
 		uint8_t* componentArray = (uint8_t*)GetComponentArray(chunkIndex, componentIndex);
-		size_t componentOffset = entityIndex * m_ArchetypesRegistry->GetCompatibleComponents()
+		size_t componentOffset = indexInChunk * m_ArchetypesRegistry->GetCompatibleComponents()
 			.GetComponentInfo(archetype.Components[componentIndex]).Size;
 
 		return componentArray + componentOffset;
@@ -123,6 +127,7 @@ namespace Flare
 	void EntityStorage::DefaultConstructEntityComponentsRange(size_t entityIndex, size_t startComponent, size_t componentCount)
 	{
 		FLARE_PROFILE_FUNCTION();
+		FLARE_CORE_ASSERT(entityIndex < m_EntityCount);
 
 		const ArchetypeRecord& archetypeRecord = m_ArchetypesRegistry->operator[](m_Archetype);
 		FLARE_CORE_ASSERT(startComponent + componentCount <= archetypeRecord.Components.size());
@@ -141,6 +146,7 @@ namespace Flare
 	void EntityStorage::CopyConstructEntity(size_t entityIndex, Span<const void*> componentData)
 	{
 		FLARE_PROFILE_FUNCTION();
+		FLARE_CORE_ASSERT(entityIndex < m_EntityCount);
 
 		const ArchetypeRecord& archetypeRecord = m_ArchetypesRegistry->operator[](m_Archetype);
 		FLARE_CORE_ASSERT(componentData.GetSize() == archetypeRecord.Components.size());
@@ -157,6 +163,7 @@ namespace Flare
 	void EntityStorage::MoveConstructEntity(size_t entityIndex, Span<void*> componentData)
 	{
 		FLARE_PROFILE_FUNCTION();
+		FLARE_CORE_ASSERT(entityIndex < m_EntityCount);
 
 		const ArchetypeRecord& archetypeRecord = m_ArchetypesRegistry->operator[](m_Archetype);
 		FLARE_CORE_ASSERT(componentData.GetSize() == archetypeRecord.Components.size());
@@ -173,6 +180,8 @@ namespace Flare
 	void EntityStorage::MoveEntityData(size_t sourceEntityIndex, EntityStorage& sourceStorage, size_t destinationEntityIndex)
 	{
 		FLARE_PROFILE_FUNCTION();
+
+		FLARE_CORE_ASSERT(sourceEntityIndex < sourceStorage.GetEntityCount() && destinationEntityIndex < m_EntityCount);
 		FLARE_CORE_ASSERT(m_ArchetypesRegistry == sourceStorage.m_ArchetypesRegistry && m_Archetype == sourceStorage.m_Archetype);
 
 		const ArchetypeRecord& archetypeRecord = m_ArchetypesRegistry->operator[](m_Archetype);

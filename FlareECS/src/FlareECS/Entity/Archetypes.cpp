@@ -177,6 +177,8 @@ namespace Flare
 				const ComponentInfo& info = m_ComponentsRegistry.GetComponentInfo(archetype.Components[componentIndex]);
 				offset += info.Size * entityCount;
 			}
+
+			archetype.IdsBufferOffset = offset;
 		}
 
 		archetype.EntitySize = Align(archetype.EntitySize, m_ComponentsRegistry.GetComponentInfo(archetype.Components[0]).Initializer->Type.Alignment);
