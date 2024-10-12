@@ -95,7 +95,7 @@ namespace Flare
 		Span<const glm::vec3> normals,
 		Span<const glm::vec3> tangents,
 		Span<const glm::vec2> uvs,
-		Span<const SubMesh>& subMeshes)
+		Span<const SubMesh> subMeshes)
 		: Asset(AssetType::Mesh),
 		m_IndexFormat(indexFormat),
 		m_VertexCount(vertices.GetSize()),

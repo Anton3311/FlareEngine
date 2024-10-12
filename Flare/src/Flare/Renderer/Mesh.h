@@ -79,7 +79,7 @@ namespace Flare
 			Span<const glm::vec3> normals,
 			Span<const glm::vec3> tangents,
 			Span<const glm::vec2> uvs,
-			Span<const SubMesh>& subMeshes);
+			Span<const SubMesh> subMeshes);
 
 		Mesh(Ref<SharedMesh> sharedMesh,
 			MemorySpan indices,
