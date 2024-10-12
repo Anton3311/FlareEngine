@@ -8,6 +8,7 @@
 #include <Flare/Scene/Transform.h>
 
 #include <FlareECS/World.h>
+#include <FlareECS/Commands/CommandBuffer.h>
 
 #include <random>
 
