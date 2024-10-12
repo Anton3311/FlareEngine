@@ -244,7 +244,7 @@ namespace Flare
 			const auto& node = nodes[i];
 			bool isRoot = i == 0;
 
-			Entity entity = world.Entities.CreateEntityFromArchetype(node.Archetype, ComponentInitializationStrategy::DefaultConstructor);
+			Entity entity = world.Entities.CreateEntityFromArchetype(node.Archetype, ComponentInitializationStrategy::NoInitialization);
 			createdEntities[i] = entity;
 
 			const uint8_t* hierarchyEntityData = m_Hierarchy.GetEntityData(i);
