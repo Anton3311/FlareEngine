@@ -152,13 +152,13 @@ namespace Flare
                 if (value.IsArray)
                 {
 					SerializeArrayOfReferences(
-						*SerializationDescriptorOf<ReferenceCountUnderlyingType<T>::Type>().Descriptor(),
+						*SerializationDescriptorOf<typename ReferenceCountUnderlyingType<T>::Type>().Descriptor(),
                         value.Values.GetData(), value.Values.GetSize());
                 }
                 else
                 {
 					SerializeReference(
-						*SerializationDescriptorOf<ReferenceCountUnderlyingType<T>::Type>().Descriptor(),
+						*SerializationDescriptorOf<typename ReferenceCountUnderlyingType<T>::Type>().Descriptor(),
 						&value.Values[0],
 						ReferenceCountValuePointer<T>().Get(value.Values[0]));
                 }
