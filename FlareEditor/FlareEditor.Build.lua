@@ -52,7 +52,7 @@ project "FlareEditor"
 	pchheader "PCH.h"
 	pchsource "PCH.cpp"
 
-	filter "files:%{wks.location}/Flare/vendor/**.cpp"
+	filter "files:../Flare/vendor/ImGuizmo/**.cpp"
 		flags "NoPCH"
 	filter {}
 
