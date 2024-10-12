@@ -11,7 +11,7 @@
 
 namespace Flare
 {
-	constexpr char* ENTITY_PAYLOAD_NAME = "ENTITY_PAYLOAD";
+	constexpr const char* ENTITY_PAYLOAD_NAME = "ENTITY_PAYLOAD";
 
 	class EditorIcons;
 	class World;

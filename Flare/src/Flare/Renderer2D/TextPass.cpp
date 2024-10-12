@@ -61,7 +61,7 @@ namespace Flare
 			specifications.DepthWrite = false;
 			specifications.InputLayout = PipelineInputLayout({
 				{ 0, 0, ShaderDataType::Float3 }, // Position
-				{ 0, 1, ShaderDataType::Float4 }, // COlor
+				{ 0, 1, ShaderDataType::Float4 }, // Color
 				{ 0, 2, ShaderDataType::Float2 }, // UV
 				{ 0, 3, ShaderDataType::Int }, // Entity index
 			});
@@ -113,7 +113,9 @@ namespace Flare
 		commandBuffer->SetGlobalDescriptorSet(set, 1);
 		commandBuffer->BindPipeline(m_TextPipeline);
 
-		commandBuffer->BindVertexBuffers(Span((Ref<const GPUBuffer>)frameResources.VertexBuffer), 0);
+		Ref<const GPUBuffer> vertexBuffer = (Ref<const GPUBuffer>)frameResources.VertexBuffer;
+
+		commandBuffer->BindVertexBuffers(Span<Ref<const GPUBuffer>>(vertexBuffer), 0);
 		commandBuffer->BindIndexBuffer(m_IndexBuffer, IndexFormat::UInt32);
 		commandBuffer->DrawIndexed(batch.Start * 6, batch.Count * 6, 0, 0, 1);
 	}

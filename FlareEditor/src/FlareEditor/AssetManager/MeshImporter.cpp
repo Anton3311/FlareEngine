@@ -216,7 +216,7 @@ namespace Flare
 
 		AssetHandle meshSource = NULL_ASSET_HANDLE;
 		if (!DeserializeMeshSource(metadata.Path, meshSource))
-			return false;
+			return nullptr;
 
 		const AssetMetadata& sourceMetadata = *AssetManager::GetAssetMetadata(meshSource);
 
@@ -253,13 +253,13 @@ namespace Flare
 		}
 		else
 		{
-		 	mesh = Ref<Mesh>::New(MemorySpan::FromVector(data.Indices32),
+			MemorySpan indices = MemorySpan::FromVector(data.Indices32);
+			mesh = Ref<Mesh>::New(indices,
 				data.IndexFormat,
-				Span<const glm::vec3>(data.Vertices.data(), data.Vertices.size()),
-				Span<const glm::vec3>(data.Normals.data(), data.Normals.size()),
-				Span<const glm::vec3>(data.Tangents.data(), data.Tangents.size()),
-				Span<const glm::vec2>(data.UVs.data(), data.UVs.size()),
-				Span<const SubMesh>(data.SubMeshes.data(), data.SubMeshes.size()));
+				Span(data.Vertices.data(), data.Vertices.size()),
+				Span(data.Normals.data(), data.Normals.size()),
+				Span(data.Tangents.data(), data.Tangents.size()),
+				Span(data.UVs.data(), data.UVs.size()));
 		}
 
 		return mesh;

@@ -19,7 +19,7 @@ namespace Flare
 	{
 	public:
 		EditorSelection()
-			: m_Type(EditorSelectionType::None), m_Entity(Entity()), m_Asset(NULL_ASSET_HANDLE) {}
+			: m_Type(EditorSelectionType::None), m_Asset(NULL_ASSET_HANDLE) {}
 
 		EditorSelection(const EditorSelection&) = delete;
 		EditorSelection& operator=(const EditorSelection&) = delete;

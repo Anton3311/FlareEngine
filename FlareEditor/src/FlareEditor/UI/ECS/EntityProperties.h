@@ -22,7 +22,7 @@ namespace Flare
 		void RenderSpriteComponent(SpriteComponent& sprite);
 		void RenderEnvironmentComponent(Environment& environment);
 
-		void EntityProperties::RenderAddComponentMenu(Entity entity);
+		void RenderAddComponentMenu(Entity entity);
 	private:
 		World& m_World;
 	};

@@ -15,7 +15,7 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 		if (!ShaderCompiler::Compile(metadata.Handle))
-			return false;
+			return nullptr;
 
 		Ref<Shader> shader = Shader::Create();
 		shader->Handle = metadata.Handle;
@@ -28,7 +28,7 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 		if (!ShaderCompiler::Compile(metadata.Handle))
-			return false;
+			return nullptr;
 
 		Ref<ComputeShader> shader = ComputeShader::Create();
 		shader->Handle = metadata.Handle;

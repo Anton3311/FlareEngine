@@ -34,7 +34,7 @@ namespace Flare
 		UUID m_UUID;
 	};
 
-	constexpr AssetHandle NULL_ASSET_HANDLE = 0;
+	constexpr AssetHandle NULL_ASSET_HANDLE = AssetHandle(UUID(0));
 
 	enum class AssetType
 	{
