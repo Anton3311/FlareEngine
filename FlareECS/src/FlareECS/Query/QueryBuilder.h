@@ -56,7 +56,7 @@ namespace Flare
 
 		T Build()
 		{
-			static_assert(false);
+			return T();
 		}
 	private:
 		Entities& m_Entities;

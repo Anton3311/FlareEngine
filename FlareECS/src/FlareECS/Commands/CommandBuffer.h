@@ -18,32 +18,16 @@ namespace Flare
 			: m_FutureEntity(entity), m_CommandBuffer(commandBuffer) {}
 	public:
 		template<typename T>
-		FutureEntityCommands& AddComponent(ComponentInitializationStrategy initStrategy = ComponentInitializationStrategy::DefaultConstructor)
-		{
-			m_CommandBuffer.AddCommand<AddComponentCommand>(AddComponentCommand(m_FutureEntity, COMPONENT_ID(T), initStrategy));
-			return *this;
-		}
+		FutureEntityCommands& AddComponent(ComponentInitializationStrategy initStrategy = ComponentInitializationStrategy::DefaultConstructor);
 
 		template<typename T>
-		FutureEntityCommands& AddComponentWithData(const T& component)
-		{
-			m_CommandBuffer.AddCommand<AddComponentWithDataCommand<T>>(AddComponentWithDataCommand<T>(m_FutureEntity, component));
-			return *this;
-		}
+		FutureEntityCommands& AddComponentWithData(const T& component);
 
 		template<typename T>
-		FutureEntityCommands& SetComponent(const T& component)
-		{
-			m_CommandBuffer.AddCommand<SetComponentCommand<T>>(SetComponentCommand<T>(m_FutureEntity, component));
-			return *this;
-		}
+		FutureEntityCommands& SetComponent(const T& component);
 
 		template<typename T>
-		FutureEntityCommands& RemoveComponent()
-		{
-			m_CommandBuffer.AddCommand<RemoveComponentCommand>(RemoveComponentCommand(m_FutureEntity, COMPONENT_ID(T)));
-			return *this;
-		}
+		FutureEntityCommands& RemoveComponent();
 	private:
 		FutureEntity m_FutureEntity;
 		EntitiesCommandBuffer& m_CommandBuffer;
@@ -122,4 +106,32 @@ namespace Flare
 		World& m_World;
 		CommandsStorage m_Storage;
 	};
+
+	template<typename T>
+	inline FutureEntityCommands& FutureEntityCommands::AddComponent(ComponentInitializationStrategy initStrategy)
+	{
+		m_CommandBuffer.AddCommand<AddComponentCommand>(AddComponentCommand(m_FutureEntity, COMPONENT_ID(T), initStrategy));
+		return *this;
+	}
+
+	template<typename T>
+	inline FutureEntityCommands& FutureEntityCommands::AddComponentWithData(const T& component)
+	{
+		m_CommandBuffer.AddCommand<AddComponentWithDataCommand<T>>(AddComponentWithDataCommand<T>(m_FutureEntity, component));
+		return *this;
+	}
+
+	template<typename T>
+	inline FutureEntityCommands& FutureEntityCommands::SetComponent(const T& component)
+	{
+		m_CommandBuffer.AddCommand<SetComponentCommand<T>>(SetComponentCommand<T>(m_FutureEntity, component));
+		return *this;
+	}
+
+	template<typename T>
+	inline FutureEntityCommands& FutureEntityCommands::RemoveComponent()
+	{
+		m_CommandBuffer.AddCommand<RemoveComponentCommand>(RemoveComponentCommand(m_FutureEntity, COMPONENT_ID(T)));
+		return *this;
+	}
 }

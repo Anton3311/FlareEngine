@@ -5,8 +5,6 @@
 #include "FlareECS/System/SystemsRegistry.h"
 #include "FlareECS/System/ExecutionGraph/ExecutionGraph.h"
 
-#include "FlareECS/Commands/CommandBuffer.h"
-
 #include <functional>
 #include <vector>
 #include <string>
@@ -27,6 +25,7 @@ namespace Flare
 		std::vector<SystemId> ExecutionOrder;
 	};
 
+	class EntitiesCommandBuffer;
 	class System;
 	class World;
 	class FLAREECS_API SystemsManager : public SystemsRegisteringHandler
@@ -87,10 +86,10 @@ namespace Flare
 			if (id < (uint32_t)m_Systems.size())
 			{
 				SystemExecutionContext context;
-				context.Commands = &m_CommandBuffer;
+				context.Commands = m_CommandBuffer.get();
 				m_Systems[id].SystemInstance->OnUpdate(m_World, context);
 
-				m_CommandBuffer.Execute();
+				ExecuteCommandBuffer();
 			}
 		}
 
@@ -105,10 +104,12 @@ namespace Flare
 		void OnUnregisterSystems() override;
 		void OnRegisterSystems() override;
 	private:
+		void ExecuteCommandBuffer();
+	private:
 		World& m_World;
 		SystemsRegistry& m_Registry;
 
-		EntitiesCommandBuffer m_CommandBuffer;
+		Scope<EntitiesCommandBuffer> m_CommandBuffer;
 
 		SystemGroupId m_DefaultSystemGroupId = 0;
 

@@ -4,6 +4,8 @@
 
 #include "FlareCore/Profiler/Profiler.h"
 
+#include "FlareECS/Commands/CommandBuffer.h"
+
 #include "FlareECS/World.h"
 #include "FlareECS/System/SystemInitializer.h"
 #include "FlareECS/System/SystemsRegistry.h"
@@ -11,7 +13,7 @@
 namespace Flare
 {
 	SystemsManager::SystemsManager(World& world, SystemsRegistry& registry)
-		: m_CommandBuffer(world), m_World(world), m_Registry(registry)
+		: m_CommandBuffer(new EntitiesCommandBuffer(world)), m_World(world), m_Registry(registry)
 	{
 		m_Registry.AddResigteringHandler(this);
 	}
@@ -131,12 +133,12 @@ namespace Flare
 			const SystemData& data = m_Systems[id];
 
 			SystemExecutionContext context{};
-			context.Commands = &m_CommandBuffer;
+			context.Commands = m_CommandBuffer.get();
 
 			FLARE_CORE_ASSERT(data.SystemInstance != nullptr);
 
 			data.SystemInstance->OnUpdate(m_World, context);
-			m_CommandBuffer.Execute();
+			ExecuteCommandBuffer();
 		}
 	}
 
@@ -176,5 +178,12 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 		RegisterSystems();
+	}
+
+	void SystemsManager::ExecuteCommandBuffer()
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		m_CommandBuffer->Execute();
 	}
 }

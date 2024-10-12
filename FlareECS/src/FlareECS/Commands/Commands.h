@@ -3,6 +3,7 @@
 #include "FlareECS/Entities.h"
 #include "FlareECS/Entity/ComponentGroup.h"
 #include "FlareECS/Commands/Command.h"
+#include "FlareECS/World.h"
 
 namespace Flare
 {
