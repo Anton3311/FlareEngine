@@ -59,46 +59,95 @@ namespace Flare
 		Entities* m_Entities = nullptr;
 	};
 
+	//
+	// QueryIterator
+	//
+
 	template<typename T>
-	struct QueryIterationHelper
+	struct QueryIteratorArgument
 	{
-		static std::tuple<QueryChunk> Get(QueryChunk chunk, const ArchetypeRecord& archetype, size_t chunkIndex, EntityStorage& storage)
+		static void Create(const QueryChunk& chunk,
+			const ArchetypeRecord& archetype,
+			size_t chunkIndex,
+			EntityStorage& storage,
+			T& outArgument) {}
+	};
+
+	template<>
+	struct QueryIteratorArgument<QueryChunk>
+	{
+		static void Create(const QueryChunk& chunk,
+			const ArchetypeRecord& archetype,
+			size_t chunkIndex,
+			EntityStorage& storage,
+			QueryChunk& outArgument)
 		{
-			return std::make_tuple(chunk);
+			outArgument = chunk;
 		}
 	};
 
-	template<typename FirstArg, typename... Args>
-	struct QueryIterationHelper<ArgumentsList<FirstArg, Args...>>
+	template<typename T>
+	struct QueryIteratorArgument<ComponentView<T>>
 	{
-		static std::tuple<QueryChunk, Args...> Get(QueryChunk chunk, const ArchetypeRecord& archetype, size_t chunkIndex, EntityStorage& storage)
+		static void Create(const QueryChunk& chunk,
+			const ArchetypeRecord& archetype,
+			size_t chunkIndex,
+			EntityStorage& storage,
+			ComponentView<T>& outArgument)
+		{
+			ComponentId componentId = COMPONENT_ID(std::remove_reference_t<T>);
+
+			std::optional<size_t> componentIndex = archetype.TryGetComponentIndex(componentId);
+			FLARE_CORE_ASSERT(componentIndex.has_value());
+
+			T* componentArray = (T*)storage.GetComponentArray(chunkIndex, *componentIndex);
+			outArgument = ComponentView<T>(componentArray);
+		}
+	};
+
+	template<typename... Args>
+	struct QueryIterationHelper
+	{
+		using TupleT = std::tuple<Args...>;
+
+		static TupleT CreateIteratorArguments(QueryChunk chunk,
+			const ArchetypeRecord& archetype,
+			size_t chunkIndex,
+			EntityStorage& storage)
+		{
+			return TupleT();
+		}
+	};
+
+	template<typename... Args>
+	struct QueryIterationHelper<ArgumentsList<Args...>>
+	{
+		using TupleT = std::tuple<Args...>;
+
+		static TupleT CreateIteratorArguments(QueryChunk chunk,
+			const ArchetypeRecord& archetype,
+			size_t chunkIndex,
+			EntityStorage& storage)
 		{
 			FLARE_PROFILE_FUNCTION();
-			size_t componentIndex = 0;
 
-			std::tuple<QueryChunk, Args...> tuple;
-			std::get<QueryChunk>(tuple) = chunk;
+			TupleT tuple;
 
 			// NOTE: When generating function arguments for std::make_tuple using a lambda with fold expression,
 			//       the arguments are being generated in reverse order, which results in wrong component offsets for ComponentViews.
 
 			([&]()
 				{
-					static_assert(IsComponentView<Args>);
-
-					using ComponentType = typename ComponentViewUnderlyingType<Args>::Type;
-					ComponentId componentId = COMPONENT_ID(std::remove_reference_t<typename ComponentViewUnderlyingType<Args>::Type>);
-
-					auto componentIndex = archetype.TryGetComponentIndex(componentId);
-					FLARE_CORE_ASSERT(componentIndex.has_value());
-
-					ComponentType* componentArray = (ComponentType*)storage.GetComponentArray(chunkIndex, *componentIndex);
-					std::get<Args>(tuple) = Args(componentArray);
+					QueryIteratorArgument<Args>::Create(chunk, archetype, chunkIndex, storage, std::get<Args>(tuple));
 				} (), ...);
 
 			return tuple;
 		}
 	};
+
+	//
+	// Query
+	//
 
 	class FLAREECS_API Query : public EntitiesQuery
 	{
@@ -115,16 +164,11 @@ namespace Flare
 		{
 			FLARE_PROFILE_FUNCTION();
 			using IteratorTraits = FunctionTraits<IteratorFunction>;
-			static_assert(IteratorTraits::ArgumentsCount >= 2, "A query iterator function must accept a QueryChunk as the first argument and at least 1 component view");
-
 			using IteratorArguments = typename IteratorTraits::Arguments;
 			using IterationHelper = QueryIterationHelper<IteratorArguments>;
-			using FirstArg = FirstArgument<IteratorArguments>::Type;
+			using FirstArg = typename FirstArgument<IteratorArguments>::Type;
 
 			using FirstArgType = std::remove_const_t<std::remove_reference_t<FirstArg>>;
-
-			// QueryChunk + at least 1 component view
-			static_assert(std::is_same_v<FirstArgType, QueryChunk>);
 
 			const QueryData& queryData = m_Queries->GetQueryData(m_Id);
 
@@ -148,7 +192,7 @@ namespace Flare
 				const ArchetypeRecord& archetype = archetypes[matchedArchetype];
 				for (size_t chunkIndex = 0; chunkIndex < storage->GetChunkCount(); chunkIndex++)
 				{
-					auto arguments = IterationHelper::Get(
+					auto arguments = IterationHelper::CreateIteratorArguments(
 						QueryChunk(storage->CreateEntityIdGetter(chunkIndex), storage->GetEntitiesCountInChunk(chunkIndex)),
 						archetype,
 						chunkIndex,
