@@ -110,9 +110,9 @@ namespace Flare
 		m_DeletedEntitiesWithParent.ForEachChunk([&world](QueryChunk chunk, ComponentView<const Parent> parents)
 			{
 				uint32_t entityIndex = 0;
-				for (auto entity : chunk)
+				for (size_t entityIndex = 0; entityIndex < chunk.GetEntityCount(); entityIndex++)
 				{
-					Entity parentEntity = parents[entity].ParentEntity;
+					Entity parentEntity = parents[entityIndex].ParentEntity;
 					Entity thisEntity = chunk.GetEntityId(entityIndex);
 
 					{
@@ -134,9 +134,9 @@ namespace Flare
 		m_DeletedEntitiesWithChildren.ForEachChunk([this, &world](QueryChunk chunk, ComponentView<const Children> childrenComponents)
 			{
 				uint32_t entityIndex = 0;
-				for (auto entity : chunk)
+				for (size_t entityIndex = 0; entityIndex < chunk.GetEntityCount(); entityIndex++)
 				{
-					const Children& children = childrenComponents[entity];
+					const Children& children = childrenComponents[entityIndex];
 
 					for (Entity child : children.ChildrenEntities)
 					{
@@ -197,10 +197,10 @@ namespace Flare
 			ComponentView<const TransformComponent> transforms,
 			ComponentView<const Children> childrenComponents)
 			{
-				for (auto entity : chunk)
+				for (size_t entityIndex = 0; entityIndex < chunk.GetEntityCount(); entityIndex++)
 				{
-					const TransformComponent& parentTransform = transforms[entity];
-					const Children& children = childrenComponents[entity];
+					const TransformComponent& parentTransform = transforms[entityIndex];
+					const Children& children = childrenComponents[entityIndex];
 
 					glm::quat parentRotation = glm::quat(glm::radians(parentTransform.Rotation));
 
