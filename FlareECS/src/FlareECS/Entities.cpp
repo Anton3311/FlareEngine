@@ -664,12 +664,13 @@ namespace Flare
 			
 			for (size_t i = oldSize; i < m_EntityStorages.size(); i++)
 			{
-				FLARE_CORE_ASSERT(m_Archetypes[i].Components.size() > 0);
+				const ArchetypeRecord& archetypeRecord = m_Archetypes[(ArchetypeId)i];
+				FLARE_CORE_ASSERT(archetypeRecord.Components.size() > 0);
 
 				EntityStorageRequirements storageRequirements{};
-				storageRequirements.EntitySize = m_Archetypes[i].EntitySize;
-				storageRequirements.EntityAlignment = m_Archetypes[i].EntityAlignment;
-				m_EntityStorages[i].Initialize(storageRequirements, m_Archetypes, m_Archetypes[i].Id);
+				storageRequirements.EntitySize = archetypeRecord.EntitySize;
+				storageRequirements.EntityAlignment = archetypeRecord.EntityAlignment;
+				m_EntityStorages[i].Initialize(storageRequirements, m_Archetypes, archetypeRecord.Id);
 			}
 		}
 

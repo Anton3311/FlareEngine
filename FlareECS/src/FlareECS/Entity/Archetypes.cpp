@@ -50,7 +50,7 @@ namespace Flare
 		auto it = ComponentSetToArchetype.find(ComponentSet(idsCopy));
 		if (it == ComponentSetToArchetype.end())
 		{
-			ArchetypeId archetypeId = Records.size();
+			ArchetypeId archetypeId = (ArchetypeId)Records.size();
 			ArchetypeRecord& record = Records.emplace_back();
 			record.Id = archetypeId;
 			record.Components = std::move(idsCopy);
@@ -97,7 +97,7 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(sortedComponentIds.size() > 0);
 
-		ArchetypeId archetypeId = Records.size();
+		ArchetypeId archetypeId = (ArchetypeId)Records.size();
 		ArchetypeRecord& record = Records.emplace_back();
 		record.Id = archetypeId;
 		record.CreatedEntitiesQueryReferences = 0;

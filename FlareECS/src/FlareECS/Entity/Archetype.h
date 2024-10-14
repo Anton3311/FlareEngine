@@ -10,8 +10,8 @@
 
 namespace Flare
 {
-	using ArchetypeId = size_t;
-	constexpr ArchetypeId INVALID_ARCHETYPE_ID = SIZE_MAX;
+	using ArchetypeId = uint32_t;
+	constexpr ArchetypeId INVALID_ARCHETYPE_ID = std::numeric_limits<ArchetypeId>::max();
 
 	struct ArchetypeEdge
 	{
