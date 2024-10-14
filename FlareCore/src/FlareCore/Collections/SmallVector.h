@@ -2,6 +2,7 @@
 
 #include "FlareCore/Assert.h"
 #include "FlareCore/Log.h"
+#include "FlareCore/Profiler/Profiler.h"
 
 #include "FlareCore/Collections/Span.h"
 
@@ -44,6 +45,18 @@ namespace Flare
 			: m_Array(nullptr), m_Capacity(InlineCapacity), m_Size(0)
 		{
 			ConstructFromArray(elements.begin(), elements.end());
+		}
+
+		SmallVector(const T* start, const T* end)
+			: m_Array(nullptr), m_Capacity(InlineCapacity), m_Size(0)
+		{
+			ConstructFromArray(start, end);
+		}
+
+		SmallVector(const T* array, size_t size)
+			: m_Array(nullptr), m_Capacity(InlineCapacity), m_Size(0)
+		{
+			ConstructFromArray(array, array + size);
 		}
 		
 		~SmallVector()
@@ -95,7 +108,7 @@ namespace Flare
 			MoveConstruct(std::move(other));
 			return *this;
 		}
-		
+
 		constexpr uint32_t GetSize() const { return m_Size; }
 		constexpr uint32_t GetCapacity() const { return m_Capacity; }
 
@@ -169,6 +182,7 @@ namespace Flare
 
 		void Clear()
 		{
+			FLARE_PROFILE_FUNCTION();
 			for (uint32_t i = 0; i < m_Size; i++)
 			{
 				m_Array[i].~T();
@@ -179,6 +193,7 @@ namespace Flare
 
 		void Resize(uint32_t newSize)
 		{
+			FLARE_PROFILE_FUNCTION();
 			EnsureCapacity(newSize);
 			DefaultConstructElementsInRange(m_Size, m_Capacity - m_Size);
 			m_Size = m_Capacity;
@@ -186,6 +201,7 @@ namespace Flare
 
 		void EnsureCapacity(uint32_t newCapacity)
 		{
+			FLARE_PROFILE_FUNCTION();
 			if (IsUsingInlineBuffer() && newCapacity <= InlineCapacity)
 			{
 				m_Capacity = newCapacity;
@@ -216,6 +232,7 @@ namespace Flare
 	private:
 		inline void MoveConstruct(SmallVector<T, InlineCapacity>&& other)
 		{
+			FLARE_PROFILE_FUNCTION();
 			m_Size = other.m_Size;
 			m_Capacity = other.m_Capacity;
 
@@ -245,6 +262,7 @@ namespace Flare
 
 		inline void Release()
 		{
+			FLARE_PROFILE_FUNCTION();
 			Clear();
 
 			if (!IsUsingInlineBuffer())
@@ -255,6 +273,7 @@ namespace Flare
 
 		void DefaultConstructElementsInRange(uint32_t start, uint32_t count)
 		{
+			FLARE_PROFILE_FUNCTION();
 			for (uint32_t i = start; i < start + count; i++)
 			{
 				new(&m_Array[i]) T();
@@ -263,6 +282,7 @@ namespace Flare
 
 		void ConstructFromArray(const T* start, const T* end)
 		{
+			FLARE_PROFILE_FUNCTION();
 			m_Size = (uint32_t)(end - start);
 
 			if (m_Size < InlineCapacity)
