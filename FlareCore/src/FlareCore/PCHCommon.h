@@ -8,6 +8,7 @@
 #include "FlareCore/Core.h"
 
 #include "FlareCore/Collections/Span.h"
+#include "FlareCore/Collections/SmallVector.h"
 
 #include <array>
 #include <cstring>
