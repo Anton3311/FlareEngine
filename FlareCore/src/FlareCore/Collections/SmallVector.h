@@ -45,6 +45,16 @@ namespace Flare
 		{
 			ConstructFromArray(elements.begin(), elements.end());
 		}
+		
+		~SmallVector()
+		{
+			Release();
+		}
+
+		template<uint32_t N2>
+		SmallVector(SmallVector<T, N2>&&) = delete;
+		template<uint32_t N2>
+		SmallVector<T, InlineCapacity>& operator=(SmallVector<T, N2>&&) = delete;
 
 		template<uint32_t N2>
 		SmallVector(const SmallVector<T, N2>& other)
@@ -52,12 +62,38 @@ namespace Flare
 			ConstructFromArray(other.begin(), other.end());
 		}
 
-		~SmallVector()
+		SmallVector(const SmallVector<T, InlineCapacity>& other)
+		{
+			ConstructFromArray(other.begin(), other.end());
+		}
+
+		template<uint32_t N2>
+		SmallVector<T, InlineCapacity>& operator=(const SmallVector<T, N2>& other)
 		{
 			Clear();
+			EnsureCapacity(other.GetSize());
+			ConstructFromArray(other.begin(), other.end());
+			return *this;
+		}
 
-			if (!IsUsingInlineBuffer())
-				free(m_Array);
+		SmallVector<T, InlineCapacity>& operator=(const SmallVector<T, InlineCapacity>& other)
+		{
+			Clear();
+			EnsureCapacity(other.GetSize());
+			ConstructFromArray(other.begin(), other.end());
+			return *this;
+		}
+
+		SmallVector(SmallVector<T, InlineCapacity>&& other) noexcept
+		{
+			MoveConstruct(std::move(other));
+		}
+
+		SmallVector<T, InlineCapacity>& operator=(SmallVector<T, InlineCapacity>&& other) noexcept
+		{
+			Release();
+			MoveConstruct(std::move(other));
+			return *this;
 		}
 		
 		constexpr uint32_t GetSize() const { return m_Size; }
@@ -178,6 +214,45 @@ namespace Flare
 			}
 		}
 	private:
+		inline void MoveConstruct(SmallVector<T, InlineCapacity>&& other)
+		{
+			m_Size = other.m_Size;
+			m_Capacity = other.m_Capacity;
+
+			if (other.IsUsingInlineBuffer())
+			{
+				m_Array = m_InlineBuffer.GetData();
+
+				for (uint32_t i = 0; i < m_Size; i++)
+				{
+					new(&m_Array[i]) T(std::move(other.m_Array[i]));
+				}
+
+				for (uint32_t i = 0; i < m_Size; i++)
+				{
+					other.m_Array[i].~T();
+				}
+			}
+			else
+			{
+				std::swap(m_Array, other.m_Array);
+			}
+
+			other.m_Array = nullptr;
+			other.m_Size = 0;
+			other.m_Capacity = 0;
+		}
+
+		inline void Release()
+		{
+			Clear();
+
+			if (!IsUsingInlineBuffer())
+				free(m_Array);
+
+			m_Array = nullptr;
+		}
+
 		void DefaultConstructElementsInRange(uint32_t start, uint32_t count)
 		{
 			for (uint32_t i = start; i < start + count; i++)
@@ -202,7 +277,7 @@ namespace Flare
 
 			for (uint32_t i = 0; i < m_Size; i++)
 			{
-				new(m_Array[i]) T(start[i]);
+				new(&m_Array[i]) T(start[i]);
 			}
 		}
 
