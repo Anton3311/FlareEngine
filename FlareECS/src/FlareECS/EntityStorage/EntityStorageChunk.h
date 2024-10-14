@@ -2,6 +2,8 @@
 
 #include "FlareCore/Core.h"
 
+#include "FlareECS/Types.h"
+
 #include <stdint.h>
 #include <intrin.h>
 
@@ -16,6 +18,8 @@ namespace Flare
 	public:
 		static constexpr size_t CHUNK_SIZE = 4096;
 		static constexpr size_t CHUNK_ALIGNMENT = std::max(alignof(std::max_align_t), alignof(__m128));
+
+		static_assert(CHUNK_SIZE < std::numeric_limits<EntitySizeT>::max());
 
 		EntityStorageChunk();
 		~EntityStorageChunk();

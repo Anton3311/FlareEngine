@@ -157,11 +157,11 @@ namespace Flare
 			offset = Align(offset, info.Initializer->Type.Alignment);
 
 			archetype.CombinedComponentTypeFlags &= info.Initializer->Type.Flags;
-			archetype.ComponentOffsets[i] = offset;
+			archetype.ComponentOffsets[i] = (EntitySizeT)offset;
 
 			offset += componentSize;
-			archetype.EntitySize += componentSize;
-			archetype.EntityAlignment = std::max(archetype.EntityAlignment, info.Initializer->Type.Alignment);
+			archetype.EntitySize += (EntitySizeT)componentSize;
+			archetype.EntityAlignment = std::max(archetype.EntityAlignment, (EntitySizeT)info.Initializer->Type.Alignment);
 		}
 		
 		{
@@ -174,15 +174,16 @@ namespace Flare
 
 			for (size_t componentIndex = 0; componentIndex < archetype.Components.size(); componentIndex++)
 			{
-				archetype.ComponentArrayOffsets[componentIndex] = offset;
+				archetype.ComponentArrayOffsets[componentIndex] = (EntitySizeT)offset;
 
 				const ComponentInfo& info = m_ComponentsRegistry.GetComponentInfo(archetype.Components[componentIndex]);
 				offset += info.Size * archetype.EntityCountPerChunk;
 			}
 
-			archetype.IdsBufferOffset = offset;
+			archetype.IdsBufferOffset = (EntitySizeT)offset;
 		}
 
-		archetype.EntitySize = Align(archetype.EntitySize, m_ComponentsRegistry.GetComponentInfo(archetype.Components[0]).Initializer->Type.Alignment);
+		archetype.EntitySize = (EntitySizeT)Align((size_t)archetype.EntitySize,
+			m_ComponentsRegistry.GetComponentInfo(archetype.Components[0]).Initializer->Type.Alignment);
 	}
 }

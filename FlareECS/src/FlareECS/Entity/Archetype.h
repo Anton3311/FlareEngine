@@ -2,6 +2,7 @@
 
 #include "FlareCore/Serialization/TypeInitializer.h"
 
+#include "FlareECS/Types.h"
 #include "FlareECS/Entity/Component.h"
 
 #include <vector>
@@ -37,9 +38,9 @@ namespace Flare
 		constexpr bool IsUsedInCreatedEntitiesQuery() const { return CreatedEntitiesQueryReferences > 0; }
 
 		ArchetypeId Id;
-		size_t EntitySize = 0;
-		size_t EntityAlignment = 0;
-		size_t EntityCountPerChunk = 0;
+		EntitySizeT EntitySize = 0;
+		EntitySizeT EntityAlignment = 0;
+		EntitySizeT EntityCountPerChunk = 0;
 
 		int32_t DeletionQueryReferences = 0;
 		int32_t CreatedEntitiesQueryReferences = 0;
@@ -47,10 +48,10 @@ namespace Flare
 		TypeFlags CombinedComponentTypeFlags = TypeFlags::None;
 		
 		std::vector<ComponentId> Components; // Sorted
-		std::vector<size_t> ComponentOffsets;
+		std::vector<EntitySizeT> ComponentOffsets;
 
-		std::vector<size_t> ComponentArrayOffsets;
-		size_t IdsBufferOffset = 0;
+		std::vector<EntitySizeT> ComponentArrayOffsets;
+		EntitySizeT IdsBufferOffset = 0;
 
 		std::unordered_map<ComponentId, ArchetypeEdge> Edges;
 	};
