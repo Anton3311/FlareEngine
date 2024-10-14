@@ -2,6 +2,7 @@
 
 #include "FlareCore/UUID.h"
 #include "FlareCore/Collections/Span.h"
+#include "FlareCore/Collections/SmallVector.h"
 #include "FlareCore/Serialization/TypeSerializer.h"
 
 #include <stdint.h>
@@ -349,6 +350,47 @@ namespace Flare
                 [](void* vector, SerializationStream& stream)
                 {
                     TypeSerializer<std::vector<T>>::OnSerialize(*(std::vector<T>*)vector, stream);
+                });
+
+            return &s_Descriptor;
+        }
+    };
+
+    template<typename T, uint32_t N>
+    struct TypeSerializer<SmallVector<T, N>>
+    {
+        static void OnSerialize(SmallVector<T, N>& vector, SerializationStream& stream)
+        {
+            stream.PropertyKey("Elements");
+
+            size_t size = vector.GetSize();
+            switch (stream.SerializeDynamicArraySize(size))
+            {
+            case SerializationStream::DynamicArrayAction::None:
+                break;
+            case SerializationStream::DynamicArrayAction::Append:
+                vector.Emplace();
+                break;
+            case SerializationStream::DynamicArrayAction::Resize:
+                vector.Resize((uint32_t)size);
+                break;
+            }
+
+            stream.Serialize(SerializationValue(vector.GetData(), vector.GetSize()));
+        }
+    };
+
+    template<typename T, uint32_t N>
+    struct SerializationDescriptorOf<SmallVector<T, N>>
+    {
+        static const SerializableObjectDescriptor* Descriptor()
+        {
+            static SerializableObjectDescriptor s_Descriptor(
+                typeid(SmallVector<T, N>).name(),
+                sizeof(SmallVector<T, N>),
+                [](void* vector, SerializationStream& stream)
+                {
+                    TypeSerializer<SmallVector<T, N>>::OnSerialize(*(SmallVector<T, N>*)vector, stream);
                 });
 
             return &s_Descriptor;
