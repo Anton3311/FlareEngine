@@ -1,7 +1,7 @@
 #pragma once
 
 #include "FlareECS/Entity/Entity.h"
-#include "FlareECS/Entity/Archetype.h"
+#include "FlareECS/Entity/Archetypes.h"
 
 namespace Flare
 {

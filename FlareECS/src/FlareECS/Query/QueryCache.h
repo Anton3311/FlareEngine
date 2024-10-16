@@ -3,7 +3,6 @@
 #include "FlareCore/Assert.h"
 
 #include "FlareECS/Entity/Component.h"
-#include "FlareECS/Entity/Archetype.h"
 #include "FlareECS/Entity/Archetypes.h"
 
 #include "FlareECS/Query/QueryData.h"

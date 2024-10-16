@@ -3,13 +3,59 @@
 #include "FlareCore/Assert.h"
 #include "FlareCore/Collections/Span.h"
 
-#include "FlareECS/Entity/Archetype.h"
+#include "FlareCore/Serialization/TypeInitializer.h"
+
+#include "FlareECS/Types.h"
+#include "FlareECS/Entity/Component.h"
 
 #include <vector>
+#include <optional>
 #include <unordered_map>
 
 namespace Flare
 {
+	using ArchetypeId = uint32_t;
+	constexpr ArchetypeId INVALID_ARCHETYPE_ID = std::numeric_limits<ArchetypeId>::max();
+
+	struct ArchetypeEdge
+	{
+		ArchetypeId Add;
+		ArchetypeId Remove;
+	};
+
+	struct FLAREECS_API ArchetypeRecord
+	{
+		FLARE_NONCOPYABLE(ArchetypeRecord);
+
+		ArchetypeRecord() = default;
+
+		ArchetypeRecord(ArchetypeRecord&&) = default;
+		ArchetypeRecord& operator=(ArchetypeRecord&&) = default;
+
+		std::optional<size_t> TryGetComponentIndex(ComponentId component) const;
+
+		constexpr bool IsUsedInDeletionQuery() const { return DeletionQueryReferences > 0; }
+		constexpr bool IsUsedInCreatedEntitiesQuery() const { return CreatedEntitiesQueryReferences > 0; }
+
+		ArchetypeId Id = INVALID_ARCHETYPE_ID;
+		EntitySizeT EntitySize = 0;
+		EntitySizeT EntityAlignment = 0;
+		EntitySizeT EntityCountPerChunk = 0;
+
+		int32_t DeletionQueryReferences = 0;
+		int32_t CreatedEntitiesQueryReferences = 0;
+
+		TypeFlags CombinedComponentTypeFlags = TypeFlags::None;
+		
+		std::vector<ComponentId> Components; // Sorted
+		std::vector<EntitySizeT> ComponentOffsets;
+
+		std::vector<EntitySizeT> ComponentArrayOffsets;
+		EntitySizeT IdsBufferOffset = 0;
+
+		std::unordered_map<ComponentId, ArchetypeEdge> Edges;
+	};
+
 	class ArchetypeUpdateHandler
 	{
 	public:

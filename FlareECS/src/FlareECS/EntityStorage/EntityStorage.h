@@ -2,7 +2,6 @@
 
 #include "FlareCore/Assert.h"
 
-#include "FlareECS/Entity/Archetype.h"
 #include "FlareECS/Entity/Archetypes.h"
 
 #include "FlareECS/Entity/Entity.h"

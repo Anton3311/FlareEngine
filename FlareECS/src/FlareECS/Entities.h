@@ -7,7 +7,6 @@
 #include "FlareECS/Entity/Component.h"
 #include "FlareECS/Entity/Components.h"
 #include "FlareECS/Entity/ComponentInitializer.h"
-#include "FlareECS/Entity/Archetype.h"
 #include "FlareECS/Entity/Archetypes.h"
 #include "FlareECS/Entity/EntityIndex.h"
 

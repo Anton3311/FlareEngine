@@ -2,7 +2,7 @@
 
 #include "FlareCore/Core.h"
 
-#include "FlareECS/Entity/Archetype.h"
+#include "FlareECS/Entity/Archetypes.h"
 
 #include <unordered_map>
 #include <string_view>
