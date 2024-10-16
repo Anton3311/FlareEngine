@@ -13,36 +13,45 @@ namespace Flare
 	struct ComponentId
 	{
 	public:
-		constexpr ComponentId()
-			: m_Index(UINT32_MAX), m_Generation(UINT16_MAX) {}
-		constexpr ComponentId(uint32_t index, uint16_t generation)
-			: m_Index(index), m_Generation(generation) {}
+		using UnderlyingType = uint16_t;
+		static constexpr UnderlyingType INDEX_BITS = 10;
+		static constexpr UnderlyingType GENERATION_BITS = 6;
+		static constexpr UnderlyingType INDEX_MASK = (1 << INDEX_BITS) - 1;
+		static constexpr UnderlyingType GENERATION_MASK = (1 << GENERATION_BITS) - 1;
 
-		constexpr uint32_t GetIndex() const { return m_Index; }
-		constexpr uint16_t GetGeneration() const { return m_Generation; }
+		constexpr ComponentId()
+			: m_Value(std::numeric_limits<UnderlyingType>::max()) {}
+
+		inline ComponentId(UnderlyingType index, UnderlyingType generation)
+			: m_Value(index | generation << INDEX_BITS)
+		{
+			FLARE_CORE_VERIFY(index < INDEX_MASK && generation < GENERATION_MASK);
+		}
+
+		constexpr UnderlyingType GetIndex() const { return m_Value & INDEX_MASK; }
+		constexpr UnderlyingType GetGeneration() const { return (m_Value & GENERATION_MASK) >> INDEX_BITS; }
 
 		constexpr bool operator<(ComponentId other) const
 		{
-			return m_Index < other.m_Index;
+			return GetIndex() < other.GetIndex();
 		}
 
 		constexpr bool operator>(ComponentId other) const
 		{
-			return m_Index > other.m_Index;
+			return GetIndex() > other.GetIndex();
 		}
 
 		constexpr bool operator==(ComponentId other) const
 		{
-			return m_Index == other.m_Index && m_Generation == other.m_Generation;
+			return m_Value == other.m_Value;
 		}
 
 		constexpr bool operator!=(ComponentId other) const
 		{
-			return m_Index != other.m_Index || m_Generation != other.m_Generation;
+			return m_Value != other.m_Value;
 		}
 	private:
-		uint32_t m_Index;
-		uint16_t m_Generation;
+		UnderlyingType m_Value;
 
 		friend struct std::hash<ComponentId>;
 	};
@@ -143,6 +152,6 @@ struct std::hash<Flare::ComponentId>
 {
 	size_t operator()(Flare::ComponentId id) const
 	{
-		return std::hash<uint32_t>()(id.m_Index);
+		return std::hash<Flare::ComponentId::UnderlyingType>()(id.m_Value);
 	}
 };
