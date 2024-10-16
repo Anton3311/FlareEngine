@@ -36,7 +36,7 @@ namespace Flare
 
 		inline const std::vector<QueryData>& GetQueries() const { return m_Queries; }
 	private:
-		bool CompareComponentSets(const std::vector<ComponentId>& archetypeComponents, const std::vector<ComponentId>& queryComponents);
+		bool CompareComponentSets(const std::vector<ComponentId>& archetypeComponents, const std::vector<QueryData::ComponentEntry>& queryComponents);
 	private:
 		Archetypes& m_Archetypes;
 

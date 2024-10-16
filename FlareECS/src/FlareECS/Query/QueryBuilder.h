@@ -29,7 +29,8 @@ namespace Flare
 
 			([&]
 			{
-				m_Data.Components.push_back(COMPONENT_ID(T));
+				ComponentId id = COMPONENT_ID(T);
+				m_Data.Components.push_back(QueryData::ComponentEntry { id, QueryFilterType::With });
 			} (), ...);
 
 			return *this;
@@ -46,9 +47,7 @@ namespace Flare
 			([&]
 			{
 				ComponentId id = COMPONENT_ID(T);
-				m_Data.Components.push_back(ComponentId(
-					id.GetIndex() | (uint32_t)QueryFilterType::Without, 
-					id.GetGeneration()));
+				m_Data.Components.push_back(QueryData::ComponentEntry { id, QueryFilterType::Without });
 			} (), ...);
 
 			return *this;

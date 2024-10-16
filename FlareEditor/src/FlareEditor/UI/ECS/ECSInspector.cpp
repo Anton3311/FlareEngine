@@ -295,15 +295,15 @@ namespace Flare
 
 			if (ImGui::TreeNodeEx("Components", flags))
 			{
-				for (ComponentId id : query.Components)
+				for (QueryData::ComponentEntry entry : query.Components)
 				{
 					ImGui::SetCursorPosY(ImGui::GetCursorPosY() + style.FramePadding.y);
 
 					ImGui::Text("%s %s",
-						HAS_BIT(id.GetIndex(), (uint32_t)QueryFilterType::Without)
+						entry.Filter == QueryFilterType::Without
 							? "Without"
 							: "With",
-						World::GetCurrent().Components.GetComponentInfo(id.Masked()).Initializer->Type.TypeName.data());
+						World::GetCurrent().Components.GetComponentInfo(entry.Id).Initializer->Type.TypeName.data());
 
 					ImGui::SetCursorPosY(ImGui::GetCursorPosY() + style.FramePadding.y);
 				}

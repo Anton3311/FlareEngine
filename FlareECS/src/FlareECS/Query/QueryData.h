@@ -19,18 +19,24 @@ namespace Flare
 		CreatedEntities,
 	};
 
-	struct QueryCreationData
-	{
-		QueryTarget Target;
-		std::vector<ComponentId> Components;
-	};
-
 	struct QueryData
 	{
+		struct ComponentEntry
+		{
+			ComponentId Id = ComponentId();
+			QueryFilterType Filter = QueryFilterType::With;
+		};
+
 		QueryId Id;
 		QueryTarget Target;
 
-		std::vector<ComponentId> Components;
+		std::vector<ComponentEntry> Components;
 		std::unordered_set<ArchetypeId> MatchedArchetypes;
+	};
+
+	struct QueryCreationData
+	{
+		QueryTarget Target;
+		std::vector<QueryData::ComponentEntry> Components;
 	};
 }

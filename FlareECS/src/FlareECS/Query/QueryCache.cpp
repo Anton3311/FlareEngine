@@ -60,11 +60,16 @@ namespace Flare
 		query.Components = std::move(creationData.Components);
 		query.MatchedArchetypes;
 
-		std::sort(query.Components.begin(), query.Components.end());
+		std::sort(query.Components.begin(),
+			query.Components.end(),
+			[](const QueryData::ComponentEntry& a, const QueryData::ComponentEntry& b) -> bool
+			{
+				return a.Id < b.Id;
+			});
 
 		for (size_t i = 0; i < query.Components.size(); i++)
 		{
-			auto it = m_Archetypes.ComponentToArchetype.find(query.Components[i].Masked());
+			auto it = m_Archetypes.ComponentToArchetype.find(query.Components[i].Id);
 			if (it == m_Archetypes.ComponentToArchetype.end())
 				continue;
 
@@ -86,7 +91,7 @@ namespace Flare
 		}
 
 		for (size_t i = 0; i < query.Components.size(); i++)
-			m_CachedMatches[query.Components[i].Masked()].push_back(id);
+			m_CachedMatches[query.Components[i].Id].push_back(id);
 
 		return id;
 	}
@@ -123,22 +128,22 @@ namespace Flare
 		}
 	}
 
-	bool QueryCache::CompareComponentSets(const std::vector<ComponentId>& archetypeComponents, const std::vector<ComponentId>& queryComponents)
+	bool QueryCache::CompareComponentSets(const std::vector<ComponentId>& archetypeComponents, const std::vector<QueryData::ComponentEntry>& queryComponents)
 	{
 		FLARE_PROFILE_FUNCTION();
 		size_t queryComponentIndex = 0;
 		size_t i = 0;
 		while (i < archetypeComponents.size() && queryComponentIndex < queryComponents.size())
 		{
-			bool match = archetypeComponents[i].CompareMasked(queryComponents[queryComponentIndex]);
-			bool without = HAS_BIT(queryComponents[queryComponentIndex].GetIndex(), (uint32_t)QueryFilterType::Without);
+			bool match = archetypeComponents[i] == queryComponents[queryComponentIndex].Id;
+			bool without = queryComponents[queryComponentIndex].Filter == QueryFilterType::Without;
 
 			if (match && without)
 				return false;
 
 			if (without)
 			{
-				if (archetypeComponents[i].GetIndex() > (queryComponents[queryComponentIndex].GetIndex() & ComponentId::INDEX_MASK))
+				if (archetypeComponents[i] > queryComponents[queryComponentIndex].Id)
 				{
 					queryComponentIndex++;
 					continue;
@@ -158,7 +163,7 @@ namespace Flare
 			++i;
 		}
 
-		while (queryComponentIndex < queryComponents.size() && HAS_BIT(queryComponents[queryComponentIndex].GetIndex(), (uint32_t)QueryFilterType::Without))
+		while (queryComponentIndex < queryComponents.size() && queryComponents[queryComponentIndex].Filter == QueryFilterType::Without)
 			++queryComponentIndex;
 
 		return queryComponentIndex == queryComponents.size();
