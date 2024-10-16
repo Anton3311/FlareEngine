@@ -47,51 +47,60 @@ namespace Flare
 	Archetypes::~Archetypes()
 	{
 		FLARE_PROFILE_FUNCTION();
-		for (const auto& archetype : Records)
+		for (const auto& archetype : m_Records)
 		{
 			FLARE_CORE_ASSERT(archetype.DeletionQueryReferences == 0 && archetype.CreatedEntitiesQueryReferences == 0);
 		}
 	}
 
-	const ArchetypeRecord* Archetypes::FindArchetype(Span<ComponentId> components) const
+	void Archetypes::Clear()
+	{
+		FLARE_PROFILE_FUNCTION();
+		m_ComponentSetToArchetype.clear();
+		m_ComponentToArchetype.clear();
+
+		m_Records.clear();
+	}
+
+	const ArchetypeRecord* Archetypes::FindArchetype(Span<const ComponentId> components) const
 	{
 		FLARE_PROFILE_FUNCTION();
 
 		std::vector<ComponentId> idsCopy(components.begin(), components.end());
 		std::sort(idsCopy.begin(), idsCopy.end());
 
-		auto it = ComponentSetToArchetype.find(ComponentSet(idsCopy));
-		if (it == ComponentSetToArchetype.end())
+		auto it = m_ComponentSetToArchetype.find(ComponentSet(idsCopy));
+		if (it == m_ComponentSetToArchetype.end())
 		{
 			return nullptr;
 		}
 
-		return &Records[it->second];
+		return &m_Records[it->second];
 	}
 
-	const ArchetypeRecord* Archetypes::FindOrCreateArchetype(Span<ComponentId> components)
+	const ArchetypeRecord* Archetypes::FindOrCreateArchetype(Span<const ComponentId> components)
 	{
 		FLARE_PROFILE_FUNCTION();
 
 		std::vector<ComponentId> idsCopy(components.begin(), components.end());
 		std::sort(idsCopy.begin(), idsCopy.end());
 
-		auto it = ComponentSetToArchetype.find(ComponentSet(idsCopy));
-		if (it == ComponentSetToArchetype.end())
+		auto it = m_ComponentSetToArchetype.find(ComponentSet(idsCopy));
+		if (it == m_ComponentSetToArchetype.end())
 		{
-			ArchetypeId archetypeId = (ArchetypeId)Records.size();
-			ArchetypeRecord& record = Records.emplace_back();
+			ArchetypeId archetypeId = (ArchetypeId)m_Records.size();
+			ArchetypeRecord& record = m_Records.emplace_back();
 			record.Id = archetypeId;
 			record.Components = std::move(idsCopy);
 			record.CreatedEntitiesQueryReferences = 0;
 			record.DeletionQueryReferences = 0;
 
-			ComponentSetToArchetype.emplace(ComponentSet(record.Components), archetypeId);
+			m_ComponentSetToArchetype.emplace(ComponentSet(record.Components), archetypeId);
 
 			for (size_t i = 0; i < record.Components.size(); i++)
 			{
 				ComponentId component = record.Components[i];
-				ComponentToArchetype[component].emplace(archetypeId, i);
+				m_ComponentToArchetype[component].emplace(archetypeId, i);
 			}
 
 			InitializeRecord(record);
@@ -106,7 +115,7 @@ namespace Flare
 			return &record;
 		}
 
-		return &Records[it->second];
+		return &m_Records[it->second];
 	}
 
 	ArchetypeId Archetypes::CreateArchetype(Span<const ComponentId> sortedComponentIds)
@@ -126,8 +135,8 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(sortedComponentIds.size() > 0);
 
-		ArchetypeId archetypeId = (ArchetypeId)Records.size();
-		ArchetypeRecord& record = Records.emplace_back();
+		ArchetypeId archetypeId = (ArchetypeId)m_Records.size();
+		ArchetypeRecord& record = m_Records.emplace_back();
 		record.Id = archetypeId;
 		record.CreatedEntitiesQueryReferences = 0;
 		record.DeletionQueryReferences = 0;
@@ -135,12 +144,12 @@ namespace Flare
 
 		InitializeRecord(record);
 
-		ComponentSetToArchetype[ComponentSet(record.Components)] = archetypeId;
+		m_ComponentSetToArchetype[ComponentSet(record.Components)] = archetypeId;
 
 		for (size_t i = 0; i < record.Components.size(); i++)
 		{
 			ComponentId component = record.Components[i];
-			ComponentToArchetype[component].emplace(archetypeId, i);
+			m_ComponentToArchetype[component].emplace(archetypeId, i);
 		}
 
 		FLARE_CORE_ASSERT(record.EntitySize > 0);
@@ -168,6 +177,26 @@ namespace Flare
 			return;
 
 		m_UpdateHandlers.erase(it);
+	}
+
+	void Archetypes::AddArchetypeEdge(ArchetypeId archetype, ComponentId component, ArchetypeEdge edge)
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		auto& archetypeEdges = m_Records[archetype].Edges;
+
+		auto iterator = archetypeEdges.find(component);
+		if (iterator == archetypeEdges.end())
+		{
+			archetypeEdges.emplace(component, edge);
+		}
+		else
+		{
+			if (edge.Add != INVALID_ARCHETYPE_ID)
+				iterator->second.Add = edge.Add;
+			if (edge.Remove != INVALID_ARCHETYPE_ID)
+				iterator->second.Remove = edge.Remove;
+		}
 	}
 
 	void Archetypes::InitializeRecord(ArchetypeRecord& archetype)

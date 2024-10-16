@@ -166,7 +166,7 @@ namespace Flare
 			lastEntityInBufferRecord.BufferIndex = record.BufferIndex;
 		}
 
-		const ArchetypeRecord& archetype = m_Archetypes.Records[record.Archetype];
+		const ArchetypeRecord& archetype = m_Archetypes[record.Archetype];
 		if (!ignoreDeletionQueries && archetype.IsUsedInDeletionQuery())
 		{
 			auto& deletedEntities = GetDeletedEntityStorage(archetype.Id);
@@ -204,7 +204,7 @@ namespace Flare
 			return false;
 
 		EntityRecord& entityRecord = m_EntityRecords[recordIterator->second];
-		ArchetypeRecord& archetype = m_Archetypes.Records[entityRecord.Archetype];
+		const ArchetypeRecord& archetype = m_Archetypes[entityRecord.Archetype];
 
 		// Can only have one instance of a component
 		if (m_Archetypes[entityRecord.Archetype].TryGetComponentIndex(componentId).has_value())
@@ -247,10 +247,10 @@ namespace Flare
 				}
 			}
 
-			auto it = m_Archetypes.ComponentSetToArchetype.find(ComponentSet(newComponents));
-			if (it != m_Archetypes.ComponentSetToArchetype.end())
+			const ArchetypeRecord* foundArchetype = m_Archetypes.FindArchetype(Span<ComponentId>::FromVector(newComponents));
+			if (foundArchetype)
 			{
-				newArchetypeId = it->second;
+				newArchetypeId = foundArchetype->Id;
 			}
 			else
 			{
@@ -265,14 +265,14 @@ namespace Flare
 				storage.Initialize(storageRequirements, m_Archetypes, archetype.Id);
 			}
 
-			m_Archetypes.Records[entityRecord.Archetype].Edges.emplace(componentId, ArchetypeEdge{newArchetypeId, INVALID_ARCHETYPE_ID});
-			m_Archetypes.Records[newArchetypeId].Edges.emplace(componentId, ArchetypeEdge{INVALID_ARCHETYPE_ID, entityRecord.Archetype});
+			m_Archetypes.AddArchetypeEdge(entityRecord.Archetype, componentId, ArchetypeEdge{ newArchetypeId, INVALID_ARCHETYPE_ID });
+			m_Archetypes.AddArchetypeEdge(newArchetypeId, componentId, ArchetypeEdge{ INVALID_ARCHETYPE_ID, entityRecord.Archetype });
 		}
 
 		FLARE_CORE_ASSERT(insertedComponentIndex != SIZE_MAX);
 
-		ArchetypeRecord& oldArchetype = m_Archetypes.Records[entityRecord.Archetype];
-		ArchetypeRecord& newArchetype = m_Archetypes.Records[newArchetypeId];
+		const ArchetypeRecord& oldArchetype = m_Archetypes[entityRecord.Archetype];
+		const ArchetypeRecord& newArchetype = m_Archetypes[newArchetypeId];
 
 		EntityStorage& oldStorage = GetEntityStorage(oldArchetype.Id);
 		EntityStorage& newStorage = GetEntityStorage(newArchetypeId);
@@ -343,7 +343,7 @@ namespace Flare
 			return false;
 
 		EntityRecord& entityRecord = m_EntityRecords[recordIterator->second];
-		ArchetypeRecord& archetype = m_Archetypes.Records[entityRecord.Archetype];
+		const ArchetypeRecord& archetype = m_Archetypes[entityRecord.Archetype];
 
 		size_t removedComponentIndex = SIZE_MAX;
 		ArchetypeId newArchetypeId = INVALID_ARCHETYPE_ID;
@@ -378,10 +378,10 @@ namespace Flare
 				}
 			}
 
-			auto it = m_Archetypes.ComponentSetToArchetype.find(ComponentSet(newComponents));
-			if (it != m_Archetypes.ComponentSetToArchetype.end())
+			const ArchetypeRecord* foundArchetype = m_Archetypes.FindArchetype(Span<ComponentId>::FromVector(newComponents));
+			if (foundArchetype)
 			{
-				newArchetypeId = it->second;
+				newArchetypeId = foundArchetype->Id;
 			}
 			else
 			{
@@ -396,12 +396,12 @@ namespace Flare
 				storage.Initialize(storageRequirements, m_Archetypes, archetype.Id);
 			}
 
-			m_Archetypes.Records[entityRecord.Archetype].Edges.emplace(componentId, ArchetypeEdge{ INVALID_ARCHETYPE_ID, newArchetypeId });
-			m_Archetypes.Records[newArchetypeId].Edges.emplace(componentId, ArchetypeEdge{ entityRecord.Archetype, INVALID_ARCHETYPE_ID });
+			m_Archetypes.AddArchetypeEdge(entityRecord.Archetype, componentId, ArchetypeEdge{ INVALID_ARCHETYPE_ID, newArchetypeId });
+			m_Archetypes.AddArchetypeEdge(newArchetypeId, componentId, ArchetypeEdge{ newArchetypeId, INVALID_ARCHETYPE_ID });
 		}
 
-		ArchetypeRecord& oldArchetype = m_Archetypes.Records[entityRecord.Archetype];
-		ArchetypeRecord& newArchetype = m_Archetypes.Records[newArchetypeId];
+		const ArchetypeRecord& oldArchetype = m_Archetypes[entityRecord.Archetype];
+		const ArchetypeRecord& newArchetype = m_Archetypes[newArchetypeId];
 
 		EntityStorage& oldStorage = GetEntityStorage(oldArchetype.Id);
 		EntityStorage& newStorage = GetEntityStorage(newArchetypeId);
@@ -497,7 +497,7 @@ namespace Flare
 			return {};
 
 		const EntityRecord& entityRecord = m_EntityRecords[it->second];
-		const ArchetypeRecord& archetype = m_Archetypes.Records[entityRecord.Archetype];
+		const ArchetypeRecord& archetype = m_Archetypes[entityRecord.Archetype];
 		const EntityStorage& storage = m_EntityStorages[archetype.Id];
 
 		std::optional<size_t> componentIndex = archetype.TryGetComponentIndex(component);
@@ -515,7 +515,7 @@ namespace Flare
 			return nullptr;
 
 		const EntityRecord& entityRecord = m_EntityRecords[it->second];
-		const ArchetypeRecord& archetype = m_Archetypes.Records[entityRecord.Archetype];
+		const ArchetypeRecord& archetype = m_Archetypes[entityRecord.Archetype];
 		const EntityStorage& storage = m_EntityStorages[archetype.Id];
 
 		std::optional<size_t> componentIndex = archetype.TryGetComponentIndex(component);
@@ -530,14 +530,14 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(m_Components.IsComponentIdValid(id));
 
-		auto it = m_Archetypes.ComponentToArchetype.find(id);
-		if (it == m_Archetypes.ComponentToArchetype.end())
+		auto result = m_Archetypes.GetArchetypesWithComponent(id);
+		if (result)
 		{
 			FLARE_CORE_ERROR("Failed to get singleton component: World doesn't contain any entities with component '{0}'", m_Components.GetComponentInfo(id).Name);
 			return nullptr;
 		}
 
-		const auto& archetypes = it->second;
+		const auto& archetypes = *result;
 		
 		ArchetypeId archetype = INVALID_ARCHETYPE_ID;
 		size_t componentIndex = SIZE_MAX;
@@ -630,7 +630,7 @@ namespace Flare
 	{
 		auto it = FindEntity(entity);
 		FLARE_CORE_ASSERT(it != m_EntityToRecord.end());
-		return m_Archetypes.Records[m_EntityRecords[it->second].Archetype].Components;
+		return m_Archetypes[m_EntityRecords[it->second].Archetype].Components;
 	}
 
 	bool Entities::HasComponent(Entity entity, ComponentId component) const
@@ -657,10 +657,10 @@ namespace Flare
 	void Entities::EnsureValidEntityStorages()
 	{
 		FLARE_PROFILE_FUNCTION();
-		if (m_Archetypes.Records.size() >= m_EntityStorages.size())
+		if (m_Archetypes.GetArchetypeCount() >= m_EntityStorages.size())
 		{
 			size_t oldSize = m_EntityStorages.size();
-			m_EntityStorages.resize(m_Archetypes.Records.size());
+			m_EntityStorages.resize(m_Archetypes.GetArchetypeCount());
 			
 			for (size_t i = oldSize; i < m_EntityStorages.size(); i++)
 			{
@@ -696,9 +696,9 @@ namespace Flare
 		record.RegistryIndex = (uint32_t)registryIndex;
 		record.Id = m_EntityIndex.CreateId();
 
-		auto it = m_Archetypes.ComponentSetToArchetype.find(components);
-		if (it != m_Archetypes.ComponentSetToArchetype.end())
-			record.Archetype = it->second;
+		const ArchetypeRecord* foundArchetype = m_Archetypes.FindArchetype(Span(components.GetIds(), components.GetCount()));
+		if (foundArchetype)
+			record.Archetype = foundArchetype->Id;
 		else
 		{
 			record.Archetype = m_Archetypes.CreateArchetype(Span<const ComponentId>(components.GetIds(), components.GetCount()));
@@ -711,7 +711,7 @@ namespace Flare
 			GetEntityStorage(record.Archetype).Initialize(storageRequirements, m_Archetypes, archetype.Id);
 		}
 
-		ArchetypeRecord& archetypeRecord = m_Archetypes.Records[record.Archetype];
+		const ArchetypeRecord& archetypeRecord = m_Archetypes[record.Archetype];
 		EntityStorage& storage = GetEntityStorage(record.Archetype);
 		record.BufferIndex = storage.AddEntity(record.Id);
 
@@ -800,7 +800,7 @@ namespace Flare
 
 	void Entities::RemoveEntityData(ArchetypeId archetype, size_t entityBufferIndex)
 	{
-		ArchetypeRecord& archetypeRecord = m_Archetypes.Records[archetype];
+		const ArchetypeRecord& archetypeRecord = m_Archetypes[archetype];
 
 		EntityStorage& storage = GetEntityStorage(archetype);
 		FLARE_CORE_ASSERT(storage.GetEntityCount() > 0);
@@ -848,7 +848,7 @@ namespace Flare
 
 		ClearQueuedForDeletion();
 
-		for (const ArchetypeRecord& archetype : m_Archetypes.Records)
+		for (const ArchetypeRecord& archetype : m_Archetypes.GetRecords())
 		{
 			// HACK: Used to cause a crash when destroying a world owned by prefab editor scene
 			//

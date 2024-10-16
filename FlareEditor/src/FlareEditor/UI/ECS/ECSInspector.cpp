@@ -119,7 +119,7 @@ namespace Flare
 				{
 					if (ImGui::BeginChild("Archetypes List"))
 					{
-						for (const auto& archetype : world.GetArchetypes().Records)
+						for (const ArchetypeRecord& archetype : world.GetArchetypes().GetRecords())
 						{
 							ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_SpanFullWidth;
 							bool opened = ImGui::TreeNodeEx((void*)&archetype, flags, "Archetype %d", archetype.Id);

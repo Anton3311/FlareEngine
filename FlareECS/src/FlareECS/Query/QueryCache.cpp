@@ -33,12 +33,12 @@ namespace Flare
 			if (query.Target == QueryTarget::DeletedEntities)
 			{
 				for (ArchetypeId archetype : query.MatchedArchetypes)
-					m_Archetypes.Records[archetype].DeletionQueryReferences--;
+					m_Archetypes.GetMutableRecord(archetype).DeletionQueryReferences--;
 			}
 			else if (query.Target == QueryTarget::CreatedEntities)
 			{
 				for (ArchetypeId archetype : query.MatchedArchetypes)
-					m_Archetypes.Records[archetype].CreatedEntitiesQueryReferences--;
+					m_Archetypes.GetMutableRecord(archetype).CreatedEntitiesQueryReferences--;
 			}
 		}
 	}
@@ -69,11 +69,11 @@ namespace Flare
 
 		for (size_t i = 0; i < query.Components.size(); i++)
 		{
-			auto it = m_Archetypes.ComponentToArchetype.find(query.Components[i].Id);
-			if (it == m_Archetypes.ComponentToArchetype.end())
+			auto archetypes = m_Archetypes.GetArchetypesWithComponent(query.Components[i].Id);
+			if (!archetypes)
 				continue;
 
-			for (std::pair<ArchetypeId, size_t> archetype : it->second)
+			for (std::pair<ArchetypeId, size_t> archetype : *archetypes)
 			{
 				if (query.MatchedArchetypes.find(archetype.first) != query.MatchedArchetypes.end())
 					continue;
@@ -84,9 +84,9 @@ namespace Flare
 				query.MatchedArchetypes.insert(archetype.first);
 
 				if (query.Target == QueryTarget::DeletedEntities)
-					m_Archetypes.Records[archetype.first].DeletionQueryReferences++;
+					m_Archetypes.GetMutableRecord(archetype.first).DeletionQueryReferences++;
 				else if (query.Target == QueryTarget::CreatedEntities)
-					m_Archetypes.Records[archetype.first].CreatedEntitiesQueryReferences += 1;
+					m_Archetypes.GetMutableRecord(archetype.first).CreatedEntitiesQueryReferences += 1;
 			}
 		}
 
@@ -120,9 +120,9 @@ namespace Flare
 					query.MatchedArchetypes.insert(archetype);
 
 					if (query.Target == QueryTarget::DeletedEntities)
-						m_Archetypes.Records[archetype].DeletionQueryReferences++;
+						m_Archetypes.GetMutableRecord(archetype).DeletionQueryReferences++;
 					else if (query.Target == QueryTarget::CreatedEntities)
-						m_Archetypes.Records[archetype].CreatedEntitiesQueryReferences += 1;
+						m_Archetypes.GetMutableRecord(archetype).CreatedEntitiesQueryReferences++;
 				}
 			}
 		}
