@@ -49,7 +49,7 @@ M.setup_project = function(name)
 
 	project(name)
 	language("C++")
-	cppdialect("C++17")
+	cppdialect(CPP_DIALECT)
 	staticruntime("off")
 	files({"Source/**.h", "Source/*.hpp", "Source/*.cpp"})
 
