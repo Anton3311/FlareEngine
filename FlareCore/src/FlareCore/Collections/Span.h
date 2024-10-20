@@ -102,13 +102,17 @@ namespace Flare
 			return m_Values[index];
 		}
 
-		inline static Span<T> FromVector(std::vector<T>& vector)
+		template<typename U>
+		inline static Span<T> FromVector(std::vector<U>& vector)
 		{
+			static_assert(std::is_convertible_v<U*, T*>);
 			return Span<T>(vector.data(), vector.size());
 		}
 
-		inline static Span<const T> FromVector(const std::vector<T>& vector)
+		template<typename U>
+		inline static Span<const T> FromVector(const std::vector<U>& vector)
 		{
+			static_assert(std::is_convertible_v<U*, T*>);
 			return Span<const T>(vector.data(), vector.size());
 		}
 	private:
