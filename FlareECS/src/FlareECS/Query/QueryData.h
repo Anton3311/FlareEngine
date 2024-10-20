@@ -30,7 +30,7 @@ namespace Flare
 		QueryTarget Target;
 
 		std::vector<ComponentEntry> Components;
-		std::unordered_set<ArchetypeId> MatchedArchetypes;
+		std::unordered_set<ArchetypeId> MatchingArchetypes;
 	};
 
 	struct QueryCreationData

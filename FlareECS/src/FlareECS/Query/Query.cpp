@@ -47,7 +47,7 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 		const QueryData& queryData = (*m_Queries)[m_Id];
-		for (ArchetypeId archetype : queryData.MatchedArchetypes)
+		for (ArchetypeId archetype : queryData.MatchingArchetypes)
 		{
 			Span<Entity> ids = m_Entities->GetCreatedEntities(archetype);
 			if (ids.GetSize() == 0)

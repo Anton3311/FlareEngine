@@ -50,6 +50,8 @@ namespace Flare
 		{
 			return m_Value != other.m_Value;
 		}
+
+		constexpr UnderlyingType GetValue() const { return m_Value; }
 	private:
 		UnderlyingType m_Value;
 

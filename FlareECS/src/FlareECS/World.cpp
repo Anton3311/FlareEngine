@@ -37,11 +37,6 @@ namespace Flare
 		return Entities.IsEntityAlive(entity);
 	}
 
-	const std::vector<ComponentId>& World::GetEntityComponents(Entity entity)
-	{
-		return Entities.GetEntityComponents(entity);
-	}
-
 	Entity World::GetSingletonEntity(const Query& query)
 	{
 		return Entities.GetSingletonEntity(query).value_or(Entity());

@@ -205,6 +205,7 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 		World& world = World::GetCurrent();
 		const ArchetypeRecord& record = world.GetArchetypes()[archetype];
+		const ArchetypeComponents& archetypeComponents = world.GetArchetypes().GetArchetypeComponents(archetype);
 
 		if (EditorGUI::BeginPropertyGrid())
 		{
@@ -241,7 +242,7 @@ namespace Flare
 		if (ImGui::TreeNodeEx("Components", flags))
 		{
 			const ImGuiStyle& style = ImGui::GetStyle();
-			for (ComponentId id : record.Components)
+			for (ComponentId id : archetypeComponents.GetComponentsAsSpan())
 			{
 				ImGui::SetCursorPosY(ImGui::GetCursorPosY() + style.FramePadding.y);
 				ImGui::TextUnformatted(world.Entities.GetComponents().GetComponentInfo(id).Name.c_str());
@@ -313,7 +314,7 @@ namespace Flare
 
 			if (ImGui::TreeNodeEx("Matching Archetypes", flags))
 			{
-				for (ArchetypeId archetype : query.MatchedArchetypes)
+				for (ArchetypeId archetype : query.MatchingArchetypes)
 				{
 					ImGui::SetCursorPosY(ImGui::GetCursorPosY() + style.FramePadding.y);
 					ImGui::Text("%llu", (uint64_t)archetype);

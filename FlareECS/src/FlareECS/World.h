@@ -60,7 +60,7 @@ namespace Flare
 		template<typename T>
 		constexpr T& GetEntityComponent(Entity entity)
 		{
-			void* componentData = Entities.GetEntityComponent(entity, COMPONENT_ID(T));
+			void* componentData = Entities.GetRawEntityComponent(entity, COMPONENT_ID(T), sizeof(T));
 			FLARE_CORE_ASSERT(componentData, "Failed to get entity component");
 			return *(T*)componentData;
 		}
@@ -68,7 +68,7 @@ namespace Flare
 		template<typename T>
 		constexpr const T& GetEntityComponent(Entity entity) const
 		{
-			const void* componentData = Entities.GetEntityComponent(entity, COMPONENT_ID(T));
+			const void* componentData = Entities.GetRawEntityComponent(entity, COMPONENT_ID(T), sizeof(T));
 			FLARE_CORE_ASSERT(componentData, "Failed to get entity component");
 			return *(const T*)componentData;
 		}
@@ -76,13 +76,13 @@ namespace Flare
 		template<typename T>
 		constexpr T* TryGetEntityComponent(Entity entity)
 		{
-			return (T*)Entities.GetEntityComponent(entity, COMPONENT_ID(T));
+			return (T*)Entities.GetRawEntityComponent(entity, COMPONENT_ID(T), sizeof(T));
 		}
 
 		template<typename T>
 		constexpr const T* TryGetEntityComponent(Entity entity) const
 		{
-			return (const T*) Entities.GetEntityComponent(entity, COMPONENT_ID(T));
+			return (const T*) Entities.GetRawEntityComponent(entity, COMPONENT_ID(T), sizeof(T));
 		}
 
 		template<typename T>
@@ -105,7 +105,6 @@ namespace Flare
 
 		void DeleteEntity(Entity entity);
 		bool IsEntityAlive(Entity entity) const;
-		const std::vector<ComponentId>& GetEntityComponents(Entity entity);
 		Entity GetSingletonEntity(const Query& query);
 
 		template<typename T>

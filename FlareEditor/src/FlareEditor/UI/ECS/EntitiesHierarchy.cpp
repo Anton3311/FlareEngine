@@ -169,9 +169,10 @@ namespace Flare
 		Entity duplicated = entities.CreateEntityFromArchetype(archetypeId, ComponentInitializationStrategy::DefaultConstructor);
 
 		const ArchetypeRecord& archetype = m_World->GetArchetypes()[archetypeId];
-		for (size_t i = 0; i < archetype.Components.size(); i++)
+		const ArchetypeComponents& archetypeComponents = m_World->GetArchetypes().GetArchetypeComponents(archetypeId);
+		for (size_t i = 0; i < archetypeComponents.ComponentCount; i++)
 		{
-			if (archetype.Components[i] == COMPONENT_ID(SerializationId))
+			if (archetypeComponents.ComponentIds[i] == COMPONENT_ID(SerializationId))
 			{
 				// NOTE: Skip SerializationId component, because each entity must have a unique serialization id.
 				//
@@ -183,12 +184,12 @@ namespace Flare
 				continue;
 			}
 
-			void* componentSource = entities.GetEntityComponent(entity, archetype.Components[i]);
-			void* componentDestination = entities.GetEntityComponent(duplicated, archetype.Components[i]);
+			void* componentSource = entities.GetEntityComponent(entity, archetypeComponents.ComponentIds[i]);
+			void* componentDestination = entities.GetEntityComponent(duplicated, archetypeComponents.ComponentIds[i]);
 
 			FLARE_CORE_ASSERT(componentSource && componentDestination);
 
-			const ComponentInfo& component = m_World->Components.GetComponentInfo(archetype.Components[i]);
+			const ComponentInfo& component = m_World->Components.GetComponentInfo(archetypeComponents.ComponentIds[i]);
 			component.Initializer->Type.Functions.CopyConstructor(componentDestination, componentSource);
 		}
 

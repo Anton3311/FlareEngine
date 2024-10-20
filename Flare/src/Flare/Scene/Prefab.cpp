@@ -61,17 +61,18 @@ namespace Flare
 		{
 			const Node& node = m_Nodes[entityIndex];
 			const ArchetypeRecord& archetypeRecord = m_CompatibleArchetypes[node.Archetype];
+			const ArchetypeComponents& archetypeComponents = m_CompatibleArchetypes.GetArchetypeComponents(node.Archetype);
 
-			for (size_t componentIndex = 0; componentIndex < archetypeRecord.Components.size(); componentIndex++)
+			for (size_t componentIndex = 0; componentIndex < archetypeComponents.ComponentCount; componentIndex++)
 			{
 				uint8_t* componentData = m_Buffer + node.DataOffset + archetypeRecord.ComponentOffsets[componentIndex];
 				const void* sceneEntityComponent = world.Entities.GetEntityComponent(
 					entities[entityIndex].Id,
-					archetypeRecord.Components[componentIndex]);
+					archetypeComponents.ComponentIds[componentIndex]);
 
 				FLARE_CORE_ASSERT(sceneEntityComponent);
 
-				const ComponentInfo& componentInfo = m_CompatibleComponentsRegistry.GetComponentInfo(archetypeRecord.Components[componentIndex]);
+				const ComponentInfo& componentInfo = m_CompatibleComponentsRegistry.GetComponentInfo(archetypeComponents.ComponentIds[componentIndex]);
 				componentInfo.Initializer->Type.Functions.CopyConstructor(componentData, sceneEntityComponent);
 			}
 		}
@@ -153,21 +154,24 @@ namespace Flare
 
 		for (size_t nodeIndex = 0; nodeIndex < m_Nodes.size(); nodeIndex++)
 		{
-			EntityHelper::DefaultConstruct(m_CompatibleArchetypes[m_Nodes[nodeIndex].Archetype], m_CompatibleComponentsRegistry, GetEntityData(nodeIndex));
+			EntityHelper::DefaultConstruct(m_CompatibleArchetypes, m_Nodes[nodeIndex].Archetype, m_CompatibleComponentsRegistry, GetEntityData(nodeIndex));
 		}
 	}
 
 	std::optional<size_t> PrefabHierarchy::GetNodeComponentOffset(size_t nodeIndex, ComponentId component) const
 	{
+		FLARE_PROFILE_FUNCTION();
 		const auto& node = m_Nodes[nodeIndex];
 
 		const ArchetypeRecord& archetype = m_CompatibleArchetypes[node.Archetype];
-		std::optional<size_t> componentIndex = archetype.TryGetComponentIndex(component);
+		const ArchetypeComponents& archetypeComponents = m_CompatibleArchetypes.GetArchetypeComponents(node.Archetype);
 
-		if (!componentIndex)
+		EntitySizeT componentIndex = archetypeComponents.TryGetComponentIndex(component);
+
+		if (componentIndex == ArchetypeComponents::INVALID_COMPONENT_INDEX)
 			return {};
 
-		return archetype.ComponentOffsets[*componentIndex];
+		return archetype.ComponentOffsets[componentIndex];
 	}
 
 	void PrefabHierarchy::Release()
@@ -191,10 +195,11 @@ namespace Flare
 
 			FLARE_CORE_ASSERT(node.Archetype != INVALID_ARCHETYPE_ID);
 			const ArchetypeRecord& archetypeRecord = m_CompatibleArchetypes[node.Archetype];
+			const ArchetypeComponents& archetypeComponents = m_CompatibleArchetypes.GetArchetypeComponents(node.Archetype);
 
-			for (size_t componentIndex = 0; componentIndex < archetypeRecord.Components.size(); componentIndex++)
+			for (size_t componentIndex = 0; componentIndex < archetypeComponents.ComponentCount; componentIndex++)
 			{
-				const ComponentInfo& componentInfo = m_CompatibleComponentsRegistry.GetComponentInfo(archetypeRecord.Components[componentIndex]);
+				const ComponentInfo& componentInfo = m_CompatibleComponentsRegistry.GetComponentInfo(archetypeComponents.ComponentIds[componentIndex]);
 				componentInfo.Initializer->Type.Functions.Destructor(m_Buffer + node.DataOffset + archetypeRecord.ComponentOffsets[componentIndex]);
 			}
 		}
@@ -249,9 +254,10 @@ namespace Flare
 
 			const uint8_t* hierarchyEntityData = m_Hierarchy.GetEntityData(i);
 			const ArchetypeRecord& archetype = m_Hierarchy.GetCompatibleArchetypes()[node.Archetype];
-			for (size_t componentIndex = 0; componentIndex < archetype.Components.size(); componentIndex++)
+			const ArchetypeComponents& archetypeComponents = m_Hierarchy.GetCompatibleArchetypes().GetArchetypeComponents(node.Archetype);
+			for (size_t componentIndex = 0; componentIndex < archetypeComponents.ComponentCount; componentIndex++)
 			{
-				const ComponentInfo& component = m_Hierarchy.GetCompatibleComponents().GetComponentInfo(archetype.Components[componentIndex]);
+				const ComponentInfo& component = m_Hierarchy.GetCompatibleComponents().GetComponentInfo(archetypeComponents.ComponentIds[componentIndex]);
 				size_t componentOffset = archetype.ComponentOffsets[componentIndex];
 				uint8_t* componentData = (uint8_t*)world.Entities.GetEntityComponent(entity, component.Id);
 

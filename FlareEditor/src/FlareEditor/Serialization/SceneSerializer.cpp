@@ -91,7 +91,7 @@ namespace Flare
 
 		emitter << YAML::Key << "Components" << YAML::BeginSeq; // Components
 
-		for (ComponentId component : world.GetEntityComponents(entity))
+		for (ComponentId component : world.Entities.GetEntityComponents(entity))
 		{
 			if (component == COMPONENT_ID(SerializationId))
 				continue;

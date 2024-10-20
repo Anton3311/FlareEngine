@@ -52,7 +52,7 @@ namespace Flare
 		virtual size_t GetEntitiesCount() const = 0;
 
 		inline QueryId GetId() const { return m_Id; }
-		const std::unordered_set<ArchetypeId>& GetMatchingArchetypes() const { return m_Queries->GetQueryData(m_Id).MatchedArchetypes; }
+		const std::unordered_set<ArchetypeId>& GetMatchingArchetypes() const { return m_Queries->GetQueryData(m_Id).MatchingArchetypes; }
 	protected:
 		QueryId m_Id = INVALID_QUERY_ID;
 		const QueryCache* m_Queries = nullptr;
@@ -68,6 +68,7 @@ namespace Flare
 	{
 		static void Create(const QueryChunk& chunk,
 			const ArchetypeRecord& archetype,
+			const ArchetypeComponents& archetypeComponents,
 			size_t chunkIndex,
 			EntityStorage& storage,
 			T& outArgument) {}
@@ -78,6 +79,7 @@ namespace Flare
 	{
 		static void Create(const QueryChunk& chunk,
 			const ArchetypeRecord& archetype,
+			const ArchetypeComponents& archetypeComponents,
 			size_t chunkIndex,
 			EntityStorage& storage,
 			QueryChunk& outArgument)
@@ -91,16 +93,17 @@ namespace Flare
 	{
 		static void Create(const QueryChunk& chunk,
 			const ArchetypeRecord& archetype,
+			const ArchetypeComponents& archetypeComponents,
 			size_t chunkIndex,
 			EntityStorage& storage,
 			ComponentView<T>& outArgument)
 		{
 			ComponentId componentId = COMPONENT_ID(std::remove_reference_t<T>);
 
-			std::optional<size_t> componentIndex = archetype.TryGetComponentIndex(componentId);
-			FLARE_CORE_ASSERT(componentIndex.has_value());
+			EntitySizeT componentIndex = archetypeComponents.TryGetComponentIndex(componentId);
+			FLARE_CORE_ASSERT(componentIndex != ArchetypeComponents::INVALID_COMPONENT_INDEX);
 
-			T* componentArray = (T*)storage.GetComponentArray(chunkIndex, *componentIndex);
+			T* componentArray = (T*)storage.GetComponentArray(chunkIndex, componentIndex);
 			outArgument = ComponentView<T>(componentArray);
 		}
 	};
@@ -126,6 +129,7 @@ namespace Flare
 
 		static TupleT CreateIteratorArguments(QueryChunk chunk,
 			const ArchetypeRecord& archetype,
+			const ArchetypeComponents& archetypeComponents,
 			size_t chunkIndex,
 			EntityStorage& storage)
 		{
@@ -138,7 +142,7 @@ namespace Flare
 
 			([&]()
 				{
-					QueryIteratorArgument<Args>::Create(chunk, archetype, chunkIndex, storage, std::get<Args>(tuple));
+					QueryIteratorArgument<Args>::Create(chunk, archetype, archetypeComponents, chunkIndex, storage, std::get<Args>(tuple));
 				} (), ...);
 
 			return tuple;
@@ -190,11 +194,13 @@ namespace Flare
 				}
 
 				const ArchetypeRecord& archetype = archetypes[matchedArchetype];
+				const ArchetypeComponents& archetypeComponents = archetypes.GetArchetypeComponents(matchedArchetype);
 				for (size_t chunkIndex = 0; chunkIndex < storage->GetChunkCount(); chunkIndex++)
 				{
 					auto arguments = IterationHelper::CreateIteratorArguments(
 						QueryChunk(storage->GetReadonlyEntityIdsArray(chunkIndex), storage->GetEntitiesCountInChunk(chunkIndex)),
 						archetype,
+						archetypeComponents,
 						chunkIndex,
 						*storage);
 

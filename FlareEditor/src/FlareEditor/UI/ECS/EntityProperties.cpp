@@ -52,7 +52,7 @@ namespace Flare
 		if (ImGui::BeginChild("Components"))
 		{
 			std::optional<ComponentId> removedComponent;
-			for (ComponentId component : m_World.GetEntityComponents(entity))
+			for (ComponentId component : m_World.Entities.GetEntityComponents(entity))
 			{
 				const ComponentInfo& componentInfo = m_World.Components.GetComponentInfo(component);
 				if (component == COMPONENT_ID(CameraComponent))

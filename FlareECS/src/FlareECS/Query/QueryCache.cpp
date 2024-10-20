@@ -32,12 +32,12 @@ namespace Flare
 		{
 			if (query.Target == QueryTarget::DeletedEntities)
 			{
-				for (ArchetypeId archetype : query.MatchedArchetypes)
+				for (ArchetypeId archetype : query.MatchingArchetypes)
 					m_Archetypes.GetMutableRecord(archetype).DeletionQueryReferences--;
 			}
 			else if (query.Target == QueryTarget::CreatedEntities)
 			{
-				for (ArchetypeId archetype : query.MatchedArchetypes)
+				for (ArchetypeId archetype : query.MatchingArchetypes)
 					m_Archetypes.GetMutableRecord(archetype).CreatedEntitiesQueryReferences--;
 			}
 		}
@@ -58,7 +58,7 @@ namespace Flare
 		query.Id = id;
 		query.Target = creationData.Target;
 		query.Components = std::move(creationData.Components);
-		query.MatchedArchetypes;
+		query.MatchingArchetypes;
 
 		std::sort(query.Components.begin(),
 			query.Components.end(),
@@ -75,13 +75,14 @@ namespace Flare
 
 			for (std::pair<ArchetypeId, size_t> archetype : *archetypes)
 			{
-				if (query.MatchedArchetypes.find(archetype.first) != query.MatchedArchetypes.end())
+				if (query.MatchingArchetypes.find(archetype.first) != query.MatchingArchetypes.end())
 					continue;
 
-				if (!CompareComponentSets(m_Archetypes[archetype.first].Components, query.Components))
+				const ArchetypeComponents& archetypeComponents = m_Archetypes.GetArchetypeComponents(archetype.first);
+				if (!CompareComponentSets(archetypeComponents.GetComponentsAsSpan(), Span<QueryData::ComponentEntry>::FromVector(query.Components)))
 					continue;
 
-				query.MatchedArchetypes.insert(archetype.first);
+				query.MatchingArchetypes.insert(archetype.first);
 
 				if (query.Target == QueryTarget::DeletedEntities)
 					m_Archetypes.GetMutableRecord(archetype.first).DeletionQueryReferences++;
@@ -100,8 +101,9 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 		const ArchetypeRecord& archetypeRecord = m_Archetypes[archetype];
+		const ArchetypeComponents& archetypeComponents = m_Archetypes.GetArchetypeComponents(archetype);
 
-		for (ComponentId component : archetypeRecord.Components)
+		for (ComponentId component : archetypeComponents.GetComponentsAsSpan())
 		{
 			auto it = m_CachedMatches.find(component);
 			if (it == m_CachedMatches.end())
@@ -112,12 +114,12 @@ namespace Flare
 			{
 				QueryData& query = m_Queries[queryId];
 
-				if (query.MatchedArchetypes.find(archetype) != query.MatchedArchetypes.end())
+				if (query.MatchingArchetypes.find(archetype) != query.MatchingArchetypes.end())
 					continue;
 
-				if (CompareComponentSets(archetypeRecord.Components, query.Components))
+				if (CompareComponentSets(archetypeComponents.GetComponentsAsSpan(), Span(query.Components.data(), query.Components.size())))
 				{
-					query.MatchedArchetypes.insert(archetype);
+					query.MatchingArchetypes.insert(archetype);
 
 					if (query.Target == QueryTarget::DeletedEntities)
 						m_Archetypes.GetMutableRecord(archetype).DeletionQueryReferences++;
@@ -128,12 +130,12 @@ namespace Flare
 		}
 	}
 
-	bool QueryCache::CompareComponentSets(const std::vector<ComponentId>& archetypeComponents, const std::vector<QueryData::ComponentEntry>& queryComponents)
+	bool QueryCache::CompareComponentSets(Span<const ComponentId> archetypeComponents, Span<const QueryData::ComponentEntry> queryComponents)
 	{
 		FLARE_PROFILE_FUNCTION();
 		size_t queryComponentIndex = 0;
 		size_t i = 0;
-		while (i < archetypeComponents.size() && queryComponentIndex < queryComponents.size())
+		while (i < archetypeComponents.GetSize() && queryComponentIndex < queryComponents.GetSize())
 		{
 			bool match = archetypeComponents[i] == queryComponents[queryComponentIndex].Id;
 			bool without = queryComponents[queryComponentIndex].Filter == QueryFilterType::Without;
@@ -148,7 +150,7 @@ namespace Flare
 					queryComponentIndex++;
 					continue;
 				}
-				else if (i == archetypeComponents.size() - 1)
+				else if (i == archetypeComponents.GetSize() - 1)
 					queryComponentIndex++;
 				else
 					continue;
@@ -157,15 +159,15 @@ namespace Flare
 			if (match)
 				queryComponentIndex++;
 
-			if (queryComponentIndex == queryComponents.size())
+			if (queryComponentIndex == queryComponents.GetSize())
 				break;
 
 			++i;
 		}
 
-		while (queryComponentIndex < queryComponents.size() && queryComponents[queryComponentIndex].Filter == QueryFilterType::Without)
+		while (queryComponentIndex < queryComponents.GetSize() && queryComponents[queryComponentIndex].Filter == QueryFilterType::Without)
 			++queryComponentIndex;
 
-		return queryComponentIndex == queryComponents.size();
+		return queryComponentIndex == queryComponents.GetSize();
 	}
 }

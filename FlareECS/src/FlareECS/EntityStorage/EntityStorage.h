@@ -58,8 +58,8 @@ namespace Flare
 		// Entity data operations
 		inline void DefaultConstructEntity(size_t entityIndex)
 		{
-			const ArchetypeRecord& archetypeRecord = m_ArchetypesRegistry->operator[](m_Archetype);
-			DefaultConstructEntityComponentsRange(entityIndex, 0, archetypeRecord.Components.size());
+			const ArchetypeComponents& archetypeComponents = m_ArchetypesRegistry->GetArchetypeComponents(m_Archetype);
+			DefaultConstructEntityComponentsRange(entityIndex, 0, archetypeComponents.ComponentCount);
 		}
 
 		void DefaultConstructEntityComponentsRange(size_t entityIndex, size_t startComponent, size_t componentCount);
@@ -72,7 +72,7 @@ namespace Flare
 
 		void* GetComponentArray(size_t chunkIndex, size_t componentIndex) const
 		{
-			size_t arrayOffset = m_ArchetypesRegistry->operator[](m_Archetype).ComponentArrayOffsets[componentIndex];
+			size_t arrayOffset = m_ArchetypesRegistry->GetArchetypeComponents(m_Archetype).ComponentArrayOffsets[componentIndex];
 			return m_Chunks[chunkIndex].GetBuffer() + arrayOffset;
 		}
 
@@ -80,7 +80,7 @@ namespace Flare
 		{
 			FLARE_CORE_ASSERT(chunkIndex < m_Chunks.size());
 
-			size_t arrayOffset = m_ArchetypesRegistry->operator[](m_Archetype).IdsBufferOffset;
+			size_t arrayOffset = m_ArchetypesRegistry->GetArchetypeComponents(m_Archetype).IdsBufferOffset;
 			const void* array = m_Chunks[chunkIndex].GetBuffer() + arrayOffset;
 
 			return (const Entity*)array;
@@ -90,7 +90,7 @@ namespace Flare
 		{
 			FLARE_CORE_ASSERT(chunkIndex < m_Chunks.size());
 
-			size_t arrayOffset = m_ArchetypesRegistry->operator[](m_Archetype).IdsBufferOffset;
+			size_t arrayOffset = m_ArchetypesRegistry->GetArchetypeComponents(m_Archetype).IdsBufferOffset;
 			void* array = m_Chunks[chunkIndex].GetBuffer() + arrayOffset;
 
 			return (Entity*)array;

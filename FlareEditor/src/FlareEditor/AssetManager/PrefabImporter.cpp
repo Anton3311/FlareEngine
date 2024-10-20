@@ -31,10 +31,11 @@ namespace Flare
 
 		const PrefabHierarchy::Node& node = hierarchy.GetNodes()[nodeIndex];
 		const ArchetypeRecord& archetype = hierarchy.GetCompatibleArchetypes()[node.Archetype];
+		const ArchetypeComponents& archetypeComponents = hierarchy.GetCompatibleArchetypes().GetArchetypeComponents(node.Archetype);
 
-		for (size_t componentIndex = 0; componentIndex < archetype.Components.size(); componentIndex++)
+		for (size_t componentIndex = 0; componentIndex < archetypeComponents.ComponentCount; componentIndex++)
 		{
-			const ComponentInfo& info = hierarchy.GetCompatibleComponents().GetComponentInfo(archetype.Components[componentIndex]);
+			const ComponentInfo& info = hierarchy.GetCompatibleComponents().GetComponentInfo(archetypeComponents.ComponentIds[componentIndex]);
 
 			YAMLSerializer serializer(emitter, nullptr);
 			emitter << YAML::BeginMap;
@@ -211,11 +212,12 @@ namespace Flare
 			{
 				const ComponentInfo* component = node.ComponentIds[componentIndex];
 				const ArchetypeRecord& archetype = hierarchy.GetCompatibleArchetypes()[node.Archetype];
+				const ArchetypeComponents& archetypeComponents = hierarchy.GetCompatibleArchetypes().GetArchetypeComponents(node.Archetype);
 
-				std::optional<size_t> archetypeComponentIndex = archetype.TryGetComponentIndex(component->Id);
-				FLARE_CORE_ASSERT(archetypeComponentIndex);
+				EntitySizeT archetypeComponentIndex = archetypeComponents.TryGetComponentIndex(component->Id);
+				FLARE_CORE_ASSERT(archetypeComponentIndex != ArchetypeComponents::INVALID_COMPONENT_INDEX);
 
-				uint8_t* componentData = entityData + archetype.ComponentOffsets[*archetypeComponentIndex];
+				uint8_t* componentData = entityData + archetype.ComponentOffsets[archetypeComponentIndex];
 
 				component->Initializer->Type.Functions.DefaultConstructor(componentData);
 

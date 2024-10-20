@@ -94,7 +94,9 @@ namespace Flare
 		void* GetEntityComponent(Entity entity, ComponentId component);
 		const void* GetEntityComponent(Entity entity, ComponentId component) const;
 
-		const std::vector<ComponentId>& GetEntityComponents(Entity entity);
+		void* GetRawEntityComponent(Entity entity, ComponentId component, size_t componentSize) const;
+
+		Span<const ComponentId> GetEntityComponents(Entity entity);
 		bool HasComponent(Entity entity, ComponentId component) const;
 
 		void* GetSingletonComponent(ComponentId id) const;
@@ -123,11 +125,6 @@ namespace Flare
 
 		// Ensures that each archetype has a valid entity storage
 		void EnsureValidEntityStorages();
-
-		// Moves entity components starting from `firstComponentIndex` into a destination buffer
-		//
-		// First component is moved into the buffer at offset 0
-		void MoveEntityComponents(uint8_t* source, uint8_t* destination, const ArchetypeRecord& entityArchetype, size_t firstComponentIndex, size_t componentsCount);
 
 		void CreateEntity(const ComponentSet& components, EntityCreationResult& result);
 
@@ -172,11 +169,11 @@ namespace Flare
 	class FLAREECS_API EntityHelper
 	{
 	public:
-		static void DefaultConstruct(const ArchetypeRecord& archetype, const Components& compatibleComponents, void* entityData);
-		static void Destroy(const ArchetypeRecord& archetype, const Components& compatibleComponents, void* entityData);
+		static void DefaultConstruct(const Archetypes& archetypes, ArchetypeId archetypeId, const Components& compatibleComponents, void* entityData);
+		static void Destroy(const Archetypes& archetypes, ArchetypeId archetypeId, const Components& compatibleComponents, void* entityData);
 
-		static void CopyConstruct(const ArchetypeRecord& archetype, const Components& compatibleComponents, void* entityData, const void* copySource);
-		static void MoveConstruct(const ArchetypeRecord& archetype, const Components& compatibleComponents, void* entityData, void* moveSource);
+		static void CopyConstruct(const Archetypes& archetypes, ArchetypeId archetypeId, const Components& compatibleComponents, void* entityData, const void* copySource);
+		static void MoveConstruct(const Archetypes& archetypes, ArchetypeId archetypeId, const Components& compatibleComponents, void* entityData, void* moveSource);
 	};
 
 }
