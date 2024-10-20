@@ -51,16 +51,16 @@ namespace Flare
 	Entity Entities::CreateEntity(const ComponentSet& componentSet, ComponentInitializationStrategy initStrategy)
 	{
 		FLARE_PROFILE_FUNCTION();
-		FLARE_CORE_ASSERT(componentSet.GetCount() > 0);
+		FLARE_CORE_ASSERT(componentSet.GetSize() > 0);
 
-		if (m_TemporaryComponentSet.size() < componentSet.GetCount())
-			m_TemporaryComponentSet.resize(componentSet.GetCount());
+		if (m_TemporaryComponentSet.size() < componentSet.GetSize())
+			m_TemporaryComponentSet.resize(componentSet.GetSize());
 
-		std::memcpy(m_TemporaryComponentSet.data(), componentSet.GetIds(), sizeof(ComponentId) * componentSet.GetCount());
+		std::memcpy(m_TemporaryComponentSet.data(), componentSet.GetData(), sizeof(ComponentId) * componentSet.GetSize());
 
-		std::sort(m_TemporaryComponentSet.data(), m_TemporaryComponentSet.data() + componentSet.GetCount());
+		std::sort(m_TemporaryComponentSet.data(), m_TemporaryComponentSet.data() + componentSet.GetSize());
 
-		ComponentSet components = ComponentSet(m_TemporaryComponentSet.data(), componentSet.GetCount());
+		ComponentSet components = ComponentSet(m_TemporaryComponentSet.data(), componentSet.GetSize());
 
 		EntityCreationResult result;
 		CreateEntity(components, result);
@@ -695,12 +695,12 @@ namespace Flare
 		record.RegistryIndex = (uint32_t)registryIndex;
 		record.Id = m_EntityIndex.CreateId();
 
-		const ArchetypeRecord* foundArchetype = m_Archetypes.FindArchetype(Span(components.GetIds(), components.GetCount()));
+		const ArchetypeRecord* foundArchetype = m_Archetypes.FindArchetype(components);
 		if (foundArchetype)
 			record.Archetype = foundArchetype->Id;
 		else
 		{
-			record.Archetype = m_Archetypes.CreateArchetype(Span<const ComponentId>(components.GetIds(), components.GetCount()));
+			record.Archetype = m_Archetypes.CreateArchetype(components);
 
 			const ArchetypeRecord& archetype = m_Archetypes[record.Archetype];
 

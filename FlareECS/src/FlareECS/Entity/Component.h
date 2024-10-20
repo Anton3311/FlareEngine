@@ -2,6 +2,7 @@
 
 #include "FlareCore/Assert.h"
 #include "FlareCore/Core.h"
+#include "FlareCore/Collections/Span.h"
 
 #include <string>
 #include <vector>
@@ -96,44 +97,7 @@ namespace Flare
 		ComponentInitializer* Initializer;
 	};
 
-	class ComponentSet
-	{
-	public:
-		ComponentSet(const std::vector<ComponentId>& ids)
-			: m_Ids(ids.data()), m_Count(ids.size())
-		{
-			FLARE_CORE_ASSERT(m_Count, "Components count shouldn't been 0");
-		}
-
-		constexpr ComponentSet(const ComponentId* ids, size_t count)
-			: m_Ids(ids), m_Count(count) {}
-
-		constexpr const ComponentId* GetIds() { return m_Ids; }
-		constexpr const ComponentId* GetIds() const { return m_Ids; }
-		constexpr size_t GetCount() const { return m_Count; }
-
-		constexpr ComponentId operator[](size_t index) const
-		{
-			FLARE_CORE_ASSERT(index < m_Count);
-			return m_Ids[index];
-		}
-
-		constexpr const ComponentId* begin() const
-		{
-			return m_Ids;
-		}
-
-		constexpr const ComponentId* end() const
-		{
-			return m_Ids + m_Count;
-		}
-	private:
-		const ComponentId* m_Ids;
-		size_t m_Count;
-	};
-
-	FLAREECS_API bool operator==(const ComponentSet& setA, const ComponentSet& setB);
-	FLAREECS_API bool operator!=(const ComponentSet& setA, const ComponentSet& setB);
+	using ComponentSet = Span<const ComponentId>;
 }
 
 template<>
@@ -142,7 +106,7 @@ struct std::hash<Flare::ComponentSet>
 	size_t operator()(const Flare::ComponentSet& set) const
 	{
 		size_t hash = 0;
-		for (size_t i = 0; i < set.GetCount(); i++)
+		for (size_t i = 0; i < set.GetSize(); i++)
 			Flare::CombineHashes<Flare::ComponentId>(hash, set[i]);
 
 		return hash;

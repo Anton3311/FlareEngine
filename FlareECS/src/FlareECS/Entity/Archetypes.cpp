@@ -168,7 +168,7 @@ namespace Flare
 		std::vector<ComponentId> idsCopy(components.begin(), components.end());
 		std::sort(idsCopy.begin(), idsCopy.end());
 
-		auto it = m_ComponentSetToArchetype.find(ComponentSet(idsCopy));
+		auto it = m_ComponentSetToArchetype.find(ComponentSet::FromVector(idsCopy));
 		if (it == m_ComponentSetToArchetype.end())
 		{
 			return nullptr;
@@ -184,7 +184,7 @@ namespace Flare
 		std::vector<ComponentId> idsCopy(components.begin(), components.end());
 		std::sort(idsCopy.begin(), idsCopy.end());
 
-		auto it = m_ComponentSetToArchetype.find(ComponentSet(idsCopy));
+		auto it = m_ComponentSetToArchetype.find(ComponentSet::FromVector(idsCopy));
 		if (it == m_ComponentSetToArchetype.end())
 		{
 			ArchetypeId archetypeId = CreateArchetype(std::move(idsCopy));
