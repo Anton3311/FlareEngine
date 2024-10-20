@@ -40,6 +40,8 @@ namespace Flare
 		static constexpr EntitySizeT INVALID_COMPONENT_INDEX = std::numeric_limits<EntitySizeT>::max();
 
 		ArchetypeComponents(EntitySizeT componentCount);
+		~ArchetypeComponents();
+
 		ArchetypeComponents(ArchetypeComponents&& other) noexcept;
 
 		ArchetypeComponents& operator=(ArchetypeComponents&& other) noexcept;
@@ -55,21 +57,31 @@ namespace Flare
 			int32_t mask = _mm_movemask_epi8(result);
 
 			if (mask == 0)
-				return INVALID_COMPONENT_INDEX;
+			{
+				if (ComponentCount <= INLINE_BUFFER_CAPACITY)
+					return INVALID_COMPONENT_INDEX;
+				else
+					return FindComponentIndex(component);
+			}
 
 			EntitySizeT index = (EntitySizeT)((32 - std::countl_zero((uint32_t)mask)) / 2 - 1);
 			if (index < ComponentCount)
 				return index;
 
+			if (ComponentCount > INLINE_BUFFER_CAPACITY)
+				return FindComponentIndex(component);
+
 			return INVALID_COMPONENT_INDEX;
 		}
 
-		constexpr bool IsUsingInlineBuffers() const { return ComponentCount < INLINE_BUFFER_CAPACITY; }
+		constexpr bool IsUsingInlineBuffers() const { return ComponentCount <= INLINE_BUFFER_CAPACITY; }
 
 		inline Span<const ComponentId> GetComponentsAsSpan() const { return Span<const ComponentId>(ComponentIds, ComponentCount); }
 
 		void FillComponentIds(Span<const ComponentId> ids);
 		void FillComponentArrayOffsets(Span<const EntitySizeT> offsets);
+	private:
+		EntitySizeT FindComponentIndex(ComponentId component) const;
 	public:
 		ComponentId* ComponentIds = nullptr;
 		EntitySizeT* ComponentArrayOffsets = nullptr;

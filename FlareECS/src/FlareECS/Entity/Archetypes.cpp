@@ -17,9 +17,26 @@ namespace Flare
 	ArchetypeComponents::ArchetypeComponents(EntitySizeT componentCount)
 		: ComponentCount(componentCount)
 	{
-		FLARE_CORE_ASSERT(componentCount <= INLINE_BUFFER_CAPACITY);
-		ComponentIds = m_InlineComponentIds;
-		ComponentArrayOffsets = m_InlineComponentArrayOffset;
+		FLARE_PROFILE_FUNCTION();
+		if (componentCount <= INLINE_BUFFER_CAPACITY)
+		{
+			ComponentIds = m_InlineComponentIds;
+			ComponentArrayOffsets = m_InlineComponentArrayOffset;
+		}
+		else
+		{
+			ComponentIds = new ComponentId[componentCount];
+			ComponentArrayOffsets = new EntitySizeT[componentCount];
+		}
+	}
+
+	ArchetypeComponents::~ArchetypeComponents()
+	{
+		if (!IsUsingInlineBuffers())
+		{
+			delete[] ComponentIds;
+			delete[] ComponentArrayOffsets;
+		}
 	}
 
 	ArchetypeComponents::ArchetypeComponents(ArchetypeComponents&& other) noexcept
@@ -28,9 +45,19 @@ namespace Flare
 		IdsBufferOffset(other.IdsBufferOffset),
 		ComponentCount(other.ComponentCount)
 	{
-		FLARE_CORE_ASSERT(other.IsUsingInlineBuffers());
-		std::memcpy(m_InlineComponentIds, other.m_InlineComponentIds, sizeof(ComponentId) * INLINE_BUFFER_CAPACITY);
-		std::memcpy(m_InlineComponentArrayOffset, other.m_InlineComponentArrayOffset, sizeof(EntitySizeT) * INLINE_BUFFER_CAPACITY);
+		if (other.IsUsingInlineBuffers())
+		{
+			std::memcpy(m_InlineComponentIds, other.m_InlineComponentIds, sizeof(ComponentId) * INLINE_BUFFER_CAPACITY);
+			std::memcpy(m_InlineComponentArrayOffset, other.m_InlineComponentArrayOffset, sizeof(EntitySizeT) * INLINE_BUFFER_CAPACITY);
+		}
+		else
+		{
+			ComponentIds = other.ComponentIds;
+			ComponentArrayOffsets = other.ComponentArrayOffsets;
+
+			other.ComponentIds = other.m_InlineComponentIds;
+			other.ComponentArrayOffsets = other.m_InlineComponentArrayOffset;
+		}
 
 		other.ComponentCount = 0;
 		other.IdsBufferOffset = 0;
@@ -38,14 +65,24 @@ namespace Flare
 
 	ArchetypeComponents& ArchetypeComponents::operator=(ArchetypeComponents&& other) noexcept
 	{
-		FLARE_CORE_ASSERT(other.IsUsingInlineBuffers());
 		ComponentIds = m_InlineComponentIds;
 		ComponentArrayOffsets = m_InlineComponentArrayOffset;
 		IdsBufferOffset = other.IdsBufferOffset;
 		ComponentCount = other.ComponentCount;
 
-		std::memcpy(m_InlineComponentIds, other.m_InlineComponentIds, sizeof(ComponentId) * INLINE_BUFFER_CAPACITY);
-		std::memcpy(m_InlineComponentArrayOffset, other.m_InlineComponentArrayOffset, sizeof(EntitySizeT) * INLINE_BUFFER_CAPACITY);
+		if (other.IsUsingInlineBuffers())
+		{
+			std::memcpy(m_InlineComponentIds, other.m_InlineComponentIds, sizeof(ComponentId) * INLINE_BUFFER_CAPACITY);
+			std::memcpy(m_InlineComponentArrayOffset, other.m_InlineComponentArrayOffset, sizeof(EntitySizeT) * INLINE_BUFFER_CAPACITY);
+		}
+		else
+		{
+			ComponentIds = other.ComponentIds;
+			ComponentArrayOffsets = other.ComponentArrayOffsets;
+
+			other.ComponentIds = other.m_InlineComponentIds;
+			other.ComponentArrayOffsets = other.m_InlineComponentArrayOffset;
+		}
 
 		other.ComponentCount = 0;
 		other.IdsBufferOffset = 0;
@@ -71,6 +108,30 @@ namespace Flare
 		{
 			std::memcpy(ComponentArrayOffsets, offsets.GetData(), offsets.GetSize() * sizeof(EntitySizeT));
 		}
+	}
+
+	EntitySizeT ArchetypeComponents::FindComponentIndex(ComponentId component) const
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		EntitySizeT left = INLINE_BUFFER_CAPACITY;
+		EntitySizeT right = ComponentCount;
+
+		while (right - left > 1)
+		{
+			EntitySizeT mid = (left + right) / 2;
+			if (ComponentIds[mid] == component)
+				return mid;
+			else if (ComponentIds[mid] > component)
+				right = mid;
+			else
+				left = mid;
+		}
+
+		if (ComponentIds[left] == component)
+			return left;
+		
+		return INVALID_COMPONENT_INDEX;
 	}
 
 	//
