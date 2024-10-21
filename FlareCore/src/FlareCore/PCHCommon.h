@@ -11,9 +11,11 @@
 #include "FlareCore/Collections/SmallVector.h"
 
 #include <array>
+#include <bit>
 #include <cstring>
 #include <filesystem>
 #include <map>
+#include <optional>
 #include <set>
 #include <stdint.h>
 #include <string>
