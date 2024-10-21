@@ -55,20 +55,11 @@ namespace Flare
 			__m128i result = _mm_cmpeq_epi16(idVectors[0], searchVector);
 
 			int32_t mask = _mm_movemask_epi8(result);
+			EntitySizeT index = (EntitySizeT)(std::countr_zero((uint32_t)mask)) / 2;
 
-			if (mask == 0)
-			{
-				if (ComponentCount <= INLINE_BUFFER_CAPACITY)
-					return INVALID_COMPONENT_INDEX;
-				else
-					return FindComponentIndex(component);
-			}
-
-			EntitySizeT index = (EntitySizeT)((32 - std::countl_zero((uint32_t)mask)) / 2 - 1);
 			if (index < ComponentCount)
 				return index;
-
-			if (ComponentCount > INLINE_BUFFER_CAPACITY)
+			else if (ComponentCount > INLINE_BUFFER_CAPACITY)
 				return FindComponentIndex(component);
 
 			return INVALID_COMPONENT_INDEX;
