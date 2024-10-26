@@ -37,6 +37,7 @@ namespace Flare
 		bool RenderEntityContextMenu(Entity entity, Entity& selectedEntity);
 	private:
 		EntitiesHierarchyFeatures m_Features;
+		std::optional<Entity> m_EntityToDelete;
 		World* m_World;
 	};
 }

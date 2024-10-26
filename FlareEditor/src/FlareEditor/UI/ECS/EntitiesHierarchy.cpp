@@ -47,7 +47,6 @@ namespace Flare
 			ImGui::EndMenu();
 		}
 
-		std::optional<Entity> deletedEntity;
 #if USE_CLIPPER
 		while (clipper.Step())
 		{
@@ -68,6 +67,12 @@ namespace Flare
 		{
 			if (!m_World->HasComponent<Parent>(entityRecord.Id))
 				result |= RenderEntityItem(entityRecord.Id, selectedEntity);
+		}
+
+		if (m_EntityToDelete)
+		{
+			HierarchyHelper::DeleteEntityHierarchy(*m_World, *m_EntityToDelete);
+			m_EntityToDelete = {};
 		}
 #endif
 
@@ -264,7 +269,9 @@ namespace Flare
 			RenderContextMenu(selectedEntity, &entity, false);
 
 			if (HAS_BIT(m_Features, EntitiesHierarchyFeatures::DeleteEntity) && ImGui::MenuItem("Delete"))
-				m_World->DeleteEntity(entity);
+			{
+				m_EntityToDelete = entity;
+			}
 
 			if (HAS_BIT(m_Features, EntitiesHierarchyFeatures::DuplicateEntity) && ImGui::MenuItem("Duplicate"))
 			{
