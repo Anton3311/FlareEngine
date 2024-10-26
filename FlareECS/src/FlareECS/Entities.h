@@ -127,6 +127,7 @@ namespace Flare
 		void EnsureValidEntityStorages();
 
 		void CreateEntity(const ComponentSet& components, EntityCreationResult& result);
+		void CreateEntity(const ArchetypeRecord& archetype, EntityCreationResult& result);
 
 		void RemoveEntityData(ArchetypeId archetype, size_t entityBufferIndex);
 

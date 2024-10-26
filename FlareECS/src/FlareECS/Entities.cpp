@@ -112,7 +112,6 @@ namespace Flare
 		return result.Id;
 	}
 
-	// TODO: Should probably also use `CreateEntity(const ComponentSet&, EntityCreationResult&)`
 	Entity Entities::CreateEntityFromArchetype(ArchetypeId archetype, ComponentInitializationStrategy initStrategy)
 	{
 		FLARE_PROFILE_FUNCTION();
@@ -121,7 +120,7 @@ namespace Flare
 		const ArchetypeRecord& archetypeRecord = m_Archetypes[archetype];
 		const ArchetypeComponents& archetypeComponents = m_Archetypes.GetArchetypeComponents(archetype);
 		EntityCreationResult entityResult{};
-		CreateEntity(ComponentSet(archetypeComponents.ComponentIds, archetypeComponents.ComponentCount), entityResult);
+		CreateEntity(archetypeRecord, entityResult);
 
 		const EntityRecord& entityRecord = m_EntityRecords[FindEntity(entityResult.Id)->second];
 
@@ -690,25 +689,34 @@ namespace Flare
 	void Entities::CreateEntity(const ComponentSet& components, EntityCreationResult& result)
 	{
 		FLARE_PROFILE_FUNCTION();
-		size_t registryIndex = m_EntityRecords.size();
-		EntityRecord& record = m_EntityRecords.emplace_back();
-		record.RegistryIndex = (uint32_t)registryIndex;
-		record.Id = m_EntityIndex.CreateId();
-
 		const ArchetypeRecord* foundArchetype = m_Archetypes.FindArchetype(components);
-		if (foundArchetype)
-			record.Archetype = foundArchetype->Id;
-		else
+		
+		if (!foundArchetype)
 		{
-			record.Archetype = m_Archetypes.CreateArchetype(components);
-
-			const ArchetypeRecord& archetype = m_Archetypes[record.Archetype];
+			ArchetypeId newArchetypeId = m_Archetypes.CreateArchetype(components);
+			const ArchetypeRecord& archetype = m_Archetypes[newArchetypeId];
 
 			EntityStorageRequirements storageRequirements{};
 			storageRequirements.EntitySize = archetype.EntitySize;
 			storageRequirements.EntityAlignment = archetype.EntityAlignment;
-			GetEntityStorage(record.Archetype).Initialize(storageRequirements, m_Archetypes, archetype.Id);
+			GetEntityStorage(newArchetypeId).Initialize(storageRequirements, m_Archetypes, archetype.Id);
+
+			foundArchetype = &archetype;
 		}
+
+		FLARE_CORE_ASSERT(foundArchetype);
+
+		return CreateEntity(*foundArchetype, result);
+	}
+
+	void Entities::CreateEntity(const ArchetypeRecord& archetype, EntityCreationResult& result)
+	{
+		FLARE_PROFILE_FUNCTION();
+		size_t registryIndex = m_EntityRecords.size();
+		EntityRecord& record = m_EntityRecords.emplace_back();
+		record.RegistryIndex = (uint32_t)registryIndex;
+		record.Id = m_EntityIndex.CreateId();
+		record.Archetype = archetype.Id;
 
 		const ArchetypeRecord& archetypeRecord = m_Archetypes[record.Archetype];
 		EntityStorage& storage = GetEntityStorage(record.Archetype);
