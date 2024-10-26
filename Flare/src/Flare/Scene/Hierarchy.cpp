@@ -65,6 +65,29 @@ namespace Flare
 		children->ChildrenEntities.push_back(child);
 	}
 
+	void HierarchyHelper::DeleteEntityHierarchy(World& world, Entity root)
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		const Children* children = world.TryGetEntityComponent<const Children>(root);
+		if (children == nullptr)
+			return;
+
+		for (Entity child : children->ChildrenEntities)
+		{
+			if (world.IsEntityAlive(child))
+			{
+				DeleteEntityHierarchy(world, child);
+				world.DeleteEntity(child);
+			}
+		}
+
+		if (world.IsEntityAlive(root))
+		{
+			world.DeleteEntity(root);
+		}
+	}
+
 	void HierarchyHelper::RemoveFromParent(World& world, Entity child, Entity parent)
 	{
 		FLARE_PROFILE_FUNCTION();
@@ -143,7 +166,7 @@ namespace Flare
 						if (!world.IsEntityAlive(child))
 							return;
 
-						DeleteEntitiesRecursively(world, child);
+						HierarchyHelper::DeleteEntityHierarchy(world, child);
 
 						world.Entities.DeleteEntity(child, true);
 					}
@@ -151,24 +174,6 @@ namespace Flare
 					entityIndex++;
 				}
 			});
-	}
-
-	void HierarchyProcessor::DeleteEntitiesRecursively(World& world, Entity root) const
-	{
-		FLARE_PROFILE_FUNCTION();
-
-		const Children* children = world.TryGetEntityComponent<const Children>(root);
-		if (children == nullptr)
-			return;
-
-		for (Entity child : children->ChildrenEntities)
-		{
-			if (world.IsEntityAlive(child))
-			{
-				DeleteEntitiesRecursively(world, child);
-				world.DeleteEntity(child);
-			}
-		}
 	}
 
 	//

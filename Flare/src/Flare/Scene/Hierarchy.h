@@ -57,6 +57,8 @@ namespace Flare
 	public:
 		static void SetParent(World& world, Entity child, Entity parent);
 		static void AddParent(World& world, Entity child, Entity parent);
+
+		static void DeleteEntityHierarchy(World& world, Entity root);
 	private:
 		static void RemoveFromParent(World& world, Entity child, Entity parent);
 	};
@@ -72,8 +74,6 @@ namespace Flare
 
 		void OnConfig(World& world, SystemConfig& config) override;
 		void OnUpdate(World& world, SystemExecutionContext& context) override;
-	private:
-		void DeleteEntitiesRecursively(World& world, Entity root) const;
 	private:
 		Query m_DeletedEntitiesWithParent;
 		Query m_DeletedEntitiesWithChildren;
