@@ -88,6 +88,73 @@ namespace Flare
 		}
 	}
 
+	Entity HierarchyHelper::DuplicateEntityHierarchy(World& world, Entity root, const std::unordered_set<ComponentId>* ignoredComponents)
+	{
+		FLARE_PROFILE_FUNCTION();
+		FLARE_CORE_ASSERT(world.IsEntityAlive(root));
+
+		Entity rootCopy = DuplicateEntity(world, root, ignoredComponents);
+
+		const Children* children = world.TryGetEntityComponent<const Children>(root);
+
+		if (children)
+		{
+			Children* copyChildren = world.TryGetEntityComponent<Children>(rootCopy);
+			FLARE_CORE_ASSERT(copyChildren);
+
+			for (size_t i = 0; i < children->ChildrenEntities.size(); i++)
+			{
+				Entity childCopy = DuplicateEntityHierarchy(world, children->ChildrenEntities[i]);
+				copyChildren->ChildrenEntities[i] = childCopy;
+
+				Parent* parent = world.TryGetEntityComponent<Parent>(childCopy);
+				if (parent)
+				{
+					parent->ParentEntity = rootCopy;
+				}
+			}
+		}
+
+		return rootCopy;
+	}
+
+	Entity HierarchyHelper::DuplicateEntity(World& world, Entity entity, const std::unordered_set<ComponentId>* ignoredComponents)
+	{
+		FLARE_PROFILE_FUNCTION();
+		Entities& entities = world.Entities;
+		ArchetypeId archetypeId = entities.GetEntityArchetype(entity);
+
+		// Create an entity of the same archetype, but don't initialize any components.
+		// They are manually initialized using a copy or a default constructor
+		Entity duplicated = entities.CreateEntityFromArchetype(archetypeId, ComponentInitializationStrategy::NoInitialization);
+
+		const ArchetypeRecord& archetype = world.GetArchetypes()[archetypeId];
+		const ArchetypeComponents& archetypeComponents = world.GetArchetypes().GetArchetypeComponents(archetypeId);
+		for (size_t i = 0; i < archetypeComponents.ComponentCount; i++)
+		{
+			const ComponentInfo& component = world.Components.GetComponentInfo(archetypeComponents.ComponentIds[i]);
+			void* componentDestination = entities.GetEntityComponent(duplicated, archetypeComponents.ComponentIds[i]);
+
+			FLARE_CORE_ASSERT(componentDestination);
+
+			if (ignoredComponents && ignoredComponents->contains(archetypeComponents.ComponentIds[i]))
+			{
+				// Default initialize the ignored component
+				component.Initializer->Type.Functions.DefaultConstructor(componentDestination);
+			}
+			else
+			{
+				const void* componentSource = entities.GetEntityComponent(entity, archetypeComponents.ComponentIds[i]);
+
+				FLARE_CORE_ASSERT(componentSource);
+
+				component.Initializer->Type.Functions.CopyConstructor(componentDestination, componentSource);
+			}
+		}
+
+		return duplicated;
+	}
+
 	void HierarchyHelper::RemoveFromParent(World& world, Entity child, Entity parent)
 	{
 		FLARE_PROFILE_FUNCTION();

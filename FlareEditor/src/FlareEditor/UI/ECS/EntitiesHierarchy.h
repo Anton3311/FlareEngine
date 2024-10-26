@@ -30,14 +30,15 @@ namespace Flare
 		inline void SetWorld(World& world) { m_World = &world; }
 	private:
 		bool RenderContextMenu(Entity& selectedEntity, Entity* parent, bool isRoot);
-		
-		Entity DuplicateEntity(Entity entity);
 	private:
 		bool RenderEntityItem(Entity entity, Entity& selectedEntity);
 		bool RenderEntityContextMenu(Entity entity, Entity& selectedEntity);
 	private:
 		EntitiesHierarchyFeatures m_Features;
+
 		std::optional<Entity> m_EntityToDelete;
+		std::optional<Entity> m_EntityToDuplicate;
+
 		World* m_World;
 	};
 }

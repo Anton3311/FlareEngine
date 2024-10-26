@@ -59,7 +59,11 @@ namespace Flare
 		static void AddParent(World& world, Entity child, Entity parent);
 
 		static void DeleteEntityHierarchy(World& world, Entity root);
+
+		// `ignoredComponents` specifies which components should be initialized using a default constructor instead of copying them
+		static Entity DuplicateEntityHierarchy(World& world, Entity root, const std::unordered_set<ComponentId>* ignoredComponents = nullptr);
 	private:
+		static Entity DuplicateEntity(World& world, Entity entity, const std::unordered_set<ComponentId>* ignoredComponents);
 		static void RemoveFromParent(World& world, Entity child, Entity parent);
 	};
 
