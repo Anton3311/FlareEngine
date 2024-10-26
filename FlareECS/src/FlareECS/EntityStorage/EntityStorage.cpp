@@ -187,9 +187,9 @@ namespace Flare
 			const ComponentInfo& componentInfo = m_ArchetypesRegistry->GetCompatibleComponents()
 				.GetComponentInfo(archetypeComponents.ComponentIds[componentIndex]);
 
-			componentInfo.Initializer->Type.Functions.MoveAssignment(
+			componentInfo.Initializer->Type.Functions.MoveConstructor(
 				GetEntityComponentData(destinationEntityIndex, componentIndex),
-				GetEntityComponentData(sourceEntityIndex, componentIndex));
+				sourceStorage.GetEntityComponentData(sourceEntityIndex, componentIndex));
 		}
 	}
 
