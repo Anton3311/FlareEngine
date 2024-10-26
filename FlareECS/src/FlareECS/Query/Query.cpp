@@ -49,7 +49,7 @@ namespace Flare
 		const QueryData& queryData = (*m_Queries)[m_Id];
 		for (ArchetypeId archetype : queryData.MatchingArchetypes)
 		{
-			Span<Entity> ids = m_Entities->GetCreatedEntities(archetype);
+			Span<const Entity> ids = m_Entities->GetCreatedEntities(archetype);
 			if (ids.GetSize() == 0)
 				continue;
 
@@ -66,7 +66,7 @@ namespace Flare
 		size_t count = 0;
 		for (ArchetypeId archetype : GetMatchingArchetypes())
 		{
-			Span<Entity> ids = m_Entities->GetCreatedEntities(archetype);
+			Span<const Entity> ids = m_Entities->GetCreatedEntities(archetype);
 			count += ids.GetSize();
 		}
 

@@ -225,7 +225,7 @@ namespace Flare
 		{
 			for (ArchetypeId archetype : GetMatchingArchetypes())
 			{
-				Span<Entity> ids = m_Entities->GetCreatedEntities(archetype);
+				Span<const Entity> ids = m_Entities->GetCreatedEntities(archetype);
 
 				for (Entity id : ids)
 					iterator(id);

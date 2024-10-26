@@ -84,7 +84,7 @@ namespace Flare
 		EntityStorage& GetDeletedEntityStorage(ArchetypeId archetype);
 		const EntityStorage& GetDeletedEntityStorage(ArchetypeId archetype) const;
 
-		Span<Entity> GetCreatedEntities(ArchetypeId archetype);
+		Span<const Entity> GetCreatedEntities(ArchetypeId archetype);
 
 		void ClearQueuedForDeletion();
 		void ClearCreatedEntitiesQueryResult();

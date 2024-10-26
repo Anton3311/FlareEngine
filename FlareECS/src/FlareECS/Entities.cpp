@@ -775,7 +775,7 @@ namespace Flare
 		return it->second;
 	}
 
-	Span<Entity> Entities::GetCreatedEntities(ArchetypeId archetype)
+	Span<const Entity> Entities::GetCreatedEntities(ArchetypeId archetype)
 	{
 		auto it = m_CreatedEntitiesPerArchetype.find(archetype);
 		if (it == m_CreatedEntitiesPerArchetype.end())
