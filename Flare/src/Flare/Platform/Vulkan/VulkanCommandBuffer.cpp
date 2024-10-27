@@ -631,12 +631,13 @@ namespace Flare
 		m_RenderTargetState.RenderPass = frameBuffer->GetCompatibleRenderPass();
 	}
 
-	void VulkanCommandBuffer::BeginRenderPass(VkFramebuffer frameBuffer, const Ref<VulkanRenderPass>& renderPass, glm::uvec2 renderAreaSize)
+	void VulkanCommandBuffer::BeginRenderPass(VkFramebuffer frameBuffer,
+		const Ref<VulkanRenderPass>& renderPass,
+		glm::uvec2 renderAreaSize,
+		Span<const VkClearValue> clearValues)
 	{
 		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(!m_RenderTargetState.IsValid());
-
-		const auto& defaultClearValues = renderPass->GetDefaultClearValues();
 
 		VkRenderPassBeginInfo info{};
 		info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -645,8 +646,8 @@ namespace Flare
 		info.renderArea.offset = { 0, 0 };
 		info.renderArea.extent.width = renderAreaSize.x;
 		info.renderArea.extent.height = renderAreaSize.y;
-		info.clearValueCount = (uint32_t)defaultClearValues.size();
-		info.pClearValues = defaultClearValues.data();
+		info.clearValueCount = (uint32_t)clearValues.GetSize();
+		info.pClearValues = clearValues.GetData();
 
 		vkCmdBeginRenderPass(m_CommandBuffer, &info, VK_SUBPASS_CONTENTS_INLINE);
 

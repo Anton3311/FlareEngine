@@ -86,7 +86,10 @@ namespace Flare
 		void End();
 
 		void BeginRenderPass(const Ref<VulkanRenderPass>& renderPass, const Ref<VulkanFrameBuffer>& frameBuffer);
-		void BeginRenderPass(VkFramebuffer frameBuffer, const Ref<VulkanRenderPass>& renderPass, glm::uvec2 renderAreaSize);
+		void BeginRenderPass(VkFramebuffer frameBuffer,
+			const Ref<VulkanRenderPass>& renderPass,
+			glm::uvec2 renderAreaSize,
+			Span<const VkClearValue> clearValues);
 		void EndRenderPass();
 
 		void TransitionImageLayout(VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout);

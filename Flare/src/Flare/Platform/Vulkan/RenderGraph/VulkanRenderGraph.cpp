@@ -29,6 +29,8 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(IsValid());
 
+		VulkanCommandBuffer& vulkanCommandBuffer = commandBuffer.DerefAs<VulkanCommandBuffer>();
+
 		uint32_t frameInFlight = GraphicsContext::GetInstance().GetCurrentFrameInFlight();
 
 		const auto& nodes = GetNodes();
@@ -51,7 +53,7 @@ namespace Flare
 				sceneSubmition,
 				view);
 
-			commandBuffer->BeginLabel(node.Specifications.GetDebugColor(), node.Specifications.GetDebugName());
+			vulkanCommandBuffer.BeginLabel(node.Specifications.GetDebugColor(), node.Specifications.GetDebugName());
 
 			node.Pass->OnPrepare(context, commandBuffer);
 
@@ -59,16 +61,24 @@ namespace Flare
 
 			if (renderTarget)
 			{
-				commandBuffer->BeginRenderTarget(renderTarget);
+				const VulkanFrameBuffer& vulkanFrameBuffer = renderTarget.DerefAs<const VulkanFrameBuffer>();
+
+				ClearValuesRange clearValuesRange = m_NodeData[nodeIndex].ClearValues;
+
+				vulkanCommandBuffer.BeginRenderPass(vulkanFrameBuffer.GetHandle(),
+					vulkanFrameBuffer.GetCompatibleRenderPass(),
+					vulkanFrameBuffer.GetSize(),
+					Span<VkClearValue>::FromVector(m_ClearValuesBuffer).Slice(clearValuesRange.Start, clearValuesRange.Count));
+
 				node.Pass->OnRender(context, commandBuffer);
-				commandBuffer->EndRenderTarget();
+				vulkanCommandBuffer.EndRenderTarget();
 			}
 			else
 			{
 				node.Pass->OnRender(context, commandBuffer);
 			}
 
-			commandBuffer->EndLabel();
+			vulkanCommandBuffer.EndLabel();
 		}
 
 		ExecuteLayoutTransitions(commandBuffer, m_CompiledRenderGraph.ExternalResourceFinalTransitions);
@@ -208,35 +218,68 @@ namespace Flare
 				}
 			}
 
+			m_NodeData[nodeIndex].VulkanRenderPassHandle = renderPassCache.GetOrCreate(renderPassKey);
+		}
+	}
+
+	static VkClearValue AttachmentClearValueToVkClearValue(AttachmentClearValue clearValue)
+	{
+		VkClearValue result{};
+		switch (clearValue.Type)
+		{
+		case AttachmentClearValueType::Color:
+			result.color.float32[0] = clearValue.Color.r;
+			result.color.float32[1] = clearValue.Color.g;
+			result.color.float32[2] = clearValue.Color.b;
+			result.color.float32[3] = clearValue.Color.a;
+			break;
+		case AttachmentClearValueType::Depth:
+			result.depthStencil.depth = clearValue.Depth;
+			result.depthStencil.stencil = 0;
+			break;
+		default:
+			FLARE_VERIFY_UNREACHABLE();
+		}
+
+		return result;
+	}
+
+	void VulkanRenderGraph::FillClearValuesBuffer()
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		size_t bufferSize = 0;
+
+		for (const RenderPassNode& node : GetNodes())
+		{
 			if (node.Specifications.HasOutputClearValues())
+				bufferSize += node.Specifications.GetOutputs().size();
+		}
+
+		m_ClearValuesBuffer.resize(bufferSize);
+
+		const auto& nodes = GetNodes();
+
+		size_t allocationOffset = 0;
+		for (size_t nodeIndex = 0; nodeIndex < nodes.size(); nodeIndex++)
+		{
+			const RenderGraphPassSpecifications& specifications = nodes[nodeIndex].Specifications;
+			if (!specifications.HasOutputClearValues())
+				continue;
+
+			const ClearValuesRange range = ClearValuesRange{ (uint32_t)allocationOffset, (uint32_t)specifications.GetOutputs().size() };
+			m_NodeData[nodeIndex].ClearValues = range;
+			allocationOffset += specifications.GetOutputs().size();
+
+			for (uint32_t i = 0; i < range.Count; i++)
 			{
-				for (size_t outputIndex = 0; outputIndex < outputs.size(); outputIndex++)
-				{
-					auto clearValue = outputs[outputIndex].ClearValue.value();
+				const auto& outputClearValue = specifications.GetOutputs()[i].ClearValue;
 
-					if (clearValue.Type == AttachmentClearValueType::Color)
-					{
-						clearValues[outputIndex].color.float32[0] = clearValue.Color.x;
-						clearValues[outputIndex].color.float32[1] = clearValue.Color.y;
-						clearValues[outputIndex].color.float32[2] = clearValue.Color.z;
-						clearValues[outputIndex].color.float32[3] = clearValue.Color.w;
-					}
-					else
-					{
-						clearValues[outputIndex].depthStencil.depth = clearValue.Depth;
-						clearValues[outputIndex].depthStencil.stencil = 0;
-					}
-				}
+				if (outputClearValue.has_value())
+					m_ClearValuesBuffer[range.Start + i] = AttachmentClearValueToVkClearValue(*outputClearValue);
+				else
+					m_ClearValuesBuffer[range.Start + i] = VkClearValue{};
 			}
-
-			Ref<VulkanRenderPass> compatibleRenderPass = renderPassCache.GetOrCreate(renderPassKey);
-
-			if (node.Specifications.HasOutputClearValues())
-			{
-				compatibleRenderPass->SetDefaultClearValues(Span<VkClearValue>::FromVector(clearValues));
-			}
-
-			m_NodeData[nodeIndex].VulkanRenderPassHandle = compatibleRenderPass;
 		}
 	}
 
@@ -300,5 +343,7 @@ namespace Flare
 		{
 			CreateRenderTargets(frameIndex);
 		}
+
+		FillClearValuesBuffer();
 	}
 }

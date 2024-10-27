@@ -2,6 +2,8 @@
 
 #include "Flare/Renderer/RenderGraph/RenderGraph.h"
 
+#include <vulkan/vulkan.h>
+
 namespace Flare
 {
 	class LayoutTransitionsGenerator;
@@ -20,12 +22,19 @@ namespace Flare
 		void CreateRenderTargets(uint32_t frameIndex);
 
 		void SelectVulkanRenderPasses(const LayoutTransitionsGenerator& renderGraphBuilder);
+		void FillClearValuesBuffer();
 	protected:
 		void OnPrepare() override;
 		void OnTexturesResize() override;
 		void OnClear() override;
 		void OnBuild() override;
 	private:
+		struct ClearValuesRange
+		{
+			uint32_t Start = 0;
+			uint32_t Count = 0;
+		};
+
 		struct NodeData
 		{
 			static constexpr uint32_t INVALID_TARGET_INDEX = UINT32_MAX;
@@ -33,10 +42,13 @@ namespace Flare
 			LayoutTransitionsRange ExplicitTransitions;
 			uint32_t RenderTargetHandleIndex = INVALID_TARGET_INDEX;
 
+			ClearValuesRange ClearValues;
+
 			Ref<VulkanRenderPass> VulkanRenderPassHandle = nullptr;
 		};
 
 		std::vector<Ref<VulkanFrameBuffer>> m_RenderTargets;
 		std::vector<NodeData> m_NodeData;
+		std::vector<VkClearValue> m_ClearValuesBuffer;
 	};
 }
