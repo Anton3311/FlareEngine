@@ -59,8 +59,6 @@ namespace Flare
 		TextureSpecifications m_Specifications;
 		VulkanAllocation m_Allocation;
 
-		uint32_t m_MipLevels = 1;
-
 		bool m_OwnsImages = true;
 		
 		VkImage m_Image = VK_NULL_HANDLE;

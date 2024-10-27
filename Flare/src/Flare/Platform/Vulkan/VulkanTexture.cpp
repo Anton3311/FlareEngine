@@ -101,7 +101,7 @@ namespace Flare
 
 		if (HAS_BIT(m_Specifications.Flags, TextureFlags::GenerateMipMaps))
 		{
-			m_MipLevels = CalculateMipCount(m_Specifications.Width, m_Specifications.Height);
+			m_Specifications.MipCount = CalculateMipCount(m_Specifications.Width, m_Specifications.Height);
 		}
 
 		MemorySpan mipData = MemorySpan::FromRawBytes(data, m_Specifications.Width * m_Specifications.Height * GetImagePixelSizeInBytes());
@@ -117,7 +117,7 @@ namespace Flare
 
 		if (HAS_BIT(m_Specifications.Flags, TextureFlags::GenerateMipMaps))
 		{
-			m_MipLevels = CalculateMipCount(m_Specifications.Width, m_Specifications.Height);
+			m_Specifications.MipCount = CalculateMipCount(m_Specifications.Width, m_Specifications.Height);
 		}
 
 		MemorySpan mipData = MemorySpan::FromRawBytes(data, m_Specifications.Width * m_Specifications.Height * GetImagePixelSizeInBytes());
@@ -135,9 +135,9 @@ namespace Flare
 		FLARE_CORE_ASSERT(generateMipMaps && data.Mips.size() == 1 || !generateMipMaps);
 
 		if (generateMipMaps)
-			m_MipLevels = CalculateMipCount(m_Specifications.Width, m_Specifications.Height);
+			m_Specifications.MipCount = CalculateMipCount(m_Specifications.Width, m_Specifications.Height);
 		else
-			m_MipLevels = (uint32_t)data.Mips.size();
+			m_Specifications.MipCount = (uint32_t)data.Mips.size();
 
 		CreateResources();
 		UploadPixelData(Span(data.Mips.data(), data.Mips.size()));
@@ -223,12 +223,13 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 		VkFormat imageFormat = TextureFormatToVulkanFormat(m_Specifications.Format);
 		FLARE_CORE_ASSERT(imageFormat != VK_FORMAT_UNDEFINED);
-		FLARE_CORE_ASSERT(m_MipLevels > 0);
+		FLARE_CORE_ASSERT(m_Specifications.MipCount > 0 && m_Specifications.ArrayLayerCount > 0);
 		FLARE_CORE_ASSERT(m_Specifications.Width > 0 && m_Specifications.Height);
 
 		VkImageCreateInfo imageInfo{};
 		imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-		imageInfo.arrayLayers = 1;
+		imageInfo.arrayLayers = m_Specifications.ArrayLayerCount;
+		imageInfo.mipLevels = m_Specifications.MipCount;
 		imageInfo.extent.width = (uint32_t)m_Specifications.Width;
 		imageInfo.extent.height = (uint32_t)m_Specifications.Height;
 		imageInfo.extent.depth = 1;
@@ -239,18 +240,12 @@ namespace Flare
 		imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 		imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
 		imageInfo.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT;
-		imageInfo.mipLevels = m_MipLevels;
 
 		// TODO: Add TextureUsage::Blit?
 		imageInfo.usage |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
 
 		if (!IsDepthTextureFormat(m_Specifications.Format) && HAS_BIT(m_Specifications.Usage, TextureUsage::RenderTarget))
 			imageInfo.usage |= VK_IMAGE_USAGE_STORAGE_BIT;
-
-		if (m_MipLevels > 1)
-		{
-			imageInfo.usage |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
-		}
 
 		if (HAS_BIT(m_Specifications.Usage, TextureUsage::Sampling))
 			imageInfo.usage |= VK_IMAGE_USAGE_SAMPLED_BIT;
@@ -355,9 +350,9 @@ namespace Flare
 			FLARE_CORE_ASSERT(false);
 		}
 
-		if (m_MipLevels > 1)
+		if (m_Specifications.MipCount > 1)
 		{
-			samplerInfo.maxLod = (float)(m_MipLevels - 1);
+			samplerInfo.maxLod = (float)(m_Specifications.MipCount - 1);
 			samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
 		}
 
@@ -412,11 +407,11 @@ namespace Flare
 		uint32_t providedMipCount = (uint32_t)mips.GetSize();
 		CopyImageMips(commandBuffer, mips, stagingBuffer, providedMipCount);
 
-		if (HAS_BIT(m_Specifications.Flags, TextureFlags::GenerateMipMaps) && m_MipLevels > 1 && providedMipCount == 1)
+		if (HAS_BIT(m_Specifications.Flags, TextureFlags::GenerateMipMaps) && m_Specifications.MipCount > 1 && providedMipCount == 1)
 		{
 			commandBuffer->TransitionImageLayout(m_Image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, 0, 1);
-			commandBuffer->GenerateImageMipMaps(m_Image, m_MipLevels, glm::uvec2(m_Specifications.Width, m_Specifications.Height));
-			commandBuffer->TransitionImageLayout(m_Image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, 0, m_MipLevels);
+			commandBuffer->GenerateImageMipMaps(m_Image, m_Specifications.MipCount, glm::uvec2(m_Specifications.Width, m_Specifications.Height));
+			commandBuffer->TransitionImageLayout(m_Image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, 0, m_Specifications.MipCount);
 		}
 		else
 		{

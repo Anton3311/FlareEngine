@@ -96,6 +96,10 @@ namespace Flare
 
 		uint32_t Width = 0;
 		uint32_t Height = 0;
+
+		uint32_t ArrayLayerCount = 1;
+		uint32_t MipCount = 1;
+
 		TextureFormat Format = TextureFormat::RGB8;
 		TextureFiltering Filtering = TextureFiltering::Linear;
 		TextureWrap Wrap = TextureWrap::Clamp;
