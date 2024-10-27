@@ -88,6 +88,7 @@ namespace Flare
 		void AddOutput(RenderGraphTextureId textureId, float depthClearValue, ImageLayout layout = ImageLayout::AttachmentOutput);
 
 		void AddSubresourceOutput(RenderGraphTextureId textureId, std::optional<glm::vec4> clearValue, const TextureSubresource& subresource);
+		void AddDepthSubresourceOutput(RenderGraphTextureId textureId, std::optional<float> clearValue, const TextureSubresource& subresource);
 
 		inline const std::vector<Input>& GetInputs() const { return m_Inputs; };
 		inline const std::vector<OutputAttachment>& GetOutputs() const { return m_Outputs; }
