@@ -55,7 +55,7 @@ namespace Flare
 		return id;
 	}
 
-	RenderGraphTextureId RenderGraphResourceManager::CreateFixedSizeTexture(TextureFormat format, glm::uvec2 size, std::string_view debugName)
+	RenderGraphTextureId RenderGraphResourceManager::CreateFixedSizeTexture(TextureFormat format, glm::uvec2 size, std::string_view debugName, uint32_t arrayLayers, uint32_t mipCount)
 	{
 		FLARE_PROFILE_FUNCTION();
 
@@ -75,6 +75,8 @@ namespace Flare
 		specifications.Usage = TextureUsage::Sampling | TextureUsage::RenderTarget;
 		specifications.Wrap = TextureWrap::Clamp;
 		specifications.Filtering = TextureFiltering::Closest;
+		specifications.ArrayLayerCount = arrayLayers;
+		specifications.MipCount = mipCount;
 
 		uint32_t frameInFlightCount = GraphicsContext::GetInstance().GetFrameInFlightCount();
 		for (uint32_t i = 0; i < frameInFlightCount; i++)

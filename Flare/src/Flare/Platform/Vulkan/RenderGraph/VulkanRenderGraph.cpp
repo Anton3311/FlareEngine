@@ -19,8 +19,84 @@
 
 namespace Flare
 {
+	VulkanRenderTarget::VulkanRenderTarget(glm::uvec2 size, Span<const VkImageView> attachments, Ref<VulkanRenderPass> compatibleRenderPass, const char* debugName)
+		: m_Size(size), m_CompatibleRenderPass(compatibleRenderPass)
+	{
+		FLARE_PROFILE_FUNCTION();
+		FLARE_CORE_ASSERT(attachments.GetSize() > 0);
+		FLARE_CORE_ASSERT(size.x > 0 && size.y > 0);
+		FLARE_CORE_ASSERT(compatibleRenderPass);
+
+		VkFramebufferCreateInfo createInfo{};
+		createInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+		createInfo.attachmentCount = (uint32_t)attachments.GetSize();
+		createInfo.pAttachments = attachments.GetData();
+		createInfo.width = size.x;
+		createInfo.height = size.y;
+		createInfo.renderPass = compatibleRenderPass->GetHandle();
+		createInfo.layers = 1;
+		createInfo.flags = 0;
+
+		VK_CHECK_RESULT(vkCreateFramebuffer(VulkanContext::GetInstance().GetDevice(), &createInfo, nullptr, &m_Handle));
+
+		VulkanContext::GetInstance().SetDebugName(VK_OBJECT_TYPE_FRAMEBUFFER, (uint64_t)m_Handle, debugName);
+	}
+
+	VulkanRenderTarget::VulkanRenderTarget(const VulkanRenderTarget& other)
+	{
+		FLARE_CORE_ASSERT(!other.IsCreated());
+	}
+
+	VulkanRenderTarget::VulkanRenderTarget(VulkanRenderTarget&& other) noexcept
+		: m_Size(other.m_Size), m_CompatibleRenderPass(std::move(other.m_CompatibleRenderPass)), m_Handle(other.m_Handle)
+	{
+		other.m_Size = glm::uvec2(0, 0);
+		other.m_Handle = VK_NULL_HANDLE;
+	}
+
+	VulkanRenderTarget::~VulkanRenderTarget()
+	{
+		Release();
+	}
+
+	VulkanRenderTarget& VulkanRenderTarget::operator=(VulkanRenderTarget&& other) noexcept
+	{
+		Release();
+
+		m_Size = other.m_Size;
+		m_Handle = other.m_Handle;
+
+		m_CompatibleRenderPass = std::move(other.m_CompatibleRenderPass);
+
+		other.m_Size = glm::uvec2(0, 0);
+		other.m_Handle = VK_NULL_HANDLE;
+
+		return *this;
+	}
+
+	VulkanRenderTarget& VulkanRenderTarget::operator=(const VulkanRenderTarget& other)
+	{
+		FLARE_CORE_ASSERT(!IsCreated() && !other.IsCreated());
+		return *this;
+	}
+
+	void VulkanRenderTarget::Release()
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		if (m_Handle)
+		{
+			vkDestroyFramebuffer(VulkanContext::GetInstance().GetDevice(), m_Handle, nullptr);
+			m_Handle = VK_NULL_HANDLE;
+		}
+	}
+
+	//
+	// VulkanRenderGraph
+	//
+
 	VulkanRenderGraph::VulkanRenderGraph(const Viewport& viewport)
-		: RenderGraph(viewport)
+		: RenderGraph(viewport), m_TextureViews(GetResourceManager())
 	{
 	}
 
@@ -38,11 +114,11 @@ namespace Flare
 		{
 			const RenderPassNode& node = nodes[nodeIndex];
 
-			Ref<FrameBuffer> renderTarget = nullptr;
+			VulkanRenderTarget* renderTarget = nullptr;
 			if (node.Specifications.GetType() == RenderGraphPassType::Graphics
 				&& m_NodeData[nodeIndex].RenderTargetHandleIndex != NodeData::INVALID_TARGET_INDEX)
 			{
-				renderTarget = m_RenderTargets[m_NodeData[nodeIndex].RenderTargetHandleIndex + frameInFlight];
+				renderTarget = &m_RenderTargets[m_NodeData[nodeIndex].RenderTargetHandleIndex + frameInFlight];
 			}
 
 			RenderGraphContext context(
@@ -61,13 +137,11 @@ namespace Flare
 
 			if (renderTarget)
 			{
-				const VulkanFrameBuffer& vulkanFrameBuffer = renderTarget.DerefAs<const VulkanFrameBuffer>();
-
 				ClearValuesRange clearValuesRange = m_NodeData[nodeIndex].ClearValues;
 
-				vulkanCommandBuffer.BeginRenderPass(vulkanFrameBuffer.GetHandle(),
-					vulkanFrameBuffer.GetCompatibleRenderPass(),
-					vulkanFrameBuffer.GetSize(),
+				vulkanCommandBuffer.BeginRenderPass(renderTarget->GetHandle(),
+					renderTarget->GetCompatibleRenderPass(),
+					renderTarget->GetSize(),
 					Span<VkClearValue>::FromVector(m_ClearValuesBuffer).Slice(clearValuesRange.Start, clearValuesRange.Count));
 
 				node.Pass->OnRender(context, commandBuffer);
@@ -127,7 +201,7 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		std::vector<Ref<Texture>> attachmentTextures;
+		std::vector<VkImageView> attachmentTextures;
 		const auto& nodes = GetNodes();
 		for (size_t nodeIndex = 0; nodeIndex < nodes.size(); nodeIndex++)
 		{
@@ -140,27 +214,29 @@ namespace Flare
 			attachmentTextures.clear();
 			attachmentTextures.resize(outputs.size(), nullptr);
 
+			glm::uvec2 renderTargetSize = glm::uvec2(0, 0);
+
 			for (size_t outputIndex = 0; outputIndex < outputs.size(); outputIndex++)
 			{
-				attachmentTextures[outputIndex] = GetResourceManager().GetTextureForFrameInFlight(outputs[outputIndex].AttachmentTexture, frameIndex);
+				const auto& output = outputs[outputIndex];
+
+				Span<const VkImageView> imageViews = m_TextureViews.GetOrCreate(output.AttachmentTexture, output.Subresource);
+				attachmentTextures[outputIndex] = imageViews[frameIndex];
+
+				Ref<const Texture> texture = GetResourceManager().GetTexture(output.AttachmentTexture);
+				renderTargetSize.x = glm::max(renderTargetSize.x, texture->GetWidth());
+				renderTargetSize.y = glm::max(renderTargetSize.y, texture->GetHeight());
 			}
 
 			uint32_t renderTargetIndex = m_NodeData[nodeIndex].RenderTargetHandleIndex + frameIndex;
-			Ref<VulkanFrameBuffer> renderTarget = m_RenderTargets[renderTargetIndex];
+			VulkanRenderTarget& renderTarget = m_RenderTargets[renderTargetIndex];
 
 			FLARE_CORE_ASSERT(m_NodeData[nodeIndex].VulkanRenderPassHandle);
 
-			m_RenderTargets[renderTargetIndex] = Ref<VulkanFrameBuffer>::New(attachmentTextures[0]->GetWidth(),
-				attachmentTextures[0]->GetHeight(),
+			renderTarget = std::move(VulkanRenderTarget(renderTargetSize,
+				Span<const VkImageView>::FromVector(attachmentTextures),
 				m_NodeData[nodeIndex].VulkanRenderPassHandle,
-				Span<Ref<Texture>>::FromVector(attachmentTextures),
-				false);
-
-			if (renderTarget)
-			{
-				std::string debugName = renderTarget->GetDebugName();
-				m_RenderTargets[renderTargetIndex]->SetDebugName(debugName);
-			}
+				nodes[nodeIndex].Specifications.GetDebugName().c_str()));
 		}
 	}
 
@@ -292,6 +368,7 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
+		m_TextureViews.Clear();
 		CreateRenderTargets(GraphicsContext::GetInstance().GetCurrentFrameInFlight());
 	}
 
@@ -301,6 +378,9 @@ namespace Flare
 
 		m_RenderTargets.clear();
 		m_NodeData.clear();
+
+		VkDevice device = VulkanContext::GetInstance().GetDevice();
+		m_TextureViews.Clear();
 	}
 
 	void VulkanRenderGraph::OnBuild()
@@ -337,7 +417,7 @@ namespace Flare
 			}
 		}
 
-		m_RenderTargets.resize(renderTargetIndex, nullptr);
+		m_RenderTargets.resize(renderTargetIndex);
 
 		for (uint32_t frameIndex = 0; frameIndex < frameInFlightCount; frameIndex++)
 		{

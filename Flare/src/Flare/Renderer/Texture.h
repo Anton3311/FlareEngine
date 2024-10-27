@@ -90,6 +90,33 @@ namespace Flare
 
 	FLARE_IMPL_ENUM_BITFIELD(TextureFlags);
 
+	struct TextureSubresource
+	{
+		static const TextureSubresource FULL_VIEW;
+
+		constexpr TextureSubresource() = default;
+		constexpr TextureSubresource(uint32_t baseArrayLayer, uint32_t arrayLayerCount, uint32_t baseMip, uint32_t mipCount) noexcept
+			: BaseArrayLayer(baseArrayLayer), ArrayLayerCount(arrayLayerCount), BaseMip(baseMip), MipCount(mipCount) {}
+	
+		constexpr bool operator==(const TextureSubresource& other) const
+		{
+			return BaseArrayLayer == other.BaseArrayLayer
+				&& ArrayLayerCount == other.ArrayLayerCount
+				&& BaseMip == other.BaseMip
+				&& MipCount == other.MipCount;
+		}
+
+		constexpr bool operator!=(const TextureSubresource& other) const
+		{
+			return !operator==(other);
+		}
+
+		uint32_t BaseArrayLayer = 0;
+		uint32_t ArrayLayerCount = 1;
+		uint32_t BaseMip = 0;
+		uint32_t MipCount = 1;
+	};
+
 	struct TextureSpecifications
 	{
 		static constexpr uint32_t DefaultMipLevelsCount = 4;

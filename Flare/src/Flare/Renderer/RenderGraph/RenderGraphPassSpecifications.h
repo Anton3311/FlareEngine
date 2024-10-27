@@ -71,6 +71,9 @@ namespace Flare
 		{
 			RenderGraphTextureId AttachmentTexture;
 			ImageLayout Layout = ImageLayout::Undefined;
+
+			TextureSubresource Subresource = TextureSubresource::FULL_VIEW;
+
 			std::optional<AttachmentClearValue> ClearValue;
 		};
 
@@ -83,6 +86,8 @@ namespace Flare
 		void AddResource(RenderGraphTextureId textureId, ResourceAccess access);
 		void AddOutput(RenderGraphTextureId textureId, const glm::vec4& clearColor, ImageLayout layout = ImageLayout::AttachmentOutput);
 		void AddOutput(RenderGraphTextureId textureId, float depthClearValue, ImageLayout layout = ImageLayout::AttachmentOutput);
+
+		void AddSubresourceOutput(RenderGraphTextureId textureId, std::optional<glm::vec4> clearValue, const TextureSubresource& subresource);
 
 		inline const std::vector<Input>& GetInputs() const { return m_Inputs; };
 		inline const std::vector<OutputAttachment>& GetOutputs() const { return m_Outputs; }

@@ -15,6 +15,8 @@
 
 namespace Flare
 {
+	const TextureSubresource TextureSubresource::FULL_VIEW = TextureSubresource(0, UINT32_MAX, 0, UINT32_MAX);
+
 	FLARE_IMPL_ASSET(Texture);
 	FLARE_SERIALIZABLE_IMPL(Texture);
 

@@ -2,6 +2,8 @@
 
 #include "Flare/Renderer/RenderGraph/RenderGraph.h"
 
+#include "Flare/Platform/Vulkan/RenderGraph/TextureViewsManager.h"
+
 #include <vulkan/vulkan.h>
 
 namespace Flare
@@ -9,6 +11,34 @@ namespace Flare
 	class LayoutTransitionsGenerator;
 	class VulkanRenderPass;
 	class VulkanFrameBuffer;
+
+	class FLARE_API VulkanRenderTarget
+	{
+	public:
+		VulkanRenderTarget() = default;
+		VulkanRenderTarget(glm::uvec2 size, Span<const VkImageView> attachments, Ref<VulkanRenderPass> compatibleRenderPass, const char* debugName);
+
+		VulkanRenderTarget(const VulkanRenderTarget& other);
+		VulkanRenderTarget(VulkanRenderTarget&& other) noexcept;
+
+		~VulkanRenderTarget();
+
+		VulkanRenderTarget& operator=(VulkanRenderTarget&& other) noexcept;
+		VulkanRenderTarget& operator=(const VulkanRenderTarget& other);
+
+		inline bool IsCreated() const { return m_Handle != VK_NULL_HANDLE; }
+
+		inline VkFramebuffer GetHandle() const { return m_Handle; }
+		inline glm::uvec2 GetSize() const { return m_Size; }
+		inline Ref<VulkanRenderPass> GetCompatibleRenderPass() const { return m_CompatibleRenderPass; }
+	private:
+		void Release();
+	private:
+		glm::uvec2 m_Size = glm::uvec2(0, 0);
+		VkFramebuffer m_Handle = VK_NULL_HANDLE;
+		Ref<VulkanRenderPass> m_CompatibleRenderPass = nullptr;
+	};
+
 	class FLARE_API VulkanRenderGraph : public RenderGraph
 	{
 	public:
@@ -47,7 +77,9 @@ namespace Flare
 			Ref<VulkanRenderPass> VulkanRenderPassHandle = nullptr;
 		};
 
-		std::vector<Ref<VulkanFrameBuffer>> m_RenderTargets;
+		TextureViewsManager m_TextureViews;
+
+		std::vector<VulkanRenderTarget> m_RenderTargets;
 		std::vector<NodeData> m_NodeData;
 		std::vector<VkClearValue> m_ClearValuesBuffer;
 	};

@@ -61,4 +61,19 @@ namespace Flare
 
 		m_HasOutputClearValues = true;
 	}
+
+	void RenderGraphPassSpecifications::AddSubresourceOutput(RenderGraphTextureId textureId,
+		std::optional<glm::vec4> clearValue,
+		const TextureSubresource& subresource)
+	{
+		auto& output = m_Outputs.emplace_back();
+		output.AttachmentTexture = textureId;
+		output.Subresource = subresource;
+		output.Layout = ImageLayout::AttachmentOutput;
+
+		if (clearValue.has_value())
+			output.ClearValue = AttachmentClearValue(*clearValue);
+
+		m_HasOutputClearValues |= clearValue.has_value();
+	}
 }

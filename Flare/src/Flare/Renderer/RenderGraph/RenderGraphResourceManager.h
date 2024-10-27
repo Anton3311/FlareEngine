@@ -70,7 +70,17 @@ namespace Flare
 		RenderGraphResourceManager(const Viewport& viewport);
 
 		RenderGraphTextureId CreateTexture(TextureFormat format, std::string_view debugName, float scale = 1.0f);
-		RenderGraphTextureId CreateFixedSizeTexture(TextureFormat format, glm::uvec2 size, std::string_view debugName);
+		RenderGraphTextureId CreateFixedSizeTexture(TextureFormat format,
+			glm::uvec2 size,
+			std::string_view debugName,
+			uint32_t arrayLayers,
+			uint32_t mipCount);
+
+		inline RenderGraphTextureId CreateFixedSizeTexture(TextureFormat format, glm::uvec2 size, std::string_view debugName)
+		{
+			return CreateFixedSizeTexture(format, size, debugName, 1, 1);
+		}
+
 		RenderGraphTextureId RegisterExistingTexture(Ref<Texture> texture);
 
 		void Clear();
@@ -86,6 +96,12 @@ namespace Flare
 
 			uint32_t textureHandleIndex = m_Textures[textureId.GetValue()].TextureHandleIndex;
 			return m_TextureHandles[textureHandleIndex + GraphicsContext::GetInstance().GetCurrentFrameInFlight()];
+		}
+
+		inline const RenderGraphTextureResource& GetTextureResource(RenderGraphTextureId textureId) const
+		{
+			FLARE_CORE_ASSERT(IsTextureIdValid(textureId));
+			return m_Textures[textureId.GetValue()];
 		}
 
 		inline Ref<Texture> GetTextureForFrameInFlight(RenderGraphTextureId textureId, uint32_t frameInFlightIndex) const
