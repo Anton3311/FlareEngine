@@ -36,10 +36,6 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 		m_AttachmentDescriptions.clear();
 
-		bool hasClearValues = false;
-		for (const auto& attachment : key.Attachments)
-			hasClearValues |= attachment.HasClearValue;
-
 		std::optional<uint32_t> depthAttachmentIndex = {};
 		for (size_t i = 0; i < key.Attachments.size(); i++)
 		{
@@ -63,7 +59,7 @@ namespace Flare
 			description.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 			description.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
 
-			if (hasClearValues)
+			if (key.Attachments[i].HasClearValue)
 			{
 				description.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 			}
