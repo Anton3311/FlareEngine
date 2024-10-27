@@ -26,11 +26,10 @@ namespace Flare
 		input.Layout = layout;
 	}
 
-	void RenderGraphPassSpecifications::AddOutput(RenderGraphTextureId textureId, uint32_t attachmentIndex, ImageLayout layout)
+	void RenderGraphPassSpecifications::AddOutput(RenderGraphTextureId textureId, ImageLayout layout)
 	{
 		auto& output = m_Outputs.emplace_back();
 		output.AttachmentTexture = textureId;
-		output.AttachmentIndex = attachmentIndex;
 		output.Layout = layout;
 	}
 
@@ -43,28 +42,20 @@ namespace Flare
 		resource.TextureId = textureId;
 	}
 
-	void RenderGraphPassSpecifications::AddOutput(RenderGraphTextureId textureId,
-		uint32_t attachmentIndex,
-		const glm::vec4& clearColor,
-		ImageLayout layout)
+	void RenderGraphPassSpecifications::AddOutput(RenderGraphTextureId textureId, const glm::vec4& clearColor, ImageLayout layout)
 	{
 		auto& output = m_Outputs.emplace_back();
 		output.AttachmentTexture = textureId;
-		output.AttachmentIndex = attachmentIndex;
 		output.Layout = layout;
 		output.ClearValue = AttachmentClearValue(clearColor);
 
 		m_HasOutputClearValues = true;
 	}
 
-	void RenderGraphPassSpecifications::AddOutput(RenderGraphTextureId textureId,
-		uint32_t attachmentIndex,
-		float depthClearValue,
-		ImageLayout layout)
+	void RenderGraphPassSpecifications::AddOutput(RenderGraphTextureId textureId, float depthClearValue, ImageLayout layout)
 	{
 		auto& output = m_Outputs.emplace_back();
 		output.AttachmentTexture = textureId;
-		output.AttachmentIndex = attachmentIndex;
 		output.Layout = layout;
 		output.ClearValue = AttachmentClearValue(depthClearValue);
 

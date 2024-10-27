@@ -407,7 +407,7 @@ namespace Flare
 
 			RenderGraphPassSpecifications cascadePassSpec{};
 			cascadePassSpec.SetDebugName(fmt::format("ShadowCascadePass{}", cascadeIndex));
-			cascadePassSpec.AddOutput(cascadeTextures[cascadeIndex], 0, 1.0f);
+			cascadePassSpec.AddOutput(cascadeTextures[cascadeIndex], 1.0f);
 
 			Ref<ShadowCascadePass> cascadePass = Ref<ShadowCascadePass>::New(
 				s_RendererData.Statistics,
@@ -438,8 +438,8 @@ namespace Flare
 
 		RenderGraphPassSpecifications geometryPass{};
 		geometryPass.SetDebugName("GeometryPass");
-		geometryPass.AddOutput(viewport.ColorTextureId, 0);
-		geometryPass.AddOutput(viewport.DepthTextureId, 2);
+		geometryPass.AddOutput(viewport.ColorTextureId);
+		geometryPass.AddOutput(viewport.DepthTextureId);
 
 		if (viewport.IsShadowMappingEnabled())
 		{
@@ -472,7 +472,7 @@ namespace Flare
 		// Decal pass
 		RenderGraphPassSpecifications decalPass{};
 		decalPass.AddInput(viewport.DepthTextureId);
-		decalPass.AddOutput(viewport.ColorTextureId, 0);
+		decalPass.AddOutput(viewport.ColorTextureId);
 		decalPass.SetDebugName("DecalsPass");
 
 		viewport.GetRenderGraph()->AddPass(decalPass, Ref<DecalsPass>::New(

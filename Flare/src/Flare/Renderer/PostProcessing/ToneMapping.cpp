@@ -42,7 +42,7 @@ namespace Flare
 		RenderGraphPassSpecifications toneMappingPass{};
 		toneMappingPass.SetDebugName("ToneMapping");
 		toneMappingPass.AddInput(viewport.ColorTextureId);
-		toneMappingPass.AddOutput(intermediateTexture, 0);
+		toneMappingPass.AddOutput(intermediateTexture);
 
 		RenderGraphPassSpecifications blitPass{};
 		blitPass.SetDebugName("ToneMappingBlit");

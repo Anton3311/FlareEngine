@@ -70,7 +70,6 @@ namespace Flare
 		struct OutputAttachment
 		{
 			RenderGraphTextureId AttachmentTexture;
-			uint32_t AttachmentIndex = 0;
 			ImageLayout Layout = ImageLayout::Undefined;
 			std::optional<AttachmentClearValue> ClearValue;
 		};
@@ -79,19 +78,11 @@ namespace Flare
 
 		void SetDebugName(std::string_view debugName);
 		void AddInput(RenderGraphTextureId textureId, ImageLayout layout = ImageLayout::ReadOnly);
-		void AddOutput(RenderGraphTextureId textureId, uint32_t attachmentIndex, ImageLayout layout = ImageLayout::AttachmentOutput);
+		void AddOutput(RenderGraphTextureId textureId, ImageLayout layout = ImageLayout::AttachmentOutput);
 		
 		void AddResource(RenderGraphTextureId textureId, ResourceAccess access);
-
-		void AddOutput(RenderGraphTextureId textureId,
-			uint32_t attachmentIndex,
-			const glm::vec4& clearColor,
-			ImageLayout layout = ImageLayout::AttachmentOutput);
-
-		void AddOutput(RenderGraphTextureId textureId,
-			uint32_t attachmentIndex,
-			float depthClearValue,
-			ImageLayout layout = ImageLayout::AttachmentOutput);
+		void AddOutput(RenderGraphTextureId textureId, const glm::vec4& clearColor, ImageLayout layout = ImageLayout::AttachmentOutput);
+		void AddOutput(RenderGraphTextureId textureId, float depthClearValue, ImageLayout layout = ImageLayout::AttachmentOutput);
 
 		inline const std::vector<Input>& GetInputs() const { return m_Inputs; };
 		inline const std::vector<OutputAttachment>& GetOutputs() const { return m_Outputs; }

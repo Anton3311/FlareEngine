@@ -126,8 +126,8 @@ namespace Flare
 		if (m_SceneViewSettings.ShowGrid)
 		{
 			RenderGraphPassSpecifications gridPass{};
-			gridPass.AddOutput(m_Viewport.ColorTextureId, 0);
-			gridPass.AddOutput(m_Viewport.DepthTextureId, 1);
+			gridPass.AddOutput(m_Viewport.ColorTextureId);
+			gridPass.AddOutput(m_Viewport.DepthTextureId);
 			gridPass.SetDebugName("SceneViewGridPass");
 			gridPass.SetType(RenderGraphPassType::Graphics);
 

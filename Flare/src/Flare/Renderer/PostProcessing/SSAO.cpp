@@ -57,7 +57,7 @@ namespace Flare
 		downsamplePass.SetDebugName("HBAODownsamplePass");
 		downsamplePass.SetType(RenderGraphPassType::Graphics);
 		downsamplePass.AddInput(viewport.DepthTextureId);
-		downsamplePass.AddOutput(linearDepthDepth, 0);
+		downsamplePass.AddOutput(linearDepthDepth);
 
 		renderGraph.AddPass(downsamplePass, Ref<HBAODownsamplePass>::New(viewport.DepthTextureId));
 
@@ -65,14 +65,14 @@ namespace Flare
 		aoPass.SetDebugName("HBAOPass");
 		aoPass.SetType(RenderGraphPassType::Graphics);
 		aoPass.AddInput(linearDepthDepth);
-		aoPass.AddOutput(aoTexture, 0);
+		aoPass.AddOutput(aoTexture);
 	
 		renderGraph.AddPass(aoPass, Ref<HBAOPass>::New(Ref<SSAO>(this), linearDepthDepth));
 
 		{
 			RenderGraphPassSpecifications verticalBlurPass{};
 			verticalBlurPass.AddInput(aoTexture);
-			verticalBlurPass.AddOutput(aoBlurIntermediateTexture, 0, glm::vec4(0.0f));
+			verticalBlurPass.AddOutput(aoBlurIntermediateTexture, glm::vec4(0.0f));
 			verticalBlurPass.SetType(RenderGraphPassType::Graphics);
 			verticalBlurPass.SetDebugName("HBAO Vertical Bilateral Blur");
 
@@ -82,7 +82,7 @@ namespace Flare
 		{
 			RenderGraphPassSpecifications horizontalBlurPass{};
 			horizontalBlurPass.AddInput(aoBlurIntermediateTexture);
-			horizontalBlurPass.AddOutput(aoTexture, 0, glm::vec4(0.0f));
+			horizontalBlurPass.AddOutput(aoTexture, glm::vec4(0.0f));
 			horizontalBlurPass.SetType(RenderGraphPassType::Graphics);
 			horizontalBlurPass.SetDebugName("HBAO Horizontal Bilateral Blur");
 

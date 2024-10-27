@@ -207,7 +207,7 @@ namespace Flare
 		RenderGraphPassSpecifications geometryPass{};
 		geometryPass.SetDebugName("2DGeometryPass");
 		geometryPass.SetType(RenderGraphPassType::Graphics);
-		geometryPass.AddOutput(viewport.ColorTextureId, 0);
+		geometryPass.AddOutput(viewport.ColorTextureId);
 		
 		viewport.GetRenderGraph()->AddPass(geometryPass, Ref<Geometry2DPass>::New(
 			s_Renderer2DData.Limits,
@@ -218,7 +218,7 @@ namespace Flare
 		RenderGraphPassSpecifications textPass{};
 		textPass.SetDebugName("TextPass");
 		textPass.SetType(RenderGraphPassType::Graphics);
-		textPass.AddOutput(viewport.ColorTextureId, 0);
+		textPass.AddOutput(viewport.ColorTextureId);
 
 		viewport.GetRenderGraph()->AddPass(textPass, Ref<TextPass>::New(
 			s_Renderer2DData.Limits,

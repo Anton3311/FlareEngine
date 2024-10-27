@@ -50,8 +50,8 @@ namespace Flare
 			return;
 
 		RenderGraphPassSpecifications specifications{};
-		specifications.AddOutput(viewport.ColorTextureId, 0);
-		specifications.AddOutput(viewport.DepthTextureId, 1);
+		specifications.AddOutput(viewport.ColorTextureId);
+		specifications.AddOutput(viewport.DepthTextureId);
 		specifications.SetType(RenderGraphPassType::Graphics);
 		specifications.SetDebugName("AtmospherePass");
 
