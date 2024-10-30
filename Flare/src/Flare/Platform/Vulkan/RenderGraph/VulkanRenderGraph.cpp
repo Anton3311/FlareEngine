@@ -186,14 +186,55 @@ namespace Flare
 			VkImageLayout initialLayout = ImageLayoutToVulkanImageLayout(transition.InitialLayout, format);
 			VkImageLayout finalLayout = ImageLayoutToVulkanImageLayout(transition.FinalLayout, format);
 
-			if (IsDepthTextureFormat(format))
+			VkImageMemoryBarrier barrier{};
+			barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+			barrier.image = image;
+			barrier.oldLayout = initialLayout;
+			barrier.newLayout = finalLayout;
+			barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+			barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+
+			if (transition.Subresource == TextureSubresource::FULL_VIEW)
 			{
-				vulkanCommandBuffer->TransitionDepthImageLayout(image, HasStencilComponent(format), initialLayout, finalLayout);
+				const TextureSpecifications& specifications = texture->GetSpecifications();
+
+				barrier.subresourceRange.baseArrayLayer = 0;
+				barrier.subresourceRange.layerCount = specifications.ArrayLayerCount;
+				barrier.subresourceRange.baseMipLevel = 0;
+				barrier.subresourceRange.levelCount = specifications.MipCount;
 			}
 			else
 			{
-				vulkanCommandBuffer->TransitionImageLayout(image, initialLayout, finalLayout);
+				barrier.subresourceRange.baseArrayLayer = transition.Subresource.BaseArrayLayer;
+				barrier.subresourceRange.layerCount = transition.Subresource.ArrayLayerCount;
+				barrier.subresourceRange.baseMipLevel = transition.Subresource.BaseMip;
+				barrier.subresourceRange.levelCount = transition.Subresource.MipCount;
 			}
+
+			if (IsDepthTextureFormat(format))
+			{
+				barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+			}
+			else
+			{
+				barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+			}
+
+			VkPipelineStageFlags sourceStage = VK_PIPELINE_STAGE_NONE;
+			VkPipelineStageFlags destinationStage = VK_PIPELINE_STAGE_NONE;
+
+			VulkanContext::FillPipelineStagesAndAccessMasks(initialLayout,
+				finalLayout,
+				sourceStage,
+				destinationStage,
+				barrier.srcAccessMask,
+				barrier.dstAccessMask);
+
+			vkCmdPipelineBarrier(vulkanCommandBuffer->GetHandle(),
+				sourceStage, destinationStage, 0, 0,
+				nullptr, 0,
+				nullptr, 1,
+				&barrier);
 		}
 	}
 
@@ -368,8 +409,14 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
+		OnClear();
+		OnBuild();
+
+		// TODO: Resize the textures
+#if 0
 		m_TextureViews.Clear();
 		CreateRenderTargets(GraphicsContext::GetInstance().GetCurrentFrameInFlight());
+#endif
 	}
 
 	void VulkanRenderGraph::OnClear()

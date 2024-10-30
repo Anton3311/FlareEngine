@@ -54,6 +54,7 @@ namespace Flare
 		RendererStatistics Statistics;
 
 		Ref<Sampler> DefaultShadowSampler = nullptr;
+		Ref<Sampler> DefaultLinearClampSampler = nullptr;
 
 		// Shadows
 		ShadowSettings ShadowMappingSettings;
@@ -208,13 +209,24 @@ namespace Flare
 			s_RendererData.DecalsDescriptorSetPool = Ref<VulkanDescriptorSetPool>::New(Span(&decalDepthBinding, 1));
 		}
 
-		SamplerSpecifications samplerSpecifications{};
-		samplerSpecifications.ComparisonEnabled = true;
-		samplerSpecifications.ComparisonFunction = DepthComparisonFunction::Less;
-		samplerSpecifications.Filter = TextureFiltering::Linear;
-		samplerSpecifications.WrapMode = TextureWrap::Clamp;
+		{
+			SamplerSpecifications samplerSpecifications{};
+			samplerSpecifications.ComparisonEnabled = true;
+			samplerSpecifications.ComparisonFunction = DepthComparisonFunction::Less;
+			samplerSpecifications.Filter = TextureFiltering::Linear;
+			samplerSpecifications.WrapMode = TextureWrap::Clamp;
 
-		s_RendererData.DefaultShadowSampler = Sampler::Create(samplerSpecifications);
+			s_RendererData.DefaultShadowSampler = Sampler::Create(samplerSpecifications);
+		}
+
+		{
+			SamplerSpecifications samplerSpecifications{};
+			samplerSpecifications.ComparisonEnabled = false;
+			samplerSpecifications.Filter = TextureFiltering::Linear;
+			samplerSpecifications.WrapMode = TextureWrap::Clamp;
+
+			s_RendererData.DefaultLinearClampSampler = Sampler::Create(samplerSpecifications);
+		}
 
 		RendererPrimitives::Initialize();
 
@@ -366,7 +378,7 @@ namespace Flare
 		return s_RendererData.DecalsDescriptorSetPool->GetLayout();
 	}
 
-	static void SetupGlobalDescriptorSet(Ref<DescriptorSet> set, Ref<Sampler> comparisonSampler)
+	static void SetupGlobalDescriptorSet(Ref<DescriptorSet> set)
 	{
 		for (size_t i = 0; i < ShadowSettings::MaxCascades; i++)
 		{
@@ -375,7 +387,7 @@ namespace Flare
 
 		for (size_t i = 0; i < ShadowSettings::MaxCascades; i++)
 		{
-			set->WriteImage(s_RendererData.DummyDepthTexture, comparisonSampler, (uint32_t)(8 + i));
+			set->WriteImage(s_RendererData.DummyDepthTexture, s_RendererData.DefaultShadowSampler, (uint32_t)(8 + i));
 		}
 
 		set->FlushWrites();
@@ -432,8 +444,8 @@ namespace Flare
 		for (uint32_t i = 0; i < frameInFlightCount; i++)
 		{
 			const ViewportFrameResources& viewportFrameResources = viewport.GetFrameResources(i);
-			SetupGlobalDescriptorSet(viewportFrameResources.GlobalDescriptorSet, s_RendererData.DefaultShadowSampler);
-			SetupGlobalDescriptorSet(viewportFrameResources.GlobalDescriptorSetWithoutShadows, s_RendererData.DefaultShadowSampler);
+			SetupGlobalDescriptorSet(viewportFrameResources.GlobalDescriptorSet);
+			SetupGlobalDescriptorSet(viewportFrameResources.GlobalDescriptorSetWithoutShadows);
 		}
 
 		RenderGraphPassSpecifications geometryPass{};

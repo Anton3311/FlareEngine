@@ -13,6 +13,7 @@ namespace Flare
 	struct LayoutTransition
 	{
 		RenderGraphTextureId Texture;
+		TextureSubresource Subresource;
 		ImageLayout InitialLayout = ImageLayout::Undefined;
 		ImageLayout FinalLayout = ImageLayout::Undefined;
 	};
