@@ -6,14 +6,12 @@
 
 #include "Flare/Scene/Scene.h"
 
+#include "Flare/Renderer/CommandBuffer.h"
 #include "Flare/Renderer/Renderer.h"
-#include "Flare/Renderer/ShaderLibrary.h"
 #include "Flare/Renderer/RendererPrimitives.h"
 #include "Flare/Renderer/Material.h"
-
-#include "Flare/Platform/Vulkan/VulkanCommandBuffer.h"
-#include "Flare/Platform/Vulkan/VulkanContext.h"
-#include "Flare/Platform/Vulkan/VulkanFrameBuffer.h"
+#include "Flare/Renderer/Sampler.h"
+#include "Flare/Renderer/ShaderLibrary.h"
 
 #include <glm/gtc/epsilon.hpp>
 
@@ -46,16 +44,29 @@ namespace Flare
 
 	void Atmosphere::RegisterRenderPasses(RenderGraph& renderGraph, const Viewport& viewport)
 	{
+		FLARE_PROFILE_FUNCTION();
 		if (!IsEnabled())
 			return;
 
-		RenderGraphPassSpecifications specifications{};
-		specifications.AddOutput(viewport.ColorTextureId);
-		specifications.AddOutput(viewport.DepthTextureId);
-		specifications.SetType(RenderGraphPassType::Graphics);
-		specifications.SetDebugName("AtmospherePass");
+		RenderGraphTextureId sunTransmittanceLUT = renderGraph
+			.GetResourceManager()
+			.CreateFixedSizeTexture(TextureFormat::R32G32B32A32, glm::uvec2(SunTransmittanceLUTSize), "SunTransmittanceLUT");
 
-		renderGraph.AddPass(specifications, Ref<AtmospherePass>::New());
+		RenderGraphPassSpecifications lutPass{};
+		lutPass.SetDebugName("SunTransmittanceLUTPass");
+		lutPass.SetType(RenderGraphPassType::Graphics);
+		lutPass.AddOutput(sunTransmittanceLUT);
+
+		renderGraph.AddPass(lutPass, Ref<AtmosphereTransmittanceLUTPass>::New(Ref(this)));
+
+		RenderGraphPassSpecifications mainPass{};
+		mainPass.AddOutput(viewport.ColorTextureId);
+		mainPass.AddOutput(viewport.DepthTextureId);
+		mainPass.AddInput(sunTransmittanceLUT);
+		mainPass.SetType(RenderGraphPassType::Graphics);
+		mainPass.SetDebugName("AtmospherePass");
+
+		renderGraph.AddPass(mainPass, Ref<AtmospherePass>::New(sunTransmittanceLUT, Ref(this)));
 	}
 
 	const SerializableObjectDescriptor& Atmosphere::GetSerializationDescriptor() const
@@ -63,24 +74,101 @@ namespace Flare
 		return FLARE_SERIALIZATION_DESCRIPTOR_OF(Atmosphere);
 	}
 
-	AtmospherePass::AtmospherePass()
+	//
+	// AtmosphereTransmittanceLUTPass
+	//
+
+	AtmosphereTransmittanceLUTPass::AtmosphereTransmittanceLUTPass(Ref<const Atmosphere> parameters)
+		: m_Parameters(parameters)
 	{
 		FLARE_PROFILE_FUNCTION();
+
 		std::optional<AssetHandle> shaderHandle = ShaderLibrary::FindShader("AtmosphereSunTransmittanceLUT");
 		if (shaderHandle.has_value())
 		{
 			m_SunTransmittanceMaterial = Material::Create(*shaderHandle);
 		}
 
+		uint32_t frameInFlightCount = GraphicsContext::GetInstance().GetFrameInFlightCount();
+		m_FrameInFlightFlags.resize(frameInFlightCount, false);
+	}
+
+	void AtmosphereTransmittanceLUTPass::OnPrepare(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
+	{
+	}
+
+	void AtmosphereTransmittanceLUTPass::OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		bool lutIsDirty = m_Parameters->ScatteringParameters != m_PreviousScatteringParameters
+			&& m_PreviousLUTSteps != m_Parameters->SunTransmittanceLUTSteps;
+
+		if (lutIsDirty)
+		{
+			m_FrameInFlightFlags.assign(m_FrameInFlightFlags.size(), false);
+		}
+
+		uint32_t frameInFlight = GraphicsContext::GetInstance().GetCurrentFrameInFlight();
+
+		if (m_FrameInFlightFlags[frameInFlight])
+			return;
+
+		m_FrameInFlightFlags[frameInFlight] = true;
+		m_PreviousScatteringParameters = m_Parameters->ScatteringParameters;
+		m_PreviousLUTSteps = m_Parameters->SunTransmittanceLUTSteps;
+
+		Ref<Shader> shader = m_SunTransmittanceMaterial->GetShader();
+		FLARE_CORE_ASSERT(shader);
+
+		std::optional<uint32_t> mieCoefficientIndex = shader->GetPropertyIndex("u_Params.MieCoefficient");
+		std::optional<uint32_t> mieAbsorbtionIndex = shader->GetPropertyIndex("u_Params.MieAbsorbtion");
+		std::optional<uint32_t> rayleighAbsorbtionIndex = shader->GetPropertyIndex("u_Params.RayleighAbsorbtion");
+		std::optional<uint32_t> rayleighCoefficientIndex = shader->GetPropertyIndex("u_Params.RayleighCoefficient");
+		std::optional<uint32_t> ozoneAbsorbtionIndex = shader->GetPropertyIndex("u_Params.OzoneAbsorbtion");
+		std::optional<uint32_t> planetRadius = shader->GetPropertyIndex("u_Params.PlanetRadius");
+		std::optional<uint32_t>	atmosphereThickness = shader->GetPropertyIndex("u_Params.AtmosphereThickness");
+		std::optional<uint32_t> sunTransmittanceSteps = shader->GetPropertyIndex("u_Params.SunTransmittanceSteps");
+		std::optional<uint32_t> mieHeight = shader->GetPropertyIndex("u_Params.MieHeight");
+		std::optional<uint32_t> rayleighHeight = shader->GetPropertyIndex("u_Params.RayleighHeight");
+
+		m_SunTransmittanceMaterial->WritePropertyValue<float>(*mieCoefficientIndex, m_Parameters->ScatteringParameters.MieCoefficient);
+		m_SunTransmittanceMaterial->WritePropertyValue<float>(*mieAbsorbtionIndex, m_Parameters->ScatteringParameters.MieAbsorbtion);
+		m_SunTransmittanceMaterial->WritePropertyValue<float>(*rayleighAbsorbtionIndex, m_Parameters->ScatteringParameters.RayleighAbsorbtion);
+		m_SunTransmittanceMaterial->WritePropertyValue<glm::vec3>(*rayleighCoefficientIndex, m_Parameters->ScatteringParameters.RayleighCoefficients);
+		m_SunTransmittanceMaterial->WritePropertyValue<glm::vec3>(*ozoneAbsorbtionIndex, m_Parameters->ScatteringParameters.OzoneAbsorbtion);
+		m_SunTransmittanceMaterial->WritePropertyValue<float>(*planetRadius, m_Parameters->ScatteringParameters.PlanetRadius);
+		m_SunTransmittanceMaterial->WritePropertyValue<float>(*atmosphereThickness, m_Parameters->ScatteringParameters.AtmosphereThickness);
+		m_SunTransmittanceMaterial->WritePropertyValue<float>(*mieHeight, m_Parameters->ScatteringParameters.MieHeight);
+		m_SunTransmittanceMaterial->WritePropertyValue<float>(*rayleighHeight, m_Parameters->ScatteringParameters.RayleighHeight);
+		m_SunTransmittanceMaterial->WritePropertyValue<int32_t>(*sunTransmittanceSteps, (int32_t)m_Parameters->SunTransmittanceLUTSteps);
+
+		commandBuffer->ApplyMaterial(m_SunTransmittanceMaterial);
+		commandBuffer->SetViewportAndScissors(Math::Rect(0, 0,
+			(float)m_Parameters->SunTransmittanceLUTSize,
+			(float)m_Parameters->SunTransmittanceLUTSize));
+
+		commandBuffer->DrawMeshIndexed(RendererPrimitives::GetFullscreenQuadMesh(), 0, 0, 1);
+	}
+
+	//
+	// AtmospherePass
+	//
+
+	AtmospherePass::AtmospherePass(RenderGraphTextureId sunTransmittanceLUT, Ref<const Atmosphere> parameters)
+		: m_SunTransmittanceLUT(sunTransmittanceLUT), m_Parameters(parameters)
+	{
+		FLARE_PROFILE_FUNCTION();
 		std::optional<AssetHandle> atmosphereShaderHandle = ShaderLibrary::FindShader("Atmosphere");
 		if (atmosphereShaderHandle.has_value())
 		{
 			m_AtmosphereMaterial = Material::Create(*atmosphereShaderHandle);
 		}
 
-		auto result = Scene::GetActive()->GetPostProcessingManager().GetEffect<Atmosphere>();
-		FLARE_CORE_ASSERT(result.has_value());
-		m_Parameters = *result;
+		SamplerSpecifications specifications{};
+		specifications.Filter = TextureFiltering::Linear;
+		specifications.WrapMode = TextureWrap::Clamp;
+		m_LUTSampler = Sampler::Create(specifications);
 	}
 
 	void AtmospherePass::OnPrepare(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
@@ -90,8 +178,6 @@ namespace Flare
 	void AtmospherePass::OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
 	{
 		FLARE_PROFILE_FUNCTION();
-
-		return;
 
 		Ref<Shader> shader = m_AtmosphereMaterial->GetShader();
 
@@ -127,15 +213,7 @@ namespace Flare
 
 		m_AtmosphereMaterial->WritePropertyValue<int32_t>(*viewRaySteps, (int32_t)m_Parameters->ViewRaySteps);
 		m_AtmosphereMaterial->WritePropertyValue<int32_t>(*sunTransmittanceSteps, (int32_t)m_Parameters->SunTransmittanceSteps);
-
-		if (sunTransmittanceLUT.has_value() && m_SunTransmittanceMaterial != nullptr)
-		{
-			GenerateSunTransmittanceLUT(commandBuffer);
-			m_AtmosphereMaterial->SetTextureProperty(*sunTransmittanceLUT, m_SunTransmittanceLUT->GetAttachment(0));
-		}
-
-		m_PreviousScatteringParameters = m_Parameters->ScatteringParameters;
-		m_PreviousLUTSteps = m_Parameters->SunTransmittanceLUTSteps;
+		m_AtmosphereMaterial->SetTextureProperty(*sunTransmittanceLUT, context.GetRenderGraph().GetTexture(m_SunTransmittanceLUT), m_LUTSampler);
 
 		commandBuffer->SetGlobalDescriptorSet(context.GetViewport().GetFrameResources().CameraDescriptorSet, 0);
 		commandBuffer->SetGlobalDescriptorSet(context.GetViewport().GetFrameResources().GlobalDescriptorSet, 1);
@@ -143,72 +221,5 @@ namespace Flare
 
 		commandBuffer->SetDefaultViewportAndScissors();
 		commandBuffer->DrawMeshIndexed(RendererPrimitives::GetFullscreenQuadMesh(), 0, 0, 1);
-	}
-
-	void AtmospherePass::GenerateSunTransmittanceLUT(Ref<CommandBuffer> commandBuffer)
-	{
-		FLARE_PROFILE_FUNCTION();
-
-		if (m_Parameters->ScatteringParameters == m_PreviousScatteringParameters
-			&& m_PreviousLUTSteps == m_Parameters->SunTransmittanceLUTSteps
-			&& m_SunTransmittanceLUT->GetSpecifications().Width == m_Parameters->SunTransmittanceLUTSize)
-			return;
-
-		if (m_SunTransmittanceLUT == nullptr)
-		{
-			FrameBufferSpecifications lutSpecifications{};
-			lutSpecifications.Width = m_Parameters->SunTransmittanceLUTSize;
-			lutSpecifications.Height = m_Parameters->SunTransmittanceLUTSize;
-			lutSpecifications.Attachments.emplace_back(FrameBufferAttachmentSpecifications{
-				TextureFormat::R32G32B32A32,
-				TextureWrap::Clamp,
-				TextureFiltering::Linear
-			});
-
-			m_SunTransmittanceLUT = FrameBuffer::Create(lutSpecifications);
-		}
-
-		Ref<Shader> shader = m_SunTransmittanceMaterial->GetShader();
-		FLARE_CORE_ASSERT(shader);
-
-		std::optional<uint32_t> mieCoefficientIndex = shader->GetPropertyIndex("u_Params.MieCoefficient");
-		std::optional<uint32_t> mieAbsorbtionIndex = shader->GetPropertyIndex("u_Params.MieAbsorbtion");
-		std::optional<uint32_t> rayleighAbsorbtionIndex = shader->GetPropertyIndex("u_Params.RayleighAbsorbtion");
-		std::optional<uint32_t> rayleighCoefficientIndex = shader->GetPropertyIndex("u_Params.RayleighCoefficient");
-		std::optional<uint32_t> ozoneAbsorbtionIndex = shader->GetPropertyIndex("u_Params.OzoneAbsorbtion");
-		std::optional<uint32_t> planetRadius = shader->GetPropertyIndex("u_Params.PlanetRadius");
-		std::optional<uint32_t>	atmosphereThickness = shader->GetPropertyIndex("u_Params.AtmosphereThickness");
-		std::optional<uint32_t> sunTransmittanceSteps = shader->GetPropertyIndex("u_Params.SunTransmittanceSteps");
-		std::optional<uint32_t> mieHeight = shader->GetPropertyIndex("u_Params.MieHeight");
-		std::optional<uint32_t> rayleighHeight = shader->GetPropertyIndex("u_Params.RayleighHeight");
-
-		m_SunTransmittanceMaterial->WritePropertyValue<float>(*mieCoefficientIndex, m_Parameters->ScatteringParameters.MieCoefficient);
-		m_SunTransmittanceMaterial->WritePropertyValue<float>(*mieAbsorbtionIndex, m_Parameters->ScatteringParameters.MieAbsorbtion);
-		m_SunTransmittanceMaterial->WritePropertyValue<float>(*rayleighAbsorbtionIndex, m_Parameters->ScatteringParameters.RayleighAbsorbtion);
-		m_SunTransmittanceMaterial->WritePropertyValue<glm::vec3>(*rayleighCoefficientIndex, m_Parameters->ScatteringParameters.RayleighCoefficients);
-		m_SunTransmittanceMaterial->WritePropertyValue<glm::vec3>(*ozoneAbsorbtionIndex, m_Parameters->ScatteringParameters.OzoneAbsorbtion);
-		m_SunTransmittanceMaterial->WritePropertyValue<float>(*planetRadius, m_Parameters->ScatteringParameters.PlanetRadius);
-		m_SunTransmittanceMaterial->WritePropertyValue<float>(*atmosphereThickness, m_Parameters->ScatteringParameters.AtmosphereThickness);
-		m_SunTransmittanceMaterial->WritePropertyValue<float>(*mieHeight, m_Parameters->ScatteringParameters.MieHeight);
-		m_SunTransmittanceMaterial->WritePropertyValue<float>(*rayleighHeight, m_Parameters->ScatteringParameters.RayleighHeight);
-		m_SunTransmittanceMaterial->WritePropertyValue<int32_t>(*sunTransmittanceSteps, (int32_t)m_Parameters->SunTransmittanceLUTSteps);
-
-		Ref<VulkanCommandBuffer> vulkanCommandBuffer = commandBuffer.As<VulkanCommandBuffer>();
-		Ref<VulkanFrameBuffer> lut = m_SunTransmittanceLUT.As<VulkanFrameBuffer>();
-		VkImage lutImage = lut->GetAttachmentImage(0);
-
-		vulkanCommandBuffer->TransitionImageLayout(lutImage, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
-
-		vulkanCommandBuffer->BeginRenderTarget(m_SunTransmittanceLUT);
-		vulkanCommandBuffer->ApplyMaterial(m_SunTransmittanceMaterial);
-
-		vulkanCommandBuffer->SetViewportAndScissors(Math::Rect(0, 0,
-			(float)m_Parameters->SunTransmittanceLUTSize,
-			(float)m_Parameters->SunTransmittanceLUTSize));
-
-		vulkanCommandBuffer->DrawMeshIndexed(RendererPrimitives::GetFullscreenQuadMesh(), 0, 0, 1);
-		vulkanCommandBuffer->EndRenderTarget();
-
-		vulkanCommandBuffer->TransitionImageLayout(lutImage, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 	}
 }

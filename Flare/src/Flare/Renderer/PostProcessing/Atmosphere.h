@@ -13,6 +13,7 @@ namespace Flare
 	class CommandBuffer;
 	class FrameBuffer;
 	class Material;
+	class Sampler;
 
 	struct FLARE_API AtmosphericScatteringParameters
 	{
@@ -79,25 +80,36 @@ namespace Flare
 		}
 	};
 
-	class FLARE_API AtmospherePass : public RenderGraphPass
+	class FLARE_API AtmosphereTransmittanceLUTPass : public RenderGraphPass
 	{
 	public:
-		AtmospherePass();
+		AtmosphereTransmittanceLUTPass(Ref<const Atmosphere> parameters);
 
 		void OnPrepare(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer) override;
 		void OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer) override;
+	private:
+		std::vector<bool> m_FrameInFlightFlags;
 
-		inline Ref<FrameBuffer> GetSunTransmittanceLUT() const { return m_SunTransmittanceLUT; }
-	private:
-		void GenerateSunTransmittanceLUT(Ref<CommandBuffer> commandBuffer);
-	private:
-		Ref<FrameBuffer> m_SunTransmittanceLUT = nullptr;
 		Ref<Material> m_SunTransmittanceMaterial = nullptr;
-		Ref<Material> m_AtmosphereMaterial = nullptr;
 
 		AtmosphericScatteringParameters m_PreviousScatteringParameters;
 		uint32_t m_PreviousLUTSteps = 0;
 
-		Ref<Atmosphere> m_Parameters;
+		Ref<const Atmosphere> m_Parameters;
+	};
+
+	class FLARE_API AtmospherePass : public RenderGraphPass
+	{
+	public:
+		AtmospherePass(RenderGraphTextureId sunTransmittanceLUT, Ref<const Atmosphere> parameters);
+
+		void OnPrepare(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer) override;
+		void OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer) override;
+	private:
+		RenderGraphTextureId m_SunTransmittanceLUT;
+		Ref<Sampler> m_LUTSampler = nullptr;
+
+		Ref<Material> m_AtmosphereMaterial = nullptr;
+		Ref<const Atmosphere> m_Parameters;
 	};
 }
