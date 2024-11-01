@@ -47,7 +47,7 @@ namespace Flare
 		std::optional<uint32_t> radiusSquaredProperty = m_Material->GetShader()->GetPropertyIndex("u_RadiusSquared");
 		std::optional<uint32_t> negativeInverseSquaredRadiusProperty = m_Material->GetShader()->GetPropertyIndex("u_NegativeInverseSquaredRadius");
 
-		std::optional<uint32_t> tangentBiasProperty = m_Material->GetShader()->GetPropertyIndex("u_TangentBias");
+		std::optional<uint32_t> biasProperty = m_Material->GetShader()->GetPropertyIndex("u_Bias");
 
 		std::optional<uint32_t> depthTextureSizeProperty = m_Material->GetShader()->GetPropertyIndex("u_DepthTextureSize");
 		std::optional<uint32_t> inverseDepthTextureSize = m_Material->GetShader()->GetPropertyIndex("u_InverseDepthTextureSize");
@@ -70,8 +70,8 @@ namespace Flare
 		if (negativeInverseSquaredRadiusProperty)
 			m_Material->WritePropertyValue<float>(*negativeInverseSquaredRadiusProperty, -1.0f / radiusSquared);
 
-		if (tangentBiasProperty)
-			m_Material->WritePropertyValue<float>(*tangentBiasProperty, glm::radians(m_Parameters->Bias));
+		if (biasProperty)
+			m_Material->WritePropertyValue<float>(*biasProperty, glm::radians(m_Parameters->Bias));
 
 		const TextureSpecifications& specifications = depthTexture->GetSpecifications();
 		glm::vec2 depthTextureSize = (glm::vec2)glm::uvec2(specifications.Width, specifications.Height);

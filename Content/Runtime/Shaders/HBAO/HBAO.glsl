@@ -24,7 +24,7 @@ layout(push_constant) uniform Constants
 	float u_Radius;
 	float u_RadiusSquared;
 	float u_NegativeInverseSquaredRadius;
-	float u_TangentBias;
+	float u_Bias;
 	float u_Intensity;
 
 	vec2 u_DepthTextureSize;
@@ -99,7 +99,16 @@ float ComputeScreenSpaceRadius(vec3 positionVS)
 	return (projectedPoint.x - projectedCenter.x) * 0.5f;
 }
 
-float ComputeAO(vec3 positionVS, float tangentAngle, vec2 sampleStep)
+float ComputeSampleAO(vec3 positionVS, vec3 normalVS, vec3 samplePositionVS)
+{
+	vec3 D = samplePositionVS - positionVS;
+	float DdotD = dot(D, D);
+	float NdotD = dot(normalVS, D) * inversesqrt(max(DdotD, 0.001f)); // max(0.001f) to avoid divison by zero
+
+	return clamp(NdotD - u_Bias, 0.0f, 1.0f) * clamp(Attenuate(DdotD), 0.0f, 1.0f);
+}
+
+float ComputeAO(vec3 positionVS, vec3 normalVS, float tangentAngle, vec2 sampleStep)
 {
 	float horizonAngle = tangentAngle;
 	float previousAO = 0.0f;
@@ -111,6 +120,7 @@ float ComputeAO(vec3 positionVS, float tangentAngle, vec2 sampleStep)
 		vec2 sampleUV = SnapToTexelCenter(i_UV + sampleStep * float(sampleIndex));
 		vec3 sampleViewSpacePosition = GetVSPosition(sampleUV);
 
+#if 0
 		// D = S_i - P
 		vec3 D = sampleViewSpacePosition - positionVS;
 
@@ -128,6 +138,9 @@ float ComputeAO(vec3 positionVS, float tangentAngle, vec2 sampleStep)
 			previousAO = ao;
 			horizonAngle = elevationAngle;
 		}
+#else
+		totalAO += ComputeSampleAO(positionVS, normalVS, sampleViewSpacePosition);
+#endif
 	}
 
 	return totalAO;
@@ -153,6 +166,8 @@ void main()
 	vec3 du, dv;
 	ComputeDerrivatives(positionVS, du, dv);
 
+	vec3 normalVS = normalize(cross(du, dv));
+
 	vec2 sampleStep = ComputeSampleStep(positionVS);
 
 	float aoSum = 0.0f;
@@ -164,9 +179,9 @@ void main()
 		vec2 direction = vec2(cos(angle), sin(angle));
 
 		vec3 tangentVector = direction.x * du + direction.y * dv;
-		float tangentAngle = atan(tangentVector.z, length(tangentVector.xy)) + u_TangentBias;
+		float tangentAngle = atan(tangentVector.z, length(tangentVector.xy)) + u_Bias;
 
-		aoSum += ComputeAO(positionVS, tangentAngle, direction * sampleStep);
+		aoSum += ComputeAO(positionVS, normalVS, tangentAngle, direction * sampleStep);
 	}
 
 	o_AO = vec3(max(0.0f, 1.0 - aoSum / (TWO_PI) * u_Intensity));
