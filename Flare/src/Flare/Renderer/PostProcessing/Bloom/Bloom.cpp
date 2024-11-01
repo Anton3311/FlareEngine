@@ -21,14 +21,13 @@ namespace Flare
 		if (!IsEnabled())
 			return;
 
-		uint32_t mipCount = CalculateMipCount(viewport.GetSize().x, viewport.GetSize().y) - 4;
-		FLARE_CORE_ASSERT(mipCount > 0);
+		constexpr uint32_t MIP_COUNT = 6;
 
 		std::vector<RenderGraphTextureId> mips;
-		mips.reserve(mipCount);
+		mips.reserve(MIP_COUNT);
 
 		glm::uvec2 textureSize = viewport.GetSize();
-		for (uint32_t i = 0; i < mipCount; i++)
+		for (uint32_t i = 0; i < MIP_COUNT; i++)
 		{
 			RenderGraphTextureId bloomTexture = renderGraph.GetResourceManager().CreateFixedSizeTexture(
 				viewport.GetColorTextureFormat(),
@@ -48,7 +47,7 @@ namespace Flare
 		renderGraph.AddPass(luminanceIsolationPass, Ref<BloomLuminanceIsolationPass>::New(viewport.ColorTextureId, Ref(this)));
 
 		// Downsampling Passes
-		for (uint32_t i = 1; i < mipCount; i++)
+		for (uint32_t i = 1; i < MIP_COUNT; i++)
 		{
 			RenderGraphPassSpecifications downsamplePass{};
 			downsamplePass.SetDebugName(fmt::format("BloomDownsamplePass.{}", i));
@@ -60,7 +59,7 @@ namespace Flare
 		}
 
 		// Upsampling Passes
-		for (uint32_t i = mipCount - 1; i > 0; i--)
+		for (uint32_t i = MIP_COUNT - 1; i > 0; i--)
 		{
 			RenderGraphPassSpecifications upsamplePass{};
 			upsamplePass.SetDebugName(fmt::format("BloomUpsamplePass.{}", i));
