@@ -27,6 +27,7 @@ namespace Flare
 	{
 		Opaque,
 		Transparent,
+		Additive,
 	};
 
 	enum class CullingMode : uint8_t

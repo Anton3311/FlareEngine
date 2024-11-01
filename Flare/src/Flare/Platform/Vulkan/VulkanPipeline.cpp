@@ -149,6 +149,15 @@ namespace Flare
 				attachmentBlendState.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
 				attachmentBlendState.alphaBlendOp = VK_BLEND_OP_ADD;
 				break;
+			case BlendMode::Additive:
+				attachmentBlendState.blendEnable = VK_TRUE;
+				attachmentBlendState.srcColorBlendFactor = VK_BLEND_FACTOR_ONE;
+				attachmentBlendState.dstColorBlendFactor = VK_BLEND_FACTOR_ONE;
+				attachmentBlendState.colorBlendOp = VK_BLEND_OP_ADD;
+				attachmentBlendState.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+				attachmentBlendState.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+				attachmentBlendState.alphaBlendOp = VK_BLEND_OP_ADD;
+				break;
 			}
 		}
 
