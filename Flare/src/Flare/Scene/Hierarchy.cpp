@@ -91,6 +91,16 @@ namespace Flare
 	Entity HierarchyHelper::DuplicateEntityHierarchy(World& world, Entity root, const std::unordered_set<ComponentId>* ignoredComponents)
 	{
 		FLARE_PROFILE_FUNCTION();
+
+		Entity rootCopy = DuplicateEntityHierarchyRecursively(world, root, ignoredComponents);
+		ReattachCopyToOriginalParent(world, root, rootCopy);
+
+		return rootCopy;
+	}
+
+	Entity HierarchyHelper::DuplicateEntityHierarchyRecursively(World& world, Entity root, const std::unordered_set<ComponentId>* ignoredComponents)
+	{
+		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(world.IsEntityAlive(root));
 
 		Entity rootCopy = DuplicateEntity(world, root, ignoredComponents);
@@ -104,7 +114,7 @@ namespace Flare
 
 			for (size_t i = 0; i < children->ChildrenEntities.size(); i++)
 			{
-				Entity childCopy = DuplicateEntityHierarchy(world, children->ChildrenEntities[i]);
+				Entity childCopy = DuplicateEntityHierarchyRecursively(world, children->ChildrenEntities[i], ignoredComponents);
 				copyChildren->ChildrenEntities[i] = childCopy;
 
 				Parent* parent = world.TryGetEntityComponent<Parent>(childCopy);
@@ -116,6 +126,23 @@ namespace Flare
 		}
 
 		return rootCopy;
+	}
+
+	void HierarchyHelper::ReattachCopyToOriginalParent(World& world, Entity originalEntity, Entity copy)
+	{
+		FLARE_PROFILE_FUNCTION();
+		
+		const Parent* rootParent = world.TryGetEntityComponent<const Parent>(originalEntity);
+		if (rootParent)
+		{
+			Children* parentChildren = world.TryGetEntityComponent<Children>(rootParent->ParentEntity);
+			FLARE_CORE_ASSERT(parentChildren);
+
+			auto originalRootIndex = std::find(parentChildren->ChildrenEntities.begin(), parentChildren->ChildrenEntities.end(), originalEntity);
+			FLARE_CORE_ASSERT(originalRootIndex != parentChildren->ChildrenEntities.end());
+
+			parentChildren->ChildrenEntities.insert(originalRootIndex + 1, copy);
+		}
 	}
 
 	Entity HierarchyHelper::DuplicateEntity(World& world, Entity entity, const std::unordered_set<ComponentId>* ignoredComponents)
