@@ -68,24 +68,29 @@ namespace Flare
 	void HierarchyHelper::DeleteEntityHierarchy(World& world, Entity root)
 	{
 		FLARE_PROFILE_FUNCTION();
+		FLARE_CORE_ASSERT(world.IsEntityAlive(root));
 
 		const Children* children = world.TryGetEntityComponent<const Children>(root);
-		if (children == nullptr)
-			return;
 
-		for (Entity child : children->ChildrenEntities)
+		if (children)
 		{
-			if (world.IsEntityAlive(child))
+			for (Entity child : children->ChildrenEntities)
 			{
-				DeleteEntityHierarchy(world, child);
-				world.DeleteEntity(child);
+				if (world.IsEntityAlive(child))
+				{
+					DeleteEntityHierarchy(world, child);
+					world.DeleteEntity(child);
+				}
 			}
 		}
 
-		if (world.IsEntityAlive(root))
+		const Parent* parent = world.TryGetEntityComponent<const Parent>(root);
+		if (parent)
 		{
-			world.DeleteEntity(root);
+			RemoveFromParent(world, root, parent->ParentEntity);
 		}
+
+		world.DeleteEntity(root);
 	}
 
 	Entity HierarchyHelper::DuplicateEntityHierarchy(World& world, Entity root, const std::unordered_set<ComponentId>* ignoredComponents)
