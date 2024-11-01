@@ -4,10 +4,11 @@
 
 #include "FlareCore/Profiler/Profiler.h"
 
+#include "Flare/Renderer/PostProcessing/Atmosphere.h"
+#include "Flare/Renderer/PostProcessing/Bloom/Bloom.h"
 #include "Flare/Renderer/PostProcessing/ToneMapping.h"
 #include "Flare/Renderer/PostProcessing/Vignette.h"
 #include "Flare/Renderer/PostProcessing/SSAO.h"
-#include "Flare/Renderer/PostProcessing/Atmosphere.h"
 
 #include "Flare/Math/Math.h"
 #include "Flare/Scene/Components.h"
@@ -55,6 +56,7 @@ namespace Flare
 
 		m_PostProcessingManager.AddEffect(Ref<SSAO>::New());
 		m_PostProcessingManager.AddEffect(Ref<Atmosphere>::New());
+		m_PostProcessingManager.AddEffect(Ref<Bloom>::New());
 		m_PostProcessingManager.AddEffect(Ref<Vignette>::New());
 		m_PostProcessingManager.AddEffect(Ref<ToneMapping>::New());
 	}

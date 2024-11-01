@@ -65,6 +65,8 @@ namespace Flare
 
 		// Returns frame resources of a specific frame in flight
 		inline const ViewportFrameResources& GetFrameResources(uint32_t frameIndex) const { return m_GlobalResources.FrameResources[frameIndex]; }
+
+		inline TextureFormat GetColorTextureFormat() const { return m_ColorTextureFormat; }
 	public:
 		RenderGraphTextureId ColorTextureId;
 		RenderGraphTextureId DepthTextureId;

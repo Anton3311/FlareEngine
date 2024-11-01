@@ -12,4 +12,9 @@ float InterleavedGradientNoise(vec2 screenSpacePosition)
 	return -scale + 2.0 * scale * fract(magic.z * fract(dot(screenSpacePosition, magic.xy)));
 }
 
+float LuminanceFromRGB(vec3 rgb)
+{
+	return dot(rgb, vec3(0.2126, 0.7152, 0.0722));
+}
+
 #endif
