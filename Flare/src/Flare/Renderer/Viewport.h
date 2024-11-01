@@ -77,8 +77,6 @@ namespace Flare
 		bool m_ShadowMappingEnabled = true;
 		bool m_DebugRenderingEnabled = false;
 
-		bool m_ShouldResizeRenderGraphTextures = false;
-
 		Scope<RenderGraph> m_RenderGraph;
 
 		TextureFormat m_ColorTextureFormat = TextureFormat::R11G11B10;

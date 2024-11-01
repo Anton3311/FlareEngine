@@ -59,7 +59,9 @@ namespace Flare
 	void Viewport::Resize(glm::ivec2 position, glm::ivec2 size)
 	{
 		if (m_Size != size)
-			m_ShouldResizeRenderGraphTextures = true;
+		{
+			m_RenderGraph->SetNeedsRebuilding();
+		}
 
 		m_Position = position;
 		m_Size = size;
