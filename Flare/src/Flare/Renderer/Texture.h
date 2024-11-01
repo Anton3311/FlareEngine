@@ -109,6 +109,11 @@ namespace Flare
 	FLARE_API std::optional<TextureWrap> TextureWrapFromString(std::string_view string);
 	FLARE_API std::optional<TextureFiltering> TextureFilteringFromString(std::string_view string);
 
+	inline uint32_t CalculateMipCount(uint32_t width, uint32_t height)
+	{
+		return (uint32_t)glm::floor(glm::log2((float)glm::max(width, height))) + 1u;
+	}
+
 	struct FLARE_API TexturePixelData
 	{
 		~TexturePixelData();
