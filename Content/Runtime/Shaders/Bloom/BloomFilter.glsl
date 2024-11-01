@@ -29,18 +29,28 @@ layout(std140, push_constant) uniform Constants
 	vec2 u_TexelSize;
 };
 
+vec3 Sample4(vec2 uv)
+{
+	vec3 topLeftSample = texture(u_Color, uv + vec2(-u_TexelSize.x, u_TexelSize.y)).rgb;
+	vec3 topRightSample = texture(u_Color, uv + vec2(u_TexelSize.x, u_TexelSize.y)).rgb;
+
+	vec3 bottomLeftSample = texture(u_Color, uv + vec2(-u_TexelSize.x, -u_TexelSize.y)).rgb;
+	vec3 bottomRightSample = texture(u_Color, uv + vec2(u_TexelSize.x, -u_TexelSize.y)).rgb;
+
+	return (topLeftSample + topRightSample + bottomRightSample + bottomLeftSample) * 0.25f;
+}
+
 void main()
 {
-	vec3 centerSample = texture(u_Color, i_UV).rgb;
+	vec3 center = Sample4(i_UV) * 0.5f;
 
-	vec3 topLeftSample = texture(u_Color, i_UV - vec2(-u_TexelSize.x, u_TexelSize.y)).rgb;
-	vec3 topRightSample = texture(u_Color, i_UV + vec2(u_TexelSize.x, u_TexelSize.y)).rgb;
+	vec3 topLeft = Sample4(i_UV + vec2(-u_TexelSize.x, u_TexelSize.y) * 2.0f) * 0.125f;
+	vec3 topRight = Sample4(i_UV + vec2(u_TexelSize.x, u_TexelSize.y) * 2.0f) * 0.125f;
 
-	vec3 bottomLeftSample = texture(u_Color, i_UV + vec2(-u_TexelSize.x, -u_TexelSize.y)).rgb;
-	vec3 bottomRightSample = texture(u_Color, i_UV + vec2(u_TexelSize.x, -u_TexelSize.y)).rgb;
+	vec3 bottomLeft = Sample4(i_UV + vec2(-u_TexelSize.x, -u_TexelSize.y) * 2.0f) * 0.125f;
+	vec3 bottomRight = Sample4(i_UV + vec2(u_TexelSize.x, -u_TexelSize.y) * 2.0f) * 0.125f;
 
-	o_Color = centerSample * 0.5f
-		+ (topLeftSample + topRightSample + bottomLeftSample + bottomRightSample) * 0.125f;
+	o_Color = center + topLeft + topRight + bottomLeft + bottomRight;
 }
 
 #end
