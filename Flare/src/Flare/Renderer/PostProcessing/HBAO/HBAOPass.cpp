@@ -17,8 +17,11 @@
 
 namespace Flare
 {
-	HBAOPass::HBAOPass(Ref<SSAO> parameters, RenderGraphTextureId downsampledDepth)
-		: m_Parameters(parameters), m_DownsampledDepth(downsampledDepth)
+	HBAOPass::HBAOPass(Ref<SSAO> parameters,
+		RenderGraphTextureId downsampledDepth,
+		uint32_t subPassIndex,
+		float jitterAngle)
+		: m_Parameters(parameters), m_DownsampledDepth(downsampledDepth), m_SubPassIndex(subPassIndex), m_JitterAngle(jitterAngle)
 	{
 		FLARE_PROFILE_FUNCTION();
 
@@ -55,6 +58,9 @@ namespace Flare
 		std::optional<uint32_t> intensityProperty = m_Material->GetShader()->GetPropertyIndex("u_Intensity");
 		std::optional<uint32_t> projectionParams = m_Material->GetShader()->GetPropertyIndex("u_InverseProjectionParams");
 
+		std::optional<uint32_t> jitterAngle = m_Material->GetShader()->GetPropertyIndex("u_JitterAngle");
+		std::optional<uint32_t> sampleOffset = m_Material->GetShader()->GetPropertyIndex("u_SampleOffset");
+
 		Ref<Texture> depthTexture = context.GetRenderGraph().GetTexture(m_DownsampledDepth);
 
 		if (depthTextureProperty)
@@ -90,7 +96,67 @@ namespace Flare
 		if (intensityProperty)
 			m_Material->WritePropertyValue<float>(*intensityProperty, m_Parameters->Intensity);
 
+		if (jitterAngle)
+			m_Material->WritePropertyValue<float>(*jitterAngle, m_JitterAngle);
+
+		if (sampleOffset)
+			m_Material->WritePropertyValue<glm::ivec2>(*sampleOffset, glm::ivec2(m_SubPassIndex % 2, m_SubPassIndex / 2));
+
 		commandBuffer->ApplyMaterial(m_Material);
+		commandBuffer->SetDefaultViewportAndScissors();
+		commandBuffer->DrawMeshIndexed(RendererPrimitives::GetFullscreenQuadMesh(), 0, 1);
+	}
+
+	//
+	// HBAOCombineDeinterleavedTexturesPass
+	//
+
+	HBAOCombineDeinterleavedTexturesPass::HBAOCombineDeinterleavedTexturesPass(const TextureIdsArray& textures)
+		: m_Textures(textures)
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		if (std::optional<AssetHandle> shaderHandle = ShaderLibrary::FindShader("HBAOCombineDeinterleavedTextures"))
+		{
+			FLARE_CORE_ASSERT(AssetManager::IsAssetHandleValid(*shaderHandle));
+			m_Material = Material::Create(*shaderHandle);
+		}
+	}
+
+	void HBAOCombineDeinterleavedTexturesPass::OnPrepare(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
+	{
+	}
+
+	void HBAOCombineDeinterleavedTexturesPass::OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		if (!m_Material || !m_Material->GetShader())
+		{
+			FLARE_CORE_ERROR("HBAO: Invalid material or shader");
+			return;
+		}
+
+		auto aoTexture0 = m_Material->GetShader()->GetPropertyIndex("u_AOTexture0");
+		auto aoTexture1 = m_Material->GetShader()->GetPropertyIndex("u_AOTexture1");
+		auto aoTexture2 = m_Material->GetShader()->GetPropertyIndex("u_AOTexture2");
+		auto aoTexture3 = m_Material->GetShader()->GetPropertyIndex("u_AOTexture3");
+
+		bool isValid = aoTexture0 && aoTexture1 && aoTexture2 && aoTexture3;
+
+		if (!isValid)
+		{
+			FLARE_CORE_ERROR("HBAO: Shader doesn't have 'u_AOTexture' properties");
+			return;
+		}
+
+		m_Material->SetTextureProperty(*aoTexture0, context.GetRenderGraph().GetTexture(m_Textures[0]));
+		m_Material->SetTextureProperty(*aoTexture1, context.GetRenderGraph().GetTexture(m_Textures[1]));
+		m_Material->SetTextureProperty(*aoTexture2, context.GetRenderGraph().GetTexture(m_Textures[2]));
+		m_Material->SetTextureProperty(*aoTexture3, context.GetRenderGraph().GetTexture(m_Textures[3]));
+
+		commandBuffer->ApplyMaterial(m_Material);
+		commandBuffer->SetDefaultViewportAndScissors();
 		commandBuffer->DrawMeshIndexed(RendererPrimitives::GetFullscreenQuadMesh(), 0, 1);
 	}
 }

@@ -49,40 +49,66 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		RenderGraphTextureId linearDepthDepth = renderGraph.CreateTexture(TextureFormat::RF32, "HBAO.DownsampledDepth", 0.5f);
-		RenderGraphTextureId aoTexture = renderGraph.CreateTexture(TextureFormat::R8, "HBAO.AO", 0.5f);
-		RenderGraphTextureId aoBlurIntermediateTexture = renderGraph.CreateTexture(TextureFormat::R8, "HBAO.AOBlurIntermediate", 0.5f);
+		constexpr TextureFormat AO_TEXTURE_FORMAT = TextureFormat::R8;
 
-		RenderGraphPassSpecifications downsamplePass{};
-		downsamplePass.SetDebugName("HBAODownsamplePass");
-		downsamplePass.SetType(RenderGraphPassType::Graphics);
-		downsamplePass.AddInput(viewport.DepthTextureId);
-		downsamplePass.AddOutput(linearDepthDepth);
+		std::default_random_engine engine;
+		std::uniform_real_distribution<float> generator(0.0f, 2.0f * glm::pi<float>());
 
-		renderGraph.AddPass(downsamplePass, Ref<HBAODownsamplePass>::New(viewport.DepthTextureId));
+		RenderGraphTextureId linearDepthDepth = renderGraph.CreateTexture(TextureFormat::RF32, "HBAO.DownsampledDepth");
+		RenderGraphTextureId fullScreenAOTexture = renderGraph.CreateTexture(AO_TEXTURE_FORMAT, "HBAO.FullScreenAO");
+		RenderGraphTextureId aoBlurIntermediateTexture = renderGraph.CreateTexture(AO_TEXTURE_FORMAT, "HBAO.AOBlurIntermediate");
 
-		RenderGraphPassSpecifications aoPass{};
-		aoPass.SetDebugName("HBAOPass");
-		aoPass.SetType(RenderGraphPassType::Graphics);
-		aoPass.AddInput(linearDepthDepth);
-		aoPass.AddOutput(aoTexture);
-	
-		renderGraph.AddPass(aoPass, Ref<HBAOPass>::New(Ref<SSAO>(this), linearDepthDepth));
+		constexpr size_t TEXTURE_COUNT = 4;
+
+		std::array<RenderGraphTextureId, TEXTURE_COUNT> aoTextures;
+		for (size_t i = 0; i < TEXTURE_COUNT; i++)
+		{
+			aoTextures[i] = renderGraph.CreateTexture(TextureFormat::R8, fmt::format("HBAO.AO.{}", i), 0.5f);
+		}
+
+		RenderGraphPassSpecifications linearizeDepthPass{};
+		linearizeDepthPass.SetDebugName("HBAOLinearizeDepth");
+		linearizeDepthPass.SetType(RenderGraphPassType::Graphics);
+		linearizeDepthPass.AddInput(viewport.DepthTextureId);
+		linearizeDepthPass.AddOutput(linearDepthDepth);
+
+		renderGraph.AddPass(linearizeDepthPass, Ref<HBAODownsamplePass>::New(viewport.DepthTextureId));
+
+		for (size_t i = 0; i < TEXTURE_COUNT; i++)
+		{
+			RenderGraphPassSpecifications aoPass{};
+			aoPass.SetDebugName("HBAOPass");
+			aoPass.SetType(RenderGraphPassType::Graphics);
+			aoPass.AddInput(linearDepthDepth);
+			aoPass.AddOutput(aoTextures[i]);
+
+			renderGraph.AddPass(aoPass, Ref<HBAOPass>::New(Ref<SSAO>(this), linearDepthDepth, (uint32_t)i, generator(engine)));
+		}
+
+		RenderGraphPassSpecifications combinePass{};
+		combinePass.SetDebugName("HBAOCombineDeinterleavedTexturesPass");
+		combinePass.SetType(RenderGraphPassType::Graphics);
+		combinePass.AddOutput(fullScreenAOTexture);
+
+		for (size_t i = 0; i < TEXTURE_COUNT; i++)
+			combinePass.AddInput(aoTextures[i]);
+
+		renderGraph.AddPass(combinePass, Ref<HBAOCombineDeinterleavedTexturesPass>::New(aoTextures));
 
 		{
 			RenderGraphPassSpecifications verticalBlurPass{};
-			verticalBlurPass.AddInput(aoTexture);
+			verticalBlurPass.AddInput(fullScreenAOTexture);
 			verticalBlurPass.AddOutput(aoBlurIntermediateTexture, glm::vec4(0.0f));
 			verticalBlurPass.SetType(RenderGraphPassType::Graphics);
 			verticalBlurPass.SetDebugName("HBAO Vertical Bilateral Blur");
 
-			renderGraph.AddPass(verticalBlurPass, Ref<HBAOBilateralBlurPass>::New(Ref<SSAO>(this), true, linearDepthDepth, aoTexture));
+			renderGraph.AddPass(verticalBlurPass, Ref<HBAOBilateralBlurPass>::New(Ref<SSAO>(this), true, linearDepthDepth, fullScreenAOTexture));
 		}
 
 		{
 			RenderGraphPassSpecifications horizontalBlurPass{};
 			horizontalBlurPass.AddInput(aoBlurIntermediateTexture);
-			horizontalBlurPass.AddOutput(aoTexture, glm::vec4(0.0f));
+			horizontalBlurPass.AddOutput(fullScreenAOTexture, glm::vec4(0.0f));
 			horizontalBlurPass.SetType(RenderGraphPassType::Graphics);
 			horizontalBlurPass.SetDebugName("HBAO Horizontal Bilateral Blur");
 
@@ -92,10 +118,10 @@ namespace Flare
 		RenderGraphPassSpecifications ssaoComposingPass{};
 		ssaoComposingPass.SetDebugName("SSAOComposingPass");
 		ssaoComposingPass.SetType(RenderGraphPassType::Compute);
-		ssaoComposingPass.AddInput(aoTexture);
+		ssaoComposingPass.AddInput(fullScreenAOTexture);
 		ssaoComposingPass.AddResource(viewport.ColorTextureId, ResourceAccess::ReadWrite);
 
-		renderGraph.AddPass(ssaoComposingPass, Ref<SSAOComposingPass>::New(viewport.ColorTextureId, aoTexture));
+		renderGraph.AddPass(ssaoComposingPass, Ref<SSAOComposingPass>::New(viewport.ColorTextureId, fullScreenAOTexture));
 	}
 
 

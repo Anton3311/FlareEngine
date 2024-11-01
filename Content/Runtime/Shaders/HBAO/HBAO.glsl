@@ -31,6 +31,9 @@ layout(push_constant) uniform Constants
 	vec2 u_InverseDepthTextureSize;
 
 	vec2 u_InverseProjectionParams;
+
+	ivec2 u_SampleOffset;
+	float u_JitterAngle;
 };
 
 layout(set = 3, binding = 0) uniform sampler2D u_DepthTexture; // NOTE: Downsampled linear depth
@@ -66,7 +69,7 @@ vec3 MinDifference(vec3 position, vec3 left, vec3 right)
 
 vec3 GetVSPosition(vec2 uv)
 {
-	float linearDepth = texture(u_DepthTexture, uv).r;
+	float linearDepth = texture(u_DepthTexture, uv + u_SampleOffset * u_InverseDepthTextureSize).r;
 
 	uv = uv * 2.0f - vec2(1.0f);
 
@@ -171,7 +174,7 @@ void main()
 	vec2 sampleStep = ComputeSampleStep(positionVS);
 
 	float aoSum = 0.0f;
-	float rotationOffset = InterleavedGradientNoise(gl_FragCoord.xy) * TWO_PI;
+	float rotationOffset = u_JitterAngle;
 
 	for (int directionIndex = 0; directionIndex < DIRECTION_COUNT; directionIndex++)
 	{
