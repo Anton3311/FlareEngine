@@ -3,9 +3,10 @@
 
 #include "FlareCore/Serialization/Serialization.h"
 
+#include "Flare/Renderer/PostProcessing/Bloom/BloomBlitPass.h"
 #include "Flare/Renderer/PostProcessing/Bloom/BloomFilteringPass.h"
 #include "Flare/Renderer/PostProcessing/Bloom/BloomLuminanceIsolationPass.h"
-#include "Flare/Renderer/PostProcessing/Bloom/BloomBlitPass.h"
+#include "Flare/Renderer/PostProcessing/Bloom/BloomUpsamplePass.h"
 #include "Flare/Renderer/RenderGraph/RenderGraphPassSpecifications.h"
 #include "Flare/Renderer/Viewport.h"
 
@@ -67,7 +68,7 @@ namespace Flare
 			upsamplePass.AddInput(mips[i]);
 			upsamplePass.AddOutput(mips[i - 1]);
 
-			renderGraph.AddPass(upsamplePass, Ref<BloomFilteringPass>::New(mips[i]));
+			renderGraph.AddPass(upsamplePass, Ref<BloomUpsamplePass>::New(Ref(this), mips[i]));
 		}
 
 		RenderGraphPassSpecifications blitPass{};

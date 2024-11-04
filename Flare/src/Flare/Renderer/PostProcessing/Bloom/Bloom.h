@@ -20,6 +20,7 @@ namespace Flare
 	public:
 		float Threshold = 1.0f;
 		float Intensity = 1.0f;
+		float Radius = 0.01f;
 	};
 
 	template<>
@@ -29,6 +30,7 @@ namespace Flare
 		{
 			stream.Serialize("Threshold", SerializationValue(bloom.Threshold));
 			stream.Serialize("Intensity", SerializationValue(bloom.Intensity));
+			stream.Serialize("Radius", SerializationValue(bloom.Radius));
 		}
 	};
 }
