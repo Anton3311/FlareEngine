@@ -487,7 +487,6 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 		Entity viewport = s_RendererData.RenderWorld->CreateEntity(Viewport(),
 			ViewportRenderGraph(),
-			ViewportRenderGraphState(),
 			ViewportGlobalResources(),
 			ViewportColorOutput(),
 			ViewportDepthOutput());
@@ -525,19 +524,16 @@ namespace Flare
 		const Viewport* viewport = s_RendererData.RenderWorld->TryGetEntityComponent<const Viewport>(viewportEntity);
 		FLARE_CORE_ASSERT(viewport);
 
-		ViewportRenderGraphState* viewportState = s_RendererData.RenderWorld->TryGetEntityComponent<ViewportRenderGraphState>(viewportEntity);
-		FLARE_CORE_ASSERT(viewportState);
-
 		if (!viewport->IsValid())
 			return;
 
-		if (viewportState->RenderTargetSize != viewport->Size || viewportState->Settings != viewport->Settings)
+		if (viewportRenderGraph->CurrentViewportSize != viewport->Size || viewportRenderGraph->Settings != viewport->Settings)
 		{
 			viewportRenderGraph->Graph->SetNeedsRebuilding();
 		}
 
-		viewportState->RenderTargetSize = viewport->Size;
-		viewportState->Settings = viewport->Settings;
+		viewportRenderGraph->CurrentViewportSize = viewport->Size;
+		viewportRenderGraph->Settings = viewport->Settings;
 
 		ViewportColorOutput* colorOutput = s_RendererData.RenderWorld->TryGetEntityComponent<ViewportColorOutput>(viewportEntity);
 		ViewportDepthOutput* depthOutput = s_RendererData.RenderWorld->TryGetEntityComponent<ViewportDepthOutput>(viewportEntity);
@@ -588,7 +584,7 @@ namespace Flare
 		if (!s_RendererData.ViewportsQuery)
 		{
 			s_RendererData.ViewportsQuery = CreateScope<Query>(s_RendererData.RenderWorld->NewQuery()
-				.All().With<Viewport, ViewportRenderGraph, ViewportRenderGraphState>().Build());
+				.All().With<Viewport, ViewportRenderGraph>().Build());
 		}
 
 		s_RendererData.ViewportsQuery->ForEachChunk([](QueryChunk chunk, ComponentView<ViewportRenderGraph> renderGraphs)

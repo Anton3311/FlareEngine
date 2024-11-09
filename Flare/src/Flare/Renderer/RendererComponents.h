@@ -46,14 +46,6 @@ namespace Flare
 		ViewportSettings Settings;
 	};
 
-	struct ViewportRenderGraphState
-	{
-		FLARE_COMPONENT;
-
-		glm::uvec2 RenderTargetSize = glm::uvec2(0, 0);
-		ViewportSettings Settings;
-	};
-
 	struct FLARE_API ViewportFrameResources
 	{
 		FLARE_NONCOPYABLE(ViewportFrameResources);
@@ -115,7 +107,17 @@ namespace Flare
 
 		ViewportRenderGraph() = default;
 
+		inline bool IsReadyForRendering() const
+		{
+			return CurrentViewportSize.x != 0
+				&& CurrentViewportSize.y != 0
+				&& Graph != nullptr
+				&& Graph->IsValid();
+		}
+
 		// TODO: Shouldn't be ref counted
 		Ref<RenderGraph> Graph = nullptr;
+		glm::uvec2 CurrentViewportSize = glm::uvec2(0, 0);
+		ViewportSettings Settings;
 	};
 }

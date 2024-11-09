@@ -152,7 +152,7 @@ namespace Flare
 		RenderGraphTextureId viewportColorTexture = renderWorld.GetEntityComponent<const ViewportColorOutput>(m_ViewportEntity).Id;
 		RenderGraphTextureId viewportDepthTexture = renderWorld.GetEntityComponent<const ViewportDepthOutput>(m_ViewportEntity).Id;
 
-		if (!viewport.IsValid())
+		if (!viewportRenderGraph.IsReadyForRendering())
 			return;
 
 		switch (m_Overlay)

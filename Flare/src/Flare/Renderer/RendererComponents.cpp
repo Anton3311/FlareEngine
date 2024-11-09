@@ -15,7 +15,6 @@ namespace Flare
 	FLARE_IMPL_COMPONENT(ViewportColorOutput);
 	FLARE_IMPL_COMPONENT(ViewportDepthOutput);
 	FLARE_IMPL_COMPONENT(ViewportRenderGraph);
-	FLARE_IMPL_COMPONENT(ViewportRenderGraphState);
 
 	ViewportFrameResources::~ViewportFrameResources()
 	{
