@@ -36,9 +36,9 @@ namespace Flare
 				const ComponentInfo& componentInfo = m_ArchetypesRegistry->GetCompatibleComponents().GetComponentInfo(archetypeComponents.ComponentIds[componentIndex]);
 
 				void* destination = GetEntityComponentData(index, componentIndex);
-				const void* source = GetEntityComponentData(m_EntityCount - 1, componentIndex);
+				void* source = GetEntityComponentData(m_EntityCount - 1, componentIndex);
 
-				componentInfo.Initializer->Type.Functions.CopyAssignment(destination, source);
+				componentInfo.Initializer->Type.Functions.MoveAssignment(destination, source);
 			}
 
 			Entity lastEntityId = GetEntityId(m_EntityCount - 1);
