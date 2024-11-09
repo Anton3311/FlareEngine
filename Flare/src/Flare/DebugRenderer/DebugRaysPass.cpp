@@ -4,11 +4,13 @@
 
 #include "FlareCore/Profiler/Profiler.h"
 
+#include "FlareECS/World.h"
+
 #include "Flare/Renderer/CommandBuffer.h"
 #include "Flare/Renderer/RenderData.h"
 #include "Flare/Renderer/Renderer.h"
+#include "Flare/Renderer/RendererComponents.h"
 #include "Flare/Renderer/SceneSubmition.h"
-#include "Flare/Renderer/Viewport.h"
 
 #include "Flare/Platform/Vulkan/VulkanFrameBuffer.h"
 #include "Flare/Platform/Vulkan/VulkanPipeline.h"
@@ -56,11 +58,14 @@ namespace Flare
 		const DebugRendererFrameData& submition = context.GetSceneSubmition().DebugRendererSubmition;
 		const FrameResources& frameResources = m_FrameResources[GraphicsContext::GetInstance().GetCurrentFrameInFlight()];
 
+		const ViewportGlobalResources* resources = context.RenderWorld.TryGetEntityComponent<const ViewportGlobalResources>(context.ViewportEntity);
+		FLARE_CORE_ASSERT(resources);
+
 		Ref<VulkanCommandBuffer> vulkanCommandBuffer = commandBuffer.As<VulkanCommandBuffer>();
 		vulkanCommandBuffer->BindPipeline(m_Pipeline);
 		vulkanCommandBuffer->BindVertexBuffers(Span((Ref<const GPUBuffer>*)&frameResources.VertexBuffer, 1), 0);
 		vulkanCommandBuffer->BindIndexBuffer(m_IndexBuffer, IndexFormat::UInt32);
-		vulkanCommandBuffer->BindDescriptorSet(context.GetViewport().GetFrameResources().CameraDescriptorSet, 0);
+		vulkanCommandBuffer->BindDescriptorSet(resources->GetCurrentFrameResources().CameraDescriptorSet, 0);
 
 		vulkanCommandBuffer->DrawIndexed(0, (uint32_t)submition.RayCount * DebugRendererSettings::IndicesPerRay, 0, 0, 1);
 	}
@@ -87,7 +92,6 @@ namespace Flare
 	void DebugRaysPass::GenerateVertices(const RenderGraphContext& context)
 	{
 		FLARE_PROFILE_FUNCTION();
-		const Viewport& viewport = context.GetViewport();
 		const float triangleHeight = glm::sqrt(3.0f) * m_Settings.RayThickness;
 
 		const DebugRendererFrameData& submition = context.GetSceneSubmition().DebugRendererSubmition;

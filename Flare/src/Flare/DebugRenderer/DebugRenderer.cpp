@@ -4,13 +4,16 @@
 
 #include "FlareCore/Assert.h"
 
+#include "FlareECS/World.h"
+
 #include "Flare/AssetManager/AssetManager.h"
 
 #include "Flare/Renderer/Renderer.h"
+#include "Flare/Renderer/RenderGraph/RenderGraph.h"
+#include "Flare/Renderer/RendererComponents.h"
 #include "Flare/Renderer/ShaderLibrary.h"
 #include "Flare/Renderer/Shader.h"
 #include "Flare/Renderer/SceneSubmition.h"
-#include "Flare/Renderer/Viewport.h"
 
 #include "Flare/Project/Project.h"
 
@@ -249,29 +252,38 @@ namespace Flare
 		DrawWireBox(corners, color);
 	}
 
-	void DebugRenderer::ConfigurePasses(Viewport& viewport)
+	void DebugRenderer::ConfigurePasses(const World& renderWorld, RenderGraph& renderGraph, Entity viewportEntity)
 	{
 		FLARE_PROFILE_FUNCTION();
-		if (!viewport.IsDebugRenderingEnabled())
+		const Viewport* viewport = renderWorld.TryGetEntityComponent<const Viewport>(viewportEntity);
+
+		FLARE_CORE_ASSERT(viewport);
+
+		const ViewportColorOutput* colorOutput = renderWorld.TryGetEntityComponent<const ViewportColorOutput>(viewportEntity);
+		const ViewportDepthOutput* depthOutput = renderWorld.TryGetEntityComponent<const ViewportDepthOutput>(viewportEntity);
+
+		FLARE_CORE_ASSERT(colorOutput && depthOutput);
+
+		if (!viewport->Settings.DebugRenderingEnabled)
 			return;
 
 		RenderGraphPassSpecifications linesPass{};
-		linesPass.AddOutput(viewport.ColorTextureId);
-		linesPass.AddOutput(viewport.DepthTextureId);
+		linesPass.AddOutput(colorOutput->Id);
+		linesPass.AddOutput(depthOutput->Id);
 		linesPass.SetType(RenderGraphPassType::Graphics);
 		linesPass.SetDebugName("DebugLinesPass");
 
-		viewport.GetRenderGraph()->AddPass(linesPass, Ref<DebugLinesPass>::New(
+		renderGraph.AddPass(linesPass, Ref<DebugLinesPass>::New(
 			s_DebugRendererData.DebugShader,
 			s_DebugRendererData.Settings));
 
 		RenderGraphPassSpecifications raysPass{};
-		raysPass.AddOutput(viewport.ColorTextureId);
-		raysPass.AddOutput(viewport.DepthTextureId);
+		raysPass.AddOutput(colorOutput->Id);
+		raysPass.AddOutput(depthOutput->Id);
 		raysPass.SetType(RenderGraphPassType::Graphics);
 		raysPass.SetDebugName("DebugRaysPass");
 
-		viewport.GetRenderGraph()->AddPass(raysPass, Ref<DebugRaysPass>::New(
+		renderGraph.AddPass(raysPass, Ref<DebugRaysPass>::New(
 			s_DebugRendererData.RaysIndexBuffer,
 			s_DebugRendererData.DebugShader,
 			s_DebugRendererData.Settings));

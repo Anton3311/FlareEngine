@@ -2,18 +2,21 @@
 
 #include "RenderGraphResourceManager.h"
 
-#include "FlareCore/Log.h"
-#include "FlareCore/Profiler/Profiler.h"
+#include "FlareECS/World.h"
 
-#include "Flare/Renderer/Viewport.h"
+#include "Flare/Renderer/Renderer.h"
+#include "Flare/Renderer/RendererComponents.h"
 
 namespace Flare
 {
-	RenderGraphResourceManager::RenderGraphResourceManager(const Viewport& viewport)
-		: m_Viewport(viewport)
+	RenderGraphResourceManager::RenderGraphResourceManager(World& renderWorld, Entity viewportEntity)
+		: m_ViewportEntity(viewportEntity), m_RenderWorld(renderWorld)
 	{
+		const Viewport* viewport = renderWorld.TryGetEntityComponent<const Viewport>(viewportEntity);
+		FLARE_CORE_ASSERT(viewport);
+
 		uint32_t frameInFlightCount = GraphicsContext::GetInstance().GetFrameInFlightCount();
-		m_FrameInFlightViewportSizes.resize(frameInFlightCount, (glm::uvec2)viewport.GetSize());
+		m_FrameInFlightViewportSizes.resize(frameInFlightCount, viewport->Size);
 	}
 
 	inline static glm::uvec2 CalculateTextureSize(glm::uvec2 viewportSize, float textureScale)
@@ -33,7 +36,10 @@ namespace Flare
 		resource.TextureHandleIndex = (uint32_t)m_TextureHandles.size();
 		resource.Scale = scale;
 
-		glm::uvec2 textureSize = CalculateTextureSize((glm::uvec2)m_Viewport.GetSize(), resource.Scale);
+		const Viewport* viewport = Renderer::GetRenderWorld().TryGetEntityComponent<const Viewport>(m_ViewportEntity);
+		FLARE_CORE_ASSERT(viewport);
+
+		glm::uvec2 textureSize = CalculateTextureSize(viewport->Size, resource.Scale);
 
 		TextureSpecifications specifications{};
 		specifications.Width = textureSize.x;
@@ -119,9 +125,11 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 
 		uint32_t frameIndex = GraphicsContext::GetInstance().GetCurrentFrameInFlight();
-		glm::uvec2 viewportSize = (glm::vec2)m_Viewport.GetSize();
 
-		if (m_FrameInFlightViewportSizes[frameIndex] == viewportSize)
+		const Viewport* viewport = m_RenderWorld.TryGetEntityComponent<const Viewport>(m_ViewportEntity);
+		FLARE_CORE_ASSERT(viewport);
+
+		if (m_FrameInFlightViewportSizes[frameIndex] == viewport->Size)
 			return false;
 
 		for (const RenderGraphTextureResource& resource : m_Textures)
@@ -130,12 +138,12 @@ namespace Flare
 				continue;
 
 			Ref<Texture> texture = GetTextureForFrameInFlight(resource, frameIndex);
-			glm::uvec2 textureSize = CalculateTextureSize(viewportSize, resource.Scale);
+			glm::uvec2 textureSize = CalculateTextureSize(viewport->Size, resource.Scale);
 
 			texture->Resize(textureSize.x, textureSize.y);
 		}
 
-		m_FrameInFlightViewportSizes[frameIndex] = viewportSize;
+		m_FrameInFlightViewportSizes[frameIndex] = viewport->Size;
 		return true;
 	}
 

@@ -95,8 +95,8 @@ namespace Flare
 	// VulkanRenderGraph
 	//
 
-	VulkanRenderGraph::VulkanRenderGraph(const Viewport& viewport)
-		: RenderGraph(viewport), m_TextureViews(GetResourceManager())
+	VulkanRenderGraph::VulkanRenderGraph(World& renderWorld, Entity viewportEntity)
+		: RenderGraph(renderWorld, viewportEntity), m_TextureViews(GetResourceManager())
 	{
 	}
 
@@ -122,7 +122,8 @@ namespace Flare
 			}
 
 			RenderGraphContext context(
-				GetViewport(),
+				m_ViewportEntity,
+				m_RenderWorld,
 				renderTarget ? renderTarget->GetSize() : glm::uvec2(0, 0), // TODO: Specify a valid size even if the render target is null
 				*this,
 				GetResourceManager(),

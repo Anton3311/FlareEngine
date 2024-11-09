@@ -7,8 +7,6 @@
 #include "Flare/Scene/Components.h"
 #include "Flare/Scene/Transform.h"
 
-#include "Flare/Renderer/Viewport.h"
-
 #include "Flare/DebugRenderer/DebugRenderer.h"
 
 #include "FlareECS/World.h"
@@ -36,6 +34,7 @@ namespace Flare
 		if (!EditorLayer::GetInstance().GetSceneViewSettings().ShowCameraFrustum)
 			return;
 
+#if 0
 		m_Query.ForEachChunk([](QueryChunk chunk, ComponentView<const TransformComponent> transforms, ComponentView<const CameraComponent> cameras)
 			{
 				for (size_t entityIndex = 0; entityIndex < chunk.GetEntityCount(); entityIndex++)
@@ -50,5 +49,6 @@ namespace Flare
 					DebugRenderer::DrawFrustum(glm::inverse(viewProjection), glm::vec4(1.0f));
 				}
 			});
+#endif
 	}
 }

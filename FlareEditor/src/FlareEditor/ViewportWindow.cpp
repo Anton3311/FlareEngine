@@ -7,10 +7,10 @@
 #include "Flare/Core/Application.h"
 
 #include "Flare/DebugRenderer/DebugRenderer.h"
-
 #include "Flare/Renderer/CommandBuffer.h"
-#include "Flare/Renderer/Renderer.h"
 #include "Flare/Renderer/Passes/BlitPass.h"
+#include "Flare/Renderer/Renderer.h"
+#include "Flare/Renderer/RendererComponents.h"
 
 #include "Flare/Renderer2D/Renderer2D.h"
 
@@ -35,9 +35,15 @@ namespace Flare
 		m_RelativeMousePosition(glm::ivec2(0)),
 		m_ViewportOffset(glm::uvec2(0))
 	{
+		m_ViewportEntity = Renderer::CreateViewport();
 	}
 
-	void ViewportWindow::OnRenderViewport()
+	ViewportWindow::~ViewportWindow()
+	{
+		Renderer::DeleteViewport(m_ViewportEntity);
+	}
+
+	void ViewportWindow::OnRenderViewport(const World& renderWorld)
 	{
 		FLARE_PROFILE_FUNCTION();
 
@@ -48,38 +54,16 @@ namespace Flare
 		if (scene == nullptr)
 			return;
 
-		PrepareViewport();
-
-		if (m_Viewport.GetSize() != glm::ivec2(0))
-		{
-			m_SceneRenderer->RenderViewport(m_Viewport);
-		}
+		m_SceneRenderer->RenderViewport(m_ViewportEntity, nullptr, FLARE_BIND_EVENT_CALLBACK(BuildRenderGraph));
 	}
 
-	void ViewportWindow::OnAddRenderPasses()
+	void ViewportWindow::OnAddRenderPasses(RenderGraph& renderGraph)
 	{
 	}
 
 	void ViewportWindow::SetMaximized(bool maximized)
 	{
 		m_Maximized = maximized;
-	}
-
-	void ViewportWindow::PrepareViewport()
-	{
-		if (m_Viewport.IsPostProcessingEnabled() && GetScene()->GetPostProcessingManager().IsDirty())
-			m_Viewport.GetRenderGraph()->SetNeedsRebuilding();
-
-		if (Renderer::RequiresRenderGraphRebuild())
-			m_Viewport.GetRenderGraph()->SetNeedsRebuilding();
-
-		if (m_Viewport.GetSize() != glm::ivec2(0))
-		{
-			if (m_Viewport.GetRenderGraph()->NeedsRebuilding())
-			{
-				BuildRenderGraph();
-			}
-		}
 	}
 
 	Ref<Scene> ViewportWindow::GetScene() const
@@ -107,9 +91,9 @@ namespace Flare
 
 		m_IsVisible = ImGui::Begin(m_Name.c_str(), &ShowWindow, windowFlags);
 
-		// HACK: If window's title bar isn't hovered, disable window moving by draging anywhere inside the window.
-		//       When the window wasn't docket it used to interfere with the camera controller and guizmos,
-		//       as moving a cemera or using a guizmo was also moving a window.
+		// HACK: If window's title bar isn't hovered, disable window moving by dragging anywhere inside the window.
+		//       When the window wasn't docket it used to interfere with the camera controller and gizmos,
+		//       as moving a camera or using a guizmo was also moving a window.
 		if (!ImGui::IsWindowDocked())
 		{
 			ImGuiWindow* window = ImGui::GetCurrentWindow();
@@ -153,15 +137,19 @@ namespace Flare
 		m_RelativeMousePosition.y = newViewportSize.y - m_RelativeMousePosition.y;
 
 		bool changed = false;
-		glm::ivec2 viewportSize = m_Viewport.GetSize();
-		glm::ivec2 viewportPosition = m_Viewport.GetPosition();
 
-		if (m_Viewport.GetSize() == glm::ivec2(0))
+		World& renderWorld = Renderer::GetRenderWorld();
+		Viewport& viewport = renderWorld.GetEntityComponent<Viewport>(m_ViewportEntity);
+
+		glm::ivec2 viewportSize = (glm::ivec2)viewport.Size;
+		glm::ivec2 viewportPosition = (glm::ivec2)viewport.Position;
+
+		if (viewportSize == glm::ivec2(0))
 		{
 			viewportSize = newViewportSize;
 			changed = true;
 		}
-		else if (newViewportSize != m_Viewport.GetSize())
+		else if (newViewportSize != viewportSize)
 		{
 			viewportSize = newViewportSize;
 			changed = true;
@@ -174,17 +162,13 @@ namespace Flare
 			changed = true;
 		}
 
-		bool shouldResizeViewport = viewportSize != m_Viewport.GetSize();
-		if (shouldResizeViewport)
-		{
-			bool shouldCreateFrameBuffers = m_Viewport.GetSize() == glm::ivec2(0);
-			m_Viewport.Resize(viewportPosition, viewportSize);
-		}
+		changed |= viewportSize != viewportSize;
+
+		viewport.Position = viewportPosition;
+		viewport.Size = viewportSize;
 
 		if (changed)
-		{
 			OnViewportChanged();
-		}
 	}
 
 	void ViewportWindow::RenderViewportBuffer(const Ref<Texture>& texture)
@@ -192,7 +176,10 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 		ImVec2 windowSize = ImGui::GetContentRegionAvail();
 
-		ImVec2 imageSize = ImVec2((float)m_Viewport.GetSize().x, (float)m_Viewport.GetSize().y);
+		const World& renderWorld = Renderer::GetRenderWorld();
+		const Viewport& viewport = renderWorld.GetEntityComponent<const Viewport>(m_ViewportEntity);
+
+		ImVec2 imageSize = ImVec2((float)viewport.Size.x, (float)viewport.Size.y);
 		ImGui::Image(ImGuiLayer::GetId(texture), windowSize, ImVec2(0, 1), ImVec2(1, 0));
 	}
 
@@ -207,37 +194,27 @@ namespace Flare
 	{
 	}
 
-	void ViewportWindow::BuildRenderGraph()
+	void ViewportWindow::BuildRenderGraph(RenderGraph& renderGraph)
 	{
 		FLARE_PROFILE_FUNCTION();
 		Ref<Scene> scene = GetScene();
 
-		if (scene != nullptr)
-			scene->GetPostProcessingManager().MarkAsDirty();
+		const World& renderWorld = Renderer::GetRenderWorld();
+		const Viewport& viewport = renderWorld.GetEntityComponent<const Viewport>(m_ViewportEntity);
 
-		m_Viewport.GetRenderGraph()->Clear();
-		m_Viewport.OnBuildRenderGraph();
-
-		Renderer::ConfigurePasses(m_Viewport);
-		Renderer2D::ConfigurePasses(m_Viewport);
-
-		if (scene && m_Viewport.IsPostProcessingEnabled())
+		if (scene && viewport.Settings.PostProcessingEnabled)
 		{
 			PostProcessingManager& postProcessing = scene->GetPostProcessingManager();
 			postProcessing.MarkAsDirty(); // HACK
-			postProcessing.RegisterRenderPasses(*m_Viewport.GetRenderGraph(), m_Viewport);
+			postProcessing.RegisterRenderPasses(renderGraph, m_ViewportEntity, renderWorld);
 		}
 
-		OnAddRenderPasses();
-		DebugRenderer::ConfigurePasses(m_Viewport);
-
-		m_Viewport.GetRenderGraph()->Build();
+		OnAddRenderPasses(renderGraph);
 	}
 
 	void ViewportWindow::OnAttach()
 	{
 		FLARE_PROFILE_FUNCTION();
-		m_Viewport.GetRenderGraph()->SetNeedsRebuilding();
 	}
 
 	void ViewportWindow::OnRenderImGui()
@@ -248,9 +225,13 @@ namespace Flare
 
 		BeginImGui();
 
-		if (m_Viewport.GetRenderGraph()->GetResourceManager().IsTextureIdValid(m_Viewport.ColorTextureId))
+		const World& renderWorld = Renderer::GetRenderWorld();
+		const RenderGraph& renderGraph = *renderWorld.GetEntityComponent<const ViewportRenderGraph>(m_ViewportEntity).Graph;
+		RenderGraphTextureId colorTexture = renderWorld.GetEntityComponent<const ViewportColorOutput>(m_ViewportEntity).Id;
+
+		if (renderGraph.GetResourceManager().IsTextureIdValid(colorTexture))
 		{
-			RenderViewportBuffer(m_Viewport.GetRenderGraph()->GetTexture(m_Viewport.ColorTextureId));
+			RenderViewportBuffer(renderGraph.GetTexture(colorTexture));
 		}
 
 		EndImGui();

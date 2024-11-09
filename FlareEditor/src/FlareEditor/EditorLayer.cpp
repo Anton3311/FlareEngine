@@ -10,6 +10,7 @@
 
 #include "Flare/Renderer2D/Renderer2D.h"
 #include "Flare/Renderer/Renderer.h"
+#include "Flare/Renderer/RendererComponents.h"
 #include "Flare/Renderer/Font.h"
 
 #include "Flare/AssetManager/AssetManager.h"
@@ -101,6 +102,8 @@ namespace Flare
         ShaderCacheManager::SetInstance(CreateScope<EditorShaderCache>());
         EditorGUI::Initialize();
 
+        m_ECSContext.Components.RegisterComponents();
+
         m_ImGuiLayer = ImGuiLayer::Create();
         m_PropertiesWindow.OnAttach();
 
@@ -121,8 +124,6 @@ namespace Flare
 
         m_ViewportWindows.emplace_back(m_SceneViewport);
         m_ViewportWindows.emplace_back(m_GameWindow);
-
-        Renderer::SetMainViewport(m_GameWindow->GetViewport());
 
         if (Application::GetInstance().GetCommandLineArguments().ArgumentsCount >= 2)
         {
@@ -188,6 +189,9 @@ namespace Flare
         EditorAssetManager::GetInstance()->SerializeRegistry();
 
         m_SceneRenderer.reset();
+        m_ViewportWindows.clear();
+        m_GameWindow = nullptr;
+        m_SceneViewport = nullptr;
 
         m_AssetManagerWindow.Uninitialize();
         m_AssetEditorWindows.clear();
@@ -247,8 +251,10 @@ namespace Flare
         Renderer2D::ResetStats();
         Renderer::ClearStatistics();
 
-        Renderer::SetMainViewport(m_GameWindow->GetViewport());
-        InputManager::SetMousePositionOffset(-m_GameWindow->GetViewport().GetPosition());
+        {
+			const Viewport& gameViewport = Renderer::GetRenderWorld().GetEntityComponent<const Viewport>(m_GameWindow->GetViewportEntity());
+			InputManager::SetMousePositionOffset(-(glm::ivec2)gameViewport.Position);
+        }
 
         {
             FLARE_PROFILE_SCOPE("Scene Runtime Update");
@@ -273,7 +279,7 @@ namespace Flare
             FLARE_PROFILE_SCOPE("Viewport Render");
             for (auto& viewport : m_ViewportWindows)
             {
-                viewport->OnRenderViewport();
+                viewport->OnRenderViewport(Renderer::GetRenderWorld());
             }
         }
 
@@ -580,11 +586,7 @@ namespace Flare
     void EditorLayer::ResetViewportRenderGraphs()
     {
 		FLARE_PROFILE_FUNCTION();
-        for (auto& viewportWindow : m_ViewportWindows)
-        {
-            viewportWindow->GetViewport().GetRenderGraph()->Clear();
-            viewportWindow->GetViewport().GetRenderGraph()->SetNeedsRebuilding();
-        }
+        Renderer::RequestRenderGraphRebuilds();
     }
 
     void EditorLayer::SaveActiveScene()

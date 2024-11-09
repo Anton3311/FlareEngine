@@ -2,9 +2,11 @@
 
 #include "DebugLinesPass.h"
 
+#include "FlareECS/World.h"
+
 #include "Flare/Renderer/Renderer.h"
+#include "Flare/Renderer/RendererComponents.h"
 #include "Flare/Renderer/SceneSubmition.h"
-#include "FLare/Renderer/Viewport.h"
 
 #include "Flare/DebugRenderer/DebugRendererFrameData.h"
 
@@ -55,9 +57,12 @@ namespace Flare
 
 		Ref<VulkanCommandBuffer> vulkanCommandBuffer = commandBuffer.As<VulkanCommandBuffer>();
 
+		const ViewportGlobalResources* resources = context.RenderWorld.TryGetEntityComponent<const ViewportGlobalResources>(context.ViewportEntity);
+		FLARE_CORE_ASSERT(resources);
+
 		vulkanCommandBuffer->BindPipeline(m_Pipeline);
 		vulkanCommandBuffer->BindVertexBuffers(Span((Ref<const GPUBuffer>*)&frameResources.VertexBuffer, 1), 0);
-		vulkanCommandBuffer->BindDescriptorSet(context.GetViewport().GetFrameResources().CameraDescriptorSet, 0);
+		vulkanCommandBuffer->BindDescriptorSet(resources->GetCurrentFrameResources().CameraDescriptorSet, 0);
 
 		vulkanCommandBuffer->Draw(0, (uint32_t)submition.LineCount * 2, 0, 1);
 	}

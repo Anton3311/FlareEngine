@@ -1,5 +1,7 @@
 #include "Components.h"
 
+#include "FlareCore/Log.h"
+
 #include "FlareECS/Entity/ComponentInitializer.h"
 
 #include <unordered_set>
@@ -10,6 +12,9 @@ namespace Flare
 	{
 		for (ComponentInitializer* initializer : ComponentInitializer::GetInitializers())
 		{
+			if (IsComponentIdValid(initializer->m_Id))
+				continue;
+
 			Entity entityId = m_IdGenerator.CreateId();
 
 			uint32_t registryIndex = (uint32_t)RegisteredComponents.size();

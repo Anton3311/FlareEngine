@@ -2,15 +2,17 @@
 
 #include "GeometryPass.h"
 
+#include "FlareECS/World.h"
+
 #include "Flare/Renderer/CommandBuffer.h"
 #include "Flare/Renderer/DescriptorSet.h"
 #include "Flare/Renderer/FrameBuffer.h"
 #include "Flare/Renderer/GraphicsContext.h"
 #include "Flare/Renderer/GPUTimer.h"
 #include "Flare/Renderer/RenderData.h"
+#include "Flare/Renderer/RendererComponents.h"
 #include "Flare/Renderer/Renderer.h"
 #include "Flare/Renderer/SceneSubmition.h"
-#include "Flare/Renderer/Viewport.h"
 
 #include "Flare/Renderer2D/Renderer2D.h"
 
@@ -52,13 +54,16 @@ namespace Flare
 
 		const FrameResources& frameResources = m_FrameResources[GraphicsContext::GetInstance().GetCurrentFrameInFlight()];
 
-		const ViewportFrameResources& viewportFrameResources = context.GetViewport().GetFrameResources();
-		commandBuffer->SetGlobalDescriptorSet(viewportFrameResources.CameraDescriptorSet, 0);
+		const Viewport* viewport = context.RenderWorld.TryGetEntityComponent<const Viewport>(context.ViewportEntity);
+		const ViewportGlobalResources* viewportResources = context.RenderWorld.TryGetEntityComponent<const ViewportGlobalResources>(context.ViewportEntity);
+		FLARE_CORE_ASSERT(viewportResources && viewport);
 
-		if (context.GetViewport().IsShadowMappingEnabled() && Renderer::GetShadowSettings().Enabled)
-			commandBuffer->SetGlobalDescriptorSet(viewportFrameResources.GlobalDescriptorSet, 1);
+		commandBuffer->SetGlobalDescriptorSet(viewportResources->GetCurrentFrameResources().CameraDescriptorSet, 0);
+
+		if (viewport->Settings.ShadowMappingEnabled && Renderer::GetShadowSettings().Enabled)
+			commandBuffer->SetGlobalDescriptorSet(viewportResources->GetCurrentFrameResources().GlobalDescriptorSet, 1);
 		else
-			commandBuffer->SetGlobalDescriptorSet(viewportFrameResources.GlobalDescriptorSetWithoutShadows, 1);
+			commandBuffer->SetGlobalDescriptorSet(viewportResources->GetCurrentFrameResources().GlobalDescriptorSetWithoutShadows, 1);
 
 		commandBuffer->SetGlobalDescriptorSet(frameResources.InstanceBufferDescriptor, 2);
 

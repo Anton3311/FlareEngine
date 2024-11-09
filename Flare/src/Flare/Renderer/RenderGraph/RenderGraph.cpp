@@ -13,8 +13,8 @@
 
 namespace Flare
 {
-	RenderGraph::RenderGraph(const Viewport& viewport)
-		: m_Viewport(viewport), m_ResourceManager(viewport)
+	RenderGraph::RenderGraph(World& renderWorld, Entity viewportEntity)
+		: m_ResourceManager(renderWorld, viewportEntity), m_ViewportEntity(viewportEntity), m_RenderWorld(renderWorld)
 	{
 	}
 
@@ -105,16 +105,15 @@ namespace Flare
 		OnPrepare();
 	}
 
-	Scope<RenderGraph> RenderGraph::Create(const Viewport& viewport)
+	Ref<RenderGraph> RenderGraph::Create(World& renderWorld, Entity viewportEntity)
 	{
 		switch (RendererAPI::GetAPI())
 		{
 		case RendererAPI::API::Vulkan:
-			return CreateScope<VulkanRenderGraph>(viewport);
+			return Ref<VulkanRenderGraph>::New(renderWorld, viewportEntity);
 		}
 
-		FLARE_CORE_ASSERT(false);
-
+		FLARE_VERIFY_UNREACHABLE();
 		return nullptr;
 	}
 }

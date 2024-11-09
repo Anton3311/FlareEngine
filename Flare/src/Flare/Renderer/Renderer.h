@@ -8,6 +8,8 @@
 
 #include "Flare/Renderer/RendererStatistics.h"
 
+#include "FlareECS/Entity/Entity.h"
+
 #include <glm/glm.hpp>
 
 namespace Flare
@@ -138,9 +140,10 @@ namespace Flare
 	class DescriptorSetPool;
 	class Material;
 	class RendererSubmitionQueue;
+	class RenderGraph;
 	class Sampler;
 	class Texture;
-	class Viewport;
+	class World;
 
 	class FLARE_API Renderer
 	{
@@ -151,9 +154,6 @@ namespace Flare
 		static const RendererStatistics& GetStatistics();
 		static void ClearStatistics();
 
-		static void SetMainViewport(Viewport& viewport);
-		static void SetCurrentViewport(Viewport& viewport);
-
 		static void BeginFrame();
 		static void EndFrame();
 
@@ -161,13 +161,7 @@ namespace Flare
 		static void BeginScene(SceneSubmition& sceneSubmition);
 		static void EndScene();
 
-		static void BeginScene(Viewport& viewport);
-		static void Flush();
-
 		static RendererSubmitionQueue& GetOpaqueSubmitionQueue();
-
-		static Viewport& GetMainViewport();
-		static Viewport& GetCurrentViewport();
 
 		static Ref<Texture> GetWhiteTexture();
 		static Ref<Texture> GetDefaultNormalMap();
@@ -186,7 +180,13 @@ namespace Flare
 
 		static Ref<const DescriptorSetLayout> GetDecalsDescriptorSetLayout();
 
-		static void ConfigurePasses(Viewport& viewport);
+		// Viewports
+
+		static World& GetRenderWorld();
+		static Entity CreateViewport();
+		static void DeleteViewport(Entity viewportEntity);
+		static void PrepareViewport(Entity viewportEntity, const std::function<void(RenderGraph&)>& onBuild);
+		static void RequestRenderGraphRebuilds();
 	private:
 		static void ReloadShaders();
 	};

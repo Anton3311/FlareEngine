@@ -2,16 +2,18 @@
 
 #include "ShadowPass.h"
 
-#include "Flare/Renderer/Renderer.h"
-#include "Flare/Renderer/CommandBuffer.h"
-#include "Flare/Renderer/GraphicsContext.h"
-#include "Flare/Renderer/FrameBuffer.h"
-#include "Flare/Renderer/Sampler.h"
-#include "Flare/Renderer/GPUTimer.h"
-#include "Flare/Renderer/SceneSubmition.h"
-#include "Flare/Renderer/Viewport.h"
+#include "FlareECS/World.h"
 
 #include "Flare/Math/SIMD.h"
+
+#include "Flare/Renderer/CommandBuffer.h"
+#include "Flare/Renderer/FrameBuffer.h"
+#include "Flare/Renderer/GraphicsContext.h"
+#include "Flare/Renderer/GPUTimer.h"
+#include "Flare/Renderer/Renderer.h"
+#include "Flare/Renderer/RendererComponents.h"
+#include "Flare/Renderer/Sampler.h"
+#include "Flare/Renderer/SceneSubmition.h"
 
 #include "Flare/Platform/Vulkan/VulkanCommandBuffer.h"
 #include "Flare/Platform/Vulkan/VulkanContext.h"
@@ -27,7 +29,10 @@ namespace Flare
 	void ShadowPass::OnPrepare(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
 	{
 		FLARE_PROFILE_FUNCTION();
-		if (context.GetViewport().IsShadowMappingEnabled())
+		const Viewport* viewport = context.RenderWorld.TryGetEntityComponent<const Viewport>(context.ViewportEntity);
+		FLARE_CORE_ASSERT(viewport);
+
+		if (viewport->Settings.ShadowMappingEnabled)
 		{
 			for (ShadowCascadeData& cascadeData : m_CascadeData)
 			{
@@ -38,7 +43,7 @@ namespace Flare
 			m_FilteredTransforms.clear();
 			m_VisibleSubMeshRanges.clear();
 
-			ComputeShaderProjectionsAndCullObjects(context);
+			ComputeShadowProjectionsAndCullObjects(context);
 		}
 
 		CalculateShadowMappingParameters(context);
@@ -139,9 +144,11 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 
 		const ShadowSettings& settings = Renderer::GetShadowSettings();
-		const Viewport& viewport = context.GetViewport();
 
-		bool enabled = viewport.IsShadowMappingEnabled() && settings.Enabled;
+		const Viewport* viewport = context.RenderWorld.TryGetEntityComponent<const Viewport>(context.ViewportEntity);
+		FLARE_CORE_ASSERT(viewport);
+
+		bool enabled = viewport->Settings.ShadowMappingEnabled && settings.Enabled;
 
 		m_ShadowData.Bias = settings.Bias;
 		m_ShadowData.NormalBias = settings.NormalBias;
@@ -160,7 +167,8 @@ namespace Flare
 		m_ShadowData.MaxShadowDistance = settings.CascadeSplits[settings.Cascades - 1];
 		m_ShadowData.ShadowFadeStartDistance = m_ShadowData.MaxShadowDistance - settings.FadeDistance;
 
-		context.GetViewport().GetFrameResources().ShadowDataBuffer->SetData(MemorySpan(&m_ShadowData, 1), 0);
+		ViewportGlobalResources& viewportFrameResources = context.RenderWorld.GetEntityComponent<ViewportGlobalResources>(context.ViewportEntity);
+		viewportFrameResources.GetCurrentFrameResources().ShadowDataBuffer->SetData(MemorySpan(&m_ShadowData, 1), 0);
 	}
 
 	enum class CullResult
@@ -204,11 +212,12 @@ namespace Flare
 		return inFrontCount == 4 ? CullResult::FullyVisible : CullResult::PartiallyVisible;
 	}
 
-	void ShadowPass::ComputeShaderProjectionsAndCullObjects(const RenderGraphContext& context)
+	void ShadowPass::ComputeShadowProjectionsAndCullObjects(const RenderGraphContext& context)
 	{
 		FLARE_PROFILE_FUNCTION();
+		const Viewport* viewport = context.RenderWorld.TryGetEntityComponent<const Viewport>(context.ViewportEntity);
+		FLARE_CORE_ASSERT(viewport);
 
-		const Viewport& viewport = context.GetViewport();
 		const DirectionalLightSubmition& directionalLight = context.GetSceneSubmition().DirectionalLight;
 		const ShadowSettings& shadowSettings = Renderer::GetShadowSettings();
 
@@ -225,7 +234,7 @@ namespace Flare
 				CalculateShadowFrustumParamsAroundCamera(m_CascadeData[i],
 					context.GetRenderView(),
 					directionalLight.Direction,
-					viewport, currentNearPlane,
+					*viewport, currentNearPlane,
 					shadowSettings.CascadeSplits[i]);
 
 				// 2. Calculate projection frustum planes (except near and far)

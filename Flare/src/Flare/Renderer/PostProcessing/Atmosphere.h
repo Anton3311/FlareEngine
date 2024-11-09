@@ -40,7 +40,7 @@ namespace Flare
 		FLARE_TYPE;
 		FLARE_SERIALIZABLE;
 
-		void RegisterRenderPasses(RenderGraph& renderGraph, const Viewport& viewport) override;
+		void RegisterRenderPasses(RenderGraph& renderGraph, Entity viewportEntity, const World& renderWorld) override;
 		const SerializableObjectDescriptor& GetSerializationDescriptor() const override;
 	public:
 		// All units are Km

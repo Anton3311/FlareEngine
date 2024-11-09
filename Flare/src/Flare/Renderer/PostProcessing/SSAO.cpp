@@ -4,14 +4,16 @@
 
 #include "Flare/Scene/Scene.h"
 
-#include "Flare/Renderer/Renderer.h"
-#include "Flare/Renderer/RendererPrimitives.h"
 #include "Flare/Renderer/CommandBuffer.h"
 #include "Flare/Renderer/ComputeShader.h"
 #include "Flare/Renderer/FrameBuffer.h"
-#include "Flare/Renderer/ShaderLibrary.h"
 #include "Flare/Renderer/GraphicsContext.h"
 #include "Flare/Renderer/Material.h"
+#include "Flare/Renderer/Renderer.h"
+#include "Flare/Renderer/RendererPrimitives.h"
+#include "Flare/Renderer/RendererComponents.h"
+#include "Flare/Renderer/RenderGraph/RenderGraph.h"
+#include "Flare/Renderer/ShaderLibrary.h"
 
 #include "Flare/Renderer/Passes/BlitPass.h"
 
@@ -30,14 +32,14 @@ namespace Flare
 	FLARE_IMPL_TYPE(SSAO);
 	FLARE_SERIALIZABLE_IMPL(SSAO);
 
-	void SSAO::RegisterRenderPasses(RenderGraph& renderGraph, const Viewport& viewport)
+	void SSAO::RegisterRenderPasses(RenderGraph& renderGraph, Entity viewportEntity, const World& renderWorld)
 	{
 		FLARE_PROFILE_FUNCTION();
 
 		if (!IsEnabled())
 			return;
 
-		RegisterHBAORenderPasses(renderGraph, viewport);
+		RegisterHBAORenderPasses(renderGraph, viewportEntity, renderWorld);
 	}
 
 	const SerializableObjectDescriptor& SSAO::GetSerializationDescriptor() const
@@ -45,7 +47,7 @@ namespace Flare
 		return FLARE_SERIALIZATION_DESCRIPTOR_OF(SSAO);
 	}
 
-	void SSAO::RegisterHBAORenderPasses(RenderGraph& renderGraph, const Viewport& viewport)
+	void SSAO::RegisterHBAORenderPasses(RenderGraph& renderGraph, Entity viewportEntity, const World& renderWorld)
 	{
 		FLARE_PROFILE_FUNCTION();
 
@@ -66,13 +68,16 @@ namespace Flare
 			aoTextures[i] = renderGraph.CreateTexture(TextureFormat::R8, fmt::format("HBAO.AO.{}", i), 0.5f);
 		}
 
+		RenderGraphTextureId viewportDepthTexture = renderWorld.GetEntityComponent<const ViewportDepthOutput>(viewportEntity).Id;
+		RenderGraphTextureId viewportColorTexture = renderWorld.GetEntityComponent<const ViewportColorOutput>(viewportEntity).Id;
+
 		RenderGraphPassSpecifications linearizeDepthPass{};
 		linearizeDepthPass.SetDebugName("HBAOLinearizeDepth");
 		linearizeDepthPass.SetType(RenderGraphPassType::Graphics);
-		linearizeDepthPass.AddInput(viewport.DepthTextureId);
+		linearizeDepthPass.AddInput(viewportDepthTexture);
 		linearizeDepthPass.AddOutput(linearDepthDepth);
 
-		renderGraph.AddPass(linearizeDepthPass, Ref<HBAODownsamplePass>::New(viewport.DepthTextureId));
+		renderGraph.AddPass(linearizeDepthPass, Ref<HBAODownsamplePass>::New(viewportDepthTexture));
 
 		for (size_t i = 0; i < TEXTURE_COUNT; i++)
 		{
@@ -119,9 +124,9 @@ namespace Flare
 		ssaoComposingPass.SetDebugName("SSAOComposingPass");
 		ssaoComposingPass.SetType(RenderGraphPassType::Compute);
 		ssaoComposingPass.AddInput(fullScreenAOTexture);
-		ssaoComposingPass.AddResource(viewport.ColorTextureId, ResourceAccess::ReadWrite);
+		ssaoComposingPass.AddResource(viewportColorTexture, ResourceAccess::ReadWrite);
 
-		renderGraph.AddPass(ssaoComposingPass, Ref<SSAOComposingPass>::New(viewport.ColorTextureId, fullScreenAOTexture));
+		renderGraph.AddPass(ssaoComposingPass, Ref<SSAOComposingPass>::New(viewportColorTexture, fullScreenAOTexture));
 	}
 
 
@@ -173,7 +178,9 @@ namespace Flare
 		commandBuffer->PushConstants(m_ConstantBuffer);
 		commandBuffer->PushDescriptorProperties(m_DescriptorBuffer);
 
-		glm::uvec2 renderAreaSize = (glm::uvec2)context.GetViewport().GetSize();
+		const Viewport& viewport = context.RenderWorld.GetEntityComponent<const Viewport>(context.ViewportEntity);
+
+		glm::uvec2 renderAreaSize = viewport.Size;
 		glm::uvec2 localGroupSize = m_Shader->GetMetadata()->LocalGroupSize;
 
 		glm::uvec2 groupCount = (renderAreaSize + localGroupSize - glm::uvec2(1)) / localGroupSize;

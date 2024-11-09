@@ -18,7 +18,7 @@ namespace Flare
 
 		Vignette();
 
-		void RegisterRenderPasses(RenderGraph& renderGraph, const Viewport& viewport) override;
+		void RegisterRenderPasses(RenderGraph& renderGraph, Entity viewportEntity, const World& renderWorld) override;
 		const SerializableObjectDescriptor& GetSerializationDescriptor() const override;
 	public:
 		glm::vec4 Color;

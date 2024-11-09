@@ -4,16 +4,18 @@
 
 #include "FlareCore/Log.h"
 
+#include "FlareECS/World.h"
+
 #include "Flare/AssetManager/AssetManager.h"
 
 #include "Flare/Renderer/CommandBuffer.h"
 #include "Flare/Renderer/GraphicsContext.h"
 #include "Flare/Renderer/Material.h"
 #include "Flare/Renderer/Renderer.h"
+#include "Flare/Renderer/RendererComponents.h"
 #include "Flare/Renderer/RendererPrimitives.h"
 #include "Flare/Renderer/Shader.h"
 #include "Flare/Renderer/ShaderLibrary.h"
-#include "Flare/Renderer/Viewport.h"
 
 #include "Flare/Renderer/Passes/BlitPass.h"
 
@@ -30,7 +32,7 @@ namespace Flare
 	{
 	}
 
-	void ToneMapping::RegisterRenderPasses(RenderGraph& renderGraph, const Viewport& viewport)
+	void ToneMapping::RegisterRenderPasses(RenderGraph& renderGraph, Entity viewportEntity, const World& renderWorld)
 	{
 		FLARE_PROFILE_FUNCTION();
 
@@ -39,17 +41,19 @@ namespace Flare
 
 		RenderGraphTextureId intermediateTexture = renderGraph.CreateTexture(TextureFormat::R11G11B10, "ToneMapping.IntermediateColorTexture");
 
+		RenderGraphTextureId viewportColorTexture = renderWorld.GetEntityComponent<const ViewportColorOutput>(viewportEntity).Id;
+
 		RenderGraphPassSpecifications toneMappingPass{};
 		toneMappingPass.SetDebugName("ToneMapping");
-		toneMappingPass.AddInput(viewport.ColorTextureId);
+		toneMappingPass.AddInput(viewportColorTexture);
 		toneMappingPass.AddOutput(intermediateTexture);
 
 		RenderGraphPassSpecifications blitPass{};
 		blitPass.SetDebugName("ToneMappingBlit");
-		BlitPass::ConfigureSpecifications(blitPass, intermediateTexture, viewport.ColorTextureId);
+		BlitPass::ConfigureSpecifications(blitPass, intermediateTexture, viewportColorTexture);
 
-		renderGraph.AddPass(toneMappingPass, Ref<ToneMappingPass>::New(viewport.ColorTextureId));
-		renderGraph.AddPass(blitPass, Ref<BlitPass>::New(intermediateTexture, viewport.ColorTextureId, TextureFiltering::Closest));
+		renderGraph.AddPass(toneMappingPass, Ref<ToneMappingPass>::New(viewportColorTexture));
+		renderGraph.AddPass(blitPass, Ref<BlitPass>::New(intermediateTexture, viewportColorTexture, TextureFiltering::Closest));
 	}
 
 	const SerializableObjectDescriptor& ToneMapping::GetSerializationDescriptor() const
@@ -89,7 +93,7 @@ namespace Flare
 		if (colorTextureIndex)
 			m_Material->SetTextureProperty(*colorTextureIndex, context.GetRenderGraphResourceManager().GetTexture(m_ColorTexture));
 
-		commandBuffer->SetViewportAndScissors(Math::Rect(glm::vec2(0.0f, 0.0f), (glm::vec2)context.GetViewport().GetSize()));
+		commandBuffer->SetDefaultViewportAndScissors();
 
 		commandBuffer->ApplyMaterial(m_Material);
 		commandBuffer->DrawMeshIndexed(RendererPrimitives::GetFullscreenQuadMesh(), 0, 0, 1);

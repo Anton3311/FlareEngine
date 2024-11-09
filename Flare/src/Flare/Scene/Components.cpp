@@ -5,7 +5,6 @@
 #include "Flare/AssetManager/AssetManager.h"
 
 #include "Flare/Renderer/Renderer.h"
-#include "Flare/Renderer/Viewport.h"
 
 namespace Flare
 {
@@ -35,37 +34,6 @@ namespace Flare
 		  FOV(60.0f),
 		  Near(0.1f),
 		  Far(1000.0f) {}
-
-	glm::mat4 CameraComponent::GetProjection() const
-	{
-		glm::uvec2 viewportSize = Renderer::GetMainViewport().GetSize();
-
-		float halfSize = Size / 2;
-		float aspectRation = (float)viewportSize.x / (float)viewportSize.y;
-
-		if (Projection == CameraComponent::ProjectionType::Orthographic)
-			return glm::orthoRH_ZO(-halfSize * aspectRation, halfSize * aspectRation, -halfSize, halfSize, Near, Far);
-		else
-			return glm::perspectiveRH_ZO<float>(glm::radians(FOV), aspectRation, Near, Far);
-	}
-
-	glm::vec3 CameraComponent::ScreenToWorld(glm::vec2 point) const
-	{
-		glm::mat4 projection = GetProjection();
-		glm::mat4 inverseProjection = glm::inverse(projection);
-
-		point.y = Renderer::GetMainViewport().GetSize().y - point.y;
-
-		point = (point / (glm::vec2)Renderer::GetMainViewport().GetSize()) * 2.0f - glm::vec2(1.0f);
-		return inverseProjection * glm::vec4(point, 0.0f, 1.0f);
-	}
-
-	glm::vec3 CameraComponent::ViewportToWorld(glm::vec2 point) const
-	{
-		glm::mat4 projection = GetProjection();
-		glm::mat4 inverseProjection = glm::inverse(projection);
-		return inverseProjection * glm::vec4(point, 0.0f, 1.0f);
-	}
 
 	FLARE_IMPL_COMPONENT(SpriteComponent);
 	SpriteComponent::SpriteComponent()

@@ -3,11 +3,14 @@
 #include "FlareCore/Core.h"
 #include "Flare/Math/Math.h"
 
+#include "FlareECS/Entity/Entity.h"
+
 namespace Flare
 {
+	class RenderGraph;
 	struct SceneSubmition;
+	class World;
 
-	class Viewport;
 	class FLARE_API DebugRenderer
 	{
 	public:
@@ -41,6 +44,6 @@ namespace Flare
 		static void DrawWireBox(const glm::vec3 corners[8], const glm::vec4& color = glm::vec4(1.0f));
 		static void DrawAABB(const Math::AABB& aabb, const glm::vec4& color = glm::vec4(1.0f));
 
-		static void ConfigurePasses(Viewport& viewport);
+		static void ConfigurePasses(const World& renderWorld, RenderGraph& renderGraph, Entity viewportEntity);
 	};
 }

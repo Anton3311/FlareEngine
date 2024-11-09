@@ -10,8 +10,9 @@
 
 #include "Flare/AssetManager/AssetManager.h"
 
-#include "Flare/Renderer/Viewport.h"
 #include "Flare/Renderer/Renderer.h"
+#include "Flare/Renderer/RendererComponents.h"
+#include "Flare/Renderer/RenderGraph/RenderGraph.h"
 #include "Flare/Renderer/ShaderLibrary.h"
 #include "Flare/Renderer/Pipeline.h"
 #include "Flare/Renderer/SceneSubmition.h"
@@ -201,15 +202,19 @@ namespace Flare
 		s_Renderer2DData.SceneSubmition = nullptr;
 	}
 
-	void Renderer2D::ConfigurePasses(Viewport& viewport)
+	void Renderer2D::ConfigurePasses(Entity viewportEntity, RenderGraph& renderGraph)
 	{
 		FLARE_PROFILE_FUNCTION();
+
+		const ViewportColorOutput* colorOutput = Renderer::GetRenderWorld().TryGetEntityComponent<const ViewportColorOutput>(viewportEntity);
+		FLARE_CORE_ASSERT(colorOutput);
+
 		RenderGraphPassSpecifications geometryPass{};
 		geometryPass.SetDebugName("2DGeometryPass");
 		geometryPass.SetType(RenderGraphPassType::Graphics);
-		geometryPass.AddOutput(viewport.ColorTextureId);
+		geometryPass.AddOutput(colorOutput->Id);
 		
-		viewport.GetRenderGraph()->AddPass(geometryPass, Ref<Geometry2DPass>::New(
+		renderGraph.AddPass(geometryPass, Ref<Geometry2DPass>::New(
 			s_Renderer2DData.Limits,
 			s_Renderer2DData.IndexBuffer,
 			s_Renderer2DData.DefaultMaterial,
@@ -218,9 +223,9 @@ namespace Flare
 		RenderGraphPassSpecifications textPass{};
 		textPass.SetDebugName("TextPass");
 		textPass.SetType(RenderGraphPassType::Graphics);
-		textPass.AddOutput(viewport.ColorTextureId);
+		textPass.AddOutput(colorOutput->Id);
 
-		viewport.GetRenderGraph()->AddPass(textPass, Ref<TextPass>::New(
+		renderGraph.AddPass(textPass, Ref<TextPass>::New(
 			s_Renderer2DData.Limits,
 			s_Renderer2DData.IndexBuffer,
 			s_Renderer2DData.TextShader,

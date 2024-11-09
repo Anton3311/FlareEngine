@@ -1,5 +1,7 @@
 #pragma once
 
+#include "FlareECS/Entity/Entity.h"
+
 #include "Flare/Renderer/PostProcessing/PostProcessingEffect.h"
 
 #include <optional>
@@ -7,6 +9,7 @@
 namespace Flare
 {
 	class RenderGraph;
+	class World;
 	class FLARE_API PostProcessingManager
 	{
 	public:
@@ -17,7 +20,7 @@ namespace Flare
 		};
 
 		void AddEffect(Ref<PostProcessingEffect> effect);
-		void RegisterRenderPasses(RenderGraph& renderGraph, const Viewport& viewport);
+		void RegisterRenderPasses(RenderGraph& renderGraph, Entity viewportEntity, const World& renderWorld);
 
 		std::optional<Ref<PostProcessingEffect>> FindEffect(const SerializableObjectDescriptor& descriptor) const;
 

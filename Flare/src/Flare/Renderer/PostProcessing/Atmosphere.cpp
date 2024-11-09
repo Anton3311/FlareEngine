@@ -8,7 +8,9 @@
 
 #include "Flare/Renderer/CommandBuffer.h"
 #include "Flare/Renderer/Renderer.h"
+#include "Flare/Renderer/RendererComponents.h"
 #include "Flare/Renderer/RendererPrimitives.h"
+#include "Flare/Renderer/RenderGraph/RenderGraph.h"
 #include "Flare/Renderer/Material.h"
 #include "Flare/Renderer/Sampler.h"
 #include "Flare/Renderer/ShaderLibrary.h"
@@ -42,7 +44,7 @@ namespace Flare
 	FLARE_IMPL_TYPE(Atmosphere);
 	FLARE_SERIALIZABLE_IMPL(Atmosphere);
 
-	void Atmosphere::RegisterRenderPasses(RenderGraph& renderGraph, const Viewport& viewport)
+	void Atmosphere::RegisterRenderPasses(RenderGraph& renderGraph, Entity viewportEntity, const World& renderWorld)
 	{
 		FLARE_PROFILE_FUNCTION();
 		if (!IsEnabled())
@@ -60,8 +62,8 @@ namespace Flare
 		renderGraph.AddPass(lutPass, Ref<AtmosphereTransmittanceLUTPass>::New(Ref(this)));
 
 		RenderGraphPassSpecifications mainPass{};
-		mainPass.AddOutput(viewport.ColorTextureId);
-		mainPass.AddOutput(viewport.DepthTextureId);
+		mainPass.AddOutput(renderWorld.GetEntityComponent<const ViewportColorOutput>(viewportEntity).Id);
+		mainPass.AddOutput(renderWorld.GetEntityComponent<const ViewportDepthOutput>(viewportEntity).Id);
 		mainPass.AddInput(sunTransmittanceLUT);
 		mainPass.SetType(RenderGraphPassType::Graphics);
 		mainPass.SetDebugName("AtmospherePass");
@@ -215,8 +217,10 @@ namespace Flare
 		m_AtmosphereMaterial->WritePropertyValue<int32_t>(*sunTransmittanceSteps, (int32_t)m_Parameters->SunTransmittanceSteps);
 		m_AtmosphereMaterial->SetTextureProperty(*sunTransmittanceLUT, context.GetRenderGraph().GetTexture(m_SunTransmittanceLUT), m_LUTSampler);
 
-		commandBuffer->SetGlobalDescriptorSet(context.GetViewport().GetFrameResources().CameraDescriptorSet, 0);
-		commandBuffer->SetGlobalDescriptorSet(context.GetViewport().GetFrameResources().GlobalDescriptorSet, 1);
+		const ViewportGlobalResources& resources = context.RenderWorld.GetEntityComponent<const ViewportGlobalResources>(context.ViewportEntity);
+
+		commandBuffer->SetGlobalDescriptorSet(resources.GetCurrentFrameResources().CameraDescriptorSet, 0);
+		commandBuffer->SetGlobalDescriptorSet(resources.GetCurrentFrameResources().GlobalDescriptorSet, 1);
 		commandBuffer->ApplyMaterial(m_AtmosphereMaterial);
 
 		commandBuffer->SetDefaultViewportAndScissors();

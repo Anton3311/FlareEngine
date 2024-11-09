@@ -22,10 +22,10 @@ namespace Flare
 
 		SSAO() = default;
 
-		void RegisterRenderPasses(RenderGraph& renderGraph, const Viewport& viewport) override;
+		void RegisterRenderPasses(RenderGraph& renderGraph, Entity viewportEntity, const World& renderWorld) override;
 		const SerializableObjectDescriptor& GetSerializationDescriptor() const override;
 	private:
-		void RegisterHBAORenderPasses(RenderGraph& renderGraph, const Viewport& viewport);
+		void RegisterHBAORenderPasses(RenderGraph& renderGraph, Entity viewportEntity, const World& renderWorld);
 	public:
 		float Bias = 30.0f;
 		float Radius = 1.0f;

@@ -2,13 +2,15 @@
 
 #include "ShadowCascadePass.h"
 
+#include "FlareECS/World.h"
+
 #include "Flare/Renderer/CommandBuffer.h"
 #include "Flare/Renderer/DescriptorSet.h"
 #include "Flare/Renderer/GPUTimer.h"
 #include "Flare/Renderer/RenderData.h"
 #include "Flare/Renderer/Renderer.h"
+#include "Flare/Renderer/RendererComponents.h"
 #include "Flare/Renderer/RendererSubmitionQueue.h"
-#include "Flare/Renderer/Viewport.h"
 
 #include "Flare/Renderer/Passes/ShadowPass.h"
 
@@ -65,7 +67,7 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		const Viewport& currentViewport = context.GetViewport();
+		const Viewport& viewport = context.RenderWorld.GetEntityComponent<const Viewport>(context.ViewportEntity);
 		const ShadowSettings& shadowSettings = Renderer::GetShadowSettings();
 
 		const FrameResources& resources = m_FrameResources[GraphicsContext::GetInstance().GetCurrentFrameInFlight()];
@@ -142,9 +144,10 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 
 		const FrameResources& resources = m_FrameResources[GraphicsContext::GetInstance().GetCurrentFrameInFlight()];
+		const ViewportGlobalResources& globalResources = context.RenderWorld.GetEntityComponent<const ViewportGlobalResources>(context.ViewportEntity);
 
 		commandBuffer->SetGlobalDescriptorSet(resources.CameraDescriptor, 0);
-		commandBuffer->SetGlobalDescriptorSet(context.GetViewport().GetFrameResources().GlobalDescriptorSetWithoutShadows, 1);
+		commandBuffer->SetGlobalDescriptorSet(globalResources.GetCurrentFrameResources().GlobalDescriptorSetWithoutShadows, 1);
 		commandBuffer->SetGlobalDescriptorSet(resources.InstanceBufferDescriptor, 2);
 
 		commandBuffer->ApplyMaterial(Renderer::GetDepthOnlyMaterial());

@@ -93,7 +93,7 @@ namespace Flare
 		inline const std::vector<VisibleSubMeshRange>& GetVisibleSubMeshIndices() const { return m_VisibleSubMeshRanges; }
 	private:
 		void CalculateShadowMappingParameters(const RenderGraphContext& context);
-		void ComputeShaderProjectionsAndCullObjects(const RenderGraphContext& context);
+		void ComputeShadowProjectionsAndCullObjects(const RenderGraphContext& context);
 		void FilterSubmitions(const RenderGraphContext& context);
 
 		void CullSubMeshes(PartiallyVisibleMesh& mesh,

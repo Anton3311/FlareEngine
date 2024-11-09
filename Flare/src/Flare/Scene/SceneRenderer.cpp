@@ -6,6 +6,7 @@
 
 #include "FlareECS/System/System.h"
 #include "FlareECS/System/SystemsManager.h"
+#include "FlareECS/World.h"
 
 #include "Flare/Scene/Components.h"
 #include "Flare/Scene/Scene.h"
@@ -16,6 +17,7 @@
 
 #include "Flare/Renderer/GraphicsContext.h"
 #include "Flare/Renderer/Renderer.h"
+#include "Flare/Renderer/RendererComponents.h"
 
 #include "Flare/DebugRenderer/DebugRenderer.h"
 
@@ -161,16 +163,24 @@ namespace Flare
 		Scene::SetActive(previousActiveScene);
 	}
 
-	void SceneRenderer::RenderViewport(Viewport& viewport, const RenderView* view)
+	void SceneRenderer::RenderViewport(Entity viewportEntity, const RenderView* viewOverride, const std::function<void(RenderGraph&)>& onRenderGraphBuild)
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		Renderer::SetCurrentViewport(viewport);
+		const World& renderWorld = Renderer::GetRenderWorld();
+
+		const Viewport& viewport = renderWorld.GetEntityComponent<const Viewport>(viewportEntity);
+		if (!viewport.IsValid())
+			return;
+
+		const ViewportRenderGraph& viewportRenderGraph = renderWorld.GetEntityComponent<const ViewportRenderGraph>(viewportEntity);
+
+		Renderer::PrepareViewport(viewportEntity, onRenderGraphBuild);
 
 		RenderView sceneCameraView{};
-		if (view != nullptr)
+		if (viewOverride != nullptr)
 		{
-			sceneCameraView = *view;
+			sceneCameraView = *viewOverride;
 		}
 		else
 		{
@@ -208,11 +218,11 @@ namespace Flare
 			}
 		}
 
-		sceneCameraView.ViewportSize = viewport.GetSize();
+		sceneCameraView.ViewportSize = viewport.Size;
 
-		PrepareViewportForRendering(viewport, sceneCameraView);
+		PrepareViewportForRendering(viewportEntity, sceneCameraView);
 
-		viewport.GetRenderGraph()->Execute(GraphicsContext::GetInstance().GetCommandBuffer(), m_SceneSubmition, sceneCameraView);
+		viewportRenderGraph.Graph->Execute(GraphicsContext::GetInstance().GetCommandBuffer(), m_SceneSubmition, sceneCameraView);
 	}
 
 	void SceneRenderer::SetDefaultEnvironmentLight(const glm::vec3& color, float intensity)
@@ -246,11 +256,9 @@ namespace Flare
 		m_SpotLightsQuery = world.NewQuery().All().With<TransformComponent, SpotLight>().Build();
 	}
 
-	void SceneRenderer::PrepareViewportForRendering(Viewport& viewport, const RenderView& view)
+	void SceneRenderer::PrepareViewportForRendering(Entity viewportEntity, const RenderView& view)
 	{
 		FLARE_PROFILE_FUNCTION();
-
-		viewport.PrepareViewport();
 
 		Ref<CommandBuffer> commandBuffer = GraphicsContext::GetInstance().GetCommandBuffer();
 
@@ -258,15 +266,14 @@ namespace Flare
 		lightData.Color = m_SceneSubmition.DirectionalLight.Color;
 		lightData.Intensity = m_SceneSubmition.DirectionalLight.Intensity;
 		lightData.Direction = m_SceneSubmition.DirectionalLight.Direction;
-
 		lightData.Near = 0.1f;
-
 		lightData.EnvironmentLight = glm::vec4(m_SceneSubmition.Environment.EnvironmentColor, m_SceneSubmition.Environment.EnvironmentColorIntensity);
-
 		lightData.PointLightsCount = (uint32_t)m_SceneSubmition.PointLights.size();
 		lightData.SpotLightsCount = (uint32_t)m_SceneSubmition.SpotLights.size();
 
-		const ViewportFrameResources& viewportFrameResources = viewport.GetFrameResources();
+		const World& renderWorld = Renderer::GetRenderWorld();
+		const ViewportGlobalResources& viewportGlobalResources = renderWorld.GetEntityComponent<const ViewportGlobalResources>(viewportEntity);
+		const ViewportFrameResources& viewportFrameResources = viewportGlobalResources.GetCurrentFrameResources();
 
 		{
 			FLARE_PROFILE_SCOPE("UpdateLightUniformBuffer");
@@ -307,7 +314,8 @@ namespace Flare
 			viewportFrameResources.SpotLightsBuffer->SetData(spotLightsData, 0, commandBuffer);
 		}
 
-		viewport.UpdateGlobalDescriptorSets();
+		viewportGlobalResources.SetupGlobalDescriptorSet(viewportFrameResources, viewportFrameResources.GlobalDescriptorSet);
+		viewportGlobalResources.SetupGlobalDescriptorSet(viewportFrameResources, viewportFrameResources.GlobalDescriptorSetWithoutShadows);
 	}
 
 

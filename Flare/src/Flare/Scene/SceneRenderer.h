@@ -10,9 +10,9 @@
 namespace Flare
 {
 	struct RenderView;
-
-	class Viewport;
+	class RenderGraph;
 	class Scene;
+
 	class FLARE_API SceneRenderer
 	{
 	public:
@@ -24,14 +24,14 @@ namespace Flare
 
 		// Renders the scene to a given viewport.
 		// In case the given view is null, uses the one given by SceneSubmition.
-		void RenderViewport(Viewport& viewport, const RenderView* viewOverride = nullptr);
+		void RenderViewport(Entity viewportEntity, const RenderView* viewOverride, const std::function<void(RenderGraph&)>& onRenderGraphBuild);
 
 		void SetDefaultEnvironmentLight(const glm::vec3& color, float intensity);
 		void SetDefaultDirectionalLight(const glm::vec3& direction, const glm::vec3& color, float intensity);
 	private:
 		void InitializeQueries();
 
-		void PrepareViewportForRendering(Viewport& viewport, const RenderView& view);
+		void PrepareViewportForRendering(Entity viewportEntity, const RenderView& view);
 	private:
 		Query m_CameraQuery;
 		Query m_EnvironmentQuery;

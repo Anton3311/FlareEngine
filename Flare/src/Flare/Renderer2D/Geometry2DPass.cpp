@@ -4,6 +4,8 @@
 
 #include "FlareCore/Profiler/Profiler.h"
 
+#include "FlareECS/World.h"
+
 #include "Flare/Math/Math.h"
 
 #include "Flare/Renderer/Buffer.h"
@@ -11,9 +13,9 @@
 #include "Flare/Renderer/DescriptorSet.h"
 #include "Flare/Renderer/FrameBuffer.h"
 #include "Flare/Renderer/Renderer.h"
+#include "Flare/Renderer/RendererComponents.h"
 #include "Flare/Renderer/SceneSubmition.h"
 #include "Flare/Renderer/Texture.h"
-#include "Flare/Renderer/Viewport.h"
 
 #include "Flare/Renderer2D/Renderer2DFrameData.h"
 
@@ -63,7 +65,10 @@ namespace Flare
 		const Renderer2DFrameData& submition = context.GetSceneSubmition().Renderer2DSubmition;
 		const FrameResources& frameResources = m_FrameResources[GraphicsContext::GetInstance().GetCurrentFrameInFlight()];
 
-		commandBuffer->SetGlobalDescriptorSet(context.GetViewport().GetFrameResources().CameraDescriptorSet, 0);
+		const ViewportGlobalResources* viewportResources = context.RenderWorld.TryGetEntityComponent<const ViewportGlobalResources>(context.ViewportEntity);
+		FLARE_CORE_ASSERT(viewportResources);
+
+		commandBuffer->SetGlobalDescriptorSet(viewportResources->GetCurrentFrameResources().CameraDescriptorSet, 0);
 		commandBuffer->BindVertexBuffers(Span((Ref<const GPUBuffer>*)&frameResources.VertexBuffer, 1), 0);
 		commandBuffer->BindIndexBuffer(m_IndexBuffer, IndexFormat::UInt32);
 

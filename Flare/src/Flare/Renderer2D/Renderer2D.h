@@ -2,6 +2,8 @@
 
 #include "FlareCore/Core.h"
 
+#include "FlareECS/World.h"
+
 #include <glm/glm.hpp>
 #include <string_view>
 
@@ -13,9 +15,9 @@ namespace Flare
 	class DescriptorSetLayout;
 	class Font;
 	class Material;
+	class RenderGraph;
 	class Sprite;
 	class Texture;
-	class Viewport;
 
 	struct Renderer2DStats
 	{
@@ -46,7 +48,7 @@ namespace Flare
 		static void BeginScene(SceneSubmition& sceneSubmition);
 		static void EndScene();
 
-		static void ConfigurePasses(Viewport& viewport);
+		static void ConfigurePasses(Entity viewportEntity, RenderGraph& renderGraph);
 		
 		static void SetMaterial(const Ref<Material>& material);
 		static Ref<Material> GetMaterial();

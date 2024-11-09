@@ -2,6 +2,8 @@
 
 #include "FlareCore/Collections/Span.h"
 
+#include "FlareECS/Entity/Entity.h"
+
 #include "Flare/Renderer/RenderGraph/DependecyGraph.h"
 #include "Flare/Renderer/RenderGraph/RenderGraphPass.h"
 #include "Flare/Renderer/RenderGraph/RenderGraphPassSpecifications.h"
@@ -13,16 +15,17 @@
 
 namespace Flare
 {
+	class CommandBuffer;
 	struct RenderView;
 	struct SceneSubmition;
+	class World;
 
-	class CommandBuffer;
-	class Viewport;
-
-	class FLARE_API RenderGraph
+	// TODO: Shouldn't be RefCounted
+	class FLARE_API RenderGraph : public RefCounted<RenderGraph>
 	{
+	protected:
+		RenderGraph(World& renderWorld, Entity viewportEntity);
 	public:
-		RenderGraph(const Viewport& viewport);
 		virtual ~RenderGraph() = default;
 
 		void AddPass(const RenderGraphPassSpecifications& specifications, Ref<RenderGraphPass> pass);
@@ -62,17 +65,18 @@ namespace Flare
 		inline const std::vector<RenderPassNode>& GetNodes() const { return m_Nodes; }
 		inline const std::vector<ExternalRenderGraphResource>& GetExternalResources() const { return m_ExternalResources; }
 		inline const DependecyGraph& GetDependencyGraph() const { return m_DependencyGraph; }
-		inline const Viewport& GetViewport() const { return m_Viewport; }
 
-		static Scope<RenderGraph> Create(const Viewport& viewport);
+		static Ref<RenderGraph> Create(World& renderWorld, Entity viewportEntity);
 	protected:
 		virtual void OnPrepare() = 0;
 		virtual void OnTexturesResize() = 0;
 		virtual void OnClear() = 0;
 		virtual void OnBuild() = 0;
+	protected:
+		Entity m_ViewportEntity;
+		World& m_RenderWorld;
 	private:
 		bool m_IsValid = false;
-		const Viewport& m_Viewport;
 
 		std::vector<RenderPassNode> m_Nodes;
 		std::vector<ExternalRenderGraphResource> m_ExternalResources;

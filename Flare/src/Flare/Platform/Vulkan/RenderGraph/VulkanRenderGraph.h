@@ -42,7 +42,7 @@ namespace Flare
 	class FLARE_API VulkanRenderGraph : public RenderGraph
 	{
 	public:
-		VulkanRenderGraph(const Viewport& viewport);
+		VulkanRenderGraph(World& renderWorld, Entity viewportEntity);
 
 		void Execute(Ref<CommandBuffer> commandBuffer, const SceneSubmition& sceneSubmition, const RenderView& view) override;
 	private:

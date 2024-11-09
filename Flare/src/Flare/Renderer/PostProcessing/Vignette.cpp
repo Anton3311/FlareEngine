@@ -6,12 +6,14 @@
 
 #include "Flare/Scene/Scene.h"
 
-#include "Flare/Renderer/Renderer.h"
-#include "Flare/Renderer/ShaderLibrary.h"
-#include "Flare/Renderer/GraphicsContext.h"
 #include "Flare/Renderer/CommandBuffer.h"
-#include "Flare/Renderer/RendererPrimitives.h"
+#include "Flare/Renderer/GraphicsContext.h"
 #include "Flare/Renderer/Material.h"
+#include "Flare/Renderer/Renderer.h"
+#include "Flare/Renderer/RendererComponents.h"
+#include "Flare/Renderer/RendererPrimitives.h"
+#include "Flare/Renderer/RenderGraph/RenderGraph.h"
+#include "Flare/Renderer/ShaderLibrary.h"
 
 #include "FlareCore/Profiler/Profiler.h"
 
@@ -29,7 +31,7 @@ namespace Flare
 	{
 	}
 
-	void Vignette::RegisterRenderPasses(RenderGraph& renderGraph, const Viewport& viewport)
+	void Vignette::RegisterRenderPasses(RenderGraph& renderGraph, Entity viewportEntity, const World& renderWorld)
 	{
 		FLARE_PROFILE_FUNCTION();
 
@@ -38,7 +40,7 @@ namespace Flare
 		
 		RenderGraphPassSpecifications specifications{};
 		specifications.SetDebugName("VignettePass");
-		specifications.AddOutput(viewport.ColorTextureId);
+		specifications.AddOutput(renderWorld.GetEntityComponent<const ViewportColorOutput>(viewportEntity).Id);
 
 		renderGraph.AddPass(specifications, Ref<VignettePass>::New());
 	}

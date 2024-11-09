@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Flare/AssetManager/Asset.h"
+
 #include "FlareEditor/SceneViewSettings.h"
 #include "FlareEditor/Guizmo.h"
 #include "FlareEditor/ViewportWindow.h"
@@ -31,11 +33,11 @@ namespace Flare
 
 		virtual void OnAttach() override;
 
-		virtual void OnRenderViewport() override;
+		virtual void OnRenderViewport(const World& renderWorld) override;
 		virtual void OnViewportChanged() override;
 		virtual void OnRenderImGui() override;
 		virtual void OnEvent(Event& event) override;
-		virtual void OnAddRenderPasses() override;
+		virtual void OnAddRenderPasses(RenderGraph& renderGraph) override;
 
 		inline EditorCamera& GetEditorCamera() { return m_EditorCamera; }
 		inline const EditorCamera& GetEditorCamera() const { return m_EditorCamera; }

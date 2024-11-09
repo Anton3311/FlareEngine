@@ -4,12 +4,14 @@
 
 #include "FlareCore/Profiler/Profiler.h"
 
+#include "FlareECS/World.h"
+
 #include "Flare/Renderer/CommandBuffer.h"
-#include "Flare/Renderer/Renderer.h"
-#include "Flare/Renderer/ShaderLibrary.h"
 #include "Flare/Renderer/Material.h"
 #include "Flare/Renderer/RenderData.h"
-#include "Flare/Renderer/Viewport.h"
+#include "Flare/Renderer/Renderer.h"
+#include "Flare/Renderer/RendererComponents.h"
+#include "Flare/Renderer/ShaderLibrary.h"
 
 #include "Flare/Platform/Vulkan/VulkanPipeline.h"
 #include "Flare/Platform/Vulkan/VulkanCommandBuffer.h"
@@ -66,8 +68,11 @@ namespace Flare
 
 		int32_t scaleLevel = (int32_t)glm::floor(y / step);
 
+		const ViewportGlobalResources* viewportResources = context.RenderWorld.TryGetEntityComponent<const ViewportGlobalResources>(context.ViewportEntity);
+		FLARE_CORE_ASSERT(viewportResources);
+
 		vulkanCommandBuffer->BindPipeline(m_Pipeline);
-		vulkanCommandBuffer->BindDescriptorSet(context.GetViewport().GetFrameResources().CameraDescriptorSet, 0);
+		vulkanCommandBuffer->BindDescriptorSet(viewportResources->GetCurrentFrameResources().CameraDescriptorSet, 0);
 		vulkanCommandBuffer->BindVertexBuffers(Span((Ref<const GPUBuffer>*)&m_VertexBuffer, 1), 0);
 
 		// First draw the secondary grid and only than the primary one.

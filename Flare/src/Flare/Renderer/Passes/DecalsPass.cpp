@@ -4,8 +4,11 @@
 
 #include "FlareCore/Profiler/Profiler.h"
 
+#include "FlareECS/World.h"
+
 #include "Flare/Renderer/Renderer.h"
-#include "Flare/Renderer/Viewport.h"
+#include "Flare/Renderer/RenderGraph/RenderGraph.h"
+#include "Flare/Renderer/RendererComponents.h"
 #include "Flare/Renderer/RendererPrimitives.h"
 #include "Flare/Renderer/CommandBuffer.h"
 #include "Flare/Renderer/DescriptorSet.h"
@@ -86,7 +89,10 @@ namespace Flare
 		const FrameResources& frameResources = m_FrameResources[GraphicsContext::GetInstance().GetCurrentFrameInFlight()];
 		const auto& submittedDecals = context.GetSceneSubmition().DecalSubmitions;
 
-		commandBuffer->SetGlobalDescriptorSet(context.GetViewport().GetFrameResources().CameraDescriptorSet, 0);
+		const ViewportGlobalResources* viewportResources = context.RenderWorld.TryGetEntityComponent<const ViewportGlobalResources>(context.ViewportEntity);
+		FLARE_CORE_ASSERT(viewportResources);
+
+		commandBuffer->SetGlobalDescriptorSet(viewportResources->GetCurrentFrameResources().CameraDescriptorSet, 0);
 		commandBuffer->SetGlobalDescriptorSet(frameResources.DecalSet, 1);
 		commandBuffer->SetGlobalDescriptorSet(frameResources.InstanceBufferDescriptor, 2);
 

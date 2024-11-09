@@ -9,6 +9,9 @@
 
 #include "Flare/Scene/SceneRenderer.h"
 
+#include "Flare/Renderer/Renderer.h"
+#include "Flare/Renderer/RendererComponents.h"
+
 #include "FlareEditor/AssetManager/PrefabImporter.h"
 
 #include <imgui.h>
@@ -32,11 +35,14 @@ namespace Flare
         m_SceneViewSettings.ShowGrid = true;
 
         m_ViewportWindow.SetScene(m_PreviewScene);
-        m_ViewportWindow.GetViewport().SetShadowMappingEnabled(false);
+        Entity viewportEntity = m_ViewportWindow.GetViewportEntity();
+        World& renderWorld = Renderer::GetRenderWorld();
+
+        Viewport& viewport = renderWorld.GetEntityComponent<Viewport>(viewportEntity);
+        viewport.Settings.ShadowMappingEnabled = false;
+        viewport.Settings.PostProcessingEnabled = false;
 
         m_PreviewScene->InitializeRuntime();
-
-        m_ViewportWindow.GetViewport().SetPostProcessingEnabled(false);
     }
 
     void PrefabEditor::OnOpen(AssetHandle asset)
@@ -46,7 +52,8 @@ namespace Flare
         m_Prefab = AssetManager::GetAsset<Prefab>(asset);
         m_Prefab->CreateInstance(GetWorld());
 
-        m_ViewportWindow.GetViewport().GetRenderGraph()->SetNeedsRebuilding();
+        World& renderWorld = Renderer::GetRenderWorld();
+        renderWorld.GetEntityComponent<ViewportRenderGraph>(m_ViewportWindow.GetViewportEntity()).Graph->SetNeedsRebuilding();
 
         m_ViewportWindow.ShowWindow = true;
     }
@@ -75,7 +82,7 @@ namespace Flare
 
         m_SceneRenderer->CollectSceneData();
 
-        m_ViewportWindow.OnRenderViewport();
+        m_ViewportWindow.OnRenderViewport(Renderer::GetRenderWorld());
         m_ViewportWindow.OnRenderImGui();
 
         ImGui::Begin("Prefab Entities");

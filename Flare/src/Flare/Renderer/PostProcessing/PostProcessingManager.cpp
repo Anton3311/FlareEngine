@@ -19,14 +19,14 @@ namespace Flare
 			m_IsDirty = true;
 	}
 
-	void PostProcessingManager::RegisterRenderPasses(RenderGraph& renderGraph, const Viewport& viewport)
+	void PostProcessingManager::RegisterRenderPasses(RenderGraph& renderGraph, Entity viewportEntity, const World& renderWorld)
 	{
 		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(!m_Initialized || m_IsDirty);
 
 		for (const auto& entry : m_Entries)
 		{
-			entry.Effect->RegisterRenderPasses(renderGraph, viewport);
+			entry.Effect->RegisterRenderPasses(renderGraph, viewportEntity, renderWorld);
 		}
 
 		m_Initialized = true;

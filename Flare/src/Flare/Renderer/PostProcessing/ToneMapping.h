@@ -18,7 +18,7 @@ namespace Flare
 
 		ToneMapping();
 
-		void RegisterRenderPasses(RenderGraph& renderGraph, const Viewport& viewport) override;
+		void RegisterRenderPasses(RenderGraph& renderGraph, Entity viewportEntity, const World& renderWorld) override;
 		const SerializableObjectDescriptor& GetSerializationDescriptor() const override;
 	};
 

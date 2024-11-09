@@ -4,13 +4,15 @@
 
 #include "FlareCore/Profiler/Profiler.h"
 
+#include "FlareECS/World.h"
+
 #include "Flare/AssetManager/AssetManager.h"
 
 #include "Flare/Renderer/CommandBuffer.h"
 #include "Flare/Renderer/Material.h"
+#include "Flare/Renderer/RendererComponents.h"
 #include "Flare/Renderer/RendererPrimitives.h"
 #include "Flare/Renderer/ShaderLibrary.h"
-#include "Flare/Renderer/Viewport.h"
 
 namespace Flare
 {
@@ -38,7 +40,10 @@ namespace Flare
 
 		commandBuffer->SetDefaultViewportAndScissors();
 
-		commandBuffer->SetGlobalDescriptorSet(context.GetViewport().GetFrameResources().CameraDescriptorSet, 0);
+		const ViewportGlobalResources* viewportResources = context.RenderWorld.TryGetEntityComponent<const ViewportGlobalResources>(context.ViewportEntity);
+		FLARE_CORE_ASSERT(viewportResources);
+
+		commandBuffer->SetGlobalDescriptorSet(viewportResources->GetCurrentFrameResources().CameraDescriptorSet, 0);
 
 		std::optional<uint32_t> depthTextureProperty = m_Material->GetShader()->GetPropertyIndex("u_DepthTexture");
 

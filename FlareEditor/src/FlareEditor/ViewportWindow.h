@@ -1,7 +1,8 @@
 #pragma once
 
 #include "Flare/Renderer/RenderData.h"
-#include "Flare/Renderer/Viewport.h"
+
+#include "FlareECS/Entity/Entity.h"
 
 #include <glm/glm.hpp>
 
@@ -11,36 +12,36 @@
 namespace Flare
 {
 	class Event;
+	class RenderGraph;
 	class Scene;
 	class SceneRenderer;
+	class Texture;
+	class World;
+
 	class ViewportWindow : public RefCounted<ViewportWindow>
 	{
 	public:
 		ViewportWindow(const Scope<SceneRenderer>& sceneRenderer, std::string_view name);
-		virtual ~ViewportWindow() = default;
-	public:
+		virtual ~ViewportWindow();
+
 		virtual void OnAttach();
 
 		virtual void OnRenderImGui();
-		virtual void OnRenderViewport();
+		virtual void OnRenderViewport(const World& renderWorld);
 		virtual void OnEvent(Event& event) {}
 
-		virtual void OnAddRenderPasses();
+		virtual void OnAddRenderPasses(RenderGraph& renderGraph);
 
-		Viewport& GetViewport() { return m_Viewport; }
-		const Viewport& GetViewport() const { return m_Viewport; }
+		void SetScene(const Ref<Scene>& scene) { m_Scene = scene; }
+		void SetMaximized(bool maximized);
 
-		const std::string& GetName() const { return m_Name; }
+		inline const std::string& GetName() const { return m_Name; }
 
 		inline const bool HasFocusChanged() const { return m_PreviousFocusState != m_IsFocused; }
 		inline const bool IsFocused() const { return m_IsFocused; }
 
 		inline void RequestFocus() { m_WindowFocusRequested = true; }
-
-		void SetScene(const Ref<Scene>& scene) { m_Scene = scene; }
-		void SetMaximized(bool maximized);
-
-		void PrepareViewport();
+		inline Entity GetViewportEntity() const { return m_ViewportEntity; }
 	protected:
 		Ref<Scene> GetScene() const;
 
@@ -49,8 +50,8 @@ namespace Flare
 		void EndImGui();
 
 		virtual void OnViewportChanged();
-	private:
-		void BuildRenderGraph();
+
+		void BuildRenderGraph(RenderGraph& renderGraph);
 	public:
 		bool ShowWindow;
 	protected:
@@ -59,7 +60,7 @@ namespace Flare
 
 		const Scope<SceneRenderer>& m_SceneRenderer;
 
-		Viewport m_Viewport;
+		Entity m_ViewportEntity;
 
 		bool m_Maximized = false;
 		bool m_PreviousFocusState;

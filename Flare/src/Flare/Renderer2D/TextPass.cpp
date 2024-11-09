@@ -2,11 +2,13 @@
 
 #include "TextPass.h"
 
+#include "FlareECS/World.h"
+
 #include "Flare/Renderer/Buffer.h"
 #include "Flare/Renderer/Renderer.h"
+#include "Flare/Renderer/RendererComponents.h"
 #include "Flare/Renderer/Font.h"
 #include "Flare/Renderer/SceneSubmition.h"
-#include "Flare/Renderer/Viewport.h"
 
 #include "Flare/Renderer2D/Renderer2DFrameData.h"
 
@@ -85,8 +87,11 @@ namespace Flare
 		const FrameResources& frameResources = m_FrameResources[GraphicsContext::GetInstance().GetCurrentFrameInFlight()];
 		const Renderer2DFrameData& submition = context.GetSceneSubmition().Renderer2DSubmition;
 
+		const ViewportGlobalResources* viewportResources = context.RenderWorld.TryGetEntityComponent<const ViewportGlobalResources>(context.ViewportEntity);
+		FLARE_CORE_ASSERT(viewportResources);
+
 		commandBuffer->SetDefaultViewportAndScissors();
-		commandBuffer->SetGlobalDescriptorSet(context.GetViewport().GetFrameResources().CameraDescriptorSet, 0);
+		commandBuffer->SetGlobalDescriptorSet(viewportResources->GetCurrentFrameResources().CameraDescriptorSet, 0);
 		
 		for (const auto& batch : submition.TextBatches)
 		{

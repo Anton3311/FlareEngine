@@ -6,6 +6,8 @@
 
 #include "Flare/Math/Math.h"
 
+#include "Flare/Renderer/RendererComponents.h"
+
 #include "Flare/Scene/Components.h"
 #include "Flare/Scene/Hierarchy.h"
 #include "Flare/Scene/Transform.h"
@@ -30,14 +32,17 @@ namespace Flare
 		std::string_view name)
 		: ViewportWindow(sceneRenderer, name), m_CameraController(m_EditorCamera), m_SceneViewSettings(sceneViewSettings)
 	{
-		m_Viewport.SetDebugRenderingEnabled(true);
+		World& world = Renderer::GetRenderWorld();
+		Viewport& viewport = world.GetEntityComponent<Viewport>(m_ViewportEntity);
+
+		viewport.Settings.DebugRenderingEnabled = true;
 	}
 
 	void SceneViewportWindow::OnAttach()
 	{
 	}
 
-	void SceneViewportWindow::OnRenderViewport()
+	void SceneViewportWindow::OnRenderViewport(const World& renderWorld)
 	{
 		FLARE_PROFILE_FUNCTION();
 
@@ -45,24 +50,21 @@ namespace Flare
 		if (scene == nullptr || !ShowWindow || !m_IsVisible)
 			return;
 
-		PrepareViewport();
-
-		if (m_Viewport.GetSize() == glm::ivec2(0))
-			return;
-
-		std::optional<SystemGroupId> debugRenderingGroup = scene->GetECSSystemsManager().FindGroup("Debug Rendering");
-
 		RenderView editorCameraView{};
 		m_EditorCamera.FillRenderView(editorCameraView);
 
-		m_SceneRenderer->RenderViewport(m_Viewport, &editorCameraView);
+		m_SceneRenderer->RenderViewport(m_ViewportEntity, &editorCameraView, FLARE_BIND_EVENT_CALLBACK(BuildRenderGraph));
 	}
 
 	void SceneViewportWindow::OnViewportChanged()
 	{
 		FLARE_PROFILE_FUNCTION();
 		ViewportWindow::OnViewportChanged();
-		m_EditorCamera.OnViewportChanged(m_Viewport.GetSize(), m_Viewport.GetPosition());
+
+		const Viewport& viewport = Renderer::GetRenderWorld().GetEntityComponent<const Viewport>(m_ViewportEntity);
+
+		if (viewport.IsValid())
+			m_EditorCamera.OnViewportChanged(viewport.Size, viewport.Position);
 	}
 
 	void SceneViewportWindow::OnRenderImGui()
@@ -120,18 +122,20 @@ namespace Flare
 	{
 	}
 
-	void SceneViewportWindow::OnAddRenderPasses()
+	void SceneViewportWindow::OnAddRenderPasses(RenderGraph& renderGraph)
 	{
 		FLARE_PROFILE_FUNCTION();
 		if (m_SceneViewSettings.ShowGrid)
 		{
+			const World& renderWorld = Renderer::GetRenderWorld();
+
 			RenderGraphPassSpecifications gridPass{};
-			gridPass.AddOutput(m_Viewport.ColorTextureId);
-			gridPass.AddOutput(m_Viewport.DepthTextureId);
+			gridPass.AddOutput(renderWorld.GetEntityComponent<const ViewportColorOutput>(m_ViewportEntity).Id);
+			gridPass.AddOutput(renderWorld.GetEntityComponent<const ViewportDepthOutput>(m_ViewportEntity).Id);
 			gridPass.SetDebugName("SceneViewGridPass");
 			gridPass.SetType(RenderGraphPassType::Graphics);
 
-			m_Viewport.GetRenderGraph()->AddPass(gridPass, Ref<SceneViewGridPass>::New());
+			renderGraph.AddPass(gridPass, Ref<SceneViewGridPass>::New());
 		}
 	}
 
@@ -141,19 +145,23 @@ namespace Flare
 		if (GetScene() == nullptr)
 			return;
 
-		if (!m_Viewport.GetRenderGraph()->IsValid())
-			return;
+		const World& renderWorld = Renderer::GetRenderWorld();
+		const Viewport& viewport = renderWorld.GetEntityComponent<const Viewport>(m_ViewportEntity);
+		const ViewportRenderGraph& viewportRenderGraph = renderWorld.GetEntityComponent<const ViewportRenderGraph>(m_ViewportEntity);
 
-		if (m_Viewport.GetSize().x == 0 || m_Viewport.GetSize().y == 0)
+		RenderGraphTextureId viewportColorTexture = renderWorld.GetEntityComponent<const ViewportColorOutput>(m_ViewportEntity).Id;
+		RenderGraphTextureId viewportDepthTexture = renderWorld.GetEntityComponent<const ViewportDepthOutput>(m_ViewportEntity).Id;
+
+		if (!viewport.IsValid())
 			return;
 
 		switch (m_Overlay)
 		{
 		case ViewportOverlay::Default:
-			RenderViewportBuffer(m_Viewport.GetRenderGraph()->GetTexture(m_Viewport.ColorTextureId));
+			RenderViewportBuffer(viewportRenderGraph.Graph->GetTexture(viewportColorTexture));
 			break;
 		case ViewportOverlay::Depth:
-			RenderViewportBuffer(m_Viewport.GetRenderGraph()->GetTexture(m_Viewport.DepthTextureId));
+			RenderViewportBuffer(viewportRenderGraph.Graph->GetTexture(viewportDepthTexture));
 			break;
 		}
 
@@ -294,23 +302,13 @@ namespace Flare
 			ImGui::PushID("SceneViewSettings");
 			if (ImGui::BeginCombo("", "Settings"))
 			{
-				{
-					bool value = m_Viewport.IsShadowMappingEnabled();
-					if (ImGui::MenuItem("Shadows", nullptr, &value))
-						m_Viewport.SetShadowMappingEnabled(value);
-				}
+				World& renderWorld = Renderer::GetRenderWorld();
+				Viewport& viewport = renderWorld.GetEntityComponent<Viewport>(m_ViewportEntity);
+				ViewportRenderGraph& viewportRenderGraph = renderWorld.GetEntityComponent<ViewportRenderGraph>(m_ViewportEntity);
 
-				{
-					bool value = m_Viewport.IsPostProcessingEnabled();
-					if (ImGui::MenuItem("Post Processing", nullptr, &value))
-						m_Viewport.SetPostProcessingEnabled(value);
-				}
-
-				{
-					bool value = m_Viewport.IsDebugRenderingEnabled();
-					if (ImGui::MenuItem("Debug Rendering", nullptr, &value))
-						m_Viewport.SetDebugRenderingEnabled(value);
-				}
+				ImGui::MenuItem("Shadows", nullptr, &viewport.Settings.ShadowMappingEnabled);
+				ImGui::MenuItem("Post Processing", nullptr, &viewport.Settings.PostProcessingEnabled);
+				ImGui::MenuItem("Debug Rendering", nullptr, &viewport.Settings.DebugRenderingEnabled);
 
 				ImGui::Separator();
 
@@ -320,14 +318,14 @@ namespace Flare
 
 				if (ImGui::MenuItem("Show Grid", nullptr, &m_SceneViewSettings.ShowGrid))
 				{
-					m_Viewport.GetRenderGraph()->SetNeedsRebuilding();
+					viewportRenderGraph.Graph->SetNeedsRebuilding();
 				}
 
 				if (ImGui::MenuItem("Inspect Render Graph"))
 				{
 					if (!m_RenderGraphInspector)
 					{
-						m_RenderGraphInspector = CreateScope<RenderGraphInspector>(*m_Viewport.GetRenderGraph());
+						m_RenderGraphInspector = CreateScope<RenderGraphInspector>(*viewportRenderGraph.Graph);
 					}
 
 					m_RenderGraphInspector->SetVisible(true);
@@ -422,6 +420,8 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
+		const Viewport& viewport = Renderer::GetRenderWorld().GetEntityComponent<const Viewport>(m_ViewportEntity);
+
 		World& world = GetScene()->GetECSWorld();
 		const EditorSelection& selection = EditorLayer::GetInstance().Selection;
 
@@ -438,8 +438,8 @@ namespace Flare
 		ImVec2 windowPosition = ImGui::GetWindowPos();
 		ImGuizmo::SetRect(windowPosition.x + m_ViewportOffset.x,
 			windowPosition.y + m_ViewportOffset.y,
-			(float)m_Viewport.GetSize().x,
-			(float)m_Viewport.GetSize().y);
+			(float)viewport.Size.x,
+			(float)viewport.Size.y);
 
 		Math::AffineTransform* globalTransform = world.TryGetEntityComponent<TransformComponent>(selectedEntity);
 		Math::AffineTransform* localTransform = world.TryGetEntityComponent<LocalTransform>(selectedEntity);

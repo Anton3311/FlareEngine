@@ -1,7 +1,8 @@
 #pragma once
 
-#include "Flare/Renderer/Texture.h"
+#include "FlareECS/Entity/Entity.h"
 
+#include "Flare/Renderer/Texture.h"
 #include "Flare/Renderer/GraphicsContext.h"
 
 #include <string>
@@ -63,11 +64,11 @@ namespace Flare
 		SizeConstraint TextureSizeConstraint = SizeConstraint::Fixed;
 	};
 
-	class Viewport;
+	class World;
 	class FLARE_API RenderGraphResourceManager
 	{
 	public:
-		RenderGraphResourceManager(const Viewport& viewport);
+		RenderGraphResourceManager(World& renderWorld, Entity viewportEntity);
 
 		RenderGraphTextureId CreateTexture(TextureFormat format, std::string_view debugName, float scale = 1.0f);
 		RenderGraphTextureId CreateFixedSizeTexture(TextureFormat format,
@@ -128,7 +129,9 @@ namespace Flare
 
 		size_t GetTextureResourceCount() const { return m_Textures.size(); }
 	private:
-		const Viewport& m_Viewport;
+		Entity m_ViewportEntity;
+		World& m_RenderWorld;
+
 		std::vector<RenderGraphTextureResource> m_Textures;
 		std::vector<Ref<Texture>> m_TextureHandles;
 
