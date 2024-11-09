@@ -11,6 +11,7 @@
 #include "Flare/Scene/SceneRenderer.h"
 
 #include "FlareECS/World.h"
+#include "FlareECS/System/SystemsManager.h"
 
 namespace Flare
 {
@@ -34,7 +35,12 @@ namespace Flare
 		void OnUpdate();
 		void OnViewportResize(uint32_t width, uint32_t height);
 
-		World& GetECSWorld();
+		inline World& GetECSWorld() { return m_World; }
+		inline const World& GetECSWorld() const { return m_World; }
+
+		inline SystemsManager& GetECSSystemsManager() { return m_SystemsManager; }
+		inline const SystemsManager& GetECSSystemsManager() const { return m_SystemsManager; }
+
 		inline PostProcessingManager& GetPostProcessingManager() { return m_PostProcessingManager; }
 		inline const PostProcessingManager& GetPostProcessingManager() const { return m_PostProcessingManager; }
 
@@ -44,6 +50,7 @@ namespace Flare
 		void UpdateEnvironmentSettings();
 	private:
 		World m_World;
+		SystemsManager m_SystemsManager;
 
 		SystemGroupId m_RenderingGroup;
 		SystemGroupId m_ScriptingUpdateGroup;

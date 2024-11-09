@@ -83,7 +83,7 @@ namespace Flare
 			systemData.Id = initializer->GetId();
 			systemData.SystemInstance = initializer->CreateSystem();
 
-			SystemConfig config(systemData);
+			SystemConfig config(systemData, *this);
 
 			systemData.SystemInstance->OnConfig(m_World, config);
 

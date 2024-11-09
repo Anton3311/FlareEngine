@@ -37,7 +37,7 @@ namespace Flare
 		m_SceneSubmition.Clear();
 
 		World& world = m_Scene->GetECSWorld();
-		SystemsManager& systemsManager = world.GetSystemsManager();
+		SystemsManager& systemsManager = m_Scene->GetECSSystemsManager();
 
 		if (std::optional<Entity> cameraEntity = m_CameraQuery.TryGetFirstEntityId())
 		{
@@ -319,7 +319,7 @@ namespace Flare
 	void SpriteRendererSystem::OnConfig(World& world, SystemConfig& config)
 	{
 		FLARE_PROFILE_FUNCTION();
-		std::optional<uint32_t> groupId = world.GetSystemsManager().FindGroup("Rendering");
+		std::optional<uint32_t> groupId = config.SystemsManager.FindGroup("Rendering");
 		FLARE_CORE_ASSERT(groupId);
 		config.Group = *groupId;
 
@@ -386,7 +386,7 @@ namespace Flare
 	void MeshRendererSystem::OnConfig(World& world, SystemConfig& config)
 	{
 		FLARE_PROFILE_FUNCTION();
-		std::optional<uint32_t> groupId = world.GetSystemsManager().FindGroup("Rendering");
+		std::optional<uint32_t> groupId = config.SystemsManager.FindGroup("Rendering");
 		FLARE_CORE_ASSERT(groupId);
 		config.Group = *groupId;
 
@@ -422,7 +422,7 @@ namespace Flare
 	void DecalRendererSystem::OnConfig(World& world, SystemConfig& config)
 	{
 		FLARE_PROFILE_FUNCTION();
-		std::optional<uint32_t> groupId = world.GetSystemsManager().FindGroup("Rendering");
+		std::optional<uint32_t> groupId = config.SystemsManager.FindGroup("Rendering");
 		FLARE_CORE_ASSERT(groupId);
 		config.Group = *groupId;
 

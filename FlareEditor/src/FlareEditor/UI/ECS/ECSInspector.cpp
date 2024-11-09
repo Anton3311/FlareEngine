@@ -8,6 +8,8 @@
 #include "FlareECS/EntityStorage/EntityStorage.h"
 #include "FlareECS/Query/QueryData.h"
 
+#include "Flare/Scene/Scene.h"
+
 #include "FlareEditor/EditorSelection.h"
 #include "FlareEditor/EditorLayer.h"
 
@@ -28,7 +30,10 @@ namespace Flare
 		{
 			if (ImGui::BeginTabBar("ECS Inspector Tabs"))
 			{
-				World& world = World::GetCurrent();
+				Ref<const Scene> activeScene = Scene::GetActive();
+				const World& world = activeScene->GetECSWorld();
+				const SystemsManager& systemsManager = activeScene->GetECSSystemsManager();
+
 				if (ImGui::BeginTabItem("Entity Info"))
 				{
 					const EditorSelection& selection = EditorLayer::GetInstance().Selection;
@@ -139,11 +144,9 @@ namespace Flare
 
 				if (ImGui::BeginTabItem("Systems"))
 				{
-					const SystemsManager& systems = world.GetSystemsManager();
-
 					if (ImGui::BeginChild("Systems List"))
 					{
-						for (const SystemGroup& group : systems.GetGroups())
+						for (const SystemGroup& group : systemsManager.GetGroups())
 						{
 							ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_SpanFullWidth;
 							bool opened = ImGui::TreeNodeEx((void*)group.Name.c_str(), flags, "Group '%s'", group.Name.c_str());
@@ -255,9 +258,10 @@ namespace Flare
 	void ECSInspector::RenderSystem(uint32_t systemIndex)
 	{
 		FLARE_PROFILE_FUNCTION();
-		World& world = World::GetCurrent();
-		const SystemsRegistry& systemsRegistry = world.GetSystemsManager().GetSystemsRegistry();
+		Ref<const Scene> activeScene = Scene::GetActive();
 
+		const SystemsManager& systemsManager = activeScene->GetECSSystemsManager();
+		const SystemsRegistry& systemsRegistry = systemsManager.GetSystemsRegistry();
 		const SystemRecord& systemRecord = systemsRegistry.GetRecord(systemIndex);
 
 		ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_Leaf;

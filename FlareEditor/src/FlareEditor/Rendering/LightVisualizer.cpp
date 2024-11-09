@@ -6,6 +6,7 @@
 #include "FlareCore/Profiler/Profiler.h"
 
 #include "FlareECS/World.h"
+#include "FlareECS/System/SystemsManager.h"
 
 #include "Flare/Scene/Components.h"
 #include "Flare/Scene/Transform.h"
@@ -27,7 +28,7 @@ namespace Flare
 	void LightVisualizer::OnConfig(World& world, SystemConfig& config)
 	{
 		FLARE_PROFILE_FUNCTION();
-		std::optional<uint32_t> groupId = world.GetSystemsManager().FindGroup("Debug Rendering");
+		std::optional<uint32_t> groupId = config.SystemsManager.FindGroup("Debug Rendering");
 		FLARE_CORE_ASSERT(groupId.has_value());
 		config.Group = *groupId;
 

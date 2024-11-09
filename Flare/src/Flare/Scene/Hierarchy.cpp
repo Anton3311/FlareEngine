@@ -7,6 +7,8 @@
 
 #include "Flare/Scene/Transform.h"
 
+#include "FlareECS/System/SystemsManager.h"
+
 #include <glm/glm.hpp>
 #include <glm/gtx/quaternion.hpp>
 #include <glm/gtc/quaternion.hpp>
@@ -215,7 +217,7 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		std::optional<uint32_t> groupId = world.GetSystemsManager().FindGroup("SceneHierarchyUpdate");
+		std::optional<uint32_t> groupId = config.SystemsManager.FindGroup("SceneHierarchyUpdate");
 		FLARE_CORE_ASSERT(groupId.has_value());
 		config.Group = *groupId;
 
@@ -282,7 +284,7 @@ namespace Flare
 	FLARE_IMPL_SYSTEM(TransformPropagationSystem);
 	void TransformPropagationSystem::OnConfig(World& world, SystemConfig& config)
 	{
-		std::optional<uint32_t> groupId = world.GetSystemsManager().FindGroup("SceneHierarchyUpdate");
+		std::optional<uint32_t> groupId = config.SystemsManager.FindGroup("SceneHierarchyUpdate");
 		FLARE_CORE_ASSERT(groupId.has_value());
 		config.Group = *groupId;
 

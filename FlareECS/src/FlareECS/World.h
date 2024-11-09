@@ -13,8 +13,6 @@
 #include "FlareECS/Query/QueryBuilder.h"
 #include "FlareECS/Query/Query.h"
 
-#include "FlareECS/System/SystemsManager.h"
-
 #include <vector>
 #include <string_view>
 
@@ -131,14 +129,10 @@ namespace Flare
 		inline const Archetypes& GetArchetypes() const { return m_Archetypes; }
 		inline const QueryCache& GetQueries() const { return m_Queries; }
 
-		inline SystemsManager& GetSystemsManager() { return m_SystemsManager; }
-		inline const SystemsManager& GetSystemsManager() const { return m_SystemsManager; }
-
 		Flare::Entities Entities;
 		Flare::Components& Components;
 	private:
 		Archetypes& m_Archetypes;
 		QueryCache& m_Queries;
-		SystemsManager m_SystemsManager;
 	};
 }

@@ -5,10 +5,11 @@
 namespace Flare
 {
 	class World;
+	class SystemsManager;
 	struct SystemConfig
 	{
-		SystemConfig(SystemData& systemData)
-			: m_Data(systemData) {}
+		SystemConfig(SystemData& systemData, const SystemsManager& systemsManager)
+			: m_Data(systemData), SystemsManager(systemsManager) {}
 
 		template<typename T>
 		void ExecuteAfter()
@@ -31,6 +32,7 @@ namespace Flare
 		}
 	public:
 		SystemGroupId Group = INVALID_SYSTEM_GROUP_ID;
+		const SystemsManager& SystemsManager;
 	private:
 		SystemData& m_Data;
 	};

@@ -50,7 +50,7 @@ namespace Flare
 		if (m_Viewport.GetSize() == glm::ivec2(0))
 			return;
 
-		std::optional<SystemGroupId> debugRenderingGroup = scene->GetECSWorld().GetSystemsManager().FindGroup("Debug Rendering");
+		std::optional<SystemGroupId> debugRenderingGroup = scene->GetECSSystemsManager().FindGroup("Debug Rendering");
 
 		RenderView editorCameraView{};
 		m_EditorCamera.FillRenderView(editorCameraView);

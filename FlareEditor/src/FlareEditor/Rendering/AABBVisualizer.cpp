@@ -11,6 +11,7 @@
 #include "Flare/DebugRenderer/DebugRenderer.h"
 
 #include "FlareECS/World.h"
+#include "FlareECS/System/SystemsManager.h"
 
 #include "FlareEditor/EditorLayer.h"
 
@@ -32,7 +33,7 @@ namespace Flare
 			.With<Decal>()
 			.Build();
 
-		std::optional<uint32_t> groupId = world.GetSystemsManager().FindGroup("Debug Rendering");
+		std::optional<uint32_t> groupId = config.SystemsManager.FindGroup("Debug Rendering");
 		FLARE_CORE_ASSERT(groupId.has_value());
 		config.Group = *groupId;
 	}

@@ -7,8 +7,7 @@ namespace Flare
 	World* s_CurrentWorld = nullptr;
 
 	World::World(ECSContext& context)
-		: m_SystemsManager(*this, context.SystemsRegistry),
-		Components(context.Components),
+		: Components(context.Components),
 		m_Queries(context.Queries),
 		m_Archetypes(context.Archetypes),
 		Entities(context.Components, context.Archetypes)
