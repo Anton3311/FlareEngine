@@ -175,7 +175,6 @@ namespace Flare
 		static const ShadowSettings& GetShadowSettings();
 		static void SetShadowSettings(const ShadowSettings& settings);
 
-		static bool RequiresRenderGraphRebuild();
 		static Ref<Sampler> GetDefaultShadowSampler();
 
 		static Ref<const DescriptorSetLayout> GetDecalsDescriptorSetLayout();

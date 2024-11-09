@@ -44,8 +44,6 @@ namespace Flare
 	{
 		SceneSubmition* Submition = nullptr;
 
-		bool RenderGraphRebuildIsRequired = false;
-
 		Ref<Texture> WhiteTexture = nullptr;
 		Ref<Texture> DefaultNormalMap = nullptr;
 		Ref<Texture> DummyDepthTexture = nullptr;
@@ -71,7 +69,7 @@ namespace Flare
 
 		// Render World
 		Scope<World> RenderWorld = nullptr;
-		Query ViewportsQuery;
+		Scope<Query> ViewportsQuery;
 	};
 	
 	RendererData s_RendererData;
@@ -239,7 +237,6 @@ namespace Flare
 		Project::OnProjectOpen.Bind(ReloadShaders);
 
 		s_RendererData.RenderWorld = CreateScope<World>(ECSContext::GetGlobal());
-		s_RendererData.ViewportsQuery = s_RendererData.RenderWorld->NewQuery().All().With<Viewport, ViewportRenderGraph, ViewportRenderGraphState>().Build();
 	}
 
 	void Renderer::Shutdown()
@@ -259,7 +256,6 @@ namespace Flare
 
 	void Renderer::BeginFrame()
 	{
-		s_RendererData.RenderGraphRebuildIsRequired = false;
 	}
 
 	void Renderer::EndFrame()
@@ -335,15 +331,13 @@ namespace Flare
 
 	void Renderer::SetShadowSettings(const ShadowSettings& settings)
 	{
-		s_RendererData.RenderGraphRebuildIsRequired |= settings.Quality != s_RendererData.ShadowMappingSettings.Quality;
-		s_RendererData.RenderGraphRebuildIsRequired |= settings.Enabled != s_RendererData.ShadowMappingSettings.Enabled;
+		bool rebuildRenderGraph = settings.Quality != s_RendererData.ShadowMappingSettings.Quality;
+		rebuildRenderGraph |= settings.Enabled != s_RendererData.ShadowMappingSettings.Enabled;
+
+		if (rebuildRenderGraph)
+			RequestRenderGraphRebuilds();
 
 		s_RendererData.ShadowMappingSettings = settings;
-	}
-
-	bool Renderer::RequiresRenderGraphRebuild()
-	{
-		return s_RendererData.RenderGraphRebuildIsRequired;
 	}
 
 	Ref<Sampler> Renderer::GetDefaultShadowSampler()
@@ -591,9 +585,15 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		s_RendererData.ViewportsQuery.ForEachChunk([](QueryChunk chunk, ComponentView<ViewportRenderGraph> renderGraphs)
+		if (!s_RendererData.ViewportsQuery)
+		{
+			s_RendererData.ViewportsQuery = CreateScope<Query>(s_RendererData.RenderWorld->NewQuery()
+				.All().With<Viewport, ViewportRenderGraph, ViewportRenderGraphState>().Build());
+		}
+
+		s_RendererData.ViewportsQuery->ForEachChunk([](QueryChunk chunk, ComponentView<ViewportRenderGraph> renderGraphs)
 			{
-				for (size_t i = 0; chunk.GetEntityCount(); i++)
+				for (size_t i = 0; i < chunk.GetEntityCount(); i++)
 				{
 					renderGraphs[i].Graph->SetNeedsRebuilding();
 				}
