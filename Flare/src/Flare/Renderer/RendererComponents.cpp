@@ -17,15 +17,14 @@ namespace Flare
 	FLARE_IMPL_COMPONENT(ViewportRenderGraph);
 	FLARE_IMPL_COMPONENT(ViewportRenderGraphState);
 
-	ViewportGlobalResources::~ViewportGlobalResources()
+	ViewportFrameResources::~ViewportFrameResources()
 	{
-		FLARE_PROFILE_FUNCTION();
-		for (const ViewportFrameResources& frameResources : FrameResources)
-		{
-			Renderer::GetCameraDescriptorSetPool()->ReleaseSet(frameResources.CameraDescriptorSet);
-			Renderer::GetGlobalDescriptorSetPool()->ReleaseSet(frameResources.GlobalDescriptorSet);
-			Renderer::GetGlobalDescriptorSetPool()->ReleaseSet(frameResources.GlobalDescriptorSetWithoutShadows);
-		}
+		if (CameraDescriptorSet)
+			Renderer::GetCameraDescriptorSetPool()->ReleaseSet(CameraDescriptorSet);
+		if (GlobalDescriptorSet)
+			Renderer::GetGlobalDescriptorSetPool()->ReleaseSet(GlobalDescriptorSet);
+		if (GlobalDescriptorSetWithoutShadows)
+			Renderer::GetGlobalDescriptorSetPool()->ReleaseSet(GlobalDescriptorSetWithoutShadows);
 	}
 
 	void ViewportGlobalResources::CreateResources()

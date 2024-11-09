@@ -56,6 +56,14 @@ namespace Flare
 
 	struct FLARE_API ViewportFrameResources
 	{
+		FLARE_NONCOPYABLE(ViewportFrameResources);
+
+		ViewportFrameResources() = default;
+		~ViewportFrameResources();
+
+		ViewportFrameResources(ViewportFrameResources&&) = default;
+		ViewportFrameResources& operator=(ViewportFrameResources&&) = default;
+
 		Ref<GPUBuffer> CameraBuffer = nullptr;
 		Ref<GPUBuffer> LightBuffer = nullptr;
 		Ref<GPUBuffer> PointLightsBuffer = nullptr;
@@ -71,7 +79,12 @@ namespace Flare
 	{
 		FLARE_COMPONENT;
 
-		~ViewportGlobalResources();
+		FLARE_NONCOPYABLE(ViewportGlobalResources);
+
+		ViewportGlobalResources() = default;
+
+		ViewportGlobalResources(ViewportGlobalResources&&) = default;
+		ViewportGlobalResources& operator=(ViewportGlobalResources&&) = default;
 
 		void CreateResources();
 
