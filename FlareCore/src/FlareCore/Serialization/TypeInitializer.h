@@ -72,26 +72,15 @@ namespace Flare
 		TypeConstructorFunctions functions{};
 		functions.DefaultConstructor = [](void* instance) { new(instance) T(); };
 		functions.Destructor = [](void* instance) { (*(T*)instance).~T(); };
-		functions.CopyConstructor = [](void* instance, const void* copySource)
-			{
-				if constexpr (std::is_copy_constructible_v<T>)
-					new(instance) T(*(const T*)copySource);
-			};
-		functions.MoveConstructor = [](void* instance, void* moveSource)
-			{
-				if constexpr (std::is_move_constructible_v<T>)
-					new (instance) T(std::move(*(T*)moveSource));
-			};
-		functions.CopyAssignment = [](void* instance, const void* copySource)
-			{
-				if constexpr (std::is_copy_assignable_v<T>)
-					(*(T*)instance).operator=(*(const T*)copySource);
-			};
-		functions.MoveAssignment = [](void* instance, void* copySource)
-			{
-				if constexpr (std::is_move_assignable_v<T>)
-					(*(T*)instance).operator=(std::move(*(const T*)copySource));
-			};
+
+		if constexpr (std::is_copy_constructible_v<T>)
+			functions.CopyConstructor = [](void* instance, const void* copySource) { new(instance) T(*(const T*)copySource); };
+		if constexpr (std::is_move_constructible_v<T>)
+			functions.MoveConstructor = [](void* instance, void* moveSource) { new (instance) T(std::move(*(T*)moveSource)); };
+		if constexpr (std::is_copy_assignable_v<T>)
+			functions.CopyAssignment = [](void* instance, const void* copySource) { (*(T*)instance).operator=(*(const T*)copySource); };
+		if constexpr (std::is_move_assignable_v<T>)
+			functions.MoveAssignment = [](void* instance, void* moveSource) { (*(T*)instance) = std::move(*(T*)moveSource); };
 
 		return functions;
 	}
