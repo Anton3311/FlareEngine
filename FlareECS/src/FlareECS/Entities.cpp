@@ -458,7 +458,7 @@ namespace Flare
 		return FindEntity(entity) != m_EntityToRecord.end();
 	}
 
-	ArchetypeId Entities::GetEntityArchetype(Entity entity)
+	ArchetypeId Entities::GetEntityArchetype(Entity entity) const
 	{
 		auto it = m_EntityToRecord.find(entity);
 		FLARE_CORE_ASSERT(it != m_EntityToRecord.end());

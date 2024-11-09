@@ -69,7 +69,7 @@ namespace Flare
 		bool RemoveEntityComponent(Entity entity, ComponentId componentId);
 		bool IsEntityAlive(Entity entity) const;
 
-		ArchetypeId GetEntityArchetype(Entity entity);
+		ArchetypeId GetEntityArchetype(Entity entity) const;
 
 		const std::vector<EntityRecord>& GetEntityRecords() const;
 
