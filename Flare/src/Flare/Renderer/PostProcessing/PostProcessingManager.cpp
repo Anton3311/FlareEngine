@@ -5,6 +5,8 @@
 #include "FlareCore/Assert.h"
 #include "FlareCore/Profiler/Profiler.h"
 
+#include "Flare/Renderer/Renderer.h"
+
 namespace Flare
 {
 	void PostProcessingManager::AddEffect(Ref<PostProcessingEffect> effect)
@@ -49,5 +51,7 @@ namespace Flare
 	void PostProcessingManager::MarkAsDirty()
 	{
 		m_IsDirty = true;
+
+		Renderer::RequestRenderGraphRebuilds();
 	}
 }
