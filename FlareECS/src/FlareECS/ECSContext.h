@@ -9,16 +9,14 @@ namespace Flare
 {
 	struct FLAREECS_API ECSContext
 	{
+	public:
 		ECSContext();
+		~ECSContext();
 
-		inline void Clear()
-		{
-			Queries.Clear();
-			Archetypes.Clear();
-			Components.Clear();
-			SystemsRegistry.Clear();
-		}
+		void Clear();
 
+		static ECSContext& GetGlobal();
+	public:
 		Flare::Archetypes Archetypes;
 		Flare::Components Components;
 		Flare::SystemsRegistry SystemsRegistry;
