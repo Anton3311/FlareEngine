@@ -6,6 +6,11 @@
 
 namespace Flare
 {
+	PostProcessingEffect::PostProcessingEffect(PostProcessingExecutionOrder executionOrder)
+		: m_ExecutionOrder(executionOrder)
+	{
+	}
+
 	void PostProcessingEffect::OnAttach(PostProcessingManager& postProcessingManager)
 	{
 		m_PostProcessingManager = &postProcessingManager;

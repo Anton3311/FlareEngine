@@ -22,6 +22,11 @@ namespace Flare
 		void AddEffect(Ref<PostProcessingEffect> effect);
 		void RegisterRenderPasses(RenderGraph& renderGraph, Entity viewportEntity, const World& renderWorld);
 
+		void RegisterRenderPasses(RenderGraph& renderGraph,
+			Entity viewportEntity,
+			const World& renderWorld,
+			PostProcessingExecutionOrder group);
+
 		std::optional<Ref<PostProcessingEffect>> FindEffect(const SerializableObjectDescriptor& descriptor) const;
 
 		template<typename T>
@@ -35,6 +40,9 @@ namespace Flare
 		}
 
 		void MarkAsDirty();
+
+		// TODO: This should exist
+		inline void ResetDirtyFlag() { m_IsDirty = false; }
 
 		inline const std::vector<PostProcessingEntry>& GetEntries() const { return m_Entries; }
 		inline bool IsDirty() const { return m_IsDirty; }

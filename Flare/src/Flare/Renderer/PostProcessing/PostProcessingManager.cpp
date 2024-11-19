@@ -35,6 +35,20 @@ namespace Flare
 		m_IsDirty = false;
 	}
 
+	void PostProcessingManager::RegisterRenderPasses(RenderGraph& renderGraph,
+		Entity viewportEntity,
+		const World& renderWorld,
+		PostProcessingExecutionOrder group)
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		for (const auto& entry : m_Entries)
+		{
+			if (entry.Effect->GetExecutionOrder() == group)
+				entry.Effect->RegisterRenderPasses(renderGraph, viewportEntity, renderWorld);
+		}
+	}
+
 	std::optional<Ref<PostProcessingEffect>> PostProcessingManager::FindEffect(const SerializableObjectDescriptor& descriptor) const
 	{
 		for (const auto& entry : m_Entries)

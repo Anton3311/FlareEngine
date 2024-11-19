@@ -32,6 +32,11 @@ namespace Flare
 	FLARE_IMPL_TYPE(SSAO);
 	FLARE_SERIALIZABLE_IMPL(SSAO);
 
+	SSAO::SSAO()
+		: PostProcessingEffect(PostProcessingExecutionOrder::AfterDepthPrePass)
+	{
+	}
+
 	void SSAO::RegisterRenderPasses(RenderGraph& renderGraph, Entity viewportEntity, const World& renderWorld)
 	{
 		FLARE_PROFILE_FUNCTION();
@@ -51,6 +56,9 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
+		// FIXME: Should allow accepting a mutable reference to the World, instead of getting it from the Renderer
+		AOConfiguration& aoConfiguration = Renderer::GetRenderWorld().GetEntityComponent<AOConfiguration>(viewportEntity);
+
 		constexpr TextureFormat AO_TEXTURE_FORMAT = TextureFormat::R8;
 
 		std::default_random_engine engine;
@@ -59,6 +67,8 @@ namespace Flare
 		RenderGraphTextureId linearDepthDepth = renderGraph.CreateTexture(TextureFormat::RF32, "HBAO.DownsampledDepth");
 		RenderGraphTextureId fullScreenAOTexture = renderGraph.CreateTexture(AO_TEXTURE_FORMAT, "HBAO.FullScreenAO");
 		RenderGraphTextureId aoBlurIntermediateTexture = renderGraph.CreateTexture(AO_TEXTURE_FORMAT, "HBAO.AOBlurIntermediate");
+
+		aoConfiguration.AOTexture = fullScreenAOTexture;
 
 		constexpr size_t TEXTURE_COUNT = 4;
 
@@ -119,72 +129,5 @@ namespace Flare
 
 			renderGraph.AddPass(horizontalBlurPass, Ref<HBAOBilateralBlurPass>::New(Ref<SSAO>(this), false, linearDepthDepth, aoBlurIntermediateTexture));
 		}
-
-		RenderGraphPassSpecifications ssaoComposingPass{};
-		ssaoComposingPass.SetDebugName("SSAOComposingPass");
-		ssaoComposingPass.SetType(RenderGraphPassType::Compute);
-		ssaoComposingPass.AddInput(fullScreenAOTexture);
-		ssaoComposingPass.AddResource(viewportColorTexture, ResourceAccess::ReadWrite);
-
-		renderGraph.AddPass(ssaoComposingPass, Ref<SSAOComposingPass>::New(viewportColorTexture, fullScreenAOTexture));
-	}
-
-
-
-	SSAOComposingPass::SSAOComposingPass(RenderGraphTextureId colorTexture, RenderGraphTextureId aoTexture)
-		: m_ColorTexture(colorTexture), m_AOTexture(aoTexture)
-	{
-		FLARE_PROFILE_FUNCTION();
-		std::optional<AssetHandle> shaderHandle = ShaderLibrary::FindShader("SSAOCompose");
-		if (shaderHandle && AssetManager::IsAssetHandleValid(shaderHandle.value()))
-		{
-			m_Shader = AssetManager::GetAsset<ComputeShader>(*shaderHandle);
-
-			Ref<const ComputeShaderMetadata> metadata = m_Shader->GetMetadata();
-
-			m_ColorImageProperty = metadata->FindDescriptorProperty("u_Color");
-			m_AOImageProperty = metadata->FindDescriptorProperty("u_AO");
-			m_ImageSizeProperty = metadata->FindConstantProperty("u_ImageSize");
-
-			m_ConstantBuffer.SetShader(m_Shader);
-			m_DescriptorBuffer.SetShader(m_Shader);
-		}
-		else
-		{
-			FLARE_CORE_ERROR("SSAO: Failed to find SSAOCompose shader");
-		}
-
-		auto result = Scene::GetActive()->GetPostProcessingManager().GetEffect<SSAO>();
-		FLARE_CORE_ASSERT(result.has_value());
-		m_Parameters = *result;
-	}
-
-	void SSAOComposingPass::OnPrepare(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
-	{
-		FLARE_PROFILE_FUNCTION();
-
-		const TextureSpecifications& colorTextureSpec = context.GetRenderGraphResourceManager().GetTexture(m_ColorTexture)->GetSpecifications();
-		m_ConstantBuffer.SetProperty(*m_ImageSizeProperty, glm::ivec2((int32_t)colorTextureSpec.Width, (int32_t)colorTextureSpec.Height));
-
-		m_DescriptorBuffer.SetTexture(*m_AOImageProperty, context.GetRenderGraphResourceManager().GetTexture(m_AOTexture));
-		m_DescriptorBuffer.SetTexture(*m_ColorImageProperty, context.GetRenderGraphResourceManager().GetTexture(m_ColorTexture));
-	}
-
-	void SSAOComposingPass::OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
-	{
-		FLARE_PROFILE_FUNCTION();
-
-		commandBuffer->BindComputeShader(m_Shader);
-		commandBuffer->PushConstants(m_ConstantBuffer);
-		commandBuffer->PushDescriptorProperties(m_DescriptorBuffer);
-
-		const Viewport& viewport = context.RenderWorld.GetEntityComponent<const Viewport>(context.ViewportEntity);
-
-		glm::uvec2 renderAreaSize = viewport.Size;
-		glm::uvec2 localGroupSize = m_Shader->GetMetadata()->LocalGroupSize;
-
-		glm::uvec2 groupCount = (renderAreaSize + localGroupSize - glm::uvec2(1)) / localGroupSize;
-
-		commandBuffer->DispatchCompute(glm::uvec3(groupCount, 1));
 	}
 }
