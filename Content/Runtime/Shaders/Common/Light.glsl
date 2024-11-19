@@ -3,6 +3,8 @@
 
 #include "BRDF.glsl"
 
+layout(set = 1, binding = 12) uniform sampler2D u_AO;
+
 layout(std140, set = 1, binding = 1) uniform LightData
 {
 	vec4 u_LightColor;
@@ -13,6 +15,8 @@ layout(std140, set = 1, binding = 1) uniform LightData
 
 	uint u_PointLightsCount;
 	uint u_SpotLightsCount;
+
+	bool u_AOEnabled;
 };
 
 struct PointLightData
@@ -108,6 +112,11 @@ vec3 CalculateSpotLightsContribution(vec3 V, in SurfaceProperties surface)
 	}
 
 	return finalColor;
+}
+
+float SampleAO(ivec2 pixelPosition)
+{
+	return u_AOEnabled ? (texelFetch(u_AO, pixelPosition, 0).r) : 1.0f;
 }
 
 #endif

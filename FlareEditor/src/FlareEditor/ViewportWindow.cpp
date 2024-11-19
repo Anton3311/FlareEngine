@@ -197,17 +197,6 @@ namespace Flare
 	void ViewportWindow::BuildRenderGraph(RenderGraph& renderGraph)
 	{
 		FLARE_PROFILE_FUNCTION();
-		Ref<Scene> scene = GetScene();
-
-		const World& renderWorld = Renderer::GetRenderWorld();
-		const Viewport& viewport = renderWorld.GetEntityComponent<const Viewport>(m_ViewportEntity);
-
-		if (scene && viewport.Settings.PostProcessingEnabled)
-		{
-			PostProcessingManager& postProcessing = scene->GetPostProcessingManager();
-			postProcessing.MarkAsDirty(); // HACK
-			postProcessing.RegisterRenderPasses(renderGraph, m_ViewportEntity, renderWorld);
-		}
 
 		OnAddRenderPasses(renderGraph);
 	}

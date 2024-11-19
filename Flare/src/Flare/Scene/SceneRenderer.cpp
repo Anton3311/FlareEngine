@@ -175,7 +175,7 @@ namespace Flare
 
 		const ViewportRenderGraph& viewportRenderGraph = renderWorld.GetEntityComponent<const ViewportRenderGraph>(viewportEntity);
 
-		Renderer::PrepareViewport(viewportEntity, onRenderGraphBuild);
+		Renderer::PrepareViewport(viewportEntity, onRenderGraphBuild, m_Scene->GetPostProcessingManager());
 
 		RenderView sceneCameraView{};
 		if (viewOverride != nullptr)
@@ -262,6 +262,11 @@ namespace Flare
 
 		Ref<CommandBuffer> commandBuffer = GraphicsContext::GetInstance().GetCommandBuffer();
 
+		const World& renderWorld = Renderer::GetRenderWorld();
+
+		const AOConfiguration& aoConfiguration = renderWorld.GetEntityComponent<const AOConfiguration>(viewportEntity);
+		const ViewportRenderGraph& renderGraph = renderWorld.GetEntityComponent<const ViewportRenderGraph>(viewportEntity);
+
 		LightData lightData{};
 		lightData.Color = m_SceneSubmition.DirectionalLight.Color;
 		lightData.Intensity = m_SceneSubmition.DirectionalLight.Intensity;
@@ -270,8 +275,8 @@ namespace Flare
 		lightData.EnvironmentLight = glm::vec4(m_SceneSubmition.Environment.EnvironmentColor, m_SceneSubmition.Environment.EnvironmentColorIntensity);
 		lightData.PointLightsCount = (uint32_t)m_SceneSubmition.PointLights.size();
 		lightData.SpotLightsCount = (uint32_t)m_SceneSubmition.SpotLights.size();
+		lightData.AOEnabled = renderGraph.Graph->GetResourceManager().IsTextureIdValid(aoConfiguration.AOTexture);
 
-		const World& renderWorld = Renderer::GetRenderWorld();
 		const ViewportGlobalResources& viewportGlobalResources = renderWorld.GetEntityComponent<const ViewportGlobalResources>(viewportEntity);
 		const ViewportFrameResources& viewportFrameResources = viewportGlobalResources.GetCurrentFrameResources();
 

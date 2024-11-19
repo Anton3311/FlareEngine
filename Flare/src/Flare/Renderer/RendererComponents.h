@@ -120,4 +120,11 @@ namespace Flare
 		glm::uvec2 CurrentViewportSize = glm::uvec2(0, 0);
 		ViewportSettings Settings;
 	};
+
+	struct FLARE_API AOConfiguration
+	{
+		FLARE_COMPONENT;
+
+		RenderGraphTextureId AOTexture;
+	};
 }

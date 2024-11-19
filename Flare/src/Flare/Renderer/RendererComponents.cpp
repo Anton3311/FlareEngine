@@ -68,4 +68,6 @@ namespace Flare
 		set->WriteStorageBuffer(frameResources.SpotLightsBuffer, 3);
 		set->FlushWrites();
 	}
+
+	FLARE_IMPL_COMPONENT(AOConfiguration);
 }

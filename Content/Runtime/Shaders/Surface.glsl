@@ -142,7 +142,10 @@ void main()
 	finalColor += CalculatePointLightsContribution(V, surface);
 	finalColor += CalculateSpotLightsContribution(V, surface);
 
-	finalColor += u_EnvironmentLight.rgb * u_EnvironmentLight.w * color.rgb;
+	float ao = SampleAO(ivec2(gl_FragCoord.xy));
+	ao = mix(ao, 1.0f, shadow);
+
+	finalColor += u_EnvironmentLight.rgb * u_EnvironmentLight.w * color.rgb * ao;
 
 #if DEBUG_CASCADES
 	int cascadeIndex = CalculateCascadeIndex(i_Vertex.ViewSpacePosition);

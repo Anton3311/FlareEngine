@@ -139,6 +139,7 @@ namespace Flare
 	class DescriptorSetLayout;
 	class DescriptorSetPool;
 	class Material;
+	class PostProcessingManager;
 	class RendererSubmitionQueue;
 	class RenderGraph;
 	class Sampler;
@@ -184,7 +185,7 @@ namespace Flare
 		static World& GetRenderWorld();
 		static Entity CreateViewport();
 		static void DeleteViewport(Entity viewportEntity);
-		static void PrepareViewport(Entity viewportEntity, const std::function<void(RenderGraph&)>& onBuild);
+		static void PrepareViewport(Entity viewportEntity, const std::function<void(RenderGraph&)>& onBuild, PostProcessingManager& postProcessingManager);
 		static void RequestRenderGraphRebuilds();
 	private:
 		static void ReloadShaders();

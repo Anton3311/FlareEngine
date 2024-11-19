@@ -15,18 +15,17 @@
 #include "Flare/DebugRenderer/DebugRenderer.h"
 #include "Flare/Renderer/DescriptorSet.h"
 #include "Flare/Renderer/GraphicsContext.h"
-#include "Flare/Renderer/RendererComponents.h"
-#include "Flare/Renderer/RendererPrimitives.h"
-#include "Flare/Renderer/Sampler.h"
-#include "Flare/Renderer/SceneSubmition.h"
-#include "Flare/Renderer/ShaderLibrary.h"
-
 #include "Flare/Renderer/Passes/GeometryPass.h"
 #include "Flare/Renderer/Passes/GeometryCullingPass.h"
 #include "Flare/Renderer/Passes/ShadowPass.h"
 #include "Flare/Renderer/Passes/ShadowCascadePass.h"
 #include "Flare/Renderer/Passes/DecalsPass.h"
-
+#include "Flare/Renderer/PostProcessing/PostProcessingManager.h"
+#include "Flare/Renderer/RendererComponents.h"
+#include "Flare/Renderer/RendererPrimitives.h"
+#include "Flare/Renderer/Sampler.h"
+#include "Flare/Renderer/SceneSubmition.h"
+#include "Flare/Renderer/ShaderLibrary.h"
 #include "Flare/Renderer2D/Renderer2D.h"
 
 #include "Flare/Project/Project.h"
@@ -56,6 +55,7 @@ namespace Flare
 
 		Ref<Sampler> DefaultShadowSampler = nullptr;
 		Ref<Sampler> DefaultLinearClampSampler = nullptr;
+		Ref<Sampler> DefaultClosestClampSampler = nullptr;
 
 		// Shadows
 		ShadowSettings ShadowMappingSettings;
@@ -134,7 +134,7 @@ namespace Flare
 		if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
 		{
 			{
-				VkDescriptorSetLayoutBinding bindings[4 + 4 + 4] = {};
+				VkDescriptorSetLayoutBinding bindings[4 + 4 + 4 + 1] = {};
 				auto& shadowDataBinding = bindings[0];
 				shadowDataBinding.binding = 0;
 				shadowDataBinding.descriptorCount = 1;
@@ -179,7 +179,14 @@ namespace Flare
 					cascadeBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 				}
 
-				s_RendererData.GlobalDescriptorSetPool = Ref<VulkanDescriptorSetPool>::New(Span(bindings, 12));
+				auto& aoTexture = bindings[12];
+				aoTexture.binding = 12;
+				aoTexture.descriptorCount = 1;
+				aoTexture.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+				aoTexture.pImmutableSamplers = nullptr;
+				aoTexture.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+				s_RendererData.GlobalDescriptorSetPool = Ref<VulkanDescriptorSetPool>::New(Span(bindings, 13));
 			}
 
 			{
@@ -231,6 +238,15 @@ namespace Flare
 			samplerSpecifications.WrapMode = TextureWrap::Clamp;
 
 			s_RendererData.DefaultLinearClampSampler = Sampler::Create(samplerSpecifications);
+		}
+
+		{
+			SamplerSpecifications samplerSpecifications{};
+			samplerSpecifications.ComparisonEnabled = false;
+			samplerSpecifications.Filter = TextureFiltering::Closest;
+			samplerSpecifications.WrapMode = TextureWrap::Clamp;
+
+			s_RendererData.DefaultClosestClampSampler = Sampler::Create(samplerSpecifications);
 		}
 
 		RendererPrimitives::Initialize();
@@ -353,6 +369,7 @@ namespace Flare
 
 	static void SetupGlobalDescriptorSet(Ref<DescriptorSet> set)
 	{
+		FLARE_PROFILE_FUNCTION();
 		for (size_t i = 0; i < ShadowSettings::MaxCascades; i++)
 		{
 			set->WriteImage(s_RendererData.DummyDepthTexture, (uint32_t)(4 + i));
@@ -363,10 +380,29 @@ namespace Flare
 			set->WriteImage(s_RendererData.DummyDepthTexture, s_RendererData.DefaultShadowSampler, (uint32_t)(8 + i));
 		}
 
+		// Set AO texture
+		set->WriteImage(s_RendererData.WhiteTexture, s_RendererData.DefaultClosestClampSampler, 12);
+
 		set->FlushWrites();
 	}
 
-	static Ref<ShadowPass> ConfigureShadowPass(const Viewport& viewport,
+	static void SetupInitialGlobalDescriptorSets(Entity viewportEntity)
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		uint32_t frameInFlightCount = GraphicsContext::GetInstance().GetFrameInFlightCount();
+		const ViewportGlobalResources& viewportResources = s_RendererData.RenderWorld->GetEntityComponent<const ViewportGlobalResources>(viewportEntity);
+
+		for (uint32_t i = 0; i < frameInFlightCount; i++)
+		{
+			const ViewportFrameResources& viewportFrameResources = viewportResources.FrameResources[i];
+			SetupGlobalDescriptorSet(viewportFrameResources.GlobalDescriptorSet);
+			SetupGlobalDescriptorSet(viewportFrameResources.GlobalDescriptorSetWithoutShadows);
+		}
+	}
+
+	static Ref<ShadowPass> ConfigureShadowPass(Entity viewportEntity,
+		const Viewport& viewport,
 		RenderGraph& renderGraph,
 		std::array<RenderGraphTextureId, ShadowSettings::MaxCascades>& cascadeTextures)
 	{
@@ -403,6 +439,26 @@ namespace Flare
 			renderGraph.AddPass(cascadePassSpec, cascadePass);
 		}
 
+		// Update global descriptor sets
+		const ViewportRenderGraph& viewportRenderGraph = s_RendererData.RenderWorld->GetEntityComponent<const ViewportRenderGraph>(viewportEntity);
+		const ViewportGlobalResources& viewportResources = s_RendererData.RenderWorld->GetEntityComponent<const ViewportGlobalResources>(viewportEntity);
+		
+		uint32_t frameInFlightCount = GraphicsContext::GetInstance().GetFrameInFlightCount();
+		const RenderGraphResourceManager& resourceManager = viewportRenderGraph.Graph->GetResourceManager();
+		for (uint32_t frameIndex = 0; frameIndex < frameInFlightCount; frameIndex++)
+		{
+			const ViewportFrameResources& viewportFrameResources = viewportResources.FrameResources[frameIndex];
+			Ref<DescriptorSet> set = viewportFrameResources.GlobalDescriptorSet;
+			for (uint32_t cascadeIndex = 0; cascadeIndex < (uint32_t)Renderer::GetShadowSettings().Cascades; cascadeIndex++)
+			{
+				Ref<Texture> cascadeTexture = resourceManager.GetTextureForFrameInFlight(cascadeTextures[cascadeIndex], frameIndex);
+				set->WriteImage(cascadeTexture, 4 + cascadeIndex);
+				set->WriteImage(cascadeTexture, s_RendererData.DefaultShadowSampler, 8 + cascadeIndex);
+			}
+
+			set->FlushWrites();
+		}
+
 		return shadowPass;
 	}
 
@@ -418,33 +474,15 @@ namespace Flare
 		return nullptr;
 	}
 
-	static void ConfigurePasses(Entity viewportEntity)
+	static void ConfigureDepthPrepass(Entity viewportEntity)
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		const Viewport* viewport = s_RendererData.RenderWorld->TryGetEntityComponent<const Viewport>(viewportEntity);
 		ViewportRenderGraph* viewportRenderGraph = s_RendererData.RenderWorld->TryGetEntityComponent<ViewportRenderGraph>(viewportEntity);
+		FLARE_CORE_ASSERT(viewportRenderGraph);
 
-		FLARE_CORE_ASSERT(viewport && viewportRenderGraph);
-
-		const ViewportColorOutput* colorOutput = s_RendererData.RenderWorld->TryGetEntityComponent<const ViewportColorOutput>(viewportEntity);
 		const ViewportDepthOutput* depthOutput = s_RendererData.RenderWorld->TryGetEntityComponent<const ViewportDepthOutput>(viewportEntity);
-
-		FLARE_CORE_ASSERT(colorOutput && depthOutput);
-
-		const ViewportGlobalResources* viewportResources = s_RendererData.RenderWorld->TryGetEntityComponent<const ViewportGlobalResources>(viewportEntity);
-
-		std::array<RenderGraphTextureId, ShadowSettings::MaxCascades> cascadeTextures = { RenderGraphTextureId() };
-		Ref<ShadowPass> shadowPass = ConfigureShadowPass(*viewport, *viewportRenderGraph->Graph, cascadeTextures);
-
-		uint32_t frameInFlightCount = GraphicsContext::GetInstance().GetFrameInFlightCount();
-
-		for (uint32_t i = 0; i < frameInFlightCount; i++)
-		{
-			const ViewportFrameResources& viewportFrameResources = viewportResources->FrameResources[i];
-			SetupGlobalDescriptorSet(viewportFrameResources.GlobalDescriptorSet);
-			SetupGlobalDescriptorSet(viewportFrameResources.GlobalDescriptorSetWithoutShadows);
-		}
+		FLARE_CORE_ASSERT(depthOutput);
 
 		// Culling pass
 		{
@@ -466,8 +504,21 @@ namespace Flare
 
 			viewportRenderGraph->Graph->AddPass(depthPrepass, Ref<GeometryPass>::New(s_RendererData.Statistics, depthPrepassMaterial));
 		}
+	}
 
-		// Geometry pass
+	static void ConfigureGeometryPass(Entity viewportEntity,
+		const std::array<RenderGraphTextureId, ShadowSettings::MaxCascades>& cascadeTextures)
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		const Viewport* viewport = s_RendererData.RenderWorld->TryGetEntityComponent<const Viewport>(viewportEntity);
+		ViewportRenderGraph* viewportRenderGraph = s_RendererData.RenderWorld->TryGetEntityComponent<ViewportRenderGraph>(viewportEntity);
+		FLARE_CORE_ASSERT(viewport && viewportRenderGraph);
+
+		const ViewportColorOutput* colorOutput = s_RendererData.RenderWorld->TryGetEntityComponent<const ViewportColorOutput>(viewportEntity);
+		const ViewportDepthOutput* depthOutput = s_RendererData.RenderWorld->TryGetEntityComponent<const ViewportDepthOutput>(viewportEntity);
+		FLARE_CORE_ASSERT(colorOutput && depthOutput);
+
 		RenderGraphPassSpecifications geometryPass{};
 		geometryPass.SetDebugName("GeometryPass");
 		geometryPass.AddOutput(colorOutput->Id);
@@ -475,21 +526,6 @@ namespace Flare
 
 		if (viewport->Settings.ShadowMappingEnabled)
 		{
-			const RenderGraphResourceManager& resourceManager = viewportRenderGraph->Graph->GetResourceManager();
-			for (uint32_t frameIndex = 0; frameIndex < frameInFlightCount; frameIndex++)
-			{
-				const ViewportFrameResources& viewportFrameResources = viewportResources->FrameResources[frameIndex];
-				Ref<DescriptorSet> set = viewportFrameResources.GlobalDescriptorSet;
-				for (uint32_t cascadeIndex = 0; cascadeIndex < (uint32_t)Renderer::GetShadowSettings().Cascades; cascadeIndex++)
-				{
-					Ref<Texture> cascadeTexture = resourceManager.GetTextureForFrameInFlight(cascadeTextures[cascadeIndex], frameIndex);
-					set->WriteImage(cascadeTexture, 4 + cascadeIndex);
-					set->WriteImage(cascadeTexture, s_RendererData.DefaultShadowSampler, 8 + cascadeIndex);
-				}
-
-				set->FlushWrites();
-			}
-
 			for (size_t i = 0; i < cascadeTextures.size(); i++)
 			{
 				if (cascadeTextures[i].GetValue() == UINT32_MAX)
@@ -499,7 +535,43 @@ namespace Flare
 			}
 		}
 
+		// Setup AO input
+		const AOConfiguration& aoConfiguration = s_RendererData.RenderWorld->GetEntityComponent<const AOConfiguration>(viewportEntity);
+		if (viewportRenderGraph->Graph->GetResourceManager().IsTextureIdValid(aoConfiguration.AOTexture))
+		{
+			geometryPass.AddInput(aoConfiguration.AOTexture);
+
+			// Update descriptor sets with the ao texture
+
+			const ViewportGlobalResources& viewportResources = s_RendererData.RenderWorld->GetEntityComponent<const ViewportGlobalResources>(viewportEntity);
+			const RenderGraphResourceManager& resourceManager = viewportRenderGraph->Graph->GetResourceManager();
+			for (uint32_t frameInFlight = 0; frameInFlight < GraphicsContext::GetInstance().GetFrameInFlightCount(); frameInFlight++)
+			{
+				const ViewportFrameResources& currentFrameResources = viewportResources.FrameResources[frameInFlight];
+
+				Ref<Texture> aoTexture = resourceManager.GetTextureForFrameInFlight(aoConfiguration.AOTexture, frameInFlight);
+
+				currentFrameResources.GlobalDescriptorSet->WriteImage(aoTexture, s_RendererData.DefaultClosestClampSampler, 12);
+				currentFrameResources.GlobalDescriptorSet->FlushWrites();
+
+				currentFrameResources.GlobalDescriptorSetWithoutShadows->WriteImage(aoTexture, s_RendererData.DefaultClosestClampSampler, 12);
+				currentFrameResources.GlobalDescriptorSetWithoutShadows->FlushWrites();
+			}
+		}
+
 		viewportRenderGraph->Graph->AddPass(geometryPass, Ref<GeometryPass>::New(s_RendererData.Statistics, nullptr));
+	}
+
+	static void ConfigureOtherPasses(Entity viewportEntity)
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		ViewportRenderGraph* viewportRenderGraph = s_RendererData.RenderWorld->TryGetEntityComponent<ViewportRenderGraph>(viewportEntity);
+		FLARE_CORE_ASSERT(viewportRenderGraph);
+
+		const ViewportColorOutput* colorOutput = s_RendererData.RenderWorld->TryGetEntityComponent<const ViewportColorOutput>(viewportEntity);
+		const ViewportDepthOutput* depthOutput = s_RendererData.RenderWorld->TryGetEntityComponent<const ViewportDepthOutput>(viewportEntity);
+		FLARE_CORE_ASSERT(colorOutput && depthOutput);
 
 		// Decal pass
 		RenderGraphPassSpecifications decalPass{};
@@ -524,7 +596,8 @@ namespace Flare
 			ViewportRenderGraph(),
 			ViewportGlobalResources(),
 			ViewportColorOutput(),
-			ViewportDepthOutput());
+			ViewportDepthOutput(),
+			AOConfiguration());
 
 		s_RendererData.RenderWorld->AddDefaultEntityComponent<CulledGeometry>(viewport);
 
@@ -547,7 +620,14 @@ namespace Flare
 		s_RendererData.RenderWorld->DeleteEntity(viewportEntity);
 	}
 
-	void Renderer::PrepareViewport(Entity viewportEntity, const std::function<void(RenderGraph&)>& onBuild)
+	static void ResetViewportState(Entity viewportEntity)
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		s_RendererData.RenderWorld->GetEntityComponent<AOConfiguration>(viewportEntity) = AOConfiguration();
+	}
+
+	void Renderer::PrepareViewport(Entity viewportEntity, const std::function<void(RenderGraph&)>& onBuild, PostProcessingManager& postProcessingManager)
 	{
 		FLARE_PROFILE_FUNCTION();
 
@@ -579,6 +659,7 @@ namespace Flare
 		if (viewportRenderGraph->Graph->NeedsRebuilding())
 		{
 			viewportRenderGraph->Graph->Clear();
+			ResetViewportState(viewportEntity);
 
 			colorOutput->Id	= viewportRenderGraph->Graph->CreateTexture(TextureFormat::R11G11B10, "Color");
 			depthOutput->Id = viewportRenderGraph->Graph->CreateTexture(TextureFormat::Depth32, "Depth");
@@ -596,12 +677,39 @@ namespace Flare
 			viewportRenderGraph->Graph->AddExternalResource(colorTextureResource);
 			viewportRenderGraph->Graph->AddExternalResource(depthTextureResource);
 
-			ConfigurePasses(viewportEntity);
-			Renderer2D::ConfigurePasses(viewportEntity, *viewportRenderGraph->Graph);
+			{
+				SetupInitialGlobalDescriptorSets(viewportEntity);
 
-			onBuild(*viewportRenderGraph->Graph);
+				std::array<RenderGraphTextureId, ShadowSettings::MaxCascades> cascadeTextures = { RenderGraphTextureId() };
+				Ref<ShadowPass> shadowPass = ConfigureShadowPass(viewportEntity, *viewport, *viewportRenderGraph->Graph, cascadeTextures);
 
-			DebugRenderer::ConfigurePasses(*s_RendererData.RenderWorld, *viewportRenderGraph->Graph, viewportEntity);
+				ConfigureDepthPrepass(viewportEntity);
+
+				if (viewport->Settings.PostProcessingEnabled)
+				{
+					postProcessingManager.RegisterRenderPasses(*viewportRenderGraph->Graph,
+						viewportEntity,
+						*s_RendererData.RenderWorld,
+						PostProcessingExecutionOrder::AfterDepthPrePass);
+				}
+
+				ConfigureGeometryPass(viewportEntity, cascadeTextures);
+				ConfigureOtherPasses(viewportEntity);
+
+				Renderer2D::ConfigurePasses(viewportEntity, *viewportRenderGraph->Graph);
+
+				onBuild(*viewportRenderGraph->Graph);
+
+				DebugRenderer::ConfigurePasses(*s_RendererData.RenderWorld, *viewportRenderGraph->Graph, viewportEntity);
+
+				if (viewport->Settings.PostProcessingEnabled)
+				{
+					postProcessingManager.RegisterRenderPasses(*viewportRenderGraph->Graph,
+						viewportEntity,
+						*s_RendererData.RenderWorld,
+						PostProcessingExecutionOrder::EndOfFrame);
+				}
+			}
 
 			viewportRenderGraph->Graph->Build();
 		}
