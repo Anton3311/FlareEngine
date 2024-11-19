@@ -34,6 +34,10 @@ namespace Flare
 
 		m_Pipeline = nullptr;
 		m_IsDirty = true;
+
+		// No descriptor properties, no descriptor set, no need to set the dirty flag
+		if (m_Shader->GetMetadata()->DescriptorSetUsage[3].PropertyCount == 0)
+			m_IsDirty = false;
 	}
 
 	Ref<VulkanPipeline> VulkanMaterial::GetPipeline(const Ref<VulkanRenderPass>& renderPass)
@@ -49,6 +53,10 @@ namespace Flare
 	void VulkanMaterial::UpdateDescriptorSet()
 	{
 		FLARE_PROFILE_FUNCTION();
+
+		// No descriptor properties, no descriptor set, no need to update the descritor set
+		if (m_Shader->GetMetadata()->DescriptorSetUsage[3].PropertyCount == 0)
+			return;
 
 		if (!m_IsDirty)
 			return;
