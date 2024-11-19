@@ -22,6 +22,7 @@
 #include "Flare/Renderer/ShaderLibrary.h"
 
 #include "Flare/Renderer/Passes/GeometryPass.h"
+#include "Flare/Renderer/Passes/GeometryCullingPass.h"
 #include "Flare/Renderer/Passes/ShadowPass.h"
 #include "Flare/Renderer/Passes/ShadowCascadePass.h"
 #include "Flare/Renderer/Passes/DecalsPass.h"
@@ -433,6 +434,14 @@ namespace Flare
 			SetupGlobalDescriptorSet(viewportFrameResources.GlobalDescriptorSetWithoutShadows);
 		}
 
+		{
+			RenderGraphPassSpecifications geometryCullingPass{};
+			geometryCullingPass.SetDebugName("GeometryCullingPass");
+			geometryCullingPass.SetType(RenderGraphPassType::Other);
+
+			viewportRenderGraph->Graph->AddPass(geometryCullingPass, Ref<GeometryCullingPass>::New());
+		}
+
 		RenderGraphPassSpecifications geometryPass{};
 		geometryPass.SetDebugName("GeometryPass");
 		geometryPass.AddOutput(colorOutput->Id);
@@ -490,6 +499,8 @@ namespace Flare
 			ViewportGlobalResources(),
 			ViewportColorOutput(),
 			ViewportDepthOutput());
+
+		s_RendererData.RenderWorld->AddDefaultEntityComponent<CulledGeometry>(viewport);
 
 		ViewportRenderGraph& renderGraph = s_RendererData.RenderWorld->GetEntityComponent<ViewportRenderGraph>(viewport);
 		renderGraph.Graph = RenderGraph::Create(*s_RendererData.RenderWorld, viewport);

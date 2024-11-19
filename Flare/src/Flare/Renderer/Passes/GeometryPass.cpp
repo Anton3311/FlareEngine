@@ -9,6 +9,7 @@
 #include "Flare/Renderer/FrameBuffer.h"
 #include "Flare/Renderer/GraphicsContext.h"
 #include "Flare/Renderer/GPUTimer.h"
+#include "Flare/Renderer/Passes/GeometryCullingPass.h"
 #include "Flare/Renderer/RenderData.h"
 #include "Flare/Renderer/RendererComponents.h"
 #include "Flare/Renderer/Renderer.h"
@@ -24,35 +25,21 @@ namespace Flare
 		: m_Statistics(statistics)
 	{
 		FLARE_PROFILE_FUNCTION();
-		constexpr size_t maxInstances = 16;
-
-		uint32_t frameInFlightCount = GraphicsContext::GetInstance().GetFrameInFlightCount();
-		for (uint32_t i = 0; i < frameInFlightCount; i++)
-		{
-			FrameResources& resources = m_FrameResources.emplace_back();
-			resources.InstanceBuffer = GPUBuffer::CreateStorageBuffer(maxInstances * sizeof(InstanceData), GPUBufferMemoryType::Static);
-
-			resources.InstanceBufferDescriptor = Renderer::GetInstanceDataDescriptorSetPool()->AllocateSet();
-			resources.InstanceBufferDescriptor->WriteStorageBuffer(resources.InstanceBuffer, 0);
-			resources.InstanceBufferDescriptor->FlushWrites();
-		}
 
 		m_Timer = GPUTimer::Create();
-	}
-
-	GeometryPass::~GeometryPass()
-	{
-		for (const FrameResources& frameResources : m_FrameResources)
-		{
-			Renderer::GetInstanceDataDescriptorSetPool()->ReleaseSet(frameResources.InstanceBufferDescriptor);
-		}
 	}
 
 	void GeometryPass::OnPrepare(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
 	{
 		FLARE_PROFILE_FUNCTION();
+	}
 
-		const FrameResources& frameResources = m_FrameResources[GraphicsContext::GetInstance().GetCurrentFrameInFlight()];
+	void GeometryPass::OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		const CulledGeometry& culledGeometry = context.RenderWorld.GetEntityComponent<const CulledGeometry>(context.ViewportEntity);
+		const CulledGeometry::GPUFrameResources& frameResources = culledGeometry.FrameResources[GraphicsContext::GetInstance().GetCurrentFrameInFlight()];
 
 		const Viewport* viewport = context.RenderWorld.TryGetEntityComponent<const Viewport>(context.ViewportEntity);
 		const ViewportGlobalResources* viewportResources = context.RenderWorld.TryGetEntityComponent<const ViewportGlobalResources>(context.ViewportEntity);
@@ -67,52 +54,6 @@ namespace Flare
 
 		commandBuffer->SetGlobalDescriptorSet(frameResources.InstanceBufferDescriptor, 2);
 
-		m_VisibleObjects.clear();
-
-		CullObjects(context);
-
-		m_Statistics.GeometryPassTime += m_Timer->GetElapsedTime().value_or(0.0f); // Read the time from the previous frame
-		m_Statistics.ObjectsVisible += (uint32_t)m_VisibleObjects.size();
-
-		const RendererSubmitionQueue& opaqueGeometry = context.GetSceneSubmition().OpaqueGeometrySubmitions;
-
-		{
-			FLARE_PROFILE_SCOPE("Sort");
-			std::sort(m_VisibleObjects.begin(), m_VisibleObjects.end(), [&opaqueGeometry](uint32_t a, uint32_t b) -> bool
-			{
-				return opaqueGeometry[a].SortKey < opaqueGeometry[b].SortKey;
-			});
-		}
-
-		m_InstanceData.clear();
-
-		{
-			FLARE_PROFILE_SCOPE("FillInstanceData");
-			for (uint32_t objectIndex : m_VisibleObjects)
-			{
-				auto& instanceData = m_InstanceData.emplace_back();
-				const auto& transform = opaqueGeometry[objectIndex].Transform;
-				instanceData.PackedTransform[0] = glm::vec4(transform.RotationScale[0], transform.Translation.x);
-				instanceData.PackedTransform[1] = glm::vec4(transform.RotationScale[1], transform.Translation.y);
-				instanceData.PackedTransform[2] = glm::vec4(transform.RotationScale[2], transform.Translation.z);
-			}
-		}
-
-		size_t instanceDataSize = sizeof(InstanceData) * m_InstanceData.size();
-		if (instanceDataSize > frameResources.InstanceBuffer->GetSize())
-		{
-			frameResources.InstanceBuffer->Resize(instanceDataSize);
-			frameResources.InstanceBufferDescriptor->WriteStorageBuffer(frameResources.InstanceBuffer, 0);
-			frameResources.InstanceBufferDescriptor->FlushWrites();
-		}
-
-		frameResources.InstanceBuffer->SetData(MemorySpan::FromVector(m_InstanceData), 0, commandBuffer);
-	}
-
-	void GeometryPass::OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
-	{
-		FLARE_PROFILE_FUNCTION();
-
 		const RendererSubmitionQueue& opaqueGeometry = context.GetSceneSubmition().OpaqueGeometrySubmitions;
 
 		//commandBuffer->StartTimer(m_Timer);
@@ -120,9 +61,9 @@ namespace Flare
 
 		Batch batch{};
 
-		for (uint32_t currentInstance = 0; currentInstance < (uint32_t)m_VisibleObjects.size(); currentInstance++)
+		for (uint32_t currentInstance = 0; currentInstance < (uint32_t)culledGeometry.VisibleObjects.size(); currentInstance++)
 		{
-			uint32_t objectIndex = m_VisibleObjects[currentInstance];
+			uint32_t objectIndex = culledGeometry.VisibleObjects[currentInstance];
 			const auto& object = opaqueGeometry[objectIndex];
 
 			if (batch.Mesh != object.Mesh
@@ -149,7 +90,7 @@ namespace Flare
 			}
 		}
 
-		batch.InstanceCount = (uint32_t)m_VisibleObjects.size() - batch.BaseInstance;
+		batch.InstanceCount = (uint32_t)culledGeometry.VisibleObjects.size() - batch.BaseInstance;
 		FlushBatch(commandBuffer, batch);
 
 		//commandBuffer->StopTimer(m_Timer);
@@ -158,41 +99,6 @@ namespace Flare
 	std::optional<float> GeometryPass::GetElapsedTime() const
 	{
 		return m_Timer->GetElapsedTime();
-	}
-
-	void GeometryPass::CullObjects(const RenderGraphContext& context)
-	{
-		FLARE_PROFILE_FUNCTION();
-
-		Math::AABB objectAABB;
-
-		const RenderView& cameraView = context.GetRenderView();
-
-		FrustumPlanes planes{};
-		planes.SetFromViewAndProjection(cameraView.View, cameraView.InverseViewProjection, cameraView.ViewDirection);
-
-		const RendererSubmitionQueue& opaqueGeometry = context.GetSceneSubmition().OpaqueGeometrySubmitions;
-
-		for (size_t i = 0; i < opaqueGeometry.GetSize(); i++)
-		{
-			const auto& object = opaqueGeometry[i];
-			objectAABB = Math::SIMD::TransformAABB(object.Mesh->GetSubMeshes()[object.SubMeshIndex].Bounds, object.Transform.ToMatrix4x4());
-
-			bool intersects = true;
-			for (size_t i = 0; i < planes.PlanesCount; i++)
-			{
-				if (!objectAABB.IntersectsOrInFrontOfPlane(planes.Planes[i]))
-				{
-					intersects = false;
-					break;
-				}
-			}
-
-			if (intersects)
-			{
-				m_VisibleObjects.push_back((uint32_t)i);
-			}
-		}
 	}
 
 	void GeometryPass::FlushBatch(const Ref<CommandBuffer>& commandBuffer, const Batch& batch)
