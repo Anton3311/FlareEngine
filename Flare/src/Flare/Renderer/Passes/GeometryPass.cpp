@@ -21,8 +21,8 @@
 
 namespace Flare
 {
-	GeometryPass::GeometryPass(RendererStatistics& statistics)
-		: m_Statistics(statistics)
+	GeometryPass::GeometryPass(RendererStatistics& statistics, Ref<Material> materialOverride)
+		: m_Statistics(statistics), m_MaterialOverride(materialOverride)
 	{
 		FLARE_PROFILE_FUNCTION();
 
@@ -60,6 +60,7 @@ namespace Flare
 		commandBuffer->SetDefaultViewportAndScissors();
 
 		Batch batch{};
+		batch.Material = m_MaterialOverride;
 
 		for (uint32_t currentInstance = 0; currentInstance < (uint32_t)culledGeometry.VisibleObjects.size(); currentInstance++)
 		{
@@ -79,7 +80,7 @@ namespace Flare
 				batch.SubMesh = object.SubMeshIndex;
 			}
 
-			if (object.Material != batch.Material)
+			if (!m_MaterialOverride && object.Material != batch.Material)
 			{
 				batch.InstanceCount = currentInstance - batch.BaseInstance;
 

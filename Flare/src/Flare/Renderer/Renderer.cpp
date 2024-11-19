@@ -406,6 +406,18 @@ namespace Flare
 		return shadowPass;
 	}
 
+	static Ref<Material> CreateDepthPrepassMaterial()
+	{
+		FLARE_PROFILE_FUNCTION();
+		std::optional<AssetHandle> shaderHandle = ShaderLibrary::FindShader("DepthOnlyPerspective");
+		if (shaderHandle && AssetManager::IsAssetHandleValid(*shaderHandle))
+		{
+			return Material::Create(*shaderHandle);
+		}
+
+		return nullptr;
+	}
+
 	static void ConfigurePasses(Entity viewportEntity)
 	{
 		FLARE_PROFILE_FUNCTION();
@@ -434,6 +446,7 @@ namespace Flare
 			SetupGlobalDescriptorSet(viewportFrameResources.GlobalDescriptorSetWithoutShadows);
 		}
 
+		// Culling pass
 		{
 			RenderGraphPassSpecifications geometryCullingPass{};
 			geometryCullingPass.SetDebugName("GeometryCullingPass");
@@ -441,7 +454,20 @@ namespace Flare
 
 			viewportRenderGraph->Graph->AddPass(geometryCullingPass, Ref<GeometryCullingPass>::New());
 		}
+	
+		// Depth prepass
+		{
+			Ref<Material> depthPrepassMaterial = CreateDepthPrepassMaterial();
 
+			RenderGraphPassSpecifications depthPrepass{};
+			depthPrepass.SetDebugName("DepthPrepass");
+			depthPrepass.SetType(RenderGraphPassType::Graphics);
+			depthPrepass.AddOutput(depthOutput->Id);
+
+			viewportRenderGraph->Graph->AddPass(depthPrepass, Ref<GeometryPass>::New(s_RendererData.Statistics, depthPrepassMaterial));
+		}
+
+		// Geometry pass
 		RenderGraphPassSpecifications geometryPass{};
 		geometryPass.SetDebugName("GeometryPass");
 		geometryPass.AddOutput(colorOutput->Id);
@@ -473,7 +499,7 @@ namespace Flare
 			}
 		}
 
-		viewportRenderGraph->Graph->AddPass(geometryPass, Ref<GeometryPass>::New(s_RendererData.Statistics));
+		viewportRenderGraph->Graph->AddPass(geometryPass, Ref<GeometryPass>::New(s_RendererData.Statistics, nullptr));
 
 		// Decal pass
 		RenderGraphPassSpecifications decalPass{};

@@ -1,4 +1,5 @@
 Type = Surface
+DepthFunction = LessOrEqual
 Properties = 
 {
 	u_Material.Color = { Type = Color }
