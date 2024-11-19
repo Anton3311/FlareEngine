@@ -90,6 +90,12 @@ namespace Flare
 		}
 
 		template<typename T>
+		constexpr bool AddDefaultEntityComponent(Entity entity)
+		{
+			return Entities.AddEntityComponent(entity, COMPONENT_ID(T), nullptr, ComponentInitializationStrategy::DefaultConstructor);
+		}
+
+		template<typename T>
 		constexpr bool RemoveEntityComponent(Entity entity)
 		{
 			return Entities.RemoveEntityComponent(entity, COMPONENT_ID(T));
