@@ -169,6 +169,13 @@ namespace Flare
 
 		virtual uint32_t GetWidth() const = 0;
 		virtual uint32_t GetHeight() const = 0;
+
+		inline glm::uvec2 GetSize() const
+		{
+			const TextureSpecifications& specifications = GetSpecifications();
+			return glm::uvec2(specifications.Width, specifications.Height);
+		}
+
 		virtual TextureFormat GetFormat() const = 0;
 		virtual TextureFiltering GetFiltering() const = 0;
 
