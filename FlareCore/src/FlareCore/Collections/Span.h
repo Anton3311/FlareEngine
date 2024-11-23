@@ -102,6 +102,17 @@ namespace Flare
 			return m_Values[index];
 		}
 
+		inline bool Contains(const T& value) const
+		{
+			for (size_t i = 0; i < m_Size; i++)
+			{
+				if (m_Values[i] == value)
+					return true;
+			}
+
+			return false;
+		}
+
 		template<typename U>
 		inline static Span<T> FromVector(std::vector<U>& vector)
 		{
