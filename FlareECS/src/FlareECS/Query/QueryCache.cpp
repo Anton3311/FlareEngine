@@ -133,41 +133,26 @@ namespace Flare
 	bool QueryCache::CompareComponentSets(Span<const ComponentId> archetypeComponents, Span<const QueryData::ComponentEntry> queryComponents)
 	{
 		FLARE_PROFILE_FUNCTION();
-		size_t queryComponentIndex = 0;
-		size_t i = 0;
-		while (i < archetypeComponents.GetSize() && queryComponentIndex < queryComponents.GetSize())
+
+		for (const QueryData::ComponentEntry& entry : queryComponents)
 		{
-			bool match = archetypeComponents[i] == queryComponents[queryComponentIndex].Id;
-			bool without = queryComponents[queryComponentIndex].Filter == QueryFilterType::Without;
-
-			if (match && without)
-				return false;
-
-			if (without)
+			bool contains = archetypeComponents.Contains(entry.Id);
+			
+			switch (entry.Filter)
 			{
-				if (archetypeComponents[i] > queryComponents[queryComponentIndex].Id)
-				{
-					queryComponentIndex++;
-					continue;
-				}
-				else if (i == archetypeComponents.GetSize() - 1)
-					queryComponentIndex++;
-				else
-					continue;
-			}
-
-			if (match)
-				queryComponentIndex++;
-
-			if (queryComponentIndex == queryComponents.GetSize())
+			case QueryFilterType::With:
+				if (!contains)
+					return false;
 				break;
-
-			++i;
+			case QueryFilterType::Without:
+				if (contains)
+					return false;
+				break;
+			default:
+				FLARE_VERIFY_UNREACHABLE();
+			}
 		}
 
-		while (queryComponentIndex < queryComponents.GetSize() && queryComponents[queryComponentIndex].Filter == QueryFilterType::Without)
-			++queryComponentIndex;
-
-		return queryComponentIndex == queryComponents.GetSize();
+		return true;
 	}
 }
