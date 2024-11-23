@@ -273,9 +273,6 @@ namespace Flare
 
 			if (!isRoot)
 			{
-				Parent* parent = world.TryGetEntityComponent<Parent>(entity);
-				FLARE_CORE_ASSERT(parent, "An entity that is not at the root of PrefabHierarchy must have a Parent component");
-
 				FLARE_CORE_ASSERT(node.ParentNode != PrefabHierarchy::Node::INVALID_PARENT_NODE);
 
 				HierarchyHelper::SetParent(world, createdEntities[i], createdEntities[node.ParentNode]);

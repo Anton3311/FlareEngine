@@ -47,8 +47,6 @@ namespace Flare
 			{
 				COMPONENT_ID(TransformComponent),
 				COMPONENT_ID(LocalTransform),
-				COMPONENT_ID(Parent),
-				COMPONENT_ID(Children),
 				COMPONENT_ID(MeshRenderer)
 			};
 
@@ -62,7 +60,6 @@ namespace Flare
 			{
 				COMPONENT_ID(TransformComponent),
 				COMPONENT_ID(LocalTransform),
-				COMPONENT_ID(Children),
 				COMPONENT_ID(MeshRenderer)
 			};
 
@@ -76,8 +73,6 @@ namespace Flare
 			{
 				COMPONENT_ID(TransformComponent),
 				COMPONENT_ID(LocalTransform),
-				COMPONENT_ID(Children),
-				COMPONENT_ID(Parent),
 				COMPONENT_ID(PointLight)
 			};
 
@@ -91,8 +86,6 @@ namespace Flare
 			{
 				COMPONENT_ID(TransformComponent),
 				COMPONENT_ID(LocalTransform),
-				COMPONENT_ID(Children),
-				COMPONENT_ID(Parent),
 				COMPONENT_ID(SpotLight)
 			};
 
