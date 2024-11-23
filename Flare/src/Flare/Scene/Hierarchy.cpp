@@ -37,7 +37,8 @@ namespace Flare
 			return;
 		}
 
-		RemoveFromParent(world, child, childParent->m_ParentEntity);
+		if (world.IsEntityAlive(childParent->GetParentEntity()))
+			RemoveFromParent(world, child, childParent->m_ParentEntity);
 
 		childParent->m_ParentEntity = parent;
 
