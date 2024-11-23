@@ -5,6 +5,7 @@ Properties =
 	u_Material.Color = { Type = Color }
 	u_Material.Roughness = {}
 	u_Material.Metallic = {}
+	u_Material.Emission = { Type = HDR }
 	u_Texture = { Default = White }
 	u_NormalMap = { Default = DefaultNormals }
 	u_RoughnessMap = { Default = White }
@@ -63,6 +64,7 @@ layout(std140, push_constant) uniform InstanceData
 	vec4 Color;
 	float Roughness;
 	float Metallic;
+	vec3 Emission;
 } u_Material;
 
 struct VertexData
@@ -146,6 +148,8 @@ void main()
 	ao = mix(ao, 1.0f, shadow);
 
 	finalColor += u_EnvironmentLight.rgb * u_EnvironmentLight.w * color.rgb * ao;
+
+	finalColor += u_Material.Emission;
 
 #if DEBUG_CASCADES
 	int cascadeIndex = CalculateCascadeIndex(i_Vertex.ViewSpacePosition);

@@ -13,11 +13,6 @@
 
 namespace Flare
 {
-	uint32_t CalculateMipCount(uint32_t width, uint32_t height)
-	{
-		return (uint32_t)glm::floor(glm::log2((float)glm::max(width, height))) + 1u;
-	}
-
 	VkFormat TextureFormatToVulkanFormat(TextureFormat format)
 	{
 		switch (format)

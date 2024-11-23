@@ -106,6 +106,8 @@ namespace Flare
 			return "Opaque";
 		case BlendMode::Transparent:
 			return "Transparent";
+		case BlendMode::Additive:
+			return "Additive";
 		}
 
 		FLARE_CORE_ASSERT(false, "Unhandled material blend mode");
@@ -118,6 +120,8 @@ namespace Flare
 			return BlendMode::Opaque;
 		if (string == "Transparent")
 			return BlendMode::Transparent;
+		if (string == "Additive")
+			return BlendMode::Additive;
 
 		return {};
 	}

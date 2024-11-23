@@ -96,11 +96,13 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
+#if 0
 		if (m_ResourceManager.ResizeTextures())
 		{
 			// Textures were resized, so recreate render targets
 			OnTexturesResize();
 		}
+#endif
 
 		OnPrepare();
 	}
