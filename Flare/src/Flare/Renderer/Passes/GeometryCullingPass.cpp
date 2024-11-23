@@ -96,8 +96,6 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		Math::AABB objectAABB;
-
 		const RenderView& cameraView = context.GetRenderView();
 
 		FrustumPlanes planes{};
@@ -108,7 +106,7 @@ namespace Flare
 		for (size_t i = 0; i < opaqueGeometry.GetSize(); i++)
 		{
 			const auto& object = opaqueGeometry[i];
-			objectAABB = Math::SIMD::TransformAABB(object.Mesh->GetSubMeshes()[object.SubMeshIndex].Bounds, object.Transform.ToMatrix4x4());
+			Math::AABB objectAABB = object.Mesh->GetSubMeshes()[object.SubMeshIndex].Bounds.Transformed(object.Transform.ToMatrix4x4());
 
 			bool intersects = true;
 			for (size_t i = 0; i < planes.PlanesCount; i++)
