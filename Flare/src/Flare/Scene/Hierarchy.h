@@ -125,6 +125,7 @@ namespace Flare
 	private:
 		static void PropagateTransformRecursively(World& world, const Children& children, const TransformComponent& parentTransform);
 	private:
-		Query m_Query;
+		Query m_NonLeafEntitiesQuery;
+		Query m_LeafEntitiesQuery;
 	};
 }

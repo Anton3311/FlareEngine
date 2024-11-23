@@ -292,10 +292,16 @@ namespace Flare
 		FLARE_CORE_ASSERT(groupId.has_value());
 		config.Group = *groupId;
 
-		m_Query = world.NewQuery()
+		m_NonLeafEntitiesQuery = world.NewQuery()
 			.All()
 			.With<TransformComponent, Children>()
 			.Without<Parent>()
+			.Build();
+
+		m_LeafEntitiesQuery = world.NewQuery()
+			.All()
+			.With<TransformComponent, LocalTransform, Parent>()
+			.Without<Children>()
 			.Build();
 	}
 
@@ -303,7 +309,7 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		m_Query.ForEachChunk([this, &world](QueryChunk chunk,
+		m_NonLeafEntitiesQuery.ForEachChunk([&world](QueryChunk chunk,
 			ComponentView<const TransformComponent> transforms,
 			ComponentView<const Children> childrenComponents)
 			{
@@ -333,6 +339,30 @@ namespace Flare
 							PropagateTransformRecursively(world, *childrenEntities, *globalTransform);
 						}
 					}
+				}
+			});
+
+		m_LeafEntitiesQuery.ForEachChunk([&world](QueryChunk chunk,
+			ComponentView<TransformComponent> transforms,
+			ComponentView<const LocalTransform> localTransforms,
+			ComponentView<Parent> parents)
+			{
+				for (size_t entityIndex = 0; entityIndex < chunk.GetEntityCount(); entityIndex++)
+				{
+					Entity parentEntity = parents[entityIndex].GetParentEntity();
+
+					const TransformComponent* parentsGlobalTransform = world.TryGetEntityComponent<const TransformComponent>(parentEntity);
+					if (!parentsGlobalTransform)
+						continue;
+
+					glm::quat parentRotation = glm::quat(glm::radians(parentsGlobalTransform->Rotation));
+
+					TransformComponent& globalTransform = transforms[entityIndex];
+
+					glm::vec3 rotatedPosition = parentRotation * (localTransforms[entityIndex].Position * parentsGlobalTransform->Scale);
+					globalTransform.Position = rotatedPosition + parentsGlobalTransform->Position;
+					globalTransform.Rotation = parentsGlobalTransform->Rotation + localTransforms[entityIndex].Rotation;
+					globalTransform.Scale = parentsGlobalTransform->Scale * localTransforms[entityIndex].Scale;
 				}
 			});
 	}
