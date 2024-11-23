@@ -9,6 +9,7 @@ Properties =
 	u_Texture = { Default = White }
 	u_NormalMap = { Default = DefaultNormals }
 	u_RoughnessMap = { Default = White }
+	u_EmissionMap = { Default = Black }
 }
 
 #begin vertex
@@ -79,6 +80,7 @@ struct VertexData
 layout(set = 3, binding = 0) uniform sampler2D u_Texture;
 layout(set = 3, binding = 1) uniform sampler2D u_NormalMap;
 layout(set = 3, binding = 2) uniform sampler2D u_RoughnessMap;
+layout(set = 3, binding = 3) uniform sampler2D u_EmissionMap;
 
 layout(location = 0) in VertexData i_Vertex;
 
@@ -149,7 +151,8 @@ void main()
 
 	finalColor += u_EnvironmentLight.rgb * u_EnvironmentLight.w * color.rgb * ao;
 
-	finalColor += u_Material.Emission;
+	vec3 emission = texture(u_EmissionMap, uv).rgb * u_Material.Emission;
+	finalColor += emission;
 
 #if DEBUG_CASCADES
 	int cascadeIndex = CalculateCascadeIndex(i_Vertex.ViewSpacePosition);
