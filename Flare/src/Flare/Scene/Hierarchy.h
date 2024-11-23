@@ -9,11 +9,23 @@
 
 namespace Flare
 {
+	class HierarchyHelper;
+	class HierarchyProcessor;
+
+
+
 	struct FLARE_API Children
 	{
+	public:
 		FLARE_COMPONENT;
 
-		std::vector<Entity> ChildrenEntities;
+		const std::vector<Entity>& GetChildren() const { return m_ChildrenEntities; }
+	private:
+		std::vector<Entity> m_ChildrenEntities;
+
+		friend struct TypeSerializer<Children>;
+		friend class HierarchyHelper;
+		friend class HierarchyProcessor;
 	};
 
 	template<>
@@ -21,7 +33,7 @@ namespace Flare
 	{
 		static void OnSerialize(Children& children, SerializationStream& stream)
 		{
-			stream.Serialize("ChildrenEntities", SerializationValue(children.ChildrenEntities));
+			stream.Serialize("ChildrenEntities", SerializationValue(children.m_ChildrenEntities));
 		}
 	};
 
@@ -29,14 +41,21 @@ namespace Flare
 
 	struct FLARE_API Parent
 	{
+	public:
 		FLARE_COMPONENT;
 
 		Parent()
-			: ParentEntity(Entity()) {}
+			: m_ParentEntity(Entity()) {}
 		Parent(Entity parent)
-			: ParentEntity(parent) {}
+			: m_ParentEntity(parent) {}
 
-		Entity ParentEntity;
+		inline Entity GetParentEntity() const { return m_ParentEntity; }
+	private:
+		Entity m_ParentEntity;
+
+		friend struct TypeSerializer<Parent>;
+		friend class HierarchyHelper;
+		friend class HierarchyProcessor;
 	};
 
 	template<>
@@ -44,7 +63,7 @@ namespace Flare
 	{
 		static void OnSerialize(Parent& parent, SerializationStream& stream)
 		{
-			stream.Serialize("ParentEntity", SerializationValue(parent.ParentEntity));
+			stream.Serialize("ParentEntity", SerializationValue(parent.m_ParentEntity));
 		}
 	};
 

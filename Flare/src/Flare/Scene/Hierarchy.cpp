@@ -28,7 +28,7 @@ namespace Flare
 		FLARE_CORE_ASSERT(world.IsEntityAlive(child) && world.IsEntityAlive(parent));
 
 		Parent* childParent = world.TryGetEntityComponent<Parent>(child);
-		if (childParent && childParent->ParentEntity == parent)
+		if (childParent && childParent->m_ParentEntity == parent)
 			return;
 		
 		if (!childParent)
@@ -37,9 +37,9 @@ namespace Flare
 			return;
 		}
 
-		RemoveFromParent(world, child, childParent->ParentEntity);
+		RemoveFromParent(world, child, childParent->m_ParentEntity);
 
-		childParent->ParentEntity = parent;
+		childParent->m_ParentEntity = parent;
 
 		Children* children = world.TryGetEntityComponent<Children>(parent);
 		if (!children)
@@ -48,12 +48,13 @@ namespace Flare
 			children = &world.GetEntityComponent<Children>(parent);
 		}
 
-		children->ChildrenEntities.push_back(child);
+		children->m_ChildrenEntities.push_back(child);
 	}
 
 	void HierarchyHelper::AddParent(World& world, Entity child, Entity parent)
 	{
 		FLARE_PROFILE_FUNCTION();
+		FLARE_CORE_ASSERT(!world.HasComponent<Parent>(child));
 
 		world.AddEntityComponent(child, Parent(parent));
 
@@ -64,7 +65,7 @@ namespace Flare
 			children = &world.GetEntityComponent<Children>(parent);
 		}
 
-		children->ChildrenEntities.push_back(child);
+		children->m_ChildrenEntities.push_back(child);
 	}
 
 	void HierarchyHelper::DeleteEntityHierarchy(World& world, Entity root)
@@ -76,7 +77,7 @@ namespace Flare
 
 		if (children)
 		{
-			for (Entity child : children->ChildrenEntities)
+			for (Entity child : children->m_ChildrenEntities)
 			{
 				if (world.IsEntityAlive(child))
 				{
@@ -89,7 +90,7 @@ namespace Flare
 		const Parent* parent = world.TryGetEntityComponent<const Parent>(root);
 		if (parent)
 		{
-			RemoveFromParent(world, root, parent->ParentEntity);
+			RemoveFromParent(world, root, parent->m_ParentEntity);
 		}
 
 		world.DeleteEntity(root);
@@ -119,15 +120,15 @@ namespace Flare
 			Children* copyChildren = world.TryGetEntityComponent<Children>(rootCopy);
 			FLARE_CORE_ASSERT(copyChildren);
 
-			for (size_t i = 0; i < children->ChildrenEntities.size(); i++)
+			for (size_t i = 0; i < children->m_ChildrenEntities.size(); i++)
 			{
-				Entity childCopy = DuplicateEntityHierarchyRecursively(world, children->ChildrenEntities[i], ignoredComponents);
-				copyChildren->ChildrenEntities[i] = childCopy;
+				Entity childCopy = DuplicateEntityHierarchyRecursively(world, children->m_ChildrenEntities[i], ignoredComponents);
+				copyChildren->m_ChildrenEntities[i] = childCopy;
 
 				Parent* parent = world.TryGetEntityComponent<Parent>(childCopy);
 				if (parent)
 				{
-					parent->ParentEntity = rootCopy;
+					parent->m_ParentEntity = rootCopy;
 				}
 			}
 		}
@@ -142,13 +143,13 @@ namespace Flare
 		const Parent* rootParent = world.TryGetEntityComponent<const Parent>(originalEntity);
 		if (rootParent)
 		{
-			Children* parentChildren = world.TryGetEntityComponent<Children>(rootParent->ParentEntity);
+			Children* parentChildren = world.TryGetEntityComponent<Children>(rootParent->m_ParentEntity);
 			FLARE_CORE_ASSERT(parentChildren);
 
-			auto originalRootIndex = std::find(parentChildren->ChildrenEntities.begin(), parentChildren->ChildrenEntities.end(), originalEntity);
-			FLARE_CORE_ASSERT(originalRootIndex != parentChildren->ChildrenEntities.end());
+			auto originalRootIndex = std::find(parentChildren->m_ChildrenEntities.begin(), parentChildren->m_ChildrenEntities.end(), originalEntity);
+			FLARE_CORE_ASSERT(originalRootIndex != parentChildren->m_ChildrenEntities.end());
 
-			parentChildren->ChildrenEntities.insert(originalRootIndex + 1, copy);
+			parentChildren->m_ChildrenEntities.insert(originalRootIndex + 1, copy);
 		}
 	}
 
@@ -198,14 +199,14 @@ namespace Flare
 			return;
 
 		auto it = std::find(
-			children->ChildrenEntities.begin(),
-			children->ChildrenEntities.end(),
+			children->m_ChildrenEntities.begin(),
+			children->m_ChildrenEntities.end(),
 			child);
 
-		if (it == children->ChildrenEntities.end())
+		if (it == children->m_ChildrenEntities.end())
 			return;
 
-		children->ChildrenEntities.erase(it);
+		children->m_ChildrenEntities.erase(it);
 	}
 
 	//
@@ -233,25 +234,24 @@ namespace Flare
 
 		m_DeletedEntitiesWithParent.ForEachChunk([&world](QueryChunk chunk, ComponentView<const Parent> parents)
 			{
-				uint32_t entityIndex = 0;
 				for (size_t entityIndex = 0; entityIndex < chunk.GetEntityCount(); entityIndex++)
 				{
-					Entity parentEntity = parents[entityIndex].ParentEntity;
+					Entity parentEntity = parents[entityIndex].m_ParentEntity;
 					Entity thisEntity = chunk.GetEntityId(entityIndex);
+
+					// TODO: Delete hierarchies of children
 
 					{
 						Children* children = world.TryGetEntityComponent<Children>(parentEntity);
 						if (children)
 						{
-							auto it = std::find(children->ChildrenEntities.begin(), children->ChildrenEntities.end(), thisEntity);
-							if (it != children->ChildrenEntities.end())
+							auto it = std::find(children->m_ChildrenEntities.begin(), children->m_ChildrenEntities.end(), thisEntity);
+							if (it != children->m_ChildrenEntities.end())
 							{
-								children->ChildrenEntities.erase(it);
+								children->m_ChildrenEntities.erase(it);
 							}
 						}
 					}
-
-					entityIndex++;
 				}
 			});
 
@@ -262,7 +262,7 @@ namespace Flare
 				{
 					const Children& children = childrenComponents[entityIndex];
 
-					for (Entity child : children.ChildrenEntities)
+					for (Entity child : children.GetChildren())
 					{
 						if (!world.IsEntityAlive(child))
 							return;
@@ -310,7 +310,7 @@ namespace Flare
 
 					glm::quat parentRotation = glm::quat(glm::radians(parentTransform.Rotation));
 
-					for (Entity child : children.ChildrenEntities)
+					for (Entity child : children.GetChildren())
 					{
 						TransformComponent* globalTransform = world.TryGetEntityComponent<TransformComponent>(child);
 						const LocalTransform* localTransform = world.TryGetEntityComponent<const LocalTransform>(child);
@@ -352,7 +352,7 @@ namespace Flare
 		
 		glm::quat parentRotation = glm::quat(glm::radians(parentTransform.Rotation));
 
-		for (Entity child : children.ChildrenEntities)
+		for (Entity child : children.GetChildren())
 		{
 			const LocalTransform* localTransform = world.TryGetEntityComponent<const LocalTransform>(child);
 			TransformComponent* globalTransform = world.TryGetEntityComponent<TransformComponent>(child);

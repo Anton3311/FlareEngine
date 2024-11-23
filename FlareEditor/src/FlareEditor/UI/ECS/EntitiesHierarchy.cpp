@@ -221,7 +221,7 @@ namespace Flare
 
 		if (children && opened)
 		{
-			for (Entity child : children->ChildrenEntities)
+			for (Entity child : children->GetChildren())
 			{
 				if (!m_World->IsEntityAlive(child))
 					continue;

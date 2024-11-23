@@ -450,7 +450,7 @@ namespace Flare
 		{
 			if (parent)
 			{
-				const TransformComponent* parentTransform = world.TryGetEntityComponent<const TransformComponent>(parent->ParentEntity);
+				const TransformComponent* parentTransform = world.TryGetEntityComponent<const TransformComponent>(parent->GetParentEntity());
 				if (parentTransform)
 				{
 					glm::mat4 parentTransformationMatrix = parentTransform->GetTransformationMatrix();

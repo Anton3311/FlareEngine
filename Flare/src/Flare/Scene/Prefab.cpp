@@ -83,12 +83,12 @@ namespace Flare
 			const EntityRecord& entityRecord = entities[nodeIndex];
 
 			const Parent* parent = world.TryGetEntityComponent<const Parent>(entityRecord.Id);
-			if (parent && world.IsEntityAlive(parent->ParentEntity))
+			if (parent && world.IsEntityAlive(parent->GetParentEntity()))
 			{
-				auto it = entityToNode.find(parent->ParentEntity);
+				auto it = entityToNode.find(parent->GetParentEntity());
 				if (it == entityToNode.end())
 				{
-					FLARE_CORE_WARN("PrefabHierarchy: Entity {} has invalid parent entity {}", entityRecord.Id.GetIndex(), parent->ParentEntity.GetIndex());
+					FLARE_CORE_WARN("PrefabHierarchy: Entity {} has invalid parent entity {}", entityRecord.Id.GetIndex(), parent->GetParentEntity().GetIndex());
 					continue;
 				}
 				
@@ -278,12 +278,7 @@ namespace Flare
 
 				FLARE_CORE_ASSERT(node.ParentNode != PrefabHierarchy::Node::INVALID_PARENT_NODE);
 
-				parent->ParentEntity = createdEntities[node.ParentNode];
-
-				Children* children = world.TryGetEntityComponent<Children>(parent->ParentEntity);
-				FLARE_CORE_ASSERT(children);
-
-				children->ChildrenEntities.push_back(createdEntities[i]);
+				HierarchyHelper::SetParent(world, createdEntities[i], createdEntities[node.ParentNode]);
 			}
 		}
 
