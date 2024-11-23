@@ -177,6 +177,8 @@ namespace Flare
 			return DefaultTextureValue::White;
 		if (string == "DefaultNormals")
 			return DefaultTextureValue::DefaultNormals;
+		if (string == "Black")
+			return DefaultTextureValue::Black;
 
 		FLARE_CORE_ASSERT(false);
 		return DefaultTextureValue::None;

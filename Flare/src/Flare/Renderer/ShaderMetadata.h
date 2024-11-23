@@ -101,6 +101,7 @@ namespace Flare
 	{
 		None,
 		White,
+		Black,
 		DefaultNormals,
 	};
 

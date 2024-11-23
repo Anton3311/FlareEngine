@@ -165,6 +165,7 @@ namespace Flare
 		static RendererSubmitionQueue& GetOpaqueSubmitionQueue();
 
 		static Ref<Texture> GetWhiteTexture();
+		static Ref<Texture> GetBlackTexture();
 		static Ref<Texture> GetDefaultNormalMap();
 		static Ref<Material> GetErrorMaterial();
 		static Ref<Material> GetDepthOnlyMaterial();

@@ -136,6 +136,11 @@ namespace Flare
 				case DefaultTextureValue::DefaultNormals:
 					defaultValue = Renderer::GetDefaultNormalMap();
 					break;
+				case DefaultTextureValue::Black:
+					defaultValue = Renderer::GetBlackTexture();
+					break;
+				default:
+					FLARE_VERIFY_UNREACHABLE();
 				}
 
 				m_Textures[property.SamplerIndex].Texture = defaultValue;

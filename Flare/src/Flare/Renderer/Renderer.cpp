@@ -45,6 +45,8 @@ namespace Flare
 		SceneSubmition* Submition = nullptr;
 
 		Ref<Texture> WhiteTexture = nullptr;
+		Ref<Texture> BlackTexture = nullptr;
+
 		Ref<Texture> DefaultNormalMap = nullptr;
 		Ref<Texture> DummyDepthTexture = nullptr;
 
@@ -105,6 +107,12 @@ namespace Flare
 			uint32_t pixel = 0xffff8080;
 			s_RendererData.DefaultNormalMap = Texture::Create(1, 1, &pixel, TextureFormat::RGBA8);
 			s_RendererData.DefaultNormalMap->SetDebugName("DefaultNormalMap");
+		}
+
+		{
+			uint32_t pixel = 0xff000000;
+			s_RendererData.BlackTexture = Texture::Create(1, 1, &pixel, TextureFormat::RGBA8);
+			s_RendererData.BlackTexture->SetDebugName("Black");
 		}
 
 		{
@@ -309,6 +317,11 @@ namespace Flare
 	Ref<Texture> Renderer::GetWhiteTexture()
 	{
 		return s_RendererData.WhiteTexture;
+	}
+
+	Ref<Texture> Renderer::GetBlackTexture()
+	{
+		return s_RendererData.BlackTexture;
 	}
 
 	Ref<Texture> Renderer::GetDefaultNormalMap()
