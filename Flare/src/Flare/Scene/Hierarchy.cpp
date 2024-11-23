@@ -195,18 +195,21 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 
 		Children* children = world.TryGetEntityComponent<Children>(parent);
-		if (!children)
-			return;
+		FLARE_CORE_ASSERT(children, "Parent entity doesn't have the Children component");
 
 		auto it = std::find(
 			children->m_ChildrenEntities.begin(),
 			children->m_ChildrenEntities.end(),
 			child);
 
-		if (it == children->m_ChildrenEntities.end())
-			return;
+		FLARE_CORE_ASSERT(it != children->m_ChildrenEntities.end(), "A given entity is not a child of a given parent");
 
 		children->m_ChildrenEntities.erase(it);
+
+		if (children->m_ChildrenEntities.size() == 0)
+		{
+			world.RemoveEntityComponent<Children>(parent);
+		}
 	}
 
 	//
