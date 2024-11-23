@@ -408,7 +408,7 @@ namespace Flare
 
 		const ArchetypeRecord& oldArchetype = m_Archetypes[entityRecord.Archetype];
 		const ArchetypeRecord& newArchetype = m_Archetypes[newArchetypeId];
-		const ArchetypeComponents& newArchetypeComponents = m_Archetypes.GetArchetypeComponents(entityRecord.Archetype);
+		const ArchetypeComponents& newArchetypeComponents = m_Archetypes.GetArchetypeComponents(newArchetypeId);
 
 		EntityStorage& oldStorage = GetEntityStorage(oldArchetype.Id);
 		EntityStorage& newStorage = GetEntityStorage(newArchetypeId);
