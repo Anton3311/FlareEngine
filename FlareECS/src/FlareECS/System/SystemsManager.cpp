@@ -22,11 +22,7 @@ namespace Flare
 	{
 		m_Registry.RemoveRegisteringHandler(this);
 
-		for (SystemData& system : m_Systems)
-		{
-			delete system.SystemInstance;
-			system.SystemInstance = nullptr;
-		}
+		Clear();
 	}
 
 	SystemGroupId SystemsManager::CreateGroup(std::string_view name)
@@ -51,6 +47,12 @@ namespace Flare
 	void SystemsManager::Clear()
 	{
 		FLARE_PROFILE_FUNCTION();
+
+		for (SystemData& system : m_Systems)
+		{
+			delete system.SystemInstance;
+			system.SystemInstance = nullptr;
+		}
 
 		m_Systems.clear();
 		m_Groups.clear();
