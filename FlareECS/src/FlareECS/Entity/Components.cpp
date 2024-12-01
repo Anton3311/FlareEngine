@@ -1,6 +1,7 @@
 #include "Components.h"
 
 #include "FlareCore/Log.h"
+#include "FlareCore/Profiler/Profiler.h"
 
 #include "FlareECS/Entity/ComponentInitializer.h"
 
@@ -10,6 +11,7 @@ namespace Flare
 {
 	void Components::RegisterComponents()
 	{
+		FLARE_PROFILE_FUNCTION();
 		for (ComponentInitializer* initializer : ComponentInitializer::GetInitializers())
 		{
 			if (IsComponentIdValid(initializer->m_Id))
@@ -35,6 +37,7 @@ namespace Flare
 
 	void Components::ReregisterComponents()
 	{
+		FLARE_PROFILE_FUNCTION();
 		std::vector<ComponentInfo> newComponents;
 		std::unordered_set<uint32_t> reregistedComponents;
 		std::unordered_map<std::string, uint32_t> newNameToIndex;
