@@ -25,11 +25,13 @@ namespace Flare
 
 	void ScriptingEngine::Shutdown()
 	{
+		FLARE_PROFILE_FUNCTION();
 		UnloadAllModules();
 	}
 
 	void ScriptingEngine::LoadModules()
 	{
+		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(Project::GetActive());
 
 		std::string_view configurationName = "";
@@ -67,6 +69,7 @@ namespace Flare
 
 	void ScriptingEngine::UnloadAllModules()
 	{
+		FLARE_PROFILE_FUNCTION();
 		for (void* lib : s_ScriptingData.LoadedSharedLibraries)
 			Platform::FreeSharedLibrary(lib);
 		s_ScriptingData.LoadedSharedLibraries.clear();
