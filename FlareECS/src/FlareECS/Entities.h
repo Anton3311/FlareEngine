@@ -114,8 +114,6 @@ namespace Flare
 	public:
 		EntityRecord& operator[](size_t index);
 		const EntityRecord& operator[](size_t index) const;
-
-		void OnArchetypeCreated(ArchetypeId id) override;
 	private:
 		struct EntityCreationResult
 		{
@@ -149,6 +147,11 @@ namespace Flare
 				return &m_EntityStorages[archetype];
 			return nullptr;
 		}
+
+		const EntityStorage* TryGetDeletedEntitiesStorage(ArchetypeId archetype) const;
+
+		void OnArchetypeCreated(ArchetypeId id) override;
+		void OnArchetypeRemoved(ArchetypeId id) override;
 	private:
 		std::vector<ComponentId> m_TemporaryComponentSet;
 

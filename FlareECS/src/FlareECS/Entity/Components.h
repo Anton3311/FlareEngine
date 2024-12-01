@@ -9,6 +9,12 @@
 
 namespace Flare
 {
+	class ComponentsRegistryUpdateHandler
+	{
+	public:
+		virtual void OnComponentUnregister(ComponentId component) = 0;
+	};
+
 	struct FLAREECS_API Components
 	{
 		FLARE_NONCOPYABLE(Components);
@@ -36,6 +42,9 @@ namespace Flare
 		{
 			return m_RegisteredComponents;
 		}
+
+		void AddUpdateHandler(ComponentsRegistryUpdateHandler& handler);
+		void RemoveUpdateHandler(ComponentsRegistryUpdateHandler& handler);
 	private:
 		void InvalidateComponentInitializer(ComponentInitializer& component) const;
 	private:
@@ -44,5 +53,7 @@ namespace Flare
 		std::vector<ComponentInfo> m_RegisteredComponents;
 
 		EntityIndex m_IdGenerator;
+
+		std::vector<ComponentsRegistryUpdateHandler*> m_UpdateHandlers;
 	};
 }

@@ -865,11 +865,31 @@ namespace Flare
 		}
 	}
 
+	const EntityStorage* Entities::TryGetDeletedEntitiesStorage(ArchetypeId archetype) const
+	{
+		auto it = m_DeletedEntitiesStorages.find(archetype);
+		if (it != m_DeletedEntitiesStorages.end())
+			return &it->second;
+
+		return nullptr;
+	}
+
 	void Entities::OnArchetypeCreated(ArchetypeId id)
 	{
 		FLARE_PROFILE_FUNCTION();
 
 		EnsureValidEntityStorages();
+	}
+
+	void Entities::OnArchetypeRemoved(ArchetypeId id)
+	{
+		FLARE_PROFILE_FUNCTION();
+		const EntityStorage* storage = TryGetEntityStorage(id);
+		const EntityStorage* deletedEntities = TryGetDeletedEntitiesStorage(id);
+
+		size_t totalEntityCount = storage->GetEntityCount() + deletedEntities->GetEntityCount();
+
+		FLARE_CORE_VERIFY(totalEntityCount == 0, "An archetype was deleted, however there are still entities of this archetype");
 	}
 
 	//

@@ -8,6 +8,7 @@
 
 #include "FlareECS/Types.h"
 #include "FlareECS/Entity/Component.h"
+#include "FlareECS/Entity/Components.h"
 
 #include <bit>
 #include <vector>
@@ -124,6 +125,7 @@ namespace Flare
 	{
 	public:
 		virtual void OnArchetypeCreated(ArchetypeId id) = 0;
+		virtual void OnArchetypeRemoved(ArchetypeId id) = 0;
 	};
 
 	//
@@ -131,12 +133,12 @@ namespace Flare
 	//
 
 	struct Components;
-	class FLAREECS_API Archetypes
+	class FLAREECS_API Archetypes : public ComponentsRegistryUpdateHandler
 	{
 	public:
 		FLARE_NONCOPYABLE(Archetypes);
 
-		Archetypes(const Components& componentsRegistry);
+		Archetypes(Components& componentsRegistry);
 		~Archetypes();
 
 		void Clear();
@@ -145,27 +147,33 @@ namespace Flare
 
 		inline bool IsIdValid(ArchetypeId id) const
 		{
-			return (size_t)id < m_Records.size();
+			auto it = m_ArchetypeIdToIndex.find(id);
+			if (it == m_ArchetypeIdToIndex.end())
+				return false;
+			return true;
 		}
 
 		inline const ArchetypeRecord& operator[](ArchetypeId id) const
 		{
-			FLARE_CORE_ASSERT((size_t)id < m_Records.size());
-			return m_Records[(size_t)id];
+			auto it = m_ArchetypeIdToIndex.find(id);
+			FLARE_CORE_ASSERT(it != m_ArchetypeIdToIndex.end());
+			return m_Records[it->second];
 		}
 
 		ArchetypeRecord& GetMutableRecord(ArchetypeId id)
 		{
-			FLARE_CORE_ASSERT(IsIdValid(id));
-			return m_Records[id];
+			auto it = m_ArchetypeIdToIndex.find(id);
+			FLARE_CORE_ASSERT(it != m_ArchetypeIdToIndex.end());
+			return m_Records[it->second];
 		}
 
 		Span<const ArchetypeRecord> GetRecords() const { return Span(m_Records.data(), m_Records.size()); }
 
 		const ArchetypeComponents& GetArchetypeComponents(ArchetypeId archetype) const
 		{
-			FLARE_CORE_ASSERT(IsIdValid(archetype));
-			return m_ArchetypeComponents[archetype];
+			auto it = m_ArchetypeIdToIndex.find(archetype);
+			FLARE_CORE_ASSERT(it != m_ArchetypeIdToIndex.end());
+			return m_ArchetypeComponents[it->second];
 		}
 
 		const ArchetypeRecord* FindArchetype(Span<const ComponentId> components) const;
@@ -189,10 +197,15 @@ namespace Flare
 
 			return &it->second;
 		}
+
+		void OnComponentUnregister(ComponentId component) override;
 	private:
 		void InitializeRecord(ArchetypeRecord& archetype, ArchetypeComponents& archetypeComponents);
+		void DeleteArchetype(ArchetypeId archetype);
 	private:
-		const Components& m_ComponentsRegistry;
+		Components& m_ComponentsRegistry;
+
+		std::unordered_map<ArchetypeId, size_t> m_ArchetypeIdToIndex;
 
 		std::vector<ArchetypeRecord> m_Records;
 		std::vector<ArchetypeComponents> m_ArchetypeComponents;
@@ -201,5 +214,7 @@ namespace Flare
 		std::unordered_map<ComponentId, std::unordered_map<ArchetypeId, size_t>> m_ComponentToArchetype;
 
 		std::vector<ArchetypeUpdateHandler*> m_UpdateHandlers;
+
+		ArchetypeId m_NextArchetypeId = 0;
 	};
 }

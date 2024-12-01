@@ -31,9 +31,10 @@ namespace Flare
 
 		QueryId CreateQuery(QueryCreationData& creationData);
 
-		void OnArchetypeCreated(ArchetypeId archetype) override;
-
 		inline const std::vector<QueryData>& GetQueries() const { return m_Queries; }
+
+		void OnArchetypeCreated(ArchetypeId archetype) override;
+		void OnArchetypeRemoved(ArchetypeId id) override;
 	private:
 		bool CompareComponentSets(Span<const ComponentId> archetypeComponents, Span<const QueryData::ComponentEntry> queryComponents);
 	private:

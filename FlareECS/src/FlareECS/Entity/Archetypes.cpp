@@ -138,14 +138,18 @@ namespace Flare
 	// Archetypes
 	//
 
-	Archetypes::Archetypes(const Components& componentsRegistry)
+	Archetypes::Archetypes(Components& componentsRegistry)
 		: m_ComponentsRegistry(componentsRegistry)
 	{
+		m_ComponentsRegistry.AddUpdateHandler(*this);
 	}
 
 	Archetypes::~Archetypes()
 	{
 		FLARE_PROFILE_FUNCTION();
+
+		m_ComponentsRegistry.RemoveUpdateHandler(*this);
+
 		for (const auto& archetype : m_Records)
 		{
 			FLARE_CORE_ASSERT(archetype.DeletionQueryReferences == 0 && archetype.CreatedEntitiesQueryReferences == 0);
@@ -211,11 +215,15 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(sortedComponentIds.size() > 0);
 
-		ArchetypeId archetypeId = (ArchetypeId)m_Records.size();
+		ArchetypeId archetypeId = m_NextArchetypeId++;
+		size_t archetypeRegistryIndex = m_Records.size();
+
 		ArchetypeRecord& record = m_Records.emplace_back();
 		record.Id = archetypeId;
 		record.CreatedEntitiesQueryReferences = 0;
 		record.DeletionQueryReferences = 0;
+
+		m_ArchetypeIdToIndex[archetypeId] = archetypeRegistryIndex;
 
 		ArchetypeComponents& archetypeComponents = m_ArchetypeComponents.emplace_back((EntitySizeT)sortedComponentIds.size());
 		archetypeComponents.FillComponentIds(Span(sortedComponentIds.data(), sortedComponentIds.size()));
@@ -322,5 +330,58 @@ namespace Flare
 
 		archetype.EntitySize = (EntitySizeT)Align((size_t)archetype.EntitySize,
 			m_ComponentsRegistry.GetComponentInfo(archetypeComponents.ComponentIds[0]).Initializer->Type.Alignment);
+	}
+
+	void Archetypes::DeleteArchetype(ArchetypeId archetype)
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		auto it = m_ArchetypeIdToIndex.find(archetype);
+		FLARE_CORE_ASSERT(it != m_ArchetypeIdToIndex.end());
+
+		size_t registryIndex = it->second;
+
+		if (registryIndex != m_Records.size() - 1)
+		{
+			ArchetypeId lastArchetypeId = m_Records.back().Id;
+
+			m_Records[registryIndex] = std::move(m_Records.back());
+			m_ArchetypeComponents[registryIndex] = std::move(m_ArchetypeComponents.back());
+
+			m_ArchetypeIdToIndex[lastArchetypeId] = registryIndex;
+		}
+
+		// Remove from the registry and maps
+
+	 	const ArchetypeComponents& components = m_ArchetypeComponents[registryIndex];
+
+		m_ComponentSetToArchetype.erase(components.GetComponentsAsSpan());
+
+		for (auto& [key, mapping] : m_ComponentToArchetype)
+		{
+			auto mappingIterator = mapping.find(archetype);
+			if (mappingIterator != mapping.end())
+			{
+				mapping.erase(mappingIterator);
+			}
+		}
+
+		m_Records.pop_back();
+		m_ArchetypeComponents.pop_back();
+
+		m_ArchetypeIdToIndex.erase(archetype);
+	}
+
+	void Archetypes::OnComponentUnregister(ComponentId component)
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		for (size_t archetypeIndex = 0; archetypeIndex < m_ArchetypeComponents.size(); archetypeIndex++)
+		{
+			if (m_ArchetypeComponents[archetypeIndex].TryGetComponentIndex(component) != ArchetypeComponents::INVALID_COMPONENT_INDEX)
+			{
+				DeleteArchetype(m_Records[archetypeIndex].Id);
+			}
+		}
 	}
 }

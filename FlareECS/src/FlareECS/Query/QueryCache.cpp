@@ -130,6 +130,20 @@ namespace Flare
 		}
 	}
 
+	void QueryCache::OnArchetypeRemoved(ArchetypeId id)
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		for (QueryData& data : m_Queries)
+		{
+			auto it = data.MatchingArchetypes.find(id);
+			if (it != data.MatchingArchetypes.end())
+			{
+				data.MatchingArchetypes.erase(it);
+			}
+		}
+	}
+
 	bool QueryCache::CompareComponentSets(Span<const ComponentId> archetypeComponents, Span<const QueryData::ComponentEntry> queryComponents)
 	{
 		FLARE_PROFILE_FUNCTION();

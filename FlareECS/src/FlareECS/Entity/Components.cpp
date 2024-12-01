@@ -110,6 +110,16 @@ namespace Flare
 		FLARE_CORE_ASSERT(IsComponentIdValid(component.GetId()));
 		FLARE_CORE_ASSERT(component.m_CorrespondingRegistry == this);
 
+		// Notify about the remove first, in case the handler might still need
+		// to query some information about this component
+		{
+			FLARE_PROFILE_SCOPE("NotifyUpdateHandlers");
+			for (ComponentsRegistryUpdateHandler* handler : m_UpdateHandlers)
+			{
+				handler->OnComponentUnregister(component.GetId());
+			}
+		}
+
 		m_ComponentNameToIndex.erase(std::string(component.Type.TypeName));
 		m_ComponentIdToIndex.erase(component.GetId());
 
@@ -130,8 +140,6 @@ namespace Flare
 		m_RegisteredComponents.pop_back();
 
 		InvalidateComponentInitializer(component);
-
-		// TODO: Notify the archetype registry that the component has been removed
 	}
 
 	void Components::Clear()
@@ -164,6 +172,20 @@ namespace Flare
 		if (it == m_ComponentIdToIndex.end())
 			return false;
 		return it->second < m_RegisteredComponents.size();
+	}
+
+	void Components::AddUpdateHandler(ComponentsRegistryUpdateHandler& handler)
+	{
+		m_UpdateHandlers.push_back(&handler);
+	}
+
+	void Components::RemoveUpdateHandler(ComponentsRegistryUpdateHandler& handler)
+	{
+		FLARE_PROFILE_FUNCTION();
+		auto it = std::find(m_UpdateHandlers.begin(), m_UpdateHandlers.end(), &handler);
+
+		if (it != m_UpdateHandlers.end())
+			m_UpdateHandlers.erase(it);
 	}
 
 	void Components::InvalidateComponentInitializer(ComponentInitializer& component) const
