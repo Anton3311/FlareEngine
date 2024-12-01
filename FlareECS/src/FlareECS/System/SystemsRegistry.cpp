@@ -66,7 +66,7 @@ namespace Flare
 		return m_SystemRecords[id];
 	}
 
-	void SystemsRegistry::AddResigteringHandler(SystemsRegisteringHandler* handler)
+	void SystemsRegistry::AddRegisteringHandler(SystemsRegisteringHandler* handler)
 	{
 		m_RegisteringHandlers.push_back(handler);
 	}

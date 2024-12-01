@@ -15,7 +15,7 @@ namespace Flare
 	SystemsManager::SystemsManager(World& world, SystemsRegistry& registry)
 		: m_CommandBuffer(new EntitiesCommandBuffer(world)), m_World(world), m_Registry(registry)
 	{
-		m_Registry.AddResigteringHandler(this);
+		m_Registry.AddRegisteringHandler(this);
 	}
 
 	SystemsManager::~SystemsManager()

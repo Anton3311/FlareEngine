@@ -43,7 +43,7 @@ namespace Flare
 
 		const SystemRecord& GetRecord(SystemId id) const;
 
-		void AddResigteringHandler(SystemsRegisteringHandler* handler);
+		void AddRegisteringHandler(SystemsRegisteringHandler* handler);
 		void RemoveRegisteringHandler(SystemsRegisteringHandler* handler);
 
 		inline bool IsSystemIdValid(SystemId id) const { return (size_t)id < m_SystemRecords.size(); }
