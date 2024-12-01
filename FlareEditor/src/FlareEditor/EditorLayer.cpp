@@ -87,7 +87,6 @@ namespace Flare
 			Scene::SetActive(nullptr);
             m_PostProcessingWindow = PostProcessingWindow();
 
-            m_ECSContext.Clear();
             ScriptingEngine::UnloadAllModules();
         });
     }

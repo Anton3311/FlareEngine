@@ -132,7 +132,7 @@ namespace Flare
 			else
 				continue;
 
-			std::optional<ComponentId> componentId = world.Components.FindComponnet(name);
+			std::optional<ComponentId> componentId = world.Components.FindComponent(name);
 
 			if (!componentId.has_value())
 			{

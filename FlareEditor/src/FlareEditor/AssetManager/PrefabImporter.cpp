@@ -176,7 +176,7 @@ namespace Flare
 				if (YAML::Node name = componentNode["Name"])
 				{
 					std::string componentName = name.as<std::string>();
-					std::optional<ComponentId> componentId = componentsRegistry.FindComponnet(componentName);
+					std::optional<ComponentId> componentId = componentsRegistry.FindComponent(componentName);
 
 					if (componentId)
 					{

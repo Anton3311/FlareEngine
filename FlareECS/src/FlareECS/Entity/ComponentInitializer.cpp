@@ -1,5 +1,9 @@
 #include "ComponentInitializer.h"
 
+#include "FlareCore/Profiler/Profiler.h"
+
+#include "FlareECS/Entity/Components.h"
+
 namespace Flare
 {
     ComponentInitializer::ComponentInitializer(const TypeInitializer& type, const SerializableObjectDescriptor& serializationDescriptor)
@@ -10,6 +14,8 @@ namespace Flare
 
     ComponentInitializer::~ComponentInitializer()
     {
+        FLARE_PROFILE_FUNCTION();
+
         auto& initializers = GetInitializers();
         for (size_t i = 0; i < initializers.size(); i++)
         {
@@ -18,6 +24,11 @@ namespace Flare
                 initializers.erase(initializers.begin() + i);
                 break;
             }
+        }
+
+        if (IsRegistered())
+        {
+            m_CorrespondingRegistry->OnComponentUnregister(*this);
         }
     }
 

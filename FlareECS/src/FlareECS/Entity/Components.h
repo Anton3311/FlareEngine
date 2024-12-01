@@ -11,55 +11,37 @@ namespace Flare
 {
 	struct FLAREECS_API Components
 	{
+		FLARE_NONCOPYABLE(Components);
+		FLARE_NONMOVABLE(Components);
+
 		Components() = default;
-		Components(const Components&) = delete;
-
-		Components(Components&& other) noexcept
-			: ComponentNameToIndex(std::move(other.ComponentNameToIndex)),
-			ComponentIdToIndex(std::move(other.ComponentIdToIndex)),
-			RegisteredComponents(std::move(other.RegisteredComponents)) {}
-
-		Components& operator=(const Components&) = delete;
-		Components& operator=(Components&& other) noexcept
-		{
-			ComponentNameToIndex = std::move(other.ComponentNameToIndex);
-			ComponentIdToIndex = std::move(other.ComponentIdToIndex);
-			RegisteredComponents = std::move(other.RegisteredComponents);
-
-			return *this;
-		}
+		~Components();
 
 		void RegisterComponents();
 		void ReregisterComponents();
 
-		inline void Clear()
-		{
-			ComponentNameToIndex.clear();
-			ComponentIdToIndex.clear();
+		void OnComponentUnregister(ComponentInitializer& component);
+		void Clear();
 
-			for (const ComponentInfo& component : RegisteredComponents)
-				m_IdGenerator.AddDeletedId(Entity(component.Id.GetIndex(), component.Id.GetGeneration()));
-
-			RegisteredComponents.clear();
-		}
-
-		std::optional<ComponentId> FindComponnet(std::string_view name) const;
+		std::optional<ComponentId> FindComponent(std::string_view name) const;
 		bool IsComponentIdValid(ComponentId id) const;
 
 		inline const ComponentInfo& GetComponentInfo(ComponentId id) const
 		{
 			FLARE_CORE_ASSERT(IsComponentIdValid(id));
-			return RegisteredComponents[ComponentIdToIndex.at(id)];
+			return m_RegisteredComponents[m_ComponentIdToIndex.at(id)];
 		}
 
 		inline const std::vector<ComponentInfo>& GetRegisteredComponents() const
 		{
-			return RegisteredComponents;
+			return m_RegisteredComponents;
 		}
 	private:
-		std::unordered_map<std::string, uint32_t> ComponentNameToIndex;
-		std::unordered_map<ComponentId, uint32_t> ComponentIdToIndex;
-		std::vector<ComponentInfo> RegisteredComponents;
+		void InvalidateComponentInitializer(ComponentInitializer& component) const;
+	private:
+		std::unordered_map<std::string, uint32_t> m_ComponentNameToIndex;
+		std::unordered_map<ComponentId, uint32_t> m_ComponentIdToIndex;
+		std::vector<ComponentInfo> m_RegisteredComponents;
 
 		EntityIndex m_IdGenerator;
 	};

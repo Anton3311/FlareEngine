@@ -538,10 +538,7 @@ namespace Flare
 
 		auto result = m_Archetypes.GetArchetypesWithComponent(id);
 		if (!result)
-		{
-			FLARE_CORE_ERROR("Failed to get singleton component: World doesn't contain any entities with component '{0}'", m_Components.GetComponentInfo(id).Name);
 			return nullptr;
-		}
 
 		const auto& archetypes = *result;
 		
@@ -566,10 +563,7 @@ namespace Flare
 		}
 
 		if (archetype == INVALID_ARCHETYPE_ID)
-		{
-			FLARE_CORE_ERROR("Failed to get singleton component: World doesn't contain any entities with component '{0}'", m_Components.GetComponentInfo(id).Name);
 			return nullptr;
-		}
 
 		const ArchetypeRecord& record = m_Archetypes[archetype];
 		const EntityStorage& storage = GetEntityStorage(archetype);

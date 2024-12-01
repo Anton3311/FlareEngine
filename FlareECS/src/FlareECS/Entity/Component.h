@@ -67,28 +67,6 @@ namespace Flare
 			RegistryIndex(UINT32_MAX),
 			Size(0), Initializer(nullptr) {}
 
-		ComponentInfo(const ComponentInfo& other)
-			: Id(other.Id),
-			RegistryIndex(other.RegistryIndex),
-			Name(other.Name),
-			Size(other.Size),
-			Initializer(other.Initializer)
-		{
-		}
-
-		ComponentInfo(ComponentInfo&& other) noexcept
-			: Id(other.Id),
-			RegistryIndex(other.RegistryIndex),
-			Name(std::move(other.Name)),
-			Size(other.Size),
-			Initializer(other.Initializer)
-		{
-			other.Id = ComponentId();
-			other.RegistryIndex = UINT32_MAX;
-			other.Size = 0;
-			other.Initializer = nullptr;
-		}
-
 		ComponentId Id;
 		uint32_t RegistryIndex;
 		std::string Name;

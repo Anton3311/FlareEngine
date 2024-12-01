@@ -20,12 +20,14 @@ namespace Flare
 
 		static std::vector<ComponentInitializer*>& GetInitializers();
 
+		constexpr bool IsRegistered() const { return m_CorrespondingRegistry != nullptr; }
 		constexpr ComponentId GetId() const { return m_Id; }
 	public:
 		const TypeInitializer& Type;
 		const SerializableObjectDescriptor& SerializationDescriptor;
 	private:
 		ComponentId m_Id;
+		Components* m_CorrespondingRegistry = nullptr;
 
 		friend struct Components;
 	};

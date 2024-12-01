@@ -201,6 +201,9 @@ namespace Flare
         MeshRenderer(Ref<Mesh> mesh)
             : Mesh(mesh) {}
 
+        MeshRenderer(Ref<Mesh> mesh, Ref<Material> material)
+            : Mesh(mesh), Materials({ material }) {}
+
         Ref<Mesh> Mesh = nullptr;
         std::vector<Ref<Material>> Materials;
         MeshRenderFlags Flags = MeshRenderFlags::None;
