@@ -136,10 +136,22 @@ namespace Flare
 				else
 				{
 					Ref<Shader> shader = AssetManager::GetAsset<Shader>(handle);
-					FLARE_CORE_ASSERT(shader);
 
-					material->SetShader(shader);
-					shaderHandle = handle;
+					if (shader)
+					{
+						material->SetShader(shader);
+						shaderHandle = handle;
+					}
+					else
+					{
+						FLARE_CORE_ERROR("Failed to load shader (Handle={}) for material (Handle={}, Path={})",
+							(uint64_t)handle,
+							metadata.Handle,
+							metadata.Path.string());
+
+						// No valid shader, return an empty material
+						return material;
+					}
 				}
 			}
 
