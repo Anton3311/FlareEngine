@@ -82,7 +82,10 @@ namespace Flare
 
             ResetViewportRenderGraphs();
 
+            m_SceneRenderer.reset();
             assetManager->UnloadAsset(Scene::GetActive()->Handle);
+
+            m_ECSContext.SystemsRegistry.Clear();
 
 			Scene::SetActive(nullptr);
             m_PostProcessingWindow = PostProcessingWindow();
