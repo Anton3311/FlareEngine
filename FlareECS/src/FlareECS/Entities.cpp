@@ -537,7 +537,7 @@ namespace Flare
 		FLARE_CORE_ASSERT(m_Components.IsComponentIdValid(id));
 
 		auto result = m_Archetypes.GetArchetypesWithComponent(id);
-		if (result)
+		if (!result)
 		{
 			FLARE_CORE_ERROR("Failed to get singleton component: World doesn't contain any entities with component '{0}'", m_Components.GetComponentInfo(id).Name);
 			return nullptr;
