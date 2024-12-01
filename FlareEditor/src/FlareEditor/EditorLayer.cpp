@@ -16,6 +16,7 @@
 #include "Flare/AssetManager/AssetManager.h"
 
 #include "Flare/Scene/Scene.h"
+#include "Flare/Scene/Components.h"
 
 #include "Flare/Project/Project.h"
 
@@ -251,15 +252,25 @@ namespace Flare
         Renderer2D::ResetStats();
         Renderer::ClearStatistics();
 
+		Ref<Scene> activeScene = Scene::GetActive();
+
         {
-			const Viewport& gameViewport = Renderer::GetRenderWorld().GetEntityComponent<const Viewport>(m_GameWindow->GetViewportEntity());
+            Entity viewportEntity = m_GameWindow->GetViewportEntity();
+			const Viewport& gameViewport = Renderer::GetRenderWorld().GetEntityComponent<const Viewport>(viewportEntity);
 			InputManager::SetMousePositionOffset(-(glm::ivec2)gameViewport.Position);
+
+            if (activeScene)
+            {
+				CameraOutput* cameraOutput = activeScene->GetECSWorld().TryGetSingletonComponent<CameraOutput>();
+				if (cameraOutput)
+				{
+					cameraOutput->ViewportEntity = viewportEntity;
+				}
+            }
         }
 
         {
             FLARE_PROFILE_SCOPE("Scene Runtime Update");
-
-            Ref<Scene> activeScene = Scene::GetActive();
 
             if (activeScene)
             {

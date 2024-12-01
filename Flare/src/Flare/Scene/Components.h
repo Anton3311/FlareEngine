@@ -53,6 +53,8 @@ namespace Flare
         CameraComponent();
         CameraComponent(ProjectionType projection);
 
+        glm::mat4 GetProjection(glm::uvec2 viewportSize) const;
+
         ProjectionType Projection;
 
         float Size;
@@ -76,6 +78,20 @@ namespace Flare
         }
     };
 
+
+
+    struct FLARE_API CameraOutput
+    {
+        FLARE_COMPONENT;
+
+        Entity ViewportEntity;
+    };
+
+    template<>
+    struct TypeSerializer<CameraOutput>
+    {
+        void OnSerialize(CameraOutput&, SerializationStream&) {}
+    };
 
 
     struct FLARE_API SpriteComponent

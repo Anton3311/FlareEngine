@@ -35,6 +35,32 @@ namespace Flare
 		  Near(0.1f),
 		  Far(1000.0f) {}
 
+	glm::mat4 CameraComponent::GetProjection(glm::uvec2 viewportSize) const
+	{
+		float viewportAspectRatio = static_cast<float>(viewportSize.x) / static_cast<float>(viewportSize.y);
+		if (Projection == ProjectionType::Orthographic)
+		{
+			float halfSize = Size / 2.0f;
+			return glm::orthoRH_ZO(
+				-halfSize * viewportAspectRatio,
+				+halfSize * viewportAspectRatio,
+				-halfSize,
+				+halfSize,
+				Near,
+				Far);
+		}
+		else
+		{
+			return glm::perspectiveRH_ZO(
+				glm::radians(FOV),
+				viewportAspectRatio,
+				Near,
+				Far);
+		}
+	}
+
+	FLARE_IMPL_COMPONENT(CameraOutput);
+
 	FLARE_IMPL_COMPONENT(SpriteComponent);
 	SpriteComponent::SpriteComponent()
 		: Color(glm::vec4(1.0f)),
