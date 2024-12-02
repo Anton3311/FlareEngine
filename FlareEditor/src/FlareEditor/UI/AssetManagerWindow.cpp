@@ -473,12 +473,9 @@ namespace Flare
 
                 if (!std::filesystem::exists(path))
                 {
-                    std::ofstream output(path);
-                    output << R"(Components:
-- Name: struct Flare::TransformComponent
-    Position: [0, 0, 0]
-    Rotation: [0, 0, 0]
-    Scale: [1, 1, 1])";
+                    Ref<Prefab> emptyPrefab = Prefab::CreateEmpty(EditorLayer::GetInstance().GetECSContext().Archetypes);
+                    AssetHandle handle = m_AssetManager->ImportAsset(path, emptyPrefab);
+                    PrefabImporter::SerializePrefab(handle);
                 }
             });
         }
