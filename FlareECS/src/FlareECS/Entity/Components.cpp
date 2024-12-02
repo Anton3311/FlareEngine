@@ -40,6 +40,7 @@ namespace Flare
 		}
 	}
 
+	// TODO: Remove
 	void Components::ReregisterComponents()
 	{
 		FLARE_PROFILE_FUNCTION();
@@ -120,9 +121,6 @@ namespace Flare
 			}
 		}
 
-		m_ComponentNameToIndex.erase(std::string(component.Type.TypeName));
-		m_ComponentIdToIndex.erase(component.GetId());
-
 		uint32_t removedComponentRegistryIndex = m_ComponentIdToIndex[component.GetId()];
 		if ((size_t)removedComponentRegistryIndex != m_RegisteredComponents.size() - 1)
 		{
@@ -137,6 +135,8 @@ namespace Flare
 			oldMappingIndex = removedComponentRegistryIndex;
 		}
 
+		m_ComponentNameToIndex.erase(std::string(component.Type.TypeName));
+		m_ComponentIdToIndex.erase(component.GetId());
 		m_RegisteredComponents.pop_back();
 
 		InvalidateComponentInitializer(component);
