@@ -6,6 +6,7 @@
 
 #include "Flare/AssetManager/AssetManager.h"
 #include "Flare/Scene/Hierarchy.h"
+#include "Flare/Scene/Transform.h"
 
 #include <yaml-cpp/yaml.h>
 
@@ -244,6 +245,22 @@ namespace Flare
 			return {};
 
 		return InstantiateHierarchy(world);
+	}
+
+	Ref<Prefab> Prefab::CreateEmpty(Archetypes& compatibleArchetypes)
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		Ref<Prefab> prefab = Ref<Prefab>::New(compatibleArchetypes.GetCompatibleComponents(), compatibleArchetypes, PrefabFlags::None);
+
+		ComponentId components[] = { COMPONENT_ID(TransformComponent) };
+		ArchetypeId archetype = prefab->GetHierarchy().GetCompatibleArchetypes().FindOrCreateArchetype(Span(components, 1))->Id;
+
+		prefab->GetHierarchy().AddEntity(archetype, PrefabHierarchy::Node::INVALID_PARENT_NODE);
+		prefab->GetHierarchy().EnsureAllocated();
+		prefab->GetHierarchy().InitializeEntities();
+
+		return prefab;
 	}
 
 	Entity Prefab::InstantiateHierarchy(World& world) const

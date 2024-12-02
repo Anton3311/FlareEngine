@@ -104,6 +104,10 @@ namespace Flare
 
 		constexpr PrefabFlags GetFlags() const { return m_Flags; }
 		constexpr AssetHandle GetSourceMesh() const { return m_SourceMesh; }
+	public:
+
+		// Creates a new prefab with a single entity, that has a transform
+		static Ref<Prefab> CreateEmpty(Archetypes& compatibleArchetypes);
 	private:
 		Entity InstantiateHierarchy(World& world) const;
 	private:
