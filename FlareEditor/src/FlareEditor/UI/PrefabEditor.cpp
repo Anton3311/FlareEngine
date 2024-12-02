@@ -50,17 +50,31 @@ namespace Flare
         FLARE_PROFILE_FUNCTION();
         FLARE_CORE_ASSERT(AssetManager::IsAssetHandleValid(asset));
         m_Prefab = AssetManager::GetAsset<Prefab>(asset);
-        m_Prefab->TryCreateInstance(GetWorld());
 
-        World& renderWorld = Renderer::GetRenderWorld();
-        renderWorld.GetEntityComponent<ViewportRenderGraph>(m_ViewportWindow.GetViewportEntity()).Graph->SetNeedsRebuilding();
+        if (m_Prefab)
+        {
+			m_Prefab->TryCreateInstance(GetWorld());
 
-        m_ViewportWindow.ShowWindow = true;
+			World& renderWorld = Renderer::GetRenderWorld();
+			renderWorld.GetEntityComponent<ViewportRenderGraph>(m_ViewportWindow.GetViewportEntity()).Graph->SetNeedsRebuilding();
+
+			m_ViewportWindow.ShowWindow = true;
+		}
+        else
+        {
+            FLARE_CORE_ERROR("Cannot open prefab, because it is null");
+        }
     }
 
     void PrefabEditor::OnClose()
     {
         FLARE_PROFILE_FUNCTION();
+
+        if (!m_Prefab)
+        {
+			FLARE_CORE_ERROR("Cannot save the prefab, because it is null");
+            return;
+        }
 
 		World& world = GetWorld();
         if (!HAS_BIT(m_Prefab->GetFlags(), PrefabFlags::Generated))
