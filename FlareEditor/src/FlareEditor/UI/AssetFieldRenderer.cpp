@@ -70,7 +70,7 @@ namespace Flare
             else
                 ImGui::TextUnformatted("Handle: Invalid");
 
-            if (m_Asset && &(*m_Asset)->GetDescriptor() == &Mesh::_Asset)
+            if (m_Asset && (*m_Asset != nullptr) && (&(*m_Asset)->GetDescriptor() == &Mesh::_Asset))
             {
                 ImGui::SeparatorText("Mesh");
 				Ref<const Mesh> mesh = m_Asset->As<const Mesh>();
