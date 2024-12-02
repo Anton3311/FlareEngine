@@ -70,6 +70,27 @@ namespace Flare
             else
                 ImGui::TextUnformatted("Handle: Invalid");
 
+            if (m_Asset && &(*m_Asset)->GetDescriptor() == &Mesh::_Asset)
+            {
+                ImGui::SeparatorText("Mesh");
+				Ref<const Mesh> mesh = m_Asset->As<const Mesh>();
+
+                Math::AABB bounds = mesh->GetBounds();
+                
+                ImGui::Text("Bounds: Min = (%f, %f, %f) Max = (%f, %f, %f)",
+                    bounds.Min.x, bounds.Min.y, bounds.Min.z,
+                    bounds.Max.x, bounds.Max.y, bounds.Max.z);
+
+                ImGui::Text("Vertex count: %d", (int32_t)mesh->GetVertexCount());
+				ImGui::TextUnformatted(mesh->GetIndexFormat() == IndexFormat::UInt16
+					? "Index format: UInt16"
+					: "Index format: UInt32");
+
+                ImGui::Text("Index count: %d", (int32_t)mesh->GetIndexCount());
+
+                ImGui::Text("Sub mesh count: %d", (int32_t)mesh->GetSubMeshes().size());
+            }
+
             ImGui::EndTooltip();
         }
 
