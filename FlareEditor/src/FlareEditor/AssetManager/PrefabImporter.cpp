@@ -234,7 +234,16 @@ namespace Flare
 
 		ECSContext& context = EditorLayer::GetInstance().GetECSContext();
 
-		YAML::Node node = YAML::LoadFile(metadata.Path.generic_string());
+		YAML::Node node;
+		try
+		{
+			node = YAML::LoadFile(metadata.Path.generic_string());
+		}
+		catch (std::exception& e)
+		{
+			FLARE_CORE_ERROR("Failed to import prefab {}. Error: {}", (uint64_t)metadata.Handle, e.what());
+			return nullptr;
+		}
 
 		PrefabFlags flags = PrefabFlags::None;
 		if (YAML::Node flagsNode = node["Flags"])
