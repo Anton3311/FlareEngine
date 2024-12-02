@@ -85,8 +85,10 @@ namespace Flare
 		for (glm::vec3 vertex : vertices)
 		{
 			subMesh.Bounds.Min = glm::min(vertex, subMesh.Bounds.Min);
-			subMesh.Bounds.Max = glm::min(vertex, subMesh.Bounds.Max);
+			subMesh.Bounds.Max = glm::max(vertex, subMesh.Bounds.Max);
 		}
+
+		m_Bounds = subMesh.Bounds;
 	}
 
 	Mesh::Mesh(MemorySpan indices,
