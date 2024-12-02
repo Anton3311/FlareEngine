@@ -97,6 +97,7 @@ namespace Flare
 		Prefab(const Components& compatibleComponentsRegistry, Archetypes& compatibleArchetypes, PrefabFlags flags, AssetHandle sourceMesh);
 	
 		Entity CreateInstance(World& world);
+		std::optional<Entity> TryCreateInstance(World& world);
 
 		inline PrefabHierarchy& GetHierarchy() { return m_Hierarchy; }
 		inline const PrefabHierarchy& GetHierarchy() const { return m_Hierarchy; }

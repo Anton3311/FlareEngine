@@ -50,7 +50,7 @@ namespace Flare
         FLARE_PROFILE_FUNCTION();
         FLARE_CORE_ASSERT(AssetManager::IsAssetHandleValid(asset));
         m_Prefab = AssetManager::GetAsset<Prefab>(asset);
-        m_Prefab->CreateInstance(GetWorld());
+        m_Prefab->TryCreateInstance(GetWorld());
 
         World& renderWorld = Renderer::GetRenderWorld();
         renderWorld.GetEntityComponent<ViewportRenderGraph>(m_ViewportWindow.GetViewportEntity()).Graph->SetNeedsRebuilding();

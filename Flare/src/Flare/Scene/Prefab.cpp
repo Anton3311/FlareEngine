@@ -235,6 +235,17 @@ namespace Flare
 		return InstantiateHierarchy(world);
 	}
 
+	std::optional<Entity> Prefab::TryCreateInstance(World& world)
+	{
+		FLARE_PROFILE_FUNCTION();
+		FLARE_CORE_ASSERT(&world.Components == &m_CompatibleComponentsRegistry);
+
+		if (m_Hierarchy.IsEmpty())
+			return {};
+
+		return InstantiateHierarchy(world);
+	}
+
 	Entity Prefab::InstantiateHierarchy(World& world) const
 	{
 		FLARE_PROFILE_FUNCTION();
