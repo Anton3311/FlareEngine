@@ -718,8 +718,6 @@ namespace Flare
 
             m_SceneRenderer = CreateScope<SceneRenderer>(playModeScene);
 
-            FLARE_CORE_INFO("Entered play mode. World: {}", (void*)&playModeScene->GetECSWorld());
-
 			playModeScene->InitializeRuntime();
 			Scene::GetActive()->OnRuntimeStart();
 
