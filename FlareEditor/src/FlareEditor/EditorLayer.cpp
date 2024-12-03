@@ -717,6 +717,7 @@ namespace Flare
 			m_Mode = EditorMode::Play;
 
             m_SceneRenderer = CreateScope<SceneRenderer>(playModeScene);
+            m_PostProcessingWindow = PostProcessingWindow(playModeScene);
 
 			playModeScene->InitializeRuntime();
 			Scene::GetActive()->OnRuntimeStart();
@@ -753,6 +754,7 @@ namespace Flare
 			m_Mode = EditorMode::Edit;
 
             m_SceneRenderer = CreateScope<SceneRenderer>(editorScene);
+            m_PostProcessingWindow = PostProcessingWindow(editorScene);
 
 			InputManager::SetCursorMode(CursorMode::Normal);
             m_ExitPlayModeScheduled = false;
