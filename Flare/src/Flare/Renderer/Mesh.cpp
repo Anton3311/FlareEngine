@@ -48,15 +48,6 @@ namespace Flare
 	FLARE_SERIALIZABLE_IMPL(Mesh);
 	FLARE_IMPL_ASSET(Mesh);
 
-	Mesh::Mesh(size_t vertexBufferSize, IndexFormat indexFormat, size_t indexBufferSize)
-		: Asset(AssetType::Mesh),
-		m_VertexCount(vertexBufferSize),
-		m_IndexFormat(indexFormat),
-		m_IndexCount(indexBufferSize)
-	{
-		// TODO: Remove this constructor
-	}
-
 	Mesh::Mesh(MemorySpan indices,
 		IndexFormat indexFormat,
 		Span<const glm::vec3> vertices,
@@ -246,20 +237,6 @@ namespace Flare
 		m_UVs->SetData(MemorySpan(uvs.GetData(), m_VertexCount), 0, commandBuffer);
 
 		m_IndexBuffer->SetData(indices, 0, commandBuffer);
-	}
-
-	Ref<Mesh> Mesh::Create(size_t vertexBufferSize, IndexFormat indexFormat, size_t indexBufferSize)
-	{
-		FLARE_PROFILE_FUNCTION();
-
-		switch (RendererAPI::GetAPI())
-		{
-		case RendererAPI::API::Vulkan:
-			return Ref<Mesh>::New(vertexBufferSize, indexFormat, indexBufferSize);
-		}
-
-		FLARE_CORE_ASSERT(false);
-		return nullptr;
 	}
 
 	Ref<Mesh> Mesh::Create(MemorySpan indices,

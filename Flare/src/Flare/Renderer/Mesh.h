@@ -62,10 +62,6 @@ namespace Flare
 		FLARE_SERIALIZABLE;
 		FLARE_ASSET;
 
-		Mesh(size_t vertexBufferSize,
-			IndexFormat indexFormat,
-			size_t indexBufferSize);
-
 		Mesh(MemorySpan indices,
 			IndexFormat indexFormat,
 			Span<const glm::vec3> vertices,
@@ -129,8 +125,6 @@ namespace Flare
 			Span<const glm::vec3> tangents,
 			Span<const glm::vec2> uvs);
 	public:
-		static Ref<Mesh> Create( size_t vertexBufferSize, IndexFormat indexFormat, size_t indexBufferSize);
-
 		static Ref<Mesh> Create(MemorySpan indices,
 			IndexFormat indexFormat,
 			Span<const glm::vec3> vertices,
