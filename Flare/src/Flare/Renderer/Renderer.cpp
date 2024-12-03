@@ -713,8 +713,6 @@ namespace Flare
 
 				onBuild(*viewportRenderGraph->Graph);
 
-				DebugRenderer::ConfigurePasses(*s_RendererData.RenderWorld, *viewportRenderGraph->Graph, viewportEntity);
-
 				if (viewport->Settings.PostProcessingEnabled)
 				{
 					postProcessingManager.RegisterRenderPasses(*viewportRenderGraph->Graph,
@@ -722,6 +720,9 @@ namespace Flare
 						*s_RendererData.RenderWorld,
 						PostProcessingExecutionOrder::EndOfFrame);
 				}
+
+				// Debug rendering is done last, to avoid any of the post processing passes overriding the DebugRenderer's output.
+				DebugRenderer::ConfigurePasses(*s_RendererData.RenderWorld, *viewportRenderGraph->Graph, viewportEntity);
 			}
 
 			viewportRenderGraph->Graph->Build();
