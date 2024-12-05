@@ -411,6 +411,8 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 
 		RendererSubmitionQueue& submitionQueue = Renderer::GetOpaqueSubmitionQueue();
+		GeometryBatcher& batcher = Renderer::GetCurrentSceneSubmition().BatchedGeometry;
+
 		m_Query.ForEachChunk([&](QueryChunk chunk, ComponentView<const TransformComponent> transforms, ComponentView<MeshRenderer> meshRenderers)
 			{
 				for (uint32_t entityIndex = 0; entityIndex < chunk.GetEntityCount(); entityIndex++)
@@ -423,6 +425,10 @@ namespace Flare
 						Span<Ref<Material>>::FromVector(meshRenderer.Materials),
 						Math::Compact3DTransform(transforms[entityIndex].GetTransformationMatrix()),
 						meshRenderer.Flags);
+
+					batcher.SubmitGeometry(meshRenderer.Mesh,
+						Span<const Ref<Material>>::FromVector(meshRenderer.Materials),
+						transforms[entityIndex].GetTransformationMatrix());
 				}
 			});
 	}

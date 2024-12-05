@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Flare/Renderer/RendererSubmitionQueue.h"
+#include "Flare/Renderer/GeometryBatcher.h"
 
 #include "Flare/Renderer2D/Renderer2DFrameData.h"
 #include "Flare/DebugRenderer/DebugRendererFrameData.h"
@@ -101,6 +102,7 @@ namespace Flare
 		EnvironmentSubmition Environment;
 
 		RendererSubmitionQueue OpaqueGeometrySubmitions;
+		GeometryBatcher BatchedGeometry;
 
 		std::vector<PointLightSubmition> PointLights;
 		std::vector<SpotLightSubmition> SpotLights;
