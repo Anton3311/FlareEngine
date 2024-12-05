@@ -25,8 +25,6 @@ namespace Flare
 		: m_Statistics(statistics), m_MaterialOverride(materialOverride)
 	{
 		FLARE_PROFILE_FUNCTION();
-
-		m_Timer = GPUTimer::Create();
 	}
 
 	void GeometryPass::OnPrepare(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
@@ -56,7 +54,6 @@ namespace Flare
 
 		const RendererSubmitionQueue& opaqueGeometry = context.GetSceneSubmition().OpaqueGeometrySubmitions;
 
-		//commandBuffer->StartTimer(m_Timer);
 		commandBuffer->SetDefaultViewportAndScissors();
 
 		Batch batch{};
@@ -93,13 +90,6 @@ namespace Flare
 
 		batch.InstanceCount = (uint32_t)culledGeometry.VisibleObjects.size() - batch.BaseInstance;
 		FlushBatch(commandBuffer, batch);
-
-		//commandBuffer->StopTimer(m_Timer);
-	}
-
-	std::optional<float> GeometryPass::GetElapsedTime() const
-	{
-		return m_Timer->GetElapsedTime();
 	}
 
 	void GeometryPass::FlushBatch(const Ref<CommandBuffer>& commandBuffer, const Batch& batch)

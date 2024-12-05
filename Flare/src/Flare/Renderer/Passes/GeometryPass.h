@@ -19,7 +19,6 @@ namespace Flare
 
 		void OnPrepare(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer) override;
 		void OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer) override;
-		std::optional<float> GetElapsedTime() const;
 	private:
 		struct Batch
 		{
@@ -32,7 +31,6 @@ namespace Flare
 
 		void FlushBatch(const Ref<CommandBuffer>& commandBuffer, const Batch& batch);
 	private:
-		Ref<GPUTimer> m_Timer = nullptr;
 		Ref<Material> m_MaterialOverride = nullptr;
 
 		RendererStatistics& m_Statistics;
