@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Flare/Renderer/GeometryBatcher.h"
 #include "Flare/Renderer/RenderGraph/RenderGraphPass.h"
 
 #include "FlareECS/Entity/ComponentInitializer.h"
@@ -7,7 +8,29 @@
 namespace Flare
 {
 	class DescriptorSet;
+	struct FrustumPlanes;
+	class GeometryBatch;
 	class GPUBuffer;
+	class World;
+
+	struct CulledGeometryBatch
+	{
+		FLARE_NONCOPYABLE(CulledGeometryBatch);
+
+		static constexpr size_t ALL_SUBMESHES = SIZE_MAX;
+
+		CulledGeometryBatch(size_t subMeshIndex, const GeometryBatch& originalBatch)
+			: SubMeshIndex(subMeshIndex), OriginalBatch(&originalBatch) {}
+
+		CulledGeometryBatch(CulledGeometryBatch&&) = default;
+		CulledGeometryBatch& operator=(CulledGeometryBatch&&) = default;
+	public:
+		size_t SubMeshIndex = ALL_SUBMESHES;
+		size_t TransformBufferOffset = 0;
+
+		const GeometryBatch* OriginalBatch;
+		std::vector<uint32_t> CulledGeometryIndices;
+	};
 
 	struct FLARE_API CulledGeometry
 	{
@@ -19,10 +42,7 @@ namespace Flare
 		CulledGeometry(CulledGeometry&&) = default;
 		CulledGeometry& operator=(CulledGeometry&&) = default;
 
-		struct InstanceData
-		{
-			glm::vec4 PackedTransform[3];
-		};
+		void Clear();
 
 		struct FLARE_API GPUFrameResources
 		{
@@ -35,16 +55,19 @@ namespace Flare
 
 			~GPUFrameResources();
 
+			void Resize(size_t newTransformCount);
+
 			Ref<GPUBuffer> InstanceBuffer = nullptr;
 			Ref<DescriptorSet> InstanceBufferDescriptor = nullptr;
 		};
 
 		std::vector<uint32_t> VisibleObjects;
-		std::vector<InstanceData> InstanceDataBuffer;
+		std::vector<PackedTransform> InstanceDataBuffer;
 		std::vector<GPUFrameResources> FrameResources;
+
+		std::vector<CulledGeometryBatch> CulledBatches;
 	};
 
-	class World;
 	class GeometryCullingPass : public RenderGraphPass
 	{
 	public:
@@ -52,5 +75,6 @@ namespace Flare
 		void OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer) override;
 	private:
 		static void CullGeometry(const RenderGraphContext& context, std::vector<uint32_t>& culledGeometry);
+		static void CullGeometryBatch(const FrustumPlanes& frustumPlanes, CulledGeometryBatch& outCulledGeometry);
 	};
 }

@@ -421,11 +421,6 @@ namespace Flare
 					if (meshRenderer.Mesh == nullptr)
 						continue;
 
-					submitionQueue.Submit(meshRenderer.Mesh,
-						Span<Ref<Material>>::FromVector(meshRenderer.Materials),
-						Math::Compact3DTransform(transforms[entityIndex].GetTransformationMatrix()),
-						meshRenderer.Flags);
-
 					batcher.SubmitGeometry(meshRenderer.Mesh,
 						Span<const Ref<Material>>::FromVector(meshRenderer.Materials),
 						transforms[entityIndex].GetTransformationMatrix());

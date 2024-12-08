@@ -56,40 +56,28 @@ namespace Flare
 
 		commandBuffer->SetDefaultViewportAndScissors();
 
-		Batch batch{};
-		batch.Material = m_MaterialOverride;
+		if (m_MaterialOverride)
+			commandBuffer->ApplyMaterial(m_MaterialOverride);
 
-		for (uint32_t currentInstance = 0; currentInstance < (uint32_t)culledGeometry.VisibleObjects.size(); currentInstance++)
+		Ref<Material> errorMaterial = Renderer::GetErrorMaterial();
+
+		for (const auto& culledBatch : culledGeometry.CulledBatches)
 		{
-			uint32_t objectIndex = culledGeometry.VisibleObjects[currentInstance];
-			const auto& object = opaqueGeometry[objectIndex];
+			const Ref<const Mesh>& mesh = culledBatch.OriginalBatch->GetMesh();
 
-			if (batch.Mesh != object.Mesh
-				|| batch.SubMesh != object.SubMeshIndex)
+			if (!m_MaterialOverride)
 			{
-				batch.InstanceCount = currentInstance - batch.BaseInstance;
-
-				FlushBatch(commandBuffer, batch);
-
-				batch.BaseInstance = currentInstance;
-				batch.InstanceCount = 0;
-				batch.Mesh = object.Mesh;
-				batch.SubMesh = object.SubMeshIndex;
+				if (culledBatch.SubMeshIndex < culledBatch.OriginalBatch->GetMaterials().size())
+					commandBuffer->ApplyMaterial(culledBatch.OriginalBatch->GetMaterials()[culledBatch.SubMeshIndex]);
+				else
+					commandBuffer->ApplyMaterial(errorMaterial);
 			}
 
-			if (!m_MaterialOverride && object.Material != batch.Material)
-			{
-				batch.InstanceCount = currentInstance - batch.BaseInstance;
-
-				FlushBatch(commandBuffer, batch);
-				batch.BaseInstance = currentInstance;
-				batch.InstanceCount = 0;
-				batch.Material = object.Material;
-			}
+			commandBuffer->DrawMeshIndexed(mesh,
+				static_cast<uint32_t>(culledBatch.SubMeshIndex),
+				static_cast<uint32_t>(culledBatch.TransformBufferOffset),
+				static_cast<uint32_t>(culledBatch.CulledGeometryIndices.size()));
 		}
-
-		batch.InstanceCount = (uint32_t)culledGeometry.VisibleObjects.size() - batch.BaseInstance;
-		FlushBatch(commandBuffer, batch);
 	}
 
 	void GeometryPass::FlushBatch(const Ref<CommandBuffer>& commandBuffer, const Batch& batch)

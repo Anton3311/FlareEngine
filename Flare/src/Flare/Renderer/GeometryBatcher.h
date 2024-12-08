@@ -42,6 +42,25 @@ namespace Flare
 
 	struct PackedTransform
 	{
+		inline glm::mat3 GetRotationScale() const
+		{
+			return glm::mat3(Vectors[0], Vectors[1], Vectors[2]);
+		}
+
+		inline glm::mat4 AsMatrix4x4() const
+		{
+			return glm::mat4(
+				glm::vec4(static_cast<glm::vec3>(Vectors[0]), 0.0f),
+				glm::vec4(static_cast<glm::vec3>(Vectors[1]), 0.0f),
+				glm::vec4(static_cast<glm::vec3>(Vectors[2]), 0.0f),
+				glm::vec4(Vectors[0].w, Vectors[1].w, Vectors[2].w, 1.0f));
+		}
+
+		inline glm::vec3 GetTranslation() const
+		{
+			return glm::vec3(Vectors[0].w, Vectors[1].w, Vectors[2].w);
+		}
+
 		glm::vec4 Vectors[3];
 	};
 
@@ -71,6 +90,7 @@ namespace Flare
 
 		inline const Ref<const Mesh>& GetMesh() const { return m_Mesh; }
 		inline const std::vector<Ref<Material>>& GetMaterials() const { return m_Materials; }
+		inline const std::vector<PackedTransform>& GetTransforms() const { return m_Transforms; }
 	private:
 		Ref<const Mesh> m_Mesh;
 		std::vector<Ref<Material>> m_Materials;

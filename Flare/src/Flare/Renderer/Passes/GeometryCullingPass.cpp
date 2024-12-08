@@ -34,62 +34,99 @@ namespace Flare
 		}
 	}
 
+	void CulledGeometry::Clear()
+	{
+		FLARE_PROFILE_FUNCTION();
+		VisibleObjects.clear();
+		InstanceDataBuffer.clear();
+		CulledBatches.clear();
+	}
+
 	CulledGeometry::GPUFrameResources::~GPUFrameResources()
 	{
 		if (InstanceBufferDescriptor)
 			Renderer::GetInstanceDataDescriptorSetPool()->ReleaseSet(InstanceBufferDescriptor);
 	}
 
+	void CulledGeometry::GPUFrameResources::Resize(size_t newTransformCount)
+	{
+		size_t instanceDataSize = sizeof(PackedTransform) * newTransformCount;
+		if (instanceDataSize > InstanceBuffer->GetSize())
+		{
+			InstanceBuffer->Resize(instanceDataSize);
+			InstanceBufferDescriptor->WriteStorageBuffer(InstanceBuffer, 0);
+			InstanceBufferDescriptor->FlushWrites();
+		}
+	}
+
 	void GeometryCullingPass::OnPrepare(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
 	{
 		FLARE_PROFILE_FUNCTION();
+
 		const RendererSubmitionQueue& opaqueGeometry = context.GetSceneSubmition().OpaqueGeometrySubmitions;
+		const GeometryBatcher& geometryBatcher = context.GetSceneSubmition().BatchedGeometry;
 
 		const Viewport& viewport = context.RenderWorld.GetEntityComponent<const Viewport>(context.ViewportEntity);
 		const ViewportGlobalResources& viewportResources = context.RenderWorld.GetEntityComponent<const ViewportGlobalResources>(context.ViewportEntity);
 		CulledGeometry& culledGeometry = context.RenderWorld.GetEntityComponent<CulledGeometry>(context.ViewportEntity);
 
-		const CulledGeometry::GPUFrameResources& frameResources = culledGeometry.FrameResources[GraphicsContext::GetInstance().GetCurrentFrameInFlight()];
+		CulledGeometry::GPUFrameResources& frameResources = culledGeometry.FrameResources[GraphicsContext::GetInstance().GetCurrentFrameInFlight()];
 
-		culledGeometry.VisibleObjects.clear();
+		culledGeometry.Clear();
 
-		CullGeometry(context, culledGeometry.VisibleObjects);
+		const RenderView& cameraView = context.GetRenderView();
 
+		FrustumPlanes frustumPlanes;
+		frustumPlanes.SetFromViewAndProjection(cameraView.View, cameraView.InverseViewProjection, cameraView.ViewDirection);
+
+		size_t totalTransformCount = 0;
+		for (const auto& [key, batch] : geometryBatcher.GetBatches())
 		{
-			FLARE_PROFILE_SCOPE("Sort");
-			std::sort(culledGeometry.VisibleObjects.begin(), culledGeometry.VisibleObjects.end(), [&opaqueGeometry](uint32_t a, uint32_t b) -> bool
+			for (size_t subMeshIndex = 0; subMeshIndex < batch.GetMesh()->GetSubMeshes().size(); subMeshIndex++)
 			{
-				return opaqueGeometry[a].SortKey < opaqueGeometry[b].SortKey;
-			});
-		}
+				CulledGeometryBatch culledBatch(subMeshIndex, batch);
+				CullGeometryBatch(frustumPlanes, culledBatch);
 
-		culledGeometry.InstanceDataBuffer.clear();
-
-		{
-			FLARE_PROFILE_SCOPE("FillInstanceData");
-			for (uint32_t objectIndex : culledGeometry.VisibleObjects)
-			{
-				auto& instanceData = culledGeometry.InstanceDataBuffer.emplace_back();
-				const auto& transform = opaqueGeometry[objectIndex].Transform;
-				instanceData.PackedTransform[0] = glm::vec4(transform.RotationScale[0], transform.Translation.x);
-				instanceData.PackedTransform[1] = glm::vec4(transform.RotationScale[1], transform.Translation.y);
-				instanceData.PackedTransform[2] = glm::vec4(transform.RotationScale[2], transform.Translation.z);
+				if (!culledBatch.CulledGeometryIndices.empty())
+				{
+					size_t transformCount = culledBatch.CulledGeometryIndices.size();
+					culledBatch.TransformBufferOffset = totalTransformCount;
+					culledGeometry.CulledBatches.push_back(std::move(culledBatch));
+					totalTransformCount += transformCount;
+				}
 			}
 		}
 
-		size_t instanceDataSize = sizeof(CulledGeometry::InstanceData) * culledGeometry.InstanceDataBuffer.size();
-		if (instanceDataSize > frameResources.InstanceBuffer->GetSize())
+		std::vector<PackedTransform> transforms;
+		transforms.reserve(totalTransformCount);
+
+		for (const auto& batch : culledGeometry.CulledBatches)
 		{
-			frameResources.InstanceBuffer->Resize(instanceDataSize);
-			frameResources.InstanceBufferDescriptor->WriteStorageBuffer(frameResources.InstanceBuffer, 0);
-			frameResources.InstanceBufferDescriptor->FlushWrites();
+			for (uint32_t index : batch.CulledGeometryIndices)
+			{
+				transforms.push_back(batch.OriginalBatch->GetTransforms()[index]);
+			}
 		}
 
-		frameResources.InstanceBuffer->SetData(MemorySpan::FromVector(culledGeometry.InstanceDataBuffer), 0, commandBuffer);
+		frameResources.Resize(totalTransformCount);
+		frameResources.InstanceBuffer->SetData(MemorySpan::FromVector(transforms), 0, commandBuffer);
 	}
 
 	void GeometryCullingPass::OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
 	{
+	}
+
+	inline static bool CheckFrustumVsAABBIntersection(const FrustumPlanes& planes, const Math::AABB& aabb)
+	{
+		for (size_t i = 0; i < planes.PlanesCount; i++)
+		{
+			if (!aabb.IntersectsOrInFrontOfPlane(planes.Planes[i]))
+			{
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 	void GeometryCullingPass::CullGeometry(const RenderGraphContext& context, std::vector<uint32_t>& culledGeometry)
@@ -121,6 +158,30 @@ namespace Flare
 			if (intersects)
 			{
 				culledGeometry.push_back((uint32_t)i);
+			}
+		}
+	}
+
+	void GeometryCullingPass::CullGeometryBatch(const FrustumPlanes& frustumPlanes, CulledGeometryBatch& outCulledGeometry)
+	{
+		FLARE_PROFILE_FUNCTION();
+		const auto& transforms = outCulledGeometry.OriginalBatch->GetTransforms();
+
+		Math::AABB meshBounds;
+		
+		if (outCulledGeometry.SubMeshIndex == CulledGeometryBatch::ALL_SUBMESHES)
+			meshBounds = outCulledGeometry.OriginalBatch->GetMesh()->GetBounds();
+		else
+			outCulledGeometry.OriginalBatch->GetMesh()->GetSubMeshes()[outCulledGeometry.SubMeshIndex].Bounds;
+
+		for (size_t i = 0; i < transforms.size(); i++)
+		{
+			Math::AABB transformedAABB = meshBounds.Transformed(transforms[i].AsMatrix4x4());
+			bool intersects = CheckFrustumVsAABBIntersection(frustumPlanes, transformedAABB);
+
+			if (intersects)
+			{
+				outCulledGeometry.CulledGeometryIndices.push_back(static_cast<uint32_t>(i));
 			}
 		}
 	}
