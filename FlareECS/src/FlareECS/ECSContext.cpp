@@ -5,7 +5,7 @@ namespace Flare
 	static ECSContext* s_GlobalContext = nullptr;
 
 	ECSContext::ECSContext()
-		: Archetypes(Components), Queries(Archetypes)
+		: Components(), Archetypes(Components), Queries(Archetypes)
 	{
 		FLARE_CORE_VERIFY(s_GlobalContext == nullptr);
 		s_GlobalContext = this;
