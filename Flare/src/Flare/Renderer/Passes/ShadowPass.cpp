@@ -338,40 +338,44 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 		const ShadowSettings& shadowSettings = Renderer::GetShadowSettings();
-		const auto& submitedBatches = context.GetSceneSubmition().OpaqueGeometrySubmitions.GetShadowPassBatches();
+		const GeometryBatcher& batcher = context.GetSceneSubmition().BatchedGeometry;
 
-		for (size_t batchIndex = 0; batchIndex < submitedBatches.size(); batchIndex++)
+		for (const auto& [key, batch] : batcher.GetBatches())
 		{
-			const RendererSubmitionQueue::ShadowPassBatch& batch = submitedBatches[batchIndex];
 			for (size_t cascadeIndex = 0; cascadeIndex < (size_t)shadowSettings.Cascades; cascadeIndex++)
 			{
 				ShadowCascadeData& cascadeData = m_CascadeData[cascadeIndex];
 				FilteredShadowPassBatch filteredBatch{};
-				filteredBatch.Mesh = batch.Mesh;
+				filteredBatch.Mesh = batch.GetMesh();
 				filteredBatch.FirstEntryIndex = (uint32_t)m_FilteredTransforms.size();
 
-				for (size_t submitionIndex = 0; submitionIndex < batch.Submitions.size(); submitionIndex++)
+				const auto& transforms = batch.GetTransforms();
+
+				for (size_t submitionIndex = 0; submitionIndex < transforms.size(); submitionIndex++)
 				{
+					const PackedTransform& transform = transforms[submitionIndex];
+					Math::Compact3DTransform compactTransform = Math::Compact3DTransform(transform.AsMatrix4x4());
+
 					CullResult result = CullAABB(
 						filteredBatch.Mesh->GetBounds(),
 						cascadeData.FrustumPlanes,
-						batch.Submitions[submitionIndex].Transform);
+						compactTransform);
 
 					if (result == CullResult::PartiallyVisible && filteredBatch.Mesh->GetSubMeshes().size() == 1)
 						result = CullResult::FullyVisible;
 
 					if (result == CullResult::FullyVisible)
 					{
-						m_FilteredTransforms.push_back(batch.Submitions[submitionIndex].Transform);
+						m_FilteredTransforms.push_back(compactTransform);
 						filteredBatch.Count++;
 					}
 					else if (result == CullResult::PartiallyVisible)
 					{
 						PartiallyVisibleMesh partiallyVisibleMesh{};
 						partiallyVisibleMesh.Mesh = filteredBatch.Mesh;
-						partiallyVisibleMesh.Transform = batch.Submitions[submitionIndex].Transform;
+						partiallyVisibleMesh.Transform = compactTransform;
 
-						CullSubMeshes(partiallyVisibleMesh, batch.Submitions[submitionIndex].Transform, cascadeData.FrustumPlanes);
+						CullSubMeshes(partiallyVisibleMesh, compactTransform, cascadeData.FrustumPlanes);
 
 						if (partiallyVisibleMesh.SubMeshRangeCount > 0)
 						{
