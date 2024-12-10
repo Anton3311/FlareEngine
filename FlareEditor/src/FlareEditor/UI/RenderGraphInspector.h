@@ -18,6 +18,8 @@ namespace Flare
 
 		inline void SetVisible(bool visible) { m_IsVisible = visible; }
 	private:
+		void RenderRenderGraph(ImRect viewportRect);
+	private:
 		const RenderGraph& m_RenderGraph;
 
 		bool m_IsVisible = false;
