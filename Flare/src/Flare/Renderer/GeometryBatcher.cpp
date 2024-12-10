@@ -47,6 +47,9 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		m_Batches.clear();
+		for (auto& [key, batch] : m_Batches)
+		{
+			batch.Clear();
+		}
 	}
 }

@@ -91,6 +91,8 @@ namespace Flare
 		inline const Ref<const Mesh>& GetMesh() const { return m_Mesh; }
 		inline const std::vector<Ref<Material>>& GetMaterials() const { return m_Materials; }
 		inline const std::vector<PackedTransform>& GetTransforms() const { return m_Transforms; }
+
+		inline void Clear() { return m_Transforms.clear(); }
 	private:
 		Ref<const Mesh> m_Mesh;
 		std::vector<Ref<Material>> m_Materials;
