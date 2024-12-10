@@ -129,39 +129,6 @@ namespace Flare
 		return true;
 	}
 
-	void GeometryCullingPass::CullGeometry(const RenderGraphContext& context, std::vector<uint32_t>& culledGeometry)
-	{
-		FLARE_PROFILE_FUNCTION();
-
-		const RenderView& cameraView = context.GetRenderView();
-
-		FrustumPlanes planes{};
-		planes.SetFromViewAndProjection(cameraView.View, cameraView.InverseViewProjection, cameraView.ViewDirection);
-
-		const RendererSubmitionQueue& opaqueGeometry = context.GetSceneSubmition().OpaqueGeometrySubmitions;
-
-		for (size_t i = 0; i < opaqueGeometry.GetSize(); i++)
-		{
-			const auto& object = opaqueGeometry[i];
-			Math::AABB objectAABB = object.Mesh->GetSubMeshes()[object.SubMeshIndex].Bounds.Transformed(object.Transform.ToMatrix4x4());
-
-			bool intersects = true;
-			for (size_t i = 0; i < planes.PlanesCount; i++)
-			{
-				if (!objectAABB.IntersectsOrInFrontOfPlane(planes.Planes[i]))
-				{
-					intersects = false;
-					break;
-				}
-			}
-
-			if (intersects)
-			{
-				culledGeometry.push_back((uint32_t)i);
-			}
-		}
-	}
-
 	void GeometryCullingPass::CullGeometryBatch(const FrustumPlanes& frustumPlanes, CulledGeometryBatch& outCulledGeometry)
 	{
 		FLARE_PROFILE_FUNCTION();

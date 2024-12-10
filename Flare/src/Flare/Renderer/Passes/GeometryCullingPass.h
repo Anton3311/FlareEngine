@@ -74,7 +74,6 @@ namespace Flare
 		void OnPrepare(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer) override;
 		void OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer) override;
 	private:
-		static void CullGeometry(const RenderGraphContext& context, std::vector<uint32_t>& culledGeometry);
 		static void CullGeometryBatch(const FrustumPlanes& frustumPlanes, CulledGeometryBatch& outCulledGeometry);
 	};
 }
