@@ -172,7 +172,7 @@ namespace Flare
 		if (outCulledGeometry.SubMeshIndex == CulledGeometryBatch::ALL_SUBMESHES)
 			meshBounds = outCulledGeometry.OriginalBatch->GetMesh()->GetBounds();
 		else
-			outCulledGeometry.OriginalBatch->GetMesh()->GetSubMeshes()[outCulledGeometry.SubMeshIndex].Bounds;
+			meshBounds = outCulledGeometry.OriginalBatch->GetMesh()->GetSubMeshes()[outCulledGeometry.SubMeshIndex].Bounds;
 
 		for (size_t i = 0; i < transforms.size(); i++)
 		{
