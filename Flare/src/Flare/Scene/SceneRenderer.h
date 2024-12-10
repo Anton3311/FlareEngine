@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Flare/AssetManager/Asset.h"
 #include "Flare/Renderer/SceneSubmition.h"
 
 #include "FlareECS/World.h"

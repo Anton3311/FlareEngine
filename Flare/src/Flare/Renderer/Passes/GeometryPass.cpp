@@ -52,8 +52,6 @@ namespace Flare
 
 		commandBuffer->SetGlobalDescriptorSet(frameResources.InstanceBufferDescriptor, 2);
 
-		const RendererSubmitionQueue& opaqueGeometry = context.GetSceneSubmition().OpaqueGeometrySubmitions;
-
 		commandBuffer->SetDefaultViewportAndScissors();
 
 		if (m_MaterialOverride)
@@ -78,23 +76,5 @@ namespace Flare
 				static_cast<uint32_t>(culledBatch.TransformBufferOffset),
 				static_cast<uint32_t>(culledBatch.CulledGeometryIndices.size()));
 		}
-	}
-
-	void GeometryPass::FlushBatch(const Ref<CommandBuffer>& commandBuffer, const Batch& batch)
-	{
-		FLARE_PROFILE_FUNCTION();
-
-		if (batch.InstanceCount == 0)
-			return;
-
-		m_Statistics.DrawCallCount++;
-		m_Statistics.DrawCallsSavedByInstancing += batch.InstanceCount - 1;
-
-		if (batch.Material == nullptr || batch.Material->GetShader() == nullptr)
-			commandBuffer->ApplyMaterial(Renderer::GetErrorMaterial());
-		else
-			commandBuffer->ApplyMaterial(batch.Material);
-
-		commandBuffer->DrawMeshIndexed(batch.Mesh, batch.SubMesh, batch.BaseInstance, batch.InstanceCount);
 	}
 }

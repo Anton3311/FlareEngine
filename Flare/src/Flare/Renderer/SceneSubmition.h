@@ -1,12 +1,12 @@
 #pragma once
 
-#include "Flare/Renderer/RendererSubmitionQueue.h"
 #include "Flare/Renderer/GeometryBatcher.h"
 
 #include "Flare/Renderer2D/Renderer2DFrameData.h"
 #include "Flare/DebugRenderer/DebugRendererFrameData.h"
 
 #include "Flare/Math/Math.h"
+#include "Flare/Math/AffineTransform.h"
 
 namespace Flare
 {
@@ -101,7 +101,6 @@ namespace Flare
 		DirectionalLightSubmition DirectionalLight;
 		EnvironmentSubmition Environment;
 
-		RendererSubmitionQueue OpaqueGeometrySubmitions;
 		GeometryBatcher BatchedGeometry;
 
 		std::vector<PointLightSubmition> PointLights;

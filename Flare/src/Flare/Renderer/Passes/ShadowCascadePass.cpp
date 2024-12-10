@@ -10,7 +10,6 @@
 #include "Flare/Renderer/RenderData.h"
 #include "Flare/Renderer/Renderer.h"
 #include "Flare/Renderer/RendererComponents.h"
-#include "Flare/Renderer/RendererSubmitionQueue.h"
 
 #include "Flare/Renderer/Passes/ShadowPass.h"
 

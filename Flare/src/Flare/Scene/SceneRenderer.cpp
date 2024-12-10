@@ -410,7 +410,6 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		RendererSubmitionQueue& submitionQueue = Renderer::GetOpaqueSubmitionQueue();
 		GeometryBatcher& batcher = Renderer::GetCurrentSceneSubmition().BatchedGeometry;
 
 		m_Query.ForEachChunk([&](QueryChunk chunk, ComponentView<const TransformComponent> transforms, ComponentView<MeshRenderer> meshRenderers)

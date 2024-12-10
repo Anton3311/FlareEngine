@@ -11,6 +11,7 @@
 #include "Flare/Renderer/GraphicsContext.h"
 #include "Flare/Renderer/GPUTimer.h"
 #include "Flare/Renderer/Renderer.h"
+#include "Flare/Renderer/RendererAPI.h"
 #include "Flare/Renderer/RendererComponents.h"
 #include "Flare/Renderer/Sampler.h"
 #include "Flare/Renderer/SceneSubmition.h"

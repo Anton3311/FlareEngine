@@ -6,16 +6,16 @@
 #include "FlareCore/Log.h"
 #include "FlareCore/Profiler/Profiler.h"
 
-#include "Flare/Serialization/Serialization.h"
+#include "Flare/AssetManager/Asset.h"
 #include "Flare/Project/Project.h"
-
-#include "Flare/Scene/Scene.h"
-#include "Flare/Scene/Prefab.h"
-
 #include "Flare/Renderer/Texture.h"
 #include "Flare/Renderer/Font.h"
+#include "Flare/Renderer/Mesh.h"
 #include "Flare/Renderer/MeshSource.h"
 #include "Flare/Renderer/ShaderLibrary.h"
+#include "Flare/Scene/Scene.h"
+#include "Flare/Scene/Prefab.h"
+#include "Flare/Serialization/Serialization.h"
 
 #include "FlareEditor/EditorLayer.h"
 #include "FlareEditor/ShaderCompiler/ShaderCompiler.h"

@@ -140,7 +140,6 @@ namespace Flare
 	class DescriptorSetPool;
 	class Material;
 	class PostProcessingManager;
-	class RendererSubmitionQueue;
 	class RenderGraph;
 	class Sampler;
 	class Texture;
@@ -161,8 +160,6 @@ namespace Flare
 		static SceneSubmition& GetCurrentSceneSubmition();
 		static void BeginScene(SceneSubmition& sceneSubmition);
 		static void EndScene();
-
-		static RendererSubmitionQueue& GetOpaqueSubmitionQueue();
 
 		static Ref<Texture> GetWhiteTexture();
 		static Ref<Texture> GetBlackTexture();

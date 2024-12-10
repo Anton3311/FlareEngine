@@ -10,7 +10,6 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		OpaqueGeometrySubmitions.Clear();
 		BatchedGeometry.Clear();
 
 		PointLights.clear();

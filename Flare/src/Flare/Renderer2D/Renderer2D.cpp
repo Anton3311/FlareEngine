@@ -10,7 +10,9 @@
 
 #include "Flare/AssetManager/AssetManager.h"
 
+#include "Flare/Renderer/Material.h"
 #include "Flare/Renderer/Renderer.h"
+#include "Flare/Renderer/RendererAPI.h"
 #include "Flare/Renderer/RendererComponents.h"
 #include "Flare/Renderer/RenderGraph/RenderGraph.h"
 #include "Flare/Renderer/ShaderLibrary.h"

@@ -9,7 +9,6 @@
 #include "Flare/Renderer/RenderGraph/RenderGraphContext.h"
 #include "Flare/Renderer/Renderer.h"
 #include "Flare/Renderer/RendererComponents.h"
-#include "Flare/Renderer/RendererSubmitionQueue.h"
 #include "Flare/Renderer/SceneSubmition.h"
 #include "Flare/Renderer/RenderData.h"
 
@@ -63,9 +62,7 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		const RendererSubmitionQueue& opaqueGeometry = context.GetSceneSubmition().OpaqueGeometrySubmitions;
 		const GeometryBatcher& geometryBatcher = context.GetSceneSubmition().BatchedGeometry;
-
 		const Viewport& viewport = context.RenderWorld.GetEntityComponent<const Viewport>(context.ViewportEntity);
 		const ViewportGlobalResources& viewportResources = context.RenderWorld.GetEntityComponent<const ViewportGlobalResources>(context.ViewportEntity);
 		CulledGeometry& culledGeometry = context.RenderWorld.GetEntityComponent<CulledGeometry>(context.ViewportEntity);
@@ -98,13 +95,17 @@ namespace Flare
 		}
 
 		std::vector<PackedTransform> transforms;
-		transforms.reserve(totalTransformCount);
 
-		for (const auto& batch : culledGeometry.CulledBatches)
 		{
-			for (uint32_t index : batch.CulledGeometryIndices)
+			FLARE_PROFILE_SCOPE("FillTransformsBuffer");
+			transforms.reserve(totalTransformCount);
+
+			for (const auto& batch : culledGeometry.CulledBatches)
 			{
-				transforms.push_back(batch.OriginalBatch->GetTransforms()[index]);
+				for (uint32_t index : batch.CulledGeometryIndices)
+				{
+					transforms.push_back(batch.OriginalBatch->GetTransforms()[index]);
+				}
 			}
 		}
 

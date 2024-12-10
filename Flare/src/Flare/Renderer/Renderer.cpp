@@ -15,6 +15,7 @@
 #include "Flare/DebugRenderer/DebugRenderer.h"
 #include "Flare/Renderer/DescriptorSet.h"
 #include "Flare/Renderer/GraphicsContext.h"
+#include "Flare/Renderer/Material.h"
 #include "Flare/Renderer/Passes/GeometryPass.h"
 #include "Flare/Renderer/Passes/GeometryCullingPass.h"
 #include "Flare/Renderer/Passes/ShadowPass.h"
@@ -306,12 +307,6 @@ namespace Flare
 
 		FLARE_CORE_ASSERT(s_RendererData.Submition);
 		s_RendererData.Submition = nullptr;
-	}
-
-	RendererSubmitionQueue& Renderer::GetOpaqueSubmitionQueue()
-	{
-		FLARE_CORE_ASSERT(s_RendererData.Submition);
-		return s_RendererData.Submition->OpaqueGeometrySubmitions;
 	}
 
 	Ref<Texture> Renderer::GetWhiteTexture()
