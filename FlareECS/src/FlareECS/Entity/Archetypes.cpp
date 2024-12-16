@@ -141,19 +141,26 @@ namespace Flare
 	Archetypes::Archetypes(Components& componentsRegistry)
 		: m_ComponentsRegistry(componentsRegistry)
 	{
-		m_ComponentsRegistry.AddUpdateHandler(*this);
 	}
 
 	Archetypes::~Archetypes()
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		m_ComponentsRegistry.RemoveUpdateHandler(*this);
-
 		for (const auto& archetype : m_Records)
 		{
 			FLARE_CORE_ASSERT(archetype.DeletionQueryReferences == 0 && archetype.CreatedEntitiesQueryReferences == 0);
 		}
+	}
+
+	void Archetypes::Initialize()
+	{
+		m_ComponentsRegistry.AddUpdateHandler(*this);
+	}
+
+	void Archetypes::Uninitialize()
+	{
+		m_ComponentsRegistry.RemoveUpdateHandler(*this);
 	}
 
 	void Archetypes::Clear()

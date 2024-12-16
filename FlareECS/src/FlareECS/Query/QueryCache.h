@@ -24,6 +24,8 @@ namespace Flare
 		QueryCache(const QueryCache&) = delete;
 		QueryCache& operator=(const QueryCache&) = delete;
 
+		void Initialize();
+		void Uninitialize();
 		void Clear();
 
 		const QueryData& operator[](QueryId id) const;

@@ -141,6 +141,8 @@ namespace Flare
 		Archetypes(Components& componentsRegistry);
 		~Archetypes();
 
+		void Initialize();
+		void Uninitialize();
 		void Clear();
 
 		constexpr size_t GetArchetypeCount() const { return m_Records.size(); }

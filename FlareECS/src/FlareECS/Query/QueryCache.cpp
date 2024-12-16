@@ -14,15 +14,23 @@ namespace Flare
 	QueryCache::QueryCache(Archetypes& archetypes)
 			: m_Archetypes(archetypes)
 	{
-		m_Archetypes.AddUpdateHandler(this);
 	}
 
 	QueryCache::~QueryCache()
 	{
 		FLARE_PROFILE_FUNCTION();
-		m_Archetypes.RemoveUpdateHandler(this);
 
 		Clear();
+	}
+
+	void QueryCache::Initialize()
+	{
+		m_Archetypes.AddUpdateHandler(this);
+	}
+
+	void QueryCache::Uninitialize()
+	{
+		m_Archetypes.RemoveUpdateHandler(this);
 	}
 
 	void QueryCache::Clear()
