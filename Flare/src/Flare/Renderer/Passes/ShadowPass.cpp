@@ -179,38 +179,19 @@ namespace Flare
 		FullyVisible,
 	};
 
-	inline static CullResult CullAABB(const Math::AABB& aabb, const Math::Plane* planes, const Math::Compact3DTransform& transform)
+	inline static CullResult CullAABB(const Math::AABB& transformedAABB, const Math::Plane* planes)
 	{
-		Math::AABB transformedAABB = Math::SIMD::TransformAABB(aabb, transform.ToMatrix4x4());
-
-		__m128 min = _mm_loadu_ps(glm::value_ptr(glm::vec4(aabb.Min, 0.0f)));
-		__m128 max = _mm_loadu_ps(glm::value_ptr(glm::vec4(aabb.Max, 0.0f)));
-
-		// Calculate AABB extents
-		__m128 extents = _mm_sub_ps(max, min);
-
-		// Calculate AABB center
-		float scale = 0.5f;
-		__m128 halfScale = _mm_load_ps1(&scale);
-		__m128 center = _mm_mul_ps(_mm_add_ps(min, max), halfScale);
-
-		size_t inFrontCount = 0;
-		bool intersects = true;
+		size_t intersectionCount = 0;
 		for (size_t i = 0; i < 4; i++)
 		{
-			Math::Plane plane = planes[i];
-
-			__m128 planeNormal = _mm_loadu_ps(glm::value_ptr(glm::vec4(plane.Normal, 0.0f)));
-			float projectedDistance = Math::SIMD::Dot(Math::SIMD::Abs(planeNormal), extents);
-			float signedDistance = glm::abs(Math::SIMD::Dot(planeNormal, center));
-
-			inFrontCount += (projectedDistance <= signedDistance) ? 1 : 0;
-
-			if (-projectedDistance > signedDistance) // No intersection and not in front
+			if (!transformedAABB.IntersectsOrInFrontOfPlane(planes[i]))
 				return CullResult::NotVisible;
+
+			if (transformedAABB.IntersectsPlane(planes[i]))
+				intersectionCount++;
 		}
 
-		return inFrontCount == 4 ? CullResult::FullyVisible : CullResult::PartiallyVisible;
+		return intersectionCount == 0 ? CullResult::FullyVisible : CullResult::PartiallyVisible;
 	}
 
 	void ShadowPass::ComputeShadowProjectionsAndCullObjects(const RenderGraphContext& context)
