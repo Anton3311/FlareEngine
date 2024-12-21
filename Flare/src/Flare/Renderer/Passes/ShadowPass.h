@@ -98,7 +98,8 @@ namespace Flare
 
 		void CullSubMeshes(PartiallyVisibleMesh& mesh,
 			const Math::Compact3DTransform& transform,
-			const Math::Plane* frustumPlanes);
+			const Math::Basis& lightBasis,
+			uint32_t cascadeIndex);
 	private:
 		ShadowData m_ShadowData;
 

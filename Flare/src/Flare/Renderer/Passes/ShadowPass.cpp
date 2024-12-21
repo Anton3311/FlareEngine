@@ -316,11 +316,37 @@ namespace Flare
 		}
 	}
 
+	static glm::vec2 ProjectAABBExtentsOnNearPlane(glm::vec3 nearPlaneNormal, const Math::Basis& lightBasis, const Math::AABB& aabb)
+	{
+		glm::vec3 projectedExtents = Math::ProjectOnPlane(aabb.GetExtents(), nearPlaneNormal);
+
+		// Light position is ignored, because it is a directional light.
+		//
+		// The basis is orthonormal
+		glm::mat3 worldSpaceToLightSpace = glm::transpose(glm::mat3(lightBasis.Right, lightBasis.Up, lightBasis.Forward));
+		glm::vec3 projectedExtentsInLightSpace = projectedExtents * worldSpaceToLightSpace;
+
+		return static_cast<glm::vec2>(projectedExtentsInLightSpace);
+	}
+
+	static bool CullByShadowMapSpaceSize(const Math::Basis& lightBasis, const Math::AABB& aabb, float projectionSize, uint32_t shadowMapResolution, uint32_t minSizeInPixels)
+	{
+		glm::vec2 projectedSize = ProjectAABBExtentsOnNearPlane(lightBasis.Forward, lightBasis, aabb);
+		projectedSize = glm::abs(projectedSize / projectionSize * static_cast<float>(shadowMapResolution));
+
+		return false;
+		return glm::all(glm::lessThanEqual(projectedSize, glm::vec2(static_cast<float>(minSizeInPixels))));
+	}
+
+	static constexpr uint32_t s_SmallObjectThreshold = 16;
+
 	void ShadowPass::FilterSubmitions(const RenderGraphContext& context)
 	{
 		FLARE_PROFILE_FUNCTION();
 		const ShadowSettings& shadowSettings = Renderer::GetShadowSettings();
 		const GeometryBatcher& batcher = context.GetSceneSubmition().BatchedGeometry;
+		
+		uint32_t shadowMapResolution = GetShadowMapResolution(Renderer::GetShadowSettings().Quality);
 
 		for (const auto& [key, batch] : batcher.GetBatches())
 		{
@@ -337,11 +363,18 @@ namespace Flare
 				{
 					const PackedTransform& transform = transforms[submitionIndex];
 					Math::Compact3DTransform compactTransform = Math::Compact3DTransform(transform.AsMatrix4x4());
+					Math::AABB transformedAABB = filteredBatch.Mesh->GetBounds().Transformed(transform.AsMatrix4x4());
 
-					CullResult result = CullAABB(
-						filteredBatch.Mesh->GetBounds(),
-						cascadeData.FrustumPlanes,
-						compactTransform);
+					bool isTooSmall = CullByShadowMapSpaceSize(context.GetSceneSubmition().DirectionalLight.LightBasis,
+						transformedAABB,
+						2 * m_CascadeData[cascadeIndex].BoundingSphereRadius,
+						shadowMapResolution,
+						s_SmallObjectThreshold);
+
+					if (isTooSmall)
+						continue;
+
+					CullResult result = CullAABB(transformedAABB, cascadeData.FrustumPlanes);
 
 					if (result == CullResult::PartiallyVisible && filteredBatch.Mesh->GetSubMeshes().size() == 1)
 						result = CullResult::FullyVisible;
@@ -357,7 +390,7 @@ namespace Flare
 						partiallyVisibleMesh.Mesh = filteredBatch.Mesh;
 						partiallyVisibleMesh.Transform = compactTransform;
 
-						CullSubMeshes(partiallyVisibleMesh, compactTransform, cascadeData.FrustumPlanes);
+						CullSubMeshes(partiallyVisibleMesh, compactTransform, context.GetSceneSubmition().DirectionalLight.LightBasis, static_cast<uint32_t>(cascadeIndex));
 
 						if (partiallyVisibleMesh.SubMeshRangeCount > 0)
 						{
@@ -374,7 +407,7 @@ namespace Flare
 		}
 	}
 
-	void ShadowPass::CullSubMeshes(PartiallyVisibleMesh& mesh, const Math::Compact3DTransform& transform, const Math::Plane* frustumPlanes)
+	void ShadowPass::CullSubMeshes(PartiallyVisibleMesh& mesh, const Math::Compact3DTransform& transform, const Math::Basis& lightBasis, uint32_t cascadeIndex)
 	{
 		FLARE_PROFILE_FUNCTION();
 
@@ -384,11 +417,19 @@ namespace Flare
 		currentRange.Start = UINT32_MAX;
 		currentRange.Count = 0;
 
+		const auto* frustumPlanes = m_CascadeData[cascadeIndex].FrustumPlanes;
+		uint32_t shadowMapResolution = GetShadowMapResolution(Renderer::GetShadowSettings().Quality);
+
 		const auto& subMeshes = mesh.Mesh->GetSubMeshes();
 		uint32_t subMeshCount = (uint32_t)subMeshes.size();
+
 		for (uint32_t i = 0; i < subMeshCount; i++)
 		{
-			CullResult result = CullAABB(subMeshes[i].Bounds, frustumPlanes, transform);
+			Math::AABB transformAABB = subMeshes[i].Bounds.Transformed(transform.ToMatrix4x4());
+			if (CullByShadowMapSpaceSize(lightBasis, transformAABB, 2 * m_CascadeData[cascadeIndex].BoundingSphereRadius, shadowMapResolution, s_SmallObjectThreshold))
+				continue;
+
+			CullResult result = CullAABB(transformAABB, frustumPlanes);
 			if (result == CullResult::NotVisible)
 				continue;
 
