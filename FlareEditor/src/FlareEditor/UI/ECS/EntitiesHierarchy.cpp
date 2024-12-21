@@ -7,6 +7,7 @@
 #include "Flare/Scene/Transform.h"
 #include "Flare/Scene/Components.h"
 #include "Flare/Scene/Hierarchy.h"
+#include "Flare/Scene/Prefab.h"
 
 #include "FlareECS/World.h"
 
@@ -194,14 +195,22 @@ namespace Flare
 		NameComponent* entityName = m_World->TryGetEntityComponent<NameComponent>(entity);
 		Children* children = m_World->TryGetEntityComponent<Children>(entity);
 
+		bool isPrefab = m_World->HasComponent<PrefabInstance>(entity);
+
 		if (!children)
 			flags |= ImGuiTreeNodeFlags_Leaf;
+
+		if (isPrefab)
+			ImGui::PushStyleColor(ImGuiCol_Text, ImGuiTheme::Primary);
 
 		bool opened = false;
 		if (entityName)
 			opened = ImGui::TreeNodeEx((void*)std::hash<Entity>()(entity), flags, entityName->Value.c_str());
 		else
 			opened = ImGui::TreeNodeEx((void*)std::hash<Entity>()(entity), flags, "Entity %d", entity.GetIndex());
+
+		if (isPrefab)
+			ImGui::PopStyleColor();
 
 		result |= RenderEntityContextMenu(entity, selectedEntity);
 
