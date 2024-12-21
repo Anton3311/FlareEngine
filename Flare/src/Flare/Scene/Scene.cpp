@@ -99,10 +99,6 @@ namespace Flare
 		UpdateEnvironmentSettings();
 	}
 
-	void Scene::OnViewportResize(uint32_t width, uint32_t height)
-	{
-	}
-
 	Ref<Scene> Scene::GetActive()
 	{
 		return s_Active;

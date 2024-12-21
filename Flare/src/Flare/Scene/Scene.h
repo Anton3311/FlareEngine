@@ -32,7 +32,6 @@ namespace Flare
 
 		void OnUpdateRuntime();
 		void OnUpdate();
-		void OnViewportResize(uint32_t width, uint32_t height);
 
 		inline World& GetECSWorld() { return m_World; }
 		inline const World& GetECSWorld() const { return m_World; }
