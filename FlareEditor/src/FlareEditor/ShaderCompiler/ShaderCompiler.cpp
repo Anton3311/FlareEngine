@@ -39,12 +39,7 @@ namespace Flare
 			FLARE_PROFILE_FUNCTION();
 			std::filesystem::path requestingPath = requesting_source;
 			std::filesystem::path parent = requestingPath.parent_path();
-			std::filesystem::path includedFilePath = parent / requested_source;
-
-			if (std::string_view(requested_source)._Starts_with("Packages"))
-			{
-				includedFilePath = std::filesystem::absolute(std::filesystem::path("../") / requested_source);
-			}
+			std::filesystem::path includedFilePath = std::filesystem::canonical(parent / requested_source);
 
 			shaderc_include_result* includeData = new shaderc_include_result();
 			includeData->content = nullptr;
@@ -712,7 +707,7 @@ namespace Flare
 	static bool CompileGraphicsShader(AssetHandle shaderHandle, bool forceRecompile, const ShaderSourceParser& parser, std::vector<ShaderError>& errors)
 	{
 		FLARE_PROFILE_FUNCTION();
-		const std::filesystem::path& shaderPath = AssetManager::GetAssetMetadata(shaderHandle)->Path;
+		const std::filesystem::path& shaderPath = std::filesystem::canonical(AssetManager::GetAssetMetadata(shaderHandle)->Path);
 		std::string pathString = shaderPath.string();
 		std::vector<PreprocessedShaderProgram> programs;
 		std::unordered_map<std::string, size_t> propertyNameToIndex;
