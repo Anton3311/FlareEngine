@@ -6,6 +6,7 @@
 
 #include "Flare/Scene/Scene.h"
 #include "Flare/Scene/Components.h"
+#include "Flare/Scene/Prefab.h"
 #include "Flare/AssetManager/AssetManager.h"
 
 #include "Flare/Serialization/Serialization.h"
@@ -77,6 +78,7 @@ namespace Flare
 	void SceneSerializer::SerializeEntity(YAML::Emitter& emitter, World& world, Entity entity)
 	{
 		FLARE_PROFILE_FUNCTION();
+
 		emitter << YAML::BeginMap;
 
 		{
@@ -89,17 +91,38 @@ namespace Flare
 				emitter << UUID();
 		}
 
-		emitter << YAML::Key << "Components" << YAML::BeginSeq; // Components
-
-		for (ComponentId component : world.Entities.GetEntityComponents(entity))
+		const PrefabInstance* prefabInstance = world.TryGetEntityComponent<const PrefabInstance>(entity);
+		if (prefabInstance)
 		{
-			if (component == COMPONENT_ID(SerializationId))
-				continue;
+			// This entity was created by instantiating a prefab.
+			
+			bool isPrefabValid = AssetManager::IsAssetHandleValid(prefabInstance->PrefabHandle);
+			if (!isPrefabValid)
+			{
+				FLARE_CORE_WARN("Entity ({}; {}) was created by instantiating a prefab, however `PrefabInstance` component has an invalid prefab handle",
+					entity.GetIndex(),
+					entity.GetGeneration());
+			}
 
-			SerializeComponent(emitter, world, entity, component);
+			emitter << YAML::Key << "Prefab" << YAML::Value << prefabInstance->PrefabHandle;
+		}
+		else
+		{
+			// Just a regular entity
+
+			emitter << YAML::Key << "Components" << YAML::BeginSeq; // Components
+
+			for (ComponentId component : world.Entities.GetEntityComponents(entity))
+			{
+				if (component == COMPONENT_ID(SerializationId))
+					continue;
+
+				SerializeComponent(emitter, world, entity, component);
+			}
+
+			emitter << YAML::EndSeq; // Components
 		}
 
-		emitter << YAML::EndSeq; // Components
 		emitter << YAML::EndMap;
 	}
 
@@ -113,6 +136,27 @@ namespace Flare
 			id = idNode.as<UUID>();
 		}
 
+		if (YAML::Node prefabInstanceNode = node["Prefab"])
+		{
+			AssetHandle prefabHandle = prefabInstanceNode.as<AssetHandle>();
+			if (!AssetManager::IsAssetHandleValid(prefabHandle))
+			{
+				FLARE_CORE_ERROR("Failed to deserialize an entity, because it was created from an invalid prefab");
+			}
+			else
+			{
+				Ref<Prefab> prefab = AssetManager::GetAsset<Prefab>(prefabHandle);
+
+				Entity prefabInstance = prefab->CreateInstance(world, PrefabInstantiationFlags::AddMetadataComponents);
+				world.AddEntityComponent(prefabInstance, SerializationId{ id });
+
+				outEntity = prefabInstance;
+				outSerializationId = id;
+
+				return;
+			}
+		}
+
 		outEntity = world.CreateEntity<SerializationId>(SerializationId(id));
 		outSerializationId = id;
 	}
@@ -121,6 +165,8 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 		YAML::Node componentsNode = node["Components"];
+
+		// Deserialization of a prefab entity is handled while also deserializing the id
 		if (!componentsNode)
 			return;
 

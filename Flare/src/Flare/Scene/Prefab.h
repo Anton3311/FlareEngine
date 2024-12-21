@@ -8,6 +8,14 @@
 
 namespace Flare
 {
+	enum class PrefabInstantiationFlags
+	{
+		None = 0,
+		AddMetadataComponents = 1,
+	};
+
+	FLARE_IMPL_ENUM_BITFIELD(PrefabInstantiationFlags);
+
 	//
 	// PrefabHierarchy
 	//
@@ -96,8 +104,8 @@ namespace Flare
 		Prefab(const Components& compatibleComponentsRegistry, Archetypes& compatibleArchetypes, PrefabFlags flags);
 		Prefab(const Components& compatibleComponentsRegistry, Archetypes& compatibleArchetypes, PrefabFlags flags, AssetHandle sourceMesh);
 	
-		Entity CreateInstance(World& world);
-		std::optional<Entity> TryCreateInstance(World& world);
+		Entity CreateInstance(World& world, PrefabInstantiationFlags instantiationFlags = PrefabInstantiationFlags::None);
+		std::optional<Entity> TryCreateInstance(World& world, PrefabInstantiationFlags instantiationFlags = PrefabInstantiationFlags::None);
 
 		inline PrefabHierarchy& GetHierarchy() { return m_Hierarchy; }
 		inline const PrefabHierarchy& GetHierarchy() const { return m_Hierarchy; }
@@ -109,7 +117,7 @@ namespace Flare
 		// Creates a new prefab with a single entity, that has a transform
 		static Ref<Prefab> CreateEmpty(Archetypes& compatibleArchetypes);
 	private:
-		Entity InstantiateHierarchy(World& world) const;
+		Entity InstantiateHierarchy(World& world, PrefabInstantiationFlags instantiationFlags) const;
 	private:
 		PrefabFlags m_Flags;
 		PrefabHierarchy m_Hierarchy;
@@ -125,11 +133,20 @@ namespace Flare
 	public:
 		InstantiatePrefab() = default;
 		InstantiatePrefab(const Ref<Prefab>& prefab);
+		InstantiatePrefab(const Ref<Prefab>& prefab, PrefabInstantiationFlags instantiationFlags);
 
 		virtual void Apply(CommandContext& context, World& world) override;
 		virtual void Initialize(FutureEntity entity);
 	private:
 		FutureEntity m_OutputEntity;
 		Ref<Prefab> m_Prefab;
+		PrefabInstantiationFlags m_InstantiationFlags;
+	};
+
+	struct FLARE_API PrefabInstance
+	{
+		FLARE_COMPONENT;
+
+		AssetHandle PrefabHandle;
 	};
 }

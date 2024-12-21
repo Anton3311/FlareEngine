@@ -229,14 +229,14 @@ namespace Flare
 		m_Hierarchy(compatibleComponentsRegistry, compatibleArchetypes),
 		m_Flags(flags), m_SourceMesh(sourceMesh) {}
 
-	Entity Prefab::CreateInstance(World& world)
+	Entity Prefab::CreateInstance(World& world, PrefabInstantiationFlags instantiationFlags)
 	{
 		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(&world.Components == &m_CompatibleComponentsRegistry);
-		return InstantiateHierarchy(world);
+		return InstantiateHierarchy(world, instantiationFlags);
 	}
 
-	std::optional<Entity> Prefab::TryCreateInstance(World& world)
+	std::optional<Entity> Prefab::TryCreateInstance(World& world, PrefabInstantiationFlags instantiationFlags)
 	{
 		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(&world.Components == &m_CompatibleComponentsRegistry);
@@ -244,7 +244,7 @@ namespace Flare
 		if (m_Hierarchy.IsEmpty())
 			return {};
 
-		return InstantiateHierarchy(world);
+		return InstantiateHierarchy(world, instantiationFlags);
 	}
 
 	Ref<Prefab> Prefab::CreateEmpty(Archetypes& compatibleArchetypes)
@@ -263,7 +263,7 @@ namespace Flare
 		return prefab;
 	}
 
-	Entity Prefab::InstantiateHierarchy(World& world) const
+	Entity Prefab::InstantiateHierarchy(World& world, PrefabInstantiationFlags instantiationFlags) const
 	{
 		FLARE_PROFILE_FUNCTION();
 
@@ -308,7 +308,15 @@ namespace Flare
 		}
 
 		FLARE_CORE_ASSERT(createdEntities.size() > 0);
-		return createdEntities[0];
+
+		Entity root = createdEntities[0];
+
+		if (HAS_BIT(instantiationFlags, PrefabInstantiationFlags::AddMetadataComponents))
+		{
+			world.AddEntityComponent(root, PrefabInstance{ Handle });
+		}
+
+		return root;
 	}
 
 	//
@@ -318,10 +326,13 @@ namespace Flare
 	InstantiatePrefab::InstantiatePrefab(const Ref<Prefab>& prefab)
 		: m_Prefab(prefab) {}
 
+	InstantiatePrefab::InstantiatePrefab(const Ref<Prefab>& prefab, PrefabInstantiationFlags instantiationFlags)
+		: m_Prefab(prefab), m_InstantiationFlags(instantiationFlags) {}
+
 	void InstantiatePrefab::Apply(CommandContext& context, World& world)
 	{
 		FLARE_PROFILE_FUNCTION();
-		Entity entity = m_Prefab->CreateInstance(world);
+		Entity entity = m_Prefab->CreateInstance(world, m_InstantiationFlags);
 		context.SetEntity(m_OutputEntity, entity);
 	}
 
@@ -329,4 +340,6 @@ namespace Flare
 	{
 		m_OutputEntity = entity;
 	}
+
+	FLARE_IMPL_COMPONENT(PrefabInstance);
 }
