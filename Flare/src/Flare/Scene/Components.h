@@ -321,6 +321,28 @@ namespace Flare
         }
     };
 
+    
+
+    struct FLARE_API SpotLightShadows
+    {
+        FLARE_COMPONENT;
+
+        SpotLightShadows() = default;
+
+        float Bias = 0.0f;
+        float NormalBias = 0.0f;
+    };
+
+    template<>
+    struct TypeSerializer<SpotLightShadows>
+    {
+        void OnSerialize(SpotLightShadows& shadows, SerializationStream& stream)
+        {
+            stream.Serialize("Bias", SerializationValue(shadows.Bias));
+            stream.Serialize("NormalBias", SerializationValue(shadows.NormalBias));
+        }
+    };
+
 
 
     struct FLARE_API Environment

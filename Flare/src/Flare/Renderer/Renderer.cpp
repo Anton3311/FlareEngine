@@ -16,11 +16,12 @@
 #include "Flare/Renderer/DescriptorSet.h"
 #include "Flare/Renderer/GraphicsContext.h"
 #include "Flare/Renderer/Material.h"
+#include "Flare/Renderer/Passes/DecalsPass.h"
 #include "Flare/Renderer/Passes/GeometryPass.h"
 #include "Flare/Renderer/Passes/GeometryCullingPass.h"
 #include "Flare/Renderer/Passes/ShadowPass.h"
 #include "Flare/Renderer/Passes/ShadowCascadePass.h"
-#include "Flare/Renderer/Passes/DecalsPass.h"
+#include "Flare/Renderer/Passes/SpotLightShadowPass.h"
 #include "Flare/Renderer/PostProcessing/PostProcessingManager.h"
 #include "Flare/Renderer/RendererComponents.h"
 #include "Flare/Renderer/RendererPrimitives.h"
@@ -471,6 +472,25 @@ namespace Flare
 		return shadowPass;
 	}
 
+	static RenderGraphTextureId ConfigureSpotLightShadowPass(RenderGraph& renderGraph, Ref<Material> perspectiveDepthOnly)
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		RenderGraphTextureId shadowMapId = renderGraph.GetResourceManager().CreateFixedSizeTexture(
+			TextureFormat::Depth32,
+			glm::uvec2(256),
+			"SpotLightShadowMap");
+
+		Ref<SpotLightShadowPass> pass = Ref<SpotLightShadowPass>::New(shadowMapId, perspectiveDepthOnly);
+
+		RenderGraphPassSpecifications specifications{};
+		specifications.SetDebugName("SpotLightShadowPass");
+		specifications.AddOutput(shadowMapId, 1.0f);
+		renderGraph.AddPass(specifications, pass);
+
+		return shadowMapId;
+	}
+
 	static Ref<Material> CreateDepthPrepassMaterial()
 	{
 		FLARE_PROFILE_FUNCTION();
@@ -483,7 +503,7 @@ namespace Flare
 		return nullptr;
 	}
 
-	static void ConfigureDepthPrepass(Entity viewportEntity)
+	static void ConfigureDepthPrepass(Entity viewportEntity, Ref<Material> depthPrepassMaterial)
 	{
 		FLARE_PROFILE_FUNCTION();
 
@@ -504,8 +524,6 @@ namespace Flare
 	
 		// Depth prepass
 		{
-			Ref<Material> depthPrepassMaterial = CreateDepthPrepassMaterial();
-
 			RenderGraphPassSpecifications depthPrepass{};
 			depthPrepass.SetDebugName("DepthPrepass");
 			depthPrepass.SetType(RenderGraphPassType::Graphics);
@@ -516,7 +534,8 @@ namespace Flare
 	}
 
 	static void ConfigureGeometryPass(Entity viewportEntity,
-		const std::array<RenderGraphTextureId, ShadowSettings::MaxCascades>& cascadeTextures)
+		const std::array<RenderGraphTextureId, ShadowSettings::MaxCascades>& cascadeTextures,
+		RenderGraphTextureId spotLightShadowMap)
 	{
 		FLARE_PROFILE_FUNCTION();
 
@@ -567,6 +586,8 @@ namespace Flare
 				currentFrameResources.GlobalDescriptorSetWithoutShadows->FlushWrites();
 			}
 		}
+
+		geometryPass.AddInput(spotLightShadowMap);
 
 		viewportRenderGraph->Graph->AddPass(geometryPass, Ref<GeometryPass>::New(s_RendererData.Statistics, nullptr, false));
 	}
@@ -694,7 +715,11 @@ namespace Flare
 				std::array<RenderGraphTextureId, ShadowSettings::MaxCascades> cascadeTextures = { RenderGraphTextureId() };
 				Ref<ShadowPass> shadowPass = ConfigureShadowPass(viewportEntity, *viewport, *viewportRenderGraph->Graph, cascadeTextures);
 
-				ConfigureDepthPrepass(viewportEntity);
+				Ref<Material> perspectiveDepthOnly = CreateDepthPrepassMaterial();
+
+				RenderGraphTextureId spotLightShadowMap = ConfigureSpotLightShadowPass(*viewportRenderGraph->Graph, perspectiveDepthOnly);
+
+				ConfigureDepthPrepass(viewportEntity, perspectiveDepthOnly);
 
 				if (viewport->Settings.PostProcessingEnabled)
 				{
@@ -704,7 +729,7 @@ namespace Flare
 						PostProcessingExecutionOrder::AfterDepthPrePass);
 				}
 
-				ConfigureGeometryPass(viewportEntity, cascadeTextures);
+				ConfigureGeometryPass(viewportEntity, cascadeTextures, spotLightShadowMap);
 				ConfigureOtherPasses(viewportEntity);
 
 				Renderer2D::ConfigurePasses(viewportEntity, *viewportRenderGraph->Graph);
