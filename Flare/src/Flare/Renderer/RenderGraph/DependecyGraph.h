@@ -36,10 +36,10 @@ namespace Flare
 	};
 
 	//
-	// RenderPassDependecyGraph
+	// RenderPassDependencyGraph
 	//
 
-	class FLARE_API DependecyGraph
+	class FLARE_API DependencyGraph
 	{
 	public:
 		struct GraphNode
@@ -48,11 +48,11 @@ namespace Flare
 			uint32_t OrderIndex = UINT32_MAX;
 			const RenderPassNode* PassNode = nullptr;
 			std::unordered_set<size_t> Children;
-			std::unordered_set<size_t> Dependecies;
+			std::unordered_set<size_t> Dependencies;
 		};
 
-		DependecyGraph();
-		DependecyGraph(Span<const RenderPassNode> nodes);
+		DependencyGraph();
+		DependencyGraph(Span<const RenderPassNode> nodes);
 
 		void Build();
 

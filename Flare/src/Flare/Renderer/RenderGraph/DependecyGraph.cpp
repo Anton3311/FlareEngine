@@ -142,12 +142,12 @@ namespace Flare
 	}
 
 	//
-	// RenderPassDependecyGraph
+	// RenderPassDependencyGraph
 	//
 
-	DependecyGraph::DependecyGraph() {}
+	DependencyGraph::DependencyGraph() {}
 
-	DependecyGraph::DependecyGraph(Span<const RenderPassNode> nodes)
+	DependencyGraph::DependencyGraph(Span<const RenderPassNode> nodes)
 		: m_Nodes(nodes)
 	{
 		FLARE_PROFILE_FUNCTION();
@@ -159,7 +159,7 @@ namespace Flare
 		}
 	}
 
-	void DependecyGraph::Build()
+	void DependencyGraph::Build()
 	{
 		FLARE_PROFILE_FUNCTION();
 
@@ -176,14 +176,14 @@ namespace Flare
 		AdjacencyMatrix AB = adjacencyMatrix * transitiveClosure;
 
 		{
-			FLARE_PROFILE_SCOPE("GenerateDependecies");
+			FLARE_PROFILE_SCOPE("GenerateDependencies");
 			for (uint32_t y = 0; y < adjacencyMatrix.GetSize(); y++)
 			{
 				for (uint32_t x = 0; x < adjacencyMatrix.GetSize(); x++)
 				{
 					if (adjacencyMatrix.Get(x, y) && !AB.Get(x, y))
 					{
-						m_Graph[x].Dependecies.insert(y);
+						m_Graph[x].Dependencies.insert(y);
 						m_Graph[y].Children.insert(x);
 					}
 				}
@@ -192,7 +192,7 @@ namespace Flare
 
 		for (size_t i = 0; i < m_Graph.size(); i++)
 		{
-			if (m_Graph[i].Dependecies.size() == 0)
+			if (m_Graph[i].Dependencies.size() == 0)
 			{
 				DetermineDependencyLayers(i);
 			}
@@ -201,7 +201,7 @@ namespace Flare
 		GenerateExecutionOrder();
 	}
 
-	void DependecyGraph::GenerateAdjacencyMatrix(AdjacencyMatrix& adjacencyMatrix)
+	void DependencyGraph::GenerateAdjacencyMatrix(AdjacencyMatrix& adjacencyMatrix)
 	{
 		FLARE_PROFILE_FUNCTION();
 
@@ -254,7 +254,7 @@ namespace Flare
 		}
 	}
 
-	void DependecyGraph::GenerateTransitiveClosure(AdjacencyMatrix& matrix)
+	void DependencyGraph::GenerateTransitiveClosure(AdjacencyMatrix& matrix)
 	{
 		FLARE_PROFILE_FUNCTION();
 
@@ -270,7 +270,7 @@ namespace Flare
 		}
 	}
 
-	void DependecyGraph::DetermineDependencyLayers(size_t start)
+	void DependencyGraph::DetermineDependencyLayers(size_t start)
 	{
 		FLARE_PROFILE_FUNCTION();
 
@@ -309,7 +309,7 @@ namespace Flare
 		}
 	}
 
-	void DependecyGraph::GenerateExecutionOrder()
+	void DependencyGraph::GenerateExecutionOrder()
 	{
 		FLARE_PROFILE_FUNCTION();
 
@@ -320,7 +320,7 @@ namespace Flare
 
 		for (size_t i = 0; i < m_Graph.size(); i++)
 		{
-			if (m_Graph[i].Dependecies.size() == 0)
+			if (m_Graph[i].Dependencies.size() == 0)
 				queue.push_back(i);
 		}
 
@@ -329,7 +329,7 @@ namespace Flare
 			size_t nodeIndex = queue.front();
 			queue.pop_front();
 
-			if (visited[nodeIndex] != (uint32_t)m_Graph[nodeIndex].Dependecies.size())
+			if (visited[nodeIndex] != (uint32_t)m_Graph[nodeIndex].Dependencies.size())
 			{
 				queue.push_back(nodeIndex);
 				continue;
