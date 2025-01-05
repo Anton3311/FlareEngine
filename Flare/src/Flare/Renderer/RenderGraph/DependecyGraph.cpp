@@ -192,6 +192,9 @@ namespace Flare
 
 		for (size_t i = 0; i < m_Graph.size(); i++)
 		{
+			if (!m_Graph[i].PassNode->Enabled)
+				continue;
+
 			if (m_Graph[i].Dependencies.size() == 0)
 			{
 				DetermineDependencyLayers(i);
@@ -222,6 +225,9 @@ namespace Flare
 		for (size_t nodeIndex = 0; nodeIndex < m_Graph.size(); nodeIndex++)
 		{
 			const GraphNode& node = m_Graph[nodeIndex];
+			if (!node.PassNode->Enabled)
+				continue;
+
 			RenderGraphPassType passType = node.PassNode->Specifications.GetType();
 
 			switch (passType)
@@ -320,6 +326,9 @@ namespace Flare
 
 		for (size_t i = 0; i < m_Graph.size(); i++)
 		{
+			if (!m_Graph[i].PassNode->Enabled)
+				continue;
+
 			if (m_Graph[i].Dependencies.size() == 0)
 				queue.push_back(i);
 		}

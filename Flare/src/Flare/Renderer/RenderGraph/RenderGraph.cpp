@@ -66,12 +66,26 @@ namespace Flare
 		m_ExternalResources.push_back(resource);
 	}
 
+	void RenderGraph::Execute(Ref<CommandBuffer> commandBuffer, const SceneSubmition& sceneSubmition, const RenderView& view)
+	{
+		FLARE_PROFILE_FUNCTION();
+		FLARE_CORE_VERIFY(m_IsValid);
+
+		if (m_NeedsRebuilding)
+		{
+			m_IsValid = false;
+			Build();
+		}
+
+		ExecuteRenderPasses(std::move(commandBuffer), sceneSubmition, view);
+	}
+
 	void RenderGraph::Build()
 	{
 		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(!m_IsValid);
 
-		m_DependencyGraph = DependecyGraph(Span<const RenderPassNode>(m_Nodes.data(), m_Nodes.size()));
+		m_DependencyGraph = DependencyGraph(Span<const RenderPassNode>(m_Nodes.data(), m_Nodes.size()));
 		m_DependencyGraph.Build();
 
 		OnBuild();
@@ -105,6 +119,22 @@ namespace Flare
 #endif
 
 		OnPrepare();
+	}
+
+	bool RenderGraph::IsPassEnabled(size_t index) const
+	{
+		FLARE_CORE_ASSERT(index < m_Nodes.size());
+		return m_Nodes[index].Enabled;
+	}
+
+	void RenderGraph::SetPassEnabled(size_t index, bool enabled)
+	{
+		FLARE_CORE_ASSERT(index < m_Nodes.size());
+
+		bool changed = m_Nodes[index].Enabled != enabled;
+	 	m_Nodes[index].Enabled = enabled;
+
+		m_NeedsRebuilding |= changed;
 	}
 
 	Ref<RenderGraph> RenderGraph::Create(World& renderWorld, Entity viewportEntity)

@@ -21,7 +21,7 @@ namespace Flare
 		if (!m_IsVisible)
 			return;
 
-		const DependecyGraph& dependencyGraph = m_RenderGraph.GetDependencyGraph();
+		const DependencyGraph& dependencyGraph = m_RenderGraph.GetDependencyGraph();
 		if (dependencyGraph.GetMaxDependencyLayer() == 0)
 			return;
 
@@ -45,7 +45,7 @@ namespace Flare
 		constexpr float SPACING_BETWEEN_LAYERS = 60.0f;
 		constexpr float SPACING_BETWEEN_NODES = 30.0f;
 
-		const DependecyGraph& dependencyGraph = m_RenderGraph.GetDependencyGraph();
+		const DependencyGraph& dependencyGraph = m_RenderGraph.GetDependencyGraph();
 
 		const ImGuiStyle& style = ImGui::GetStyle();
 		const ImU32 textColor = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Text]);
@@ -75,6 +75,9 @@ namespace Flare
 
 		for (size_t nodeIndex = 0; nodeIndex < nodes.size(); nodeIndex++)
 		{
+			if (!nodes[nodeIndex].PassNode->Enabled)
+				continue;
+
 			const auto& node = nodes[nodeIndex];
 			const char* name = node.PassNode->Specifications.GetDebugName().c_str();
 			ImVec2 textSize = ImGui::CalcTextSize(name);
@@ -89,7 +92,7 @@ namespace Flare
 
 			drawList->AddText(textPosition + nodeNameTextCenter, textColor, name);
 
-			for (size_t dependencyIndex : node.Dependecies)
+			for (size_t dependencyIndex : node.Dependencies)
 			{
 				glm::vec2 dependencyPosition = m_NodePositions[dependencyIndex];
 

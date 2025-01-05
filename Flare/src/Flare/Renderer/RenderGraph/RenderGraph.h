@@ -49,12 +49,15 @@ namespace Flare
 
 		void AddExternalResource(const ExternalRenderGraphResource& resource);
 
-		virtual void Execute(Ref<CommandBuffer> commandBuffer, const SceneSubmition& sceneSubmition, const RenderView& view) = 0;
+		void Execute(Ref<CommandBuffer> commandBuffer, const SceneSubmition& sceneSubmition, const RenderView& view);
 
 		void Build();
 		void Clear();
 
 		void Prepare();
+
+		bool IsPassEnabled(size_t index) const;
+		void SetPassEnabled(size_t index, bool enabled);
 
 		inline bool NeedsRebuilding() const { return m_NeedsRebuilding; }
 		inline void SetNeedsRebuilding() { m_NeedsRebuilding = true; }
@@ -64,10 +67,11 @@ namespace Flare
 
 		inline const std::vector<RenderPassNode>& GetNodes() const { return m_Nodes; }
 		inline const std::vector<ExternalRenderGraphResource>& GetExternalResources() const { return m_ExternalResources; }
-		inline const DependecyGraph& GetDependencyGraph() const { return m_DependencyGraph; }
+		inline const DependencyGraph& GetDependencyGraph() const { return m_DependencyGraph; }
 
 		static Ref<RenderGraph> Create(World& renderWorld, Entity viewportEntity);
 	protected:
+		virtual void ExecuteRenderPasses(Ref<CommandBuffer> commandBuffer, const SceneSubmition& sceneSubmition, const RenderView& view) = 0;
 		virtual void OnPrepare() = 0;
 		virtual void OnTexturesResize() = 0;
 		virtual void OnClear() = 0;
@@ -82,7 +86,7 @@ namespace Flare
 		std::vector<ExternalRenderGraphResource> m_ExternalResources;
 
 		RenderGraphResourceManager m_ResourceManager;
-		DependecyGraph m_DependencyGraph;
+		DependencyGraph m_DependencyGraph;
 
 		bool m_NeedsRebuilding = false;
 	protected:

@@ -177,7 +177,7 @@ namespace Flare
 	//
 
 	LayoutTransitionsGenerator::LayoutTransitionsGenerator(CompiledRenderGraph& result,
-		const DependecyGraph& dependencyGraph,
+		const DependencyGraph& dependencyGraph,
 		Span<const RenderPassNode> nodes,
 		const RenderGraphResourceManager& resourceManager,
 		Span<const ExternalRenderGraphResource> externalResources)

@@ -11,5 +11,6 @@ namespace Flare
 	{
 		RenderGraphPassSpecifications Specifications;
 		Ref<RenderGraphPass> Pass = nullptr;
+		bool Enabled = true;
 	};
 }

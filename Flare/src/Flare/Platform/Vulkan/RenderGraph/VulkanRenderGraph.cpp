@@ -100,7 +100,7 @@ namespace Flare
 	{
 	}
 
-	void VulkanRenderGraph::Execute(Ref<CommandBuffer> commandBuffer, const SceneSubmition& sceneSubmition, const RenderView& view)
+	void VulkanRenderGraph::ExecuteRenderPasses(Ref<CommandBuffer> commandBuffer, const SceneSubmition& sceneSubmition, const RenderView& view)
 	{
 		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(IsValid());
@@ -110,9 +110,11 @@ namespace Flare
 		uint32_t frameInFlight = GraphicsContext::GetInstance().GetCurrentFrameInFlight();
 
 		const auto& nodes = GetNodes();
-		for (size_t nodeIndex = 0; nodeIndex < nodes.size(); nodeIndex++)
+		const auto& executionOrder = GetDependencyGraph().GetExecutionOrder();
+		for (size_t nodeIndex : executionOrder)
 		{
 			const RenderPassNode& node = nodes[nodeIndex];
+			FLARE_CORE_ASSERT(node.Enabled);
 
 			VulkanRenderTarget* renderTarget = nullptr;
 			if (node.Specifications.GetType() == RenderGraphPassType::Graphics
@@ -297,6 +299,8 @@ namespace Flare
 		for (size_t nodeIndex = 0; nodeIndex < nodes.size(); nodeIndex++)
 		{
 			const RenderPassNode& node = nodes[nodeIndex];
+			if (!node.Enabled)
+				continue;
 
 			// RenderTargets are only created for Graphics render passes
 			if (node.Specifications.GetType() != RenderGraphPassType::Graphics)

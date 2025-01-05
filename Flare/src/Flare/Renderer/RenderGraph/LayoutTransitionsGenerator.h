@@ -114,14 +114,14 @@ namespace Flare
 	bool ContainsSubresource(const TextureSubresource& subresourceA, const TextureSubresource& subresourceB);
 	
 	class RenderGraphResourceManager;
-	class DependecyGraph;
+	class DependencyGraph;
 	class FLARE_API LayoutTransitionsGenerator
 	{
 	public:
 		FLARE_NONCOPYABLE(LayoutTransitionsGenerator);
 
 		LayoutTransitionsGenerator(CompiledRenderGraph& result,
-			const DependecyGraph& dependencyGraph,
+			const DependencyGraph& dependencyGraph,
 			Span<const RenderPassNode> nodes,
 			const RenderGraphResourceManager& resourceManager,
 			Span<const ExternalRenderGraphResource> externalResources);
@@ -170,7 +170,7 @@ namespace Flare
 		};
 
 		CompiledRenderGraph& m_Result;
-		const DependecyGraph& m_DependencyGraph;
+		const DependencyGraph& m_DependencyGraph;
 		const RenderGraphResourceManager& m_ResourceManager;
 
 		Span<const RenderPassNode> m_Nodes;
