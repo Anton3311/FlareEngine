@@ -23,7 +23,6 @@ namespace Flare
 		void UpdateWindows() override;
 
 		ImTextureID GetTextureId(const Ref<const Texture>& texture) override;
-		ImTextureID GetFrameBufferAttachmentId(const Ref<const FrameBuffer>& frameBuffer, uint32_t attachment) override;
 
 		inline VkDescriptorSet GetFontsTextureDescrptor() const { return m_FontsTextureDescriptor; }
 		inline VkPipeline GetPipeline() const { return m_Pipeline; }

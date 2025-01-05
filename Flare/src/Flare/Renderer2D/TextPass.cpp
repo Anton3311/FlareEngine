@@ -13,7 +13,6 @@
 #include "Flare/Renderer2D/Renderer2DFrameData.h"
 
 #include "Flare/Platform/Vulkan/VulkanCommandBuffer.h"
-#include "Flare/Platform/Vulkan/VulkanFrameBuffer.h"
 #include "Flare/Platform/Vulkan/VulkanPipeline.h"
 
 namespace Flare

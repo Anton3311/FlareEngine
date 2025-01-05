@@ -10,7 +10,6 @@
 
 #include "Flare/Platform/Vulkan/VulkanContext.h"
 #include "Flare/Platform/Vulkan/VulkanCommandBuffer.h"
-#include "Flare/Platform/Vulkan/VulkanFrameBuffer.h"
 #include "Flare/Platform/Vulkan/VulkanRenderPass.h"
 #include "Flare/Platform/Vulkan/VulkanTexture.h"
 
@@ -230,15 +229,6 @@ namespace Flare
 
 		Ref<const VulkanTexture> vulkanTexture = texture.As<const VulkanTexture>();
 		return GetImageId(vulkanTexture->GetImageViewHandle(), vulkanTexture->GetDefaultSampler());
-	}
-
-	ImTextureID ImGuiLayerVulkan::GetFrameBufferAttachmentId(const Ref<const FrameBuffer>& frameBuffer, uint32_t attachment)
-	{
-		FLARE_CORE_ASSERT(frameBuffer);
-		FLARE_CORE_ASSERT(attachment < frameBuffer->GetAttachmentsCount());
-
-		Ref<const VulkanFrameBuffer> vulkanFrameBuffer = frameBuffer.As<const VulkanFrameBuffer>();
-		return GetImageId(vulkanFrameBuffer->GetAttachmentImageView(attachment), vulkanFrameBuffer->GetDefaultAttachmentSampler(attachment));
 	}
 
 	ImTextureID ImGuiLayerVulkan::GetImageId(VkImageView imageView, VkSampler defaultSampler)

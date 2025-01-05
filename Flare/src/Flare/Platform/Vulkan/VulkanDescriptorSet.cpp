@@ -6,7 +6,6 @@
 
 #include "Flare/Platform/Vulkan/VulkanBuffer.h"
 #include "Flare/Platform/Vulkan/VulkanContext.h"
-#include "Flare/Platform/Vulkan/VulkanFrameBuffer.h"
 #include "Flare/Platform/Vulkan/VulkanTexture.h"
 #include "Flare/Platform/Vulkan/VulkanSampler.h"
 
@@ -90,30 +89,6 @@ namespace Flare
 		write.pTexelBufferView = nullptr;
 	}
 
-	void VulkanDescriptorSet::WriteImage(Ref<const FrameBuffer> frameBuffer, uint32_t attachmentIndex, uint32_t binding)
-	{
-		FLARE_CORE_ASSERT(m_Images.size() < m_Images.capacity());
-		FLARE_CORE_ASSERT(frameBuffer);
-		FLARE_CORE_ASSERT(attachmentIndex < frameBuffer->GetAttachmentsCount());
-
-		auto vulkanFrameBuffer = frameBuffer.As<const VulkanFrameBuffer>();
-		auto& image = m_Images.emplace_back();
-		image.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-		image.imageView = vulkanFrameBuffer->GetAttachmentImageView(attachmentIndex);
-		image.sampler = vulkanFrameBuffer->GetDefaultAttachmentSampler(attachmentIndex);
-
-		auto& write = m_Writes.emplace_back();
-		write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-		write.descriptorCount = 1;
-		write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-		write.dstBinding = binding;
-		write.dstArrayElement = 0;
-		write.dstSet = m_Set;
-		write.pBufferInfo = nullptr;
-		write.pImageInfo = &image;
-		write.pTexelBufferView = nullptr;
-	}
-
 	void VulkanDescriptorSet::WriteImages(Span<Ref<const Texture>> textures, uint32_t arrayOffset, uint32_t binding)
 	{
 		FLARE_CORE_ASSERT(m_Images.size() < m_Images.capacity());
@@ -152,30 +127,6 @@ namespace Flare
 		image.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
 		image.imageView = vulkanTexture->GetImageViewHandle();
 		image.sampler = VK_NULL_HANDLE;
-
-		auto& write = m_Writes.emplace_back();
-		write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-		write.descriptorCount = 1;
-		write.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
-		write.dstBinding = binding;
-		write.dstArrayElement = 0;
-		write.dstSet = m_Set;
-		write.pBufferInfo = nullptr;
-		write.pImageInfo = &image;
-		write.pTexelBufferView = nullptr;
-	}
-
-	void VulkanDescriptorSet::WriteStorageImage(Ref<const FrameBuffer> frameBuffer, uint32_t attachmentIndex, uint32_t binding)
-	{
-		FLARE_CORE_ASSERT(m_Images.size() < m_Images.capacity());
-		FLARE_CORE_ASSERT(frameBuffer);
-		FLARE_CORE_ASSERT(attachmentIndex < frameBuffer->GetAttachmentsCount());
-
-		auto vulkanFrameBuffer = frameBuffer.As<const VulkanFrameBuffer>();
-		auto& image = m_Images.emplace_back();
-		image.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-		image.imageView = vulkanFrameBuffer->GetAttachmentImageView(attachmentIndex);
-		image.sampler = vulkanFrameBuffer->GetDefaultAttachmentSampler(attachmentIndex);
 
 		auto& write = m_Writes.emplace_back();
 		write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;

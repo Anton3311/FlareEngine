@@ -33,12 +33,9 @@ namespace Flare
 
 		void WriteImage(Ref<const Texture> texture, uint32_t binding) override;
 		void WriteImage(Ref<const Texture> texture, Ref<const Sampler> sampler, uint32_t binding) override;
-		void WriteImage(Ref<const FrameBuffer> frameBuffer, uint32_t attachmentIndex, uint32_t binding) override;
 		void WriteImages(Span<Ref<const Texture>> textures, uint32_t arrayOffset, uint32_t binding) override;
 
 		void WriteStorageImage(Ref<const Texture> texture, uint32_t binding) override;
-
-		void WriteStorageImage(Ref<const FrameBuffer> frameBuffer, uint32_t attachmentIndex, uint32_t binding) override;
 
 		void WriteUniformBuffer(Ref<const GPUBuffer> buffer, uint32_t binding) override;
 		void WriteStorageBuffer(Ref<const GPUBuffer> buffer, uint32_t binding) override;
