@@ -179,7 +179,18 @@ namespace Flare
 		VulkanContext& context = VulkanContext::GetInstance();
 
 		Ref<VulkanCommandBuffer> commandBuffer = context.GetPrimaryCommandBuffer();
-		commandBuffer->BeginRenderPass(context.GetColorOnlyPass(), context.GetSwapChainFrameBuffer(context.GetCurrentFrameInFlight()));
+		const VulkanSwapchain& swapchain = context.GetSwapchain();
+
+		VkClearValue clearValue{};
+		clearValue.color.float32[0] = 0.0f;
+		clearValue.color.float32[1] = 0.0f;
+		clearValue.color.float32[2] = 0.0f;
+		clearValue.color.float32[3] = 1.0f;
+
+		commandBuffer->BeginRenderPass(swapchain.GetFrameBufferHandle(context.GetCurrentFrameInFlight()),
+			context.GetColorOnlyPass(),
+			swapchain.GetSize(),
+			Span(&clearValue, 1));
 
 		ImGuiVulkanRenderer::RenderViewportData(
 			drawData,

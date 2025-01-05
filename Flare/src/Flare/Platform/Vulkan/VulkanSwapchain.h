@@ -13,7 +13,6 @@
 
 namespace Flare
 {
-	class VulkanFrameBuffer;
 	class FLARE_API VulkanSwapchain
 	{
 	public:
@@ -41,11 +40,7 @@ namespace Flare
 		inline glm::uvec2 GetSize() const { return m_Size; }
 		inline glm::uvec2 GetWindowSize() const { return m_WindowSize; }
 
-		Ref<VulkanFrameBuffer> GetFrameBuffer(uint32_t index) const
-		{
-			FLARE_CORE_ASSERT(index < GetFrameCount());
-			return m_FrameData[index].FrameBuffer;
-		}
+		VkFramebuffer GetFrameBufferHandle(uint32_t frameIndex) const;
 
 		VkImage GetImage(uint32_t index) const
 		{
@@ -71,7 +66,7 @@ namespace Flare
 		void CreateFrameBuffers();
 		void CreateSemaphores();
 
-		void ReleaseImageViews();
+		void ReleaseImageViewsAndFramebuffers();
 		void ReleaseSemaphores();
 
 		void UpdateDebugName();
@@ -85,7 +80,7 @@ namespace Flare
 		{
 			VkImage Image = VK_NULL_HANDLE;
 			VkImageView ImageView = VK_NULL_HANDLE;
-			Ref<VulkanFrameBuffer> FrameBuffer = nullptr;
+			VkFramebuffer FrameBuffer = nullptr;
 		};
 
 		std::string m_DebugName;

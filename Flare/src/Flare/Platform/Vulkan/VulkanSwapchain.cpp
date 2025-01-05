@@ -7,6 +7,7 @@
 
 #include "Flare/Platform/Vulkan/VulkanContext.h"
 #include "Flare/Platform/Vulkan/VulkanFrameBuffer.h"
+#include "Flare/Platform/Vulkan/VulkanRenderPass.h"
 
 namespace Flare
 {
@@ -116,9 +117,15 @@ namespace Flare
 
 		VulkanContext::GetInstance().WaitForDevice();
 
-		ReleaseImageViews();
+		ReleaseImageViewsAndFramebuffers();
 		ReleaseSemaphores();
 		Create();
+	}
+
+	VkFramebuffer VulkanSwapchain::GetFrameBufferHandle(uint32_t frameIndex) const
+	{
+		FLARE_CORE_ASSERT(frameIndex < GetFrameCount());
+		return m_FrameData[frameIndex].FrameBuffer;
 	}
 
 	void VulkanSwapchain::SetDebugName(std::string_view debugName)
@@ -251,25 +258,29 @@ namespace Flare
 	void VulkanSwapchain::CreateFrameBuffers()
 	{
 		FLARE_PROFILE_FUNCTION();
+
+		const VulkanContext& context = VulkanContext::GetInstance();
+		Ref<VulkanRenderPass> renderPass = context.GetColorOnlyPass();
+
 		for (size_t i = 0; i < m_FrameData.size(); i++)
 		{
-			TextureSpecifications specifications{};
-			specifications.Width = m_Size.x;
-			specifications.Height = m_Size.y;
-			specifications.Filtering = TextureFiltering::Closest;
-			specifications.Wrap = TextureWrap::Clamp;
-			specifications.Usage = TextureUsage::RenderTarget;
-			specifications.Format = TextureFormat::RGBA8;
+			VkFramebufferCreateInfo createInfo{};
+			createInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+			createInfo.attachmentCount = 1;
+			createInfo.width = m_Size.x;
+			createInfo.height = m_Size.y;
+			createInfo.layers = 1;
+			createInfo.pAttachments = &m_FrameData[i].ImageView;
+			createInfo.renderPass = renderPass->GetHandle();
 
-			Ref<Texture> attachmentTexture = Ref<VulkanTexture>::New(specifications, m_FrameData[i].Image, m_FrameData[i].ImageView);
-			m_FrameData[i].FrameBuffer = Ref<VulkanFrameBuffer>::New(
-				m_Size.x,
-				m_Size.y,
-				VulkanContext::GetInstance().GetColorOnlyPass(),
-				Span<Ref<Texture>>(&attachmentTexture, 1),
-				false);
+			VkFramebuffer frameBufferHandle = VK_NULL_HANDLE;
+			VK_CHECK_RESULT(vkCreateFramebuffer(context.GetDevice(), &createInfo, nullptr, &frameBufferHandle));
 
-			m_FrameData[i].FrameBuffer->SetDebugName(fmt::format("SwapChainFrameBuffer.{}", i));
+			context.SetDebugName(VK_OBJECT_TYPE_FRAMEBUFFER,
+				reinterpret_cast<uint64_t>(frameBufferHandle),
+				fmt::format("SwapchainFramebuffer.{}", i).c_str());
+
+			m_FrameData[i].FrameBuffer = frameBufferHandle;
 		}
 	}
 
@@ -296,14 +307,14 @@ namespace Flare
 		if (m_Swapchain == VK_NULL_HANDLE)
 			return;
 
-		ReleaseImageViews();
+		ReleaseImageViewsAndFramebuffers();
 		ReleaseSemaphores();
 
 		vkDestroySwapchainKHR(VulkanContext::GetInstance().GetDevice(), m_Swapchain, nullptr);
 		m_Swapchain = VK_NULL_HANDLE;
 	}
 
-	void VulkanSwapchain::ReleaseImageViews()
+	void VulkanSwapchain::ReleaseImageViewsAndFramebuffers()
 	{
 		FLARE_PROFILE_FUNCTION();
 		VulkanContext& context = VulkanContext::GetInstance();
@@ -312,7 +323,9 @@ namespace Flare
 		for (size_t i = 0; i < m_FrameData.size(); i++)
 		{
 			vkDestroyImageView(device, m_FrameData[i].ImageView, nullptr);
+			vkDestroyFramebuffer(device, m_FrameData[i].FrameBuffer, nullptr);
 			m_FrameData[i].ImageView = VK_NULL_HANDLE;
+			m_FrameData[i].FrameBuffer = VK_NULL_HANDLE;
 		}
 
 		m_FrameData.clear();

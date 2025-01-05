@@ -106,6 +106,7 @@ namespace Flare
 		void WaitForDevice() override;
 
 		Ref<CommandBuffer> GetCommandBuffer() const override;
+		const VulkanSwapchain& GetSwapchain() const { return *m_Swapchain; }
 
 		bool IsValid() const { return m_Device != VK_NULL_HANDLE; }
 
@@ -119,8 +120,6 @@ namespace Flare
 		void SubmitSwapchainPresent(VulkanSwapchain& swapchain,
 			Span<const VkSemaphore> waitSemaphores,
 			bool waitForMainRenderingSubmition);
-
-		Ref<VulkanFrameBuffer> GetSwapChainFrameBuffer(uint32_t index) const { return m_Swapchain->GetFrameBuffer(index); }
 
 		Ref<VulkanCommandBuffer> GetUploadCommandBuffer();
 
@@ -150,7 +149,7 @@ namespace Flare
 		void SetImageViewDeletionHandler(const std::function<void(VkImageView)>& handler) { m_ImageDeletationHandler = handler; }
 		void NotifyImageViewDeletionHandler(VkImageView deletedImageView);
 
-		VkResult SetDebugName(VkObjectType objectType, uint64_t objectHandle, const char* name);
+		VkResult SetDebugName(VkObjectType objectType, uint64_t objectHandle, const char* name) const;
 
 		Ref<Pipeline> GetDefaultPipelineForShader(Ref<Shader> shader, Ref<VulkanRenderPass> renderPass);
 

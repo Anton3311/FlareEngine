@@ -690,7 +690,7 @@ namespace Flare
 		}
 	}
 
-	VkResult VulkanContext::SetDebugName(VkObjectType objectType, uint64_t objectHandle, const char* name)
+	VkResult VulkanContext::SetDebugName(VkObjectType objectType, uint64_t objectHandle, const char* name) const
 	{
 		FLARE_PROFILE_FUNCTION();
 		if (m_DebugMarkersEnabled)

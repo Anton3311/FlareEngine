@@ -109,7 +109,7 @@ namespace Flare
 		VkDevice device = VulkanContext::GetInstance().GetDevice();
 
 		// NOTE: Don't need to wait for a fence because everything is submitted in a single vkQueueSubmit,
-		//       which is singals a fence in VulkanContext. VulkanContext waits for this fence at the start of the frame
+		//       which is signals a fence in VulkanContext. VulkanContext waits for this fence at the start of the frame
 
 		VK_CHECK_RESULT(vkResetCommandPool(device, m_CommandPool, 0));
 
@@ -126,7 +126,10 @@ namespace Flare
 		clearValue.color.float32[2] = 0.0f;
 		clearValue.color.float32[3] = 1.0f;
 
-		commandBuffer->BeginRenderPass(m_RenderPass, m_Swapchain.GetFrameBuffer(m_Swapchain.GetFrameInFlight()));
+		commandBuffer->BeginRenderPass(m_Swapchain.GetFrameBufferHandle(m_Swapchain.GetFrameInFlight()),
+			m_RenderPass,
+			m_Swapchain.GetSize(),
+			Span(&clearValue, 1));
 
 		RenderViewportData(viewport->DrawData, commandBuffer->GetHandle(), frameData.FrameResources);
 
