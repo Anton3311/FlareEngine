@@ -355,7 +355,15 @@ float CalculateSpotLightShadow(vec3 spotLightPosition, vec3 N, vec3 position)
 	if (any(lessThan(uv, vec2(0.0f))) || any(greaterThan(uv, vec2(1.0f))))
 		return 1.0f;
 
-	return texture(u_SpotLightShadowMap, vec3(uv, projectedDepth)).r;
+	float rotationAngle = 2.0f * PI * InterleavedGradientNoise(gl_FragCoord.xy);
+	ShadowMappingSurfaceParams params;
+	params.Position = position;
+	params.Normal = N;
+	params.ConstantBias = 0.0f;
+	params.BiasParams = vec3(0.0f, 0.0f, projectedDepth);
+	params.SamplesRotation = vec2(cos(rotationAngle), sin(rotationAngle));
+
+	return 1.0f - PCF(u_SpotLightShadowMap, uv, 2.0f / 128.0f, params);
 }
 
 #endif
