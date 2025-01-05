@@ -100,6 +100,7 @@ namespace Flare
 		m_Nodes.clear();
 		m_CompiledRenderGraph.Reset();
 		m_ResourceManager.Clear();
+		m_ExternalResources.clear();
 
 		OnClear();
 
