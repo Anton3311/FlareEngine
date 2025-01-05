@@ -9,11 +9,9 @@
 
 namespace Flare
 {
-	class FrameBuffer;
 	class Material;
 
 	class VulkanDescriptorSet;
-	class VulkanFrameBuffer;
 	class VulkanGPUTimer;
 	class VulkanPipeline;
 	class VulkanRenderPass;
@@ -23,14 +21,8 @@ namespace Flare
 	public:
 		VulkanCommandBuffer(VkCommandBuffer commandBuffer);
 
-		void BeginRenderTarget(const Ref<FrameBuffer> frameBuffer) override;
-		void EndRenderTarget() override;
-
 		void BeginLabel(const glm::vec4& color, const std::string& label) override;
 		void EndLabel() override;
-
-		void ClearColorAttachment(Ref<FrameBuffer> frameBuffer, uint32_t index, const glm::vec4& clearColor) override;
-		void ClearDepthAttachment(Ref<FrameBuffer> frameBuffer, float depth) override;
 
 		void ClearColor(const Ref<Texture>& texture, const glm::vec4& clearColor) override;
 		void ClearDepth(const Ref<Texture>& texture, float depth) override;
@@ -85,7 +77,6 @@ namespace Flare
 		void Begin();
 		void End();
 
-		void BeginRenderPass(const Ref<VulkanRenderPass>& renderPass, const Ref<VulkanFrameBuffer>& frameBuffer);
 		void BeginRenderPass(VkFramebuffer frameBuffer,
 			const Ref<VulkanRenderPass>& renderPass,
 			glm::uvec2 renderAreaSize,

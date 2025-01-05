@@ -11,7 +11,6 @@
 
 namespace Flare
 {
-	class FrameBuffer;
 	class Material;
 	class Mesh;
 	class GPUBuffer;
@@ -25,18 +24,8 @@ namespace Flare
 	class FLARE_API CommandBuffer : public RefCounted<CommandBuffer>
 	{
 	public:
-		virtual void BeginRenderTarget(const Ref<FrameBuffer> frameBuffer) = 0;
-		virtual void EndRenderTarget() = 0;
-
 		virtual void BeginLabel(const glm::vec4& color, const std::string& label) = 0;
 		virtual void EndLabel() = 0;
-
-		virtual void ClearColorAttachment(Ref<FrameBuffer> frameBuffer, uint32_t index, const glm::vec4& clearColor) = 0;
-
-		// Depth is in range [0.0, 1.0]
-		// 0.0 - is near plane
-		// 1.0 - is far plane
-		virtual void ClearDepthAttachment(Ref<FrameBuffer> frameBuffer, float depth) = 0;
 
 		// Depth is in range [0.0, 1.0]
 		// 0.0 - is near plane

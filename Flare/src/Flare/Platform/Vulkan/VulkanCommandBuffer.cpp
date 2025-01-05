@@ -19,17 +19,6 @@ namespace Flare
 	VulkanCommandBuffer::VulkanCommandBuffer(VkCommandBuffer commandBuffer)
 		: m_CommandBuffer(commandBuffer) {}
 
-	void VulkanCommandBuffer::BeginRenderTarget(const Ref<FrameBuffer> frameBuffer)
-	{
-		Ref<VulkanFrameBuffer> vulkanFrameBuffer = frameBuffer.As<VulkanFrameBuffer>();
-		BeginRenderPass(vulkanFrameBuffer->GetCompatibleRenderPass(), vulkanFrameBuffer);
-	}
-
-	void VulkanCommandBuffer::EndRenderTarget()
-	{
-		EndRenderPass();
-	}
-
 	void VulkanCommandBuffer::BeginLabel(const glm::vec4& color, const std::string& label)
 	{
 		FLARE_PROFILE_FUNCTION();
@@ -59,20 +48,6 @@ namespace Flare
 		{
 			context.GetEndDebugLabelFunction()(m_CommandBuffer);
 		}
-	}
-
-	void VulkanCommandBuffer::ClearColorAttachment(Ref<FrameBuffer> frameBuffer, uint32_t index, const glm::vec4& clearColor)
-	{
-		FLARE_CORE_ASSERT(index < frameBuffer->GetAttachmentsCount());
-		ClearColor(frameBuffer->GetAttachment(index), clearColor);
-	}
-
-	void VulkanCommandBuffer::ClearDepthAttachment(Ref<FrameBuffer> frameBuffer, float depth)
-	{
-		auto index = frameBuffer->GetDepthAttachmentIndex();
-		FLARE_CORE_ASSERT(index.has_value());
-
-		ClearDepth(frameBuffer->GetAttachment(*index), depth);
 	}
 
 	void VulkanCommandBuffer::ClearColor(const Ref<Texture>& texture, const glm::vec4& clearColor)
@@ -605,30 +580,6 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 		VK_CHECK_RESULT(vkEndCommandBuffer(m_CommandBuffer));
-	}
-
-	void VulkanCommandBuffer::BeginRenderPass(const Ref<VulkanRenderPass>& renderPass, const Ref<VulkanFrameBuffer>& frameBuffer)
-	{
-		FLARE_PROFILE_FUNCTION();
-		FLARE_CORE_ASSERT(!m_RenderTargetState.IsValid());
-
-		const auto& defaultClearValues = renderPass->GetDefaultClearValues();
-
-		VkRenderPassBeginInfo info{};
-		info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-		info.framebuffer = frameBuffer->GetHandle();
-		info.renderPass = renderPass->GetHandle();
-		info.renderArea.offset = { 0, 0 };
-		info.renderArea.extent.width = frameBuffer->GetSize().x;
-		info.renderArea.extent.height = frameBuffer->GetSize().y;
-		info.clearValueCount = (uint32_t)defaultClearValues.size();
-		info.pClearValues = defaultClearValues.data();
-
-		vkCmdBeginRenderPass(m_CommandBuffer, &info, VK_SUBPASS_CONTENTS_INLINE);
-
-		m_RenderTargetState.FrameBufferHandle = frameBuffer->GetHandle();
-		m_RenderTargetState.RenderAreaSize = frameBuffer->GetSize();
-		m_RenderTargetState.RenderPass = frameBuffer->GetCompatibleRenderPass();
 	}
 
 	void VulkanCommandBuffer::BeginRenderPass(VkFramebuffer frameBuffer,

@@ -148,7 +148,7 @@ namespace Flare
 					Span<VkClearValue>::FromVector(m_ClearValuesBuffer).Slice(clearValuesRange.Start, clearValuesRange.Count));
 
 				node.Pass->OnRender(context, commandBuffer);
-				vulkanCommandBuffer.EndRenderTarget();
+				vulkanCommandBuffer.EndRenderPass();
 			}
 			else
 			{
