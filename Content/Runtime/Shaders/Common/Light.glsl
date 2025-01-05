@@ -88,7 +88,7 @@ vec3 CalculatePointLightsContribution(vec3 V, in SurfaceProperties surface)
 	return finalColor;
 }
 
-vec3 CalculateSpotLightsContribution(vec3 V, in SurfaceProperties surface)
+vec3 CalculateSpotLightsContribution(vec3 V, float shadow, in SurfaceProperties surface)
 {
 	vec3 finalColor = vec3(0.0);
 	for (uint i = 0; i < u_SpotLightsCount; i++)
@@ -108,7 +108,12 @@ vec3 CalculateSpotLightsContribution(vec3 V, in SurfaceProperties surface)
 
 		vec3 incomingLight = spotLight.Color.rgb * spotLight.Color.w * fade;
 
-		finalColor += CalculateLight(V, halfWayVector, incomingLight * attenuation, direction, surface);
+		vec3 contribution = CalculateLight(V, halfWayVector, incomingLight * attenuation, direction, surface);
+
+		if (i == 0)
+			contribution *= shadow;
+
+		finalColor += contribution;
 	}
 
 	return finalColor;

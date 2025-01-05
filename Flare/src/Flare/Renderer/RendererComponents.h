@@ -61,6 +61,7 @@ namespace Flare
 		Ref<GPUBuffer> PointLightsBuffer = nullptr;
 		Ref<GPUBuffer> SpotLightsBuffer = nullptr;
 		Ref<GPUBuffer> ShadowDataBuffer = nullptr;
+		Ref<GPUBuffer> SpotLightShadowDataBuffer = nullptr;
 
 		Ref<DescriptorSet> CameraDescriptorSet = nullptr; // Set 0
 		Ref<DescriptorSet> GlobalDescriptorSet = nullptr; // Set 1

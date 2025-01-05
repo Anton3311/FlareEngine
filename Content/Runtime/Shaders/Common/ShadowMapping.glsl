@@ -29,7 +29,6 @@ layout(std140, set = 1, binding = 0) uniform ShadowData
 	float u_MaxShadowDistance;
 
 	int u_MaxCascadeIndex;
-
 };
 
 layout(set = 1, binding = 4) uniform sampler2D u_ShadowMap0;
@@ -41,6 +40,13 @@ layout(set = 1, binding = 8) uniform sampler2DShadow u_ShadowMapCompareSampler0;
 layout(set = 1, binding = 9) uniform sampler2DShadow u_ShadowMapCompareSampler1;
 layout(set = 1, binding = 10) uniform sampler2DShadow u_ShadowMapCompareSampler2;
 layout(set = 1, binding = 11) uniform sampler2DShadow u_ShadowMapCompareSampler3;
+
+layout(set = 1, binding = 13) uniform sampler2DShadow u_SpotLightShadowMap;
+
+layout(set = 1, binding = 14) uniform SpotLightShadowData
+{
+	mat4 Projection;
+} u_SpotLightShadowData;
 
 // Vogel disk points
 const vec2[] SAMPLE_POINTS = {
@@ -329,6 +335,27 @@ float CalculateShadow(vec3 N, vec3 position)
 #endif
 
 	return mix(shadow, 1.0f, shadowFade);
+}
+
+float CalculateSpotLightShadow(vec3 spotLightPosition, vec3 N, vec3 position)
+{
+	vec3 directionTowardsLight = normalize(spotLightPosition - position);
+	float NoL = dot(N, directionTowardsLight);
+
+	vec3 positionBias = (NoL < 0.0f) ? (-directionTowardsLight * 0.2f) : (directionTowardsLight * 0.2f);
+
+	position += positionBias;
+
+	vec4 projected = u_SpotLightShadowData.Projection * vec4(position, 1.0f);
+	projected /= projected.w;
+
+	vec2 uv = projected.xy * 0.5f + vec2(0.5f);
+	float projectedDepth = projected.z;
+
+	if (any(lessThan(uv, vec2(0.0f))) || any(greaterThan(uv, vec2(1.0f))))
+		return 1.0f;
+
+	return texture(u_SpotLightShadowMap, vec3(uv, projectedDepth)).r;
 }
 
 #endif

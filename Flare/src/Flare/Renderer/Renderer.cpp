@@ -144,7 +144,7 @@ namespace Flare
 		if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan)
 		{
 			{
-				VkDescriptorSetLayoutBinding bindings[4 + 4 + 4 + 1] = {};
+				VkDescriptorSetLayoutBinding bindings[4 + 4 + 4 + 1 + 1 + 1] = {};
 				auto& shadowDataBinding = bindings[0];
 				shadowDataBinding.binding = 0;
 				shadowDataBinding.descriptorCount = 1;
@@ -196,7 +196,21 @@ namespace Flare
 				aoTexture.pImmutableSamplers = nullptr;
 				aoTexture.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
-				s_RendererData.GlobalDescriptorSetPool = Ref<VulkanDescriptorSetPool>::New(Span(bindings, 13));
+				auto& spotLightShadowMap = bindings[13];
+				spotLightShadowMap.binding = 13;
+				spotLightShadowMap.descriptorCount = 1;
+				spotLightShadowMap.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+				spotLightShadowMap.pImmutableSamplers = nullptr;
+				spotLightShadowMap.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+				auto& spotLightShadowData = bindings[14];
+				spotLightShadowData.binding = 14;
+				spotLightShadowData.descriptorCount = 1;
+				spotLightShadowData.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+				spotLightShadowData.pImmutableSamplers = nullptr;
+				spotLightShadowData.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+				s_RendererData.GlobalDescriptorSetPool = Ref<VulkanDescriptorSetPool>::New(Span(bindings, 15));
 			}
 
 			{
@@ -391,6 +405,7 @@ namespace Flare
 
 		// Set AO texture
 		set->WriteImage(s_RendererData.WhiteTexture, s_RendererData.DefaultClosestClampSampler, 12);
+		set->WriteImage(s_RendererData.DummyDepthTexture, s_RendererData.DefaultShadowSampler, 13);
 
 		set->FlushWrites();
 	}
@@ -472,7 +487,7 @@ namespace Flare
 		return shadowPass;
 	}
 
-	static RenderGraphTextureId ConfigureSpotLightShadowPass(RenderGraph& renderGraph, Ref<Material> perspectiveDepthOnly)
+	static RenderGraphTextureId ConfigureSpotLightShadowPass(Entity viewportEntity, RenderGraph& renderGraph, Ref<Material> perspectiveDepthOnly)
 	{
 		FLARE_PROFILE_FUNCTION();
 
@@ -487,6 +502,20 @@ namespace Flare
 		specifications.SetDebugName("SpotLightShadowPass");
 		specifications.AddOutput(shadowMapId, 1.0f);
 		renderGraph.AddPass(specifications, pass);
+
+		const ViewportRenderGraph& viewportRenderGraph = s_RendererData.RenderWorld->GetEntityComponent<const ViewportRenderGraph>(viewportEntity);
+		const ViewportGlobalResources& viewportResources = s_RendererData.RenderWorld->GetEntityComponent<const ViewportGlobalResources>(viewportEntity);
+
+		uint32_t frameInFlightCount = GraphicsContext::GetInstance().GetFrameInFlightCount();
+		const RenderGraphResourceManager& resourceManager = viewportRenderGraph.Graph->GetResourceManager();
+		for (uint32_t frameIndex = 0; frameIndex < frameInFlightCount; frameIndex++)
+		{
+			const ViewportFrameResources& viewportFrameResources = viewportResources.FrameResources[frameIndex];
+			Ref<DescriptorSet> set = viewportFrameResources.GlobalDescriptorSet;
+			Ref<Texture> texture = resourceManager.GetTextureForFrameInFlight(shadowMapId, frameIndex);
+			set->WriteImage(texture, s_RendererData.DefaultShadowSampler, 13);
+			set->FlushWrites();
+		}
 
 		return shadowMapId;
 	}
@@ -717,7 +746,9 @@ namespace Flare
 
 				Ref<Material> perspectiveDepthOnly = CreateDepthPrepassMaterial();
 
-				RenderGraphTextureId spotLightShadowMap = ConfigureSpotLightShadowPass(*viewportRenderGraph->Graph, perspectiveDepthOnly);
+				RenderGraphTextureId spotLightShadowMap = ConfigureSpotLightShadowPass(viewportEntity,
+					*viewportRenderGraph->Graph,
+					perspectiveDepthOnly);
 
 				ConfigureDepthPrepass(viewportEntity, perspectiveDepthOnly);
 

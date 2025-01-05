@@ -134,17 +134,18 @@ void main()
 	surface.Position = i_Vertex.Position;
 	surface.Normal = N;
 	surface.Color = color.rgb;
-	surface.Roughness = u_Material.Roughness * texture(u_RoughnessMap, uv).r;;
+	surface.Roughness = u_Material.Roughness * texture(u_RoughnessMap, uv).r;
 	surface.Metallic = u_Material.Metallic;
 
 	float shadow = CalculateShadow(vertexNormal, i_Vertex.Position);
+	float spotLightShadow = CalculateSpotLightShadow(u_SpotLights[0].Position, vertexNormal, i_Vertex.Position);
 
 	vec3 finalColor = CalculateLight(V, H, u_LightColor.rgb * u_LightColor.w, -u_LightDirection, surface);
 
 	finalColor *= shadow;
 
 	finalColor += CalculatePointLightsContribution(V, surface);
-	finalColor += CalculateSpotLightsContribution(V, surface);
+	finalColor += CalculateSpotLightsContribution(V, spotLightShadow, surface);
 
 	float ao = SampleAO(ivec2(gl_FragCoord.xy));
 	ao = mix(ao, 1.0f, shadow);

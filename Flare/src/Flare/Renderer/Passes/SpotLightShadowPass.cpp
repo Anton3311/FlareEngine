@@ -63,14 +63,12 @@ namespace Flare
 		float radius = glm::sqrt(spotLight.Intensity / 0.01f);
 
 		// TODO: Get rid of acos
-		float fov = glm::acos(spotLight.OuterAngleCos);
+		float fov = glm::acos(spotLight.OuterAngleCos) * 2.0f;
 		glm::mat4 projection = glm::perspectiveRH_ZO(fov, 1.0f, 0.01f, radius);
 
 		glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
 		glm::vec3 forward = spotLight.Direction;
 		glm::vec3 right = -glm::cross(up, forward);
-
-		FLARE_CORE_INFO("Right: {} Up: {} Forward: {}", right, up, forward);
 
 		glm::mat4 basis = static_cast<glm::mat4>(glm::mat3(right, up, forward));
 		glm::mat4 viewMatrix = glm::inverse(glm::translate(basis, spotLight.Position));
@@ -88,7 +86,11 @@ namespace Flare
 		view.ViewportSize = shadowMapSize;
 		view.SetViewAndProjection(projection, viewMatrix);
 
-		m_FrameResources[GraphicsContext::GetInstance().GetCurrentFrameInFlight()].CameraBuffer->SetData(MemorySpan(&view, 1), 0);
+		uint32_t frameIndex = GraphicsContext::GetInstance().GetCurrentFrameInFlight();
+		m_FrameResources[frameIndex].CameraBuffer->SetData(MemorySpan(&view, 1), 0);
+
+		const ViewportGlobalResources& globalResources = context.RenderWorld.GetEntityComponent<const ViewportGlobalResources>(context.ViewportEntity);
+		globalResources.FrameResources[frameIndex].SpotLightShadowDataBuffer->SetData(MemorySpan(&view.ViewProjection, 1), 0);
 	}
 
 	void SpotLightShadowPass::OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
