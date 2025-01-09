@@ -214,7 +214,7 @@ namespace Flare
 		if (buttonColor != 0)
 			drawList->AddRectFilled(buttonRect.Min, buttonRect.Max, buttonColor, style.FrameRounding);
 
-		drawList->AddText(textPosition, ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Text]), text, text + 1);
+		drawList->AddText(textPosition, ImGui::GetColorU32(ImGuiCol_Text), text, text + 1);
 
 		return result;
 	}
@@ -263,7 +263,6 @@ namespace Flare
 
 		ImGui::PopID();
 
-
 		// Guizmos
 		float width = 30.0f * 3.0f;
 		float offset = style.ItemSpacing.x + ImGui::GetItemRectSize().x;
@@ -282,6 +281,7 @@ namespace Flare
 
 		ImGui::SameLine();
 
+		ImGui::BeginDisabled(!m_Features.GizmosEnabled);
 		{
 			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
 			if (GuizmoButton("T", m_Guizmo == GuizmoMode::Translate))
@@ -297,6 +297,7 @@ namespace Flare
 
 			ImGui::PopStyleVar(); // Item spacing
 		}
+		ImGui::EndDisabled();
 
 		// Scene View Settings
 
@@ -423,6 +424,9 @@ namespace Flare
 	void SceneViewportWindow::HandleGuizmo()
 	{
 		FLARE_PROFILE_FUNCTION();
+
+		if (!m_Features.GizmosEnabled)
+			return;
 
 		const Viewport& viewport = Renderer::GetRenderWorld().GetEntityComponent<const Viewport>(m_ViewportEntity);
 

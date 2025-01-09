@@ -17,6 +17,11 @@ namespace Flare
 		struct AffineTransform;
 	}
 
+	struct SceneViewportFeatures
+	{
+		bool GizmosEnabled = true;
+	};
+
 	class Scene;
 	class SceneViewportWindow : public ViewportWindow
 	{
@@ -43,6 +48,8 @@ namespace Flare
 
 		inline EditorCamera& GetEditorCamera() { return m_EditorCamera; }
 		inline const EditorCamera& GetEditorCamera() const { return m_EditorCamera; }
+
+		inline void SetFeatures(const SceneViewportFeatures& features) { m_Features = features; }
 	private:
 		void RenderWindowContents();
 		void RenderToolBar();
@@ -56,6 +63,8 @@ namespace Flare
 	private:
 		SceneViewSettings& m_SceneViewSettings;
 		EditorSelection& m_EditorSelection;
+
+		SceneViewportFeatures m_Features;
 
 		GuizmoMode m_Guizmo = GuizmoMode::None;
 		TransformationSpace m_TransformationSpace = TransformationSpace::World;

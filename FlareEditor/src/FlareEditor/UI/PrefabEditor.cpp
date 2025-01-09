@@ -64,6 +64,11 @@ namespace Flare
             bool isGenerated = HAS_BIT(m_Prefab->GetFlags(), PrefabFlags::Generated);
             m_Entities.SetFeatures(isGenerated ? GENERATED_HIERARHCY_FEATURES : DEFAULT_HIERARCHY_FEATURES);
 
+            SceneViewportFeatures features{};
+            features.GizmosEnabled = !isGenerated;
+
+            m_ViewportWindow.SetFeatures(features);
+
 			World& renderWorld = Renderer::GetRenderWorld();
 			renderWorld.GetEntityComponent<ViewportRenderGraph>(m_ViewportWindow.GetViewportEntity()).Graph->SetNeedsRebuilding();
 
