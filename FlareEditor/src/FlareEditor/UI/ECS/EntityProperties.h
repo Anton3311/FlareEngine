@@ -15,7 +15,7 @@ namespace Flare
 	public:
 		EntityProperties(World& world);
 
-		void OnRenderImGui(Entity entity);
+		void OnRenderImGui(Entity entity, bool isReadonly = false);
 	private:
 		void RenderCameraComponent(CameraComponent& cameraComponent);
 		void RenderTransformComponent(TransformComponent& transform);

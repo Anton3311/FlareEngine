@@ -17,7 +17,7 @@ namespace Flare
 	EntityProperties::EntityProperties(World& world)
 		: m_World(world) {}
 
-	void EntityProperties::OnRenderImGui(Entity entity)
+	void EntityProperties::OnRenderImGui(Entity entity, bool isReadonly)
 	{
 		if (!m_World.IsEntityAlive(entity))
 			return;
@@ -35,6 +35,7 @@ namespace Flare
 		if (name)
 			nameString = &name->Value;
 
+		ImGui::BeginDisabled(isReadonly);
 		if (EditorGUI::TextField("Name", *nameString))
 		{
 			if (!nameString->empty() && !name)
@@ -46,11 +47,17 @@ namespace Flare
 			if (nameString->empty() && name)
 				m_World.RemoveEntityComponent<NameComponent>(entity);
 		}
+		ImGui::EndDisabled();
 
-		RenderAddComponentMenu(entity);
+		if (!isReadonly)
+		{
+			RenderAddComponentMenu(entity);
+		}
 
 		if (ImGui::BeginChild("Components"))
 		{
+			ImGui::BeginDisabled(isReadonly);
+
 			std::optional<ComponentId> removedComponent;
 			for (ComponentId component : m_World.Entities.GetEntityComponents(entity))
 			{
@@ -78,6 +85,8 @@ namespace Flare
 					ImGui::End();
 				}
 			}
+
+			ImGui::EndDisabled();
 
 			if (removedComponent.has_value())
 				m_World.Entities.RemoveEntityComponent(entity, removedComponent.value());

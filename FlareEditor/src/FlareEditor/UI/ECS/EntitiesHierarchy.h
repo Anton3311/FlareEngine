@@ -27,6 +27,8 @@ namespace Flare
 
 		bool OnRenderImGui(Entity& selectedEntity);
 
+		void SetFeatures(EntitiesHierarchyFeatures features) { m_Features = features; }
+
 		inline void SetWorld(World& world) { m_World = &world; }
 	private:
 		bool RenderContextMenu(Entity& selectedEntity, Entity* parent, bool isRoot);

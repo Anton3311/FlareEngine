@@ -18,9 +18,15 @@
 
 namespace Flare
 {
+    static constexpr EntitiesHierarchyFeatures DEFAULT_HIERARCHY_FEATURES = EntitiesHierarchyFeatures::CreateEntity
+        | EntitiesHierarchyFeatures::DeleteEntity
+        | EntitiesHierarchyFeatures::DuplicateEntity;
+
+    static constexpr EntitiesHierarchyFeatures GENERATED_HIERARHCY_FEATURES = EntitiesHierarchyFeatures::None;
+
     PrefabEditor::PrefabEditor(ECSContext& context)
         : m_PreviewScene(Ref<Scene>::New(context)),
-        m_Entities(GetWorld(), EntitiesHierarchyFeatures::CreateEntity | EntitiesHierarchyFeatures::DeleteEntity | EntitiesHierarchyFeatures::DuplicateEntity),
+        m_Entities(GetWorld(), DEFAULT_HIERARCHY_FEATURES),
         m_Properties(GetWorld()), m_SelectedEntity(Entity()),
         m_ViewportWindow(m_SceneRenderer, m_SceneViewSettings, "Prefab Preview")
     {
@@ -54,6 +60,9 @@ namespace Flare
         if (m_Prefab)
         {
 			m_Prefab->TryCreateInstance(GetWorld());
+
+            bool isGenerated = HAS_BIT(m_Prefab->GetFlags(), PrefabFlags::Generated);
+            m_Entities.SetFeatures(isGenerated ? GENERATED_HIERARHCY_FEATURES : DEFAULT_HIERARCHY_FEATURES);
 
 			World& renderWorld = Renderer::GetRenderWorld();
 			renderWorld.GetEntityComponent<ViewportRenderGraph>(m_ViewportWindow.GetViewportEntity()).Graph->SetNeedsRebuilding();
@@ -99,13 +108,14 @@ namespace Flare
         m_ViewportWindow.OnRenderViewport(Renderer::GetRenderWorld());
         m_ViewportWindow.OnRenderImGui();
 
-        ImGui::Begin("Prefab Entities");
-        m_Entities.OnRenderImGui(m_SelectedEntity);
-        ImGui::End();
+		ImGui::Begin("Prefab Entities");
+		m_Entities.OnRenderImGui(m_SelectedEntity);
+		ImGui::End();
 
-        ImGui::Begin("Prefab Entity Properties");
-        m_Properties.OnRenderImGui(m_SelectedEntity);
-        ImGui::End();
+		ImGui::Begin("Prefab Entity Properties");
+		bool isGenerated = HAS_BIT(m_Prefab->GetFlags(), PrefabFlags::Generated);
+		m_Properties.OnRenderImGui(m_SelectedEntity, isGenerated);
+		ImGui::End();
 
         show = m_ViewportWindow.ShowWindow;
     }
