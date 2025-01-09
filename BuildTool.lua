@@ -100,13 +100,27 @@ end
 
 M.define_application = function()
 	setup_language()
+	M.configure_tracy()
 end
 
 M.define_module = function(name)
+	M.define_module_with_config(name, {})
+end
+
+function M.define_module_with_config(name, config)
 	setup_language()
 	set_module_defines(name, true)
 
 	M.set_module_kind()
+
+	local enable_tracy = config.tracy
+	if enable_tracy == nil then
+		enable_tracy = true
+	end
+
+	if enable_tracy then
+		M.configure_tracy()
+	end
 end
 
 M.add_module_ref = function(name)
@@ -145,6 +159,12 @@ M.add_internal_module_ref = function(name)
         }
 
     filter {}
+end
+
+function M.configure_tracy()
+	filter "configurations:Release"
+		defines { "TRACY_ENABLE", "TRACY_IMPORTS", "TRACY_ON_DEMAND", }
+	filter ""
 end
 
 return M

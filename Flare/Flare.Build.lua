@@ -90,7 +90,7 @@ project "Flare"
 		symbols "on"
 
 	filter "configurations:Release"
-		defines { "FLARE_RELEASE", "TRACY_ENABLE", "TRACY_IMPORTS" }
+		defines { "FLARE_RELEASE" }
 		runtime "Release"
 		optimize "on"
 

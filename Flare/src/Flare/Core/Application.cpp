@@ -115,7 +115,12 @@ namespace Flare
 
 		while (m_Running)
 		{
-			FLARE_PROFILE_BEGIN_FRAME("Main");
+#ifdef FLARE_PROFILING_ENABLED
+			bool isProfilerConnected = tracy::GetProfiler().IsConnected();
+
+			if (isProfilerConnected)
+				FLARE_PROFILE_BEGIN_FRAME("Main");
+#endif
 
 			{
 				FLARE_PROFILE_SCOPE("Application::Update");
@@ -173,7 +178,10 @@ namespace Flare
 				m_PreviousFrameTime = currentTime;
 			}
 
-			FLARE_PROFILE_END_FRAME("Main");
+#ifdef FLARE_PROFILING_ENABLED
+			if (isProfilerConnected)
+				FLARE_PROFILE_END_FRAME("Main");
+#endif
 		}
 
 		GraphicsContext::GetInstance().WaitForDevice();

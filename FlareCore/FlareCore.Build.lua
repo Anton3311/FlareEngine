@@ -1,7 +1,9 @@
 local build_tool = require("BuildTool")
 
 project "FlareCore"
-	build_tool.define_module("FlareCore")
+	build_tool.define_module_with_config("FlareCore", {
+		tracy = false,
+	})
 
     files
     {
@@ -24,7 +26,7 @@ project "FlareCore"
 			"%{wks.location}/Flare/vendor/Tracy/",
 		}
 
-		defines { "TRACY_ENABLE", "TRACY_EXPORTS" }
+		defines { "TRACY_ENABLE", "TRACY_EXPORTS", "TRACY_ON_DEMAND" }
 
 	filter "system:windows"
 		systemversion "latest"
