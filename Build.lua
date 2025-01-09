@@ -18,11 +18,6 @@ workspace "Flare"
 			"4251"
 		}
 
-	flags
-	{
-		"MultiProcessorCompile"
-	}
-
 group "Dependencies"
     include "Flare/vendor/GLFW/GLFW.Build.lua"
     include "Flare/vendor/ImGUI/ImGUI.Build.lua"

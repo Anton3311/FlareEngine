@@ -34,6 +34,12 @@ end
 
 M.setup_workspace = function(name)
 	workspace(name)
+
+	flags
+	{
+		"MultiProcessorCompile"
+	}
+
 	configurations({"Debug", "Release", "Dist"})
 	architecture("x86_64")
 end
