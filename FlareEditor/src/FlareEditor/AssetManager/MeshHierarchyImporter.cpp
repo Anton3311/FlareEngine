@@ -181,6 +181,8 @@ namespace Flare
 		glm::mat4 transformRelativeToParent = ConvertToColumnMajor(node.mTransformation);
 		Math::DecomposeTransform(transformRelativeToParent, localTransform->Position, localTransform->Rotation, localTransform->Scale);
 
+		localTransform->Rotation = glm::degrees(localTransform->Rotation);
+
 		*globalTransform = *localTransform;
 		globalTransform->ApplyTransform(parentTransform);
 		for (uint32_t child = 0; child < node.mNumChildren; child++)
