@@ -28,7 +28,7 @@ namespace Flare
         : m_PreviewScene(Ref<Scene>::New(context)),
         m_Entities(GetWorld(), DEFAULT_HIERARCHY_FEATURES),
         m_Properties(GetWorld()),
-        m_ViewportWindow(m_SceneRenderer, m_SceneViewSettings, m_EditorSelection, "Prefab Preview")
+        m_ViewportWindow(m_SceneRenderer, m_SceneViewSettings, m_EditorSelection, "Prefab Preview", ImGuiWindowFlags_NoMove)
     {
         FLARE_PROFILE_FUNCTION();
         m_SceneRenderer.reset(new SceneRenderer(m_PreviewScene));

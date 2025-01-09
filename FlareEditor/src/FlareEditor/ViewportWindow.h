@@ -4,6 +4,8 @@
 
 #include "FlareECS/Entity/Entity.h"
 
+#include "FlareEditor/ImGui/ImGuiLayer.h"
+
 #include <glm/glm.hpp>
 
 #include <string>
@@ -22,7 +24,10 @@ namespace Flare
 	class ViewportWindow : public RefCounted<ViewportWindow>
 	{
 	public:
-		ViewportWindow(const Scope<SceneRenderer>& sceneRenderer, std::string_view name);
+		ViewportWindow(const Scope<SceneRenderer>& sceneRenderer,
+			std::string_view name,
+			ImGuiWindowFlags windowFlags = ImGuiWindowFlags_None);
+
 		virtual ~ViewportWindow();
 
 		virtual void OnAttach();
@@ -56,6 +61,8 @@ namespace Flare
 	public:
 		bool ShowWindow;
 	protected:
+		ImGuiWindowFlags m_WindowFlags = ImGuiWindowFlags_None;
+
 		std::string m_Name;
 		Ref<Scene> m_Scene;
 
@@ -64,11 +71,11 @@ namespace Flare
 		Entity m_ViewportEntity;
 
 		bool m_Maximized = false;
-		bool m_PreviousFocusState;
-		bool m_IsFocused;
-		bool m_IsHovered;
-		bool m_WindowFocusRequested;
-		bool m_IsVisible;
+		bool m_PreviousFocusState = false;
+		bool m_IsFocused = false;
+		bool m_IsHovered = false;
+		bool m_WindowFocusRequested = false;
+		bool m_IsVisible = true;
 
 		glm::ivec2 m_RelativeMousePosition;
 		glm::ivec2 m_ViewportOffset;

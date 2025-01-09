@@ -30,7 +30,8 @@ namespace Flare
 		SceneViewportWindow(const Scope<SceneRenderer>& sceneRenderer,
 			SceneViewSettings& sceneViewSettings,
 			EditorSelection& editorSelection,
-			std::string_view name = "Scene Viewport");
+			std::string_view name = "Scene Viewport",
+			ImGuiWindowFlags windowFlags = ImGuiWindowFlags_None);
 
 		virtual void OnAttach() override;
 

@@ -24,16 +24,13 @@
 
 namespace Flare
 {
-	ViewportWindow::ViewportWindow(const Scope<SceneRenderer>& sceneRenderer, std::string_view name)
+	ViewportWindow::ViewportWindow(const Scope<SceneRenderer>& sceneRenderer, std::string_view name, ImGuiWindowFlags windowFlags)
 		: m_Name(name),
 		m_SceneRenderer(sceneRenderer),
-		m_IsFocused(false),
-		m_IsVisible(true),
-		m_PreviousFocusState(false),
-		m_IsHovered(false),
 		ShowWindow(true),
 		m_RelativeMousePosition(glm::ivec2(0)),
-		m_ViewportOffset(glm::uvec2(0))
+		m_ViewportOffset(glm::uvec2(0)),
+		m_WindowFlags(windowFlags)
 	{
 		m_ViewportEntity = Renderer::CreateViewport();
 	}
@@ -77,7 +74,7 @@ namespace Flare
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
 
-		ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
+		ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | m_WindowFlags;
 
 		if (m_Maximized)
 		{

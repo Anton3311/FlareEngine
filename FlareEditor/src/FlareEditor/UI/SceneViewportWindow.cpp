@@ -30,8 +30,9 @@ namespace Flare
 	SceneViewportWindow::SceneViewportWindow(const Scope<SceneRenderer>& sceneRenderer,
 		SceneViewSettings& sceneViewSettings,
 		EditorSelection& editorSelection,
-		std::string_view name)
-		: ViewportWindow(sceneRenderer, name),
+		std::string_view name,
+		ImGuiWindowFlags windowFlags)
+		: ViewportWindow(sceneRenderer, name, windowFlags),
 		m_CameraController(m_EditorCamera),
 		m_SceneViewSettings(sceneViewSettings),
 		m_EditorSelection(editorSelection)
