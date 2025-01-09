@@ -17,6 +17,7 @@ namespace Flare
 	class SceneRenderer;
 	class Texture;
 	class World;
+	struct EditorSelection;
 
 	class ViewportWindow : public RefCounted<ViewportWindow>
 	{

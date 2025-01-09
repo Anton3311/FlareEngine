@@ -123,7 +123,7 @@ namespace Flare
         });
 
         m_GameWindow = Ref<ViewportWindow>::New(m_SceneRenderer, "Game");
-        m_SceneViewport = Ref<SceneViewportWindow>::New(m_SceneRenderer, m_SceneViewSettings);
+        m_SceneViewport = Ref<SceneViewportWindow>::New(m_SceneRenderer, m_SceneViewSettings, Selection);
 
         m_ViewportWindows.emplace_back(m_SceneViewport);
         m_ViewportWindows.emplace_back(m_GameWindow);

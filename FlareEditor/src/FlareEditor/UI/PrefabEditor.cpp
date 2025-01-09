@@ -27,8 +27,8 @@ namespace Flare
     PrefabEditor::PrefabEditor(ECSContext& context)
         : m_PreviewScene(Ref<Scene>::New(context)),
         m_Entities(GetWorld(), DEFAULT_HIERARCHY_FEATURES),
-        m_Properties(GetWorld()), m_SelectedEntity(Entity()),
-        m_ViewportWindow(m_SceneRenderer, m_SceneViewSettings, "Prefab Preview")
+        m_Properties(GetWorld()),
+        m_ViewportWindow(m_SceneRenderer, m_SceneViewSettings, m_EditorSelection, "Prefab Preview")
     {
         FLARE_PROFILE_FUNCTION();
         m_SceneRenderer.reset(new SceneRenderer(m_PreviewScene));
@@ -109,12 +109,27 @@ namespace Flare
         m_ViewportWindow.OnRenderImGui();
 
 		ImGui::Begin("Prefab Entities");
-		m_Entities.OnRenderImGui(m_SelectedEntity);
+
+        {
+			Entity selectedEntity = m_EditorSelection.GetType() == EditorSelectionType::Entity
+				? m_EditorSelection.GetEntity()
+				: Entity();
+
+			if (m_Entities.OnRenderImGui(selectedEntity))
+			{
+				m_EditorSelection.SetEntity(selectedEntity);
+			}
+        }
+
 		ImGui::End();
 
 		ImGui::Begin("Prefab Entity Properties");
-		bool isGenerated = HAS_BIT(m_Prefab->GetFlags(), PrefabFlags::Generated);
-		m_Properties.OnRenderImGui(m_SelectedEntity, isGenerated);
+
+        if (m_EditorSelection.GetType() == EditorSelectionType::Entity)
+        {
+			bool isGenerated = HAS_BIT(m_Prefab->GetFlags(), PrefabFlags::Generated);
+			m_Properties.OnRenderImGui(m_EditorSelection.GetEntity(), isGenerated);
+        }
 		ImGui::End();
 
         show = m_ViewportWindow.ShowWindow;

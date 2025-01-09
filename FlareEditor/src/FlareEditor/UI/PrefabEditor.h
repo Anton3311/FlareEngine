@@ -2,8 +2,8 @@
 
 #include "FlareECS/Entity/Entity.h"
 
+#include "FlareEditor/EditorSelection.h"
 #include "FlareEditor/SceneViewSettings.h"
-
 #include "FlareEditor/UI/AssetEditor.h"
 #include "FlareEditor/UI/ECS/EntitiesHierarchy.h"
 #include "FlareEditor/UI/ECS/EntityProperties.h"
@@ -34,6 +34,7 @@ namespace Flare
 
 		Scope<SceneRenderer> m_SceneRenderer = nullptr;
 
+		EditorSelection m_EditorSelection;
 		SceneViewSettings m_SceneViewSettings;
 		
 		SceneViewportWindow m_ViewportWindow;
@@ -41,7 +42,5 @@ namespace Flare
 		EntitiesHierarchy m_Entities;
 		EntityProperties m_Properties;
 		Ref<Prefab> m_Prefab;
-
-		Entity m_SelectedEntity;
 	};
 }

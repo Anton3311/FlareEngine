@@ -29,6 +29,7 @@ namespace Flare
 
 		SceneViewportWindow(const Scope<SceneRenderer>& sceneRenderer,
 			SceneViewSettings& sceneViewSettings,
+			EditorSelection& editorSelection,
 			std::string_view name = "Scene Viewport");
 
 		virtual void OnAttach() override;
@@ -53,6 +54,7 @@ namespace Flare
 			const glm::mat4* parentTransform) const;
 	private:
 		SceneViewSettings& m_SceneViewSettings;
+		EditorSelection& m_EditorSelection;
 
 		GuizmoMode m_Guizmo = GuizmoMode::None;
 		TransformationSpace m_TransformationSpace = TransformationSpace::World;

@@ -29,8 +29,12 @@ namespace Flare
 {
 	SceneViewportWindow::SceneViewportWindow(const Scope<SceneRenderer>& sceneRenderer,
 		SceneViewSettings& sceneViewSettings,
+		EditorSelection& editorSelection,
 		std::string_view name)
-		: ViewportWindow(sceneRenderer, name), m_CameraController(m_EditorCamera), m_SceneViewSettings(sceneViewSettings)
+		: ViewportWindow(sceneRenderer, name),
+		m_CameraController(m_EditorCamera),
+		m_SceneViewSettings(sceneViewSettings),
+		m_EditorSelection(editorSelection)
 	{
 		World& world = Renderer::GetRenderWorld();
 		Viewport& viewport = world.GetEntityComponent<Viewport>(m_ViewportEntity);
@@ -101,11 +105,10 @@ namespace Flare
 
 			if (ImGui::IsKeyPressed(ImGuiKey_F))
 			{
-				const auto& editorSelection = EditorLayer::GetInstance().Selection;
-				if (editorSelection.GetType() == EditorSelectionType::Entity)
+				if (m_EditorSelection.GetType() == EditorSelectionType::Entity)
 				{
 					const World& world = GetScene()->GetECSWorld();
-					const TransformComponent* transform = world.TryGetEntityComponent<TransformComponent>(editorSelection.GetEntity());
+					const TransformComponent* transform = world.TryGetEntityComponent<TransformComponent>(m_EditorSelection.GetEntity());
 
 					if (transform)
 						m_EditorCamera.SetRotationOrigin(transform->Position);
@@ -423,15 +426,14 @@ namespace Flare
 		const Viewport& viewport = Renderer::GetRenderWorld().GetEntityComponent<const Viewport>(m_ViewportEntity);
 
 		World& world = GetScene()->GetECSWorld();
-		const EditorSelection& selection = EditorLayer::GetInstance().Selection;
 
 		bool showGuizmo = m_Guizmo != GuizmoMode::None;
-		bool hasSelection = selection.GetType() == EditorSelectionType::Entity && world.IsEntityAlive(selection.GetEntity());
+		bool hasSelection = m_EditorSelection.GetType() == EditorSelectionType::Entity && world.IsEntityAlive(m_EditorSelection.GetEntity());
 
 		if (!showGuizmo || !hasSelection)
 			return;
 
-		Entity selectedEntity = selection.GetEntity();
+		Entity selectedEntity = m_EditorSelection.GetEntity();
 		ImGuizmo::SetOrthographic(false);
 		ImGuizmo::SetDrawlist();
 
