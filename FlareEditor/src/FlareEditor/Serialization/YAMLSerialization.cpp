@@ -231,7 +231,18 @@ namespace Flare
         if (&descriptor == &FLARE_SERIALIZATION_DESCRIPTOR_OF(Entity))
         {
             if (m_World == nullptr)
+            {
+                if (isArray)
+                {
+                    m_Emitter << YAML::BeginSeq << YAML::EndSeq;
+                }
+                else
+                {
+                    m_Emitter << YAML::Value << 0;
+                }
+
                 return;
+            }
 
             Entity* entityIds = (Entity*)objectData;
             if (isArray)
@@ -542,10 +553,26 @@ namespace Flare
 
             if (&descriptor == &FLARE_SERIALIZATION_DESCRIPTOR_OF(Entity))
             {
-                if (m_SerializationIdToECSId == nullptr)
-                    return;
-
                 Entity* entities = (Entity*)objectData;
+
+                // No mapping then set all ids to invalid ones
+                if (m_SerializationIdToECSId == nullptr)
+                {
+                    if (isArray)
+                    {
+                        for (size_t i = 0; i < arraySize; i++)
+                        {
+                            entities[i] = Entity();
+                        }
+                    }
+                    else
+                    {
+                        entities[0] = Entity();
+                    }
+
+                    return;
+                }
+
                 if (isArray)
                 {
                     YAML::Node node = CurrentNode()[m_CurrentPropertyKey];
