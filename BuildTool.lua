@@ -32,6 +32,17 @@ local function set_module_defines(module_name, export)
 	objdir("%{wks.location}/bin-int/" .. OUTPUT_DIRECTORY .. "/%{prj.name}")
 end
 
+---@param pch_name string a name for both pch header and source, without the extension.
+function M.setup_pch(pch_name)
+	local pch_source = pch_name .. ".cpp"
+	local pch_header = pch_name .. ".h"
+
+	pchheader(pch_header)
+	pchsource(pch_source)
+
+	files { pch_header, pch_source }
+end
+
 M.setup_workspace = function(name)
 	workspace(name)
 
