@@ -19,20 +19,10 @@
 
 namespace Flare
 {
-	void MaterialImporter::SerializeMaterial(Ref<Material> material, const std::filesystem::path& path)
+	static void SerializeMaterialProperties(const Ref<const Material>& material, YAML::Emitter& emitter)
 	{
 		FLARE_PROFILE_FUNCTION();
-		Ref<Shader> shader = material->GetShader();
-
-		YAML::Emitter emitter;
-		emitter << YAML::BeginMap;
-
-		if (shader == nullptr)
-			emitter << YAML::Key << "Shader" << YAML::Value << NULL_ASSET_HANDLE;
-		else
-			emitter << YAML::Key << "Shader" << YAML::Value << shader->Handle;
-
-		emitter << YAML::Key << "Properties" << YAML::BeginSeq;
+		Ref<const Shader> shader = material->GetShader();
 
 		const ShaderProperties& properties = shader->GetProperties();
 		for (uint32_t index = 0; index < (uint32_t)properties.size(); index++)
@@ -100,8 +90,29 @@ namespace Flare
 
 			emitter << YAML::EndMap;
 		}
+	}
 
-		emitter << YAML::EndSeq; // Parameters
+	void MaterialImporter::SerializeMaterial(Ref<const Material> material, const std::filesystem::path& path)
+	{
+		FLARE_PROFILE_FUNCTION();
+		Ref<const Shader> shader = material->GetShader();
+
+		YAML::Emitter emitter;
+		emitter << YAML::BeginMap;
+
+		if (shader == nullptr)
+			emitter << YAML::Key << "Shader" << YAML::Value << NULL_ASSET_HANDLE;
+		else
+			emitter << YAML::Key << "Shader" << YAML::Value << shader->Handle;
+
+		emitter << YAML::Key << "Properties" << YAML::BeginSeq;
+
+		if (shader != nullptr)
+		{
+			SerializeMaterialProperties(material, emitter);
+		}
+
+		emitter << YAML::EndSeq; // Properties
 
 		emitter << YAML::EndMap;
 

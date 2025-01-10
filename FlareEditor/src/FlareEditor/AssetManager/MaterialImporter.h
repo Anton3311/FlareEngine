@@ -8,7 +8,7 @@ namespace Flare
 	class MaterialImporter
 	{
 	public:
-		static void SerializeMaterial(Ref<Material> material, const std::filesystem::path& path);
+		static void SerializeMaterial(Ref<const Material> material, const std::filesystem::path& path);
 
 		static Ref<Material> ImportMaterial(const AssetMetadata& metadata);
 	};
