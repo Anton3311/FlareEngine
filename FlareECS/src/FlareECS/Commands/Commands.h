@@ -141,4 +141,23 @@ namespace Flare
 		FutureEntity m_OutputEntity;
 		Entity m_Entity;
 	};
+
+	template<typename F, bool HasEntityTarget>
+	class FunctionExecutionCommand : public Command
+	{
+	public:
+		inline FunctionExecutionCommand(F&& function, FutureEntity entity)
+			: m_Function(function), m_Entity(entity) {}
+
+		void Apply(CommandContext& context, World& world) override
+		{
+			if constexpr (HasEntityTarget)
+				m_Function(context, world, context.GetEntity(m_Entity));
+			else
+				m_Function(context, world);
+		}
+	private:
+		F m_Function;
+		FutureEntity m_Entity;
+	};
 }

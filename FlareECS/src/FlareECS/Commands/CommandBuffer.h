@@ -28,6 +28,9 @@ namespace Flare
 
 		template<typename T>
 		FutureEntityCommands& RemoveComponent();
+
+		template<typename F>
+		FutureEntityCommands& ExecuteFunction(F&& function);
 	private:
 		FutureEntity m_FutureEntity;
 		EntitiesCommandBuffer& m_CommandBuffer;
@@ -39,11 +42,17 @@ namespace Flare
 	public:
 		EntitiesCommandBuffer(World& world);
 
+		template<typename F>
+		void ExecuteFunction(F&& function)
+		{
+			AddCommand(FunctionExecutionCommand<F, false>(std::move(function), FutureEntity()));
+		}
+
 		template<typename T>
-		void AddCommand(const T& command)
+		void AddCommand(T&& command)
 		{
 			static_assert(std::is_base_of_v<Command, T> == true, "T is not a Command");
-			static_assert(std::is_default_constructible_v<T> == true, "T must have a default constructor");
+			static_assert(std::is_move_constructible_v<T> == true);
 
 			std::optional<CommandAllocation> commandAllocation = m_Storage.AllocateCommand(sizeof(T));
 			FLARE_CORE_ASSERT(commandAllocation.has_value());
@@ -53,15 +62,14 @@ namespace Flare
 
 			meta->CommandSize = sizeof(T);
 
-			new(commandData) T;
-			*(T*)commandData = command;
+			new(commandData) T(std::move(command));
 		}
 
 		template<typename T>
-		FutureEntityCommands AddEntityCommand(const T& command)
+		FutureEntityCommands AddEntityCommand(T&& command)
 		{
+			static_assert(std::is_move_constructible_v<T> == true);
 			static_assert(std::is_base_of_v<Command, T> == true, "T is not a Command");
-			static_assert(std::is_default_constructible_v<T> == true, "T must have a default constructor");
 			static_assert(std::is_base_of_v<EntityCommand, T> == true, "T is not an EntityCommand");
 
 			std::optional<CommandAllocation> commandAllocation = m_Storage.AllocateCommand(sizeof(T));
@@ -79,8 +87,7 @@ namespace Flare
 
 			meta->CommandSize = sizeof(T) + sizeof(Entity);
 
-			new(commandData) T;
-			*commandData = command;
+			new(commandData) T(std::move(command));
 
 			((EntityCommand*)commandData)->Initialize(entity);
 			return FutureEntityCommands(entity, *this);
@@ -132,6 +139,13 @@ namespace Flare
 	inline FutureEntityCommands& FutureEntityCommands::RemoveComponent()
 	{
 		m_CommandBuffer.AddCommand<RemoveComponentCommand>(RemoveComponentCommand(m_FutureEntity, COMPONENT_ID(T)));
+		return *this;
+	}
+
+	template<typename F>
+	inline FutureEntityCommands& FutureEntityCommands::ExecuteFunction(F&& function)
+	{
+		m_CommandBuffer.AddCommand<FunctionExecutionCommand<F, true>>(FunctionExecutionCommand<F, true>(std::move(function), m_FutureEntity));
 		return *this;
 	}
 }
