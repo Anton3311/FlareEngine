@@ -7,13 +7,26 @@ namespace Flare
 	std::optional<Entity> Query::TryGetFirstEntityId() const
 	{
 		FLARE_PROFILE_FUNCTION();
+		const QueryData& queryData = m_Queries->GetQueryData(m_Id);
 		for (ArchetypeId archetype : GetMatchingArchetypes())
 		{
-			const EntityStorage& storage = m_Entities->GetEntityStorage(archetype);
-			if (storage.GetEntityCount() == 0)
+			EntityStorage* storage = nullptr;
+			switch (queryData.Target)
+			{
+			case QueryTarget::AllEntities:
+				storage = &m_Entities->GetEntityStorage(archetype);
+				break;
+			case QueryTarget::DeletedEntities:
+				storage = &m_Entities->GetDeletedEntityStorage(archetype);
+				break;
+			default:
+				FLARE_CORE_ASSERT(false);
+			}
+
+			if (storage->GetEntityCount() == 0)
 				continue;
 
-			return storage.GetEntityId(0);
+			return storage->GetEntityId(0);
 		}
 
 		return {};
