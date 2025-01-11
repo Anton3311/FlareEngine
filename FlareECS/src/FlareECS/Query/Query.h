@@ -163,6 +163,57 @@ namespace Flare
 		virtual std::optional<Entity> TryGetFirstEntityId() const override;
 		virtual size_t GetEntitiesCount() const override;
 
+		template<typename F>
+		inline void ForEachEntityInRange(size_t start, size_t end, F&& function) const
+		{
+			FLARE_PROFILE_FUNCTION();
+
+			size_t iteratedCount = 0;
+			bool isInRange = false;
+
+			const QueryData& queryData = m_Queries->GetQueryData(m_Id);
+			const Archetypes& archetypes = m_Entities->GetArchetypes();
+			for (ArchetypeId matchedArchetype : GetMatchingArchetypes())
+			{
+				EntityStorage* storage = nullptr;
+				
+				switch (queryData.Target)
+				{
+				case QueryTarget::AllEntities:
+					storage = &m_Entities->GetEntityStorage(matchedArchetype);
+					break;
+				case QueryTarget::DeletedEntities:
+					storage = &m_Entities->GetDeletedEntityStorage(matchedArchetype);
+					break;
+				default:
+					FLARE_CORE_ASSERT(false);
+				}
+
+				if (isInRange)
+				{
+					size_t leftCount = end - iteratedCount;
+
+					for (size_t i = 0; i < std::min(storage->GetEntityCount(), leftCount); i++)
+					{
+						function(storage->GetEntityId(i));
+					}
+				}
+				else if (iteratedCount + storage->GetEntityCount() >= start)
+				{
+					isInRange = true;
+					for (size_t i = start - iteratedCount; i < storage->GetEntityCount(); i++)
+					{
+						function(storage->GetEntityId(i));
+					}
+				}
+
+				iteratedCount += storage->GetEntityCount();
+
+				if (iteratedCount >= end)
+					break;
+			}
+		}
+
 		template<typename IteratorFunction>
 		inline void ForEachChunk(const IteratorFunction& function)
 		{
