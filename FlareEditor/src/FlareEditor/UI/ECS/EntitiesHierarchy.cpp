@@ -64,7 +64,7 @@ namespace Flare
 				ImVec2 rectMin = window->DC.CursorPos;
 				ImVec2 rectMax = window->DC.CursorPos + itemSize;
 
-				if (ImGui::IsRectVisible(rectMin, rectMax))
+				if (ImRect(rectMin, rectMax).Overlaps(window->ClipRect))
 				{
 					m_RootLevelEntities.ForEachEntityInRange(entry.Start, entry.Start + entry.Count, [&](Entity entity)
 						{
