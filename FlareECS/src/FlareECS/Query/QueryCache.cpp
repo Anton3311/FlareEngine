@@ -77,25 +77,39 @@ namespace Flare
 
 		for (size_t i = 0; i < query.Components.size(); i++)
 		{
-			auto archetypes = m_Archetypes.GetArchetypesWithComponent(query.Components[i].Id);
-			if (!archetypes)
-				continue;
-
-			for (std::pair<ArchetypeId, size_t> archetype : *archetypes)
+			const auto& archetypeRecords = m_Archetypes.GetRecords();
+			for (size_t i = 0; i < archetypeRecords.GetSize(); i++)
 			{
-				if (query.MatchingArchetypes.find(archetype.first) != query.MatchingArchetypes.end())
+				const ArchetypeRecord& record = archetypeRecords[i];
+				ArchetypeId id = record.Id;
+
+				if (query.MatchingArchetypes.find(id) != query.MatchingArchetypes.end())
 					continue;
 
-				const ArchetypeComponents& archetypeComponents = m_Archetypes.GetArchetypeComponents(archetype.first);
+				const ArchetypeComponents& archetypeComponents = m_Archetypes.GetArchetypeComponents(id);
 				if (!CompareComponentSets(archetypeComponents.GetComponentsAsSpan(), Span<QueryData::ComponentEntry>::FromVector(query.Components)))
 					continue;
 
-				query.MatchingArchetypes.insert(archetype.first);
+				query.MatchingArchetypes.insert(id);
 
 				if (query.Target == QueryTarget::DeletedEntities)
-					m_Archetypes.GetMutableRecord(archetype.first).DeletionQueryReferences++;
+					m_Archetypes.GetMutableRecord(id).DeletionQueryReferences++;
 				else if (query.Target == QueryTarget::CreatedEntities)
-					m_Archetypes.GetMutableRecord(archetype.first).CreatedEntitiesQueryReferences += 1;
+					m_Archetypes.GetMutableRecord(id).CreatedEntitiesQueryReferences += 1;
+			}
+		}
+
+		if (query.Components.size() == 0)
+		{
+			const auto& archetypeRecords = m_Archetypes.GetRecords();
+			for (size_t i = 0; i < archetypeRecords.GetSize(); i++)
+			{
+				query.MatchingArchetypes.insert(archetypeRecords[i].Id);
+
+				if (query.Target == QueryTarget::DeletedEntities)
+					m_Archetypes.GetMutableRecord(archetypeRecords[i].Id).DeletionQueryReferences++;
+				else if (query.Target == QueryTarget::CreatedEntities)
+					m_Archetypes.GetMutableRecord(archetypeRecords[i].Id).CreatedEntitiesQueryReferences += 1;
 			}
 		}
 
@@ -113,15 +127,8 @@ namespace Flare
 
 		for (ComponentId component : archetypeComponents.GetComponentsAsSpan())
 		{
-			auto it = m_CachedMatches.find(component);
-			if (it == m_CachedMatches.end())
-				continue;
-
-			const auto& queries = it->second;
-			for (QueryId queryId : queries)
+			for (auto& query : m_Queries)
 			{
-				QueryData& query = m_Queries[queryId];
-
 				if (query.MatchingArchetypes.find(archetype) != query.MatchingArchetypes.end())
 					continue;
 
