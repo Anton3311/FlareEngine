@@ -18,6 +18,7 @@ namespace Flare
 
 	void SceneWindow::OnImGuiRender()
 	{
+		FLARE_PROFILE_FUNCTION();
 		ImGui::Begin("Scene");
 
 		if (Scene::GetActive() == nullptr)
@@ -26,10 +27,8 @@ namespace Flare
 			return;
 		}
 
-		World& world = Scene::GetActive()->GetECSWorld();
+		World& world = m_Scene->GetECSWorld();
 		const auto& records = world.Entities.GetEntityRecords();
-
-		m_Hierarchy.SetWorld(world);
 
 		Entity selected;
 		if (EditorLayer::GetInstance().Selection.GetType() == EditorSelectionType::Entity)
@@ -39,5 +38,21 @@ namespace Flare
 			EditorLayer::GetInstance().Selection.SetEntity(selected);
 
 		ImGui::End();
+	}
+
+	void SceneWindow::SetScene(Ref<Scene> scene)
+	{
+		FLARE_PROFILE_FUNCTION();
+		m_Scene = scene;
+
+		if (m_Scene)
+		{
+			m_Hierarchy.SetWorld(m_Scene->GetECSWorld());
+		}
+	}
+
+	void SceneWindow::Reset()
+	{
+		m_Scene = nullptr;
 	}
 }

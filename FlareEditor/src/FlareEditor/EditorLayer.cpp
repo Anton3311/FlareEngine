@@ -192,6 +192,7 @@ namespace Flare
         EditorAssetManager::GetInstance()->SerializeRegistry();
 
         m_SceneRenderer.reset();
+        m_SceneWindow.Reset();
         m_ViewportWindows.clear();
         m_GameWindow = nullptr;
         m_SceneViewport = nullptr;
@@ -537,6 +538,7 @@ namespace Flare
 		ResetViewportRenderGraphs();
 
         m_SceneRenderer.reset();
+        m_SceneWindow.Reset();
 
 		Ref<Scene> active = Scene::GetActive();
 
@@ -558,6 +560,7 @@ namespace Flare
 		m_PostProcessingWindow = PostProcessingWindow(active);
 
         m_SceneRenderer.reset(new SceneRenderer(active));
+        m_SceneWindow.SetScene(active);
     }
 
     void EditorLayer::HandleKeyboardShortcuts()
@@ -717,6 +720,7 @@ namespace Flare
 			m_Mode = EditorMode::Play;
 
             m_SceneRenderer = CreateScope<SceneRenderer>(playModeScene);
+            m_SceneWindow.SetScene(playModeScene);
             m_PostProcessingWindow = PostProcessingWindow(playModeScene);
 
 			playModeScene->InitializeRuntime();
@@ -754,6 +758,7 @@ namespace Flare
 			m_Mode = EditorMode::Edit;
 
             m_SceneRenderer = CreateScope<SceneRenderer>(editorScene);
+            m_SceneWindow.SetScene(editorScene);
             m_PostProcessingWindow = PostProcessingWindow(editorScene);
 
 			InputManager::SetCursorMode(CursorMode::Normal);
