@@ -189,6 +189,9 @@ namespace Flare
 					FLARE_CORE_ASSERT(false);
 				}
 
+				if (storage->GetEntityCount() == 0)
+					continue;
+
 				if (isInRange)
 				{
 					size_t leftCount = end - iteratedCount;
@@ -201,7 +204,10 @@ namespace Flare
 				else if (iteratedCount + storage->GetEntityCount() >= start)
 				{
 					isInRange = true;
-					for (size_t i = start - iteratedCount; i < storage->GetEntityCount(); i++)
+
+					size_t startingIndex = start - iteratedCount;
+					size_t iterationCount = std::min(end - start + startingIndex, storage->GetEntityCount());
+					for (size_t i = startingIndex; i < iterationCount; i++)
 					{
 						function(storage->GetEntityId(i));
 					}
