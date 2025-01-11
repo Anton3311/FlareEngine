@@ -140,7 +140,7 @@ namespace Flare
 	private:
 		FutureEntity m_OutputEntity;
 		Ref<Prefab> m_Prefab;
-		PrefabInstantiationFlags m_InstantiationFlags;
+		PrefabInstantiationFlags m_InstantiationFlags = PrefabInstantiationFlags::None;
 	};
 
 	struct FLARE_API PrefabInstance
