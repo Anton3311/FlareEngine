@@ -21,14 +21,13 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 		ImGui::Begin("Scene");
 
-		if (Scene::GetActive() == nullptr)
+		if (m_Scene == nullptr)
 		{
 			ImGui::End();
 			return;
 		}
 
 		World& world = m_Scene->GetECSWorld();
-		const auto& records = world.Entities.GetEntityRecords();
 
 		Entity selected;
 		if (EditorLayer::GetInstance().Selection.GetType() == EditorSelectionType::Entity)

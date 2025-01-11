@@ -43,10 +43,10 @@ namespace Flare
 		std::optional<Entity> m_EntityToDelete;
 		std::optional<Entity> m_EntityToDuplicate;
 
-		World* m_World;
+		World* m_World = nullptr;
 
 		Query m_RootLevelEntities;
-		size_t m_CurrentEntityCount;
+		size_t m_CurrentEntityCount = 0;
 
 		struct AccelerationStructureEntry
 		{

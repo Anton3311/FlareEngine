@@ -51,7 +51,8 @@ namespace Flare
 		}
 
 		{
-			float itemHeight = ImGui::GetFontSize() + ImGui::GetStyle().FramePadding.y * 2.0f;
+			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
+			float itemHeight = ImGui::GetFontSize() + ImGui::GetStyle().FramePadding.y;
 			float itemWidth = ImGui::GetContentRegionAvail().x;
 
 			ImGuiWindow* window = ImGui::GetCurrentWindow();
@@ -64,12 +65,22 @@ namespace Flare
 				ImVec2 rectMin = window->DC.CursorPos;
 				ImVec2 rectMax = window->DC.CursorPos + itemSize;
 
-				if (ImRect(rectMin, rectMax).Overlaps(window->ClipRect))
+				ImRect itemRect = ImRect(rectMin, rectMax);
+
+				if (itemRect.Overlaps(window->ClipRect))
 				{
-					m_RootLevelEntities.ForEachEntityInRange(entry.Start, entry.Start + entry.Count, [&](Entity entity)
-						{
-							result |= RenderEntityItem(entity, selectedEntity);
-						});
+					ImGuiListClipper clipper;
+					clipper.Begin(static_cast<int32_t>(entry.Count), itemHeight);
+
+					while (clipper.Step())
+					{
+						size_t visibleRangeStart = static_cast<size_t>(clipper.DisplayStart) + entry.Start;
+						size_t visibleRangeEnd = static_cast<size_t>(clipper.DisplayEnd) + entry.Start;
+						m_RootLevelEntities.ForEachEntityInRange(visibleRangeStart, visibleRangeEnd, [&](Entity entity)
+							{
+								result |= RenderEntityItem(entity, selectedEntity);
+							});
+					}
 				}
 				else
 				{
@@ -78,6 +89,8 @@ namespace Flare
 					ImGui::ItemAdd({ rectMin, rectMax }, id);
 				}
 			}
+
+			ImGui::PopStyleVar();
 		}
 
 		if (m_EntityToDelete)
