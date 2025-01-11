@@ -23,7 +23,10 @@ namespace Flare
 		: m_World(nullptr), m_Features(features) {}
 
 	EntitiesHierarchy::EntitiesHierarchy(World& world, EntitiesHierarchyFeatures features)
-		: m_World(&world), m_Features(features) {}
+		: m_World(nullptr), m_Features(features)
+	{
+		SetWorld(world);
+	}
 
 	bool EntitiesHierarchy::OnRenderImGui(Entity& selectedEntity)
 	{
@@ -33,14 +36,7 @@ namespace Flare
 		bool result = false;
 		const std::vector<EntityRecord>& records = m_World->Entities.GetEntityRecords();
 
-#define USE_CLIPPER 0
-
 		ImGui::BeginChild("Scene Entities");
-
-#if USE_CLIPPER
-		ImGuiListClipper clipper;
-		clipper.Begin((int32_t)records.size());
-#endif
 
 		if (ImGui::BeginPopupContextWindow("Entity Hierarchy Context Menu"))
 		{
@@ -48,26 +44,40 @@ namespace Flare
 			ImGui::EndMenu();
 		}
 
-#if USE_CLIPPER
-		while (clipper.Step())
+		if (m_CurrentEntityCount != m_World->Entities.GetEntityRecords().size())
 		{
-			for (int32_t i = clipper.DisplayStart; i < clipper.DisplayEnd; i++)
-			{
-				if (i < 0 || i >= (int32_t)records.size())
-					continue;
-
-				Entity entity = records[i].Id;
-				if (!m_World->HasComponent<Parent>(entity))
-					result |= RenderEntityItem(entity, selectedEntity);
-			}
+			BuildClippingAccelerationStructure();
+			m_CurrentEntityCount = m_World->Entities.GetEntityRecords().size();
 		}
 
-		clipper.End();
-#else
-		for (const EntityRecord& entityRecord : records)
 		{
-			if (!m_World->HasComponent<Parent>(entityRecord.Id))
-				result |= RenderEntityItem(entityRecord.Id, selectedEntity);
+			float itemHeight = ImGui::GetFontSize() + ImGui::GetStyle().FramePadding.y * 2.0f;
+			float itemWidth = ImGui::GetContentRegionAvail().x;
+
+			ImGuiWindow* window = ImGui::GetCurrentWindow();
+
+			for (size_t i = 0; i < m_ClippingAccelerationStruture.size(); i++)
+			{
+				const auto& entry = m_ClippingAccelerationStruture[i];
+
+				ImVec2 itemSize = ImVec2(itemWidth, itemHeight * static_cast<float>(entry.Count));
+				ImVec2 rectMin = window->DC.CursorPos;
+				ImVec2 rectMax = window->DC.CursorPos + itemSize;
+
+				if (ImGui::IsRectVisible(rectMin, rectMax))
+				{
+					m_RootLevelEntities.ForEachEntityInRange(entry.Start, entry.Start + entry.Count, [&](Entity entity)
+						{
+							result |= RenderEntityItem(entity, selectedEntity);
+						});
+				}
+				else
+				{
+					ImGuiID id = window->GetID(&entry.CurrentEntity);
+					ImGui::ItemSize(itemSize);
+					ImGui::ItemAdd({ rectMin, rectMax }, id);
+				}
+			}
 		}
 
 		if (m_EntityToDelete)
@@ -90,11 +100,20 @@ namespace Flare
 
 			result = true;
 		}
-#endif
 
 		ImGui::EndChild();
 
 		return result;
+	}
+
+	void EntitiesHierarchy::SetWorld(World& world)
+	{
+		FLARE_PROFILE_FUNCTION();
+		m_World = &world;
+
+		m_RootLevelEntities = m_World->NewQuery().All().Without<Parent>().Build();
+
+		BuildClippingAccelerationStructure();
 	}
 
 	bool EntitiesHierarchy::RenderContextMenu(Entity& selectedEntity, Entity* parent, bool isRoot)
@@ -269,5 +288,36 @@ namespace Flare
 		}
 
 		return result;
+	}
+
+	void EntitiesHierarchy::BuildClippingAccelerationStructure()
+	{
+		FLARE_PROFILE_FUNCTION();
+		
+		m_ClippingAccelerationStruture.clear();
+
+		size_t offset = 0;
+		m_RootLevelEntities.ForEachChunk([&](QueryChunk chunk)
+			{
+				for (size_t i = 0; i < chunk.GetEntityCount(); i++)
+				{
+					Entity entity = chunk.GetEntityId(i);
+
+					if (m_ClippingAccelerationStruture.size() == 0)
+					{
+						m_ClippingAccelerationStruture.emplace_back(0, 0, entity);
+					}
+					else
+					{
+						m_ClippingAccelerationStruture.back().Count++;
+						offset++;
+
+						if (m_World->HasComponent<Children>(entity))
+						{
+							m_ClippingAccelerationStruture.emplace_back(offset, 0, entity);
+						}
+					}
+				}
+			});
 	}
 }
