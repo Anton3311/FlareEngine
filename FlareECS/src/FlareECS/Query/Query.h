@@ -108,6 +108,20 @@ namespace Flare
 		}
 	};
 
+	template<>
+	struct QueryIteratorArgument<ArchetypeId>
+	{
+		static void Create(const QueryChunk& chunk,
+			const ArchetypeRecord& archetype,
+			const ArchetypeComponents& archetypeComponents,
+			size_t chunkIndex,
+			EntityStorage& storage,
+			ArchetypeId& outArgument)
+		{
+			outArgument = archetype.Id;
+		}
+	};
+
 	template<typename... Args>
 	struct QueryIterationHelper
 	{
