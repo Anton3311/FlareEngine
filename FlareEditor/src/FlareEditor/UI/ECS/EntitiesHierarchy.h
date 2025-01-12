@@ -38,6 +38,16 @@ namespace Flare
 
 		bool RenderClippedHierarchy(Entity& selectedEntity);
 		void BuildClippingAccelerationStructure();
+		void BuildClippingSubStructure(Entity rootEntity, size_t rootEntry);
+	public:
+		struct AccelerationStructureEntry
+		{
+			size_t Start = 0;
+			size_t Count = 0;
+			size_t VisibleCount = 0;
+			size_t NextNode = SIZE_MAX;
+			Entity CurrentEntity = Entity();
+		};
 	private:
 		EntitiesHierarchyFeatures m_Features;
 
@@ -48,15 +58,6 @@ namespace Flare
 
 		Query m_RootLevelEntities;
 		size_t m_CurrentEntityCount = 0;
-
-		struct AccelerationStructureEntry
-		{
-			size_t Start = 0;
-			size_t Count = 0;
-			size_t VisibleCount = 0;
-			size_t NextNode = SIZE_MAX;
-			Entity CurrentEntity = Entity();
-		};
 
 		std::vector<AccelerationStructureEntry> m_ClippingAccelerationStruture;
 	};
