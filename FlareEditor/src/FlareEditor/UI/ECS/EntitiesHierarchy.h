@@ -54,6 +54,7 @@ namespace Flare
 			size_t Start = 0;
 			size_t Count = 0;
 			size_t VisibleCount = 0;
+			size_t NextNode = SIZE_MAX;
 			Entity CurrentEntity = Entity();
 		};
 

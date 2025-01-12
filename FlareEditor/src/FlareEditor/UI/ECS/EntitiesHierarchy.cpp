@@ -284,6 +284,7 @@ namespace Flare
 
 	bool EntitiesHierarchy::RenderClippedHierarchy(Entity& selectedEntity)
 	{
+		FLARE_PROFILE_FUNCTION();
 		bool result = false;
 
 		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
@@ -292,9 +293,11 @@ namespace Flare
 
 		ImGuiWindow* window = ImGui::GetCurrentWindow();
 
-		for (size_t i = 0; i < m_ClippingAccelerationStruture.size(); i++)
+		size_t currentNode = 0;
+
+		while (currentNode != SIZE_MAX)
 		{
-			const auto& entry = m_ClippingAccelerationStruture[i];
+			const auto& entry = m_ClippingAccelerationStruture[currentNode];
 
 			ImVec2 itemSize = ImVec2(itemWidth, itemHeight * static_cast<float>(entry.VisibleCount));
 			ImVec2 rectMin = window->DC.CursorPos;
@@ -315,7 +318,7 @@ namespace Flare
 						size_t visibleRangeEnd = static_cast<size_t>(clipper.DisplayEnd) + entry.Start;
 						m_RootLevelEntities.ForEachEntityInRange(visibleRangeStart, visibleRangeEnd, [&](Entity entity)
 							{
-								result |= RenderEntityItem(entity, selectedEntity, i);
+								result |= RenderEntityItem(entity, selectedEntity, currentNode);
 							});
 					}
 				}
@@ -323,7 +326,7 @@ namespace Flare
 				{
 					m_RootLevelEntities.ForEachEntityInRange(entry.Start, entry.Start + entry.Count, [&](Entity entity)
 						{
-							result |= RenderEntityItem(entity, selectedEntity, i);
+							result |= RenderEntityItem(entity, selectedEntity, currentNode);
 						});
 				}
 			}
@@ -333,6 +336,8 @@ namespace Flare
 				ImGui::ItemSize(itemSize);
 				ImGui::ItemAdd({ rectMin, rectMax }, id);
 			}
+
+			currentNode = m_ClippingAccelerationStruture[currentNode].NextNode;
 		}
 
 		ImGui::PopStyleVar();
@@ -355,21 +360,37 @@ namespace Flare
 
 					if (m_ClippingAccelerationStruture.size() == 0)
 					{
-						m_ClippingAccelerationStruture.emplace_back(0, 0, 0, entity);
+						m_ClippingAccelerationStruture.push_back(AccelerationStructureEntry
+						{
+							.Start = 0,
+							.Count = 0,
+							.VisibleCount = 0,
+							.NextNode = SIZE_MAX,
+							.CurrentEntity = entity
+						});
 					}
 					else
 					{
-						m_ClippingAccelerationStruture.back().Count++;
-						m_ClippingAccelerationStruture.back().VisibleCount++;
-
-						bool previousEntityHasChildren = m_World->HasComponent<Children>(m_ClippingAccelerationStruture.back().CurrentEntity);
-						bool hasChildren = m_World->HasComponent<Children>(entity);
+						AccelerationStructureEntry& previousNode = m_ClippingAccelerationStruture.back();
+						previousNode.Count++;
+						previousNode.VisibleCount++;
 
 						offset++;
 
+						bool previousEntityHasChildren = m_World->HasComponent<Children>(previousNode.CurrentEntity);
+						bool hasChildren = m_World->HasComponent<Children>(entity);
+
 						if (hasChildren || (previousEntityHasChildren && !hasChildren))
 						{
-							m_ClippingAccelerationStruture.emplace_back(offset, 0, 0, entity);
+							previousNode.NextNode = m_ClippingAccelerationStruture.size();
+							m_ClippingAccelerationStruture.push_back(AccelerationStructureEntry
+							{
+								.Start = offset,
+								.Count = 0,
+								.VisibleCount = 0,
+								.NextNode = SIZE_MAX,
+								.CurrentEntity = entity
+							});
 						}
 					}
 				}
