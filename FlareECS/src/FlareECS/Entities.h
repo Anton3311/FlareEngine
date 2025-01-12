@@ -78,8 +78,8 @@ namespace Flare
 
 		std::optional<size_t> GetEntityDataSize(Entity entity) const;
 
-		inline EntityStorage& GetEntityStorage(ArchetypeId archetype) { return m_EntityStorages[archetype]; }
-		inline const EntityStorage& GetEntityStorage(ArchetypeId archetype) const { return m_EntityStorages[archetype]; }
+		inline EntityStorage& GetEntityStorage(ArchetypeId archetype) { return m_EntityStorages[archetype.GetValue()]; }
+		inline const EntityStorage& GetEntityStorage(ArchetypeId archetype) const { return m_EntityStorages[archetype.GetValue()]; }
 
 		EntityStorage& GetDeletedEntityStorage(ArchetypeId archetype);
 		const EntityStorage& GetDeletedEntityStorage(ArchetypeId archetype) const;
@@ -136,15 +136,15 @@ namespace Flare
 
 		inline EntityStorage* TryGetEntityStorage(ArchetypeId archetype)
 		{
-			if ((size_t)archetype < m_EntityStorages.size())
-				return &m_EntityStorages[archetype];
+			if ((size_t)archetype.GetValue() < m_EntityStorages.size())
+				return &m_EntityStorages[archetype.GetValue()];
 			return nullptr;
 		}
 
 		inline const EntityStorage* TryGetEntityStorage(ArchetypeId archetype) const
 		{
-			if ((size_t)archetype < m_EntityStorages.size())
-				return &m_EntityStorages[archetype];
+			if ((size_t)archetype.GetValue() < m_EntityStorages.size())
+				return &m_EntityStorages[archetype.GetValue()];
 			return nullptr;
 		}
 

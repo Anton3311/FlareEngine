@@ -17,8 +17,39 @@
 
 namespace Flare
 {
-	using ArchetypeId = uint32_t;
-	constexpr ArchetypeId INVALID_ARCHETYPE_ID = std::numeric_limits<ArchetypeId>::max();
+	struct ArchetypeId
+	{
+	public:
+		using UnderlyingType = uint32_t;
+
+		constexpr ArchetypeId()
+			: m_Value(std::numeric_limits<UnderlyingType>::max()) { }
+
+		explicit constexpr ArchetypeId(UnderlyingType value)
+			: m_Value(value) {}
+
+		constexpr UnderlyingType GetValue() const { return m_Value; }
+
+		constexpr bool operator==(ArchetypeId other) const { return m_Value == other.m_Value; }
+		constexpr bool operator!=(ArchetypeId other) const { return m_Value != other.m_Value; }
+	private:
+		UnderlyingType m_Value;
+	};
+}
+
+template<>
+struct std::hash<Flare::ArchetypeId>
+{
+	inline size_t operator()(Flare::ArchetypeId id) const
+	{
+		return std::hash<Flare::ArchetypeId::UnderlyingType>()(id.GetValue());
+	}
+};
+
+namespace Flare
+{
+
+	constexpr ArchetypeId INVALID_ARCHETYPE_ID = ArchetypeId();
 
 	struct ArchetypeEdge
 	{
@@ -204,6 +235,13 @@ namespace Flare
 	private:
 		void InitializeRecord(ArchetypeRecord& archetype, ArchetypeComponents& archetypeComponents);
 		void DeleteArchetype(ArchetypeId archetype);
+
+		inline ArchetypeId GetNextArchetypeId()
+		{
+			ArchetypeId result = m_NextArchetypeId;
+			m_NextArchetypeId = ArchetypeId(result.GetValue() + 1);
+			return result;
+		}
 	private:
 		Components& m_ComponentsRegistry;
 
@@ -217,6 +255,6 @@ namespace Flare
 
 		std::vector<ArchetypeUpdateHandler*> m_UpdateHandlers;
 
-		ArchetypeId m_NextArchetypeId = 0;
+		ArchetypeId m_NextArchetypeId = ArchetypeId(0);
 	};
 }

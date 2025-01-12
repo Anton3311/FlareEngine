@@ -25,7 +25,10 @@ namespace Flare
 		ArchetypeId archetype = m_World.Entities.GetEntityArchetype(entity);
 
 		ImGui::BeginDisabled();
-		ImGui::Text("Index %d Generation %d Archetype %llu", entity.GetIndex(), entity.GetGeneration(), (uint64_t)archetype);
+		ImGui::Text("Index %d Generation %d Archetype %llu",
+			entity.GetIndex(),
+			entity.GetGeneration(),
+			static_cast<uint64_t>(archetype.GetValue()));
 		ImGui::EndDisabled();
 
 		std::string newNameString = "";

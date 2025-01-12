@@ -517,7 +517,7 @@ namespace Flare
 
 		const EntityRecord& entityRecord = m_EntityRecords[it->second];
 		const ArchetypeComponents& archetypeComponents = m_Archetypes.GetArchetypeComponents(entityRecord.Archetype);
-		const EntityStorage& storage = m_EntityStorages[entityRecord.Archetype];
+		const EntityStorage& storage = m_EntityStorages[entityRecord.Archetype.GetValue()];
 
 		EntitySizeT componentIndex = archetypeComponents.TryGetComponentIndex(component);
 		if (componentIndex == ArchetypeComponents::INVALID_COMPONENT_INDEX)
@@ -668,8 +668,9 @@ namespace Flare
 			
 			for (size_t i = oldSize; i < m_EntityStorages.size(); i++)
 			{
-				const ArchetypeRecord& archetypeRecord = m_Archetypes[(ArchetypeId)i];
-				const ArchetypeComponents& archetypeComponents = m_Archetypes.GetArchetypeComponents((ArchetypeId)i);
+				ArchetypeId archetypeId = ArchetypeId(static_cast<ArchetypeId::UnderlyingType>(i));
+				const ArchetypeRecord& archetypeRecord = m_Archetypes[archetypeId];
+				const ArchetypeComponents& archetypeComponents = m_Archetypes.GetArchetypeComponents(archetypeId);
 				FLARE_CORE_ASSERT(archetypeComponents.ComponentCount > 0);
 
 				EntityStorageRequirements storageRequirements{};
@@ -857,10 +858,10 @@ namespace Flare
 			// 
 			//		 It was empty probably because the prefab window was never used (throughout the lifetime of the application)
 			//       and the World stayed empty and thus `EnsureValidEntityStorages()` was never called
-			if (archetype.Id >= m_EntityStorages.size())
+			if (static_cast<size_t>(archetype.Id.GetValue()) >= m_EntityStorages.size())
 				continue;
 
-			EntityStorage& storage = m_EntityStorages[archetype.Id];
+			EntityStorage& storage = m_EntityStorages[archetype.Id.GetValue()];
 			storage.Release();
 		}
 	}

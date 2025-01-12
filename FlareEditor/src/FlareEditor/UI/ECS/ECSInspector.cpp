@@ -321,7 +321,7 @@ namespace Flare
 				for (ArchetypeId archetype : query.MatchingArchetypes)
 				{
 					ImGui::SetCursorPosY(ImGui::GetCursorPosY() + style.FramePadding.y);
-					ImGui::Text("%llu", (uint64_t)archetype);
+					ImGui::Text("%llu", static_cast<uint64_t>(archetype.GetValue()));
 					ImGui::SetCursorPosY(ImGui::GetCursorPosY() + style.FramePadding.y);
 				}
 

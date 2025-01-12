@@ -185,7 +185,7 @@ namespace Flare
 			return nullptr;
 		}
 
-		return &m_Records[it->second];
+		return &m_Records[it->second.GetValue()];
 	}
 
 	const ArchetypeRecord* Archetypes::FindOrCreateArchetype(Span<const ComponentId> components)
@@ -199,10 +199,10 @@ namespace Flare
 		if (it == m_ComponentSetToArchetype.end())
 		{
 			ArchetypeId archetypeId = CreateArchetype(std::move(idsCopy));
-			return &m_Records[archetypeId];
+			return &m_Records[archetypeId.GetValue()];
 		}
 
-		return &m_Records[it->second];
+		return &m_Records[it->second.GetValue()];
 	}
 
 	ArchetypeId Archetypes::CreateArchetype(Span<const ComponentId> sortedComponentIds)
@@ -222,7 +222,7 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(sortedComponentIds.size() > 0);
 
-		ArchetypeId archetypeId = m_NextArchetypeId++;
+		ArchetypeId archetypeId = GetNextArchetypeId();
 		size_t archetypeRegistryIndex = m_Records.size();
 
 		ArchetypeRecord& record = m_Records.emplace_back();
@@ -276,7 +276,7 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		auto& archetypeEdges = m_Records[archetype].Edges;
+		auto& archetypeEdges = m_Records[archetype.GetValue()].Edges;
 
 		auto iterator = archetypeEdges.find(component);
 		if (iterator == archetypeEdges.end())
