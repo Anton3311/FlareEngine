@@ -31,12 +31,16 @@ namespace Flare
 
 		size_t offset = 0;
 		size_t previousEntryIndex = SIZE_MAX;
-		rootLevelEntitiesQuery.ForEachChunk([&](QueryChunk chunk)
+		rootLevelEntitiesQuery.ForEachChunk([&](QueryChunk chunk, ArchetypeId archetypeId)
 			{
+				bool hasChildren = world
+					.GetArchetypes()
+					.GetArchetypeComponents(archetypeId)
+					.TryGetComponentIndex(COMPONENT_ID(Children)) != ArchetypeComponents::INVALID_COMPONENT_INDEX;
+				
 				for (size_t i = 0; i < chunk.GetEntityCount(); i++)
 				{
 					Entity entity = chunk.GetEntityId(i);
-					bool hasChildren = world.HasComponent<Children>(entity);
 
 					if (m_Nodes.size() == 0)
 					{
