@@ -36,7 +36,7 @@ namespace Flare
 		constexpr size_t GetEntityCount() const { return m_EntityCount; }
 	private:
 		size_t m_EntityCount = 0;
-		const Entity* m_IdArray;
+		const Entity* m_IdArray = nullptr;
 	};
 
 	class FLAREECS_API EntitiesQuery
