@@ -49,17 +49,16 @@ namespace Flare
 					else
 					{
 						offset++;
-						auto& previousNode = m_Nodes[previousEntryIndex];
 
-						if (previousNode.IsLeaf && !hasChildren)
+						if (m_Nodes[previousEntryIndex].IsLeaf && !hasChildren)
 						{
-							previousNode.VisibleCount++;
+							m_Nodes[previousEntryIndex].VisibleCount++;
 						}
 						else
 						{
 							size_t node = AppendNode(entity, SIZE_MAX, offset, !hasChildren);
 
-							previousNode.NextNode = node;
+							m_Nodes[previousEntryIndex].NextNode = node;
 							previousEntryIndex = node;
 						}
 					}
@@ -92,17 +91,15 @@ namespace Flare
 			}
 			else
 			{
-				auto& previousNode = m_Nodes[previousEntryIndex];
-
-				if (previousNode.IsLeaf && !hasChildren)
+				if (m_Nodes[previousEntryIndex].IsLeaf && !hasChildren)
 				{
-					previousNode.VisibleCount++;
+					m_Nodes[previousEntryIndex].VisibleCount++;
 				}
 				else
 				{
 					size_t node = AppendNode(childrenEntities[i], rootEntry, i, !hasChildren);
 
-					previousNode.NextNode = node;
+					m_Nodes[previousEntryIndex].NextNode = node;
 					previousEntryIndex = node;
 				}
 			}
