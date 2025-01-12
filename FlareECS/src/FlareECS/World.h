@@ -102,7 +102,7 @@ namespace Flare
 		}
 
 		template<typename T>
-		constexpr bool HasComponent(Entity entity)
+		constexpr bool HasComponent(Entity entity) const
 		{
 			return Entities.HasComponent(entity, COMPONENT_ID(T));
 		}
