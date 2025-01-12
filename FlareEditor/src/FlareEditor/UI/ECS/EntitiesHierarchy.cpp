@@ -189,7 +189,7 @@ namespace Flare
 			m_CurrentEntityCount = m_World->Entities.GetEntityRecords().size();
 		}
 
-		result |= RenderClippedHierarchy(selectedEntity);
+		result |= RenderClippedHierarchyRootLevel(selectedEntity);
 
 		if (m_EntityToDelete)
 		{
@@ -315,6 +315,74 @@ namespace Flare
 		return static_cast<bool>(storage->GetInt(id, 0));
 	}
 
+	static bool RenderClippedTreeSection(const EntitiesHierarchyAccelerationStructure::Node& entry, float itemWidth, float itemHeight)
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		ImGuiWindow* window = ImGui::GetCurrentWindow();
+
+		ImVec2 itemSize = ImVec2(itemWidth, itemHeight * static_cast<float>(entry.VisibleCount));
+		ImVec2 rectMin = window->DC.CursorPos;
+		ImVec2 rectMax = window->DC.CursorPos + itemSize;
+
+		ImRect itemRect = ImRect(rectMin, rectMax);
+
+		if (itemRect.Overlaps(window->ClipRect))
+			return true;
+
+		ImGuiID id = window->GetID(&entry.CurrentEntity);
+		ImGui::ItemSize(itemSize);
+		ImGui::ItemAdd({ rectMin, rectMax }, id);
+
+		return false;
+	}
+
+	template<typename F>
+	static bool RenderClippedHierarchy(EntitiesHierarchyAccelerationStructure& clippingHierarchy, size_t startNode, F&& renderFunction)
+	{
+		FLARE_PROFILE_FUNCTION();
+		bool result = false;
+
+		const float itemHeight = ImGui::GetFontSize() + ImGui::GetStyle().FramePadding.y;
+		const float itemWidth = ImGui::GetContentRegionAvail().x;
+
+		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
+
+		size_t currentNode = startNode;
+
+		while (currentNode != SIZE_MAX)
+		{
+			const auto& node = clippingHierarchy.GetNode(currentNode);
+
+			if (RenderClippedTreeSection(node, itemWidth, itemHeight))
+			{
+				if (node.IsLeaf)
+				{
+					ImGuiListClipper clipper;
+					clipper.Begin(static_cast<int32_t>(node.VisibleCount), itemHeight);
+
+					while (clipper.Step())
+					{
+						size_t visibleRangeStart = static_cast<size_t>(clipper.DisplayStart) + node.Start;
+						size_t visibleRangeEnd = static_cast<size_t>(clipper.DisplayEnd) + node.Start;
+
+						result |= renderFunction(visibleRangeStart, visibleRangeEnd, currentNode);
+					}
+				}
+				else
+				{
+					result |= renderFunction(node.Start, node.Start + 1, currentNode);
+				}
+			}
+
+			currentNode = node.NextNode;
+		}
+
+		ImGui::PopStyleVar();
+
+		return result;
+	}
+
 	bool EntitiesHierarchy::RenderEntityItem(Entity entity, Entity& selectedEntity, size_t accelerationStructureEntryIndex)
 	{
 		FLARE_PROFILE_FUNCTION();
@@ -387,18 +455,23 @@ namespace Flare
 
 		if (children && opened)
 		{
-			const auto& childrenEntities = children->GetChildren();
-
-			size_t childNode = accelerationStructureEntryIndex + 1;
-			for (size_t i = 0; i < childrenEntities.size(); i++)
+			size_t firstChildNode = accelerationStructureEntryIndex + 1;
+			RenderClippedHierarchy(m_ClippingHierarchy, firstChildNode, [this, &selectedEntity, &children](size_t start, size_t end, size_t currentNode)
 			{
-				Entity child = childrenEntities[i];
-				if (!m_World->IsEntityAlive(child))
-					continue;
+				bool result = false;
 
-				result |= RenderEntityItem(child, selectedEntity, childNode);
-				childNode = m_ClippingHierarchy.GetNode(childNode).NextNode;
-			}
+				const auto& childrenEntities = children->GetChildren();
+				for (size_t i = start; i < end; i++)
+				{
+					Entity child = childrenEntities[i];
+					if (!m_World->IsEntityAlive(child))
+						continue;
+
+					result |= RenderEntityItem(child, selectedEntity, currentNode);
+				}
+
+				return result;
+			});
 		}
 
 		if (opened)
@@ -433,75 +506,19 @@ namespace Flare
 		return result;
 	}
 
-	static bool RenderClippedTreeSection(const EntitiesHierarchyAccelerationStructure::Node& entry, float itemWidth, float itemHeight)
+	bool EntitiesHierarchy::RenderClippedHierarchyRootLevel(Entity& selectedEntity)
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		ImGuiWindow* window = ImGui::GetCurrentWindow();
-
-		ImVec2 itemSize = ImVec2(itemWidth, itemHeight * static_cast<float>(entry.VisibleCount));
-		ImVec2 rectMin = window->DC.CursorPos;
-		ImVec2 rectMax = window->DC.CursorPos + itemSize;
-
-		ImRect itemRect = ImRect(rectMin, rectMax);
-
-		if (itemRect.Overlaps(window->ClipRect))
-			return true;
-
-		ImGuiID id = window->GetID(&entry.CurrentEntity);
-		ImGui::ItemSize(itemSize);
-		ImGui::ItemAdd({ rectMin, rectMax }, id);
-
-		return false;
-	}
-
-	bool EntitiesHierarchy::RenderClippedHierarchy(Entity& selectedEntity)
-	{
-		FLARE_PROFILE_FUNCTION();
-		bool result = false;
-
-		const float itemHeight = ImGui::GetFontSize() + ImGui::GetStyle().FramePadding.y;
-		const float itemWidth = ImGui::GetContentRegionAvail().x;
-
-		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
-
-		size_t currentNode = 0;
-
-		while (currentNode != SIZE_MAX)
+		return RenderClippedHierarchy(m_ClippingHierarchy, 0, [&](size_t start, size_t end, size_t currentNode)
 		{
-			const auto& node = m_ClippingHierarchy.GetNode(currentNode);
-
-			if (RenderClippedTreeSection(node, itemWidth, itemHeight))
+			bool result = false;
+			m_RootLevelEntities.ForEachEntityInRange(start, end, [&](Entity entity)
 			{
-				if (node.IsLeaf)
-				{
-					ImGuiListClipper clipper;
-					clipper.Begin(static_cast<int32_t>(node.VisibleCount), itemHeight);
+				result |= RenderEntityItem(entity, selectedEntity, currentNode);
+			});
 
-					while (clipper.Step())
-					{
-						size_t visibleRangeStart = static_cast<size_t>(clipper.DisplayStart) + node.Start;
-						size_t visibleRangeEnd = static_cast<size_t>(clipper.DisplayEnd) + node.Start;
-						m_RootLevelEntities.ForEachEntityInRange(visibleRangeStart, visibleRangeEnd, [&](Entity entity)
-							{
-								result |= RenderEntityItem(entity, selectedEntity, currentNode);
-							});
-					}
-				}
-				else
-				{
-					m_RootLevelEntities.ForEachEntityInRange(node.Start, node.Start + 1, [&](Entity entity)
-						{
-							result |= RenderEntityItem(entity, selectedEntity, currentNode);
-						});
-				}
-			}
-
-			currentNode = node.NextNode;
-		}
-
-		ImGui::PopStyleVar();
-
-		return result;
+			return result;
+		});
 	}
 }

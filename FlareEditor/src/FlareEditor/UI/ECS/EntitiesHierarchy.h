@@ -64,7 +64,7 @@ namespace Flare
 		bool RenderEntityItem(Entity entity, Entity& selectedEntity, size_t accelerationStructureEntryIndex);
 		bool RenderEntityContextMenu(Entity entity, Entity& selectedEntity);
 
-		bool RenderClippedHierarchy(Entity& selectedEntity);
+		bool RenderClippedHierarchyRootLevel(Entity& selectedEntity);
 	private:
 		EntitiesHierarchyFeatures m_Features;
 
