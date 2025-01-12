@@ -39,6 +39,9 @@ namespace Flare
 		bool RenderClippedHierarchy(Entity& selectedEntity);
 		void BuildClippingAccelerationStructure();
 		void BuildClippingSubStructure(Entity rootEntity, size_t rootEntry);
+
+		void UpdateVisibility(size_t startNode, int64_t visibleCountDelta);
+		size_t CountEntriesInSameLevel(size_t startNode);
 	public:
 		struct AccelerationStructureEntry
 		{
@@ -46,6 +49,7 @@ namespace Flare
 			size_t Count = 0;
 			size_t VisibleCount = 0;
 			size_t NextNode = SIZE_MAX;
+			size_t ParentNode = SIZE_MAX;
 			Entity CurrentEntity = Entity();
 		};
 	private:

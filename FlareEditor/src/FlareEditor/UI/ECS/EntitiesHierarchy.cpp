@@ -233,20 +233,32 @@ namespace Flare
 
 		if (children && accelerationStructureEntryIndex != SIZE_MAX && opened != wasOpenedBefore)
 		{
+			auto& currentNode = m_ClippingAccelerationStruture[accelerationStructureEntryIndex];
+			size_t entitiesInNextLevel = CountEntriesInSameLevel(accelerationStructureEntryIndex + 1);
+
 			if (opened)
-				m_ClippingAccelerationStruture[accelerationStructureEntryIndex].VisibleCount += children->GetChildren().size();
+			{
+				UpdateVisibility(accelerationStructureEntryIndex, static_cast<int64_t>(entitiesInNextLevel));
+			}
 			else
-				m_ClippingAccelerationStruture[accelerationStructureEntryIndex].VisibleCount -= children->GetChildren().size();
+			{
+				UpdateVisibility(accelerationStructureEntryIndex, -static_cast<int64_t>(entitiesInNextLevel));
+			}
 		}
 
 		if (children && opened)
 		{
-			for (Entity child : children->GetChildren())
+			const auto& childrenEntities = children->GetChildren();
+
+			size_t childNode = accelerationStructureEntryIndex + 1;
+			for (size_t i = 0; i < childrenEntities.size(); i++)
 			{
+				Entity child = childrenEntities[i];
 				if (!m_World->IsEntityAlive(child))
 					continue;
 
-				result |= RenderEntityItem(child, selectedEntity, SIZE_MAX);
+				result |= RenderEntityItem(child, selectedEntity, childNode);
+				childNode = m_ClippingAccelerationStruture[childNode].NextNode;
 			}
 		}
 
@@ -361,7 +373,7 @@ namespace Flare
 		m_ClippingAccelerationStruture.clear();
 
 		size_t offset = 0;
-		size_t previousEntryIndex = 0;
+		size_t previousEntryIndex = SIZE_MAX;
 		m_RootLevelEntities.ForEachChunk([&](QueryChunk chunk)
 			{
 				for (size_t i = 0; i < chunk.GetEntityCount(); i++)
@@ -375,8 +387,9 @@ namespace Flare
 						{
 							.Start = 0,
 							.Count = 0,
-							.VisibleCount = 0,
+							.VisibleCount = 1,
 							.NextNode = SIZE_MAX,
+							.ParentNode = SIZE_MAX,
 							.CurrentEntity = entity
 						});
 
@@ -386,21 +399,20 @@ namespace Flare
 					{
 						AccelerationStructureEntry& previousNode = m_ClippingAccelerationStruture[previousEntryIndex];
 						previousNode.Count++;
-						previousNode.VisibleCount++;
 
 						offset++;
 
 						bool previousEntityHasChildren = m_World->HasComponent<Children>(previousNode.CurrentEntity);
 
-						if (hasChildren || (previousEntityHasChildren && !hasChildren))
 						{
 							previousNode.NextNode = m_ClippingAccelerationStruture.size();
 							m_ClippingAccelerationStruture.push_back(AccelerationStructureEntry
 							{
 								.Start = offset,
 								.Count = 0,
-								.VisibleCount = 0,
+								.VisibleCount = 1,
 								.NextNode = SIZE_MAX,
+								.ParentNode = SIZE_MAX,
 								.CurrentEntity = entity
 							});
 
@@ -424,7 +436,7 @@ namespace Flare
 		FLARE_CORE_ASSERT(children);
 
 		const auto& childrenEntities = children->GetChildren();
-		size_t previousEntryIndex = rootEntry;
+		size_t previousEntryIndex = SIZE_MAX;
 
 		for (size_t i = 0; i < childrenEntities.size(); i++)
 		{
@@ -436,8 +448,9 @@ namespace Flare
 				{
 					.Start = 0,
 					.Count = 0,
-					.VisibleCount = 0,
+					.VisibleCount = 1,
 					.NextNode = SIZE_MAX,
+					.ParentNode = rootEntry,
 					.CurrentEntity = childrenEntities[i],
 				});
 
@@ -445,19 +458,18 @@ namespace Flare
 			}
 			else
 			{
-				auto& previousNode = m_ClippingAccelerationStruture.back();
+				auto& previousNode = m_ClippingAccelerationStruture[previousEntryIndex];
 				previousNode.Count++;
-				previousNode.VisibleCount++;
 
-				if (hasChildren)
 				{
 					previousNode.NextNode = m_ClippingAccelerationStruture.size();
 					m_ClippingAccelerationStruture.push_back(AccelerationStructureEntry
 					{
 						.Start = i,
 						.Count = 0,
-						.VisibleCount = 0,
+						.VisibleCount = 1,
 						.NextNode = SIZE_MAX,
+						.ParentNode = rootEntry,
 						.CurrentEntity = childrenEntities[i],
 					});
 
@@ -468,5 +480,33 @@ namespace Flare
 			if (hasChildren)
 				BuildClippingSubStructure(childrenEntities[i], previousEntryIndex);
 		}
+	}
+
+	void EntitiesHierarchy::UpdateVisibility(size_t startNode, int64_t visibleCountDelta)
+	{
+		FLARE_PROFILE_FUNCTION();
+		FLARE_CORE_INFO("{}", visibleCountDelta);
+
+		size_t currentNode = startNode;
+		while (currentNode != SIZE_MAX)
+		{
+			m_ClippingAccelerationStruture[currentNode].VisibleCount += visibleCountDelta;
+			currentNode = m_ClippingAccelerationStruture[currentNode].ParentNode;
+		}
+	}
+
+	size_t EntitiesHierarchy::CountEntriesInSameLevel(size_t startNode)
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		size_t result = 0;
+		size_t currentNode = startNode;
+		while (currentNode != SIZE_MAX)
+		{
+			result += m_ClippingAccelerationStruture[currentNode].VisibleCount;
+			currentNode = m_ClippingAccelerationStruture[currentNode].NextNode;
+		}
+
+		return result;
 	}
 }
