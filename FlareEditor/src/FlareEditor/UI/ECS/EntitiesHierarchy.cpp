@@ -40,40 +40,23 @@ namespace Flare
 
 					if (m_Nodes.size() == 0)
 					{
-						m_Nodes.push_back(Node
-						{
-							.Start = 0,
-							.Count = 0,
-							.VisibleCount = 1,
-							.NextNode = SIZE_MAX,
-							.ParentNode = SIZE_MAX,
-							.CurrentEntity = entity
-						});
-
-						previousEntryIndex = m_Nodes.size() - 1;
+						previousEntryIndex = AppendNode(entity, SIZE_MAX, 0, !hasChildren);
 					}
 					else
 					{
-						Node& previousNode = m_Nodes[previousEntryIndex];
-						previousNode.Count++;
-
 						offset++;
+						auto& previousNode = m_Nodes[previousEntryIndex];
 
-						bool previousEntityHasChildren = world.HasComponent<Children>(previousNode.CurrentEntity);
-
+						if (previousNode.IsLeaf && !hasChildren)
 						{
-							previousNode.NextNode = m_Nodes.size();
-							m_Nodes.push_back(Node
-							{
-								.Start = offset,
-								.Count = 0,
-								.VisibleCount = 1,
-								.NextNode = SIZE_MAX,
-								.ParentNode = SIZE_MAX,
-								.CurrentEntity = entity
-							});
+							previousNode.VisibleCount++;
+						}
+						else
+						{
+							size_t node = AppendNode(entity, SIZE_MAX, offset, !hasChildren);
 
-							previousEntryIndex = m_Nodes.size() - 1;
+							previousNode.NextNode = node;
+							previousEntryIndex = node;
 						}
 					}
 
@@ -101,42 +84,43 @@ namespace Flare
 
 			if (i == 0)
 			{
-				m_Nodes.push_back(Node
-				{
-					.Start = 0,
-					.Count = 0,
-					.VisibleCount = 1,
-					.NextNode = SIZE_MAX,
-					.ParentNode = rootEntry,
-					.CurrentEntity = childrenEntities[i],
-				});
-
-				previousEntryIndex = m_Nodes.size() - 1;
+				previousEntryIndex = AppendNode(childrenEntities[i], rootEntry, 0, !hasChildren);
 			}
 			else
 			{
 				auto& previousNode = m_Nodes[previousEntryIndex];
-				previousNode.Count++;
 
+				if (previousNode.IsLeaf && !hasChildren)
 				{
-					previousNode.NextNode = m_Nodes.size();
-					m_Nodes.push_back(Node
-					{
-						.Start = i,
-						.Count = 0,
-						.VisibleCount = 1,
-						.NextNode = SIZE_MAX,
-						.ParentNode = rootEntry,
-						.CurrentEntity = childrenEntities[i],
-					});
+					previousNode.VisibleCount++;
+				}
+				else
+				{
+					size_t node = AppendNode(childrenEntities[i], rootEntry, i, !hasChildren);
 
-					previousEntryIndex = m_Nodes.size() - 1;
+					previousNode.NextNode = node;
+					previousEntryIndex = node;
 				}
 			}
 
 			if (hasChildren)
 				BuildClippingSubStructure(world, childrenEntities[i], previousEntryIndex);
 		}
+	}
+
+	size_t EntitiesHierarchyAccelerationStructure::AppendNode(Entity entity, size_t parentNode, size_t offset, bool isLeaf)
+	{
+		m_Nodes.push_back(Node
+			{
+				.Start = offset,
+				.VisibleCount = 1,
+				.NextNode = SIZE_MAX,
+				.ParentNode = parentNode,
+				.CurrentEntity = entity,
+				.IsLeaf = isLeaf
+			});
+
+		return m_Nodes.size() - 1;
 	}
 
 	void EntitiesHierarchyAccelerationStructure::UpdateAncestorsVisibility(size_t startNode, int64_t visibleCountDelta)
@@ -485,7 +469,7 @@ namespace Flare
 
 			if (RenderClippedTreeSection(node, itemWidth, itemHeight))
 			{
-				if (node.Count > 1)
+				if (node.IsLeaf)
 				{
 					ImGuiListClipper clipper;
 					clipper.Begin(static_cast<int32_t>(node.VisibleCount), itemHeight);
@@ -502,7 +486,7 @@ namespace Flare
 				}
 				else
 				{
-					m_RootLevelEntities.ForEachEntityInRange(node.Start, node.Start + node.Count, [&](Entity entity)
+					m_RootLevelEntities.ForEachEntityInRange(node.Start, node.Start + 1, [&](Entity entity)
 						{
 							result |= RenderEntityItem(entity, selectedEntity, currentNode);
 						});
