@@ -361,9 +361,13 @@ namespace Flare
 					{
 						m_ClippingAccelerationStruture.back().Count++;
 						m_ClippingAccelerationStruture.back().VisibleCount++;
+
+						bool previousEntityHasChildren = m_World->HasComponent<Children>(m_ClippingAccelerationStruture.back().CurrentEntity);
+						bool hasChildren = m_World->HasComponent<Children>(entity);
+
 						offset++;
 
-						if (m_World->HasComponent<Children>(entity))
+						if (hasChildren || (previousEntityHasChildren && !hasChildren))
 						{
 							m_ClippingAccelerationStruture.emplace_back(offset, 0, 0, entity);
 						}
