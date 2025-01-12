@@ -50,48 +50,7 @@ namespace Flare
 			m_CurrentEntityCount = m_World->Entities.GetEntityRecords().size();
 		}
 
-		{
-			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
-			float itemHeight = ImGui::GetFontSize() + ImGui::GetStyle().FramePadding.y;
-			float itemWidth = ImGui::GetContentRegionAvail().x;
-
-			ImGuiWindow* window = ImGui::GetCurrentWindow();
-
-			for (size_t i = 0; i < m_ClippingAccelerationStruture.size(); i++)
-			{
-				const auto& entry = m_ClippingAccelerationStruture[i];
-
-				ImVec2 itemSize = ImVec2(itemWidth, itemHeight * static_cast<float>(entry.Count));
-				ImVec2 rectMin = window->DC.CursorPos;
-				ImVec2 rectMax = window->DC.CursorPos + itemSize;
-
-				ImRect itemRect = ImRect(rectMin, rectMax);
-
-				if (itemRect.Overlaps(window->ClipRect))
-				{
-					ImGuiListClipper clipper;
-					clipper.Begin(static_cast<int32_t>(entry.Count), itemHeight);
-
-					while (clipper.Step())
-					{
-						size_t visibleRangeStart = static_cast<size_t>(clipper.DisplayStart) + entry.Start;
-						size_t visibleRangeEnd = static_cast<size_t>(clipper.DisplayEnd) + entry.Start;
-						m_RootLevelEntities.ForEachEntityInRange(visibleRangeStart, visibleRangeEnd, [&](Entity entity)
-							{
-								result |= RenderEntityItem(entity, selectedEntity);
-							});
-					}
-				}
-				else
-				{
-					ImGuiID id = window->GetID(&entry.CurrentEntity);
-					ImGui::ItemSize(itemSize);
-					ImGui::ItemAdd({ rectMin, rectMax }, id);
-				}
-			}
-
-			ImGui::PopStyleVar();
-		}
+		result |= RenderClippedHierarchy(selectedEntity);
 
 		if (m_EntityToDelete)
 		{
@@ -210,7 +169,14 @@ namespace Flare
 		return result;
 	}
 
-	bool EntitiesHierarchy::RenderEntityItem(Entity entity, Entity& selectedEntity)
+	static bool IsTreeNodeOpened(ImGuiID id)
+	{
+		ImGuiContext* g = ImGui::GetCurrentContext();
+		ImGuiStorage* storage = g->CurrentWindow->DC.StateStorage;
+		return static_cast<bool>(storage->GetInt(id, 0));
+	}
+
+	bool EntitiesHierarchy::RenderEntityItem(Entity entity, Entity& selectedEntity, size_t accelerationStructureEntryIndex)
 	{
 		FLARE_PROFILE_FUNCTION();
 		bool result = false;
@@ -235,11 +201,16 @@ namespace Flare
 		if (isPrefab)
 			ImGui::PushStyleColor(ImGuiCol_Text, ImGuiTheme::Primary);
 
+	 	void* id = (void*)std::hash<Entity>()(entity);
+		ImGuiID nodeId = ImGui::GetCurrentWindow()->GetID(id);
+
+		bool wasOpenedBefore = IsTreeNodeOpened(nodeId);
+
 		bool opened = false;
 		if (entityName)
-			opened = ImGui::TreeNodeEx((void*)std::hash<Entity>()(entity), flags, entityName->Value.c_str());
+			opened = ImGui::TreeNodeEx(id, flags, entityName->Value.c_str());
 		else
-			opened = ImGui::TreeNodeEx((void*)std::hash<Entity>()(entity), flags, "Entity %d", entity.GetIndex());
+			opened = ImGui::TreeNodeEx(id, flags, "Entity %d", entity.GetIndex());
 
 		if (isPrefab)
 			ImGui::PopStyleColor();
@@ -260,6 +231,14 @@ namespace Flare
 			result = true;
 		}
 
+		if (children && accelerationStructureEntryIndex != SIZE_MAX && opened != wasOpenedBefore)
+		{
+			if (opened)
+				m_ClippingAccelerationStruture[accelerationStructureEntryIndex].VisibleCount += children->GetChildren().size();
+			else
+				m_ClippingAccelerationStruture[accelerationStructureEntryIndex].VisibleCount -= children->GetChildren().size();
+		}
+
 		if (children && opened)
 		{
 			for (Entity child : children->GetChildren())
@@ -267,7 +246,7 @@ namespace Flare
 				if (!m_World->IsEntityAlive(child))
 					continue;
 
-				result |= RenderEntityItem(child, selectedEntity);
+				result |= RenderEntityItem(child, selectedEntity, SIZE_MAX);
 			}
 		}
 
@@ -303,6 +282,64 @@ namespace Flare
 		return result;
 	}
 
+	bool EntitiesHierarchy::RenderClippedHierarchy(Entity& selectedEntity)
+	{
+		bool result = false;
+
+		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
+		float itemHeight = ImGui::GetFontSize() + ImGui::GetStyle().FramePadding.y;
+		float itemWidth = ImGui::GetContentRegionAvail().x;
+
+		ImGuiWindow* window = ImGui::GetCurrentWindow();
+
+		for (size_t i = 0; i < m_ClippingAccelerationStruture.size(); i++)
+		{
+			const auto& entry = m_ClippingAccelerationStruture[i];
+
+			ImVec2 itemSize = ImVec2(itemWidth, itemHeight * static_cast<float>(entry.VisibleCount));
+			ImVec2 rectMin = window->DC.CursorPos;
+			ImVec2 rectMax = window->DC.CursorPos + itemSize;
+
+			ImRect itemRect = ImRect(rectMin, rectMax);
+
+			if (itemRect.Overlaps(window->ClipRect))
+			{
+				if (entry.Count > 1)
+				{
+					ImGuiListClipper clipper;
+					clipper.Begin(static_cast<int32_t>(entry.VisibleCount), itemHeight);
+
+					while (clipper.Step())
+					{
+						size_t visibleRangeStart = static_cast<size_t>(clipper.DisplayStart) + entry.Start;
+						size_t visibleRangeEnd = static_cast<size_t>(clipper.DisplayEnd) + entry.Start;
+						m_RootLevelEntities.ForEachEntityInRange(visibleRangeStart, visibleRangeEnd, [&](Entity entity)
+							{
+								result |= RenderEntityItem(entity, selectedEntity, i);
+							});
+					}
+				}
+				else
+				{
+					m_RootLevelEntities.ForEachEntityInRange(entry.Start, entry.Start + entry.Count, [&](Entity entity)
+						{
+							result |= RenderEntityItem(entity, selectedEntity, i);
+						});
+				}
+			}
+			else
+			{
+				ImGuiID id = window->GetID(&entry.CurrentEntity);
+				ImGui::ItemSize(itemSize);
+				ImGui::ItemAdd({ rectMin, rectMax }, id);
+			}
+		}
+
+		ImGui::PopStyleVar();
+
+		return result;
+	}
+
 	void EntitiesHierarchy::BuildClippingAccelerationStructure()
 	{
 		FLARE_PROFILE_FUNCTION();
@@ -318,16 +355,17 @@ namespace Flare
 
 					if (m_ClippingAccelerationStruture.size() == 0)
 					{
-						m_ClippingAccelerationStruture.emplace_back(0, 0, entity);
+						m_ClippingAccelerationStruture.emplace_back(0, 0, 0, entity);
 					}
 					else
 					{
 						m_ClippingAccelerationStruture.back().Count++;
+						m_ClippingAccelerationStruture.back().VisibleCount++;
 						offset++;
 
 						if (m_World->HasComponent<Children>(entity))
 						{
-							m_ClippingAccelerationStruture.emplace_back(offset, 0, entity);
+							m_ClippingAccelerationStruture.emplace_back(offset, 0, 0, entity);
 						}
 					}
 				}

@@ -33,9 +33,10 @@ namespace Flare
 		void SetWorld(World& world);
 	private:
 		bool RenderContextMenu(Entity& selectedEntity, Entity* parent, bool isRoot);
-		bool RenderEntityItem(Entity entity, Entity& selectedEntity);
+		bool RenderEntityItem(Entity entity, Entity& selectedEntity, size_t accelerationStructureEntryIndex);
 		bool RenderEntityContextMenu(Entity entity, Entity& selectedEntity);
 
+		bool RenderClippedHierarchy(Entity& selectedEntity);
 		void BuildClippingAccelerationStructure();
 	private:
 		EntitiesHierarchyFeatures m_Features;
@@ -52,6 +53,7 @@ namespace Flare
 		{
 			size_t Start = 0;
 			size_t Count = 0;
+			size_t VisibleCount = 0;
 			Entity CurrentEntity = Entity();
 		};
 
