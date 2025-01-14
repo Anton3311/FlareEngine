@@ -27,16 +27,25 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(index < m_EntityCount);
 
+		const ArchetypeRecord& archetype = m_ArchetypesRegistry->operator[](m_Archetype);
+		const ArchetypeComponents& archetypeComponents = m_ArchetypesRegistry->GetArchetypeComponents(m_Archetype);
 		if (index != m_EntityCount - 1)
 		{
-			const ArchetypeRecord& archetype = m_ArchetypesRegistry->operator[](m_Archetype);
-			const ArchetypeComponents& archetypeComponents = m_ArchetypesRegistry->GetArchetypeComponents(m_Archetype);
+			uint8_t* destinationChunk = m_Chunks[index / m_EntitiesPerChunk].GetBuffer();
+			uint8_t* sourceChunk = m_Chunks.back().GetBuffer();
+
+			size_t removedEntityIndexInChunk = index % m_EntitiesPerChunk;
+			size_t lastEntityIndexInChunk = (m_EntityCount - 1) % m_EntitiesPerChunk;
+
+			// Move components of the last entity in place of the removed entity.
 			for (size_t componentIndex = 0; componentIndex < archetypeComponents.ComponentCount; componentIndex++)
 			{
 				const ComponentInfo& componentInfo = m_ArchetypesRegistry->GetCompatibleComponents().GetComponentInfo(archetypeComponents.ComponentIds[componentIndex]);
 
-				void* destination = GetEntityComponentData(index, componentIndex);
-				void* source = GetEntityComponentData(m_EntityCount - 1, componentIndex);
+				size_t componentArrayOffset = archetypeComponents.ComponentArrayOffsets[componentIndex];
+
+				void* destination = destinationChunk + componentArrayOffset + componentInfo.Size * removedEntityIndexInChunk;
+				void* source = sourceChunk + componentArrayOffset + componentInfo.Size * lastEntityIndexInChunk;
 
 				componentInfo.Initializer->Type.Functions.MoveAssignment(destination, source);
 			}
@@ -55,7 +64,9 @@ namespace Flare
 		// 2. The caller asked to remove other entity, and last entity was moved in place of the removed one.
 		//
 		// In both cases removing an entity requires popping the last one
-		ReleaseEntityComponents(m_EntityCount - 1);
+
+		if (!HAS_BIT(archetype.CombinedComponentTypeFlags, TypeFlags::TriviallyDestructible))
+			ReleaseEntityComponents(m_EntityCount - 1, archetypeComponents);
 
 		m_EntityCount--;
 
@@ -193,19 +204,24 @@ namespace Flare
 		}
 	}
 
-	void EntityStorage::ReleaseEntityComponents(size_t entityIndex)
+	void EntityStorage::ReleaseEntityComponents(size_t entityIndex, const ArchetypeComponents& archetypeComponents)
 	{
 		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(entityIndex < m_EntityCount);
 
-		const ArchetypeRecord& archetypeRecord = m_ArchetypesRegistry->operator[](m_Archetype);
-		const ArchetypeComponents& archetypeComponents = m_ArchetypesRegistry->GetArchetypeComponents(m_Archetype);
+		size_t chunkIndex = entityIndex / m_EntitiesPerChunk;
+		size_t indexInChunk = entityIndex % m_EntitiesPerChunk;
+
+		uint8_t* chunkData = m_Chunks[chunkIndex].GetBuffer();
+
+		const Components& componentsRegistry = m_ArchetypesRegistry->GetCompatibleComponents();
 		for (size_t componentIndex = 0; componentIndex < archetypeComponents.ComponentCount; componentIndex++)
 		{
-			const ComponentInfo& componentInfo = m_ArchetypesRegistry->GetCompatibleComponents()
-				.GetComponentInfo(archetypeComponents.ComponentIds[componentIndex]);
+			size_t componentArrayOffset = archetypeComponents.ComponentArrayOffsets[componentIndex];
+			const ComponentInfo& componentInfo = componentsRegistry.GetComponentInfo(archetypeComponents.ComponentIds[componentIndex]);
 
-			componentInfo.Initializer->Type.Functions.Destructor(GetEntityComponentData(entityIndex, componentIndex));
+			void* entityData = chunkData + componentArrayOffset + componentInfo.Size * indexInChunk;
+			componentInfo.Initializer->Type.Functions.Destructor(entityData);
 		}
 	}
 

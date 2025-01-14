@@ -96,7 +96,7 @@ namespace Flare
 			return (Entity*)array;
 		}
 
-		void ReleaseEntityComponents(size_t entityIndex);
+		void ReleaseEntityComponents(size_t entityIndex, const ArchetypeComponents& archetypeComponents);
 		void ReleaseAllEntities();
 
 		inline void InvalidateEntityIdEntry(size_t chunkIndex, size_t entityIndexInChunk)
