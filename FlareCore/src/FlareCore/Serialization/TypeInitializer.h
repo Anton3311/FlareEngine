@@ -14,14 +14,15 @@ namespace Flare
 	{
 		None = 0,
 
-		DefaultConstructable = 1,
+		DefaultConstructible,
+		TriviallyDestructible,
 
-		TriviallyConstructable = 2,
-		TriviallyCopyConstructable,
-		TriviallyMoveConstructable,
+		TriviallyConstructible,
+		TriviallyCopyConstructible,
+		TriviallyMoveConstructible,
 
-		TriviallyCopyAssignable,
-		TriviallyMoveAssignable,
+		TriviallyCopyAssignible,
+		TriviallyMoveAssignible,
 	};
 
 	FLARE_IMPL_ENUM_BITFIELD(TypeFlags);
@@ -32,19 +33,23 @@ namespace Flare
 		TypeFlags flags = TypeFlags::None;
 
 		if constexpr (std::is_default_constructible_v<T>)
-			flags |= TypeFlags::DefaultConstructable;
+			flags |= TypeFlags::DefaultConstructible;
+
+		if constexpr (std::is_trivially_destructible_v<T>)
+			flags |= TypeFlags::TriviallyDestructible;
+
 		if constexpr (std::is_trivially_constructible_v<T>)
-			flags |= TypeFlags::TriviallyConstructable;
+			flags |= TypeFlags::TriviallyConstructible;
 
 		if constexpr (std::is_trivially_copy_constructible_v<T>)
-			flags |= TypeFlags::TriviallyCopyConstructable;
+			flags |= TypeFlags::TriviallyCopyConstructible;
 		if constexpr (std::is_trivially_move_constructible_v<T>)
-			flags |= TypeFlags::TriviallyMoveConstructable;
+			flags |= TypeFlags::TriviallyMoveConstructible;
 
 		if constexpr (std::is_trivially_copy_assignable_v<T>)
-			flags |= TypeFlags::TriviallyCopyAssignable;
+			flags |= TypeFlags::TriviallyCopyAssignible;
 		if constexpr (std::is_trivially_move_assignable_v<T>)
-			flags |= TypeFlags::TriviallyMoveAssignable;
+			flags |= TypeFlags::TriviallyMoveAssignible;
 
 		return flags;
 	}

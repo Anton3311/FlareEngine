@@ -904,7 +904,7 @@ namespace Flare
 		const ArchetypeComponents& archetypeComponents = archetypes.GetArchetypeComponents(archetypeId);
 		const ArchetypeRecord& archetype = archetypes[archetypeId];
 
-		FLARE_CORE_ASSERT(HAS_BIT(archetype.CombinedComponentTypeFlags, TypeFlags::DefaultConstructable));
+		FLARE_CORE_ASSERT(HAS_BIT(archetype.CombinedComponentTypeFlags, TypeFlags::DefaultConstructible));
 
 		for (size_t componentIndex = 0; componentIndex < archetypeComponents.ComponentCount; componentIndex++)
 		{
@@ -938,7 +938,7 @@ namespace Flare
 		const ArchetypeComponents& archetypeComponents = archetypes.GetArchetypeComponents(archetypeId);
 		const ArchetypeRecord& archetype = archetypes[archetypeId];
 
-		if (HAS_BIT(archetype.CombinedComponentTypeFlags, TypeFlags::TriviallyCopyConstructable))
+		if (HAS_BIT(archetype.CombinedComponentTypeFlags, TypeFlags::TriviallyCopyConstructible))
 		{
 			std::memcpy(entityData, copySource, archetype.EntitySize);
 			return;

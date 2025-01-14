@@ -1,6 +1,7 @@
 #include "TypeInitializer.h"
 
 #include "FlareCore/Assert.h"
+#include "FlareCore/Profiler/Profiler.h"
 
 namespace Flare
 {
@@ -14,6 +15,8 @@ namespace Flare
 
     TypeInitializer::~TypeInitializer()
     {
+        FLARE_PROFILE_FUNCTION();
+
         auto& initializers = GetInitializers();
         for (size_t i = 0; i < initializers.size(); i++)
         {
