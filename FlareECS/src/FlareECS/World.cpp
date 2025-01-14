@@ -10,6 +10,7 @@ namespace Flare
 		: Components(context.Components),
 		m_Queries(context.Queries),
 		m_Archetypes(context.Archetypes),
+		Events(Components),
 		Entities(context.Components, context.Archetypes)
 	{
 		FLARE_PROFILE_FUNCTION();

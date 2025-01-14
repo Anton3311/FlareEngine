@@ -3,11 +3,12 @@
 #include "FlareECS/ECSContext.h"
 #include "FlareECS/Entities.h"
 
+#include "FlareECS/Entity/Archetypes.h"
 #include "FlareECS/Entity/Component.h"
 #include "FlareECS/Entity/Components.h"
 #include "FlareECS/Entity/ComponentGroup.h"
 
-#include "FlareECS/Entity/Archetypes.h"
+#include "FlareECS/Event/EventManager.h"
 
 #include "FlareECS/Query/QueryFilters.h"
 #include "FlareECS/Query/QueryBuilder.h"
@@ -137,6 +138,8 @@ namespace Flare
 
 		Flare::Entities Entities;
 		Flare::Components& Components;
+
+		EventManager Events;
 	private:
 		Archetypes& m_Archetypes;
 		QueryCache& m_Queries;
