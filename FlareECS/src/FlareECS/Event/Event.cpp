@@ -14,6 +14,7 @@ namespace Flare
 
 		const ComponentInfo& componentInfo = m_Components.GetComponentInfo(m_EventType);
 		m_EventsPerChunk = EntityStorageChunk::CHUNK_SIZE / componentInfo.Size;
+		m_EventSize = componentInfo.Size;
 	}
 
 	EventStorage::~EventStorage()
@@ -56,7 +57,7 @@ namespace Flare
 
 			// Only the last chunk is partially filled
 			if (chunkIndex == m_Chunks.size() - 1)
-				eventCountInChunk = m_Count % m_EventsPerChunk;
+				eventCountInChunk = m_EventCount % m_EventsPerChunk;
 
 			uint8_t* chunkData = m_Chunks[chunkIndex].GetBuffer();
 			for (size_t i = 0; i < eventCountInChunk; i++)
@@ -67,20 +68,20 @@ namespace Flare
 			EntityChunksPool::GetInstance()->Add(std::move(m_Chunks[chunkIndex]));
 		}
 
-		m_Count = 0;
+		m_EventCount = 0;
 	}
 
 	uint8_t* EventStorage::AllocateEvent(const ComponentInfo& componentInfo)
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		if (m_Count % m_EventsPerChunk == 0)
+		if (m_EventCount % m_EventsPerChunk == 0)
 			m_Chunks.push_back(EntityChunksPool::GetInstance()->GetOrCreate());
 
-		size_t lastChunkEventCount = m_Count % m_EventsPerChunk;
+		size_t lastChunkEventCount = m_EventCount % m_EventsPerChunk;
 		uint8_t* destination = m_Chunks.back().GetBuffer() + lastChunkEventCount * componentInfo.Size;
 
-		m_Count++;
+		m_EventCount++;
 
 		return destination;
 	}
