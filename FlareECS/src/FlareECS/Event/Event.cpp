@@ -68,6 +68,7 @@ namespace Flare
 			EntityChunksPool::GetInstance()->Add(std::move(m_Chunks[chunkIndex]));
 		}
 
+		m_Chunks.clear();
 		m_EventCount = 0;
 	}
 
