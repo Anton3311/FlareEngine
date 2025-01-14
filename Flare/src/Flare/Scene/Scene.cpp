@@ -96,6 +96,8 @@ namespace Flare
 		m_World.Entities.ClearQueuedForDeletion();
 		m_World.Entities.ClearCreatedEntitiesQueryResult();
 
+		m_World.Events.ReleaseCollectedEvents();
+
 		UpdateEnvironmentSettings();
 	}
 

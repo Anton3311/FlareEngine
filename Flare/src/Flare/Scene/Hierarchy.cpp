@@ -17,6 +17,7 @@ namespace Flare
 {
 	FLARE_IMPL_COMPONENT(Children);
 	FLARE_IMPL_COMPONENT(Parent);
+	FLARE_IMPL_COMPONENT(ReparentEvent);
 
 	//
 	// HierarchyHelper
@@ -37,6 +38,11 @@ namespace Flare
 			return;
 		}
 
+		ReparentEvent reparentEvent{};
+		reparentEvent.TargetEntity = child;
+		reparentEvent.PreviousParent = childParent->GetParentEntity();
+		reparentEvent.NewParent = parent;
+
 		if (world.IsEntityAlive(childParent->GetParentEntity()))
 			RemoveFromParent(world, child, childParent->m_ParentEntity);
 
@@ -50,6 +56,8 @@ namespace Flare
 		}
 
 		children->m_ChildrenEntities.push_back(child);
+
+		world.Events.GetEventWriter<ReparentEvent>().Append(reparentEvent);
 	}
 
 	void HierarchyHelper::AddParent(World& world, Entity child, Entity parent)
@@ -67,6 +75,13 @@ namespace Flare
 		}
 
 		children->m_ChildrenEntities.push_back(child);
+
+		world.Events.GetEventWriter<ReparentEvent>().Append(ReparentEvent
+			{
+				.TargetEntity = child,
+				.PreviousParent = Entity(),
+				.NewParent = parent
+			});
 	}
 
 	void HierarchyHelper::DeleteEntityHierarchy(World& world, Entity root)

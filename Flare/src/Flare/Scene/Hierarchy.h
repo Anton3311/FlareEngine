@@ -67,6 +67,15 @@ namespace Flare
 		}
 	};
 
+	struct ReparentEvent
+	{
+		FLARE_COMPONENT;
+
+		Entity TargetEntity = Entity();
+		Entity PreviousParent = Entity();
+		Entity NewParent = Entity();
+	};
+
 	//
 	// HierarchyHelper
 	//
