@@ -169,15 +169,4 @@ namespace Flare
 
 		friend class EntitiesIterator;
 	};
-
-	class FLAREECS_API EntityHelper
-	{
-	public:
-		static void DefaultConstruct(const Archetypes& archetypes, ArchetypeId archetypeId, const Components& compatibleComponents, void* entityData);
-		static void Destroy(const Archetypes& archetypes, ArchetypeId archetypeId, const Components& compatibleComponents, void* entityData);
-
-		static void CopyConstruct(const Archetypes& archetypes, ArchetypeId archetypeId, const Components& compatibleComponents, void* entityData, const void* copySource);
-		static void MoveConstruct(const Archetypes& archetypes, ArchetypeId archetypeId, const Components& compatibleComponents, void* entityData, void* moveSource);
-	};
-
 }
