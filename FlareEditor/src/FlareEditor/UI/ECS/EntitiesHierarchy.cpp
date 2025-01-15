@@ -453,7 +453,7 @@ namespace Flare
 		if (children && opened)
 		{
 			size_t firstChildNode = accelerationStructureEntryIndex + 1;
-			RenderClippedHierarchy(m_ClippingHierarchy, firstChildNode, [this, &selectedEntity, &children](size_t start, size_t end, size_t currentNode)
+			result |= RenderClippedHierarchy(m_ClippingHierarchy, firstChildNode, [this, &selectedEntity, &children](size_t start, size_t end, size_t currentNode)
 			{
 				bool result = false;
 
