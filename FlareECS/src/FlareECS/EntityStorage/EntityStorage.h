@@ -13,6 +13,12 @@ namespace Flare
 {
 	struct Components;
 
+	struct EntityIndexPair
+	{
+		size_t ChunkIndex = SIZE_MAX;
+		size_t IndexInChunk = SIZE_MAX;
+	};
+
 	struct EntityStorageRequirements
 	{
 		constexpr bool IsValid() const { return EntitySize > 0 && EntityAlignment > 0; }
@@ -84,6 +90,15 @@ namespace Flare
 			const void* array = m_Chunks[chunkIndex].GetBuffer() + arrayOffset;
 
 			return (const Entity*)array;
+		}
+
+		constexpr EntityIndexPair IndexToPair(size_t entityIndex) const
+		{
+			return EntityIndexPair
+			{
+				.ChunkIndex = entityIndex / m_EntitiesPerChunk,
+				.IndexInChunk = entityIndex % m_EntitiesPerChunk
+			};
 		}
 	private:
 		inline Entity* GetEntityIdsArray(size_t chunkIndex)

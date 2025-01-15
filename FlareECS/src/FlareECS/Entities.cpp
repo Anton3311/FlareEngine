@@ -275,21 +275,27 @@ namespace Flare
 
 		FLARE_CORE_ASSERT(insertedComponentIndex != SIZE_MAX);
 
-		const ArchetypeRecord& oldArchetype = m_Archetypes[entityRecord.Archetype];
-		const ArchetypeRecord& newArchetype = m_Archetypes[newArchetypeId];
 		const ArchetypeComponents& newArchetypeComponents = m_Archetypes.GetArchetypeComponents(newArchetypeId);
+		const ArchetypeComponents& oldArchetypeComponents = m_Archetypes.GetArchetypeComponents(entityRecord.Archetype);
 
-		EntityStorage& oldStorage = GetEntityStorage(oldArchetype.Id);
+		EntityStorage& oldStorage = GetEntityStorage(entityRecord.Archetype);
 		EntityStorage& newStorage = GetEntityStorage(newArchetypeId);
 
 		size_t oldEntityIndex = entityRecord.BufferIndex;
 		size_t newEntityIndex = newStorage.AddEntity(entityRecord.Id);
 
+		EntityIndexPair destinationIndex = newStorage.IndexToPair(newEntityIndex);
+		EntityIndexPair sourceIndex = oldStorage.IndexToPair(oldEntityIndex);
+
+		uint8_t* sourceChunk = oldStorage.GetChunkBuffer(sourceIndex.ChunkIndex);
+		uint8_t* destinationChunk = newStorage.GetChunkBuffer(destinationIndex.ChunkIndex);
+
 		{
 			// Copy construct an added component
-			void* destination = newStorage.GetEntityComponentData(newEntityIndex, insertedComponentIndex);
-
 			const ComponentInfo& componentInfo = m_Components.GetComponentInfo(componentId);
+			void* destination = destinationChunk
+				+ newArchetypeComponents.ComponentArrayOffsets[insertedComponentIndex]
+				+ componentInfo.Size * destinationIndex.IndexInChunk;
 
 			if (componentData == nullptr)
 			{
@@ -307,23 +313,36 @@ namespace Flare
 			{
 				const ComponentInfo& componentInfo = m_Components.GetComponentInfo(newArchetypeComponents.ComponentIds[componentIndex]);
 
-				componentInfo.Initializer->Type.Functions.MoveConstructor(
-					newStorage.GetEntityComponentData(newEntityIndex, componentIndex),
-					oldStorage.GetEntityComponentData(oldEntityIndex, componentIndex));
+				void* destination = destinationChunk
+					+ newArchetypeComponents.ComponentArrayOffsets[componentIndex]
+					+ componentInfo.Size * destinationIndex.IndexInChunk;
+
+				void* source = sourceChunk
+					+ oldArchetypeComponents.ComponentArrayOffsets[componentIndex]
+					+ componentInfo.Size * sourceIndex.IndexInChunk;
+
+				componentInfo.Initializer->Type.Functions.MoveConstructor(destination, source);
 			}
 		}
 
 		{
 			// Move construct components after the inserted one
 
-			size_t sourceIndex = insertedComponentIndex;
-			for (size_t destinationIndex = insertedComponentIndex + 1; destinationIndex < newArchetypeComponents.ComponentCount; destinationIndex++, sourceIndex++)
+			for (size_t i = insertedComponentIndex + 1; i < newArchetypeComponents.ComponentCount; i++)
 			{
-				const ComponentInfo& componentInfo = m_Components.GetComponentInfo(newArchetypeComponents.ComponentIds[destinationIndex]);
+				const ComponentInfo& componentInfo = m_Components.GetComponentInfo(newArchetypeComponents.ComponentIds[i]);
 
-				componentInfo.Initializer->Type.Functions.MoveConstructor(
-					newStorage.GetEntityComponentData(newEntityIndex, destinationIndex),
-					oldStorage.GetEntityComponentData(oldEntityIndex, sourceIndex));
+				void* destination = destinationChunk
+					+ newArchetypeComponents.ComponentArrayOffsets[i]
+					+ componentInfo.Size * destinationIndex.IndexInChunk;
+
+				size_t sourceComponentIndex = i - 1;
+				void* source = sourceChunk
+					+ oldArchetypeComponents.ComponentArrayOffsets[sourceComponentIndex]
+					+ componentInfo.Size * sourceIndex.IndexInChunk;
+
+
+				componentInfo.Initializer->Type.Functions.MoveConstructor(destination, source);
 			}
 		}
 
