@@ -142,8 +142,6 @@ namespace Flare
 		int32_t CreatedEntitiesQueryReferences = 0;
 
 		TypeFlags CombinedComponentTypeFlags = TypeFlags::None;
-		
-		std::vector<EntitySizeT> ComponentOffsets;
 
 		std::unordered_map<ComponentId, ArchetypeEdge> Edges;
 	};

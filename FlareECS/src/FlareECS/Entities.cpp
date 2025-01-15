@@ -432,9 +432,6 @@ namespace Flare
 		EntityStorage& oldStorage = GetEntityStorage(oldArchetype.Id);
 		EntityStorage& newStorage = GetEntityStorage(newArchetypeId);
 
-		size_t sizeBefore = oldArchetype.ComponentOffsets[removedComponentIndex];
-		size_t sizeAfter = oldStorage.GetEntitySize() - (sizeBefore + componentInfo.Size);
-
 		size_t oldEntityIndex = entityRecord.BufferIndex;
 		size_t newEntityIndex = newStorage.AddEntity(entityRecord.Id);
 

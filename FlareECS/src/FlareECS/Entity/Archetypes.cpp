@@ -300,21 +300,14 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		archetype.ComponentOffsets.resize(archetypeComponents.ComponentCount, 0);
 		archetype.CombinedComponentTypeFlags = m_ComponentsRegistry.GetComponentInfo(archetypeComponents.ComponentIds[0]).Initializer->Type.Flags;
 
-		size_t offset = 0;
 		for (EntitySizeT i = 0; i < archetypeComponents.ComponentCount; i++)
 		{
 			const ComponentInfo& info = m_ComponentsRegistry.GetComponentInfo(archetypeComponents.ComponentIds[i]);
 			size_t componentSize = info.Size;
 
-			offset = Align(offset, info.Initializer->Type.Alignment);
-
 			archetype.CombinedComponentTypeFlags &= info.Initializer->Type.Flags;
-			archetype.ComponentOffsets[i] = (EntitySizeT)offset;
-
-			offset += componentSize;
 			archetype.EntitySize += (EntitySizeT)componentSize;
 			archetype.EntityAlignment = std::max(archetype.EntityAlignment, (EntitySizeT)info.Initializer->Type.Alignment);
 		}
