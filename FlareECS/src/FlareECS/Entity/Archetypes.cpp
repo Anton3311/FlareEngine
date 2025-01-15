@@ -1,6 +1,7 @@
 #include "Archetypes.h"
 
 #include "FlareCore/Profiler/Profiler.h"
+#include "FlareCore/Collections/SmallVector.h"
 
 #include "FlareECS/Entity/Components.h"
 #include "FlareECS/Entity/ComponentInitializer.h"
@@ -319,10 +320,11 @@ namespace Flare
 		}
 		
 		{
-			std::vector<EntitySizeT> arrayOffsets(archetypeComponents.ComponentCount, 0);
+			SmallVector<EntitySizeT, 16> arrayOffsets;
+			arrayOffsets.Resize(archetypeComponents.ComponentCount);
 			size_t offset = 0;
 
-			// There is also an array of Entity ids at the of the chunk, so to this into account
+			// There is also an array of Entity ids at the of the chunk, so take this into account
 			archetype.EntityCountPerChunk = EntityStorageChunk::CHUNK_SIZE / (archetype.EntitySize + sizeof(Entity));
 
 			for (EntitySizeT componentIndex = 0; componentIndex < archetypeComponents.ComponentCount; componentIndex++)
@@ -334,8 +336,7 @@ namespace Flare
 			}
 
 			archetypeComponents.IdsBufferOffset = (EntitySizeT)offset;
-
-			archetypeComponents.FillComponentArrayOffsets(Span(arrayOffsets.data(), arrayOffsets.size()));
+			archetypeComponents.FillComponentArrayOffsets(arrayOffsets.ToSpan());
 		}
 
 		archetype.EntitySize = (EntitySizeT)Align((size_t)archetype.EntitySize,

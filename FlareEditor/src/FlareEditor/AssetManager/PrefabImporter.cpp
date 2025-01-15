@@ -24,25 +24,39 @@
 
 namespace Flare
 {
+	inline static size_t Align(size_t value, size_t alignment)
+	{
+		return (value + alignment - 1) / alignment * alignment;
+	}
+
+	inline static size_t ComputeNextComponentOffset(size_t& currentOffset, const ComponentInfo& componentInfo)
+	{
+		currentOffset = Align(currentOffset, componentInfo.Initializer->Type.Alignment);
+		size_t componentOffset = currentOffset;
+		currentOffset += componentInfo.Size;
+		return componentOffset;
+	}
+
 	static void SerializeNodeComponents(YAML::Emitter& emitter, const PrefabHierarchy& hierarchy, size_t nodeIndex)
 	{
 		FLARE_PROFILE_FUNCTION();
 		uint8_t* entityData = hierarchy.GetEntityData(nodeIndex);
 
 		const PrefabHierarchy::Node& node = hierarchy.GetNodes()[nodeIndex];
-		const ArchetypeRecord& archetype = hierarchy.GetCompatibleArchetypes()[node.Archetype];
 		const ArchetypeComponents& archetypeComponents = hierarchy.GetCompatibleArchetypes().GetArchetypeComponents(node.Archetype);
 
+		size_t offset = 0;
 		for (size_t componentIndex = 0; componentIndex < archetypeComponents.ComponentCount; componentIndex++)
 		{
 			const ComponentInfo& info = hierarchy.GetCompatibleComponents().GetComponentInfo(archetypeComponents.ComponentIds[componentIndex]);
+			size_t componentOffset = ComputeNextComponentOffset(offset, info);
 
 			YAMLSerializer serializer(emitter, nullptr);
 			emitter << YAML::BeginMap;
 			emitter << YAML::Key << "Name" << YAML::Value << info.Initializer->SerializationDescriptor.Name;
 
 			emitter << YAML::Key << "Data" << YAML::Value;
-			serializer.SerializeObject(info.Initializer->SerializationDescriptor, entityData + archetype.ComponentOffsets[componentIndex], false, 0);
+			serializer.SerializeObject(info.Initializer->SerializationDescriptor, entityData + componentOffset, false, 0);
 			emitter << YAML::EndMap;
 		}
 
@@ -208,16 +222,18 @@ namespace Flare
 			const auto& node = dataNodes[nodeIndex];
 			uint8_t* entityData = hierarchy.GetEntityData(nodeIndex);
 
+			const ArchetypeComponents& archetypeComponents = hierarchy.GetCompatibleArchetypes().GetArchetypeComponents(node.Archetype);
+
+			size_t offset = 0;
 			for (size_t componentIndex = 0; componentIndex < node.ComponentIds.size(); componentIndex++)
 			{
 				const ComponentInfo* component = node.ComponentIds[componentIndex];
-				const ArchetypeRecord& archetype = hierarchy.GetCompatibleArchetypes()[node.Archetype];
-				const ArchetypeComponents& archetypeComponents = hierarchy.GetCompatibleArchetypes().GetArchetypeComponents(node.Archetype);
+				size_t componentOffset = ComputeNextComponentOffset(offset, *component);
 
 				EntitySizeT archetypeComponentIndex = archetypeComponents.TryGetComponentIndex(component->Id);
 				FLARE_CORE_ASSERT(archetypeComponentIndex != ArchetypeComponents::INVALID_COMPONENT_INDEX);
 
-				uint8_t* componentData = entityData + archetype.ComponentOffsets[archetypeComponentIndex];
+				uint8_t* componentData = entityData + componentOffset;
 
 				component->Initializer->Type.Functions.DefaultConstructor(componentData);
 
