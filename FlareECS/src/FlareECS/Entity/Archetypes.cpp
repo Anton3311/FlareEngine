@@ -77,6 +77,9 @@ namespace Flare
 		}
 		else
 		{
+			delete[] ComponentIds;
+			delete[] ComponentArrayOffsets;
+
 			ComponentIds = other.ComponentIds;
 			ComponentArrayOffsets = other.ComponentArrayOffsets;
 
