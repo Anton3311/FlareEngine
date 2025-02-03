@@ -12,8 +12,11 @@ namespace Flare
 	public:
 		constexpr FutureEntity()
 			: Location(SIZE_MAX) {}
-		constexpr FutureEntity(size_t location)
+		explicit constexpr FutureEntity(size_t location)
 			: Location(location) {}
+
+		constexpr bool operator==(FutureEntity other) const { return Location == other.Location; }
+		constexpr bool operator!=(FutureEntity other) const { return Location != other.Location; }
 
 		size_t Location;
 	};

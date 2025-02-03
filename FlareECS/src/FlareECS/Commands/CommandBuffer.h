@@ -31,6 +31,11 @@ namespace Flare
 
 		template<typename F>
 		FutureEntityCommands& ExecuteFunction(F&& function);
+
+		template<typename T>
+		FutureEntityCommands& AddCommand(T&& command);
+
+		inline FutureEntity GetFutureEntity() const { return m_FutureEntity; }
 	private:
 		FutureEntity m_FutureEntity;
 		EntitiesCommandBuffer& m_CommandBuffer;
@@ -40,7 +45,7 @@ namespace Flare
 	class FLAREECS_API EntitiesCommandBuffer
 	{
 	public:
-		EntitiesCommandBuffer(World& world);
+		EntitiesCommandBuffer();
 
 		template<typename F>
 		void ExecuteFunction(F&& function)
@@ -78,7 +83,7 @@ namespace Flare
 			FLARE_CORE_ASSERT(commandAllocation.has_value());
 			FLARE_CORE_ASSERT(entityLocation.has_value());
 
-			FutureEntity entity = entityLocation.value();
+			FutureEntity entity = FutureEntity(entityLocation.value());
 
 			m_Storage.Write<Entity>(entityLocation.value(), Entity());
 
@@ -108,9 +113,8 @@ namespace Flare
 		FutureEntityCommands GetEntity(Entity entity);
 
 		void DeleteEntity(Entity entity);
-		void Execute();
+		void Execute(World& world);
 	private:
-		World& m_World;
 		CommandsStorage m_Storage;
 	};
 
@@ -146,6 +150,13 @@ namespace Flare
 	inline FutureEntityCommands& FutureEntityCommands::ExecuteFunction(F&& function)
 	{
 		m_CommandBuffer.AddCommand<FunctionExecutionCommand<F, true>>(FunctionExecutionCommand<F, true>(std::move(function), m_FutureEntity));
+		return *this;
+	}
+
+	template<typename T>
+	inline FutureEntityCommands& FutureEntityCommands::AddCommand(T&& command)
+	{
+		m_CommandBuffer.AddCommand<T>(std::move(command));
 		return *this;
 	}
 }

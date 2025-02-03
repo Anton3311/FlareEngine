@@ -13,7 +13,7 @@
 namespace Flare
 {
 	SystemsManager::SystemsManager(World& world, SystemsRegistry& registry)
-		: m_CommandBuffer(new EntitiesCommandBuffer(world)), m_World(world), m_Registry(registry)
+		: m_CommandBuffer(new EntitiesCommandBuffer()), m_World(world), m_Registry(registry)
 	{
 		m_Registry.AddRegisteringHandler(this);
 	}
@@ -186,6 +186,6 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		m_CommandBuffer->Execute();
+		m_CommandBuffer->Execute(m_World);
 	}
 }

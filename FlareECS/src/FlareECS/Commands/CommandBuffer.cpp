@@ -6,8 +6,8 @@
 
 namespace Flare
 {
-	EntitiesCommandBuffer::EntitiesCommandBuffer(World& world)
-		: m_Storage(2048), m_World(world)
+	EntitiesCommandBuffer::EntitiesCommandBuffer()
+		: m_Storage(2048)
 	{
 
 	}
@@ -22,7 +22,7 @@ namespace Flare
 		AddCommand<DeleteEntityCommand>(DeleteEntityCommand(entity));
 	}
 
-	void EntitiesCommandBuffer::Execute()
+	void EntitiesCommandBuffer::Execute(World& world)
 	{
 		FLARE_PROFILE_FUNCTION();
 		if (!m_Storage.CanRead())
@@ -34,7 +34,7 @@ namespace Flare
 
 			CommandContext context(meta, m_Storage);
 
-			command->Apply(context, m_World);
+			command->Apply(context, world);
 			command->~Command();
 		}
 
