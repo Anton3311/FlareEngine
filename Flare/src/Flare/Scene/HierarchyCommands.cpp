@@ -14,4 +14,14 @@ namespace Flare
 		Entity parent = context.GetEntity(m_NewParent);
 		HierarchyHelper::SetParent(world, child, parent);
 	}
+
+	DetachFromParentCommand::DetachFromParentCommand(FutureEntity entity)
+		: m_Entity(entity)
+	{
+	}
+
+	void DetachFromParentCommand::Apply(CommandContext& context, World& world)
+	{
+		HierarchyHelper::DetachFromParent(world, context.GetEntity(m_Entity));
+	}
 }

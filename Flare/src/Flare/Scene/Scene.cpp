@@ -93,12 +93,15 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 		m_SystemsManager.ExecuteGroup(m_SceneHierarchyUpdate);
 
+		UpdateEnvironmentSettings();
+	}
+
+	void Scene::OnFrameStart()
+	{
 		m_World.Entities.ClearQueuedForDeletion();
 		m_World.Entities.ClearCreatedEntitiesQueryResult();
 
 		m_World.Events.ReleaseCollectedEvents();
-
-		UpdateEnvironmentSettings();
 	}
 
 	Ref<Scene> Scene::GetActive()

@@ -84,6 +84,25 @@ namespace Flare
 			});
 	}
 
+	void HierarchyHelper::DetachFromParent(World& world, Entity child)
+	{
+		Parent* parent = world.TryGetEntityComponent<Parent>(child);
+		if (!parent)
+			return;
+
+		Entity previousParent = parent->GetParentEntity();
+		RemoveFromParent(world, child, parent->GetParentEntity());
+
+		world.RemoveEntityComponent<Parent>(child);
+
+		world.Events.GetEventWriter<ReparentEvent>().Append(ReparentEvent
+		{
+			.TargetEntity = child,
+			.PreviousParent = previousParent,
+			.NewParent = Entity()
+		});
+	}
+
 	void HierarchyHelper::DeleteEntityHierarchy(World& world, Entity root)
 	{
 		FLARE_PROFILE_FUNCTION();

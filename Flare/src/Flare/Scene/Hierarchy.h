@@ -67,7 +67,7 @@ namespace Flare
 		}
 	};
 
-	struct ReparentEvent
+	struct FLARE_API ReparentEvent
 	{
 		FLARE_COMPONENT;
 
@@ -85,6 +85,7 @@ namespace Flare
 	public:
 		static void SetParent(World& world, Entity child, Entity parent);
 		static void AddParent(World& world, Entity child, Entity parent);
+		static void DetachFromParent(World& world, Entity child);
 
 		static void DeleteEntityHierarchy(World& world, Entity root);
 

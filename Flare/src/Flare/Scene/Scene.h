@@ -33,6 +33,8 @@ namespace Flare
 		void OnUpdateRuntime();
 		void OnUpdate();
 
+		void OnFrameStart();
+
 		inline World& GetECSWorld() { return m_World; }
 		inline const World& GetECSWorld() const { return m_World; }
 

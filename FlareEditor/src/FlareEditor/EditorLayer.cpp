@@ -227,6 +227,13 @@ namespace Flare
     {
         FLARE_PROFILE_FUNCTION();
 
+		Ref<Scene> activeScene = Scene::GetActive();
+
+        if (activeScene)
+        {
+            activeScene->OnFrameStart();
+        }
+
         if (m_Mode == EditorMode::Play)
         {
             if (m_GameWindow->HasFocusChanged())
@@ -254,8 +261,6 @@ namespace Flare
 
         Renderer2D::ResetStats();
         Renderer::ClearStatistics();
-
-		Ref<Scene> activeScene = Scene::GetActive();
 
         {
             Entity viewportEntity = m_GameWindow->GetViewportEntity();

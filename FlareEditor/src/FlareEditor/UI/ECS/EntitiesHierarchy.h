@@ -79,6 +79,7 @@ namespace Flare
 		Query m_RootLevelEntities;
 		size_t m_CurrentEntityCount = 0;
 
+		bool m_ClippingHierarchyIsDirty = false;
 		EntitiesHierarchyAccelerationStructure m_ClippingHierarchy;
 	};
 }

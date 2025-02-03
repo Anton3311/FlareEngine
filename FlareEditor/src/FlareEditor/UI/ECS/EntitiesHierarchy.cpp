@@ -181,10 +181,24 @@ namespace Flare
 			ImGui::EndMenu();
 		}
 
+		if (auto storage = m_World->Events.TryGetEventStorage(COMPONENT_ID(ReparentEvent)))
+		{
+			if (storage->GetEventCount() != 0)
+			{
+				m_ClippingHierarchyIsDirty = true;
+			}
+		}
+
 		if (m_CurrentEntityCount != m_World->Entities.GetEntityRecords().size())
+		{
+			m_ClippingHierarchyIsDirty = true;
+		}
+
+		if (m_ClippingHierarchyIsDirty)
 		{
 			m_ClippingHierarchy.Build(*m_World, m_RootLevelEntities);
 			m_CurrentEntityCount = m_World->Entities.GetEntityRecords().size();
+			m_ClippingHierarchyIsDirty = false;
 		}
 
 		result |= RenderClippedHierarchyRootLevel(selectedEntity);
@@ -502,6 +516,14 @@ namespace Flare
 				FLARE_CORE_ASSERT(HAS_BIT(m_Features, EntitiesHierarchyFeatures::DuplicateEntity));
 
 				m_EntityToDuplicate = entity;
+			}
+
+			if (m_World->HasComponent<Parent>(entity) && ImGui::MenuItem("Detach from parent"))
+			{
+				FutureEntity futureEntity = m_EntityCommands.GetEntity(entity).GetFutureEntity();
+				m_EntityCommands.AddCommand(DetachFromParentCommand(futureEntity));
+
+				m_ClippingHierarchyIsDirty = true;
 			}
 
 			ImGui::EndMenu();
