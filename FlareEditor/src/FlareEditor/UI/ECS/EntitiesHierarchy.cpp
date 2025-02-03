@@ -7,6 +7,7 @@
 #include "Flare/Scene/Transform.h"
 #include "Flare/Scene/Components.h"
 #include "Flare/Scene/Hierarchy.h"
+#include "Flare/Scene/HierarchyCommands.h"
 #include "Flare/Scene/Prefab.h"
 
 #include "FlareECS/World.h"
@@ -209,6 +210,8 @@ namespace Flare
 			result = true;
 		}
 
+		m_EntityCommands.Execute(*m_World);
+
 		ImGui::EndChild();
 
 		return result;
@@ -238,64 +241,68 @@ namespace Flare
 		{
 			if (ImGui::BeginMenu("Create"))
 			{
+				FutureEntity futureEntity;
+
 				if (ImGui::MenuItem("Entity"))
 				{
-					selectedEntity = m_World->CreateEntity<TransformComponent, SerializationId>();
+					futureEntity = m_EntityCommands.CreateEntity<TransformComponent, SerializationId>().GetFutureEntity();
 					result = true;
 				}
 
 				if (ImGui::MenuItem("Sprite"))
 				{
-					selectedEntity = m_World->CreateEntity<TransformComponent, SpriteComponent, SerializationId>();
+					futureEntity = m_EntityCommands.CreateEntity<TransformComponent, SpriteComponent, SerializationId>().GetFutureEntity();
 					result = true;
 				}
 
 				if (ImGui::MenuItem("Perspective Camera"))
 				{
-					selectedEntity = m_World->CreateEntity(
+					futureEntity = m_EntityCommands.CreateEntity(
 						TransformComponent(),
 						SerializationId(),
-						CameraComponent(CameraComponent::ProjectionType::Perspective));
+						CameraComponent(CameraComponent::ProjectionType::Perspective)).GetFutureEntity();
 					result = true;
 				}
 
 				if (ImGui::MenuItem("Orthographic Camera"))
 				{
-					selectedEntity = m_World->CreateEntity(
+					futureEntity = m_EntityCommands.CreateEntity(
 						TransformComponent(),
 						SerializationId(),
-						CameraComponent(CameraComponent::ProjectionType::Orthographic));
+						CameraComponent(CameraComponent::ProjectionType::Orthographic)).GetFutureEntity();
 					result = true;
 				}
 
 				if (ImGui::MenuItem("Directional Light"))
 				{
-					selectedEntity = m_World->CreateEntity(TransformComponent(), SerializationId(), DirectionalLight());
+					futureEntity = m_EntityCommands.CreateEntity(TransformComponent(), SerializationId(), DirectionalLight()).GetFutureEntity();
 					result = true;
 				}
 
 				if (ImGui::MenuItem("Point Light"))
 				{
-					selectedEntity = m_World->CreateEntity(TransformComponent(), SerializationId(), PointLight());
+					futureEntity = m_EntityCommands.CreateEntity(TransformComponent(), SerializationId(), PointLight()).GetFutureEntity();
 					result = true;
 				}
 
 				if (ImGui::MenuItem("Spot Light"))
 				{
-					selectedEntity = m_World->CreateEntity(TransformComponent(), SerializationId(), SpotLight());
+					futureEntity = m_EntityCommands.CreateEntity(TransformComponent(), SerializationId(), SpotLight()).GetFutureEntity();
 					result = true;
 				}
 
 				if (ImGui::MenuItem("Environment"))
 				{
-					selectedEntity = m_World->CreateEntity(TransformComponent(), SerializationId(), Environment());
+					futureEntity = m_EntityCommands.CreateEntity(TransformComponent(), SerializationId(), Environment()).GetFutureEntity();
 					result = true;
 				}
 
-				if (result && parent)
+				if (futureEntity != FutureEntity() && parent)
 				{
-					HierarchyHelper::AddParent(*m_World, selectedEntity, *parent);
-					m_World->AddEntityComponent(selectedEntity, LocalTransform());
+					FutureEntity parentEntity = m_EntityCommands.GetEntity(*parent).GetFutureEntity();
+
+					m_EntityCommands.AddCommand(SetParentCommand(futureEntity, parentEntity));
+					FutureEntityCommands(futureEntity, m_EntityCommands).AddComponent<LocalTransform>();
 				}
 
 				ImGui::EndMenu();

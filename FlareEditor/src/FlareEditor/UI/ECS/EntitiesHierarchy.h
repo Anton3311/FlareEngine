@@ -4,6 +4,7 @@
 
 #include "FlareECS/Entity/Entity.h"
 #include "FlareECS/Query/Query.h"
+#include "FlareECS/Commands/CommandBuffer.h"
 
 namespace Flare
 {
@@ -70,6 +71,8 @@ namespace Flare
 
 		std::optional<Entity> m_EntityToDelete;
 		std::optional<Entity> m_EntityToDuplicate;
+
+		EntitiesCommandBuffer m_EntityCommands;
 
 		World* m_World = nullptr;
 
