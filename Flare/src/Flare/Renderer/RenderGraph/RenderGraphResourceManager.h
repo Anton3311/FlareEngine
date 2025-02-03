@@ -39,6 +39,12 @@ struct std::hash<Flare::RenderGraphTextureId>
 
 namespace Flare
 {
+	enum class RenderGraphTextureAllocationMode : uint8_t
+	{
+		OnDemand,
+		Preallocated,
+	};
+
 	struct RenderGraphTextureResource
 	{
 		enum class SizeConstraint
@@ -61,7 +67,11 @@ namespace Flare
 		// Texture for frame 1 is at index: TextureHandleIndex + 1
 		// Texture for frame 2 is at index: TextureHandleIndex + 2
 		uint32_t TextureHandleIndex = UINT32_MAX;
+		uint32_t WritingPassesCount = 0;
 		SizeConstraint TextureSizeConstraint = SizeConstraint::Fixed;
+
+		uint8_t UniqueAllocationsMask = 0;
+		RenderGraphTextureAllocationMode AllocationMode = RenderGraphTextureAllocationMode::Preallocated;
 	};
 
 	class World;
@@ -75,16 +85,21 @@ namespace Flare
 			glm::uvec2 size,
 			std::string_view debugName,
 			uint32_t arrayLayers,
-			uint32_t mipCount);
+			uint32_t mipCount,
+			RenderGraphTextureAllocationMode allocationMode = RenderGraphTextureAllocationMode::Preallocated);
 
-		inline RenderGraphTextureId CreateFixedSizeTexture(TextureFormat format, glm::uvec2 size, std::string_view debugName)
+		inline RenderGraphTextureId CreateFixedSizeTexture(TextureFormat format,
+			glm::uvec2 size,
+			std::string_view debugName,
+			RenderGraphTextureAllocationMode allocationMode = RenderGraphTextureAllocationMode::Preallocated)
 		{
-			return CreateFixedSizeTexture(format, size, debugName, 1, 1);
+			return CreateFixedSizeTexture(format, size, debugName, 1, 1, allocationMode);
 		}
 
 		RenderGraphTextureId RegisterExistingTexture(Ref<Texture> texture);
 
 		void Clear();
+		void UpdateOnDemandAllocatedTextures(std::unordered_set<RenderGraphTextureId>& updatedTextures);
 
 		// Resizes the texture with SizeConstraint::ViewportSize.
 		// Returns whether any textures were resized.
@@ -98,6 +113,8 @@ namespace Flare
 			uint32_t textureHandleIndex = m_Textures[textureId.GetValue()].TextureHandleIndex;
 			return m_TextureHandles[textureHandleIndex + GraphicsContext::GetInstance().GetCurrentFrameInFlight()];
 		}
+
+		inline RenderGraphTextureResource& GetTextureResource(RenderGraphTextureId textureId) { return m_Textures[textureId.GetValue()]; }
 
 		inline const RenderGraphTextureResource& GetTextureResource(RenderGraphTextureId textureId) const
 		{
@@ -127,7 +144,10 @@ namespace Flare
 
 		Span<const Ref<Texture>> GetTexturesForEachFrameInFlight(const RenderGraphTextureResource& textureResource);
 
-		size_t GetTextureResourceCount() const { return m_Textures.size(); }
+		inline size_t GetTextureResourceCount() const { return m_Textures.size(); }
+	private:
+		void FillTextureSpecifications(TextureSpecifications& specifications, const RenderGraphTextureResource& resource, glm::uvec2 fixedSize) const;
+		void PreallocateTexturesForResource(const RenderGraphTextureResource& resource, glm::uvec2 fixedSize);
 	private:
 		Entity m_ViewportEntity;
 		World& m_RenderWorld;

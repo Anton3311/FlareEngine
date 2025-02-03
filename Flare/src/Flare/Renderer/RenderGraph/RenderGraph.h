@@ -76,6 +76,7 @@ namespace Flare
 		virtual void OnTexturesResize() = 0;
 		virtual void OnClear() = 0;
 		virtual void OnBuild() = 0;
+		virtual void OnAfterAllocatingOnDemandTextures(const std::unordered_set<RenderGraphTextureId>& updatedTextures) = 0;
 	protected:
 		Entity m_ViewportEntity;
 		World& m_RenderWorld;

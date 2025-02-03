@@ -77,6 +77,11 @@ namespace Flare
 			Build();
 		}
 
+		std::unordered_set<RenderGraphTextureId> updatedTextures;
+		m_ResourceManager.UpdateOnDemandAllocatedTextures(updatedTextures);
+
+		OnAfterAllocatingOnDemandTextures(updatedTextures);
+
 		ExecuteRenderPasses(std::move(commandBuffer), sceneSubmition, view);
 	}
 
@@ -92,11 +97,28 @@ namespace Flare
 		
 		m_NeedsRebuilding = false;
 		m_IsValid = true;
+
+		for (size_t i : m_DependencyGraph.GetExecutionOrder())
+		{
+			for (const auto& output : m_Nodes[i].Specifications.GetOutputs())
+			{
+				m_ResourceManager.GetTextureResource(output.AttachmentTexture).WritingPassesCount++;
+			}
+		}
 	}
 
 	void RenderGraph::Clear()
 	{
 		FLARE_PROFILE_FUNCTION();
+
+		for (size_t i : m_DependencyGraph.GetExecutionOrder())
+		{
+			for (const auto& output : m_Nodes[i].Specifications.GetOutputs())
+			{
+				m_ResourceManager.GetTextureResource(output.AttachmentTexture).WritingPassesCount--;
+			}
+		}
+
 		m_Nodes.clear();
 		m_CompiledRenderGraph.Reset();
 		m_ResourceManager.Clear();

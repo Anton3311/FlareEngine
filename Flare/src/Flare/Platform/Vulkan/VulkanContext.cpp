@@ -329,6 +329,8 @@ namespace Flare
 			m_Swapchain->AcquireNextImage();
 		}
 
+		FLARE_CORE_TRACE("Vulkan. Frame index = {}", m_Swapchain->GetFrameInFlight());
+
 		m_CurrentFrameResources->CommandBuffer->Reset();
 		m_CurrentFrameResources->StagingBufferPool.Reset();
 		m_CurrentFrameResources->CommandBuffer->Begin();

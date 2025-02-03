@@ -78,6 +78,28 @@ namespace Flare
 		return slice;
 	}
 
+	void TextureViewsManager::RecreateCachedTextureViews(RenderGraphTextureId texture)
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		uint32_t frameInFlightCount = GraphicsContext::GetInstance().GetFrameInFlightCount();
+		for (const auto& [key, entryIndex] : m_SubresourceToViewIndex)
+		{
+			if (key.Texture == texture)
+			{
+				Span<VkImageView> slice = Span<VkImageView>::FromVector(m_Views).Slice(entryIndex, frameInFlightCount);
+
+				// Full texture views are created together with the texture and not by `TextureViewManager`
+				if (key.Subresource == TextureSubresource::FULL_VIEW)
+				{
+					ReleaseImageViews(slice);
+				}
+
+				CreateImageViews(key.Texture, key.Subresource, slice);
+			}
+		}
+	}
+
 	void TextureViewsManager::CreateImageViews(RenderGraphTextureId texture, const TextureSubresource& subresource, Span<VkImageView> outViews) const
 	{
 		FLARE_PROFILE_FUNCTION();
@@ -127,9 +149,22 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 
 		VkDevice device = VulkanContext::GetInstance().GetDevice();
-		for (VkImageView imageView : imageViews)
+		for (size_t i = 0; i < imageViews.GetSize(); i++)
 		{
-			vkDestroyImageView(device, imageView, nullptr);
+			bool duplicate = false;
+			for (size_t j = 0; j < i; j++)
+			{
+				if (imageViews[i] == imageViews[j])
+				{
+					duplicate = true;
+					break;
+				}
+			}
+
+			if (!duplicate)
+				break;
+
+			vkDestroyImageView(device, imageViews[i], nullptr);
 		}
 	}
 }

@@ -432,7 +432,8 @@ namespace Flare
 			cascadeTextures[cascadeIndex] = renderGraph.GetResourceManager().CreateFixedSizeTexture(
 				TextureFormat::Depth32,
 				glm::uvec2(shadowTextureResolution),
-				fmt::format("CascadeTexture.{}", cascadeIndex));
+				fmt::format("CascadeTexture.{}", cascadeIndex),
+				RenderGraphTextureAllocationMode::Preallocated);
 
 			RenderGraphPassSpecifications cascadePassSpec{};
 			cascadePassSpec.SetDebugName(fmt::format("ShadowCascadePass{}", cascadeIndex));

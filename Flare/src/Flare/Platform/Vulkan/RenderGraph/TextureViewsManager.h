@@ -48,6 +48,8 @@ namespace Flare
 		void Clear();
 
 		Span<const VkImageView> GetOrCreate(RenderGraphTextureId texture, const TextureSubresource& subResource);
+
+		void RecreateCachedTextureViews(RenderGraphTextureId texture);
 	private:
 		void CreateImageViews(RenderGraphTextureId texture, const TextureSubresource& subresource, Span<VkImageView> outViews) const;
 		void ReleaseImageViews(Span<const VkImageView> imageViews) const;

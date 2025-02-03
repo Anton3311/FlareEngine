@@ -246,40 +246,14 @@ namespace Flare
 
 		std::vector<VkImageView> attachmentTextures;
 		const auto& nodes = GetNodes();
+
+		// TODO: Create render passes only for nodes that are in dependency graph
 		for (size_t nodeIndex = 0; nodeIndex < nodes.size(); nodeIndex++)
 		{
 			if (m_NodeData[nodeIndex].RenderTargetHandleIndex == NodeData::INVALID_TARGET_INDEX)
 				continue;
 
-			const auto& outputs = nodes[nodeIndex].Specifications.GetOutputs();
-			FLARE_CORE_ASSERT(outputs.size() > 0);
-
-			attachmentTextures.clear();
-			attachmentTextures.resize(outputs.size(), nullptr);
-
-			glm::uvec2 renderTargetSize = glm::uvec2(0, 0);
-
-			for (size_t outputIndex = 0; outputIndex < outputs.size(); outputIndex++)
-			{
-				const auto& output = outputs[outputIndex];
-
-				Span<const VkImageView> imageViews = m_TextureViews.GetOrCreate(output.AttachmentTexture, output.Subresource);
-				attachmentTextures[outputIndex] = imageViews[frameIndex];
-
-				Ref<const Texture> texture = GetResourceManager().GetTexture(output.AttachmentTexture);
-				renderTargetSize.x = glm::max(renderTargetSize.x, texture->GetWidth());
-				renderTargetSize.y = glm::max(renderTargetSize.y, texture->GetHeight());
-			}
-
-			uint32_t renderTargetIndex = m_NodeData[nodeIndex].RenderTargetHandleIndex + frameIndex;
-			VulkanRenderTarget& renderTarget = m_RenderTargets[renderTargetIndex];
-
-			FLARE_CORE_ASSERT(m_NodeData[nodeIndex].VulkanRenderPassHandle);
-
-			renderTarget = std::move(VulkanRenderTarget(renderTargetSize,
-				Span<const VkImageView>::FromVector(attachmentTextures),
-				m_NodeData[nodeIndex].VulkanRenderPassHandle,
-				nodes[nodeIndex].Specifications.GetDebugName().c_str()));
+			CreateRenderTargetForNode(nodeIndex, frameIndex, attachmentTextures);
 		}
 	}
 
@@ -404,6 +378,42 @@ namespace Flare
 		}
 	}
 
+	void VulkanRenderGraph::CreateRenderTargetForNode(size_t nodeIndex, uint32_t frameIndex, std::vector<VkImageView>& temporaryAttachmentsStorage)
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		const auto& nodes = GetNodes();
+		const auto& outputs = nodes[nodeIndex].Specifications.GetOutputs();
+		FLARE_CORE_ASSERT(outputs.size() > 0);
+
+		temporaryAttachmentsStorage.clear();
+		temporaryAttachmentsStorage.resize(outputs.size(), nullptr);
+
+		glm::uvec2 renderTargetSize = glm::uvec2(0, 0);
+
+		for (size_t outputIndex = 0; outputIndex < outputs.size(); outputIndex++)
+		{
+			const auto& output = outputs[outputIndex];
+
+			Span<const VkImageView> imageViews = m_TextureViews.GetOrCreate(output.AttachmentTexture, output.Subresource);
+			temporaryAttachmentsStorage[outputIndex] = imageViews[frameIndex];
+
+			Ref<const Texture> texture = GetResourceManager().GetTexture(output.AttachmentTexture);
+			renderTargetSize.x = glm::max(renderTargetSize.x, texture->GetWidth());
+			renderTargetSize.y = glm::max(renderTargetSize.y, texture->GetHeight());
+		}
+
+		uint32_t renderTargetIndex = m_NodeData[nodeIndex].RenderTargetHandleIndex + frameIndex;
+		VulkanRenderTarget& renderTarget = m_RenderTargets[renderTargetIndex];
+
+		FLARE_CORE_ASSERT(m_NodeData[nodeIndex].VulkanRenderPassHandle);
+
+		renderTarget = std::move(VulkanRenderTarget(renderTargetSize,
+			Span<const VkImageView>::FromVector(temporaryAttachmentsStorage),
+			m_NodeData[nodeIndex].VulkanRenderPassHandle,
+			nodes[nodeIndex].Specifications.GetDebugName().c_str()));
+	}
+
 	void VulkanRenderGraph::OnPrepare()
 	{
 		FLARE_PROFILE_FUNCTION();
@@ -476,5 +486,42 @@ namespace Flare
 		}
 
 		FillClearValuesBuffer();
+	}
+
+	void VulkanRenderGraph::OnAfterAllocatingOnDemandTextures(const std::unordered_set<RenderGraphTextureId>& updatedTextures)
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		for (RenderGraphTextureId texture : updatedTextures)
+		{
+			m_TextureViews.RecreateCachedTextureViews(texture);
+		}
+
+		uint32_t frameIndex = GraphicsContext::GetInstance().GetCurrentFrameInFlight();
+		std::vector<VkImageView> temporaryAttachmentsStorage;
+
+		const auto& dependencyGraph = GetDependencyGraph();
+		for (size_t nodeIndex : dependencyGraph.GetExecutionOrder())
+		{
+			const auto& node = GetNodes()[nodeIndex];
+
+			if (m_NodeData[nodeIndex].RenderTargetHandleIndex == NodeData::INVALID_TARGET_INDEX)
+				continue;
+
+			bool recreateRenderPass = false;
+			for (const auto& output : node.Specifications.GetOutputs())
+			{
+				if (updatedTextures.contains(output.AttachmentTexture))
+				{
+					recreateRenderPass = true;
+					break;
+				}
+			}
+
+			if (recreateRenderPass)
+			{
+				CreateRenderTargetForNode(nodeIndex, frameIndex, temporaryAttachmentsStorage);
+			}
+		}
 	}
 }

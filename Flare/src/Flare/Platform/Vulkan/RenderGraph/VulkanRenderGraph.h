@@ -53,11 +53,14 @@ namespace Flare
 
 		void SelectVulkanRenderPasses(const LayoutTransitionsGenerator& renderGraphBuilder);
 		void FillClearValuesBuffer();
+
+		void CreateRenderTargetForNode(size_t nodeIndex, uint32_t frameIndex, std::vector<VkImageView>& temporaryAttachmentsStorage);
 	protected:
 		void OnPrepare() override;
 		void OnTexturesResize() override;
 		void OnClear() override;
 		void OnBuild() override;
+		void OnAfterAllocatingOnDemandTextures(const std::unordered_set<RenderGraphTextureId>& updatedTextures) override;
 	private:
 		struct ClearValuesRange
 		{
