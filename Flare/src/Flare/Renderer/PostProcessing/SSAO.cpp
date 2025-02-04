@@ -64,8 +64,18 @@ namespace Flare
 		std::uniform_real_distribution<float> generator(0.0f, 2.0f * glm::pi<float>());
 
 		RenderGraphTextureId linearDepthDepth = renderGraph.CreateTexture(TextureFormat::RF32, "HBAO.DownsampledDepth");
-		RenderGraphTextureId fullScreenAOTexture = renderGraph.CreateTexture(AO_TEXTURE_FORMAT, "HBAO.FullScreenAO");
 		RenderGraphTextureId aoBlurIntermediateTexture = renderGraph.CreateTexture(AO_TEXTURE_FORMAT, "HBAO.AOBlurIntermediate");
+
+		// FIXME: Switch back to on demand allocation.
+		//       It isn't possible at the moment as the AO texture in global descriptor sets is not updated every frame.
+		//
+		//       When updating descriptor sets, all sets for each frame in flight might get filled with the same AO texture,
+		//       because not all of the textures had been allocated at this point.
+		//       This leads to validation errors, because all frames in flight use the same texture.
+		//       To work around this, the texture resource is created with `RenderGraphTextureAllocationMode::Preallocated`.
+		RenderGraphTextureId fullScreenAOTexture = renderGraph.GetResourceManager().CreateTexture(AO_TEXTURE_FORMAT,
+			"HBAO.FullScreenAO",
+			1.0f, RenderGraphTextureAllocationMode::Preallocated);
 
 		aoConfiguration.AOTexture = fullScreenAOTexture;
 

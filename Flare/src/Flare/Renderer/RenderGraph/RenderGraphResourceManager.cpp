@@ -24,7 +24,10 @@ namespace Flare
 		return (glm::uvec2)glm::ceil((glm::vec2)viewportSize * textureScale);
 	}
 
-	RenderGraphTextureId RenderGraphResourceManager::CreateTexture(TextureFormat format, std::string_view debugName, float scale)
+	RenderGraphTextureId RenderGraphResourceManager::CreateTexture(TextureFormat format,
+		std::string_view debugName,
+		float scale,
+		RenderGraphTextureAllocationMode allocationMode)
 	{
 		FLARE_PROFILE_FUNCTION();
 		RenderGraphTextureId id = RenderGraphTextureId((uint32_t)m_Textures.size());
@@ -33,7 +36,7 @@ namespace Flare
 		resource.DebugName = debugName;
 		resource.Format = format;
 		resource.TextureSizeConstraint = RenderGraphTextureResource::SizeConstraint::ViewportSize;
-		resource.AllocationMode = RenderGraphTextureAllocationMode::OnDemand;
+		resource.AllocationMode = allocationMode;
 		resource.UniqueAllocationsMask = 1;
 		resource.TextureHandleIndex = (uint32_t)m_TextureHandles.size();
 		resource.Scale = scale;

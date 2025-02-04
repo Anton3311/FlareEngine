@@ -80,7 +80,11 @@ namespace Flare
 	public:
 		RenderGraphResourceManager(World& renderWorld, Entity viewportEntity);
 
-		RenderGraphTextureId CreateTexture(TextureFormat format, std::string_view debugName, float scale = 1.0f);
+		RenderGraphTextureId CreateTexture(TextureFormat format,
+			std::string_view debugName,
+			float scale = 1.0f,
+			RenderGraphTextureAllocationMode allocationMode = RenderGraphTextureAllocationMode::OnDemand);
+
 		RenderGraphTextureId CreateFixedSizeTexture(TextureFormat format,
 			glm::uvec2 size,
 			std::string_view debugName,
