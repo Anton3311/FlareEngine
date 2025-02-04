@@ -10,6 +10,28 @@
 
 namespace Flare
 {
+	enum class AttachmentClearValueType : uint8_t
+	{
+		Color = 0,
+		Depth = 1,
+	};
+
+	struct AttachmentClearValue
+	{
+		AttachmentClearValue() = default;
+		AttachmentClearValue(const glm::vec4& clearColor)
+			: Type(AttachmentClearValueType::Color), Color(clearColor) {}
+		AttachmentClearValue(float clearDepth)
+			: Type(AttachmentClearValueType::Depth), Depth(clearDepth) {}
+
+		AttachmentClearValueType Type = AttachmentClearValueType::Color;
+		union
+		{
+			glm::vec4 Color = glm::vec4(0.0f);
+			float Depth;
+		};
+	};
+
 	struct LayoutTransition
 	{
 		RenderGraphTextureId Texture;
@@ -23,6 +45,7 @@ namespace Flare
 		RenderGraphTextureId Texture;
 		ImageLayout InitialLayout = ImageLayout::Undefined;
 		ImageLayout FinalLayout = ImageLayout::Undefined;
+		std::optional<AttachmentClearValue> ClearValue;
 	};
 
 	struct LayoutTransitionsRange

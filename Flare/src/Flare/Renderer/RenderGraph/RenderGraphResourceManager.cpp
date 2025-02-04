@@ -100,8 +100,6 @@ namespace Flare
 		uint32_t frameCount = GraphicsContext::GetInstance().GetFrameInFlightCount();
 		uint32_t previousFrameIndex = (frameCount + frameIndex - 1) % frameCount;
 
-		FLARE_CORE_INFO("Frame index = {}", frameIndex);
-
 		uint8_t fullAllocationMask = static_cast<uint8_t>((1 << frameCount) - 1);
 		uint8_t currentAllocationMask = static_cast<uint8_t>(1 << frameIndex);
 
@@ -148,11 +146,6 @@ namespace Flare
 					updatedTextures.insert(textureId);
 				}
 			}
-		}
-
-		for (const auto& r : m_Textures)
-		{
-			FLARE_CORE_INFO("Frame = {} Texture = {}", frameIndex, m_TextureHandles[r.TextureHandleIndex + frameIndex]->GetDebugName());
 		}
 	}
 

@@ -40,6 +40,7 @@ namespace Flare
 		Ref<VulkanRenderPass> m_CompatibleRenderPass = nullptr;
 	};
 
+	class VulkanCommandBuffer;
 	class FLARE_API VulkanRenderGraph : public RenderGraph
 	{
 	public:
@@ -56,6 +57,7 @@ namespace Flare
 		void FillClearValuesBuffer();
 
 		void CreateRenderTargetForNode(size_t nodeIndex, uint32_t frameIndex, std::vector<VkImageView>& temporaryAttachmentsStorage);
+		void ClearExternalTexture(const ExternalRenderGraphResource& externalTexture, VulkanCommandBuffer& commandBuffer) const;
 	protected:
 		void OnPrepare() override;
 		void OnTexturesResize() override;

@@ -677,11 +677,13 @@ namespace Flare
 			colorTextureResource.InitialLayout = ImageLayout::AttachmentOutput;
 			colorTextureResource.FinalLayout = ImageLayout::ReadOnly;
 			colorTextureResource.Texture = colorOutput->Id;
+			colorTextureResource.ClearValue = AttachmentClearValue(glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
 
 			ExternalRenderGraphResource depthTextureResource{};
 			depthTextureResource.InitialLayout = ImageLayout::AttachmentOutput;
 			depthTextureResource.FinalLayout = ImageLayout::ReadOnly;
 			depthTextureResource.Texture = depthOutput->Id;
+			depthTextureResource.ClearValue = AttachmentClearValue(1.0f);
 
 			viewportRenderGraph->Graph->AddExternalResource(colorTextureResource);
 			viewportRenderGraph->Graph->AddExternalResource(depthTextureResource);
@@ -725,11 +727,6 @@ namespace Flare
 		}
 		
 		FLARE_CORE_ASSERT(viewportRenderGraph->Graph->IsValid());
-
-		Ref<CommandBuffer> commandBuffer = GraphicsContext::GetInstance().GetCommandBuffer();
-		RenderGraphResourceManager& resourceManager = viewportRenderGraph->Graph->GetResourceManager();
-		commandBuffer->ClearColor(resourceManager.GetTexture(colorOutput->Id), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
-		commandBuffer->ClearDepth(resourceManager.GetTexture(depthOutput->Id), 1.0f);
 	}
 
 	void Renderer::RequestRenderGraphRebuilds()

@@ -18,6 +18,32 @@
 
 namespace Flare
 {
+	static VkClearValue AttachmentClearValueToVkClearValue(AttachmentClearValue clearValue)
+	{
+		VkClearValue result{};
+		switch (clearValue.Type)
+		{
+		case AttachmentClearValueType::Color:
+			result.color.float32[0] = clearValue.Color.r;
+			result.color.float32[1] = clearValue.Color.g;
+			result.color.float32[2] = clearValue.Color.b;
+			result.color.float32[3] = clearValue.Color.a;
+			break;
+		case AttachmentClearValueType::Depth:
+			result.depthStencil.depth = clearValue.Depth;
+			result.depthStencil.stencil = 0;
+			break;
+		default:
+			FLARE_VERIFY_UNREACHABLE();
+		}
+
+		return result;
+	}
+
+	//
+	// VulkanRenderTarget
+	//
+
 	VulkanRenderTarget::VulkanRenderTarget(glm::uvec2 size, Span<const VkImageView> attachments, Ref<VulkanRenderPass> compatibleRenderPass, const char* debugName)
 		: m_Size(size), m_CompatibleRenderPass(compatibleRenderPass), m_DebugName(debugName)
 	{
@@ -106,6 +132,19 @@ namespace Flare
 		FLARE_CORE_ASSERT(IsValid());
 
 		VulkanCommandBuffer& vulkanCommandBuffer = commandBuffer.DerefAs<VulkanCommandBuffer>();
+
+		// Clear external textures
+
+		{
+			FLARE_PROFILE_SCOPE("ClearExternalTextures");
+			for (const auto& externalTexture : GetExternalResources())
+			{
+				if (!externalTexture.ClearValue)
+					continue;
+
+				ClearExternalTexture(externalTexture, vulkanCommandBuffer);
+			}
+		}
 
 		uint32_t frameInFlight = GraphicsContext::GetInstance().GetCurrentFrameInFlight();
 
@@ -318,28 +357,6 @@ namespace Flare
 		}
 	}
 
-	static VkClearValue AttachmentClearValueToVkClearValue(AttachmentClearValue clearValue)
-	{
-		VkClearValue result{};
-		switch (clearValue.Type)
-		{
-		case AttachmentClearValueType::Color:
-			result.color.float32[0] = clearValue.Color.r;
-			result.color.float32[1] = clearValue.Color.g;
-			result.color.float32[2] = clearValue.Color.b;
-			result.color.float32[3] = clearValue.Color.a;
-			break;
-		case AttachmentClearValueType::Depth:
-			result.depthStencil.depth = clearValue.Depth;
-			result.depthStencil.stencil = 0;
-			break;
-		default:
-			FLARE_VERIFY_UNREACHABLE();
-		}
-
-		return result;
-	}
-
 	void VulkanRenderGraph::FillClearValuesBuffer()
 	{
 		FLARE_PROFILE_FUNCTION();
@@ -415,6 +432,105 @@ namespace Flare
 			Span<const VkImageView>::FromVector(temporaryAttachmentsStorage),
 			m_NodeData[nodeIndex].VulkanRenderPassHandle,
 			renderTargetDebugName.c_str()));
+	}
+
+	void VulkanRenderGraph::ClearExternalTexture(const ExternalRenderGraphResource& externalTexture, VulkanCommandBuffer& commandBuffer) const
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		const VulkanTexture& texture = GetTexture(externalTexture.Texture).DerefAs<const VulkanTexture>();
+
+		TextureFormat textureFormat = texture.GetSpecifications().Format;
+		bool isDepthTexture = IsDepthTextureFormat(textureFormat);
+
+		FLARE_CORE_ASSERT((isDepthTexture && externalTexture.ClearValue->Type == AttachmentClearValueType::Depth)
+			|| (!isDepthTexture && externalTexture.ClearValue->Type == AttachmentClearValueType::Color));
+
+		VkImage image = texture.GetImageHandle();
+		VkImageLayout initialLayout = ImageLayoutToVulkanImageLayout(externalTexture.InitialLayout, textureFormat);
+
+		const TextureSpecifications& specifications = texture.GetSpecifications();
+		VkImageSubresourceRange imageSubresourceRange{};
+		imageSubresourceRange.aspectMask = isDepthTexture ? VK_IMAGE_ASPECT_DEPTH_BIT : VK_IMAGE_ASPECT_COLOR_BIT;
+		imageSubresourceRange.baseArrayLayer = 0;
+		imageSubresourceRange.baseMipLevel = 0;
+		imageSubresourceRange.layerCount = specifications.ArrayLayerCount;
+		imageSubresourceRange.levelCount = specifications.MipCount;
+
+		{
+			VkImageMemoryBarrier barrier{};
+			barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+			barrier.image = image;
+			barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+			barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+			barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+			barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+			barrier.subresourceRange = imageSubresourceRange;
+
+			VkPipelineStageFlags sourceStage = VK_PIPELINE_STAGE_NONE;
+			VkPipelineStageFlags destinationStage = VK_PIPELINE_STAGE_NONE;
+
+			VulkanContext::FillPipelineStagesAndAccessMasks(initialLayout,
+				VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+				sourceStage,
+				destinationStage,
+				barrier.srcAccessMask,
+				barrier.dstAccessMask);
+
+			vkCmdPipelineBarrier(commandBuffer.GetHandle(),
+				sourceStage, destinationStage, 0, 0,
+				nullptr, 0,
+				nullptr, 1,
+				&barrier);
+		}
+
+		VkClearValue clearValue = AttachmentClearValueToVkClearValue(*externalTexture.ClearValue);
+
+		if (isDepthTexture)
+		{
+			vkCmdClearDepthStencilImage(commandBuffer.GetHandle(),
+				image,
+				VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+				&clearValue.depthStencil,
+				1,
+				&imageSubresourceRange);
+		}
+		else
+		{
+			vkCmdClearColorImage(commandBuffer.GetHandle(),
+				image,
+				VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+				&clearValue.color,
+				1,
+				&imageSubresourceRange);
+		}
+
+		{
+			VkImageMemoryBarrier barrier{};
+			barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+			barrier.image = image;
+			barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+			barrier.newLayout = initialLayout;
+			barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+			barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+			barrier.subresourceRange = imageSubresourceRange;
+
+			VkPipelineStageFlags sourceStage = VK_PIPELINE_STAGE_NONE;
+			VkPipelineStageFlags destinationStage = VK_PIPELINE_STAGE_NONE;
+
+			VulkanContext::FillPipelineStagesAndAccessMasks(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+				initialLayout,
+				sourceStage,
+				destinationStage,
+				barrier.srcAccessMask,
+				barrier.dstAccessMask);
+
+			vkCmdPipelineBarrier(commandBuffer.GetHandle(),
+				sourceStage, destinationStage, 0, 0,
+				nullptr, 0,
+				nullptr, 1,
+				&barrier);
+		}
 	}
 
 	void VulkanRenderGraph::OnPrepare()
