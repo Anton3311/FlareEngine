@@ -19,7 +19,7 @@
 namespace Flare
 {
 	VulkanRenderTarget::VulkanRenderTarget(glm::uvec2 size, Span<const VkImageView> attachments, Ref<VulkanRenderPass> compatibleRenderPass, const char* debugName)
-		: m_Size(size), m_CompatibleRenderPass(compatibleRenderPass)
+		: m_Size(size), m_CompatibleRenderPass(compatibleRenderPass), m_DebugName(debugName)
 	{
 		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(attachments.GetSize() > 0);
@@ -64,6 +64,7 @@ namespace Flare
 
 		m_Size = other.m_Size;
 		m_Handle = other.m_Handle;
+		m_DebugName = std::move(other.m_DebugName);
 
 		m_CompatibleRenderPass = std::move(other.m_CompatibleRenderPass);
 
@@ -408,10 +409,12 @@ namespace Flare
 
 		FLARE_CORE_ASSERT(m_NodeData[nodeIndex].VulkanRenderPassHandle);
 
+		std::string renderTargetDebugName = fmt::format("{}.#{}", nodes[nodeIndex].Specifications.GetDebugName(), frameIndex);
+
 		renderTarget = std::move(VulkanRenderTarget(renderTargetSize,
 			Span<const VkImageView>::FromVector(temporaryAttachmentsStorage),
 			m_NodeData[nodeIndex].VulkanRenderPassHandle,
-			nodes[nodeIndex].Specifications.GetDebugName().c_str()));
+			renderTargetDebugName.c_str()));
 	}
 
 	void VulkanRenderGraph::OnPrepare()

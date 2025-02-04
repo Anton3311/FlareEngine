@@ -34,6 +34,7 @@ namespace Flare
 	private:
 		void Release();
 	private:
+		std::string m_DebugName;
 		glm::uvec2 m_Size = glm::uvec2(0, 0);
 		VkFramebuffer m_Handle = VK_NULL_HANDLE;
 		Ref<VulkanRenderPass> m_CompatibleRenderPass = nullptr;
