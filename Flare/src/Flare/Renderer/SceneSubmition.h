@@ -105,6 +105,7 @@ namespace Flare
 
 		std::vector<PointLightSubmition> PointLights;
 		std::vector<SpotLightSubmition> SpotLights;
+		std::vector<uint32_t> ShadowCastingSpotLights;
 
 		std::vector<DecalSubmition> DecalSubmitions;
 

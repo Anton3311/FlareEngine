@@ -53,12 +53,12 @@ namespace Flare
 		constexpr float PROJECTION_NEAR = 0.01f;
 
 		const SceneSubmition& sceneSubmition = context.GetSceneSubmition();
-		m_HasSpotLight = sceneSubmition.SpotLights.size() > 0;
+		m_HasSpotLight = sceneSubmition.ShadowCastingSpotLights.size() > 0;
 
 		if (!m_HasSpotLight)
 			return;
 
-		const SpotLightSubmition& spotLight = sceneSubmition.SpotLights[0];
+		const SpotLightSubmition& spotLight = sceneSubmition.SpotLights[sceneSubmition.ShadowCastingSpotLights[0]];
 
 		float radius = glm::sqrt(spotLight.Intensity / 0.01f);
 

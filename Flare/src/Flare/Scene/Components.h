@@ -321,7 +321,7 @@ namespace Flare
         }
     };
 
-    
+
 
     struct FLARE_API SpotLightShadows
     {

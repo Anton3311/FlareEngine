@@ -14,6 +14,7 @@ namespace Flare
 
 		PointLights.clear();
 		SpotLights.clear();
+		ShadowCastingSpotLights.clear();
 		DecalSubmitions.clear();
 
 		Renderer2DSubmition.Reset();

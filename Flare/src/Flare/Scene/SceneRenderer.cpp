@@ -111,10 +111,15 @@ namespace Flare
 				}
 			});
 
-		m_SpotLightsQuery.ForEachChunk([submitions = &m_SceneSubmition.SpotLights](QueryChunk chunk,
+		m_SpotLightsQuery.ForEachChunk([this, &world](QueryChunk chunk,
 			ComponentView<const TransformComponent> transforms,
-			ComponentView<const SpotLight> lights)
+			ComponentView<const SpotLight> lights,
+			ArchetypeId archetype)
 			{
+				bool hasShadows = world.GetArchetypes()
+					.GetArchetypeComponents(archetype)
+					.TryGetComponentIndex(COMPONENT_ID(SpotLightShadows)) != ArchetypeComponents::INVALID_COMPONENT_INDEX;
+
 				for (size_t entityIndex = 0; entityIndex < chunk.GetEntityCount(); entityIndex++)
 				{
 					if (lights[entityIndex].OuterAngle - lights[entityIndex].InnerAngle <= 0.0f)
@@ -123,13 +128,20 @@ namespace Flare
 					glm::vec3 position = transforms[entityIndex].Position;
 					glm::vec3 direction = transforms[entityIndex].TransformDirection(glm::vec3(0.0f, 0.0f, -1.0f));
 
-					SpotLightSubmition& submition = submitions->emplace_back();
+					size_t spotLightIndex = m_SceneSubmition.SpotLights.size();
+
+					SpotLightSubmition& submition = m_SceneSubmition.SpotLights.emplace_back();
 					submition.Color = lights[entityIndex].Color;
 					submition.Intensity = lights[entityIndex].Intensity;
 					submition.Direction = direction;
 					submition.Position = position;
 					submition.InnerAngleCos = glm::cos(glm::radians(lights[entityIndex].InnerAngle));
 					submition.OuterAngleCos = glm::cos(glm::radians(lights[entityIndex].OuterAngle));
+
+					if (hasShadows)
+					{
+						m_SceneSubmition.ShadowCastingSpotLights.push_back(static_cast<uint32_t>(spotLightIndex));
+					}
 				}
 			});
 
