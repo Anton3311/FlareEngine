@@ -110,14 +110,7 @@ namespace Flare
 			entry.UVTranslation = tileSize * static_cast<glm::vec2>(tileCoordinate);
 		}
 
-		uint32_t shadowCastingLightsRange[2] =
-		{
-			static_cast<uint32_t>(sceneSubmition.SpotLights.size() - sceneSubmition.ShadowCastingSpotLights.size()),
-			static_cast<uint32_t>(sceneSubmition.ShadowCastingSpotLights.size())
-		};
-
-		globalResources.FrameResources[frameIndex].SpotLightShadowDataBuffer->SetData(MemorySpan(shadowCastingLightsRange, 2), 0);
-		globalResources.FrameResources[frameIndex].SpotLightShadowDataBuffer->SetData(MemorySpan::FromVector(shadowEntries), 16);
+		globalResources.FrameResources[frameIndex].SpotLightShadowDataBuffer->SetData(MemorySpan::FromVector(shadowEntries), 0);
 	}
 
 	void SpotLightShadowPass::OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)

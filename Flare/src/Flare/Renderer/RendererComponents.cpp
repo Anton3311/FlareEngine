@@ -41,7 +41,7 @@ namespace Flare
 			frameResources.ShadowDataBuffer = GPUBuffer::CreateUniformBuffer(sizeof(ShadowPass::ShadowData));
 			frameResources.PointLightsBuffer = GPUBuffer::CreateStorageBuffer(16 * sizeof(PointLightData), GPUBufferMemoryType::Static);
 			frameResources.SpotLightsBuffer = GPUBuffer::CreateStorageBuffer(16 * sizeof(SpotLightData), GPUBufferMemoryType::Static);
-			frameResources.SpotLightShadowDataBuffer = GPUBuffer::CreateStorageBuffer(sizeof(SpotLightShadowsEntry) * 8 + 16, GPUBufferMemoryType::Dynamic);
+			frameResources.SpotLightShadowDataBuffer = GPUBuffer::CreateStorageBuffer(sizeof(SpotLightShadowsEntry) * 8, GPUBufferMemoryType::Dynamic);
 
 			frameResources.CameraDescriptorSet = Renderer::GetCameraDescriptorSetPool()->AllocateSet();
 			frameResources.CameraDescriptorSet->WriteUniformBuffer(frameResources.CameraBuffer, 0);

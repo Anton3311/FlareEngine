@@ -71,6 +71,9 @@ namespace Flare
 		uint32_t PointLightsCount = 0;
 		uint32_t SpotLightsCount = 0;
 
+		uint32_t FirstShadowCastingSpotlight = 0;
+		uint32_t ShadowCastingSpotlightCount = 0;
+
 		// Making it a `bool` type, causes errors when the `LightData` is copied to the GPU.
 		// spirv-cross says that this member of an equivalent struct inside the shader is actually a uint.
 		//

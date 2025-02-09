@@ -16,6 +16,9 @@ layout(std140, set = 1, binding = 1) uniform LightData
 	uint u_PointLightsCount;
 	uint u_SpotLightsCount;
 
+	uint u_FirstShadowCastingSpotlight;
+	uint u_ShadowCastingSpotlightCount;
+
 	bool u_AOEnabled;
 };
 

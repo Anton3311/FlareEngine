@@ -14,10 +14,6 @@ struct SpotLightShadowsEntry
 
 layout(std430, set = 1, binding = 14) readonly buffer SpotLightShadowData
 {
-	uint Start;
-	uint Count;
-	uint Padding0;
-	uint Padding1;
 	SpotLightShadowsEntry Entries[];
 } u_SpotLightShadowData;
 
@@ -47,9 +43,9 @@ float CalculateSpotLightShadow(vec3 spotLightPosition, vec3 surfaceNormal, vec3 
 vec3 ComputeShadowCastingSpotLightsContribution(vec3 V, in SurfaceProperties surface)
 {
 	vec3 finalContribution = vec3(0.0f);
-	uint end = u_SpotLightShadowData.Start + u_SpotLightShadowData.Count;
+	uint end = u_FirstShadowCastingSpotlight + u_ShadowCastingSpotlightCount;
 
-	for (uint i = u_SpotLightShadowData.Start; i < end; i++)
+	for (uint i = u_FirstShadowCastingSpotlight; i < end; i++)
 	{
 		SpotLightData spotLight = u_SpotLights[i];
 
