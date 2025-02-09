@@ -16,10 +16,18 @@ namespace Flare
 		glm::mat4 Projection;
 	};
 
+	struct SpotLightShadowsSpecifications
+	{
+		uint32_t TileSize = 256;
+		glm::uvec2 TileCount = glm::uvec2(2, 2);
+	};
+
 	class SpotLightShadowPass : public RenderGraphPass
 	{
 	public:
-		SpotLightShadowPass(RenderGraphTextureId shadowMap, Ref<Material> perspectiveDepthOnly);
+		SpotLightShadowPass(RenderGraphTextureId shadowMap,
+			Ref<Material> perspectiveDepthOnly,
+			const SpotLightShadowsSpecifications& specifications);
 		~SpotLightShadowPass();
 
 		void OnPrepare(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer) override;
@@ -30,6 +38,8 @@ namespace Flare
 			Ref<DescriptorSet> CameraDescriptorSet = nullptr;
 			Ref<GPUBuffer> CameraBuffer = nullptr;
 		};
+
+		SpotLightShadowsSpecifications m_Specifications;
 
 		bool m_HasSpotLight = false;
 		RenderGraphTextureId m_ShadowMap;

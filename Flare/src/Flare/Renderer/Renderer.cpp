@@ -491,12 +491,14 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
+		SpotLightShadowsSpecifications shadowSpecifications{};
+
 		RenderGraphTextureId shadowMapId = renderGraph.GetResourceManager().CreateFixedSizeTexture(
 			TextureFormat::Depth32,
-			glm::uvec2(256),
+			shadowSpecifications.TileSize * shadowSpecifications.TileCount,
 			"SpotLightShadowMap");
 
-		Ref<SpotLightShadowPass> pass = Ref<SpotLightShadowPass>::New(shadowMapId, perspectiveDepthOnly);
+		Ref<SpotLightShadowPass> pass = Ref<SpotLightShadowPass>::New(shadowMapId, perspectiveDepthOnly, shadowSpecifications);
 
 		const ViewportDepthOutput& depthOutput = s_RendererData.RenderWorld->GetEntityComponent<const ViewportDepthOutput>(viewportEntity);
 

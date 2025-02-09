@@ -15,25 +15,27 @@
 
 namespace Flare
 {
-	SpotLightShadowPass::SpotLightShadowPass(RenderGraphTextureId shadowMap, Ref<Material> perspectiveDepthOnly)
-		: m_ShadowMap(shadowMap), m_PerspectiveDepthOnly(perspectiveDepthOnly)
+	SpotLightShadowPass::SpotLightShadowPass(RenderGraphTextureId shadowMap,
+		Ref<Material> perspectiveDepthOnly,
+		const SpotLightShadowsSpecifications& specifications)
+		: m_ShadowMap(shadowMap), m_PerspectiveDepthOnly(perspectiveDepthOnly), m_Specifications(specifications)
 	{
 		FLARE_PROFILE_FUNCTION();
 
 		uint32_t frameInFlightCount = GraphicsContext::GetInstance().GetFrameInFlightCount();
 		m_FrameResources.reserve(frameInFlightCount);
 
-		GPUBufferSpecifications specifications{};
-		specifications.MemoryType = GPUBufferMemoryType::Dynamic;
-		specifications.Size = sizeof(RenderView);
-		specifications.Usage = GPUBufferUsage::UniformBuffer;
+		GPUBufferSpecifications bufferSpecifications{};
+		bufferSpecifications.MemoryType = GPUBufferMemoryType::Dynamic;
+		bufferSpecifications.Size = sizeof(RenderView);
+		bufferSpecifications.Usage = GPUBufferUsage::UniformBuffer;
 
 		constexpr uint32_t MAX_LIGHTS = 4;
 
 		for (uint32_t frameIndex = 0; frameIndex < frameInFlightCount * MAX_LIGHTS; frameIndex++)
 		{
 			FrameResources& resources = m_FrameResources.emplace_back();
-			resources.CameraBuffer = GPUBuffer::Create(specifications);
+			resources.CameraBuffer = GPUBuffer::Create(bufferSpecifications);
 			resources.CameraDescriptorSet = Renderer::GetCameraDescriptorSetPool()->AllocateSet();
 			resources.CameraDescriptorSet->WriteUniformBuffer(resources.CameraBuffer, 0);
 			resources.CameraDescriptorSet->FlushWrites();
@@ -67,9 +69,14 @@ namespace Flare
 
 		std::vector<SpotLightShadowsEntry> shadowEntries;
 		const ViewportGlobalResources& globalResources = context.RenderWorld.GetEntityComponent<const ViewportGlobalResources>(context.ViewportEntity);
+
+		glm::uvec2 shadowMapSize = context.GetRenderGraphResourceManager().GetTexture(m_ShadowMap)->GetSize();
 		for (size_t lightIndex = 0; lightIndex < lightCount; lightIndex++)
 		{
 			const SpotLightSubmition& spotLight = sceneSubmition.SpotLights[sceneSubmition.ShadowCastingSpotLights[lightIndex]];
+
+			glm::uvec2 tileCoordinate = glm::uvec2(lightIndex % m_Specifications.TileCount.x, lightIndex / m_Specifications.TileCount.y);
+			glm::vec2 tileSize = glm::vec2(1.0f) / static_cast<glm::vec2>(m_Specifications.TileCount);
 
 			float radius = glm::sqrt(spotLight.Intensity / 0.01f);
 
@@ -86,8 +93,6 @@ namespace Flare
 
 			viewMatrix = glm::lookAt(spotLight.Position + spotLight.Direction, spotLight.Position, glm::vec3(0.0f, 1.0f, 0.0f));
 
-			glm::uvec2 shadowMapSize = context.GetRenderGraphResourceManager().GetTexture(m_ShadowMap)->GetSize();
-
 			RenderView view{};
 			view.FOV = fov;
 			view.Far = radius;
@@ -101,8 +106,8 @@ namespace Flare
 
 			auto& entry = shadowEntries.emplace_back();
 			entry.Projection = view.ViewProjection;
-			entry.UVScale = glm::vec2(0.5f);
-			entry.UVTranslation = glm::vec2(0.5f) * glm::vec2(static_cast<float>(lightIndex % 2), static_cast<float>(lightIndex / 2));
+			entry.UVScale = tileSize;
+			entry.UVTranslation = tileSize * static_cast<glm::vec2>(tileCoordinate);
 		}
 
 		uint32_t shadowCastingLightsRange[2] =
@@ -135,9 +140,13 @@ namespace Flare
 			commandBuffer->SetGlobalDescriptorSet(frameResources.CameraDescriptorSet, 0);
 			commandBuffer->ApplyMaterial(m_PerspectiveDepthOnly);
 
+			glm::uvec2 tileCoordinate = glm::uvec2(lightIndex % m_Specifications.TileCount.x, lightIndex / m_Specifications.TileCount.y);
+			glm::vec2 tileSize = glm::vec2(1.0f) / static_cast<glm::vec2>(m_Specifications.TileCount);
+
 			Math::Rect viewport{};
-			viewport.Min = glm::vec2(0.5f) * glm::vec2(static_cast<float>(lightIndex % 2), static_cast<float>(lightIndex / 2));
-			viewport.Max = viewport.Min + glm::vec2(0.5f);
+			viewport.Min = tileSize * static_cast<glm::vec2>(tileCoordinate);
+			viewport.Max = viewport.Min + tileSize;
+
 			viewport.Min *= context.RenderAreaSize;
 			viewport.Max *= context.RenderAreaSize;
 
