@@ -41,13 +41,6 @@ layout(set = 1, binding = 9) uniform sampler2DShadow u_ShadowMapCompareSampler1;
 layout(set = 1, binding = 10) uniform sampler2DShadow u_ShadowMapCompareSampler2;
 layout(set = 1, binding = 11) uniform sampler2DShadow u_ShadowMapCompareSampler3;
 
-layout(set = 1, binding = 13) uniform sampler2DShadow u_SpotLightShadowMap;
-
-layout(set = 1, binding = 14) uniform SpotLightShadowData
-{
-	mat4 Projection;
-} u_SpotLightShadowData;
-
 // Vogel disk points
 const vec2[] SAMPLE_POINTS = {
 	vec2(0.1767766952966369, 0.0),
@@ -335,35 +328,6 @@ float CalculateShadow(vec3 N, vec3 position)
 #endif
 
 	return mix(shadow, 1.0f, shadowFade);
-}
-
-float CalculateSpotLightShadow(vec3 spotLightPosition, vec3 N, vec3 position)
-{
-	vec3 directionTowardsLight = normalize(spotLightPosition - position);
-	float NoL = dot(N, directionTowardsLight);
-
-	vec3 positionBias = (NoL < 0.0f) ? (-directionTowardsLight * 0.2f) : (directionTowardsLight * 0.2f);
-
-	position += positionBias;
-
-	vec4 projected = u_SpotLightShadowData.Projection * vec4(position, 1.0f);
-	projected /= projected.w;
-
-	vec2 uv = projected.xy * 0.5f + vec2(0.5f);
-	float projectedDepth = projected.z;
-
-	if (any(lessThan(uv, vec2(0.0f))) || any(greaterThan(uv, vec2(1.0f))))
-		return 1.0f;
-
-	float rotationAngle = 2.0f * PI * InterleavedGradientNoise(gl_FragCoord.xy);
-	ShadowMappingSurfaceParams params;
-	params.Position = position;
-	params.Normal = N;
-	params.ConstantBias = 0.0f;
-	params.BiasParams = vec3(0.0f, 0.0f, projectedDepth);
-	params.SamplesRotation = vec2(cos(rotationAngle), sin(rotationAngle));
-
-	return 1.0f - PCF(u_SpotLightShadowMap, uv, 2.0f / 128.0f, params);
 }
 
 #endif

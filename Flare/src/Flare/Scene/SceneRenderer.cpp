@@ -286,7 +286,7 @@ namespace Flare
 		lightData.Near = 0.1f;
 		lightData.EnvironmentLight = glm::vec4(m_SceneSubmition.Environment.EnvironmentColor, m_SceneSubmition.Environment.EnvironmentColorIntensity);
 		lightData.PointLightsCount = (uint32_t)m_SceneSubmition.PointLights.size();
-		lightData.SpotLightsCount = (uint32_t)m_SceneSubmition.SpotLights.size();
+		lightData.SpotLightsCount = (uint32_t)(m_SceneSubmition.SpotLights.size() - m_SceneSubmition.ShadowCastingSpotLights.size());
 		lightData.AOEnabled = renderGraph.Graph->GetResourceManager().IsTextureIdValid(aoConfiguration.AOTexture);
 
 		const ViewportGlobalResources& viewportGlobalResources = renderWorld.GetEntityComponent<const ViewportGlobalResources>(viewportEntity);
@@ -306,7 +306,37 @@ namespace Flare
 
 		{
 			FLARE_PROFILE_SCOPE("UploadPointLightsData");
-			MemorySpan pointLightsData = MemorySpan::FromVector(m_SceneSubmition.PointLights);
+
+			// Put non-shadow casting lights at the front, and shadow casting lights at the back.
+			MemorySpan pointLightsData;
+			std::vector<PointLightSubmition> groupedPointLights;
+
+			if (m_SceneSubmition.ShadowCastingSpotLights.size() > 0)
+			{
+				groupedPointLights.resize(m_SceneSubmition.PointLights.size());
+
+				size_t shadowCastingLightIndex = 0;
+				size_t frontIndex = 0;
+				size_t backIndex = groupedPointLights.size() - 1;
+				for (size_t i = 0; i < m_SceneSubmition.PointLights.size(); i++)
+				{
+					if (i == m_SceneSubmition.ShadowCastingSpotLights[shadowCastingLightIndex])
+					{
+						groupedPointLights[backIndex--] = m_SceneSubmition.PointLights[i];
+						shadowCastingLightIndex++;
+					}
+					else
+					{
+						groupedPointLights[frontIndex++] = m_SceneSubmition.PointLights[i];
+					}
+				}
+
+				pointLightsData = MemorySpan::FromVector(groupedPointLights);
+			}
+			else
+			{
+				pointLightsData = MemorySpan::FromVector(m_SceneSubmition.SpotLights);
+			}
 
 			if (pointLightsData.GetSize() > viewportFrameResources.PointLightsBuffer->GetSize())
 			{

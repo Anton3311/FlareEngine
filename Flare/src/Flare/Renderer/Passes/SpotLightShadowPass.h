@@ -9,6 +9,13 @@ namespace Flare
 	class GPUBuffer;
 	class Material;
 
+	struct SpotLightShadowsEntry
+	{
+		glm::vec2 UVScale;
+		glm::vec2 UVTranslation;
+		glm::mat4 Projection;
+	};
+
 	class SpotLightShadowPass : public RenderGraphPass
 	{
 	public:

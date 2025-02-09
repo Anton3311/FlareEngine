@@ -88,32 +88,31 @@ vec3 CalculatePointLightsContribution(vec3 V, in SurfaceProperties surface)
 	return finalColor;
 }
 
-vec3 CalculateSpotLightsContribution(vec3 V, float shadow, in SurfaceProperties surface)
+vec3 CalculateSingleSpotLightContricbution(vec3 V, in SurfaceProperties surface, uint lightIndex)
+{
+	SpotLightData spotLight = u_SpotLights[lightIndex];
+
+	vec3 direction = spotLight.Position - surface.Position;
+	float distance = length(direction);
+	float attenuation = 1.0f / (distance * distance);
+
+	direction /= distance;
+
+	vec3 halfWayVector = normalize(V + direction);
+
+	float angleCos = dot(direction, spotLight.Direction);
+	float fade = 1.0f - smoothstep(spotLight.InnerrRadiusCos, spotLight.OuterRadiusCos, angleCos);
+
+	vec3 incomingLight = spotLight.Color.rgb * spotLight.Color.w * fade;
+	return CalculateLight(V, halfWayVector, incomingLight * attenuation, direction, surface);
+}
+
+vec3 CalculateSpotLightsContribution(vec3 V, in SurfaceProperties surface)
 {
 	vec3 finalColor = vec3(0.0);
 	for (uint i = 0; i < u_SpotLightsCount; i++)
 	{
-		SpotLightData spotLight = u_SpotLights[i];
-
-		vec3 direction = u_SpotLights[i].Position - surface.Position;
-		float distance = length(direction);
-		float attenuation = 1.0f / (distance * distance);
-
-		direction /= distance;
-
-		vec3 halfWayVector = normalize(V + direction);
-
-		float angleCos = dot(direction, spotLight.Direction);
-		float fade = 1.0f - smoothstep(spotLight.InnerrRadiusCos, spotLight.OuterRadiusCos, angleCos);
-
-		vec3 incomingLight = spotLight.Color.rgb * spotLight.Color.w * fade;
-
-		vec3 contribution = CalculateLight(V, halfWayVector, incomingLight * attenuation, direction, surface);
-
-		if (i == 0)
-			contribution *= shadow;
-
-		finalColor += contribution;
+		finalColor += CalculateSingleSpotLightContricbution(V, surface, i);
 	}
 
 	return finalColor;

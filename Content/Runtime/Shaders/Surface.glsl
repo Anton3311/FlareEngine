@@ -59,6 +59,7 @@ void main()
 #include "Common/BRDF.glsl"
 #include "Common/ShadowMapping.glsl"
 #include "Common/Light.glsl"
+#include "Common/SpotLightShadows.glsl"
 
 layout(std140, push_constant) uniform InstanceData
 {
@@ -138,14 +139,14 @@ void main()
 	surface.Metallic = u_Material.Metallic;
 
 	float shadow = CalculateShadow(vertexNormal, i_Vertex.Position);
-	float spotLightShadow = CalculateSpotLightShadow(u_SpotLights[0].Position, vertexNormal, i_Vertex.Position);
 
 	vec3 finalColor = CalculateLight(V, H, u_LightColor.rgb * u_LightColor.w, -u_LightDirection, surface);
 
 	finalColor *= shadow;
 
 	finalColor += CalculatePointLightsContribution(V, surface);
-	finalColor += CalculateSpotLightsContribution(V, spotLightShadow, surface);
+	finalColor += CalculateSpotLightsContribution(V, surface);
+	finalColor += ComputeShadowCastingSpotLightsContribution(V, surface);
 
 	float ao = SampleAO(ivec2(gl_FragCoord.xy));
 	ao = mix(ao, 1.0f, shadow);

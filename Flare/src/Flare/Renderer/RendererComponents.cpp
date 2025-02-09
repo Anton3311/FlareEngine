@@ -7,6 +7,7 @@
 #include "Flare/Renderer/Renderer.h"
 #include "Flare/Renderer/RenderData.h"
 #include "Flare/Renderer/Passes/ShadowPass.h"
+#include "Flare/Renderer/Passes/SpotLightShadowPass.h"
 
 namespace Flare
 {
@@ -40,7 +41,7 @@ namespace Flare
 			frameResources.ShadowDataBuffer = GPUBuffer::CreateUniformBuffer(sizeof(ShadowPass::ShadowData));
 			frameResources.PointLightsBuffer = GPUBuffer::CreateStorageBuffer(16 * sizeof(PointLightData), GPUBufferMemoryType::Static);
 			frameResources.SpotLightsBuffer = GPUBuffer::CreateStorageBuffer(16 * sizeof(SpotLightData), GPUBufferMemoryType::Static);
-			frameResources.SpotLightShadowDataBuffer = GPUBuffer::CreateUniformBuffer(sizeof(glm::mat4));
+			frameResources.SpotLightShadowDataBuffer = GPUBuffer::CreateStorageBuffer(sizeof(SpotLightShadowsEntry) * 8 + 16, GPUBufferMemoryType::Dynamic);
 
 			frameResources.CameraDescriptorSet = Renderer::GetCameraDescriptorSetPool()->AllocateSet();
 			frameResources.CameraDescriptorSet->WriteUniformBuffer(frameResources.CameraBuffer, 0);
@@ -67,7 +68,7 @@ namespace Flare
 		set->WriteUniformBuffer(frameResources.LightBuffer, 1);
 		set->WriteStorageBuffer(frameResources.PointLightsBuffer, 2);
 		set->WriteStorageBuffer(frameResources.SpotLightsBuffer, 3);
-		set->WriteUniformBuffer(frameResources.SpotLightShadowDataBuffer, 14);
+		set->WriteStorageBuffer(frameResources.SpotLightShadowDataBuffer, 14);
 		set->FlushWrites();
 	}
 

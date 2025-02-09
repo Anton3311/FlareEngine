@@ -206,7 +206,7 @@ namespace Flare
 				auto& spotLightShadowData = bindings[14];
 				spotLightShadowData.binding = 14;
 				spotLightShadowData.descriptorCount = 1;
-				spotLightShadowData.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+				spotLightShadowData.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
 				spotLightShadowData.pImmutableSamplers = nullptr;
 				spotLightShadowData.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
