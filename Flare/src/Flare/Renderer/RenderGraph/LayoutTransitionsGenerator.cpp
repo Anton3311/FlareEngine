@@ -328,13 +328,21 @@ namespace Flare
 
 		ImageLayout initialLayout = ImageLayout::Undefined;
 
-		if (it != m_States.end())
+		ResourceState* resourceState = nullptr;
+		if (it == m_States.end())
+		{
+			// To this point there are were no layout transitions with including this texture, so there is no corresponding `ResourceState`.
+			const TextureSpecifications& specifications = m_ResourceManager.GetTexture(texture)->GetSpecifications();
+			resourceState = &m_States.try_emplace(texture, specifications, layout).first->second;
+		}
+		else
 		{
 			initialLayout = it->second.GetSubresourceRangeLayout(subresource);
-		}
+			if (initialLayout == layout)
+				return;
 
-		if (initialLayout == layout)
-			return;
+			resourceState = &it->second;
+		}
 
 		transitions.End++;
 		auto& transition = m_Result.LayoutTransitions.emplace_back();
@@ -343,7 +351,7 @@ namespace Flare
 		transition.InitialLayout = initialLayout;
 		transition.FinalLayout = layout;
 
-		it->second.SetLayoutAndResetWritingPasses(subresource, layout);
+		resourceState->SetLayoutAndResetWritingPasses(subresource, layout);
 	}
 
 	void LayoutTransitionsGenerator::AddTransition(RenderGraphTextureId texture,
