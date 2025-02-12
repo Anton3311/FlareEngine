@@ -33,6 +33,8 @@ namespace Flare
 		RG8,
 		RG16,
 
+		R32_G32_SIGNED_FLOAT,
+
 		RF16,
 		RF32,
 
