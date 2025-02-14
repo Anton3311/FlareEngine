@@ -2,8 +2,12 @@
 
 #include "Flare/Renderer/RenderGraph/RenderGraphPass.h"
 
+#include "Flare/Renderer/ShaderConstantBuffer.h"
+#include "Flare/Renderer/ShaderDescriptorBuffer.h"
+
 namespace Flare
 {
+	class ComputeShader;
 	class Material;
 	class SSAO;
 
@@ -11,7 +15,8 @@ namespace Flare
 	{
 	public:
 		HBAOPass(Ref<SSAO> parameters,
-			RenderGraphTextureId downsampledDepth,
+			RenderGraphTextureId linearDepth,
+			RenderGraphTextureId outputTexture,
 			uint32_t subPassIndex,
 			float jitterAngle);
 
@@ -21,8 +26,12 @@ namespace Flare
 		uint32_t m_SubPassIndex = 0;
 		float m_JitterAngle;
 
-		Ref<Material> m_Material = nullptr;
-		RenderGraphTextureId m_DownsampledDepth;
+		Ref<ComputeShader> m_Shader = nullptr;
+		RenderGraphTextureId m_LinearDepth;
+		RenderGraphTextureId m_OutputTexture;
+
+		ShaderConstantBuffer m_ConstantBuffer;
+		ShaderDescriptorBuffer m_DescriptorBuffer;
 
 		Ref<SSAO> m_Parameters;
 	};

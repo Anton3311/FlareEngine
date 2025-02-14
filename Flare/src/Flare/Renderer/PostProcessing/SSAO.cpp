@@ -63,7 +63,7 @@ namespace Flare
 		std::default_random_engine engine;
 		std::uniform_real_distribution<float> generator(0.0f, 2.0f * glm::pi<float>());
 
-		RenderGraphTextureId linearDepthDepth = renderGraph.CreateTexture(TextureFormat::RF32, "HBAO.DownsampledDepth");
+		RenderGraphTextureId linearDepthDepth = renderGraph.CreateTexture(TextureFormat::R32G32B32A32, "HBAO.LinearDepth");
 		RenderGraphTextureId aoBlurIntermediateTexture = renderGraph.CreateTexture(AO_TEXTURE_FORMAT, "HBAO.AOBlurIntermediate");
 
 		// FIXME: Switch back to on demand allocation.
@@ -84,7 +84,7 @@ namespace Flare
 		std::array<RenderGraphTextureId, TEXTURE_COUNT> aoTextures;
 		for (size_t i = 0; i < TEXTURE_COUNT; i++)
 		{
-			aoTextures[i] = renderGraph.CreateTexture(TextureFormat::R8, fmt::format("HBAO.AO.{}", i), 0.5f);
+			aoTextures[i] = renderGraph.CreateTexture(TextureFormat::R32G32B32A32, fmt::format("HBAO.AO.{}", i), 0.5f);
 		}
 
 		RenderGraphTextureId viewportDepthTexture = renderWorld.GetEntityComponent<const ViewportDepthOutput>(viewportEntity).Id;
@@ -98,15 +98,16 @@ namespace Flare
 
 		renderGraph.AddPass(linearizeDepthPass, Ref<HBAODownsamplePass>::New(viewportDepthTexture));
 
+#if 1
 		for (size_t i = 0; i < TEXTURE_COUNT; i++)
 		{
 			RenderGraphPassSpecifications aoPass{};
 			aoPass.SetDebugName("HBAOPass");
-			aoPass.SetType(RenderGraphPassType::Graphics);
+			aoPass.SetType(RenderGraphPassType::Compute);
 			aoPass.AddInput(linearDepthDepth);
-			aoPass.AddOutput(aoTextures[i]);
+			aoPass.AddResource(aoTextures[i], ResourceAccess::Write);
 
-			renderGraph.AddPass(aoPass, Ref<HBAOPass>::New(Ref<SSAO>(this), linearDepthDepth, (uint32_t)i, generator(engine)));
+			renderGraph.AddPass(aoPass, Ref<HBAOPass>::New(Ref<SSAO>(this), viewportDepthTexture, aoTextures[i], (uint32_t)i, generator(engine)));
 		}
 
 		RenderGraphPassSpecifications combinePass{};
@@ -138,5 +139,6 @@ namespace Flare
 
 			renderGraph.AddPass(horizontalBlurPass, Ref<HBAOBilateralBlurPass>::New(Ref<SSAO>(this), false, linearDepthDepth, aoBlurIntermediateTexture));
 		}
+#endif
 	}
 }
