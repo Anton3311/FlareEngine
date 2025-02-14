@@ -92,11 +92,11 @@ namespace Flare
 
 		RenderGraphPassSpecifications linearizeDepthPass{};
 		linearizeDepthPass.SetDebugName("HBAOLinearizeDepth");
-		linearizeDepthPass.SetType(RenderGraphPassType::Graphics);
+		linearizeDepthPass.SetType(RenderGraphPassType::Compute);
 		linearizeDepthPass.AddInput(viewportDepthTexture);
-		linearizeDepthPass.AddOutput(linearDepthTexture);
+		linearizeDepthPass.AddResource(linearDepthTexture, ResourceAccess::Write);
 
-		renderGraph.AddPass(linearizeDepthPass, Ref<HBAODownsamplePass>::New(viewportDepthTexture));
+		renderGraph.AddPass(linearizeDepthPass, Ref<HBAOLinearizeDepthPass>::New(viewportDepthTexture, linearDepthTexture));
 
 		RenderGraphPassSpecifications aoPass{};
 		aoPass.SetDebugName("HBAOPass");
