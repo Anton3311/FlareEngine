@@ -16,19 +16,17 @@ namespace Flare
 	public:
 		HBAOPass(Ref<SSAO> parameters,
 			RenderGraphTextureId linearDepth,
-			RenderGraphTextureId outputTexture,
-			uint32_t subPassIndex,
-			float jitterAngle);
+			const RenderGraphTextureId* outputTextures,
+			const float* jitterAngle);
 
 		void OnPrepare(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer) override;
 		void OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer) override;
 	private:
-		uint32_t m_SubPassIndex = 0;
-		float m_JitterAngle;
+		float m_JitterAngles[4];
 
 		Ref<ComputeShader> m_Shader = nullptr;
 		RenderGraphTextureId m_LinearDepth;
-		RenderGraphTextureId m_OutputTexture;
+		RenderGraphTextureId m_OutputTextures[4];
 
 		ShaderConstantBuffer m_ConstantBuffer;
 		ShaderDescriptorBuffer m_DescriptorBuffer;

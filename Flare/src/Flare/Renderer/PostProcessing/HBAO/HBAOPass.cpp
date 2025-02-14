@@ -23,16 +23,15 @@ namespace Flare
 {
 	HBAOPass::HBAOPass(Ref<SSAO> parameters,
 		RenderGraphTextureId linearDepth,
-		RenderGraphTextureId outputTexture,
-		uint32_t subPassIndex,
-		float jitterAngle)
+		const RenderGraphTextureId* outputTextures,
+		const float* jitterAngles)
 		: m_Parameters(parameters),
-		m_LinearDepth(linearDepth),
-		m_OutputTexture(outputTexture),
-		m_SubPassIndex(subPassIndex),
-		m_JitterAngle(jitterAngle)
+		m_LinearDepth(linearDepth)
 	{
 		FLARE_PROFILE_FUNCTION();
+
+		std::memcpy(m_JitterAngles, jitterAngles, sizeof(m_JitterAngles));
+		std::memcpy(m_OutputTextures, outputTextures, sizeof(m_OutputTextures));
 
 		if (std::optional<AssetHandle> shaderHandle = ShaderLibrary::FindShader("HBAOCompute"))
 		{
@@ -63,10 +62,7 @@ namespace Flare
 
 		commandBuffer->SetGlobalDescriptorSet(viewportResources->GetCurrentFrameResources().CameraDescriptorSet, 0);
 
-		Ref<Texture> outputTexture = context.GetRenderGraphResourceManager().GetTexture(m_OutputTexture);
-		glm::uvec2 outputTextureSize = outputTexture->GetSize();
 		Ref<const ComputeShaderMetadata> metadata = m_Shader->GetMetadata();
-
 		std::optional<size_t> depthTextureProperty = metadata->FindDescriptorProperty("u_DepthTexture");
 		std::optional<size_t> outputImageProperty = metadata->FindDescriptorProperty("u_OutputAO");
 
@@ -86,58 +82,64 @@ namespace Flare
 		std::optional<size_t> sampleOffset = metadata->FindConstantProperty("u_SampleOffset");
 		std::optional<size_t> outputImageSize = metadata->FindConstantProperty("u_OutputImageSize");
 
-		Ref<Texture> depthTexture = context.GetRenderGraph().GetTexture(m_LinearDepth);
-
-		if (depthTextureProperty)
-			m_DescriptorBuffer.SetTexture(*depthTextureProperty, depthTexture);
-		if (outputImageProperty)
-			m_DescriptorBuffer.SetTexture(*outputImageProperty, outputTexture);
-
-		if (radiusProperty)
-			m_ConstantBuffer.SetProperty<float>(*radiusProperty, m_Parameters->Radius);
-
-		float radiusSquared = m_Parameters->Radius * m_Parameters->Radius;
-		if (radiusSquaredProperty)
-			m_ConstantBuffer.SetProperty<float>(*radiusSquaredProperty, radiusSquared);
-
-		if (negativeInverseSquaredRadiusProperty)
-			m_ConstantBuffer.SetProperty<float>(*negativeInverseSquaredRadiusProperty, -1.0f / radiusSquared);
-
-		if (biasProperty)
-			m_ConstantBuffer.SetProperty<float>(*biasProperty, glm::radians(m_Parameters->Bias));
-
-		glm::vec2 depthTextureSize = static_cast<glm::vec2>(depthTexture->GetSize());
-		
-		if (depthTextureSizeProperty)
-			m_ConstantBuffer.SetProperty<glm::vec2>(*depthTextureSizeProperty, depthTextureSize);
-		if (inverseDepthTextureSize)
-			m_ConstantBuffer.SetProperty<glm::vec2>(*inverseDepthTextureSize, glm::vec2(1.0f) / depthTextureSize);
-
-		if (projectionParams)
-		{
-			const glm::mat4& inverseProjection = context.GetRenderView().InverseProjection;
-			m_ConstantBuffer.SetProperty<glm::vec2>(*projectionParams, glm::vec2(inverseProjection[0][0], inverseProjection[1][1]));
-		}
-
-		if (intensityProperty)
-			m_ConstantBuffer.SetProperty<float>(*intensityProperty, m_Parameters->Intensity);
-
-		if (jitterAngle)
-			m_ConstantBuffer.SetProperty<float>(*jitterAngle, m_JitterAngle);
-
-		if (sampleOffset)
-			m_ConstantBuffer.SetProperty<glm::ivec2>(*sampleOffset, glm::ivec2(m_SubPassIndex % 2, m_SubPassIndex / 2));
-
-		if (outputImageSize)
-			m_ConstantBuffer.SetProperty<glm::ivec2>(*outputImageSize, static_cast<glm::ivec2>(outputTextureSize));
-
 		commandBuffer->BindComputeShader(m_Shader);
-		commandBuffer->PushConstants(m_ConstantBuffer);
-		commandBuffer->PushDescriptorProperties(m_DescriptorBuffer);
+		for (uint32_t subPassIndex = 0; subPassIndex < 4; subPassIndex++)
+		{
+			Ref<Texture> outputTexture = context.GetRenderGraphResourceManager().GetTexture(m_OutputTextures[subPassIndex]);
+			glm::uvec2 outputTextureSize = outputTexture->GetSize();
 
-		glm::uvec2 groupSize = metadata->LocalGroupSize;
-		glm::uvec2 groupCount = (outputTextureSize + groupSize - glm::uvec2(1, 1)) / groupSize;
-		commandBuffer->DispatchCompute(glm::uvec3(groupCount, 1));
+			Ref<Texture> depthTexture = context.GetRenderGraph().GetTexture(m_LinearDepth);
+
+			if (depthTextureProperty)
+				m_DescriptorBuffer.SetTexture(*depthTextureProperty, depthTexture);
+			if (outputImageProperty)
+				m_DescriptorBuffer.SetTexture(*outputImageProperty, outputTexture);
+
+			if (radiusProperty)
+				m_ConstantBuffer.SetProperty<float>(*radiusProperty, m_Parameters->Radius);
+
+			float radiusSquared = m_Parameters->Radius * m_Parameters->Radius;
+			if (radiusSquaredProperty)
+				m_ConstantBuffer.SetProperty<float>(*radiusSquaredProperty, radiusSquared);
+
+			if (negativeInverseSquaredRadiusProperty)
+				m_ConstantBuffer.SetProperty<float>(*negativeInverseSquaredRadiusProperty, -1.0f / radiusSquared);
+
+			if (biasProperty)
+				m_ConstantBuffer.SetProperty<float>(*biasProperty, glm::radians(m_Parameters->Bias));
+
+			glm::vec2 depthTextureSize = static_cast<glm::vec2>(depthTexture->GetSize());
+
+			if (depthTextureSizeProperty)
+				m_ConstantBuffer.SetProperty<glm::vec2>(*depthTextureSizeProperty, depthTextureSize);
+			if (inverseDepthTextureSize)
+				m_ConstantBuffer.SetProperty<glm::vec2>(*inverseDepthTextureSize, glm::vec2(1.0f) / depthTextureSize);
+
+			if (projectionParams)
+			{
+				const glm::mat4& inverseProjection = context.GetRenderView().InverseProjection;
+				m_ConstantBuffer.SetProperty<glm::vec2>(*projectionParams, glm::vec2(inverseProjection[0][0], inverseProjection[1][1]));
+			}
+
+			if (intensityProperty)
+				m_ConstantBuffer.SetProperty<float>(*intensityProperty, m_Parameters->Intensity);
+
+			if (jitterAngle)
+				m_ConstantBuffer.SetProperty<float>(*jitterAngle, m_JitterAngles[subPassIndex]);
+
+			if (sampleOffset)
+				m_ConstantBuffer.SetProperty<glm::ivec2>(*sampleOffset, glm::ivec2(subPassIndex % 2, subPassIndex / 2));
+
+			if (outputImageSize)
+				m_ConstantBuffer.SetProperty<glm::ivec2>(*outputImageSize, static_cast<glm::ivec2>(outputTextureSize));
+
+			commandBuffer->PushConstants(m_ConstantBuffer);
+			commandBuffer->PushDescriptorProperties(m_DescriptorBuffer);
+
+			glm::uvec2 groupSize = metadata->LocalGroupSize;
+			glm::uvec2 groupCount = (outputTextureSize + groupSize - glm::uvec2(1, 1)) / groupSize;
+			commandBuffer->DispatchCompute(glm::uvec3(groupCount, 1));
+		}
 	}
 
 	//

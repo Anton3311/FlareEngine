@@ -98,16 +98,19 @@ namespace Flare
 
 		renderGraph.AddPass(linearizeDepthPass, Ref<HBAODownsamplePass>::New(viewportDepthTexture));
 
-		for (size_t i = 0; i < TEXTURE_COUNT; i++)
-		{
-			RenderGraphPassSpecifications aoPass{};
-			aoPass.SetDebugName("HBAOPass");
-			aoPass.SetType(RenderGraphPassType::Compute);
-			aoPass.AddInput(linearDepthTexture);
-			aoPass.AddResource(aoTextures[i], ResourceAccess::Write);
+		RenderGraphPassSpecifications aoPass{};
+		aoPass.SetDebugName("HBAOPass");
+		aoPass.SetType(RenderGraphPassType::Compute);
+		aoPass.AddInput(linearDepthTexture);
 
-			renderGraph.AddPass(aoPass, Ref<HBAOPass>::New(Ref<SSAO>(this), linearDepthTexture, aoTextures[i], (uint32_t)i, generator(engine)));
-		}
+		for (RenderGraphTextureId aoTexture : aoTextures)
+			aoPass.AddResource(aoTexture, ResourceAccess::Write);
+
+		float jitterAngels[4];
+		for (uint32_t i = 0; i < 4; i++)
+			jitterAngels[i] = generator(engine);
+
+		renderGraph.AddPass(aoPass, Ref<HBAOPass>::New(Ref<SSAO>(this), linearDepthTexture, aoTextures.data(), jitterAngels));
 
 		RenderGraphPassSpecifications combinePass{};
 		combinePass.SetDebugName("HBAOCombineDeinterleavedTexturesPass");
