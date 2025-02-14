@@ -63,7 +63,7 @@ namespace Flare
 		std::default_random_engine engine;
 		std::uniform_real_distribution<float> generator(0.0f, 2.0f * glm::pi<float>());
 
-		RenderGraphTextureId linearDepthDepth = renderGraph.CreateTexture(TextureFormat::R32G32B32A32, "HBAO.LinearDepth");
+		RenderGraphTextureId linearDepthTexture = renderGraph.CreateTexture(TextureFormat::R32G32B32A32, "HBAO.LinearDepth");
 		RenderGraphTextureId aoBlurIntermediateTexture = renderGraph.CreateTexture(AO_TEXTURE_FORMAT, "HBAO.AOBlurIntermediate");
 
 		// FIXME: Switch back to on demand allocation.
@@ -94,7 +94,7 @@ namespace Flare
 		linearizeDepthPass.SetDebugName("HBAOLinearizeDepth");
 		linearizeDepthPass.SetType(RenderGraphPassType::Graphics);
 		linearizeDepthPass.AddInput(viewportDepthTexture);
-		linearizeDepthPass.AddOutput(linearDepthDepth);
+		linearizeDepthPass.AddOutput(linearDepthTexture);
 
 		renderGraph.AddPass(linearizeDepthPass, Ref<HBAODownsamplePass>::New(viewportDepthTexture));
 
@@ -104,10 +104,10 @@ namespace Flare
 			RenderGraphPassSpecifications aoPass{};
 			aoPass.SetDebugName("HBAOPass");
 			aoPass.SetType(RenderGraphPassType::Compute);
-			aoPass.AddInput(linearDepthDepth);
+			aoPass.AddInput(linearDepthTexture);
 			aoPass.AddResource(aoTextures[i], ResourceAccess::Write);
 
-			renderGraph.AddPass(aoPass, Ref<HBAOPass>::New(Ref<SSAO>(this), viewportDepthTexture, aoTextures[i], (uint32_t)i, generator(engine)));
+			renderGraph.AddPass(aoPass, Ref<HBAOPass>::New(Ref<SSAO>(this), linearDepthTexture, aoTextures[i], (uint32_t)i, generator(engine)));
 		}
 
 		RenderGraphPassSpecifications combinePass{};
@@ -127,7 +127,7 @@ namespace Flare
 			verticalBlurPass.SetType(RenderGraphPassType::Graphics);
 			verticalBlurPass.SetDebugName("HBAO Vertical Bilateral Blur");
 
-			renderGraph.AddPass(verticalBlurPass, Ref<HBAOBilateralBlurPass>::New(Ref<SSAO>(this), true, linearDepthDepth, fullScreenAOTexture));
+			renderGraph.AddPass(verticalBlurPass, Ref<HBAOBilateralBlurPass>::New(Ref<SSAO>(this), true, linearDepthTexture, fullScreenAOTexture));
 		}
 
 		{
@@ -137,7 +137,7 @@ namespace Flare
 			horizontalBlurPass.SetType(RenderGraphPassType::Graphics);
 			horizontalBlurPass.SetDebugName("HBAO Horizontal Bilateral Blur");
 
-			renderGraph.AddPass(horizontalBlurPass, Ref<HBAOBilateralBlurPass>::New(Ref<SSAO>(this), false, linearDepthDepth, aoBlurIntermediateTexture));
+			renderGraph.AddPass(horizontalBlurPass, Ref<HBAOBilateralBlurPass>::New(Ref<SSAO>(this), false, linearDepthTexture, aoBlurIntermediateTexture));
 		}
 #endif
 	}

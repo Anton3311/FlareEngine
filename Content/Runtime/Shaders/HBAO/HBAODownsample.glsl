@@ -98,7 +98,7 @@ void main()
 #endif
 
 #if 1
-	o_LinearDepth = vec4(vec3(depth), 1.0f);
+	o_LinearDepth = vec4(vec3(linearDepth), 1.0f);
 #else
 	o_LinearDepth = vec4(normalVS, 1.0f);
 #endif

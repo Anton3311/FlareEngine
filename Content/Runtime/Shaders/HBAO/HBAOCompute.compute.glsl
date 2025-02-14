@@ -42,25 +42,14 @@ vec3 MinDifference(vec3 position, vec3 left, vec3 right)
 	return (leftDistance < rightDistance) ? leftDirection : rightDirection;
 }
 
-vec3 GetVSPosition(vec2 uv)
-{
-	float depth = texture(u_DepthTexture, uv).r;
-	uv = uv * 2.0f - vec2(1.0f);
-
-	vec4 clipSpacePos = vec4(uv, depth, 1.0f);
-	vec4 positionVS = u_Camera.InverseProjection * clipSpacePos;
-	return positionVS.xyz / positionVS.w;
-}
-
 vec3 FetchPositionVS(ivec2 texelPosition)
 {
-	float depth = texelFetch(u_DepthTexture, texelPosition, 0).r;
+	float linearDepth = texelFetch(u_DepthTexture, texelPosition, 0).r;
 	vec2 uv = vec2(texelPosition) * u_InverseDepthTextureSize;
 	uv = uv * 2.0f - vec2(1.0f);
 
-	vec4 clipSpacePos = vec4(uv, depth, 1.0f);
-	vec4 positionVS = u_Camera.InverseProjection * clipSpacePos;
-	return positionVS.xyz / positionVS.w;
+	// -linearDepth because -Z is forward
+	return vec3(uv * u_InverseProjectionParams * linearDepth, -linearDepth);
 }
 
 layout(local_size_x = TILE_SIZE, local_size_y = TILE_SIZE, local_size_z = 1) in;
@@ -71,7 +60,9 @@ void main()
 		return;
 	}
 
-	ivec2 texelPosition = ivec2(gl_GlobalInvocationID.xy) * 2;
+	ivec2 texelPosition = ivec2(gl_GlobalInvocationID.xy) * 2 + u_SampleOffset;
+	vec2 uv = vec2(texelPosition) * u_InverseDepthTextureSize;
+
 	vec3 positionVS = FetchPositionVS(texelPosition);
 
 	vec3 left = FetchPositionVS(texelPosition - ivec2(1, 0));
