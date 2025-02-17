@@ -146,15 +146,21 @@ namespace Flare
 	// HBAOCombineDeinterleavedTexturesPass
 	//
 
-	HBAOCombineDeinterleavedTexturesPass::HBAOCombineDeinterleavedTexturesPass(const TextureIdsArray& textures)
-		: m_Textures(textures)
+	HBAOCombineDeinterleavedTexturesPass::HBAOCombineDeinterleavedTexturesPass(const TextureIdsArray& textures, RenderGraphTextureId outputImage)
+		: m_Textures(textures), m_OutputImage(outputImage)
 	{
 		FLARE_PROFILE_FUNCTION();
 
 		if (std::optional<AssetHandle> shaderHandle = ShaderLibrary::FindShader("HBAOCombineDeinterleavedTextures"))
 		{
 			FLARE_CORE_ASSERT(AssetManager::IsAssetHandleValid(*shaderHandle));
-			m_Material = Material::Create(*shaderHandle);
+			m_ComputeShader = AssetManager::GetAsset<ComputeShader>(*shaderHandle);
+
+			if (m_ComputeShader)
+			{
+				m_DescriptorBuffer.SetShader(m_ComputeShader);
+				m_ConstantBuffer.SetShader(m_ComputeShader);
+			}
 		}
 	}
 
@@ -166,18 +172,23 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		if (!m_Material || !m_Material->GetShader())
+		if (!m_ComputeShader)
 		{
 			FLARE_CORE_ERROR("HBAO: Invalid material or shader");
 			return;
 		}
 
-		auto aoTexture0 = m_Material->GetShader()->GetPropertyIndex("u_AOTexture0");
-		auto aoTexture1 = m_Material->GetShader()->GetPropertyIndex("u_AOTexture1");
-		auto aoTexture2 = m_Material->GetShader()->GetPropertyIndex("u_AOTexture2");
-		auto aoTexture3 = m_Material->GetShader()->GetPropertyIndex("u_AOTexture3");
+		Ref<const ComputeShaderMetadata> metadata = m_ComputeShader->GetMetadata();
 
-		bool isValid = aoTexture0 && aoTexture1 && aoTexture2 && aoTexture3;
+		auto aoTexture0 = metadata->FindDescriptorProperty("u_AOTexture0");
+		auto aoTexture1 = metadata->FindDescriptorProperty("u_AOTexture1");
+		auto aoTexture2 = metadata->FindDescriptorProperty("u_AOTexture2");
+		auto aoTexture3 = metadata->FindDescriptorProperty("u_AOTexture3");
+
+		auto outputTextureProperty = metadata->FindDescriptorProperty("u_OutputImage");
+		auto outputImageSizeProperty = metadata->FindConstantProperty("u_OutputImageSize");
+
+		bool isValid = aoTexture0 && aoTexture1 && aoTexture2 && aoTexture3 && outputTextureProperty && outputImageSizeProperty;
 
 		if (!isValid)
 		{
@@ -185,13 +196,24 @@ namespace Flare
 			return;
 		}
 
-		m_Material->SetTextureProperty(*aoTexture0, context.GetRenderGraph().GetTexture(m_Textures[0]));
-		m_Material->SetTextureProperty(*aoTexture1, context.GetRenderGraph().GetTexture(m_Textures[1]));
-		m_Material->SetTextureProperty(*aoTexture2, context.GetRenderGraph().GetTexture(m_Textures[2]));
-		m_Material->SetTextureProperty(*aoTexture3, context.GetRenderGraph().GetTexture(m_Textures[3]));
+		Ref<Texture> outputTexture = context.GetRenderGraph().GetTexture(m_OutputImage);
+		m_ConstantBuffer.SetProperty<glm::ivec2>(*outputImageSizeProperty, static_cast<glm::ivec2>(outputTexture->GetSize()));
 
-		commandBuffer->ApplyMaterial(m_Material);
-		commandBuffer->SetDefaultViewportAndScissors();
-		commandBuffer->DrawMeshIndexed(RendererPrimitives::GetFullscreenQuadMesh(), 0, 1);
+		m_DescriptorBuffer.SetTexture(*aoTexture0, context.GetRenderGraph().GetTexture(m_Textures[0]));
+		m_DescriptorBuffer.SetTexture(*aoTexture1, context.GetRenderGraph().GetTexture(m_Textures[1]));
+		m_DescriptorBuffer.SetTexture(*aoTexture2, context.GetRenderGraph().GetTexture(m_Textures[2]));
+		m_DescriptorBuffer.SetTexture(*aoTexture3, context.GetRenderGraph().GetTexture(m_Textures[3]));
+		m_DescriptorBuffer.SetTexture(*outputTextureProperty, outputTexture);
+
+		commandBuffer->BindComputeShader(m_ComputeShader);
+		commandBuffer->PushDescriptorProperties(m_DescriptorBuffer);
+		commandBuffer->PushConstants(m_ConstantBuffer);
+
+		// The compute shader is ran on 2x2 pixel regions
+		glm::uvec2 outputImagePixelCount = (context.GetRenderGraphResourceManager().GetTexture(m_OutputImage)->GetSize() + glm::uvec2(1, 1)) / 2u;
+
+		glm::uvec2 groupSize = metadata->LocalGroupSize;
+		glm::uvec2 groupCount = (outputImagePixelCount + groupSize - glm::uvec2(1, 1)) / groupSize;
+		commandBuffer->DispatchCompute(glm::uvec3(groupCount, 1));
 	}
 }

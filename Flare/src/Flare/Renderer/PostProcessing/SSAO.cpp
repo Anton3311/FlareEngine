@@ -114,13 +114,13 @@ namespace Flare
 
 		RenderGraphPassSpecifications combinePass{};
 		combinePass.SetDebugName("HBAOCombineDeinterleavedTexturesPass");
-		combinePass.SetType(RenderGraphPassType::Graphics);
-		combinePass.AddOutput(fullScreenAOTexture);
+		combinePass.SetType(RenderGraphPassType::Compute);
+		combinePass.AddResource(fullScreenAOTexture, ResourceAccess::Write);
 
 		for (size_t i = 0; i < TEXTURE_COUNT; i++)
-			combinePass.AddInput(aoTextures[i]);
+			combinePass.AddResource(aoTextures[i], ResourceAccess::Read);
 
-		renderGraph.AddPass(combinePass, Ref<HBAOCombineDeinterleavedTexturesPass>::New(aoTextures));
+		renderGraph.AddPass(combinePass, Ref<HBAOCombineDeinterleavedTexturesPass>::New(aoTextures, fullScreenAOTexture));
 
 		{
 			RenderGraphPassSpecifications verticalBlurPass{};

@@ -39,12 +39,16 @@ namespace Flare
 	public:
 		using TextureIdsArray = std::array<RenderGraphTextureId, 4>;
 
-		HBAOCombineDeinterleavedTexturesPass(const TextureIdsArray& textures);
+		HBAOCombineDeinterleavedTexturesPass(const TextureIdsArray& textures, RenderGraphTextureId outputImage);
 
 		void OnPrepare(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer) override;
 		void OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer) override;
 	private:
+		RenderGraphTextureId m_OutputImage;
 		TextureIdsArray m_Textures;
-		Ref<Material> m_Material = nullptr;
+		Ref<ComputeShader> m_ComputeShader = nullptr;
+
+		ShaderConstantBuffer m_ConstantBuffer;
+		ShaderDescriptorBuffer m_DescriptorBuffer;
 	};
 }
