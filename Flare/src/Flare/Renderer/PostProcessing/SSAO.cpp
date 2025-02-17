@@ -17,7 +17,7 @@
 #include "Flare/Renderer/Passes/BlitPass.h"
 
 #include "Flare/Renderer/PostProcessing/HBAO/HBAOBilateralBlurPass.h"
-#include "Flare/Renderer/PostProcessing/HBAO/HBAODownsamplePass.h"
+#include "Flare/Renderer/PostProcessing/HBAO/HBAOLinearizeDepthPass.h"
 #include "Flare/Renderer/PostProcessing/HBAO/HBAOPass.h"
 
 #include "Flare/AssetManager/AssetManager.h"

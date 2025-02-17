@@ -1,6 +1,6 @@
 #include "PCH.h"
 
-#include "HBAODownsamplePass.h"
+#include "HBAOLinearizeDepthPass.h"
 
 #include "FlareCore/Profiler/Profiler.h"
 
