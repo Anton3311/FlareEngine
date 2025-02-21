@@ -2,6 +2,8 @@
 
 #include "HBAOBilateralBlurPass.h"
 
+#include "Flare/AssetManager/AssetManager.h"
+#include "Flare/Renderer/ComputeShader.h"
 #include "Flare/Renderer/CommandBuffer.h"
 #include "Flare/Renderer/Material.h"
 #include "Flare/Renderer/RendererPrimitives.h"
@@ -16,14 +18,29 @@ namespace Flare
 	HBAOBilateralBlurPass::HBAOBilateralBlurPass(Ref<SSAO> parameters,
 		bool isVertical,
 		RenderGraphTextureId linearDepthTexture,
-		RenderGraphTextureId aoTexture)
-		: m_Parameters(parameters), m_IsVertical(isVertical), m_LinearDepthTexture(linearDepthTexture), m_AOTexture(aoTexture)
+		RenderGraphTextureId aoTexture,
+		RenderGraphTextureId outputTexture)
+		: m_Parameters(parameters),
+		m_IsVertical(isVertical),
+		m_LinearDepthTexture(linearDepthTexture),
+		m_AOTexture(aoTexture),
+		m_OutputTexture(outputTexture)
 	{
 		FLARE_PROFILE_FUNCTION();
 
 		if (auto shaderHandle = ShaderLibrary::FindShader("HBAOBilateralBlur"))
 		{
-			m_Material = Material::Create(*shaderHandle);
+			m_Shader = AssetManager::GetAsset<ComputeShader>(*shaderHandle);
+
+			if (m_Shader)
+			{
+				m_ConstantBuffer.SetShader(m_Shader);
+				m_DescriptorBuffer.SetShader(m_Shader);
+			}
+			else
+			{
+				FLARE_CORE_ERROR("No valid HBAOBilateralBlur shader");
+			}
 		}
 	}
 
@@ -35,35 +52,55 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		std::optional<uint32_t> aoProperty = m_Material->GetShader()->GetPropertyIndex("u_AO");
-		std::optional<uint32_t> linearDepthProperty = m_Material->GetShader()->GetPropertyIndex("u_LinearDepth");
+		if (!m_Shader)
+			return;
 
-		std::optional<uint32_t> sharpnessProperty = m_Material->GetShader()->GetPropertyIndex("u_Sharpness");
-		std::optional<uint32_t> directionProperty = m_Material->GetShader()->GetPropertyIndex("u_Direction");
+		Ref<const ComputeShaderMetadata> metadata = m_Shader->GetMetadata();
+
+		std::optional<size_t> aoProperty = metadata->FindDescriptorProperty("u_AO");
+		std::optional<size_t> outputAOProperty = metadata->FindDescriptorProperty("u_OutputAO");
+		std::optional<size_t> linearDepthProperty = metadata->FindDescriptorProperty("u_LinearDepth");
+
+		std::optional<size_t> sharpnessProperty = metadata->FindConstantProperty("u_Sharpness");
+		std::optional<size_t> directionProperty = metadata->FindConstantProperty("u_Direction");
+		std::optional<size_t> imageSizeProperty = metadata->FindConstantProperty("u_ImageSize");
 
 		if (sharpnessProperty)
-		{
-			m_Material->WritePropertyValue<float>(*sharpnessProperty, m_Parameters->Sharpness);
-		}
+			m_ConstantBuffer.SetProperty<float>(*sharpnessProperty, m_Parameters->Sharpness);
 
 		if (directionProperty)
 		{
-			glm::vec2 direction = m_IsVertical ? glm::vec2(0.0f, 1.0f) : glm::vec2(1.0f, 0.0f);
-			m_Material->WritePropertyValue<glm::vec2>(*directionProperty, direction / (glm::vec2)context.RenderAreaSize);
+			glm::ivec2 direction = m_IsVertical ? glm::ivec2(0, 1) : glm::ivec2(1, 0);
+			m_ConstantBuffer.SetProperty<glm::ivec2>(*directionProperty, direction);
+		}
+		
+		glm::uvec2 outputTextureSize = context.GetRenderGraphResourceManager().GetTexture(m_AOTexture)->GetSize();
+		if (imageSizeProperty)
+		{
+			m_ConstantBuffer.SetProperty<glm::ivec2>(*imageSizeProperty, static_cast<glm::ivec2>(outputTextureSize));
 		}
 
 		if (aoProperty)
 		{
-			m_Material->SetTextureProperty(*aoProperty, context.GetRenderGraphResourceManager().GetTexture(m_AOTexture));
+			m_DescriptorBuffer.SetTexture(*aoProperty, context.GetRenderGraphResourceManager().GetTexture(m_AOTexture));
+		}
+
+		if (outputAOProperty)
+		{
+			m_DescriptorBuffer.SetTexture(*outputAOProperty, context.GetRenderGraphResourceManager().GetTexture(m_OutputTexture));
 		}
 
 		if (linearDepthProperty)
 		{
-			m_Material->SetTextureProperty(*linearDepthProperty, context.GetRenderGraphResourceManager().GetTexture(m_LinearDepthTexture));
+			m_DescriptorBuffer.SetTexture(*linearDepthProperty, context.GetRenderGraphResourceManager().GetTexture(m_LinearDepthTexture));
 		}
 
-		commandBuffer->SetDefaultViewportAndScissors();
-		commandBuffer->ApplyMaterial(m_Material);
-		commandBuffer->DrawMeshIndexed(RendererPrimitives::GetFullscreenQuadMesh(), 0, 1);
+		glm::uvec2 groupSize = metadata->LocalGroupSize;
+		glm::uvec2 groupCount = (outputTextureSize + groupSize - glm::uvec2(1, 1)) / groupSize;
+
+		commandBuffer->BindComputeShader(m_Shader);
+		commandBuffer->PushConstants(m_ConstantBuffer);
+		commandBuffer->PushDescriptorProperties(m_DescriptorBuffer);
+		commandBuffer->DispatchCompute(glm::uvec3(groupCount, 1));
 	}
 }
