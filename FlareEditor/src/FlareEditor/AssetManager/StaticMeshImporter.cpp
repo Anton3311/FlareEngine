@@ -92,9 +92,7 @@ namespace Flare
 		for (uint32_t meshIndex = 0; meshIndex < m_Scene->mNumMeshes; meshIndex++)
 		{
 			const aiMesh* mesh = m_Scene->mMeshes[meshIndex];
-			SubMesh subMesh = CopySubMeshData(mesh);
-
-			m_SceneData.MeshData[mesh] = subMesh;
+			m_SceneData.MeshData[mesh] = CopySubMeshData(mesh);
 		}
 
 		m_SceneData.SharedMesh = Ref<SharedMesh>::New(vertexCount, m_SceneData.IndexFormat, indexCount);
@@ -107,9 +105,19 @@ namespace Flare
 		m_SceneData.SharedMesh->UVs->SetData(MemorySpan::FromVector(m_SceneData.UVs), 0, commandBuffer);
 
 		if (m_SceneData.IndexFormat == IndexFormat::UInt16)
+		{
 			m_SceneData.SharedMesh->IndexBuffer->SetData(MemorySpan::FromVector(m_SceneData.Indices16), 0, commandBuffer);
+
+			m_SceneData.SharedMesh->DepthOnlyIndexBuffer = GPUBuffer::CreateIndexBuffer(m_SceneData.DepthOnlyIndices16.size(), IndexFormat::UInt16, GPUBufferMemoryType::Static);
+			m_SceneData.SharedMesh->DepthOnlyIndexBuffer->SetData(MemorySpan::FromVector(m_SceneData.DepthOnlyIndices16), 0, commandBuffer);
+		}
 		else
+		{
 			m_SceneData.SharedMesh->IndexBuffer->SetData(MemorySpan::FromVector(m_SceneData.Indices32), 0, commandBuffer);
+
+			m_SceneData.SharedMesh->DepthOnlyIndexBuffer = GPUBuffer::CreateIndexBuffer(m_SceneData.DepthOnlyIndices32.size(), IndexFormat::UInt32, GPUBufferMemoryType::Static);
+			m_SceneData.SharedMesh->DepthOnlyIndexBuffer->SetData(MemorySpan::FromVector(m_SceneData.DepthOnlyIndices32), 0, commandBuffer);
+		}
 	}
 
 	void StaticMeshImporter::WalkHierarchy(const aiNode* node, const glm::mat4& parentTransform)
@@ -145,18 +153,21 @@ namespace Flare
 				size_t subMeshStart = m_VertexOffset;
 				size_t subMeshEnd = m_VertexOffset + (size_t)nodeMesh->mNumVertices;
 
-				SubMesh subMesh = CopySubMeshData(nodeMesh);
+				auto [subMesh, depthOnlySubMesh] = CopySubMeshData(nodeMesh);
 				FlattenHierarchy(node, nodeTransform, subMeshStart, subMeshEnd);
 
 				subMesh.Bounds = ComputeBounds(Span(m_SceneData.Vertices.data() + subMeshStart, subMeshEnd - subMeshStart));
+				depthOnlySubMesh.Bounds = subMesh.Bounds;
 
 				m_SceneData.SubMeshes.push_back(subMesh);
+				m_SceneData.DepthOnlySubMeshes.push_back(depthOnlySubMesh);
 			}
 		}
 
 		if (m_ImportSettings.PreserveHierarchy)
 		{
 			std::vector<SubMesh> subMeshes;
+			std::vector<SubMesh> depthOnlySubMeshes;
 
 			NodeMesh& nodeMeshData = m_SceneData.NodeToMesh[node];
 			for (uint32_t i = 0; i < node->mNumMeshes; i++)
@@ -165,15 +176,54 @@ namespace Flare
 
 				nodeMeshData.MaterialIndices.push_back(nodeMesh->mMaterialIndex);
 				m_SceneData.UsedMaterials.insert(nodeMesh->mMaterialIndex);
-				subMeshes.push_back(m_SceneData.MeshData[nodeMesh]);
+
+				auto subMeshesPair = m_SceneData.MeshData[nodeMesh];
+				subMeshes.push_back(subMeshesPair.MainSubMesh);
+				depthOnlySubMeshes.push_back(subMeshesPair.DepthOnlySubMesh);
 			}
 
-			nodeMeshData.Mesh = Ref<Mesh>::New(m_SceneData.SharedMesh, std::move(subMeshes));
+			nodeMeshData.Mesh = Ref<Mesh>::New(m_SceneData.SharedMesh, std::move(subMeshes), std::move(depthOnlySubMeshes));
 			nodeMeshData.Mesh->SetDebugName(node->mName.C_Str());
 		}
 	}
 
-	SubMesh StaticMeshImporter::CopySubMeshData(const aiMesh* mesh)
+	struct Vector3Hasher
+	{
+	public:
+		size_t operator()(const glm::vec3& vector) const
+		{
+			size_t hash = 0;
+			CombineHashes(hash, vector.x);
+			CombineHashes(hash, vector.y);
+			CombineHashes(hash, vector.z);
+			return hash;
+		}
+	};
+
+	template<typename IndexType>
+	static void GenerateDepthOnlyIndices(Span<const glm::vec3> vertices,
+		Span<const IndexType> indices,
+		std::vector<IndexType>& outputBuffer)
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		std::unordered_map<glm::vec3, IndexType, Vector3Hasher> vertexToIndex;
+		vertexToIndex.reserve(indices.GetSize());
+
+		for (IndexType index : indices)
+		{
+			vertexToIndex.try_emplace(vertices[index], index);
+		}
+
+		outputBuffer.reserve(outputBuffer.size() + vertexToIndex.size());
+
+		for (IndexType index : indices)
+		{
+			outputBuffer.push_back(vertexToIndex[vertices[index]]);
+		}
+	}
+
+	SubMeshesPair StaticMeshImporter::CopySubMeshData(const aiMesh* mesh)
 	{
 		FLARE_PROFILE_FUNCTION();
 
@@ -226,10 +276,31 @@ namespace Flare
 		subMesh.IndicesCount = (uint32_t)subMeshIndexCount;
 		subMesh.Bounds = ComputeBounds(Span(m_SceneData.Vertices.data() + m_VertexOffset, (size_t)mesh->mNumVertices));
 
+		SubMesh depthOnlySubMesh{};
+		depthOnlySubMesh.BaseVertex = 0;
+		depthOnlySubMesh.BaseIndex = m_SceneData.IndexFormat == IndexFormat::UInt16
+			? static_cast<uint32_t>(m_SceneData.DepthOnlyIndices16.size())
+			: static_cast<uint32_t>(m_SceneData.DepthOnlyIndices32.size());
+		depthOnlySubMesh.Bounds = subMesh.Bounds;
+		depthOnlySubMesh.IndicesCount = subMesh.IndicesCount;
+
+		Span<const glm::vec3> subMeshVertices = Span<const glm::vec3>::FromVector(m_SceneData.Vertices);
+
+		if (m_SceneData.IndexFormat == IndexFormat::UInt16)
+		{
+			Span<const uint16_t> subMeshIndices = Span<const uint16_t>::FromVector(m_SceneData.Indices16).Slice(m_IndexOffset, subMeshIndexCount);
+			GenerateDepthOnlyIndices<uint16_t>(subMeshVertices, subMeshIndices, m_SceneData.DepthOnlyIndices16);
+		}
+		else
+		{
+			Span<const uint32_t> subMeshIndices = Span<const uint32_t>::FromVector(m_SceneData.Indices32).Slice(m_IndexOffset, subMeshIndexCount);
+			GenerateDepthOnlyIndices<uint32_t>(subMeshVertices, subMeshIndices, m_SceneData.DepthOnlyIndices32);
+		}
+
 		m_VertexOffset += mesh->mNumVertices;
 		m_IndexOffset += subMeshIndexCount;
 
-		return subMesh;
+		return { subMesh, depthOnlySubMesh };
 	}
 
 	void StaticMeshImporter::FlattenHierarchy(const aiNode* node, const glm::mat4& transform, size_t subMeshStart, size_t subMeshEnd)

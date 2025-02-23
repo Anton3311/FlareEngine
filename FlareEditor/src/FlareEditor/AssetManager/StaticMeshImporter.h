@@ -25,6 +25,12 @@ namespace Flare
 		std::vector<uint32_t> MaterialIndices;
 	};
 
+	struct SubMeshesPair
+	{
+		SubMesh MainSubMesh;
+		SubMesh DepthOnlySubMesh;
+	};
+
 	glm::mat4 ConvertToColumnMajor(const aiMatrix4x4& matrix);
 
 	struct SceneData
@@ -34,6 +40,9 @@ namespace Flare
 		std::vector<uint16_t> Indices16;
 		std::vector<uint32_t> Indices32;
 
+		std::vector<uint16_t> DepthOnlyIndices16;
+		std::vector<uint32_t> DepthOnlyIndices32;
+
 		std::vector<glm::vec3> Vertices;
 		std::vector<glm::vec3> Normals;
 		std::vector<glm::vec3> Tangents;
@@ -42,12 +51,13 @@ namespace Flare
 		size_t MaxSubMeshIndexCount = 0;
 
 		std::vector<SubMesh> SubMeshes;
+		std::vector<SubMesh> DepthOnlySubMeshes;
 		std::unordered_set<uint32_t> UsedMaterials;
 
 		Ref<SharedMesh> SharedMesh = nullptr;
 		std::vector<Ref<Mesh>> Meshes;
 
-		std::unordered_map<const aiMesh*, SubMesh> MeshData;
+		std::unordered_map<const aiMesh*, SubMeshesPair> MeshData;
 		std::unordered_map<const aiNode*, NodeMesh> NodeToMesh;
 	};
 
@@ -66,7 +76,7 @@ namespace Flare
 		void WalkHierarchy(const aiNode* node, const glm::mat4& parentTransform);
 		void VisitNode(const aiNode* node, const glm::mat4& parentTransform);
 
-		SubMesh CopySubMeshData(const aiMesh* node);
+		SubMeshesPair CopySubMeshData(const aiMesh* node);
 		void FlattenHierarchy(const aiNode* node, const glm::mat4& transform, size_t subMeshStart, size_t subMeshEnd);
 
 		void ReserveBuffers();

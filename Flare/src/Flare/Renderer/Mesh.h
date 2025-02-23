@@ -42,6 +42,8 @@ namespace Flare
 		inline IndexFormat GetIndexFormat() const { return m_IndexFormat; }
 	public:
 		Ref<GPUBuffer> IndexBuffer = nullptr;
+		Ref<GPUBuffer> DepthOnlyIndexBuffer = nullptr;
+
 		Ref<GPUBuffer> Vertices = nullptr;
 		Ref<GPUBuffer> Normals = nullptr;
 		Ref<GPUBuffer> Tangents = nullptr;
@@ -84,7 +86,7 @@ namespace Flare
 			Span<const glm::vec3> tangents,
 			Span<const glm::vec2> uvs);
 
-		Mesh(Ref<SharedMesh> sharedMesh, std::vector<SubMesh>&& subMeshes);
+		Mesh(Ref<SharedMesh> sharedMesh, std::vector<SubMesh>&& subMeshes, std::vector<SubMesh>&& depthOnlySubMeshes);
 
 		~Mesh();
 

@@ -168,13 +168,46 @@ namespace Flare
 		{
 			FLARE_PROFILE_SCOPE("DrawPartiallyVisible");
 
-			Ref<VulkanCommandBuffer> vulkanCommandBuffer = commandBuffer.As<VulkanCommandBuffer>();
+			VulkanCommandBuffer& vulkanCommandBuffer = commandBuffer.DerefAs<VulkanCommandBuffer>();
 			for (const auto& visibleMesh : m_CascadeData.PartiallyVisible)
 			{
 				for (uint32_t i = 0; i < visibleMesh.SubMeshRangeCount; i++)
 				{
 					VisibleSubMeshRange range = m_VisibleSubMeshRanges[visibleMesh.FirstSubMeshRange + i];
-					vulkanCommandBuffer->DrawMeshIndexed(visibleMesh.Mesh, range.Start, range.Count, instanceIndex, 1);
+					Ref<const Mesh> mesh = visibleMesh.Mesh;
+
+					vulkanCommandBuffer.BindMesh(visibleMesh.Mesh);
+					vulkanCommandBuffer.BindIndexBuffer(visibleMesh.Mesh->GetDepthOnlyIndexBuffer(), mesh->GetIndexFormat());
+
+					size_t firstSubMesh = range.Start;
+					size_t subMeshCount = range.Count;
+
+					const auto& subMeshes = visibleMesh.Mesh->GetDepthOnlySubMeshes();
+
+					if (mesh->GetSharedMesh() == nullptr)
+					{
+						uint32_t lastSubMeshIndex = firstSubMesh + subMeshCount;
+						uint32_t indexCount = 0;
+
+						if (lastSubMeshIndex == (uint32_t)subMeshes.size())
+						{
+							indexCount = (uint32_t)mesh->GetIndexCount() - subMeshes[firstSubMesh].BaseIndex;
+						}
+						else
+						{
+							indexCount = subMeshes[lastSubMeshIndex].BaseIndex - subMeshes[firstSubMesh].BaseIndex;
+						}
+
+						vkCmdDrawIndexed(vulkanCommandBuffer.GetHandle(), indexCount, 1, subMeshes[firstSubMesh].BaseIndex, 0, instanceIndex);
+					}
+					else
+					{
+						for (uint32_t i = firstSubMesh; i < subMeshCount; i++)
+						{
+							const SubMesh& subMesh = subMeshes[i];
+							vkCmdDrawIndexed(vulkanCommandBuffer.GetHandle(), subMesh.IndicesCount, 1, subMesh.BaseIndex, subMesh.BaseVertex, instanceIndex);
+						}
+					}
 
 					m_Statistics.DrawCallCount++;
 				}

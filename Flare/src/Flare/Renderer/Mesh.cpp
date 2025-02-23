@@ -161,12 +161,17 @@ namespace Flare
 		m_UVs->SetData(MemorySpan(uvs.GetData(), uvs.GetSize()), m_VertexBufferOffset, commandBuffer);
 	}
 
-	Mesh::Mesh(Ref<SharedMesh> sharedMesh, std::vector<SubMesh>&& subMeshes)
-		: Asset(AssetType::Mesh), m_IndexFormat(sharedMesh->GetIndexFormat()), m_SubMeshes(subMeshes), m_SharedMesh(sharedMesh)
+	Mesh::Mesh(Ref<SharedMesh> sharedMesh, std::vector<SubMesh>&& subMeshes, std::vector<SubMesh>&& depthOnlySubMeshes)
+		: Asset(AssetType::Mesh),
+		m_IndexFormat(sharedMesh->GetIndexFormat()),
+		m_SubMeshes(subMeshes),
+		m_SharedMesh(sharedMesh),
+		m_DepthOnlySubMeshes(depthOnlySubMeshes)
 	{
 		FLARE_CORE_ASSERT(m_SubMeshes.size() > 0);
 
 		m_IndexBuffer = sharedMesh->IndexBuffer;
+		m_DepthOnlyIndexBuffer = sharedMesh->DepthOnlyIndexBuffer;
 		m_Vertices = sharedMesh->Vertices;
 		m_Normals = sharedMesh->Normals;
 		m_Tangents = sharedMesh->Tangents;
