@@ -333,7 +333,6 @@ namespace Flare
 		glm::vec2 projectedSize = ProjectAABBExtentsOnNearPlane(lightBasis.Forward, lightBasis, aabb);
 		projectedSize = glm::abs(projectedSize / projectionSize * static_cast<float>(shadowMapResolution));
 
-		return false;
 		return glm::all(glm::lessThanEqual(projectedSize, glm::vec2(static_cast<float>(minSizeInPixels))));
 	}
 
@@ -342,6 +341,7 @@ namespace Flare
 	void ShadowPass::FilterSubmitions(const RenderGraphContext& context)
 	{
 		FLARE_PROFILE_FUNCTION();
+
 		const ShadowSettings& shadowSettings = Renderer::GetShadowSettings();
 		const GeometryBatcher& batcher = context.GetSceneSubmition().BatchedGeometry;
 		
