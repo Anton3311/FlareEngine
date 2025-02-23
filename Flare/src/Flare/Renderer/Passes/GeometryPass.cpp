@@ -16,19 +16,19 @@
 
 #include "Flare/Renderer2D/Renderer2D.h"
 
+#include "Flare/Platform/Vulkan/VulkanCommandBuffer.h"
+
 #include "Flare/Math/SIMD.h"
 
 namespace Flare
 {
-	GeometryPass::GeometryPass(RendererStatistics& statistics, Ref<Material> materialOverride)
-		: m_Statistics(statistics), m_MaterialOverride(materialOverride)
+	GeometryPass::GeometryPass(RendererStatistics& statistics, Ref<Material> materialOverride, bool isDepthOnly)
+		: m_Statistics(statistics), m_MaterialOverride(materialOverride), m_IsDepthOnly(isDepthOnly)
 	{
-		FLARE_PROFILE_FUNCTION();
 	}
 
 	void GeometryPass::OnPrepare(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
 	{
-		FLARE_PROFILE_FUNCTION();
 	}
 
 	void GeometryPass::OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
@@ -56,6 +56,7 @@ namespace Flare
 		if (m_MaterialOverride)
 			commandBuffer->ApplyMaterial(m_MaterialOverride);
 
+		VulkanCommandBuffer& vulkanCommandBuffer = commandBuffer.DerefAs<VulkanCommandBuffer>();
 		Ref<Material> errorMaterial = Renderer::GetErrorMaterial();
 
 		for (const auto& culledBatch : culledGeometry.CulledBatches)
@@ -70,10 +71,28 @@ namespace Flare
 					commandBuffer->ApplyMaterial(errorMaterial);
 			}
 
-			commandBuffer->DrawMeshIndexed(mesh,
-				static_cast<uint32_t>(culledBatch.SubMeshIndex),
-				static_cast<uint32_t>(culledBatch.TransformBufferOffset),
-				static_cast<uint32_t>(culledBatch.CulledGeometryIndices.size()));
+			vulkanCommandBuffer.BindMesh(mesh);
+			if (m_IsDepthOnly)
+			{
+				vulkanCommandBuffer.BindIndexBuffer(mesh->GetDepthOnlyIndexBuffer(), mesh->GetIndexFormat());
+			}
+
+			SubMesh subMesh;
+			if (m_IsDepthOnly)
+			{
+				subMesh = mesh->GetDepthOnlySubMeshes()[culledBatch.SubMeshIndex];
+			}
+			else
+			{
+				subMesh = mesh->GetSubMeshes()[culledBatch.SubMeshIndex];
+			}
+
+			vkCmdDrawIndexed(vulkanCommandBuffer.GetHandle(),
+				subMesh.IndicesCount,
+				static_cast<uint32_t>(culledBatch.CulledGeometryIndices.size()),
+				subMesh.BaseIndex,
+				subMesh.BaseVertex,
+				static_cast<uint32_t>(culledBatch.TransformBufferOffset));
 		}
 	}
 }

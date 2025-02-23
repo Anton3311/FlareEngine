@@ -15,11 +15,12 @@ namespace Flare
 	class GeometryPass : public RenderGraphPass 
 	{
 	public:
-		GeometryPass(RendererStatistics& statistics, Ref<Material> materialOverride);
+		GeometryPass(RendererStatistics& statistics, Ref<Material> materialOverride, bool isDepthOnly);
 
 		void OnPrepare(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer) override;
 		void OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer) override;
 	private:
+		bool m_IsDepthOnly = false;
 		Ref<Material> m_MaterialOverride = nullptr;
 
 		RendererStatistics& m_Statistics;

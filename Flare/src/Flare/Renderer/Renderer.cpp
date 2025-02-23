@@ -511,7 +511,7 @@ namespace Flare
 			depthPrepass.SetType(RenderGraphPassType::Graphics);
 			depthPrepass.AddOutput(depthOutput->Id);
 
-			viewportRenderGraph->Graph->AddPass(depthPrepass, Ref<GeometryPass>::New(s_RendererData.Statistics, depthPrepassMaterial));
+			viewportRenderGraph->Graph->AddPass(depthPrepass, Ref<GeometryPass>::New(s_RendererData.Statistics, depthPrepassMaterial, true));
 		}
 	}
 
@@ -568,7 +568,7 @@ namespace Flare
 			}
 		}
 
-		viewportRenderGraph->Graph->AddPass(geometryPass, Ref<GeometryPass>::New(s_RendererData.Statistics, nullptr));
+		viewportRenderGraph->Graph->AddPass(geometryPass, Ref<GeometryPass>::New(s_RendererData.Statistics, nullptr, false));
 	}
 
 	static void ConfigureOtherPasses(Entity viewportEntity)

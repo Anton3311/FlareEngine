@@ -94,12 +94,6 @@ namespace Flare
 			const aiMesh* mesh = m_Scene->mMeshes[meshIndex];
 			SubMesh subMesh = CopySubMeshData(mesh);
 
-#if 0
-			subMesh.Bounds.Min = glm::vec3(mesh->mAABB.mMin.x, mesh->mAABB.mMin.y, mesh->mAABB.mMin.z);
-			subMesh.Bounds.Max = glm::vec3(mesh->mAABB.mMax.x, mesh->mAABB.mMax.y, mesh->mAABB.mMax.z);
-#else
-#endif
-
 			m_SceneData.MeshData[mesh] = subMesh;
 		}
 

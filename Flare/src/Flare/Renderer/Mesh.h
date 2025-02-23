@@ -95,6 +95,7 @@ namespace Flare
 		constexpr size_t GetIndexCount() const { return m_IndexCount; }
 
 		inline Ref<GPUBuffer> GetIndexBuffer() const { return m_IndexBuffer; }
+		inline Ref<GPUBuffer> GetDepthOnlyIndexBuffer() const { return m_DepthOnlyIndexBuffer ? m_DepthOnlyIndexBuffer : m_IndexBuffer; }
 		inline Ref<GPUBuffer> GetVertices() const { return m_Vertices; }
 		inline Ref<GPUBuffer> GetNormals() const { return m_Normals; }
 		inline Ref<GPUBuffer> GetTangents() const { return m_Tangents; }
@@ -103,6 +104,8 @@ namespace Flare
 		inline const Math::AABB& GetBounds() const { return m_Bounds; }
 
 		inline const std::vector<SubMesh>& GetSubMeshes() const { return m_SubMeshes; }
+		inline const std::vector<SubMesh>& GetDepthOnlySubMeshes() const { return m_DepthOnlyIndexBuffer ? m_DepthOnlySubMeshes : m_SubMeshes; }
+
 		inline IndexFormat GetIndexFormat() const { return m_IndexFormat; }
 
 		inline Ref<SharedMesh> GetSharedMesh() const { return m_SharedMesh; }
@@ -116,6 +119,9 @@ namespace Flare
 			fullMesh.IndicesCount = (uint32_t)m_IndexCount;
 			return fullMesh;
 		}
+	private:
+		std::vector<uint32_t> GenerateDepthOnlyIndices(Span<const glm::vec3> vertices, Span<const uint32_t> indices, uint32_t indexOffset);
+		void GenerateDepthOnlyIndexBuffer(Span<const uint32_t> indices, Span<const glm::vec3> vertices);
 	private:
 		void UpdateBufferDebugNames();
 		void CreateBuffers(MemorySpan indices,
@@ -150,7 +156,9 @@ namespace Flare
 		Ref<GPUBuffer> m_Normals = nullptr;
 		Ref<GPUBuffer> m_Tangents = nullptr;
 		Ref<GPUBuffer> m_UVs = nullptr;
+		Ref<GPUBuffer> m_DepthOnlyIndexBuffer = nullptr;
 
+		std::vector<SubMesh> m_DepthOnlySubMeshes;
 		std::vector<SubMesh> m_SubMeshes;
 
 		friend class SharedMesh;

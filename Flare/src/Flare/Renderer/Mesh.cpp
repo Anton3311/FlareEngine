@@ -80,6 +80,12 @@ namespace Flare
 		}
 
 		m_Bounds = subMesh.Bounds;
+
+		if (m_IndexFormat == IndexFormat::UInt32)
+		{
+			Span<const uint32_t> indices32 = Span(static_cast<const uint32_t*>(indices.GetBuffer()), indices.GetSize() / sizeof(uint32_t));
+			GenerateDepthOnlyIndexBuffer(indices32, vertices);
+		}
 	}
 
 	Mesh::Mesh(MemorySpan indices,
@@ -109,6 +115,12 @@ namespace Flare
 		{
 			m_Bounds.Min = glm::min(m_Bounds.Min, subMesh.Bounds.Min);
 			m_Bounds.Max = glm::max(m_Bounds.Max, subMesh.Bounds.Max);
+		}
+
+		if (indexFormat == IndexFormat::UInt32)
+		{
+			Span<const uint32_t> indices32 = Span(static_cast<const uint32_t*>(indices.GetBuffer()), indices.GetSize() / sizeof(uint32_t));
+			GenerateDepthOnlyIndexBuffer(indices32, vertices);
 		}
 	}
 
@@ -185,6 +197,72 @@ namespace Flare
 		m_DebugName = debugName;
 
 		UpdateBufferDebugNames();
+	}
+
+	struct Vector3Hasher
+	{
+	public:
+		size_t operator()(const glm::vec3& vector) const
+		{
+			size_t hash = 0;
+			CombineHashes(hash, vector.x);
+			CombineHashes(hash, vector.y);
+			CombineHashes(hash, vector.z);
+			return hash;
+		}
+	};
+
+	std::vector<uint32_t> Mesh::GenerateDepthOnlyIndices(Span<const glm::vec3> vertices, Span<const uint32_t> indices, uint32_t indexOffset)
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		std::unordered_map<glm::vec3, uint32_t, Vector3Hasher> vertexToIndex;
+
+		for (uint32_t index : indices)
+		{
+			vertexToIndex.try_emplace(vertices[index], index);
+		}
+
+		std::vector<uint32_t> generatedIndices;
+		generatedIndices.reserve(vertexToIndex.size());
+
+		for (uint32_t index : indices)
+		{
+			generatedIndices.push_back(vertexToIndex[vertices[index]]);
+		}
+
+		return generatedIndices;
+	}
+
+	void Mesh::GenerateDepthOnlyIndexBuffer(Span<const uint32_t> indices, Span<const glm::vec3> vertices)
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		if (m_IndexFormat == IndexFormat::UInt32)
+		{
+			std::vector<uint32_t> depthOnlyIndices;
+
+			for (const SubMesh& subMesh : m_SubMeshes)
+			{
+				auto generatedIndices = GenerateDepthOnlyIndices(vertices.Slice(subMesh.BaseIndex), indices.Slice(subMesh.BaseIndex), 0);
+				m_DepthOnlySubMeshes.push_back(SubMesh
+				{
+					.Bounds = subMesh.Bounds,
+					.BaseIndex = static_cast<uint32_t>(depthOnlyIndices.size()),
+					.IndicesCount = static_cast<uint32_t>(generatedIndices.size()),
+					.BaseVertex = subMesh.BaseVertex,
+				});
+
+				for (uint32_t i : generatedIndices)
+				{
+					depthOnlyIndices.push_back(i);
+				}
+			}
+
+			MemorySpan indexData = MemorySpan::FromVector(depthOnlyIndices);
+			m_DepthOnlyIndexBuffer = GPUBuffer::CreateIndexBuffer(depthOnlyIndices.size(), IndexFormat::UInt32, GPUBufferMemoryType::Static);
+			m_DepthOnlyIndexBuffer->SetData(indexData, 0, VulkanContext::GetInstance().GetUploadCommandBuffer());
+		}
 	}
 
 	void Mesh::UpdateBufferDebugNames()
