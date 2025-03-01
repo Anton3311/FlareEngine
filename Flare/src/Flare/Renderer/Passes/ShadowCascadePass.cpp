@@ -179,8 +179,8 @@ namespace Flare
 					vulkanCommandBuffer.BindMesh(visibleMesh.Mesh);
 					vulkanCommandBuffer.BindIndexBuffer(visibleMesh.Mesh->GetDepthOnlyIndexBuffer(), mesh->GetIndexFormat());
 
-					size_t firstSubMesh = range.Start;
-					size_t subMeshCount = range.Count;
+					uint32_t firstSubMesh = static_cast<uint32_t>(range.Start);
+					uint32_t subMeshCount = static_cast<uint32_t>(range.Count);
 
 					const auto& subMeshes = visibleMesh.Mesh->GetDepthOnlySubMeshes();
 
