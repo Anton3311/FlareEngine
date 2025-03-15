@@ -23,6 +23,14 @@ AssetRegistry:
     Parent: 0
     SubAssets:
       []
+  - Handle: 333606890438607557
+    Type: ComputeShader
+    BuiltIn: true
+    Path: ../../Content/Runtime/Shaders/HBAO/HBAOCompute.compute.glsl
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
   - Handle: 413801428778504691
     Type: ComputeShader
     BuiltIn: true
@@ -119,6 +127,14 @@ AssetRegistry:
     Parent: 0
     SubAssets:
       []
+  - Handle: 4798686408258318735
+    Type: Shader
+    BuiltIn: true
+    Path: ../../Content/Runtime/Shaders/DepthOnlyPerspective.glsl
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
   - Handle: 5084657888770960653
     Type: MeshSource
     BuiltIn: false
@@ -167,10 +183,42 @@ AssetRegistry:
     Parent: 0
     SubAssets:
       []
+  - Handle: 7402642726985470696
+    Type: ComputeShader
+    BuiltIn: true
+    Path: ../../Content/Runtime/Shaders/HBAO/HBAOLinearizeDepth.compute.glsl
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
+  - Handle: 7961827439441279668
+    Type: Shader
+    BuiltIn: true
+    Path: ../../Content/Runtime/Shaders/Bloom/BloomLuminance.glsl
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
+  - Handle: 8030943264460132175
+    Type: ComputeShader
+    BuiltIn: true
+    Path: ../../Content/Runtime/Shaders/HBAO/HBAOBilateralBlur.compute.glsl
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
   - Handle: 8710847031777458545
     Type: Shader
     BuiltIn: true
     Path: ../../Content/Editor/Shaders/SceneViewGrid.glsl
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
+  - Handle: 9508609964407969477
+    Type: Shader
+    BuiltIn: true
+    Path: ../../Content/Runtime/Shaders/HBAO/HBAO.glsl
     Source: File
     Parent: 0
     SubAssets:
@@ -191,6 +239,14 @@ AssetRegistry:
     Parent: 0
     SubAssets:
       []
+  - Handle: 10430132151060666698
+    Type: Shader
+    BuiltIn: true
+    Path: ../../Content/Runtime/Shaders/Bloom/BloomBlit.glsl
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
   - Handle: 11547166465694510241
     Type: Material
     BuiltIn: false
@@ -207,6 +263,14 @@ AssetRegistry:
     Parent: 0
     SubAssets:
       []
+  - Handle: 11746763625634458128
+    Type: Shader
+    BuiltIn: true
+    Path: ../../Content/Runtime/Shaders/Bloom/BloomFilter.glsl
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
   - Handle: 11903094609482565069
     Type: Shader
     BuiltIn: true
@@ -219,6 +283,14 @@ AssetRegistry:
     Type: Shader
     BuiltIn: true
     Path: ../../Content/Runtime/Shaders/QuadShader.glsl
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
+  - Handle: 12465326575607793590
+    Type: Shader
+    BuiltIn: true
+    Path: ../../Content/Runtime/Shaders/Bloom/BloomUpsample.glsl
     Source: File
     Parent: 0
     SubAssets:
@@ -259,6 +331,14 @@ AssetRegistry:
     Type: Shader
     BuiltIn: true
     Path: ../../Content/Runtime/Shaders/Surface.glsl
+    Source: File
+    Parent: 0
+    SubAssets:
+      []
+  - Handle: 17816955027994602902
+    Type: ComputeShader
+    BuiltIn: true
+    Path: ../../Content/Runtime/Shaders/HBAO/HBAOCombineDeinterleavedTextures.compute.glsl
     Source: File
     Parent: 0
     SubAssets:

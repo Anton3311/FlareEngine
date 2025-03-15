@@ -38,7 +38,7 @@ Entities:
       - Name: struct Flare::Environment
         Data:
           EnvironmentColor: [0.967971504, 0.954756439, 0.919745147]
-          EnvironmentColorIntensity: 0.5
+          EnvironmentColorIntensity: 0.800000012
           ShadowSettings:
             Enabled: true
             LightSize: 2
@@ -80,9 +80,9 @@ Entities:
           Flags: 0
       - Name: struct Flare::TransformComponent
         Data:
-          Position: [0, -4.02802563, 0]
+          Position: [0, -4.18799162, 0]
           Rotation: [0, -0, 0]
-          Scale: [0.400000006, 0.00571999978, 0.400000006]
+          Scale: [10, 0.00571999978, 10]
   - SerializationId: 8546642799043777967
     Components:
       - Name: struct Flare::NameComponent
@@ -235,9 +235,9 @@ Entities:
           Scale: [0.0279385615, 0.0279385615, 0.0279385615]
 Editor:
   Camera:
-    RotationOrigin: [-14.3830338, -9.31957054, 3.04942513]
-    Rotation: [42, -1428, 0]
-    Zoom: 32.4416885
+    RotationOrigin: [-7.59970188, 9.1308918, 14.9989262]
+    Rotation: [12, -1279, 0]
+    Zoom: 69.4416885
   SceneViewSettings:
     ShowAABBs: false
     ShowCameraFrustum: true
@@ -247,9 +247,10 @@ PostProcessing:
   - Name: class Flare::SSAO
     Enabled: true
     Data:
-      Radius: 0.5
-      Bias: 0.100000001
-      BlurSize: 10
+      Radius: 6
+      Bias: 30
+      Intensity: 0.800000012
+      Sharpness: 1
   - Name: class Flare::Atmosphere
     Enabled: true
     Data:
@@ -267,6 +268,12 @@ PostProcessing:
       ViewRaySteps: 10
       SunTransmittanceSteps: 10
       SunTransmittanceLUTSteps: 100
+  - Name: class Flare::Bloom
+    Enabled: true
+    Data:
+      Threshold: 1.79999995
+      Intensity: 9.99999975e-05
+      Radius: 0.100000001
   - Name: class Flare::Vignette
     Enabled: true
     Data:
