@@ -6,6 +6,7 @@
 #include "Flare/Renderer/CommandBuffer.h"
 #include "Flare/Renderer/Material.h"
 #include "Flare/Renderer/PostProcessing/Bloom/Bloom.h"
+#include "Flare/Renderer/Renderer.h"
 #include "Flare/Renderer/RendererPrimitives.h"
 #include "Flare/Renderer/RenderGraph/RenderGraph.h"
 #include "Flare/Renderer/Sampler.h"
@@ -13,8 +14,8 @@
 
 namespace Flare
 {
-	BloomUpsamplePass::BloomUpsamplePass(Ref<const Bloom> parameters, RenderGraphTextureId sourceTexture)
-		: m_SourceTexture(sourceTexture), m_Parameters(parameters)
+	BloomUpsamplePass::BloomUpsamplePass(Ref<const Bloom> parameters, RenderGraphTextureId sourceTexture, RenderGraphTextureId previousMip)
+		: m_SourceTexture(sourceTexture), m_Parameters(parameters), m_PreviousMip(previousMip)
 	{
 		if (std::optional<AssetHandle> shaderHandle = ShaderLibrary::FindShader("BloomUpsample"))
 		{
@@ -42,6 +43,7 @@ namespace Flare
 
 		std::optional<uint32_t> aspectRatioProperty = m_Material->GetShader()->GetPropertyIndex("u_AspectRatio");
 		std::optional<uint32_t> colorTextureProperty = m_Material->GetShader()->GetPropertyIndex("u_Color");
+		std::optional<uint32_t> previousMipProperty = m_Material->GetShader()->GetPropertyIndex("u_PreviousMip");
 		std::optional<uint32_t> radiusTextureProperty = m_Material->GetShader()->GetPropertyIndex("u_Radius");
 
 		Ref<Texture> sourceTexture = context.GetRenderGraph().GetTexture(m_SourceTexture);
@@ -50,6 +52,15 @@ namespace Flare
 		m_Material->WritePropertyValue<float>(*aspectRatioProperty, (float)specifications.Width / (float)specifications.Height);
 		m_Material->WritePropertyValue<float>(*radiusTextureProperty, m_Parameters->Radius);
 		m_Material->SetTextureProperty(*colorTextureProperty, sourceTexture, m_Sampler);
+
+		if (m_PreviousMip != RenderGraphTextureId())
+		{
+			m_Material->SetTextureProperty(*previousMipProperty, context.GetRenderGraph().GetTexture(m_PreviousMip), m_Sampler);
+		}
+		else
+		{
+			m_Material->SetTextureProperty(*previousMipProperty, Renderer::GetBlackTexture());
+		}
 
 		commandBuffer->ApplyMaterial(m_Material);
 		commandBuffer->SetDefaultViewportAndScissors();

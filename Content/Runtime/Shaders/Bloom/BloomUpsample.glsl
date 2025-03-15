@@ -19,6 +19,7 @@ void main()
 #include "../Common/Math.glsl"
 
 layout(set = 3, binding = 0) uniform sampler2D u_Color;
+layout(set = 3, binding = 1) uniform sampler2D u_PreviousMip;
 
 layout(location = 0) in vec2 i_UV;
 
@@ -52,7 +53,7 @@ void main()
 		}
 	}
 
-	o_Color = vec4(finalColor, 1.0f);
+	o_Color = vec4(finalColor + texture(u_PreviousMip, i_UV).rgb, 1.0f);
 }
 
 #end
