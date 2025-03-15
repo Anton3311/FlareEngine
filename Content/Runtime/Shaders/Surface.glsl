@@ -9,7 +9,7 @@ Properties =
 	u_Texture = { Default = White }
 	u_NormalMap = { Default = DefaultNormals }
 	u_RoughnessMap = { Default = White }
-	u_EmissionMap = { Default = Black }
+	u_EmissionMap = { Default = White }
 }
 
 #begin vertex
