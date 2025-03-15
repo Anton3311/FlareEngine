@@ -35,18 +35,26 @@ namespace Flare
 
 	struct SceneData
 	{
+		~SceneData();
+
 		IndexFormat IndexFormat = IndexFormat::UInt32;
 
-		std::vector<uint16_t> Indices16;
-		std::vector<uint32_t> Indices32;
+		size_t IndexCount = 0;
+		size_t VertexCount = 0;
+
+		uint16_t* Indices16 = nullptr;
+		uint32_t* Indices32 = nullptr;
 
 		std::vector<uint16_t> DepthOnlyIndices16;
 		std::vector<uint32_t> DepthOnlyIndices32;
 
-		std::vector<glm::vec3> Vertices;
-		std::vector<glm::vec3> Normals;
-		std::vector<glm::vec3> Tangents;
-		std::vector<glm::vec2> UVs;
+		glm::vec3* VertexDataBuffer = nullptr;
+
+		// All of these, are suballocated from the VertexDataBuffer
+		glm::vec3* Vertices = nullptr;
+		glm::vec3* Normals = nullptr;
+		glm::vec3* Tangents = nullptr;
+		glm::vec2* UVs = nullptr;
 
 		size_t MaxSubMeshIndexCount = 0;
 
@@ -79,7 +87,7 @@ namespace Flare
 		SubMeshesPair CopySubMeshData(const aiMesh* node);
 		void FlattenHierarchy(const aiNode* node, const glm::mat4& transform, size_t subMeshStart, size_t subMeshEnd);
 
-		void ReserveBuffers();
+		void InitializeSceneData(size_t vertexCount, size_t indexCount, IndexFormat indexFormat);
 		void CountMeshVerticesAndIndices(size_t& outVertexCount, size_t& outIndexCount);
 
 		void CountVerticesAndIndicesRecursively(const aiNode* node, size_t& vertexCount, size_t& indexCount);

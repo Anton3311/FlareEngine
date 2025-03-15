@@ -243,23 +243,23 @@ namespace Flare
 		
 		if (data.IndexFormat == IndexFormat::UInt16)
 		{
-		 	mesh = Ref<Mesh>::New(MemorySpan::FromVector(data.Indices16),
+		 	mesh = Ref<Mesh>::New(MemorySpan(data.Indices16, data.IndexCount),
 				data.IndexFormat,
-				Span<const glm::vec3>(data.Vertices.data(), data.Vertices.size()),
-				Span<const glm::vec3>(data.Normals.data(), data.Normals.size()),
-				Span<const glm::vec3>(data.Tangents.data(), data.Tangents.size()),
-				Span<const glm::vec2>(data.UVs.data(), data.UVs.size()),
+				Span<const glm::vec3>(data.Vertices, data.VertexCount),
+				Span<const glm::vec3>(data.Normals, data.VertexCount),
+				Span<const glm::vec3>(data.Tangents, data.VertexCount),
+				Span<const glm::vec2>(data.UVs, data.VertexCount),
 				Span<const SubMesh>(data.SubMeshes.data(), data.SubMeshes.size()));
 		}
 		else
 		{
-			MemorySpan indices = MemorySpan::FromVector(data.Indices32);
+			MemorySpan indices = MemorySpan(data.Indices32, data.IndexCount);
 			mesh = Ref<Mesh>::New(indices,
 				data.IndexFormat,
-				Span(data.Vertices.data(), data.Vertices.size()),
-				Span(data.Normals.data(), data.Normals.size()),
-				Span(data.Tangents.data(), data.Tangents.size()),
-				Span(data.UVs.data(), data.UVs.size()));
+				Span<const glm::vec3>(data.Vertices, data.VertexCount),
+				Span<const glm::vec3>(data.Normals, data.VertexCount),
+				Span<const glm::vec3>(data.Tangents, data.VertexCount),
+				Span<const glm::vec2>(data.UVs, data.VertexCount));
 		}
 
 		return mesh;

@@ -28,13 +28,36 @@ namespace Flare
 			matrix.a4, matrix.b4, matrix.c4, matrix.d4);
 	}
 
+	SceneData::~SceneData()
+	{
+		if (VertexDataBuffer)
+			delete[] VertexDataBuffer;
+
+		if (UVs)
+			delete[] UVs;
+
+		if (Indices16)
+			delete[] Indices16;
+
+		if (Indices32)
+			delete[] Indices32;
+	}
+
 	void StaticMeshImporter::Import()
 	{
 		FLARE_PROFILE_FUNCTION();
 
 		if (!m_ImportSettings.PreserveHierarchy)
 		{
-			ReserveBuffers();
+			size_t vertexCount = 0;
+			size_t indexCount = 0;
+			CountVerticesAndIndicesRecursively(m_Scene->mRootNode, vertexCount, indexCount);
+
+			IndexFormat indexFormat = indexCount <= (size_t)std::numeric_limits<uint16_t>::max()
+				? IndexFormat::UInt16
+				: IndexFormat::UInt32;
+
+			InitializeSceneData(vertexCount, indexCount, indexFormat);
 		}
 		else
 		{
@@ -72,22 +95,12 @@ namespace Flare
 		size_t indexCount = 0;
 
 		CountMeshVerticesAndIndices(vertexCount, indexCount);
-		
-		m_SceneData.Vertices.resize(vertexCount);
-		m_SceneData.Normals.resize(vertexCount);
-		m_SceneData.Tangents.resize(vertexCount);
-		m_SceneData.UVs.resize(vertexCount);
 
-		if (indexCount <= (size_t)std::numeric_limits<uint16_t>::max())
-		{
-			m_SceneData.IndexFormat = IndexFormat::UInt16;
-			m_SceneData.Indices16.reserve(indexCount);
-		}
-		else
-		{
-			m_SceneData.IndexFormat = IndexFormat::UInt32;
-			m_SceneData.Indices32.reserve(indexCount);
-		}
+		IndexFormat indexFormat = indexCount <= (size_t)std::numeric_limits<uint16_t>::max()
+			? IndexFormat::UInt16
+			: IndexFormat::UInt32;
+
+		InitializeSceneData(vertexCount, indexCount, indexFormat);
 
 		for (uint32_t meshIndex = 0; meshIndex < m_Scene->mNumMeshes; meshIndex++)
 		{
@@ -99,24 +112,34 @@ namespace Flare
 
 		Ref<CommandBuffer> commandBuffer = VulkanContext::GetInstance().GetUploadCommandBuffer();
 		
-		m_SceneData.SharedMesh->Vertices->SetData(MemorySpan::FromVector(m_SceneData.Vertices), 0, commandBuffer);
-		m_SceneData.SharedMesh->Normals->SetData(MemorySpan::FromVector(m_SceneData.Normals), 0, commandBuffer);
-		m_SceneData.SharedMesh->Tangents->SetData(MemorySpan::FromVector(m_SceneData.Tangents), 0, commandBuffer);
-		m_SceneData.SharedMesh->UVs->SetData(MemorySpan::FromVector(m_SceneData.UVs), 0, commandBuffer);
+		m_SceneData.SharedMesh->Vertices->SetData(MemorySpan(m_SceneData.Vertices, m_SceneData.VertexCount), 0, commandBuffer);
+		m_SceneData.SharedMesh->Normals->SetData(MemorySpan(m_SceneData.Normals, m_SceneData.VertexCount), 0, commandBuffer);
+		m_SceneData.SharedMesh->Tangents->SetData(MemorySpan(m_SceneData.Tangents, m_SceneData.VertexCount), 0, commandBuffer);
+		m_SceneData.SharedMesh->UVs->SetData(MemorySpan(m_SceneData.UVs, m_SceneData.VertexCount), 0, commandBuffer);
 
 		if (m_SceneData.IndexFormat == IndexFormat::UInt16)
 		{
-			m_SceneData.SharedMesh->IndexBuffer->SetData(MemorySpan::FromVector(m_SceneData.Indices16), 0, commandBuffer);
+			m_SceneData.SharedMesh->IndexBuffer->SetData(MemorySpan(m_SceneData.Indices16, m_SceneData.IndexCount),
+					0, commandBuffer);
 
-			m_SceneData.SharedMesh->DepthOnlyIndexBuffer = GPUBuffer::CreateIndexBuffer(m_SceneData.DepthOnlyIndices16.size(), IndexFormat::UInt16, GPUBufferMemoryType::Static);
-			m_SceneData.SharedMesh->DepthOnlyIndexBuffer->SetData(MemorySpan::FromVector(m_SceneData.DepthOnlyIndices16), 0, commandBuffer);
+			m_SceneData.SharedMesh->DepthOnlyIndexBuffer = GPUBuffer::CreateIndexBuffer(
+					m_SceneData.DepthOnlyIndices16.size(),
+					IndexFormat::UInt16,
+					GPUBufferMemoryType::Static);
+			m_SceneData.SharedMesh->DepthOnlyIndexBuffer->SetData(
+					MemorySpan::FromVector(m_SceneData.DepthOnlyIndices16),
+					0, commandBuffer);
 		}
 		else
 		{
-			m_SceneData.SharedMesh->IndexBuffer->SetData(MemorySpan::FromVector(m_SceneData.Indices32), 0, commandBuffer);
+			m_SceneData.SharedMesh->IndexBuffer->SetData(MemorySpan(m_SceneData.Indices32, m_SceneData.IndexCount),
+					0, commandBuffer);
 
-			m_SceneData.SharedMesh->DepthOnlyIndexBuffer = GPUBuffer::CreateIndexBuffer(m_SceneData.DepthOnlyIndices32.size(), IndexFormat::UInt32, GPUBufferMemoryType::Static);
-			m_SceneData.SharedMesh->DepthOnlyIndexBuffer->SetData(MemorySpan::FromVector(m_SceneData.DepthOnlyIndices32), 0, commandBuffer);
+			m_SceneData.SharedMesh->DepthOnlyIndexBuffer = GPUBuffer::CreateIndexBuffer(m_SceneData.DepthOnlyIndices32.size(),
+					IndexFormat::UInt32,
+					GPUBufferMemoryType::Static);
+			m_SceneData.SharedMesh->DepthOnlyIndexBuffer->SetData(MemorySpan::FromVector(m_SceneData.DepthOnlyIndices32),
+					0, commandBuffer);
 		}
 	}
 
@@ -156,7 +179,7 @@ namespace Flare
 				auto [subMesh, depthOnlySubMesh] = CopySubMeshData(nodeMesh);
 				FlattenHierarchy(node, nodeTransform, subMeshStart, subMeshEnd);
 
-				subMesh.Bounds = ComputeBounds(Span(m_SceneData.Vertices.data() + subMeshStart, subMeshEnd - subMeshStart));
+				subMesh.Bounds = ComputeBounds(Span(m_SceneData.Vertices + subMeshStart, subMeshEnd - subMeshStart));
 				depthOnlySubMesh.Bounds = subMesh.Bounds;
 
 				m_SceneData.SubMeshes.push_back(subMesh);
@@ -227,9 +250,9 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		std::memcpy(m_SceneData.Vertices.data() + m_VertexOffset, mesh->mVertices, sizeof(glm::vec3) * mesh->mNumVertices);
-		std::memcpy(m_SceneData.Normals.data() + m_VertexOffset, mesh->mNormals, sizeof(glm::vec3) * mesh->mNumVertices);
-		std::memcpy(m_SceneData.Tangents.data() + m_VertexOffset, mesh->mTangents, sizeof(glm::vec3) * mesh->mNumVertices);
+		std::memcpy(m_SceneData.Vertices + m_VertexOffset, mesh->mVertices, sizeof(glm::vec3) * mesh->mNumVertices);
+		std::memcpy(m_SceneData.Normals + m_VertexOffset, mesh->mNormals, sizeof(glm::vec3) * mesh->mNumVertices);
+		std::memcpy(m_SceneData.Tangents + m_VertexOffset, mesh->mTangents, sizeof(glm::vec3) * mesh->mNumVertices);
 
 		if (mesh->mTextureCoords != nullptr && mesh->mTextureCoords[0] != nullptr)
 		{
@@ -249,24 +272,32 @@ namespace Flare
 		size_t subMeshIndexCount = 0;
 		if (m_SceneData.IndexFormat == IndexFormat::UInt16)
 		{
+			uint16_t* indexWriteLocation = m_SceneData.Indices16 + m_IndexOffset;
 			for (uint32_t face = 0; face < mesh->mNumFaces; face++)
 			{
-				aiFace& f = mesh->mFaces[face];
+				const aiFace& f = mesh->mFaces[face];
 				subMeshIndexCount += f.mNumIndices;
 
 				for (uint32_t i = 0; i < f.mNumIndices; i++)
-					m_SceneData.Indices16.push_back((uint16_t)f.mIndices[i] + (uint16_t)m_VertexOffset);
+				{
+					*indexWriteLocation = static_cast<uint16_t>(f.mIndices[i]) + static_cast<uint16_t>(m_VertexOffset);
+					indexWriteLocation++;
+				}
 			}
 		}
 		else
 		{
+			uint32_t* indexWriteLocation = m_SceneData.Indices32 + m_IndexOffset;
 			for (uint32_t face = 0; face < mesh->mNumFaces; face++)
 			{
-				aiFace& f = mesh->mFaces[face];
+				const aiFace& f = mesh->mFaces[face];
 				subMeshIndexCount += f.mNumIndices;
 
 				for (uint32_t i = 0; i < f.mNumIndices; i++)
-					m_SceneData.Indices32.push_back((uint32_t)f.mIndices[i] + (uint32_t)m_VertexOffset);
+				{
+					*indexWriteLocation = static_cast<uint32_t>(f.mIndices[i]) + static_cast<uint32_t>(m_VertexOffset);
+					indexWriteLocation++;
+				}
 			}
 		}
 
@@ -274,7 +305,7 @@ namespace Flare
 		subMesh.BaseVertex = 0;
 		subMesh.BaseIndex = (uint32_t)m_IndexOffset;
 		subMesh.IndicesCount = (uint32_t)subMeshIndexCount;
-		subMesh.Bounds = ComputeBounds(Span(m_SceneData.Vertices.data() + m_VertexOffset, (size_t)mesh->mNumVertices));
+		subMesh.Bounds = ComputeBounds(Span(m_SceneData.Vertices + m_VertexOffset, (size_t)mesh->mNumVertices));
 
 		SubMesh depthOnlySubMesh{};
 		depthOnlySubMesh.BaseVertex = 0;
@@ -284,16 +315,15 @@ namespace Flare
 		depthOnlySubMesh.Bounds = subMesh.Bounds;
 		depthOnlySubMesh.IndicesCount = subMesh.IndicesCount;
 
-		Span<const glm::vec3> subMeshVertices = Span<const glm::vec3>::FromVector(m_SceneData.Vertices);
-
+		Span<const glm::vec3> subMeshVertices = Span(m_SceneData.Vertices, m_SceneData.VertexCount);
 		if (m_SceneData.IndexFormat == IndexFormat::UInt16)
 		{
-			Span<const uint16_t> subMeshIndices = Span<const uint16_t>::FromVector(m_SceneData.Indices16).Slice(m_IndexOffset, subMeshIndexCount);
+			Span<const uint16_t> subMeshIndices = Span(m_SceneData.Indices16 + m_IndexOffset, subMeshIndexCount);
 			GenerateDepthOnlyIndices<uint16_t>(subMeshVertices, subMeshIndices, m_SceneData.DepthOnlyIndices16);
 		}
 		else
 		{
-			Span<const uint32_t> subMeshIndices = Span<const uint32_t>::FromVector(m_SceneData.Indices32).Slice(m_IndexOffset, subMeshIndexCount);
+			Span<const uint32_t> subMeshIndices = Span(m_SceneData.Indices32 + m_IndexOffset, subMeshIndexCount);
 			GenerateDepthOnlyIndices<uint32_t>(subMeshVertices, subMeshIndices, m_SceneData.DepthOnlyIndices32);
 		}
 
@@ -323,28 +353,31 @@ namespace Flare
 		}
 	}
 
-	void StaticMeshImporter::ReserveBuffers()
+	void StaticMeshImporter::InitializeSceneData(size_t vertexCount, size_t indexCount, IndexFormat indexFormat)
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		size_t vertexCount = 0;
-		size_t indexCount = 0;
-		CountVerticesAndIndicesRecursively(m_Scene->mRootNode, vertexCount, indexCount);
+		m_SceneData.VertexCount = vertexCount;
+		m_SceneData.IndexCount = indexCount;
+		m_SceneData.IndexFormat = indexFormat;
 
-		m_SceneData.Vertices.resize(vertexCount);
-		m_SceneData.Normals.resize(vertexCount);
-		m_SceneData.Tangents.resize(vertexCount);
-		m_SceneData.UVs.resize(vertexCount);
+		constexpr size_t VECTOR3_VERTEX_ATTRIBUTE_COUNT = 3;
+		size_t vertexDataBufferSize = vertexCount * VECTOR3_VERTEX_ATTRIBUTE_COUNT;
+		m_SceneData.VertexDataBuffer = new glm::vec3[vertexDataBufferSize];
 
-		if (indexCount <= (size_t)std::numeric_limits<uint16_t>::max())
+		m_SceneData.Vertices = m_SceneData.VertexDataBuffer;
+		m_SceneData.Normals = m_SceneData.VertexDataBuffer + vertexCount;
+		m_SceneData.Tangents = m_SceneData.VertexDataBuffer + vertexCount * 2;
+		m_SceneData.UVs = new glm::vec2[vertexCount];
+
+		switch (indexFormat)
 		{
-			m_SceneData.IndexFormat = IndexFormat::UInt16;
-			m_SceneData.Indices16.reserve(indexCount);
-		}
-		else
-		{
-			m_SceneData.IndexFormat = IndexFormat::UInt32;
-			m_SceneData.Indices32.reserve(indexCount);
+		case IndexFormat::UInt16:
+			m_SceneData.Indices16 = new uint16_t[m_SceneData.IndexCount];
+			break;
+		case IndexFormat::UInt32:
+			m_SceneData.Indices32 = new uint32_t[m_SceneData.IndexCount];
+			break;
 		}
 	}
 
