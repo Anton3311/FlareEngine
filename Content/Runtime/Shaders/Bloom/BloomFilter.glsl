@@ -24,33 +24,36 @@ layout(location = 0) in vec2 i_UV;
 
 layout(location = 0) out vec3 o_Color;
 
-layout(std140, push_constant) uniform Constants
-{
-	vec2 u_TexelSize;
-};
-
-vec3 Sample4(vec2 uv)
-{
-	vec3 topLeftSample = texture(u_Color, uv + vec2(-u_TexelSize.x, u_TexelSize.y)).rgb;
-	vec3 topRightSample = texture(u_Color, uv + vec2(u_TexelSize.x, u_TexelSize.y)).rgb;
-
-	vec3 bottomLeftSample = texture(u_Color, uv + vec2(-u_TexelSize.x, -u_TexelSize.y)).rgb;
-	vec3 bottomRightSample = texture(u_Color, uv + vec2(u_TexelSize.x, -u_TexelSize.y)).rgb;
-
-	return (topLeftSample + topRightSample + bottomRightSample + bottomLeftSample) * 0.25f;
-}
-
 void main()
 {
-	vec3 center = Sample4(i_UV) * 0.5f;
+	vec3 samples[3][3];
 
-	vec3 topLeft = Sample4(i_UV + vec2(-u_TexelSize.x, u_TexelSize.y) * 2.0f) * 0.125f;
-	vec3 topRight = Sample4(i_UV + vec2(u_TexelSize.x, u_TexelSize.y) * 2.0f) * 0.125f;
+	samples[0][0] = textureOffset(u_Color, i_UV, ivec2(-2, -2), 0).rgb;
+	samples[1][0] = textureOffset(u_Color, i_UV, ivec2(0, -2), 0).rgb;
+	samples[2][0] = textureOffset(u_Color, i_UV, ivec2(2, -2), 0).rgb;
 
-	vec3 bottomLeft = Sample4(i_UV + vec2(-u_TexelSize.x, -u_TexelSize.y) * 2.0f) * 0.125f;
-	vec3 bottomRight = Sample4(i_UV + vec2(u_TexelSize.x, -u_TexelSize.y) * 2.0f) * 0.125f;
+	samples[0][1] = textureOffset(u_Color, i_UV, ivec2(-2, 0), 0).rgb;
+	samples[1][1] = textureOffset(u_Color, i_UV, ivec2(0, 0), 0).rgb;
+	samples[2][1] = textureOffset(u_Color, i_UV, ivec2(2, 0), 0).rgb;
 
-	o_Color = center + topLeft + topRight + bottomLeft + bottomRight;
+	samples[0][2] = textureOffset(u_Color, i_UV, ivec2(-2, 2), 0).rgb;
+	samples[1][2] = textureOffset(u_Color, i_UV, ivec2(0, 2), 0).rgb;
+	samples[2][2] = textureOffset(u_Color, i_UV, ivec2(2, 2), 0).rgb;
+
+	vec3 topLeft = samples[0][0] + samples[1][0] + samples[0][1] + samples[1][1];
+	vec3 topRight = samples[1][0] + samples[2][0] + samples[1][1] + samples[2][1];
+
+	vec3 bottomLeft = samples[0][1] + samples[1][1] + samples[0][2] + samples[1][2];
+	vec3 bottomRight = samples[1][1] + samples[2][1] + samples[1][2] + samples[2][2];
+
+	vec3 centerTopLeft = textureOffset(u_Color, i_UV, ivec2(-1, -1), 0).rgb;
+	vec3 centerTopRight = textureOffset(u_Color, i_UV, ivec2(1, -1), 0).rgb;
+	vec3 centerBottomLeft = textureOffset(u_Color, i_UV, ivec2(-1, 1), 0).rgb;
+	vec3 centerBottomRight = textureOffset(u_Color, i_UV, ivec2(1, 1), 0).rgb;
+
+	vec3 center = (centerTopLeft + centerTopRight + centerBottomLeft + centerBottomRight) * 0.5f;
+
+	o_Color = center + (topLeft + topRight + bottomLeft + bottomRight) * 0.125f;
 }
 
 #end

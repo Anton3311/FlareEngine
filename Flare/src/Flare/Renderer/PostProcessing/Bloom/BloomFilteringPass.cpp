@@ -39,14 +39,10 @@ namespace Flare
 		if (m_Material == nullptr || m_Material->GetShader() == nullptr || !m_Material->GetShader()->IsLoaded())
 			return;
 
-		std::optional<uint32_t> texelSizeProperty = m_Material->GetShader()->GetPropertyIndex("u_TexelSize");
 		std::optional<uint32_t> colorTextureProperty = m_Material->GetShader()->GetPropertyIndex("u_Color");
 
-		Ref<Texture> sourceTexture = context.GetRenderGraph().GetTexture(m_SourceTexture);
-		const TextureSpecifications& specifications = sourceTexture->GetSpecifications();
-
-		m_Material->WritePropertyValue<glm::vec2>(*texelSizeProperty, glm::vec2(1.0f) / glm::vec2((float)specifications.Width, (float)specifications.Height));
-		m_Material->SetTextureProperty(*colorTextureProperty, sourceTexture, m_Sampler);
+		if (colorTextureProperty)
+			m_Material->SetTextureProperty(*colorTextureProperty, context.GetRenderGraph().GetTexture(m_SourceTexture), m_Sampler);
 
 		commandBuffer->ApplyMaterial(m_Material);
 		commandBuffer->SetDefaultViewportAndScissors();
