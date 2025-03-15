@@ -89,7 +89,7 @@ namespace Flare
 		else if (string == "MeshSource")
 			return AssetType::MeshSource;
 
-		FLARE_CORE_ERROR("Unknown asset type string");
+		FLARE_CORE_ERROR("Unknown asset type string {}", string);
 		return AssetType::None;
 	}
 
