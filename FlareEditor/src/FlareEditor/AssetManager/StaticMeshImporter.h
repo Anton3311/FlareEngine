@@ -41,6 +41,7 @@ namespace Flare
 
 		size_t IndexCount = 0;
 		size_t VertexCount = 0;
+		size_t SubMeshCount = 0;
 
 		uint16_t* Indices16 = nullptr;
 		uint32_t* Indices32 = nullptr;
@@ -58,12 +59,11 @@ namespace Flare
 
 		size_t MaxSubMeshIndexCount = 0;
 
-		std::vector<SubMesh> SubMeshes;
-		std::vector<SubMesh> DepthOnlySubMeshes;
+		SubMesh* SubMeshes = nullptr;
+		SubMesh* DepthOnlySubMeshes = nullptr;
 		std::unordered_set<uint32_t> UsedMaterials;
 
 		Ref<SharedMesh> SharedMesh = nullptr;
-		std::vector<Ref<Mesh>> Meshes;
 
 		std::unordered_map<const aiMesh*, SubMeshesPair> MeshData;
 		std::unordered_map<const aiNode*, NodeMesh> NodeToMesh;
@@ -87,7 +87,7 @@ namespace Flare
 		SubMeshesPair CopySubMeshData(const aiMesh* node);
 		void FlattenHierarchy(const aiNode* node, const glm::mat4& transform, size_t subMeshStart, size_t subMeshEnd);
 
-		void InitializeSceneData(size_t vertexCount, size_t indexCount, IndexFormat indexFormat);
+		void InitializeSceneData(size_t vertexCount, size_t indexCount, size_t subMeshCount, IndexFormat indexFormat);
 		void CountMeshVerticesAndIndices(size_t& outVertexCount, size_t& outIndexCount);
 
 		void CountVerticesAndIndicesRecursively(const aiNode* node, size_t& vertexCount, size_t& indexCount);
@@ -97,6 +97,8 @@ namespace Flare
 
 		size_t m_VertexOffset = 0;
 		size_t m_IndexOffset = 0;
+
+		size_t m_InsertedSubMeshCount = 0;
 
 		SceneData m_SceneData;
 		const aiScene* m_Scene = nullptr;

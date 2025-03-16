@@ -41,6 +41,9 @@ namespace Flare
 
 		if (Indices32)
 			delete[] Indices32;
+
+		if (SubMeshes)
+			delete[] SubMeshes;
 	}
 
 	void StaticMeshImporter::Import()
@@ -57,7 +60,7 @@ namespace Flare
 				? IndexFormat::UInt16
 				: IndexFormat::UInt32;
 
-			InitializeSceneData(vertexCount, indexCount, indexFormat);
+			InitializeSceneData(vertexCount, indexCount, m_Scene->mNumMeshes, indexFormat);
 		}
 		else
 		{
@@ -93,6 +96,7 @@ namespace Flare
 
 		size_t vertexCount = 0;
 		size_t indexCount = 0;
+		size_t subMeshCount = m_Scene->mNumMeshes;
 
 		CountMeshVerticesAndIndices(vertexCount, indexCount);
 
@@ -100,7 +104,7 @@ namespace Flare
 			? IndexFormat::UInt16
 			: IndexFormat::UInt32;
 
-		InitializeSceneData(vertexCount, indexCount, indexFormat);
+		InitializeSceneData(vertexCount, indexCount, subMeshCount, indexFormat);
 
 		for (uint32_t meshIndex = 0; meshIndex < m_Scene->mNumMeshes; meshIndex++)
 		{
@@ -184,13 +188,15 @@ namespace Flare
 				subMesh.Bounds = ComputeBounds(Span(m_SceneData.Vertices + subMeshStart, subMeshEnd - subMeshStart));
 				depthOnlySubMesh.Bounds = subMesh.Bounds;
 
-				m_SceneData.SubMeshes.push_back(subMesh);
-				m_SceneData.DepthOnlySubMeshes.push_back(depthOnlySubMesh);
+				m_SceneData.SubMeshes[m_InsertedSubMeshCount] = subMesh;
+				m_SceneData.DepthOnlySubMeshes[m_InsertedSubMeshCount] = depthOnlySubMesh;
+				m_InsertedSubMeshCount++;
 			}
 		}
 
 		if (m_ImportSettings.PreserveHierarchy)
 		{
+			size_t previousSubMeshCount = m_InsertedSubMeshCount;
 			std::vector<SubMesh> subMeshes;
 			std::vector<SubMesh> depthOnlySubMeshes;
 
@@ -202,12 +208,16 @@ namespace Flare
 				nodeMeshData.MaterialIndices.push_back(nodeMesh->mMaterialIndex);
 				m_SceneData.UsedMaterials.insert(nodeMesh->mMaterialIndex);
 
-				auto subMeshesPair = m_SceneData.MeshData[nodeMesh];
-				subMeshes.push_back(subMeshesPair.MainSubMesh);
-				depthOnlySubMeshes.push_back(subMeshesPair.DepthOnlySubMesh);
+				auto [subMesh, depthOnlySubMesh] = m_SceneData.MeshData[nodeMesh];
+				m_SceneData.SubMeshes[m_InsertedSubMeshCount] = subMesh;
+				m_SceneData.DepthOnlySubMeshes[m_InsertedSubMeshCount] = depthOnlySubMesh;
+				m_InsertedSubMeshCount++;
 			}
 
-			nodeMeshData.Mesh = Ref<Mesh>::New(m_SceneData.SharedMesh, std::move(subMeshes), std::move(depthOnlySubMeshes));
+			size_t subMeshCount = static_cast<size_t>(node->mNumMeshes);
+			nodeMeshData.Mesh = Ref<Mesh>::New(m_SceneData.SharedMesh,
+					std::vector<SubMesh>(m_SceneData.SubMeshes + previousSubMeshCount, m_SceneData.SubMeshes + m_InsertedSubMeshCount),
+					std::vector<SubMesh>(m_SceneData.DepthOnlySubMeshes + previousSubMeshCount, m_SceneData.DepthOnlySubMeshes + m_InsertedSubMeshCount));
 			nodeMeshData.Mesh->SetDebugName(node->mName.C_Str());
 		}
 	}
@@ -356,13 +366,14 @@ namespace Flare
 		}
 	}
 
-	void StaticMeshImporter::InitializeSceneData(size_t vertexCount, size_t indexCount, IndexFormat indexFormat)
+	void StaticMeshImporter::InitializeSceneData(size_t vertexCount, size_t indexCount, size_t subMeshCount, IndexFormat indexFormat)
 	{
 		FLARE_PROFILE_FUNCTION();
 
 		m_SceneData.VertexCount = vertexCount;
 		m_SceneData.IndexCount = indexCount;
 		m_SceneData.IndexFormat = indexFormat;
+		m_SceneData.SubMeshCount = subMeshCount;
 
 		constexpr size_t VECTOR3_VERTEX_ATTRIBUTE_COUNT = 3;
 		size_t vertexDataBufferSize = vertexCount * VECTOR3_VERTEX_ATTRIBUTE_COUNT;
@@ -372,6 +383,9 @@ namespace Flare
 		m_SceneData.Normals = m_SceneData.VertexDataBuffer + vertexCount;
 		m_SceneData.Tangents = m_SceneData.VertexDataBuffer + vertexCount * 2;
 		m_SceneData.UVs = new glm::vec2[vertexCount];
+
+		m_SceneData.SubMeshes = new SubMesh[subMeshCount * 2];
+		m_SceneData.DepthOnlySubMeshes = m_SceneData.SubMeshes + subMeshCount;
 
 		switch (indexFormat)
 		{

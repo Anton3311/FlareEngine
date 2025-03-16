@@ -249,7 +249,7 @@ namespace Flare
 				Span<const glm::vec3>(data.Normals, data.VertexCount),
 				Span<const glm::vec3>(data.Tangents, data.VertexCount),
 				Span<const glm::vec2>(data.UVs, data.VertexCount),
-				Span<const SubMesh>(data.SubMeshes.data(), data.SubMeshes.size()));
+				Span<const SubMesh>(data.SubMeshes, data.SubMeshCount));
 		}
 		else
 		{
