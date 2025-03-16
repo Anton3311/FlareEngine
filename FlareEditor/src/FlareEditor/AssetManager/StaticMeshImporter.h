@@ -45,8 +45,8 @@ namespace Flare
 		uint16_t* Indices16 = nullptr;
 		uint32_t* Indices32 = nullptr;
 
-		std::vector<uint16_t> DepthOnlyIndices16;
-		std::vector<uint32_t> DepthOnlyIndices32;
+		uint16_t* DepthOnlyIndices16 = nullptr;
+		uint32_t* DepthOnlyIndices32 = nullptr;
 
 		glm::vec3* VertexDataBuffer = nullptr;
 

@@ -123,11 +123,11 @@ namespace Flare
 					0, commandBuffer);
 
 			m_SceneData.SharedMesh->DepthOnlyIndexBuffer = GPUBuffer::CreateIndexBuffer(
-					m_SceneData.DepthOnlyIndices16.size(),
+					m_SceneData.IndexCount,
 					IndexFormat::UInt16,
 					GPUBufferMemoryType::Static);
 			m_SceneData.SharedMesh->DepthOnlyIndexBuffer->SetData(
-					MemorySpan::FromVector(m_SceneData.DepthOnlyIndices16),
+					MemorySpan(m_SceneData.DepthOnlyIndices16, m_SceneData.IndexCount),
 					0, commandBuffer);
 		}
 		else
@@ -135,10 +135,12 @@ namespace Flare
 			m_SceneData.SharedMesh->IndexBuffer->SetData(MemorySpan(m_SceneData.Indices32, m_SceneData.IndexCount),
 					0, commandBuffer);
 
-			m_SceneData.SharedMesh->DepthOnlyIndexBuffer = GPUBuffer::CreateIndexBuffer(m_SceneData.DepthOnlyIndices32.size(),
+			m_SceneData.SharedMesh->DepthOnlyIndexBuffer = GPUBuffer::CreateIndexBuffer(
+					m_SceneData.IndexCount,
 					IndexFormat::UInt32,
 					GPUBufferMemoryType::Static);
-			m_SceneData.SharedMesh->DepthOnlyIndexBuffer->SetData(MemorySpan::FromVector(m_SceneData.DepthOnlyIndices32),
+			m_SceneData.SharedMesh->DepthOnlyIndexBuffer->SetData(
+					MemorySpan(m_SceneData.DepthOnlyIndices32, m_SceneData.IndexCount),
 					0, commandBuffer);
 		}
 	}
@@ -226,7 +228,7 @@ namespace Flare
 	template<typename IndexType>
 	static void GenerateDepthOnlyIndices(Span<const glm::vec3> vertices,
 		Span<const IndexType> indices,
-		std::vector<IndexType>& outputBuffer)
+		IndexType* outputBuffer)
 	{
 		FLARE_PROFILE_FUNCTION();
 
@@ -238,11 +240,9 @@ namespace Flare
 			vertexToIndex.try_emplace(vertices[index], index);
 		}
 
-		outputBuffer.reserve(outputBuffer.size() + vertexToIndex.size());
-
-		for (IndexType index : indices)
+		for (size_t i = 0; i < indices.GetSize(); i++)
 		{
-			outputBuffer.push_back(vertexToIndex[vertices[index]]);
+			outputBuffer[i] = vertexToIndex[vertices[indices[i]]];
 		}
 	}
 
@@ -309,22 +309,25 @@ namespace Flare
 
 		SubMesh depthOnlySubMesh{};
 		depthOnlySubMesh.BaseVertex = 0;
-		depthOnlySubMesh.BaseIndex = m_SceneData.IndexFormat == IndexFormat::UInt16
-			? static_cast<uint32_t>(m_SceneData.DepthOnlyIndices16.size())
-			: static_cast<uint32_t>(m_SceneData.DepthOnlyIndices32.size());
 		depthOnlySubMesh.Bounds = subMesh.Bounds;
+		// NOTE: Each submesh has the same total number of regular and depthonly indices, so the offsets and counts match
+		depthOnlySubMesh.BaseIndex = subMesh.BaseIndex;
 		depthOnlySubMesh.IndicesCount = subMesh.IndicesCount;
 
 		Span<const glm::vec3> subMeshVertices = Span(m_SceneData.Vertices, m_SceneData.VertexCount);
 		if (m_SceneData.IndexFormat == IndexFormat::UInt16)
 		{
 			Span<const uint16_t> subMeshIndices = Span(m_SceneData.Indices16 + m_IndexOffset, subMeshIndexCount);
-			GenerateDepthOnlyIndices<uint16_t>(subMeshVertices, subMeshIndices, m_SceneData.DepthOnlyIndices16);
+			GenerateDepthOnlyIndices<uint16_t>(subMeshVertices,
+					subMeshIndices,
+					m_SceneData.DepthOnlyIndices16 + m_IndexOffset);
 		}
 		else
 		{
 			Span<const uint32_t> subMeshIndices = Span(m_SceneData.Indices32 + m_IndexOffset, subMeshIndexCount);
-			GenerateDepthOnlyIndices<uint32_t>(subMeshVertices, subMeshIndices, m_SceneData.DepthOnlyIndices32);
+			GenerateDepthOnlyIndices<uint32_t>(subMeshVertices,
+					subMeshIndices,
+					m_SceneData.DepthOnlyIndices32 + m_IndexOffset);
 		}
 
 		m_VertexOffset += mesh->mNumVertices;
@@ -373,11 +376,19 @@ namespace Flare
 		switch (indexFormat)
 		{
 		case IndexFormat::UInt16:
-			m_SceneData.Indices16 = new uint16_t[m_SceneData.IndexCount];
+		{
+			uint16_t* indices = new uint16_t[m_SceneData.IndexCount * 2];
+			m_SceneData.Indices16 = indices;
+			m_SceneData.DepthOnlyIndices16 = indices + m_SceneData.IndexCount;
 			break;
+		}
 		case IndexFormat::UInt32:
-			m_SceneData.Indices32 = new uint32_t[m_SceneData.IndexCount];
+		{
+			uint32_t* indices = new uint32_t[m_SceneData.IndexCount * 2];
+			m_SceneData.Indices32 = indices;
+			m_SceneData.DepthOnlyIndices32 = indices + m_SceneData.IndexCount;
 			break;
+		}
 		}
 	}
 
