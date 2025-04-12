@@ -71,28 +71,20 @@ namespace Flare
 					commandBuffer->ApplyMaterial(errorMaterial);
 			}
 
-			vulkanCommandBuffer.BindMesh(mesh);
 			if (m_IsDepthOnly)
 			{
-				vulkanCommandBuffer.BindIndexBuffer(mesh->GetDepthOnlyIndexBuffer(), mesh->GetIndexFormat());
-			}
-
-			SubMesh subMesh;
-			if (m_IsDepthOnly)
-			{
-				subMesh = mesh->GetDepthOnlySubMeshes()[culledBatch.SubMeshIndex];
+				commandBuffer->DrawDepthOnlyMeshIndexed(mesh,
+						static_cast<uint32_t>(culledBatch.SubMeshIndex),
+						static_cast<uint32_t>(culledBatch.TransformBufferOffset),
+						static_cast<uint32_t>(culledBatch.CulledGeometryIndices.size()));
 			}
 			else
 			{
-				subMesh = mesh->GetSubMeshes()[culledBatch.SubMeshIndex];
+				commandBuffer->DrawMeshIndexed(mesh,
+						static_cast<uint32_t>(culledBatch.SubMeshIndex),
+						static_cast<uint32_t>(culledBatch.TransformBufferOffset),
+						static_cast<uint32_t>(culledBatch.CulledGeometryIndices.size()));
 			}
-
-			vkCmdDrawIndexed(vulkanCommandBuffer.GetHandle(),
-				subMesh.IndicesCount,
-				static_cast<uint32_t>(culledBatch.CulledGeometryIndices.size()),
-				subMesh.BaseIndex,
-				subMesh.BaseVertex,
-				static_cast<uint32_t>(culledBatch.TransformBufferOffset));
 		}
 	}
 }

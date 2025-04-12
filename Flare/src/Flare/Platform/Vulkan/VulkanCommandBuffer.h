@@ -16,6 +16,12 @@ namespace Flare
 	class VulkanPipeline;
 	class VulkanRenderPass;
 
+	enum class MeshType
+	{
+		Default,
+		DepthOnly,
+	};
+
 	class FLARE_API VulkanCommandBuffer : public CommandBuffer
 	{
 	public:
@@ -41,6 +47,16 @@ namespace Flare
 		void BindIndexBuffer(Ref<const GPUBuffer> buffer, IndexFormat format) override;
 
 		void DrawMeshIndexed(const Ref<const Mesh>& mesh, uint32_t baseInstance, uint32_t instanceCount) override;
+
+		void DrawDepthOnlyMeshIndexed(const Ref<const Mesh>& mesh,
+				uint32_t baseInstance,
+				uint32_t instanceCount) override;
+
+		void DrawDepthOnlyMeshIndexed(const Ref<const Mesh>& mesh,
+				uint32_t subMeshIndex,
+				uint32_t baseInstance,
+				uint32_t instanceCount) override;
+
 		void DrawMeshIndexed(const Ref<const Mesh>& mesh, uint32_t subMeshIndex, uint32_t baseInstance, uint32_t instanceCount) override;
 		void DrawMeshIndexed(const Ref<const Mesh>& mesh, uint32_t firstSubMesh, uint32_t subMeshCount, uint32_t baseInstance, uint32_t instanceCount);
 
@@ -103,7 +119,7 @@ namespace Flare
 			VkPipelineBindPoint bindPoint,
 			uint32_t index);
 
-		void BindMesh(const Ref<const Mesh>& mesh);
+		void BindMesh(const Ref<const Mesh>& mesh, MeshType meshType = MeshType::Default);
 
 		void DepthImagesBarrier(Span<VkImage> images, bool hasStencil,
 			VkPipelineStageFlags srcStage, VkAccessFlags srcAccessMask,
@@ -118,8 +134,6 @@ namespace Flare
 		static constexpr size_t GLOBAL_DESCRIPTOR_SET_COUNT = 3;
 		std::vector<VkImageMemoryBarrier> m_ImageBarriers;
 
-		Ref<const Mesh> m_CurrentMesh = nullptr;
-
 		Ref<const VulkanDescriptorSet> m_GlobalDescriptorSets[GLOBAL_DESCRIPTOR_SET_COUNT] = { nullptr }; // Slot 3 is material resources
 		bool m_GlobalDescriptorSetsRequireBinding = false;
 
@@ -131,6 +145,12 @@ namespace Flare
 
 			Ref<Pipeline> GraphicsPipeline = nullptr;
 			Ref<ComputeShader> ComputeShader = nullptr;
+		};
+
+		struct BoundMeshState
+		{
+			Ref<const Mesh> Mesh = nullptr;
+			MeshType Type = MeshType::Default;
 		};
 
 		struct BoundDescriptorSet
@@ -153,6 +173,7 @@ namespace Flare
 
 		BoundDescriptorSet m_CurrentDescriptorSets[4] = { nullptr };
 		BoundPipelineState m_BoundPipeline;
+		BoundMeshState m_BoundMesh;
 
 		VkCommandBuffer m_CommandBuffer = VK_NULL_HANDLE;
 

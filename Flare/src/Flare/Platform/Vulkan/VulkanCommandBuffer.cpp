@@ -244,7 +244,7 @@ namespace Flare
 
 	void VulkanCommandBuffer::BindVertexBuffer(Ref<const GPUBuffer> buffer, uint32_t index)
 	{
-		m_CurrentMesh = nullptr;
+		m_BoundMesh.Mesh = nullptr;
 		VkDeviceSize offset = 0;
 		VkBuffer bufferHandle = buffer.As<VulkanBuffer>()->GetBufferHandle();
 
@@ -255,7 +255,7 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		m_CurrentMesh = nullptr;
+		m_BoundMesh.Mesh = nullptr;
 
 		std::vector<VkDeviceSize> offsets(vertexBuffers.GetSize());
 		std::vector<VkBuffer> buffers(vertexBuffers.GetSize());
@@ -311,6 +311,58 @@ namespace Flare
 		}
 	}
 
+	void VulkanCommandBuffer::DrawDepthOnlyMeshIndexed(const Ref<const Mesh>& mesh, uint32_t baseInstance, uint32_t instanceCount)
+	{
+		FLARE_PROFILE_FUNCTION();
+		BindMesh(mesh, MeshType::DepthOnly);
+
+		if (mesh->GetSharedMesh() == nullptr)
+		{
+			// A mesh doesn't have a SharedMesh,
+			// so the Mesh owns all the buffers & sub meshes are laid out sequentially in memory,
+			// so it is possible to draw the mesh in a single draw call
+
+			// FIXME: need a full mesh range for depth only variant
+			SubMesh fullMeshRange = mesh->GetFullMeshRange();
+			vkCmdDrawIndexed(m_CommandBuffer,
+				fullMeshRange.IndicesCount,
+				instanceCount,
+				fullMeshRange.BaseIndex,
+				fullMeshRange.BaseVertex,
+				baseInstance);
+		}
+		else
+		{
+			for (const SubMesh& subMesh : mesh->GetDepthOnlySubMeshes())
+			{
+				vkCmdDrawIndexed(m_CommandBuffer,
+					subMesh.IndicesCount,
+					instanceCount,
+					subMesh.BaseIndex,
+					subMesh.BaseVertex,
+					baseInstance);
+			}
+		}
+	}
+
+	void VulkanCommandBuffer::DrawDepthOnlyMeshIndexed(const Ref<const Mesh>& mesh,
+			uint32_t subMeshIndex,
+			uint32_t baseInstance,
+			uint32_t instanceCount)
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		BindMesh(mesh);
+
+		const auto& subMesh = mesh->GetDepthOnlySubMeshes()[subMeshIndex];
+		vkCmdDrawIndexed(m_CommandBuffer,
+				subMesh.IndicesCount,
+				instanceCount,
+				subMesh.BaseIndex,
+				subMesh.BaseVertex,
+				baseInstance);
+	}
+
 	void VulkanCommandBuffer::DrawMeshIndexed(const Ref<const Mesh>& mesh, uint32_t subMeshIndex, uint32_t baseInstance, uint32_t instanceCount)
 	{
 		FLARE_PROFILE_FUNCTION();
@@ -318,7 +370,12 @@ namespace Flare
 		BindMesh(mesh);
 
 		const auto& subMesh = mesh->GetSubMeshes()[subMeshIndex];
-		vkCmdDrawIndexed(m_CommandBuffer, subMesh.IndicesCount, instanceCount, subMesh.BaseIndex, subMesh.BaseVertex, baseInstance);
+		vkCmdDrawIndexed(m_CommandBuffer,
+				subMesh.IndicesCount,
+				instanceCount,
+				subMesh.BaseIndex,
+				subMesh.BaseVertex,
+				baseInstance);
 	}
 
 	void VulkanCommandBuffer::DrawMeshIndexed(const Ref<const Mesh>& mesh, uint32_t firstSubMesh, uint32_t subMeshCount, uint32_t baseInstance, uint32_t instanceCount)
@@ -498,7 +555,7 @@ namespace Flare
 
 		ResetBoundPipelineState();
 
-		m_CurrentMesh = nullptr;
+		m_BoundMesh = {};
 
 		for (size_t i = 0; i < GLOBAL_DESCRIPTOR_SET_COUNT; i++)
 		{
@@ -899,33 +956,44 @@ namespace Flare
 		m_CurrentDescriptorSets[index].PipelineLayout = pipelineLayout;
 	}
 
-	void VulkanCommandBuffer::BindMesh(const Ref<const Mesh>& mesh)
+	void VulkanCommandBuffer::BindMesh(const Ref<const Mesh>& mesh, MeshType meshType)
 	{
 		FLARE_PROFILE_FUNCTION();
-		bool rebind = false;
+		bool rebind;
 
-		if (m_CurrentMesh == nullptr)
+		if (m_BoundMesh.Mesh == nullptr)
 			rebind = true;
-		else if (m_CurrentMesh->GetSharedMesh() != nullptr && m_CurrentMesh->GetSharedMesh() == mesh->GetSharedMesh())
+		else if (m_BoundMesh.Mesh->GetSharedMesh() != nullptr
+				&& m_BoundMesh.Mesh->GetSharedMesh() == mesh->GetSharedMesh())
 			return;
 		else
-			rebind = m_CurrentMesh != mesh;
+			rebind = m_BoundMesh.Mesh != mesh || meshType != m_BoundMesh.Type;
 
-		if (rebind)
+		if (!rebind)
+			return;
+
+		Ref<const GPUBuffer> vertexBuffers[] =
 		{
-			Ref<const GPUBuffer> vertexBuffers[] =
-			{
-				mesh->GetVertices(),
-				mesh->GetNormals(),
-				mesh->GetTangents(),
-				mesh->GetUVs()
-			};
+			mesh->GetVertices(),
+			mesh->GetNormals(),
+			mesh->GetTangents(),
+			mesh->GetUVs()
+		};
 
-			BindVertexBuffers(Span(vertexBuffers, 4), 0);
+		BindVertexBuffers(Span(vertexBuffers, 4), 0);
+
+		switch (meshType)
+		{
+		case MeshType::Default:
 			BindIndexBuffer(mesh->GetIndexBuffer(), mesh->GetIndexFormat());
-
-			m_CurrentMesh = mesh;
+			break;
+		case MeshType::DepthOnly:
+			BindIndexBuffer(mesh->GetDepthOnlyIndexBuffer(), mesh->GetIndexFormat());
+			break;
 		}
+
+		m_BoundMesh.Mesh = mesh;
+		m_BoundMesh.Type = meshType;
 	}
 
 	void VulkanCommandBuffer::DepthImagesBarrier(Span<VkImage> images, bool hasStencil,

@@ -47,6 +47,16 @@ namespace Flare
 		virtual void BindIndexBuffer(Ref<const GPUBuffer> buffe, IndexFormat formatr) = 0;
 
 		virtual void DrawMeshIndexed(const Ref<const Mesh>& mesh, uint32_t baseInstance, uint32_t instanceCount) = 0;
+
+		virtual void DrawDepthOnlyMeshIndexed(const Ref<const Mesh>& mesh,
+				uint32_t baseInstance,
+				uint32_t instanceCount) = 0;
+
+		virtual void DrawDepthOnlyMeshIndexed(const Ref<const Mesh>& mesh,
+				uint32_t subMeshIndex,
+				uint32_t baseInstance,
+				uint32_t instanceCount) = 0;
+
 		virtual void DrawMeshIndexed(const Ref<const Mesh>& mesh,
 			uint32_t subMeshIndex,
 			uint32_t baseInstance,
