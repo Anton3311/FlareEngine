@@ -2,6 +2,7 @@
 
 #include "Flare/Renderer/RenderGraph/RenderGraphPass.h"
 #include "Flare/Renderer/RenderGraph/RenderGraphResourceManager.h"
+#include "Flare/Renderer/Passes/GeometryCullingPass.h"
 
 namespace Flare
 {
@@ -26,6 +27,19 @@ namespace Flare
 		glm::uvec2 TileCount = glm::uvec2(2, 2);
 	};
 
+	struct SpotLightCulledGeometryRange
+	{
+		uint32_t Start;
+		uint32_t Count;
+	};
+
+	struct SpotLightCulledGeometryBatch
+	{
+		Ref<const Mesh> GeometryMesh = nullptr;
+		uint32_t TransformBufferOffset = 0;
+		uint32_t Count = 0;
+	};
+
 	class SpotLightShadowPass : public RenderGraphPass
 	{
 	public:
@@ -37,17 +51,32 @@ namespace Flare
 		void OnPrepare(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer) override;
 		void OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer) override;
 	private:
-		struct FrameResources
+		size_t CullGeometryForLight(const RenderGraphContext& context, size_t lightIndex);
+		void CullGeometry(const RenderGraphContext& context);
+	private:
+		struct PerLightCameraResources
 		{
 			Ref<DescriptorSet> CameraDescriptorSet = nullptr;
 			Ref<GPUBuffer> CameraBuffer = nullptr;
+		};
+
+		struct TransformBufferResources
+		{
+			Ref<DescriptorSet> Set = nullptr;
+			Ref<GPUBuffer> Buffer = nullptr;
 		};
 
 		SpotLightShadowsSpecifications m_Specifications;
 
 		bool m_HasSpotLight = false;
 		RenderGraphTextureId m_ShadowMap;
-		std::vector<FrameResources> m_FrameResources;
 		Ref<Material> m_PerspectiveDepthOnly = nullptr;
+
+		std::vector<PerLightCameraResources> m_PerLightCameras;
+		std::vector<TransformBufferResources> m_TransformBuffers;
+
+		std::vector<PackedTransform> m_CulledGeometryTransforms;
+		std::vector<SpotLightCulledGeometryBatch> m_CulledBatches;
+		std::vector<SpotLightCulledGeometryRange> m_BatchesPerLight;
 	};
 }
