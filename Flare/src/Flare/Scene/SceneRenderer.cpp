@@ -155,6 +155,7 @@ namespace Flare
 					submition.Near = shadows[entityIndex].Near;
 					submition.Far = shadows[entityIndex].Far;
 					submition.Bias = shadows[entityIndex].Bias;
+					submition.SizePowerOfTwo = shadows[entityIndex].SizePowerOfTwo;
 				}
 			});
 

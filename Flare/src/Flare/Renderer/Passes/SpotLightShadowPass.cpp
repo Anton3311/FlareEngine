@@ -29,8 +29,7 @@ namespace Flare
 		bufferSpecifications.Size = sizeof(RenderView);
 		bufferSpecifications.Usage = GPUBufferUsage::UniformBuffer;
 
-		uint32_t maxLightCount = m_Specifications.TileCount.x * m_Specifications.TileCount.y;
-		for (uint32_t lightIndex = 0; lightIndex < frameInFlightCount * maxLightCount; lightIndex++)
+		for (uint32_t lightIndex = 0; lightIndex < frameInFlightCount * m_Specifications.MaxLightCount; lightIndex++)
 		{
 			PerLightCameraResources& resources = m_PerLightCameras.emplace_back();
 			resources.CameraBuffer = GPUBuffer::Create(bufferSpecifications);
@@ -77,7 +76,7 @@ namespace Flare
 		
 		m_CulledGeometryTransforms.clear();
 		m_CulledBatches.clear();
-		m_BatchesPerLight.clear();
+		m_Tiles.clear();
 
 		const SceneSubmition& sceneSubmition = context.GetSceneSubmition();
 		m_HasSpotLight = sceneSubmition.SpotLightShadows.size() > 0;
@@ -91,18 +90,20 @@ namespace Flare
 		{
 			size_t lightCount = sceneSubmition.SpotLightShadows.size();
 
-			std::vector<SpotLightShadowsEntry> shadowEntries;
-
 			glm::uvec2 shadowMapSize = context.GetRenderGraphResourceManager().GetTexture(m_ShadowMap)->GetSize();
-			glm::vec2 tileSize = glm::vec2(1.0f) / static_cast<glm::vec2>(m_Specifications.TileCount);
+			FLARE_CORE_ASSERT(shadowMapSize == glm::uvec2(1 << m_Specifications.SizePowerOfTwo));
+
+			SpotLightShadowsEntry* shadowEntries = new SpotLightShadowsEntry[lightCount];
+
 			for (size_t lightIndex = 0; lightIndex < lightCount; lightIndex++)
 			{
 				const SpotLightShadowsSubmition& shadowsSubmition = sceneSubmition.SpotLightShadows[lightIndex];
 				const SpotLightSubmition& spotLight = sceneSubmition.SpotLights[shadowsSubmition.LightIndex];
 
-				glm::uvec2 tileCoordinate = glm::uvec2(
-						lightIndex % m_Specifications.TileCount.x,
-						lightIndex / m_Specifications.TileCount.y);
+				if (shadowsSubmition.SizePowerOfTwo > m_Specifications.SizePowerOfTwo)
+				{
+					FLARE_CORE_ERROR("Spotlight at index {} is larger that the shadow atlas", lightIndex);
+				}
 
 				float radius = glm::sqrt(spotLight.Intensity / 0.01f);
 
@@ -128,23 +129,82 @@ namespace Flare
 				view.Near = shadowsSubmition.Near;
 				view.Position = spotLight.Position;
 				view.ViewDirection = spotLight.Direction;
-				view.ViewportSize = static_cast<glm::ivec2>(m_Specifications.TileSize);
+				view.ViewportSize = glm::ivec2(1 << shadowsSubmition.SizePowerOfTwo);
 				view.SetViewAndProjection(projection, viewMatrix);
 
-				size_t cameraResourceIndex = static_cast<uint32_t>(lightIndex) * frameCount + frameIndex;
-				m_PerLightCameras[cameraResourceIndex].CameraBuffer->SetData(MemorySpan(&view, 1), 0);
-
-				auto& entry = shadowEntries.emplace_back();
+				auto& entry = shadowEntries[lightIndex];
 				entry.Projection = view.ViewProjection;
-				entry.UVScale = tileSize;
-				entry.UVTranslation = tileSize * static_cast<glm::vec2>(tileCoordinate);
 				entry.Radius = radius;
 				entry.Near = shadowsSubmition.Near;
 				entry.Far = shadowsSubmition.Far;
 				entry.Bias = shadowsSubmition.Bias;
+
+				size_t cameraResourceIndex = static_cast<uint32_t>(lightIndex) * frameCount + frameIndex;
+				m_PerLightCameras[cameraResourceIndex].CameraBuffer->SetData(MemorySpan(&view, 1), 0);
 			}
 
-			globalResources.FrameResources[frameIndex].SpotLightShadowDataBuffer->SetData(MemorySpan::FromVector(shadowEntries), 0);
+			// Fill tiles
+
+			m_Tiles.resize(lightCount);
+			for (size_t i = 0; i < lightCount; i++)
+			{
+				m_Tiles[i] = SpotLightTile
+				{
+					.Position = glm::ivec2(0, 0),
+					.SizePowerOfTwo = sceneSubmition.SpotLightShadows[i].SizePowerOfTwo,
+					.CulledBatches = SpotLightCulledGeometryRange {}
+				};
+			}
+
+			// Sort shadow casting lights by their size
+			uint32_t* lightIndices = new uint32_t[lightCount];
+
+			for (size_t i = 0; i < lightCount; i++)
+				lightIndices[i] = static_cast<uint32_t>(i);
+
+			std::sort(lightIndices,
+					lightIndices + sceneSubmition.SpotLightShadows.size(),
+					[&sceneSubmition](uint32_t lightAIndex, uint32_t lightBIndex) -> bool
+					{
+						uint32_t aSize = sceneSubmition.SpotLightShadows[lightAIndex].SizePowerOfTwo;
+						uint32_t bSize = sceneSubmition.SpotLightShadows[lightBIndex].SizePowerOfTwo;
+						return aSize > bSize;
+					});
+
+			// Pack tiles into the atlas
+			glm::uvec2 tileOffset = glm::ivec2(0, 0);
+			uint32_t rowHeight = 0;
+			for (size_t i = 0; i < lightCount; i++)
+			{
+				uint32_t lightIndex = lightIndices[i];
+
+				// Calculate tile position
+				uint32_t tileSize = 1 << sceneSubmition.SpotLightShadows[lightIndex].SizePowerOfTwo;
+				if (tileOffset.x + tileSize > shadowMapSize.x)
+				{
+					tileOffset.x = 0;
+					tileOffset.y += rowHeight;
+					rowHeight = 0;
+				}
+
+				// TODO: Handle the case when it is not possible to pack all the lights into the atlas.
+
+				glm::uvec2 tilePosition = tileOffset;
+				tileOffset.x += tileSize;
+				rowHeight = glm::max(rowHeight, tileSize);
+
+				auto& entry = shadowEntries[lightIndex];
+				entry.UVScale = glm::vec2(static_cast<float>(tileSize)) / static_cast<glm::vec2>(shadowMapSize);
+				entry.UVTranslation = static_cast<glm::vec2>(tilePosition) / static_cast<glm::vec2>(shadowMapSize);
+
+				m_Tiles[lightIndex].Position = tilePosition;
+			}
+
+			globalResources.FrameResources[frameIndex].SpotLightShadowDataBuffer->SetData(
+					MemorySpan(shadowEntries, lightCount), 0);
+
+			delete[] shadowEntries;
+			delete[] lightIndices;
 		}
 
 		CullGeometry(context);
@@ -171,6 +231,7 @@ namespace Flare
 		const SceneSubmition& sceneSubmition = context.GetSceneSubmition();
 
 		commandBuffer->SetGlobalDescriptorSet(m_TransformBuffers[frameIndex].Set, 2);
+		glm::uvec2 shadowMapSize = context.GetRenderGraphResourceManager().GetTexture(m_ShadowMap)->GetSize();
 
 		for (size_t lightIndex = 0; lightIndex < sceneSubmition.SpotLightShadows.size(); lightIndex++)
 		{
@@ -178,21 +239,13 @@ namespace Flare
 			commandBuffer->SetGlobalDescriptorSet(cameraResources.CameraDescriptorSet, 0);
 			commandBuffer->ApplyMaterial(m_PerspectiveDepthOnly);
 
-			glm::uvec2 tileCoordinate = glm::uvec2(
-					lightIndex % m_Specifications.TileCount.x,
-					lightIndex / m_Specifications.TileCount.y);
-			glm::vec2 tileSize = glm::vec2(1.0f) / static_cast<glm::vec2>(m_Specifications.TileCount);
-
 			Math::Rect viewport{};
-			viewport.Min = tileSize * static_cast<glm::vec2>(tileCoordinate);
-			viewport.Max = viewport.Min + tileSize;
-
-			viewport.Min *= context.RenderAreaSize;
-			viewport.Max *= context.RenderAreaSize;
+			viewport.Min = m_Tiles[lightIndex].Position;
+			viewport.Max = viewport.Min + glm::vec2(static_cast<float>(1 << m_Tiles[lightIndex].SizePowerOfTwo));
 
 			commandBuffer->SetViewportAndScissors(viewport);
 
-			auto culledBatchesRange = m_BatchesPerLight[lightIndex];
+			auto culledBatchesRange = m_Tiles[lightIndex].CulledBatches;
 			for (uint32_t i = 0; i < culledBatchesRange.Count; i++)
 			{
 				const auto& culledBatch = m_CulledBatches[i + culledBatchesRange.Start];
@@ -264,18 +317,19 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 
 		const SceneSubmition& sceneSubmition = context.GetSceneSubmition();
-		m_BatchesPerLight.reserve(sceneSubmition.SpotLightShadows.size());
+		m_Tiles.reserve(sceneSubmition.SpotLightShadows.size());
 
 		size_t rangeStart = 0;
 		for (size_t i = 0; i < sceneSubmition.SpotLightShadows.size(); i++)
 		{
 			size_t culledBatchCount = CullGeometryForLight(context, i);
 
-			m_BatchesPerLight.push_back(SpotLightCulledGeometryRange
+			m_Tiles[i].CulledBatches = SpotLightCulledGeometryRange
 			{
 				.Start = static_cast<uint32_t>(rangeStart),
 				.Count = static_cast<uint32_t>(culledBatchCount)
-			});
+			};
+
 			rangeStart += culledBatchCount;
 		}
 	}

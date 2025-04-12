@@ -88,6 +88,7 @@ namespace Flare
 		float Near;
 		float Far;
 		float Bias;
+		uint32_t SizePowerOfTwo;
 	};
 
 	struct DecalSubmition

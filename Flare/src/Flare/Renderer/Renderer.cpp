@@ -495,7 +495,7 @@ namespace Flare
 
 		RenderGraphTextureId shadowMapId = renderGraph.GetResourceManager().CreateFixedSizeTexture(
 			TextureFormat::Depth32,
-			shadowSpecifications.TileSize * shadowSpecifications.TileCount,
+			glm::uvec2(1 << shadowSpecifications.SizePowerOfTwo),
 			"SpotLightShadowMap");
 
 		Ref<SpotLightShadowPass> pass = Ref<SpotLightShadowPass>::New(shadowMapId, perspectiveDepthOnly, shadowSpecifications);

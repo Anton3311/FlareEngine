@@ -23,8 +23,8 @@ namespace Flare
 
 	struct SpotLightShadowsSpecifications
 	{
-		uint32_t TileSize = 256;
-		glm::uvec2 TileCount = glm::uvec2(2, 2);
+		uint32_t MaxLightCount = 4;
+		uint32_t SizePowerOfTwo = 10; // 1024
 	};
 
 	struct SpotLightCulledGeometryRange
@@ -38,6 +38,13 @@ namespace Flare
 		Ref<const Mesh> GeometryMesh = nullptr;
 		uint32_t TransformBufferOffset = 0;
 		uint32_t Count = 0;
+	};
+
+	struct SpotLightTile
+	{
+		glm::ivec2 Position;
+		uint32_t SizePowerOfTwo;
+		SpotLightCulledGeometryRange CulledBatches;
 	};
 
 	class SpotLightShadowPass : public RenderGraphPass
@@ -77,6 +84,6 @@ namespace Flare
 
 		std::vector<PackedTransform> m_CulledGeometryTransforms;
 		std::vector<SpotLightCulledGeometryBatch> m_CulledBatches;
-		std::vector<SpotLightCulledGeometryRange> m_BatchesPerLight;
+		std::vector<SpotLightTile> m_Tiles;
 	};
 }
