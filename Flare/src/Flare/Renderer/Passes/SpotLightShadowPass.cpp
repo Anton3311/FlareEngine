@@ -197,7 +197,7 @@ namespace Flare
 			{
 				const auto& culledBatch = m_CulledBatches[i + culledBatchesRange.Start];
 
-				commandBuffer->DrawMeshIndexed(culledBatch.GeometryMesh,
+				commandBuffer->DrawDepthOnlyMeshIndexed(culledBatch.GeometryMesh,
 					culledBatch.TransformBufferOffset,
 					culledBatch.Count);
 			}
