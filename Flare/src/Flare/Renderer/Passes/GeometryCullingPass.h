@@ -62,7 +62,6 @@ namespace Flare
 		};
 
 		std::vector<uint32_t> VisibleObjects;
-		std::vector<PackedTransform> InstanceDataBuffer;
 		std::vector<GPUFrameResources> FrameResources;
 
 		std::vector<CulledGeometryBatch> CulledBatches;

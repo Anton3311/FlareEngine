@@ -25,7 +25,7 @@ namespace Flare
 		for (uint32_t i = 0; i < frameInFlightCount; i++)
 		{
 			CulledGeometry::GPUFrameResources& resources = FrameResources.emplace_back();
-			resources.InstanceBuffer = GPUBuffer::CreateStorageBuffer(maxInstances * sizeof(CulledGeometry::InstanceDataBuffer), GPUBufferMemoryType::Static);
+			resources.InstanceBuffer = GPUBuffer::CreateStorageBuffer(maxInstances * sizeof(PackedTransform), GPUBufferMemoryType::Static);
 
 			resources.InstanceBufferDescriptor = Renderer::GetInstanceDataDescriptorSetPool()->AllocateSet();
 			resources.InstanceBufferDescriptor->WriteStorageBuffer(resources.InstanceBuffer, 0);
@@ -37,7 +37,6 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 		VisibleObjects.clear();
-		InstanceDataBuffer.clear();
 		CulledBatches.clear();
 	}
 
