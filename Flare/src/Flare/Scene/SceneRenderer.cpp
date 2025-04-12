@@ -25,6 +25,23 @@
 
 namespace Flare
 {
+	void SubmitSpotLight(SceneSubmition& sceneSubmition, const SpotLight& light, const TransformComponent& transform)
+	{
+		if (light.OuterAngle - light.InnerAngle <= 0.0f)
+			return;
+
+		glm::vec3 position = transform.Position;
+		glm::vec3 direction = transform.TransformDirection(glm::vec3(0.0f, 0.0f, -1.0f));
+
+		SpotLightSubmition& submition = sceneSubmition.SpotLights.emplace_back();
+		submition.Color = light.Color;
+		submition.Intensity = light.Intensity;
+		submition.Direction = direction;
+		submition.Position = position;
+		submition.InnerAngleCos = glm::cos(glm::radians(light.InnerAngle));
+		submition.OuterAngleCos = glm::cos(glm::radians(light.OuterAngle));
+	}
+
 	SceneRenderer::SceneRenderer(Ref<Scene> scene)
 		: m_Scene(scene)
 	{
@@ -116,32 +133,28 @@ namespace Flare
 			ComponentView<const SpotLight> lights,
 			ArchetypeId archetype)
 			{
-				bool hasShadows = world.GetArchetypes()
-					.GetArchetypeComponents(archetype)
-					.TryGetComponentIndex(COMPONENT_ID(SpotLightShadows)) != ArchetypeComponents::INVALID_COMPONENT_INDEX;
-
 				for (size_t entityIndex = 0; entityIndex < chunk.GetEntityCount(); entityIndex++)
 				{
-					if (lights[entityIndex].OuterAngle - lights[entityIndex].InnerAngle <= 0.0f)
-						continue;
+					SubmitSpotLight(m_SceneSubmition, lights[entityIndex], transforms[entityIndex]);
+				}
+			});
 
-					glm::vec3 position = transforms[entityIndex].Position;
-					glm::vec3 direction = transforms[entityIndex].TransformDirection(glm::vec3(0.0f, 0.0f, -1.0f));
+		m_SpotLightsWithShadowsQuery.ForEachChunk([this, &world](QueryChunk chunk,
+			ComponentView<const TransformComponent> transforms,
+			ComponentView<const SpotLight> lights,
+			ComponentView<const SpotLightShadows> shadows,
+			ArchetypeId archetype)
+			{
+				for (size_t entityIndex = 0; entityIndex < chunk.GetEntityCount(); entityIndex++)
+				{
+					size_t lightIndex = m_SceneSubmition.SpotLights.size();
+					SubmitSpotLight(m_SceneSubmition, lights[entityIndex], transforms[entityIndex]);
 
-					size_t spotLightIndex = m_SceneSubmition.SpotLights.size();
-
-					SpotLightSubmition& submition = m_SceneSubmition.SpotLights.emplace_back();
-					submition.Color = lights[entityIndex].Color;
-					submition.Intensity = lights[entityIndex].Intensity;
-					submition.Direction = direction;
-					submition.Position = position;
-					submition.InnerAngleCos = glm::cos(glm::radians(lights[entityIndex].InnerAngle));
-					submition.OuterAngleCos = glm::cos(glm::radians(lights[entityIndex].OuterAngle));
-
-					if (hasShadows)
-					{
-						m_SceneSubmition.ShadowCastingSpotLights.push_back(static_cast<uint32_t>(spotLightIndex));
-					}
+					SpotLightShadowsSubmition& submition = m_SceneSubmition.SpotLightShadows.emplace_back();
+					submition.LightIndex = static_cast<uint32_t>(lightIndex);
+					submition.Near = shadows[entityIndex].Near;
+					submition.Far = shadows[entityIndex].Far;
+					submition.Bias = shadows[entityIndex].Bias;
 				}
 			});
 
@@ -265,7 +278,13 @@ namespace Flare
 		m_DirectionalLightQuery = world.NewQuery().All().With<TransformComponent, DirectionalLight>().Build();
 		m_EnvironmentQuery = world.NewQuery().All().With<Environment>().Build();
 		m_PointLightsQuery = world.NewQuery().All().With<TransformComponent, PointLight>().Build();
-		m_SpotLightsQuery = world.NewQuery().All().With<TransformComponent, SpotLight>().Build();
+		m_SpotLightsQuery = world.NewQuery().All()
+			.With<TransformComponent, SpotLight>()
+			.Without<SpotLightShadows>().Build();
+
+		m_SpotLightsWithShadowsQuery = world.NewQuery().All()
+			.With<TransformComponent, SpotLight, SpotLightShadows>()
+			.Build();
 	}
 
 	void SceneRenderer::PrepareViewportForRendering(Entity viewportEntity, const RenderView& view)
@@ -286,10 +305,10 @@ namespace Flare
 		lightData.Near = 0.1f;
 		lightData.EnvironmentLight = glm::vec4(m_SceneSubmition.Environment.EnvironmentColor, m_SceneSubmition.Environment.EnvironmentColorIntensity);
 		lightData.PointLightsCount = (uint32_t)m_SceneSubmition.PointLights.size();
-		lightData.SpotLightsCount = (uint32_t)(m_SceneSubmition.SpotLights.size() - m_SceneSubmition.ShadowCastingSpotLights.size());
+		lightData.SpotLightsCount = (uint32_t)(m_SceneSubmition.SpotLights.size() - m_SceneSubmition.SpotLightShadows.size());
 		lightData.AOEnabled = renderGraph.Graph->GetResourceManager().IsTextureIdValid(aoConfiguration.AOTexture);
-		lightData.FirstShadowCastingSpotlight = static_cast<uint32_t>(m_SceneSubmition.SpotLights.size() - m_SceneSubmition.ShadowCastingSpotLights.size());
-		lightData.ShadowCastingSpotlightCount = static_cast<uint32_t>(m_SceneSubmition.ShadowCastingSpotLights.size());
+		lightData.FirstShadowCastingSpotlight = static_cast<uint32_t>(m_SceneSubmition.SpotLights.size() - m_SceneSubmition.SpotLightShadows.size());
+		lightData.ShadowCastingSpotlightCount = static_cast<uint32_t>(m_SceneSubmition.SpotLightShadows.size());
 
 		const ViewportGlobalResources& viewportGlobalResources = renderWorld.GetEntityComponent<const ViewportGlobalResources>(viewportEntity);
 		const ViewportFrameResources& viewportFrameResources = viewportGlobalResources.GetCurrentFrameResources();
@@ -327,16 +346,16 @@ namespace Flare
 			MemorySpan spotLightsData;
 			std::vector<SpotLightSubmition> groupedSpotLights;
 
-			if (m_SceneSubmition.ShadowCastingSpotLights.size() > 0)
+			if (m_SceneSubmition.SpotLightShadows.size() > 0)
 			{
 				groupedSpotLights.resize(m_SceneSubmition.SpotLights.size());
 
 				size_t shadowCastingLightIndex = 0;
 				size_t frontIndex = 0;
-				size_t backIndex = groupedSpotLights.size() - m_SceneSubmition.ShadowCastingSpotLights.size();
+				size_t backIndex = groupedSpotLights.size() - m_SceneSubmition.SpotLightShadows.size();
 				for (size_t i = 0; i < m_SceneSubmition.SpotLights.size(); i++)
 				{
-					if (i == m_SceneSubmition.ShadowCastingSpotLights[shadowCastingLightIndex])
+					if (i == m_SceneSubmition.SpotLightShadows[shadowCastingLightIndex].LightIndex)
 					{
 						groupedSpotLights[backIndex++] = m_SceneSubmition.SpotLights[i];
 						shadowCastingLightIndex++;

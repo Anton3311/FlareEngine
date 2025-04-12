@@ -39,6 +39,7 @@ namespace Flare
 		Query m_DirectionalLightQuery;
 		Query m_PointLightsQuery;
 		Query m_SpotLightsQuery;
+		Query m_SpotLightsWithShadowsQuery;
 
 		EnvironmentSubmition m_DefaultEnvironment;
 		DirectionalLightSubmition m_DefaultDirectionalLight;

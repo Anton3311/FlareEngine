@@ -82,6 +82,14 @@ namespace Flare
 		float Intensity = 0.0f;
 	};
 
+	struct SpotLightShadowsSubmition
+	{
+		uint32_t LightIndex;
+		float Near;
+		float Far;
+		float Bias;
+	};
+
 	struct DecalSubmition
 	{
 		Ref<const Material> Material = nullptr;
@@ -105,7 +113,7 @@ namespace Flare
 
 		std::vector<PointLightSubmition> PointLights;
 		std::vector<SpotLightSubmition> SpotLights;
-		std::vector<uint32_t> ShadowCastingSpotLights;
+		std::vector<SpotLightShadowsSubmition> SpotLightShadows;
 
 		std::vector<DecalSubmition> DecalSubmitions;
 

@@ -54,15 +54,13 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		constexpr float PROJECTION_NEAR = 0.01f;
-
 		const SceneSubmition& sceneSubmition = context.GetSceneSubmition();
-		m_HasSpotLight = sceneSubmition.ShadowCastingSpotLights.size() > 0;
+		m_HasSpotLight = sceneSubmition.SpotLightShadows.size() > 0;
 
 		if (!m_HasSpotLight)
 			return;
 
-		size_t lightCount = sceneSubmition.ShadowCastingSpotLights.size();
+		size_t lightCount = sceneSubmition.SpotLightShadows.size();
 
 		uint32_t frameCount = GraphicsContext::GetInstance().GetFrameInFlightCount();
 		uint32_t frameIndex = GraphicsContext::GetInstance().GetCurrentFrameInFlight();
@@ -71,18 +69,21 @@ namespace Flare
 		const ViewportGlobalResources& globalResources = context.RenderWorld.GetEntityComponent<const ViewportGlobalResources>(context.ViewportEntity);
 
 		glm::uvec2 shadowMapSize = context.GetRenderGraphResourceManager().GetTexture(m_ShadowMap)->GetSize();
+		glm::vec2 tileSize = glm::vec2(1.0f) / static_cast<glm::vec2>(m_Specifications.TileCount);
 		for (size_t lightIndex = 0; lightIndex < lightCount; lightIndex++)
 		{
-			const SpotLightSubmition& spotLight = sceneSubmition.SpotLights[sceneSubmition.ShadowCastingSpotLights[lightIndex]];
+			const SpotLightShadowsSubmition& shadowsSubmition = sceneSubmition.SpotLightShadows[lightIndex];
+			const SpotLightSubmition& spotLight = sceneSubmition.SpotLights[shadowsSubmition.LightIndex];
 
-			glm::uvec2 tileCoordinate = glm::uvec2(lightIndex % m_Specifications.TileCount.x, lightIndex / m_Specifications.TileCount.y);
-			glm::vec2 tileSize = glm::vec2(1.0f) / static_cast<glm::vec2>(m_Specifications.TileCount);
+			glm::uvec2 tileCoordinate = glm::uvec2(
+					lightIndex % m_Specifications.TileCount.x,
+					lightIndex / m_Specifications.TileCount.y);
 
 			float radius = glm::sqrt(spotLight.Intensity / 0.01f);
 
 			// TODO: Get rid of acos
 			float fov = glm::acos(spotLight.OuterAngleCos) * 2.0f;
-			glm::mat4 projection = glm::perspectiveRH_ZO(fov, 1.0f, PROJECTION_NEAR, radius);
+			glm::mat4 projection = glm::perspectiveRH_ZO(fov, 1.0f, shadowsSubmition.Near, shadowsSubmition.Far);
 
 			glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
 			glm::vec3 forward = spotLight.Direction;
@@ -91,15 +92,18 @@ namespace Flare
 			glm::mat4 basis = static_cast<glm::mat4>(glm::mat3(right, up, forward));
 			glm::mat4 viewMatrix = glm::inverse(glm::translate(basis, spotLight.Position));
 
-			viewMatrix = glm::lookAt(spotLight.Position + spotLight.Direction, spotLight.Position, glm::vec3(0.0f, 1.0f, 0.0f));
+			viewMatrix = glm::lookAt(
+					spotLight.Position + spotLight.Direction,
+					spotLight.Position,
+					glm::vec3(0.0f, 1.0f, 0.0f));
 
 			RenderView view{};
 			view.FOV = fov;
-			view.Far = radius;
-			view.Near = PROJECTION_NEAR;
+			view.Far = shadowsSubmition.Far;
+			view.Near = shadowsSubmition.Near;
 			view.Position = spotLight.Position;
 			view.ViewDirection = spotLight.Direction;
-			view.ViewportSize = shadowMapSize / 2u;
+			view.ViewportSize = static_cast<glm::ivec2>(m_Specifications.TileSize);
 			view.SetViewAndProjection(projection, viewMatrix);
 
 			m_FrameResources[static_cast<uint32_t>(lightIndex) * frameCount + frameIndex].CameraBuffer->SetData(MemorySpan(&view, 1), 0);
@@ -109,9 +113,9 @@ namespace Flare
 			entry.UVScale = tileSize;
 			entry.UVTranslation = tileSize * static_cast<glm::vec2>(tileCoordinate);
 			entry.Radius = radius;
-			entry.Near = PROJECTION_NEAR;
-			entry.Far = radius;
-			entry.Bias = 0.001f;
+			entry.Near = shadowsSubmition.Near;
+			entry.Far = shadowsSubmition.Far;
+			entry.Bias = shadowsSubmition.Bias;
 		}
 
 		globalResources.FrameResources[frameIndex].SpotLightShadowDataBuffer->SetData(MemorySpan::FromVector(shadowEntries), 0);
@@ -131,7 +135,7 @@ namespace Flare
 
 		commandBuffer->SetGlobalDescriptorSet(culledGeometryResources.InstanceBufferDescriptor, 2);
 
-		for (size_t lightIndex = 0; lightIndex < sceneSubmition.ShadowCastingSpotLights.size(); lightIndex++)
+		for (size_t lightIndex = 0; lightIndex < sceneSubmition.SpotLightShadows.size(); lightIndex++)
 		{
 			const FrameResources& frameResources = m_FrameResources[lightIndex * frameCount + frameIndex];
 			commandBuffer->SetGlobalDescriptorSet(frameResources.CameraDescriptorSet, 0);

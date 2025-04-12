@@ -330,7 +330,8 @@ namespace Flare
         SpotLightShadows() = default;
 
         float Bias = 0.0f;
-        float NormalBias = 0.0f;
+		float Near = 0.01f;
+		float Far = 100.0f;
     };
 
     template<>
@@ -339,7 +340,8 @@ namespace Flare
         void OnSerialize(SpotLightShadows& shadows, SerializationStream& stream)
         {
             stream.Serialize("Bias", SerializationValue(shadows.Bias));
-            stream.Serialize("NormalBias", SerializationValue(shadows.NormalBias));
+            stream.Serialize("Near", SerializationValue(shadows.Near));
+            stream.Serialize("Far", SerializationValue(shadows.Far));
         }
     };
 
