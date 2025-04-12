@@ -10,6 +10,10 @@ struct SpotLightShadowsEntry
 {
 	vec4 UVTransform; // xy - scale, zw - translation
 	mat4 Projection;
+	float Radius;
+	float Near;
+	float Far;
+	float Bias;
 };
 
 layout(std430, set = 1, binding = 14) readonly buffer SpotLightShadowData
@@ -17,24 +21,23 @@ layout(std430, set = 1, binding = 14) readonly buffer SpotLightShadowData
 	SpotLightShadowsEntry Entries[];
 } u_SpotLightShadowData;
 
+float ComputeShadowBias(float projectedDepth, float near, float far, float bias)
+{
+	return -bias * near * far / (projectedDepth * (projectedDepth - bias) * (near - far));
+}
+
 float CalculateSpotLightShadow(vec3 spotLightPosition, vec3 surfaceNormal, vec3 position, uint lightIndex)
 {
-	vec3 directionTowardsLight = normalize(spotLightPosition - position);
-	float NoL = dot(surfaceNormal, directionTowardsLight);
-
-	vec3 positionBias = (NoL < 0.0f) ? (-directionTowardsLight * 0.2f) : (directionTowardsLight * 0.2f);
-
-	position += positionBias;
-
 	SpotLightShadowsEntry shadowEntry = u_SpotLightShadowData.Entries[lightIndex];
 	vec4 projected = shadowEntry.Projection * vec4(position, 1.0f);
 	projected /= projected.w;
 
 	vec2 uv = projected.xy * 0.5f + vec2(0.5f);
-	float projectedDepth = projected.z;
-
 	if (any(lessThan(uv, vec2(0.0f))) || any(greaterThan(uv, vec2(1.0f))))
 		return 1.0f;
+
+	float bias = ComputeShadowBias(projected.z, shadowEntry.Near, shadowEntry.Far, shadowEntry.Bias);
+	float projectedDepth = projected.z - bias;
 
 	uv.xy = shadowEntry.UVTransform.xy * uv.xy + shadowEntry.UVTransform.zw;
 	return texture(u_SpotLightShadowMap, vec3(uv, projectedDepth));

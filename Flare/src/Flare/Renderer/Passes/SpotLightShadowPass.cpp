@@ -82,7 +82,7 @@ namespace Flare
 
 			// TODO: Get rid of acos
 			float fov = glm::acos(spotLight.OuterAngleCos) * 2.0f;
-			glm::mat4 projection = glm::perspectiveRH_ZO(fov, 1.0f, 0.01f, radius);
+			glm::mat4 projection = glm::perspectiveRH_ZO(fov, 1.0f, PROJECTION_NEAR, radius);
 
 			glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
 			glm::vec3 forward = spotLight.Direction;
@@ -108,6 +108,10 @@ namespace Flare
 			entry.Projection = view.ViewProjection;
 			entry.UVScale = tileSize;
 			entry.UVTranslation = tileSize * static_cast<glm::vec2>(tileCoordinate);
+			entry.Radius = radius;
+			entry.Near = PROJECTION_NEAR;
+			entry.Far = radius;
+			entry.Bias = 0.001f;
 		}
 
 		globalResources.FrameResources[frameIndex].SpotLightShadowDataBuffer->SetData(MemorySpan::FromVector(shadowEntries), 0);

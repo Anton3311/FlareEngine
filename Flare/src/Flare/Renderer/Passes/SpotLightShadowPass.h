@@ -14,6 +14,10 @@ namespace Flare
 		glm::vec2 UVScale;
 		glm::vec2 UVTranslation;
 		glm::mat4 Projection;
+		float Radius;
+		float Near;
+		float Far;
+		float Bias;
 	};
 
 	struct SpotLightShadowsSpecifications
