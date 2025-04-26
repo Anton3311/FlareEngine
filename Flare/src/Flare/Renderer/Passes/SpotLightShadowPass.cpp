@@ -115,12 +115,35 @@ namespace Flare
 				glm::vec3 forward = spotLight.Direction;
 				glm::vec3 right = -glm::cross(up, forward);
 
-				glm::mat4 basis = static_cast<glm::mat4>(glm::mat3(right, up, forward));
-				glm::mat4 viewMatrix = glm::inverse(glm::translate(basis, spotLight.Position));
-
-				viewMatrix = glm::lookAt(
+				glm::mat4 viewMatrix = glm::lookAt(
 						spotLight.Position + spotLight.Direction,
 						spotLight.Position,
+						glm::vec3(0.0f, 1.0f, 0.0f));
+
+				glm::vec3 snappedSpotLightPosition = spotLight.Position;
+
+				// Snap to texel
+				{
+					glm::mat4 viewProjection = projection * viewMatrix;
+					glm::mat4 inverseViewProjection = glm::inverse(viewProjection);
+
+					glm::vec3 forwardOffset = spotLight.Direction * shadowsSubmition.Near;
+
+					glm::vec3 samplePoint = spotLight.Position + forwardOffset;
+					glm::vec4 projectedSamplePoint = viewProjection * glm::vec4(samplePoint, 1.0f);
+					projectedSamplePoint /= projectedSamplePoint.w;
+					projectedSamplePoint.x = glm::round(projectedSamplePoint.x);
+					projectedSamplePoint.y = glm::round(projectedSamplePoint.y);
+
+					glm::vec4 snappedSamplePoint = inverseViewProjection * projectedSamplePoint;
+					snappedSamplePoint /= snappedSamplePoint.w;
+
+					snappedSpotLightPosition = snappedSamplePoint;
+				}
+
+				viewMatrix = glm::lookAt(
+						snappedSpotLightPosition + spotLight.Direction,
+						snappedSpotLightPosition,
 						glm::vec3(0.0f, 1.0f, 0.0f));
 
 				RenderView view{};
