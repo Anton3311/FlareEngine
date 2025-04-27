@@ -116,8 +116,8 @@ namespace Flare
 				glm::vec3 right = -glm::cross(up, forward);
 
 				glm::mat4 viewMatrix = glm::lookAt(
-						spotLight.Position + spotLight.Direction,
 						spotLight.Position,
+						spotLight.Position + spotLight.Direction,
 						glm::vec3(0.0f, 1.0f, 0.0f));
 
 				glm::vec3 snappedSpotLightPosition = spotLight.Position;
@@ -142,8 +142,8 @@ namespace Flare
 				}
 
 				viewMatrix = glm::lookAt(
-						snappedSpotLightPosition + spotLight.Direction,
 						snappedSpotLightPosition,
+						snappedSpotLightPosition + spotLight.Direction,
 						glm::vec3(0.0f, 1.0f, 0.0f));
 
 				RenderView view{};
@@ -292,16 +292,47 @@ namespace Flare
 			);
 	}
 
+	struct Sphere
+	{
+		glm::vec3 Center;
+		float Radius;
+	};
+
+	static Sphere CreateConeBoundingSphere(glm::vec3 conePosition, glm::vec3 coneDirection, float radius, float halfAngle)
+	{
+		Sphere sphere{};
+		if (halfAngle >= glm::pi<float>() / 4.0f)
+		{
+			sphere.Center = conePosition + coneDirection * glm::cos(halfAngle) * radius;
+			sphere.Radius = glm::sin(halfAngle) * radius;
+		}
+		else
+		{
+			sphere.Radius = radius / (2.0f * glm::cos(halfAngle));
+			sphere.Center = conePosition + coneDirection * sphere.Radius;
+		}
+
+		return sphere;
+	}
+
 	size_t SpotLightShadowPass::CullGeometryForLight(const RenderGraphContext& context, size_t lightIndex)
 	{
 		FLARE_PROFILE_FUNCTION();
 
 		const SceneSubmition& sceneSubmition = context.GetSceneSubmition();
-		glm::vec3 lightPosition = sceneSubmition.SpotLights[lightIndex].Position;
-		float lightRadius = glm::sqrt(sceneSubmition.SpotLights[lightIndex].Intensity / 0.01f);
+		const SpotLightShadowsSubmition& spotLightShadows = sceneSubmition.SpotLightShadows[lightIndex];
+		const SpotLightSubmition& spotLight = sceneSubmition.SpotLights[spotLightShadows.LightIndex];
+
+		// Create spot light AABB
+		Sphere boundingSphere = CreateConeBoundingSphere(
+				spotLight.Position,
+				spotLight.Direction,
+				spotLightShadows.Far,
+				glm::acos(spotLight.OuterAngleCos));
+
 		Math::AABB lightAABB = Math::AABB(
-				lightPosition - glm::vec3(lightRadius),
-				lightPosition + glm::vec3(lightRadius));
+				boundingSphere.Center - glm::vec3(boundingSphere.Radius),
+				boundingSphere.Center + glm::vec3(boundingSphere.Radius));
 
 		size_t culledBatchCount = 0;
 		for (const auto& [key, batch] : sceneSubmition.BatchedGeometry.GetBatches())
