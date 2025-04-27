@@ -56,7 +56,7 @@ struct SurfaceProperties
 	float Metallic;
 };
 
-vec3 CalculateLight(vec3 V, vec3 H, vec3 incomingLight, vec3 lightDirection, in SurfaceProperties surface)
+vec3 CalculateLight(vec3 V, vec3 H, vec3 incomingLight, vec3 directionTowardsLight, in SurfaceProperties surface)
 {
 	float alpha = max(0.04, surface.Roughness * surface.Roughness);
 	vec3 F0 = mix(BASE_REFLECTIVITY, surface.Color, surface.Metallic);
@@ -65,10 +65,10 @@ vec3 CalculateLight(vec3 V, vec3 H, vec3 incomingLight, vec3 lightDirection, in 
 	vec3 kD = vec3(1.0) - kS;
 
 	vec3 diffuse = Diffuse_Lambertian(surface.Color);
-	vec3 specular = Specular_CookTorence(alpha, surface.Normal, V, lightDirection);
+	vec3 specular = Specular_CookTorence(alpha, surface.Normal, V, directionTowardsLight);
 	vec3 brdf = kD * diffuse + specular;
 
-	return brdf * incomingLight * max(0.0, dot(lightDirection, surface.Normal));
+	return brdf * incomingLight * max(0.0, dot(directionTowardsLight, surface.Normal));
 }
 
 vec3 CalculatePointLightsContribution(vec3 V, in SurfaceProperties surface)
@@ -95,19 +95,19 @@ vec3 CalculateSingleSpotLightContricbution(vec3 V, in SurfaceProperties surface,
 {
 	SpotLightData spotLight = u_SpotLights[lightIndex];
 
-	vec3 direction = spotLight.Position - surface.Position;
-	float distance = length(direction);
+	vec3 directionTowardsLight = spotLight.Position - surface.Position;
+	float distance = length(directionTowardsLight);
 	float attenuation = 1.0f / (distance * distance);
 
-	direction /= distance;
+	directionTowardsLight /= distance;
 
-	vec3 halfWayVector = normalize(V + direction);
+	vec3 halfWayVector = normalize(V + directionTowardsLight);
 
-	float angleCos = dot(direction, spotLight.Direction);
+	float angleCos = dot(-directionTowardsLight, spotLight.Direction);
 	float fade = 1.0f - smoothstep(spotLight.InnerrRadiusCos, spotLight.OuterRadiusCos, angleCos);
 
 	vec3 incomingLight = spotLight.Color.rgb * spotLight.Color.w * fade;
-	return CalculateLight(V, halfWayVector, incomingLight * attenuation, direction, surface);
+	return CalculateLight(V, halfWayVector, incomingLight * attenuation, directionTowardsLight, surface);
 }
 
 vec3 CalculateSpotLightsContribution(vec3 V, in SurfaceProperties surface)
