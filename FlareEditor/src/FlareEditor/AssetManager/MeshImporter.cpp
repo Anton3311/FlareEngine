@@ -262,6 +262,8 @@ namespace Flare
 				Span<const glm::vec2>(data.UVs, data.VertexCount));
 		}
 
+		mesh->SetDebugName(metadata.Name);
+
 		return mesh;
 	}
 
