@@ -33,7 +33,7 @@ float CalculateSpotLightShadow(vec3 spotLightPosition, vec3 surfaceNormal, vec3 
 	projected /= projected.w;
 
 	vec2 uv = projected.xy * 0.5f + vec2(0.5f);
-	if (any(lessThan(uv, vec2(0.0f))) || any(greaterThan(uv, vec2(1.0f))))
+	if (any(lessThan(uv, vec2(0.0f))) || any(greaterThan(uv, vec2(1.0f))) || projected.z >= 1.0f)
 		return 1.0f;
 
 	float bias = ComputeShadowBias(projected.z, shadowEntry.Near, shadowEntry.Far, shadowEntry.Bias);
