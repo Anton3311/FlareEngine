@@ -76,6 +76,11 @@ namespace Flare
 			{
 				for (size_t entityIndex = 0; entityIndex < chunk.GetEntityCount(); entityIndex++)
 				{
+					const SpotLight& light = lights[entityIndex];
+
+					float outerAngle = glm::clamp(glm::radians(light.OuterAngle), 0.0f, glm::pi<float>());
+					float innerAngle = glm::clamp(glm::radians(light.InnerAngle), 0.0f, outerAngle);
+
 					glm::vec3 lightDirection = transforms[entityIndex].TransformDirection(glm::vec3(0.0f, 0.0f, -1.0f));
 					glm::vec3 tangent = transforms[entityIndex].TransformDirection(glm::vec3(1.0f, 0.0f, 0.0f));
 					glm::vec3 bitangent = glm::cross(lightDirection, tangent);
@@ -84,9 +89,9 @@ namespace Flare
 					float radius = lights[entityIndex].Intensity / intensityLimit;
 					radius = glm::sqrt(radius);
 
-					float forwardOffset = radius * glm::cos(glm::radians(lights[entityIndex].OuterAngle));
-					float outerCircleRadius = radius * glm::sin(glm::radians(lights[entityIndex].OuterAngle));
-					float innerCircleRadius = radius * glm::sin(glm::radians(lights[entityIndex].InnerAngle));
+					float forwardOffset = radius * glm::cos(outerAngle);
+					float outerCircleRadius = radius * glm::sin(outerAngle);
+					float innerCircleRadius = radius * glm::sin(innerAngle);
 
 					DebugRenderer::DrawCircle(transforms[entityIndex].Position + lightDirection * forwardOffset,
 						lightDirection,

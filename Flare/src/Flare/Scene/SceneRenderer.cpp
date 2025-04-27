@@ -25,11 +25,19 @@
 
 namespace Flare
 {
-	void SubmitSpotLight(SceneSubmition& sceneSubmition, const SpotLight& light, const TransformComponent& transform)
+	inline static bool ValidateSpotLight(const SpotLight& light)
 	{
-		if (light.OuterAngle - light.InnerAngle <= 0.0f)
-			return;
+		if (light.InnerAngle > light.OuterAngle)
+			return false;
 
+		if (light.Intensity <= 0.0f)
+			return false;
+
+		return true;
+	}
+
+	static void SubmitSpotLight(SceneSubmition& sceneSubmition, const SpotLight& light, const TransformComponent& transform)
+	{
 		glm::vec3 position = transform.Position;
 		glm::vec3 direction = transform.TransformDirection(glm::vec3(0.0f, 0.0f, -1.0f));
 
@@ -38,8 +46,8 @@ namespace Flare
 		submition.Intensity = light.Intensity;
 		submition.Direction = direction;
 		submition.Position = position;
-		submition.InnerAngleCos = glm::cos(glm::radians(light.InnerAngle));
-		submition.OuterAngleCos = glm::cos(glm::radians(light.OuterAngle));
+		submition.InnerAngleCos = glm::cos(glm::clamp(glm::radians(light.InnerAngle), 0.0f, glm::pi<float>()));
+		submition.OuterAngleCos = glm::cos(glm::clamp(glm::radians(light.OuterAngle), 0.0f, glm::pi<float>()));
 	}
 
 	SceneRenderer::SceneRenderer(Ref<Scene> scene)
@@ -135,6 +143,8 @@ namespace Flare
 			{
 				for (size_t entityIndex = 0; entityIndex < chunk.GetEntityCount(); entityIndex++)
 				{
+					if (!ValidateSpotLight(lights[entityIndex]))
+						continue;
 					SubmitSpotLight(m_SceneSubmition, lights[entityIndex], transforms[entityIndex]);
 				}
 			});
@@ -147,6 +157,9 @@ namespace Flare
 			{
 				for (size_t entityIndex = 0; entityIndex < chunk.GetEntityCount(); entityIndex++)
 				{
+					if (!ValidateSpotLight(lights[entityIndex]))
+						continue;
+
 					size_t lightIndex = m_SceneSubmition.SpotLights.size();
 					SubmitSpotLight(m_SceneSubmition, lights[entityIndex], transforms[entityIndex]);
 
