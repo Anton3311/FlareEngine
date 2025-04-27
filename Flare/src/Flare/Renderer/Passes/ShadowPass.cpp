@@ -364,6 +364,7 @@ namespace Flare
 					Math::Compact3DTransform compactTransform = Math::Compact3DTransform(transform.AsMatrix4x4());
 					Math::AABB transformedAABB = filteredBatch.Mesh->GetBounds().Transformed(transform.AsMatrix4x4());
 
+#if 0
 					bool isTooSmall = CullByShadowMapSpaceSize(context.GetSceneSubmition().DirectionalLight.LightBasis,
 						transformedAABB,
 						2 * m_CascadeData[cascadeIndex].BoundingSphereRadius,
@@ -372,6 +373,7 @@ namespace Flare
 
 					if (isTooSmall)
 						continue;
+#endif
 
 					CullResult result = CullAABB(transformedAABB, cascadeData.FrustumPlanes);
 
