@@ -683,6 +683,10 @@ namespace Flare
 			active->InitializeRuntime();
 			Scene::SetActive(active);
 
+			m_SceneRenderer = CreateScope<SceneRenderer>(active);
+            m_SceneWindow.Initialize(active, &m_SceneViewport->GetEditorCamera());
+            m_PostProcessingWindow = PostProcessingWindow(active);
+
 			m_EditedSceneHandle = NULL_ASSET_HANDLE;
 		});
     }
