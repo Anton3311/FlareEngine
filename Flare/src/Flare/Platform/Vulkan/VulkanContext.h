@@ -309,7 +309,34 @@ namespace Flare
 		VulkanRenderPassCache m_RenderPassCache;
 		std::unordered_map<RenderPassKey, Ref<VulkanRenderPass>> m_RenderPasses;
 
-		std::unordered_map<uint64_t, Ref<Pipeline>> m_DefaultPipelines;
+		struct PipelineKey
+		{
+			constexpr bool operator==(const PipelineKey& other) const
+			{
+				return ShaderKey == other.ShaderKey && RenderPassKey == other.RenderPassKey;
+			}
+
+			constexpr bool operator!=(const PipelineKey& other) const
+			{
+				return ShaderKey != other.ShaderKey || RenderPassKey != other.RenderPassKey;
+			}
+
+			const Shader* ShaderKey;
+			const VulkanRenderPass* RenderPassKey;
+		};
+
+		struct PipelineKeyHasher
+		{
+			size_t operator()(const PipelineKey& key) const
+			{
+				size_t hash = 0;
+				CombineHashes(hash, key.ShaderKey);
+				CombineHashes(hash, key.RenderPassKey);
+				return hash;
+			}
+		};
+
+		std::unordered_map<PipelineKey, Ref<Pipeline>, PipelineKeyHasher> m_DefaultPipelines;
 
 		// Allocator
 		VmaAllocator m_Allocator = VK_NULL_HANDLE;

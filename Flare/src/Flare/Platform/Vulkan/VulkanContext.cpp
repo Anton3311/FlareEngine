@@ -715,16 +715,14 @@ namespace Flare
 	Ref<Pipeline> VulkanContext::GetDefaultPipelineForShader(Ref<Shader> shader, Ref<VulkanRenderPass> renderPass)
 	{
 		FLARE_PROFILE_FUNCTION();
-		uint64_t key = (uint64_t)shader.GetRawPointer();
-		auto it = m_DefaultPipelines.find(key);
+		PipelineKey key{};
+		key.ShaderKey = shader.GetRawPointer();
+		key.RenderPassKey = renderPass.GetRawPointer();
 
+		auto it = m_DefaultPipelines.find(key);
 		if (it != m_DefaultPipelines.end())
 		{
-			Ref<VulkanPipeline> pipeline = it->second.As<VulkanPipeline>();
-			if (pipeline->GetCompatibleRenderPass().GetRawPointer() == renderPass.GetRawPointer())
-			{
-				return it->second;
-			}
+			return it->second;
 		}
 
 		Ref<const GraphicsShaderMetadata> metadata = shader->GetMetadata();
