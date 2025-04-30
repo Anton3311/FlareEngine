@@ -49,6 +49,7 @@ namespace Flare
 	FLARE_IMPL_ENUM_BITFIELD(EntitiesHierarchyFeatures);
 
 	class World;
+	class EditorCamera;
 	class EntitiesHierarchy
 	{
 	public:
@@ -60,6 +61,7 @@ namespace Flare
 		void SetFeatures(EntitiesHierarchyFeatures features) { m_Features = features; }
 
 		void SetWorld(World& world);
+		inline void SetEditorCamera(const EditorCamera* editorCamera) { m_EditorCamera = editorCamera; }
 	private:
 		bool RenderContextMenu(Entity& selectedEntity, Entity* parent, bool isRoot);
 		bool RenderEntityItem(Entity entity, Entity& selectedEntity, size_t accelerationStructureEntryIndex);
@@ -68,6 +70,7 @@ namespace Flare
 		bool RenderClippedHierarchyRootLevel(Entity& selectedEntity);
 	private:
 		EntitiesHierarchyFeatures m_Features;
+		const EditorCamera* m_EditorCamera = nullptr;
 
 		std::optional<Entity> m_EntityToDelete;
 		std::optional<Entity> m_EntityToDuplicate;

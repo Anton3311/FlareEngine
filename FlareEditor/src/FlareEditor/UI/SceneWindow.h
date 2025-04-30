@@ -4,6 +4,7 @@
 
 namespace Flare
 {
+	class EditorCamera;
 	class Scene;
 	class SceneWindow
 	{
@@ -11,7 +12,7 @@ namespace Flare
 		SceneWindow();
 		void OnImGuiRender();
 
-		void SetScene(Ref<Scene> scene);
+		void Initialize(Ref<Scene> scene, const EditorCamera* editorCamera);
 		void Reset();
 	private:
 		EntitiesHierarchy m_Hierarchy;

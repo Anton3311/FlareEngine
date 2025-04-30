@@ -39,7 +39,7 @@ namespace Flare
 		ImGui::End();
 	}
 
-	void SceneWindow::SetScene(Ref<Scene> scene)
+	void SceneWindow::Initialize(Ref<Scene> scene, const EditorCamera* editorCamera)
 	{
 		FLARE_PROFILE_FUNCTION();
 		m_Scene = scene;
@@ -48,6 +48,8 @@ namespace Flare
 		{
 			m_Hierarchy.SetWorld(m_Scene->GetECSWorld());
 		}
+
+		m_Hierarchy.SetEditorCamera(editorCamera);
 	}
 
 	void SceneWindow::Reset()

@@ -15,6 +15,7 @@
 #include "FlareEditor/EditorLayer.h"
 #include "FlareEditor/UI/EditorGUI.h"
 #include "FlareEditor/ImGui/ImGuiLayer.h"
+#include "FlareEditor/EditorCamera.h"
 
 #include "FlareEditor/Serialization/SerializationId.h"
 
@@ -504,6 +505,12 @@ namespace Flare
 		bool result = false;
 		if (ImGui::BeginPopupContextItem())
 		{
+			if (entity != selectedEntity)
+			{
+				selectedEntity = entity;
+				result = true;
+			}
+
 			RenderContextMenu(selectedEntity, &entity, false);
 
 			if (HAS_BIT(m_Features, EntitiesHierarchyFeatures::DeleteEntity) && ImGui::MenuItem("Delete"))
@@ -525,6 +532,34 @@ namespace Flare
 
 				m_ClippingHierarchyIsDirty = true;
 			}
+
+			if (m_EditorCamera)
+			{
+				TransformComponent* globalTransform = m_World->TryGetEntityComponent<TransformComponent>(selectedEntity);
+				LocalTransform* localTransform = m_World->TryGetEntityComponent<LocalTransform>(selectedEntity);
+
+				bool hasTransform = globalTransform || localTransform;
+				bool hasCamera = m_World->HasComponent<CameraComponent>(selectedEntity);
+
+				if (hasTransform && hasCamera && ImGui::MenuItem("Match with editor camera"))
+				{
+					glm::vec3 position = m_EditorCamera->GetPosition();
+					glm::vec3 rotation = m_EditorCamera->GetRotation();
+
+					if (localTransform)
+					{
+						localTransform->Position = position;
+						localTransform->Rotation = -rotation;
+					}
+
+					if (globalTransform)
+					{
+						globalTransform->Position = position;
+						globalTransform->Rotation = -rotation;
+					}
+				}
+			}
+
 
 			ImGui::EndMenu();
 		}

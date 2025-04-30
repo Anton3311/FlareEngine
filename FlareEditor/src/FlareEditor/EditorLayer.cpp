@@ -565,7 +565,7 @@ namespace Flare
 		m_PostProcessingWindow = PostProcessingWindow(active);
 
         m_SceneRenderer.reset(new SceneRenderer(active));
-        m_SceneWindow.SetScene(active);
+        m_SceneWindow.Initialize(active, &m_SceneViewport->GetEditorCamera());
     }
 
     void EditorLayer::HandleKeyboardShortcuts()
@@ -725,7 +725,7 @@ namespace Flare
 			m_Mode = EditorMode::Play;
 
             m_SceneRenderer = CreateScope<SceneRenderer>(playModeScene);
-            m_SceneWindow.SetScene(playModeScene);
+            m_SceneWindow.Initialize(playModeScene, &m_SceneViewport->GetEditorCamera());
             m_PostProcessingWindow = PostProcessingWindow(playModeScene);
 
 			playModeScene->InitializeRuntime();
@@ -763,7 +763,7 @@ namespace Flare
 			m_Mode = EditorMode::Edit;
 
             m_SceneRenderer = CreateScope<SceneRenderer>(editorScene);
-            m_SceneWindow.SetScene(editorScene);
+            m_SceneWindow.Initialize(editorScene, &m_SceneViewport->GetEditorCamera());
             m_PostProcessingWindow = PostProcessingWindow(editorScene);
 
 			InputManager::SetCursorMode(CursorMode::Normal);
