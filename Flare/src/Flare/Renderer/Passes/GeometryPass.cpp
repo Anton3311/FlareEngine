@@ -66,9 +66,21 @@ namespace Flare
 			if (!m_MaterialOverride)
 			{
 				if (culledBatch.SubMeshIndex < culledBatch.OriginalBatch->GetMaterials().size())
-					commandBuffer->ApplyMaterial(culledBatch.OriginalBatch->GetMaterials()[culledBatch.SubMeshIndex]);
+				{
+					Ref<Material> material = culledBatch.OriginalBatch->GetMaterials()[culledBatch.SubMeshIndex];
+					if (material != nullptr)
+					{
+						commandBuffer->ApplyMaterial(material);
+					}
+					else
+					{
+						commandBuffer->ApplyMaterial(errorMaterial);
+					}
+				}
 				else
+				{
 					commandBuffer->ApplyMaterial(errorMaterial);
+				}
 			}
 
 			if (m_IsDepthOnly)
