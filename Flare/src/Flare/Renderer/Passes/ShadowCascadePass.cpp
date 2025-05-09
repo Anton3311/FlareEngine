@@ -158,7 +158,7 @@ namespace Flare
 
 			for (const auto& batch : m_CascadeData.Batches)
 			{
-				commandBuffer->DrawMeshIndexed(batch.Mesh, instanceIndex, batch.Count);
+				commandBuffer->DrawDepthOnlyMeshIndexed(batch.Mesh, instanceIndex, batch.Count);
 				instanceIndex += batch.Count;
 
 				m_Statistics.DrawCallCount++;
