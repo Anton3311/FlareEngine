@@ -972,26 +972,39 @@ namespace Flare
 		if (!rebind)
 			return;
 
-		Ref<const GPUBuffer> vertexBuffers[] =
 		{
-			mesh->GetVertices(),
-			mesh->GetNormals(),
-			mesh->GetTangents(),
-			mesh->GetUVs()
-		};
+			VkBuffer vertexBuffers[] =
+			{
+				mesh->GetVertices().DerefAs<const VulkanBuffer>().GetBufferHandle(),
+				mesh->GetNormals().DerefAs<const VulkanBuffer>().GetBufferHandle(),
+				mesh->GetTangents().DerefAs<const VulkanBuffer>().GetBufferHandle(),
+				mesh->GetUVs().DerefAs<const VulkanBuffer>().GetBufferHandle(),
+			};
 
-		BindVertexBuffers(Span(vertexBuffers, 4), 0);
+			VkDeviceSize offsets[] = { 0, 0, 0, 0 };
 
-		switch (meshType)
-		{
-		case MeshType::Default:
-			BindIndexBuffer(mesh->GetIndexBuffer(), mesh->GetIndexFormat());
-			break;
-		case MeshType::DepthOnly:
-			BindIndexBuffer(mesh->GetDepthOnlyIndexBuffer(), mesh->GetIndexFormat());
-			break;
+			vkCmdBindVertexBuffers(m_CommandBuffer, 0, 4, vertexBuffers, offsets);
 		}
 
+		{
+			VkBuffer indexBuffer = VK_NULL_HANDLE;
+			switch (meshType)
+			{
+			case MeshType::Default:
+				indexBuffer = mesh->GetIndexBuffer().DerefAs<const VulkanBuffer>().GetBufferHandle();
+				break;
+			case MeshType::DepthOnly:
+				indexBuffer = mesh->GetDepthOnlyIndexBuffer().DerefAs<const VulkanBuffer>().GetBufferHandle();
+				break;
+			}
+
+			vkCmdBindIndexBuffer(m_CommandBuffer,
+				indexBuffer, 0,
+				mesh->GetIndexFormat() == IndexFormat::UInt16
+					? VK_INDEX_TYPE_UINT16
+					: VK_INDEX_TYPE_UINT32);
+		}
+		
 		m_BoundMesh.Mesh = mesh;
 		m_BoundMesh.Type = meshType;
 	}
