@@ -108,27 +108,14 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(world.IsEntityAlive(root));
 
-		const Children* children = world.TryGetEntityComponent<const Children>(root);
-
-		if (children)
-		{
-			for (Entity child : children->m_ChildrenEntities)
-			{
-				if (world.IsEntityAlive(child))
-				{
-					DeleteEntityHierarchy(world, child);
-					world.DeleteEntity(child);
-				}
-			}
-		}
-
+		// First detach from parent
 		const Parent* parent = world.TryGetEntityComponent<const Parent>(root);
 		if (parent)
 		{
 			RemoveFromParent(world, root, parent->m_ParentEntity);
 		}
 
-		world.DeleteEntity(root);
+		DeleteDetachedEntityHierarchy(world, root);
 	}
 
 	Entity HierarchyHelper::DuplicateEntityHierarchy(World& world, Entity root, const std::unordered_set<ComponentId>* ignoredComponents)
@@ -139,6 +126,25 @@ namespace Flare
 		ReattachCopyToOriginalParent(world, root, rootCopy);
 
 		return rootCopy;
+	}
+
+	void HierarchyHelper::DeleteDetachedEntityHierarchy(World& world, Entity root)
+	{
+		FLARE_PROFILE_FUNCTION();
+		const Children* children = world.TryGetEntityComponent<const Children>(root);
+
+		if (children)
+		{
+			for (Entity child : children->m_ChildrenEntities)
+			{
+				if (world.IsEntityAlive(child))
+				{
+					DeleteDetachedEntityHierarchy(world, child);
+				}
+			}
+		}
+
+		world.DeleteEntity(root);
 	}
 
 	Entity HierarchyHelper::DuplicateEntityHierarchyRecursively(World& world, Entity root, const std::unordered_set<ComponentId>* ignoredComponents)
