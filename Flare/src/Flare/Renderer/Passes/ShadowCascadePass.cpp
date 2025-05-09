@@ -176,8 +176,7 @@ namespace Flare
 					VisibleSubMeshRange range = m_VisibleSubMeshRanges[visibleMesh.FirstSubMeshRange + i];
 					Ref<const Mesh> mesh = visibleMesh.Mesh;
 
-					vulkanCommandBuffer.BindMesh(visibleMesh.Mesh);
-					vulkanCommandBuffer.BindIndexBuffer(visibleMesh.Mesh->GetDepthOnlyIndexBuffer(), mesh->GetIndexFormat());
+					vulkanCommandBuffer.BindMesh(visibleMesh.Mesh, MeshType::DepthOnly);
 
 					uint32_t firstSubMesh = static_cast<uint32_t>(range.Start);
 					uint32_t subMeshCount = static_cast<uint32_t>(range.Count);
