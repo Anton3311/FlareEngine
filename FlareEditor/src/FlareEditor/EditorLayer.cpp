@@ -558,14 +558,13 @@ namespace Flare
 		active = AssetManager::GetAsset<Scene>(handle);
 		Scene::SetActive(active);
 
-		active->InitializeRuntime();
-
 		m_EditedSceneHandle = handle;
 
 		m_PostProcessingWindow = PostProcessingWindow(active);
-
         m_SceneRenderer.reset(new SceneRenderer(active));
         m_SceneWindow.Initialize(active, &m_SceneViewport->GetEditorCamera());
+
+		active->InitializeRuntime();
     }
 
     void EditorLayer::HandleKeyboardShortcuts()
@@ -664,30 +663,30 @@ namespace Flare
 		{
 			GraphicsContext::GetInstance().WaitForDevice();
 
-			Ref<Scene> active = Scene::GetActive();
 
 			ResetViewportRenderGraphs();
 
-			if (active != nullptr)
-			{
-				Ref<EditorAssetManager> editorAssetManager = AssetManager::GetInstance().As<EditorAssetManager>();
+            {
+				Ref<Scene> active = Scene::GetActive();
+
+				Ref<EditorAssetManager> editorAssetManager = EditorAssetManager::GetInstance();
 
 				if (active != nullptr && AssetManager::IsAssetHandleValid(active->Handle))
 					editorAssetManager->UnloadAsset(active->Handle);
-			}
 
-			active = nullptr;
+                Scene::SetActive(nullptr);
+            }
 
-			active = Ref<Scene>::New(m_ECSContext);
-			active->Initialize();
-			active->InitializeRuntime();
+			m_EditedSceneHandle = NULL_ASSET_HANDLE;
+
+			Ref<Scene> active = Ref<Scene>::New(m_ECSContext);
 			Scene::SetActive(active);
 
-			m_SceneRenderer = CreateScope<SceneRenderer>(active);
+            m_SceneRenderer.reset(new SceneRenderer(active));
             m_SceneWindow.Initialize(active, &m_SceneViewport->GetEditorCamera());
             m_PostProcessingWindow = PostProcessingWindow(active);
 
-			m_EditedSceneHandle = NULL_ASSET_HANDLE;
+			active->InitializeRuntime();
 		});
     }
 
