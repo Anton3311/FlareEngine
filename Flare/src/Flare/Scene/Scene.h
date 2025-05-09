@@ -24,7 +24,6 @@ namespace Flare
 		Scene(ECSContext& context);
 		~Scene();
 
-		void Initialize();
 		void InitializeRuntime();
 	public:
 		void OnRuntimeStart();
@@ -47,6 +46,7 @@ namespace Flare
 		static Ref<Scene> GetActive();
 		static void SetActive(const Ref<Scene>& scene);
 	private:
+		void Initialize();
 		void UpdateEnvironmentSettings();
 	private:
 		World m_World;
