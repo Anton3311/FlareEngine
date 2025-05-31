@@ -491,11 +491,12 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
+		// TODO: Store this somewhere
 		SpotLightShadowsSpecifications shadowSpecifications{};
 
 		RenderGraphTextureId shadowMapId = renderGraph.GetResourceManager().CreateFixedSizeTexture(
 			TextureFormat::Depth32,
-			glm::uvec2(1 << shadowSpecifications.SizePowerOfTwo),
+			glm::uvec2(1 << shadowSpecifications.SizeLog2),
 			"SpotLightShadowMap");
 
 		Ref<SpotLightShadowPass> pass = Ref<SpotLightShadowPass>::New(shadowMapId, perspectiveDepthOnly, shadowSpecifications);

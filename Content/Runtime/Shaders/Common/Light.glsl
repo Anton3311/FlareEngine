@@ -18,6 +18,7 @@ layout(std140, set = 1, binding = 1) uniform LightData
 
 	uint u_FirstShadowCastingSpotlight;
 	uint u_ShadowCastingSpotlightCount;
+	float u_SpotLightsShadowAtlasTexelSize;
 
 	bool u_AOEnabled;
 };

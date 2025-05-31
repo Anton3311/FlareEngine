@@ -332,7 +332,7 @@ namespace Flare
         float Bias = 0.0f;
 		float Near = 0.01f;
 		float Far = 100.0f;
-		uint32_t SizePowerOfTwo = 8;
+		uint32_t SizeLog2 = 8;
     };
 
     template<>
@@ -343,7 +343,7 @@ namespace Flare
             stream.Serialize("Bias", SerializationValue(shadows.Bias));
             stream.Serialize("Near", SerializationValue(shadows.Near));
             stream.Serialize("Far", SerializationValue(shadows.Far));
-            stream.Serialize("SizePowerOfTwo", SerializationValue(shadows.SizePowerOfTwo));
+            stream.Serialize("SizeLog2", SerializationValue(shadows.SizeLog2));
         }
     };
 

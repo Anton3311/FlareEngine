@@ -12,20 +12,17 @@ namespace Flare
 
 	struct SpotLightShadowsEntry
 	{
-		glm::vec2 UVScale;
-		glm::vec2 UVTranslation;
 		glm::mat4 Projection;
 		float Radius;
 		float Bias;
 		float NormalBias;
-
-		float Padding0;
+		uint32_t UVTransform;
 	};
 
 	struct SpotLightShadowsSpecifications
 	{
 		uint32_t MaxLightCount = 4;
-		uint32_t SizePowerOfTwo = 10; // 1024
+		uint32_t SizeLog2 = 10; // 1024
 	};
 
 	struct SpotLightCulledGeometryRange
@@ -44,7 +41,7 @@ namespace Flare
 	struct SpotLightTile
 	{
 		glm::ivec2 Position;
-		uint32_t SizePowerOfTwo;
+		uint32_t SizeLog2;
 		SpotLightCulledGeometryRange CulledBatches;
 	};
 

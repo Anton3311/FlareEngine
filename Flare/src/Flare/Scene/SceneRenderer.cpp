@@ -18,6 +18,7 @@
 #include "Flare/Renderer/GraphicsContext.h"
 #include "Flare/Renderer/Renderer.h"
 #include "Flare/Renderer/RendererComponents.h"
+#include "Flare/Renderer/Passes/SpotLightShadowPass.h"
 
 #include "Flare/DebugRenderer/DebugRenderer.h"
 
@@ -168,7 +169,7 @@ namespace Flare
 					submition.Near = shadows[entityIndex].Near;
 					submition.Far = shadows[entityIndex].Far;
 					submition.Bias = shadows[entityIndex].Bias;
-					submition.SizePowerOfTwo = shadows[entityIndex].SizePowerOfTwo;
+					submition.SizeLog2 = shadows[entityIndex].SizeLog2;
 				}
 			});
 
@@ -323,6 +324,9 @@ namespace Flare
 		lightData.AOEnabled = renderGraph.Graph->GetResourceManager().IsTextureIdValid(aoConfiguration.AOTexture);
 		lightData.FirstShadowCastingSpotlight = static_cast<uint32_t>(m_SceneSubmition.SpotLights.size() - m_SceneSubmition.SpotLightShadows.size());
 		lightData.ShadowCastingSpotlightCount = static_cast<uint32_t>(m_SceneSubmition.SpotLightShadows.size());
+
+		SpotLightShadowsSpecifications spotLightShadowSpecifications{};
+		lightData.SpotLightsShadowAtlasTexelSize = 1.0f / static_cast<float>(1 << spotLightShadowSpecifications.SizeLog2);
 
 		const ViewportGlobalResources& viewportGlobalResources = renderWorld.GetEntityComponent<const ViewportGlobalResources>(viewportEntity);
 		const ViewportFrameResources& viewportFrameResources = viewportGlobalResources.GetCurrentFrameResources();

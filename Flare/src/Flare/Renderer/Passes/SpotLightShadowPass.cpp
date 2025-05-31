@@ -91,7 +91,7 @@ namespace Flare
 			size_t lightCount = sceneSubmition.SpotLightShadows.size();
 
 			glm::uvec2 shadowMapSize = context.GetRenderGraphResourceManager().GetTexture(m_ShadowMap)->GetSize();
-			FLARE_CORE_ASSERT(shadowMapSize == glm::uvec2(1 << m_Specifications.SizePowerOfTwo));
+			FLARE_CORE_ASSERT(shadowMapSize == glm::uvec2(1 << m_Specifications.SizeLog2));
 
 			SpotLightShadowsEntry* shadowEntries = new SpotLightShadowsEntry[lightCount];
 
@@ -100,7 +100,7 @@ namespace Flare
 				const SpotLightShadowsSubmition& shadowsSubmition = sceneSubmition.SpotLightShadows[lightIndex];
 				const SpotLightSubmition& spotLight = sceneSubmition.SpotLights[shadowsSubmition.LightIndex];
 
-				if (shadowsSubmition.SizePowerOfTwo > m_Specifications.SizePowerOfTwo)
+				if (shadowsSubmition.SizeLog2 > m_Specifications.SizeLog2)
 				{
 					FLARE_CORE_ERROR("Spotlight at index {} is larger that the shadow atlas", lightIndex);
 				}
@@ -152,7 +152,7 @@ namespace Flare
 				view.Near = shadowsSubmition.Near;
 				view.Position = spotLight.Position;
 				view.ViewDirection = spotLight.Direction;
-				view.ViewportSize = glm::ivec2(1 << shadowsSubmition.SizePowerOfTwo);
+				view.ViewportSize = glm::ivec2(1 << shadowsSubmition.SizeLog2);
 				view.SetViewAndProjection(projection, viewMatrix);
 
 				auto& entry = shadowEntries[lightIndex];
@@ -173,7 +173,7 @@ namespace Flare
 				m_Tiles[i] = SpotLightTile
 				{
 					.Position = glm::ivec2(0, 0),
-					.SizePowerOfTwo = sceneSubmition.SpotLightShadows[i].SizePowerOfTwo,
+					.SizeLog2 = sceneSubmition.SpotLightShadows[i].SizeLog2,
 					.CulledBatches = SpotLightCulledGeometryRange {}
 				};
 			}
@@ -188,8 +188,8 @@ namespace Flare
 					lightIndices + sceneSubmition.SpotLightShadows.size(),
 					[&sceneSubmition](uint32_t lightAIndex, uint32_t lightBIndex) -> bool
 					{
-						uint32_t aSize = sceneSubmition.SpotLightShadows[lightAIndex].SizePowerOfTwo;
-						uint32_t bSize = sceneSubmition.SpotLightShadows[lightBIndex].SizePowerOfTwo;
+						uint32_t aSize = sceneSubmition.SpotLightShadows[lightAIndex].SizeLog2;
+						uint32_t bSize = sceneSubmition.SpotLightShadows[lightBIndex].SizeLog2;
 						return aSize > bSize;
 					});
 
@@ -201,7 +201,8 @@ namespace Flare
 				uint32_t lightIndex = lightIndices[i];
 
 				// Calculate tile position
-				uint32_t tileSize = 1 << sceneSubmition.SpotLightShadows[lightIndex].SizePowerOfTwo;
+				uint32_t tileSizeLog2 = sceneSubmition.SpotLightShadows[lightIndex].SizeLog2;
+				uint32_t tileSize = 1 << tileSizeLog2;
 				if (tileOffset.x + tileSize > shadowMapSize.x)
 				{
 					tileOffset.x = 0;
@@ -215,9 +216,20 @@ namespace Flare
 				tileOffset.x += tileSize;
 				rowHeight = glm::max(rowHeight, tileSize);
 
+				// UV Transform format:
+				// 4 bits - log2 size
+				// 14 bits - x position
+				// 14 bits - y position
+				constexpr uint32_t TILE_SIZE_MASK = 0b1111;
+				constexpr uint32_t TILE_POSITION_MASK = 0x3fff;
+				constexpr uint32_t TILE_POSITION_OFFSET = 14;
+
+				FLARE_CORE_ASSERT((tileSizeLog2 >> TILE_SIZE_MASK) == 0);
+				FLARE_CORE_ASSERT((tilePosition.x >> TILE_POSITION_OFFSET) == 0);
+				FLARE_CORE_ASSERT((tilePosition.y >> TILE_POSITION_OFFSET) == 0);
+
 				auto& entry = shadowEntries[lightIndex];
-				entry.UVScale = glm::vec2(static_cast<float>(tileSize)) / static_cast<glm::vec2>(shadowMapSize);
-				entry.UVTranslation = static_cast<glm::vec2>(tilePosition) / static_cast<glm::vec2>(shadowMapSize);
+				entry.UVTransform = (tileSizeLog2) << 28 | (tilePosition.x << 14) | tilePosition.y;
 
 				m_Tiles[lightIndex].Position = tilePosition;
 			}
@@ -263,7 +275,7 @@ namespace Flare
 
 			Math::Rect viewport{};
 			viewport.Min = m_Tiles[lightIndex].Position;
-			viewport.Max = viewport.Min + glm::vec2(static_cast<float>(1 << m_Tiles[lightIndex].SizePowerOfTwo));
+			viewport.Max = viewport.Min + glm::vec2(static_cast<float>(1 << m_Tiles[lightIndex].SizeLog2));
 
 			commandBuffer->SetViewportAndScissors(viewport);
 
