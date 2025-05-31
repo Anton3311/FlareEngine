@@ -159,7 +159,7 @@ namespace Flare
 				entry.Projection = view.ViewProjection;
 				entry.Radius = radius;
 				entry.Bias = shadowsSubmition.Bias;
-				entry.NormalBias = 0.0f;
+				entry.NormalBias = shadowsSubmition.NormalBias;
 
 				size_t cameraResourceIndex = static_cast<uint32_t>(lightIndex) * frameCount + frameIndex;
 				m_PerLightCameras[cameraResourceIndex].CameraBuffer->SetData(MemorySpan(&view, 1), 0);

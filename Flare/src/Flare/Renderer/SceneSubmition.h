@@ -88,6 +88,7 @@ namespace Flare
 		float Near;
 		float Far;
 		float Bias;
+		float NormalBias;
 		uint32_t SizeLog2;
 	};
 
