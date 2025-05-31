@@ -11,9 +11,8 @@ struct SpotLightShadowsEntry
 	vec4 UVTransform; // xy - scale, zw - translation
 	mat4 Projection;
 	float Radius;
-	float Near;
-	float Far;
 	float Bias;
+	float NormalBias;
 };
 
 layout(std430, set = 1, binding = 14) readonly buffer SpotLightShadowData
@@ -26,9 +25,13 @@ float ComputeShadowBias(float projectedDepth, float near, float far, float bias)
 	return -bias * near * far / (projectedDepth * (projectedDepth - bias) * (near - far));
 }
 
-float CalculateSpotLightShadow(vec3 spotLightPosition, vec3 surfaceNormal, vec3 position, uint lightIndex)
+float CalculateSpotLightShadow(vec3 spotLightPosition,
+	vec3 surfaceNormal,
+	vec3 position,
+	uint lightIndex,
+	vec3 directionFromLight)
 {
-	SpotLightShadowsEntry shadowEntry = u_SpotLightShadowData.Entries[lightIndex];
+	SpotLightShadowsEntry shadowEntry = u_SpotLightShadowData.Entries[lightIndex - u_FirstShadowCastingSpotlight];
 	vec4 projected = shadowEntry.Projection * vec4(position, 1.0f);
 	projected /= projected.w;
 
@@ -36,11 +39,20 @@ float CalculateSpotLightShadow(vec3 spotLightPosition, vec3 surfaceNormal, vec3 
 	if (any(lessThan(uv, vec2(0.0f))) || any(greaterThan(uv, vec2(1.0f))) || projected.z >= 1.0f)
 		return 1.0f;
 
-	float bias = ComputeShadowBias(projected.z, shadowEntry.Near, shadowEntry.Far, shadowEntry.Bias);
-	float projectedDepth = projected.z - bias;
+	float NoL = dot(-directionFromLight, surfaceNormal);
+	float bias = max(shadowEntry.NormalBias * (1.0f - NoL), 0.0f) + shadowEntry.Bias;
+
+	float potentialOccluderDepth = FindPotentialOccluder(uv,
+		shadowEntry.Projection,
+		position,
+		surfaceNormal,
+		bias,
+		directionFromLight,
+		spotLightPosition,
+		false);
 
 	uv.xy = shadowEntry.UVTransform.xy * uv.xy + shadowEntry.UVTransform.zw;
-	return texture(u_SpotLightShadowMap, vec3(uv, projectedDepth));
+	return texture(u_SpotLightShadowMap, vec3(uv, potentialOccluderDepth));
 }
 
 vec3 ComputeShadowCastingSpotLightsContribution(vec3 V, in SurfaceProperties surface)
@@ -52,7 +64,11 @@ vec3 ComputeShadowCastingSpotLightsContribution(vec3 V, in SurfaceProperties sur
 	{
 		SpotLightData spotLight = u_SpotLights[i];
 
-		float shadow = CalculateSpotLightShadow(spotLight.Position, surface.Normal, surface.Position, i);
+		vec3 directionFromLight = surface.Position - spotLight.Position;
+		float shadow = CalculateSpotLightShadow(spotLight.Position,
+			surface.Normal,
+			surface.Position,
+			i, normalize(directionFromLight));
 
 		finalContribution += CalculateSingleSpotLightContricbution(V, surface, i) * shadow;
 	}
