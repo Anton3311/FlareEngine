@@ -19,7 +19,9 @@ namespace Flare
 		static constexpr size_t TopPlaneIndex = 4;
 		static constexpr size_t BottomPlaneIndex = 5;
 
-		void SetFromViewAndProjection(const glm::mat4& view, const glm::mat4& inverseViewProjection, glm::vec3 viewDirection);
+		FrustumPlanes() = default;
+		FrustumPlanes(const glm::mat4& inverseViewProjection);
+		FrustumPlanes(const glm::mat4& inverseViewProjection, glm::vec3 viewDirection);
 
 		inline bool ContainsPoint(const glm::vec3& point) const
 		{

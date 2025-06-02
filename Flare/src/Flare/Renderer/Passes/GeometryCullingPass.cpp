@@ -72,8 +72,7 @@ namespace Flare
 
 		const RenderView& cameraView = context.GetRenderView();
 
-		FrustumPlanes frustumPlanes;
-		frustumPlanes.SetFromViewAndProjection(cameraView.View, cameraView.InverseViewProjection, cameraView.ViewDirection);
+		FrustumPlanes frustumPlanes(cameraView.InverseViewProjection, cameraView.ViewDirection);
 
 		size_t totalTransformCount = 0;
 		for (const auto& [key, batch] : geometryBatcher.GetBatches())

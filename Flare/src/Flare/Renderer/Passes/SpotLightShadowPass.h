@@ -12,7 +12,7 @@ namespace Flare
 
 	struct SpotLightShadowsEntry
 	{
-		glm::mat4 Projection;
+		glm::mat4 ViewProjection;
 		float Bias;
 		float NormalBias;
 		uint32_t UVTransform;
@@ -55,8 +55,10 @@ namespace Flare
 		void OnPrepare(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer) override;
 		void OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer) override;
 	private:
-		size_t CullGeometryForLight(const RenderGraphContext& context, size_t lightIndex);
-		void CullGeometry(const RenderGraphContext& context);
+		const SpotLightShadowsEntry* PrepareShadowEntries(const RenderGraphContext& context);
+
+		size_t CullGeometryForLight(const RenderGraphContext& context, size_t lightIndex, const SpotLightShadowsEntry& shadows);
+		void CullGeometry(const RenderGraphContext& context, const SpotLightShadowsEntry* shadowEntries);
 	private:
 		struct PerLightCameraResources
 		{

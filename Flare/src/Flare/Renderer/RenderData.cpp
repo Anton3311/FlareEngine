@@ -2,10 +2,26 @@
 
 #include "RenderData.h"
 
+#include "FlareCore/Profiler/Profiler.h"
+
 namespace Flare
 {
-	void FrustumPlanes::SetFromViewAndProjection(const glm::mat4& view, const glm::mat4& inverseViewProjection, glm::vec3 viewDirection)
+	FrustumPlanes::FrustumPlanes(const glm::mat4& inverseViewProjection)
 	{
+		FLARE_PROFILE_FUNCTION();
+		glm::vec4 pointOnNearPlane = inverseViewProjection * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+		pointOnNearPlane /= pointOnNearPlane.w;
+		glm::vec4 pointOnFarPlane = inverseViewProjection * glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
+		pointOnFarPlane /= pointOnFarPlane.w;
+
+		glm::vec3 viewDirection = glm::normalize(pointOnFarPlane - pointOnNearPlane);
+
+		FrustumPlanes(inverseViewProjection, viewDirection);
+	}
+
+	FrustumPlanes::FrustumPlanes(const glm::mat4& inverseViewProjection, glm::vec3 viewDirection)
+	{
+		FLARE_PROFILE_FUNCTION();
 		std::array<glm::vec4, 8> frustumCorners =
 		{
 			// Near
