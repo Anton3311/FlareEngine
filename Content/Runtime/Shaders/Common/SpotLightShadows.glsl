@@ -9,7 +9,6 @@ layout(set = 1, binding = 13) uniform sampler2DShadow u_SpotLightShadowMap;
 struct SpotLightShadowsEntry
 {
 	mat4 Projection;
-	float Radius;
 	float Bias;
 	float NormalBias;
 	uint UVTransform; // [4 bits - log2 size] [14 bits - x offset] [14 bits - y offset]
@@ -46,7 +45,11 @@ float CalculateSpotLightShadow(vec3 spotLightPosition,
 	float NoL = dot(-directionFromLight, surfaceNormal);
 	float bias = max(shadowEntry.NormalBias * (1.0f - NoL), 0.0f) + shadowEntry.Bias;
 
+	float size = float(1 << (shadowEntry.UVTransform >> TILE_SIZE_OFFSET));
+	vec2 texelCenter = floor(uv * size + vec2(0.5)) / size;
+
 	float potentialOccluderDepth = FindPotentialOccluder(uv,
+		texelCenter,
 		shadowEntry.Projection,
 		position,
 		surfaceNormal,
@@ -55,8 +58,9 @@ float CalculateSpotLightShadow(vec3 spotLightPosition,
 		spotLightPosition,
 		false);
 
-	float size = float(1 << (shadowEntry.UVTransform >> TILE_SIZE_OFFSET));
-	uvec2 offset = uvec2((shadowEntry.UVTransform >> TILE_POSITION_OFFSET), shadowEntry.UVTransform) & TILE_POSITION_MASK;
+	uvec2 offset = uvec2(
+		shadowEntry.UVTransform >> TILE_POSITION_OFFSET,
+		shadowEntry.UVTransform) & TILE_POSITION_MASK;
 
 	uv.xy = (size * uv.xy + vec2(offset)) * u_SpotLightsShadowAtlasTexelSize;
 	return texture(u_SpotLightShadowMap, vec3(uv, potentialOccluderDepth));

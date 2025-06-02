@@ -13,7 +13,6 @@ namespace Flare
 	struct SpotLightShadowsEntry
 	{
 		glm::mat4 Projection;
-		float Radius;
 		float Bias;
 		float NormalBias;
 		uint32_t UVTransform;

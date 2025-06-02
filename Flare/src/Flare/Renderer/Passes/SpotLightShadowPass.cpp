@@ -157,7 +157,6 @@ namespace Flare
 
 				auto& entry = shadowEntries[lightIndex];
 				entry.Projection = view.ViewProjection;
-				entry.Radius = radius;
 				entry.Bias = shadowsSubmition.Bias;
 				entry.NormalBias = shadowsSubmition.NormalBias;
 

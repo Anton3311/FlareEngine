@@ -100,6 +100,7 @@ void UVToRay(vec2 uv, mat4 inverseProjection, out vec3 origin, out vec3 directio
 }
 
 float FindPotentialOccluder(vec2 uv,
+	vec2 texelCenter,
 	mat4 projection,
 	vec3 surfacePosition,
 	vec3 surfaceNormal,
@@ -108,9 +109,6 @@ float FindPotentialOccluder(vec2 uv,
 	vec3 lightOrigin,
 	bool isOrtho)
 {
-	// 1. Create a ray going from the light source through the center of the current shadow map texel
-	vec2 texelCenter = GetTexelCenter(uv);
-	
 	vec3 rayOrigin;
 	vec3 rayDirection;
 	mat4 inverseProjection = inverse(projection);
@@ -127,17 +125,17 @@ float FindPotentialOccluder(vec2 uv,
 		rayDirection = normalize(pointAlongRay.xyz / pointAlongRay.w - rayOrigin);
 	}
 
-	// 2. Create plane tagent to the surface (in view space)
+	// 1. Create plane tagent to the surface (in view space)
 	vec4 planeParams = vec4(surfaceNormal, -dot(surfaceNormal, surfacePosition));
 
-	// 3. Find ray & plane intersection
+	// 2. Find ray & plane intersection
 	float intersectionDistance = RayPlaneIntersection(planeParams, rayOrigin, rayDirection);
 	vec3 intersectionPoint = rayOrigin + rayDirection * intersectionDistance;
 
-	// 4. Move the depth closer to the light source by [bias] units in world space
+	// 3. Move the depth closer to the light source by [bias] units in world space
 	intersectionPoint -= directionFromLight * bias;
 
-	// 5. Project intersection point
+	// 4. Project intersection point
 	vec4 projectedIntersection = projection * vec4(intersectionPoint, 1.0f);
 	projectedIntersection /= projectedIntersection.w;
 
@@ -146,11 +144,19 @@ float FindPotentialOccluder(vec2 uv,
 
 vec3 CalculateBiasParams(vec2 uv, mat4 projection, vec3 surfacePosition, vec3 surfaceNormal, float bias)
 {
-	float depth = FindPotentialOccluder(uv, projection, surfacePosition, surfaceNormal,
+	vec2 texelCenter = GetTexelCenter(uv);
+	float depth = FindPotentialOccluder(uv, texelCenter,
+		projection, surfacePosition, surfaceNormal,
 		bias, u_LightDirection, vec3(0.0f), true);
-	float depthX = FindPotentialOccluder(uv + vec2(1.0f / u_ShadowResolution, 0.0f), projection, surfacePosition, surfaceNormal,
+
+	float depthX = FindPotentialOccluder(uv + vec2(1.0f / u_ShadowResolution, 0.0f),
+		texelCenter, projection,
+		surfacePosition, surfaceNormal,
 		bias, u_LightDirection, vec3(0.0f), true);
-	float depthY = FindPotentialOccluder(uv + vec2(0.0f, 1.0f / u_ShadowResolution), projection, surfacePosition, surfaceNormal,
+
+	float depthY = FindPotentialOccluder(uv + vec2(0.0f, 1.0f / u_ShadowResolution),
+		texelCenter, projection,
+		surfacePosition, surfaceNormal,
 		bias, u_LightDirection, vec3(0.0f), true);
 
 	return vec3(depthX - depth, depthY - depth, depth);
