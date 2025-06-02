@@ -131,9 +131,10 @@ namespace Flare
 
 					glm::vec3 samplePoint = spotLight.Position + forwardOffset;
 					glm::vec4 projectedSamplePoint = viewProjection * glm::vec4(samplePoint, 1.0f);
+					float shadowMapRegionSize = static_cast<float>(1 << shadowsSubmition.SizeLog2);
 					projectedSamplePoint /= projectedSamplePoint.w;
-					projectedSamplePoint.x = glm::round(projectedSamplePoint.x);
-					projectedSamplePoint.y = glm::round(projectedSamplePoint.y);
+					projectedSamplePoint.x = glm::round(projectedSamplePoint.x * shadowMapRegionSize) / shadowMapRegionSize;
+					projectedSamplePoint.y = glm::round(projectedSamplePoint.y * shadowMapRegionSize) / shadowMapRegionSize;
 
 					glm::vec4 snappedSamplePoint = inverseViewProjection * projectedSamplePoint;
 					snappedSamplePoint /= snappedSamplePoint.w;
