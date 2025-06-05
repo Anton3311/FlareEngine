@@ -12,6 +12,7 @@ struct SpotLightShadowsEntry
 	float Bias;
 	float NormalBias;
 	uint UVTransform; // [4 bits - log2 size] [14 bits - x offset] [14 bits - y offset]
+	uint Padding;
 };
 
 const uint TILE_SIZE_OFFSET = 28;
@@ -29,7 +30,7 @@ float CalculateSpotLightShadow(vec3 spotLightPosition,
 	uint lightIndex,
 	vec3 directionFromLight)
 {
-	SpotLightShadowsEntry shadowEntry = u_SpotLightShadowData.Entries[lightIndex - u_FirstShadowCastingSpotlight];
+	SpotLightShadowsEntry shadowEntry = u_SpotLightShadowData.Entries[lightIndex];
 	vec4 projected = shadowEntry.Projection * vec4(position, 1.0f);
 	projected /= projected.w;
 
@@ -66,19 +67,21 @@ float CalculateSpotLightShadow(vec3 spotLightPosition,
 vec3 ComputeShadowCastingSpotLightsContribution(vec3 V, in SurfaceProperties surface)
 {
 	vec3 finalContribution = vec3(0.0f);
-	uint end = u_FirstShadowCastingSpotlight + u_ShadowCastingSpotlightCount;
 
-	for (uint i = u_FirstShadowCastingSpotlight; i < end; i++)
+	for (uint i = 0; i < u_ShadowCastingSpotlightCount; i++)
 	{
-		SpotLightData spotLight = u_SpotLights[i];
+		uint spotlightIndex = i + u_FirstShadowCastingSpotlight;
+		SpotLightData spotLight = u_SpotLights[spotlightIndex];
 
 		vec3 directionFromLight = surface.Position - spotLight.Position;
+
+		vec3 light = CalculateSingleSpotLightContricbution(V, surface, spotlightIndex);
 		float shadow = CalculateSpotLightShadow(spotLight.Position,
 			surface.Normal,
 			surface.Position,
 			i, normalize(directionFromLight));
 
-		finalContribution += CalculateSingleSpotLightContricbution(V, surface, i) * shadow;
+		finalContribution += light * shadow;
 	}
 
 	return finalContribution;
