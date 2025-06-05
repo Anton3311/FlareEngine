@@ -35,7 +35,7 @@ namespace Flare
 			size_t IndexOffset = 0;
 		};
 
-		SharedMesh(size_t vertexCount, IndexFormat indexFormat, size_t indexCount);
+		SharedMesh(size_t vertexCount, size_t depthOnlyVertexCount, IndexFormat indexFormat, size_t indexCount);
 
 		MeshOffset AllocateMesh(size_t vertexCount, size_t indexCount);
 
@@ -45,6 +45,8 @@ namespace Flare
 		Ref<GPUBuffer> DepthOnlyIndexBuffer = nullptr;
 
 		Ref<GPUBuffer> Vertices = nullptr;
+		Ref<GPUBuffer> DepthOnlyVertices = nullptr;
+
 		Ref<GPUBuffer> Normals = nullptr;
 		Ref<GPUBuffer> Tangents = nullptr;
 		Ref<GPUBuffer> UVs = nullptr;
@@ -99,6 +101,7 @@ namespace Flare
 		inline Ref<GPUBuffer> GetIndexBuffer() const { return m_IndexBuffer; }
 		inline Ref<GPUBuffer> GetDepthOnlyIndexBuffer() const { return m_DepthOnlyIndexBuffer ? m_DepthOnlyIndexBuffer : m_IndexBuffer; }
 		inline Ref<GPUBuffer> GetVertices() const { return m_Vertices; }
+		inline Ref<GPUBuffer> GetDepthOnlyVertices() const { return m_DepthOnlyVertices ? m_DepthOnlyVertices : m_Vertices; }
 		inline Ref<GPUBuffer> GetNormals() const { return m_Normals; }
 		inline Ref<GPUBuffer> GetTangents() const { return m_Tangents; }
 		inline Ref<GPUBuffer> GetUVs() const { return m_UVs; }
@@ -158,7 +161,9 @@ namespace Flare
 		Ref<GPUBuffer> m_Normals = nullptr;
 		Ref<GPUBuffer> m_Tangents = nullptr;
 		Ref<GPUBuffer> m_UVs = nullptr;
+
 		Ref<GPUBuffer> m_DepthOnlyIndexBuffer = nullptr;
+		Ref<GPUBuffer> m_DepthOnlyVertices = nullptr;
 
 		std::vector<SubMesh> m_DepthOnlySubMeshes;
 		std::vector<SubMesh> m_SubMeshes;

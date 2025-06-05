@@ -320,6 +320,7 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 		BindMesh(mesh, MeshType::DepthOnly);
 
+#if 0
 		if (mesh->GetSharedMesh() == nullptr)
 		{
 			// A mesh doesn't have a SharedMesh,
@@ -337,6 +338,7 @@ namespace Flare
 		}
 		else
 		{
+#endif
 			for (const SubMesh& subMesh : mesh->GetDepthOnlySubMeshes())
 			{
 				vkCmdDrawIndexed(m_CommandBuffer,
@@ -346,7 +348,9 @@ namespace Flare
 					subMesh.BaseVertex,
 					baseInstance);
 			}
+#if 0
 		}
+#endif
 	}
 
 	void VulkanCommandBuffer::DrawDepthOnlyMeshIndexed(const Ref<const Mesh>& mesh,
@@ -356,7 +360,7 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		BindMesh(mesh);
+		BindMesh(mesh, MeshType::DepthOnly);
 
 		const auto& subMesh = mesh->GetDepthOnlySubMeshes()[subMeshIndex];
 		vkCmdDrawIndexed(m_CommandBuffer,
@@ -977,9 +981,20 @@ namespace Flare
 			return;
 
 		{
+			VkBuffer vertexBuffer = VK_NULL_HANDLE;
+			switch (meshType)
+			{
+			case MeshType::Default:
+				vertexBuffer = mesh->GetVertices().DerefAs<const VulkanBuffer>().GetBufferHandle();
+				break;
+			case MeshType::DepthOnly:
+				vertexBuffer = mesh->GetDepthOnlyVertices().DerefAs<const VulkanBuffer>().GetBufferHandle();
+				break;
+			}
+
 			VkBuffer vertexBuffers[] =
 			{
-				mesh->GetVertices().DerefAs<const VulkanBuffer>().GetBufferHandle(),
+				vertexBuffer,
 				mesh->GetNormals().DerefAs<const VulkanBuffer>().GetBufferHandle(),
 				mesh->GetTangents().DerefAs<const VulkanBuffer>().GetBufferHandle(),
 				mesh->GetUVs().DerefAs<const VulkanBuffer>().GetBufferHandle(),

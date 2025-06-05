@@ -14,7 +14,7 @@
 
 namespace Flare
 {
-	SharedMesh::SharedMesh(size_t vertexCount, IndexFormat indexFormat, size_t indexCount)
+	SharedMesh::SharedMesh(size_t vertexCount, size_t depthOnlyVertexCount, IndexFormat indexFormat, size_t indexCount)
 		: m_VertexCount(vertexCount), m_IndexCount(indexCount), m_IndexFormat(indexFormat)
 	{
 		FLARE_PROFILE_FUNCTION();
@@ -24,6 +24,8 @@ namespace Flare
 		UVs = GPUBuffer::CreateVertexBuffer(sizeof(glm::vec2) * m_VertexCount, GPUBufferMemoryType::Static);
 
 		IndexBuffer = GPUBuffer::CreateIndexBuffer(indexCount, indexFormat, GPUBufferMemoryType::Static);
+		DepthOnlyIndexBuffer = GPUBuffer::CreateIndexBuffer(indexCount, indexFormat, GPUBufferMemoryType::Static);
+		DepthOnlyVertices = GPUBuffer::CreateVertexBuffer(sizeof(glm::vec3) * depthOnlyVertexCount, GPUBufferMemoryType::Static);
 	}
 
 	SharedMesh::MeshOffset SharedMesh::AllocateMesh(size_t vertexCount, size_t indexCount)
@@ -173,6 +175,7 @@ namespace Flare
 		m_IndexBuffer = sharedMesh->IndexBuffer;
 		m_DepthOnlyIndexBuffer = sharedMesh->DepthOnlyIndexBuffer;
 		m_Vertices = sharedMesh->Vertices;
+		m_DepthOnlyVertices = sharedMesh->DepthOnlyVertices;
 		m_Normals = sharedMesh->Normals;
 		m_Tangents = sharedMesh->Tangents;
 		m_UVs = sharedMesh->UVs;
@@ -278,6 +281,13 @@ namespace Flare
 			return;
 
 		m_Vertices->SetDebugName(fmt::format("{}.Vertices", m_DebugName));
+		
+		if (m_DepthOnlyVertices)
+			m_DepthOnlyVertices->SetDebugName(fmt::format("{}.DepthOnlyVertices", m_DebugName));
+
+		if (m_DepthOnlyIndexBuffer)
+			m_DepthOnlyIndexBuffer->SetDebugName(fmt::format("{}.DepthOnlyIndices", m_DebugName));
+
 		m_Normals->SetDebugName(fmt::format("{}.Normals", m_DebugName));
 		m_IndexBuffer->SetDebugName(fmt::format("{}.Indices", m_DebugName));
 		m_Tangents->SetDebugName(fmt::format("{}.Tangents", m_DebugName));
