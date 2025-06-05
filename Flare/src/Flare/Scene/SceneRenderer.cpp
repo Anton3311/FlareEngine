@@ -170,6 +170,7 @@ namespace Flare
 					submition.Far = shadows[entityIndex].Far;
 					submition.Bias = shadows[entityIndex].Bias;
 					submition.NormalBias = shadows[entityIndex].NormalBias;
+					submition.FilterRadius = shadows[entityIndex].FilterRadius;
 					submition.SizeLog2 = shadows[entityIndex].SizeLog2;
 				}
 			});

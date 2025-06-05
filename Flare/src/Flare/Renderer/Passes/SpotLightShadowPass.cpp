@@ -222,6 +222,7 @@ namespace Flare
 			auto& entry = shadowEntries[lightIndex];
 			entry.ViewProjection = view.ViewProjection;
 			entry.Bias = shadowsSubmition.Bias;
+			entry.FilterRadius = shadowsSubmition.FilterRadius;
 			entry.NormalBias = shadowsSubmition.NormalBias;
 
 			size_t cameraResourceIndex = static_cast<uint32_t>(lightIndex) * frameCount + frameIndex;

@@ -16,7 +16,7 @@ namespace Flare
 		float Bias;
 		float NormalBias;
 		uint32_t UVTransform;
-		uint32_t Padding;
+		float FilterRadius;
 	};
 
 	struct SpotLightShadowsSpecifications

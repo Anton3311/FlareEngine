@@ -333,6 +333,7 @@ namespace Flare
         float NormalBias = 0.0f;
 		float Near = 0.01f;
 		float Far = 100.0f;
+        float FilterRadius = 2.0f;
 		uint32_t SizeLog2 = 8;
     };
 
@@ -345,6 +346,7 @@ namespace Flare
             stream.Serialize("NormalBias", SerializationValue(shadows.NormalBias));
             stream.Serialize("Near", SerializationValue(shadows.Near));
             stream.Serialize("Far", SerializationValue(shadows.Far));
+            stream.Serialize("FilterRadius", SerializationValue(shadows.FilterRadius));
             stream.Serialize("SizeLog2", SerializationValue(shadows.SizeLog2));
         }
     };
