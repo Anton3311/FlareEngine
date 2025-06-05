@@ -106,7 +106,7 @@ namespace Flare
                 EditorGUI::PropertyIndex(i);
 
             ImGui::PushID(&value.Values[i]);
-            ImGui::DragFloat("", &value.Values[i]);
+            ImGui::DragFloat("", &value.Values[i], 1.0f, 0.0f, 0.0f, EditorGUI::GetFloatFormat());
             ImGui::PopID();
         }
     }
@@ -143,10 +143,10 @@ namespace Flare
             switch (componentsCount)
             {
             case 1:
-                ImGui::DragFloat("", &value.Values[i]);
+                ImGui::DragFloat("", &value.Values[i], 1.0f, 0.0f, 0.0f, EditorGUI::GetFloatFormat());
                 break;
             case 2:
-                ImGui::DragFloat2("", &value.Values[i]);
+                ImGui::DragFloat2("", &value.Values[i], 1.0f, 0.0f, 0.0f, EditorGUI::GetFloatFormat());
                 break;
             case 3:
                 if (HAS_BIT(value.Flags, SerializationValueFlags::Color))

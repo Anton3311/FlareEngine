@@ -70,5 +70,7 @@ namespace Flare
 
 		static void PropertyName(const char* name, float minHeight = 0.0f);
 		static void PropertyIndex(size_t index);
+
+		static const char* GetFloatFormat();
 	};
 }

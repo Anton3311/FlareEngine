@@ -21,6 +21,7 @@
 namespace Flare
 {
     static EditorIcons s_EditorIcons(48);
+    static const char* s_FloatFormat = "%.6f";
 
     void EditorGUI::Initialize()
     {
@@ -154,7 +155,7 @@ namespace Flare
         PropertyName(name);
 
         ImGui::PushID(name);
-        bool result = ImGui::DragFloat("", &value, 0.1f);
+        bool result = ImGui::DragFloat("", &value, 0.1f, 0.0f, 0.0f, s_FloatFormat);
         ImGui::PopID();
 
         ImGui::PopItemWidth();
@@ -166,7 +167,7 @@ namespace Flare
         PropertyName(name);
 
         ImGui::PushID(name);
-        bool result = ImGui::DragFloat2("", glm::value_ptr(value), 0.1f);
+        bool result = ImGui::DragFloat2("", glm::value_ptr(value), 0.1f, 0.0f, 0.0f, s_FloatFormat);
         ImGui::PopID();
         return result;
     }
@@ -176,7 +177,7 @@ namespace Flare
         PropertyName(name);
 
         ImGui::PushID(name);
-        bool result = ImGui::DragFloat3("", glm::value_ptr(value), 0.1f);
+        bool result = ImGui::DragFloat3("", glm::value_ptr(value), 0.1f, 0.0f, 0.0f, s_FloatFormat);
         ImGui::PopID();
         return result;
     }
@@ -186,7 +187,7 @@ namespace Flare
         PropertyName(name);
 
         ImGui::PushID(name);
-        bool result = ImGui::DragFloat4("", glm::value_ptr(value), 0.1f);
+        bool result = ImGui::DragFloat4("", glm::value_ptr(value), 0.1f, 0.0f, 0.0f, s_FloatFormat);
         ImGui::PopID();
         return result;
     }
@@ -386,6 +387,11 @@ namespace Flare
 
         ImGui::TableSetColumnIndex(1);
         ImGui::PushItemWidth(-1);
+    }
+
+    const char* EditorGUI::GetFloatFormat()
+    {
+        return s_FloatFormat;
     }
 
     void EditorGUI::UUIDField(const char* name, UUID uuid)
