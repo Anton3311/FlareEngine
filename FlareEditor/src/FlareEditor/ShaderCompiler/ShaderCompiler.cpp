@@ -9,7 +9,10 @@
 #include "Flare/Renderer/RendererAPI.h"
 
 #include "Flare/AssetManager/AssetManager.h"
+#include "FlareEditor/AssetManager/EditorAssetManager.h"
 #include "FlareEditor/AssetManager/EditorShaderCache.h"
+
+#include "FlareEditor/ShaderCompiler/ShaderDependencyManager.h"
 #include "FlareEditor/ShaderCompiler/ShaderSourceParser.h"
 
 #include <shaderc/shaderc.hpp>
@@ -31,6 +34,9 @@ namespace Flare
 	class ShaderIncluder : public shaderc::CompileOptions::IncluderInterface
 	{
 	public:
+		ShaderIncluder(std::vector<AssetHandle>& includeDependencies)
+			: m_IncludeDependencies(includeDependencies) {}
+
 		virtual shaderc_include_result* GetInclude(const char* requested_source,
 			shaderc_include_type type,
 			const char* requesting_source,
@@ -47,6 +53,16 @@ namespace Flare
 			includeData->source_name = nullptr;
 			includeData->source_name_length = 0;
 			includeData->user_data = nullptr;
+
+			Ref<EditorAssetManager> assetManager = EditorAssetManager::GetInstance();
+			if (std::optional<AssetHandle> includedFileHandle = assetManager->FindAssetByPath(includedFilePath))
+			{
+				m_IncludeDependencies.push_back(*includedFileHandle);
+			}
+			else
+			{
+				FLARE_CORE_INFO("Asset not found: {}", includedFilePath.string());
+			}
 
 			std::ifstream inputStream(includedFilePath);
 
@@ -100,16 +116,22 @@ namespace Flare
 
 			delete data;
 		}
+	private:
+		std::vector<AssetHandle>& m_IncludeDependencies;
 	};
 
-	static std::optional<std::vector<uint32_t>> CompileVulkanGlslToSpirv(const std::string& path, const std::string& source, shaderc_shader_kind programKind)
+	static std::optional<std::vector<uint32_t>> CompileVulkanGlslToSpirv(const std::string& path,
+		const std::string& source,
+		shaderc_shader_kind programKind,
+		std::vector<AssetHandle>& includeDependencies)
 	{
 		FLARE_PROFILE_FUNCTION();
+
 		shaderc::Compiler compiler;
 		shaderc::CompileOptions options;
 		options.SetSourceLanguage(shaderc_source_language_glsl);
 		options.SetGenerateDebugInfo();
-		options.SetIncluder(CreateScope<ShaderIncluder>());
+		options.SetIncluder(CreateScope<ShaderIncluder>(includeDependencies));
 		options.SetTargetEnvironment(shaderc_target_env_vulkan, 0);
 		options.SetOptimizationLevel(shaderc_optimization_level_performance);
 
@@ -751,6 +773,11 @@ namespace Flare
 			metadata->Stages.push_back(program.Stage);
 
 		// Check for outdated shader cache
+		if (!ShaderDependencyManager::GetInstance().IsShaderUpToDate(shaderHandle))
+		{
+			forceRecompile = true;
+		}
+
 		for (const PreprocessedShaderProgram& program : programs)
 		{
 			std::filesystem::path cacheFilePath = EditorShaderCache::GetInstance().GetCacheFilePath(shaderHandle, program.Stage);
@@ -762,7 +789,13 @@ namespace Flare
 			}
 		}
 
+		if (forceRecompile)
+		{
+			FLARE_CORE_INFO("Recompiling graphics shader {} {}", shaderHandle, pathString);
+		}
+
 		// Compile
+		std::vector<AssetHandle> includeDependencies;
 		for (const PreprocessedShaderProgram& program : programs)
 		{
 			shaderc_shader_kind shaderKind = ShaderStageTypeToShaderCStageType(program.Stage);
@@ -776,7 +809,7 @@ namespace Flare
 
 			if (!compiledVulkanShader)
 			{
-				compiledVulkanShader = CompileVulkanGlslToSpirv(pathString, program.Source, shaderKind);
+				compiledVulkanShader = CompileVulkanGlslToSpirv(pathString, program.Source, shaderKind, includeDependencies);
 				if (!compiledVulkanShader)
 					return false;
 
@@ -810,6 +843,11 @@ namespace Flare
 		ParseGraphicsShaderMetadata(parser, metadata, errors, propertyNameToIndex);
 
 		EditorShaderCache::GetInstance().SetShaderEntry(shaderHandle, metadata);
+
+		if (forceRecompile)
+		{
+			ShaderDependencyManager::GetInstance().SetShaderDependencies(shaderHandle, std::move(includeDependencies));
+		}
 
 		return true;
 	}
@@ -866,12 +904,23 @@ namespace Flare
 		}
 
 		// Check for outdated cache
+
+		if (!ShaderDependencyManager::GetInstance().IsShaderUpToDate(shaderHandle))
+		{
+			forceRecompile = true;
+		}
+
 		{
 			std::filesystem::path cachePath = EditorShaderCache::GetInstance().GetCacheFilePath(shaderHandle, program.Stage);
 			if (std::filesystem::exists(cachePath) && IsShaderCacheOutdated(shaderPath, cachePath))
 			{
 				forceRecompile = true;
 			}
+		}
+
+		if (forceRecompile)
+		{
+			FLARE_CORE_INFO("Recompiling compute shader {} {}", shaderHandle, shaderPathString);
 		}
 		
 		Ref<ComputeShaderMetadata> metadata = Ref<ComputeShaderMetadata>::New();
@@ -885,9 +934,10 @@ namespace Flare
 			compiledVulkanShader = ShaderCacheManager::GetInstance()->FindCache(shaderHandle, program.Stage);
 		}
 
+		std::vector<AssetHandle> includeDependencies;
 		if (!compiledVulkanShader)
 		{
-			compiledVulkanShader = CompileVulkanGlslToSpirv(shaderPathString, program.Source, shaderKind);
+			compiledVulkanShader = CompileVulkanGlslToSpirv(shaderPathString, program.Source, shaderKind, includeDependencies);
 			if (!compiledVulkanShader)
 				return false;
 
@@ -906,6 +956,12 @@ namespace Flare
 		}
 
 		EditorShaderCache::GetInstance().SetComputeShaderEntry(shaderHandle, metadata);
+
+		if (forceRecompile)
+		{
+			ShaderDependencyManager::GetInstance().SetShaderDependencies(shaderHandle, std::move(includeDependencies));
+		}
+
 		return true;
 	}
 

@@ -31,6 +31,7 @@
 #include "FlareEditor/Serialization/YAMLSerialization.h"
 #include "FlareEditor/AssetManager/EditorAssetManager.h"
 #include "FlareEditor/AssetManager/EditorShaderCache.h"
+#include "FlareEditor/ShaderCompiler/ShaderDependencyManager.h"
 
 #include "FlareEditor/ViewportWindow.h"
 
@@ -91,6 +92,8 @@ namespace Flare
             m_PostProcessingWindow = PostProcessingWindow();
 
             ScriptingEngine::UnloadAllModules();
+
+            m_ShaderDependencyManager.reset();
         });
     }
 
@@ -357,6 +360,11 @@ namespace Flare
             }
         }
 
+        if (m_ShaderDependencyManager && m_ShaderDependencyManager->NeedsSerializing())
+        {
+            m_ShaderDependencyManager->Serialize();
+        }
+
         {
             EditorAssetManager& assetManager = *EditorAssetManager::GetInstance();
             if (assetManager.GetRegistry().IsDirty())
@@ -518,6 +526,8 @@ namespace Flare
 		Ref<EditorAssetManager> assetManager = AssetManager::GetInstance().As<EditorAssetManager>();
 
         assetManager->Reinitialize();
+
+        m_ShaderDependencyManager.reset(new ShaderDependencyManager());
 
         UpdateWindowTitle();
         m_AssetManagerWindow.RebuildAssetTree();

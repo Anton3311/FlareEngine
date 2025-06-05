@@ -35,6 +35,7 @@ namespace Flare
 	class PrefabEditor;
 	class SceneRenderer;
 	class SceneViewportWindow;
+	class ShaderDependencyManager;
 	class SpriteEditor;
 	class ViewportWindow;
 
@@ -130,6 +131,8 @@ namespace Flare
 		ECSContext m_ECSContext;
 
 		Scope<FileWatcher> m_ProjectFilesWacher;
+
+		Scope<ShaderDependencyManager> m_ShaderDependencyManager;
 	public:
 		EditorSelection Selection;
 	private:
