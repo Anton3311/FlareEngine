@@ -111,7 +111,7 @@ namespace Flare
 		commandBuffer->SetGlobalDescriptorSet(m_TransformBuffers[frameIndex].Set, 2);
 		glm::uvec2 shadowMapSize = context.GetRenderGraphResourceManager().GetTexture(m_ShadowMap)->GetSize();
 
-		for (size_t lightIndex = 0; lightIndex < sceneSubmition.SpotLightShadows.size(); lightIndex++)
+		for (size_t lightIndex = 0; lightIndex < m_AllocatedTileCount; lightIndex++)
 		{
 			const PerLightCameraResources& cameraResources = m_PerLightCameras[lightIndex * frameCount + frameIndex];
 			commandBuffer->SetGlobalDescriptorSet(cameraResources.CameraDescriptorSet, 0);
@@ -164,6 +164,7 @@ namespace Flare
 			if (shadowsSubmition.SizeLog2 > m_Specifications.SizeLog2)
 			{
 				FLARE_CORE_ERROR("Spotlight at index {} is larger that the shadow atlas", lightIndex);
+				break;
 			}
 
 			float radius = glm::sqrt(spotLight.Intensity / 0.01f);
@@ -236,7 +237,8 @@ namespace Flare
 		{
 			m_Tiles[i] = SpotLightTile
 			{
-				.Position = glm::ivec2(0, 0),
+				// Set the position to a coordinate outside the shadow map to indicate an invalid state.
+				.Position = glm::ivec2(shadowMapSize),
 				.SizeLog2 = sceneSubmition.SpotLightShadows[i].SizeLog2,
 				.CulledBatches = SpotLightCulledGeometryRange {}
 			};
@@ -260,6 +262,8 @@ namespace Flare
 		// Pack tiles into the atlas
 		glm::uvec2 tileOffset = glm::ivec2(0, 0);
 		uint32_t rowHeight = 0;
+
+		m_AllocatedTileCount = 0;
 		for (size_t i = 0; i < lightCount; i++)
 		{
 			uint32_t lightIndex = lightIndices[i];
@@ -267,14 +271,19 @@ namespace Flare
 			// Calculate tile position
 			uint32_t tileSizeLog2 = sceneSubmition.SpotLightShadows[lightIndex].SizeLog2;
 			uint32_t tileSize = 1 << tileSizeLog2;
+			if (tileOffset.x + tileSize > shadowMapSize.x || tileOffset.y + tileSize > shadowMapSize.y)
+			{
+				// TODO: Should update the number of shadow casting spotlights to omit the ones that were failed to be allocated
+				FLARE_CORE_ERROR("Can't fit all the spotlights ({}) into a single shadow atlas ({}x{})", lightCount, shadowMapSize.x, shadowMapSize.y);
+				continue;
+			}
+
 			if (tileOffset.x + tileSize > shadowMapSize.x)
 			{
 				tileOffset.x = 0;
 				tileOffset.y += rowHeight;
 				rowHeight = 0;
 			}
-
-			// TODO: Handle the case when it is not possible to pack all the lights into the atlas.
 
 			glm::uvec2 tilePosition = tileOffset;
 			tileOffset.x += tileSize;
@@ -296,6 +305,8 @@ namespace Flare
 			entry.UVTransform = (tileSizeLog2) << 28 | (tilePosition.x << 14) | tilePosition.y;
 
 			m_Tiles[lightIndex].Position = tilePosition;
+
+			m_AllocatedTileCount++;
 		}
 
 		globalResources.FrameResources[frameIndex].SpotLightShadowDataBuffer->SetData(

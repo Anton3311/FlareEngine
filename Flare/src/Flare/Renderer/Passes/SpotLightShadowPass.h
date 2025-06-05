@@ -84,6 +84,8 @@ namespace Flare
 
 		std::vector<PackedTransform> m_CulledGeometryTransforms;
 		std::vector<SpotLightCulledGeometryBatch> m_CulledBatches;
+
+		uint32_t m_AllocatedTileCount = 0;
 		std::vector<SpotLightTile> m_Tiles;
 	};
 }
