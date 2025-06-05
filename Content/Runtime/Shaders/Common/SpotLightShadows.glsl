@@ -23,11 +23,6 @@ layout(std430, set = 1, binding = 14) readonly buffer SpotLightShadowData
 	SpotLightShadowsEntry Entries[];
 } u_SpotLightShadowData;
 
-float ComputeShadowBias(float projectedDepth, float near, float far, float bias)
-{
-	return -bias * near * far / (projectedDepth * (projectedDepth - bias) * (near - far));
-}
-
 float CalculateSpotLightShadow(vec3 spotLightPosition,
 	vec3 surfaceNormal,
 	vec3 position,
@@ -42,12 +37,10 @@ float CalculateSpotLightShadow(vec3 spotLightPosition,
 	if (any(lessThan(uv, vec2(0.0f))) || any(greaterThan(uv, vec2(1.0f))) || projected.z >= 1.0f)
 		return 1.0f;
 
-	float NoL = dot(-directionFromLight, surfaceNormal);
-	float bias = max(shadowEntry.NormalBias * (1.0f - NoL), 0.0f) + shadowEntry.Bias;
-
 	float size = float(1 << (shadowEntry.UVTransform >> TILE_SIZE_OFFSET));
 	vec2 texelCenter = floor(uv * size + vec2(0.5)) / size;
 
+#if 0
 	float potentialOccluderDepth = FindPotentialOccluder(uv,
 		texelCenter,
 		shadowEntry.Projection,
@@ -57,13 +50,17 @@ float CalculateSpotLightShadow(vec3 spotLightPosition,
 		directionFromLight,
 		spotLightPosition,
 		false);
+#endif
+
+	float NoL = dot(-directionFromLight, surfaceNormal);
+	float bias = max(shadowEntry.NormalBias * (1.0f - NoL), 0.0f) + shadowEntry.Bias;
 
 	uvec2 offset = uvec2(
 		shadowEntry.UVTransform >> TILE_POSITION_OFFSET,
 		shadowEntry.UVTransform) & TILE_POSITION_MASK;
 
 	uv.xy = (size * uv.xy + vec2(offset)) * u_SpotLightsShadowAtlasTexelSize;
-	return texture(u_SpotLightShadowMap, vec3(uv, potentialOccluderDepth));
+	return texture(u_SpotLightShadowMap, vec3(uv, projected.z - bias));
 }
 
 vec3 ComputeShadowCastingSpotLightsContribution(vec3 V, in SurfaceProperties surface)
