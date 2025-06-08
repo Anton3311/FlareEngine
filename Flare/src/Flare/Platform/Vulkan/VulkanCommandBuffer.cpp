@@ -911,13 +911,14 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 		bool rebind;
 
-		if (m_BoundMesh.Mesh == nullptr)
+		if (meshType != m_BoundMesh.Type)
 			rebind = true;
-		else if (m_BoundMesh.Mesh->GetSharedMesh() != nullptr
-				&& m_BoundMesh.Mesh->GetSharedMesh() == mesh->GetSharedMesh())
+		else if (m_BoundMesh.Mesh == nullptr)
+			rebind = true;
+		else if (m_BoundMesh.Mesh->GetSharedMesh() != nullptr && m_BoundMesh.Mesh->GetSharedMesh() == mesh->GetSharedMesh())
 			return;
 		else
-			rebind = m_BoundMesh.Mesh != mesh || meshType != m_BoundMesh.Type;
+			rebind = m_BoundMesh.Mesh != mesh;
 
 		if (!rebind)
 			return;
