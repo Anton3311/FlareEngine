@@ -512,6 +512,24 @@ namespace Flare
 					propertyRenderer.Serialize(SerializationValue(material->GetPropertyValue<glm::ivec4>((uint32_t)propertyIndex), property.Flags));
 					break;
 
+				// TODO: Implement `UInt` types. They require a serializer for `glm::uvec`
+				//       which in turn need another method in `SerializationStream` for uint.
+
+#if 0
+				case ShaderDataType::UInt:
+					propertyRenderer.Serialize(SerializationValue(material->GetPropertyValue<uint32_t>((uint32_t)propertyIndex), property.Flags));
+					break;
+				case ShaderDataType::UInt2:
+					propertyRenderer.Serialize(SerializationValue(material->GetPropertyValue<glm::uvec2>((uint32_t)propertyIndex), property.Flags));
+					break;
+				case ShaderDataType::UInt3:
+					propertyRenderer.Serialize(SerializationValue(material->GetPropertyValue<glm::uvec3>((uint32_t)propertyIndex), property.Flags));
+					break;
+				case ShaderDataType::UInt4:
+					propertyRenderer.Serialize(SerializationValue(material->GetPropertyValue<glm::uvec4>((uint32_t)propertyIndex), property.Flags));
+					break;
+#endif
+
 				case ShaderDataType::Float:
 					propertyRenderer.Serialize(SerializationValue(material->GetPropertyValue<float>((uint32_t)propertyIndex), property.Flags));
 					break;
@@ -534,6 +552,8 @@ namespace Flare
 					material->SetTextureProperty((uint32_t)propertyIndex, texture);
 					break;
 				}
+				default:
+					FLARE_VERIFY_UNREACHABLE();
 				}
 			}
 

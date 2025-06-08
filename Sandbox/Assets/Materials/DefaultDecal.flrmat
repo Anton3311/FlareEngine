@@ -1,8 +1,8 @@
 Shader: 4221637628309167559
 Properties:
   - Name: u_Material.Color
-    Type: 7
+    Type: Float4
     Value: [1, 1, 1, 1]
   - Name: u_ColorTexture
-    Type: 8
+    Type: Sampler
     Value: 1396463033351025598

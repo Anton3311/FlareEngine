@@ -1,20 +1,26 @@
 Shader: 17438643766101068745
 Properties:
   - Name: u_Material.Color
-    Type: 7
-    Value: [0.939534903, 0.275305539, 0.275305539, 1]
+    Type: Float4
+    Value: [0.970000029, 0.209999993, 0.140000001, 1]
   - Name: u_Material.Roughness
-    Type: 4
-    Value: 0.800000012
+    Type: Float
+    Value: 0.300000012
   - Name: u_Material.Metallic
-    Type: 4
-    Value: 0.200000003
+    Type: Float
+    Value: 0
+  - Name: u_Material.Emission
+    Type: Float3
+    Value: [0, 0, 0]
   - Name: u_Texture
-    Type: 8
+    Type: Sampler
     Value: 0
   - Name: u_NormalMap
-    Type: 8
+    Type: Sampler
     Value: 0
   - Name: u_RoughnessMap
-    Type: 8
+    Type: Sampler
+    Value: 0
+  - Name: u_EmissionMap
+    Type: Sampler
     Value: 0

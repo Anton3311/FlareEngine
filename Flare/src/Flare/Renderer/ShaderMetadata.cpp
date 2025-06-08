@@ -131,12 +131,19 @@ namespace Flare
 		switch (dataType)
 		{
 		case ShaderDataType::Int:
+		case ShaderDataType::UInt:
 		case ShaderDataType::Float:
 			return 4;
+		case ShaderDataType::Int2:
+		case ShaderDataType::UInt2:
 		case ShaderDataType::Float2:
 			return 4 * 2;
+		case ShaderDataType::Int3:
+		case ShaderDataType::UInt3:
 		case ShaderDataType::Float3:
 			return 4 * 3;
+		case ShaderDataType::Int4:
+		case ShaderDataType::UInt4:
 		case ShaderDataType::Float4:
 			return 4 * 4;
 		case ShaderDataType::Matrix4x4:
@@ -144,6 +151,8 @@ namespace Flare
 		case ShaderDataType::Sampler:
 		case ShaderDataType::StorageImage:
 			return 4;
+		default:
+			FLARE_VERIFY_UNREACHABLE();
 		}
 
 		return 0;
@@ -154,16 +163,25 @@ namespace Flare
 		switch (dataType)
 		{
 		case ShaderDataType::Int:
+		case ShaderDataType::UInt:
 		case ShaderDataType::Float:
 			return 1;
+		case ShaderDataType::Int2:
+		case ShaderDataType::UInt2:
 		case ShaderDataType::Float2:
 			return 2;
+		case ShaderDataType::Int3:
+		case ShaderDataType::UInt3:
 		case ShaderDataType::Float3:
 			return 3;
+		case ShaderDataType::Int4:
+		case ShaderDataType::UInt4:
 		case ShaderDataType::Float4:
 			return 4;
 		case ShaderDataType::Matrix4x4:
 			return 16;
+		default:
+			FLARE_VERIFY_UNREACHABLE();
 		}
 
 		return 0;
@@ -180,7 +198,7 @@ namespace Flare
 		if (string == "Black")
 			return DefaultTextureValue::Black;
 
-		FLARE_CORE_ASSERT(false);
+		FLARE_VERIFY_UNREACHABLE();
 		return DefaultTextureValue::None;
 	}
 
@@ -196,7 +214,7 @@ namespace Flare
 			return "Compute";
 		}
 
-		FLARE_CORE_ASSERT(false, "Unhandled ShaderStageType");
+		FLARE_VERIFY_UNREACHABLE();
 		return nullptr;
 	}
 

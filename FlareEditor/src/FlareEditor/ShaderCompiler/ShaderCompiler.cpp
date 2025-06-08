@@ -371,55 +371,44 @@ namespace Flare
 	static std::optional<ShaderDataType> SPIRVTypeToShaderDataType(const spirv_cross::SPIRType& type)
 	{
 		std::optional<ShaderDataType> shaderDataType;
-		uint32_t componentsCount = type.vecsize;
+		uint32_t componentCount = type.vecsize;
+		FLARE_CORE_ASSERT(componentCount >= 1);
 
 		switch (type.basetype)
 		{
 		case spirv_cross::SPIRType::BaseType::Int:
-			switch (componentsCount)
+		{
+			if (componentCount > 4)
 			{
-			case 1:
-				shaderDataType = ShaderDataType::Int;
-				break;
-			case 2:
-				shaderDataType = ShaderDataType::Int2;
-				break;
-			case 3:
-				shaderDataType = ShaderDataType::Int2;
-				break;
-			case 4:
-				shaderDataType = ShaderDataType::Int2;
-				break;
-			default:
-				FLARE_CORE_ERROR("Unsupported components count");
+				FLARE_CORE_ERROR("Unsupported components count: {}", componentCount);
 				return {};
 			}
 
-			break;
+			ShaderDataType types[] = { ShaderDataType::Int, ShaderDataType::Int2, ShaderDataType::Int3, ShaderDataType::Int4 };
+			return types[componentCount - 1];
+		}
+		case spirv_cross::SPIRType::BaseType::UInt:
+		{
+			if (componentCount > 4)
+			{
+				FLARE_CORE_ERROR("Unsupported components count: {}", componentCount);
+				return {};
+			}
+
+			ShaderDataType types[] = { ShaderDataType::UInt, ShaderDataType::UInt2, ShaderDataType::UInt3, ShaderDataType::UInt4 };
+			return types[componentCount - 1];
+		}
 		case spirv_cross::SPIRType::BaseType::Float:
-			switch (componentsCount)
+		{
+			if (componentCount > 4)
 			{
-			case 1:
-				shaderDataType = ShaderDataType::Float;
-				break;
-			case 2:
-				shaderDataType = ShaderDataType::Float2;
-				break;
-			case 3:
-				shaderDataType = ShaderDataType::Float3;
-				break;
-			case 4:
-				if (type.columns == 4)
-					shaderDataType = ShaderDataType::Matrix4x4;
-				else
-					shaderDataType = ShaderDataType::Float4;
-				break;
-			default:
-				FLARE_CORE_ERROR("Unsupported components count");
+				FLARE_CORE_ERROR("Unsupported components count: {}", componentCount);
 				return {};
 			}
 
-			break;
+			ShaderDataType types[] = { ShaderDataType::Float, ShaderDataType::Float2, ShaderDataType::Float3, ShaderDataType::Float4 };
+			return types[componentCount - 1];
+		}
 		default:
 			FLARE_CORE_ERROR("Unsupported shader data type");
 			return {};

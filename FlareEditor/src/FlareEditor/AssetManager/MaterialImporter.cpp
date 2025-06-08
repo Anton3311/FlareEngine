@@ -19,6 +19,65 @@
 
 namespace Flare
 {
+	static const char* ShaderDataTypeToString(ShaderDataType type)
+	{
+		switch (type)
+		{
+#define TYPE_TO_STRING(name) case ShaderDataType::name: return #name;
+			TYPE_TO_STRING(Int);
+			TYPE_TO_STRING(Int2);
+			TYPE_TO_STRING(Int3);
+			TYPE_TO_STRING(Int4);
+
+			TYPE_TO_STRING(UInt);
+			TYPE_TO_STRING(UInt2);
+			TYPE_TO_STRING(UInt3);
+			TYPE_TO_STRING(UInt4);
+
+			TYPE_TO_STRING(Float);
+			TYPE_TO_STRING(Float2);
+			TYPE_TO_STRING(Float3);
+			TYPE_TO_STRING(Float4);
+
+			TYPE_TO_STRING(Sampler);
+			TYPE_TO_STRING(SamplerArray);
+			TYPE_TO_STRING(StorageImage);
+			TYPE_TO_STRING(Matrix4x4);
+		default:
+			FLARE_VERIFY_UNREACHABLE();
+#undef TYPE_TO_STRING
+		}
+
+		return "";
+	}
+
+	static std::optional<ShaderDataType> ShaderDataTypeFromString(std::string_view string)
+	{
+#define TYPE_FROM_STRING(name) if (string == #name) return ShaderDataType::name;
+		TYPE_FROM_STRING(Int);
+		TYPE_FROM_STRING(Int2);
+		TYPE_FROM_STRING(Int3);
+		TYPE_FROM_STRING(Int4);
+
+		TYPE_FROM_STRING(UInt);
+		TYPE_FROM_STRING(UInt2);
+		TYPE_FROM_STRING(UInt3);
+		TYPE_FROM_STRING(UInt4);
+
+		TYPE_FROM_STRING(Float);
+		TYPE_FROM_STRING(Float2);
+		TYPE_FROM_STRING(Float3);
+		TYPE_FROM_STRING(Float4);
+
+		TYPE_FROM_STRING(Sampler);
+		TYPE_FROM_STRING(SamplerArray);
+		TYPE_FROM_STRING(StorageImage);
+		TYPE_FROM_STRING(Matrix4x4);
+#undef TYPE_FROM_STRING
+
+		return {};
+	}
+
 	static void SerializeMaterialProperties(const Ref<const Material>& material, YAML::Emitter& emitter)
 	{
 		FLARE_PROFILE_FUNCTION();
@@ -27,18 +86,18 @@ namespace Flare
 		const ShaderProperties& properties = shader->GetProperties();
 		for (uint32_t index = 0; index < (uint32_t)properties.size(); index++)
 		{
-			const ShaderProperty& parameter = properties[index];
+			const ShaderProperty& property = properties[index];
 
-			if (parameter.Type == ShaderDataType::Matrix4x4)
+			if (property.Type == ShaderDataType::Matrix4x4)
 				continue;
 
 			emitter << YAML::BeginMap;
 
-			emitter << YAML::Key << "Name" << YAML::Value << parameter.Name;
-			emitter << YAML::Key << "Type" << YAML::Value << (uint32_t)parameter.Type;
+			emitter << YAML::Key << "Name" << YAML::Value << property.Name;
+			emitter << YAML::Key << "Type" << YAML::Value << ShaderDataTypeToString(property.Type);
 			emitter << YAML::Key << "Value" << YAML::Value;
 
-			switch (parameter.Type)
+			switch (property.Type)
 			{
 			case ShaderDataType::Int:
 				emitter << material->ReadPropertyValue<int32_t>(index);
@@ -120,6 +179,105 @@ namespace Flare
 		output << emitter.c_str();
 	}
 
+	static void DeserializeMaterialProperty(const AssetMetadata& metadata, Ref<Material> material, const YAML::Node& parameter)
+	{
+		FLARE_PROFILE_FUNCTION();
+
+		Ref<Shader> shader = material->GetShader();
+
+		YAML::Node nameNode = parameter["Name"];
+		if (!nameNode)
+			return;
+
+		std::string propertyName = nameNode.as<std::string>();
+		std::optional<uint32_t> index = shader->GetPropertyIndex(propertyName);
+
+		if (!index.has_value())
+		{
+			FLARE_CORE_ERROR("Material '{}' {} doesn't have a property named '{}'", metadata.Name, metadata.Handle, propertyName);
+			return;
+		}
+
+		YAML::Node typeNode = parameter["Type"];
+		if (!typeNode)
+			return;
+
+		std::string typeName = typeNode.as<std::string>();
+		std::optional<ShaderDataType> type = ShaderDataTypeFromString(typeName);
+
+		if (!type)
+		{
+			FLARE_CORE_ERROR("Failed to deserialize property of material '{}' with handle {}", metadata.Name, metadata.Handle);
+			FLARE_CORE_ERROR("Property '{}' in has invalid data type {}", propertyName, typeName);
+			return;
+		}
+
+		YAML::Node valueNode = parameter["Value"];
+		if (!valueNode)
+			return;
+
+		if (*type != shader->GetProperties()[*index].Type)
+		{
+			FLARE_CORE_ERROR("Property named '{}' of material '{}' {} has a data type that doesn't match the one specified in the shader",
+				propertyName,
+				metadata.Name,
+				metadata.Handle);
+			return;
+		}
+
+		switch (type.value())
+		{
+		case ShaderDataType::Int:
+			material->WritePropertyValue(index.value(), valueNode.as<int32_t>());
+			break;
+		case ShaderDataType::Int2:
+			material->WritePropertyValue(index.value(), valueNode.as<glm::ivec2>());
+			break;
+		case ShaderDataType::Int3:
+			material->WritePropertyValue(index.value(), valueNode.as<glm::ivec3>());
+			break;
+		case ShaderDataType::Int4:
+			material->WritePropertyValue(index.value(), valueNode.as<glm::ivec4>());
+			break;
+
+		case ShaderDataType::UInt:
+			material->WritePropertyValue(index.value(), valueNode.as<uint32_t>());
+			break;
+		case ShaderDataType::UInt2:
+			material->WritePropertyValue(index.value(), valueNode.as<glm::uvec2>());
+			break;
+		case ShaderDataType::UInt3:
+			material->WritePropertyValue(index.value(), valueNode.as<glm::uvec3>());
+			break;
+		case ShaderDataType::UInt4:
+			material->WritePropertyValue(index.value(), valueNode.as<glm::uvec4>());
+			break;
+
+		case ShaderDataType::Float:
+			material->WritePropertyValue(index.value(), valueNode.as<float>());
+			break;
+		case ShaderDataType::Float2:
+			material->WritePropertyValue(index.value(), valueNode.as<glm::vec2>());
+			break;
+		case ShaderDataType::Float3:
+			material->WritePropertyValue(index.value(), valueNode.as<glm::vec3>());
+			break;
+		case ShaderDataType::Float4:
+			auto a = valueNode.as<glm::vec4>();
+			material->WritePropertyValue(index.value(), valueNode.as<glm::vec4>());
+			break;
+
+		case ShaderDataType::Sampler:
+		{
+			AssetHandle handle = valueNode.as<AssetHandle>();
+			if (AssetManager::IsAssetHandleValid(handle))
+				material->SetTextureProperty(*index, AssetManager::GetAsset<Texture>(handle));
+
+			break;
+		}
+		}
+	}
+
 	Ref<Material> MaterialImporter::ImportMaterial(const AssetMetadata& metadata)
 	{
 		FLARE_PROFILE_FUNCTION();
@@ -144,99 +302,37 @@ namespace Flare
 					// No valid shader, return an empty material
 					return material;
 				}
-				else
+
+				Ref<Shader> shader = AssetManager::GetAsset<Shader>(handle);
+				if (!shader)
 				{
-					Ref<Shader> shader = AssetManager::GetAsset<Shader>(handle);
+					FLARE_CORE_ERROR("Failed to load shader (Handle={}) for material (Handle={}, Path={})",
+						(uint64_t)handle,
+						metadata.Handle,
+						metadata.Path.string());
 
-					if (shader)
-					{
-						material->SetShader(shader);
-						shaderHandle = handle;
-					}
-					else
-					{
-						FLARE_CORE_ERROR("Failed to load shader (Handle={}) for material (Handle={}, Path={})",
-							(uint64_t)handle,
-							metadata.Handle,
-							metadata.Path.string());
-
-						// No valid shader, return an empty material
-						return material;
-					}
+					// No valid shader, return an empty material
+					return material;
 				}
+
+				material->SetShader(shader);
+				shaderHandle = handle;
 			}
 
-			if (shaderHandle.has_value())
+			if (!shaderHandle.has_value())
+				return nullptr;
+
+			Ref<Shader> shader = AssetManager::GetAsset<Shader>(shaderHandle.value());
+			if (!shader)
+				return material;
+
+			const ShaderProperties& shaderProperties = shader->GetProperties();
+			if (YAML::Node parameters = node["Properties"])
 			{
-				Ref<Shader> shader = AssetManager::GetAsset<Shader>(shaderHandle.value());
-				if (!shader)
-					return material;
-
-				const ShaderProperties& shaderProperties = shader->GetProperties();
-
-				if (YAML::Node parameters = node["Properties"])
+				for (YAML::Node parameter : parameters)
 				{
-					for (YAML::Node parameter : parameters)
-					{
-						std::optional<uint32_t> index = {};
-						std::optional<ShaderDataType> type = {};
-
-						if (YAML::Node nameNode = parameter["Name"])
-						{
-							std::string name = nameNode.as<std::string>();
-							index = shader->GetPropertyIndex(name);
-						}
-
-						if (YAML::Node typeNode = parameter["Type"])
-						{
-							uint32_t dataType = typeNode.as<uint32_t>();
-							type = (ShaderDataType)dataType;
-						}
-
-						YAML::Node valueNode = parameter["Value"];
-						if (index.has_value() && type.has_value() && valueNode)
-						{
-							switch (type.value())
-							{
-							case ShaderDataType::Int:
-								material->WritePropertyValue(index.value(), valueNode.as<int32_t>());
-								break;
-							case ShaderDataType::Int2:
-								material->WritePropertyValue(index.value(), valueNode.as<glm::ivec2>());
-								break;
-							case ShaderDataType::Int3:
-								material->WritePropertyValue(index.value(), valueNode.as<glm::ivec3>());
-								break;
-							case ShaderDataType::Int4:
-								material->WritePropertyValue(index.value(), valueNode.as<glm::ivec4>());
-								break;
-
-							case ShaderDataType::Sampler:
-							{
-								AssetHandle handle = valueNode.as<AssetHandle>();
-								if (AssetManager::IsAssetHandleValid(handle))
-									material->SetTextureProperty(*index, AssetManager::GetAsset<Texture>(handle));
-
-								break;
-							}
-
-							case ShaderDataType::Float:
-								material->WritePropertyValue(index.value(), valueNode.as<float>());
-								break;
-							case ShaderDataType::Float2:
-								material->WritePropertyValue(index.value(), valueNode.as<glm::vec2>());
-								break;
-							case ShaderDataType::Float3:
-								material->WritePropertyValue(index.value(), valueNode.as<glm::vec3>());
-								break;
-							case ShaderDataType::Float4:
-								auto a = valueNode.as<glm::vec4>();
-								material->WritePropertyValue(index.value(), valueNode.as<glm::vec4>());
-								break;
-							}
-						}
-					}
-				} // Parameters
+					DeserializeMaterialProperty(metadata, material, parameter);
+				}
 			}
 		}
 		catch (std::exception& e)

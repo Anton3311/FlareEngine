@@ -73,6 +73,12 @@ namespace Flare
 		Int2,
 		Int3,
 		Int4,
+
+		UInt,
+		UInt2,
+		UInt3,
+		UInt4,
+
 		Float,
 		Float2,
 		Float3,

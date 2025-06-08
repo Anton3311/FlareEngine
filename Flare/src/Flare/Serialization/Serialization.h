@@ -83,6 +83,7 @@ namespace YAML
 	};
 
 
+
 	template<>
 	struct convert<glm::ivec2>
 	{
@@ -158,6 +159,85 @@ namespace YAML
 		}
 	};
 
+
+
+	template<>
+	struct convert<glm::uvec2>
+	{
+		static Node encode(const glm::uvec2& vector)
+		{
+			Node node;
+			node.push_back(vector.x);
+			node.push_back(vector.y);
+			node.SetStyle(EmitterStyle::Flow);
+			return node;
+		}
+
+		static bool decode(const Node& node, glm::uvec2& out)
+		{
+			if (!node.IsSequence() || node.size() != 2)
+				return false;
+
+			out.x = node[0].as<uint32_t>();
+			out.y = node[1].as<uint32_t>();
+			return true;
+		}
+	};
+
+	template<>
+	struct convert<glm::uvec3>
+	{
+		static Node encode(const glm::uvec3& vector)
+		{
+			Node node;
+			node.push_back(vector.x);
+			node.push_back(vector.y);
+			node.push_back(vector.z);
+			node.SetStyle(EmitterStyle::Flow);
+			return node;
+		}
+
+		static bool decode(const Node& node, glm::uvec3& out)
+		{
+			if (!node.IsSequence() || node.size() != 3)
+				return false;
+
+			out.x = node[0].as<uint32_t>();
+			out.y = node[1].as<uint32_t>();
+			out.z = node[2].as<uint32_t>();
+			return true;
+		}
+	};
+
+	template<>
+	struct convert<glm::uvec4>
+	{
+		static Node encode(const glm::uvec4& vector)
+		{
+			Node node;
+			node.push_back(vector.x);
+			node.push_back(vector.y);
+			node.push_back(vector.z);
+			node.push_back(vector.w);
+			node.SetStyle(EmitterStyle::Flow);
+			return node;
+		}
+
+		static bool decode(const Node& node, glm::uvec4& out)
+		{
+			if (!node.IsSequence() || node.size() != 4)
+				return false;
+
+			out.x = node[0].as<uint32_t>();
+			out.y = node[1].as<uint32_t>();
+			out.z = node[2].as<uint32_t>();
+			out.w = node[3].as<uint32_t>();
+			return true;
+		}
+	};
+
+
+
 	template<>
 	struct convert<Flare::AssetHandle>
 	{
@@ -232,6 +312,28 @@ inline YAML::Emitter& operator<<(YAML::Emitter& emitter, const glm::ivec3& vecto
 }
 
 inline YAML::Emitter& operator<<(YAML::Emitter& emitter, const glm::ivec4& vector)
+{
+	emitter << YAML::Flow;
+	emitter << YAML::BeginSeq << vector.x << vector.y << vector.z << vector.w << YAML::EndSeq;
+	return emitter;
+}
+
+
+inline YAML::Emitter& operator<<(YAML::Emitter& emitter, const glm::uvec2& vector)
+{
+	emitter << YAML::Flow;
+	emitter << YAML::BeginSeq << vector.x << vector.y << YAML::EndSeq;
+	return emitter;
+}
+
+inline YAML::Emitter& operator<<(YAML::Emitter& emitter, const glm::uvec3& vector)
+{
+	emitter << YAML::Flow;
+	emitter << YAML::BeginSeq << vector.x << vector.y << vector.z << YAML::EndSeq;
+	return emitter;
+}
+
+inline YAML::Emitter& operator<<(YAML::Emitter& emitter, const glm::uvec4& vector)
 {
 	emitter << YAML::Flow;
 	emitter << YAML::BeginSeq << vector.x << vector.y << vector.z << vector.w << YAML::EndSeq;
