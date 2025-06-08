@@ -773,7 +773,8 @@ namespace Flare
 			metadata->Stages.push_back(program.Stage);
 
 		// Check for outdated shader cache
-		if (!ShaderDependencyManager::GetInstance().IsShaderUpToDate(shaderHandle))
+		ShaderDependencyManager& shaderDependencyManager = ShaderDependencyManager::GetInstance();
+		if (shaderDependencyManager.ContainsShader(shaderHandle) && !shaderDependencyManager.IsShaderUpToDate(shaderHandle))
 		{
 			forceRecompile = true;
 		}
@@ -905,7 +906,8 @@ namespace Flare
 
 		// Check for outdated cache
 
-		if (!ShaderDependencyManager::GetInstance().IsShaderUpToDate(shaderHandle))
+		ShaderDependencyManager& shaderDependencyManager = ShaderDependencyManager::GetInstance();
+		if (shaderDependencyManager.ContainsShader(shaderHandle) && !shaderDependencyManager.IsShaderUpToDate(shaderHandle))
 		{
 			forceRecompile = true;
 		}
