@@ -287,31 +287,14 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 		BindMesh(mesh);
 
-		if (mesh->GetSharedMesh() == nullptr)
+		for (const SubMesh& subMesh : mesh->GetSubMeshes())
 		{
-			// A mesh doesn't have a SharedMesh,
-			// so the Mesh owns all the buffers & sub meshes are laid out sequentially in memory,
-			// so it is possible to draw the mesh in a single draw call
-
-			SubMesh fullMeshRange = mesh->GetFullMeshRange();
 			vkCmdDrawIndexed(m_CommandBuffer,
-				fullMeshRange.IndicesCount,
+				subMesh.IndicesCount,
 				instanceCount,
-				fullMeshRange.BaseIndex,
-				fullMeshRange.BaseVertex,
+				subMesh.BaseIndex,
+				subMesh.BaseVertex,
 				baseInstance);
-		}
-		else
-		{
-			for (const SubMesh& subMesh : mesh->GetSubMeshes())
-			{
-				vkCmdDrawIndexed(m_CommandBuffer,
-					subMesh.IndicesCount,
-					instanceCount,
-					subMesh.BaseIndex,
-					subMesh.BaseVertex,
-					baseInstance);
-			}
 		}
 	}
 
@@ -320,37 +303,15 @@ namespace Flare
 		FLARE_PROFILE_FUNCTION();
 		BindMesh(mesh, MeshType::DepthOnly);
 
-#if 0
-		if (mesh->GetSharedMesh() == nullptr)
+		for (const SubMesh& subMesh : mesh->GetDepthOnlySubMeshes())
 		{
-			// A mesh doesn't have a SharedMesh,
-			// so the Mesh owns all the buffers & sub meshes are laid out sequentially in memory,
-			// so it is possible to draw the mesh in a single draw call
-
-			// FIXME: need a full mesh range for depth only variant
-			SubMesh fullMeshRange = mesh->GetFullMeshRange();
 			vkCmdDrawIndexed(m_CommandBuffer,
-				fullMeshRange.IndicesCount,
+				subMesh.IndicesCount,
 				instanceCount,
-				fullMeshRange.BaseIndex,
-				fullMeshRange.BaseVertex,
+				subMesh.BaseIndex,
+				subMesh.BaseVertex,
 				baseInstance);
 		}
-		else
-		{
-#endif
-			for (const SubMesh& subMesh : mesh->GetDepthOnlySubMeshes())
-			{
-				vkCmdDrawIndexed(m_CommandBuffer,
-					subMesh.IndicesCount,
-					instanceCount,
-					subMesh.BaseIndex,
-					subMesh.BaseVertex,
-					baseInstance);
-			}
-#if 0
-		}
-#endif
 	}
 
 	void VulkanCommandBuffer::DrawDepthOnlyMeshIndexed(const Ref<const Mesh>& mesh,
@@ -394,29 +355,10 @@ namespace Flare
 
 		const auto& subMeshes = mesh->GetSubMeshes();
 
-		if (mesh->GetSharedMesh() == nullptr)
+		for (uint32_t i = firstSubMesh; i < subMeshCount; i++)
 		{
-			uint32_t lastSubMeshIndex = firstSubMesh + subMeshCount;
-			uint32_t indexCount = 0;
-
-			if (lastSubMeshIndex == (uint32_t)subMeshes.size())
-			{
-				indexCount = (uint32_t)mesh->GetIndexCount() - subMeshes[firstSubMesh].BaseIndex;
-			}
-			else
-			{
-				indexCount = subMeshes[lastSubMeshIndex].BaseIndex - subMeshes[firstSubMesh].BaseIndex;
-			}
-
-			vkCmdDrawIndexed(m_CommandBuffer, indexCount, instanceCount, subMeshes[firstSubMesh].BaseIndex, 0, baseInstance);
-		}
-		else
-		{
-			for (uint32_t i = firstSubMesh; i < subMeshCount; i++)
-			{
-				const SubMesh& subMesh = subMeshes[i];
-				vkCmdDrawIndexed(m_CommandBuffer, subMesh.IndicesCount, instanceCount, subMesh.BaseIndex, subMesh.BaseVertex, baseInstance);
-			}
+			const SubMesh& subMesh = subMeshes[i];
+			vkCmdDrawIndexed(m_CommandBuffer, subMesh.IndicesCount, instanceCount, subMesh.BaseIndex, subMesh.BaseVertex, baseInstance);
 		}
 	}
 

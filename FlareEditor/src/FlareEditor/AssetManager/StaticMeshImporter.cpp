@@ -283,7 +283,6 @@ namespace Flare
 		Span<const IndexType> depthOnlyIndices,
 		Span<glm::vec3> reducedVertexBuffer,
 		Span<IndexType> reducedIndexBuffer,
-		IndexType vertexOffset,
 		Span<IndexType> indexMapping)
 	{
 		FLARE_PROFILE_FUNCTION();
@@ -299,7 +298,7 @@ namespace Flare
 			if (indexMapping[index] == INVALID_INDEX)
 			{
 				reducedVertexBuffer[reducedVertexBufferOffset] = vertices[index];
-				indexMapping[index] = reducedVertexBufferOffset + vertexOffset;
+				indexMapping[index] = reducedVertexBufferOffset;
 				reducedVertexBufferOffset++;
 			}
 
@@ -393,7 +392,6 @@ namespace Flare
 				Span(reducedIndexBuffer, subMeshIndexCount),
 				Span(m_SceneData.DepthOnlyVertices + m_SceneData.DepthOnlyVertexCount, uniqueVertexCount),
 				Span(m_SceneData.DepthOnlyIndices16 + m_IndexOffset, subMeshIndexCount),
-				static_cast<uint16_t>(m_SceneData.DepthOnlyVertexCount),
 				Span(reinterpret_cast<uint16_t*>(m_TemporaryUniqueVertexMapping), m_SceneData.VertexCount));
 		}
 		else
@@ -407,10 +405,10 @@ namespace Flare
 				Span(m_TemporaryReducedIndexBuffer, subMeshIndexCount),
 				Span(m_SceneData.DepthOnlyVertices + m_SceneData.DepthOnlyVertexCount, uniqueVertexCount),
 				Span(m_SceneData.DepthOnlyIndices32 + m_IndexOffset, subMeshIndexCount),
-				static_cast<uint32_t>(m_SceneData.DepthOnlyVertexCount),
 				Span(m_TemporaryUniqueVertexMapping, m_SceneData.VertexCount));
 		}
 
+		depthOnlySubMesh.BaseVertex = static_cast<uint32_t>(m_SceneData.DepthOnlyVertexCount);
 		m_SceneData.DepthOnlyVertexCount += uniqueVertexCount;
 
 		m_VertexOffset += mesh->mNumVertices;

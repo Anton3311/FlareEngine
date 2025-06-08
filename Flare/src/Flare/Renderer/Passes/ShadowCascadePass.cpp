@@ -182,30 +182,10 @@ namespace Flare
 					uint32_t subMeshCount = static_cast<uint32_t>(range.Count);
 
 					const auto& subMeshes = visibleMesh.Mesh->GetDepthOnlySubMeshes();
-
-					if (mesh->GetSharedMesh() == nullptr)
+					for (uint32_t i = firstSubMesh; i < subMeshCount; i++)
 					{
-						uint32_t lastSubMeshIndex = firstSubMesh + subMeshCount;
-						uint32_t indexCount = 0;
-
-						if (lastSubMeshIndex == (uint32_t)subMeshes.size())
-						{
-							indexCount = (uint32_t)mesh->GetIndexCount() - subMeshes[firstSubMesh].BaseIndex;
-						}
-						else
-						{
-							indexCount = subMeshes[lastSubMeshIndex].BaseIndex - subMeshes[firstSubMesh].BaseIndex;
-						}
-
-						vkCmdDrawIndexed(vulkanCommandBuffer.GetHandle(), indexCount, 1, subMeshes[firstSubMesh].BaseIndex, 0, instanceIndex);
-					}
-					else
-					{
-						for (uint32_t i = firstSubMesh; i < subMeshCount; i++)
-						{
-							const SubMesh& subMesh = subMeshes[i];
-							vkCmdDrawIndexed(vulkanCommandBuffer.GetHandle(), subMesh.IndicesCount, 1, subMesh.BaseIndex, subMesh.BaseVertex, instanceIndex);
-						}
+						const SubMesh& subMesh = subMeshes[i];
+						vkCmdDrawIndexed(vulkanCommandBuffer.GetHandle(), subMesh.IndicesCount, 1, subMesh.BaseIndex, subMesh.BaseVertex, instanceIndex);
 					}
 
 					m_Statistics.DrawCallCount++;
