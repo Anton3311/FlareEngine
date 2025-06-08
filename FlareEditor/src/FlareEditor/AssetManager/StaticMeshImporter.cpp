@@ -62,21 +62,27 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		if (!m_ImportSettings.PreserveHierarchy)
-		{
-			size_t vertexCount = 0;
-			size_t indexCount = 0;
-			CountVerticesAndIndicesRecursively(m_Scene->mRootNode, vertexCount, indexCount);
+		size_t vertexCount = 0;
+		size_t indexCount = 0;
+		size_t subMeshCount = m_Scene->mNumMeshes;
+		
+		CountMeshVerticesAndIndices(vertexCount, indexCount);
+		
+		IndexFormat indexFormat = indexCount <= (size_t)std::numeric_limits<uint16_t>::max()
+			? IndexFormat::UInt16
+			: IndexFormat::UInt32;
+		
+		InitializeSceneData(vertexCount, indexCount, subMeshCount, indexFormat);
 
-			IndexFormat indexFormat = indexCount <= (size_t)std::numeric_limits<uint16_t>::max()
-				? IndexFormat::UInt16
-				: IndexFormat::UInt32;
-
-			InitializeSceneData(vertexCount, indexCount, m_Scene->mNumMeshes, indexFormat);
-		}
-		else
+		if (m_ImportSettings.PreserveHierarchy)
 		{
-			CreateSubMeshes();
+			for (uint32_t meshIndex = 0; meshIndex < m_Scene->mNumMeshes; meshIndex++)
+			{
+				const aiMesh* mesh = m_Scene->mMeshes[meshIndex];
+				m_SceneData.MeshData[mesh] = CopySubMeshData(mesh);
+			}
+			
+			CreateSharedMesh();
 		}
 
 		VisitNode(m_Scene->mRootNode, glm::mat4(1.0f));
@@ -103,32 +109,7 @@ namespace Flare
 		return bounds;
 	}
 
-	void StaticMeshImporter::CreateSubMeshes()
-	{
-		FLARE_PROFILE_FUNCTION();
-
-		size_t vertexCount = 0;
-		size_t indexCount = 0;
-		size_t subMeshCount = m_Scene->mNumMeshes;
-
-		CountMeshVerticesAndIndices(vertexCount, indexCount);
-
-		m_SceneData.IndexFormat = indexCount <= (size_t)std::numeric_limits<uint16_t>::max()
-			? IndexFormat::UInt16
-			: IndexFormat::UInt32;
-
-		InitializeSceneData(vertexCount, indexCount, subMeshCount, m_SceneData.IndexFormat);
-
-		for (uint32_t meshIndex = 0; meshIndex < m_Scene->mNumMeshes; meshIndex++)
-		{
-			const aiMesh* mesh = m_Scene->mMeshes[meshIndex];
-			m_SceneData.MeshData[mesh] = CopySubMeshData(mesh);
-		}
-
-		InitializeSharedMesh();
-	}
-
-	void StaticMeshImporter::InitializeSharedMesh()
+	void StaticMeshImporter::CreateSharedMesh()
 	{
 		FLARE_PROFILE_FUNCTION();
 		m_SceneData.SharedMesh = Ref<SharedMesh>::New(m_SceneData.VertexCount,

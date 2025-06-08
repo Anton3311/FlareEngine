@@ -84,8 +84,7 @@ namespace Flare
 
 		inline const SceneData& GetSceneData() const { return m_SceneData; }
 	private:
-		void CreateSubMeshes();
-		void InitializeSharedMesh();
+		void CreateSharedMesh();
 
 		void WalkHierarchy(const aiNode* node, const glm::mat4& parentTransform);
 		void VisitNode(const aiNode* node, const glm::mat4& parentTransform);
