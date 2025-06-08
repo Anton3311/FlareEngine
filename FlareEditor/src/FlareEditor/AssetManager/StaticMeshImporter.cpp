@@ -323,7 +323,7 @@ namespace Flare
 
 				for (uint32_t i = 0; i < f.mNumIndices; i++)
 				{
-					*indexWriteLocation = static_cast<uint16_t>(f.mIndices[i]) + static_cast<uint16_t>(m_VertexOffset);
+					*indexWriteLocation = static_cast<uint16_t>(f.mIndices[i]);
 					indexWriteLocation++;
 				}
 			}
@@ -338,58 +338,58 @@ namespace Flare
 
 				for (uint32_t i = 0; i < f.mNumIndices; i++)
 				{
-					*indexWriteLocation = static_cast<uint32_t>(f.mIndices[i]) + static_cast<uint32_t>(m_VertexOffset);
+					*indexWriteLocation = static_cast<uint32_t>(f.mIndices[i]);
 					indexWriteLocation++;
 				}
 			}
 		}
 
+		Span<const glm::vec3> subMeshVertices = Span(m_SceneData.Vertices + m_VertexOffset, (size_t)mesh->mNumVertices);
+
 		SubMesh subMesh{};
-		subMesh.BaseVertex = 0;
+		subMesh.BaseVertex = static_cast<uint32_t>(m_VertexOffset);
 		subMesh.BaseIndex = (uint32_t)m_IndexOffset;
 		subMesh.IndicesCount = (uint32_t)subMeshIndexCount;
-		subMesh.Bounds = ComputeBounds(Span(m_SceneData.Vertices + m_VertexOffset, (size_t)mesh->mNumVertices));
+		subMesh.Bounds = ComputeBounds(subMeshVertices);
 
 		SubMesh depthOnlySubMesh{};
-		depthOnlySubMesh.BaseVertex = 0;
+		depthOnlySubMesh.BaseVertex = static_cast<uint32_t>(m_SceneData.DepthOnlyVertexCount);
 		depthOnlySubMesh.Bounds = subMesh.Bounds;
-		// NOTE: Each submesh has the same total number of regular and depthonly indices, so the offsets and counts match
+		// NOTE: Each sub mesh has the same total number of regular and depth only indices, so the offsets and counts match
 		depthOnlySubMesh.BaseIndex = subMesh.BaseIndex;
 		depthOnlySubMesh.IndicesCount = subMesh.IndicesCount;
 
 		size_t uniqueVertexCount = 0;
-		Span<const glm::vec3> allVertices = Span(m_SceneData.Vertices, m_SceneData.VertexCount);
 
 		FLARE_CORE_ASSERT(subMeshIndexCount <= m_MaxSubMeshIndexCount);
 		if (m_SceneData.IndexFormat == IndexFormat::UInt16)
 		{
 			uint16_t* reducedIndexBuffer = reinterpret_cast<uint16_t*>(m_TemporaryReducedIndexBuffer);
-			GenerateDepthOnlyIndices<uint16_t>(allVertices,
+			GenerateDepthOnlyIndices<uint16_t>(subMeshVertices,
 				Span(m_SceneData.Indices16 + m_IndexOffset, subMeshIndexCount),
 				reducedIndexBuffer,
 				uniqueVertexCount);
 			
-			GenerateUniqueVertices<uint16_t>(allVertices,
+			GenerateUniqueVertices<uint16_t>(subMeshVertices,
 				Span(reducedIndexBuffer, subMeshIndexCount),
 				Span(m_SceneData.DepthOnlyVertices + m_SceneData.DepthOnlyVertexCount, uniqueVertexCount),
 				Span(m_SceneData.DepthOnlyIndices16 + m_IndexOffset, subMeshIndexCount),
-				Span(reinterpret_cast<uint16_t*>(m_TemporaryUniqueVertexMapping), m_SceneData.VertexCount));
+				Span(reinterpret_cast<uint16_t*>(m_TemporaryUniqueVertexMapping), subMeshVertices.GetSize()));
 		}
 		else
 		{
-			GenerateDepthOnlyIndices<uint32_t>(allVertices,
+			GenerateDepthOnlyIndices<uint32_t>(subMeshVertices,
 				Span(m_SceneData.Indices32 + m_IndexOffset, subMeshIndexCount),
 				m_TemporaryReducedIndexBuffer,
 				uniqueVertexCount);
 
-			GenerateUniqueVertices<uint32_t>(allVertices,
+			GenerateUniqueVertices<uint32_t>(subMeshVertices,
 				Span(m_TemporaryReducedIndexBuffer, subMeshIndexCount),
 				Span(m_SceneData.DepthOnlyVertices + m_SceneData.DepthOnlyVertexCount, uniqueVertexCount),
 				Span(m_SceneData.DepthOnlyIndices32 + m_IndexOffset, subMeshIndexCount),
-				Span(m_TemporaryUniqueVertexMapping, m_SceneData.VertexCount));
+				Span(m_TemporaryUniqueVertexMapping, subMeshVertices.GetSize()));
 		}
 
-		depthOnlySubMesh.BaseVertex = static_cast<uint32_t>(m_SceneData.DepthOnlyVertexCount);
 		m_SceneData.DepthOnlyVertexCount += uniqueVertexCount;
 
 		m_VertexOffset += mesh->mNumVertices;
