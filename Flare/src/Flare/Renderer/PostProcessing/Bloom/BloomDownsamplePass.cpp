@@ -1,5 +1,5 @@
 #include "PCH.h"
-#include "BloomFilteringPass.h"
+#include "BloomDownsamplePass.h"
 
 #include "Flare/AssetManager/AssetManager.h"
 
@@ -12,10 +12,10 @@
 
 namespace Flare
 {
-	BloomFilteringPass::BloomFilteringPass(RenderGraphTextureId sourceTexture)
+	BloomDownsamplePass::BloomDownsamplePass(RenderGraphTextureId sourceTexture)
 		: m_SourceTexture(sourceTexture)
 	{
-		if (std::optional<AssetHandle> shaderHandle = ShaderLibrary::FindShader("BloomFilter"))
+		if (std::optional<AssetHandle> shaderHandle = ShaderLibrary::FindShader("BloomDownsample"))
 		{
 			FLARE_CORE_ASSERT(AssetManager::IsAssetHandleValid(*shaderHandle));
 			m_Material = Material::Create(*shaderHandle);
@@ -28,11 +28,11 @@ namespace Flare
 		m_Sampler = Sampler::Create(specifications);
 	}
 
-	void BloomFilteringPass::OnPrepare(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
+	void BloomDownsamplePass::OnPrepare(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
 	{
 	}
 
-	void BloomFilteringPass::OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
+	void BloomDownsamplePass::OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
 	{
 		FLARE_PROFILE_FUNCTION();
 

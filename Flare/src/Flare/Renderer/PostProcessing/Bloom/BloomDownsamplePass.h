@@ -6,10 +6,10 @@ namespace Flare
 {
 	class Material;
 	class Sampler;
-	class BloomFilteringPass : public RenderGraphPass
+	class BloomDownsamplePass : public RenderGraphPass
 	{
 	public:
-		BloomFilteringPass(RenderGraphTextureId sourceTexture);
+		BloomDownsamplePass(RenderGraphTextureId sourceTexture);
 
 		void OnPrepare(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer) override;
 		void OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer) override;

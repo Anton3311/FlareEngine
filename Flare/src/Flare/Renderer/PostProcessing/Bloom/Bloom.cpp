@@ -6,7 +6,7 @@
 #include "FlareECS/World.h"
 
 #include "Flare/Renderer/PostProcessing/Bloom/BloomBlitPass.h"
-#include "Flare/Renderer/PostProcessing/Bloom/BloomFilteringPass.h"
+#include "Flare/Renderer/PostProcessing/Bloom/BloomDownsamplePass.h"
 #include "Flare/Renderer/PostProcessing/Bloom/BloomLuminanceIsolationPass.h"
 #include "Flare/Renderer/PostProcessing/Bloom/BloomUpsamplePass.h"
 #include "Flare/Renderer/RenderGraph/RenderGraph.h"
@@ -63,7 +63,7 @@ namespace Flare
 			downsamplePass.AddInput(mips[i - 1]);
 			downsamplePass.AddOutput(mips[i]);
 
-			renderGraph.AddPass(downsamplePass, Ref<BloomFilteringPass>::New(mips[i - 1]));
+			renderGraph.AddPass(downsamplePass, Ref<BloomDownsamplePass>::New(mips[i - 1]));
 		}
 
 		// Upsampling Passes
