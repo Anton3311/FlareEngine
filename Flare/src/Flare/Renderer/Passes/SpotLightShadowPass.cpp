@@ -77,25 +77,29 @@ namespace Flare
 		m_CulledGeometryTransforms.clear();
 		m_CulledBatches.clear();
 		m_Tiles.clear();
+		m_AllocatedTileCount = 0;
 
 		uint32_t frameIndex = GraphicsContext::GetInstance().GetCurrentFrameInFlight();
 		uint32_t frameCount = GraphicsContext::GetInstance().GetFrameInFlightCount();
 
 		const SpotLightShadowsEntry* shadowEntries = PrepareShadowEntries(context);
 
-		CullGeometry(context, shadowEntries);
-
-		size_t transformsSize = sizeof(PackedTransform) * m_CulledGeometryTransforms.size();
-		if (transformsSize > m_TransformBuffers[frameIndex].Buffer->GetSize())
+		if (shadowEntries != nullptr)
 		{
-			m_TransformBuffers[frameIndex].Buffer->Resize(transformsSize);
-			m_TransformBuffers[frameIndex].Set->WriteStorageBuffer(m_TransformBuffers[frameIndex].Buffer, 0);
-			m_TransformBuffers[frameIndex].Set->FlushWrites();
+			CullGeometry(context, shadowEntries);
+
+			size_t transformsSize = sizeof(PackedTransform) * m_CulledGeometryTransforms.size();
+			if (transformsSize > m_TransformBuffers[frameIndex].Buffer->GetSize())
+			{
+				m_TransformBuffers[frameIndex].Buffer->Resize(transformsSize);
+				m_TransformBuffers[frameIndex].Set->WriteStorageBuffer(m_TransformBuffers[frameIndex].Buffer, 0);
+				m_TransformBuffers[frameIndex].Set->FlushWrites();
+			}
+
+			m_TransformBuffers[frameIndex].Buffer->SetData(MemorySpan::FromVector(m_CulledGeometryTransforms), 0, commandBuffer);
+
+			delete[] shadowEntries;
 		}
-
-		m_TransformBuffers[frameIndex].Buffer->SetData(MemorySpan::FromVector(m_CulledGeometryTransforms), 0, commandBuffer);
-
-		delete[] shadowEntries;
 	}
 
 	void SpotLightShadowPass::OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)
@@ -263,7 +267,6 @@ namespace Flare
 		glm::uvec2 tileOffset = glm::ivec2(0, 0);
 		uint32_t rowHeight = 0;
 
-		m_AllocatedTileCount = 0;
 		for (size_t i = 0; i < lightCount; i++)
 		{
 			uint32_t lightIndex = lightIndices[i];
