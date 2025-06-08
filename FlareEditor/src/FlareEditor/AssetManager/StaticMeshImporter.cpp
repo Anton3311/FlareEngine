@@ -49,6 +49,15 @@ namespace Flare
 			delete[] SubMeshes;
 	}
 
+	StaticMeshImporter::~StaticMeshImporter()
+	{
+		if (m_TemporaryReducedIndexBuffer)
+			delete[] m_TemporaryReducedIndexBuffer;
+
+		if (m_TemporaryUniqueVertexMapping)
+			delete[] m_TemporaryUniqueVertexMapping;
+	}
+
 	void StaticMeshImporter::Import()
 	{
 		FLARE_PROFILE_FUNCTION();
@@ -274,14 +283,14 @@ namespace Flare
 		Span<const IndexType> depthOnlyIndices,
 		Span<glm::vec3> reducedVertexBuffer,
 		Span<IndexType> reducedIndexBuffer,
-		IndexType vertexOffset)
+		IndexType vertexOffset,
+		Span<IndexType> indexMapping)
 	{
 		FLARE_PROFILE_FUNCTION();
 
 		constexpr IndexType INVALID_INDEX = std::numeric_limits<IndexType>::max();
-		IndexType* indexMapping = new IndexType[vertices.GetSize()];
 
-		std::memset(indexMapping, 0xff, vertices.GetSize() * sizeof(IndexType));
+		std::memset(indexMapping.GetData(), 0xff, indexMapping.GetSize() * sizeof(IndexType));
 
 		IndexType reducedVertexBufferOffset = 0;
 		IndexType reducedIndexBufferOffset = 0;
@@ -298,8 +307,6 @@ namespace Flare
 
 			reducedIndexBufferOffset++;
 		}
-
-		delete[] indexMapping;
 	}
 
 	SubMeshesPair StaticMeshImporter::CopySubMeshData(const aiMesh* mesh)
@@ -372,9 +379,11 @@ namespace Flare
 
 		size_t uniqueVertexCount = 0;
 		Span<const glm::vec3> allVertices = Span(m_SceneData.Vertices, m_SceneData.VertexCount);
+
+		FLARE_CORE_ASSERT(subMeshIndexCount <= m_MaxSubMeshIndexCount);
 		if (m_SceneData.IndexFormat == IndexFormat::UInt16)
 		{
-			uint16_t* reducedIndexBuffer = new uint16_t[subMeshIndexCount];
+			uint16_t* reducedIndexBuffer = reinterpret_cast<uint16_t*>(m_TemporaryReducedIndexBuffer);
 			GenerateDepthOnlyIndices<uint16_t>(allVertices,
 				Span(m_SceneData.Indices16 + m_IndexOffset, subMeshIndexCount),
 				reducedIndexBuffer,
@@ -384,25 +393,22 @@ namespace Flare
 				Span(reducedIndexBuffer, subMeshIndexCount),
 				Span(m_SceneData.DepthOnlyVertices + m_SceneData.DepthOnlyVertexCount, uniqueVertexCount),
 				Span(m_SceneData.DepthOnlyIndices16 + m_IndexOffset, subMeshIndexCount),
-				static_cast<uint16_t>(m_SceneData.DepthOnlyVertexCount));
-
-			delete[] reducedIndexBuffer;
+				static_cast<uint16_t>(m_SceneData.DepthOnlyVertexCount),
+				Span(reinterpret_cast<uint16_t*>(m_TemporaryUniqueVertexMapping), m_SceneData.VertexCount));
 		}
 		else
 		{
-			uint32_t* reducedIndexBuffer = new uint32_t[subMeshIndexCount];
 			GenerateDepthOnlyIndices<uint32_t>(allVertices,
 				Span(m_SceneData.Indices32 + m_IndexOffset, subMeshIndexCount),
-				reducedIndexBuffer,
+				m_TemporaryReducedIndexBuffer,
 				uniqueVertexCount);
 
 			GenerateUniqueVertices<uint32_t>(allVertices,
-				Span(reducedIndexBuffer, subMeshIndexCount),
+				Span(m_TemporaryReducedIndexBuffer, subMeshIndexCount),
 				Span(m_SceneData.DepthOnlyVertices + m_SceneData.DepthOnlyVertexCount, uniqueVertexCount),
 				Span(m_SceneData.DepthOnlyIndices32 + m_IndexOffset, subMeshIndexCount),
-				static_cast<uint32_t>(m_SceneData.DepthOnlyVertexCount));
-
-			delete[] reducedIndexBuffer;
+				static_cast<uint32_t>(m_SceneData.DepthOnlyVertexCount),
+				Span(m_TemporaryUniqueVertexMapping, m_SceneData.VertexCount));
 		}
 
 		m_SceneData.DepthOnlyVertexCount += uniqueVertexCount;
@@ -456,6 +462,9 @@ namespace Flare
 		m_SceneData.SubMeshes = new SubMesh[subMeshCount * 2];
 		m_SceneData.DepthOnlySubMeshes = m_SceneData.SubMeshes + subMeshCount;
 
+		m_TemporaryReducedIndexBuffer = new uint32_t[m_MaxSubMeshIndexCount];
+		m_TemporaryUniqueVertexMapping = new uint32_t[m_SceneData.VertexCount];
+
 		switch (indexFormat)
 		{
 		case IndexFormat::UInt16:
@@ -495,11 +504,17 @@ namespace Flare
 		{
 			const aiMesh* mesh = m_Scene->mMeshes[i];
 
-			outVertexCount += (size_t)mesh->mNumVertices;
+			size_t meshIndexCount = 0;
+
 			for (uint32_t face = 0; face < mesh->mNumFaces; face++)
 			{
-				outIndexCount += (size_t)mesh->mFaces[face].mNumIndices;
+				meshIndexCount += (size_t)mesh->mFaces[face].mNumIndices;
 			}
+
+			outVertexCount += (size_t)mesh->mNumVertices;
+			outIndexCount += meshIndexCount;
+
+			m_MaxSubMeshIndexCount = glm::max(m_MaxSubMeshIndexCount, meshIndexCount);
 		}
 	}
 
@@ -517,5 +532,7 @@ namespace Flare
 				indexCount += (size_t)f.mNumIndices;
 			}
 		}
+
+		m_MaxSubMeshIndexCount = glm::max(m_MaxSubMeshIndexCount, indexCount);
 	}
 }

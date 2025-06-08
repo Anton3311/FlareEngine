@@ -78,6 +78,8 @@ namespace Flare
 		StaticMeshImporter(const aiScene* scene, const MeshImportSettings& importSettings)
 			: m_Scene(scene), m_ImportSettings(importSettings) {}
 
+		~StaticMeshImporter();
+
 		void Import();
 
 		inline const SceneData& GetSceneData() const { return m_SceneData; }
@@ -106,5 +108,10 @@ namespace Flare
 
 		SceneData m_SceneData;
 		const aiScene* m_Scene = nullptr;
+
+		uint32_t* m_TemporaryReducedIndexBuffer = nullptr;
+		uint32_t* m_TemporaryUniqueVertexMapping = nullptr;
+
+		size_t m_MaxSubMeshIndexCount = 0;
 	};
 }
