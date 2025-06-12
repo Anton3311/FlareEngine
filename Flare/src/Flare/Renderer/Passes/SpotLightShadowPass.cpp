@@ -281,16 +281,16 @@ namespace Flare
 				continue;
 			}
 
+			glm::uvec2 tilePosition = tileOffset;
+			tileOffset.x += tileSize;
+			rowHeight = glm::max(rowHeight, tileSize);
+
 			if (tileOffset.x + tileSize > shadowMapSize.x)
 			{
 				tileOffset.x = 0;
 				tileOffset.y += rowHeight;
 				rowHeight = 0;
 			}
-
-			glm::uvec2 tilePosition = tileOffset;
-			tileOffset.x += tileSize;
-			rowHeight = glm::max(rowHeight, tileSize);
 
 			// UV Transform format:
 			// 4 bits - log2 size
