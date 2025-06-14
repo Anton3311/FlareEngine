@@ -14,8 +14,8 @@
 
 namespace Flare
 {
-	BloomUpsamplePass::BloomUpsamplePass(Ref<const Bloom> parameters, RenderGraphTextureId sourceTexture, RenderGraphTextureId previousMip)
-		: m_SourceTexture(sourceTexture), m_Parameters(parameters), m_PreviousMip(previousMip)
+	BloomUpsamplePass::BloomUpsamplePass(Ref<const Bloom> parameters, RenderGraphTextureId sourceTexture)
+		: m_SourceTexture(sourceTexture), m_Parameters(parameters)
 	{
 		if (std::optional<AssetHandle> shaderHandle = ShaderLibrary::FindShader("BloomUpsample"))
 		{
@@ -43,7 +43,6 @@ namespace Flare
 
 		std::optional<uint32_t> texelSizeProperty = m_Material->GetShader()->GetPropertyIndex("u_TexelSize");
 		std::optional<uint32_t> colorTextureProperty = m_Material->GetShader()->GetPropertyIndex("u_Color");
-		std::optional<uint32_t> previousMipProperty = m_Material->GetShader()->GetPropertyIndex("u_PreviousMip");
 
 		Ref<Texture> sourceTexture = context.GetRenderGraph().GetTexture(m_SourceTexture);
 		const TextureSpecifications& specifications = sourceTexture->GetSpecifications();
@@ -51,18 +50,6 @@ namespace Flare
 		glm::vec2 texelSize = glm::vec2(m_Parameters->Radius) / glm::vec2((float)specifications.Width, (float)specifications.Height);
 		m_Material->WritePropertyValue<glm::vec2>(*texelSizeProperty, texelSize);
 		m_Material->SetTextureProperty(*colorTextureProperty, sourceTexture, m_Sampler);
-
-		if (previousMipProperty)
-		{
-			if (m_PreviousMip != RenderGraphTextureId())
-			{
-				m_Material->SetTextureProperty(*previousMipProperty, context.GetRenderGraph().GetTexture(m_PreviousMip), m_Sampler);
-			}
-			else
-			{
-				m_Material->SetTextureProperty(*previousMipProperty, Renderer::GetBlackTexture());
-			}
-		}
 
 		commandBuffer->ApplyMaterial(m_Material);
 		commandBuffer->SetDefaultViewportAndScissors();

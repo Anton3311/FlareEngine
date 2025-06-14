@@ -75,14 +75,7 @@ namespace Flare
 			upsamplePass.AddInput(mips[i]);
 			upsamplePass.AddOutput(mips[i - 1]);
 
-			RenderGraphTextureId previousMipId = RenderGraphTextureId();
-			if (i < MIP_COUNT - 1)
-			{
-				previousMipId = mips[i + 1];
-				upsamplePass.AddInput(previousMipId);
-			}
-
-			renderGraph.AddPass(upsamplePass, Ref<BloomUpsamplePass>::New(Ref(this), mips[i], previousMipId));
+			renderGraph.AddPass(upsamplePass, Ref<BloomUpsamplePass>::New(Ref(this), mips[i]));
 		}
 
 		RenderGraphPassSpecifications blitPass{};
