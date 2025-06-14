@@ -53,13 +53,7 @@ void main()
 #begin pixel
 #version 450
 
-// #define DEBUG_CASCADES 1
-
-#include "Common/Camera.glsl"
-#include "Common/BRDF.glsl"
-#include "Common/ShadowMapping.glsl"
-#include "Common/Light.glsl"
-#include "Common/SpotLightShadows.glsl"
+#include "BasePBRSurface.glsl"
 
 layout(std140, push_constant) uniform InstanceData
 {
@@ -87,29 +81,6 @@ layout(location = 0) in VertexData i_Vertex;
 
 layout(location = 0) out vec4 o_Color;
 
-vec3 UnpackNormalXYZ(vec3 packedNormal)
-{
-	return packedNormal * 2.0f - vec3(1.0f);
-}
-
-vec3 UnpackNormalXY(vec3 packedNormal)
-{
-	vec2 normalXY = packedNormal.xy * 2.0f - vec2(1.0f);
-	float z = sqrt(clamp(1.0f - dot(normalXY, normalXY), 0.0f, 1.0f));
-	return vec3(normalXY, z);
-}
-
-// #define NORMAL_FORMAT_XYZ
-
-vec3 UnpackNormal(vec3 packedNormal)
-{
-#ifdef NORMAL_FORMAT_XYZ
-	return UnpackNormalXYZ(packedNormal);
-#else
-	return UnpackNormalXY(packedNormal);
-#endif
-}
-
 void main()
 {
 	vec2 uv = vec2(i_Vertex.UVx, i_Vertex.UVy);
@@ -117,53 +88,22 @@ void main()
 	if (color.a == 0.0f)
 		discard;
 
-	vec3 vertexNormal = normalize(i_Vertex.Normal);
-	vec3 V = normalize(u_Camera.Position - i_Vertex.Position);
-	vec3 H = normalize(V - u_LightDirection);
-	vec3 N = vertexNormal;
+	vec3 normal = normalize(i_Vertex.Normal);
 
-	vec3 tangent = normalize(i_Vertex.Tangent);
-	tangent = normalize(tangent - dot(tangent, N) * N);
-
-	vec3 bitangent = cross(N, tangent);
-	mat3 tbn = mat3(tangent, bitangent, N);
+	mat3 tangentSpace = ComputeTangentSpace(normal, normalize(i_Vertex.Tangent));
 	vec3 sampledNormal = UnpackNormal(texture(u_NormalMap, uv).xyz);
+	normal = normalize(tangentSpace * sampledNormal);
 
-	N = normalize(tbn * sampledNormal);
+	PBRMaterialProperties material;
+	material.SurfacePosition = i_Vertex.Position;
+	material.SurfaceNormal = normal;
+	material.SurfaceColor = color;
+	material.SurfaceEmission = texture(u_EmissionMap, uv).rgb * u_Material.Emission;
+	material.Metallic = u_Material.Metallic;
+	material.Roughness = u_Material.Roughness * texture(u_RoughnessMap, uv).r;
 
-	SurfaceProperties surface;
-	surface.Position = i_Vertex.Position;
-	surface.Normal = N;
-	surface.Color = color.rgb;
-	surface.Roughness = u_Material.Roughness * texture(u_RoughnessMap, uv).r;
-	surface.Metallic = u_Material.Metallic;
-
-	float shadow = CalculateShadow(vertexNormal, i_Vertex.Position);
-
-	vec3 finalColor = CalculateLight(V, H, u_LightColor.rgb * u_LightColor.w, -u_LightDirection, surface);
-
-	finalColor *= shadow;
-
-	finalColor += CalculatePointLightsContribution(V, surface);
-	finalColor += CalculateSpotLightsContribution(V, surface);
-	finalColor += ComputeShadowCastingSpotLightsContribution(V, surface);
-
-	float ao = SampleAO(ivec2(gl_FragCoord.xy));
-	ao = mix(ao, 1.0f, shadow);
-
-	finalColor += u_EnvironmentLight.rgb * u_EnvironmentLight.w * color.rgb * ao;
-
-	vec3 emission = texture(u_EmissionMap, uv).rgb * u_Material.Emission;
-	finalColor += emission;
-
-#if DEBUG_CASCADES
-	int cascadeIndex = CalculateCascadeIndex(i_Vertex.ViewSpacePosition);
-	vec3 cascadeColors[] = { vec3(1.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f), vec3(0.0f, 0.0f, 1.0f), vec3(1.0f, 0.0f, 0.0f), vec3(1.0f) };
-
-	finalColor *= cascadeColors[min(cascadeIndex, CASCADES_COUNT)];
-#endif
-
-	o_Color = vec4(finalColor, color.a);
+	vec3 surfaceColor = ShadePBRSurface(material);
+	o_Color = vec4(surfaceColor, color.a);
 }
 
 #end
