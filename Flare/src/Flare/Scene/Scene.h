@@ -43,6 +43,8 @@ namespace Flare
 		inline PostProcessingManager& GetPostProcessingManager() { return m_PostProcessingManager; }
 		inline const PostProcessingManager& GetPostProcessingManager() const { return m_PostProcessingManager; }
 
+		inline Query GetRootEntitiesQuery() const { return m_RootEntitiesQuery; }
+
 		static Ref<Scene> GetActive();
 		static void SetActive(const Ref<Scene>& scene);
 	private:
@@ -64,6 +66,7 @@ namespace Flare
 		SystemGroupId m_OnFrameEnd;
 
 		Query m_EnvironmentQuery;
+		Query m_RootEntitiesQuery;
 
 		PostProcessingManager m_PostProcessingManager;
 	private:

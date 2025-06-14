@@ -52,6 +52,7 @@ namespace Flare
 		m_OnFrameEnd = m_SystemsManager.CreateGroup("On Frame End");
 
 		m_EnvironmentQuery = m_World.NewQuery().All().With<Environment>().Build();
+		m_RootEntitiesQuery = m_World.NewQuery().All().Without<Parent>().Build();
 
 		m_PostProcessingManager.AddEffect(Ref<SSAO>::New());
 		m_PostProcessingManager.AddEffect(Ref<Atmosphere>::New());

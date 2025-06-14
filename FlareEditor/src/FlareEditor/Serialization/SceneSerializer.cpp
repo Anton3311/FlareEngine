@@ -7,6 +7,7 @@
 #include "Flare/Scene/Scene.h"
 #include "Flare/Scene/Components.h"
 #include "Flare/Scene/Prefab.h"
+#include "Flare/Scene/Hierarchy.h"
 #include "Flare/AssetManager/AssetManager.h"
 
 #include "Flare/Serialization/Serialization.h"
@@ -91,6 +92,7 @@ namespace Flare
 				emitter << UUID();
 		}
 
+		bool shouldSerializeChildren = true;
 		const PrefabInstance* prefabInstance = world.TryGetEntityComponent<const PrefabInstance>(entity);
 		if (prefabInstance)
 		{
@@ -105,6 +107,11 @@ namespace Flare
 			}
 
 			emitter << YAML::Key << "Prefab" << YAML::Value << prefabInstance->PrefabHandle;
+
+			// NOTE: Don't serialize children of the prefab instance.
+			//       This leads to having invalid hierarchy connections after deserializing.
+			//       There will be extra entities, that were deserialized from the scene file, attached to a prefab instance.
+			shouldSerializeChildren = false;
 		}
 		else
 		{
@@ -124,6 +131,18 @@ namespace Flare
 		}
 
 		emitter << YAML::EndMap;
+
+		if (shouldSerializeChildren)
+		{
+			const Children* children = world.TryGetEntityComponent<Children>(entity);
+			if (children)
+			{
+				for (Entity child : children->GetChildren())
+				{
+					SerializeEntity(emitter, world, child);
+				}
+			}
+		}
 	}
 
 	static void DeserializeEntitySerializationId(const YAML::Node& node, World& world, Entity& outEntity, UUID& outSerializationId)
@@ -246,8 +265,14 @@ namespace Flare
 		emitter << YAML::Key << "Entities";
 		emitter << YAML::BeginSeq;
 
-		for (Entity entity : scene->m_World.Entities)
-			SerializeEntity(emitter, scene->m_World, entity);
+		Query rootEntitiesQuery = scene->GetRootEntitiesQuery();
+		rootEntitiesQuery.ForEachChunk([&](QueryChunk chunk)
+		{
+			for (size_t i = 0; i < chunk.GetEntityCount(); i++)
+			{
+				SerializeEntity(emitter, scene->m_World, chunk.GetEntityId(i));
+			}
+		});
 
 		emitter << YAML::EndSeq; // Entities
 
