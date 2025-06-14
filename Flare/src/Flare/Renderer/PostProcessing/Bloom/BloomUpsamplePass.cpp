@@ -41,25 +41,27 @@ namespace Flare
 		if (m_Material == nullptr || m_Material->GetShader() == nullptr || !m_Material->GetShader()->IsLoaded())
 			return;
 
-		std::optional<uint32_t> aspectRatioProperty = m_Material->GetShader()->GetPropertyIndex("u_AspectRatio");
+		std::optional<uint32_t> texelSizeProperty = m_Material->GetShader()->GetPropertyIndex("u_TexelSize");
 		std::optional<uint32_t> colorTextureProperty = m_Material->GetShader()->GetPropertyIndex("u_Color");
 		std::optional<uint32_t> previousMipProperty = m_Material->GetShader()->GetPropertyIndex("u_PreviousMip");
-		std::optional<uint32_t> radiusTextureProperty = m_Material->GetShader()->GetPropertyIndex("u_Radius");
 
 		Ref<Texture> sourceTexture = context.GetRenderGraph().GetTexture(m_SourceTexture);
 		const TextureSpecifications& specifications = sourceTexture->GetSpecifications();
 
-		m_Material->WritePropertyValue<float>(*aspectRatioProperty, (float)specifications.Width / (float)specifications.Height);
-		m_Material->WritePropertyValue<float>(*radiusTextureProperty, m_Parameters->Radius);
+		glm::vec2 texelSize = glm::vec2(m_Parameters->Radius) / glm::vec2((float)specifications.Width, (float)specifications.Height);
+		m_Material->WritePropertyValue<glm::vec2>(*texelSizeProperty, texelSize);
 		m_Material->SetTextureProperty(*colorTextureProperty, sourceTexture, m_Sampler);
 
-		if (m_PreviousMip != RenderGraphTextureId())
+		if (previousMipProperty)
 		{
-			m_Material->SetTextureProperty(*previousMipProperty, context.GetRenderGraph().GetTexture(m_PreviousMip), m_Sampler);
-		}
-		else
-		{
-			m_Material->SetTextureProperty(*previousMipProperty, Renderer::GetBlackTexture());
+			if (m_PreviousMip != RenderGraphTextureId())
+			{
+				m_Material->SetTextureProperty(*previousMipProperty, context.GetRenderGraph().GetTexture(m_PreviousMip), m_Sampler);
+			}
+			else
+			{
+				m_Material->SetTextureProperty(*previousMipProperty, Renderer::GetBlackTexture());
+			}
 		}
 
 		commandBuffer->ApplyMaterial(m_Material);

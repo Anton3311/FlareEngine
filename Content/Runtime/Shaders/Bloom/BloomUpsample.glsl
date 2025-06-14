@@ -27,8 +27,7 @@ layout(location = 0) out vec4 o_Color;
 
 layout(std140, push_constant) uniform Constants
 {
-	float u_Radius;
-	float u_AspectRatio;
+	vec2 u_TexelSize;
 };
 
 const float FILTER_WEIGHTS[3][3] =
@@ -45,10 +44,7 @@ void main()
 	{
 		for (int xIndex = 0; xIndex < 3; xIndex++)
 		{
-			vec2 offset = vec2(float(xIndex - 1), float(yIndex - 1));
-			offset.x /= u_AspectRatio;
-
-			vec2 sampleUV = i_UV + offset * u_Radius;
+			vec2 sampleUV = i_UV + vec2(float(xIndex - 1), float(yIndex - 1)) * u_TexelSize;
 			finalColor += texture(u_Color, sampleUV).rgb * FILTER_WEIGHTS[yIndex][xIndex];
 		}
 	}
