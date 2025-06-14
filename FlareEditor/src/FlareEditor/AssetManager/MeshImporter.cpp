@@ -202,7 +202,8 @@ namespace Flare
 				materialAsset->WritePropertyValue(*metallicProperty, metallic);
 			if (emissionProperty)
 			{
-				glm::vec3 emissionValue = glm::vec3(emission.r, emission.g, emission.b);
+				constexpr float EMISSION_INTENSITY = 100.0f;
+				glm::vec3 emissionValue = glm::vec3(emission.r, emission.g, emission.b) * EMISSION_INTENSITY;
 				materialAsset->WritePropertyValue<glm::vec3>(*emissionProperty, emissionValue);
 			}
 
