@@ -48,7 +48,7 @@ namespace Flare
 
 		m_SystemsManager.SetDefaultSystemsGroup(m_ScriptingUpdateGroup);
 
-		m_OnFrameStart = m_SystemsManager.CreateGroup("On Frame End");
+		m_OnFrameStart = m_SystemsManager.CreateGroup("On Frame Start");
 		m_OnFrameEnd = m_SystemsManager.CreateGroup("On Frame End");
 
 		m_EnvironmentQuery = m_World.NewQuery().All().With<Environment>().Build();
