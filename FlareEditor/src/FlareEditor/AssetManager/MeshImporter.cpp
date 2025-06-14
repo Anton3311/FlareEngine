@@ -129,12 +129,14 @@ namespace Flare
 			AssetHandle roughnessMapHandle = NULL_ASSET_HANDLE;
 			AssetHandle metallicMapHandle = NULL_ASSET_HANDLE;
 			AssetHandle specularMapHandle = NULL_ASSET_HANDLE;
+			AssetHandle emissionMapHandle = NULL_ASSET_HANDLE;
 
 			baseColorTextureHandle = getMaterialTexture(*material, aiTextureType_BASE_COLOR);
 			normalMapHandle = getMaterialTexture(*material, aiTextureType_NORMALS);
 			roughnessMapHandle = getMaterialTexture(*material, aiTextureType_DIFFUSE_ROUGHNESS);
 			metallicMapHandle = getMaterialTexture(*material, aiTextureType_METALNESS);
 			specularMapHandle = getMaterialTexture(*material, aiTextureType_SPECULAR);
+			emissionMapHandle = getMaterialTexture(*material, aiTextureType_EMISSIVE);
 
 			if (baseColorTextureHandle == NULL_ASSET_HANDLE)
 			{
@@ -155,15 +157,19 @@ namespace Flare
 			}
 
 			aiColor4D color(1.0f, 1.0f, 1.0f, 1.0f);
-			material->Get(AI_MATKEY_COLOR_DIFFUSE, color);
 			float roughness = 1.0f;
-			material->Get(AI_MATKEY_ROUGHNESS_FACTOR, roughness);
 			float metallic = 0.0f;
+			aiColor3D emission(0.0f);
+
+			material->Get(AI_MATKEY_COLOR_DIFFUSE, color);
+			material->Get(AI_MATKEY_ROUGHNESS_FACTOR, roughness);
 			material->Get(AI_MATKEY_METALLIC_FACTOR, metallic);
+			material->Get(AI_MATKEY_COLOR_EMISSIVE, emission);
 
 			Ref<Material> materialAsset = Material::Create(*selectedSurfaceShader);
 
 			std::optional<uint32_t> colorProperty;
+			std::optional<uint32_t> emissionProperty;
 			std::optional<uint32_t> roughnessProperty;
 			std::optional<uint32_t> textureProperty;
 			std::optional<uint32_t> normalMapProperty;
@@ -171,11 +177,13 @@ namespace Flare
 			std::optional<uint32_t> metallicProperty;
 			std::optional<uint32_t> metallicMapProperty;
 			std::optional<uint32_t> specularMapProperty;
+			std::optional<uint32_t> emissionMapProperty;
 
 			Ref<Shader> shader = materialAsset->GetShader();
 			if (shader != nullptr && shader->IsLoaded())
 			{
 				colorProperty = shader->GetPropertyIndex("u_Material.Color");
+				emissionProperty = shader->GetPropertyIndex("u_Material.Emission");
 				roughnessProperty = shader->GetPropertyIndex("u_Material.Roughness");
 				textureProperty = shader->GetPropertyIndex("u_Texture");
 				normalMapProperty = shader->GetPropertyIndex("u_NormalMap");
@@ -183,6 +191,7 @@ namespace Flare
 				metallicProperty = shader->GetPropertyIndex("u_Material.Metallic");
 				metallicMapProperty = shader->GetPropertyIndex("u_MetallicMap");
 				specularMapProperty = shader->GetPropertyIndex("u_SpecularMap");
+				emissionMapProperty = shader->GetPropertyIndex("u_EmissionMap");
 			}
 
 			if (colorProperty)
@@ -191,12 +200,18 @@ namespace Flare
 				materialAsset->WritePropertyValue(*roughnessProperty, roughness);
 			if (metallicProperty)
 				materialAsset->WritePropertyValue(*metallicProperty, metallic);
+			if (emissionProperty)
+			{
+				glm::vec3 emissionValue = glm::vec3(emission.r, emission.g, emission.b);
+				materialAsset->WritePropertyValue<glm::vec3>(*emissionProperty, emissionValue);
+			}
 
 			TrySetMaterialTexture(textureProperty, materialAsset, baseColorTextureHandle, Renderer::GetWhiteTexture());
 			TrySetMaterialTexture(normalMapProperty, materialAsset, normalMapHandle, Renderer::GetDefaultNormalMap());
 			TrySetMaterialTexture(roughnessMapProperty, materialAsset, roughnessMapHandle, Renderer::GetWhiteTexture());
 			TrySetMaterialTexture(metallicMapProperty, materialAsset, metallicMapHandle, Renderer::GetWhiteTexture());
 			TrySetMaterialTexture(specularMapProperty, materialAsset, specularMapHandle, Renderer::GetWhiteTexture());
+			TrySetMaterialTexture(emissionMapProperty, materialAsset, emissionMapHandle, Renderer::GetWhiteTexture());
 
 			auto it = nameToHandle.find(name);
 			if (it != nameToHandle.end())
