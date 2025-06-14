@@ -9,6 +9,7 @@ Properties =
 	u_Texture = { Default = White }
 	u_NormalMap = { Default = DefaultNormals }
 	u_RoughnessMap = { Default = White }
+	u_MetallicMap = { Default = White }
 	u_EmissionMap = { Default = White }
 }
 
@@ -75,7 +76,8 @@ struct VertexData
 layout(set = 3, binding = 0) uniform sampler2D u_Texture;
 layout(set = 3, binding = 1) uniform sampler2D u_NormalMap;
 layout(set = 3, binding = 2) uniform sampler2D u_RoughnessMap;
-layout(set = 3, binding = 3) uniform sampler2D u_EmissionMap;
+layout(set = 3, binding = 3) uniform sampler2D u_MetallicMap;
+layout(set = 3, binding = 4) uniform sampler2D u_EmissionMap;
 
 layout(location = 0) in VertexData i_Vertex;
 
@@ -99,7 +101,7 @@ void main()
 	material.SurfaceNormal = normal;
 	material.SurfaceColor = color;
 	material.SurfaceEmission = texture(u_EmissionMap, uv).rgb * u_Material.Emission;
-	material.Metallic = u_Material.Metallic;
+	material.Metallic = u_Material.Metallic * texture(u_MetallicMap, uv).r;
 	material.Roughness = u_Material.Roughness * texture(u_RoughnessMap, uv).r;
 
 	vec3 surfaceColor = ShadePBRSurface(material);
