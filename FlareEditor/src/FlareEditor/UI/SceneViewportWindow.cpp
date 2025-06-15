@@ -381,9 +381,11 @@ namespace Flare
 			case AssetType::Prefab:
 			{
 				Ref<Prefab> prefab = AssetManager::GetAsset<Prefab>(handle);
-				Entity instance = prefab->CreateInstance(GetScene()->GetECSWorld(), PrefabInstantiationFlags::AddMetadataComponents);
-
-				EditorLayer::GetInstance().Selection.SetEntity(instance);
+				if (prefab)
+				{
+					Entity instance = prefab->CreateInstance(GetScene()->GetECSWorld(), PrefabInstantiationFlags::AddMetadataComponents);
+					EditorLayer::GetInstance().Selection.SetEntity(instance);
+				}
 
 				break;
 			}
