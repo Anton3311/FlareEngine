@@ -60,14 +60,12 @@ namespace Flare
 		return textureHandle;
 	}
 
-	static void TrySetMaterialTexture(std::optional<uint32_t> propertyIndex, const Ref<Material>& material, AssetHandle handle, const Ref<Texture>& defaultValue)
+	static void TrySetMaterialTexture(std::optional<uint32_t> propertyIndex, const Ref<Material>& material, AssetHandle handle)
 	{
 		FLARE_PROFILE_FUNCTION();
 		if (propertyIndex)
 		{
-			if (handle == NULL_ASSET_HANDLE)
-				material->SetTextureProperty(*propertyIndex, defaultValue);
-			else
+			if (handle != NULL_ASSET_HANDLE)
 				material->SetTextureProperty(*propertyIndex, AssetManager::GetAsset<Texture>(handle));
 		}
 	}
@@ -124,19 +122,12 @@ namespace Flare
 			if (name.empty())
 				name = fmt::format("Material {}", i);
 
-			AssetHandle baseColorTextureHandle = NULL_ASSET_HANDLE;
-			AssetHandle normalMapHandle = NULL_ASSET_HANDLE;
-			AssetHandle roughnessMapHandle = NULL_ASSET_HANDLE;
-			AssetHandle metallicMapHandle = NULL_ASSET_HANDLE;
-			AssetHandle specularMapHandle = NULL_ASSET_HANDLE;
-			AssetHandle emissionMapHandle = NULL_ASSET_HANDLE;
-
-			baseColorTextureHandle = getMaterialTexture(*material, aiTextureType_BASE_COLOR);
-			normalMapHandle = getMaterialTexture(*material, aiTextureType_NORMALS);
-			roughnessMapHandle = getMaterialTexture(*material, aiTextureType_DIFFUSE_ROUGHNESS);
-			metallicMapHandle = getMaterialTexture(*material, aiTextureType_METALNESS);
-			specularMapHandle = getMaterialTexture(*material, aiTextureType_SPECULAR);
-			emissionMapHandle = getMaterialTexture(*material, aiTextureType_EMISSIVE);
+			AssetHandle baseColorTextureHandle = getMaterialTexture(*material, aiTextureType_BASE_COLOR);
+			AssetHandle normalMapHandle = getMaterialTexture(*material, aiTextureType_NORMALS);
+			AssetHandle roughnessMapHandle = getMaterialTexture(*material, aiTextureType_DIFFUSE_ROUGHNESS);
+			AssetHandle metallicMapHandle = getMaterialTexture(*material, aiTextureType_METALNESS);
+			AssetHandle specularMapHandle = getMaterialTexture(*material, aiTextureType_SPECULAR);
+			AssetHandle emissionMapHandle = getMaterialTexture(*material, aiTextureType_EMISSIVE);
 
 			if (baseColorTextureHandle == NULL_ASSET_HANDLE)
 			{
@@ -207,12 +198,12 @@ namespace Flare
 				materialAsset->WritePropertyValue<glm::vec3>(*emissionProperty, emissionValue);
 			}
 
-			TrySetMaterialTexture(textureProperty, materialAsset, baseColorTextureHandle, Renderer::GetWhiteTexture());
-			TrySetMaterialTexture(normalMapProperty, materialAsset, normalMapHandle, Renderer::GetDefaultNormalMap());
-			TrySetMaterialTexture(roughnessMapProperty, materialAsset, roughnessMapHandle, Renderer::GetWhiteTexture());
-			TrySetMaterialTexture(metallicMapProperty, materialAsset, metallicMapHandle, Renderer::GetWhiteTexture());
-			TrySetMaterialTexture(specularMapProperty, materialAsset, specularMapHandle, Renderer::GetWhiteTexture());
-			TrySetMaterialTexture(emissionMapProperty, materialAsset, emissionMapHandle, Renderer::GetWhiteTexture());
+			TrySetMaterialTexture(textureProperty, materialAsset, baseColorTextureHandle);
+			TrySetMaterialTexture(normalMapProperty, materialAsset, normalMapHandle);
+			TrySetMaterialTexture(roughnessMapProperty, materialAsset, roughnessMapHandle);
+			TrySetMaterialTexture(metallicMapProperty, materialAsset, metallicMapHandle);
+			TrySetMaterialTexture(specularMapProperty, materialAsset, specularMapHandle);
+			TrySetMaterialTexture(emissionMapProperty, materialAsset, emissionMapHandle);
 
 			auto it = nameToHandle.find(name);
 			if (it != nameToHandle.end())
