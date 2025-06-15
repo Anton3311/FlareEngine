@@ -94,10 +94,11 @@ void main()
 
 	mat3 tangentSpace = ComputeTangentSpace(normal, normalize(i_Vertex.Tangent));
 	vec3 sampledNormal = UnpackNormal(texture(u_NormalMap, uv).xyz);
-	normal = normalize(tangentSpace * sampledNormal);
+	vec3 detailNormal = normalize(tangentSpace * sampledNormal);
 
 	PBRMaterialProperties material;
 	material.SurfacePosition = i_Vertex.Position;
+	material.SurfaceDetailNormal = detailNormal;
 	material.SurfaceNormal = normal;
 	material.SurfaceColor = color;
 	material.SurfaceEmission = texture(u_EmissionMap, uv).rgb * u_Material.Emission;

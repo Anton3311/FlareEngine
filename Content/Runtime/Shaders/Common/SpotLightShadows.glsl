@@ -63,7 +63,8 @@ float CalculateSpotLightShadow(vec3 spotLightPosition,
 	return 1.0f - PCF(u_SpotLightShadowMap, uv, shadowEntry.FilterRadius * u_SpotLightsShadowAtlasTexelSize, params);
 }
 
-vec3 ComputeShadowCastingSpotLightsContribution(vec3 V, in SurfaceProperties surface)
+// surfaceNormal - surface normal without the normal map applied
+vec3 ComputeShadowCastingSpotLightsContribution(vec3 V, SurfaceProperties surface, vec3 surfaceNormal)
 {
 	vec3 finalContribution = vec3(0.0f);
 
@@ -76,7 +77,7 @@ vec3 ComputeShadowCastingSpotLightsContribution(vec3 V, in SurfaceProperties sur
 
 		vec3 light = CalculateSingleSpotLightContricbution(V, surface, spotlightIndex);
 		float shadow = CalculateSpotLightShadow(spotLight.Position,
-			surface.Normal,
+			surfaceNormal,
 			surface.Position,
 			i, normalize(directionFromLight));
 

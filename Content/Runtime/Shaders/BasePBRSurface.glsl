@@ -18,6 +18,11 @@
 struct PBRMaterialProperties
 {
 	vec3 SurfacePosition;
+
+	// Surface normal after applying a normal map
+	vec3 SurfaceDetailNormal;
+
+	// Surface normal without the normal map
 	vec3 SurfaceNormal;
 
 	vec4 SurfaceColor;
@@ -70,7 +75,7 @@ vec3 ShadePBRSurface(PBRMaterialProperties material)
 	SurfaceProperties surface;
 	surface.Color = material.SurfaceColor.rgb;
 	surface.Position = material.SurfacePosition;
-	surface.Normal = material.SurfaceNormal;
+	surface.Normal = material.SurfaceDetailNormal;
 	surface.Metallic = material.Metallic;
 	surface.Roughness = material.Roughness;
 
@@ -83,7 +88,7 @@ vec3 ShadePBRSurface(PBRMaterialProperties material)
 	finalColor += CalculateLight(V, H, u_LightColor.rgb * u_LightColor.w, -u_LightDirection, surface) * directionalShadow;
 	finalColor += CalculatePointLightsContribution(V, surface);
 	finalColor += CalculateSpotLightsContribution(V, surface);
-	finalColor += ComputeShadowCastingSpotLightsContribution(V, surface);
+	finalColor += ComputeShadowCastingSpotLightsContribution(V, surface, material.SurfaceNormal);
 
 	float ao = SampleAO(ivec2(gl_FragCoord.xy));
 	ao = mix(ao, 1.0f, directionalShadow);
