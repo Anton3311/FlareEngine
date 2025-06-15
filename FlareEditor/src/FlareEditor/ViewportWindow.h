@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Flare/Renderer/RenderData.h"
+#include "Flare/Renderer/RenderGraph/RenderGraphResourceManager.h"
 
 #include "FlareECS/Entity/Entity.h"
 
@@ -52,7 +53,7 @@ namespace Flare
 		Ref<Scene> GetScene() const;
 
 		void BeginImGui();
-		void RenderViewportBuffer(const Ref<Texture>& texture);
+		void RenderViewportBuffer(const RenderGraph& renderGraph, RenderGraphTextureId texture);
 		void EndImGui();
 
 		virtual void OnViewportChanged();

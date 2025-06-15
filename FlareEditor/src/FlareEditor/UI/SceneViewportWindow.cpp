@@ -152,9 +152,11 @@ namespace Flare
 		const World& renderWorld = Renderer::GetRenderWorld();
 		const Viewport& viewport = renderWorld.GetEntityComponent<const Viewport>(m_ViewportEntity);
 		const ViewportRenderGraph& viewportRenderGraph = renderWorld.GetEntityComponent<const ViewportRenderGraph>(m_ViewportEntity);
+		const RenderGraph& renderGraph = *viewportRenderGraph.Graph;
 
 		RenderGraphTextureId viewportColorTexture = renderWorld.GetEntityComponent<const ViewportColorOutput>(m_ViewportEntity).Id;
 		RenderGraphTextureId viewportDepthTexture = renderWorld.GetEntityComponent<const ViewportDepthOutput>(m_ViewportEntity).Id;
+		const AOConfiguration* aoConfiguration = renderWorld.TryGetEntityComponent<const AOConfiguration>(m_ViewportEntity);
 
 		if (!viewportRenderGraph.IsReadyForRendering())
 			return;
@@ -162,11 +164,16 @@ namespace Flare
 		switch (m_Overlay)
 		{
 		case ViewportOverlay::Default:
-			RenderViewportBuffer(viewportRenderGraph.Graph->GetTexture(viewportColorTexture));
+			RenderViewportBuffer(renderGraph, viewportColorTexture);
 			break;
 		case ViewportOverlay::Depth:
-			RenderViewportBuffer(viewportRenderGraph.Graph->GetTexture(viewportDepthTexture));
+			RenderViewportBuffer(renderGraph, viewportDepthTexture);
 			break;
+		case ViewportOverlay::AO:
+			RenderViewportBuffer(renderGraph, aoConfiguration->AOTexture);
+			break;
+		default:
+			FLARE_VERIFY_UNREACHABLE();
 		}
 
 		if (ImGui::BeginDragDropTarget())
@@ -238,6 +245,11 @@ namespace Flare
 		case ViewportOverlay::Depth:
 			overlayName = "Depth";
 			break;
+		case ViewportOverlay::AO:
+			overlayName = "Ambient Occlusion";
+			break;
+		default:
+			FLARE_VERIFY_UNREACHABLE();
 		}
 
 		if (ImGui::BeginCombo("", overlayName))
@@ -246,6 +258,8 @@ namespace Flare
 				m_Overlay = ViewportOverlay::Default;
 			if (ImGui::MenuItem("Depth"))
 				m_Overlay = ViewportOverlay::Depth;
+			if (ImGui::MenuItem("Ambient Occlusion"))
+				m_Overlay = ViewportOverlay::AO;
 
 			ImGui::EndCombo();
 		}

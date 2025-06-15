@@ -168,16 +168,24 @@ namespace Flare
 			OnViewportChanged();
 	}
 
-	void ViewportWindow::RenderViewportBuffer(const Ref<Texture>& texture)
+	void ViewportWindow::RenderViewportBuffer(const RenderGraph& renderGraph, RenderGraphTextureId texture)
 	{
 		FLARE_PROFILE_FUNCTION();
 		ImVec2 windowSize = ImGui::GetContentRegionAvail();
 
+		const RenderGraphResourceManager& resourceManager = renderGraph.GetResourceManager();
+
 		const World& renderWorld = Renderer::GetRenderWorld();
 		const Viewport& viewport = renderWorld.GetEntityComponent<const Viewport>(m_ViewportEntity);
+		const ViewportColorOutput& colorOutput = renderWorld.GetEntityComponent<const ViewportColorOutput>(m_ViewportEntity);
+
+		if (!resourceManager.IsTextureIdValid(texture))
+		{
+			texture = colorOutput.Id;
+		}
 
 		ImVec2 imageSize = ImVec2((float)viewport.Size.x, (float)viewport.Size.y);
-		ImGui::Image(ImGuiLayer::GetId(texture), windowSize, ImVec2(0, 1), ImVec2(1, 0));
+		ImGui::Image(ImGuiLayer::GetId(resourceManager.GetTexture(texture)), windowSize, ImVec2(0, 1), ImVec2(1, 0));
 	}
 
 	void ViewportWindow::EndImGui()
@@ -217,7 +225,7 @@ namespace Flare
 
 		if (renderGraph.GetResourceManager().IsTextureIdValid(colorTexture))
 		{
-			RenderViewportBuffer(renderGraph.GetTexture(colorTexture));
+			RenderViewportBuffer(renderGraph, colorTexture);
 		}
 
 		EndImGui();

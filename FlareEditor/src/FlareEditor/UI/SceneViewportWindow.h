@@ -28,6 +28,7 @@ namespace Flare
 		{
 			Default,
 			Depth,
+			AO,
 		};
 
 		SceneViewportWindow(const Scope<SceneRenderer>& sceneRenderer,
