@@ -10,7 +10,7 @@ namespace Flare
 	class BloomUpsamplePass : public RenderGraphPass
 	{
 	public:
-		BloomUpsamplePass(Ref<const Bloom> parameters, RenderGraphTextureId sourceTexture);
+		BloomUpsamplePass(Ref<const Bloom> parameters, Ref<Sampler> sampler, RenderGraphTextureId sourceTexture);
 
 		void OnPrepare(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer) override;
 		void OnRender(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer) override;

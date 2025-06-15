@@ -12,20 +12,14 @@
 
 namespace Flare
 {
-	BloomDownsamplePass::BloomDownsamplePass(RenderGraphTextureId sourceTexture)
-		: m_SourceTexture(sourceTexture)
+	BloomDownsamplePass::BloomDownsamplePass(RenderGraphTextureId sourceTexture, Ref<Sampler> sampler, bool reduceDynamicRange)
+		: m_SourceTexture(sourceTexture), m_ReduceDynamicRange(reduceDynamicRange), m_Sampler(sampler)
 	{
 		if (std::optional<AssetHandle> shaderHandle = ShaderLibrary::FindShader("BloomDownsample"))
 		{
 			FLARE_CORE_ASSERT(AssetManager::IsAssetHandleValid(*shaderHandle));
 			m_Material = Material::Create(*shaderHandle);
 		}
-
-		SamplerSpecifications specifications{};
-		specifications.Filter = TextureFiltering::Linear;
-		specifications.WrapMode = TextureWrap::Clamp;
-
-		m_Sampler = Sampler::Create(specifications);
 	}
 
 	void BloomDownsamplePass::OnPrepare(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)

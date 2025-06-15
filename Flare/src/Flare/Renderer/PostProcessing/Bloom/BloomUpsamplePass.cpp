@@ -14,20 +14,14 @@
 
 namespace Flare
 {
-	BloomUpsamplePass::BloomUpsamplePass(Ref<const Bloom> parameters, RenderGraphTextureId sourceTexture)
-		: m_SourceTexture(sourceTexture), m_Parameters(parameters)
+	BloomUpsamplePass::BloomUpsamplePass(Ref<const Bloom> parameters, Ref<Sampler> sampler, RenderGraphTextureId sourceTexture)
+		: m_SourceTexture(sourceTexture), m_Parameters(parameters), m_Sampler(sampler)
 	{
 		if (std::optional<AssetHandle> shaderHandle = ShaderLibrary::FindShader("BloomUpsample"))
 		{
 			FLARE_CORE_ASSERT(AssetManager::IsAssetHandleValid(*shaderHandle));
 			m_Material = Material::Create(*shaderHandle);
 		}
-
-		SamplerSpecifications specifications{};
-		specifications.Filter = TextureFiltering::Linear;
-		specifications.WrapMode = TextureWrap::Clamp;
-
-		m_Sampler = Sampler::Create(specifications);
 	}
 
 	void BloomUpsamplePass::OnPrepare(const RenderGraphContext& context, Ref<CommandBuffer> commandBuffer)

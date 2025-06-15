@@ -12,6 +12,7 @@
 #include "Flare/Renderer/RenderGraph/RenderGraph.h"
 #include "Flare/Renderer/RenderGraph/RenderGraphPassSpecifications.h"
 #include "Flare/Renderer/RendererComponents.h"
+#include "Flare/Renderer/Sampler.h"
 
 namespace Flare
 {
@@ -54,7 +55,16 @@ namespace Flare
 
 		renderGraph.AddPass(luminanceIsolationPass, Ref<BloomLuminanceIsolationPass>::New(colorOutput.Id, Ref(this)));
 
+		// NOTE: Clamping to the border prevents the bloom from growing in intensity closer to borders
+		SamplerSpecifications samplerSpecifications{};
+		samplerSpecifications.Filter = TextureFiltering::Linear;
+		samplerSpecifications.WrapMode = TextureWrap::ClampToBorder;
+		samplerSpecifications.BorderColor = BorderColor::FloatOpaqueBlack;
+
+		Ref<Sampler> sampler = Sampler::Create(samplerSpecifications);
+
 		// Downsampling Passes
+
 		for (uint32_t i = 1; i < MIP_COUNT; i++)
 		{
 			RenderGraphPassSpecifications downsamplePass{};
@@ -63,10 +73,12 @@ namespace Flare
 			downsamplePass.AddInput(mips[i - 1]);
 			downsamplePass.AddOutput(mips[i]);
 
-			renderGraph.AddPass(downsamplePass, Ref<BloomDownsamplePass>::New(mips[i - 1]));
+			bool reduceDynamicRange = i == 1;
+			renderGraph.AddPass(downsamplePass, Ref<BloomDownsamplePass>::New(mips[i - 1], sampler, reduceDynamicRange));
 		}
 
 		// Upsampling Passes
+
 		for (uint32_t i = MIP_COUNT - 1; i > 0; i--)
 		{
 			RenderGraphPassSpecifications upsamplePass{};
@@ -75,7 +87,7 @@ namespace Flare
 			upsamplePass.AddInput(mips[i]);
 			upsamplePass.AddOutput(mips[i - 1]);
 
-			renderGraph.AddPass(upsamplePass, Ref<BloomUpsamplePass>::New(Ref(this), mips[i]));
+			renderGraph.AddPass(upsamplePass, Ref<BloomUpsamplePass>::New(Ref(this), sampler, mips[i]));
 		}
 
 		RenderGraphPassSpecifications blitPass{};

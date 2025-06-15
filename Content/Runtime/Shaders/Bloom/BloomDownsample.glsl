@@ -20,9 +20,20 @@ void main()
 
 layout(set = 3, binding = 0) uniform sampler2D u_Color;
 
+layout(std140, push_constant) uniform Constants
+{
+	bool u_ReduceDynamicRange;
+};
+
 layout(location = 0) in vec2 i_UV;
 
 layout(location = 0) out vec3 o_Color;
+
+vec3 KarisAverage(vec3 color)
+{
+	float luminance = LuminanceFromRGB(color);
+	return color / (1.0f + luminance);
+}
 
 void main()
 {
@@ -45,15 +56,25 @@ void main()
 	vec3 centerBottomLeft = textureOffset(u_Color, i_UV, ivec2(-1, 1), 0).rgb;
 	vec3 centerBottomRight = textureOffset(u_Color, i_UV, ivec2(1, 1), 0).rgb;
 
-	vec3 topLeft = (samples[0][0] + samples[1][0] + samples[0][1] + samples[1][1]) * 0.03125f;
-	vec3 topRight = (samples[1][0] + samples[2][0] + samples[1][1] + samples[2][1]) * 0.03125f;
+	vec3 topLeft = samples[0][0] + samples[1][0] + samples[0][1] + samples[1][1];
+	vec3 topRight = samples[1][0] + samples[2][0] + samples[1][1] + samples[2][1];
 
-	vec3 bottomLeft = (samples[0][1] + samples[1][1] + samples[0][2] + samples[1][2]) * 0.03125f;
-	vec3 bottomRight = (samples[1][1] + samples[2][1] + samples[1][2] + samples[2][2]) * 0.03125f;
+	vec3 bottomLeft = samples[0][1] + samples[1][1] + samples[0][2] + samples[1][2];
+	vec3 bottomRight = samples[1][1] + samples[2][1] + samples[1][2] + samples[2][2];
 
-	vec3 center = (centerTopLeft + centerTopRight + centerBottomLeft + centerBottomRight) * 0.125f;
+	vec3 center = centerTopLeft + centerTopRight + centerBottomLeft + centerBottomRight;
 
-	o_Color = center + topLeft + topRight + bottomLeft + bottomRight;
+	if (u_ReduceDynamicRange)
+	{
+		topLeft = KarisAverage(topLeft);
+		topRight = KarisAverage(topRight);
+		bottomLeft = KarisAverage(bottomLeft);
+		bottomRight = KarisAverage(bottomRight);
+		center = KarisAverage(center);
+	}
+
+	o_Color = center * 0.125f + (topLeft + topRight + bottomLeft + bottomRight) * 0.03125f;
+
 }
 
 #end
