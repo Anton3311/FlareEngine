@@ -17,4 +17,21 @@ float LuminanceFromRGB(vec3 rgb)
 	return dot(rgb, vec3(0.2126, 0.7152, 0.0722));
 }
 
+// https://en.wikipedia.org/wiki/SRGB#Theory_of_the_transformation
+vec3 LinearRGBToSRGB(vec3 rgb)
+{
+	bvec3 condition = greaterThan(rgb, vec3(0.0031308f));
+	return mix(12.92f * rgb,
+		1.055f * pow(rgb, vec3(1.0f / 2.4f)) - vec3(0.055f),
+		condition);
+}
+
+vec3 SRGBToLinearRGB(vec3 srgb)
+{
+	bvec3 condition = greaterThan(srgb, vec3(0.04045f));
+	return mix(srgb / 12.92f,
+		pow((srgb + vec3(0.055f)) / 1.055f, vec3(2.4f)),
+		condition);
+}
+
 #endif
