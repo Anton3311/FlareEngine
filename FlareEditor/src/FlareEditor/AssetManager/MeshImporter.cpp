@@ -249,6 +249,12 @@ namespace Flare
 		if (!DeserializeMeshSource(metadata.Path, meshSource))
 			return nullptr;
 
+		if (!AssetManager::IsAssetHandleValid(meshSource))
+		{
+			FLARE_CORE_ERROR("Failed to import: Mesh source handle is invalid");
+			return nullptr;
+		}
+
 		const AssetMetadata& sourceMetadata = *AssetManager::GetAssetMetadata(meshSource);
 
 		MeshImportSettings importSettings{};
