@@ -303,9 +303,11 @@ namespace Flare
 			return "Clamp";
 		case TextureWrap::Repeat:
 			return "Repeat";
+		case TextureWrap::ClampToBorder:
+			return "ClamToBorder";
 		}
 
-		FLARE_CORE_ASSERT(false, "Unahandled texture wrap mode");
+		FLARE_CORE_ASSERT(false, "Unhandled texture wrap mode");
 		return nullptr;
 	}
 
@@ -319,7 +321,7 @@ namespace Flare
 			return "Closest";
 		}
 
-		FLARE_CORE_ASSERT(false, "Unahandled texture filtering type");
+		FLARE_CORE_ASSERT(false, "Unhandled texture filtering type");
 		return nullptr;
 	}
 
@@ -329,6 +331,8 @@ namespace Flare
 			return TextureWrap::Clamp;
 		if (string == "Repeat")
 			return TextureWrap::Repeat;
+		if (string == "ClampToBorder")
+			return TextureWrap::ClampToBorder;
 		return {};
 	}
 

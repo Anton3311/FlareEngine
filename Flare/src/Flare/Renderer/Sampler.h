@@ -5,10 +5,21 @@
 
 namespace Flare
 {
+	enum class BorderColor
+	{
+		FloatTransparentBlack,
+		IntTransparentBlack,
+		FloatOpaqueBlack,
+		IntOpaqueBlack,
+		FloatOpaqueWhite,
+		IntOPaqueWhite,
+	};
+
 	struct SamplerSpecifications
 	{
 		TextureWrap WrapMode;
 		TextureFiltering Filter;
+		BorderColor BorderColor;
 
 		bool ComparisonEnabled = false;
 		DepthComparisonFunction ComparisonFunction = DepthComparisonFunction::Never;

@@ -18,6 +18,37 @@ namespace Flare
 		case TextureWrap::Repeat:
 			addressMode = VK_SAMPLER_ADDRESS_MODE_REPEAT;
 			break;
+		case TextureWrap::ClampToBorder:
+			addressMode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
+			break;
+		default:
+			FLARE_VERIFY_UNREACHABLE();
+		}
+
+		VkBorderColor borderColor{};
+
+		switch (specifications.BorderColor)
+		{
+		case BorderColor::FloatTransparentBlack:
+			borderColor = VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK;
+			break;
+		case BorderColor::IntTransparentBlack:
+			borderColor = VK_BORDER_COLOR_INT_TRANSPARENT_BLACK;
+			break;
+		case BorderColor::FloatOpaqueBlack:
+			borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK;
+			break;
+		case BorderColor::IntOpaqueBlack:
+			borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+			break;
+		case BorderColor::FloatOpaqueWhite:
+			borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
+			break;
+		case BorderColor::IntOPaqueWhite:
+			borderColor = VK_BORDER_COLOR_INT_OPAQUE_WHITE;
+			break;
+		default:
+			FLARE_VERIFY_UNREACHABLE();
 		}
 
 		VkSamplerCreateInfo samplerInfo{};
@@ -27,7 +58,7 @@ namespace Flare
 		samplerInfo.addressModeV = addressMode;
 		samplerInfo.addressModeW = addressMode;
 		samplerInfo.anisotropyEnable = VK_FALSE;
-		samplerInfo.borderColor = {};
+		samplerInfo.borderColor = borderColor;
 		samplerInfo.compareEnable = m_Specifications.ComparisonEnabled;
 		samplerInfo.compareOp = DepthComparisonFunctionToVulkanCompareOp(m_Specifications.ComparisonFunction);
 		samplerInfo.flags = 0;
@@ -44,7 +75,7 @@ namespace Flare
 			samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;
 			break;
 		default:
-			FLARE_CORE_ASSERT(false);
+			FLARE_VERIFY_UNREACHABLE();
 		}
 
 		switch (m_Specifications.Filter)
@@ -58,7 +89,7 @@ namespace Flare
 			samplerInfo.magFilter = VK_FILTER_LINEAR;
 			break;
 		default:
-			FLARE_CORE_ASSERT(false);
+			FLARE_VERIFY_UNREACHABLE();
 		}
 
 		VK_CHECK_RESULT(vkCreateSampler(VulkanContext::GetInstance().GetDevice(), &samplerInfo, nullptr, &m_Sampler));

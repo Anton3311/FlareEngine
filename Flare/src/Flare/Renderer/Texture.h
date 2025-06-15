@@ -17,6 +17,7 @@ namespace Flare
 	enum class TextureWrap
 	{
 		Clamp,
+		ClampToBorder,
 		Repeat,
 	};
 
