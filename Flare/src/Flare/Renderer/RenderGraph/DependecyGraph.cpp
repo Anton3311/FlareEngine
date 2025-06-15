@@ -280,7 +280,6 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		std::vector<bool> visited(m_Graph.size(), false);
 		std::deque<size_t> queue;
 
 		queue.push_back(start);
@@ -291,11 +290,6 @@ namespace Flare
 		{
 			size_t nodeIndex = queue.front();
 			queue.pop_front();
-
-			if (visited[nodeIndex])
-				continue;
-
-			visited[nodeIndex] = true;
 
 			const GraphNode& node = m_Graph[nodeIndex];
 			for (size_t childIndex : node.Children)
