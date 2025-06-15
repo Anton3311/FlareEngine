@@ -111,9 +111,8 @@ float ComputeSampleAO(vec3 positionVS, vec3 normalVS, vec3 samplePositionVS)
 	return clamp(NdotD - u_Bias, 0.0f, 1.0f) * clamp(Attenuate(DdotD), 0.0f, 1.0f);
 }
 
-float ComputeAO(vec3 positionVS, vec3 normalVS, float tangentAngle, vec2 sampleStep)
+float ComputeAO(vec3 positionVS, vec3 normalVS, vec2 sampleStep)
 {
-	float horizonAngle = tangentAngle;
 	float previousAO = 0.0f;
 
 	float totalAO = 0.0f;
@@ -123,27 +122,7 @@ float ComputeAO(vec3 positionVS, vec3 normalVS, float tangentAngle, vec2 sampleS
 		vec2 sampleUV = SnapToTexelCenter(i_UV + sampleStep * float(sampleIndex));
 		vec3 sampleViewSpacePosition = GetVSPosition(sampleUV);
 
-#if 0
-		// D = S_i - P
-		vec3 D = sampleViewSpacePosition - positionVS;
-
-		float elevationAngle = atan(D.z, length(D.xy));
-
-		float lengthSqaured = dot(D, D);
-		if (lengthSqaured > u_RadiusSquared)
-			continue;
-
-		if (elevationAngle > horizonAngle)
-		{
-			float ao = sin(elevationAngle) - sin(tangentAngle);
-			totalAO += (ao - previousAO) * Attenuate(lengthSqaured);
-
-			previousAO = ao;
-			horizonAngle = elevationAngle;
-		}
-#else
 		totalAO += ComputeSampleAO(positionVS, normalVS, sampleViewSpacePosition);
-#endif
 	}
 
 	return totalAO;
@@ -181,10 +160,7 @@ void main()
 		float angle = DIRECTION_ANGLE_STEP * float(directionIndex) + rotationOffset;
 		vec2 direction = vec2(cos(angle), sin(angle));
 
-		vec3 tangentVector = direction.x * du + direction.y * dv;
-		float tangentAngle = atan(tangentVector.z, length(tangentVector.xy)) + u_Bias;
-
-		aoSum += ComputeAO(positionVS, normalVS, tangentAngle, direction * sampleStep);
+		aoSum += ComputeAO(positionVS, normalVS, direction * sampleStep);
 	}
 
 	o_AO = vec3(max(0.0f, 1.0 - aoSum / (TWO_PI) * u_Intensity));
