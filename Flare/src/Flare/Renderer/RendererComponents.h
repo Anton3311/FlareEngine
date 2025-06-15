@@ -41,6 +41,7 @@ namespace Flare
 		inline bool IsValid() const { return Size.x != 0 && Size.y != 0; }
 		inline float GetAspectRatio() const { return (float)Size.x / (float)Size.y; }
 
+		std::string Name;
 		glm::uvec2 Size = glm::uvec2(0, 0);
 		glm::uvec2 Position = glm::uvec2(0, 0);
 		ViewportSettings Settings;

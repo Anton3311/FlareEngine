@@ -654,10 +654,21 @@ namespace Flare
 		return *s_RendererData.RenderWorld;
 	}
 
-	Entity Renderer::CreateViewport()
+	Query& Renderer::GetViewportsQuery()
+	{
+		if (!s_RendererData.ViewportsQuery)
+		{
+			s_RendererData.ViewportsQuery = CreateScope<Query>(s_RendererData.RenderWorld->NewQuery()
+				.All().With<Viewport, ViewportRenderGraph>().Build());
+		}
+
+		return *s_RendererData.ViewportsQuery;
+	}
+
+	Entity Renderer::CreateViewport(std::string_view name)
 	{
 		FLARE_PROFILE_FUNCTION();
-		Entity viewport = s_RendererData.RenderWorld->CreateEntity(Viewport(),
+		Entity viewport = s_RendererData.RenderWorld->CreateEntity(Viewport { .Name = std::string(name) },
 			ViewportRenderGraph(),
 			ViewportGlobalResources(),
 			ViewportColorOutput(),
@@ -795,13 +806,7 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		if (!s_RendererData.ViewportsQuery)
-		{
-			s_RendererData.ViewportsQuery = CreateScope<Query>(s_RendererData.RenderWorld->NewQuery()
-				.All().With<Viewport, ViewportRenderGraph>().Build());
-		}
-
-		s_RendererData.ViewportsQuery->ForEachChunk([](QueryChunk chunk, ComponentView<ViewportRenderGraph> renderGraphs)
+		GetViewportsQuery().ForEachChunk([](QueryChunk chunk, ComponentView<ViewportRenderGraph> renderGraphs)
 			{
 				for (size_t i = 0; i < chunk.GetEntityCount(); i++)
 				{

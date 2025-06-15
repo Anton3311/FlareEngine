@@ -42,6 +42,7 @@
 #include "FlareEditor/UI/EditorTitleBar.h"
 #include "FlareEditor/UI/ProjectSettingsWindow.h"
 #include "FlareEditor/UI/ECS/ECSInspector.h"
+#include "FlareEditor/UI/RenderGraphInspector.h"
 #include "FlareEditor/UI/PrefabEditor.h"
 #include "FlareEditor/UI/SceneViewportWindow.h"
 #include "FlareEditor/UI/SerializablePropertyRenderer.h"
@@ -492,6 +493,7 @@ namespace Flare
             m_PostProcessingWindow.OnImGuiRender();
 
             ECSInspector::GetInstance().OnImGuiRender();
+            RenderGraphInspector::GetInstance().OnRenderImGui();
 
             for (auto& window : m_AssetEditorWindows)
             {

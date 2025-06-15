@@ -32,7 +32,7 @@ namespace Flare
 		m_ViewportOffset(glm::uvec2(0)),
 		m_WindowFlags(windowFlags)
 	{
-		m_ViewportEntity = Renderer::CreateViewport();
+		m_ViewportEntity = Renderer::CreateViewport(m_Name);
 	}
 
 	ViewportWindow::~ViewportWindow()

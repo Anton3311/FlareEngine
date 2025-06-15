@@ -1,5 +1,7 @@
 #pragma once
 
+#include "FlareECS/Entity/Entity.h"
+
 #include "FlareEditor/ImGui/ImGuiLayer.h"
 
 #include <vector>
@@ -12,16 +14,18 @@ namespace Flare
 	class RenderGraphInspector
 	{
 	public:
-		RenderGraphInspector(const RenderGraph& renderGraph);
-
 		void OnRenderImGui();
 
 		inline void SetVisible(bool visible) { m_IsVisible = visible; }
-	private:
-		void RenderRenderGraph(ImRect viewportRect);
-	private:
-		const RenderGraph& m_RenderGraph;
 
+		void Show();
+		static RenderGraphInspector& GetInstance();
+	private:
+		void RenderRenderGraph();
+		void HandleDragging();
+		void OnClose();
+	private:
+		Entity m_CurrentViewport;
 		bool m_IsVisible = false;
 
 		std::vector<glm::vec2> m_NodePositions;
@@ -29,5 +33,6 @@ namespace Flare
 
 		ImVec2 m_MoveStartPosition = ImVec2(0.0f, 0.0f);
 		ImVec2 m_Offset = ImVec2(0.0f, 0.0f);
+		bool m_IsDragging = false;
 	};
 }

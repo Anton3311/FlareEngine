@@ -184,11 +184,6 @@ namespace Flare
 		m_IsToolbarHovered = ImGui::IsAnyItemHovered();
 
 		HandleGuizmo();
-
-		if (m_RenderGraphInspector)
-		{
-			m_RenderGraphInspector->OnRenderImGui();
-		}
 	}
 
 	static bool GuizmoButton(const char* text, bool active)
@@ -324,16 +319,6 @@ namespace Flare
 				if (ImGui::MenuItem("Show Grid", nullptr, &m_SceneViewSettings.ShowGrid))
 				{
 					viewportRenderGraph.Graph->SetNeedsRebuilding();
-				}
-
-				if (ImGui::MenuItem("Inspect Render Graph"))
-				{
-					if (!m_RenderGraphInspector)
-					{
-						m_RenderGraphInspector = CreateScope<RenderGraphInspector>(*viewportRenderGraph.Graph);
-					}
-
-					m_RenderGraphInspector->SetVisible(true);
 				}
 
 				ImGui::EndCombo();

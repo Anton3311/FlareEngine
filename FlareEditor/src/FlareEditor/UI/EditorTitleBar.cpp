@@ -18,6 +18,7 @@
 #include "FlareEditor/UI/ECS/ECSInspector.h"
 #include "FlareEditor/UI/ShaderLibraryWindow.h"
 #include "FlareEditor/UI/EditorIcons.h"
+#include "FlareEditor/UI/RenderGraphInspector.h"
 
 #include <imgui_internal.h>
 
@@ -138,6 +139,8 @@ namespace Flare
 				ECSInspector::Show();
 			if (ImGui::MenuItem("Shader Library"))
 				ShaderLibraryWindow::Show();
+			if (ImGui::MenuItem("Render Graph Inspector"))
+				RenderGraphInspector::GetInstance().Show();
 
 			const auto& viewports = EditorLayer::GetInstance().GetViewportWindows();
 			for (const Ref<ViewportWindow>& viewportWindow : viewports)
