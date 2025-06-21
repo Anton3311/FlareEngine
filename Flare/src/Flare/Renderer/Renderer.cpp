@@ -505,7 +505,6 @@ namespace Flare
 
 		RenderGraphPassSpecifications specifications{};
 		specifications.SetDebugName("SpotLightShadowPass");
-		specifications.AddInput(depthOutput.Id); // TODO: get rid of this dependency, because it is just to make this pass run after GeometryCullingPass
 		specifications.AddOutput(shadowMapId, 1.0f);
 		renderGraph.AddPass(specifications, pass);
 
