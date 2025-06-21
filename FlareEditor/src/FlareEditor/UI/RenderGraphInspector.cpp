@@ -12,6 +12,7 @@
 #include "Flare/Renderer/Renderer.h"
 
 #include "FlareEditor/ImGui/ImGuiLayer.h"
+#include "FlareEditor/UI/EditorGUI.h"
 
 namespace Flare
 {
@@ -36,6 +37,7 @@ namespace Flare
 				previewText = currentViewport->Name.c_str();
 			}
 
+			ImGui::SetNextItemWidth(300.0f);
 			if (ImGui::BeginCombo("Viewport", previewText))
 			{
 				Renderer::GetViewportsQuery().ForEachChunk([&](QueryChunk chunk, ComponentView<const Viewport> viewports)
@@ -53,6 +55,44 @@ namespace Flare
 				});
 
 				ImGui::EndCombo();
+			}
+
+			ImGui::SameLine();
+
+			if (ImGui::Button("Settings"))
+			{
+				ImGui::OpenPopup("RenderGraphInspectorSettings");
+			}
+
+			ImRect settingsButtonRect = { ImGui::GetItemRectMin(), ImGui::GetItemRectMax() };
+
+			constexpr float POPUP_CONTENT_WIDTH = 300.0f;
+
+			ImGui::SetNextWindowPos(ImVec2(settingsButtonRect.Min.x, settingsButtonRect.Max.y));
+			if (ImGui::BeginPopup("RenderGraphInspectorSettings"))
+			{
+				if (EditorGUI::BeginPropertyGrid(POPUP_CONTENT_WIDTH))
+				{
+					EditorGUI::PropertyName("Node Spacing");
+					ImGui::PushID("RenderGraphInspectorNodeSpacing");
+					ImGui::DragFloat("", &m_Settings.SpacingBetweenNodes, 1.0f, 0.0f, 300.0f);
+					ImGui::PopID();
+
+					EditorGUI::PropertyName("Layer Spacing");
+					ImGui::PushID("RenderGraphInspectorLayerSpacing");
+					ImGui::DragFloat("", &m_Settings.SpacingBetweenLayers, 1.0f, 0.0f, 300.0f);
+					ImGui::PopID();
+
+					EditorGUI::EndPropertyGrid();
+				}
+
+				if (ImGui::Button("Reset View"))
+				{
+					m_Offset = ImVec2(0.0f, 0.0f);
+					ImGui::CloseCurrentPopup();
+				}
+
+				ImGui::End();
 			}
 
 			ImVec2 viewportSize = ImGui::GetContentRegionAvail();
@@ -85,9 +125,6 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
-		constexpr float SPACING_BETWEEN_LAYERS = 60.0f;
-		constexpr float SPACING_BETWEEN_NODES = 30.0f;
-
 		World& renderWorld = Renderer::GetRenderWorld();
 
 		bool isViewportValid = renderWorld.IsEntityAlive(m_CurrentViewport);
@@ -108,17 +145,37 @@ namespace Flare
 		const ImU32 textColor = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Text]);
 		const ImU32 lineColor = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Text]);
 
-		m_LayerOffsets.resize(dependencyGraph.GetMaxDependencyLayer() + 1);
-		m_NodePositions.resize(dependencyGraph.GetGraphNodes().size());
+		m_Layers.resize(dependencyGraph.GetMaxDependencyLayer() + 1);
+		m_NodeState.resize(dependencyGraph.GetGraphNodes().size());
 
-		m_NodePositions.assign(m_NodePositions.size(), glm::vec2(0.0f, 0.0f));
-		m_LayerOffsets.assign(m_LayerOffsets.size(), 0.0f);
+		m_NodeState.assign(m_NodeState.size(), NodeState());
+		m_Layers.assign(m_Layers.size(), Layer{});
 
 		const auto& nodes = dependencyGraph.GetGraphNodes();
 		float textHeight = ImGui::GetFontSize();
 
 		ImGuiWindow* window = ImGui::GetCurrentWindow();
 		ImDrawList* drawList = window->DrawList;
+
+		// Compute width of all layers
+		for (size_t nodeIndex = 0; nodeIndex < nodes.size(); nodeIndex++)
+		{
+			if (!nodes[nodeIndex].PassNode->Enabled)
+				continue;
+
+			const auto& node = nodes[nodeIndex];
+			const char* name = node.PassNode->Specifications.GetDebugName().c_str();
+			ImVec2 textSize = ImGui::CalcTextSize(name);
+
+			m_Layers[node.DependencyLayer].TotalTextWidth += textSize.x;
+			m_Layers[node.DependencyLayer].NodeCount++;
+		}
+
+		float maxWidth = 0.0f;
+		for (const Layer& layer : m_Layers)
+		{
+			maxWidth = glm::max(maxWidth, layer.TotalTextWidth + (glm::max(layer.NodeCount, 1u) - 1) * m_Settings.SpacingBetweenNodes);
+		}
 
 		for (size_t nodeIndex = 0; nodeIndex < nodes.size(); nodeIndex++)
 		{
@@ -130,20 +187,29 @@ namespace Flare
 			ImVec2 textSize = ImGui::CalcTextSize(name);
 
 			ImVec2 textPosition(window->DC.CursorPos.x, window->DC.CursorPos.y + window->DC.CurrLineTextBaseOffset);
-			ImVec2 nodeNameTextCenter = ImVec2(m_LayerOffsets[node.DependencyLayer], node.DependencyLayer * SPACING_BETWEEN_LAYERS);
+			ImVec2 nodeNameTextCenter = ImVec2(m_Layers[node.DependencyLayer].Offset, node.DependencyLayer * m_Settings.SpacingBetweenLayers);
 			nodeNameTextCenter += m_Offset;
 
-			m_LayerOffsets[node.DependencyLayer] += textSize.x + SPACING_BETWEEN_NODES;
-			m_NodePositions[nodeIndex].x = nodeNameTextCenter.x + textSize.x / 2.0f;
-			m_NodePositions[nodeIndex].y = nodeNameTextCenter.y + textSize.y / 2.0f;
+			Layer& layer = m_Layers[node.DependencyLayer];
+			float layerWidth = layer.TotalTextWidth + (glm::max(layer.NodeCount, 1u) - 1) * m_Settings.SpacingBetweenNodes;
+			float centerAlignmentOffset = (maxWidth - layerWidth) * 0.5f;
 
-			drawList->AddText(textPosition + nodeNameTextCenter, textColor, name);
+			layer.Offset += textSize.x + m_Settings.SpacingBetweenNodes;
+
+			nodeNameTextCenter.x += centerAlignmentOffset;
+
+			m_NodeState[nodeIndex].Position.x = nodeNameTextCenter.x + textSize.x / 2.0f;
+			m_NodeState[nodeIndex].Position.y = nodeNameTextCenter.y + textSize.y / 2.0f;
+			m_NodeState[nodeIndex].TextRect = {
+				textPosition + nodeNameTextCenter,
+				textPosition + nodeNameTextCenter + textSize,
+			};
 
 			for (size_t dependencyIndex : node.Dependencies)
 			{
-				glm::vec2 dependencyPosition = m_NodePositions[dependencyIndex];
+				NodeState nodeState = m_NodeState[dependencyIndex];
 
-				ImVec2 start = ImVec2(dependencyPosition.x, dependencyPosition.y + textHeight / 2.0f);
+				ImVec2 start = ImVec2(nodeState.Position.x, nodeState.Position.y + textHeight / 2.0f);
 				ImVec2 end = ImVec2(nodeNameTextCenter.x, nodeNameTextCenter.y - textHeight / 2.0f) + textSize / 2.0f;
 
 				start += window->DC.CursorPos;
@@ -151,6 +217,43 @@ namespace Flare
 
 				drawList->AddLine(start, end, lineColor);
 			}
+		}
+
+		// Now draw the node names
+
+		for (size_t nodeIndex = 0; nodeIndex < nodes.size(); nodeIndex++)
+		{
+			if (!nodes[nodeIndex].PassNode->Enabled)
+				continue;
+
+			ImRect textRect = m_NodeState[nodeIndex].TextRect;
+
+			const char* name = nodes[nodeIndex].PassNode->Specifications.GetDebugName().c_str();
+
+			ImU32 nameTextColor = 0;
+			ImU32 textBackgroundColor = 0;
+
+			switch (nodes[nodeIndex].PassNode->Specifications.GetType())
+			{
+			case RenderGraphPassType::Graphics:
+			case RenderGraphPassType::Other:
+				nameTextColor = textColor;
+				textBackgroundColor = ImGui::GetColorU32(ImGuiCol_FrameBg);
+				break;
+			case RenderGraphPassType::Compute:
+				nameTextColor = 0xffffffff;
+				textBackgroundColor = ImGui::GetColorU32(ImGuiTheme::PrimaryVariant);
+				break;
+			default:
+				FLARE_VERIFY_UNREACHABLE();
+			}
+
+			drawList->AddRectFilled(textRect.Min - style.FramePadding,
+				textRect.Max + style.FramePadding,
+				textBackgroundColor,
+				style.FrameRounding);
+
+			drawList->AddText(textRect.Min, nameTextColor, name);
 		}
 	}
 
@@ -180,7 +283,7 @@ namespace Flare
 	void RenderGraphInspector::OnClose()
 	{
 		FLARE_PROFILE_FUNCTION();
-		m_NodePositions.clear();
-		m_LayerOffsets.clear();
+		m_NodeState.clear();
+		m_Layers.clear();
 	}
 }
