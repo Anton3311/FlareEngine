@@ -491,6 +491,10 @@ namespace Flare
 	{
 		FLARE_PROFILE_FUNCTION();
 
+		const Viewport& viewport = s_RendererData.RenderWorld->GetEntityComponent<const Viewport>(viewportEntity);
+		if (!viewport.Settings.ShadowMappingEnabled)
+			return RenderGraphTextureId();
+
 		// TODO: Store this somewhere
 		SpotLightShadowsSpecifications shadowSpecifications{};
 
@@ -500,8 +504,6 @@ namespace Flare
 			"SpotLightShadowMap");
 
 		Ref<SpotLightShadowPass> pass = Ref<SpotLightShadowPass>::New(shadowMapId, perspectiveDepthOnly, shadowSpecifications);
-
-		const ViewportDepthOutput& depthOutput = s_RendererData.RenderWorld->GetEntityComponent<const ViewportDepthOutput>(viewportEntity);
 
 		RenderGraphPassSpecifications specifications{};
 		specifications.SetDebugName("SpotLightShadowPass");
@@ -621,7 +623,10 @@ namespace Flare
 			}
 		}
 
-		geometryPass.AddInput(spotLightShadowMap);
+		if (spotLightShadowMap != RenderGraphTextureId())
+		{
+			geometryPass.AddInput(spotLightShadowMap);
+		}
 
 		viewportRenderGraph->Graph->AddPass(geometryPass, Ref<GeometryPass>::New(s_RendererData.Statistics, nullptr, false));
 	}
