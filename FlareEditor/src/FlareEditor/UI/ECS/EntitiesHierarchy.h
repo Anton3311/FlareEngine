@@ -29,6 +29,8 @@ namespace Flare
 		size_t CountEntriesInSameLevel(size_t startNode);
 
 		inline const Node& GetNode(size_t index) const { return m_Nodes[index]; }
+		inline size_t GetNodeCount() const { return m_Nodes.size(); }
+		inline bool IsEmpty() const { return m_Nodes.size() == 0; }
 	private:
 		void BuildClippingSubStructure(const World& world, Entity rootEntity, size_t rootEntry);
 		size_t AppendNode(Entity entity, size_t parentNode, size_t offset, bool isLeaf);

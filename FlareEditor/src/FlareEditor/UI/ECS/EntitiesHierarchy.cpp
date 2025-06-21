@@ -360,6 +360,8 @@ namespace Flare
 	static bool RenderClippedHierarchy(EntitiesHierarchyAccelerationStructure& clippingHierarchy, size_t startNode, F&& renderFunction)
 	{
 		FLARE_PROFILE_FUNCTION();
+		FLARE_CORE_ASSERT(startNode < clippingHierarchy.GetNodeCount());
+
 		bool result = false;
 
 		const float itemHeight = ImGui::GetFontSize() + ImGui::GetStyle().FramePadding.y;
@@ -570,6 +572,11 @@ namespace Flare
 	bool EntitiesHierarchy::RenderClippedHierarchyRootLevel(Entity& selectedEntity)
 	{
 		FLARE_PROFILE_FUNCTION();
+
+		if (m_ClippingHierarchy.IsEmpty())
+		{
+			return false;
+		}
 
 		return RenderClippedHierarchy(m_ClippingHierarchy, 0, [&](size_t start, size_t end, size_t currentNode)
 		{

@@ -59,7 +59,11 @@ namespace Flare
 
         if (m_Prefab)
         {
-			m_Prefab->TryCreateInstance(GetWorld());
+		 	std::optional<Entity> instance = m_Prefab->TryCreateInstance(GetWorld());
+            if (!instance)
+            {
+                FLARE_CORE_ERROR("Failed instantiate prefab {}", asset);
+            }
 
             bool isGenerated = HAS_BIT(m_Prefab->GetFlags(), PrefabFlags::Generated);
             m_Entities.SetFeatures(isGenerated ? GENERATED_HIERARHCY_FEATURES : DEFAULT_HIERARCHY_FEATURES);
