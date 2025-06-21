@@ -79,15 +79,18 @@ namespace Flare
 
 		// Upsampling Passes
 
-		for (uint32_t i = MIP_COUNT - 1; i > 0; i--)
 		{
-			RenderGraphPassSpecifications upsamplePass{};
-			upsamplePass.SetDebugName(fmt::format("BloomUpsamplePass.{}", i));
-			upsamplePass.SetType(RenderGraphPassType::Graphics);
-			upsamplePass.AddInput(mips[i]);
-			upsamplePass.AddOutput(mips[i - 1]);
+			uint32_t passIndex = 1;
+			for (uint32_t i = MIP_COUNT - 1; i > 0; i--, passIndex++)
+			{
+				RenderGraphPassSpecifications upsamplePass{};
+				upsamplePass.SetDebugName(fmt::format("BloomUpsamplePass.{}", passIndex));
+				upsamplePass.SetType(RenderGraphPassType::Graphics);
+				upsamplePass.AddInput(mips[i]);
+				upsamplePass.AddOutput(mips[i - 1]);
 
-			renderGraph.AddPass(upsamplePass, Ref<BloomUpsamplePass>::New(Ref(this), sampler, mips[i]));
+				renderGraph.AddPass(upsamplePass, Ref<BloomUpsamplePass>::New(Ref(this), sampler, mips[i]));
+			}
 		}
 
 		RenderGraphPassSpecifications blitPass{};
