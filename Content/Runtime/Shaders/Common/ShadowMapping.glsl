@@ -6,6 +6,7 @@
 #include "Camera.glsl"
 
 const int CASCADES_COUNT = 4;
+const int DISABLED_SHADOWS = -1;
 
 layout(std140, set = 1, binding = 0) uniform ShadowData
 {
@@ -28,6 +29,7 @@ layout(std140, set = 1, binding = 0) uniform ShadowData
 	float u_ShadowFadeDistance;
 	float u_MaxShadowDistance;
 
+	// -1 indicates that the shadows are disabled
 	int u_MaxCascadeIndex;
 };
 
@@ -301,7 +303,7 @@ int CalculateCascadeIndex(vec3 viewSpacePosition)
 
 float CalculateShadow(vec3 N, vec3 position)
 {
-	if (u_MaxCascadeIndex == 0)
+	if (u_MaxCascadeIndex == DISABLED_SHADOWS)
 		return 1.0f;
 
 	float NoL = dot(N, -u_LightDirection);

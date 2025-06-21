@@ -160,9 +160,15 @@ namespace Flare
 			m_ShadowData.CascadeSplits[i] = settings.CascadeSplits[i];
 
 		if (enabled)
+		{
 			m_ShadowData.MaxCascadeIndex = settings.Cascades - 1;
+		}
 		else
-			m_ShadowData.MaxCascadeIndex = 0;
+		{
+			// NOTE: -1 indicates disabled shadows.
+			//       Must match the `ShadowMapping.glsl`
+			m_ShadowData.MaxCascadeIndex = -1;
+		}
 
 		m_ShadowData.MaxShadowDistance = settings.CascadeSplits[settings.Cascades - 1];
 		m_ShadowData.ShadowFadeStartDistance = m_ShadowData.MaxShadowDistance - settings.FadeDistance;
