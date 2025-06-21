@@ -166,19 +166,33 @@ namespace Flare
 		SetWorld(world);
 	}
 
-	bool EntitiesHierarchy::OnRenderImGui(Entity& selectedEntity)
+	static bool IsTreeNodeOpened(ImGuiID id)
+	{
+		FLARE_PROFILE_FUNCTION();
+		ImGuiContext* g = ImGui::GetCurrentContext();
+		ImGuiStorage* storage = g->CurrentWindow->DC.StateStorage;
+		return static_cast<bool>(storage->GetInt(id, 0));
+	}
+
+	static void* GetEntityTreeNodeId(Entity entity)
+	{
+		return reinterpret_cast<void*>(std::hash<Entity>()(entity));
+	}
+
+	bool EntitiesHierarchy::OnRenderImGui(std::optional<Entity>& selectedEntity)
 	{
 		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(m_World);
 
-		bool result = false;
 		const std::vector<EntityRecord>& records = m_World->Entities.GetEntityRecords();
 
 		ImGui::BeginChild("Scene Entities");
 
+		std::optional<Entity> newEntitySelection = selectedEntity;
+
 		if (ImGui::BeginPopupContextWindow("Entity Hierarchy Context Menu"))
 		{
-			result |= RenderContextMenu(selectedEntity, nullptr, true);
+			RenderCreateEntityMenu({}, newEntitySelection, true);
 			ImGui::EndMenu();
 		}
 
@@ -202,34 +216,19 @@ namespace Flare
 			m_ClippingHierarchyIsDirty = false;
 		}
 
-		result |= RenderClippedHierarchyRootLevel(selectedEntity);
+		RenderClippedHierarchyRootLevel(newEntitySelection);
 
-		if (m_EntityToDelete)
+		// NOTE: Must be executed at the end of imgui rendering
+		if (m_EntityCommands.Execute(*m_World) > 0)
 		{
-			HierarchyHelper::DeleteEntityHierarchy(*m_World, *m_EntityToDelete);
-			m_EntityToDelete = {};
-
-			result = true;
+			m_ClippingHierarchyIsDirty = true;
 		}
-
-		if (m_EntityToDuplicate)
-		{
-			FLARE_CORE_ASSERT(HAS_BIT(m_Features, EntitiesHierarchyFeatures::DuplicateEntity));
-
-			// NOTE: Ignore SerializationId, because every entity should have a unique SerializationId
-			std::unordered_set<ComponentId> ignoredComponents = { COMPONENT_ID(SerializationId) };
-			selectedEntity = HierarchyHelper::DuplicateEntityHierarchy(*m_World, *m_EntityToDuplicate, &ignoredComponents);
-
-			m_EntityToDuplicate = {};
-
-			result = true;
-		}
-
-		m_EntityCommands.Execute(*m_World);
 
 		ImGui::EndChild();
 
-		return result;
+		bool changed = newEntitySelection != selectedEntity;
+		selectedEntity = newEntitySelection;
+		return changed;
 	}
 
 	void EntitiesHierarchy::SetWorld(World& world)
@@ -242,96 +241,107 @@ namespace Flare
 		m_ClippingHierarchy.Build(*m_World, m_RootLevelEntities);
 	}
 
-	bool EntitiesHierarchy::RenderContextMenu(Entity& selectedEntity, Entity* parent, bool isRoot)
+	void EntitiesHierarchy::RenderCreateEntityMenu(std::optional<Entity> parent, std::optional<Entity>& selectedEntity, bool isRoot)
 	{
 		FLARE_PROFILE_FUNCTION();
-
-		bool result = false;
 
 		bool isCreationSupported = HAS_BIT(m_Features, EntitiesHierarchyFeatures::CreateEntity);
 		if (isRoot && !HAS_BIT(m_Features, EntitiesHierarchyFeatures::MultipleRootEntities))
 			isCreationSupported = false;
 
-		if (isCreationSupported)
+		auto setCreatedEntity = [this, parent, &selectedEntity](FutureEntity entity)
 		{
-			if (ImGui::BeginMenu("Create"))
+			FutureEntityCommands commands = FutureEntityCommands(entity, m_EntityCommands);
+			commands.ExecuteFunction([&selectedEntity](CommandContext& context, World& world, Entity entity)
 			{
-				FutureEntity futureEntity;
+				selectedEntity = entity;
+			});
 
-				if (ImGui::MenuItem("Entity"))
-				{
-					futureEntity = m_EntityCommands.CreateEntity<TransformComponent, SerializationId>().GetFutureEntity();
-					result = true;
-				}
-
-				if (ImGui::MenuItem("Sprite"))
-				{
-					futureEntity = m_EntityCommands.CreateEntity<TransformComponent, SpriteComponent, SerializationId>().GetFutureEntity();
-					result = true;
-				}
-
-				if (ImGui::MenuItem("Perspective Camera"))
-				{
-					futureEntity = m_EntityCommands.CreateEntity(
-						TransformComponent(),
-						SerializationId(),
-						CameraComponent(CameraComponent::ProjectionType::Perspective)).GetFutureEntity();
-					result = true;
-				}
-
-				if (ImGui::MenuItem("Orthographic Camera"))
-				{
-					futureEntity = m_EntityCommands.CreateEntity(
-						TransformComponent(),
-						SerializationId(),
-						CameraComponent(CameraComponent::ProjectionType::Orthographic)).GetFutureEntity();
-					result = true;
-				}
-
-				if (ImGui::MenuItem("Directional Light"))
-				{
-					futureEntity = m_EntityCommands.CreateEntity(TransformComponent(), SerializationId(), DirectionalLight()).GetFutureEntity();
-					result = true;
-				}
-
-				if (ImGui::MenuItem("Point Light"))
-				{
-					futureEntity = m_EntityCommands.CreateEntity(TransformComponent(), SerializationId(), PointLight()).GetFutureEntity();
-					result = true;
-				}
-
-				if (ImGui::MenuItem("Spot Light"))
-				{
-					futureEntity = m_EntityCommands.CreateEntity(TransformComponent(), SerializationId(), SpotLight()).GetFutureEntity();
-					result = true;
-				}
-
-				if (ImGui::MenuItem("Environment"))
-				{
-					futureEntity = m_EntityCommands.CreateEntity(TransformComponent(), SerializationId(), Environment()).GetFutureEntity();
-					result = true;
-				}
-
-				if (futureEntity != FutureEntity() && parent)
-				{
-					FutureEntity parentEntity = m_EntityCommands.GetEntity(*parent).GetFutureEntity();
-
-					m_EntityCommands.AddCommand(SetParentCommand(futureEntity, parentEntity));
-					FutureEntityCommands(futureEntity, m_EntityCommands).AddComponent<LocalTransform>();
-				}
-
-				ImGui::EndMenu();
+			if (parent)
+			{
+				FutureEntity parentEntity = m_EntityCommands.GetEntity(*parent).GetFutureEntity();
+				m_EntityCommands.AddCommand(SetParentCommand(entity, parentEntity));
+				commands.AddComponent<LocalTransform>();
 			}
+		};
+
+		if (!isCreationSupported)
+			return;
+
+		if (ImGui::BeginMenu("Create"))
+		{
+			if (ImGui::MenuItem("Entity"))
+			{
+				setCreatedEntity(m_EntityCommands.CreateEntity<TransformComponent, SerializationId>().GetFutureEntity());
+			}
+
+			if (ImGui::MenuItem("Sprite"))
+			{
+				setCreatedEntity(m_EntityCommands.CreateEntity<TransformComponent, SpriteComponent, SerializationId>().GetFutureEntity());
+			}
+
+			if (ImGui::MenuItem("Perspective Camera"))
+			{
+				setCreatedEntity(m_EntityCommands
+					.CreateEntity(
+						TransformComponent(),
+						SerializationId(),
+						CameraComponent(CameraComponent::ProjectionType::Perspective))
+					.GetFutureEntity());
+			}
+
+			if (ImGui::MenuItem("Orthographic Camera"))
+			{
+				setCreatedEntity(m_EntityCommands
+					.CreateEntity(
+						TransformComponent(),
+						SerializationId(),
+						CameraComponent(CameraComponent::ProjectionType::Orthographic))
+					.GetFutureEntity());
+			}
+
+			if (ImGui::MenuItem("Directional Light"))
+			{
+				setCreatedEntity(m_EntityCommands
+					.CreateEntity(
+						TransformComponent(),
+						SerializationId(),
+						DirectionalLight())
+					.GetFutureEntity());
+			}
+
+			if (ImGui::MenuItem("Point Light"))
+			{
+				setCreatedEntity(m_EntityCommands
+					.CreateEntity(
+						TransformComponent(),
+						SerializationId(),
+						PointLight())
+					.GetFutureEntity());
+			}
+
+			if (ImGui::MenuItem("Spot Light"))
+			{
+				setCreatedEntity(m_EntityCommands
+					.CreateEntity(
+						TransformComponent(),
+						SerializationId(),
+						SpotLight())
+					.GetFutureEntity());
+			}
+
+			if (ImGui::MenuItem("Environment"))
+			{
+				setCreatedEntity(m_EntityCommands
+					.CreateEntity(
+						TransformComponent(),
+						SerializationId(),
+						Environment())
+					.GetFutureEntity());
+			}
+
+			ImGui::EndMenu();
 		}
-
-		return result;
-	}
-
-	static bool IsTreeNodeOpened(ImGuiID id)
-	{
-		ImGuiContext* g = ImGui::GetCurrentContext();
-		ImGuiStorage* storage = g->CurrentWindow->DC.StateStorage;
-		return static_cast<bool>(storage->GetInt(id, 0));
 	}
 
 	static bool RenderClippedTreeSection(const EntitiesHierarchyAccelerationStructure::Node& entry, float itemWidth, float itemHeight)
@@ -357,12 +367,10 @@ namespace Flare
 	}
 
 	template<typename F>
-	static bool RenderClippedHierarchy(EntitiesHierarchyAccelerationStructure& clippingHierarchy, size_t startNode, F&& renderFunction)
+	static void RenderClippedHierarchy(EntitiesHierarchyAccelerationStructure& clippingHierarchy, size_t startNode, F&& renderFunction)
 	{
 		FLARE_PROFILE_FUNCTION();
 		FLARE_CORE_ASSERT(startNode < clippingHierarchy.GetNodeCount());
-
-		bool result = false;
 
 		const float itemHeight = ImGui::GetFontSize() + ImGui::GetStyle().FramePadding.y;
 		const float itemWidth = ImGui::GetContentRegionAvail().x;
@@ -387,12 +395,12 @@ namespace Flare
 						size_t visibleRangeStart = static_cast<size_t>(clipper.DisplayStart) + node.Start;
 						size_t visibleRangeEnd = static_cast<size_t>(clipper.DisplayEnd) + node.Start;
 
-						result |= renderFunction(visibleRangeStart, visibleRangeEnd, currentNode);
+						renderFunction(visibleRangeStart, visibleRangeEnd, currentNode);
 					}
 				}
 				else
 				{
-					result |= renderFunction(node.Start, node.Start + 1, currentNode);
+					renderFunction(node.Start, node.Start + 1, currentNode);
 				}
 			}
 
@@ -400,11 +408,9 @@ namespace Flare
 		}
 
 		ImGui::PopStyleVar();
-
-		return result;
 	}
 
-	bool EntitiesHierarchy::RenderEntityItem(Entity entity, Entity& selectedEntity, size_t accelerationStructureEntryIndex)
+	void EntitiesHierarchy::RenderEntityItem(Entity entity, std::optional<Entity>& selectedEntity, size_t accelerationStructureEntryIndex)
 	{
 		FLARE_PROFILE_FUNCTION();
 		bool result = false;
@@ -429,7 +435,7 @@ namespace Flare
 		if (isPrefab)
 			ImGui::PushStyleColor(ImGuiCol_Text, ImGuiTheme::Primary);
 
-	 	void* id = (void*)std::hash<Entity>()(entity);
+	 	void* id = GetEntityTreeNodeId(entity);
 		ImGuiID nodeId = ImGui::GetCurrentWindow()->GetID(id);
 
 		bool wasOpenedBefore = IsTreeNodeOpened(nodeId);
@@ -443,7 +449,7 @@ namespace Flare
 		if (isPrefab)
 			ImGui::PopStyleColor();
 
-		result |= RenderEntityContextMenu(entity, selectedEntity);
+		RenderEntityContextMenu(entity, selectedEntity);
 
 		ImGui::PopStyleVar(1); // Frame padding
 
@@ -477,10 +483,8 @@ namespace Flare
 		if (children && opened)
 		{
 			size_t firstChildNode = accelerationStructureEntryIndex + 1;
-			result |= RenderClippedHierarchy(m_ClippingHierarchy, firstChildNode, [this, &selectedEntity, &children](size_t start, size_t end, size_t currentNode)
+			RenderClippedHierarchy(m_ClippingHierarchy, firstChildNode, [this, &selectedEntity, &children](size_t start, size_t end, size_t currentNode)
 			{
-				bool result = false;
-
 				const auto& childrenEntities = children->GetChildren();
 				for (size_t i = start; i < end; i++)
 				{
@@ -488,60 +492,63 @@ namespace Flare
 					if (!m_World->IsEntityAlive(child))
 						continue;
 
-					result |= RenderEntityItem(child, selectedEntity, currentNode);
+					RenderEntityItem(child, selectedEntity, currentNode);
 				}
-
-				return result;
 			});
 		}
 
 		if (opened)
 			ImGui::TreePop();
-
-		return result;
 	}
 
-	bool EntitiesHierarchy::RenderEntityContextMenu(Entity entity, Entity& selectedEntity)
+	void EntitiesHierarchy::RenderEntityContextMenu(Entity entity, std::optional<Entity>& selectedEntity)
 	{
 		FLARE_PROFILE_FUNCTION();
-		bool result = false;
 		if (ImGui::BeginPopupContextItem())
 		{
 			if (entity != selectedEntity)
 			{
 				selectedEntity = entity;
-				result = true;
 			}
 
-			RenderContextMenu(selectedEntity, &entity, false);
+			RenderCreateEntityMenu(entity, selectedEntity, false);
 
 			if (HAS_BIT(m_Features, EntitiesHierarchyFeatures::DeleteEntity) && ImGui::MenuItem("Delete"))
 			{
-				m_EntityToDelete = entity;
+				m_EntityCommands.GetEntity(entity).ExecuteFunction([this, &selectedEntity](CommandContext& context, World& world, Entity entity)
+				{
+					HierarchyHelper::DeleteEntityHierarchy(world, entity);
+					selectedEntity = {};
+				});
 			}
 
 			if (HAS_BIT(m_Features, EntitiesHierarchyFeatures::DuplicateEntity) && ImGui::MenuItem("Duplicate"))
 			{
 				FLARE_CORE_ASSERT(HAS_BIT(m_Features, EntitiesHierarchyFeatures::DuplicateEntity));
 
-				m_EntityToDuplicate = entity;
+				m_EntityCommands.GetEntity(entity).ExecuteFunction([this, &selectedEntity](CommandContext& context, World& world, Entity entity)
+				{
+					// NOTE: Ignore SerializationId, because every entity should have a unique SerializationId
+					std::unordered_set<ComponentId> ignoredComponents = { COMPONENT_ID(SerializationId) };
+					Entity duplicateEntity = HierarchyHelper::DuplicateEntityHierarchy(world, entity, &ignoredComponents);
+
+					selectedEntity = duplicateEntity;
+				});
 			}
 
 			if (m_World->HasComponent<Parent>(entity) && ImGui::MenuItem("Detach from parent"))
 			{
 				FutureEntity futureEntity = m_EntityCommands.GetEntity(entity).GetFutureEntity();
 				m_EntityCommands.AddCommand(DetachFromParentCommand(futureEntity));
-
-				m_ClippingHierarchyIsDirty = true;
 			}
 
 			if (m_EditorCamera)
 			{
-				TransformComponent* globalTransform = m_World->TryGetEntityComponent<TransformComponent>(selectedEntity);
-				LocalTransform* localTransform = m_World->TryGetEntityComponent<LocalTransform>(selectedEntity);
+				TransformComponent* globalTransform = m_World->TryGetEntityComponent<TransformComponent>(entity);
+				LocalTransform* localTransform = m_World->TryGetEntityComponent<LocalTransform>(entity);
 
 				bool hasTransform = globalTransform || localTransform;
-				bool hasCamera = m_World->HasComponent<CameraComponent>(selectedEntity);
+				bool hasCamera = m_World->HasComponent<CameraComponent>(entity);
 
 				if (hasTransform && hasCamera && ImGui::MenuItem("Match with editor camera"))
 				{
@@ -565,25 +572,23 @@ namespace Flare
 
 			ImGui::EndMenu();
 		}
-
-		return result;
 	}
 
-	bool EntitiesHierarchy::RenderClippedHierarchyRootLevel(Entity& selectedEntity)
+	void EntitiesHierarchy::RenderClippedHierarchyRootLevel(std::optional<Entity>& selectedEntity)
 	{
 		FLARE_PROFILE_FUNCTION();
 
 		if (m_ClippingHierarchy.IsEmpty())
 		{
-			return false;
+			return;
 		}
 
-		return RenderClippedHierarchy(m_ClippingHierarchy, 0, [&](size_t start, size_t end, size_t currentNode)
+		RenderClippedHierarchy(m_ClippingHierarchy, 0, [&](size_t start, size_t end, size_t currentNode)
 		{
 			bool result = false;
 			m_RootLevelEntities.ForEachEntityInRange(start, end, [&](Entity entity)
 			{
-				result |= RenderEntityItem(entity, selectedEntity, currentNode);
+				RenderEntityItem(entity, selectedEntity, currentNode);
 			});
 
 			return result;

@@ -58,24 +58,21 @@ namespace Flare
 		EntitiesHierarchy(EntitiesHierarchyFeatures features);
 		EntitiesHierarchy(World& world, EntitiesHierarchyFeatures features);
 
-		bool OnRenderImGui(Entity& selectedEntity);
+		bool OnRenderImGui(std::optional<Entity>& selectedEntity);
 
 		void SetFeatures(EntitiesHierarchyFeatures features) { m_Features = features; }
 
 		void SetWorld(World& world);
 		inline void SetEditorCamera(const EditorCamera* editorCamera) { m_EditorCamera = editorCamera; }
 	private:
-		bool RenderContextMenu(Entity& selectedEntity, Entity* parent, bool isRoot);
-		bool RenderEntityItem(Entity entity, Entity& selectedEntity, size_t accelerationStructureEntryIndex);
-		bool RenderEntityContextMenu(Entity entity, Entity& selectedEntity);
+		void RenderCreateEntityMenu(std::optional<Entity> parent, std::optional<Entity>& selectedEntity, bool isRoot);
+		void RenderEntityItem(Entity entity, std::optional<Entity>& selectedEntity, size_t accelerationStructureEntryIndex);
+		void RenderEntityContextMenu(Entity entity, std::optional<Entity>& selectedEntity);
 
-		bool RenderClippedHierarchyRootLevel(Entity& selectedEntity);
+		void RenderClippedHierarchyRootLevel(std::optional<Entity>& selectedEntity);
 	private:
 		EntitiesHierarchyFeatures m_Features;
 		const EditorCamera* m_EditorCamera = nullptr;
-
-		std::optional<Entity> m_EntityToDelete;
-		std::optional<Entity> m_EntityToDuplicate;
 
 		EntitiesCommandBuffer m_EntityCommands;
 

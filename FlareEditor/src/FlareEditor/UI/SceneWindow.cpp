@@ -29,12 +29,14 @@ namespace Flare
 
 		World& world = m_Scene->GetECSWorld();
 
-		Entity selected;
+		std::optional<Entity> selected;
 		if (EditorLayer::GetInstance().Selection.GetType() == EditorSelectionType::Entity)
 			selected = EditorLayer::GetInstance().Selection.GetEntity();
 
-		if (m_Hierarchy.OnRenderImGui(selected))
-			EditorLayer::GetInstance().Selection.SetEntity(selected);
+		if (m_Hierarchy.OnRenderImGui(selected) && selected)
+		{
+			EditorLayer::GetInstance().Selection.SetEntity(*selected);
+		}
 
 		ImGui::End();
 	}

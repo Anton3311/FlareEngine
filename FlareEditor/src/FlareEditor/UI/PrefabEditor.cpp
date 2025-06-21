@@ -120,13 +120,13 @@ namespace Flare
 		ImGui::Begin("Prefab Entities");
 
         {
-			Entity selectedEntity = m_EditorSelection.GetType() == EditorSelectionType::Entity
-				? m_EditorSelection.GetEntity()
-				: Entity();
+			std::optional<Entity> selectedEntity = m_EditorSelection.GetType() == EditorSelectionType::Entity
+				? std::optional<Entity>(m_EditorSelection.GetEntity())
+                : std::optional<Entity>();
 
-			if (m_Entities.OnRenderImGui(selectedEntity))
+			if (m_Entities.OnRenderImGui(selectedEntity) && selectedEntity)
 			{
-				m_EditorSelection.SetEntity(selectedEntity);
+				m_EditorSelection.SetEntity(*selectedEntity);
 			}
         }
 
