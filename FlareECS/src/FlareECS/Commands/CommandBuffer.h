@@ -113,7 +113,9 @@ namespace Flare
 		FutureEntityCommands GetEntity(Entity entity);
 
 		void DeleteEntity(Entity entity);
-		void Execute(World& world);
+
+		// Returns number of commands executed.
+		size_t Execute(World& world);
 	private:
 		CommandsStorage m_Storage;
 	};
